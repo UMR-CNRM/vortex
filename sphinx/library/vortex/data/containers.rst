@@ -1,0 +1,65 @@
+:mod:`vortex.data.containers` --- Local receptacle for vortex resources
+=======================================================================
+
+.. automodule:: vortex.data.containers
+   :synopsis: Local receptacle for vortex resources
+
+.. moduleauthor:: The Vortex Team
+.. sectionauthor:: The Vortex Team
+.. versionadded:: 0.1
+
+.. warning::
+
+   Guess what? The documentation of this module is at a point of complemention
+   comparable to its parent package. 
+   
+Package
+-------
+
+.. autodata:: __all__
+
+
+Interface
+---------
+
+As a :mod:`vortex.utilities.catalogs` based module,
+:mod:`vortex.data.containers` automaticaly defined the following functions:
+
+.. autofunction:: catalog
+   
+.. autofunction:: pickup
+
+.. autofunction:: load
+
+Classes
+-------
+   
+.. autoclass:: ContainersCatalog
+   :show-inheritance:
+   :members:
+   :member-order: bysource
+
+.. autoclass:: Container
+   :show-inheritance:
+   :members:
+   :member-order: bysource
+
+.. autoclass:: Virtual
+   :show-inheritance:
+   :members:
+   :member-order: bysource
+
+.. autoclass:: InCore
+   :show-inheritance:
+   :members:
+   :member-order: bysource
+   
+.. autoclass:: MayFly
+   :show-inheritance:
+   :members:
+   :member-order: bysource
+
+.. autoclass:: File
+   :show-inheritance:
+   :members:
+   :member-order: bysource
