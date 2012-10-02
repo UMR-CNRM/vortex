@@ -1,0 +1,133 @@
+#!/bin/env python
+# -*- coding:Utf-8 -*-
+
+#: No automatic export
+__all__ = []
+
+
+from resources import Resource
+from vortex.syntax.stdattrs import a_model
+from vortex.tools.config import JacketConfigParser
+
+class Jacket(object):
+
+    def __init__(self, file=None):
+        if file:
+            self.config = JacketConfigParser(file)
+            self.virtual = False
+        else:
+            self.virtual = True
+        self._initfile = file
+
+    def dumpinfp(self):
+        return "{0:s}.{1:s}(file={2:s})".format(self.__module__, self.__class__.__name__, repr(self._initfile))
+
+
+class Executable(Resource):
+    """Abstract class for resources that could be executed."""
+
+    _abstract = True
+    _footprint = dict(
+        info = 'Miscellaneaous executable resource'
+    )
+
+
+class Script(Executable):
+    """Basic interpreted executable associated to a specific language."""
+
+    _footprint = dict(
+        attr = dict(
+            rawopts = dict(
+                optional = True,
+                default = ''
+            ),
+            language = dict(
+                values = [ 'perl', 'python', 'ksh', 'bash', 'sh' ],
+            ),
+            kind = dict(
+                optional = True,
+                default = 'script',
+                values = [ 'script' ]
+            )
+        )
+    )
+
+    @classmethod
+    def realkind(cls):
+        return 'script'
+
+    def command_line(self):
+        """Returns optional attribute :attr:`rawopts`."""
+        if self.rawopts == None:
+            return ''
+        else:
+            return self.rawopts
+
+
+class Binary(Executable):
+    """Basic compiled executable."""
+    _abstract = True
+    _footprint = dict(
+        attr = dict(
+            compiler = dict(
+                optional = True,
+            ),
+            static = dict(
+                type = bool,
+                optional = True,
+                default = True,
+            ),
+            jacket = dict(
+                type = Jacket,
+                optional = True,
+                default = Jacket()
+            )
+        )
+    )
+
+
+class BlackBox(Binary):
+    """Binary resource with explicit command line options."""
+
+    _footprint = dict(
+        attr = dict(
+            binopts = dict(
+                optional = True,
+                default = ''
+            ),
+            kind = dict(
+                values = [ 'binbox', 'blackbox' ],
+            ),
+        )
+    )
+
+    @classmethod
+    def realkind(cls):
+        return 'blackbox'
+
+    def command_line(self):
+        """Returns current attribute :attr:`binopts`."""
+        return self.binopts
+
+
+class NWPModel(Binary):
+    """Base class for any Numerical Weather Prediction Model."""
+    
+    _abstract = True
+    _footprint = dict(
+         info = 'NWP Model',
+         attr = dict(
+            model = a_model,
+            kind = dict(
+                values = [ 'nwpmodel' ]
+            )
+        )
+    )
+
+    @classmethod
+    def realkind(cls):
+        return 'nwpmodel'
+
+    def command_line(self):
+        """Abstract method."""
+        return ''

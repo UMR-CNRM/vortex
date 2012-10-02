@@ -1,0 +1,18 @@
+#PBS -N signum
+#PBS -S /bin/ksh
+#PBS -T mpisx
+#PBS -b 1
+#PBS -l cpunum_job=1
+#PBS -l cputim_job=60
+#PBS -l elapstim_req="120,100"
+#PBS -j o
+#PBS -l memsz_job=2gb
+#PBS -q vector
+
+set -x
+
+cd $TMPDIR
+
+kill -l
+
+exit 0

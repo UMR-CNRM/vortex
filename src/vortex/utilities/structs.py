@@ -1,0 +1,104 @@
+#!/bin/env python
+# -*- coding:Utf-8 -*-
+r"""
+This module defines common base classes for miscellaneous purposes.
+"""
+
+#: No automatic export
+__all__ = []
+
+import logging
+
+
+_tableroots = dict()
+
+def idtree(tag):
+    if tag not in _tableroots:
+        _tableroots[tag] = Tree(name=tag)
+    return _tableroots[tag]
+
+class Tree(object):
+    
+    def __init__(self, name='all', root=None):
+        self.name = name
+        self._nodes = dict()
+        self._root = root
+        self._tokens = []
+
+    @property
+    def root(self):
+        return self._nodes[self._root]['node']
+
+    def addnode(self, node, parent=None, token=False):
+        if parent and not id(parent) in self._nodes:
+            logging.critical('Could not add an orphean %s without parent %s', node, parent)
+        if parent:
+            parent = id(parent)
+            self._nodes[parent]['kids'].append(id(node))
+        self._nodes[id(node)] = dict(node=node, parent=parent, kids=[])
+        if token:
+            self._tokens.append(id(node))
+
+    def setroot(self, root):
+        self._root = id(root)
+        self.addnode(root)
+
+    def isroot(self, node):
+        return id(node) == self._root
+
+    def inside(self, node):
+        return id(node) in self._nodes
+
+    def node(self, id):
+        if id in self._nodes:
+            return self._nodes[id]['node']
+        else:
+            logging.critical('Id %s does not belong this tree', id)
+
+    def parent(self, node):
+        if self.inside(node):
+            parent = self._nodes[id(node)]['parent']
+            if parent:
+                return self.node(parent)
+            else:
+                return None
+        else:
+            logging.critical('Object %s does not belong this tree', node)
+
+    def kids(self, node):
+        if self.inside(node):
+            return map(lambda x: self.node(x), self._nodes[id(node)]['kids'])
+        else:
+            logging.critical('Object %s does not belong this tree', node)
+
+    def ancestors(self, node):
+        if self.inside(node):
+            pp = [ node ]
+            parent = self.parent(node)
+            while parent:
+                pp.append(parent)
+                parent = self.parent(parent)
+            return pp
+        else:
+            logging.critical('Object %s does not belong this tree', node)
+
+    @property
+    def token(self):
+        if self._tokens and self._tokens[-1] in self._nodes:
+            return self._nodes[self._tokens[-1]]['node']
+        else:
+            return None
+
+    @property
+    def previous(self):
+        if len(self._tokens) > 1:
+            return self._nodes[self._tokens[-2]]['node']
+
+    def gettoken(self, node):
+        if node and self.inside(node):
+            self._tokens.append(id(node))
+    
+    def rmtoken(self, node):
+        if node and self.inside(node):
+            id = id(node)
+            self._tokens = filter(lambda x: x != id, self._tokens)

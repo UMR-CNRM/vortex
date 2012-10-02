@@ -1,0 +1,144 @@
+#!/bin/env python
+# -*- coding:Utf-8 -*-
+
+import logging
+logging.basicConfig(level=logging.ERROR)
+
+from unittest import TestCase, TestLoader, TextTestRunner
+
+import vortex
+from vortex import toolbox
+from vortex.data.geometries import SpectralGeometry
+import olive.data
+
+cr = vortex.data.resources.catalog()
+cr.track = True
+
+class UtBackgroundErrStd(TestCase):
+    
+    def setUp(self):
+        self.attrset = dict(kind='bgerrstd', date = '2012021400', cutoff='production', namespace='[suite].archive.fr')
+        self.std = SpectralGeometry(id='Current op', truncation=224)
+        
+    def test_v1(self):
+
+        rl = toolbox.rload(
+            self.attrset,
+            geometry=self.std,
+            local='errgribvor',
+            namespace='vortex.meteo.fr',
+            experiment='oper',
+            block='analysis',
+            model='arpege',
+            term='3',
+            nativefmt='grib'
+        )
+        for rh in rl:
+            self.assertTrue(rh.complete)
+            print ' > ', rh.location()
+        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0000P/analysis/bgerrstd.arpege.tl224+0003.grib')
+
+
+    def test_e1(self):
+        #sessions.current().debug() 
+        rl = toolbox.rload(
+            self.attrset,
+            geometry=self.std,
+            local='errgribvor+arpege+[term]',
+            suite='oper',
+            term='3',
+            model='arpege',
+            igakey='arpege'
+        )
+        for rh in rl:
+            self.assertTrue(rh.complete)
+            print ' > ', rh.location()
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r0/errgribvor')
+      
+    def test_e2(self):
+        
+        rl = toolbox.rload(
+            self.attrset, 
+            geometry=self.std,
+            local='errgribvor+aearp+[term].in',
+            suite='oper',
+            term='3',
+            inout='in',
+            model='aearp',
+            cutoff='assim',
+            igakey='aearp'
+        )
+        
+        for rh in rl:
+            self.assertTrue(rh.complete)
+            print ' > ', rh.location()
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor.in')    
+
+    def test_e3(self):
+        
+        rl = toolbox.rload(
+            self.attrset,
+            geometry=self.std,
+            local='errgribvor+aearp+[term].out',
+            suite='oper',
+            term='9',
+            inout='out',
+            model='aearp',
+            cutoff='assim',
+            igakey='aearp'
+        )
+        
+        for rh in rl:
+            self.assertTrue(rh.complete)
+            print ' > ', rh.location()
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production.out')    
+ 
+    def test_e4(self):
+        rl = toolbox.rload(
+            self.attrset, 
+            geometry=self.std,
+            local='errgribvor+aearp+[term].dsbscr.out',
+            suite='oper',
+            term='12',
+            inout='out',
+            model='aearp',
+            cutoff='assim',
+            igakey='aearp'
+        )
+
+        for rh in rl:
+            if not rh.complete:
+                print cr.track.toprettyxml(indent='    ')
+            self.assertTrue(rh.complete)
+            print ' > ', rh.location()
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production_dsbscr.out')
+
+
+
+class UtInflFactor(TestCase):
+    
+    def setUp(self):
+        self.attrset = dict(kind='inflfactor', date = '2012021400', cutoff='assim', namespace='[suite].archive.fr')
+        
+    def test_a1(self):
+        rl = toolbox.rload(
+            self.attrset,
+            local='inflfactor',
+            suite='oper',
+            model='arpege',
+            igakey='aearp'
+        )
+        for rh in rl:
+            self.assertTrue(rh.complete)
+            print ' > ', rh.location()
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/inflation_factor')
+
+              
+
+if __name__ == '__main__':
+    for test in [ UtBackgroundErrStd, UtInflFactor ]:
+        x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
+        if x.errors or x.failures:
+            print "Something went wrong !"
+            break 
+        

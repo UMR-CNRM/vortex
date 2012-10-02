@@ -1,0 +1,26 @@
+mer. juin 20 11:28:25 CEST 2012
+>  /home/sevault/bin/mpirun -v -n 2 /sauvegarde/dev/eclipse/vortex/src/examples/test.sh coucou
+mer. juin 20 11:34:04 CEST 2012
+>  /home/sevault/bin/mpirun -v -n 2 /sauvegarde/dev/eclipse/vortex/src/examples/test.sh coucou
+mer. juin 20 11:35:00 CEST 2012
+>  /home/sevault/bin/mpirun -v -n 2 /sauvegarde/dev/eclipse/vortex/src/examples/test.sh coucou
+mer. juin 20 11:39:16 CEST 2012
+>  /home/sevault/bin/mpirun -v -n 2 /sauvegarde/dev/eclipse/vortex/src/examples/test.sh coucou
+mer. juin 20 11:39:22 CEST 2012
+>  /home/sevault/bin/mpirun -v -n 2 /sauvegarde/dev/eclipse/vortex/src/examples/test.sh coucou
+mer. juin 20 11:44:46 CEST 2012
+>  /home/sevault/bin/mpirun -v -n 2 /sauvegarde/dev/eclipse/vortex/src/examples/test.sh coucou
+mer. juin 20 11:46:03 CEST 2012
+>  /home/sevault/bin/mpirun -v -n 2 /sauvegarde/dev/eclipse/vortex/src/examples/test.sh coucou
+mer. juin 20 13:24:50 CEST 2012
+>  /home/sevault/bin/mpirun -v -n 2 /sauvegarde/dev/eclipse/vortex/src/examples/test.sh -vmeteo -eFCST -c1 -asli -t600 -fh3
+mer. juin 20 13:27:42 CEST 2012
+>  /home/sevault/bin/mpirun -v -n 2 /sauvegarde/dev/eclipse/vortex/src/examples/test.sh -vmeteo -eFCST -c1 -asli -t600 -fh0
+mer. juin 20 13:29:11 CEST 2012
+>  /home/sevault/bin/mpirun -v -n 2 /sauvegarde/dev/eclipse/vortex/src/examples/test.sh -vmeteo -eFCST -c1 -asli -t900 -fh0
+mer. juin 20 13:45:06 CEST 2012
+>  /home/sevault/bin/mpirun -v -n 2 /sauvegarde/dev/eclipse/vortex/src/examples/test.sh -vmeteo -eFCST -c1 -asli -t900 -fh0
+jeu. juil. 19 17:13:38 CEST 2012
+>  /home/sevault/bin/mpirun -v -n 2 /sauvegarde/dev/eclipse/vortex/src/examples/test.sh -vmeteo -eFCST -c1 -asli -t900 -fh0
+ven. juil. 20 16:47:01 CEST 2012
+>  /home/sevault/bin/mpirun -v -n 2 /sauvegarde/dev/eclipse/vortex/src/examples/test.sh -vmeteo -eFCST -c1 -asli -t900 -fh0

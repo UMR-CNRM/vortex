@@ -1,0 +1,76 @@
+2012-06-05 18:29:48,225 - iga - INFO - initialisation du provider iga
+2012-06-05 18:29:48,227 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x227b610>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-05 18:29:48,228 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x227b610>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:17:58,806 - iga - INFO - initialisation du provider iga
+2012-06-08 13:17:58,827 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x1924790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:17:58,827 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x1924790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:17:58,829 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x1924790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:17:58,829 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x1924790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:19:54,132 - iga - INFO - initialisation du provider iga
+2012-06-08 13:19:54,134 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x2096790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:19:54,134 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x2096790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:19:54,136 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x2096790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:19:54,136 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x2096790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:28:45,397 - iga - INFO - initialisation du provider iga
+2012-06-08 13:28:45,399 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x21a8790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:28:45,399 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x21a8790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:28:45,401 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x21a8790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:28:45,401 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x21a8790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:28:45,403 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x21a8790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:28:45,403 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x21a8790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:32:19,952 - iga - INFO - initialisation du provider iga
+2012-06-08 13:32:19,954 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x28cc790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:32:19,954 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x28cc790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:32:19,956 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x28cc790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:32:19,956 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x28cc790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:32:19,968 - iga - INFO - initialisation du provider iga
+2012-06-08 13:32:19,970 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-08 13:32:19,970 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-08 13:32:19,971 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-08 13:32:19,971 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-08 13:32:19,973 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-08 13:32:19,973 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-08 13:32:36,479 - iga - INFO - initialisation du provider iga
+2012-06-08 13:32:36,481 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0xbb3790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:32:36,481 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0xbb3790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:32:36,483 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0xbb3790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:32:36,483 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0xbb3790>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-08 13:32:36,494 - iga - INFO - initialisation du provider iga
+2012-06-08 13:32:36,496 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-08 13:32:36,496 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-08 13:32:36,497 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-08 13:32:36,497 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-08 13:32:36,507 - iga - INFO - initialisation du provider iga
+2012-06-22 15:17:02,105 - iga - INFO - initialisation du provider iga
+2012-06-22 15:17:02,116 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x2aef190>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-22 15:17:02,116 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x2aef190>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-22 15:17:02,117 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x2aef190>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-22 15:17:02,117 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x2aef190>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-22 15:17:02,141 - iga - INFO - initialisation du provider iga
+2012-06-22 15:17:02,143 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-22 15:17:02,143 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-22 15:17:02,144 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-22 15:17:02,144 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-22 15:17:02,164 - iga - INFO - initialisation du provider iga
+2012-06-22 15:17:25,116 - iga - INFO - initialisation du provider iga
+2012-06-22 15:17:25,119 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x15b8190>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-22 15:17:25,120 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x15b8190>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-22 15:17:25,121 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x15b8190>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-22 15:17:25,121 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x15b8190>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-22 15:17:25,144 - iga - INFO - initialisation du provider iga
+2012-06-22 15:17:25,146 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-22 15:17:25,147 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-22 15:17:25,148 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-22 15:17:25,148 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-22 15:17:25,167 - iga - INFO - initialisation du provider iga
+2012-06-22 15:44:15,703 - iga - INFO - initialisation du provider iga
+2012-06-22 15:44:15,706 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x230d190>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-22 15:44:15,706 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x230d190>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-22 15:44:15,708 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x230d190>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-22 15:44:15,708 - iga - INFO - IgaProvider:pathname info {'nativefmt': 'autoconfig', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x230d190>, 'fmt': None, 'igakey': 'france', 'suite': 'oper', 'model': 'arpege'}
+2012-06-22 15:44:15,731 - iga - INFO - initialisation du provider iga
+2012-06-22 15:44:15,733 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-22 15:44:15,733 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-22 15:44:15,735 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-22 15:44:15,735 - iga - INFO - IgaProvider:pathname info {'suite': 'oper', 'model': 'arpege', 'nativefmt': 'autoconfig', 'igakey': 'france', 'fmt': None}
+2012-06-22 15:44:15,754 - iga - INFO - initialisation du provider iga
