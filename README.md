@@ -6,13 +6,13 @@ Versatile Objects Rounded-Up in a Toolbox for Environmental eXperiments
 Disclaimer
 ----------
 
-This is a preliminary version of a python toolbox for builing and seting up
-numerical experiment. The source code repository is made available
-in order to facilitate code development.
+This is a preliminary version of a python toolbox for buidling and
+setting up numerical experiment. This source code repository is made
+available in order to facilitate code development.
 
 Copyright : © Meteo-France (2012)
 
-Contact : eric.sevault@meteo.fr
+Contact : eric.sevault [at] meteo.fr
 
 
 This software is governed by the CeCILL-C license under French law and
