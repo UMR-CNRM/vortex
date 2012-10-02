@@ -9,6 +9,7 @@ from unittest import TestCase, TestLoader, TextTestRunner
 from vortex import toolbox
 import gco.data
 import common.data
+from olive.data import collected
 
 class UtRtCoef(TestCase):
 
@@ -34,7 +35,7 @@ class UtBcor(TestCase):
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             experiment='oper',
             block='observation',
             local='bcor_[collected].dat',
@@ -45,7 +46,7 @@ class UtBcor(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
             
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0600P/observation/bcor_noaa.dat')   
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/bcor_noaa.dat')   
         
         
     def test_b1(self):

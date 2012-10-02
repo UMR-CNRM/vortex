@@ -384,7 +384,7 @@ class VortexCacheStore(Store):
 
     def cachepath(self, system):
         e = system.env
-        if ( self.rootdir == 'mtool' or ( e.SWAPP_OUTPUT_CACHE and e.SWAPP_OUTPUT_CACHE == 'mtool' ) ) and e.MTOOL_STEP_CACHE and system.isdir(e.MTOOL_STEP_CACHE):
+        if ( self.rootdir == 'mtool' or ( e.SWAPP_OUTPUT_CACHE and e.SWAPP_OUTPUT_CACHE == 'mtool' ) ) and e.MTOOL_STEP_CACHE and system.path.isdir(e.MTOOL_STEP_CACHE):
             cache = e.MTOOL_STEP_CACHE
             logging.debug('Store %s uses mtool cache %s', self, cache)
         else:

@@ -137,6 +137,10 @@ class OpArchive(Provider):
                     else:
                         t = Term(resource.term, fmt='03')
                         fuzzy = fuzzyname('prefix', 'gridpoint', self.suite) + rr + str(t) + resource.geometry.area 
+                elif entry == 'errgribfix':
+                    fuzzy = 'errgribvor'
+                    if getattr(self, keyattr)== 'aearp':
+                        fuzzy = 'errgribvor' + fuzzyname('term' + str(resource.term),resource.realkind(), self.inout) + '.' + fuzzyname('suffix',resource.realkind(),self.inout)
                 else:
                     fuzzy = fuzzyname(entry, resource.realkind(), getattr(self, keyattr))
                 bname = bname.replace(i, fuzzy)

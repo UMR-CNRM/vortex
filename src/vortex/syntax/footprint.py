@@ -10,7 +10,7 @@ The most important usage is done by :class:`BFootprint` derivated objects.
 __all__ = []
 
 #: Activate nice dump of footprint in docstring
-docstring_nicedump = False
+docstring_nicedump = True
 
 import logging, copy, re
 from priorities import top
@@ -293,6 +293,11 @@ class Footprint(object):
     def attr(self):
         """Read-only property. Direct access to internal footprint set of attributes."""
         return self._fp['attr']
+
+    @property
+    def bind(self):
+        """Read-only property. Direct access to internal footprint binding between attributes."""
+        return self._fp['bind']
 
     @property
     def only(self):

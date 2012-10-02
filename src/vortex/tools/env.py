@@ -93,6 +93,11 @@ class Environment(object):
         """Return current binded environment object."""
         return cls._os[-1]
 
+    @classmethod
+    def osstack(cls):
+        """Return a list of the environment binding stack."""
+        return cls._os[:]
+        
     def dumps(self, value):
         """Dump the specified ``value`` as a string."""
         if isinstance(value, str):

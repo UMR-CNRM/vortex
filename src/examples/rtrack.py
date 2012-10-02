@@ -28,7 +28,7 @@ print t.prompt, 'Resource tracker =', cr.track
 
 print t.line
 
-print cr.track.toprettyxml(indent='    ')
+print cr.track.alldump()
 
 print t.line
 print t.prompt, 'Duration time =', t.duration()

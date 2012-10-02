@@ -106,7 +106,22 @@ class Dispatcher(object):
         else:
             info = [ str(t.env) ]
         return (0, "\n".join(info), t.env)
-    
+
+    def setenv(self, t, kw):
+        """
+        Print actual value of the environment variable defined.
+        Return this value.
+        """
+        info = list()
+        for x in kw:
+            if kw[x] == None:
+                if x in t.env: del t.env[x]
+            else:
+                t.env[x] = kw[x]
+                x = x.upper()
+                info.append(x + '=' + t.env.native(x))
+        return (0, "\n".join(info), t.env)
+
     def echo(self, t, kw):
         """
         Print a string version of the specified elements.

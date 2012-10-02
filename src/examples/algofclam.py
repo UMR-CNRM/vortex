@@ -9,7 +9,7 @@ import olive.data
 from vortex.data.geometries import SpectralGeometry
 
 t = sessions.ticket()
-t.debug()
+t.warning()
 
 g = t.glove
 e = t.env
@@ -35,16 +35,14 @@ input=(toolbox.rload(
             role='BoundaryCondition'),
        toolbox.rload(
             kind='elscf', 
+            remote='ELSCFAROME+0000',
+            local='Inifile',
             date = '2012071900', 
             cutoff='production',
-            namespace='[suite].archive.fr',
             geometry=SpectralGeometry(id='Current op', area='frangp', resolution='02km50'),
-            local='Inifile',
             source='arpege',
-            suite='oper',
             term='00',
             model='arome',
-            igakey='arome',
             role='InitialCondition')
        )
 

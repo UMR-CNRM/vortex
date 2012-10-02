@@ -1,0 +1,154 @@
+  catalogs: 
+        Return current entries in catalogs table.
+        
+  component: 
+        Load an algo component object according to description.
+        Return the object itself.
+        
+  components: 
+        Display algo components catalog contents.
+        Return the catalog itself.
+        
+  container: 
+        Load a container object according to description.
+        Return the object itself.
+        
+  containers: 
+        Display containers catalog contents.
+        Return the catalog itself.
+        
+  dblput: 
+        Perform a "double" put : the first one is a true "physical" put,
+        the second one is an hard link to the location given by the <dbl> provider.
+        Therefore a valid <dbl> parameter is mandatory.
+        Return the resource handler.
+        
+  default: 
+        Print / Return the actual arguments.
+        
+  do: 
+        Get <attr> or apply <method> on the <with> object.
+        Return this value.
+        
+  echo: 
+        Print a string version of the specified elements.
+        Return <None>.
+        
+  envfp: 
+        Set and print the current default footprint values.
+        Result current <fpenv> object.
+        
+  get: 
+        Perform a toolbox.rget call with current attributes.
+        Return the resource handler.
+        
+  glove: 
+        Display current glove id.
+        Return the glove itself.
+        
+  grid: 
+        Instanciate a GridGeometry with specified attributes.
+        Return the new object.
+        
+  handler: 
+        Perform a toolbox.rh call with current attributes.
+        Return the resource handler.
+        
+  help: 
+        Print documentation for all or specified methods of the current shell dispatcher.
+        
+  id: 
+        Print current session identification card.
+        Return the id number of the session.
+        
+  item: 
+        Extract from an object either a key/idx entry.
+        Return this entry.
+        
+  locate: 
+        Load a resource handler and apply the <locate> method.
+        Return this information.
+        
+  mload: 
+        Print / Return the results of the import on the specified modules.
+        
+  mpitool: 
+        Load a mpitool object according to description.
+        Return the object itself.
+        
+  mpitools: 
+        Display mpitools catalog contents.
+        Return the catalog itself.
+        
+  namespaces: 
+        Display the range of names defined as values for ``namespace`` or ``netloc`` attributes.
+        Optional arguments are ``only`` and ``match``.
+        Return the associated dictionary.
+        
+  nice: 
+        Data dumper on any key/value.
+        Nothing to return.
+        
+  provider: 
+        Load a provider object according to description.
+        Return the object itself.
+        
+  providers: 
+        Display providers catalog contents.
+        Return the catalog itself.
+        
+  put: 
+        Perform a toolbox.rput call with current attributes.
+        Return the resource handler.
+        
+  refill: 
+        Refill the specified catalogs already in the calatogs table. 
+        Return the actual number of items.
+        
+  resource: 
+        Load a resource object according to description.
+        Return the object itself.
+        
+  resources: 
+        Display resources catalog contents.
+        Return the catalog itself.
+        
+  rmfp: 
+        Remove from current default footprint the specified keys.
+        Return the list of removed keys.
+        
+  session: 
+        Print current session tag.
+        Return current session.
+        
+  spectral: 
+        Instanciate a SpectralGeometry with specified attributes.
+        Return the new object.
+        
+  store: 
+        Load a store object according to description.
+        Return the object itself.
+        
+  stores: 
+        Display stores catalog contents.
+        Return the catalog itself.
+        
+  system: 
+        Load a system object according to description.
+        Return the object itself.
+        
+  systems: 
+        Display systems catalog contents.
+        Return the catalog itself.
+        
+  user: 
+        Shortcut to glove's username.
+        
+  vapp: 
+        Print or set current <vapp> value.
+        Return actual vapp.
+        
+  vconf: 
+        Print or set current <vconf> value according to <value> argument.
+        Return actual vconf.
+        

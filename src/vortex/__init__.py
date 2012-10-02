@@ -24,19 +24,20 @@ strongly advised.
 
 """
 
-__version__ = '0.5.4'
+__version__ = '0.5.5'
 
 __all__ = []
 
 import sessions, algo, data
 from tools import env
 
+
 # Set a background environment and a root session
 
 rootenv = env.Environment(active=True)
 rootenv.glove = sessions.glove()
 
-sessions.ticket(topenv=rootenv, glove=rootenv.glove, prompt='Vortex v-'+__version__+':')
+sessions.ticket(active=True, topenv=rootenv, glove=rootenv.glove, prompt='Vortex v-'+__version__+':')
 
 
 # Shorthands to sessions components

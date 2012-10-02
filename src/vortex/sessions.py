@@ -57,9 +57,9 @@ def system():
     """Returns the system associated to the current ticket."""
     return ticket().system()
 
-def opened():
+def tagsnames():
     """Ask the Desk to return the list of opened sessions names."""
-    return Desk().sessionsnames()
+    return Desk().tagsnames()
 
 def current():
     """Ask the Desk to return the current active session."""
@@ -77,8 +77,9 @@ def prompt():
 
 class Ticket(object):
 
-    def __init__(self, config=None, topenv=None, glove=None, context=None, tag='root', prompt='Vortex:'):
+    def __init__(self, active=False, config=None, topenv=None, glove=None, context=None, tag='root', prompt='Vortex:'):
         self.tag = tag
+        self._active = active
         self.config = config
         self.prompt = prompt
         self.line = "\n" + '-' * 80 + "\n"
@@ -109,9 +110,16 @@ class Ticket(object):
             context.tree = self.tree
         else:
             context = Context(topenv=self._topenv, tree=self.tree, mkrundir=False)
+            if context.env.active() and not self._active:
+                context.env.active(False)
 
         self.tree.addnode(context, parent=self, token=True)
         
+
+    @property
+    def active(self):
+        """Return either this session is active or not."""
+        return self._active
 
     @property
     def topenv(self):
@@ -153,9 +161,16 @@ class Ticket(object):
             return datetime.now() - self.started
 
     @property
-    def active(self):
-        """Boolean. <True> if the session is opened and active."""
+    def opened(self):
+        """Boolean. <True> if the session is not closed."""
         return not self.closed
+
+    def activate(self):
+        """Force the current session as active."""
+        if self.opened:
+            return Desk().switch(self.tag)
+        else:
+            return False
 
     def close(self):
         """Closes the current session."""
@@ -204,12 +219,12 @@ class Ticket(object):
         card = "\n".join((
             '{0}Name     : {1:s}',
             '{0}Started  : {2:s}',
-            '{0}Active   : {3:s}',
+            '{0}Opened   : {3:s}',
             '{0}Duration : {4:s}',
             '{0}Loglevel : {5:s}'
         )).format(
             indent,
-            self.tag, str(self.started), str(self.active), self.duration(), self.loglevel
+            self.tag, str(self.started), str(self.opened), self.duration(), self.loglevel
         )
         return card
 
@@ -251,7 +266,7 @@ class Desk(Singleton):
         if not self._gloves.has_key(tag): self._gloves[tag] = gloves.load(**kw)
         return self._gloves[tag]
 
-    def getticket(self, tag='current', prompt='Vortex:', topenv=None, glove=None, context=None):
+    def getticket(self, active=False, tag='current', prompt='Vortex:', topenv=None, glove=None, context=None):
         r"""
         This method is the only entry point to obtain a Ticket session.
         If the default tag 'current' is provided as an argument, the tag
@@ -262,7 +277,7 @@ class Desk(Singleton):
             tag = self._current_ticket
 
         if not self._tickets.has_key(tag):
-            self._tickets[tag] = Ticket(tag=tag, prompt=prompt, topenv=topenv, glove=glove, context=context)
+            self._tickets[tag] = Ticket(active=active, tag=tag, prompt=prompt, topenv=topenv, glove=glove, context=context)
         
         return self._tickets[tag]
 
@@ -291,12 +306,18 @@ class Desk(Singleton):
         provided is already known.
         """
         if self._tickets.has_key(tag):
+            self._tickets[self._current_ticket]._active = False
+            self._tickets[self._current_ticket].env.active(False)
+            self._tickets[tag]._active = True
+            self._tickets[tag].env.active(True)
             self._current_ticket = tag
+            return self._tickets[tag]
         else:
             logging.warning('Try to switch to an undefined session: %s', tag)
-        return self._tickets[tag]
+            return None
+        
 
-    def sessionsnames(self):
+    def tagsnames(self):
         """Returns an alphabeticaly sorted list of sessions tag names."""
         return sorted(self._tickets.keys())
 

@@ -1,0 +1,71 @@
+#!/bin/bash
+
+FIFODIR=${FIFODIR:=$HOME/.vortexrc}
+FIFOTAG=${FIFOTAG:=$PPID}
+
+ERROPTS=0
+
+while getopts t:d: option; do
+   case $option in
+   t) FIFOTAG=$OPTARG;;
+   d) FIFODIR=$OPTARG;;
+   \?) ERROPTS=1;;
+   esac
+done
+
+shift $(($OPTIND - 1))
+
+if [ $ERROPTS -ne 0 ]; then
+  echo "Bad option to vortex command line [ $option ]" >&2
+  exit 1
+fi
+
+RFIFO="$FIFODIR/fifo.r$FIFOTAG"
+WFIFO="$FIFODIR/fifo.w$FIFOTAG"
+PFIFO="$FIFODIR/fifo.p$FIFOTAG"
+XLOCK="$FIFODIR/fifo.x$FIFOTAG.lock"
+VORTEXLOG="$FIFODIR/vortexsh.log.$FIFOTAG"
+
+lockfile -1 -r 60 $XLOCK
+
+if [ "$?" == 0 ]; then
+
+  if [ -f "$PFIFO" ]; then
+
+    XPID=$(< $PFIFO)
+    XCMD=$(ps -cw $XPID | fgrep $XPID | awk '{print $(NF-2)}')
+    RCMD=$(which vortexshcmd.py)
+    if [ "$RCMD" != "$XCMD" ]; then
+      echo "Expected [$XPID] co-process is not running"
+      \rm -f $RFIFO $WFIFO $PFIFO
+    fi
+    
+  fi
+  
+  if [ ! -p "$RFIFO" ]; then
+  
+    \rm -f $RFIFO $WFIFO $PFIFO
+    mkfifo $RFIFO
+    mkfifo $WFIFO
+    nohup vortexshcmd.py $FIFODIR $FIFOTAG </dev/null >> $VORTEXLOG 2>&1 &
+    XPID=$(jobs -p %1)
+    echo "New vortex shell facility [$XPID] for process [$PPID] and tag [$FIFOTAG]"
+    echo $XPID > $PFIFO
+  
+  fi
+  
+  echo $FIFOTAG $PWD $* > $RFIFO
+  
+  if [ -p "$WFIFO" ]; then
+    cat < $WFIFO
+  fi
+  
+  \rm -rf $XLOCK
+  exit 0
+
+else
+
+  echo "WARNING: Could not get lock to execute command"
+  exit 1
+
+fi

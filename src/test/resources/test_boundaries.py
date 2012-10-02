@@ -28,7 +28,7 @@ class UtElscf(TestCase):
             self.attrset,
             geometry=self.arome, 
             local='ELSCFAROME+[term]',
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             experiment='oper',
             block='coupling',
             source='arpege',
@@ -38,7 +38,7 @@ class UtElscf(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0000P/coupling/cpl.arpege.frangp-02km50+0012.fa')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0000P/coupling/cpl.arpege.frangp-02km50+0012.fa')
 
     def test_e1(self):
         rl = toolbox.rload(

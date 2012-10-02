@@ -7,8 +7,7 @@ logging.basicConfig(level=logging.ERROR)
 from unittest import TestCase, TestLoader, TextTestRunner
 from vortex import toolbox
 from vortex.data.geometries import SpectralGeometry
-import olive.data
-
+from olive.data import obs, collected
 
 class UtObservations(TestCase):
 
@@ -19,7 +18,7 @@ class UtObservations(TestCase):
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             experiment='oper',
             block='observation',
             model='arpege',
@@ -33,13 +32,13 @@ class UtObservations(TestCase):
             print ' > ', rh.location()
             self.assertTrue(rh.complete)
             
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0600P/observation/obsoul.std.conv') 
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/obsoul.std.conv') 
         
 
     def test_v3(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             experiment='oper',
             block='observation',
             model='arpege',
@@ -52,7 +51,7 @@ class UtObservations(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0600P/observation/ecma.screen.full.tar')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/ecma.screen.full.tar')
         
        
     def test_o1(self):
@@ -145,7 +144,7 @@ class UtRefdata(TestCase):
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             local='refdata',
             experiment='oper',
             block='observation',
@@ -154,7 +153,7 @@ class UtRefdata(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0600P/observation/refdata.all')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/refdata.all')
 
 
 class UtVarbc(TestCase):
@@ -266,7 +265,7 @@ class UtVarbc(TestCase):
     def test_v8(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             local='varbc_vortex',
             model='aladin',
             date='2011092200',
@@ -277,8 +276,8 @@ class UtVarbc(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20110922H0000P/minim/varbc.aladin')
-        self.assertEqual(rl[1].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20110922H0000P/minim/varbc.aladin.merge')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20110922H0000P/minim/varbc.aladin')
+        self.assertEqual(rl[1].location(), 'vortex://open.cache.fr/play/sandbox/oper/20110922H0000P/minim/varbc.aladin.merge')
 
 
 class UtBlackListDiap(TestCase):
@@ -289,7 +288,7 @@ class UtBlackListDiap(TestCase):
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             experiment='oper',
             block='observation',
             model='arpege',
@@ -299,7 +298,7 @@ class UtBlackListDiap(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
             
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0600P/observation/blacklistdiap')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/blacklistdiap')
         
     def test_o1(self):
         rl = toolbox.rload(
@@ -341,7 +340,7 @@ class UtObsmap(TestCase):
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             experiment='oper',
             block='observation',
             local='obsmap',
@@ -352,7 +351,7 @@ class UtObsmap(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
             
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0600P/observation/obsmap.std')   
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/obsmap.std')   
     
     def test_o1(self):
         rl = toolbox.rload(
