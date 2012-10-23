@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 The :mod:`vortex` syntax mostly deals with attributes resolution and arguments expansion.
@@ -35,7 +35,7 @@ class UnreachableAttr(Exception):
     pass
 
 class Footprint(object):
-    
+
     def __init__(self, *args, **kw):
         """Initialisation and checking of a given set of footprint."""
         nodef = False
@@ -85,7 +85,7 @@ class Footprint(object):
             opts.extend(self.attr[k]['alias'])
         opts.extend(self.attr.keys())
         return set(opts)
-        
+
     def nice(self):
         """Retruns a nice dump version of the actual footprint."""
         return dumper.nicedump(self._fp)
@@ -100,7 +100,7 @@ class Footprint(object):
             aliases.extend(fpa[x]['alias'])
         for a in desc:
             if a in attrs or a in aliases:
-                found.append(a) 
+                found.append(a)
         return found
 
     def optional(self, a):
@@ -214,8 +214,8 @@ class Footprint(object):
         guess, input = self._firstguess(desc)
         extras = self._findextras(desc)
         self._addextras(guess, desc, extras)
-                
-        attrs = self.attr        
+
+        attrs = self.attr
 
         nbpass = 0
         if None in guess.values():
@@ -252,12 +252,12 @@ class Footprint(object):
                     kargs = kdef.get('args', dict())
                     try:
                         guess[k] = ktype(guess[k], **kargs)
+                        logging.debug(' > Attr %s reclassed = %s', k, guess[k])
                     except:
-                        logging.warning(' > Attr %s badly reclassed as %s = %s', k, ktype, guess[k])
+                        logging.debug(' > Attr %s badly reclassed as %s = %s', k, ktype, guess[k])
                         opts['tracker'].add('key', k, text='could not reclass')
                         diags[k] = True
                         guess[k] = None
-                    logging.debug(' > Attr %s reclassed = %s', k, guess[k])
                 if kdef.has_key('values') and guess[k] not in kdef['values']:
                     logging.debug(' > Attr %s value not in range = %s %s', k, guess[k], kdef['values'])
                     opts['tracker'].add('key', k, text='not in values')
@@ -281,7 +281,7 @@ class Footprint(object):
                     logging.critical('No valid attribute %s', k)
                 else:
                     logging.debug(' > No valid attribute %s', k)
-            
+
         return ( guess, input )
 
     @property
@@ -314,15 +314,15 @@ class IFootprint(object):
     """
     Interface for base classes which are supposed to create footprints.
     """
-    
+
     @classmethod
     def footprint(cls, **kw):
         pass
-    
+
     @classmethod
     def mandatory(cls):
         pass
-    
+
     @classmethod
     def couldbe(cls, rd):
         pass
@@ -330,7 +330,7 @@ class IFootprint(object):
     @classmethod
     def optional(cls):
         pass
-    
+
     def realkind(self):
         pass
 
@@ -342,15 +342,15 @@ class AFootprint(object):
         self.fget = fget
         self.fset = fset
         self.fdel = fdel
-        
+
     def __get__(self, instance, owner):
         thisattr = instance._attributes.get(self.attr, None)
         if thisattr is UNKNOWN: thisattr = None
         return thisattr
- 
+
     def __set__(self, instance, value):
         raise AttributeError, 'This attribute should not be overwritten'
-    
+
     def __delete__(self, instance):
         raise AttributeError, 'This attribute should not be deleted'
 
@@ -360,7 +360,7 @@ class MFootprint(type):
     Meta class constructor for :class:`BFootprint`.
     The current :data:`_footprint` data which could be a simple dict
     or a :class:`Footprint` object is used to instantiate a new :class:`Footprint`,
-    built as a merge of the footprint of the base classes. 
+    built as a merge of the footprint of the base classes.
     """
 
     def __new__(cls, n, b, d):
@@ -381,7 +381,7 @@ class MFootprint(type):
                 basedoc = 'Not documented yet.'
             realcls.__doc__ = basedoc + "\n    Footprint::\n\n" + realcls.footprint().nice()
         return realcls
-   
+
 
 class BFootprint(IFootprint):
     """
@@ -456,7 +456,7 @@ class BFootprint(IFootprint):
         in order to be able to match the current object.
         """
         return cls.footprint().mandatory()
-    
+
     @classmethod
     def couldbe(cls, rd, trackroot=None):
         """
@@ -479,7 +479,7 @@ class BFootprint(IFootprint):
             return ( resolved, input )
         else:
             return ( False, input )
-         
+
     def cleanup(self, rd):
         """
         Removes in the specified ``rd`` description the keys that are
