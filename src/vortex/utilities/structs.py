@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 r"""
 This module defines common base classes for miscellaneous purposes.
 """
@@ -18,7 +18,7 @@ def idtree(tag):
     return _tableroots[tag]
 
 class Tree(object):
-    
+
     def __init__(self, name='all', root=None):
         self.name = name
         self._nodes = dict()
@@ -46,17 +46,17 @@ class Tree(object):
     def isroot(self, node):
         return id(node) == self._root
 
-    def inside(self, node):
+    def contains(self, node):
         return id(node) in self._nodes
 
-    def node(self, id):
-        if id in self._nodes:
-            return self._nodes[id]['node']
+    def node(self, idn):
+        if idn in self._nodes:
+            return self._nodes[idn]['node']
         else:
-            logging.critical('Id %s does not belong this tree', id)
+            logging.critical('Id %s does not belong this tree', idn)
 
     def parent(self, node):
-        if self.inside(node):
+        if self.contains(node):
             parent = self._nodes[id(node)]['parent']
             if parent:
                 return self.node(parent)
@@ -66,13 +66,13 @@ class Tree(object):
             logging.critical('Object %s does not belong this tree', node)
 
     def kids(self, node):
-        if self.inside(node):
+        if self.contains(node):
             return map(lambda x: self.node(x), self._nodes[id(node)]['kids'])
         else:
             logging.critical('Object %s does not belong this tree', node)
 
     def ancestors(self, node):
-        if self.inside(node):
+        if self.contains(node):
             pp = [ node ]
             parent = self.parent(node)
             while parent:
@@ -95,10 +95,24 @@ class Tree(object):
             return self._nodes[self._tokens[-2]]['node']
 
     def gettoken(self, node):
-        if node and self.inside(node):
+        if node and self.contains(node):
             self._tokens.append(id(node))
-    
+
     def rmtoken(self, node):
-        if node and self.inside(node):
-            id = id(node)
-            self._tokens = filter(lambda x: x != id, self._tokens)
+        if node and self.contains(node):
+            idn = id(node)
+            self._tokens = filter(lambda x: x != idn, self._tokens)
+
+    def rdump(self, idn, indent):
+	print '{0:s}\_[{1}] {2}'.format('   ' * indent, idn, self.node(idn))
+	for kid in self._nodes[idn]['kids']:
+	    self.rdump(kid, indent+1)
+
+    def dump(self, node=None):
+	if node == None:
+	    node = self.root
+	if self.contains(node):
+	    print ' *[{0}]...'.format(self._root)
+            self.rdump(id(node), 1)
+        else:
+            logging.critical('Object %s does not belong this tree', node)

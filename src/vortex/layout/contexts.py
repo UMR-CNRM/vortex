@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 This modules defines the physical layout.
@@ -11,6 +11,7 @@ __all__ = []
 import logging
 
 from vortex.utilities import observers
+from vortex.utilities.structs import idtree
 from vortex.tools.env import Environment
 import dataflow
 
@@ -20,11 +21,11 @@ class Context(object):
 
     _count = 0
 
-    def __init__(self, tag='foo', rundir=None, tree=None, topenv=None, sequence=None, task=None, mkrundir=True):
+    def __init__(self, tag='foo', rundir=None, tagtree=None, topenv=None, sequence=None, task=None, mkrundir=True):
         logging.debug('Context initialisation %s', self)
         self._env = Environment(env=topenv, active=topenv.active)
         self._tag = tag
-        self.tree = tree
+        self.tagtree = tagtree
         self._task = None
         self._void = True
         self._fstore = dict()
@@ -35,9 +36,12 @@ class Context(object):
             self.__class__._count = self.__class__._count + 1
             self._rundir = 'ctx{0:04d}_{1:s}'.format(self.__class__._count, self._tag)
 
-        self._rundir = self.tree.root.system().path.abspath(self._rundir)
+	tree = idtree(self.tagtree)
+
+        self._rundir = tree.root.system().path.abspath(self._rundir)
         if mkrundir:
-            self.tree.root.system().filecocoon(self.system.path.join(self._rundir, 'ctx'))
+	    print "MKRUNDIR", self._rundir
+            tree.root.system().filecocoon(self.system.path.join(self._rundir, 'ctx'))
 
         if sequence:
             self._sequence = sequence
@@ -83,6 +87,12 @@ class Context(object):
         """
         if tag: self._tag = tag
         return self._tag
+
+
+    @property
+    def tree(self):
+	"""Returns the associated tree."""
+	return idtree(self.tagtree)
 
     @property
     def rundir(self):

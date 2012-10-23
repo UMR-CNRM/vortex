@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 Vortex Sessions Handling
@@ -74,7 +74,6 @@ def prompt():
     return current().prompt
 
 
-
 class Ticket(object):
 
     def __init__(self, active=False, config=None, topenv=None, glove=None, context=None, tag='root', prompt='Vortex:'):
@@ -87,10 +86,11 @@ class Ticket(object):
         self.closed = 0
         self.fake = 0
         self._system = None
- 
-        self.tree = idtree('-'.join(('session', self.tag)))
-        self.tree.setroot(self)
-               
+
+        self.tagtree = '-'.join(('session', self.tag))
+        tree = idtree(self.tagtree)
+        tree.setroot(self)
+
         if topenv:
             self._topenv = topenv
         else:
@@ -107,14 +107,14 @@ class Ticket(object):
         logging.info('Open session %s %s', self.tag, self.started)
 
         if context:
-            context.tree = self.tree
+            context.tagtree = self.tagtree
         else:
-            context = Context(topenv=self._topenv, tree=self.tree, mkrundir=False)
+            context = Context(topenv=self._topenv, tagtree=self.tagtree, mkrundir=False)
             if context.env.active() and not self._active:
                 context.env.active(False)
 
-        self.tree.addnode(context, parent=self, token=True)
-        
+        tree.addnode(context, parent=self, token=True)
+
 
     @property
     def active(self):
@@ -135,6 +135,11 @@ class Ticket(object):
     def glove(self):
         """Return the default glove associated to this session."""
         return self._glove
+
+    @property
+    def tree(self):
+	"""Returns the associated tree."""
+	return idtree(self.tagtree)
 
     @property
     def context(self):
@@ -176,19 +181,19 @@ class Ticket(object):
         """Closes the current session."""
         self.closed = datetime.now()
         logging.info('Close session %s %s', self.tag, self.duration())
-    
+
     def warning(self):
         """Switch current loglevel to WARNING."""
         self.setloglevel(logging.WARNING)
-    
+
     def debug(self):
         """Switch current loglevel to DEBUG."""
         self.setloglevel(logging.DEBUG)
-    
+
     def info(self):
         """Switch current loglevel to INFO."""
         self.setloglevel(logging.INFO)
-    
+
     def error(self):
         """Switch current loglevel to ERROR."""
         self.setloglevel(logging.ERROR)
@@ -239,20 +244,20 @@ class Desk(Singleton):
     session.
     """
 
-    _tickets = dict()
-    _gloves = dict()
-    _current_ticket = 'root'
-    _current_glove = 'default'
-
     def __init__(self):
-        logging.debug('Tickets desk %s', self._tickets)
+        if '_tickets' not in self.__dict__:
+            self._tickets = dict()
+            self._gloves = dict()
+            self._current_ticket = 'root'
+            self._current_glove = 'default'
+        logging.debug('Tickets desk init %s', self._tickets)
 
     def getglove(self, **kw):
         r"""
         This method is the priviledged entry point to obtain a Glove.
         If the default tag 'current' is provided as an argument, the tag
         of the current glove is used.
-        A new glove is created if the actual tag value is unknown. 
+        A new glove is created if the actual tag value is unknown.
         """
         if 'tag' in kw:
             tag = kw.get('tag', 'current')
@@ -271,14 +276,14 @@ class Desk(Singleton):
         This method is the only entry point to obtain a Ticket session.
         If the default tag 'current' is provided as an argument, the tag
         of the current active session is used.
-        A new ticket session is created if the actual tag value is unknown. 
+        A new ticket session is created if the actual tag value is unknown.
         """
         if tag == 'current':
             tag = self._current_ticket
 
         if not self._tickets.has_key(tag):
             self._tickets[tag] = Ticket(active=active, tag=tag, prompt=prompt, topenv=topenv, glove=glove, context=context)
-        
+
         return self._tickets[tag]
 
     def __iter__(self):
@@ -315,7 +320,7 @@ class Desk(Singleton):
         else:
             logging.warning('Try to switch to an undefined session: %s', tag)
             return None
-        
+
 
     def tagsnames(self):
         """Returns an alphabeticaly sorted list of sessions tag names."""

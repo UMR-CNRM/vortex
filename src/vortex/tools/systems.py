@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 This package handles system interfaces objects that are in charge of
@@ -56,13 +56,15 @@ class System(BFootprint):
             ),
         )
     )
-    
+
     def __init__(self, *args, **kw):
         logging.debug('Abstract System init %s', self.__class__)
-        self._os = kw.setdefault('opsys', os)
-        del kw['opsys']
-        self._sh = kw.setdefault('shell', shutil)
-        del kw['shell']
+        if 'os' in kw:
+            self._osmod = kw['os']
+            del kw['os']
+        if 'sh' in kw:
+            self._shmod = kw['sh']
+            del kw['sh']
         self.trace = kw.setdefault('trace', True)
         del kw['trace']
         super(System, self).__init__(*args, **kw)
@@ -78,6 +80,14 @@ class System(BFootprint):
     @classmethod
     def realkind(cls):
         return 'system'
+
+    @property
+    def _os(self):
+        return self.__dict__.get('_osmod', os)
+
+    @property
+    def _sh(self):
+        return self.__dict__.get('_shmod', shutil)
 
     @property
     def pwd(self):
@@ -147,8 +157,8 @@ class System(BFootprint):
         else:
             for xpath in self.env.path.split(':'):
                 fullcmd = os.path.join(xpath, command)
-                if self.xperm(fullcmd): return fullcmd 
-    
+                if self.xperm(fullcmd): return fullcmd
+
     def touch(self, filename):
         """Clone of the unix command."""
         fh = file(filename, 'a')
@@ -180,13 +190,13 @@ class LinuxBase(System):
     _footprint = dict(
         info = 'Linux base system'
     )
-    
+
     @classmethod
     def realkind(cls):
         return 'linux'
 
     def ftp(self, hostname, logname):
-        """Returns an open ftp session on the specified target.""" 
+        """Returns an open ftp session on the specified target."""
         ftpbox = StdFtp(self, hostname)
         if ftpbox.fastlogin(logname):
             return ftpbox
@@ -232,7 +242,7 @@ class LinuxBase(System):
         if xdestination:
             destination.close()
         return rc
-    
+
     def cp(self, source, destination):
         """
         Copy the ``source`` file to a safe ``destination``.

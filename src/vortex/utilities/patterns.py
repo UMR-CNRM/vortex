@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 This package defines some useful Design Patterns.
@@ -27,7 +27,7 @@ class Borg(object):
 
 class Singleton(object):
     """Obviously a base class for any *real* singleton."""
-    
+
     def __new__(cls, *p, **k):
         logging.debug('Request a singleton %s', cls)
         if not '_instance' in cls.__dict__:

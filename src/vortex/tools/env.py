@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 Advanced environment settings.
@@ -87,6 +87,9 @@ class Environment(object):
                     self._pool.update(os.environ)
         self.__dict__['_noexport'] = [x.upper() for x in noexport]
         self.active(active)
+
+    def __getstate__(self):
+      return self.__dict__
 
     @classmethod
     def current(cls):
