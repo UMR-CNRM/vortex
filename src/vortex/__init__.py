@@ -1,10 +1,10 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 *Versatile Objects Rounded-up in a Toolbox for Environmental eXperiments*
 
-VORTEX is a set of objects for basic resources handling in the context 
+VORTEX is a set of objects for basic resources handling in the context
 of numerical weather prediction. Objects should be versatile enough to
 be used either in an operational or research environment.
 
@@ -24,7 +24,7 @@ strongly advised.
 
 """
 
-__version__ = '0.6.0'
+__version__ = '0.6.2'
 
 __all__ = []
 
@@ -42,14 +42,17 @@ sessions.ticket(active=True, topenv=rootenv, glove=rootenv.glove, prompt='Vortex
 
 # Shorthands to sessions components
 
-def ticket():
+def ticket(**kw):
     """Return current session ticket."""
-    return sessions.ticket()
+    return sessions.ticket(**kw)
 
 def sh():
     """Return system interface binded to current session."""
     return sessions.system()
 
+def exit():
+    """Try to close everything nicely."""
+    return sessions.exit()
 
 # Shorthands to the most useful class catalogs
 

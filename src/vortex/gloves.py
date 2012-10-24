@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 #: No automatic export
 __all__ = []
@@ -33,7 +33,8 @@ class Glove(BFootprint):
         super(Glove, self).__init__(*args, **kw)
         self._system = None
         self._vapp = 'play'
-        self._vconf = 'sandbox' 
+        self._vconf = 'sandbox'
+        self._rmdepthmin = 3
 
     @classmethod
     def realkind(cls):
@@ -74,6 +75,11 @@ class Glove(BFootprint):
         """Vortex configuration name."""
         return self._vconf
 
+    def safedirs(self):
+        """Protected paths as a list a tuples (path, depth)."""
+        e = Environment(active=False)
+        return [ (e.HOME, 2), (e.TMPDIR, 1) ]
+
     def idcard(self):
         """Returns a printable description of the current glove."""
         indent = ''
@@ -94,7 +100,7 @@ class ResearchGlove(Glove):
     """
     The default glove as long as you do not need operational privileges.
     Optional arguments are:
-    
+
     * mail
     * profile (default is research)
     """
@@ -123,7 +129,7 @@ class OperGlove(Glove):
     """
     The default glove if you need operational privileges.
     Mandatory arguments are:
-    
+
     * user
     * profile
     """
@@ -148,7 +154,7 @@ class OperGlove(Glove):
 
 class GlovesCatalog(ClassesCollector):
     """Class in charge of collecting :class:`Store` items."""
-    
+
     def __init__(self, **kw):
         logging.debug('Gloves catalog init %s', self)
         cat = dict(

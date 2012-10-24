@@ -40,14 +40,14 @@ import gloves
 
 
 def ticket(**kw):
-    r"""
+    """
     Ask the Desk to return a session ticket according to actual arguments.
     It could be a new one.
     """
     return Desk().getticket(**kw)
 
 def glove(**kw):
-    r"""
+    """
     Ask the Desk to return a glove according to actual arguments.
     It could be a new one.
     """
@@ -63,7 +63,7 @@ def tagsnames():
 
 def current():
     """Ask the Desk to return the current active session."""
-    return Desk().current()
+    return Desk().current
 
 def switch(tag):
     """Set the session associated to the actual tag as active."""
@@ -71,8 +71,19 @@ def switch(tag):
 
 def prompt():
     """Returns a built string that could be used as a prompt for reporting."""
-    return current().prompt
+    return Desk().current.prompt
 
+def exit():
+    """Ask all inactive sessions to close, then close the active one."""
+    thedesk = Desk()
+    tags = thedesk.tagsnames()
+    xtag = thedesk.current_tag
+    tags.remove(xtag)
+    tags.append(xtag)
+    ok = True
+    for s in map(lambda x: thedesk.getticket(tag=x), tags):
+        ok = ok and s.exit()
+    return ok
 
 class Ticket(object):
 
@@ -109,7 +120,7 @@ class Ticket(object):
         if context:
             context.tagtree = self.tagtree
         else:
-            context = Context(topenv=self._topenv, tagtree=self.tagtree, mkrundir=False)
+            context = Context(topenv=self._topenv, tagtree=self.tagtree)
             if context.env.active() and not self._active:
                 context.env.active(False)
 
@@ -156,7 +167,7 @@ class Ticket(object):
         return self._system
 
     def duration(self):
-        r"""
+        """
         Time since the opening of the session if still opened
         or complete duration time if closed.
         """
@@ -179,8 +190,20 @@ class Ticket(object):
 
     def close(self):
         """Closes the current session."""
-        self.closed = datetime.now()
-        logging.info('Close session %s %s', self.tag, self.duration())
+        if self.closed:
+            logging.warning('Session %s already closed at %s', self.tag, self.closed)
+        else:
+            self.closed = datetime.now()
+            logging.warning('Close session %s ( %s s. )', self.tag, self.duration())
+
+    def exit(self):
+        """Exit from the current session."""
+        self.close()
+        ok = True
+        for kid in self.tree.kids(self):
+            logging.warning('Exit from session %s kid %s', self, kid)
+            ok = ok and kid.exit()
+        return ok
 
     def warning(self):
         """Switch current loglevel to WARNING."""
@@ -203,7 +226,7 @@ class Ticket(object):
         self.setloglevel(logging.CRITICAL)
 
     def setloglevel(self, level):
-        r"""
+        """
         Explicitly sets the logging level to the ``level`` value.
         Shortcuts such as :method::`debug' or :method:`error` should be used.
         """
@@ -212,7 +235,7 @@ class Ticket(object):
 
     @property
     def loglevel(self):
-        r"""
+        """
         Returns the logging level.
         """
         logger = logging.getLogger()
@@ -238,7 +261,7 @@ class Ticket(object):
 
 
 class Desk(Singleton):
-    r"""
+    """
     The Desk class is a singleton in charge of handling all the defined sessions.
     It encapsulates the class Ticket which is really supposed to be the so-called
     session.
@@ -253,7 +276,7 @@ class Desk(Singleton):
         logging.debug('Tickets desk init %s', self._tickets)
 
     def getglove(self, **kw):
-        r"""
+        """
         This method is the priviledged entry point to obtain a Glove.
         If the default tag 'current' is provided as an argument, the tag
         of the current glove is used.
@@ -272,7 +295,7 @@ class Desk(Singleton):
         return self._gloves[tag]
 
     def getticket(self, active=False, tag='current', prompt='Vortex:', topenv=None, glove=None, context=None):
-        r"""
+        """
         This method is the only entry point to obtain a Ticket session.
         If the default tag 'current' is provided as an argument, the tag
         of the current active session is used.
@@ -287,7 +310,7 @@ class Desk(Singleton):
         return self._tickets[tag]
 
     def __iter__(self):
-        r"""
+        """
         Desk is iterable.
         Rolling over tickets values (not tags).
         """
@@ -295,18 +318,25 @@ class Desk(Singleton):
             yield t
 
     def __call__(self):
-        r"""
+        """
         Desk is callable.
         It returns the list of actual tickets values.
         """
         return self._tickets.values()
 
+    @property
     def current(self):
         """Shortcut to get the ticket value matching the current tag name."""
         return self.getticket(tag=self._current_ticket)
 
+    @property
+    def current_tag(self):
+        """Shortcut to get the tag name of the current active session."""
+        return self._current_ticket
+
+
     def switch(self, tag):
-        r"""
+        """
         Allows the user to switch to an other session, as long that the actual tag
         provided is already known.
         """

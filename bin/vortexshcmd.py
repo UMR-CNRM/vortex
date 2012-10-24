@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import os, sys, re
 import vortex
@@ -55,13 +55,13 @@ while ( listen ):
         args = [ 'default' ]
     cmd = args.pop(0).lower()
 
-    
+
     if ( cmd == 'exit' ):
-        
+
         # The only magic command is 'exit'
         listen = False
         print 'Vortex Dispatch[{0:s}]: exit'.format(pid)
-        (rc, rmsg, results) = ( 0, 'Bye ' + ppid + '...', None )
+        (rc, rmsg, results) = ( 0, 'Bye ' + ppid + '...', vortex.exit() )
         log.append((rc, cmd))
 
     elif ( cmd == 'vars' or cmd == 'sto' ):
@@ -97,13 +97,13 @@ while ( listen ):
         log.append((rc, cmd))
 
     else:
-        
+
         # Try hard to make a proper dict of the raw arguments
         opts = dict()
         target = None
 
         for a in args:
-        
+
             # Key = Value pairs are expected
             kv = a.split('=', 1)
             key = kv[0]
@@ -111,14 +111,14 @@ while ( listen ):
                 value = None
             else:
                 value = kv[1]
-            
+
             # Avoid undefined values
             if value == None:
                 if key in sto:
                     value = sto[key]
                 else:
                     value = True
-            
+
             # True/False boolean promotion
             if type(value) == str and istrue.match(value):
                 value = True
@@ -132,8 +132,8 @@ while ( listen ):
                 if type(value) == str and value in sto:
                     value = sto[value]
                 opts[key] = value
-            
-        # At least... launch the command    
+
+        # At least... launch the command
         print 'Vortex Dispatch[{0:s}]: {1:s} {2:s}'.format(pid, cmd, opts)
         realcmd = getattr(dispatcher, cmd, None)
         if realcmd and callable(realcmd):

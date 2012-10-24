@@ -21,27 +21,36 @@ class Context(object):
 
     _count = 0
 
-    def __init__(self, tag='foo', rundir=None, tagtree=None, topenv=None, sequence=None, task=None, mkrundir=True):
+    def __init__(self, tag='foo', rundir=None, tagtree=None, topenv=None, sequence=None, task=None, mkrundir=True, rootrd=None, keeprd=False):
         logging.debug('Context initialisation %s', self)
         self._env = Environment(env=topenv, active=topenv.active)
         self._tag = tag
         self.tagtree = tagtree
+        self._keeprd = keeprd
         self._task = None
         self._void = True
         self._fstore = dict()
+
+        tree = idtree(self.tagtree)
+        csys = tree.root.system()
+
+        if rootrd:
+            self._rootrd = rootrd
+        else:
+            self._rootrd = tree.root.glove.configrc
 
         if rundir:
             self._rundir = rundir
         else:
             self.__class__._count = self.__class__._count + 1
-            self._rundir = 'ctx{0:04d}_{1:s}'.format(self.__class__._count, self._tag)
+            self._rundir = '{0:s}/ctx{1:04d}_{2:s}'.format(self._rootrd, self.__class__._count, self._tag)
 
-	tree = idtree(self.tagtree)
-
-        self._rundir = tree.root.system().path.abspath(self._rundir)
+        self._rundir = csys.path.abspath(self._rundir)
         if mkrundir:
-	    print "MKRUNDIR", self._rundir
-            tree.root.system().filecocoon(self.system.path.join(self._rundir, 'ctx'))
+            logging.info('Make context rundir %s', self._rundir)
+            csys.filecocoon(self.system.path.join(self._rundir, 'ctx'))
+        else:
+            logging.debug('Do not create any context rundir %s', self._rundir)
 
         if sequence:
             self._sequence = sequence
@@ -81,7 +90,7 @@ class Context(object):
                     section.updstage(info)
 
     def tag(self, tag=None):
-        r"""
+        """
         Set the formal tag name of the current context to the provided value, if any.
         The current tag name is returned.
         """
@@ -91,13 +100,18 @@ class Context(object):
 
     @property
     def tree(self):
-	"""Returns the associated tree."""
-	return idtree(self.tagtree)
+        """Returns the associated tree."""
+        return idtree(self.tagtree)
 
     @property
     def rundir(self):
         """Return the path of the directory associated to that context."""
         return self._rundir
+
+    @property
+    def keeprundir(self):
+        """Return pêrmanent status of the directory associated to that context."""
+        return self._keeprd
 
     def cocoon(self):
         """Change directory to the one associated to that context."""
@@ -156,7 +170,7 @@ class Context(object):
             self._void = False
 
     def newcontext(self, name, focus=False):
-        r"""
+        """
         Create a new child context, attached to the current one.
         The tagname of the new kid is given through the mandatory ``name`` arugument,
         as well as the default ``focus``.
@@ -183,7 +197,7 @@ class Context(object):
         self._fstore[stamp] = self.system.ffind()
 
     def fstrack_check(self, tag='default'):
-        r"""
+        """
         Return a anonymous dictionary with for the each key, the list of entries
         in the file system that are concerned since the last associated ``tag`` stamp.
         Keys are: ``deleted``, ``created``, ``updated``.
@@ -208,3 +222,12 @@ class Context(object):
     def record_on(self):
         """Restaure default value to void context as it was before any :func:`record_off` call."""
         self._void = self._record
+
+    def exit(self):
+        if self._keeprd:
+            logging.warning('Preserving context rundir %s', self._rundir)
+            return True
+        else:
+            logging.warning('Removing context rundir %s', self._rundir)
+            return self.system.rmsafe(self._rundir, self.tree.root.glove.safedirs())
+

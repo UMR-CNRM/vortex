@@ -18,6 +18,7 @@ from vortex.tools.env import Environment
 from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 from vortex.tools.net import StdFtp
+from vortex.utilities.decorators import printargs
 
 
 unamekeys = ('sysname', 'nodename', 'release', 'version', 'machine')
@@ -191,6 +192,12 @@ class LinuxBase(System):
         info = 'Linux base system'
     )
 
+    def __init__(self, *args, **kw):
+        logging.debug('Abstract System init %s', self.__class__)
+        self._rmtreemin = kw.setdefault('rmtreemin', 3)
+        del kw['rmtreemin']
+        super(LinuxBase, self).__init__(*args, **kw)
+
     @classmethod
     def realkind(cls):
         return 'linux'
@@ -274,6 +281,40 @@ class LinuxBase(System):
         for pname in args:
             for filename in self.glob(pname):
                 self.remove(filename)
+
+    @printargs
+    def safepath(self, thispath, safedirs):
+        """
+        Boolean to check if :var:``thispath`` is a subpath of a safedir
+        with sufficient depth (or not a subpath at all)
+        """
+        safe = True
+        if len(thispath.split(os.sep)) < self._rmtreemin + 1:
+            logging.warning('Unsafe starting point depth %s (min is %s)', thispath, self._rmtreemin)
+            safe = False
+        else:
+            for safepack in safedirs:
+                ( safedir, d ) = safepack
+                rp = self.path.relpath(thispath, safedir)
+                if not rp.startswith('..'):
+                    if len(rp.split(os.sep)) < d:
+                        logging.warning('Unsafe acces to %s relative to %s', thispath, safedir)
+                        safe = False
+        return safe
+
+    @printargs
+    def rmsafe(self, pathlist, safedirs):
+        """Recursive unlinks the specified `args` objects if safe."""
+        ok = True
+        if type(pathlist) == str:
+            pathlist = [ pathlist ]
+        for pname in pathlist:
+            for entry in filter(lambda x: self.safepath(x, safedirs), self.glob(pname)):
+                if self.path.isdir(entry):
+                    ok = ok and self.rmtree(entry)
+                else:
+                    ok = ok and self.remove(entry)
+        return ok
 
     def _globcmd(self, cmd, *args):
         """Globbing files or directories as arguments before running ``cmd``."""
