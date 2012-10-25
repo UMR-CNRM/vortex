@@ -23,7 +23,7 @@ class UtGridpoint(TestCase):
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             geometry=self.franx01,
             local='GRIDALADIN+[term]',
             nativefmt='grib,fa',
@@ -37,8 +37,8 @@ class UtGridpoint(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0600A/forecast/grid.aladin-forecast.franx01+0006.grib')
-        self.assertEqual(rl[1].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0600A/forecast/grid.aladin-forecast.franx01+0006.fa')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600A/forecast/grid.aladin-forecast.franx01+0006.grib')
+        self.assertEqual(rl[1].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600A/forecast/grid.aladin-forecast.franx01+0006.fa')
 
 
     def test_g1(self):
@@ -123,7 +123,7 @@ class UtGridpoint(TestCase):
     def test_g5(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.glob15,
             local='GRIDOLIVE+[term]',
             nativefmt='grib,fa',
@@ -145,7 +145,7 @@ class UtGridpoint(TestCase):
     def test_g6(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.glob15,
             local='FA_MOCAGEHM_OLIVE+[term]',
             nativefmt='fa',
@@ -184,7 +184,7 @@ class UtGridpoint(TestCase):
     def test_v7(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             geometry=self.glob15,
             local='FA_MOCAGEHM_CHAINE+[term]',
             nativefmt='fa',
@@ -198,12 +198,12 @@ class UtGridpoint(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0600P/forecast/grid.mocage-forecast.glob15+0006.fa')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/forecast/grid.mocage-forecast.glob15+0006.fa')
         
     def test_g8(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.glob15,
             local='FA_MOCAGESM_OLIVE+[term]',
             nativefmt='fa',
@@ -243,7 +243,7 @@ class UtGridpoint(TestCase):
     def test_v9(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             geometry=self.glob15,
             local='FA_MOCAGESM_CHAINE+[term]',
             nativefmt='fa',
@@ -257,8 +257,8 @@ class UtGridpoint(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0600P/coupling/grid.mocage-sumo.glob15+0024.fa')
-        self.assertEqual(rl[1].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0600P/coupling/grid.mocage-sumo.glob15+0024.fa')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/coupling/grid.mocage-sumo.glob15+0024.fa')
+        self.assertEqual(rl[1].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/coupling/grid.mocage-sumo.glob15+0024.fa')
         
                    
 
@@ -275,7 +275,7 @@ class UtHistoric(TestCase):
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             geometry=self.std,
             local='ICMSHARPE+[term]',
             experiment='oper',
@@ -287,13 +287,13 @@ class UtHistoric(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0000A/forecast/historic.arpege.tl798-c24+0006.fa')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0000A/forecast/historic.arpege.tl798-c24+0006.fa')
   
 
     def test_v2(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             geometry=self.caledonie,
             local='ICMSHARPE+[term]',
             experiment='oper',
@@ -305,13 +305,13 @@ class UtHistoric(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0000A/forecast/historic.aladin.caledonie-08km00+0006.fa')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0000A/forecast/historic.aladin.caledonie-08km00+0006.fa')
 
 
     def test_v3(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             geometry=self.mnh,
             local='MESONH+[term]',
             experiment='A000',
@@ -324,7 +324,7 @@ class UtHistoric(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/A000/20120214H0000A/forecast/historic.mesonh.france-01km50+0006.lfi')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/A000/20120214H0000A/forecast/historic.mesonh.france-01km50+0006.lfi')
         
 
     def test_h1(self):
@@ -416,7 +416,7 @@ class UtHistoric(TestCase):
     def test_h6(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.std,
             local='ICMSHOLIVE+[term]',
             block='forecast',
@@ -434,7 +434,7 @@ class UtHistoric(TestCase):
         #sessions.current().debug()
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.std,
             local='MESONHOLIVE+[term]',
             block='forecast',
@@ -463,7 +463,7 @@ class UtAnalysis(TestCase):
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             geometry=self.arome, 
             local='ANALYSE_AROME_[filling]',
             experiment='oper',
@@ -474,13 +474,13 @@ class UtAnalysis(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0000P/analysis/analysis.full-arome.frangp-02km50.fa')
-        self.assertEqual(rl[1].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0000P/analysis/analysis.surf-arome.frangp-02km50.fa')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0000P/analysis/analysis.full-arome.frangp-02km50.fa')
+        self.assertEqual(rl[1].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0000P/analysis/analysis.surf-arome.frangp-02km50.fa')
 
     def test_v2(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             geometry=self.std, 
             local='ANALYSE_ARPEGE_[filling]',
             experiment='oper',
@@ -491,8 +491,8 @@ class UtAnalysis(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0000P/analysis/analysis.full-arpege.tl798-c24.fa')
-        self.assertEqual(rl[1].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0000P/analysis/analysis.surf-arpege.tl798-c24.fa')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0000P/analysis/analysis.full-arpege.tl798-c24.fa')
+        self.assertEqual(rl[1].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0000P/analysis/analysis.surf-arpege.tl798-c24.fa')
 
     def test_a1(self):
         rl = toolbox.rload(
@@ -557,7 +557,7 @@ class UtAnalysis(TestCase):
         rh = toolbox.rload(
             self.attrset,
             local='ANALYSE_full_OLIVE',
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.std,
             experiment = '99A0', 
             block='canari',
@@ -572,7 +572,7 @@ class UtAnalysis(TestCase):
         rh = toolbox.rload(
             self.attrset,
             local='ANALYSE_[filling]_OLIVE',
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.std,
             experiment = '99A0', 
             filling='surf',
@@ -595,7 +595,7 @@ class UtHistsurf(TestCase):
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             geometry=self.arome,
             local='AROMOUT+[term]',
             experiment='oper',
@@ -607,12 +607,12 @@ class UtHistsurf(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0000P/forecast/histsurf.arome.frangp-02km50+0006.lfi')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0000P/forecast/histsurf.arome.frangp-02km50+0006.lfi')
   
     def test_o1(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.arome,
             local='AROMOUT+[term]',
             experiment='A000',

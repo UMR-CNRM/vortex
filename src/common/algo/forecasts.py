@@ -82,6 +82,16 @@ class Forecast(IFSModelParallel):
             )
         )
     )
+    
+    def prepare(self, rh, ctx, opts):
+        """Default pre-link for the initial condition file"""
+        ininame = 'ICMSH{0:s}INIT'.format(self.xpname)
+        initrh =  [x.rh for x in ctx.sequence.effective_inputs(role='Initialcondition')] 
+        fcinit = [x.container.localpath() for x in initrh]
+        for l in fcinit:
+            self.system.symlink(l,ininame)
+        
+    
 
 class LAMForecast(Forecast):
     """Forecast for IFS-like Limited Area Models."""
@@ -93,6 +103,16 @@ class LAMForecast(Forecast):
             ),
         )
     )
+    
+    def spawn_command_line(self, rh, ctx):
+        return rh.resource.rootcmdline(
+            name=(self.xpname+'xxxx')[:4].upper(),
+            timescheme=self.timescheme,
+            timestep=self.timestep,
+            fcterm=self.fcterm,
+            fcunit=self.fcunit,
+            model='aladin',
+        ).split()
     
     def prepare(self, rh, ctx, opts):
         """Default pre-link for boundary conditions files."""
@@ -107,13 +127,13 @@ class LAMForecast(Forecast):
         
         """Default pre-link for the initial condition file.""" 
         ininame = 'ICMSH{0:s}INIT'.format(self.xpname)
-        cplinit =  [x.rh for x in ctx.sequence.effective_inputs(role='Initialcondition')] 
-        fcinit = [x.container.localpath() for x in cplinit]
+        initrh =  [x.rh for x in ctx.sequence.effective_inputs(role='Initialcondition')] 
+        fcinit = [x.container.localpath() for x in initrh]
         for l in fcinit:
             self.system.symlink(l,ininame)
         
 
-class DFIForecast(Forecast):
+class DFIForecast(LAMForecast):
     
     _footprint = dict(
         attr = dict(
@@ -126,8 +146,8 @@ class DFIForecast(Forecast):
     def prepare(self, rh, ctx, opts):
         """Default pre-link for the initial condition file.""" 
         ininame = 'ICMSH{0:s}INIT'.format(self.xpname)
-        cplinit =  [x.rh for x in ctx.sequence.effective_inputs(role='Initialcondition')] 
-        fcinit = [x.container.localpath() for x in cplinit]
+        initrh =  [x.rh for x in ctx.sequence.effective_inputs(role='Initialcondition')] 
+        fcinit = [x.container.localpath() for x in initrh]
         for l in fcinit:
             self.system.symlink(l,ininame)
         

@@ -6,7 +6,7 @@ logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, TestLoader, TextTestRunner
 
-from vortex import toolbox
+from vortex import toolbox, sessions
 from vortex.data.geometries import SpectralGeometry, GridGeometry
 import common.data
 import gco.data
@@ -22,7 +22,7 @@ class UtClimGlobal(TestCase):
     def test_v1(self):
         rl = toolbox.rload(
             kind='modelclim',
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             experiment='oper',
             block='clim',
             geometry=self.std,
@@ -34,7 +34,7 @@ class UtClimGlobal(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
             
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/clim/clim.arpege.tl798-c24.fa.m10')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/clim/clim.arpege.tl798-c24.fa.m10')
 
 
     def test_c1(self):
@@ -62,7 +62,7 @@ class UtClimLAM(TestCase):
     def test_v1(self):
         rl = toolbox.rload(
             kind='modelclim',
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             experiment='oper',
             block='clim',
             geometry=self.caledonie,
@@ -74,7 +74,7 @@ class UtClimLAM(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
             
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/clim/clim.aladin.caledonie-08km00.fa.m10')   
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/clim/clim.aladin.caledonie-08km00.fa.m10')   
     
     def test_c1(self):
         rl = toolbox.rload(
@@ -97,11 +97,12 @@ class UtClimBDAP(TestCase):
     def setUp(self):
         self.frangp0025 = GridGeometry(id='Current op', area='FRANGP0025', resolution='0025', nlat=601, nlon=801)
         self.glob15 = GridGeometry(id='Current op', area='GLOB15', resolution='15')
-
+        #sessions.current().debug()
+        
     def test_v1(self):
         rl = toolbox.rload(
             kind='climbdap',
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             experiment='oper',
             block='clim',
             geometry=self.glob15,
@@ -113,12 +114,12 @@ class UtClimBDAP(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
             
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/clim/clim.arpege.glob15.fa.m10')   
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/clim/clim.arpege.glob15.fa.m10')   
         
     def test_v2(self):
         rl = toolbox.rload(
             kind='climbdap',
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             experiment='oper',
             block='clim',
             geometry=self.frangp0025,
@@ -130,7 +131,7 @@ class UtClimBDAP(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
             
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/clim/clim.arome.frangp0025.fa.m10')   
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/clim/clim.arome.frangp0025.fa.m10')   
     
     
     def test_c1(self):

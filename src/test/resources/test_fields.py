@@ -6,9 +6,10 @@ logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, TestLoader, TextTestRunner
 
-from vortex import toolbox
+from vortex import toolbox, sessions
 from vortex.data.geometries import SpectralGeometry
-import olive.data
+#import olive.data
+from olive.data import fields
 
 
 class UtRawFields(TestCase):
@@ -21,7 +22,7 @@ class UtRawFields(TestCase):
         #sessions.current().debug()
         rl = toolbox.rload(
             self.attrset,
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             block='observation',
             experiment='oper',
             fields='seaice',
@@ -31,7 +32,7 @@ class UtRawFields(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120228H0000A/observation/seaice.bdm')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120228H0000A/observation/seaice.bdm')
                 
     def test_r1(self):
         #sessions.current().debug()
@@ -86,7 +87,7 @@ class UtGeoFields(TestCase):
     def test_v1(self):
         rl = toolbox.rload(
              self.attrset,
-             namespace='vortex.meteo.fr',
+             namespace='vortex.cache.fr',
              experiment='oper',
              block='observation',
              geometry=self.std,
@@ -96,7 +97,7 @@ class UtGeoFields(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120228H0600P/observation/sst.tl798-c24.fa')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120228H0600P/observation/sst.tl798-c24.fa')
 
               
 if __name__ == '__main__':

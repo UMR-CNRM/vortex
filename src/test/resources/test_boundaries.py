@@ -6,7 +6,7 @@ logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, TestLoader, TextTestRunner
 
-from vortex import toolbox
+from vortex import toolbox, sessions
 from vortex.data.geometries import SpectralGeometry
 import common.data
 import olive.data
@@ -28,7 +28,7 @@ class UtElscf(TestCase):
             self.attrset,
             geometry=self.arome, 
             local='ELSCFAROME+[term]',
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             experiment='oper',
             block='coupling',
             source='arpege',
@@ -38,7 +38,7 @@ class UtElscf(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0000P/coupling/cpl.arpege.frangp-02km50+0012.fa')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0000P/coupling/cpl.arpege.frangp-02km50+0012.fa')
 
     def test_e1(self):
         rl = toolbox.rload(
@@ -128,7 +128,7 @@ class UtElscf(TestCase):
         rh = toolbox.rload(
             self.attrset,
             local='ELSCFOLIVE+[term]',
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.aladin,
             source='arpege',
             experiment = '99A2', 
@@ -145,7 +145,7 @@ class UtElscf(TestCase):
         rh = toolbox.rload(
             self.attrset,
             local='ELSCFOLIVE2+[term]',
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.arome,
             source='arpege',
             experiment = '99Q7', 

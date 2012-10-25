@@ -196,7 +196,11 @@ class LinuxBase(System):
 
     def filecocoon(self, destination):
         """Normalizes path name of the ``destination`` and creates this directory."""
-        dir = self.path.normpath(self.path.dirname(destination))
+        return self.mkdir(self.path.dirname(destination))
+        
+    def mkdir(self, dirpath):
+        """Normalizes path name and recursively creates this directory."""
+        dir = self.path.normpath(dirpath)
         if dir and not self.path.isdir(dir):
             logging.info('Cocooning directory %s', dir)
             try:
@@ -279,18 +283,24 @@ class LinuxBase(System):
     def dir(self, *args):
         """Proxy to ``ls('-l')``."""
         self._globcmd([ 'ls', '-l' ], *args)
-
+            
     def tar(self, *args):
         """Basic file archive command."""
         self._globcmd([ 'tar' ], *args)
 
-    def mv(self, *args):
-        """Wrapper of the ``mv`` command."""
-        self._globcmd([ 'mv' ], *args)
+    def rmglob(self, *args):
+        """Wrapper of the ``rm`` command through the globcmd"""
+        self._globcmd([ 'rm' ], *args)
 
-    def cat(self, *args):
-        """Wrapper of the ``cat`` command."""
-        self._globcmd([ 'cat' ], *args)
+    def mv(self, source, destination):
+        """
+        Move the ``source`` file or directory 
+        """
+        self.move(source, destination)
+
+    def mvglob(self, *args):
+        """Wrapper of the ``mv`` command through the globcmd"""
+        self._globcmd([ 'mv' ], *args)
 
     def ps(self, opts='-wwfa', search=None):
         psall = subprocess.Popen(['ps', opts], stdout=subprocess.PIPE).communicate()[0].split('\n')

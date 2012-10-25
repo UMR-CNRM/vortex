@@ -38,9 +38,9 @@ class BackgroundErrStd(GeoFlowResource):
         )
             
     def archive_basename(self):
-        bname = 'errgribvor'
-        if self.model == 'aearp':
-            bname = bname + '(term' + str(self.term) + ':inout).(suffix:inout)'
-        return bname
+#        bname = 'errgribvor'
+#        if self.model == 'aearp':
+#            bname = bname + '(term' + str(self.term) + ':inout).(suffix:inout)'
+        return '(errgribfix:igakey)'
 
 

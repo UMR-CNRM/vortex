@@ -37,7 +37,7 @@ class Namelist(ModelResource):
                 default = 'arpege',
             ),
             kind = dict(
-                values = [ 'namelist', 'namel' ]
+                values = [ 'namelist' ]
             )
         )
     )

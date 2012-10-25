@@ -7,18 +7,20 @@ logging.basicConfig(level=logging.ERROR)
 from unittest import TestCase, TestLoader, TextTestRunner
 
 import vortex
-from vortex import toolbox
+from vortex import toolbox, sessions
 from vortex.data.geometries import SpectralGeometry
-import olive.data
+from olive.data import errgrib, bestof
+#import olive.data
 
-cr = vortex.data.resources.catalog()
-cr.track = True
+#cr = vortex.data.resources.catalog()
+#cr.track = True
 
 class UtBackgroundErrStd(TestCase):
     
     def setUp(self):
         self.attrset = dict(kind='bgerrstd', date = '2012021400', cutoff='production', namespace='[suite].archive.fr')
         self.std = SpectralGeometry(id='Current op', truncation=224)
+        #sessions.current().debug()
         
     def test_v1(self):
 
@@ -26,7 +28,7 @@ class UtBackgroundErrStd(TestCase):
             self.attrset,
             geometry=self.std,
             local='errgribvor',
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             experiment='oper',
             block='analysis',
             model='arpege',
@@ -36,7 +38,7 @@ class UtBackgroundErrStd(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120214H0000P/analysis/bgerrstd.arpege.tl224+0003.grib')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0000P/analysis/bgerrstd.arpege.tl224+0003.grib')
 
 
     def test_e1(self):
@@ -64,7 +66,7 @@ class UtBackgroundErrStd(TestCase):
             suite='oper',
             term='3',
             inout='in',
-            model='aearp',
+            model='arpege',
             cutoff='assim',
             igakey='aearp'
         )
@@ -83,7 +85,7 @@ class UtBackgroundErrStd(TestCase):
             suite='oper',
             term='9',
             inout='out',
-            model='aearp',
+            model='arpege',
             cutoff='assim',
             igakey='aearp'
         )
@@ -101,7 +103,7 @@ class UtBackgroundErrStd(TestCase):
             suite='oper',
             term='12',
             inout='out',
-            model='aearp',
+            model='arpege',
             cutoff='assim',
             igakey='aearp'
         )
@@ -132,7 +134,6 @@ class UtInflFactor(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/inflation_factor')
-
               
 
 if __name__ == '__main__':

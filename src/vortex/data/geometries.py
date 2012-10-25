@@ -46,6 +46,7 @@ class SpectralGeometry(Geometry):
         logging.debug('Spectral Geometry init %s', self)
         self.truncation = 798
         self.stretching = 2.4
+        kw.setdefault('area', 'auto')
         super(SpectralGeometry, self).__init__(**kw)
 
     def lam(self):

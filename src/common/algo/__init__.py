@@ -4,4 +4,4 @@
 #: No automatic export
 __all__ = []
 
-import forecasts, mpitools
+import forecasts, coupling, mpitools

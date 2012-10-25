@@ -17,7 +17,7 @@ class UtListing(TestCase):
     def test_v1(self):
         rl = toolbox.rload(
             kind='listing',
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             experiment='oper',
             block='forecast',
             task='forecast',
@@ -30,7 +30,7 @@ class UtListing(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
             
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/20120420H0000P/forecast/listing.forecast.2012042000.production')      
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120420H0000P/forecast/listing.forecast.2012042000.production')      
 
 
 class UtMatFilter(TestCase):
@@ -42,7 +42,7 @@ class UtMatFilter(TestCase):
     def test_v1(self):
         rl = toolbox.rload(
             kind='matfilter',
-            namespace='vortex.meteo.fr',
+            namespace='vortex.cache.fr',
             experiment='oper',
             block='forecast',
             geometry=self.std,
@@ -54,7 +54,7 @@ class UtMatFilter(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
             
-        self.assertEqual(rl[0].location(), 'vortex://open.meteo.fr/play/sandbox/oper/forecast/matfil.arpege.tl798-c24-glob15-f106')      
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/forecast/matfil.arpege.tl798-c24-glob15-f106')      
 
     def test_m1(self):
         rl = toolbox.rload(

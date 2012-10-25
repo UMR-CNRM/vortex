@@ -59,7 +59,7 @@ class ClimModel(Clim):
                 optional = True,
             ),
             kind = dict(
-                values = [ 'clim_model', 'climmodel', 'climodel','modelclim', 'model_clim' ]
+                values = [ 'clim_model' ]
             )
         )
     )
