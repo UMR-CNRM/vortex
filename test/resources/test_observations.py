@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import logging
 logging.basicConfig(level=logging.ERROR)
@@ -14,7 +14,7 @@ class UtObservations(TestCase):
     def setUp(self):
         self.attrset = dict(kind='observations', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
         self.std = SpectralGeometry(id='Current op', area='france', truncation=798)
-        
+
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
@@ -31,9 +31,9 @@ class UtObservations(TestCase):
         for rh in rl:
             print ' > ', rh.location()
             self.assertTrue(rh.complete)
-            
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/obsoul.std.conv') 
-        
+
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/obsoul.std.conv')
+
 
     def test_v3(self):
         rl = toolbox.rload(
@@ -52,8 +52,8 @@ class UtObservations(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/ecma.screen.full.tar')
-        
-       
+
+
     def test_o1(self):
         rl = toolbox.rload(
             self.attrset,
@@ -127,7 +127,7 @@ class UtRefdata(TestCase):
 
     def setUp(self):
         self.attrset = dict(kind='refdata', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
-        
+
     def test_r1(self):
         rl = toolbox.rload(
             self.attrset,
@@ -140,7 +140,7 @@ class UtRefdata(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/refdata')
-        
+
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
@@ -157,10 +157,10 @@ class UtRefdata(TestCase):
 
 
 class UtVarbc(TestCase):
-    
+
     def setUp(self):
         self.attrset = dict(kind='varbc', date = '2012021400', cutoff='production', namespace='[suite].archive.fr')
-        
+
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
@@ -202,7 +202,7 @@ class UtVarbc(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle_arp')
-        
+
     def test_v4(self):
         rl = toolbox.rload(
             self.attrset,
@@ -215,8 +215,8 @@ class UtVarbc(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arome/oper/production/2012/02/14/r0/VARBC.merge')    
-        
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arome/oper/production/2012/02/14/r0/VARBC.merge')
+
     def test_v5(self):
         rl = toolbox.rload(
             self.attrset,
@@ -229,12 +229,12 @@ class UtVarbc(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/france/oper/production/2012/02/14/r0/VARBC.merge')    
-   
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/france/oper/production/2012/02/14/r0/VARBC.merge')
+
     def test_v6(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             local='varbc_olive.merge',
             model='aladin',
             date='2011092200',
@@ -245,12 +245,12 @@ class UtVarbc(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A2/20110922H00P/observations/varbc')         
- 
+        self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A2/20110922H00P/observations/varbc')
+
     def test_v7(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             local='varbc_olive.cycle',
             model='aladin',
             date='2011092200',
@@ -260,7 +260,7 @@ class UtVarbc(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A2/20110922H00P/minim/varbc')     
+        self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A2/20110922H00P/minim/varbc')
 
     def test_v8(self):
         rl = toolbox.rload(
@@ -284,7 +284,7 @@ class UtBlackListDiap(TestCase):
 
     def setUp(self):
         self.attrset = dict(kind='blacklistdiap', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
-    
+
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
@@ -297,35 +297,35 @@ class UtBlackListDiap(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-            
+
         self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/blacklistdiap')
-        
+
     def test_o1(self):
         rl = toolbox.rload(
             self.attrset,
             local='blacklist_diap',
             igakey='arpege',
             suite='oper',
-            model='arpege',   
+            model='arpege',
         )
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/entree.tar?extract=LISTE_NOIRE_DIAP')       
-   
-        
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/entree.tar?extract=LISTE_NOIRE_DIAP')
+
+
 class UtBlackListLoc(TestCase):
 
     def setUp(self):
         self.attrset = dict(kind='blacklistloc', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
-        
+
     def test_o1(self):
         rl = toolbox.rload(
             self.attrset,
             local='blacklist_loc',
             igakey='arpege',
             suite='oper',
-            model='arpege',   
+            model='arpege',
         )
         for rh in rl:
             self.assertTrue(rh.complete)
@@ -336,7 +336,7 @@ class UtObsmap(TestCase):
 
     def setUp(self):
         self.attrset = dict(kind='obsmap', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
-        
+
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
@@ -350,16 +350,16 @@ class UtObsmap(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-            
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/obsmap.std')   
-    
+
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/obsmap.std')
+
     def test_o1(self):
         rl = toolbox.rload(
             self.attrset,
             local='obsmap',
             igakey='arpege',
             suite='oper',
-            model='arpege',   
+            model='arpege',
         )
         for rh in rl:
             self.assertTrue(rh.complete)
@@ -369,7 +369,7 @@ class UtObsmap(TestCase):
     def test_o2(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             date='2011092200',
             local='obsmap_olive_split',
             model='arpege',
@@ -381,7 +381,7 @@ class UtObsmap(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A0/20110922H00P/observations/OBSMAP_split')
-    
+
 
 
 if __name__ == '__main__':
@@ -389,5 +389,5 @@ if __name__ == '__main__':
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
-            break 
-        
+            break
+

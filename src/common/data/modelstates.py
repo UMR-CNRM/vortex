@@ -137,7 +137,7 @@ class Historic(GeoFlowResource):
         prefix = 'icmsh'
         midfix = '(histfix:igakey)'
         suffix = ''   
-        if re.match('testms1|testmp1|testmp2', self.geometry.area):
+        if self.geometry.lam() and re.match('testms1|testmp1|testmp2', self.geometry.area):
             suffix = '.r' + archivesuffix(self.model, self.cutoff, self.date)
             
         name = prefix + midfix + '+' + str(self.term) 

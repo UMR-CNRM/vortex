@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import logging
 logging.basicConfig(level=logging.ERROR)
@@ -7,19 +7,18 @@ logging.basicConfig(level=logging.ERROR)
 from unittest import TestCase, TestLoader, TextTestRunner
 
 import vortex
-from vortex import toolbox
+from vortex import toolbox, sessions
 from vortex.data.geometries import SpectralGeometry
 from olive.data import errgrib, bestof
 
-cr = vortex.data.resources.catalog()
-cr.track = True
 
 class UtBackgroundErrStd(TestCase):
-    
+
     def setUp(self):
         self.attrset = dict(kind='bgerrstd', date = '2012021400', cutoff='production', namespace='[suite].archive.fr')
         self.std = SpectralGeometry(id='Current op', truncation=224)
-        
+        #sessions.current().debug()
+
     def test_v1(self):
 
         rl = toolbox.rload(
@@ -40,7 +39,7 @@ class UtBackgroundErrStd(TestCase):
 
 
     def test_e1(self):
-        #sessions.current().debug() 
+        #sessions.current().debug()
         rl = toolbox.rload(
             self.attrset,
             geometry=self.std,
@@ -54,11 +53,11 @@ class UtBackgroundErrStd(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r0/errgribvor')
-      
+
     def test_e2(self):
-        
+
         rl = toolbox.rload(
-            self.attrset, 
+            self.attrset,
             geometry=self.std,
             local='errgribvor+aearp+[term].in',
             suite='oper',
@@ -68,14 +67,14 @@ class UtBackgroundErrStd(TestCase):
             cutoff='assim',
             igakey='aearp'
         )
-        
+
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor.in')    
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor.in')
 
     def test_e3(self):
-        
+
         rl = toolbox.rload(
             self.attrset,
             geometry=self.std,
@@ -87,15 +86,15 @@ class UtBackgroundErrStd(TestCase):
             cutoff='assim',
             igakey='aearp'
         )
-        
+
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production.out')    
- 
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production.out')
+
     def test_e4(self):
         rl = toolbox.rload(
-            self.attrset, 
+            self.attrset,
             geometry=self.std,
             local='errgribvor+aearp+[term].dsbscr.out',
             suite='oper',
@@ -116,10 +115,10 @@ class UtBackgroundErrStd(TestCase):
 
 
 class UtInflFactor(TestCase):
-    
+
     def setUp(self):
         self.attrset = dict(kind='inflfactor', date = '2012021400', cutoff='assim', namespace='[suite].archive.fr')
-        
+
     def test_a1(self):
         rl = toolbox.rload(
             self.attrset,
@@ -133,12 +132,11 @@ class UtInflFactor(TestCase):
             print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/inflation_factor')
 
-              
 
 if __name__ == '__main__':
     for test in [ UtBackgroundErrStd, UtInflFactor ]:
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
-            break 
-        
+            break
+

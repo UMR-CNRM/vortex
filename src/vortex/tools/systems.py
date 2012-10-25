@@ -18,7 +18,6 @@ from vortex.tools.env import Environment
 from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 from vortex.tools.net import StdFtp
-from vortex.utilities.decorators import printargs
 
 
 unamekeys = ('sysname', 'nodename', 'release', 'version', 'machine')
@@ -213,7 +212,11 @@ class LinuxBase(System):
 
     def filecocoon(self, destination):
         """Normalizes path name of the ``destination`` and creates this directory."""
-        dir = self.path.normpath(self.path.dirname(destination))
+        return self.mkdir(self.path.dirname(destination))
+
+    def mkdir(self, dirpath):
+        """Normalizes path name and recursively creates this directory."""
+        dir = self.path.normpath(dirpath)
         if dir and not self.path.isdir(dir):
             logging.info('Cocooning directory %s', dir)
             try:
@@ -282,7 +285,6 @@ class LinuxBase(System):
             for filename in self.glob(pname):
                 self.remove(filename)
 
-    @printargs
     def safepath(self, thispath, safedirs):
         """
         Boolean to check if :var:``thispath`` is a subpath of a safedir
@@ -302,7 +304,6 @@ class LinuxBase(System):
                         safe = False
         return safe
 
-    @printargs
     def rmsafe(self, pathlist, safedirs):
         """Recursive unlinks the specified `args` objects if safe."""
         ok = True
@@ -335,13 +336,17 @@ class LinuxBase(System):
         """Basic file archive command."""
         self._globcmd([ 'tar' ], *args)
 
-    def mv(self, *args):
-        """Wrapper of the ``mv`` command."""
-        self._globcmd([ 'mv' ], *args)
+    def rmglob(self, *args):
+        """Wrapper of the ``rm`` command through the globcmd."""
+        self._globcmd([ 'rm' ], *args)
 
-    def cat(self, *args):
-        """Wrapper of the ``cat`` command."""
-        self._globcmd([ 'cat' ], *args)
+    def mv(self, source, destination):
+        """Move the ``source`` file or directory."""
+        self.move(source, destination)
+
+    def mvglob(self, *args):
+        """Wrapper of the ``mv`` command through the globcmd."""
+        self._globcmd([ 'mv' ], *args)
 
     def ps(self, opts='-wwfa', search=None):
         psall = subprocess.Popen(['ps', opts], stdout=subprocess.PIPE).communicate()[0].split('\n')

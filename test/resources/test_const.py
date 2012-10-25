@@ -6,7 +6,7 @@ logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, TestLoader, TextTestRunner
 
-from vortex import toolbox
+from vortex import toolbox, sessions
 import gco.data
 import common.data
 from olive.data import collected

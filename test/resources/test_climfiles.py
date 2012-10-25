@@ -6,7 +6,7 @@ logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, TestLoader, TextTestRunner
 
-from vortex import toolbox
+from vortex import toolbox, sessions
 from vortex.data.geometries import SpectralGeometry, GridGeometry
 import common.data
 import gco.data
@@ -97,7 +97,8 @@ class UtClimBDAP(TestCase):
     def setUp(self):
         self.frangp0025 = GridGeometry(id='Current op', area='FRANGP0025', resolution='0025', nlat=601, nlon=801)
         self.glob15 = GridGeometry(id='Current op', area='GLOB15', resolution='15')
-
+        #sessions.current().debug()
+        
     def test_v1(self):
         rl = toolbox.rload(
             kind='climbdap',

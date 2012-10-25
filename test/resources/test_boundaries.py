@@ -6,7 +6,7 @@ logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, TestLoader, TextTestRunner
 
-from vortex import toolbox
+from vortex import toolbox, sessions
 from vortex.data.geometries import SpectralGeometry
 import common.data
 import olive.data
@@ -128,7 +128,7 @@ class UtElscf(TestCase):
         rh = toolbox.rload(
             self.attrset,
             local='ELSCFOLIVE+[term]',
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.aladin,
             source='arpege',
             experiment = '99A2', 
@@ -145,7 +145,7 @@ class UtElscf(TestCase):
         rh = toolbox.rload(
             self.attrset,
             local='ELSCFOLIVE2+[term]',
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.arome,
             source='arpege',
             experiment = '99Q7', 

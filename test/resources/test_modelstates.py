@@ -123,7 +123,7 @@ class UtGridpoint(TestCase):
     def test_g5(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.glob15,
             local='GRIDOLIVE+[term]',
             nativefmt='grib,fa',
@@ -145,7 +145,7 @@ class UtGridpoint(TestCase):
     def test_g6(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.glob15,
             local='FA_MOCAGEHM_OLIVE+[term]',
             nativefmt='fa',
@@ -203,7 +203,7 @@ class UtGridpoint(TestCase):
     def test_g8(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.glob15,
             local='FA_MOCAGESM_OLIVE+[term]',
             nativefmt='fa',
@@ -416,7 +416,7 @@ class UtHistoric(TestCase):
     def test_h6(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.std,
             local='ICMSHOLIVE+[term]',
             block='forecast',
@@ -434,7 +434,7 @@ class UtHistoric(TestCase):
         #sessions.current().debug()
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.std,
             local='MESONHOLIVE+[term]',
             block='forecast',
@@ -557,7 +557,7 @@ class UtAnalysis(TestCase):
         rh = toolbox.rload(
             self.attrset,
             local='ANALYSE_full_OLIVE',
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.std,
             experiment = '99A0', 
             block='canari',
@@ -572,7 +572,7 @@ class UtAnalysis(TestCase):
         rh = toolbox.rload(
             self.attrset,
             local='ANALYSE_[filling]_OLIVE',
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.std,
             experiment = '99A0', 
             filling='surf',
@@ -612,7 +612,7 @@ class UtHistsurf(TestCase):
     def test_o1(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='olive.archive.fr',
+            namespace='open.archive.fr',
             geometry=self.arome,
             local='AROMOUT+[term]',
             experiment='A000',
