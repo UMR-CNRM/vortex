@@ -1,11 +1,10 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 #: No automatic export
 __all__ = []
 
 import collections
-
 
 class DataContent(object):
     def __init__(self, **kw):
@@ -21,26 +20,25 @@ class DataContent(object):
         """Return current class name for shell export mechanism."""
         return str(cls.__name__)
 
+    @property
+    def updated(self):
+        return False
+
     def slurp(self, container):
         """Abstract method."""
         pass
 
+    def rewrite(self, container):
+        """Abstract method."""
+        pass
 
-class IndexedTable(DataContent):
-    """
-    Multi-columns table indexed by first column.
-    Behaves mostly as a dictionary.
-    """
 
-    def __init__(self, data=None, filled=False):
-        if not data:
-            data = dict()
-        super(IndexedTable, self).__init__(data=data)
-    
-    def add(self, addlist):
-        for input in addlist:
-            i = input.pop(0)
-            self._data[i] = input
+class AlmostDictContent(DataContent):
+    """Implement some dictionary-like functions."""
+
+    def __init__(self, **kw):
+        kw.setdefault('data', dict())
+        super(AlmostDictContent, self).__init__(**kw)
 
     def __getitem__(self, idx):
         return self._data[idx]
@@ -63,7 +61,7 @@ class IndexedTable(DataContent):
 
     def has_key(self, item):
         return item in self._data
-    
+
     def keys(self):
         return self._data.keys()
 
@@ -75,6 +73,18 @@ class IndexedTable(DataContent):
 
     def iteritems(self):
         return self._data.iteritems()
+
+
+class IndexedTable(AlmostDictContent):
+    """
+    Multi-columns table indexed by first column.
+    Behaves mostly as a dictionary.
+    """
+
+    def add(self, addlist):
+        for idxinput in addlist:
+            i = idxinput.pop(0)
+            self._data[i] = idxinput
 
 
 class DataRaw(DataContent):
@@ -110,7 +120,7 @@ class DataRaw(DataContent):
 
     def __setslice__(self, istart, iend, value):
         self._data[istart:iend] = value
-    
+
     def __getitem__(self, idx):
         return self._data[idx]
 
@@ -139,3 +149,4 @@ class DataRaw(DataContent):
             self._data.append(data)
             if self._window and len(self._data) >= self._window:
                 end = True
+

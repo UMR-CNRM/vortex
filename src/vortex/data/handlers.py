@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 #: No automatic export
 __all__ = []
@@ -20,7 +20,7 @@ class Handler(object):
     for any specific resource. Other parameters given at construct time
     are stored as options.
     """
-    
+
     def __init__(self, rd, **kw):
         self.role = roles.setrole(rd.get('role', 'anonymous'))
         if 'role' in rd: del rd['role']
@@ -70,7 +70,7 @@ class Handler(object):
             return None
 
     def location(self):
-        """Returns the URL as defined by the internal provider and resource.""" 
+        """Returns the URL as defined by the internal provider and resource."""
         if self.provider and self.resource:
             return self.provider.uri(self.resource)
         else:
@@ -117,7 +117,7 @@ class Handler(object):
             remotelocation = self.location()
             uridata = net.uriparse(remotelocation)
             store = stores.load(scheme = uridata['scheme'], netloc = uridata['netloc'])
-            if store: 
+            if store:
                 logging.debug('Locate resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
@@ -197,6 +197,13 @@ class Handler(object):
         if self.container:
             logging.debug('Remove resource container %s', self.container)
             self.historic.append((datetime.now(), sessions.system().fullname(), 'clear', sessions.system().remove(self.container.localpath())))
+
+    def save(self):
+        """Rewrite data if contents have been updated."""
+        if self.contents:
+            self.contents.rewrite(self.container)
+        else:
+            logging.warning('Try to save undefined contents %s', self)
 
     def strlast(self):
         """String formatted log of the last action."""

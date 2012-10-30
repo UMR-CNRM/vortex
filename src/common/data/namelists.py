@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 #: No automatic export
 __all__ = []
@@ -8,8 +8,70 @@ import re, logging
 
 from vortex.tools import env
 from vortex.data.outflow import ModelResource, NoDateResource
+from vortex.data.contents import AlmostDictContent
+from vortex.tools.fortran import NamelistParser, NamelistBlock
 from vortex.syntax.stdattrs import binaries, term
 from gco.syntax.stdattrs import GenvKey
+
+
+class NamelistContent(AlmostDictContent):
+    """Fortran namelist including namelist blocks."""
+
+    def __init__(self, **kw):
+        kw.setdefault('macros', dict(NBPROC = None))
+        kw.setdefault('remove', set())
+        kw.setdefault('parser', None)
+        super(NamelistContent, self).__init__(**kw)
+
+    def add(self, addlist):
+        for nam in filter(lambda x: x.isinstance(NamelistBlock), addlist):
+            self._data[nam.name] = nam
+
+    def toremove(self, bname):
+        """Add an entry to the list of blocks to be removed."""
+        self._remove.add(bname)
+
+    def rmblocks(self):
+        """Returns the list of blocks to get rid off."""
+        return self._remove
+
+    def macros(self):
+        """Returns a list of macro names."""
+        return self._macros
+
+    def setmacro(self, item, value):
+        """Set macro value for further substitution."""
+        for namblock in filter(lambda x: item in x.macros(), self.values()):
+            namblock.addmacro(item, value)
+        self._macros[item] = value
+
+    def dumps(self):
+        """Returns the namelist contents as a string."""
+        return ''.join(map(lambda x: self.get(x).dumps(), sorted(self.keys())))
+
+    def merge(self, delta):
+        """Merge of the current namelist content with the set of namelist blocks provided."""
+        for namblock in delta.values:
+            if namblock.name in self:
+                self[namblock.name].merge(namblock)
+            else:
+                newblock = NamelistBlock(name=namblock.name)
+                for dk in namblock.keys():
+                    newblock[dk] = namblock[dk]
+                self[namblock.name] = newblock
+        for item in delta.rmblocks:
+            del self[item]
+
+    def slurp(self, container):
+        """Get data from the ``container`` namelist."""
+        container.rewind()
+        if not self._parser:
+            self._parser = NamelistParser(macros=self._macros.keys())
+        self._data = self._parser.parse(container.readall())
+
+    def rewrite(self, container):
+        """Write the namelist contents in the specified container."""
+        container.write(self.dumps())
 
 
 class Namelist(ModelResource):
@@ -38,6 +100,9 @@ class Namelist(ModelResource):
             ),
             kind = dict(
                 values = [ 'namelist' ]
+            ),
+            clscontents = dict(
+                default = NamelistContent
             )
         )
     )
@@ -45,11 +110,11 @@ class Namelist(ModelResource):
     @classmethod
     def realkind(cls):
         return 'namelist'
-    
+
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
         return 'extract=' + self.source
-        
+
     def iga_pathinfo(self):
         """IGA specific informations to let the provider build the url-path."""
         return dict(
@@ -82,9 +147,9 @@ class NamUtil(Namelist):
 
     @classmethod
     def realkind(cls):
-        return 'namelist_uti'  
+        return 'namelist_uti'
 
-   
+
 class NamTerm(Namelist):
     """
     Class for all the terms dependent namelists
@@ -104,10 +169,10 @@ class NamTerm(Namelist):
     @classmethod
     def realkind(cls):
         return 'namterm'
-    
+
     def incoming_xxt_fixup(self, attr, key=None, prefix=None):
         """Fix as best as possible the ``xxt.def`` file."""
-        
+
         regex = re.compile(',(.*)$')
         myenv = env.current()
         suffix = regex.search(myenv.SWAPP_XXT_DEF)
@@ -115,7 +180,7 @@ class NamTerm(Namelist):
             fp = suffix.group(1)
         else :
             fp = None
-            
+
         try:
             f = open('xxt.def', 'r')
             lines = f.readlines()
@@ -123,8 +188,8 @@ class NamTerm(Namelist):
         except IOError:
             logging.error('Could not open file xxt.def')
 
-        select = lines[self.term].split()[2]  
-        
+        select = lines[self.term].split()[2]
+
         if not re.match('undef', select):
             if fp :
                 rgx = re.compile(key + '(.*)$')
@@ -137,8 +202,8 @@ class NamTerm(Namelist):
             else:
                 return select
         else:
-            logging.error('Fullpos namelist id not defined for term %s', self.term) 
-    
+            logging.error('Fullpos namelist id not defined for term %s', self.term)
+
     def incoming_namelist_fixup(self, attr, key=None):
         """Fix as best as possible the namelist term extensions."""
 
@@ -148,7 +213,7 @@ class NamTerm(Namelist):
         r3 = re.compile('^(.*\/)?(' + key + '.*_p)$')
 
         fixed = 0
-    
+
         for r in (r1, r2, r3) :
             s = re.search(r, val)
             if s :
@@ -181,7 +246,7 @@ class NamTerm(Namelist):
         else:
             return val
 
-             
+
 class NamSelect(NamTerm):
     """
     Class for the select namelists
@@ -200,7 +265,7 @@ class NamSelect(NamTerm):
     @classmethod
     def realkind(cls):
         return 'namselect'
-  
+
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
         myenv = env.current()
@@ -208,7 +273,7 @@ class NamSelect(NamTerm):
             return 'extract=' + self.incoming_xxt_fixup('source', 'select')
         else:
             return 'extract=' + self.incoming_namelist_fixup('source', 'select')
-        
+
 
 class Namelistfp(NamTerm):
     """
@@ -228,11 +293,11 @@ class Namelistfp(NamTerm):
     @classmethod
     def realkind(cls):
         return 'namelistfp'
-  
+
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
         return 'extract=' + self.incoming_namelist_fixup('source', 'namel')
-        
+
 
 class Namselectdef(NoDateResource):
     """
@@ -270,5 +335,4 @@ class Namselectdef(NoDateResource):
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
         return 'extract=' + self.source
-    
-    
+

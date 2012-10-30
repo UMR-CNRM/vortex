@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 #: No automatic export
 __all__ = [ 'Container' ]
@@ -19,9 +19,34 @@ class Container(BFootprint):
         self._totalsize = None
         super(Container, self).__init__(*args, **kw)
 
+
+    @classmethod
+    def realkind(cls):
+        return 'container'
+
+    @property
+    def filled(self):
+        """
+        Returns a boolean value according to the fact that
+        the container has been correctly filled with data.
+        """
+        return self._filled
+
+    def updfill(self, getrc=None):
+        """Change current filled status according to return code of the get command."""
+        if getrc != None and getrc:
+            self._filled = True
+
     def localpath(self):
         """Abstract method to be overwritten."""
         pass
+
+    @property
+    def totalsize(self):
+        """Returns the complete size of the container."""
+        if self._totalsize == None:
+            self.rewind()
+        return self._totalsize
 
     def rewind(self):
         """Performs the rewind of the current io descriptor of the container."""
@@ -38,23 +63,22 @@ class Container(BFootprint):
         iod = self.iodesc()
         line = iod.readline()
         return ( line, bool(iod.tell() == self._totalsize) )
-        
-    
-    @property
-    def filled(self):
-        """
-        Returns a boolean value according to the fact that
-        the container has been correctly filled with data.
-        """
-        return self._filled
 
-    def updfill(self, getrc=None):
-        if getrc != None and getrc:
-            self._filled = True
-        
-    @classmethod
-    def realkind(cls):
-        return 'container'
+    def readall(self):
+        """Read in one jump all the data as long as the data is not too big."""
+        iod = self.iodesc()
+        if self.totalsize < 4194304:
+            return iod.read()
+
+    def close(self):
+        """Close the logical io descriptor."""
+        pass
+
+    def write(self, data):
+        """Write the data in container."""
+        pass
+
+
 
 class Virtual(Container):
 
@@ -72,6 +96,11 @@ class Virtual(Container):
     def iodesc(self):
         """Returns the file object descripteur."""
         return self._tmpfile
+
+    def close(self):
+        """Close the logical io descriptor."""
+        iod = self.iodesc()
+        iod.close()
 
     def cat(self):
         """Perform a trivial cat of the virtual container."""
@@ -190,6 +219,18 @@ class File(Container):
             self._iod = io.open(self.localpath(), 'rb')
         return self._iod
 
+    def close(self):
+        """Close the logical io descriptor."""
+        if self._iod:
+            self._iod.close()
+            self._iod = None
+
+    def write(self, data):
+        """Rewind and dump the data content in container."""
+        self.close()
+        with io.open(self.localpath(), 'wb') as fd:
+            fd.write(data)
+            fd.close()
 
 class ContainersCatalog(ClassesCollector):
 

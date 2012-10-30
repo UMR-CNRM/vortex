@@ -171,7 +171,7 @@ class System(BFootprint):
         """Clone of the unix command."""
         time.sleep(nbsecs)
 
-    def spawn(self, args):
+    def spawn(self, args, ok=[0]):
         """Subprocess call of ``args``."""
         rc = False
         if self.trace:
@@ -180,7 +180,7 @@ class System(BFootprint):
             rc = subprocess.call(args, shell=False)
         except OSError:
             logging.critical('Could not call %s', args)
-        if rc:
+        if rc not in ok:
             raise RuntimeError, "System %s spawned %s got %s" % (self, args, rc)
         return rc
 
@@ -317,28 +317,36 @@ class LinuxBase(System):
                     ok = ok and self.remove(entry)
         return ok
 
-    def _globcmd(self, cmd, *args):
+    def _globcmd(self, cmd, args, ok=[0]):
         """Globbing files or directories as arguments before running ``cmd``."""
         cmd.extend([opt for opt in args if opt.startswith('-')])
         for pname in filter(lambda x: not x.startswith('-'), args):
             cmd.extend(self.glob(pname))
-        self.spawn(cmd)
+        self.spawn(cmd, ok)
 
     def ls(self, *args):
         """Globbing and optional files or directories listing."""
-        self._globcmd([ 'ls' ], *args)
+        self._globcmd([ 'ls' ], args)
 
     def dir(self, *args):
         """Proxy to ``ls('-l')``."""
-        self._globcmd([ 'ls', '-l' ], *args)
+        self._globcmd([ 'ls', '-l' ], args)
+
+    def cat(self, *args):
+        """Globbing and optional files or directories listing."""
+        self._globcmd([ 'cat' ], args)
+
+    def diff(self, *args):
+        """Globbing and optional files or directories listing."""
+        self._globcmd([ 'diff' ], args, ok=[0, 1])
 
     def tar(self, *args):
         """Basic file archive command."""
-        self._globcmd([ 'tar' ], *args)
+        self._globcmd([ 'tar' ], args)
 
     def rmglob(self, *args):
         """Wrapper of the ``rm`` command through the globcmd."""
-        self._globcmd([ 'rm' ], *args)
+        self._globcmd([ 'rm' ], args)
 
     def mv(self, source, destination):
         """Move the ``source`` file or directory."""
@@ -346,12 +354,12 @@ class LinuxBase(System):
 
     def mvglob(self, *args):
         """Wrapper of the ``mv`` command through the globcmd."""
-        self._globcmd([ 'mv' ], *args)
+        self._globcmd([ 'mv' ], args)
 
     def ps(self, opts='-wwfa', search=None):
         psall = subprocess.Popen(['ps', opts], stdout=subprocess.PIPE).communicate()[0].split('\n')
         if search:
-            psall = filter(lambda x: re.search(search,x), psall)
+            psall = filter(lambda x: re.search(search, x), psall)
         return psall
 
     def readonly(self, filename):
