@@ -21,7 +21,6 @@ ATM_LIST_TWO = ['perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim',
                 'mocvolc']
 
 class IgaCfgParser(GenericConfigParser):
-    #PATH_INI = "/ch/mxpt/mxpt001/steph_perso/python/Vortex/src/iga/data"
 
     def __init__(self, inifile):
         GenericConfigParser.__init__(self, inifile)
@@ -160,7 +159,8 @@ class SopranoProvider(Provider):
             ),
             suite = a_suite,
             source = dict(
-                values = ATM_LIST_ONE + ATM_LIST_TWO
+                values = ATM_LIST_ONE + ATM_LIST_TWO,
+                optional = True
             ),
             config = dict(
                 type = IgaCfgParser,
@@ -203,7 +203,7 @@ class SopranoProvider(Provider):
             info['level_one'] = 'serv'
             info['level_two'] = 'env'
             info['level_three'] = info['sys_prod']
-        logging.debug('igaprovider::pathname info %s', info)
+        logging.debug('sopranoprovider::pathname info %s', info)
         self.config.setall(info)
         return self.config.resolvedpath('soprano')
 

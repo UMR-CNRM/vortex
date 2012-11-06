@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 The module contains the service adapted to the actions present in the actions
@@ -27,7 +27,7 @@ class Services(BFootprint):
     _footprint = dict(
         info = 'Abstract services class',
         )
-       
+
     def get_action_type(self):
         return self.action_type
 
@@ -39,7 +39,7 @@ class Services(BFootprint):
 class MailServices(Services):
     r"""
     Class responsible for handling email data. You never call this class
-    directly. 
+    directly.
     """
     _footprint = dict(
         info = 'Mail services class',
@@ -96,7 +96,7 @@ class MailServices(Services):
 class AlarmServices(Services):
     r"""
     Class responsible for handling alarm data. You never call this class
-    directly. 
+    directly.
     """
 
     _footprint = dict(
@@ -160,7 +160,7 @@ class AlarmServices(Services):
         hand.setFormatter(fmt)
         # add the handler to the logger
         logger.addHandler(hand)
-        hook_levels = AlarmServices.get_values('level')
+        hook_levels = AlarmServices.authvalues('level')
         return_func = dict(
             zip(
                  hook_levels,
@@ -175,7 +175,7 @@ class AlarmServices(Services):
 class BdapServices(Services):
     r"""
     Class responsible for handling bdap data. You never call this class
-    directly. 
+    directly.
     """
     _footprint = dict(
         info = 'Bdap services class',
@@ -262,7 +262,7 @@ class BdapServices(Services):
 class RoutingServices(Services):
     r"""
     Class responsible for handling routing data. You never call this class
-    directly. 
+    directly.
     """
     _footprint = dict(
         info = 'Routing services class',

@@ -1,14 +1,12 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from copy import deepcopy
 import logging
 from unittest import TestCase, TestLoader, TextTestRunner
 from vortex.syntax import Footprint, BFootprint
 from vortex.syntax.footprint import MFootprint, UNKNOWN
-from vortex.data.containers import Virtual
-
-logging.basicConfig(level=logging.DEBUG)
+from vortex.data.containers import InCore
 
 class UtFootprint(TestCase):
 
@@ -25,14 +23,16 @@ class UtFootprint(TestCase):
     def test_init_vide(self):
         ft1 = Footprint()
         for cle, value in ft1._fp.iteritems():
-            self.assertEquals(value, self.res[cle])
+            if cle != 'priority':
+                self.assertEquals(value, self.res[cle])
         print "Test __init__ vide Ok"
 
     def test_init_ftvide(self):
         ft1 = Footprint()
         ft2 = Footprint(ft1)
         for cle, value in ft2._fp.iteritems():
-            self.assertEquals(value, self.res[cle])
+            if cle != 'priority':
+                self.assertEquals(value, self.res[cle])
         print "Test __init__ ftvide Ok"
 
     def test_init_argsdict(self):
@@ -57,11 +57,13 @@ class UtFootprint(TestCase):
                     'optional': False
                 }
             },
+            'bind': [],
             'only': {},
-            'priority': {'level': 20}
+            #'priority': {'level': 20}
         }
         for cle, value in ft1._fp.iteritems():
-            self.assertEquals(value, res[cle])
+            if cle != 'priority':
+                self.assertEquals(value, res[cle])
 
     def test_init_kwdict(self):
         kw = {
@@ -81,11 +83,13 @@ class UtFootprint(TestCase):
                     'optional': False
                 }
             },
+            'bind': [],
             'only': {},
-            'priority': {'level':20}
+            #'priority': {'level':20}
         }
         for cle, value in ft1._fp.iteritems():
-            self.assertEquals(value, res[cle])
+            if cle != 'priority':
+                self.assertEquals(value, res[cle])
 
     def test_init_argskw(self):
         args = (
@@ -109,20 +113,24 @@ class UtFootprint(TestCase):
                     'optional': False
                 }
             },
+            'bind': [],
             'only': {},
-            'priority': {'level': 20}
+            #'priority': {'level': 20}
         }
         for cle, value in ft1._fp.iteritems():
-            self.assertEquals(value, res[cle])
+            if cle != 'priority':
+                self.assertEquals(value, res[cle])
 
         ft2 = Footprint(ft1)
         for cle, value in ft2._fp.iteritems():
-            self.assertEquals(value, res[cle])
+            if cle != 'priority':
+                self.assertEquals(value, res[cle])
 
         ft2 = Footprint(ft1, attr={'model': {'optional': True}})
         res['attr']['model']['optional'] = True
         for cle, value in ft2._fp.iteritems():
-            self.assertEquals(value, res[cle])
+            if cle != 'priority':
+                self.assertEquals(value, res[cle])
 
     def test_deepcopy(self):
         args = (
@@ -146,13 +154,16 @@ class UtFootprint(TestCase):
                     'optional': False
                 }
             },
+            'bind': [],
             'only': {},
-            'priority': {'level': 20}
+            #'priority': {'level': 20} can be tested only by checking the
+            #type class
         }
         ft2 = deepcopy(ft1)
         self.assertFalse(ft2._fp is ft1._fp)
         for key, value in ft2._fp.iteritems():
-            self.assertEquals(value, res[key])
+            if key != 'priority':
+                self.assertEquals(value, res[key])
 
     def test_firstguess_optional(self):
         ft = Footprint(
@@ -175,7 +186,7 @@ class UtFootprint(TestCase):
                 )
             )
         )
-        guess = ft._firstguess(dict(real='hello'))
+        guess, set_guess = ft._firstguess(dict(real='hello'))
         result = dict(
             real = 'hello',
             foo = UNKNOWN,
@@ -184,6 +195,7 @@ class UtFootprint(TestCase):
         )
         for key, value in result.iteritems():
             self.assertEquals(value, guess[key])
+        self.assertEquals(set_guess, set(['real']))
 
     def test_firstguess_alias(self):
         ft = Footprint(
@@ -197,26 +209,30 @@ class UtFootprint(TestCase):
                 ),
             )
         )
-        guess = ft._firstguess(dict(real='hello', fuzzy=2))
+        guess, set_guess = ft._firstguess(dict(real='hello', fuzzy=2))
         result = dict(
             real = 'hello',
             foo = 2,
         )
         for key, value in result.iteritems():
             self.assertEquals(value, guess[key])
+        self.assertEquals(set_guess, set(['real', 'foo']))
 
     def test_findextras_empty(self):
         ft = Footprint(self.res)
         extras = ft._findextras(dict(real='hello', fuzzy=2))
-        self.assertEquals(extras, {})
+        #only the glove is present in the extras dictionary
+        self.assertEquals(extras.keys(), ['glove'])
 
     def test_findextras_container(self):
         ft = Footprint(self.res)
-        mycont = Virtual()
+        mycont = InCore()
         extras = ft._findextras(dict(real='hello', fuzzy=2, container=mycont))
         self.assertTrue(extras)
-        self.assertTrue(len(extras) == 2)
+        self.assertTrue(len(extras) == 4)
         self.assertTrue(extras['incore'] == True)
+        self.assertTrue(extras['prefix'] == 'vortex.tmp.')
+        self.assertTrue(extras['maxsize'] == 65536)
 
     def test_replacement_internal(self):
         ft = Footprint(
@@ -233,7 +249,7 @@ class UtFootprint(TestCase):
                 ),
             )
         )
-        guess = ft._firstguess(dict(model = 'arpege', truncation=798))
+        guess, set_guess = ft._firstguess(dict(model = 'arpege', truncation=798))
         done = ft._replacement(1, 'gvar', guess, [], [ 'model' ])
         self.assertFalse(done)
         self.assertEquals('clim_[model]_t[truncation]', guess['gvar'])
@@ -248,12 +264,14 @@ class UtMFootprint(TestCase):
             'info': 'Not documented',
             'name': 'empty',
             'attr': {},
+            'bind': [],
             'only': {},
             'priority': {'level': 20}
         }
         MyBFtp = MFootprint('MyBFtp', (), {})
         for cle, value in MyBFtp._footprint._fp.iteritems():
-            self.assertEquals(value, res[cle])
+            if cle != 'priority':
+                self.assertEquals(value, res[cle])
 
     def test_new_withdict(self):
         args = {
@@ -266,12 +284,14 @@ class UtMFootprint(TestCase):
             'info': 'documented',
             'name': 'withdict',
             'attr': {},
+            'bind': [],
             'only': {},
             'priority': {'level': 20}
         }
         MyBFtp = MFootprint('MyBFtp', (), args)
         for cle, value in MyBFtp._footprint._fp.iteritems():
-            self.assertEquals(value, res[cle])
+            if cle != 'priority':
+                self.assertEquals(value, res[cle])
 
     def test_new_withbaseft(self):
         args = (
@@ -295,12 +315,14 @@ class UtMFootprint(TestCase):
                     'optional': False
                 }
             },
+            'bind': [],
             'only': {},
             'priority': {'level': 20}
         }
         MyBFtp = MFootprint('MyBFtp', (), {'_footprint': ft1})
         for cle, value in MyBFtp._footprint._fp.iteritems():
-            self.assertEquals(value, res[cle])
+            if cle != 'priority':
+                self.assertEquals(value, res[cle])
 
 
 class TestBFootprint(BFootprint):
@@ -365,7 +387,7 @@ class UtBFootprint(TestCase):
         for bf in pseudo_ctlg:
             self.assertEqual(bf.couldbe(rd), (False, set(['kind'])))
             self.assertEqual(bf.couldbe(rd2), (res_rd2, set(['kind', 'info_deux'])))
-        
+
     def test_firstguess(self):
         rd = {
             1: dict(
@@ -410,9 +432,12 @@ class UtBFootprint(TestCase):
 
 if __name__ == '__main__':
     action = TestLoader().loadTestsFromTestCase
-    #tests = [UtFootprint, UtMFootprint, UtBFootprint]
-    tests = [UtBFootprint]
+    tests = [UtFootprint, UtMFootprint, UtBFootprint]
+    #tests = [UtBFootprint]
     suites = [action(elmt) for elmt in tests]
     for suite in suites:
         TextTestRunner(verbosity=2).run(suite)
 
+def get_test_class():
+    """docstring for get_test_class"""
+    return [UtFootprint, UtMFootprint, UtBFootprint]

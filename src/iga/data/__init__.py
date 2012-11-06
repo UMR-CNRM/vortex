@@ -4,4 +4,4 @@
 #: No automatic export
 __all__ = []
 
-import containers, providers, resources, stores
+import containers, providers, resources, stores, fields, obs, errgrib, collected

@@ -465,6 +465,7 @@ class BFootprint(IFootprint):
         It returns the *resolved* form in which the current ``rd`` description
         could be recognized as a footprint of the current class, :data:`False` otherwise.
         """
+        logging.debug("-"*180)
         logging.debug('Couldbe a %s ?', cls)
         if not trackroot:
             trackroot = tracker('garbage')
@@ -496,3 +497,12 @@ class BFootprint(IFootprint):
         """Tuple with ordered weights to make a choice possible between various electible footprints."""
         fp = cls.footprint()
         return ( fp.priority['level'].value, realinputs )
+
+    @classmethod
+    def authvalues(cls, attrname):
+        """Return the list of authorized values of a footprint attribute (if any)."""
+        try:
+            return cls.footprint().attr[attrname]['values']
+        except KeyError:
+            logging.debug('No values list associated with this attribute %s', attrname)
+            return None

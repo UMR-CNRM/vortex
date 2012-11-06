@@ -303,3 +303,6 @@ class utstrdate(TestCase):
 
 if __name__ == '__main__':
     main()
+
+def get_test_class():
+    return [ utdate ]

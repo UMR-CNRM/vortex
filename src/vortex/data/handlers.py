@@ -5,10 +5,10 @@
 __all__ = []
 
 import logging
-from datetime import datetime
 
 from vortex import sessions
 from vortex.tools import net
+from vortex.tools.date import Date
 from vortex.utilities import observers, roles
 
 import stores
@@ -38,7 +38,7 @@ class Handler(object):
         for k in filter(lambda x: not self.__dict__.has_key(x), rd.keys()):
             self.options[k] = rd.get(k)
         self.options.update(kw)
-        self.historic = [(datetime.now(), self.__class__.__name__, 'init', 1)]
+        self.historic = [(Date.now(), self.__class__.__name__, 'init', 1)]
         self._observer = observers.classobserver('Resources-Handlers')
         self._observer.notify_new(self, dict(stage = 'load'))
         logging.debug('New resource handler %s', self.__dict__)
@@ -122,7 +122,7 @@ class Handler(object):
                 del uridata['scheme']
                 del uridata['netloc']
                 locst = store.locate(uridata)
-                self.historic.append((datetime.now(), store.fullname(), 'locate', locst))
+                self.historic.append((Date.now(), store.fullname(), 'locate', locst))
             else:
                 logging.error('Could not find any store to locate %s', remotelocation)
         else:
@@ -142,7 +142,7 @@ class Handler(object):
                 del uridata['netloc']
                 gst = store.get(uridata, self.container.localpath())
                 self.container.updfill(gst)
-                self.historic.append((datetime.now(), store.fullname(), 'get', gst))
+                self.historic.append((Date.now(), store.fullname(), 'get', gst))
                 self._observer.notify_upd(self, dict(stage = 'get'))
                 return gst
             else:
@@ -164,7 +164,7 @@ class Handler(object):
                 del uridata['scheme']
                 del uridata['netloc']
                 pst = store.put(self.container.localpath(), uridata)
-                self.historic.append((datetime.now(), store.fullname(), 'put', pst))
+                self.historic.append((Date.now(), store.fullname(), 'put', pst))
                 self._observer.notify_upd(self, dict(stage = 'put'))
             else:
                 logging.error('Could not find any store to put %s', remotelocation)
@@ -185,7 +185,7 @@ class Handler(object):
                 del uridata['scheme']
                 del uridata['netloc']
                 stcheck = store.check(uridata)
-                self.historic.append((datetime.now(), store.fullname(), 'check', stcheck))
+                self.historic.append((Date.now(), store.fullname(), 'check', stcheck))
             else:
                 logging.error('Could not find any store to check %s', remotelocation)
         else:
@@ -196,7 +196,7 @@ class Handler(object):
         """Clear the local container contents."""
         if self.container:
             logging.debug('Remove resource container %s', self.container)
-            self.historic.append((datetime.now(), sessions.system().fullname(), 'clear', sessions.system().remove(self.container.localpath())))
+            self.historic.append((Date.now(), sessions.system().fullname(), 'clear', sessions.system().remove(self.container.localpath())))
 
     def strlast(self):
         """String formatted log of the last action."""

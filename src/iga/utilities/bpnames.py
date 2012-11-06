@@ -10,6 +10,7 @@ __all__ = []
 
 import sys
 import logging
+from vortex.tools.date import Date
 
 
 def faNames(cutoff, reseau, model, filling=None):
@@ -109,6 +110,10 @@ def global_pnames(provider, resource):
     for mnd in ("suite", "igakey", "fmt"):
         if mnd not in info:
             info[mnd] = getattr(provider, mnd, None)
+    #patch: if model is not in info we must provide it through the
+    #provider's attributes: model or vapp
+    if "model" not in info:
+        info['model'] = getattr(provider, 'model', getattr(provider, 'vapp'))
     return info
 
 def clim_bdap_bnames(resource):
@@ -166,7 +171,10 @@ def analysis_bnames(resource):
         resource.cutoff, resource.date.hour, resource.model, resource.filling)
     #patch for the different kind of analysis (surface and atmospheric)
     if resource.filling == 'surf':
-        return 'ICMSH' + model_info + 'INIT_SURF.' + suffix
+        if resource.nativefmt != 'lfi':
+            return 'ICMSH' + model_info + 'INIT_SURF.' + suffix
+        else:
+            return 'INIT_SURF.' + suffix
     else:
         return 'ICMSH' + model_info + 'INIT.' + suffix
 
@@ -175,30 +183,17 @@ def historic_bnames(resource):
     model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model)
     return 'ICMSH' + model_info + '+' + str(resource.term) + '.' + suffix
 
-#def gridpoint_bnames(resource):
-#    """docstring for gridpoint_bnames"""
-#    cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
-#    run = getattr(resource, 'run', None)
-#    if resource.nativefmt == 'fa':
-#        model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model)
-#        localname = 'PF' + model_info + resource.geometry.area + '+'\
-#+ str(resource.term) + '.' + suffix
-#    elif resource.nativefmt == 'grib':
-#        if resource.model == 'arpege':
-#            prefix, suffix = gribNames(cutoff, reseau, model, run)
-#            nw_term = "{0:03d}".format(resource.term)
-#            if run:
-#                localname = prefix + '_' + suffix + '_' + str(run) + '_' +\
-#resource.geometry.area + '_' + str(resource.term)
-#            else:
-#                localname = prefix + suffix + nw_term + resource.geometry.area
-#        elif resource.model == 'arome':
-#            prefix, suffix = gribNames(cutoff, reseau, model, run)
-#            localname = prefix + resource.geometry.area + suffix +\
-#str(resource.term)
-#        else:
-#            return None
-#    return localname
+def histsurf_bnames(resource):
+    """docstring for histsurf"""
+    reseau = resource.date.hour
+    map_suffix = dict(
+        zip(
+            range(0, 24, 3),
+            map('r'.__add__, ('CM','TR','SX','NF','PM','QZ','DH','VU'))
+        )
+    )
+    suffix = map_suffix[reseau]
+    return 'PREP.lfi.' + suffix
 
 def gridpoint_bnames(resource, member=None):
     """docstring for gridpoint_bnames"""
@@ -261,6 +256,30 @@ def refdata_bnames(resource):
     localname = 'refdata' + '.' + suffix
     return localname
 
+def bgerrstd_bnames(resource, ens=None):
+    cutoff, term, ens, date = resource.cutoff, resource.term, ens, resource.date
+    prefix = 'errgribvor'
+    if ens == 'france':
+        #errgrib_scr type
+        delta = "P" + str(term) + "H"
+        target_date = Date(date.add_delta(delta, fmt="yyyymmddhh"))
+        new_run = int(target_date.get_date(fmt="hh"))
+        stdname = "errgrib_scr.r"
+        suffix = str(new_run)
+        return stdname + suffix
+
+    else:
+        #I have to calculate a new date so as to get the correct run
+        if term in [3, 9]:
+            delta = "P" + str(term + 3) + "H"
+            suffix = resource.date.add_delta(delta, fmt = "yyyymmddhhmnss")
+            stdname = cutoff
+        elif term == 12:
+            delta = "P" + str(term) + "H"
+            suffix = resource.date.add_delta(delta, fmt = "yyyymmddhhmnss")
+            stdname = 'production_' + 'dsbscr'
+        return prefix + '_' + stdname + '.' + suffix
+
 def observations_bnames(resource):
     """docstring for observations_bnames"""
     fmt, part = resource.nativefmt, resource.part
@@ -291,7 +310,7 @@ def observations_bnames(resource):
 def global_bnames(resource, provider):
     """Return the basename of the resource."""
     #itself = sys.modules.get(__name__)
-    for elmt in sys.modules:
+    for elmt in list(sys.modules):
         if sys.modules[elmt]:
             try:
                 current_file = sys.modules[elmt].__file__
@@ -305,7 +324,10 @@ def global_bnames(resource, provider):
     if member and attr:
         return getattr(itself, searched_func)(resource, member)
     elif attr:
-        return getattr(itself, searched_func)(resource)
+        if 'bgerrstd' in searched_func:
+            return getattr(itself, searched_func)(resource, ens=provider.igakey)
+        else:
+            return getattr(itself, searched_func)(resource)
     else:
         if resource.realkind() == 'rtcoef':
             return resource.realkind() + '.tar'
@@ -313,13 +335,67 @@ def global_bnames(resource, provider):
             return 'matrix.fil.' + resource.scopedomain.area
         if resource.realkind() == 'namelist':
             return resource.source
-        if resource.realkind() == 'namelselect':
-            return resource.realkind()
+        if resource.realkind() == 'namselect':
+            return resource.source
+        if resource.realkind() == 'blacklistloc':
+            return 'LISTE_LOC'
+        if resource.realkind() == 'blacklistdiap':
+            return 'LISTE_NOIRE_LOC'
+        if resource.realkind() == 'bcor':
+            return resource.category
+        if resource.realkind() == 'obsmap':
+            return 'BATOR_MAP_' + resource.cutoff
 
 def global_snames(resource):
-    """docstring for global_snames"""
+    """global names for soprano provider"""
+    cutoff = resource.cutoff
+    if cutoff == 'assim':
+       map_suffix = dict(
+            zip(
+                zip(
+                    (cutoff,)*4,
+                    (0, 6, 12, 18)
+                ),
+                ('00', '06', '12','18')
+            )
+        )
+    elif cutoff == 'production':
+       map_suffix = dict(
+           zip(
+               zip(
+                   (cutoff,)*4,
+                   (0, 6, 12, 18)
+               ),
+               ('AM', 'SX' , 'PM', 'DH')
+           )
+       )
     bname = None
-    if resource.fields == 'seaice':
-        bname = 'SSMI.AM'
+    if resource.realkind() == 'rawfields':
+        if resource.origin == 'ostia' and resource.fields == 'sst':
+            bname = 'sst.ostia'
+        if resource.origin == 'bdm' and resource.fields == 'seaice':
+            bname = 'SSMI.AM'
+    if resource.realkind() == 'observations':
+        suff = map_suffix[(cutoff, resource.date.hour)]
+        if resource.nativefmt == 'obsoul' and resource.part == 'conv':
+            bname = 'OBSOUL1F.' + suff
+        if resource.nativefmt == 'obsoul' and resource.part == 'prof':
+            bname = 'OBSOUL2F.' + suff
+        if resource.nativefmt == 'obsoul' and resource.part == 'surf':
+            bname = 'OBSOUL_SURFAN.' + suff
+        if resource.nativefmt == 'bufr':
+            bname = 'BUFR.' + resource.part + '.' + suff
+        logging.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
+    if resource.realkind() == 'refdata':
+        suff = map_suffix[(cutoff, resource.date.hour)]
+        if resource.nativefmt == 'obsoul' and resource.part == 'conv':
+            bname = 'RD_1.' + suff
+        if resource.nativefmt == 'obsoul' and resource.part == 'prof':
+            bname = 'RD_2.' + suff
+        if resource.nativefmt == 'bufr':
+            bname = 'rd_' + resource.part + '.' + suff
+        if resource.part == 'surf':
+            bname = 'RD_SURFAN' + '.' + suff
+        logging.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
     return bname
 

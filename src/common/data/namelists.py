@@ -50,13 +50,6 @@ class Namelist(ModelResource):
         """GGET specific query : ``extract``."""
         return 'extract=' + self.source
         
-    def iga_pathinfo(self):
-        """IGA specific informations to let the provider build the url-path."""
-        return dict(
-            model = self.model,
-            geometry = self.geometry
-        )
-
 
 class NamUtil(Namelist):
     """
