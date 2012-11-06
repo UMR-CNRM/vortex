@@ -23,7 +23,7 @@ class Analysis(GeoFlowResource):
                values = [ 'analysis', 'analyse', 'atm_analysis' ]
            ),
            nativefmt = dict(
-                values = [ 'fa', 'grib' ],
+                values = [ 'fa', 'grib', 'lfi' ],
                 default = 'fa',
            ),
            filtering = dict(

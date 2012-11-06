@@ -54,7 +54,9 @@ class UtGenericConfigParser(TestCase):
         igacfgp = GenericConfigParser(real_ini)
         kwargs = {
             'model': 'arpege',
-            'geometry': 'france'
+            'igakey': 'france',
+            'suite': 'oper',
+            'fmt': 'autres'
         }
         resolvedpath = 'arpege/france/oper/data/autres'
         igacfgp.setall(kwargs)
@@ -82,7 +84,6 @@ class UtIgaCfgParser(TestCase):
     def test_init_3(self):
         real_ini = 'iga_map_resources.ini'
         igacfgp = IgaCfgParser(real_ini)
-        self.assertTrue(igacfgp.PATH_INI == IGADATAPATH)
         sections = ['analysis', 'matfilter', 'rtcoef', 'namelist', 'climmodel',
                     'climmodel', 'climdomain']
         self.assertTrue(sorted(igacfgp.sections()), sorted(sections))
@@ -101,7 +102,8 @@ class UtIgaCfgParser(TestCase):
         kwargs = {
             'model': 'arpege',
             'igakey': 'france',
-            'suite': 'oper'
+            'suite': 'oper',
+            'fmt': 'autres'
         }
         resolvedpath = 'arpege/france/oper/data/autres'
         igacfgp.setall(kwargs)
@@ -114,7 +116,8 @@ class UtIgaCfgParser(TestCase):
         kwargs = {
             'model': 'arpege',
             'igakey': 'france',
-            'suite': 'oper'
+            'suite': 'oper',
+            'fmt': 'autres'
         }
         resolvedpath = 'arpege/france/oper/data/autres'
         igacfgp.setall(kwargs)
@@ -127,3 +130,6 @@ if __name__ == '__main__':
     suites = [action(elmt) for elmt in tests]
     for suite in suites:
         TextTestRunner(verbosity=2).run(suite)
+
+def get_test_class():
+    return [ UtGenericConfigParser, UtIgaCfgParser ]

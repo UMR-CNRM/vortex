@@ -74,3 +74,6 @@ if __name__ == '__main__':
     suites = [action(elmt) for elmt in tests]
     for suite in suites:
         TextTestRunner(verbosity=2).run(suite)
+
+def get_test_class():
+    return [ UtEnv ]

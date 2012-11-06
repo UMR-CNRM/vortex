@@ -156,6 +156,15 @@ class Date(IDate, datetime):
 
     def __init__(self, *args):
         super(Date, self).__init__()
+
+    def __deepcopy__(self, memo):
+        r"""
+        We don't allow other copies of the current object to be made. So when a
+        deepcopy is requested, self is returned. We assume that there isn't any
+        concurrency access problem during the session.
+        """
+        return self
+
 # ------------------------------------------------------------------------------
 #                        === Caracteristics ===
 # ------------------------------------------------------------------------------

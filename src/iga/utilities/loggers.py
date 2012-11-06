@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import logging
 
@@ -18,10 +18,10 @@ class MyLogger(object):
 
 def create_logger():
     """docstring for create_logger"""
-    
+
     # create logger with 'bfootprint'
     logger = logging.getLogger('bfootprint')
-    logger.setLevel(logging.DEBUG)
+    #logger.setLevel(logging.DEBUG)
     # create file handler which logs even debug messages
     fh = logging.FileHandler('bfootprint.log')
     fh.setLevel(logging.INFO)
@@ -34,10 +34,10 @@ def create_logger():
 
 def iga_logger():
     """docstring for create_logger"""
-    
+
     # create logger with 'bfootprint'
     logger = logging.getLogger('iga')
-    logger.setLevel(logging.DEBUG)
+    #logger.setLevel(logging.DEBUG)
     # create file handler which logs even debug messages
     fh = logging.FileHandler('iga.log')
     fh.setLevel(logging.INFO)
