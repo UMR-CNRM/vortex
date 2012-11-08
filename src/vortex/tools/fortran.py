@@ -447,6 +447,7 @@ class NamelistBlock(object):
         for dk in filter(lambda x: x in self, delta.delkeys()):
             self.delvar(dk)
 
+
 class NamelistParser(object):
 
     def __init__(self,

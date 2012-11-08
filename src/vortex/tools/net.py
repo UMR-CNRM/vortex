@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 Net tools.
@@ -146,8 +146,8 @@ class StdFtp(FTP):
         else:
             path = self.pwd()
 
-        for dir in filter(lambda x: x, dirname(destination).split('/')):
-            current = path + '/' + dir
+        for subdir in filter(lambda x: x, dirname(destination).split('/')):
+            current = path + '/' + subdir
             try:
                 self.cwd(current)
                 path = current

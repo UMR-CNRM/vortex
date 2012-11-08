@@ -216,11 +216,11 @@ class LinuxBase(System):
 
     def mkdir(self, dirpath):
         """Normalizes path name and recursively creates this directory."""
-        dir = self.path.normpath(dirpath)
-        if dir and not self.path.isdir(dir):
-            logging.info('Cocooning directory %s', dir)
+        normdir = self.path.normpath(dirpath)
+        if normdir and not self.path.isdir(normdir):
+            logging.info('Cocooning directory %s', normdir)
             try:
-                self.makedirs(dir)
+                self.makedirs(normdir)
                 return True
             except:
                 return False

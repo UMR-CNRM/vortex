@@ -1,12 +1,12 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 
 from vortex.tools.config import GenericConfigParser
 from vortex.data.contents import IndexedTable
 
 class IgaHelperSelect(IndexedTable):
-    
+
     def __init__(self, data=None, filled=False):
         super(IgaHelperSelect, self).__init__(data=data)
         self.parser = IgaHelperParser('helper_namselect.ini')
@@ -42,8 +42,7 @@ class IgaHelperSelect(IndexedTable):
 
 class IgaHelperParser(GenericConfigParser):
     """docstring for IgaHelperParser"""
-    def __init__(self, inifile, current='oper'):
-        GenericConfigParser.__init__(self, inifile)
+
 
     def get_info(self, current):
         """docstring for get_info"""

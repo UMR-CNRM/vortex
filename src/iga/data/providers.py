@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 #: No automatic export
 __all__ = []
@@ -23,13 +23,15 @@ ATM_LIST_TWO = ['perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim',
 class IgaCfgParser(GenericConfigParser):
 
     def __init__(self, inifile):
-        GenericConfigParser.__init__(self, inifile)
+        GenericConfigParser.__init__(self)
+        self.delay = inifile
 
     def resolvedpath(self, resname):
         """
         Shortcut to retrieve the ``resolvedpath`` entry in the ``resname`` section
         of the current config file.
         """
+        self.refresh()
         return self.get(resname, 'resolvedpath')
 
 
@@ -39,7 +41,7 @@ class IgaProvider(Provider):
     These resources are not yet part of the Vortex scope, so some specific mapping
     needs to be done. This is provided through a dedicated ini file.
     """
-    
+
     _footprint = dict(
         info = 'Iga job provider',
         attr = dict(
@@ -101,13 +103,14 @@ class IgaProvider(Provider):
         provided through the ``config`` footprint attribute.
         """
         info = bp.global_pnames(self, resource)
-        #patch pour les couplages 
-        if ( 
-            "fmt" in info and 
-            resource.realkind() == 'elscf' and 
+        #patch pour les couplages
+        if (
+            "fmt" in info and
+            resource.realkind() == 'elscf' and
             self.igakey != 'reunion'
         ):
             info['fmt'] = 'fic_day'
+        self.config.refresh()
         self.config.setall(info)
         self.writeNewPost('IgaProvider:pathname info %s' % info)
         self.notifyAll()

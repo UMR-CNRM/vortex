@@ -49,9 +49,9 @@ class NamelistContent(AlmostDictContent):
         """Returns the namelist contents as a string."""
         return ''.join(map(lambda x: self.get(x).dumps(), sorted(self.keys())))
 
-    def merge(self, delta):
+    def merge(self, delta, rmblocks=None):
         """Merge of the current namelist content with the set of namelist blocks provided."""
-        for namblock in delta.values:
+        for namblock in delta.values():
             if namblock.name in self:
                 self[namblock.name].merge(namblock)
             else:
@@ -59,7 +59,9 @@ class NamelistContent(AlmostDictContent):
                 for dk in namblock.keys():
                     newblock[dk] = namblock[dk]
                 self[namblock.name] = newblock
-        for item in delta.rmblocks:
+        if rmblocks == None:
+            rmblocks = delta.rmblocks()
+        for item in rmblocks:
             del self[item]
 
     def slurp(self, container):
@@ -211,9 +213,9 @@ class NamTerm(Namelist):
             s = re.search(r, val)
             if s :
                 fixed = 1
-                ( dir, base ) = (s.group(1), s.group(2))
-                if dir == None:
-                    dir = ''
+                ( dirpath, base ) = (s.group(1), s.group(2))
+                if dirpath == None:
+                    dirpath = ''
                 ext = ''
                 if r == r1 or r == r2 :
                     if self.term == 0:
@@ -235,7 +237,7 @@ class NamTerm(Namelist):
                         p ='1'
 
         if fixed:
-            return dir + base + p + ext
+            return dirpath + base + p + ext
         else:
             return val
 
