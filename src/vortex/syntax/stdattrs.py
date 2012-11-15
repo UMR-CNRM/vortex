@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 This module provides some pre-defined attributes descriptions or combined sets
@@ -41,7 +41,7 @@ class FmtInt(int):
 
 class Term(FmtInt):
     """Formated value ``(%O4d)`` for attributes related to chronological model outputs."""
-    
+
     def __new__(cls, value, fmt='04'):
         return FmtInt.__new__(cls, value, fmt)
 
@@ -78,7 +78,6 @@ a_cutoff = dict(
         a = 'assim',
         p = 'production',
         prod = 'production',
-        short = 'production',
         long = 'assim',
         assimilation = 'assim'
     )
@@ -124,7 +123,7 @@ a_truncation = dict(
     optional = False,
 )
 
-truncation = Footprint( info = 'Abstract truncation', attr = dict( truncation = a_truncation ) ) 
+truncation = Footprint( info = 'Abstract truncation', attr = dict( truncation = a_truncation ) )
 
 #: Usual definition of the ``domain`` attribute.
 a_domain = dict(
@@ -133,7 +132,6 @@ a_domain = dict(
 )
 
 domain = Footprint( info = 'Abstract domain', attr = dict( domain = a_domain ) )
-
 
 #: Usual definition of the ``term`` attribute.
 a_term = dict(
@@ -144,10 +142,8 @@ a_term = dict(
 term = Footprint( info = 'Abstract term', attr = dict( term = a_term ) )
 
 #: Usual definition of operational suite
-
 a_suite = dict(
-    values = [ 'oper', 'dble', 'dbl' ],
-    default = 'oper',
+    values = [ 'oper', 'dble', 'dbl', 'test' ],
     remap = dict(
         dble = 'dbl'
     )

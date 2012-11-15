@@ -119,10 +119,13 @@ class Footprint(object):
         param = envfp()
         input = set()
         for k, kdef in attrs.iteritems():
-            if  kdef['optional'] and kdef['default'] == None:
-                guess[k] = UNKNOWN
+            if kdef['optional']:
+                if kdef['default'] == None:
+                    guess[k] = UNKNOWN
+                else:
+                    guess[k] = kdef['default']
             else:
-                guess[k] = kdef['default']
+                guess[k] = None
             if k in param:
                 guess[k] = param[k]
                 input.add(k)

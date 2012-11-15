@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 #: No automatic export
 __all__ = []
@@ -19,7 +19,10 @@ class IgaFinder(Finder):
         info = 'Iga file access',
         attr = dict(
             netloc = dict(
-                values = [ 'oper.inline.fr', 'oper' ],
+                values = [ 'oper.inline.fr', 'dbl.inline.fr', 'dble.inline.fr', 'test.inline.fr' ],
+                remap = {
+                    'dbl.inline.fr' : 'dble.inline.fr'
+                }
             ),
             rootdir = dict(
                 alias = [ 'suitehome' ],
@@ -48,6 +51,7 @@ class IgaFinder(Finder):
             return remote['path'].lstrip('/')
         else:
             return self.rootdir  + remote['path']
+
 
 class SopranoStore(Store):
 

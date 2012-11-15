@@ -22,16 +22,11 @@ ATM_LIST_TWO = ['perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim',
 
 class IgaCfgParser(GenericConfigParser):
 
-    def __init__(self, inifile):
-        GenericConfigParser.__init__(self)
-        self.delay = inifile
-
     def resolvedpath(self, resname):
         """
         Shortcut to retrieve the ``resolvedpath`` entry in the ``resname`` section
         of the current config file.
         """
-        self.refresh()
         return self.get(resname, 'resolvedpath')
 
 
@@ -47,8 +42,11 @@ class IgaProvider(Provider):
         attr = dict(
             namespace = dict(
                 optional = True,
-                values = [ 'oper.inline.fr', 'dbl.inline.fr' ],
-                default = 'oper.inline.fr'
+                default = '[suite].inline.fr',
+                values = [ 'oper.inline.fr', 'dble.inline.fr', 'dbl.inline.fr', 'test.inline.fr' ],
+                remap = {
+                    'dbl.inline.fr' : 'dble.inline.fr'
+                },
             ),
             tube = dict(
                 optional = True,
@@ -110,7 +108,6 @@ class IgaProvider(Provider):
             self.igakey != 'reunion'
         ):
             info['fmt'] = 'fic_day'
-        self.config.refresh()
         self.config.setall(info)
         self.writeNewPost('IgaProvider:pathname info %s' % info)
         self.notifyAll()

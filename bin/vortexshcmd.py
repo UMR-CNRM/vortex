@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, sys, re
+import os, sys, re, traceback
 import vortex
 import common.data, iga.data
 from vortex.utilities import dispatch
@@ -144,22 +144,25 @@ while ( listen ):
                 errormsg = (
                     'Something bad happened: ' + str(e),
                     str(exc_type),
-                    str(exc_traceback)
+                    'TRACEBACK:',
+                    "\n".join(traceback.format_tb(exc_traceback)),
+                    'END OF REPORT'
                 )
+                print errormsg
                 (rc, rmsg, results) = ( 1, "\n".join(errormsg), None )
             finally:
                 log.append((rc, cmd, opts))
             if target:
                 sto[target] = results
         else:
-            (rc, rmsg, results) = ( 1, 'Could not find command <' + cmd + '>', None )
+            (rc, rmsg, results) = ( -1, 'Could not find command <' + cmd + '>', None )
             log.append((rc, cmd, opts))
 
     sto['last'] = results
 
     # Well... someone is probably waiting on the output pipe !
     wp = open(wfifo, 'w')
-    wp.write(rmsg + "\n")
+    wp.write(str(rc) + "\n" + rmsg + "\n")
     wp.close()
 
 os.unlink(rfifo)

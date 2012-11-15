@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 Functions and tools to handle resources names or other kind of names.
@@ -24,7 +24,7 @@ def faNames(cutoff, reseau, model, filling=None):
                  ('r00', 'r06', 'r12','r18')
              )
          )
-    else:
+    elif cutoff == 'production':
         map_suffix = dict(
             zip(
                 zip(
@@ -34,7 +34,16 @@ def faNames(cutoff, reseau, model, filling=None):
                 ('rAM', 'rSX' , 'rPM', 'rDH')
             )
         )
+    elif cutoff == 'short':
+        map_suffix = {(cutoff, 0): 'rCM'}
+    else:
+        logging.warning(
+            "The cutoff attribute of the ressource %s is incorrect",
+            cutoff
+        )
+        return None
     #suffix choice
+    # TODO not safe in case the time is not defined
     suffix = map_suffix[(cutoff, reseau)]
     if model == 'arpege':
         if filling == 'surf':
@@ -46,7 +55,7 @@ def faNames(cutoff, reseau, model, filling=None):
     elif model == 'aladin':
         model_info = 'ALAD'
     return model_info, suffix
-    
+
 def gribNames(cutoff, reseau, model, run=None):
     logging.debug('model %s run %s', model, run)
     if model == 'arome':
@@ -88,7 +97,15 @@ def gribNames(cutoff, reseau, model, run=None):
                     ),
                     ('rAM', 'rSX' , 'rPM', 'rDH')
                 )
-            )       
+            )
+        elif cutoff == 'short':
+            map_suffix = {(cutoff, 0): 'rCM'}
+        else:
+            logging.warning(
+                "The cutoff attribute of the ressource %s is incorrect",
+                cutoff
+            )
+            return None
         prefix = 'PE'
         suffix = map_suffix[(cutoff, reseau)]
     else:
@@ -137,14 +154,6 @@ str(resource.month)
 def clim_model_bnames(resource):
     """docstring for clim_model_bnames"""
     if resource.model == 'arome' or resource.model == 'aladin':
-        #if "08" in resource.geometry.resolution:
-        #    #clim_dap.caled01.m01
-        #    resolution = "01"
-        #else:
-        #    resolution = "025"
-        #if "caledonie" in resource.geometry.area:
-        #    igadomain = "caledonie"
-        #localname = 'clim_' + igadomain + resolution + '.' + str(resource.month)
         localname = 'clim_' + resource.geometry.area + '_isba' + str(resource.month)
     elif resource.model == 'arpege':
         localname = 'clim_t' + str(resource.truncation) + '_isba' + str(resource.month)
@@ -286,8 +295,6 @@ def observations_bnames(resource):
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
     day = str(resource.date.day)
     prefix, suffix = gribNames(cutoff, reseau, model)
-    logging.debug('fmt %s part %s cutoff %s reseau %s model %s day %s suffix %s',
-                  fmt, part, cutoff, reseau, model, day, suffix)
     dico_names = {
         'obsoul' : 'obsoul' + '.' + part + '.' + suffix,
         'ecma' : {
@@ -369,6 +376,15 @@ def global_snames(resource):
                ('AM', 'SX' , 'PM', 'DH')
            )
        )
+    elif cutoff == 'short':
+        map_suffix = {(cutoff, 0): 'rCM'}
+    else:
+        logging.warning(
+            "The cutoff attribute of the ressource %s is incorrect",
+            cutoff
+        )
+        return None
+
     bname = None
     if resource.realkind() == 'rawfields':
         if resource.origin == 'ostia' and resource.fields == 'sst':

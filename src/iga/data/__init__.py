@@ -1,7 +1,7 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 #: No automatic export
 __all__ = []
 
-import containers, providers, resources, stores, fields, obs, errgrib, collected
+import containers, providers, stores, fields, obs, errgrib, collected

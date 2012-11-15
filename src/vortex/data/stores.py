@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 This package handles store objects in charge of physically accessing resources.
@@ -33,11 +33,11 @@ class Store(BFootprint):
             ),
         ),
     )
-    
+
     def __init__(self, *args, **kw):
         logging.debug('Abstract store init %s', self.__class__)
         super(Store, self).__init__(*args, **kw)
-    
+
     @classmethod
     def realkind(cls):
         """Defines the kind of this object, here ``store``."""
@@ -138,7 +138,7 @@ class MultiStore(BFootprint):
         """Go through internal opened stores and locate the expected resource for each of them."""
         logging.debug('Multi Store locate %s', remote)
         if not self.openedstores:
-            return False 
+            return False
         rloc = list
         for sto in self.openedstores:
             logging.info('Multi locate at %s', sto)
@@ -160,7 +160,7 @@ class MultiStore(BFootprint):
         """Go through internal opened stores and put resource for each of them."""
         logging.debug('Multi Store put from %s to %s', local, remote)
         if not self.openedstores:
-            return False 
+            return False
         rc = True
         for sto in self.openedstores:
             logging.info('Multi put at %s', sto)
@@ -170,7 +170,7 @@ class MultiStore(BFootprint):
 
 class Finder(Store):
     """The most usual store: your current filesystem!"""
-    
+
     _footprint = dict(
         info = 'Miscellaneous file access',
         attr = dict(
@@ -219,7 +219,7 @@ class Finder(Store):
 
     def fileput(self, system, local, remote):
         """Delegates to ``system`` the copy of ``local`` to ``remote``."""
-        return system.cp(local, self._realpath(remote)) 
+        return system.cp(local, self._realpath(remote))
 
     def ftpcheck(self, system, remote):
         """Delegates to ``system`` a distant check."""
@@ -246,7 +246,7 @@ class Finder(Store):
             rc = ftp.get(self._realpath(remote), local)
             ftp.close()
             return rc
-        
+
     def ftpput(self, system, local, remote):
         """Delegates to ``system`` the file transfert of ``local`` to ``remote``."""
         ftp = system.ftp(self.hostname(), remote['username'])
@@ -383,13 +383,15 @@ class VortexCacheStore(Store):
         return self.storage
 
     def cachepath(self, system):
+        cache = self.rootdir
         e = system.env
-        if ( self.rootdir == 'mtool' or ( e.SWAPP_OUTPUT_CACHE and e.SWAPP_OUTPUT_CACHE == 'mtool' ) ) and e.MTOOL_STEP_CACHE and system.path.isdir(e.MTOOL_STEP_CACHE):
-            cache = e.MTOOL_STEP_CACHE
-            logging.debug('Store %s uses mtool cache %s', self, cache)
-        else:
-            cache = e.WORKDIR or e.TMPDIR
-            logging.debug('Store %s uses default cache %s', self, cache)
+        if ( cache == 'mtool' or ( e.SWAPP_OUTPUT_CACHE and e.SWAPP_OUTPUT_CACHE == 'mtool' ) ):
+            if e.MTOOL_STEP_CACHE and system.path.isdir(e.MTOOL_STEP_CACHE):
+                cache = e.MTOOL_STEP_CACHE
+                logging.debug('Store %s uses mtool cache %s', self, cache)
+            else:
+                cache = e.WORKDIR or e.TMPDIR
+                logging.debug('Store %s uses default cache %s', self, cache)
         return system.path.join(cache, self.headdir)
 
     def vortexlocate(self, system, remote):
@@ -428,7 +430,7 @@ class VortexStore(MultiStore):
 
 class StoresCatalog(ClassesCollector):
     """Class in charge of collecting :class:`Store` items."""
-    
+
     def __init__(self, **kw):
         logging.debug('Stores catalog init %s', self)
         cat = dict(

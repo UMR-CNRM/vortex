@@ -24,7 +24,7 @@ __all__ = []
 import logging
 
 logging.basicConfig(
-    format='[%(asctime)s][%(module)-10s][%(levelname)8s]: %(message)s',
+    format='[%(asctime)s][%(module)s][%(levelname)s]: %(message)s',
     datefmt='%m/%d/%Y %H:%M:%S',
     level=logging.WARNING
 )

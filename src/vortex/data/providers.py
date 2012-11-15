@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 
 #: No automatic export
@@ -35,7 +35,7 @@ class Provider(BFootprint):
     def __init__(self, *args, **kw):
         logging.debug('Abstract provider init %s', self.__class__)
         super(Provider, self).__init__(*args, **kw)
-    
+
     @classmethod
     def realkind(cls):
         return 'provider'
@@ -69,12 +69,12 @@ class Provider(BFootprint):
         Create an uri adapted to a vortex resource so as to allow the element
         in charge of retrieving the real resource to be able to locate and
         retreive it. The method used to achieve this action:
-        
+
         * obtain the proto information,
         * ask for the domain,
         * get the pathname,
         * get the basename.
-        
+
         The different operations of the algorithm can be redefined by subclasses.
         """
         return net.uriunparse((
@@ -98,7 +98,7 @@ class Remote(Provider):
 	        ),
             hostname = dict(
                 optional = True,
-                default = 'localhost' 
+                default = 'localhost'
             ),
             tube = dict(
                 optional = True,
@@ -116,7 +116,7 @@ class Remote(Provider):
     def __init__(self, *args, **kw):
         logging.debug('Remote provider init %s', self)
         super(Remote, self).__init__(*args, **kw)
-    
+
     @classmethod
     def realkind(cls):
         return 'remote'
@@ -158,11 +158,11 @@ class Vortex(Provider):
             member = dict(
                 type = int,
                 optional = True,
-            ),  
+            ),
             namespace = dict(
                 optional = True,
                 values = [ 'open.vortex.fr', 'vortex.cache.fr', 'vortex.archive.fr', 'multi.vortex.fr', 'open.cache.fr', 'open.archive.fr' ],
-                default = 'open.vortex.fr',
+                default = 'open.cache.fr',
                 remap = {
                     'vortex.cache.fr' : 'open.cache.fr',
                     'vortex.archive.fr' : 'open.archive.fr',
@@ -215,7 +215,7 @@ class Vortex(Provider):
         and resource :func:`basname_info`.
         """
         return self.namebuild.pack(resource.basename_info())
-        
+
 
 class ProvidersCatalog(ClassesCollector):
 

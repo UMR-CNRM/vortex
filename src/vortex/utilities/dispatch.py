@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 First version of command line dispatcher.
@@ -23,7 +23,7 @@ class Dispatcher(object):
         logging.debug('Dispatcher init %s', self)
 
     # Internal tools
-    
+
     def _objectslist(self, objs):
         return "\n".join(sorted([str(x) for x in objs]))
 
@@ -32,7 +32,7 @@ class Dispatcher(object):
     def help(self, t, kw):
         """
         Print documentation for all or specified methods of the current shell dispatcher.
-        """ 
+        """
         methods = sorted(filter(lambda x: not x.startswith('_'), self.__class__.__dict__.keys()))
         if kw:
             strdocs = list()
@@ -72,7 +72,7 @@ class Dispatcher(object):
         """
         ts = int(kw.get('time', 1))
         t.system().sleep(ts)
-        return (0, '', ts)
+        return (0, 'Done...', ts)
 
     def daemons(self, t, kw):
         """
@@ -80,15 +80,15 @@ class Dispatcher(object):
         Return this list.
         """
         psall = t.system().ps('-wwaf', 'python.*vortexshcmd')
-        psd = [ '{0:16s} {1:16s} {2:16s}'.format('USER', 'FIFOTAG', 'FIFODIR') ]
+        psd = [ '{0:16s} {1:24s} {2:32s}'.format('USER', 'FIFOTAG', 'FIFODIR') ]
         psr = []
         bl = re.compile('\s+')
         for ps in psall:
             items = bl.split(ps)
             psr.append((items[0], items[-1], items[-2]))
-            psd.append('{0:16s} {1:16s} {2:16s}'.format(items[0], items[-1], items[-2]))
+            psd.append('{0:16s} {1:24s} {2:32s}'.format(items[0], items[-1], items[-2]))
         return (0, "\n".join(psd), psr)
-    
+
     def session(self, t, kw):
         """
         Print current session tag.
@@ -191,7 +191,7 @@ class Dispatcher(object):
         return (0, t.glove.vconf, t.glove.vconf)
 
     # Footprint interface
-    
+
     def envfp(self, t, kw):
         """
         Set and print the current default footprint values.
@@ -228,16 +228,20 @@ class Dispatcher(object):
             return (1, 'No object specified', None)
         if 'attr' in kw:
             rattr = getattr(obj, kw['attr'], None)
-            return (1, str(rattr), rattr)
+            return (0, str(rattr), rattr)
         if 'method' in kw:
             rattr = getattr(obj, kw['method'], None)
-            args = kw.setdefault('args', False)
-            if args:
-                del kw['args']
-                info = rattr(kw)
+            if callable(rattr):
+                args = kw.setdefault('args', False)
+                if args:
+                    del kw['args']
+                    del kw['method']
+                    info = rattr(kw)
+                else:
+                    info = rattr()
+                return (0, str(info), info)
             else:
-                info = rattr()
-            return (1, str(info), info)
+                return (2, kw['method'] + ' is not a callable method', None)
 
     def item(self, t, kw):
         """
@@ -268,7 +272,7 @@ class Dispatcher(object):
             info = obj(**kw)
             return (0, str(info), info)
         else:
-            return (1, 'Object not callable', None)
+            return (2, 'Object not callable', None)
 
     def nice(self, t, kw):
         """
@@ -281,19 +285,19 @@ class Dispatcher(object):
             strdumps.append(dumper.nicedump(v))
         return (0, "\n".join(strdumps), None)
 
-    
+
     # Catalogs
 
     def catalogs(self, t, kw):
         """
         Return current entries in catalogs table.
-        """ 
+        """
         tc = catalogs.table().keys()
         return(0, str(tc), tc)
 
     def refill(self, t, kw):
         """
-        Refill the specified catalogs already in the calatogs table. 
+        Refill the specified catalogs already in the calatogs table.
         Return the actual number of items.
         """
         refilled = list()
@@ -351,7 +355,7 @@ class Dispatcher(object):
         """
         cat = data.stores.catalog()
         return (0, self._objectslist(cat()), cat)
-    
+
     def components(self, t, kw):
         """
         Display algo components catalog contents.
@@ -392,7 +396,7 @@ class Dispatcher(object):
         info = trackers.tracker(tag='fpresolve').alldump()
         return (0, str(info), None)
 
-        
+
     # shortcuts to load commands
 
     def container(self, t, kw):
@@ -426,7 +430,7 @@ class Dispatcher(object):
         """
         info = data.stores.load(**kw)
         return (0, str(info), info)
-    
+
     def component(self, t, kw):
         """
         Load an algo component object according to description.
@@ -451,7 +455,7 @@ class Dispatcher(object):
         info = tools.systems.load(**kw)
         return (0, str(info), info)
 
-        
+
     # Direct resources access
 
     def spectral(self, t, kw):
@@ -491,7 +495,7 @@ class Dispatcher(object):
             info = rh.locate()
             return (0, str(info), info)
         else:
-            return (0, 'None', None)
+            return (1, 'None', None)
 
     def get(self, t, kw):
         """
@@ -527,12 +531,18 @@ class Dispatcher(object):
         for rh in info:
             if rh.put():
                 actualstorage = rh.locate()
+                logging.info('DBLPUT p1 = %s / loc = %s', rh.provider, actualstorage)
                 actualprovider = rh.provider
                 rh.provider = dblprovider
                 doublestorage = rh.locate()
+                logging.info('DBLPUT p2 = %s / loc = %s', rh.provider, doublestorage)
                 rh.provider = actualprovider
                 if doublestorage:
-                    t.system().remove(doublestorage)
-                    t.system().link(actualstorage, doublestorage)
+                    system = t.system()
+                    system.remove(doublestorage)
+                    system.filecocoon(doublestorage)
+                    system.link(actualstorage, doublestorage)
                     display.extend([actualstorage, '  -> ' + doublestorage])
+            else:
+                logging.warning('DBLPUT could not store main resource %s', rh)
         return (0, "\n".join(display), info)

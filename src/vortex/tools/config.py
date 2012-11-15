@@ -8,6 +8,7 @@ Configuration management through ini files.
 __all__ = []
 
 import types
+import logging
 from ConfigParser import SafeConfigParser
 
 from vortex import sessions
@@ -17,7 +18,7 @@ class GenericConfigParser(object):
     """Basic configuration file parser."""
 
     def __init__(self, inifile=None):
-        self._parser = SafeConfigParser()
+        self.parser = SafeConfigParser()
         if inifile:
             self.setfile(inifile)
         else:
@@ -33,7 +34,7 @@ class GenericConfigParser(object):
             self.file = glove.configrc + '/' + local.path.basename(inifile)
             if not local.path.exists(self.file):
                 raise Exception(self.file)
-        self._parser.read(self.file)
+        self.parser.read(self.file)
 
     def setall(self, kw):
         """Define in all section the couples of ( key, values ) given as dictionary argument."""
@@ -57,7 +58,9 @@ class GenericConfigParser(object):
         return self.updates
 
     def __getattr__(self, attr):
-        return getattr(self._parser, attr)
+        if attr.startswith('__'):
+            raise AttributeError
+        return getattr(self.parser, attr)
 
 
 class DelayedConfigParser(GenericConfigParser):
@@ -75,8 +78,12 @@ class DelayedConfigParser(GenericConfigParser):
             self.delay = None
 
     def __getattribute__(self, attr):
-        if attr in filter(lambda x: not x.startswith('_'), dir(SafeConfigParser) + [ 'setall', 'save' ]):
-            object.__getattribute__(self, 'refresh')()
+        try:
+            logging.warning('Getattr %s < %s >', attr, self)
+            if attr in filter(lambda x: not x.startswith('_'), dir(SafeConfigParser) + [ 'setall', 'save' ]):
+                object.__getattribute__(self, 'refresh')()
+        except:
+            logging.abort('Trouble getattr %s < %s >', attr, self)
         return object.__getattribute__(self, attr)
 
 

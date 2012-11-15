@@ -12,7 +12,7 @@ Package
 -------
 
 .. autodata:: __all__
-  
+
 Interface
 ---------
 
@@ -20,7 +20,7 @@ As a :mod:`vortex.utilities.catalogs` based module,
 :mod:`vortex.data.stores` automaticaly defined the following functions:
 
 .. autofunction:: catalog
-   
+
 .. autofunction:: pickup
 
 .. autofunction:: load
@@ -28,7 +28,7 @@ As a :mod:`vortex.utilities.catalogs` based module,
 
 Classes
 -------
- 
+
 .. autoclass:: StoresCatalog
    :show-inheritance:
    :members:
@@ -45,6 +45,16 @@ Classes
    :member-order: bysource
 
 .. autoclass:: Finder
+   :show-inheritance:
+   :members:
+   :member-order: bysource
+
+.. autoclass:: VortexArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: bysource
+
+.. autoclass:: VortexCacheStore
    :show-inheritance:
    :members:
    :member-order: bysource
