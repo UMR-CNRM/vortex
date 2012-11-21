@@ -20,14 +20,14 @@ Classes
 .. autoclass:: Analysis
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: Historic
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: Histsurf
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

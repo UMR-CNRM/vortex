@@ -20,9 +20,9 @@ Classes
 .. autoclass:: RtCoef
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: MatFilter
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

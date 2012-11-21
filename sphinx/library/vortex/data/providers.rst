@@ -38,20 +38,20 @@ Classes
 .. autoclass:: ProvidersCatalog
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
    
 .. autoclass:: Provider
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
    
 .. autoclass:: Remote
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: Vortex
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
  

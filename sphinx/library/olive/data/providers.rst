@@ -20,9 +20,9 @@ Classes
 .. autoclass:: Olive
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
    
 .. autoclass:: OpArchive
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

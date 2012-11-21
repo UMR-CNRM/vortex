@@ -37,25 +37,25 @@ Footprint mechanism
 .. autoclass:: Footprint
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: IFootprint
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: AFootprint
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: MFootprint
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: BFootprint
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 

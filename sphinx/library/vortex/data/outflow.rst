@@ -23,14 +23,14 @@ Classes
 .. autoclass:: NoDateResource
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: ModelResource
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
    
 .. autoclass:: StaticResource
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

@@ -20,6 +20,6 @@ Classes
 .. autoclass:: BackgroundErrStd
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 

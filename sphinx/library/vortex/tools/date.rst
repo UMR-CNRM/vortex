@@ -14,4 +14,4 @@ Classes
 .. autoclass:: Date
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

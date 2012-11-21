@@ -38,15 +38,15 @@ Classes
 .. autoclass:: SystemsCatalog
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: System
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: LinuxBase
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 

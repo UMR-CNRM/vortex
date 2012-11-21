@@ -19,10 +19,10 @@ Base Classes
 .. autoclass:: Observer
    :show-inheritance:
    :members:
-   :member-order: bysource 
+   :member-order: alphabetical 
 
 .. autoclass:: ObserverSet
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
    

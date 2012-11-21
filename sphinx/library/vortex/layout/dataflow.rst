@@ -31,10 +31,10 @@ Classes
 .. autoclass:: Section
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: Sequence
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 

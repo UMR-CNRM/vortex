@@ -20,9 +20,9 @@ Classes
 .. autoclass:: GenvKey
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: GenvDomain
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

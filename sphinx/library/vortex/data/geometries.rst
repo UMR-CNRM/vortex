@@ -23,14 +23,14 @@ Classes
 .. autoclass:: Geometry
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: SpectralGeometry
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: GridGeometry
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

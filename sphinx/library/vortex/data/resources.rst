@@ -37,9 +37,9 @@ Classes
 .. autoclass:: Resource
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
    
 .. autoclass:: ResourcesCatalog
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

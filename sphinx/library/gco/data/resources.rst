@@ -25,5 +25,5 @@ Classes
 .. autoclass:: MiscGenv
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
    

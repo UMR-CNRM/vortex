@@ -38,20 +38,20 @@ Classes
 .. autoclass:: AlgoComponentsCatalog
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: AlgoComponent
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: Expresso
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: Parallel
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 

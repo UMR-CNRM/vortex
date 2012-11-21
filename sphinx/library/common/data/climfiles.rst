@@ -20,24 +20,24 @@ Classes
 .. autoclass:: Clim
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: ClimModel
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: ClimGlobal
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: ClimLAM
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: ClimBDAP
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

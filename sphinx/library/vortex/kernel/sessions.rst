@@ -34,7 +34,7 @@ The office in charge of ticket distribution ::class:`Desk`
 .. autoclass:: Desk
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 
 Tickets
@@ -43,6 +43,6 @@ Tickets
 .. autoclass:: Ticket
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 

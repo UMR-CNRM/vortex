@@ -20,10 +20,10 @@ Classes
 .. autoclass:: OliveArchiveStore
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: OpArchiveStore
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
    

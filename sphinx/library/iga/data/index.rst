@@ -8,5 +8,4 @@ Data resources
    :maxdepth: 1
 
    providers
-   resources
    stores

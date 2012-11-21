@@ -46,14 +46,14 @@ Class attributes
 .. autoclass:: FmtInt
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: Term
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: Month
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

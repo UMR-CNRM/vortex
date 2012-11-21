@@ -23,14 +23,14 @@ Classes
 .. autoclass:: DataContent
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: IndexedTable
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: DataRaw
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

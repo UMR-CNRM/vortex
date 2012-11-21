@@ -20,7 +20,7 @@ Base Catalog
 .. autoclass:: Catalog
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
    
 
 Collecting miscellaneous classes
@@ -29,4 +29,4 @@ Collecting miscellaneous classes
 .. autoclass:: ClassesCollector
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

@@ -20,25 +20,25 @@ Classes
 .. autoclass:: Collected
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: BlackListDiap
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: BlackListLoc
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: Obsmap
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: Bcor
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 

@@ -19,19 +19,19 @@ Classes
 .. autoclass:: Sequence
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: Node
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: Task
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: Family
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

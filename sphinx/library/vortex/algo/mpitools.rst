@@ -32,14 +32,14 @@ Classes
 .. autoclass:: MpiToolsCatalog
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: MpiTool
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: MpiRun
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

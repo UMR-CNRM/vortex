@@ -36,9 +36,9 @@ Classes
 .. autoclass:: ShellEncoder
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
    
 .. autoclass:: Environment
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

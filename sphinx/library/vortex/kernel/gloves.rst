@@ -33,20 +33,20 @@ Classes
 .. autoclass:: GlovesCatalog
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
   
 .. autoclass:: Glove
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: OperGlove
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: ResearchGlove
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 

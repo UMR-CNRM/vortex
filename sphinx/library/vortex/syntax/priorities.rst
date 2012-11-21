@@ -20,10 +20,10 @@ Handling priorities
 .. autoclass:: PriorityLevel
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: PrioritySet
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 

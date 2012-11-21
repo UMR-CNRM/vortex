@@ -32,9 +32,9 @@ Classes
 .. autoclass:: TargetsCatalog
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
 
 .. autoclass:: Target
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical

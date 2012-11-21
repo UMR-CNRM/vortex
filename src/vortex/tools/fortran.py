@@ -9,15 +9,16 @@ For each literal type (integer, boz, real, complex, character and
 logical), there is a corresponding function parse_* and a global
 parser, simply called parser, choose automatically the appropriate
 literal type. Here is the type conversion table:
-          integer   -> int
-          boz       -> int
-          real      -> float
-          complex   -> complex
-          character -> string
-          logical   -> bool
+
+  * integer   -> int
+  * boz       -> int
+  * real      -> float or Decimal
+  * complex   -> complex
+  * character -> string
+  * logical   -> bool
 
 For python data, functions are provided for conversion into FORTRAN
-literals. Each literal type has its encode_* function and a global
+literals through a LiteralParser. Each literal type has its encode_* function and a global
 encoder, simply called encode, chooses automatically the appropriate
 encoder; python integers will be converted into a FORTRAN integer,
 hence the only way to produce a FORTRAN boz is to use encode_boz
@@ -28,6 +29,9 @@ every situation that may happen.
 
 Inital author: Joris Picot (2010-12-08 / CERFACS)
 """
+
+#: No automatic export
+__all__ = []
 
 from decimal import Decimal
 import re
@@ -127,6 +131,7 @@ class LiteralParser(object):
         self.recompile()
 
     def recompile(self):
+        """Recompile regexps according to internal characters strings by type."""
         self.integer   = re.compile(self._re_integer,   self._re_flags)
         self.boz       = re.compile(self._re_boz,       self._re_flags)
         self.real      = re.compile(self._re_real,      self._re_flags)
@@ -139,21 +144,27 @@ class LiteralParser(object):
     # Fast check
 
     def check_integer(self, string):
+        """Returns True if ``string`` could be an integer."""
         return bool(self.integer.match(string))
 
     def check_boz(self, string):
+        """Returns True if ``string`` could be a binary, octal or hexa number."""
         return bool(self.boz.match(string))
 
     def check_real(self, string):
+        """Returns True if ``string`` could be a real number."""
         return bool(self.real.match(string))
 
     def check_complex(self, string):
+        """Returns True if ``string`` could be a complex number."""
         return bool(self.complex.match(string))
 
     def check_character(self, string):
+        """Returns True if ``string`` could be a character string."""
         return bool(self.character.match(string))
 
     def check_logical(self, string):
+        """Returns True if ``string`` could be a logical value."""
         return bool(self.logical.match(string))
 
     # Atomic type parsing
@@ -239,12 +250,15 @@ class LiteralParser(object):
             raise ValueError("Literal %s doesn't represent a FORTRAN literal" % string)
 
     def encode_integer(self, value):
+        """Returns the string form of the integer ``value``."""
         return str(value)
 
     def encode_boz(self, value):
+        """Returns the string form of the BOZ ``value``."""
         return str(value)
 
     def encode_real(self, value):
+        """Returns the string form of the real ``value``."""
         real = '{0:G}'.format(value).replace('E', 'D')
         if '.' not in real:
             real = re.sub('D', '.0D', real)
@@ -252,9 +266,11 @@ class LiteralParser(object):
         return real
 
     def encode_complex(self, value):
+        """Returns the string form of the complex ``value``."""
         return "(%s,%s)" % (self.encode_real(value.real), self.encode_real(value.imag))
 
     def encode_character(self, value):
+        """Returns the string form of the character string ``value``."""
         if ( "'" in value and '"' in value ):
             return '"%s"' % value.replace('"', '""')
         elif ( "'" in value ):
@@ -265,12 +281,14 @@ class LiteralParser(object):
             return "'%s'" % value
 
     def encode_logical(self, value):
+        """Returns the string form of the logical ``value``."""
         if ( value ):
             return '.TRUE.'
         else:
             return '.FALSE.'
 
     def encode(self, value):
+        """Returns the string form of the specified ``value`` according to its type."""
         if   ( isinstance(value, bool    ) ): return self.encode_logical(value)
         elif ( isinstance(value, int     ) ): return self.encode_integer(value)
         elif ( isinstance(value, float   ) ): return self.encode_real(value)
@@ -300,6 +318,7 @@ class NamelistBlock(object):
         return self._name
 
     def __repr__(self):
+        """Returns a formated id of the current namelist block, including number of items."""
         return '<NamelistBlock: {0:s} has {1:d} item(s)>'.format(self.name, len(self._pool))
 
     def setvar(self, varname, value):
@@ -478,6 +497,7 @@ class NamelistParser(object):
         self.recompile()
 
     def recompile(self):
+        """Recompile regexps according to internal characters strings by type."""
         self.clean = re.compile(self._re_clean, self._re_flags)
         self.block = re.compile(self._re_block, self._re_flags)
         self.bname = re.compile(self._re_bname, self._re_flags)

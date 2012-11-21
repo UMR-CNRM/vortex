@@ -1,34 +1,37 @@
-:mod:`olive.data.obs` --- Olive observations related resources
+:mod:`vortex.tools.fortran` --- FORTRAN literals and namelists
 ==============================================================
 
-.. automodule:: olive.data.obs
-   :synopsis: Observations relates resources for Olive application
+.. automodule:: vortex.tools.fortran
+   :synopsis: Support for fortran literals and namelists
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.1
+.. versionadded:: 0.6
+
+.. todo::
+
+      Nothing written for :mod:`vortex.tools.fortran` handling yet !
+
 
 Package
 -------
 
 .. autodata:: __all__
 
-
 Classes
 -------
- 
-.. autoclass:: Observations
+
+.. autoclass:: LiteralParser
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Refdata
+.. autoclass:: NamelistBlock
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Varbc
+.. autoclass:: NamelistParser
    :show-inheritance:
    :members:
    :member-order: alphabetical
-

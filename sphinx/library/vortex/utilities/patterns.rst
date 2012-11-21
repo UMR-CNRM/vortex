@@ -14,11 +14,11 @@ Base Classes
 .. autoclass:: Borg
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
    
 .. autoclass:: Singleton
    :show-inheritance:
    :members:
-   :member-order: bysource
+   :member-order: alphabetical
    
    

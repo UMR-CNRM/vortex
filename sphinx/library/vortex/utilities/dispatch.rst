@@ -15,4 +15,4 @@ Base Classes
 .. autoclass:: Dispatcher
    :show-inheritance:
    :members:
-   :member-order: bysource 
+   :member-order: alphabetical 
