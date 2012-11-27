@@ -17,11 +17,11 @@ class UtClimGlobal(TestCase):
 
     def setUp(self):
         self.std = SpectralGeometry(id='Current op',  truncation=798, stretching=2.4)
-        #sessions.current().debug()
+        # sessions.current().debug()
 
     def test_v1(self):
         rl = toolbox.rload(
-            kind='modelclim',
+            kind='clim_model',
             namespace='vortex.cache.fr',
             experiment='oper',
             block='clim',
@@ -39,7 +39,7 @@ class UtClimGlobal(TestCase):
 
     def test_c1(self):
         rl = toolbox.rload(
-            kind='modelclim',
+            kind='clim_model',
             geometry=self.std,
             local='clim.(month)',
             genv='cy36t1_op1.01',
@@ -61,7 +61,7 @@ class UtClimLAM(TestCase):
     
     def test_v1(self):
         rl = toolbox.rload(
-            kind='modelclim',
+            kind='clim_model',
             namespace='vortex.cache.fr',
             experiment='oper',
             block='clim',
@@ -78,7 +78,7 @@ class UtClimLAM(TestCase):
     
     def test_c1(self):
         rl = toolbox.rload(
-            kind='modelclim',
+            kind='clim_model',
             geometry=self.caledonie,
             local='clim.(month)',
             genv='cy36t1_op1.01',
@@ -166,7 +166,7 @@ class UtClimBDAP(TestCase):
 
 
 if __name__ == '__main__':
-    for test in [ UtClimBDAP, UtClimGlobal, UtClimLAM ]:
+    for test in [ UtClimGlobal, UtClimLAM, UtClimBDAP]:
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
