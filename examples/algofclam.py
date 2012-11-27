@@ -7,6 +7,7 @@ import common.data
 import common.algo
 import olive.data
 from vortex.data.geometries import SpectralGeometry
+from vortex.tools import env
 
 t = sessions.ticket()
 t.warning()
@@ -14,6 +15,12 @@ t.warning()
 g = t.glove
 e = t.env
 c = t.context
+
+myenv = env.current()
+mysys = t.system()
+
+mysys.chdir(myenv.HOME + '/tmp/rundir')
+mysys.rmglob('-rf','*')
 
 
 cr = vortex.data.resources.catalog()

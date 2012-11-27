@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from vortex import sessions, toolbox
 import vortex.data
@@ -26,7 +26,7 @@ cr.track = True
 myenv = env.current()
 mysys = t.system()
 
-mysys.chdir(myenv.TMPDIR + '/rundir')
+mysys.chdir(myenv.HOME + '/tmp/rundir')
 mysys.rmglob('-rf','*')
 
 fpenv = footprint.envfp(
@@ -68,7 +68,7 @@ gconf_aladin = genv.register(
 t.warning()
 #toolbox.input(
 input= (toolbox.rload(
-            kind='clim_model', 
+            kind='clim_model',
             genv=arpege_cycle,
             local='climarpege',
             model='arpege',
@@ -76,7 +76,7 @@ input= (toolbox.rload(
             month='09',
             role='Fatherclim'),
         toolbox.rload(
-            kind='clim_model', 
+            kind='clim_model',
             genv=aladin_cycle,
             local='climaladin',
             month='09',
@@ -84,7 +84,7 @@ input= (toolbox.rload(
             model='aladin',
             geometry=SpectralGeometry(id='Current op', area='reunion', resolution='08km00')),
         toolbox.rload(
-            kind='namelist', 
+            kind='namelist',
             genv=aladin_cycle,
             local='my_namelist',
             role='namelist',
@@ -92,8 +92,8 @@ input= (toolbox.rload(
             model='aladin',
             source='namel_e927'),
         toolbox.rload(
-            kind='historic', 
-            date = '2012093000', 
+            kind='historic',
+            date = '2012093000',
             cutoff='production',
             namespace='[suite].archive.fr',
             geometry=SpectralGeometry(id='Current op', truncation='798'),
@@ -114,7 +114,7 @@ for rh in input:
     for r in rh:
         r.get()
 
-        
+
 #rx = toolbox.rh(remote=e.home + '/tmp/test.sh', file='test.sh', rawopts='coucou', language=e.trueshell())
 #rx = toolbox.rh(remote=e.home + '/tmp/test.sh', file='testcpl.sh', model='arpege', kind='ifsmodel')
 rx = toolbox.rh(remote=e.home + '/tmp/testcpl.sh', file='testcpl.sh', language='bash', kind='script')
@@ -140,7 +140,7 @@ print t.line
 print t.line
 
 
-x = toolbox.component(kind='couplingexpresso', timescheme='eul', model='arpifs', fcterm=0, timestep=415.385, engine='exec', interpreter='bash')
+x = toolbox.component(kind='coupling', timescheme='eul', model='arpifs', fcterm=0, timestep=415.385, engine='parallel')
 print t.prompt, 'Engine is', x
 
 print t.line
