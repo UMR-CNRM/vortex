@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 #: No automatic export
 __all__ = []
@@ -34,43 +34,43 @@ class Elscf(GeoFlowResource):
             )
         )
     ]
-    
+
     @classmethod
     def realkind(cls):
         return 'elscf'
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'ELSCF'+ self.model[:4].upper() + '_' + self.geometry.area + '+' + str(self.term)
-    
+        return 'ELSCF' + self.model[:4].upper() + '_' + self.geometry.area + '+' + str(self.term)
+
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
         suffix = archivesuffix(self.model, self.cutoff, self.date)
         prefix = 'COUPL'
         if re.match('assist1bis|testms1', self.geometry.area):
             prefix = 'COUPL1'
-        if re.match('ifs|ecmwf', self.source) and re.match('16km',self.geometry.resolution):
-            prefix = 'COUPLIFS'   
-           
+        if re.match('ifs|ecmwf', self.source) and '16km' in self.geometry.resolution:
+            prefix = 'COUPLIFS'
+
         return prefix + str(self.term) + '.r' + str(suffix)
-  
+
     def basename_info(self):
         """Generic information, radical = ``cpl``."""
         return dict(
-            radical='cpl',
-            src=self.source,
-            geo=[self.geometry.area, self.geometry.resolution],
-            term=str(self.term),
-            format=self.nativefmt
+            format  = self.nativefmt,
+            geo     = [self.geometry.area, self.geometry.resolution],
+            src     = self.source,
+            radical = 'cpl',
+            term    = str(self.term),
         )
 
     def iga_pathinfo(self):
-        if self.model == "arome":
+        if self.model == 'arome':
             directory = 'fic_day'
         else:
             directory = 'autres'
         return dict(
+            fmt       =  directory,
+            model     = self.model,
             nativefmt = self.nativefmt,
-            model = self.model,
-            fmt =  directory
         )

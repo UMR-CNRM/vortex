@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 #: No automatic export
 __all__ = []
@@ -30,7 +30,7 @@ class Clim(StaticResource):
             )
           )
     ]
- 
+
     @classmethod
     def realkind(cls):
         return 'clim'
@@ -63,12 +63,12 @@ class ClimModel(Clim):
             )
         )
     )
-    
+
     @classmethod
     def realkind(cls):
         return 'clim_model'
 
-    
+
 class ClimGlobal(ClimModel):
     """
     Class for a model climatology of a global model. A SpectralGeometry object is needed. A Genvkey can be given.
@@ -84,15 +84,15 @@ class ClimGlobal(ClimModel):
             ),
         )
     )
-    
+
     def basename_info(self):
         """Generic information, radical = ``clim``."""
         return dict(
-            radical='clim',
-            src=self.model,
-            geo=[{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}],
-            suffix={'month':self.month},
-            format=self.nativefmt
+            format  = self.nativefmt,
+            geo     = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}],
+            radical = 'clim',
+            src     = self.model,
+            suffix  = {'month':self.month},
         )
 
 
@@ -116,7 +116,7 @@ class ClimLAM(ClimModel):
             ),
         )
     )
-    
+
     @classmethod
     def realkind(cls):
         return 'clim_model'
@@ -124,11 +124,11 @@ class ClimLAM(ClimModel):
     def basename_info(self):
         """Generic information, radical = ``clim``."""
         return dict(
-            radical='clim',
-            src=self.model,
-            geo=[self.geometry.area,self.geometry.resolution],
-            suffix={'month':self.month},
-            format=self.nativefmt
+            format  = self.nativefmt,
+            geo     = [self.geometry.area,self.geometry.resolution],
+            radical = 'clim',
+            src     = self.model,
+            suffix  = {'month':self.month},
         )
 
 class ClimBDAP(Clim):
@@ -166,9 +166,9 @@ class ClimBDAP(Clim):
     def basename_info(self):
         """Generic information, radical = ``clim``."""
         return dict(
-            radical='clim',
-            src=self.model,
-            geo=self.geometry.area,
-            suffix={'month':self.month},
-            format=self.nativefmt
+            format  = self.nativefmt,
+            geo     = self.geometry.area,
+            radical = 'clim',
+            src     = self.model,
+            suffix  = {'month':self.month},
         )

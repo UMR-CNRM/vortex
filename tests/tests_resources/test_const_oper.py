@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 
 try:
@@ -30,9 +30,8 @@ class UtRtCoef(TestCase):
         )
 
     def test_ctlg(self):
-        rtcoef = self.fp_rtcoef
         ctlg = resources.catalog()
-        res = ctlg.findbest(rtcoef)
+        res = ctlg.findbest(self.fp_rtcoef)
 
         self.assertTrue(res.kind, 'rtcoef')
 
@@ -44,7 +43,7 @@ class UtRtCoef(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            
+
         self.assertEqual(rl[0].resource.kind, 'rtcoef')
         self.assertEqual(rl[0].provider.realkind(), 'iga')
         self.assertEqual(rl[0].container.realkind(), 'file')
@@ -68,14 +67,14 @@ class UtBcor(TestCase):
             igakey = 'france',
         )
         self.fp_cont = dict(
-            local='bcor_[category].dat'
+            local='bcor_[satbias].dat'
         )
         self.fp_bcor = dict(
             kind='bcor',
             model='arpege',
             date=today(),
             cutoff='production',
-            category=['noaa','ssmi','mtop']
+            satbias=['noaa','ssmi','mtop']
         )
 
     def tearDown(self):
@@ -85,7 +84,7 @@ class UtBcor(TestCase):
     def test_ctlg(self):
         for cat in ['noaa','ssmi','mtop']:
             bcor = self.fp_bcor
-            bcor['category'] = cat
+            bcor['satbias'] = cat
             ctlg = resources.catalog()
             res = ctlg.findbest(bcor)
             self.assertTrue(res.kind, 'rtcoef')
@@ -98,10 +97,10 @@ class UtBcor(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            
             self.assertEqual(rh.resource.kind, 'bcor')
             self.assertEqual(rh.provider.realkind(), 'iga')
             self.assertEqual(rh.container.realkind(), 'file')
+
         self.assertEqual(
             rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/const/autres/bcor_noaa.dat'
@@ -134,7 +133,7 @@ if __name__ == '__main__':
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
-            break 
+            break
 
 def get_test_class():
         return [ UtRtCoef, UtBcor ]

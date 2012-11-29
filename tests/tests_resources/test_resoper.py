@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 
 import os
@@ -59,7 +59,7 @@ class UtMatFilter(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            
+
         self.assertEqual(rl[0].resource.kind, 'matfilter')
         self.assertEqual(rl[0].provider.realkind(), 'iga')
         self.assertEqual(rl[0].container.realkind(), 'file')
@@ -108,7 +108,7 @@ class UtRtCoef(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            
+
         self.assertEqual(rl[0].resource.kind, 'rtcoef')
         self.assertEqual(rl[0].provider.realkind(), 'iga')
         self.assertEqual(rl[0].container.realkind(), 'file')
@@ -124,13 +124,13 @@ class UtRtCoef(TestCase):
 
 
 class UtRawFields(TestCase):
-    
+
     def setUp(self):
         self.fp_prov = dict(
             username = 'mxpt001',
+            vapp = 'arpege',
             suite = 'oper',
             igakey = 'france',
-            glove = sessions.glove()
         )
         self.fp_prov_2 = dict(
             username = 'mxpt001',
@@ -139,8 +139,7 @@ class UtRawFields(TestCase):
             namespace='prod.inline.fr',
             vapp = 'arpege',
             tube = 'ftp',
-            glove = sessions.glove()
-        )       
+        )
         self.fp_cont_nesdis = dict(
             local='sst.nesdis.bdap'
         )
@@ -212,7 +211,7 @@ class UtRawFields(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/sst.nesdis.bdap'
         )
 
@@ -233,7 +232,7 @@ class UtRawFields(TestCase):
             print ' > ', rh.location()
 
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/sst.ostia')
 
         self.assertEqual(
@@ -264,7 +263,7 @@ class UtRawFields(TestCase):
 
 
 class UtGeoFields(TestCase):
-    
+
     def setUp(self):
         self.std = SpectralGeometry(id='Current op', area='france', truncation=798)
         self.fp_prov = dict(
@@ -272,7 +271,7 @@ class UtGeoFields(TestCase):
             suite = 'oper',
             igakey = '[geometry::area]',
             glove = sessions.glove()
-        )       
+        )
         self.fp_cont = dict(
             local='ICMSHANALSST'
         )
@@ -291,7 +290,7 @@ class UtGeoFields(TestCase):
         del self.fp_cont
         del self.fp_sst
         del self.std
-        
+
     def test_ctlg(self):
         sstgeofields = self.fp_sst
         ctlg = resources.catalog()
@@ -311,11 +310,11 @@ class UtGeoFields(TestCase):
             print ' > ', rh.location()
 
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHANALSST'
         )
         self.assertEqual(
-            rl[0].locate(), 
+            rl[0].locate(),
             '/ch/mxpt/mxpt001/arpege/france/oper/data/fic_day/ICMSHANALSST'
         )
         self.assertTrue(os.stat(rl[0].locate()))
@@ -326,9 +325,9 @@ class UtClimGlobal(TestCase):
 
     def setUp(self):
         self.std = SpectralGeometry(
-            id='Current op', 
-            area='france', 
-            truncation=798, 
+            id='Current op',
+            area='france',
+            truncation=798,
             stretching=2.4
         )
         self.fp_prov = dict(
@@ -368,11 +367,11 @@ class UtClimGlobal(TestCase):
 
         month = "{0:02d}".format(today().month)
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/const/clim/mens/clim_t798_isba'+month
         )
         self.assertEqual(
-            rl[0].locate(), 
+            rl[0].locate(),
             '/ch/mxpt/mxpt001/arpege/france/oper/const/clim/mens/clim_t798_isba'+month
         )
         self.assertTrue(os.stat(rl[0].locate()))
@@ -404,7 +403,7 @@ class UtClimLAM(TestCase):
 
         month = "{0:02d}".format(today().month)
         self.assertTrue(res.kind, 'clim_bdap')
-    
+
     def test_r1(self):
         rl = toolbox.rload(
             self.fp_climmodel,
@@ -415,15 +414,15 @@ class UtClimLAM(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
- 
+
         month = "{0:02d}".format(today().month)
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/caledonie/oper/const/clim/mens/clim_caledonie_isba'+month
         )
-    
+
         self.assertEqual(
-            rl[0].locate(), 
+            rl[0].locate(),
             '/ch/mxpt/mxpt001/aladin/caledonie/oper/const/clim/mens/clim_caledonie_isba'+month
         )
         self.assertTrue(os.stat(rl[0].locate()))
@@ -456,7 +455,7 @@ class UtClimBDAPLAM(TestCase):
 
         month = "{0:02d}".format(today().month)
         self.assertTrue(res.kind, 'clim_bdap')
-    
+
     def test_r1(self):
         rl = toolbox.rload(
             self.fp_climmodel,
@@ -467,20 +466,20 @@ class UtClimBDAPLAM(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
- 
+
         month = "{0:02d}".format(today().month)
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/caledonie/oper/const/clim/domaine/clim_dap.caled01.m'+month
         )
-    
+
         self.assertEqual(
-            rl[0].locate(), 
+            rl[0].locate(),
             '/ch/mxpt/mxpt001/aladin/caledonie/oper/const/clim/domaine/clim_dap.caled01.m'+month
         )
         self.assertTrue(os.stat(rl[0].locate()))
 
-    
+
 class UtClimBDAP(TestCase):
 
     def setUp(self):
@@ -518,7 +517,7 @@ class UtClimBDAP(TestCase):
         res = ctlg.findbest(climbdap)
 
         self.assertTrue(res.kind, 'clim_bdap')
- 
+
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -530,7 +529,7 @@ class UtClimBDAP(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-            
+
         month = "{0:02d}".format(today().month)
         self.assertEqual(
             rl[0].location(),
@@ -552,7 +551,7 @@ class UtClimBDAP(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-            
+
         month = "{0:02d}".format(today().month)
         self.assertEqual(
             rl[0].location(),
@@ -568,7 +567,7 @@ class UtBcor(TestCase):
 
     def setUp(self):
         self.attrset = dict(kind='bcor', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
-        
+
     def test_b1(self):
         rl = toolbox.rload(
             self.attrset,
@@ -576,7 +575,7 @@ class UtBcor(TestCase):
             collected='noaa,ssmi,mtop',
             igakey='arpege',
             suite='oper',
-            model='arpege',   
+            model='arpege',
         )
         for rh in rl:
             self.assertTrue(rh.complete)
@@ -589,14 +588,14 @@ class UtObsmap(TestCase):
 
     def setUp(self):
         self.attrset = dict(kind='obsmap', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
-        
+
     def test_o1(self):
         rl = toolbox.rload(
             self.attrset,
             local='obsmap',
             igakey='arpege',
             suite='oper',
-            model='arpege',   
+            model='arpege',
         )
         for rh in rl:
             self.assertTrue(rh.complete)
@@ -618,19 +617,19 @@ class UtObsmap(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'olive://open.archive.fr/9/9/A/0/20110922H00P/observations/OBSMAP_split')
-        
+
 class UtBlackListLoc(TestCase):
 
     def setUp(self):
         self.attrset = dict(kind='blacklistloc', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
-        
+
     def test_o1(self):
         rl = toolbox.rload(
             self.attrset,
             local='blacklist_loc',
             igakey='arpege',
             suite='oper',
-            model='arpege',   
+            model='arpege',
         )
         for rh in rl:
             self.assertTrue(rh.complete)
@@ -641,14 +640,14 @@ class UtBlackListDiap(TestCase):
 
     def setUp(self):
         self.attrset = dict(kind='blacklistdiap', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
-        
+
     def test_o1(self):
         rl = toolbox.rload(
             self.attrset,
             local='blacklist_diap',
             igakey='arpege',
             suite='oper',
-            model='arpege',   
+            model='arpege',
         )
         for rh in rl:
             self.assertTrue(rh.complete)
@@ -759,7 +758,7 @@ class UtObservations(TestCase):
             for rh in rl:
                 self.assertTrue(rh.complete)
                 print ' > ', rh.location()
-                
+
             self.assertEqual(
                 rl[0].location(),
                 'file://oper.inline.fr/arpege/france/oper/data/workdir/obs/' +\
@@ -774,7 +773,7 @@ ref[cpt]
             #self.assertTrue(os.stat(rl[0].locate()))
             cpt += 1
 
-       
+
 #    def test_o1(self):
 #        rl = toolbox.rload(
 #            self.attrset,
@@ -881,7 +880,7 @@ class UtRefdata(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/workdir/obs/refdata.rSX'
         )
         self.assertEqual(
@@ -953,7 +952,7 @@ class UtGridpoint(TestCase):
                                                                     "yyyymmddhh"),
             term = 6
         )
-        
+
         self.fp_gridpoint5 = dict(
             kind = 'gridpoint',
             geometry = self.glob15,
@@ -993,7 +992,7 @@ class UtGridpoint(TestCase):
         gridpoint = self.fp_gridpoint3
         res = ctlg.findbest(gridpoint)
         self.assertTrue(res.kind, 'gridpoint')
- 
+
         gridpoint = self.fp_gridpoint4
         res = ctlg.findbest(gridpoint)
         self.assertTrue(res.kind, 'gridpoint')
@@ -1016,7 +1015,7 @@ class UtGridpoint(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB15+0000.rSX'
         )
         self.assertEqual(
@@ -1036,7 +1035,7 @@ class UtGridpoint(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB15+0003.rSX'
         )
         self.assertEqual(
@@ -1056,7 +1055,7 @@ class UtGridpoint(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/france/oper/data/fic_day/PFALADFRANX01+0006.rSX'
         )
         self.assertEqual(
@@ -1076,7 +1075,7 @@ class UtGridpoint(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0006.rSX'
         )
         self.assertEqual(
@@ -1096,7 +1095,7 @@ class UtGridpoint(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/bdap/PE06000GLOB15'
         )
         self.assertEqual(
@@ -1116,7 +1115,7 @@ class UtGridpoint(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/pearp/oper/data/bdap/RUN4/fc_SX_4_GLOB15_0006'
         )
         self.assertEqual(
@@ -1141,7 +1140,7 @@ class UtHistoric(TestCase):
             igakey = 'caledonie',
             glove = sessions.glove()
         )
-        
+
         self.fp_cont = dict(
             local='ICMSH[geometry::area]+[term].rDH'
         )
@@ -1206,7 +1205,7 @@ class UtHistoric(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rDH'
         )
         self.assertEqual(
@@ -1225,7 +1224,7 @@ class UtHistoric(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/caledonie/oper/data/fic_day/ICMSHALAD+0000.rPM'
         )
         self.assertEqual(
@@ -1245,7 +1244,7 @@ class UtHistoric(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rDH'
         )
         self.assertEqual(
@@ -1255,7 +1254,7 @@ class UtHistoric(TestCase):
         self.assertTrue(os.stat(rl[0].locate()))
 
 class UtVarbc(TestCase):
-    
+
     def setUp(self):
         self.fp_prov = dict(
             username = 'mxpt001',
@@ -1325,7 +1324,7 @@ class UtVarbc(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/reunion/oper/data/fic_day/VARBC.cycle_alad.r12'
         )
         self.assertEqual(
@@ -1344,7 +1343,7 @@ class UtVarbc(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/VARBC.cycle.r12'
         )
         self.assertEqual(
@@ -1363,7 +1362,7 @@ class UtVarbc(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arome/france/oper/data/fic_day/VARBC.cycle_aro.r12'
         )
         self.assertEqual(
@@ -1373,7 +1372,7 @@ class UtVarbc(TestCase):
         self.assertTrue(os.stat(rl[0].locate()))
 
 class UtErrgribvor(TestCase):
-    
+
     def setUp(self):
         self.attrset = dict(kind='errgribvor', date = '2012021400', cutoff='production', namespace='[suite].archive.fr')
         self.std = SpectralGeometry(id='Current op', area='france', truncation=798)
@@ -1411,10 +1410,10 @@ class UtErrgribvor(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r0/errgribvor')
-      
+
     def test_e2(self):
         rl = toolbox.rload(
-            self.attrset, 
+            self.attrset,
             local='errgribvor+aearp+[term].in',
             suite='oper',
             term='3',
@@ -1423,15 +1422,15 @@ class UtErrgribvor(TestCase):
             cutoff='assim',
             igakey='aearp'
         )
-        
+
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor.in')    
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor.in')
 
     def test_e3(self):
         rl = toolbox.rload(
-            self.attrset, 
+            self.attrset,
             local='errgribvor+aearp+[term].out',
             suite='oper',
             term='9',
@@ -1440,15 +1439,15 @@ class UtErrgribvor(TestCase):
             cutoff='assim',
             igakey='aearp'
         )
-        
+
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production.out')    
- 
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production.out')
+
     def test_e4(self):
         rl = toolbox.rload(
-            self.attrset, 
+            self.attrset,
             local='errgribvor+aearp+[term].dsbscr.out',
             suite='oper',
             term='12',
@@ -1457,12 +1456,12 @@ class UtErrgribvor(TestCase):
             cutoff='assim',
             igakey='aearp'
         )
-        
+
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production_dsbscr.out')   
-                
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production_dsbscr.out')
+
 class UtElscf(TestCase):
 
     def setUp(self):
@@ -1542,7 +1541,7 @@ class UtElscf(TestCase):
         ctlg = resources.catalog()
         res = ctlg.findbest(elscf)
         self.assertTrue(res.kind, 'elscf')
- 
+
     def test_v1(self):
         rl = toolbox.rload(
             self.fp_prov,
@@ -1553,7 +1552,7 @@ class UtElscf(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC012.rPM'
         )
         self.assertEqual(
@@ -1573,7 +1572,7 @@ class UtElscf(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/caledonie/oper/data/fic_day/ELSCFALADALBC002.r00'
         )
         self.assertEqual(
@@ -1593,7 +1592,7 @@ class UtElscf(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/testmp1/oper/data/fic_day/ELSCFALADALBC016.rAM'
         )
         self.assertEqual(
@@ -1604,8 +1603,8 @@ class UtElscf(TestCase):
         #self.assertTrue(os.stat(rl[0].locate()))
 
 
-             
-              
+
+
 class UtAnalysis(TestCase):
 
     def setUp(self):
@@ -1685,7 +1684,7 @@ class UtAnalysis(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rPM'
         )
         self.assertEqual(
@@ -1705,7 +1704,7 @@ class UtAnalysis(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/caledonie/oper/data/workdir/analyse/ICMSHALADINIT.r18'
         )
         self.assertEqual(
@@ -1725,7 +1724,7 @@ class UtAnalysis(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.r06'
         )
         self.assertEqual(
@@ -1798,7 +1797,7 @@ class UtAnalysis(TestCase):
 #            self.assertTrue(rh.complete)
 #            print ' > ', rh.location()
 #        self.assertEqual(
-#            rl[0].location(), 
+#            rl[0].location(),
 #            'file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rPM'
 #        )
 #        self.assertEqual(
@@ -1818,7 +1817,7 @@ class UtAnalysis(TestCase):
 #            self.assertTrue(rh.complete)
 #            print ' > ', rh.location()
 #        self.assertEqual(
-#            rl[0].location(), 
+#            rl[0].location(),
 #            'file://oper.inline.fr/aladin/caledonie/oper/data/workdir/analyse/ICMSHALADINIT.r18'
 #        )
 #        self.assertEqual(
@@ -1838,7 +1837,7 @@ class UtAnalysis(TestCase):
 #            self.assertTrue(rh.complete)
 #            print ' > ', rh.location()
 #        self.assertEqual(
-#            rl[0].location(), 
+#            rl[0].location(),
 #            'file://oper.inline.fr/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.r06'
 #        )
 #        self.assertEqual(
@@ -1858,4 +1857,4 @@ if __name__ == '__main__':
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
-            break 
+            break

@@ -46,6 +46,11 @@ class Glove(BFootprint):
         """Returns the path of the default directory where ``.ini`` files are stored."""
         return Environment(active=False).HOME + '/.vortexrc'
 
+    @property
+    def siteconf(self):
+        """Returns the path of the default directory where ``.ini`` files are stored."""
+        pythonpath = re.sub('\/src', '', Environment(active=False).PYTHONPATH)
+        return pythonpath + '/conf'
 
     def setvapp(self, app=None):
         """Change the default vortex application name."""

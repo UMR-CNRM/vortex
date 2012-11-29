@@ -15,8 +15,94 @@ import logging, re, sys
 from vortex.syntax import BFootprint
 from vortex.syntax.priorities import top
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
+from vortex.tools.config import DelayedConfigParser
 
 from vortex import sessions
+
+
+class StoreGlue(object):
+    """Defines a way to glue stored objects together."""
+
+    def __init__(self, gluemap=dict()):
+        logging.debug('Abstract glue init %s', self.__class__)
+        self.gluemap = gluemap
+        self._asdict = None
+        self._cross = dict()
+
+    def sections(self):
+        return self.gluemap.sections()
+
+    def glueretrieve(self, section, option):
+        if self.gluemap.has_option(section, option):
+            return self.gluemap.get(section, option)
+        else:
+            logging.warning('No such section <%s> or option <%s> in %s', section, option, self)
+            return None
+
+    def gluetype(self, section):
+        return self.glueretrieve(section, 'objtype')
+
+    def gluename(self, section):
+        return self.glueretrieve(section, 'objname')
+
+    def gluelist(self, section):
+        if self.gluemap.has_section(section):
+            return filter(lambda x: not x.startswith('obj'), self.gluemap.options(section))
+        else:
+            logging.warning('No such section <%s> in %s', section, self)
+            return []
+
+    def asdict(self):
+        if not self._asdict:
+            self._asdict = dict()
+            for section in self.gluemap.sections():
+                self._asdict[section] = dict()
+                for (opt, value) in self.gluemap.items(section):
+                    lopt = re.split('[ :]', value)
+                    self._asdict[section][opt] = dict(zip(lopt[::2], lopt[1::2]))
+        return self._asdict
+
+    def crossitem(self, item):
+        if not item in self._cross:
+            self._cross[item] = dict()
+            for section, contents in self.asdict().iteritems():
+                for option, desc in contents.iteritems():
+                    if item in desc:
+                        if desc[item] not in self._cross[item]:
+                            self._cross[item][desc[item]] = list()
+                        localdesc = dict(section=section, option=option)
+                        localdesc.update(desc)
+                        self._cross[item][desc[item]].append(localdesc)
+        return self._cross[item]
+
+    def contains(self, checktype, checkvalue):
+        return checkvalue in self.crossitem(checktype)
+
+    def containsfile(self, filename):
+        return self.contains('file', filename)
+
+    def containsformat(self, format):
+        return self.contains('format', format)
+
+    def getitem(self, itemtype, itemname):
+        if self.contains(itemtype, itemname):
+            return self.crossitem(itemtype).get(itemname)
+        else:
+            return None
+
+    def getfile(self, filename):
+        return self.getitem('file', filename)
+
+    def getformat(self, format):
+        return self.getitem('format', format)
+
+
+class IniStoreGlue(StoreGlue):
+    """Initialised StoreGlue with an ini file."""
+
+    def __init__(self, inifile=None):
+        logging.debug('IniStoreGlue init %s', self.__class__)
+        super(IniStoreGlue, self).__init__(DelayedConfigParser(inifile))
 
 
 class Store(BFootprint):

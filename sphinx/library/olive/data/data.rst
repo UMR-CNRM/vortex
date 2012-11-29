@@ -17,7 +17,6 @@ Included Modules
 ----------------
 
 * :mod:`olive.data.bestof`
-* :mod:`olive.data.collected`
 * :mod:`olive.data.errgrib`
 * :mod:`olive.data.fields`
 * :mod:`olive.data.obs`

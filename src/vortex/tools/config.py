@@ -33,7 +33,9 @@ class GenericConfigParser(object):
             glove = sessions.glove()
             self.file = glove.configrc + '/' + local.path.basename(inifile)
             if not local.path.exists(self.file):
-                raise Exception(self.file)
+                self.file = glove.siteconf + '/' + local.path.basename(inifile)
+                if not local.path.exists(self.file):
+                    raise Exception(self.file)
         self.parser.read(self.file)
 
     def setall(self, kw):
@@ -79,7 +81,7 @@ class DelayedConfigParser(GenericConfigParser):
 
     def __getattribute__(self, attr):
         try:
-            logging.warning('Getattr %s < %s >', attr, self)
+            logging.debug('Getattr %s < %s >', attr, self)
             if attr in filter(lambda x: not x.startswith('_'), dir(SafeConfigParser) + [ 'setall', 'save' ]):
                 object.__getattribute__(self, 'refresh')()
         except:

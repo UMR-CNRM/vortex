@@ -1,12 +1,12 @@
-:mod:`olive.data.collected` --- Olive collected resources
-=========================================================
+:mod:`common.data.obs` --- Common observations related resources
+================================================================
 
-.. automodule:: olive.data.collected
-   :synopsis: Collected files resources for Olive application
+.. automodule:: common.data.obs
+   :synopsis: Observations related resources
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.1
+.. versionadded:: 0.6.9
 
 Package
 -------
@@ -16,18 +16,23 @@ Package
 
 Classes
 -------
- 
-.. autoclass:: Collected
+
+.. autoclass:: Observations
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: BlackListDiap
+.. autoclass:: Refdata
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: BlackListLoc
+.. autoclass:: Varbc
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: BlackList
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -41,4 +46,3 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-

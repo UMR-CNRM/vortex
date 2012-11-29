@@ -29,6 +29,16 @@ As a :mod:`vortex.utilities.catalogs` based module,
 Classes
 -------
 
+.. autoclass:: StoreGlue
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IniStoreGlue
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: StoresCatalog
    :show-inheritance:
    :members:

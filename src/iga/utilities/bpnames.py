@@ -344,12 +344,13 @@ def global_bnames(resource, provider):
             return resource.source
         if resource.realkind() == 'namselect':
             return resource.source
-        if resource.realkind() == 'blacklistloc':
-            return 'LISTE_LOC'
-        if resource.realkind() == 'blacklistdiap':
-            return 'LISTE_NOIRE_LOC'
+        if resource.realkind() == 'blacklist':
+            if 'loc' in resource.scope:
+                return 'LISTE_LOC'
+            else:
+                return 'LISTE_NOIRE_LOC'
         if resource.realkind() == 'bcor':
-            return resource.category
+            return 'bcor_' + resource.satbias + '.dat'
         if resource.realkind() == 'obsmap':
             return 'BATOR_MAP_' + resource.cutoff
 

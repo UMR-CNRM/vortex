@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 #: No automatic export
 __all__ = []
@@ -15,7 +15,7 @@ class RtCoef(ModelResource):
     """
     _footprint = [
         dict(
-            info = 'Satellite  coefficients',
+            info = 'Set of satellite  coefficients',
             attr = dict(
 				kind = dict(
                     values = [ 'rtcoef' ]
@@ -45,7 +45,7 @@ class MatFilter(StaticResource):
             info = 'Filtering matrix',
             attr = dict(
                 model = dict(
-                    optional = True,    
+                    optional = True,
                 ),
                 kind = dict(
                     values = [ 'matfilter' ]
@@ -65,13 +65,13 @@ class MatFilter(StaticResource):
     @classmethod
     def realkind(cls):
         return 'matfilter'
-    
+
     def basename_info(self):
         """Generic information, radical = ``matfil``."""
         return dict(
-            radical='matfil',
-            src=self.model,
-            geo=[{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}, self.scopedomain.area, {'filtering':self.scopedomain.filtering}]
+            geo     = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}, self.scopedomain.area, {'filtering':self.scopedomain.filtering}],
+            radical = 'matfil',
+            src     = self.model,
         )
 
     def olive_basename(self):

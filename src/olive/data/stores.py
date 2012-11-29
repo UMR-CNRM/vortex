@@ -1,16 +1,16 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 #: No automatic export
 __all__ = []
 
 import logging, re
 
-from vortex.data.stores import Store, VortexStore, VortexArchiveStore, VortexCacheStore
+from vortex.data.stores import StoreGlue, IniStoreGlue, Store, VortexStore, VortexArchiveStore, VortexCacheStore
 
 
 rextract = re.compile('^extract=(.*)$')
-
+oparchivemap = IniStoreGlue('oparchive-collector.ini')
 
 class OliveArchiveStore(VortexArchiveStore):
 
@@ -80,7 +80,7 @@ class OliveStore(VortexStore):
             ),
         )
     )
-    
+
 
 class OpArchiveStore(Store):
 
@@ -95,12 +95,18 @@ class OpArchiveStore(Store):
                 default = 'archive.meteo.fr'
             ),
             rootdir = dict(
+                optional = True,
                 alias = [ 'archivehome' ],
                 default = '/home/m/mxpt/mxpt001'
             ),
             storage = dict(
                 optional = True,
                 default = 'cougar.meteo.fr'
+            ),
+            collector = dict(
+                optional = True,
+                default = oparchivemap,
+                type = StoreGlue
             ),
         )
     )
@@ -140,22 +146,35 @@ class OpArchiveStore(Store):
     def ftpget(self, system, remote, local):
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rc = ftp.get(self._realpath(remote), local)
-            ftp.close() 
             extract = remote['query'].get('extract', None)
+            cleanpath = self._realpath(remote)
+            targetpath = local
+            (dirname, basename) = system.path.split(cleanpath)
+            if not extract and self.collector.containsfile(basename):
+                gluedesc = self.collector.getfile(basename)
+                if len(gluedesc) > 1:
+                    logging.error('Multiple glue entries %s', gludesc)
+                    return 1
+                else:
+                    gluedesc = gluedesc[0]
+                extract = basename
+                targetpath = self.collector.gluename(gluedesc['section']) + '.' + self.collector.gluetype(gluedesc['section'])
+                cleanpath = system.path.join(dirname, targetpath)
+            rc = ftp.get(cleanpath, targetpath)
+            ftp.close()
             if extract:
-                if re.match('tgz$', remote['path']):
+                if re.match('tgz$', targetpath):
                     cmdltar = 'xvfz'
                 else:
                     cmdltar = 'xvf'
                 if extract == 'all' :
-                    rc = system.tar(cmdltar, local)
+                    rc = rc and system.tar(cmdltar, targetpath)
                 else:
-                    rc = system.tar(cmdltar, local , extract)
+                    rc = system.tar(cmdltar, targetpath , extract)
                     if local != extract:
-                        rc = system.mv(extract, local)
+                        rc = rc and system.mv(extract, local)
             return rc
-        
+
     def ftpput(self, system, local, remote):
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:

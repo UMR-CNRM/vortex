@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import os
 
@@ -19,9 +19,11 @@ class UtGenericConfigParser(TestCase):
 
     def setUp(self):
         self.path = DATAPATHTEST
-    
+
     def test_void_init(self):
-        self.assertRaises(Exception, GenericConfigParser)
+        gcp = GenericConfigParser()
+        self.assertTrue(type(gcp) == GenericConfigParser)
+        self.assertTrue(gcp.file == None)
         print "test __init__ without argument Ok"
 
     def test_init_1(self):
@@ -34,7 +36,7 @@ class UtGenericConfigParser(TestCase):
         print "test __init__ with a bad formatted file Ok"
 
     def test_init_3(self):
-        real_ini = os.path.join(self.path, 'iga_map_resources.ini')
+        real_ini = os.path.join(self.path, 'iga-map-resources.ini')
         igacfgp = GenericConfigParser(real_ini)
         self.assertTrue(igacfgp.file == real_ini)
         sections = ['analysis', 'matfilter', 'rtcoef', 'namelist', 'climmodel',
@@ -50,7 +52,7 @@ class UtGenericConfigParser(TestCase):
         print "test __init__ with a real ini file Ok"
 
     def test_setall(self):
-        real_ini = os.path.join(self.path, 'iga_map_resources.ini')
+        real_ini = os.path.join(self.path, 'iga-map-resources.ini')
         igacfgp = GenericConfigParser(real_ini)
         kwargs = {
             'model': 'arpege',
@@ -69,7 +71,9 @@ class UtGenericConfigParser(TestCase):
 class UtIgaCfgParser(TestCase):
 
     def test_void_init(self):
-        self.assertRaises(Exception, IgaCfgParser)
+        icp = IgaCfgParser()
+        self.assertTrue(type(icp) == IgaCfgParser)
+        self.assertTrue(icp.file == None)
         print "test __init__ without argument Ok"
 
     def test_init_1(self):
@@ -82,7 +86,7 @@ class UtIgaCfgParser(TestCase):
         print "test __init__ with a bad formatted file Ok"
 
     def test_init_3(self):
-        real_ini = 'iga_map_resources.ini'
+        real_ini = 'iga-map-resources.ini'
         igacfgp = IgaCfgParser(real_ini)
         sections = ['analysis', 'matfilter', 'rtcoef', 'namelist', 'climmodel',
                     'climmodel', 'climdomain']
@@ -97,7 +101,7 @@ class UtIgaCfgParser(TestCase):
         print "test __init__ with a real ini file Ok"
 
     def test_setall(self):
-        real_ini = 'iga_map_resources.ini'
+        real_ini = 'iga-map-resources.ini'
         igacfgp = IgaCfgParser(real_ini)
         kwargs = {
             'model': 'arpege',
@@ -111,7 +115,7 @@ class UtIgaCfgParser(TestCase):
         print "test setall Ok"
 
     def test_resolvedpath(self):
-        real_ini = 'iga_map_resources.ini'
+        real_ini = 'iga-map-resources.ini'
         igacfgp = IgaCfgParser(real_ini)
         kwargs = {
             'model': 'arpege',

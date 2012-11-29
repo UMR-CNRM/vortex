@@ -182,7 +182,7 @@ class System(BFootprint):
             logging.critical('Could not call %s', args)
         if rc not in ok:
             raise RuntimeError, "System %s spawned %s got %s" % (self, args, rc)
-        return rc
+        return not bool(rc)
 
 
 class LinuxBase(System):
@@ -322,39 +322,35 @@ class LinuxBase(System):
         cmd.extend([opt for opt in args if opt.startswith('-')])
         for pname in filter(lambda x: not x.startswith('-'), args):
             cmd.extend(self.glob(pname))
-        self.spawn(cmd, ok)
+        return self.spawn(cmd, ok)
 
     def ls(self, *args):
         """Globbing and optional files or directories listing."""
-        self._globcmd([ 'ls' ], args)
+        return self._globcmd([ 'ls' ], args)
 
     def dir(self, *args):
         """Proxy to ``ls('-l')``."""
-        self._globcmd([ 'ls', '-l' ], args)
+        return self._globcmd([ 'ls', '-l' ], args)
 
     def cat(self, *args):
         """Globbing and optional files or directories listing."""
-        self._globcmd([ 'cat' ], args)
+        return self._globcmd([ 'cat' ], args)
 
     def diff(self, *args):
         """Globbing and optional files or directories listing."""
-        self._globcmd([ 'diff' ], args, ok=[0, 1])
-
-    def tar(self, *args):
-        """Basic file archive command."""
-        self._globcmd([ 'tar' ], args)
+        return self._globcmd([ 'diff' ], args, ok=[0, 1])
 
     def rmglob(self, *args):
         """Wrapper of the ``rm`` command through the globcmd."""
-        self._globcmd([ 'rm' ], args)
+        return self._globcmd([ 'rm' ], args)
 
     def mv(self, source, destination):
         """Move the ``source`` file or directory."""
-        self.move(source, destination)
+        return self.move(source, destination)
 
     def mvglob(self, *args):
         """Wrapper of the ``mv`` command through the globcmd."""
-        self._globcmd([ 'mv' ], args)
+        return self._globcmd([ 'mv' ], args)
 
     def ps(self, opts='-wwfa', search=None):
         psall = subprocess.Popen(['ps', opts], stdout=subprocess.PIPE).communicate()[0].split('\n')
@@ -368,6 +364,13 @@ class LinuxBase(System):
         if os.path.exists(filename):
             rc = self.chmod(filename, 0444)
         return rc
+
+    def tar(self, *args):
+        """Basic file archive command."""
+        cmd = [ 'tar', args[0] ]
+        cmd.extend(self.glob(args[1]))
+        cmd.extend(args[2:])
+        return self.spawn(cmd)
 
 
 class SystemsCatalog(ClassesCollector):

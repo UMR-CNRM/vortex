@@ -5,9 +5,12 @@ import logging
 logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, TestLoader, TextTestRunner
+
+import vortex
 from vortex import toolbox
 from vortex.data.geometries import SpectralGeometry
-from olive.data import obs, collected
+import common.data
+import olive.data
 
 class UtObservations(TestCase):
 
@@ -19,7 +22,7 @@ class UtObservations(TestCase):
         rl = toolbox.rload(
             self.attrset,
             namespace='vortex.cache.fr',
-            experiment='oper',
+            experiment='OPER',
             block='observation',
             model='arpege',
             geometry=self.std,
@@ -32,7 +35,7 @@ class UtObservations(TestCase):
             print ' > ', rh.location()
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/obsoul.std.conv')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/OPER/20120214H0600P/observation/obsoul.std.conv')
 
 
     def test_v3(self):
@@ -139,6 +142,7 @@ class UtRefdata(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
+
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/refdata')
 
     def test_v1(self):
@@ -169,6 +173,7 @@ class UtVarbc(TestCase):
             model='aladin',
             igakey='reunion'
         )
+
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
@@ -234,7 +239,7 @@ class UtVarbc(TestCase):
     def test_v6(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='open.archive.fr',
+            namespace='olive.archive.fr',
             local='varbc_olive.merge',
             model='aladin',
             date='2011092200',
@@ -250,7 +255,7 @@ class UtVarbc(TestCase):
     def test_v7(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='open.archive.fr',
+            namespace='olive.archive.fr',
             local='varbc_olive.cycle',
             model='aladin',
             date='2011092200',
@@ -283,27 +288,29 @@ class UtVarbc(TestCase):
 class UtBlackListDiap(TestCase):
 
     def setUp(self):
-        self.attrset = dict(kind='blacklistdiap', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
+        self.attrset = dict(kind='blacklist', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
 
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
             namespace='vortex.cache.fr',
-            experiment='oper',
+            experiment='OPER',
             block='observation',
             model='arpege',
+            scope='site',
             local='blacklist_diap',
         )
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
 
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/blacklistdiap')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/OPER/20120214H0600P/observation/blacklist.site.txt')
 
     def test_o1(self):
         rl = toolbox.rload(
             self.attrset,
             local='blacklist_diap',
+            scope='site',
             igakey='arpege',
             suite='oper',
             model='arpege',
@@ -311,18 +318,19 @@ class UtBlackListDiap(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/entree.tar?extract=LISTE_NOIRE_DIAP')
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/LISTE_NOIRE_DIAP')
 
 
 class UtBlackListLoc(TestCase):
 
     def setUp(self):
-        self.attrset = dict(kind='blacklistloc', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
+        self.attrset = dict(kind='blacklist', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
 
     def test_o1(self):
         rl = toolbox.rload(
             self.attrset,
             local='blacklist_loc',
+            scope='local',
             igakey='arpege',
             suite='oper',
             model='arpege',
@@ -330,7 +338,7 @@ class UtBlackListLoc(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/entree.tar?extract=LISTE_LOC')
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/LISTE_LOC')
 
 class UtObsmap(TestCase):
 
@@ -364,12 +372,12 @@ class UtObsmap(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/entree.tar?extract=BATOR_MAP')
+        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/BATOR_MAP')
 
     def test_o2(self):
         rl = toolbox.rload(
             self.attrset,
-            namespace='open.archive.fr',
+            namespace='olive.archive.fr',
             date='2011092200',
             local='obsmap_olive_split',
             model='arpege',

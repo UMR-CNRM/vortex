@@ -66,7 +66,7 @@ class IgaProvider(Provider):
             config = dict(
                 type = IgaCfgParser,
                 optional = True,
-                default = IgaCfgParser('iga_map_resources.ini')
+                default = IgaCfgParser('iga-map-resources.ini')
             ),
         )
     )

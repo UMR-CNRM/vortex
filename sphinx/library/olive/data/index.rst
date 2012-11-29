@@ -8,12 +8,10 @@ Data resources
    :maxdepth: 1
 
    data
-   
+
    bestof
-   collected
    errgrib
    fields
-   obs
    providers
    stores
-   
+

@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 
 try:
@@ -14,19 +14,19 @@ class UtObsmap(TestCase):
 
     def setUp(self):
         self.fp_obsmap = dict(
-            kind='obsmap', 
+            kind='obsmap',
             date = today(),
             cutoff='production',
             model = 'arpege'
         )
         self.fp_obsmap2 = dict(
-            kind='obsmap', 
+            kind='obsmap',
             date = today(),
             cutoff='production',
             model = 'arome'
         )
         self.fp_obsmap3 = dict(
-            kind='obsmap', 
+            kind='obsmap',
             date = today(),
             cutoff='assim',
             model = 'aladin'
@@ -133,13 +133,15 @@ class UtBlackListLoc(TestCase):
 
     def setUp(self):
         self.fp_bckll = dict(
-            kind='blacklistloc', 
+            kind='blacklist',
+            scope='local',
             date = today(),
             cutoff='production',
             model = 'arpege'
         )
         self.fp_bckll2 = dict(
-            kind='blacklistloc', 
+            kind='blacklist',
+            scope='local',
             date = today(),
             cutoff='production',
             model = 'arome'
@@ -165,12 +167,12 @@ class UtBlackListLoc(TestCase):
         bckll = self.fp_bckll
         ctlg = resources.catalog()
         res = ctlg.findbest(bckll)
-        self.assertTrue(res.kind, 'blacklistloc')
+        self.assertTrue(res.kind, 'blacklist')
 
         bckll = self.fp_bckll2
         ctlg = resources.catalog()
         res = ctlg.findbest(bckll)
-        self.assertTrue(res.kind, 'blacklistloc')
+        self.assertTrue(res.kind, 'blacklist')
 
 
     def test_r1(self):
@@ -212,7 +214,8 @@ class UtBlackListDiap(TestCase):
 
     def setUp(self):
         self.fp_bckld = dict(
-            kind='blacklistdiap', 
+            kind='blacklist',
+            scope='site',
             date = today(),
             cutoff='production',
             model = 'arpege'
@@ -237,7 +240,7 @@ class UtBlackListDiap(TestCase):
         bckld = self.fp_bckld
         ctlg = resources.catalog()
         res = ctlg.findbest(bckld)
-        self.assertTrue(res.kind, 'blacklistdiap')
+        self.assertTrue(res.kind, 'blacklist')
 
     def test_r1(self):
         rl = toolbox.rload(
@@ -256,6 +259,7 @@ class UtBlackListDiap(TestCase):
             rh.locate(),
             '/ch/mxpt/mxpt001/arpege/france/oper/const/autres/LISTE_NOIRE_LOC'
         )
+
 class UtRefData(TestCase):
 
     def setUp(self):
@@ -351,7 +355,7 @@ class UtRefData(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-            
+
         self.assertEqual(
             rl[0].location(),
             'ftp://prod.inline.fr/modele/oper/arpege/RW/RD_1.SX'
@@ -365,7 +369,7 @@ class UtRefData(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-            
+
         self.assertEqual(
             rl[0].location(),
             'ftp://prod.inline.fr/modele/oper/arpege/RW/RD_2.SX'
@@ -379,7 +383,7 @@ class UtRefData(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-            
+
         self.assertEqual(
             rl[0].location(),
             'ftp://prod.inline.fr/modele/oper/arpege/RW/RD_SURFAN.SX'
@@ -406,13 +410,13 @@ class UtRefData(TestCase):
             for rh in rl:
                 self.assertTrue(rh.complete)
                 print ' > ', rh.location()
-                
+
             self.assertEqual(
                 rl[0].location(),
                 'ftp://prod.inline.fr/modele/oper/arpege/RW/' + res_name[cpt]
             )
             cpt += 1
-      
+
 
 
 class UtObservations(TestCase):
@@ -515,7 +519,7 @@ class UtObservations(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-            
+
         self.assertEqual(
             rl[0].location(),
             'ftp://prod.inline.fr/modele/oper/arpege/RW/OBSOUL1F.SX'
@@ -529,7 +533,7 @@ class UtObservations(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-            
+
         self.assertEqual(
             rl[0].location(),
             'ftp://prod.inline.fr/modele/oper/arpege/RW/OBSOUL2F.SX'
@@ -542,7 +546,7 @@ class UtObservations(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-            
+
         self.assertEqual(
             rl[0].location(),
             'ftp://prod.inline.fr/modele/oper/arpege/RW/OBSOUL_SURFAN.SX'
@@ -569,13 +573,13 @@ class UtObservations(TestCase):
             for rh in rl:
                 self.assertTrue(rh.complete)
                 print ' > ', rh.location()
-                
+
             self.assertEqual(
                 rl[0].location(),
                 'ftp://prod.inline.fr/modele/oper/arpege/RW/' + res_name[cpt]
             )
             cpt += 1
-      
+
 
 #    def test_o3(self):
 #        rl = toolbox.rload(
@@ -648,7 +652,7 @@ class UtRefdata(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/workdir/obs/refdata.rSX'
         )
         self.assertEqual(
@@ -661,7 +665,7 @@ class UtRefdata(TestCase):
 
 
 class UtVarbc(TestCase):
-    
+
     def setUp(self):
         self.fp_prov = dict(
             username = 'mxpt001',
@@ -729,7 +733,7 @@ class UtVarbc(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/reunion/oper/data/fic_day/VARBC.cycle_alad.r12'
         )
         self.assertEqual(
@@ -748,7 +752,7 @@ class UtVarbc(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/VARBC.cycle.r12'
         )
         self.assertEqual(
@@ -767,7 +771,7 @@ class UtVarbc(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arome/france/oper/data/fic_day/VARBC.cycle_aro.r12'
         )
         self.assertEqual(
@@ -778,12 +782,12 @@ class UtVarbc(TestCase):
 
 
 if __name__ == '__main__':
-    for test in [ UtBlackListDiap, UtBlackListLoc, UtVarbc, UtObsmap, 
+    for test in [ UtBlackListDiap, UtBlackListLoc, UtVarbc, UtObsmap,
                   UtObservations, UtRefData]:
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
-            break 
+            break
 def get_test_class():
     """ return the list of the TestCase classes names"""
     return [ UtBlackListDiap, UtBlackListLoc, UtVarbc, UtObsmap, UtObservations,
