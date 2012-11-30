@@ -41,6 +41,9 @@ print bcor.locate()
 #print cr.track.alldump()
 
 print t.line
+print bcor.check()
+
+print t.line
 print bcor.get()
 
 print t.line

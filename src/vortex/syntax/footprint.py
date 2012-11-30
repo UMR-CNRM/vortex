@@ -71,7 +71,7 @@ class Footprint(object):
         return str(self.attr)
 
     def asdict(self):
-        r"""
+        """
         Returns a deep copy of the internal footprint structure as a pure dictionary.
         Be aware that some objects such as compiled regular expressions remains identical
         through this indeep copy operation.

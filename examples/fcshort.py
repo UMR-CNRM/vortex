@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from vortex import sessions, toolbox
 from vortex.tools import date
@@ -18,16 +18,15 @@ import gco.syntax
 
 
 t = sessions.ticket()
-g = t.glove
-rl = toolbox.rload
-
 t.warning()
 
+g = t.glove
 mysys = g.system
 myenv = mysys.env
-
 mysys.cd(myenv.tmpdir)
 print t.prompt, mysys.pwd
+
+cache = myenv.home + '/tmp/fcdemo/'
 
 arpege_cycle = 'cy36t1_op2.16'
 
@@ -46,62 +45,53 @@ print t.prompt, fpenv()
 
 print t.line
 
-input = (
-
-    rl(
-        role = 'Analysis',
-        kind = 'analysis',
-        remote = myenv.home + '/tmp/fcdemo/fcinit',
-        local = 'ICMSHFCSTINIT',
-    ),
-
-    rl(
-        role = 'DrivingNamelist',
-        kind = 'namelist',
-        remote = myenv.home + '/tmp/fcdemo/namelistdemo',
-        local = 'fort.4'
-    )
-
+analyse = toolbox.input(
+    role = 'Analysis',
+    kind = 'analysis',
+    remote = cache + 'fcinit',
+    local = 'ICMSHFCSTINIT',
 )
 
-for rh in input:
-    for r in rh :
+namelist = toolbox.input(
+    role = 'DrivingNamelist',
+    kind = 'namelist',
+    remote = cache + 'namelistdemo',
+    local = 'fort.4'
+)
+
+for rl in ( analyse, namelist ):
+    for r in rl:
         print t.line, r.idcard()
         r.get()
 
+print t.line
 
-arpege = rl(
+arpege = toolbox.rload(
     role = 'Model',
     kind = 'nwpmodel',
     binopts = '-vmeteo -eFCST -c001 -asli -t600 -fh3',
-    remote = myenv.home + '/tmp/fcdemo/speedy.arp',
+    remote = cache + 'speedy.arp',
     local = 'ARPEGE.EX',
 ).pop()
 
-output = (
+print arpege.idcard()
+arpege.get()
 
-    rl(
-        role = 'ModelStateOutput',
-        kind = 'historic',
-        term = (0,3),
-        remote = myenv.home + '/tmp/fcdemo/out.model.[term]',
-        local = 'ICMSHFCST+[term]',
-    ),
-    
-    rl(
-        role = 'ModelListing',
-        kind = 'listing',
-        task = 'forecast',
-        remote = myenv.home + '/tmp/fcdemo/out.listing',
-        local = 'NODE.001_01'
-    )
-
+toolbox.output(
+    role = 'ModelStateOutput',
+    kind = 'historic',
+    term = (0,3),
+    remote = cache + 'out.model.[term]',
+    local = 'ICMSHFCST+[term]',
 )
 
-print t.line
-
-arpege.get()
-print arpege.idcard()
+toolbox.output(
+    role = 'ModelListing',
+    kind = 'listing',
+    task = 'forecast',
+    remote = cache + 'out.listing',
+    local = 'NODE.001_01'
+)
 
 print t.line
 

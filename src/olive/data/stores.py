@@ -8,9 +8,9 @@ import logging, re
 
 from vortex.data.stores import StoreGlue, IniStoreGlue, Store, VortexStore, VortexArchiveStore, VortexCacheStore
 
-
 rextract = re.compile('^extract=(.*)$')
 oparchivemap = IniStoreGlue('oparchive-collector.ini')
+
 
 class OliveArchiveStore(VortexArchiveStore):
 
@@ -120,6 +120,7 @@ class OpArchiveStore(Store):
         return 'archive'
 
     def hostname(self):
+        """Returns the current :attr:`storage`."""
         return self.storage
 
     def _realpath(self, remote):
@@ -129,53 +130,64 @@ class OpArchiveStore(Store):
         """Delegates to ``system`` a distant check."""
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rloc = ftp.fullpath(self._realpath(remote))
+            extract = remote['query'].get('extract', None)
+            cleanpath = self._realpath(remote)
+            (dirname, basename) = system.path.split(cleanpath)
+            if not extract and self.collector.containsfile(basename):
+                cleanpath, targetpath = self.collector.filemap(system, dirname, basename)
+            rloc = ftp.fullpath(cleanpath)
             ftp.close()
             return rloc
         else:
             return None
 
     def ftpcheck(self, system, remote):
-        """Delegates to ``system`` a distant check."""
-        ftp = system.ftp(self.hostname(), remote['username'])
-        if ftp:
-            rc = ftp.size(self._realpath(remote))
-            ftp.close()
-            return rc
-
-    def ftpget(self, system, remote, local):
+        """Delegates to ``system.ftp`` a distant check."""
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             extract = remote['query'].get('extract', None)
             cleanpath = self._realpath(remote)
-            targetpath = local
             (dirname, basename) = system.path.split(cleanpath)
             if not extract and self.collector.containsfile(basename):
-                gluedesc = self.collector.getfile(basename)
-                if len(gluedesc) > 1:
-                    logging.error('Multiple glue entries %s', gludesc)
-                    return 1
-                else:
-                    gluedesc = gluedesc[0]
-                extract = basename
-                targetpath = self.collector.gluename(gluedesc['section']) + '.' + self.collector.gluetype(gluedesc['section'])
-                cleanpath = system.path.join(dirname, targetpath)
-            rc = ftp.get(cleanpath, targetpath)
+                cleanpath, targetpath = self.collector.filemap(system, dirname, basename)
+            rc = ftp.size(cleanpath)
             ftp.close()
-            if extract:
-                if re.match('tgz$', targetpath):
-                    cmdltar = 'xvfz'
-                else:
-                    cmdltar = 'xvf'
-                if extract == 'all' :
-                    rc = rc and system.tar(cmdltar, targetpath)
-                else:
-                    rc = system.tar(cmdltar, targetpath , extract)
-                    if local != extract:
-                        rc = rc and system.mv(extract, local)
             return rc
 
+    def ftpget(self, system, remote, local):
+        """File transfert: get from store."""
+        ftp = system.ftp(self.hostname(), remote['username'])
+        if ftp:
+            targetpath = local
+            cleanpath = self._realpath(remote)
+            extract = remote['query'].get('extract', None)
+            (dirname, basename) = system.path.split(cleanpath)
+            if not extract and self.collector.containsfile(basename):
+                extract = basename
+                cleanpath, targetpath = self.collector.filemap(system, dirname, basename)
+            if cleanpath == None:
+                rc = False
+            else:
+                rc = ftp.get(cleanpath, targetpath)
+                ftp.close()
+                if rc and extract:
+                    if re.match('tgz$', targetpath):
+                        cmdltar = 'xvfz'
+                    else:
+                        cmdltar = 'xvf'
+                    if extract == 'all' :
+                        rc = rc and system.tar(cmdltar, targetpath)
+                    else:
+                        rc = system.tar(cmdltar, targetpath , extract)
+                        if local != extract:
+                            rc = rc and system.mv(extract, local)
+            return rc
+        else:
+            logging.error('Could not get ftp connection to %s', self.hostname())
+            return False
+
     def ftpput(self, system, local, remote):
+        """File transfert: put to store."""
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.put(local, self._realpath(remote))

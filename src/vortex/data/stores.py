@@ -30,9 +30,11 @@ class StoreGlue(object):
         self._cross = dict()
 
     def sections(self):
+        """Returns a list of available glue section names. Mostly file archive names."""
         return self.gluemap.sections()
 
     def glueretrieve(self, section, option):
+        """Generic function to retrieve the associated value to ``option`` in the specified ``section``."""
         if self.gluemap.has_option(section, option):
             return self.gluemap.get(section, option)
         else:
@@ -40,12 +42,15 @@ class StoreGlue(object):
             return None
 
     def gluetype(self, section):
+        """Shortcut to retrieve option ``objtype``."""
         return self.glueretrieve(section, 'objtype')
 
     def gluename(self, section):
+        """Shortcut to retrieve option ``objname``."""
         return self.glueretrieve(section, 'objname')
 
     def gluelist(self, section):
+        """returns the list of options in the specified ``section``."""
         if self.gluemap.has_section(section):
             return filter(lambda x: not x.startswith('obj'), self.gluemap.options(section))
         else:
@@ -53,6 +58,7 @@ class StoreGlue(object):
             return []
 
     def asdict(self):
+        """Return the current internal gluemap as a pure dictionary."""
         if not self._asdict:
             self._asdict = dict()
             for section in self.gluemap.sections():
@@ -63,6 +69,10 @@ class StoreGlue(object):
         return self._asdict
 
     def crossitem(self, item):
+        """
+        Possibly builds and then returns a reverse dictionay
+        of founded options with the specified ``item`` defined.
+        """
         if not item in self._cross:
             self._cross[item] = dict()
             for section, contents in self.asdict().iteritems():
@@ -76,29 +86,46 @@ class StoreGlue(object):
         return self._cross[item]
 
     def contains(self, checktype, checkvalue):
+        """Generic boolean function to check if the specified ``value`` exists for this ``type``."""
         return checkvalue in self.crossitem(checktype)
 
     def containsfile(self, filename):
+        """Shortcut to contains for a specified file."""
         return self.contains('file', filename)
 
     def containsformat(self, format):
+        """Shortcut to contains for a specified format."""
         return self.contains('format', format)
 
     def getitem(self, itemtype, itemname):
+        """Generic function to obtain the associated description of the item specified by type and name."""
         if self.contains(itemtype, itemname):
             return self.crossitem(itemtype).get(itemname)
         else:
             return None
 
     def getfile(self, filename):
+        """Shortcut to get an item for a specified file."""
         return self.getitem('file', filename)
 
     def getformat(self, format):
+        """Shortcut to get an item for a specified format."""
         return self.getitem('format', format)
 
+    def filemap(self, system, dirname, basename):
+        """Reformulates the actual physical path for the file requested."""
+        gluedesc = self.getfile(basename)
+        if len(gluedesc) > 1:
+            logging.error('Multiple glue entries %s', gludesc)
+            cleanpath, targetpath = ( None, None )
+        else:
+            gluedesc = gluedesc[0]
+            targetpath = self.gluename(gluedesc['section']) + '.' + self.gluetype(gluedesc['section'])
+            cleanpath = system.path.join(dirname, targetpath)
+        return ( cleanpath, targetpath )
 
 class IniStoreGlue(StoreGlue):
-    """Initialised StoreGlue with an ini file."""
+    """Initialised StoreGlue with a delayed ini file."""
 
     def __init__(self, inifile=None):
         logging.debug('IniStoreGlue init %s', self.__class__)
@@ -381,16 +408,18 @@ class VortexArchiveStore(Store):
         return 'archive'
 
     def hostname(self):
+        """Returns the current :attr:`storage`."""
         return self.storage
 
     def remapget(self, system, remote):
+        """Reformulates the remote path to compatible vortex namespace."""
         xpath = remote['path'].split('/')
         xpath[3:4] = list(xpath[3])
         xpath[:0] = [ system.path.sep, self.headdir ]
         remote['path'] = system.path.join(*xpath)
 
     def ftplocate(self, system, remote):
-        """Delegates to ``system`` a distant check."""
+        """Delegates to ``system.ftp`` a distant check."""
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rloc = ftp.fullpath(self.rootdir + remote['path'])
@@ -400,29 +429,38 @@ class VortexArchiveStore(Store):
             return None
 
     def vortexlocate(self, system, remote):
+        """Remap and ftplocate sequence."""
         self.remapget(system, remote)
         return self.ftplocate(system, remote)
 
     def ftpget(self, system, remote, local):
+        """Delegates to ``system.ftp`` the put action."""
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.get(self.rootdir + remote['path'], local)
             ftp.close()
             return rc
+        else:
+            return False
 
     def vortexget(self, system, remote, local):
+        """Remap and ftpget sequence."""
         self.remapget(system, remote)
         return self.ftpget(system, remote, local)
 
     def ftpput(self, system, local, remote):
+        """Delegates to ``system.ftp`` the put action."""
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rootpath = remote.get('root', self.rootdir)
             rc = ftp.put(local, system.path.join(rootpath, remote['path'].lstrip(system.path.sep)))
             ftp.close()
             return rc
+        else:
+            return False
 
     def vortexput(self, system, local, remote):
+        """Remap root dir and ftpput sequence."""
         if not 'root' in remote: remote['root'] = self.headdir
         return self.ftpput(system, local, remote)
 
@@ -466,9 +504,11 @@ class VortexCacheStore(Store):
         return 'cache'
 
     def hostname(self):
+        """Returns the current :attr:`storage`."""
         return self.storage
 
     def cachepath(self, system):
+        """Tries to figure out what could be the actual cache space."""
         cache = self.rootdir
         e = system.env
         if ( cache == 'mtool' or ( e.SWAPP_OUTPUT_CACHE and e.SWAPP_OUTPUT_CACHE == 'mtool' ) ):
@@ -481,12 +521,15 @@ class VortexCacheStore(Store):
         return system.path.join(cache, self.headdir)
 
     def vortexlocate(self, system, remote):
+        """Agregates cache to remore subpath."""
         return self.cachepath(system) + remote['path']
 
     def vortexget(self, system, remote, local):
+        """Simple copy from vortex cache to ``local``."""
         return system.cp(self.cachepath(system) + remote['path'], local)
 
     def vortexput(self, system, local, remote):
+        """Simple copy from ``local`` to vortex cache in readonly mode."""
         targetcp = self.cachepath(system) + remote['path']
         system.remove(targetcp)
         pst = system.cp(local, targetcp)

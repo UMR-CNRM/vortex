@@ -270,7 +270,10 @@ class LinuxBase(System):
         """Glob file system entries according to ``args``. Returns a list."""
         entries = []
         for entry in args:
-            entries.extend(glob.glob(entry))
+            if entry.startswith(':'):
+                entries.append(entry[1:])
+            else:
+                entries.extend(glob.glob(entry))
         return entries
 
     def remove(self, filename):

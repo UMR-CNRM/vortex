@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 Top level interface for accessing to the VORTEX facilities.
@@ -17,21 +17,21 @@ from vortex.utilities.decorators import printargs
 
 @printargs
 def rload(*args, **kw):
-    r"""
+    """
     Resource Loader.
-    
+
     This function behaves as a factory for any possible pre-defined family
-    of VORTEX object resources. 
-    
+    of VORTEX object resources.
+
     Arguments could be a mix of a list of dictionay-type objects and key/value
-    parameters. Other type of arguments will be discarded. 
-    
+    parameters. Other type of arguments will be discarded.
+
     An abstract resource descriptor is built as the agregation of these arguments
     and then expanded according to rules defined in the syntax module. For any
     expanded descriptor, the resources module will try to pickup the best
     candidate (if any) that could match the description (ie: Resource,
     Provider, Container, etc.)
-    
+
     Finaly, a :class:`vortex.data.Handler` object is associated to this list of candidates.
     The outcome of the rload function is therefore a list of resources.Handler objects.
     """
@@ -49,7 +49,7 @@ def rload(*args, **kw):
 
 @printargs
 def rh(*args, **kw):
-    r"""
+    """
     This function selects the first complete resource handler as returned
     by the *rload* function.
     """
@@ -62,7 +62,7 @@ def rh(*args, **kw):
 
 @printargs
 def rget(*args, **kw):
-    r"""
+    """
     This function calls the :meth:`get` method on any resource handler returned
     by the *rload* function.
     """
@@ -74,7 +74,7 @@ def rget(*args, **kw):
 
 @printargs
 def rput(*args, **kw):
-    r"""
+    """
     This function calls the :meth:`put` method on any resource handler returned
     by the *rload* function.
     """
@@ -85,9 +85,7 @@ def rput(*args, **kw):
 
 @printargs
 def input(*args, **kw):
-    r"""
-    This function adds an input section to the current sequence.
-    """
+    """This function adds an input section to the current sequence."""
     ctx = sessions.ticket().context
     ctx.record_off()
     ( opts, kwclean ) =  stripargs_section(**kw)
@@ -99,9 +97,7 @@ def input(*args, **kw):
 
 @printargs
 def output(*args, **kw):
-    r"""
-    This function adds an output section to the current sequence.
-    """
+    """This function adds an output section to the current sequence."""
     ctx = sessions.ticket().context
     ctx.record_off()
     ( opts, kwclean ) =  stripargs_section(**kw)
@@ -112,7 +108,7 @@ def output(*args, **kw):
     return rl
 
 def namespaces(**kw):
-    r"""
+    """
     Some kind of interactive help to find out quickly which namespaces are in used.
     By default tracks ``stores`` and ``providers`` but one could give an ``only`` argument.
     """

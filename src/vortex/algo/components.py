@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 #: No automatic export
 __all__ = []
@@ -18,7 +18,7 @@ class AlgoComponent(BFootprint):
     """
     Component in charge of running executable resources.
     """
-    
+
     _footprint = dict(
         info = 'Abstract algo component',
         attr = dict(
@@ -34,6 +34,7 @@ class AlgoComponent(BFootprint):
         return 'algo'
 
     def fstag(self):
+        """Defines a tag specific to the current algo component."""
         return '.'.join((self.realkind(), self.engine))
 
     def fsstamp(self, ctx, opts):
@@ -58,9 +59,9 @@ class AlgoComponent(BFootprint):
     def spawn(self, args):
         """
         Spawn in the current system the command as defined in raw ``args``.
-        
+
         The followings environment variables could drive part of the execution:
-        
+
           * VORTEX_DEBUG_ENV : dump current environment before spawn
         """
         e = self.env
@@ -81,7 +82,7 @@ class AlgoComponent(BFootprint):
     def execute(self, rh, ctx, opts):
         """Abstract method."""
         pass
-    
+
     def postfix(self, rh, ctx, opts):
         """Abstract method."""
         pass
@@ -107,7 +108,7 @@ class AlgoComponent(BFootprint):
         return self._status
 
 class Expresso(AlgoComponent):
-    r"""
+    """
     Run a script resource in the good environment. Mandatory arguments are:
      * interpreter (values = bash, perl, python)
      * engine ( values =  exec, launch )
@@ -125,7 +126,7 @@ class Expresso(AlgoComponent):
     )
 
     def execute(self, rh, ctx, kw):
-        r"""
+        """
         Run the specified resource handler through the current interpreter,
         using the resource command_line method as args.
         """
@@ -136,7 +137,7 @@ class Expresso(AlgoComponent):
 
 
 class BlindRun(AlgoComponent):
-    r"""
+    """
     Run any executable resource in the current environment. Mandatory argument is:
      * engine ( values =  blind )
     """
@@ -150,11 +151,11 @@ class BlindRun(AlgoComponent):
     )
 
     def execute(self, rh, ctx, kw):
-        r"""
+        """
         Run the specified resource handler as an absolute executable,
         using the resource command_line method as args.
         """
-        
+
         args = [ self.absexcutable(rh.container.localpath()) ]
         args.extend(self.spawn_command_line(rh, ctx))
         logging.debug('BlindRun executable resource %s', args)
@@ -162,7 +163,7 @@ class BlindRun(AlgoComponent):
 
 
 class Parallel(AlgoComponent):
-    r"""
+    """
     Run a binary launched with MPI support.
     """
 
@@ -184,7 +185,7 @@ class Parallel(AlgoComponent):
     )
 
     def execute(self, rh, ctx, kw):
-        r"""
+        """
         Run the specified resource handler through the `mitool` launcher,
         using the resource command_line method as args. A named argument `mpiopts`
         could be provided.
@@ -192,10 +193,10 @@ class Parallel(AlgoComponent):
         mpi = self.mpitool
         if not mpi:
             mpi = mpitools.load(sysname=self.system.sysname, mpiname=self.mpiname)
-        
+
         if not mpi:
             raise AttributeError, 'No valid mpitool attr could be found.'
-        
+
         mpiopts = mpi.options(kw.get('mpiopts', dict()))
         args = [ mpi.launcher() ]
         args.extend(mpiopts)

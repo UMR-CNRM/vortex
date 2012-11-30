@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 #: No automatic export
 __all__ = []
@@ -82,16 +82,14 @@ class Forecast(IFSModelParallel):
             )
         )
     )
-    
+
     def prepare(self, rh, ctx, opts):
         """Default pre-link for the initial condition file"""
         ininame = 'ICMSH{0:s}INIT'.format(self.xpname)
-        initrh =  [x.rh for x in ctx.sequence.effective_inputs(role='Initialcondition')] 
-        fcinit = [x.container.localpath() for x in initrh]
-        for l in fcinit:
-            self.system.symlink(l,ininame)
-        
-    
+        initrh =  [x.rh for x in ctx.sequence.effective_inputs(role='Initialcondition')]
+        for l in [x.container.localpath() for x in initrh]:
+            self.system.symlink(l, ininame)
+
 
 class LAMForecast(Forecast):
     """Forecast for IFS-like Limited Area Models."""
@@ -103,7 +101,7 @@ class LAMForecast(Forecast):
             ),
         )
     )
-    
+
     def spawn_command_line(self, rh, ctx):
         return rh.resource.rootcmdline(
             name=(self.xpname+'xxxx')[:4].upper(),
@@ -113,28 +111,27 @@ class LAMForecast(Forecast):
             fcunit=self.fcunit,
             model='aladin',
         ).split()
-    
+
     def prepare(self, rh, ctx, opts):
         """Default pre-link for boundary conditions files."""
         cplrh = [ x.rh for x in ctx.sequence.effective_inputs(role='Boundarycondition', kind='elscf') ]
         cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
         llocal = [x.container.localpath() for x in cplrh]
-        
+
         i = 0
         for l in llocal:
             self.system.symlink(l,'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, i))
             i=i+1
-        
-        """Default pre-link for the initial condition file.""" 
+
+        # Default pre-link for the initial condition file
         ininame = 'ICMSH{0:s}INIT'.format(self.xpname)
-        initrh =  [x.rh for x in ctx.sequence.effective_inputs(role='Initialcondition')] 
-        fcinit = [x.container.localpath() for x in initrh]
-        for l in fcinit:
+        initrh =  [x.rh for x in ctx.sequence.effective_inputs(role='Initialcondition')]
+        for l in [x.container.localpath() for x in initrh]:
             self.system.symlink(l,ininame)
-        
+
 
 class DFIForecast(LAMForecast):
-    
+
     _footprint = dict(
         attr = dict(
             kind = dict(
@@ -142,19 +139,16 @@ class DFIForecast(LAMForecast):
             ),
         )
     )
-    
+
     def prepare(self, rh, ctx, opts):
-        """Default pre-link for the initial condition file.""" 
+        """Default pre-link for the initial condition file."""
         ininame = 'ICMSH{0:s}INIT'.format(self.xpname)
-        initrh =  [x.rh for x in ctx.sequence.effective_inputs(role='Initialcondition')] 
-        fcinit = [x.container.localpath() for x in initrh]
-        for l in fcinit:
+        initrh =  [x.rh for x in ctx.sequence.effective_inputs(role='Initialcondition')]
+        for l in [x.container.localpath() for x in initrh]:
             self.system.symlink(l,ininame)
-        
-        
-        """Pre-link boundary conditions as special DFI files."""
+
+        # Pre-link boundary conditions as special DFI files
         for pseudoterm in (999, 0, 1):
             self.system.symlink(ininame, 'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, pseudoterm))
 
-                
-        
+

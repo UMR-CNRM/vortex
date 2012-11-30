@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 r"""
 This modules defines the low level physical layout for data handling.
@@ -90,22 +90,22 @@ class Sequence(object):
 
     def __call__(self):
         return self.sections[:]
-       
+
     def add(self, candidate):
-        r"""
+        """
         Push the ``candidate`` to the internal list of sections
         as long as it is a :class:`Section` object.
-        """ 
+        """
         if isinstance(candidate, Section):
             self.sections.append(candidate)
         else:
             logging.warning('Try to add a non-section object %s in sequence %s', candidate, self)
 
     def remove(self, candidate):
-        r"""
+        """
         Remove the ``candidate`` from the internal list of sections
         as long as it is a :class:`Section` object.
-        """ 
+        """
         if isinstance(candidate, Section):
             self.sections.remove(candidate)
         else:
@@ -124,11 +124,11 @@ class Sequence(object):
     def input(self, **kw):
         """Create a section with default kind equal to ``ixo.INPUT``."""
         self.section(kind=ixo.INPUT, **kw)
-    
+
     def output(self, **kw):
         """Create a section with default kind equal to ``ixo.OUTPUT`` and intent equal to ``intent.OUT``."""
         self.section(kind=ixo.OUTPUT, intent=intent.OUT, **kw)
- 
+
     def inputs(self):
         """Return a list of current sequence sections with ``ixo.INPUT`` kind."""
         return filter(lambda x: x.kind == ixo.INPUT, self.sections)
@@ -136,7 +136,7 @@ class Sequence(object):
     def effective_inputs(self, **kw):
         """
         Walk through the inputs of the current sequence which reach the 'get' stage.
-        If a ``role`` or ``kind`` (or both) is provided as named argument, 
+        If a ``role`` or ``kind`` (or both) is provided as named argument,
         it operates as a filter on the inputs list. If both keys are available
         the ``role`` applies first, and then the ``kind`` in case of empty match.
         """
@@ -157,7 +157,7 @@ class Sequence(object):
     def effective_outputs(self, **kw):
         """
         Wakl through the outputs of the current sequence whatever the stage value is.
-        If a ``role`` or ``kind`` (or both) is provided as named argument, 
+        If a ``role`` or ``kind`` (or both) is provided as named argument,
         it operates as a filter on the inputs list. If both keys are available
         the ``role`` applies first, and then the ``kind`` in case of empty match.
         """

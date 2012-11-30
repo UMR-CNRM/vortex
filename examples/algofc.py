@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from vortex import sessions, toolbox
 import vortex.data
@@ -26,7 +26,7 @@ print t.prompt, 'Resource tracker =', cr.track
 
 print t.line
 
-print cr.track.toprettyxml(indent='    ')
+print cr.track.alldump()
 
 print t.line
 
