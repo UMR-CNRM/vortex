@@ -3,7 +3,7 @@
 
 import os, sys, re, traceback
 import vortex
-import common.data, iga.data
+import common.data, iga.data, common.tools
 from vortex.utilities import dispatch
 
 
@@ -12,8 +12,8 @@ t.warning()
 
 
 # Assumed that FIFO pipes are created by parent process
-fdir = sys.argv[1]
-ppid = sys.argv[2]
+ppid = sys.argv[1]
+fdir = sys.argv[2]
 
 fifobase = os.path.join(fdir, 'fifo.')
 rfifo = fifobase + 'r' + ppid

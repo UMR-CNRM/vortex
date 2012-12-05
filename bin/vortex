@@ -26,7 +26,9 @@ PFIFO="$FIFODIR/fifo.p$FIFOTAG"
 XLOCK="$FIFODIR/fifo.x$FIFOTAG.lock"
 VORTEXLOG="$FIFODIR/vortexsh.log.$FIFOTAG"
 
-lockfile -1 -r 60 $XLOCK
+#lockfile -1 -r 60 $XLOCK
+
+vortexlock -r 30 -f $XLOCK
 
 if [ "$?" == 0 ]; then
 
@@ -35,7 +37,7 @@ if [ "$?" == 0 ]; then
   if [ -f "$PFIFO" ]; then
 
     XPID=$(< $PFIFO)
-    XCMD=$(ps -cw $XPID | fgrep $XPID | awk '{print $(NF-2)}')
+    XCMD=$(ps -f -p $XPID | fgrep $XPID | awk '{print $(NF-2)}')
     RCMD=$(which vortexshcmd.py)
     if [ "$RCMD" != "$XCMD" ]; then
       echo "Expected [$XPID] co-process is not running"
@@ -49,7 +51,7 @@ if [ "$?" == 0 ]; then
     \rm -f $RFIFO $WFIFO $PFIFO
     mkfifo $RFIFO
     mkfifo $WFIFO
-    nohup vortexshcmd.py $FIFODIR $FIFOTAG </dev/null >> $VORTEXLOG 2>&1 &
+    nohup vortexshcmd.py $FIFOTAG $FIFODIR </dev/null >> $VORTEXLOG 2>&1 &
     XPID=$(jobs -p %1)
     echo "New vortex shell facility [$XPID] for process [$PPID] and tag [$FIFOTAG]"
     echo $XPID > $PFIFO

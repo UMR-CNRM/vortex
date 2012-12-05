@@ -167,6 +167,27 @@ class System(BFootprint):
         finally:
             fh.close()
 
+    def remove(self, filename):
+        """Unlink the specified `filename` object."""
+        if os.path.exists(filename):
+            self.unlink(filename)
+        return not os.path.exists(filename)
+
+    def ps(self, opts=[], search=None, pscmd=['ps']):
+        pscmd.extend(self._psopts)
+        pscmd.extend(opts)
+        psall = subprocess.Popen(pscmd, stdout=subprocess.PIPE).communicate()[0].split('\n')
+        if search:
+            psall = filter(lambda x: re.search(search, x), psall)
+        return psall
+
+    def readonly(self, filename):
+        """Set permissions of the `filename` object to read-only."""
+        rc = None
+        if os.path.exists(filename):
+            rc = self.chmod(filename, 0444)
+        return rc
+
     def sleep(self, nbsecs):
         """Clone of the unix command."""
         time.sleep(nbsecs)
@@ -185,17 +206,18 @@ class System(BFootprint):
         return not bool(rc)
 
 
-class LinuxBase(System):
+class OSExtended(System):
 
+    _abstract = True
     _footprint = dict(
-        info = 'Linux base system'
+        info = 'Extended base system'
     )
 
     def __init__(self, *args, **kw):
         logging.debug('Abstract System init %s', self.__class__)
         self._rmtreemin = kw.setdefault('rmtreemin', 3)
         del kw['rmtreemin']
-        super(LinuxBase, self).__init__(*args, **kw)
+        super(OSExtended, self).__init__(*args, **kw)
 
     @classmethod
     def realkind(cls):
@@ -276,12 +298,6 @@ class LinuxBase(System):
                 entries.extend(glob.glob(entry))
         return entries
 
-    def remove(self, filename):
-        """Unlink the specified `filename` object."""
-        if os.path.exists(filename):
-            self.unlink(filename)
-        return not os.path.exists(filename)
-
     def rmall(self, *args):
         """Unlink the specified `args` objects."""
         for pname in args:
@@ -355,25 +371,83 @@ class LinuxBase(System):
         """Wrapper of the ``mv`` command through the globcmd."""
         return self._globcmd([ 'mv' ], args)
 
-    def ps(self, opts='-wwfa', search=None):
-        psall = subprocess.Popen(['ps', opts], stdout=subprocess.PIPE).communicate()[0].split('\n')
-        if search:
-            psall = filter(lambda x: re.search(search, x), psall)
-        return psall
-
-    def readonly(self, filename):
-        """Set permissions of the `filename` object to read-only."""
-        rc = None
-        if os.path.exists(filename):
-            rc = self.chmod(filename, 0444)
-        return rc
-
     def tar(self, *args):
         """Basic file archive command."""
         cmd = [ 'tar', args[0] ]
         cmd.extend(self.glob(args[1]))
         cmd.extend(args[2:])
         return self.spawn(cmd)
+
+
+class Linux(OSExtended):
+    """Default system class for most linux based systems."""
+
+    _footprint = dict(
+        info = 'Linux base system',
+        attr = dict(
+            sysname = dict(
+                values = [ 'Linux' ]
+            )
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        logging.debug('Linux system init %s', self.__class__)
+        self._psopts = kw.setdefault('psopts', ['-w', '-f', '-a'])
+        del kw['psopts']
+        super(Linux, self).__init__(*args, **kw)
+
+    @classmethod
+    def realkind(cls):
+        return 'linux'
+
+
+class LinuxDebug(Linux):
+    """Special system class for crude debugging on linux based systems."""
+
+    _footprint = dict(
+        info = 'Linux debug system',
+        attr = dict(
+            version = dict(
+                optional = False,
+                values = [ 'dbug', 'debug' ],
+                remap = dict(
+                    dbug = 'debug'
+                )
+            )
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        logging.debug('LinuxDebug system init %s', self.__class__)
+        super(LinuxDebug, self).__init__(*args, **kw)
+
+    @classmethod
+    def realkind(cls):
+        return 'linuxdebug'
+
+
+class SuperUX(OSExtended):
+    """NEC Operating System."""
+
+    _footprint = dict(
+        info = 'NEC operating system',
+        attr = dict(
+            sysname = dict(
+                values = [ 'SUPER-UX' ]
+            )
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        logging.debug('SuperUX system init %s', self.__class__)
+        self._psopts = kw.setdefault('psopts', ['-f'])
+        del kw['psopts']
+        super(SuperUX, self).__init__(*args, **kw)
+
+    @classmethod
+    def realkind(cls):
+        return 'super-ux'
 
 
 class SystemsCatalog(ClassesCollector):

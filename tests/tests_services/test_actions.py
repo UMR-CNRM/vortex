@@ -1,5 +1,5 @@
 #!/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import os
 import logging
@@ -8,8 +8,8 @@ logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, TestLoader, TextTestRunner
 from iga.services import actions as ac
-from iga.services.services import MailServices, AlarmServices, BdapServices
-from iga.services.services import RoutingServices
+from vortex.tools.services import MailService
+from iga.services.services import AlarmService, BdapService, RoutingService
 
 class Utactions(TestCase):
 
@@ -93,8 +93,8 @@ class Utactions(TestCase):
 
     def test_get_act_serv(self):
         ref_serv = [
-            MailServices, MailServices, AlarmServices, AlarmServices,
-            BdapServices, BdapServices, RoutingServices, RoutingServices
+            MailService, MailService, AlarmService, AlarmService,
+            BdapService, BdapService, RoutingService, RoutingService
         ]
         ref_act = [
             ac.SendMail, ac.SendMail, ac.SendAlarm, ac.SendAlarm,
@@ -114,7 +114,7 @@ class Utactions(TestCase):
         for dic in [self.dico1, self.dico2, self.dico3, self.dico4, self.dico5,
                     self.dico6, self.dico7, self.dico8]:
             act_serv = ac.get_act_serv(**dic)
-            self.assertTrue(act_serv.available_services()) 
+            self.assertTrue(act_serv.available_services())
 
         print "test available_services Ok"
 

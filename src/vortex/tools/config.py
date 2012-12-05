@@ -35,7 +35,7 @@ class GenericConfigParser(object):
             if not local.path.exists(self.file):
                 self.file = glove.siteconf + '/' + local.path.basename(inifile)
                 if not local.path.exists(self.file):
-                    raise Exception(self.file)
+                    raise Exception(self.file + ' not found')
         self.parser.read(self.file)
 
     def setall(self, kw):

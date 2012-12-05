@@ -1,11 +1,12 @@
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
-r"""
+"""
 Interface for sending messages, products...
 The main class ActionsLoader contains the main methods so as to handle
 actions related to sending.
 """
 
+#: No automatic export
 __all__ = []
 
 import actions
@@ -15,10 +16,14 @@ class ActionsLoader(object):
     Main interface to perform sending actions
     By default, it uses the actions module, but a user can provide its own
     module as long as the correct methods are provided:
-        - execute, get_status, on and off.
+
+      * execute, get_status, on and off.
+
     Moreover these methods are associated with actions. For now, we provide
     four kinds of action:
-        - mail, alarm, sendbdap, routing
+
+      * mail, alarm, sendbdap, routing
+
     It means that the substitute module must offer the four methods from above
     and accept the four kind of action as argument.
     """
@@ -37,59 +42,62 @@ class ActionsLoader(object):
             raise Exception
 
     def mail(self, **kw):
-        r"""
+        """
         Entry point for sending email.
         This function must be used so as to send two kinds of email:
-            - a simple text message,
-            - an email with an attached file
-    
+
+          * a simple text message,
+          * an email with an attached file
+
         Argument:
-            kw (dict): mandatory named arguments to realize the action
-                       as sender, recipient...
+
+          * kw (dict): mandatory named arguments to realize the action as sender, recipient...
         """
         #add action_type=mail in the dictionary kw
         #the name of the key is explicitly written
         kw['action_type'] = 'mail'
         self.dispatch('execute', **kw)
-    
+
     def alarm(self, **kw):
         """
         Entry point for sending alarm.
         This function allows the user to send alarm to the supervision via syslog-ng
         or to log a message.
-    
+
         Argument:
-            kw (dict): mandatory names arguments to realize the action
-                       as the message...
+
+          * kw (dict): mandatory names arguments to realize the action as the message...
         """
         #add action_type=alarm in the dictionary kw
         #the name of the key is explicitly written
         kw['action_type'] = 'alarm'
         self.dispatch('execute', **kw)
-    
+
     def sendbdap(self, **kw):
         """
         Entry point for sending product.
         This function allows the user to send product to the BDAP machine.
-    
+
         Argument:
-            kw (dict): mandatory names arguments to realize the action
-                       as the message and the current system so to be able to do 
+
+          * kw (dict): mandatory names arguments to realize the action
+                       as the message and the current system so to be able to do
                        the system call.
         """
         #add action_type=sendbdap in the dictionary kw
         #the name of the key is explicitly written
         kw['action_type'] = 'sendbdap'
         self.dispatch('execute', **kw)
-    
+
     def route(self, **kw):
         """
         Entry point for routing product.
         This function allows the user to send product to the Soprano servers.
-    
+
         Argument:
-            kw (dict): mandatory names arguments to realize the action
-                       as the message and the current system so to be able to do 
+
+          * kw (dict): mandatory names arguments to realize the action
+                       as the message and the current system so to be able to do
                        the system call.
         """
         #add action_type=route in the dictionary kw

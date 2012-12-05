@@ -40,13 +40,20 @@ class Dispatcher(object):
                 fdoc = getattr(self, fm).__doc__
                 if not fdoc:
                     fdoc = 'Not documented yet.'
-                strdocs.append('  {0:s}: {1:s}'.format(fm, fdoc))
+                strdocs.append('{0:s}: {1:s}'.format(fm, fdoc))
             return (0, "\n".join(strdocs), strdocs)
         else:
             alldoc = dict()
             for fm in methods:
                 alldoc[fm] = True
-            return ( 0, self.help(t, alldoc)[1], methods )
+            return self.help(t, alldoc)
+
+    def functions(self, t, kw):
+        """
+        Print list of available functions in this current shell dispatcher.
+        """
+        methods = sorted(filter(lambda x: not x.startswith('_'), self.__class__.__dict__.keys()))
+        return (0, ' '.join(methods), methods)
 
     def default(self, t, kw):
         """
@@ -65,6 +72,13 @@ class Dispatcher(object):
         """
         return (0, t.idcard(), id(t))
 
+    def pwd(self, t, kw):
+        """
+        Print the current working directory of the daemon.
+        Return the same value.
+        """
+        return (0, t.system().pwd, t.system().pwd)
+
     def sleep(self, t, kw):
         """
         Print nothing.
@@ -79,14 +93,16 @@ class Dispatcher(object):
         Print the list of current active vortex dispatchers.
         Return this list.
         """
-        psall = t.system().ps('-wwaf', 'python.*vortexshcmd')
-        psd = [ '{0:16s} {1:24s} {2:32s}'.format('USER', 'FIFOTAG', 'FIFODIR') ]
+        system = t.system()
+        psall = system.ps(opts=['-u', system.env.LOGNAME], search='python.*vortexshcmd')
+        psfmt = '{0:16s} {1:24s} {2:32s}'
+        psd = [ psfmt.format('USER', 'FIFOTAG', 'FIFODIR') ]
         psr = []
         bl = re.compile('\s+')
         for ps in psall:
             items = bl.split(ps)
-            psr.append((items[0], items[-1], items[-2]))
-            psd.append('{0:16s} {1:24s} {2:32s}'.format(items[0], items[-1], items[-2]))
+            psr.append((items[0], items[-2], items[-1]))
+            psd.append(psfmt.format(items[0], items[-2], items[-1]))
         return (0, "\n".join(psd), psr)
 
     def session(self, t, kw):
@@ -305,7 +321,7 @@ class Dispatcher(object):
         select = kw.keys()
         if not select:
             select = catalogs.autocatlist()
-        for item in select:
+        for item in sorted(select):
             if item in ctable:
                 refilled.append(item + ': ' + str(catalogs.fromtable(item).refill()))
             else:
@@ -378,6 +394,14 @@ class Dispatcher(object):
         Return the catalog itself.
         """
         cat = tools.systems.catalog()
+        return (0, self._objectslist(cat()), cat)
+
+    def services(self, t, kw):
+        """
+        Display services catalog contents.
+        Return the catalog itself.
+        """
+        cat = tools.services.catalog()
         return (0, self._objectslist(cat()), cat)
 
     def trackers(self, t, kw):
@@ -453,6 +477,14 @@ class Dispatcher(object):
         Return the object itself.
         """
         info = tools.systems.load(**kw)
+        return (0, str(info), info)
+
+    def service(self, t, kw):
+        """
+        Load a service object according to description.
+        Return the object itself.
+        """
+        info = tools.services.load(**kw)
         return (0, str(info), info)
 
 
