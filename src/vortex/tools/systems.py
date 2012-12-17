@@ -217,6 +217,8 @@ class OSExtended(System):
         logging.debug('Abstract System init %s', self.__class__)
         self._rmtreemin = kw.setdefault('rmtreemin', 3)
         del kw['rmtreemin']
+        self._cmpaftercp = kw.setdefault('cmpaftercp', True)
+        del kw['cmpaftercp']
         super(OSExtended, self).__init__(*args, **kw)
 
     @classmethod
@@ -235,6 +237,13 @@ class OSExtended(System):
     def filecocoon(self, destination):
         """Normalizes path name of the ``destination`` and creates this directory."""
         return self.mkdir(self.path.dirname(destination))
+
+    def size(self, filepath):
+        """Returns the actual size in bytes of the specified ``filepath``."""
+        try:
+            return self.stat(filepath).st_size
+        except:
+            return -1
 
     def mkdir(self, dirpath):
         """Normalizes path name and recursively creates this directory."""
@@ -284,7 +293,10 @@ class OSExtended(System):
             return self.hybridcp(source, destination)
         if self.filecocoon(destination):
             self.copyfile(source, destination)
-            return filecmp.cmp(source, destination)
+            if self._cmpaftercp:
+                return filecmp.cmp(source, destination)
+            else:
+                return bool(self.size(source) == self.size(destination))
         else:
             return False
 
@@ -448,6 +460,20 @@ class SuperUX(OSExtended):
     @classmethod
     def realkind(cls):
         return 'super-ux'
+
+    def cp(self, source, destination):
+        """
+        Copy the ``source`` file to a safe ``destination``.
+        The return value is produced by a raw compare of the two files.
+        """
+        if type(source) != str or type(destination) != str:
+            return self.hybridcp(source, destination)
+        if self.filecocoon(destination):
+            self.spawn(['cp', source, destination])
+            return bool(self.size(source) == self.size(destination))
+        else:
+            logging.error('Could not create cocoon for %s', destination)
+            return False
 
 
 class SystemsCatalog(ClassesCollector):

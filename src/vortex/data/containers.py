@@ -79,7 +79,6 @@ class Container(BFootprint):
         pass
 
 
-
 class Virtual(Container):
 
     _abstract = True

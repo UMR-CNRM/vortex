@@ -21,6 +21,7 @@ class NamelistContent(AlmostDictContent):
         kw.setdefault('macros', dict(NBPROC = None))
         kw.setdefault('remove', set())
         kw.setdefault('parser', None)
+        kw.setdefault('automkblock', 0)
         super(NamelistContent, self).__init__(**kw)
 
     def add(self, addlist):
@@ -34,6 +35,15 @@ class NamelistContent(AlmostDictContent):
     def rmblocks(self):
         """Returns the list of blocks to get rid off."""
         return self._remove
+
+    def newblock(self, name=None):
+        """Construct a new block."""
+        if name == None:
+            self._automkblock += 1
+            name = 'autoblock_{0:02d}'.format(self._automkblock)
+        if name not in self._data:
+            self._data[name] = NamelistBlock(name=name)
+        return self._data[name]
 
     def macros(self):
         """Returns a list of macro names."""
@@ -135,14 +145,17 @@ class NamUtil(Namelist):
                 optional = True,
             ),
             kind = dict(
-                values = [ 'namelist_util', 'namutil' ]
+                values = [ 'namelist_util', 'namutil' ],
+                remap = dict(
+                    namelist_util = 'namutil'
+                )
             )
         )
     )
 
     @classmethod
     def realkind(cls):
-        return 'namelist_uti'
+        return 'namutil'
 
 
 class NamTerm(Namelist):

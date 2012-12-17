@@ -12,7 +12,8 @@ from types import *
 
 _dumpcache = dict()
 
-def DEBUG(msg, level=None):
+def DEBUG(msg, obj=None, level=None):
+    #print msg, str(obj)
     pass
 
 max_depth = 99
@@ -107,7 +108,7 @@ class Dumper():
         self.seen = {}
 
     def dump_default(self, obj, level=0, nextline=True):
-        DEBUG('; dump_default')
+        DEBUG('dump_default')
         if level + 1 > max_depth:
             return " <%s...>" % type(obj).__class__
         else:
@@ -137,7 +138,7 @@ class Dumper():
         return result
 
     def dump_base(self, obj, level=0, nextline=True):
-        DEBUG("; dump_%s", type(obj).__name__)
+        DEBUG('dump base ' + type(obj).__name__)
         return "%s%s" % (indent(level, break_base), obj)
 
     dump_NoneType = dump_base
@@ -146,15 +147,15 @@ class Dumper():
     dump_float = dump_base
 
     def dump_str(self, obj, level=0, nextline=True):
-        DEBUG('; dump_str')
+        DEBUG('dump_str', obj)
         return "%s'%s'" % (indent(level, break_string), obj)
 
     def dump_bool(self, obj, level=0, nextline=True):
-        DEBUG('; dump_bool')
+        DEBUG('dump_bool', obj)
         return "%s%s" % (indent(level, break_bool), str(obj))
 
     def dump_tuple(self, obj, level=0, nextline=True):
-        DEBUG('; dump_tuple')
+        DEBUG('dump_tuple', obj)
         if level + 1 > max_depth:
             return "%s(...)%s" % (
                 indent(level, break_before_tuple_begin),
@@ -174,8 +175,9 @@ class Dumper():
             )
 
     def dump_list(self, obj, level=0, nextline=True):
-        DEBUG('; dump_list')
+        DEBUG('dump_list', obj)
         if level + 1 > max_depth:
+            exit()
             return "%s[...]%s" % (
                 indent(level, break_before_list_begin),
                 indent(level, break_after_list_end)
@@ -194,7 +196,7 @@ class Dumper():
             )
 
     def dump_dict(self, obj, level=0, nextline=True):
-        DEBUG('; dump_dict')
+        DEBUG('dump_dict', obj)
         if level + 1 > max_depth:
             return "%s{...}%s" % (
                 indent(level, break_before_dict_begin),
@@ -220,19 +222,22 @@ class Dumper():
             )
 
     def dump(self, obj, level=0, nextline=True):
-        DEBUG('; dump')
-        
+        DEBUG('dump top', obj)
+
         if self.seen.has_key(id(obj)):
             return self.seen[id(obj)]
 
         if is_instance(obj) and hasattr(obj, 'dumpinfp'):
+            DEBUG('dump in fp', obj)
             self.seen[id(obj)] = obj.dumpinfp()
             return self.seen[id(obj)]
-        
+
         if is_class(obj):
             if obj.__module__ == '__builtin__':
+                DEBUG('builtin')
                 self.seen[id(obj)] = obj.__name__
             else:
+                DEBUG('class ' + str(obj))
                 self.seen[id(obj)] = '{0:s}.{1:s}'.format(obj.__module__, obj.__name__)
             return self.seen[id(obj)]
 

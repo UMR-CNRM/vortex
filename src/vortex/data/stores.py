@@ -29,6 +29,10 @@ class StoreGlue(object):
         self._asdict = None
         self._cross = dict()
 
+    def dumpinfp(self):
+        """Return a nicely formated class name for dump in footprint."""
+        return "{0:s}.{1:s}('{2:s}')".format(self.__module__, self.__class__.__name__, str(self.gluemap))
+
     def sections(self):
         """Returns a list of available glue section names. Mostly file archive names."""
         return self.gluemap.sections()
@@ -124,6 +128,7 @@ class StoreGlue(object):
             cleanpath = system.path.join(dirname, targetpath)
         return ( cleanpath, targetpath )
 
+        
 class IniStoreGlue(StoreGlue):
     """Initialised StoreGlue with a delayed ini file."""
 

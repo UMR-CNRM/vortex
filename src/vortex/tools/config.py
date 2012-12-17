@@ -17,16 +17,28 @@ from vortex import sessions
 class GenericConfigParser(object):
     """Basic configuration file parser."""
 
-    def __init__(self, inifile=None):
-        self.parser = SafeConfigParser()
+    def __init__(self, inifile=None, parser=None, clsparser=SafeConfigParser):
+        self.parser = parser
+        self.clsparser = clsparser
         if inifile:
             self.setfile(inifile)
         else:
             self.file = None
         self.updates = list()
 
+    def __deepcopy__(self, memo):
+        """Warning: deepcopy of any item of the class is... itself!"""
+        memo[self] = self
+        return self
+
+    def dumpinfp(self):
+        """Return a nicely formated class name for dump in footprint."""
+        return "{0:s}.{1:s}('{2:s}')".format(self.__module__, self.__class__.__name__, str(self.file))
+
     def setfile(self, inifile):
         """Read the specified ``inifile`` as new configuration."""
+        if self.parser == None:
+            self.parser = self.clsparser()
         self.file = inifile
         local = sessions.system()
         if not local.path.exists(self.file):
