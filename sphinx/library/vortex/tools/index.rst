@@ -11,5 +11,6 @@ Miscellaneous Tools
    env
    fortran
    net
+   services
    systems
    targets

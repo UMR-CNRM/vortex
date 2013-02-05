@@ -284,6 +284,8 @@ class Dispatcher(object):
         if 'from' in kw:
             obj = kw['from']
             del kw['from']
+        else:
+            obj = None
         if callable(obj):
             info = obj(**kw)
             return (0, str(info), info)

@@ -13,7 +13,7 @@ from vortex.tools.env import Environment
 class UtEnv(TestCase):
 
     def setUp(self):
-        self.res = Analysis(geometry=SpectralGeometry(), model='arpege', date='2011111700', cutoff='short', kind='analysis')
+        self.res = Analysis(geometry=SpectralGeometry(), model='arpege', date='2011111700', cutoff='prod', kind='analysis')
 
     def test_basic(self):
         e = Environment()
@@ -66,7 +66,7 @@ class UtEnv(TestCase):
         e['toto'] = dict(toto = 2, fun = 'coucou')
         self.assertEqual(os.environ['TOTO'], '{"fun": "coucou", "toto": 2}')
         e['toto'] = self.res
-        self.assertEqual(os.environ['TOTO'], '{"cutoff": "production", "kind": "analysis", "nativefmt": "fa", "geometry": {"area": null, "stretching": 2.3999999999999999, "resolution": null, "id": "abstract", "truncation": 798}, "filling": "full", "filtering": null, "date": "20111117000000", "clscontents": "DataRaw", "model": "arpege"}')
+        self.assertEqual(os.environ['TOTO'], '{"cutoff": "production", "kind": "analysis", "nativefmt": "fa", "geometry": {"area": "auto", "stretching": 2.4, "resolution": null, "id": "abstract", "truncation": 798}, "filling": "full", "filtering": null, "date": "20111117000000", "clscontents": "DataRaw", "model": "arpege"}')
                          
 if __name__ == '__main__':
     action = TestLoader().loadTestsFromTestCase

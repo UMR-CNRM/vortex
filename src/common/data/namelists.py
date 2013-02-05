@@ -46,7 +46,7 @@ class NamelistContent(AlmostDictContent):
         return self._data[name]
 
     def macros(self):
-        """Returns a list of macro names."""
+        """Returns the dictionary of macros already registered."""
         return self._macros
 
     def setmacro(self, item, value):

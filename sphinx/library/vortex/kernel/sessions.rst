@@ -9,12 +9,12 @@
 .. versionadded:: 0.1
 
 
-Interface to tickets
---------------------
+Interface to sessions tickets
+-----------------------------
 
 .. autofunction:: ticket
 
-.. autofunction:: tagsnames
+.. autofunction:: sessionstags
 
 .. autofunction:: current
 
@@ -22,11 +22,15 @@ Interface to tickets
 
 .. autofunction:: prompt
 
+.. autofunction:: exit
+
 
 Interface to gloves
 -------------------
 
 .. autofunction:: glove
+
+.. autofunction:: glovestags
 
 The office in charge of ticket distribution ::class:`Desk`
 ----------------------------------------------------------

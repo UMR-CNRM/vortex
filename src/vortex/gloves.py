@@ -17,6 +17,10 @@ class Glove(BFootprint):
     _footprint = dict(
         info = 'Abstract glove',
         attr = dict(
+            tag = dict(
+                optional = True,
+                default = 'default',
+            ),
             user = dict(
                 alias = ( 'logname', 'username' ),
                 optional = True,

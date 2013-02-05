@@ -13,33 +13,21 @@ Package
 
 .. autodata:: __all__
 
-Interface
----------
-
-As a :mod:`vortex.utilities.catalogs` based module,
-:mod:`vortex.data.providers` automaticaly defined the following functions:
-
-.. autofunction:: catalog
-
-.. autofunction:: pickup
-
-.. autofunction:: load
-
 
 Classes
 -------
 
-.. autoclass:: MailServices
+.. autoclass:: AlarmService
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: BdapServices
+.. autoclass:: BdapService
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: RoutingServices
+.. autoclass:: RoutingService
    :show-inheritance:
    :members:
    :member-order: alphabetical

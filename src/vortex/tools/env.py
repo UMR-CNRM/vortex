@@ -244,7 +244,8 @@ class Environment(object):
         """
         previous = self._active
         osrewind = None
-        if args: self.__dict__['_active'] = args[0]
+        if args and type(args[0]) == bool:
+            self.__dict__['_active'] = args[0]
         if previous and not self._active and self.__class__._os and id(self) == id(self.__class__._os[-1]):
             self.__class__._os.pop()
             osrewind = self.__class__._os[-1]

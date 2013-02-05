@@ -9,7 +9,7 @@ Spaces
 
 .. glossary::
 
-   logical space
+   Logical space
       This is the space meaningful in the sense of numerical prediction and methods.
       Most of the time, entities are simply described by plain words by the one
       in charge of the scientific experiments, particularly for the most abstract notions.
@@ -18,7 +18,7 @@ Spaces
 
          Try to describe the sequence that would produce the most acurate analysis every morning.
 
-   physical space
+   Physical space
       This is the *real* space where the entities defined in the logical space take place.
       Very often related to information systems.
    
@@ -37,13 +37,29 @@ Spaces
 Logical space
 -------------
 
-.. todo::
+.. glossary::
 
-   Translate the dictionary of notions for the :term:`logical space`.
-   
+   Session
+      In the :term:`logical space` the session refers to the most abstract level of the general context
+      the user operates.
+        
+      DevGuide: :ref:`env-interface`
+
+      Modules: :mod:`vortex.sessions`
+
+   Ticket
+      This is a shortcut to a :term:`session` ticket.
+
 Physical space
 --------------
 
-.. todo::
+.. glossary::
 
-   Translate the dictionary of notions for the :term:`physical space`.
+   Environment
+      The environment refers more precisely to the environment variables.
+      Vortex provides the user with a very powerfull interface on top
+      of the usual :obj:`os.environ` instance.
+
+      DevGuide: :ref:`env-interface`
+
+      Modules: :mod:`vortex.tools.env`

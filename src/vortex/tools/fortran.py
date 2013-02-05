@@ -240,12 +240,12 @@ class LiteralParser(object):
         type. Resolution order is: integer, boz, real, complex, character
         and logical.
         """
-        if   ( self.check_integer(string)   ): return self.parse_integer(string)
-        elif ( self.check_boz(string)       ): return self.parse_boz(string)
-        elif ( self.check_real(string)      ): return self.parse_real(string)
-        elif ( self.check_complex(string)   ): return self.parse_complex(string)
-        elif ( self.check_character(string) ): return self.parse_character(string)
-        elif ( self.check_logical(string)   ): return self.parse_logical(string)
+        if   self.check_integer(string)  : return self.parse_integer(string)
+        elif self.check_boz(string)      : return self.parse_boz(string)
+        elif self.check_real(string)     : return self.parse_real(string)
+        elif self.check_complex(string)  : return self.parse_complex(string)
+        elif self.check_character(string): return self.parse_character(string)
+        elif self.check_logical(string)  : return self.parse_logical(string)
         else:
             raise ValueError("Literal %s doesn't represent a FORTRAN literal" % string)
 
@@ -289,12 +289,12 @@ class LiteralParser(object):
 
     def encode(self, value):
         """Returns the string form of the specified ``value`` according to its type."""
-        if   ( isinstance(value, bool    ) ): return self.encode_logical(value)
-        elif ( isinstance(value, int     ) ): return self.encode_integer(value)
-        elif ( isinstance(value, float   ) ): return self.encode_real(value)
-        elif ( isinstance(value, Decimal ) ): return self.encode_real(value)
-        elif ( isinstance(value, complex ) ): return self.encode_complex(value)
-        elif ( isinstance(value, str     ) ): return self.encode_character(value)
+        if   isinstance(value, bool    ): return self.encode_logical(value)
+        elif isinstance(value, int     ): return self.encode_integer(value)
+        elif isinstance(value, float   ): return self.encode_real(value)
+        elif isinstance(value, Decimal ): return self.encode_real(value)
+        elif isinstance(value, complex ): return self.encode_complex(value)
+        elif isinstance(value, str     ): return self.encode_character(value)
         else:
             raise ValueError("Type %s is cannot be FORTRAN encoded" % type(value))
 
@@ -353,10 +353,6 @@ class NamelistBlock(object):
         return self.getvar(varname)
 
     def delvar(self, varname):
-        """
-        Delete ``varname`` from current environment (case sensitive).
-        Also used as internal for attribute access or dictionary access.
-        """
         varname = varname.upper()
         if varname in self._pool:
             del self._pool[varname]
@@ -506,16 +502,20 @@ class NamelistParser(object):
         self.endol = re.compile(self._re_endol, self._re_flags)
         self.comma = re.compile(self._re_comma, self._re_flags)
 
+    def addmacro(self, macro):
+        """Add an extra macro name (without associated value)."""
+        self.macros.add(macro)
+
     @property
     def literal(self):
         return self._literal
 
-    def _namelists_parse(self, source):
+    def _namelist_parse(self, source):
         """Parse the all bunch of source as a dict of namelist blocks."""
         namelists = dict()
         while source:
             if ( self.block.search(source) ):
-                namblock, source = self._namelist_parse(source)
+                namblock, source = self._namelist_block_parse(source)
                 namelists.update({namblock.name : namblock})
             else:
                 break
@@ -529,7 +529,7 @@ class NamelistParser(object):
             cleaner_source = re.sub(self._re_clean, '', dirty_source, self._re_flags)
         return cleaner_source
 
-    def _namelist_parse(self, source):
+    def _namelist_block_parse(self, source):
         """Parse a block of namelist."""
         source = self._namelist_clean(source)
         block_name = self.bname.match(source[1:]).group(0)
@@ -541,7 +541,7 @@ class NamelistParser(object):
 
         while source:
 
-            if ( self.entry.match(source) ):
+            if self.entry.match(source):
                 # Got a new entry in the namelist block
                 if (current):
                     namelist.update({current : values})
@@ -552,64 +552,64 @@ class NamelistParser(object):
                 source = self._namelist_clean(source[1:])
                 continue
 
-            elif ( re.match("^/(end)?", source, self._re_flags) ):
+            elif re.match("^/(end)?", source, self._re_flags):
                 if current: namelist.update({current : values})
                 source = source[1:]
-                if ( re.match('end', source, self._re_flags) ): source = source[3:]
+                if re.match('end', source, self._re_flags): source = source[3:]
                 break
 
-            elif ( re.match('\-+' + self._re_endol, source, self._re_flags) ):
+            elif re.match('\-+' + self._re_endol, source, self._re_flags):
                 item = re.match('\-+' + self._re_endol, source, self._re_flags).group(0)
                 namelist.todelete(current)
                 current = None
                 source = self._namelist_clean(source[len(item):])
-                if ( self.comma.match(source) ): source = self._namelist_clean(self.comma.sub('', source, 1))
+                if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
                 continue
 
-            elif ( re.match(self._re_macro + self._re_endol, source, self._re_flags) ):
+            elif re.match(self._re_macro + self._re_endol, source, self._re_flags):
                 item = re.match(self._re_macro + self._re_endol, source, self._re_flags).group(0)
                 if item in self.macros:
                     namelist.addmacro(item, None)
                     values.append(item)
                     source = self._namelist_clean(source[len(item):])
-                    if ( self.comma.match(source) ): source = self._namelist_clean(self.comma.sub('', source, 1))
+                    if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
                     continue
 
-            if ( re.match(_SIGNED_INT_LITERAL_CONSTANT + self._re_endol, source, self._re_flags) ):
+            if re.match(_SIGNED_INT_LITERAL_CONSTANT + self._re_endol, source, self._re_flags):
                 item = re.match(_SIGNED_INT_LITERAL_CONSTANT + self._re_endol, source, self._re_flags).group(0)
                 values.append(self.literal.parse_integer(item))
                 source = self._namelist_clean(source[len(item):])
-                if ( self.comma.match(source) ): source = self._namelist_clean(self.comma.sub('', source, 1))
+                if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
 
-            elif ( re.match(_BOZ_LITERAL_CONSTANT + self._re_endol, source, self._re_flags) ):
+            elif re.match(_BOZ_LITERAL_CONSTANT + self._re_endol, source, self._re_flags):
                 item = re.match(_BOZ_LITERAL_CONSTANT + self._re_endol, source, self._re_flags).group(0)
                 values.append(self.literal.parse_boz(item))
                 source = self._namelist_clean(source[len(item):])
-                if ( self.comma.match(source) ): source = self._namelist_clean(self.comma.sub('', source, 1))
+                if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
 
-            elif ( re.match(_SIGNED_REAL_LITERAL_CONSTANT + self._re_endol, source, self._re_flags) ):
+            elif re.match(_SIGNED_REAL_LITERAL_CONSTANT + self._re_endol, source, self._re_flags):
                 item = re.match(_SIGNED_REAL_LITERAL_CONSTANT + self._re_endol, source, self._re_flags).group(0)
                 values.append(self.literal.parse_real(item))
                 source = self._namelist_clean(source[len(item):])
-                if ( self.comma.match(source) ): source = self._namelist_clean(self.comma.sub('', source, 1))
+                if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
 
-            elif ( re.match(_COMPLEX_LITERAL_CONSTANT + self._re_endol, source, self._re_flags) ):
+            elif re.match(_COMPLEX_LITERAL_CONSTANT + self._re_endol, source, self._re_flags):
                 item = re.match(_COMPLEX_LITERAL_CONSTANT + self._re_endol, source, self._re_flags).group(0)
                 values.append(self.literal.parse_complex(item))
                 source = self._namelist_clean(source[len(item):])
-                if ( self.comma.match(source) ): source = self._namelist_clean(self.comma.sub('', source, 1))
+                if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
 
-            elif ( re.match(_CHAR_LITERAL_CONSTANT + self._re_endol, source, self._re_flags) ):
+            elif re.match(_CHAR_LITERAL_CONSTANT + self._re_endol, source, self._re_flags):
                 item = re.match(_CHAR_LITERAL_CONSTANT + self._re_endol, source, self._re_flags).group(0)
                 values.append(self.literal.parse_character(item))
                 source = self._namelist_clean(source[len(item):])
-                if ( self.comma.match(source) ): source = self._namelist_clean(self.comma.sub('', source, 1))
+                if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
 
-            elif ( re.match(_LOGICAL_LITERAL_CONSTANT + self._re_endol, source, self._re_flags) ):
+            elif re.match(_LOGICAL_LITERAL_CONSTANT + self._re_endol, source, self._re_flags):
                 item = re.match(_LOGICAL_LITERAL_CONSTANT + self._re_endol, source, self._re_flags).group(0)
                 values.append(self.literal.parse_logical(item))
                 source = self._namelist_clean(source[len(item):])
-                if ( self.comma.match(source) ): source = self._namelist_clean(self.comma.sub('', source, 1))
+                if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
 
             else:
                 raise ValueError("Badly formatted FORTRAN namelist: [[%s]]" % source[:32])
@@ -618,11 +618,11 @@ class NamelistParser(object):
 
     def parse(self, obj):
         """Parse a string or a file. Returns a dict of {namelist_title: namelist object}."""
-        if ( isinstance(obj,str) ):
-            return self._namelists_parse(obj)
-        elif ( isinstance(obj,file) ):
+        if isinstance(obj, str):
+            return self._namelist_parse(obj)
+        elif isinstance(obj, file):
             obj.seek(0)
-            return self._namelists_parse(obj.read())
+            return self._namelist_parse(obj.read())
         else:
             raise ValueError("Argument %s cannot be parsed." % str(obj))
 

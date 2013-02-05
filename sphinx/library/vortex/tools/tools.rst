@@ -17,6 +17,7 @@ Package
 * :mod:`vortex.tools.date`
 * :mod:`vortex.tools.env`
 * :mod:`vortex.tools.net`
+* :mod:`vortex.tools.services`
 * :mod:`vortex.tools.systems`
 * :mod:`vortex.tools.targets`
 

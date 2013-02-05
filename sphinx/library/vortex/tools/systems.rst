@@ -45,8 +45,22 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: LinuxBase
+.. autoclass:: OSExtended
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Linux
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: LinuxDebug
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SuperUX
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

@@ -24,17 +24,16 @@ strongly advised.
 
 """
 
-__version__ = '0.6.12'
+__version__ = '0.6.13'
 
 __all__ = []
 
 import sessions, algo, data
-from tools import env
-
+import tools
 
 # Set a background environment and a root session
 
-rootenv = env.Environment(active=True)
+rootenv = tools.env.Environment(active=True)
 rootenv.glove = sessions.glove()
 
 sessions.ticket(active=True, topenv=rootenv, glove=rootenv.glove, prompt='Vortex v-'+__version__+':')
@@ -56,8 +55,9 @@ def exit():
 
 # Shorthands to the most useful class catalogs
 
-components = algo.components.catalog
-containers = data.containers.catalog
-providers = data.providers.catalog
-resources = data.resources.catalog
-stores = data.stores.catalog
+components = algo.components.catalog()
+containers = data.containers.catalog()
+providers = data.providers.catalog()
+resources = data.resources.catalog()
+stores = data.stores.catalog()
+systems = tools.systems.catalog()
