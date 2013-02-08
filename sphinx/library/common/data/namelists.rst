@@ -16,7 +16,12 @@ Package
 
 Classes
 -------
- 
+
+.. autoclass:: NamelistContent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Namelist
    :show-inheritance:
    :members:

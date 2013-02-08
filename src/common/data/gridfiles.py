@@ -49,7 +49,10 @@ class Gridpoint(GeoFlowResource):
                     type = GridGeometry,
                 ),
                 kind = dict(
-                    values = [ 'gridpoint', 'gribfile' ]
+                    values = [ 'gridpoint', 'gribfile', 'fullpos' ],
+                    remap = dict(
+                        fullpos = 'gridpoint'
+                    )
                 )
             )
         )

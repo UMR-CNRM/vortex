@@ -324,6 +324,8 @@ class NamelistBlock(object):
     def setvar(self, varname, value):
         """Insert or change a namelist block key."""
         varname = varname.upper()
+        if type(value) != list:
+            value = [ value ]
         self._pool[varname] = value
         if varname not in self._keys:
             self._keys.append(varname)
@@ -342,7 +344,10 @@ class NamelistBlock(object):
         """
         varname = varname.upper()
         if varname in self._pool:
-            return self._pool[varname]
+            if len(self._pool[varname]) == 1:
+                return self._pool[varname][0]
+            else:
+                return self._pool[varname]
         else:
             return None
 
@@ -422,7 +427,7 @@ class NamelistBlock(object):
         """Register a key to be deleted."""
         self._dels.add(varname.upper())
 
-    def delkeys(self):
+    def rmkeys(self):
         """Returns a set of key to be deleted in a merge or dump."""
         return self._dels
 
@@ -459,7 +464,7 @@ class NamelistBlock(object):
     def merge(self, delta):
         """Merge the delta provided to the current block."""
         self.update(delta.pool())
-        for dk in filter(lambda x: x in self, delta.delkeys()):
+        for dk in filter(lambda x: x in self, delta.rmkeys()):
             self.delvar(dk)
 
 
@@ -514,7 +519,7 @@ class NamelistParser(object):
         """Parse the all bunch of source as a dict of namelist blocks."""
         namelists = dict()
         while source:
-            if ( self.block.search(source) ):
+            if self.block.search(source):
                 namblock, source = self._namelist_block_parse(source)
                 namelists.update({namblock.name : namblock})
             else:
@@ -617,9 +622,18 @@ class NamelistParser(object):
         return ( namelist, source )
 
     def parse(self, obj):
-        """Parse a string or a file. Returns a dict of {namelist_title: namelist object}."""
+        """
+        Parse a string or a file.
+        Returns a dict of {namelist block title: namelist block object}.
+        """
         if isinstance(obj, str):
+            if not self.block.search(obj):
+              obj = obj.strip()
+              iod = open(obj, 'r')
+              obj = iod.read()
+              iod.close()
             return self._namelist_parse(obj)
+              
         elif isinstance(obj, file):
             obj.seek(0)
             return self._namelist_parse(obj.read())

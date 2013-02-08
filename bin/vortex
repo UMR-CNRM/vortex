@@ -38,7 +38,7 @@ if [ "$?" == 0 ]; then
 
     XPID=$(< $PFIFO)
     XCMD=$(ps -f -p $XPID | fgrep $XPID | awk '{print $(NF-2)}')
-    RCMD=$(which vortexshcmd.py)
+    RCMD=$(which vortexd)
     if [ "$RCMD" != "$XCMD" ]; then
       echo "Expected [$XPID] co-process is not running"
       \rm -f $RFIFO $WFIFO $PFIFO
@@ -51,7 +51,7 @@ if [ "$?" == 0 ]; then
     \rm -f $RFIFO $WFIFO $PFIFO
     mkfifo $RFIFO
     mkfifo $WFIFO
-    nohup vortexshcmd.py $FIFOTAG $FIFODIR </dev/null >> $VORTEXLOG 2>&1 &
+    nohup vortexd $FIFOTAG $FIFODIR </dev/null >> $VORTEXLOG 2>&1 &
     XPID=$(jobs -p %1)
     echo "New vortex shell facility [$XPID] for process [$PPID] and tag [$FIFOTAG]"
     echo $XPID > $PFIFO

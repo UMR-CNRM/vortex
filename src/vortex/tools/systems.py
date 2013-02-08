@@ -179,7 +179,7 @@ class System(BFootprint):
         psall = subprocess.Popen(pscmd, stdout=subprocess.PIPE).communicate()[0].split('\n')
         if search:
             psall = filter(lambda x: re.search(search, x), psall)
-        return psall
+        return map(lambda x: x.strip(), psall)
 
     def readonly(self, filename):
         """Set permissions of the `filename` object to read-only."""

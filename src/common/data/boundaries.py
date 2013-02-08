@@ -22,7 +22,10 @@ class Elscf(GeoFlowResource):
             info = 'Coupling file for a limited area model',
             attr = dict(
                 kind = dict(
-                    values = [ 'elscf' ]
+                    values = [ 'elscf', 'coupled' ],
+                    remap = dict(
+                        coupled = 'elscf'
+                    )
                 ),
                 nativefmt = dict(
                     values = [ 'fa', 'grib' ],

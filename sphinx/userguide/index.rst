@@ -14,3 +14,4 @@ This will contain instructions for end users of the toolbox.
    :maxdepth: 2
 
    shell
+   fortran

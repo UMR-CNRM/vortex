@@ -94,7 +94,7 @@ class Dispatcher(object):
         Return this list.
         """
         system = t.system()
-        psall = system.ps(opts=['-u', system.env.LOGNAME], search='python.*vortexshcmd')
+        psall = system.ps(opts=['-u', system.env.LOGNAME], search='python.*vortexd')
         psfmt = '{0:16s} {1:24s} {2:32s}'
         psd = [ psfmt.format('USER', 'FIFOTAG', 'FIFODIR') ]
         psr = []
@@ -561,22 +561,29 @@ class Dispatcher(object):
         if not dblprovider:
             return (1, 'Invalid provider', None)
         info = filter(lambda x: x.complete, toolbox.rload(kw))
+        rc = 0
         display = list()
-        for rh in info:
-            if rh.put():
-                actualstorage = rh.locate()
-                logging.info('DBLPUT p1 = %s / loc = %s', rh.provider, actualstorage)
-                actualprovider = rh.provider
-                rh.provider = dblprovider
-                doublestorage = rh.locate()
-                logging.info('DBLPUT p2 = %s / loc = %s', rh.provider, doublestorage)
-                rh.provider = actualprovider
-                if doublestorage:
-                    system = t.system()
-                    system.remove(doublestorage)
-                    system.filecocoon(doublestorage)
-                    system.link(actualstorage, doublestorage)
-                    display.extend([actualstorage, '  -> ' + doublestorage])
-            else:
-                logging.warning('DBLPUT could not store main resource %s', rh)
-        return (0, "\n".join(display), info)
+        if info:
+            for rh in info:
+                if rh.put():
+                    actualstorage = rh.locate()
+                    logging.info('DBLPUT p1 = %s / loc = %s', rh.provider, actualstorage)
+                    actualprovider = rh.provider
+                    rh.provider = dblprovider
+                    doublestorage = rh.locate()
+                    logging.info('DBLPUT p2 = %s / loc = %s', rh.provider, doublestorage)
+                    rh.provider = actualprovider
+                    if doublestorage:
+                        system = t.system()
+                        system.remove(doublestorage)
+                        system.filecocoon(doublestorage)
+                        system.link(actualstorage, doublestorage)
+                        display.extend([actualstorage, '  -> ' + doublestorage])
+                else:
+                    logging.warning('DBLPUT could not store main resource %s', rh)
+                    display.extend('Could not put ' + str(rh), rh.idcard())
+                    rc = 1
+        else:
+            display.append('No resource handler matching the description')
+            rc = 1
+        return (rc, "\n".join(display), info)

@@ -40,7 +40,7 @@ class NamelistContent(AlmostDictContent):
         """Construct a new block."""
         if name == None:
             self._automkblock += 1
-            name = 'autoblock_{0:02d}'.format(self._automkblock)
+            name = 'AUTOBLOCK{0:03d}'.format(self._automkblock)
         if name not in self._data:
             self._data[name] = NamelistBlock(name=name)
         return self._data[name]
@@ -69,7 +69,7 @@ class NamelistContent(AlmostDictContent):
                 for dk in namblock.keys():
                     newblock[dk] = namblock[dk]
                 self[namblock.name] = newblock
-        if rmblocks == None:
+        if rmblocks == None and hasattr(delta, 'rmblocks'):
             rmblocks = delta.rmblocks()
         for item in rmblocks:
             del self[item]
