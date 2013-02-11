@@ -4,38 +4,52 @@
 import os
 
 from vortex import sessions
-from iga.services.actions_handling import ActionsLoader
+from vortex.tools import env
+from vortex.tools.actions_handling import ActionsLoader
+from iga.services import services
 
 PATH_DATA = 'data'
 FILE_TEST = 'services.txt'
 DATA = os.path.join(PATH_DATA, FILE_TEST)
 
+t = sessions.ticket()
+t.info()
+operenv = env.Environment(active=True)
+operenv.setvar('DEFAULT_ACTIONS', 'iga.services.actions')
+
 current_glv = sessions.glove(user='mxpt001', kind='oper', tag='oper')
 
 dico1 = {
-    'action_type': 'simple_mail',
-    'to': "stephane.mejias@meteo.fr",
-    'from': "stephane.mejias@meteo.fr",
+    'action_type': 'mail',
+    'receiver': "stephane.mejias@meteo.fr",
+    'sender': "stephane.mejias@meteo.fr",
     'message': 'tout est ok',
     'subject': 'test mail vortex',
-    'file': 'None'
+}
+
+dico2 = {
+    'action_type': 'mail',
+    'receiver': "stephane.mejias@meteo.fr stephane.mejias@meteo.fr",
+    'sender': "stephane.mejias@meteo.fr",
+    'message': 'tout est ok',
+    'subject': 'test mail vortex',
 }
 
 dico3 = {
-    'action_type': 'file_mail',
-    'to': "stephane.mejias@meteo.fr",
-    'from': "stephane.mejias@meteo.fr",
+    'action_type': 'mail',
+    'receiver': "stephane.mejias@meteo.fr",
+    'sender': "stephane.mejias@meteo.fr",
     'subject': 'test mail vortex',
     'file': DATA
 }
 
 dico4 = {
-    'action_type': 'simple_alarm',
+    'action_type': 'alarm',
     'message': 'tout est ok'
 }
 
 dico5 = {
-    'action_type': 'send_bdap',
+    'action_type': 'sendbdap',
     'domain': 'GLOB25',
     'localname': 'PEPM000GLOB25',
     'extra': '0',
@@ -63,5 +77,3 @@ print '_'*150
 al.alarm_on()
 al.alarm(**dico4)
 print '_'*150
-
-

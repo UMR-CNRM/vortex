@@ -1,22 +1,18 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-The module contains the specific services adapted to the actions
-performed int the IGA operational context :
-
-  * AlarmService
-  * SendbdapService
-  * RoutingService
-
+r"""
+The module contains the service adapted to the actions present in the actions
+module. We have an abstract class Services (inheritating from BFootprint)
+and 4 more classes inheritating from it :
+    - MailServices, AlarmServices, SendbdapServices and RoutingServices.
 These classes are adpated to handle the data dedicated to the action to be
 performed.
 """
 
-#: No automatic export
-__all__ = []
 
-import os, sys, re
+
+import os
 
 import logging
 from vortex import sessions
@@ -26,29 +22,42 @@ from vortex.tools.services import Service
 
 
 class AlarmService(Service):
-    """Class responsible for handling alarm data. You never call this class directly."""
+    r"""
+    Class responsible for handling alarm data. You never call this class
+    directly.
+    """
 
     _footprint = dict(
         info = 'Alarm services class',
         attr = dict(
             action_type = dict(
-                values = ['alarm']
+                optional = False,
+                type = str,
+                default = 'alarm',
+                values = ['alarm', ]
             ),
-            message = dict(),
+            message = dict(
+                optional = False,
+                type = str
+            ),
             file = dict(
                 optional = True,
+                type = str,
             ),
             level = dict(
                 optional = True,
+                type = str,
                 default = 'info',
                 values = ['info', 'warning', 'error', 'critical']
             ),
             log = dict(
                 optional = True,
+                type = str,
                 default = '/dev/log'
             ),
             facility = dict(
                 optional = True,
+                type = str,
                 default = 'LOG_LOCAL2'
             ),
             format = dict(
@@ -91,30 +100,60 @@ class AlarmService(Service):
     def get_message(self):
         return self.message
 
+    def alarm(self):
+        """docstring for alarm"""
+        message = self.get_message()
+        logger_func = self.get_loggerservice()
+        logger_func(message)
 
 class BdapService(Service):
-    """Class responsible for handling bdap data. You never call this class directly."""
-
+    r"""
+    Class responsible for handling bdap data. You never call this class
+    directly.
+    """
     _footprint = dict(
         info = 'Bdap services class',
         attr = dict(
             action_type = dict(
+                optional = False,
+                type = str,
+                default = 'sendbdap',
                 values = ['sendbdap', ]
             ),
-            domain = dict(),
+            domain = dict(
+                optional = False,
+                type = str
+            ),
             localname = dict(
                 optional = True,
+                type = str,
                 default = None
             ),
             extra = dict(
                 optional = True,
+                type = str,
                 default = '0'
             ),
-            srcdirectory = dict(),
-            term = dict(),
-            hour = dict(),
-            bdapid = dict(),
-            source = dict(),
+            srcdirectory = dict(
+                optional = False,
+                type = str
+            ),
+            term = dict(
+                optional = False,
+                type = str
+            ),
+            hour = dict(
+                optional = False,
+                default = None
+            ),
+            bdapid = dict(
+                optional = False,
+                type = str,
+            ),
+            source = dict(
+                optional = False,
+                type = str
+            ),
             scalar = dict(
                 optional = True,
                 type = bool,
@@ -154,26 +193,51 @@ class BdapService(Service):
     def get_system(self):
         return sessions.system()
 
+    def sendbdap(self):
+        system = self.get_system()
+        cmdline = self.get_cmdline()
+        system.spawn(cmdline, shell=True)
 
 class RoutingService(Service):
-    """Class responsible for handling routing data. You never call this class directly."""
-
+    r"""
+    Class responsible for handling routing data. You never call this class
+    directly.
+    """
     _footprint = dict(
         info = 'Routing services class',
         attr = dict(
             action_type = dict(
+                optional = False,
+                type = str,
                 values = ['route', ]
             ),
-            localname = dict(),
+            localname = dict(
+                optional = False,
+                type = str,
+                default = None
+            ),
             quality = dict(
                 optional = True,
+                type = str,
                 default = '0',
                 values = [ '0', ]
             ),
-            srcdirectory = dict(),
-            term = dict(),
-            productid = dict(),
-            source = dict(),
+            srcdirectory = dict(
+                optional = False,
+                type = str
+            ),
+            term = dict(
+                optional = False,
+                type = str
+            ),
+            productid = dict(
+                optional = False,
+                type = str,
+            ),
+            source = dict(
+                optional = False,
+                type = str
+            ),
             scalar = dict(
                 optional = True,
                 type = bool,
@@ -181,17 +245,21 @@ class RoutingService(Service):
             ),
             producer = dict(
                 optional = True,
+                type = str,
                 default = 'fpe'
             ),
             date = dict(
+                optional = False,
                 type = Date
             ),
             path_exec = dict(
                 optional = True,
+                type = str,
                 default = '/ch/mxpt/mxpt001/util/agt/'
             ),
             binary = dict(
                 optional = True,
+                type = str,
                 default = '[scalar]',
                 remap = dict(
                     False = 'router_pe',
@@ -226,4 +294,10 @@ class RoutingService(Service):
 
     def get_system(self):
         return sessions.system()
+
+    def route(self):
+        """docstring for route"""
+        system = self.get_system()
+        cmdline = self.get_cmdline()
+        system.spawn(cmdline, shell=True)
 

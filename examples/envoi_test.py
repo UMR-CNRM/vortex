@@ -4,7 +4,8 @@
 import os
 
 from vortex import sessions
-from iga.services.actions_handling import ActionsLoader
+from vortex.tools.actions_handling import ActionsLoader
+from iga.services import services
 
 PATH_DATA = 'data'
 FILE_TEST = 'services.txt'
@@ -13,29 +14,29 @@ DATA = os.path.join(PATH_DATA, FILE_TEST)
 current_glv = sessions.glove(user='mxpt001', kind='oper', tag='oper')
 
 dico1 = {
-    'action': 'simple_mail',
-    'to': "stephane.mejias@meteo.fr",
-    'from': "stephane.mejias@meteo.fr",
+    'action_type': 'mail',
+    'receiver': "stephane.mejias@meteo.fr",
+    'sender': "stephane.mejias@meteo.fr",
     'message': 'tout est ok',
     'subject': 'test mail vortex',
     'file': 'None'
 }
 
 dico3 = {
-    'action': 'file_mail',
+    'action_type': 'mail',
     'to': "stephane.mejias@meteo.fr",
-    'from': "stephane.mejias@meteo.fr",
+    'sender': "stephane.mejias@meteo.fr",
     'subject': 'test mail vortex',
     'file': DATA
 }
 
 dico4 = {
-    'action': 'simple_alarm',
+    'action_type': 'alarm',
     'message': 'tout est ok'
 }
 
 dico5 = {
-    'action': 'send_bdap',
+    'action_type': 'sendbdap',
     'domain': 'GLOB25',
     'localname': 'PEPM000GLOB25',
     'srcdirectory': '/ch/mxpt/mxpt001/arpege/france/oper/data/bdap',
@@ -47,7 +48,7 @@ dico5 = {
 }
 
 dico6 = {
-    'action': 'send_bdap',
+    'action_type': 'sendbdap',
     'domain': 'domain',
     'localname': 'test',
     'srcdirectory': '/ch/mxpt/mxpt001/steph_perso/python/Vortex/IgaServices/data',
@@ -59,7 +60,7 @@ dico6 = {
 }
 
 dico7 = {
-    'action': 'route',
+    'action_type': 'route',
     'localname': 'test',
     'srcdirectory': '/ch/mxpt/mxpt001/steph_perso/python/Vortex/IgaServices/data',
     'term': '0',
