@@ -1,4 +1,4 @@
-.. services-index:
+.. tools-index:
 
 #########################
 Services utilities for Op
@@ -8,6 +8,4 @@ Services utilities for Op
    :maxdepth: 1
 
    actions
-   actions_handling
-   authorizations_handling
    services

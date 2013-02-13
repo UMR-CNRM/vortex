@@ -14,5 +14,5 @@ List of modules.
    :maxdepth: 2
 
    data/index
-   services/index
    syntax/index
+   tools/index

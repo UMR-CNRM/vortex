@@ -21,3 +21,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: LAMForecast
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: DFIForecast
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

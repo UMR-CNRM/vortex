@@ -61,7 +61,7 @@ class StoreGlue(object):
             logging.warning('No such section <%s> in %s', section, self)
             return []
 
-    def asdict(self):
+    def as_dict(self):
         """Return the current internal gluemap as a pure dictionary."""
         if not self._asdict:
             self._asdict = dict()
@@ -79,7 +79,7 @@ class StoreGlue(object):
         """
         if not item in self._cross:
             self._cross[item] = dict()
-            for section, contents in self.asdict().iteritems():
+            for section, contents in self.as_dict().iteritems():
                 for option, desc in contents.iteritems():
                     if item in desc:
                         if desc[item] not in self._cross[item]:

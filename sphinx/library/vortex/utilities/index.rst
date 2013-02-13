@@ -8,6 +8,7 @@ Utilities
    :maxdepth: 1
 
    utilities
+   authorizations
    catalogs
    decorators
    dispatch

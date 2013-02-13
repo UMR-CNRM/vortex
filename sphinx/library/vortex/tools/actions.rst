@@ -1,33 +1,34 @@
-:mod:`iga.services.services` --- Extended Op services
-=====================================================
+:mod:`vortex.tools.actions` --- Actions dispatching
+===================================================
 
-.. automodule:: iga.services.services
-   :synopsis: Extended Op services
+.. automodule:: vortex.tools.actions
+   :synopsis: Actions dispatching
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.5
+.. versionadded:: 0.6
 
 Package
 -------
 
 .. autodata:: __all__
 
+.. autodata:: actiond
 
 Classes
 -------
 
-.. autoclass:: AlarmService
+.. autoclass:: Action
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: BdapService
+.. autoclass:: SendMail
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: RoutingService
+.. autoclass:: Dispatcher
    :show-inheritance:
    :members:
    :member-order: alphabetical

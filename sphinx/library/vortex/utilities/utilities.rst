@@ -23,6 +23,7 @@ Pure Functions
 Modules
 -------
 
+* :mod:`vortex.utilities.authorizations`
 * :mod:`vortex.utilities.catalogs`
 * :mod:`vortex.utilities.decorators`
 * :mod:`vortex.utilities.dispatch`

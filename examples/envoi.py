@@ -20,7 +20,6 @@ operenv.setvar('DEFAULT_ACTIONS', 'iga.services.actions')
 current_glv = sessions.glove(user='mxpt001', kind='oper', tag='oper')
 
 dico1 = {
-    'action_type': 'mail',
     'receiver': "stephane.mejias@meteo.fr",
     'sender': "stephane.mejias@meteo.fr",
     'message': 'tout est ok',
@@ -28,7 +27,6 @@ dico1 = {
 }
 
 dico2 = {
-    'action_type': 'mail',
     'receiver': "stephane.mejias@meteo.fr stephane.mejias@meteo.fr",
     'sender': "stephane.mejias@meteo.fr",
     'message': 'tout est ok',
@@ -36,7 +34,6 @@ dico2 = {
 }
 
 dico3 = {
-    'action_type': 'mail',
     'receiver': "stephane.mejias@meteo.fr",
     'sender': "stephane.mejias@meteo.fr",
     'subject': 'test mail vortex',
@@ -44,12 +41,10 @@ dico3 = {
 }
 
 dico4 = {
-    'action_type': 'alarm',
     'message': 'tout est ok'
 }
 
 dico5 = {
-    'action_type': 'sendbdap',
     'domain': 'GLOB25',
     'localname': 'PEPM000GLOB25',
     'extra': '0',

@@ -58,7 +58,7 @@ class Footprint(object):
                 dictmerge(fp, list2dict(a, ('attr', 'only')))
             if isinstance(a, Footprint):
                 logging.debug('Init Footprint updated with object %s', a)
-                dictmerge(fp, a.asdict())
+                dictmerge(fp, a.as_dict())
         dictmerge(fp, list2dict(kw, ('attr', 'only')))
         for a in fp['attr'].keys():
             fp['attr'][a].setdefault('alias', tuple())
@@ -70,7 +70,7 @@ class Footprint(object):
     def __str__(self):
         return str(self.attr)
 
-    def asdict(self):
+    def as_dict(self):
         """
         Returns a deep copy of the internal footprint structure as a pure dictionary.
         Be aware that some objects such as compiled regular expressions remains identical
@@ -396,7 +396,7 @@ class BFootprint(IFootprint):
 
     def __init__(self, *args, **kw):
         logging.debug('Abstract %s init', self.__class__)
-        self._instfp = Footprint(self._footprint.asdict())
+        self._instfp = Footprint(self._footprint.as_dict())
         checked = False
         if kw.has_key('checked'):
             checked = kw.get('checked', False)

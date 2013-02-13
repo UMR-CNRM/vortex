@@ -17,6 +17,11 @@ class Glove(BFootprint):
     _footprint = dict(
         info = 'Abstract glove',
         attr = dict(
+            mail = dict(
+                alias = [ 'address' ],
+                optional = True,
+                default = Environment(active=False)['email']
+            ),
             tag = dict(
                 optional = True,
                 default = 'default',
@@ -39,6 +44,7 @@ class Glove(BFootprint):
         self._vapp = 'play'
         self._vconf = 'sandbox'
         self._rmdepthmin = 3
+        self._siteconf = None
 
     @classmethod
     def realkind(cls):
@@ -53,8 +59,9 @@ class Glove(BFootprint):
     @property
     def siteconf(self):
         """Returns the path of the default directory where ``.ini`` files are stored."""
-        pythonpath = re.sub('\/src', '', Environment(active=False).PYTHONPATH)
-        return pythonpath + '/conf'
+        if not self._siteconf:
+            self._siteconf = '/'.join(__file__.split('/')[0:-3] + [ 'conf' ])
+        return self._siteconf
 
     def setvapp(self, app=None):
         """Change the default vortex application name."""
@@ -83,6 +90,10 @@ class Glove(BFootprint):
     def vconf(self):
         """Vortex configuration name."""
         return self._vconf
+
+    def setmail(self, mailaddr):
+        """Redefine the mail address."""
+        self._attributes['mail'] = mailaddr
 
     def safedirs(self):
         """Protected paths as a list a tuples (path, depth)."""
@@ -117,10 +128,6 @@ class ResearchGlove(Glove):
     _footprint = dict(
         info = 'Research glove',
         attr = dict(
-            mail = dict(
-                alias = [ 'address' ],
-                optional = True,
-            ),
             profile = dict(
                 optional = True,
                 default = 'research',

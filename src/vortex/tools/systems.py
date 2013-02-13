@@ -65,8 +65,9 @@ class System(BFootprint):
         if 'sh' in kw:
             self._shmod = kw['sh']
             del kw['sh']
-        self.trace = kw.setdefault('trace', True)
-        del kw['trace']
+        for flag in ( 'trace', 'output' ):
+            self.__dict__[flag] = kw.setdefault(flag, True)
+            del kw[flag]
         super(System, self).__init__(*args, **kw)
 
     def __getattr__(self, key):
@@ -162,16 +163,24 @@ class System(BFootprint):
     def touch(self, filename):
         """Clone of the unix command."""
         fh = file(filename, 'a')
+        rc = True
         try:
             os.utime(filename, None)
+        except:
+            rc = False
         finally:
             fh.close()
+        return rc
 
     def remove(self, filename):
         """Unlink the specified `filename` object."""
         if os.path.exists(filename):
             self.unlink(filename)
         return not os.path.exists(filename)
+
+    def rm(self, filename):
+        """Shortcut to remove."""
+        return self.remove(filename)
 
     def ps(self, opts=[], search=None, pscmd=['ps']):
         pscmd.extend(self._psopts)
@@ -192,18 +201,34 @@ class System(BFootprint):
         """Clone of the unix command."""
         time.sleep(nbsecs)
 
-    def spawn(self, args, ok=[0]):
+    def spawn(self, args, ok=[0], shell=False, output=None):
         """Subprocess call of ``args``."""
         rc = False
+        if output == None:
+            output = self.output
         if self.trace:
             logging.info('System spawn < %s >', ' '.join(args))
         try:
-            rc = subprocess.call(args, shell=False)
-        except OSError:
+            if output:
+                rc = subprocess.check_output(args, shell=shell)
+            else:
+                rc = subprocess.check_call(args, shell=shell)
+        except OSError as ose:
             logging.critical('Could not call %s', args)
-        if rc not in ok:
-            raise RuntimeError, "System %s spawned %s got %s" % (self, args, rc)
-        return not bool(rc)
+            return False
+        except subprocess.CalledProcessError as cpe:
+            if cpe.returncode in ok:
+                if output:
+                    rc = cpe.output
+            else:
+                if output:
+                    print cpe.output
+                raise RuntimeError, "System %s spawned %s got %s" % (self, cpe.cmd, cpe.returncode)
+        if output:
+            rc = rc.rstrip("\n")
+        else:
+            rc = not bool(rc)
+        return rc
 
 
 class OSExtended(System):
@@ -351,9 +376,19 @@ class OSExtended(System):
     def _globcmd(self, cmd, args, ok=[0]):
         """Globbing files or directories as arguments before running ``cmd``."""
         cmd.extend([opt for opt in args if opt.startswith('-')])
-        for pname in filter(lambda x: not x.startswith('-'), args):
+        cmdlen = len(cmd)
+        cmdargs = False
+        for pname in [x for x in args if not x.startswith('-')]:
+            cmdargs = True
             cmd.extend(self.glob(pname))
-        return self.spawn(cmd, ok)
+        if cmdargs and len(cmd) == cmdlen:
+            return False
+        else:
+            return self.spawn(cmd, ok)
+
+    def wc(self, *args):
+        """Word count on globbed files."""
+        return self._globcmd([ 'wc' ], args)
 
     def ls(self, *args):
         """Globbing and optional files or directories listing."""
@@ -382,6 +417,15 @@ class OSExtended(System):
     def mvglob(self, *args):
         """Wrapper of the ``mv`` command through the globcmd."""
         return self._globcmd([ 'mv' ], args)
+
+    def listdir(self, *args):
+        if not args: args = ('.',)
+        return self._os.listdir(args[0])
+
+    def l(self, *args):
+        rl = [x for x in args if not x.startswith('-')]
+        if not rl: rl.append('*')
+        return self.glob(*rl)
 
     def tar(self, *args):
         """Basic file archive command."""
@@ -469,7 +513,7 @@ class SuperUX(OSExtended):
         if type(source) != str or type(destination) != str:
             return self.hybridcp(source, destination)
         if self.filecocoon(destination):
-            self.spawn(['cp', source, destination])
+            self.spawn(['cp', source, destination], output=False)
             return bool(self.size(source) == self.size(destination))
         else:
             logging.error('Could not create cocoon for %s', destination)

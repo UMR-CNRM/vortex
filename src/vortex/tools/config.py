@@ -64,12 +64,18 @@ class GenericConfigParser(object):
 
     @property
     def updated(self):
-        """Returns if this configuration has been updated or not."""
+        """Return if this configuration has been updated or not."""
         return bool(self.updates)
 
     def historic(self):
-        """Returns a list of the description for each update performed."""
+        """Return a list of the description for each update performed."""
         return self.updates
+
+    def as_dict(self):
+        dico = dict()
+        for section in self.sections():
+            dico[section] = dict(self.items(section))
+        return dico
 
     def __getattr__(self, attr):
         if attr.startswith('__'):
@@ -105,8 +111,8 @@ class JacketConfigParser(GenericConfigParser):
     """Configuration parser for Jacket files."""
 
     def get(self, section, option):
-        r"""
-        Returns for the specified ``option`` in the ``section`` a sequence of values
+        """
+        Return for the specified ``option`` in the ``section`` a sequence of values
         build on the basis of a comma separated list.
         """
         s = SafeConfigParser.get(self, section, option)

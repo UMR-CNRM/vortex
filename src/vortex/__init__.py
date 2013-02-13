@@ -24,7 +24,7 @@ strongly advised.
 
 """
 
-__version__ = '0.6.14'
+__version__ = '0.6.16'
 
 __all__ = []
 

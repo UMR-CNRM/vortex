@@ -2,119 +2,138 @@
 # -*- coding:Utf-8 -*-
 
 r"""
-Module managing the sending of messages. It's the by default module given to the
-actions_handling main module.
-This module must provide four high level functions:
-    -on, off, status, execute.
+Module managing the sending of messages.
+Default action classes must provide four methods: on, off, status, execute.
 The on, off and status functions must return a boolean value reflecting the
-status of action passed argument. As far as the execute function is concerned,
+status of the action. As far as the execute function is concerned,
 it must deals with the data (given to realize the action) and the action
-to be processed: mail, sendbdap, routing, alarm.  
-For now, it also contains several global variables (_ACTIONS_DICT, _MAP_ACTIONS, 
-_COMPONENTS). 
-_ACTIONS_DICT : determine and store the status of the actions
-_MAP_ACTIONS : link an action to a class dedicated to that action
-_COMPONENTS : link an action to a service dedicated to that action
+to be processed: e.g. mail, sendbdap, routing, alarm.
 """
 
+#: No automatic export
+__all__ = []
 
 import logging
 
-from vortex.utilities.authorizations import is_user_authorized
-import services
-   
-class SendData(object):
-    r"""
-    This is an abstract class which represent the general way to deal with
-    sendind all kind of messages. The method used is:
-        - parse the arguments,
-        - check if the service is available,
-        - check if the user is authorized to realize the action
-        - send the message
+from vortex.utilities.catalogs import Catalog
+from vortex.utilities.authorizations import is_authorized_user
+from vortex.tools import services
 
-    Argument: 
-        data (dict): named argument, all mandatory parameters for the chosen action
-    """
-    def __init__(self, action, service):
-        self.action = action 
-        print "init service", service
+
+class Action(object):
+
+    def __init__(self, kind='foo', service=None, active=False):
+        self.kind = kind
+        if service == None:
+            service = 'send' + self.kind
         self.service = service
+        self._active = active
 
-    def available_services(self):
-        r"""
-        Check if the service is implemented. If that's the case, the attribute
-        _currentaction is set to the action to be performed.
+    @property
+    def active(self):
+        """Current status of the action as a boolean property."""
+        return self._active
 
-        :returns True or False
-        """
-        #check if the service is available
-        if hasattr(getattr(self, self.action), "__func__"):
-            self._currentaction = getattr(self, self.action)
-            return True
-        else:
-            logging.warning('Services non available %s', self.action)
-            return False
+    def status(self):
+        """Return current active status."""
+        return self.active
 
-    def send(self):
-        r"""
-        Call the chosen action pointed by _currentaction.
-        """
-        #check if the user is authorized to realize the action
-        #check if the action can be processed by the instance
-        #check if the action is authorized 
-        print self.service
-        if is_user_authorized(self.service.get_action_type()):
-            #patch: so as to work status must be defined in the derived
-            #class
-            if self.available_services() and self.status():
-                self._currentaction()
-            else:
-                logging.warning('Non authorized action %s', self.action)
-        else:
-            logging.warning('user not authorized to use %s',
-                            self.service.get_action_type())
+    def on(self):
+        """Switch on this action."""
+        self._active = True
+        return self._active
 
-    def get_service(self):
+    def off(self):
+        """Switch off this action."""
+        self._active = False
+        return self._active
+
+    def service_kind(self, **kw):
+        """Actual service kind name to be used for footprint evaluation."""
         return self.service
 
-_RUN_COMMAND = 'execute'
-_COMMAND_NAMES = ['_status', '_on', '_off']
+    def service_info(self, **kw):
+        """On the fly remapping of the expected footprint."""
+        info = dict()
+        info.update(kw)
+        info.setdefault('kind', self.service_kind(**kw))
+        return info
 
-def actioninterface(xmodule, _ACTIONS_DICT, _MAP_ACTIONS):
-    def on(action):
-        """Set the boolean value associated with the passed argument action to True."""
-        _ACTIONS_DICT[action] = True
+    def get_actual_service(self, **kw):
+        """Build the service instance determined by the actual description."""
+        info = self.service_info(**kw)
+        return services.load(**info)
+
+    def execute(self, **kw):
+        """Generic method to perform the action through a service."""
+        rc = None
+        if is_authorized_user(self.kind):
+            if self.active:
+                service = self.get_actual_service(**kw)
+                if service:
+                    rc = service()
+                else:
+                    logging.warning('Could not find any service for action %s', self.kind)
+            else:
+                logging.warning('Non active action %s', self.kind)
+        else:
+            logging.warning('User not authorized to perform %s', self.kind)
+        return rc
+
+
+class SendMail(Action):
+    """
+    Class responsible for sending emails.
+    """
+    def __init__(self, kind='mail', active=True, service='sendmail'):
+        super(SendMail, self).__init__(kind=kind, active=active, service=service)
+
+
+class Dispatcher(Catalog):
+    """
+    Central office for dispatching actions.
+    """
+
+    def __init__(self, **kw):
+        logging.debug('Action dispatcher init %s', self)
+        super(Dispatcher, self).__init__(**kw)
+        self._todo = None
+
+    def candidates(self, kind):
+        """Return a selection of the catalog's items with the specified ``kind``."""
+        return filter(lambda x: x.kind == kind, self.items())
+
+    def discard_kind(self, kind):
+        """A shortcut to discard from the catalog any item with the specified ``kind``."""
+        for item in self:
+            if item.kind == kind:
+                self.discard(item)
+
+    def __getattr__(self, action):
+        km = action.split('_')
+        kind = km[0]
+        if len(km) > 1:
+            self._todo = ( kind, km[1] )
+        else:
+            self._todo = ( kind, 'execute' )
+        return self._process
+
+    def _process(self, **kw):
+        rc = None
+        if self._todo:
+            kind, method = self._todo
+            self._todo = None
+            rc = list()
+            for item in self.candidates(kind):
+                xx = getattr(item, method, None)
+                if xx:
+                    rc.append(xx(**kw))
+                else:
+                    rc.append(None)
+        return rc
         
-    def off(action):
-        """Set the boolean value associated with the passed argument action to False."""
-        _ACTIONS_DICT[action] = False
-    
-    def status(action):
-        """Return the boolean value associated with the passed argument action."""
-        logging.info("Status of %s is %s", action, _ACTIONS_DICT[action])
-        return _ACTIONS_DICT[action]
-     
-    def get_act_serv(**kw):
-        """
-        Build the instance determined by the action, through
-        _MAP_ACTIONS dictionary, and associated with the correct service.
-        """
-        action_type = kw['action_type']
-        ctlg = services.catalog()
-        logging.debug("catalogue des services %s", ctlg())
-        serv = ctlg.findbest(kw)
-        return _MAP_ACTIONS[action_type](action_type, serv)
-    
-    def execute(**kw):
-        """
-        Call the send method of the built instance returned by get_act_serv by the action.
-        """
-        obj = get_act_serv(**kw)
-        obj.send()
 
-    xmodule.execute = execute
-    xmodule.on = on
-    xmodule.off = off
-    xmodule.status = status
-    xmodule.get_act_serv = get_act_serv
+#: Default action dispatcher... containing an anonymous SendMail action
+actiond = Dispatcher()
+actiond.add(SendMail())
 

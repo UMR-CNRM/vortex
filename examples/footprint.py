@@ -45,9 +45,9 @@ class R02(R01):
         return 'R02'
     
     
-print R01.footprint(), R01.footprint().asdict(), "\n"
+print R01.footprint(), R01.footprint().as_dict(), "\n"
 
-print R02.footprint(), R02.footprint().asdict(), "\n"
+print R02.footprint(), R02.footprint().as_dict(), "\n"
 
 rfp = R02.footprint()
 

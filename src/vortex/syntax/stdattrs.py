@@ -23,6 +23,20 @@ models = [ 'arpege', 'arp', 'aladin', 'ald', 'arome', 'aro' , 'aearp' ,'pearp', 
 #: Default values for the most common binaries.
 binaries = ['arpege', 'aladin', 'arome', 'peace', 'mocage', 'mesonh']
 
+
+class FPList(list):
+    """A list type for FootPrints arguments (without expansion)."""
+
+    def __init__(self, *args):
+        list.__init__(self, args)
+
+    def items(self):
+        return self[:]
+
+    def __hash__(self):
+        return id(self)
+
+
 class FmtInt(int):
     """Formated integer."""
 

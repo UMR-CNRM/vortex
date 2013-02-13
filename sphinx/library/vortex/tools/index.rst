@@ -6,6 +6,7 @@ Miscellaneous Tools
    :maxdepth: 1
 
    tools
+   actions
    config
    date
    env

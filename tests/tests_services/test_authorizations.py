@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-from iga.services import authorizations_handling as ah
+from vortex.utilities import authorizations
 from unittest import TestCase, main
 
 
@@ -23,12 +23,12 @@ class UtConstants(TestCase):
         del self.grpusr
 
     def test_constgrpactusr(self):
-        grpact = ah.ConstGrpActConfigParser()
+        grpact = authorizations.ConstGrpActConfigParser()
         dico_res = grpact.as_dict()
         for grp in dico_res:
             for act in dico_res[grp]:
                 self.assertEquals(dico_res[grp][act], self.grpact[grp][act])
-        grpusr = ah.ConstGrpUsrConfigParser()
+        grpusr = authorizations.ConstGrpUsrConfigParser()
         dico_res = grpusr.as_dict()
         for grp in dico_res:
             for usr in dico_res[grp]:
@@ -40,7 +40,7 @@ class UtConstants(TestCase):
         print "test constgrpactusr OK"
 
     def test_group_hdl(self):
-        gphdl = ah.GroupHandler()
+        gphdl = authorizations.GroupHandler()
         #('root', 'low')
         self.assertEquals(
             sorted(gphdl.get_grp_permis_fields()), 

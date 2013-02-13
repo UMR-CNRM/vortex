@@ -165,7 +165,7 @@ class SopranoProvider(Provider):
             config = dict(
                 type = IgaCfgParser,
                 optional = True,
-                default = IgaCfgParser('prod_map_resources.ini')
+                default = IgaCfgParser('iga-map-resources.ini')
             )
         )
     )

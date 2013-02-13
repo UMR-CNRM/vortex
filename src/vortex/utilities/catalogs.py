@@ -54,9 +54,10 @@ class Catalog(object):
     def __len__(self):
         return len(self._items)
 
-    def add(self, item):
+    def add(self, *items):
         """Add the ``item`` entry in the current catalog."""
-        self._items.add(item)
+        for item in items:
+            self._items.add(item)
 
     def discard(self, bye):
         """Remove the ``bye`` entry from current catalog."""
@@ -76,19 +77,6 @@ class Catalog(object):
         if len(kw) > 1:
             self.__dict__.update(kw)
             self.refill()
-            
-    def pickup_attributes(self, desc):
-        """Try to pickup inside the catalogue a item that could match the description."""
-        logging.debug('Pick up a "%s" in description %s with catalog %s', self.itementry, desc, self)
-        if self.itementry in desc:
-            logging.debug('A %s is already defined %s', self.itementry, desc[self.itementry])
-        else:
-            desc[self.itementry] = self.findbest(desc)
-        if desc[self.itementry]:
-            desc = desc[self.itementry].cleanup(desc)
-        else:
-            logging.warning('No %s found in description %s', self.itementry, desc)
-        return desc
 
 
 class ClassesCollector(Catalog):
@@ -143,6 +131,19 @@ class ClassesCollector(Catalog):
 
     def updobsitem(self, item, info):
         logging.debug('Notified %s upd item %s', self, item)
+
+    def pickup_attributes(self, desc):
+        """Try to pickup inside the catalogue a item that could match the description."""
+        logging.debug('Pick up a "%s" in description %s with catalog %s', self.itementry, desc, self)
+        if self.itementry in desc:
+            logging.debug('A %s is already defined %s', self.itementry, desc[self.itementry])
+        else:
+            desc[self.itementry] = self.findbest(desc)
+        if desc[self.itementry]:
+            desc = desc[self.itementry].cleanup(desc)
+        else:
+            logging.warning('No %s found in description %s', self.itementry, desc)
+        return desc
 
     def findany(self, desc):
         r"""
