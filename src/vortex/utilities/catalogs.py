@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-r"""
+"""
 This modules handles a set of base classes which play a fundamental role
 in the pickup mechanism. It defines a very generic kind of :class:`Catalog`
 and a dedicated class devoted to collecting all the current loaded classes
@@ -18,8 +18,11 @@ from trackers import tracker
 _catalogtable = dict()
 _catalogtrack = dict()
 
+def get_table():
+    return _catalogtable
+
 class Catalog(object):
-    r"""
+    """
     Abstract class for managing a collection of *items*.
     The interface is very light : :meth:`clear` and :meth:`refill` ! 
     Of course a catalog is an iterable object. It is also callable,
@@ -211,7 +214,7 @@ def cataloginterface(xmodule, xclass):
         """
         kw.setdefault('tag', 'default')
         logging.debug('Catalog method %s tag %s', xclass, kw['tag'])
-        table = _catalogtable.setdefault(xclass.tablekey(), dict())
+        table = get_table().setdefault(xclass.tablekey(), dict())
         if not table.has_key(kw['tag']):
             table[kw['tag']] = xclass(**kw)
         else:
@@ -253,8 +256,8 @@ def autocatlist():
 def autocatload(kind='systems', tag='default'):
     return _catalogtrack[kind](tag=tag)
 
-def table():
-    return _catalogtable
-
 def fromtable(kind='systems', tag='default'):
-    return _catalogtable[kind].get(tag, None)
+    return get_table()[kind].get(tag, None)
+
+
+

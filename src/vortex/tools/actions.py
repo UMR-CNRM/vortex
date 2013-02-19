@@ -99,6 +99,9 @@ class Dispatcher(Catalog):
         super(Dispatcher, self).__init__(**kw)
         self._todo = None
 
+    def actions(self):
+        return set([x.kind for x in self.items()])
+
     def candidates(self, kind):
         """Return a selection of the catalog's items with the specified ``kind``."""
         return filter(lambda x: x.kind == kind, self.items())

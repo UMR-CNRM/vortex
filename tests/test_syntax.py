@@ -245,6 +245,7 @@ class UtFootprint(TestCase):
                     type = int
                 ),
                 gvar = dict(
+                    optional = True,
                     default = 'clim_[model]_t[truncation]'
                 ),
             )
@@ -268,7 +269,7 @@ class UtMFootprint(TestCase):
             'only': {},
             'priority': {'level': 20}
         }
-        MyBFtp = MFootprint('MyBFtp', (), {})
+        MyBFtp = MFootprint('MyBFtp', ( BFootprint, ), {})
         for cle, value in MyBFtp._footprint._fp.iteritems():
             if cle != 'priority':
                 self.assertEquals(value, res[cle])
@@ -288,10 +289,10 @@ class UtMFootprint(TestCase):
             'only': {},
             'priority': {'level': 20}
         }
-        MyBFtp = MFootprint('MyBFtp', (), args)
-        for cle, value in MyBFtp._footprint._fp.iteritems():
-            if cle != 'priority':
-                self.assertEquals(value, res[cle])
+        MyBFtp = MFootprint('MyBFtp', ( BFootprint, ), args)
+        for key, value in MyBFtp._footprint._fp.iteritems():
+            if key != 'priority':
+                self.assertEquals(value, res[key])
 
     def test_new_withbaseft(self):
         args = (
@@ -319,7 +320,7 @@ class UtMFootprint(TestCase):
             'only': {},
             'priority': {'level': 20}
         }
-        MyBFtp = MFootprint('MyBFtp', (), {'_footprint': ft1})
+        MyBFtp = MFootprint('MyBFtp', ( BFootprint, ), {'_footprint': ft1})
         for cle, value in MyBFtp._footprint._fp.iteritems():
             if cle != 'priority':
                 self.assertEquals(value, res[cle])

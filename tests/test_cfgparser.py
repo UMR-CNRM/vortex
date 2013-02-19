@@ -88,11 +88,10 @@ class UtIgaCfgParser(TestCase):
     def test_init_3(self):
         real_ini = 'iga-map-resources.ini'
         igacfgp = IgaCfgParser(real_ini)
-        sections = ['analysis', 'matfilter', 'rtcoef', 'namelist', 'climmodel',
-                    'climmodel', 'climdomain']
-        self.assertTrue(sorted(igacfgp.sections()), sorted(sections))
+        for section in ['analysis', 'matfilter', 'rtcoef', 'namelist', 'clim_model', 'clim_bdap']:
+            self.assertIn(section, igacfgp.sections())
         for section in igacfgp.sections():
-            self.assertTrue(igacfgp.options(section) == [ 'resolvedpath' ])
+            self.assertTrue('resolvedpath' in igacfgp.options(section))
         self.assertRaises(
             InterpolationMissingOptionError,
             igacfgp.get,
