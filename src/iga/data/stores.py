@@ -4,7 +4,7 @@
 #: No automatic export
 __all__ = []
 
-import logging
+import logging, re
 
 from vortex.syntax.priorities import top
 from vortex.data.stores import Store, Finder

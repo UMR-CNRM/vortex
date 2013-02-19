@@ -485,7 +485,7 @@ class NamelistParser(object):
         self._literal = literal
         self.macros = set(macros)
         if re_flags:
-           self._re_flags = re_flags
+            self._re_flags = re_flags
         else:
             self._re_flags = literal._re_flags
         self._re_clean = re_clean
@@ -628,10 +628,10 @@ class NamelistParser(object):
         """
         if isinstance(obj, str):
             if not self.block.search(obj):
-              obj = obj.strip()
-              iod = open(obj, 'r')
-              obj = iod.read()
-              iod.close()
+                obj = obj.strip()
+                iod = open(obj, 'r')
+                obj = iod.read()
+                iod.close()
             return self._namelist_parse(obj)
               
         elif isinstance(obj, file):

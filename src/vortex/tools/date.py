@@ -513,7 +513,7 @@ class StrDate(object):
         The minutes and seconds parameters are missing, so set to "0".
         """
 
-        year, month, day, hour, minute, second = self._date_type_1(
+        year, month, day, u_hour, minute, second = self._date_type_1(
                                             liste_format[0:4])
         hour = self._vxdate[liste_format[3]:liste_format[4]]
         return year, month, day, hour, minute, second
@@ -523,7 +523,7 @@ class StrDate(object):
         Used to return a tuple containing the element of the current object.
         The seconds parameter is missing, so set to "0".
         """
-        year, month, day, hour, minute, second = self._date_type_2(
+        year, month, day, hour, u_minute, second = self._date_type_2(
                                             liste_format[0:5])
         minute = self._vxdate[liste_format[4]:liste_format[5]]
         return year, month, day, hour, minute, second
@@ -533,7 +533,7 @@ class StrDate(object):
         Used to return a tuple containing the element of the current object.
         """
 
-        year, month, day, hour, minute, second = self._date_type_3(
+        year, month, day, hour, minute, u_second = self._date_type_3(
                                             liste_format[0:6])
         second = self._vxdate[liste_format[5]:liste_format[6]]
         return year, month, day, hour, minute, second

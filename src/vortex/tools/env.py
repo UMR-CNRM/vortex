@@ -89,7 +89,7 @@ class Environment(object):
         self.active(active)
 
     def __getstate__(self):
-      return self.__dict__
+        return self.__dict__
 
     @classmethod
     def current(cls):

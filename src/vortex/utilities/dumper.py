@@ -8,7 +8,7 @@ Data dumper.
 #: No automatic export
 __all__ = []
 
-from types import *
+from types import *  # @UnusedWildImport
 
 _dumpcache = dict()
 

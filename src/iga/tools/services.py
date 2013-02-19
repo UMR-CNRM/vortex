@@ -61,18 +61,14 @@ class AlarmService(Service):
 
     def get_loggerservice(self):
         """docstring for add_loggerservice"""
-        log = self.log
-        facility = self.facility
-        format = self.format
-        level = self.level
-        #log, facility, format, level = self._mess_data
-        facility = getattr(SysLogHandler, facility, None)
+        # log, facility, format, level = self._mess_data
+        facility = getattr(SysLogHandler, self.facility, None)
         # create the logger object
         logger = logging.getLogger()
         # create the handlers
-        hand = SysLogHandler(log, facility)
+        hand = SysLogHandler(self.log, facility)
         # create the format
-        fmt = logging.Formatter(format)
+        fmt = logging.Formatter(self.format)
         # set the format of the handler
         hand.setFormatter(fmt)
         # add the handler to the logger
@@ -84,7 +80,7 @@ class AlarmService(Service):
                 (logger.info, logger.warning, logger.error, logger.critical)
             )
         )
-        return return_func[level]
+        return return_func[self.level]
 
     def get_message(self):
         return self.message
