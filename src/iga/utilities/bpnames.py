@@ -248,11 +248,11 @@ def elscf_bnames(resource):
     """docstring for elscf_bnames"""
     cutoff, reseau, model, term = resource.cutoff, resource.date.hour, resource.model, resource.term
     if 'arome' in model:
-        prefix, suffix = gribNames(cutoff, reseau, model)
+        u_prefix, suffix = gribNames(cutoff, reseau, model)
         nw_term = "{0:03d}".format(term)
         localname = 'ELSCFAROMALBC' + nw_term + '.' + suffix
     else:
-        model_info, suffix = faNames(cutoff, reseau, model)
+        u_model_info, suffix = faNames(cutoff, reseau, model)
         nw_term = "{0:03d}".format(resource.term)
         localname = 'ELSCFALADALBC' + nw_term + '.' + suffix
     return localname
@@ -261,7 +261,7 @@ def refdata_bnames(resource):
     """docstring for refdata_bnames."""
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
     logging.debug('cutoff %s reseau %s model %s', cutoff, reseau, model)
-    prefix, suffix = gribNames(cutoff, reseau, model)
+    u_prefix, suffix = gribNames(cutoff, reseau, model)
     localname = 'refdata' + '.' + suffix
     return localname
 
@@ -294,7 +294,7 @@ def observations_bnames(resource):
     fmt, part = resource.nativefmt, resource.part
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
     day = str(resource.date.day)
-    prefix, suffix = gribNames(cutoff, reseau, model)
+    u_prefix, suffix = gribNames(cutoff, reseau, model)
     dico_names = {
         'obsoul' : 'obsoul' + '.' + part + '.' + suffix,
         'ecma' : {
@@ -358,7 +358,7 @@ def global_snames(resource):
     """global names for soprano provider"""
     cutoff = resource.cutoff
     if cutoff == 'assim':
-       map_suffix = dict(
+        map_suffix = dict(
             zip(
                 zip(
                     (cutoff,)*4,
@@ -368,7 +368,7 @@ def global_snames(resource):
             )
         )
     elif cutoff == 'production':
-       map_suffix = dict(
+        map_suffix = dict(
            zip(
                zip(
                    (cutoff,)*4,

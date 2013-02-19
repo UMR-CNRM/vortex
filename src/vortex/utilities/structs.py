@@ -104,15 +104,15 @@ class Tree(object):
             self._tokens = filter(lambda x: x != idn, self._tokens)
 
     def rdump(self, idn, indent):
-	print '{0:s}\_[{1}] {2}'.format('   ' * indent, idn, self.node(idn))
-	for kid in self._nodes[idn]['kids']:
-	    self.rdump(kid, indent+1)
+        print '{0:s}\_[{1}] {2}'.format('   ' * indent, idn, self.node(idn))
+        for kid in self._nodes[idn]['kids']:
+            self.rdump(kid, indent+1)
 
     def dump(self, node=None):
-	if node == None:
-	    node = self.root
-	if self.contains(node):
-	    print ' *[{0}]...'.format(self._root)
+        if node == None:
+            node = self.root
+        if self.contains(node):
+            print ' *[{0}]...'.format(self._root)
             self.rdump(id(node), 1)
         else:
             logging.critical('Object %s does not belong this tree', node)

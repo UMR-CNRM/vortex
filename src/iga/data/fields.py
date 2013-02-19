@@ -4,7 +4,6 @@
 #: No automatic export
 __all__ = []
 
-import logging
 from vortex.data.resources import Resource
 from vortex.syntax.stdattrs import date, cutoff
 from vortex.data.geometries import SpectralGeometry

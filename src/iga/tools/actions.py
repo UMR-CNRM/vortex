@@ -4,8 +4,6 @@
 #: No automatic export
 __all__ = []
 
-import logging
-
 from vortex.tools.actions import Action, actiond
 
 

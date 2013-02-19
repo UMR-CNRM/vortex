@@ -114,13 +114,13 @@ class StdFtp(FTP):
 
     def put(self, source, destination):
         """Store a local `source` file object to a remote `destination`."""
-        input = open(source, 'rb')
+        inputsrc = open(source, 'rb')
         if type(source) == str:
-            input = io.open(source, 'rb')
+            inputsrc = io.open(source, 'rb')
             xsource = True
         else:
-            input = source
-            input.seek(0)
+            inputsrc = source
+            inputsrc.seek(0)
             xsource = False
         self.rmkdir(destination)
         try:
@@ -131,11 +131,11 @@ class StdFtp(FTP):
         logging.info('FTP put %s', destination)
         rc = True
         try:
-            self.storbinary('STOR ' + destination, input)
+            self.storbinary('STOR ' + destination, inputsrc)
         except:
             rc = False
         if xsource:
-            input.close()
+            inputsrc.close()
         return rc
 
     def rmkdir(self, destination):

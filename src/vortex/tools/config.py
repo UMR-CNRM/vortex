@@ -7,7 +7,6 @@ Configuration management through ini files.
 
 __all__ = []
 
-import types
 import logging
 from ConfigParser import SafeConfigParser
 
@@ -59,7 +58,7 @@ class GenericConfigParser(object):
 
     def save(self):
         """Write the current state of the configuration in the inital file."""
-        with open(sefl.file, 'wb') as configfile:
+        with open(self.file, 'wb') as configfile:
             self.write(configfile)
 
     @property
@@ -103,7 +102,7 @@ class DelayedConfigParser(GenericConfigParser):
             if attr in filter(lambda x: not x.startswith('_'), dir(SafeConfigParser) + [ 'setall', 'save' ]):
                 object.__getattribute__(self, 'refresh')()
         except:
-            logging.abort('Trouble getattr %s < %s >', attr, self)
+            logging.critical('Trouble getattr %s < %s >', attr, self)
         return object.__getattribute__(self, attr)
 
 

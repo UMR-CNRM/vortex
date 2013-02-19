@@ -157,8 +157,8 @@ class Ticket(object):
 
     @property
     def tree(self):
-	"""Returns the associated tree."""
-	return idtree(self.tagtree)
+        """Returns the associated tree."""
+        return idtree(self.tagtree)
 
     @property
     def context(self):

@@ -4,7 +4,6 @@
 #: No automatic export
 __all__ = []
 
-from vortex.algo.components import Parallel, Expresso
 from common.algo.forecasts import IFSModelParallel
 
 

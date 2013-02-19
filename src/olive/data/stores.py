@@ -134,7 +134,7 @@ class OpArchiveStore(Store):
             cleanpath = self._realpath(remote)
             (dirname, basename) = system.path.split(cleanpath)
             if not extract and self.collector.containsfile(basename):
-                cleanpath, targetpath = self.collector.filemap(system, dirname, basename)
+                cleanpath, u_targetpath = self.collector.filemap(system, dirname, basename)
             rloc = ftp.fullpath(cleanpath)
             ftp.close()
             return rloc
@@ -149,7 +149,7 @@ class OpArchiveStore(Store):
             cleanpath = self._realpath(remote)
             (dirname, basename) = system.path.split(cleanpath)
             if not extract and self.collector.containsfile(basename):
-                cleanpath, targetpath = self.collector.filemap(system, dirname, basename)
+                cleanpath, u_targetpath = self.collector.filemap(system, dirname, basename)
             rc = ftp.size(cleanpath)
             ftp.close()
             return rc

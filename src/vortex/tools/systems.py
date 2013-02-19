@@ -210,6 +210,7 @@ class System(BFootprint):
             logging.info('System spawn < %s >', ' '.join(args))
         try:
             if output:
+                # TODO new in 2.7 
                 rc = subprocess.check_output(args, shell=shell)
             else:
                 rc = subprocess.check_call(args, shell=shell)

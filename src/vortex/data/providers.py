@@ -7,7 +7,7 @@ __all__ = [ 'Provider' ]
 
 import logging, re, sys, os.path
 
-import vortex
+import vortex  # @UnusedImport
 from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 from vortex.utilities.names import VNameBuilder
