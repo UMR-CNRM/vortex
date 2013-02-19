@@ -443,7 +443,7 @@ class Linux(OSExtended):
         info = 'Linux base system',
         attr = dict(
             sysname = dict(
-                values = [ 'Linux' ]
+                values = [ 'Linux', 'Darwin' ]
             )
         )
     )
