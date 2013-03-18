@@ -9,7 +9,7 @@ Functions and tools to handle resources names or other kind of names.
 __all__ = []
 
 import sys
-import logging
+from vortex.autolog import logdefault as logger
 from vortex.tools.date import Date
 
 
@@ -37,7 +37,7 @@ def faNames(cutoff, reseau, model, filling=None):
     elif cutoff == 'short':
         map_suffix = {(cutoff, 0): 'rCM'}
     else:
-        logging.warning(
+        logger.warning(
             "The cutoff attribute of the ressource %s is incorrect",
             cutoff
         )
@@ -57,7 +57,7 @@ def faNames(cutoff, reseau, model, filling=None):
     return model_info, suffix
 
 def gribNames(cutoff, reseau, model, run=None):
-    logging.debug('model %s run %s', model, run)
+    logger.debug('model %s run %s', model, run)
     if model == 'arome':
         map_suffix = dict(
             zip(
@@ -77,7 +77,7 @@ def gribNames(cutoff, reseau, model, run=None):
         prefix = 'fc'
         suffix = map_suffix[reseau]
     elif model == 'arpege' and not run:
-        logging.debug('cutoff %s', cutoff)
+        logger.debug('cutoff %s', cutoff)
         if cutoff == 'assim':
             map_suffix = dict(
                  zip(
@@ -101,7 +101,7 @@ def gribNames(cutoff, reseau, model, run=None):
         elif cutoff == 'short':
             map_suffix = {(cutoff, 0): 'rCM'}
         else:
-            logging.warning(
+            logger.warning(
                 "The cutoff attribute of the ressource %s is incorrect",
                 cutoff
             )
@@ -207,9 +207,9 @@ def histsurf_bnames(resource):
 def gridpoint_bnames(resource, member=None):
     """docstring for gridpoint_bnames"""
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
-    logging.debug('gridpoint_bnames: cutoff %s reseau %s model %s',
+    logger.debug('gridpoint_bnames: cutoff %s reseau %s model %s',
                   cutoff, reseau, model)
-    logging.debug('gridpoint_bnames: member %s', member)
+    logger.debug('gridpoint_bnames: member %s', member)
     if resource.nativefmt == 'fa':
         model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model)
         localname = 'PF' + model_info + resource.geometry.area + '+'\
@@ -260,7 +260,7 @@ def elscf_bnames(resource):
 def refdata_bnames(resource):
     """docstring for refdata_bnames."""
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
-    logging.debug('cutoff %s reseau %s model %s', cutoff, reseau, model)
+    logger.debug('cutoff %s reseau %s model %s', cutoff, reseau, model)
     u_prefix, suffix = gribNames(cutoff, reseau, model)
     localname = 'refdata' + '.' + suffix
     return localname
@@ -306,7 +306,7 @@ def observations_bnames(resource):
 
     }
     localname = dico_names[fmt][0] + '.' + part + '.'
-    logging.debug('localname %s', localname)
+    logger.debug('localname %s', localname)
     if dico_names[fmt][1]:
         localname += str(day) + '.' + suffix + dico_names[fmt][1]
     else:
@@ -380,7 +380,7 @@ def global_snames(resource):
     elif cutoff == 'short':
         map_suffix = {(cutoff, 0): 'rCM'}
     else:
-        logging.warning(
+        logger.warning(
             "The cutoff attribute of the ressource %s is incorrect",
             cutoff
         )
@@ -402,7 +402,7 @@ def global_snames(resource):
             bname = 'OBSOUL_SURFAN.' + suff
         if resource.nativefmt == 'bufr':
             bname = 'BUFR.' + resource.part + '.' + suff
-        logging.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
+        logger.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
     if resource.realkind() == 'refdata':
         suff = map_suffix[(cutoff, resource.date.hour)]
         if resource.nativefmt == 'obsoul' and resource.part == 'conv':
@@ -413,6 +413,6 @@ def global_snames(resource):
             bname = 'rd_' + resource.part + '.' + suff
         if resource.part == 'surf':
             bname = 'RD_SURFAN' + '.' + suff
-        logging.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
+        logger.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
     return bname
 

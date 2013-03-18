@@ -5,9 +5,10 @@
 #: No automatic export
 __all__ = [ 'Provider' ]
 
-import logging, re, sys, os.path
 
+import re, sys, os.path
 import vortex  # @UnusedImport
+from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 from vortex.utilities.names import VNameBuilder
@@ -33,7 +34,7 @@ class Provider(BFootprint):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Abstract provider init %s', self.__class__)
+        logger.debug('Abstract provider init %s', self.__class__)
         super(Provider, self).__init__(*args, **kw)
 
     @classmethod
@@ -114,7 +115,7 @@ class Remote(Provider):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Remote provider init %s', self)
+        logger.debug('Remote provider init %s', self)
         super(Remote, self).__init__(*args, **kw)
 
     @classmethod
@@ -178,7 +179,7 @@ class Vortex(Provider):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Vortex experiment provider init %s', self)
+        logger.debug('Vortex experiment provider init %s', self)
         super(Vortex, self).__init__(*args, **kw)
 
     @classmethod
@@ -220,7 +221,7 @@ class Vortex(Provider):
 class ProvidersCatalog(ClassesCollector):
 
     def __init__(self, **kw):
-        logging.debug('Providers catalog init %s', self)
+        logger.debug('Providers catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.providers'),
             classes = [ Provider ],

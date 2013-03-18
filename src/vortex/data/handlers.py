@@ -4,7 +4,7 @@
 #: No automatic export
 __all__ = []
 
-import logging
+from vortex.autolog import logdefault as logger
 
 from vortex import sessions
 from vortex.tools import net
@@ -41,7 +41,7 @@ class Handler(object):
         self.historic = [(Date.now(), self.__class__.__name__, 'init', 1)]
         self._observer = observers.classobserver('Resources-Handlers')
         self._observer.notify_new(self, dict(stage = 'load'))
-        logging.debug('New resource handler %s', self.__dict__)
+        logger.debug('New resource handler %s', self.__dict__)
 
     def __del__(self):
         self._observer.notify_del(self, dict())
@@ -66,7 +66,7 @@ class Handler(object):
                 self._contents.slurp(self.container)
             return self._contents
         else:
-            logging.warning('Contents requested without container or empty container [%s]', self.container)
+            logger.warning('Contents requested without container or empty container [%s]', self.container)
             return None
 
     def location(self):
@@ -74,7 +74,7 @@ class Handler(object):
         if self.provider and self.resource:
             return self.provider.uri(self.resource)
         else:
-            logging.warning('Resource handler %s could not build location', self)
+            logger.warning('Resource handler %s could not build location', self)
             return None
 
     def idcard(self, indent=2):
@@ -118,15 +118,15 @@ class Handler(object):
             uridata = net.uriparse(remotelocation)
             store = stores.load(scheme = uridata['scheme'], netloc = uridata['netloc'])
             if store:
-                logging.debug('Locate resource %s at %s from %s', self, remotelocation, store)
+                logger.debug('Locate resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
                 locst = store.locate(uridata)
                 self.historic.append((Date.now(), store.fullname(), 'locate', locst))
             else:
-                logging.error('Could not find any store to locate %s', remotelocation)
+                logger.error('Could not find any store to locate %s', remotelocation)
         else:
-            logging.error('Could not locate an incomplete rh %s', self)
+            logger.error('Could not locate an incomplete rh %s', self)
         return locst
 
     def get(self):
@@ -137,7 +137,7 @@ class Handler(object):
             uridata = net.uriparse(remotelocation)
             store = stores.load(scheme = uridata['scheme'], netloc = uridata['netloc'])
             if store:
-                logging.debug('Get resource %s at %s from %s', self, remotelocation, store)
+                logger.debug('Get resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
                 gst = store.get(uridata, self.container.localpath())
@@ -146,56 +146,56 @@ class Handler(object):
                 self._observer.notify_upd(self, dict(stage = 'get'))
                 return gst
             else:
-                logging.error('Could not find any store to get %s', remotelocation)
+                logger.error('Could not find any store to get %s', remotelocation)
         else:
-            logging.error('Could not get an incomplete rh %s', self)
+            logger.error('Could not get an incomplete rh %s', self)
         return gst
 
     def put(self):
         """Method to store data from the current container through the provider."""
         pst = False
         if self.complete:
-            logging.debug('Put resource %s', self)
+            logger.debug('Put resource %s', self)
             remotelocation = self.location()
             uridata = net.uriparse(remotelocation)
             store = stores.load(scheme = uridata['scheme'], netloc = uridata['netloc'])
             if store:
-                logging.debug('Put resource %s at %s from %s', self, remotelocation, store)
+                logger.debug('Put resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
                 pst = store.put(self.container.localpath(), uridata)
                 self.historic.append((Date.now(), store.fullname(), 'put', pst))
                 self._observer.notify_upd(self, dict(stage = 'put'))
             else:
-                logging.error('Could not find any store to put %s', remotelocation)
+                logger.error('Could not find any store to put %s', remotelocation)
         else:
-            logging.error('Could not put an incomplete rh %s', self)
+            logger.error('Could not put an incomplete rh %s', self)
         return pst
 
     def check(self):
         """Returns a stat-like information to the remote resource."""
         stcheck = None
         if self.resource and self.provider:
-            logging.debug('Check resource %s', self)
+            logger.debug('Check resource %s', self)
             remotelocation = self.location()
             uridata = net.uriparse(remotelocation)
             store = stores.load(scheme = uridata['scheme'], netloc = uridata['netloc'])
             if store:
-                logging.debug('Check resource %s at %s from %s', self, remotelocation, store)
+                logger.debug('Check resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
                 stcheck = store.check(uridata)
                 self.historic.append((Date.now(), store.fullname(), 'check', stcheck))
             else:
-                logging.error('Could not find any store to check %s', remotelocation)
+                logger.error('Could not find any store to check %s', remotelocation)
         else:
-            logging.error('Could not check a rh without defined resource and provider %s', self)
+            logger.error('Could not check a rh without defined resource and provider %s', self)
         return stcheck
 
     def clear(self):
         """Clear the local container contents."""
         if self.container:
-            logging.debug('Remove resource container %s', self.container)
+            logger.debug('Remove resource container %s', self.container)
             self.historic.append((Date.now(), sessions.system().fullname(), 'clear', sessions.system().remove(self.container.localpath())))
 
     def save(self):
@@ -203,7 +203,7 @@ class Handler(object):
         if self.contents:
             self.contents.rewrite(self.container)
         else:
-            logging.warning('Try to save undefined contents %s', self)
+            logger.warning('Try to save undefined contents %s', self)
 
     def strlast(self):
         """String formatted log of the last action."""

@@ -62,7 +62,7 @@ def generate():
     :data:`maincycles` and :data:`subcycles` have been alterated.
     """
     for k in defined():
-        logging.debug('Remove cycle definition %s', k)
+        logger.debug('Remove cycle definition %s', k)
         del myself.__dict__[k]
     for c in monocycles():
         myself.__dict__['cy'+c] = Cycle(regexp = '^(?:cy)?'+c+'$')

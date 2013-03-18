@@ -8,7 +8,7 @@ This modules defines the physical layout.
 #: No automatic export.
 __all__ = []
 
-import logging
+from vortex.autolog import logdefault as logger
 
 from vortex.utilities import observers
 from vortex.utilities.structs import idtree
@@ -22,7 +22,7 @@ class Context(object):
     _count = 0
 
     def __init__(self, tag='foo', rundir=None, tagtree=None, topenv=None, sequence=None, task=None, mkrundir=True, rootrd=None, keeprd=False):
-        logging.debug('Context initialisation %s', self)
+        logger.debug('Context initialisation %s', self)
         self._env = Environment(env=topenv, active=topenv.active)
         self._tag = tag
         self.tagtree = tagtree
@@ -47,10 +47,10 @@ class Context(object):
 
         self._rundir = csys.path.abspath(self._rundir)
         if mkrundir:
-            logging.info('Make context rundir %s', self._rundir)
+            logger.info('Make context rundir %s', self._rundir)
             csys.filecocoon(self.system.path.join(self._rundir, 'ctx'))
         else:
-            logging.debug('Do not create any context rundir %s', self._rundir)
+            logger.debug('Do not create any context rundir %s', self._rundir)
 
         if sequence:
             self._sequence = sequence
@@ -66,7 +66,7 @@ class Context(object):
         Resources-Handlers observing facility.
         Register a new section in void active context with the resource handler ``item``.
         """
-        logging.debug('Notified %s new item %s', self, item)
+        logger.debug('Notified %s new item %s', self, item)
         if self._void and self.hasfocus():
             self._sequence.section(rh=item, stage='load')
 
@@ -76,7 +76,7 @@ class Context(object):
         Should removed the associated section. Todo.
         """
         if self.hasfocus():
-            logging.debug('Notified %s del item %s', self, item)
+            logger.debug('Notified %s del item %s', self, item)
 
     def updobsitem(self, item, info):
         """
@@ -84,7 +84,7 @@ class Context(object):
         Track the new stage of the section containing the resource handler ``item``.
         """
         if self.hasfocus():
-            logging.debug('Notified %s upd item %s', self, item)
+            logger.debug('Notified %s upd item %s', self, item)
             for section in self._sequence:
                 if section.rh == item:
                     section.updstage(info)
@@ -164,7 +164,7 @@ class Context(object):
         The task sequence becomes the current context sequence.
         """
         if task and hasattr(task, 'sequence'):
-            logging.info('Binded context <%s> to task %s', self.tag(), task)
+            logger.info('Binded context <%s> to task %s', self.tag(), task)
             self._sequence = task.sequence
             self._task = task
             self._void = False
@@ -204,7 +204,7 @@ class Context(object):
         """
         stamp = self.stamp(tag)
         if not self.system.path.exists(stamp):
-            logging.warning('Missing stamp %s', stamp)
+            logger.warning('Missing stamp %s', stamp)
             return None
         ffinded = self.system.ffind()
         fscheck = dict()
@@ -225,9 +225,9 @@ class Context(object):
 
     def exit(self):
         if self._keeprd:
-            logging.warning('Preserving context rundir %s', self._rundir)
+            logger.warning('Preserving context rundir %s', self._rundir)
             return True
         else:
-            logging.warning('Removing context rundir %s', self._rundir)
+            logger.warning('Removing context rundir %s', self._rundir)
             return self.system.rmsafe(self._rundir, self.tree.root.glove.safedirs())
 

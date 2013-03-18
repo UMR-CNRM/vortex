@@ -11,8 +11,9 @@ which inherit from a given root class.
 #: No automatic export
 __all__ = []
 
-import logging, sys, re
+import sys, re
 import observers
+from vortex.autolog import logdefault as logger
 from trackers import tracker
 
 _catalogtable = dict()
@@ -30,7 +31,7 @@ class Catalog(object):
     """
 
     def __init__(self, **kw):
-        logging.debug('Abstract %s init', self.__class__)
+        logger.debug('Abstract %s init', self.__class__)
         self._items = set()
         self._filled = False
         self.autofeed = True
@@ -90,7 +91,7 @@ class ClassesCollector(Catalog):
     """
 
     def __init__(self, **kw):
-        logging.debug('Collector catalog init %s', self)
+        logger.debug('Collector catalog init %s', self)
         self.included = False
         self.register = True
         self.track = True
@@ -99,12 +100,12 @@ class ClassesCollector(Catalog):
 
     def refill(self):
         """Implements a feed method based on the exploration of :mod:`sys.modules`."""
-        logging.debug('Refill catalog %s', self)
+        logger.debug('Refill catalog %s', self)
         self.clear()
         sm = sys.modules
         itemstack = list()
         for mname in filter(lambda x: self.remod.match(x) and sm[x], sm.keys()):
-            logging.debug(' > Exploring module %s : %s', mname, sm[mname])
+            logger.debug(' > Exploring module %s : %s', mname, sm[mname])
             dm = sm[mname].__dict__
             for item in dm:
                 if filter(lambda x:
@@ -114,7 +115,7 @@ class ClassesCollector(Catalog):
                     not dm[item].__dict__.get('_abstract', False),
                     self.classes
                 ):
-                    logging.debug(' > > Add item %s', item)
+                    logger.debug(' > > Add item %s', item)
                     itemstack.append(dm[item])
         self._items = set(itemstack)
         if self.register:
@@ -125,27 +126,27 @@ class ClassesCollector(Catalog):
         return len(self._items)
 
     def newobsitem(self, item, info):
-        logging.debug('Notified %s new item %s', self, item)
+        logger.debug('Notified %s new item %s', self, item)
         self.instances.add(item)
 
     def delobsitem(self, item, info):
-        logging.debug('Notified %s del item %s', self, item)
+        logger.debug('Notified %s del item %s', self, item)
         self.instances.discard(item)
 
     def updobsitem(self, item, info):
-        logging.debug('Notified %s upd item %s', self, item)
+        logger.debug('Notified %s upd item %s', self, item)
 
     def pickup_attributes(self, desc):
         """Try to pickup inside the catalogue a item that could match the description."""
-        logging.debug('Pick up a "%s" in description %s with catalog %s', self.itementry, desc, self)
+        logger.debug('Pick up a "%s" in description %s with catalog %s', self.itementry, desc, self)
         if self.itementry in desc:
-            logging.debug('A %s is already defined %s', self.itementry, desc[self.itementry])
+            logger.debug('A %s is already defined %s', self.itementry, desc[self.itementry])
         else:
             desc[self.itementry] = self.findbest(desc)
         if desc[self.itementry]:
             desc = desc[self.itementry].cleanup(desc)
         else:
-            logging.warning('No %s found in description %s', self.itementry, desc)
+            logger.warning('No %s found in description %s', self.itementry, desc)
         return desc
 
     def findany(self, desc):
@@ -153,7 +154,7 @@ class ClassesCollector(Catalog):
         Returns the first item of the catalog that :meth:`couldbe`
         as described by argument ``desc``.
         """
-        logging.debug('Search any %s in catalog %s', desc, self._items)
+        logger.debug('Search any %s in catalog %s', desc, self._items)
         for item in self._items:
             resolved, input = item.couldbe(desc)
             if resolved: return item(resolved, checked=True)
@@ -164,7 +165,7 @@ class ClassesCollector(Catalog):
         Returns all the items of the catalog that :meth:`couldbe`
         as described by argument ``desc``.
         """
-        logging.debug('Search all %s in catalog %s', desc, self._items)
+        logger.debug('Search all %s in catalog %s', desc, self._items)
         found = list()
         trcat = None
         if self.track and type(self.track) == bool:
@@ -184,16 +185,16 @@ class ClassesCollector(Catalog):
         Returns the best of the items returned byt the :meth:`findall` method
         according to potential priorities rules. 
         """
-        logging.debug('Search all %s in catalog %s', desc, self._items)
+        logger.debug('Search all %s in catalog %s', desc, self._items)
         candidates = self.findall(desc)
         if not candidates:
             return None
         if len(candidates) > 1:
-            logging.warning('Multiple candidates for %s', desc)
+            logger.warning('Multiple candidates for %s', desc)
             candidates.sort(key=lambda x: x[0].weightsort(x[2]), reverse=True)
             for i, c in enumerate(candidates):
                 thisclass, resolved, input = c
-                logging.warning(' > no.%d in.%d is %s', i+1, len(input), thisclass)
+                logger.warning(' > no.%d in.%d is %s', i+1, len(input), thisclass)
         topcl, topr, topinput = candidates[0]
         return topcl(topr, checked=True)
 
@@ -213,7 +214,7 @@ def cataloginterface(xmodule, xclass):
         By default, type XCANDIDATES could be collected.
         """
         kw.setdefault('tag', 'default')
-        logging.debug('Catalog method %s tag %s', xclass, kw['tag'])
+        logger.debug('Catalog method %s tag %s', xclass, kw['tag'])
         table = get_table().setdefault(xclass.tablekey(), dict())
         if not table.has_key(kw['tag']):
             table[kw['tag']] = xclass(**kw)

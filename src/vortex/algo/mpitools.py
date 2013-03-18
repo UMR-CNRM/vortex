@@ -9,8 +9,8 @@ The associated modules defines the catalog factory based on the shared footprint
 #: No automatic export
 __all__ = []
 
-import logging, re, sys
-
+import re, sys
+from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.tools import env
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
@@ -32,7 +32,7 @@ class MpiTool(BFootprint):
     )
     
     def __init__(self, *args, **kw):
-        logging.debug('Abstract mpi tool init %s', self.__class__)
+        logger.debug('Abstract mpi tool init %s', self.__class__)
         super(MpiTool, self).__init__(*args, **kw)
 
     def setup(self):
@@ -87,7 +87,7 @@ class MpiToolsCatalog(ClassesCollector):
     """Class in charge of collecting :class:`MpiTool` items."""
 
     def __init__(self, **kw):
-        logging.debug('Mpi tools catalog init %s', self)
+        logger.debug('Mpi tools catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.mpitools'),
             classes = [ MpiTool ],

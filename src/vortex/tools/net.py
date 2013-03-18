@@ -6,7 +6,7 @@ Net tools.
 """
 
 from os.path import dirname
-import logging
+from vortex.autolog import logdefault as logger
 import urlparse
 import io, ftplib
 from ftplib import FTP
@@ -102,7 +102,7 @@ class StdFtp(FTP):
         else:
             target = destination
             xdestination = False
-        logging.info('FTP get %s', source)
+        logger.info('FTP get %s', source)
         rc = True
         try:
             self.retrbinary('RETR ' + source, target.write)
@@ -125,10 +125,10 @@ class StdFtp(FTP):
         self.rmkdir(destination)
         try:
             self.delete(destination)
-            logging.warning('File %s will be replaced.', destination)
+            logger.warning('File %s will be replaced.', destination)
         except ftplib.error_perm:
-            logging.warning('File %s will be created.', destination)
-        logging.info('FTP put %s', destination)
+            logger.warning('File %s will be created.', destination)
+        logger.info('FTP put %s', destination)
         rc = True
         try:
             self.storbinary('STOR ' + destination, inputsrc)

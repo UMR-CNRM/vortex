@@ -4,7 +4,7 @@
 #: No automatic export
 __all__ = []
 
-import logging
+from vortex.autolog import logdefault as logger
 from copy import copy
 
 from vortex.tools import env
@@ -24,7 +24,7 @@ def register(**kw):
             nextcycle = entry
         else:
             nextcycle = 'CYCLE{0:03d}'.format(len(p)+1)
-        logging.debug('Register a new genv cycle %s', nextcycle)
+        logger.debug('Register a new genv cycle %s', nextcycle)
         p[nextcycle] = dict(CYCLE = cycle)
         regcycle = p[nextcycle]
     else:

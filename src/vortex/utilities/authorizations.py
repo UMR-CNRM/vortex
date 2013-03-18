@@ -11,8 +11,8 @@ verification.
 #: No automatic export
 __all__ = []
 
-
-import logging, re
+import re
+from vortex.autolog import logdefault as logger
 from collections import namedtuple, _itemgetter
 
 from vortex import sessions
@@ -52,12 +52,12 @@ def is_authorized_user(action='void', user=None):
     if auth:
         auth = bool(re.match('(?:ok|on|true|1)', auth, re.IGNORECASE))
     else:
-        logging.warning("Action %s not authorized for the current user %s", action, user)
+        logger.warning("Action %s not authorized for the current user %s", action, user)
 
     if auth:
         # Check if the permissions were altered
         genuine_gh = GroupHandler()
         if gh.users.groups.get(group, 'low') != genuine_gh.users.groups.get(group, 'low'):
-            logging.error("Permissions were altered !!!")
+            logger.error("Permissions were altered !!!")
 
     return auth

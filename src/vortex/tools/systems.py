@@ -10,10 +10,11 @@ factory based on the shared footprint mechanism.
 #: No automatic export
 __all__ = []
 
-import logging, re, os, shutil, sys, io, filecmp, time
+import re, os, shutil, sys, io, filecmp, time
 import glob
 import subprocess
 
+from vortex.autolog import logdefault as logger
 from vortex.tools.env import Environment
 from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
@@ -58,7 +59,7 @@ class System(BFootprint):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Abstract System init %s', self.__class__)
+        logger.debug('Abstract System init %s', self.__class__)
         if 'os' in kw:
             self._osmod = kw['os']
             del kw['os']
@@ -207,7 +208,7 @@ class System(BFootprint):
         if output == None:
             output = self.output
         if self.trace:
-            logging.info('System spawn < %s >', ' '.join(args))
+            logger.info('System spawn < %s >', ' '.join(args))
         try:
             if output:
                 # TODO new in 2.7 
@@ -215,7 +216,7 @@ class System(BFootprint):
             else:
                 rc = subprocess.check_call(args, shell=shell)
         except OSError as ose:
-            logging.critical('Could not call %s', args)
+            logger.critical('Could not call %s', args)
             return False
         except subprocess.CalledProcessError as cpe:
             if cpe.returncode in ok:
@@ -240,7 +241,7 @@ class OSExtended(System):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Abstract System init %s', self.__class__)
+        logger.debug('Abstract System init %s', self.__class__)
         self._rmtreemin = kw.setdefault('rmtreemin', 3)
         del kw['rmtreemin']
         self._cmpaftercp = kw.setdefault('cmpaftercp', True)
@@ -257,7 +258,7 @@ class OSExtended(System):
         if ftpbox.fastlogin(logname):
             return ftpbox
         else:
-            logging.warning('Could not login on %s as %s', hostname, logname)
+            logger.warning('Could not login on %s as %s', hostname, logname)
             return None
 
     def filecocoon(self, destination):
@@ -275,7 +276,7 @@ class OSExtended(System):
         """Normalizes path name and recursively creates this directory."""
         normdir = self.path.normpath(dirpath)
         if normdir and not self.path.isdir(normdir):
-            logging.info('Cocooning directory %s', normdir)
+            logger.info('Cocooning directory %s', normdir)
             try:
                 self.makedirs(normdir)
                 return True
@@ -349,7 +350,7 @@ class OSExtended(System):
         """
         safe = True
         if len(thispath.split(os.sep)) < self._rmtreemin + 1:
-            logging.warning('Unsafe starting point depth %s (min is %s)', thispath, self._rmtreemin)
+            logger.warning('Unsafe starting point depth %s (min is %s)', thispath, self._rmtreemin)
             safe = False
         else:
             for safepack in safedirs:
@@ -357,7 +358,7 @@ class OSExtended(System):
                 rp = self.path.relpath(thispath, safedir)
                 if not rp.startswith('..'):
                     if len(rp.split(os.sep)) < d:
-                        logging.warning('Unsafe acces to %s relative to %s', thispath, safedir)
+                        logger.warning('Unsafe acces to %s relative to %s', thispath, safedir)
                         safe = False
         return safe
 
@@ -449,7 +450,7 @@ class Linux(OSExtended):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Linux system init %s', self.__class__)
+        logger.debug('Linux system init %s', self.__class__)
         self._psopts = kw.setdefault('psopts', ['-w', '-f', '-a'])
         del kw['psopts']
         super(Linux, self).__init__(*args, **kw)
@@ -476,7 +477,7 @@ class LinuxDebug(Linux):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('LinuxDebug system init %s', self.__class__)
+        logger.debug('LinuxDebug system init %s', self.__class__)
         super(LinuxDebug, self).__init__(*args, **kw)
 
     @classmethod
@@ -497,7 +498,7 @@ class SuperUX(OSExtended):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('SuperUX system init %s', self.__class__)
+        logger.debug('SuperUX system init %s', self.__class__)
         self._psopts = kw.setdefault('psopts', ['-f'])
         del kw['psopts']
         super(SuperUX, self).__init__(*args, **kw)
@@ -517,7 +518,7 @@ class SuperUX(OSExtended):
             self.spawn(['cp', source, destination], output=False)
             return bool(self.size(source) == self.size(destination))
         else:
-            logging.error('Could not create cocoon for %s', destination)
+            logger.error('Could not create cocoon for %s', destination)
             return False
 
 
@@ -525,7 +526,7 @@ class SystemsCatalog(ClassesCollector):
     """Class in charge of collecting :class:`System` items."""
 
     def __init__(self, **kw):
-        logging.debug('Systems catalog init %s', self)
+        logger.debug('Systems catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.system'),
             classes = [ System ],

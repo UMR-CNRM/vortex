@@ -4,8 +4,8 @@
 #: Automatic export of the online provider Olive
 __all__ = ['Olive']
 
-import logging, re
-
+import re
+from vortex.autolog import logdefault as logger
 from vortex.data.providers import Provider
 from iga.syntax.stdattrs import suites, fuzzyname, archivesuffix
 from vortex.syntax.stdattrs import Term
@@ -36,7 +36,7 @@ class Olive(Provider):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Olive experiment provider init %s', self)
+        logger.debug('Olive experiment provider init %s', self)
         super(Olive, self).__init__(*args, **kw)
 
     @classmethod
@@ -102,7 +102,7 @@ class OpArchive(Provider):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Old archive provider init %s', self)
+        logger.debug('Old archive provider init %s', self)
         super(OpArchive, self).__init__(*args, **kw)
 
     @classmethod

@@ -12,7 +12,8 @@ __all__ = []
 #: Activate nice dump of footprint in docstring
 docstring_nicedump = True
 
-import logging, copy, re
+import copy, re
+from vortex.autolog import logdefault as logger
 from priorities import top
 from vortex.utilities import dictmerge, list2dict, dumper, observers
 from vortex.utilities.trackers import tracker
@@ -54,10 +55,10 @@ class Footprint(object):
             )
         for a in args:
             if isinstance(a, dict):
-                logging.debug('Init Footprint updated with dict %s', a)
+                logger.debug('Init Footprint updated with dict %s', a)
                 dictmerge(fp, list2dict(a, ('attr', 'only')))
             if isinstance(a, Footprint):
-                logging.debug('Init Footprint updated with object %s', a)
+                logger.debug('Init Footprint updated with object %s', a)
                 dictmerge(fp, a.as_dict())
         dictmerge(fp, list2dict(kw, ('attr', 'only')))
         for a in fp['attr'].keys():
@@ -132,7 +133,7 @@ class Footprint(object):
             if k in desc:
                 guess[k] = desc[k]
                 input.add(k)
-                logging.debug(' > Attr %s in description : %s', k, desc[k])
+                logger.debug(' > Attr %s in description : %s', k, desc[k])
             else:
                 for a in kdef['alias']:
                     if a in desc:
@@ -145,7 +146,7 @@ class Footprint(object):
         extras = dict(glove = env.current().glove)
         for vdesc in desc.values():
             if isinstance(vdesc, BFootprint): extras.update(vdesc.puredict())
-        if extras: logging.debug(' > Extras : %s', extras)
+        if extras: logger.debug(' > Extras : %s', extras)
         return extras
 
     def _addextras(self, guess, desc, extras):
@@ -155,7 +156,7 @@ class Footprint(object):
 
     def _replacement(self, nbpass, k, guess, extras, todo):
         if nbpass > 25:
-            logging.error('Resolve probably cycling too much... (%d) ?', nbpass)
+            logger.error('Resolve probably cycling too much... (%d) ?', nbpass)
             raise MaxLoopIter('Too many Footprint replacements')
 
         changed = 1
@@ -201,11 +202,11 @@ class Footprint(object):
 
 
         if guess[k] != None and replattr.search(str(guess[k])):
-            logging.debug(' > Requeue resolve %s : %s', k, guess[k])
+            logger.debug(' > Requeue resolve %s : %s', k, guess[k])
             todo.append(k)
             return False
         else:
-            logging.debug(' > No more substitution for %s', k)
+            logger.debug(' > No more substitution for %s', k)
             return True
 
     def resolve(self, desc, **kw):
@@ -242,27 +243,27 @@ class Footprint(object):
             if not replshortcut(nbpass, k, guess, extras, todo) or guess[k] == None: continue
 
             while kdef['remap'].has_key(guess[k]):
-                logging.debug(' > Attr %s remap(%s) = %s', k, guess[k], kdef['remap'][guess[k]])
+                logger.debug(' > Attr %s remap(%s) = %s', k, guess[k], kdef['remap'][guess[k]])
                 guess[k] = kdef['remap'][guess[k]]
 
             if guess[k] is UNKNOWN:
-                logging.debug(' > Optional attr still unknown : %s', k)
+                logger.debug(' > Optional attr still unknown : %s', k)
             else:
                 ktype = kdef.get('type', str)
                 kclass = kdef.get('isclass', False)
                 if not isinstance(guess[k], ktype) and not kclass:
-                    logging.debug(' > Attr %s reclass(%s) as %s', k, guess[k], ktype)
+                    logger.debug(' > Attr %s reclass(%s) as %s', k, guess[k], ktype)
                     kargs = kdef.get('args', dict())
                     try:
                         guess[k] = ktype(guess[k], **kargs)
-                        logging.debug(' > Attr %s reclassed = %s', k, guess[k])
+                        logger.debug(' > Attr %s reclassed = %s', k, guess[k])
                     except:
-                        logging.debug(' > Attr %s badly reclassed as %s = %s', k, ktype, guess[k])
+                        logger.debug(' > Attr %s badly reclassed as %s = %s', k, ktype, guess[k])
                         opts['tracker'].add('key', k, text='could not reclass')
                         diags[k] = True
                         guess[k] = None
                 if kdef.has_key('values') and guess[k] not in kdef['values']:
-                    logging.debug(' > Attr %s value not in range = %s %s', k, guess[k], kdef['values'])
+                    logger.debug(' > Attr %s value not in range = %s %s', k, guess[k], kdef['values'])
                     opts['tracker'].add('key', k, text='not in values')
                     diags[k] = True
                     guess[k] = None
@@ -273,7 +274,7 @@ class Footprint(object):
         for k in attrs.keys():
             if guess[k] == 'None':
                 guess[k] = None
-                logging.warning(' > Attr %s as a null string', k)
+                logger.warning(' > Attr %s as a null string', k)
                 if not k in diags:
                     opts['tracker'].add('key', k, text='not valid')
             if guess[k] == None:
@@ -281,9 +282,9 @@ class Footprint(object):
                 if not k in diags:
                     opts['tracker'].add('key', k, text='missing')
                 if opts['fatal']:
-                    logging.critical('No valid attribute %s', k)
+                    logger.critical('No valid attribute %s', k)
                 else:
-                    logging.debug(' > No valid attribute %s', k)
+                    logger.debug(' > No valid attribute %s', k)
 
         return ( guess, input )
 
@@ -367,7 +368,7 @@ class MFootprint(type):
     """
 
     def __new__(cls, n, b, d):
-        logging.debug('Base class for footprint usage "%s / %s", bc = ( %s ), internal = %s', cls, n, b, d)
+        logger.debug('Base class for footprint usage "%s / %s", bc = ( %s ), internal = %s', cls, n, b, d)
         fplocal = d.get('_footprint', dict())
         bcfp = [ c.__dict__.get('_footprint', dict()) for c in b ]
         if type(fplocal) == list:
@@ -395,7 +396,7 @@ class BFootprint(IFootprint):
     __metaclass__ = MFootprint
 
     def __init__(self, *args, **kw):
-        logging.debug('Abstract %s init', self.__class__)
+        logger.debug('Abstract %s init', self.__class__)
         self._instfp = Footprint(self._footprint.as_dict())
         checked = False
         if kw.has_key('checked'):
@@ -403,12 +404,12 @@ class BFootprint(IFootprint):
             del kw['checked']
         self._attributes = dict()
         for a in args:
-            logging.debug('BFootprint %s arg %s', self, a)
+            logger.debug('BFootprint %s arg %s', self, a)
             if isinstance(a, dict):
                 self._attributes.update(a)
         self._attributes.update(kw)
         if not checked:
-            logging.debug('Resolve attributes at footprint init %s', repr(self))
+            logger.debug('Resolve attributes at footprint init %s', repr(self))
             self._attributes, input = self._instfp.resolve(self._attributes, fatal=True)
         self._observer = observers.classobserver(self.fullname())
         self._observer.notify_new(self, dict())
@@ -448,7 +449,7 @@ class BFootprint(IFootprint):
         if '_instfp' in selfcls.__dict__:
             fpk = '_instfp'
         if len(kw):
-            logging.debug('Extend %s footprint %s', selfcls, kw)
+            logger.debug('Extend %s footprint %s', selfcls, kw)
             selfcls.__dict__[fpk] = Footprint(selfcls.__dict__[fpk], kw)
         return selfcls.__dict__[fpk]
 
@@ -468,17 +469,17 @@ class BFootprint(IFootprint):
         It returns the *resolved* form in which the current ``rd`` description
         could be recognized as a footprint of the current class, :data:`False` otherwise.
         """
-        logging.debug("-"*180)
-        logging.debug('Couldbe a %s ?', cls)
+        logger.debug("-"*180)
+        logger.debug('Couldbe a %s ?', cls)
         if not trackroot:
             trackroot = tracker('garbage')
         fp = cls.footprint()
         resolved, input = fp.resolve(rd, fatal=False, tracker=trackroot)
         if resolved:
-            logging.debug(' > Couldbe attrs %s ', resolved)
+            logger.debug(' > Couldbe attrs %s ', resolved)
             for a in resolved:
                 if resolved[a] == None:
-                    logging.debug(' > > Unresolved attr %s', a)
+                    logger.debug(' > > Unresolved attr %s', a)
                     return ( False, input )
             return ( resolved, input )
         else:
@@ -491,7 +492,7 @@ class BFootprint(IFootprint):
         """
         fp = self.footprint()
         for attr in fp.track(rd):
-            logging.debug('Removing attribute %s : %s', attr, rd[attr])
+            logger.debug('Removing attribute %s : %s', attr, rd[attr])
             del rd[attr]
         return rd
 
@@ -507,5 +508,5 @@ class BFootprint(IFootprint):
         try:
             return cls.footprint().attr[attrname]['values']
         except KeyError:
-            logging.debug('No values list associated with this attribute %s', attrname)
+            logger.debug('No values list associated with this attribute %s', attrname)
             return None

@@ -4,7 +4,7 @@
 #: No automatic export
 __all__ = []
 
-import logging
+from vortex.autolog import logdefault as logger
 from vortex.tools.config import GenericConfigParser
 
 _gc = dict()
@@ -20,7 +20,7 @@ class HGeometry(object):
     """Abstract horizontal geometry."""
     
     def __init__(self, **kw):
-        logging.debug('Abstract Horizontal Geometry init %s %s', self, kw)
+        logger.debug('Abstract Horizontal Geometry init %s %s', self, kw)
         self.id = 'abstract'
         self.__dict__.update(kw)
 
@@ -29,7 +29,7 @@ class Geometry(object):
     """Abstract geometry."""
     
     def __init__(self, **kw):
-        logging.debug('Abstract Geometry init %s %s', self, kw)
+        logger.debug('Abstract Geometry init %s %s', self, kw)
         self.id = 'abstract'
         self.area = None
         self.resolution = None
@@ -43,7 +43,7 @@ class SpectralGeometry(Geometry):
     """
     
     def __init__(self, **kw):
-        logging.debug('Spectral Geometry init %s', self)
+        logger.debug('Spectral Geometry init %s', self)
         self.truncation = 798
         self.stretching = 2.4
         kw.setdefault('area', 'auto')
@@ -61,7 +61,7 @@ class GridGeometry(Geometry):
     """
 
     def __init__(self, **kw):
-        logging.debug('Grid Geometry init %s', self)
+        logger.debug('Grid Geometry init %s', self)
         self.nlon = 3200
         self.nlat = 1600
         super(GridGeometry, self).__init__(**kw)

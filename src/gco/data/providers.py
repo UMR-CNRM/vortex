@@ -4,7 +4,7 @@
 #: No automatic export
 __all__ = []
 
-import logging
+from vortex.autolog import logdefault as logger
 
 from vortex.data.providers import Provider
 from gco.tools import genv
@@ -32,7 +32,7 @@ class GGet(Provider):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('GGet provider init %s', self)
+        logger.debug('GGet provider init %s', self)
         super(GGet, self).__init__(*args, **kw)
 
     @classmethod
@@ -81,7 +81,7 @@ class GEnv(Provider):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Genv provider init %s', self)
+        logger.debug('Genv provider init %s', self)
         super(GEnv, self).__init__(*args, **kw)
 
     @classmethod
@@ -106,10 +106,10 @@ class GEnv(Provider):
         in relation to current resource ``gvar`` attribute."""
         gconf = genv.contents(cycle=self.genv)
         if not gconf:
-            logging.error('No such registered cycle %s', self.genv)
+            logger.error('No such registered cycle %s', self.genv)
             raise Exception('Unknow cycle ' + self.genv)
         gkey = resource.gvar
         if gkey not in gconf:
-            logging.error('Key %s unknown in cycle %s', gkey, self.genv)
+            logger.error('Key %s unknown in cycle %s', gkey, self.genv)
             raise Exception('Unknow gvar ' + gkey)
         return gconf[gkey] + resource.basename(self.realkind())

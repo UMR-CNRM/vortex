@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-import logging
+from vortex.autolog import logdefault as logger
 
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource
@@ -61,7 +61,7 @@ class SimpleTest(Resource):
     ) ]
 
     def __init__(self, *args, **kw):
-        logging.debug('SimpleTest resource init %s', self)
+        logger.debug('SimpleTest resource init %s', self)
         super(SimpleTest, self).__init__(*args, **kw)
 
     def realkind(self):
@@ -95,7 +95,7 @@ class Parasite(Resource):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('SimpleTest resource init %s', self)
+        logger.debug('SimpleTest resource init %s', self)
         super(Parasite, self).__init__(*args, **kw)
 
     def realkind(self):

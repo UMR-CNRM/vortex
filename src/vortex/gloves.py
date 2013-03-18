@@ -4,8 +4,9 @@
 #: No automatic export
 __all__ = []
 
-import logging, sys, re
 
+import sys, re
+from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 from vortex.tools.env import Environment
@@ -38,7 +39,7 @@ class Glove(BFootprint):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Glove abstract %s init', self.__class__)
+        logger.debug('Glove abstract %s init', self.__class__)
         super(Glove, self).__init__(*args, **kw)
         self._system = None
         self._vapp = 'play'
@@ -172,7 +173,7 @@ class GlovesCatalog(ClassesCollector):
     """Class in charge of collecting :class:`Store` items."""
 
     def __init__(self, **kw):
-        logging.debug('Gloves catalog init %s', self)
+        logger.debug('Gloves catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.(?:sessions|gloves)'),
             classes = [ Glove ],

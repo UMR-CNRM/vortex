@@ -10,8 +10,9 @@ factory based on the shared footprint mechanism.
 #: No automatic export
 __all__ = []
 
-import logging, re, sys
+import re, sys
 
+from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 
@@ -20,7 +21,7 @@ class Target(BFootprint):
     """Root class for any :class:`Target` subclasses."""
 
     def __init__(self, *args, **kw):
-        logging.debug('Abstract target computer init %s', self.__class__)
+        logger.debug('Abstract target computer init %s', self.__class__)
         super(Target, self).__init__(*args, **kw)
     
     @classmethod
@@ -32,7 +33,7 @@ class TargetsCatalog(ClassesCollector):
     """Class in charge of collecting :class:`Target` items."""
 
     def __init__(self, **kw):
-        logging.debug('Target computers catalog init %s', self)
+        logger.debug('Target computers catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.targets'),
             classes = [ Target ],

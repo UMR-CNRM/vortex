@@ -5,7 +5,7 @@
 __all__ = []
 
 import os
-import logging
+from vortex.autolog import logdefault as logger
 
 from vortex.data.providers import Provider
 from vortex.tools.config import GenericConfigParser
@@ -72,7 +72,7 @@ class IgaProvider(Provider):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('IGA job provider init %s', self)
+        logger.debug('IGA job provider init %s', self)
         super(IgaProvider, self).__init__(*args, **kw)
         self._listOfLoggers = []
         self._post = 'initialisation du provider iga'
@@ -111,7 +111,7 @@ class IgaProvider(Provider):
         self.config.setall(info)
         self.writeNewPost('IgaProvider:pathname info %s' % info)
         self.notifyAll()
-        logging.debug('IgaProvider:pathname info %s', info)
+        logger.debug('IgaProvider:pathname info %s', info)
         #patch for the pearp kind experiment
         if self.member:
             suffix = 'RUN' + str(self.member)
@@ -171,7 +171,7 @@ class SopranoProvider(Provider):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('IGA job provider init %s', self)
+        logger.debug('IGA job provider init %s', self)
         super(SopranoProvider, self).__init__(*args, **kw)
 
     @classmethod
@@ -203,7 +203,7 @@ class SopranoProvider(Provider):
             info['level_one'] = 'serv'
             info['level_two'] = 'env'
             info['level_three'] = info['sys_prod']
-        logging.debug('sopranoprovider::pathname info %s', info)
+        logger.debug('sopranoprovider::pathname info %s', info)
         self.config.setall(info)
         return self.config.resolvedpath('soprano')
 

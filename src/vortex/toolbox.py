@@ -8,7 +8,8 @@ Top level interface for accessing to the VORTEX facilities.
 #: Automatic export of superstar interface.
 __all__ = [ 'rload', 'rget', 'rput' ]
 
-import logging, re
+import re
+from vortex.autolog import logdefault as logger
 from vortex import sessions, syntax, data
 from vortex.data import resources, containers, providers, stores
 from vortex.algo import components
@@ -40,10 +41,10 @@ def rload(*args, **kw):
         if isinstance(a, dict):
             rd.update(a)
         else:
-            logging.warning('Discard rload argument <%s>', a)
+            logger.warning('Discard rload argument <%s>', a)
     rd.update(kw)
     rx = [ containers.pickup(providers.pickup(resources.pickup(x))) for x in syntax.expand(rd)]
-    logging.debug('Resource desc %s', rx)
+    logger.debug('Resource desc %s', rx)
     return [data.handlers.Handler(x) for x in rx]
 
 

@@ -8,7 +8,7 @@ This modules defines the low level physical layout for data handling.
 #: No automatic export.
 __all__ = []
 
-import logging
+from vortex.autolog import logdefault as logger
 from vortex.utilities.empty import DataConst
 
 #: Predefined INTENT values IN, OUT and INOUT.
@@ -34,7 +34,7 @@ class Section(object):
     """Low level unit to handle a resource."""
 
     def __init__(self, **kw):
-        logging.debug('Section initialisation %s', self)
+        logger.debug('Section initialisation %s', self)
         self.kind      = ixo.INPUT
         self.intent    = intent.INOUT
         self.role      = kw.get('role', None)
@@ -56,7 +56,7 @@ class Section(object):
 
     def updignore(self, info):
         """Fake function for undefined information driven updates."""
-        logging.warning('Unable to update %s with info %s', self, info)
+        logger.warning('Unable to update %s with info %s', self, info)
 
     def updstage_get(self, info):
         """Upgrade current section to 'get' level."""
@@ -81,7 +81,7 @@ class Sequence(object):
     """
 
     def __init__(self, *args, **kw):
-        logging.debug('Sequence initialisation %s', self)
+        logger.debug('Sequence initialisation %s', self)
         self.sections = list()
 
     def __iter__(self):
@@ -99,7 +99,7 @@ class Sequence(object):
         if isinstance(candidate, Section):
             self.sections.append(candidate)
         else:
-            logging.warning('Try to add a non-section object %s in sequence %s', candidate, self)
+            logger.warning('Try to add a non-section object %s in sequence %s', candidate, self)
 
     def remove(self, candidate):
         """
@@ -109,7 +109,7 @@ class Sequence(object):
         if isinstance(candidate, Section):
             self.sections.remove(candidate)
         else:
-            logging.warning('Try to remove a non-section object %s in sequence %s', candidate, self)
+            logger.warning('Try to remove a non-section object %s in sequence %s', candidate, self)
 
     def section(self, **kw):
         rhset = kw.get('rh', list())

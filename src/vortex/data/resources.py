@@ -4,8 +4,8 @@
 #: Export Resource and associated Catalog classes.
 __all__ = [ 'Resource', 'ResourcesCatalog' ]
 
-import logging, re, sys
-
+import re, sys
+from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.syntax.stdattrs import a_nativefmt
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
@@ -28,7 +28,7 @@ class Resource(BFootprint):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Resource init %s', self)
+        logger.debug('Resource init %s', self)
         super(Resource, self).__init__(*args, **kw)
 
     @classmethod
@@ -95,7 +95,7 @@ class Resource(BFootprint):
 class ResourcesCatalog(ClassesCollector):
 
     def __init__(self, **kw):
-        logging.debug('Resources catalog init %s', self)
+        logger.debug('Resources catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*(?:resources|data)'),
             classes = [ Resource ],

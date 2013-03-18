@@ -57,7 +57,7 @@ class Observations(GeoFlowResource):
         elif re.match('^odb\/compressed', fmt) :
             return '_'.join(('ccma', self.stage, self.part)) + '.tar'
         else :
-            logging.error('No olive basename defined for such observations format %s', fmt)
+            logger.error('No olive basename defined for such observations format %s', fmt)
 
 
     def archive_basename(self):
@@ -82,7 +82,7 @@ class Observations(GeoFlowResource):
         elif re.match('^odb', fmt) and part == 'ground' and stage == 'cans':
             return 'odb_canari.tar'
         else :
-            logging.error('No archive basename defined for such observations (format=%s, part=%s, stage=%s)', fmt, part, stage)
+            logger.error('No archive basename defined for such observations (format=%s, part=%s, stage=%s)', fmt, part, stage)
 
 
     def archive_urlquery(self):

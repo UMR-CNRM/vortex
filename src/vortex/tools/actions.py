@@ -13,7 +13,7 @@ to be processed: e.g. mail, sendbdap, routing, alarm.
 #: No automatic export
 __all__ = []
 
-import logging
+from vortex.autolog import logdefault as logger
 
 from vortex.utilities.catalogs import Catalog
 from vortex.utilities.authorizations import is_authorized_user
@@ -73,11 +73,11 @@ class Action(object):
                 if service:
                     rc = service()
                 else:
-                    logging.warning('Could not find any service for action %s', self.kind)
+                    logger.warning('Could not find any service for action %s', self.kind)
             else:
-                logging.warning('Non active action %s', self.kind)
+                logger.warning('Non active action %s', self.kind)
         else:
-            logging.warning('User not authorized to perform %s', self.kind)
+            logger.warning('User not authorized to perform %s', self.kind)
         return rc
 
 
@@ -95,7 +95,7 @@ class Dispatcher(Catalog):
     """
 
     def __init__(self, **kw):
-        logging.debug('Action dispatcher init %s', self)
+        logger.debug('Action dispatcher init %s', self)
         super(Dispatcher, self).__init__(**kw)
         self._todo = None
 

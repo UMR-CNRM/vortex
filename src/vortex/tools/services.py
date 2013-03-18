@@ -11,11 +11,9 @@ a default Mail Service is provided.
 __all__ = []
 
 import sys, re, os
-
-import logging
-from smtplib import SMTP
-
 import mimetypes
+
+from smtplib import SMTP
 from email.message import Message
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
@@ -24,6 +22,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import COMMASPACE
 
+from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.syntax.stdattrs import FPList
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
@@ -168,7 +167,7 @@ class ServicesCatalog(ClassesCollector):
     """Class in charge of collecting :class:`MpiTool` items."""
 
     def __init__(self, **kw):
-        logging.debug('Services catalog init %s', self)
+        logger.debug('Services catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.services'),
             classes = [ Service ],

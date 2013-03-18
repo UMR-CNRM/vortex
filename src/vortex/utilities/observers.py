@@ -11,7 +11,7 @@ to an undetermined number of objects hold by :class:`ObserverSet` objects.
 #: No automatic export
 __all__ = []
 
-import logging
+from vortex.autolog import logdefault as logger
 
 
 _obstable = dict()
@@ -31,15 +31,15 @@ class Observer(object):
     
     def newobsitem(self, item, info):
         """A new ``item`` has been created. Some information is provided through the dict ``info``."""
-        logging.info('Notified %s new item %s info %s', self, item, info)
+        logger.info('Notified %s new item %s info %s', self, item, info)
 
     def delobsitem(self, item, info):
         """The ``item`` has been deleted. Some information is provided through the dict ``info``."""
-        logging.info('Notified %s del item %s info %s', self, item, info)
+        logger.info('Notified %s del item %s info %s', self, item, info)
 
     def updobsitem(self, item, info):
         """The ``item`` has been updated. Some information is provided through the dict ``info``."""
-        logging.info('Notified %s upd item %s info %s', self, item, info)
+        logger.info('Notified %s upd item %s info %s', self, item, info)
 
 
 class ObserverSet(object):

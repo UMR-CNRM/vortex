@@ -8,13 +8,13 @@ Functions and tools to handle resources names or other kind of names.
 #: No automatic export
 __all__ = []
 
-import logging
+from vortex.autolog import logdefault as logger
 
 
 class VNameBuilder(object):
 
     def __init__(self, *args, **kw):
-        logging.debug('New VNameBuilder %s', self.__class__)
+        logger.debug('New VNameBuilder %s', self.__class__)
         self.default = dict(
             radical = 'vortexdata',
             src = None,

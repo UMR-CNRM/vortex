@@ -7,7 +7,7 @@ Configuration management through ini files.
 
 __all__ = []
 
-import logging
+from vortex.autolog import logdefault as logger
 from ConfigParser import SafeConfigParser
 
 from vortex import sessions
@@ -98,11 +98,11 @@ class DelayedConfigParser(GenericConfigParser):
 
     def __getattribute__(self, attr):
         try:
-            logging.debug('Getattr %s < %s >', attr, self)
+            logger.debug('Getattr %s < %s >', attr, self)
             if attr in filter(lambda x: not x.startswith('_'), dir(SafeConfigParser) + [ 'setall', 'save' ]):
                 object.__getattribute__(self, 'refresh')()
         except:
-            logging.critical('Trouble getattr %s < %s >', attr, self)
+            logger.critical('Trouble getattr %s < %s >', attr, self)
         return object.__getattribute__(self, attr)
 
 

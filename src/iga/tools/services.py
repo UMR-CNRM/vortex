@@ -13,10 +13,10 @@ performed.
 __all__ = []
 
 import os
-
 import logging
-from vortex import sessions
 from logging.handlers import SysLogHandler
+
+from vortex import sessions
 from vortex.tools.date import Date
 from vortex.tools.services import Service, criticals
 

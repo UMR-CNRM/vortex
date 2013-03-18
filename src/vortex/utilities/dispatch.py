@@ -6,7 +6,8 @@ First version of command line dispatcher.
 Mainly for demonstration purpose ?
 """
 
-import logging, re
+import re
+from vortex.autolog import logdefault as logger
 from vortex import toolbox
 from vortex.syntax import footprint
 from vortex.utilities import catalogs, dumper, trackers
@@ -20,7 +21,7 @@ class Dispatcher(object):
 
     def __init__(self, **kw):
         self.__dict__.update(kw)
-        logging.debug('Dispatcher init %s', self)
+        logger.debug('Dispatcher init %s', self)
 
     # Internal tools
 
@@ -567,11 +568,11 @@ class Dispatcher(object):
             for rh in info:
                 if rh.put():
                     actualstorage = rh.locate()
-                    logging.info('DBLPUT p1 = %s / loc = %s', rh.provider, actualstorage)
+                    logger.info('DBLPUT p1 = %s / loc = %s', rh.provider, actualstorage)
                     actualprovider = rh.provider
                     rh.provider = dblprovider
                     doublestorage = rh.locate()
-                    logging.info('DBLPUT p2 = %s / loc = %s', rh.provider, doublestorage)
+                    logger.info('DBLPUT p2 = %s / loc = %s', rh.provider, doublestorage)
                     rh.provider = actualprovider
                     if doublestorage:
                         system = t.system()
@@ -580,7 +581,7 @@ class Dispatcher(object):
                         system.link(actualstorage, doublestorage)
                         display.extend([actualstorage, '  -> ' + doublestorage])
                 else:
-                    logging.warning('DBLPUT could not store main resource %s', rh)
+                    logger.warning('DBLPUT could not store main resource %s', rh)
                     display.extend('Could not put ' + str(rh), rh.idcard())
                     rc = 1
         else:

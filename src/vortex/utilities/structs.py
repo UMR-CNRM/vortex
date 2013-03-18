@@ -7,7 +7,7 @@ This module defines common base classes for miscellaneous purposes.
 #: No automatic export
 __all__ = []
 
-import logging
+from vortex.autolog import logdefault as logger
 
 
 _tableroots = dict()
@@ -31,7 +31,7 @@ class Tree(object):
 
     def addnode(self, node, parent=None, token=False):
         if parent and not id(parent) in self._nodes:
-            logging.critical('Could not add an orphean %s without parent %s', node, parent)
+            logger.critical('Could not add an orphean %s without parent %s', node, parent)
         if parent:
             parent = id(parent)
             self._nodes[parent]['kids'].append(id(node))
@@ -53,7 +53,7 @@ class Tree(object):
         if idn in self._nodes:
             return self._nodes[idn]['node']
         else:
-            logging.critical('Id %s does not belong this tree', idn)
+            logger.critical('Id %s does not belong this tree', idn)
 
     def parent(self, node):
         if self.contains(node):
@@ -63,13 +63,13 @@ class Tree(object):
             else:
                 return None
         else:
-            logging.critical('Object %s does not belong this tree', node)
+            logger.critical('Object %s does not belong this tree', node)
 
     def kids(self, node):
         if self.contains(node):
             return map(lambda x: self.node(x), self._nodes[id(node)]['kids'])
         else:
-            logging.critical('Object %s does not belong this tree', node)
+            logger.critical('Object %s does not belong this tree', node)
 
     def ancestors(self, node):
         if self.contains(node):
@@ -80,7 +80,7 @@ class Tree(object):
                 parent = self.parent(parent)
             return pp
         else:
-            logging.critical('Object %s does not belong this tree', node)
+            logger.critical('Object %s does not belong this tree', node)
 
     @property
     def token(self):
@@ -115,4 +115,4 @@ class Tree(object):
             print ' *[{0}]...'.format(self._root)
             self.rdump(id(node), 1)
         else:
-            logging.critical('Object %s does not belong this tree', node)
+            logger.critical('Object %s does not belong this tree', node)

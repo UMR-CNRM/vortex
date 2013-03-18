@@ -10,8 +10,8 @@ mechanism.
 #: No automatic export
 __all__ = [ 'Store' ]
 
-import logging, re, sys
-
+import re, sys
+from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.syntax.priorities import top
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
@@ -24,7 +24,7 @@ class StoreGlue(object):
     """Defines a way to glue stored objects together."""
 
     def __init__(self, gluemap=dict()):
-        logging.debug('Abstract glue init %s', self.__class__)
+        logger.debug('Abstract glue init %s', self.__class__)
         self.gluemap = gluemap
         self._asdict = None
         self._cross = dict()
@@ -42,7 +42,7 @@ class StoreGlue(object):
         if self.gluemap.has_option(section, option):
             return self.gluemap.get(section, option)
         else:
-            logging.warning('No such section <%s> or option <%s> in %s', section, option, self)
+            logger.warning('No such section <%s> or option <%s> in %s', section, option, self)
             return None
 
     def gluetype(self, section):
@@ -58,7 +58,7 @@ class StoreGlue(object):
         if self.gluemap.has_section(section):
             return filter(lambda x: not x.startswith('obj'), self.gluemap.options(section))
         else:
-            logging.warning('No such section <%s> in %s', section, self)
+            logger.warning('No such section <%s> in %s', section, self)
             return []
 
     def as_dict(self):
@@ -120,7 +120,7 @@ class StoreGlue(object):
         """Reformulates the actual physical path for the file requested."""
         gluedesc = self.getfile(basename)
         if len(gluedesc) > 1:
-            logging.error('Multiple glue entries %s', gludesc)
+            logger.error('Multiple glue entries %s', gludesc)
             cleanpath, targetpath = ( None, None )
         else:
             gluedesc = gluedesc[0]
@@ -133,7 +133,7 @@ class IniStoreGlue(StoreGlue):
     """Initialised StoreGlue with a delayed ini file."""
 
     def __init__(self, inifile=None):
-        logging.debug('IniStoreGlue init %s', self.__class__)
+        logger.debug('IniStoreGlue init %s', self.__class__)
         super(IniStoreGlue, self).__init__(DelayedConfigParser(inifile))
 
 
@@ -153,7 +153,7 @@ class Store(BFootprint):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Abstract store init %s', self.__class__)
+        logger.debug('Abstract store init %s', self.__class__)
         super(Store, self).__init__(*args, **kw)
 
     @classmethod
@@ -166,26 +166,26 @@ class Store(BFootprint):
         Internal method to be used as a critical backup method
         when a specific method is not yet defined.
         """
-        logging.critical('Scheme %s not yet implemented', self.scheme)
+        logger.critical('Scheme %s not yet implemented', self.scheme)
 
     def check(self, remote):
         """Proxy method to dedicated check method accordind to scheme."""
-        logging.debug('Store check from %s', remote)
+        logger.debug('Store check from %s', remote)
         return getattr(self, self.scheme + 'check', self.notyet)(sessions.system(), remote)
 
     def locate(self, remote):
         """Proxy method to dedicated get method accordind to scheme."""
-        logging.debug('Store locate %s', remote)
+        logger.debug('Store locate %s', remote)
         return getattr(self, self.scheme + 'locate', self.notyet)(sessions.system(), remote)
 
     def get(self, remote, local):
         """Proxy method to dedicated get method accordind to scheme."""
-        logging.debug('Store get from %s to %s', remote, local)
+        logger.debug('Store get from %s to %s', remote, local)
         return getattr(self, self.scheme + 'get', self.notyet)(sessions.system(), remote, local)
 
     def put(self, local, remote):
         """Proxy method to dedicated put method accordind to scheme."""
-        logging.debug('Store put from %s to %s', local, remote)
+        logger.debug('Store put from %s to %s', local, remote)
         return getattr(self, self.scheme + 'put', self.notyet)(sessions.system(), local, remote)
 
 
@@ -205,7 +205,7 @@ class MultiStore(BFootprint):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Abstract multi store init %s', self.__class__)
+        logger.debug('Abstract multi store init %s', self.__class__)
         super(MultiStore, self).__init__(*args, **kw)
         self.openedstores = self.loadstores()
 
@@ -223,7 +223,7 @@ class MultiStore(BFootprint):
             xstore = thisloader(**desc)
             if xstore:
                 activestores.append(xstore)
-        logging.info('Multi active stores %s = %s', self, activestores)
+        logger.info('Multi active stores %s = %s', self, activestores)
         return activestores
 
     def alternatefp(self):
@@ -244,7 +244,7 @@ class MultiStore(BFootprint):
 
     def check(self, remote):
         """Go through internal opened stores and check for the resource."""
-        logging.debug('Multi Store check from %s', remote)
+        logger.debug('Multi Store check from %s', remote)
         rc = False
         for sto in self.openedstores:
             rc = sto.check(remote)
@@ -254,21 +254,21 @@ class MultiStore(BFootprint):
 
     def locate(self, remote):
         """Go through internal opened stores and locate the expected resource for each of them."""
-        logging.debug('Multi Store locate %s', remote)
+        logger.debug('Multi Store locate %s', remote)
         if not self.openedstores:
             return False
         rloc = list
         for sto in self.openedstores:
-            logging.info('Multi locate at %s', sto)
+            logger.info('Multi locate at %s', sto)
             rloc.append(sto.locate(remote))
         return ';'.join(rloc)
 
     def get(self, remote, local):
         """Go through internal opened stores for the first available resource."""
-        logging.info('Multi Store get from %s to %s', remote, local)
+        logger.info('Multi Store get from %s to %s', remote, local)
         rc = False
         for sto in self.openedstores:
-            logging.info('Multi get at %s', sto)
+            logger.info('Multi get at %s', sto)
             rc = sto.get(remote, local)
             if rc:
                 break
@@ -276,12 +276,12 @@ class MultiStore(BFootprint):
 
     def put(self, local, remote):
         """Go through internal opened stores and put resource for each of them."""
-        logging.debug('Multi Store put from %s to %s', local, remote)
+        logger.debug('Multi Store put from %s to %s', local, remote)
         if not self.openedstores:
             return False
         rc = True
         for sto in self.openedstores:
-            logging.info('Multi put at %s', sto)
+            logger.info('Multi put at %s', sto)
             rc = rc & sto.put(local, remote)
         return rc
 
@@ -302,7 +302,7 @@ class Finder(Store):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Abstract store init %s', self.__class__)
+        logger.debug('Abstract store init %s', self.__class__)
         super(Finder, self).__init__(*args, **kw)
 
     @classmethod
@@ -405,7 +405,7 @@ class VortexArchiveStore(Store):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Vortex archive store init %s', self.__class__)
+        logger.debug('Vortex archive store init %s', self.__class__)
         super(VortexArchiveStore, self).__init__(*args, **kw)
 
     @classmethod
@@ -501,7 +501,7 @@ class VortexCacheStore(Store):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Vortex cache store init %s', self.__class__)
+        logger.debug('Vortex cache store init %s', self.__class__)
         super(VortexCacheStore, self).__init__(*args, **kw)
 
     @classmethod
@@ -519,10 +519,10 @@ class VortexCacheStore(Store):
         if ( cache == 'mtool' or ( e.SWAPP_OUTPUT_CACHE and e.SWAPP_OUTPUT_CACHE == 'mtool' ) ):
             if e.MTOOL_STEP_CACHE and system.path.isdir(e.MTOOL_STEP_CACHE):
                 cache = e.MTOOL_STEP_CACHE
-                logging.debug('Store %s uses mtool cache %s', self, cache)
+                logger.debug('Store %s uses mtool cache %s', self, cache)
             else:
                 cache = e.WORKDIR or e.TMPDIR
-                logging.debug('Store %s uses default cache %s', self, cache)
+                logger.debug('Store %s uses default cache %s', self, cache)
         return system.path.join(cache, self.headdir)
 
     def vortexlocate(self, system, remote):
@@ -566,7 +566,7 @@ class StoresCatalog(ClassesCollector):
     """Class in charge of collecting :class:`Store` items."""
 
     def __init__(self, **kw):
-        logging.debug('Stores catalog init %s', self)
+        logger.debug('Stores catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.stores'),
             classes = [ Store, MultiStore ],

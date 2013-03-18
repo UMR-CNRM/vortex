@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-import logging
+from vortex.autolog import logdefault as logger
 from vortex.data.providers import Provider
 
 
@@ -17,7 +17,7 @@ class Bidon(Provider):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Bidon provider init %s', self)
+        logger.debug('Bidon provider init %s', self)
         super(Bidon, self).__init__(*args, **kw)
 
     def realkind(self):

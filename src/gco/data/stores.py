@@ -4,8 +4,8 @@
 #: No automatic export
 __all__ = []
 
-import logging, re
-
+import re
+from vortex.autolog import logdefault as logger
 from vortex.data.stores import Store
 
 rextract = re.compile('^extract=(.*)$')
@@ -34,7 +34,7 @@ class GStore(Store):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Gco store init %s', self.__class__)
+        logger.debug('Gco store init %s', self.__class__)
         super(GStore, self).__init__(*args, **kw)
 
     @classmethod
@@ -53,13 +53,13 @@ class GStore(Store):
         if not rc and system.path.exists(gname):
             extract = remote['query'].get('extract', None)
             if extract:
-                logging.info('GStore get %s', gname + '/' + extract[0])
+                logger.info('GStore get %s', gname + '/' + extract[0])
                 rc = system.cp(gname + '/' + extract[0] , local)
             else:
-                logging.info( 'GStore get %s', gname )
+                logger.info( 'GStore get %s', gname )
                 rc = system.move(gname, local)
         else:
-            logging.warning('GStore get %s was not successful (%s)', gname, rc)
+            logger.warning('GStore get %s was not successful (%s)', gname, rc)
         del system.env.gget_tampon
         return rc
 

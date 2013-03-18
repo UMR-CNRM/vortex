@@ -194,7 +194,7 @@ class NamTerm(Namelist):
             lines = f.readlines()
             f.close
         except IOError:
-            logging.error('Could not open file xxt.def')
+            logger.error('Could not open file xxt.def')
 
         select = lines[self.term].split()[2]
 
@@ -210,7 +210,7 @@ class NamTerm(Namelist):
             else:
                 return select
         else:
-            logging.error('Fullpos namelist id not defined for term %s', self.term)
+            logger.error('Fullpos namelist id not defined for term %s', self.term)
 
     def incoming_namelist_fixup(self, attr, key=None):
         """Fix as best as possible the namelist term extensions."""

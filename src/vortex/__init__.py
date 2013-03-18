@@ -24,10 +24,21 @@ strongly advised.
 
 """
 
-__version__ = '0.6.17'
+__version__ = '0.6.18'
 
 __all__ = []
 
+import logging
+
+logging.basicConfig(
+    format='[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
+    datefmt='%m/%d/%Y %H:%M:%S',
+    level=logging.WARNING
+)
+
+logger = logging.getLogger('vortex')
+
+#import loader
 import sessions, algo, data
 import tools
 

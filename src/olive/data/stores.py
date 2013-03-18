@@ -4,8 +4,8 @@
 #: No automatic export
 __all__ = []
 
-import logging, re
-
+import re
+from vortex.autolog import logdefault as logger
 from vortex.data.stores import StoreGlue, IniStoreGlue, Store, VortexStore, VortexArchiveStore, VortexCacheStore
 
 rextract = re.compile('^extract=(.*)$')
@@ -28,7 +28,7 @@ class OliveArchiveStore(VortexArchiveStore):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Olive archive store init %s', self.__class__)
+        logger.debug('Olive archive store init %s', self.__class__)
         super(OliveArchiveStore, self).__init__(*args, **kw)
 
     def remapget(self, system, remote):
@@ -59,7 +59,7 @@ class OliveCacheStore(VortexCacheStore):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Olive cache store init %s', self.__class__)
+        logger.debug('Olive cache store init %s', self.__class__)
         super(OliveCacheStore, self).__init__(*args, **kw)
 
     def oliveget(self, system, remote, local):
@@ -112,7 +112,7 @@ class OpArchiveStore(Store):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Archive store init %s', self.__class__)
+        logger.debug('Archive store init %s', self.__class__)
         super(OpArchiveStore, self).__init__(*args, **kw)
 
     @classmethod
@@ -183,7 +183,7 @@ class OpArchiveStore(Store):
                             rc = rc and system.mv(extract, local)
             return rc
         else:
-            logging.error('Could not get ftp connection to %s', self.hostname())
+            logger.error('Could not get ftp connection to %s', self.hostname())
             return False
 
     def ftpput(self, system, local, remote):

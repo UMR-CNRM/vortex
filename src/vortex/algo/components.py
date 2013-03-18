@@ -4,8 +4,8 @@
 #: No automatic export
 __all__ = []
 
-import logging, re, sys
-
+import re, sys
+from vortex.autolog import logdefault as logger
 from vortex import sessions
 from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
@@ -94,7 +94,7 @@ class AlgoComponent(BFootprint):
         """Sequence for execution : prepare / execute / postfix."""
         self._status = True
         if not self.valid_executable(rh):
-            logging.warning('Resource %s is not a valid executable', rh.resource)
+            logger.warning('Resource %s is not a valid executable', rh.resource)
             return False
         ctx = sessions.ticket().context
         self.system = ctx.system
@@ -132,7 +132,7 @@ class Expresso(AlgoComponent):
         """
         args = [ self.interpreter, rh.container.localpath() ]
         args.extend(self.spawn_command_line(rh, ctx))
-        logging.debug('Run script %s', args)
+        logger.debug('Run script %s', args)
         self.spawn(args)
 
 
@@ -158,7 +158,7 @@ class BlindRun(AlgoComponent):
 
         args = [ self.absexcutable(rh.container.localpath()) ]
         args.extend(self.spawn_command_line(rh, ctx))
-        logging.debug('BlindRun executable resource %s', args)
+        logger.debug('BlindRun executable resource %s', args)
         self.spawn(args)
 
 
@@ -203,7 +203,7 @@ class Parallel(AlgoComponent):
         args.append(self.absexcutable(rh.container.localpath()))
 
         args.extend(self.spawn_command_line(rh, ctx))
-        logging.debug('Run in parallel mode %s', args)
+        logger.debug('Run in parallel mode %s', args)
         mpi.setup()
         self.spawn(args)
         mpi.clean()
@@ -213,7 +213,7 @@ class AlgoComponentsCatalog(ClassesCollector):
     """Class in charge of collecting :class:`AlgoComponent` items."""
 
     def __init__(self, **kw):
-        logging.debug('Algorithmic Components catalog init %s', self)
+        logger.debug('Algorithmic Components catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.algo'),
             classes = [ AlgoComponent ],

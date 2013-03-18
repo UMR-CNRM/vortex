@@ -4,9 +4,9 @@
 #: No automatic export
 __all__ = [ 'Container' ]
 
-import logging, re, sys, io
+import re, sys, io
 import tempfile
-
+from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 
@@ -14,7 +14,7 @@ from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 class Container(BFootprint):
 
     def __init__(self, *args, **kw):
-        logging.debug('Container %s init', self.__class__)
+        logger.debug('Container %s init', self.__class__)
         self._filled = False
         self._totalsize = None
         super(Container, self).__init__(*args, **kw)
@@ -130,7 +130,7 @@ class InCore(Virtual):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Virtual container init %s', self)
+        logger.debug('Virtual container init %s', self)
         super(InCore, self).__init__(*args, incore = True, **kw)
         self._tmpfile = None
 
@@ -167,7 +167,7 @@ class MayFly(Virtual):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Virtual container init %s', self)
+        logger.debug('Virtual container init %s', self)
         super(MayFly, self).__init__(*args, mayfly = True, **kw)
         self._tmpfile = None
 
@@ -200,7 +200,7 @@ class File(Container):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('File container init %s', self)
+        logger.debug('File container init %s', self)
         super(File, self).__init__(*args, **kw)
         self._iod = None
 
@@ -234,7 +234,7 @@ class File(Container):
 class ContainersCatalog(ClassesCollector):
 
     def __init__(self, **kw):
-        logging.debug('Containers catalog init %s', self)
+        logger.debug('Containers catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.containers'),
             classes = [ Container ],

@@ -22,13 +22,9 @@ __all__ = []
 
 import logging
 
-logging.basicConfig(
-    format='[%(asctime)s][%(module)s][%(levelname)s]: %(message)s',
-    datefmt='%m/%d/%Y %H:%M:%S',
-    level=logging.WARNING
-)
-
 from datetime import datetime
+
+from vortex.autolog import logdefault as logger
 
 from vortex.utilities.patterns import Singleton
 from vortex.utilities.structs import idtree
@@ -119,7 +115,7 @@ class Ticket(object):
             else:
                 self._glove = Desk().getglove()
 
-        logging.info('Open session %s %s', self.tag, self.started)
+        logger.info('Open session %s %s', self.tag, self.started)
 
         if context:
             context.tagtree = self.tagtree
@@ -199,17 +195,17 @@ class Ticket(object):
     def close(self):
         """Closes the current session."""
         if self.closed:
-            logging.warning('Session %s already closed at %s', self.tag, self.closed)
+            logger.warning('Session %s already closed at %s', self.tag, self.closed)
         else:
             self.closed = datetime.now()
-            logging.warning('Close session %s ( %s s. )', self.tag, self.duration())
+            logger.warning('Close session %s ( %s s. )', self.tag, self.duration())
 
     def exit(self):
         """Exit from the current session."""
         self.close()
         ok = True
         for kid in self.tree.kids(self):
-            logging.warning('Exit from session %s kid %s', self, kid)
+            logger.warning('Exit from session %s kid %s', self, kid)
             ok = ok and kid.exit()
         return ok
 
@@ -281,7 +277,7 @@ class Desk(Singleton):
             self._gloves = dict()
             self._current_ticket = 'root'
             self._current_glove = 'default'
-        logging.debug('Tickets desk init %s', self._tickets)
+        logger.debug('Tickets desk init %s', self._tickets)
 
     def getglove(self, **kw):
         """
@@ -362,7 +358,7 @@ class Desk(Singleton):
                 self._current_ticket = tag
             return self._tickets[tag]
         else:
-            logging.warning('Try to switch to an undefined session: %s', tag)
+            logger.warning('Try to switch to an undefined session: %s', tag)
             return None
 
 

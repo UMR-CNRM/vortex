@@ -4,7 +4,7 @@
 #: No automatic export
 __all__ = []
 
-import logging
+from vortex.autolog import logdefault as logger
 
 from vortex.data.stores import Store
 
@@ -33,7 +33,7 @@ class MercatorArchiveStore(Store):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Mercator Archive store init %s', self.__class__)
+        logger.debug('Mercator Archive store init %s', self.__class__)
         super(MercatorArchiveStore, self).__init__(*args, **kw)
 
     @classmethod

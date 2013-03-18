@@ -9,7 +9,8 @@ The most important usage is done by :class:`BFootprint` derivated objects.
 #: No automatic export
 __all__ = []
 
-import logging, re, copy
+import re, copy
+from vortex.autolog import logdefault as logger
 from footprint import BFootprint, Footprint
 
 
@@ -51,22 +52,22 @@ def expand(desc):
         todo = False
         nbpass = nbpass + 1
         if nbpass > 100:
-            logging.error('Expansion is getting messy... (%d) ?', nbpass)
+            logger.error('Expansion is getting messy... (%d) ?', nbpass)
             break
         for i, d in enumerate(ld):
             for k, v in d.iteritems():
                 if type(v) == list or type(v) == tuple or type(v) == set:
-                    logging.info(' > List %s', v)
+                    logger.info(' > List %s', v)
                     ld[i:i+1] = map(lambda x: inplace(d, k, x), v)
                     todo = True
                     break
                 if type(v) == str and re.search(',', v):
-                    logging.info(' > Coma string %s', v)       
+                    logger.info(' > Coma string %s', v)       
                     ld[i:i+1] = map(lambda x: inplace(d, k, x), v.split(','))
                     todo = True
                     break
 
-    logging.debug('Expand in %d loops', nbpass)       
+    logger.debug('Expand in %d loops', nbpass)       
     return ld
 
 

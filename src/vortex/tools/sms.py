@@ -7,18 +7,18 @@ Interface to SMS commands.
 
 __all__ = []
 
-import logging
+from vortex.autolog import logdefault as logger
 
 from vortex import sessions
 
 class SMSGateway(object):
     
     def __init__(self, tag='void'):
-        logging.debug('SMS gateway init %s', self.__class__)
+        logger.debug('SMS gateway init %s', self.__class__)
         super(SMSGateway, self).__init__()
         self.tag = tag
         if not sessions.system().which('smschild'):
-            logging.warning('No SMS client found at init time <%s>', self.tag)
+            logger.warning('No SMS client found at init time <%s>', self.tag)
 
     def env(self, **kw):
         smsenv = sessions.system().env

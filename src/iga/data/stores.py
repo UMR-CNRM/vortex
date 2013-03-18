@@ -4,8 +4,8 @@
 #: No automatic export
 __all__ = []
 
-import logging, re
-
+import re
+from vortex.autolog import logdefault as logger
 from vortex.syntax.priorities import top
 from vortex.data.stores import Store, Finder
 
@@ -36,7 +36,7 @@ class IgaFinder(Finder):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('IgaFinder store init %s', self.__class__)
+        logger.debug('IgaFinder store init %s', self.__class__)
         super(IgaFinder, self).__init__(*args, **kw)
 
     @classmethod
@@ -78,7 +78,7 @@ class SopranoStore(Store):
     )
 
     def __init__(self, *args, **kw):
-        logging.debug('Soprano store init %s', self.__class__)
+        logger.debug('Soprano store init %s', self.__class__)
         super(SopranoStore, self).__init__(*args, **kw)
 
     @classmethod

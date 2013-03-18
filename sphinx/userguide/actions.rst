@@ -41,7 +41,7 @@ in order to be globaly accessible:
   >>> ad.actions()
   set(['mail', 'alarm', 'agt'])
 
-If we have a llok to this :mod:`iga.tools.actions` for exemple, we can see the registering operation
+If we have a look to this :mod:`iga.tools.actions` for exemple, we can see the registering operation
 at the import time:
 
 .. code-block:: python
@@ -116,7 +116,7 @@ An action derives from the :class:`vortex.tools.actions.Action` class. It could 
 Services
 ========
 
-A service derived from a :class:`~vortex.syntax.footprint.BFootprint` base class.
+A service derives from a :class:`~vortex.syntax.footprint.BFootprint` base class.
 Root class and usual module interface for such object is available
 through the :mod:`vortex.tools.services` module.
 
