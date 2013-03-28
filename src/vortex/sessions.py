@@ -31,7 +31,7 @@ from vortex.utilities.structs import idtree
 from vortex.tools import systems
 from vortex.tools.env import Environment
 from vortex.layout.contexts import Context
-import gloves
+from vortex import gloves
 
 
 def ticket(**kw):

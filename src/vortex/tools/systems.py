@@ -109,7 +109,7 @@ class System(BFootprint):
             if self.path.isfile(pathtogo):
                 files.append(pathtogo)
             else:
-                for root, dirs, filenames in self._os.walk(pathtogo):
+                for root, u_dirs, filenames in self._os.walk(pathtogo):
                     files.extend(map(lambda f: self.path.join(root, f), filenames))
         return sorted(files)
 
@@ -211,11 +211,11 @@ class System(BFootprint):
             logger.info('System spawn < %s >', ' '.join(args))
         try:
             if output:
-                # TODO new in 2.7 
+                # TODO new in 2.7
                 rc = subprocess.check_output(args, shell=shell)
             else:
                 rc = subprocess.check_call(args, shell=shell)
-        except OSError as ose:
+        except OSError as u_ose:
             logger.critical('Could not call %s', args)
             return False
         except subprocess.CalledProcessError as cpe:

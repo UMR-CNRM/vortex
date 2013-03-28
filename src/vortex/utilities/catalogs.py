@@ -25,7 +25,7 @@ def get_table():
 class Catalog(object):
     """
     Abstract class for managing a collection of *items*.
-    The interface is very light : :meth:`clear` and :meth:`refill` ! 
+    The interface is very light : :meth:`clear` and :meth:`refill` !
     Of course a catalog is an iterable object. It is also callable,
     and then returns a copy of the list of its items.
     """
@@ -51,7 +51,7 @@ class Catalog(object):
         """Catalog is iterable... at least!"""
         for c in self._items:
             yield c
-    
+
     def __call__(self):
         return self.items()
 
@@ -77,7 +77,7 @@ class Catalog(object):
 
     def refresh(self, **kw):
         """Redo the init sequence."""
-        kw.setdefault('tag', self.tag) 
+        kw.setdefault('tag', self.tag)
         if len(kw) > 1:
             self.__dict__.update(kw)
             self.refill()
@@ -156,10 +156,10 @@ class ClassesCollector(Catalog):
         """
         logger.debug('Search any %s in catalog %s', desc, self._items)
         for item in self._items:
-            resolved, input = item.couldbe(desc)
+            resolved, u_input = item.couldbe(desc)
             if resolved: return item(resolved, checked=True)
         return None
-    
+
     def findall(self, desc):
         r"""
         Returns all the items of the catalog that :meth:`couldbe`
@@ -176,14 +176,14 @@ class ClassesCollector(Catalog):
             if trcat:
                 trnode = self.track.add('class', item.fullname(), base=trcat)
                 self.track.current(trnode)
-            resolved, input = item.couldbe(desc, trackroot=self.track)
-            if resolved: found.append((item, resolved, input))
+            resolved, theinput = item.couldbe(desc, trackroot=self.track)
+            if resolved: found.append((item, resolved, theinput))
         return found
 
     def findbest(self, desc):
         r"""
         Returns the best of the items returned byt the :meth:`findall` method
-        according to potential priorities rules. 
+        according to potential priorities rules.
         """
         logger.debug('Search all %s in catalog %s', desc, self._items)
         candidates = self.findall(desc)
@@ -193,9 +193,9 @@ class ClassesCollector(Catalog):
             logger.warning('Multiple candidates for %s', desc)
             candidates.sort(key=lambda x: x[0].weightsort(x[2]), reverse=True)
             for i, c in enumerate(candidates):
-                thisclass, resolved, input = c
-                logger.warning(' > no.%d in.%d is %s', i+1, len(input), thisclass)
-        topcl, topr, topinput = candidates[0]
+                thisclass, u_resolved, theinput = c
+                logger.warning(' > no.%d in.%d is %s', i+1, len(theinput), thisclass)
+        topcl, topr, u_topinput = candidates[0]
         return topcl(topr, checked=True)
 
 
@@ -207,7 +207,7 @@ def cataloginterface(xmodule, xclass):
     * load
     according to the proper base ``xclass`` class given as second argument.
     """
-    
+
     def catalog(**kw):
         """
         Returns the current catalog from base class XCLASS.
@@ -221,7 +221,7 @@ def cataloginterface(xmodule, xclass):
         else:
             table[kw['tag']].refresh(**kw)
         return table[kw['tag']]
-    
+
     def pickup(rd):
         """
         Find any class in the current XCLASS catalog that could match the specified

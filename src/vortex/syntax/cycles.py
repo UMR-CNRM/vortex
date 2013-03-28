@@ -25,17 +25,17 @@ class Cycle(object):
 
     def findall(self, *args):
         return self.regexp.findall(*args)
-    
+
     def search(self, *args):
         return self.regexp.search(*args)
-    
+
     def __getstate__(self):
         return self.cstate
 
     def __setstate__(self, frozendata):
         self.cstate = frozendata
-        
-            
+
+
 #: Default regular expression to evaluate if a given cycle could be operational or not.
 oper = Cycle(regexp = '^(?:cy)?\d{2}t\d_.*op\d')
 
