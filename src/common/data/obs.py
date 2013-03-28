@@ -4,8 +4,9 @@
 #: Automatic export of Observations class
 __all__ = [ 'Observations' ]
 
-import re, logging
+import re
 
+from vortex.autolog import logdefault as logger
 from vortex.data.flow import GeoFlowResource, FlowResource
 
 

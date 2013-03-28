@@ -3,7 +3,8 @@
 
 __all__ = []
 
-import sys, re, logging
+import sys, re
+from vortex.autolog import logdefault as logger
 
 myself = sys.modules.get(__name__)
 

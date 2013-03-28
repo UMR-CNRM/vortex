@@ -4,8 +4,8 @@
 #: No automatic export
 __all__ = []
 
-import re, logging
-
+import re
+from vortex.autolog import logdefault as logger
 from vortex.tools import env
 from vortex.data.outflow import ModelResource, NoDateResource
 from vortex.data.contents import AlmostDictContent
