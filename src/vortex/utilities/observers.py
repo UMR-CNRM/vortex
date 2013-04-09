@@ -14,9 +14,7 @@ __all__ = []
 from vortex.autolog import logdefault as logger
 
 
-_obstable = dict()
-
-def classobserver(clsname):
+def classobserver(clsname, _obstable=dict()):
     """Return an observer for the specifief class name."""
     if clsname not in _obstable:
         _obstable[clsname] = ObserverSet(tag=clsname)

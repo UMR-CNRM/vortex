@@ -207,4 +207,4 @@ class Handler(object):
 
     def strlast(self):
         """String formatted log of the last action."""
-        return ' '.join(map(lambda x: str(x), self.historic[-1]))
+        return ' '.join([ str(x) for x in self.historic[-1] ])

@@ -10,7 +10,7 @@ factory based on the shared footprint mechanism.
 #: No automatic export
 __all__ = []
 
-import re, os, shutil, sys, io, filecmp, time
+import re, os, platform, shutil, sys, io, filecmp, time
 import glob
 import subprocess
 
@@ -19,10 +19,6 @@ from vortex.tools.env import Environment
 from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 from vortex.tools.net import StdFtp
-
-
-unamekeys = ('sysname', 'nodename', 'release', 'version', 'machine')
-uname = dict(zip(unamekeys, os.uname()))
 
 
 class System(BFootprint):
@@ -35,26 +31,30 @@ class System(BFootprint):
         attr = dict(
             hostname = dict(
                 optional = True,
-                default = uname['nodename'],
+                default = platform.node(),
                 alias = ('nodename',)
             ),
             sysname = dict(
                 optional = True,
-                default = uname['sysname'],
+                default = platform.system(),
             ),
             arch = dict(
                 optional = True,
-                default = uname['machine'],
+                default = platform.machine(),
                 alias = ('machine',)
             ),
             release = dict(
                 optional = True,
-                default = uname['release']
+                default = platform.release()
             ),
             version = dict(
                 optional = True,
-                default = uname['version']
+                default = platform.version()
             ),
+            python = dict(
+                optional = True,
+                default = platform.python_version()
+            )
         )
     )
 
@@ -110,7 +110,7 @@ class System(BFootprint):
                 files.append(pathtogo)
             else:
                 for root, dirs, filenames in self._os.walk(pathtogo):
-                    files.extend(map(lambda f: self.path.join(root, f), filenames))
+                    files.extend([ self.path.join(root, f) for f in filenames ])
         return sorted(files)
 
     @property
@@ -183,13 +183,15 @@ class System(BFootprint):
         """Shortcut to remove."""
         return self.remove(filename)
 
-    def ps(self, opts=[], search=None, pscmd=['ps']):
+    def ps(self, opts=[], search=None, pscmd=None):
+        if not pscmd:
+            pscmd = ['ps']
         pscmd.extend(self._psopts)
         pscmd.extend(opts)
         psall = subprocess.Popen(pscmd, stdout=subprocess.PIPE).communicate()[0].split('\n')
         if search:
             psall = filter(lambda x: re.search(search, x), psall)
-        return map(lambda x: x.strip(), psall)
+        return [ x.strip() for x in psall ]
 
     def readonly(self, filename):
         """Set permissions of the `filename` object to read-only."""

@@ -39,8 +39,7 @@ logging.basicConfig(
 logger = logging.getLogger('vortex')
 
 #import loader
-import sessions, algo, data
-import tools
+import sessions, algo, data, tools
 
 # Set a background environment and a root session
 
@@ -52,23 +51,15 @@ sessions.ticket(active=True, topenv=rootenv, glove=rootenv.glove, prompt='Vortex
 
 # Shorthands to sessions components
 
-def ticket(**kw):
-    """Return current session ticket."""
-    return sessions.ticket(**kw)
-
-def sh():
-    """Return system interface binded to current session."""
-    return sessions.system()
-
-def exit():
-    """Try to close everything nicely."""
-    return sessions.exit()
+ticket = sessions.ticket
+exit = sessions.exit
+sh = sessions.system
 
 # Shorthands to the most useful class catalogs
 
-components = algo.components.catalog()
-containers = data.containers.catalog()
-providers = data.providers.catalog()
-resources = data.resources.catalog()
-stores = data.stores.catalog()
-systems = tools.systems.catalog()
+components = algo.components.catalog
+containers = data.containers.catalog
+providers = data.providers.catalog
+resources = data.resources.catalog
+stores = data.stores.catalog
+systems = tools.systems.catalog

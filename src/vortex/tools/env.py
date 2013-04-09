@@ -11,8 +11,6 @@ from datetime import datetime
 #: No automatic export
 __all__ = []
 
-_params = dict()
-
 #: Precompiled evaluation mostly used by :class:`Environment` method (true).
 vartrue  = re.compile(r'^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$', flags=re.IGNORECASE)
 
@@ -20,7 +18,7 @@ vartrue  = re.compile(r'^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$', flags=re.IGNOREC
 varfalse = re.compile(r'^\s*(?:0|ko|off|false|no|n)\s*$', flags=re.IGNORECASE)
 
 
-def param(tag='default'):
+def param(tag='default', _params=dict()):
     """
     Returns of defines an dedicated environment to store a set of parameters.
     Different sets could be defined and accessed through specific tagnames.

@@ -144,7 +144,7 @@ class Dispatcher(object):
         Print a string version of the specified elements.
         Return <None>.
         """
-        info = map(lambda x: x + ': ' + str(kw[x]), sorted(kw.keys()))
+        info = [ x + ': ' + str(kw[x]) for x in sorted(kw.keys()) ]
         return (0, "\n".join(info), None)
 
     def attributes(self, t, kw):
@@ -311,7 +311,7 @@ class Dispatcher(object):
         """
         Return current entries in catalogs table.
         """
-        tc = catalogs.table().keys()
+        tc = catalogs.get_table().keys()
         return(0, str(tc), tc)
 
     def refill(self, t, kw):
@@ -538,7 +538,7 @@ class Dispatcher(object):
         Return the resource handler.
         """
         info = filter(lambda x: x.complete, toolbox.rget(kw))
-        return (0, "\n".join(map(lambda x: x.strlast(), info)), info)
+        return (0, "\n".join([ x.strlast() for x in info ]), info)
 
     def put(self, t, kw):
         """
@@ -546,7 +546,7 @@ class Dispatcher(object):
         Return the resource handler.
         """
         info = filter(lambda x: x.complete, toolbox.rput(kw))
-        return (0, "\n".join(map(lambda x: x.strlast(), info)), info)
+        return (0, "\n".join([ x.strlast() for x in info ]), info)
 
     def dblput(self, t, kw):
         """

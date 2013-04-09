@@ -45,4 +45,4 @@ def contents(**kw):
 
 def cycles():
     p = handler()
-    return map(lambda x: p[x]['CYCLE'], p.keys())
+    return [ p[x]['CYCLE'] for x in p.keys() ]

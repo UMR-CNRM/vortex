@@ -67,7 +67,7 @@ class Tree(object):
 
     def kids(self, node):
         if self.contains(node):
-            return map(lambda x: self.node(x), self._nodes[id(node)]['kids'])
+            return [ self.node(x) for x in self._nodes[id(node)]['kids'] ]
         else:
             logger.critical('Object %s does not belong this tree', node)
 

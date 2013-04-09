@@ -19,3 +19,6 @@ class DataConst(object):
 
     def __str__(self):
         return super(DataConst, self).__str__() + ' : ' + str(sorted(self.__dict__.keys()))
+
+    def __contains__(self, item):
+        return item in self.__dict__

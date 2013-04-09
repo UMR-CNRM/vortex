@@ -9,13 +9,20 @@ This modules defines the low level physical layout for data handling.
 __all__ = []
 
 from vortex.autolog import logdefault as logger
-from vortex.utilities.empty import DataConst
+from collections import namedtuple, _itemgetter
+
+
+#: Definition of a named tuple INTENT
+IntentTuple = namedtuple('IntentTuple', ['IN', 'OUT', 'INOUT'], verbose=False)
 
 #: Predefined INTENT values IN, OUT and INOUT.
-intent = DataConst(IN = 1, OUT = 2, INOUT = 3)
+intent = IntentTuple(IN=1, OUT=2, INOUT=3)
+
+#: Definition of a named tuple IXO sequence
+IXOTuple = namedtuple('IXOTuple', ['INPUT', 'OUTPUT', 'EXEC'], verbose=False)
 
 #: Predefined IXO sequence values INPUT, OUTPUT and EXEC.
-ixo = DataConst(INPUT = 1, OUTPUT = 2, EXEC  = 3)
+ixo = IXOTuple(INPUT=1, OUTPUT=2, EXEC=3)
 
 
 def stripargs_section(**kw):

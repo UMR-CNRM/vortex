@@ -81,7 +81,7 @@ def exit():
     tags.remove(xtag)
     tags.append(xtag)
     ok = True
-    for s in map(lambda x: thedesk.getticket(tag=x), tags):
+    for s in [ thedesk.getticket(tag=x) for x in tags ]:
         ok = ok and s.exit()
     return ok
 

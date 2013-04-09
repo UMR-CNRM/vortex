@@ -16,11 +16,12 @@ import observers
 from vortex.autolog import logdefault as logger
 from trackers import tracker
 
-_catalogtable = dict()
-_catalogtrack = dict()
 
-def get_table():
+def get_table(_catalogtable=dict()):
     return _catalogtable
+
+def get_track(_catalogtrack=dict()):
+    return _catalogtrack
 
 class Catalog(object):
     """
@@ -233,7 +234,7 @@ def cataloginterface(xmodule, xclass):
 
     tmpclass = xclass(register=False, autofeed=False)
     itementry = tmpclass.itementry
-    candidates = ', '.join(map(lambda x: ':class:`{0:s}.{1:s}`'.format(x.__module__, x.__name__), tmpclass.classes))
+    candidates = ', '.join([ ':class:`{0:s}.{1:s}`'.format(x.__module__, x.__name__) for x in tmpclass.classes ])
 
     def load(**kw):
         """
@@ -249,13 +250,16 @@ def cataloginterface(xmodule, xclass):
     xmodule.catalog = catalog
     xmodule.pickup = pickup
     xmodule.load = load
-    _catalogtrack[xclass.tablekey()] = xmodule.catalog
+    catalogtrack = get_track()
+    catalogtrack[xclass.tablekey()] = xmodule.catalog
 
 def autocatlist():
-    return _catalogtrack.keys()
+    catalogtrack = get_track()
+    return catalogtrack.keys()
 
 def autocatload(kind='systems', tag='default'):
-    return _catalogtrack[kind](tag=tag)
+    catalogtrack = get_track()
+    return catalogtrack[kind](tag=tag)
 
 def fromtable(kind='systems', tag='default'):
     return get_table()[kind].get(tag, None)

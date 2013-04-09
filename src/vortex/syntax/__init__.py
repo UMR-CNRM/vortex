@@ -58,12 +58,12 @@ def expand(desc):
             for k, v in d.iteritems():
                 if type(v) == list or type(v) == tuple or type(v) == set:
                     logger.info(' > List %s', v)
-                    ld[i:i+1] = map(lambda x: inplace(d, k, x), v)
+                    ld[i:i+1] = [ inplace(d, k, x) for x in v ]
                     todo = True
                     break
                 if type(v) == str and re.search(',', v):
                     logger.info(' > Coma string %s', v)       
-                    ld[i:i+1] = map(lambda x: inplace(d, k, x), v.split(','))
+                    ld[i:i+1] = [ inplace(d, k, x) for x in v.split(',') ]
                     todo = True
                     break
 

@@ -57,7 +57,7 @@ class NamelistContent(AlmostDictContent):
 
     def dumps(self):
         """Returns the namelist contents as a string."""
-        return ''.join(map(lambda x: self.get(x).dumps(), sorted(self.keys())))
+        return ''.join([ self.get(x).dumps() for x in sorted(self.keys()) ])
 
     def merge(self, delta, rmblocks=None):
         """Merge of the current namelist content with the set of namelist blocks provided."""

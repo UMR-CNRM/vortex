@@ -104,7 +104,7 @@ class Dispatcher(Catalog):
 
     def candidates(self, kind):
         """Return a selection of the catalog's items with the specified ``kind``."""
-        return filter(lambda x: x.kind == kind, self.items())
+        return [x for x in self.items() if x.kind == kind]
 
     def discard_kind(self, kind):
         """A shortcut to discard from the catalog any item with the specified ``kind``."""
