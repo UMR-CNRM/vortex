@@ -14,7 +14,6 @@ import sys, re, os
 import mimetypes
 
 from smtplib import SMTP
-from email.message import Message    # @UnusedImport
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage

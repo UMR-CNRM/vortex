@@ -121,6 +121,7 @@ class Sequence(object):
             kw['alternate'] = ralter
             if 'role' in kw: del kw['role']
 
+    # TODO input is a reserved keyword
     def input(self, **kw):
         """Create a section with default kind equal to ``ixo.INPUT``."""
         self.section(kind=ixo.INPUT, **kw)

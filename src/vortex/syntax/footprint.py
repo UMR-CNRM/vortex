@@ -118,6 +118,7 @@ class Footprint(object):
         attrs = self.attr
         guess = dict()
         param = envfp()
+        # TODO input is a reserved keyword (4 occurrences in this file)
         input = set()
         for k, kdef in attrs.iteritems():
             if kdef['optional']:

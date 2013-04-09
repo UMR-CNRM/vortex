@@ -84,6 +84,7 @@ def rput(*args, **kw):
         rh.put()
     return rl
 
+# TODO input is a reserved keyword
 @printargs
 def input(*args, **kw):
     """This function adds an input section to the current sequence."""
