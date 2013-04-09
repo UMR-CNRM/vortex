@@ -311,7 +311,7 @@ class Dispatcher(object):
         """
         Return current entries in catalogs table.
         """
-        tc = catalogs.table().keys()
+        tc = catalogs.get_table().keys()
         return(0, str(tc), tc)
 
     def refill(self, t, kw):
@@ -320,7 +320,7 @@ class Dispatcher(object):
         Return the actual number of items.
         """
         refilled = list()
-        ctable = catalogs.table()
+        ctable = catalogs.get_table()
         select = kw.keys()
         if not select:
             select = catalogs.autocatlist()

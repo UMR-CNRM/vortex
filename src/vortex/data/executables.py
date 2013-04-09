@@ -9,18 +9,20 @@ from resources import Resource
 from vortex.syntax.stdattrs import a_model
 from vortex.tools.config import JacketConfigParser
 
+
 class Jacket(object):
 
-    def __init__(self, file=None):
+    def __init__(self, afile=None):
         if file:
-            self.config = JacketConfigParser(file)
+            self.config = JacketConfigParser(afile)
             self.virtual = False
         else:
             self.virtual = True
-        self._initfile = file
+        self._initfile = afile
 
     def dumpinfp(self):
-        return "{0:s}.{1:s}(file={2:s})".format(self.__module__, self.__class__.__name__, repr(self._initfile))
+        return "{0:s}.{1:s}(file={2:s})".format(self.__module__,
+                            self.__class__.__name__, repr(self._initfile))
 
 
 class Executable(Resource):
@@ -112,7 +114,7 @@ class BlackBox(Binary):
 
 class NWPModel(Binary):
     """Base class for any Numerical Weather Prediction Model."""
-    
+
     _abstract = True
     _footprint = dict(
          info = 'NWP Model',

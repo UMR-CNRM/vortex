@@ -5,11 +5,11 @@ Actions and Services
 ********************
 
 Actions could be seen as some external tools, not deeply tied up with the toolbox itself,
-or at least not diretly related to NWP stuff.
+or at least not directly related to NWP stuff.
 Typical actions could consist in sending a mail, issuing an alarm
 or producing some kind of execution report.
 
-The action is directly what you want to do, while the service is much more what make it possible.
+The action is directly what you want to do, while the service is much more what makes it possible.
 
 ============================
 Using the actions dispatcher
@@ -30,7 +30,7 @@ This kind of dispatcher is in fact a very simple catalog:
   set(['mail'])
 
 Modules that implement actions should register to this default actions dispatcher,
-in order to be globaly accessible:
+in order to be globally accessible:
 
 .. code-block:: python
 
@@ -41,8 +41,8 @@ in order to be globaly accessible:
   >>> ad.actions()
   set(['mail', 'alarm', 'agt'])
 
-If we have a look to this :mod:`iga.tools.actions` for exemple, we can see the registering operation
-at the import time:
+If we have a look to this :mod:`iga.tools.actions` for example, we can see the registering operation
+at import time:
 
 .. code-block:: python
 
@@ -61,7 +61,7 @@ at the import time:
 
 Using a dispatcher, actions are collectively performed according to the ``kind`` of the action.
 It means, that several actions could be candidates for a given value of ``kind``. Here is an
-exemple whith a second mail action:
+example with a second mail action:
 
 .. code-block:: python
 
@@ -83,7 +83,7 @@ exemple whith a second mail action:
   [<vortex.tools.actions.SendMail object at 0x1d5f410>, <__main__.TagSubject object at 0x1d5f450>]
 
 Some other global operations involves switching status of actions.
-For exemple, if we continue with the case of two objects related to a ``mail`` action:
+For example, if we continue with the case of two objects related to a ``mail`` action:
 
 .. code-block:: python
 
@@ -99,7 +99,7 @@ For exemple, if we continue with the case of two objects related to a ``mail`` a
 Actions
 =======
 
-An action derives from the :class:`vortex.tools.actions.Action` class. It could be active or not.
+An action derives from the :class:`vortex.tools.actions.Action` class. It can be active or not.
 
 .. code-block:: python
 

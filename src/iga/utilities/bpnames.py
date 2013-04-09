@@ -43,7 +43,7 @@ def faNames(cutoff, reseau, model, filling=None):
         )
         return None
     #suffix choice
-    # TODO not safe in case the time is not defined
+    # TODO: not safe in case the time is not defined
     suffix = map_suffix[(cutoff, reseau)]
     if model == 'arpege':
         if filling == 'surf':
