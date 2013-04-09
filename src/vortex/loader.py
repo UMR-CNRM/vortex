@@ -19,7 +19,7 @@ class VortexImporter(object):
         cls._import_prefix.add(package)
 
     @classmethod
-    def register(cls, package):
+    def unregister(cls, package):
         cls._import_prefix.discard(package)
 
     def load_module(self, fullname):

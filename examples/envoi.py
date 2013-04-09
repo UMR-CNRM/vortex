@@ -65,7 +65,7 @@ al.mail_on()
 al.mail(**dico1)
 al.mail(**dico3)
 print '_'*150
-#TODO: prepare a test to alert the supervision
+# TODO: prepare a test to alert the supervision
 al.alarm(**dico4)
 al.alarm_status()
 print '_'*150

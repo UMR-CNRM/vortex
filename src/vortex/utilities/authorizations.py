@@ -13,19 +13,19 @@ __all__ = []
 
 import re
 from vortex.autolog import logdefault as logger
-from collections import namedtuple, _itemgetter
+from collections import namedtuple
 
 from vortex import sessions
 from vortex.tools.config import GenericConfigParser
 
 class GroupHandler(namedtuple('PermsUsersHandler', ('perms', 'users'))):
 
-    def __new__(_cls):
+    def __new__(cls):
         cfgusers = GenericConfigParser('auth-users-groups.ini')
         cfgperms = GenericConfigParser('auth-perms-actions.ini')
         ConstUsers = namedtuple('ConstUsers', cfgusers.sections())
         ConstPerms = namedtuple('ConstPerms', cfgperms.sections())
-        return tuple.__new__(_cls, (ConstPerms(**cfgperms.as_dict()), ConstUsers(**cfgusers.as_dict())))
+        return tuple.__new__(cls, (ConstPerms(**cfgperms.as_dict()), ConstUsers(**cfgusers.as_dict())))
 
 
 def is_qualified_user(user=None):
@@ -35,11 +35,11 @@ def is_qualified_user(user=None):
     gh = GroupHandler()
     return user in gh.users.users
 
-        
+
 def is_authorized_user(action='void', user=None):
     """
     Check if the user of the current session is authorized
-    to perform the specified action. It also check if
+    to perform the specified action. It also checks if
     the rights had been altered in any ways.
     """
     if not user:

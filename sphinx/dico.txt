@@ -1,40 +1,40 @@
 
-Le catalogue un objet abstrait servant à la collecte d'un ou plusieurs type d'autres objets. Il permet les manipulations courantes : stockage, recherche, sélection, versionnement.
+Le catalogue un objet abstrait servant Ã  la collecte d'un ou plusieurs type d'autres objets. Il permet les manipulations courantesÂ : stockage, recherche, sÃ©lection, versionnement.
 Composant algorithmique
-Le composant algorithmique est un sous-ensemble cohérent de code de prévision numérique susceptible de faire l'objet d'une seule et unique description logique et dont le comportement est régi par un ensemble structuré d'informations ;
-Cet ensemble d'informations peut prendre la forme d'une namelist, ou d'un « fichier de configuration » de format quelconque? mais bien plus probablement un XML quelconque.
+Le composant algorithmique est un sous-ensemble cohÃ©rent de code de prÃ©vision numÃ©rique susceptible de faire l'objet d'une seule et unique description logique et dont le comportement est rÃ©gi par un ensemble structurÃ© d'informationsÂ ;
+Cet ensemble d'informations peut prendre la forme d'une namelist, ou d'un Â«Â fichier de configurationÂ Â» de format quelconque, mais bien plus probablement un XML quelconque.
 Configuration
-Une configuration est un enchaînement logique de tâches visant à satisfaire un besoin donné en terme d'expérimentation numérique. Elle définit complètement la séquence d'enchaînement, les dépendances éventuelles entre tâches, le flux de données.
-Données d'entrée
-Les ressources mobilisées dans un flux de données et dont la présence, sous une forme appropriée est exigée pour un traitement par un noyau exécutable constituent les données d'entrée d'une tâche ou d'un groupe de tâches.
-Données de sortie
-Les ressources produites dans un flux de données sous une forme particulière après la mise en ?uvre d'un noyau exécutable constituent les données de sortie d'une tâche. Ces données peuvent ou non, devenir les données d'entrée d'une autre tâche ou de la même tâche dans le cas d'une exécution cyclique.
-Expérimentation
-L'expérimentation est le déploiement dans un espace de temps ou sur un jeu limité de ressources d'une configuration. Cette spécification est souvent opéré via des paramétrisations.
-Mode d'exécution
-Le mode d'exécution est l'ensemble des modalités qui caractérisent une mise en ?uvre spécifique d'un noyau exécutable. Cela recouvre notamment, mais peut-être pas exclusivement : la mise en forme ou la conversion de données d'entrée, la définition de la ligne de commande, le positionnement de l'environnement informatique, des possibilités de cyclage de l'exécution, etc. ;
-Remarque : certaines de ces modalités peuvent n'avoir de sens que dans l'espace physique.
-Par ailleurs, en conjonction avec les qualités propres à un noyau d'exécution, le mode d'exécution précise les types de ressources autorisées en entrées ou potentiellement présentes en sortie d'exécution (on parle alors d'enveloppe de ressources).
-Noyau exécutable
-Un noyau exécutable est une entité qui joue un rôle actif dans le flux de données d'une simulation numérique. C'est souvent un exécutable binaire de code compilé constitué par l'agrégation d'un ou plusieurs noyaux algorithmiques, mais pas toujours. Cela peut être aussi une combinaison de plusieurs binaires ou même un « simple » script interprété.
-Dans le cadre des sciences environnementales, le modèle de prévision numérique est le noyau d'exécution par excellence.
-Paramétrisation
-Une paramétrisation est la méthode par laquelle des éléments variables, ou paramètres, d'une configuration peuvent être définis. Ces éléments peuvent faire l'objet de lexiques. On peut dire de ces paramètres qu'ils jouent le rôle des variables dans un programme, dont ils partagent a minima les règles de portée, mais sans limiter a priori le type d'information qu'ils véhiculent, qui peut elle-même être complexe.
+Une configuration est un enchaÃ®nement logique de tÃ¢ches visant Ã  satisfaire un besoin donnÃ© en terme d'expÃ©rimentation numÃ©rique. Elle dÃ©finit complÃ¨tement la sÃ©quence d'enchaÃ®nement, les dÃ©pendances Ã©ventuelles entre tÃ¢ches, le flux de donnÃ©es.
+DonnÃ©es d'entrÃ©e
+Les ressources mobilisÃ©es dans un flux de donnÃ©es et dont la prÃ©sence, sous une forme appropriÃ©e est exigÃ©e pour un traitement par un noyau exÃ©cutable constituent les donnÃ©es d'entrÃ©e d'une tÃ¢che ou d'un groupe de tÃ¢ches.
+DonnÃ©es de sortie
+Les ressources produites dans un flux de donnÃ©es sous une forme particuliÃ¨re aprÃ¨s la mise en Å“uvre d'un noyau exÃ©cutable constituent les donnÃ©es de sortie d'une tÃ¢che. Ces donnÃ©es peuvent ou non, devenir les donnÃ©es d'entrÃ©e d'une autre tÃ¢che ou de la mÃªme tÃ¢che dans le cas d'une exÃ©cution cyclique.
+ExpÃ©rimentation
+L'expÃ©rimentation est le dÃ©ploiement dans un espace de temps ou sur un jeu limitÃ© de ressources d'une configuration. Cette spÃ©cification est souvent opÃ©rÃ©e via des paramÃ©trisations.
+Mode d'exÃ©cution
+Le mode d'exÃ©cution est l'ensemble des modalitÃ©s qui caractÃ©risent une mise en Å“uvre spÃ©cifique d'un noyau exÃ©cutable. Cela recouvre notamment, mais peut-Ãªtre pas exclusivementÂ : la mise en forme ou la conversion de donnÃ©es d'entrÃ©e, la dÃ©finition de la ligne de commande, le positionnement de l'environnement informatique, des possibilitÃ©s de cyclage de l'exÃ©cution, etc.Â ;
+RemarqueÂ : certaines de ces modalitÃ©s peuvent n'avoir de sens que dans l'espace physique.
+Par ailleurs, en conjonction avec les qualitÃ©s propres Ã  un noyau d'exÃ©cution, le mode d'exÃ©cution prÃ©cise les types de ressources autorisÃ©es en entrÃ©es ou potentiellement prÃ©sentes en sortie d'exÃ©cution (on parle alors d'enveloppe de ressources).
+Noyau exÃ©cutable
+Un noyau exÃ©cutable est une entitÃ© qui joue un rÃ´le actif dans le flux de donnÃ©es d'une simulation numÃ©rique. C'est souvent un exÃ©cutable binaire de code compilÃ© constituÃ© par l'agrÃ©gation d'un ou plusieurs noyaux algorithmiques, mais pas toujours. Cela peut Ãªtre aussi une combinaison de plusieurs binaires ou mÃªme un Â«Â simpleÂ Â» script interprÃ©tÃ©.
+Dans le cadre des sciences environnementales, le modÃ¨le de prÃ©vision numÃ©rique est le noyau d'exÃ©cution par excellence.
+ParamÃ©trisation
+Une paramÃ©trisation est la mÃ©thode par laquelle des Ã©lÃ©ments variables, ou paramÃ¨tres, d'une configuration peuvent Ãªtre dÃ©finis. Ces Ã©lÃ©ments peuvent faire l'objet de lexiques. On peut dire de ces paramÃ¨tres qu'ils jouent le rÃ´le des variables dans un programme, dont ils partagent a minima les rÃ¨gles de portÃ©e, mais sans limiter a priori le type d'information qu'ils vÃ©hiculent, qui peut elle-mÃªme Ãªtre complexe.
 Ressource
-La ressource est l'entité de base manipulable au cours d'une expérimentation de prévision numérique et ayant un sens du point de vue de cette expérimentation. C'est l'objet météorologique par excellence. Par exemple une analyse, l'exécutable binaire d'un modèle, un champ de pression de surface, etc., sont des ressources.
-A contrario, un répertoire d'un système de fichiers, un calculateur, etc. ne sont pas des ressources.
-Séquence
-La séquence est le regroupement ordonné de données d'entrée, d'un noyau exécutable associé à un mode d'exécution particulier, et de la collecte et du traitement éventuel de données produites ou données de sortie.
-Tâche
-La tâche est une séquence logique spécifiquement paramétrée qui regroupe ainsi l'obtention de données d'entrée, la mise en ?uvre d'un noyau exécutable suivant un mode d'exécution particulier, la collecte et le traitement éventuel de données produites ou données de sortie.
+La ressource est l'entitÃ© de base manipulable au cours d'une expÃ©rimentation de prÃ©vision numÃ©rique et ayant un sens du point de vue de cette expÃ©rimentation. C'est l'objet mÃ©tÃ©orologique par excellence. Par exemple une analyse, l'exÃ©cutable binaire d'un modÃ¨le, un champ de pression de surface, etc., sont des ressources.
+A contrario, un rÃ©pertoire d'un systÃ¨me de fichiers, un calculateur, etc. ne sont pas des ressources.
+SÃ©quence
+La sÃ©quence est le regroupement ordonnÃ© de donnÃ©es d'entrÃ©e, d'un noyau exÃ©cutable associÃ© Ã  un mode d'exÃ©cution particulier, et de la collecte et du traitement Ã©ventuel de donnÃ©es produites ou donnÃ©es de sortie.
+TÃ¢che
+La tÃ¢che est une sÃ©quence logique spÃ©cifiquement paramÃ©trÃ©e qui regroupe ainsi l'obtention de donnÃ©es d'entrÃ©e, la mise en Å“uvre d'un noyau exÃ©cutable suivant un mode d'exÃ©cution particulier, la collecte et le traitement Ã©ventuel de donnÃ©es produites ou donnÃ©es de sortie.
 
 
 Espace Physique
-Contexte d'exécution
-Le contexte d'exécution est le cadre réel dans lequel se déroule une tâche ou plusieurs tâches dans le cas d'un système couplé. Il définit notamment la portée des ressources manipulées ou des paramètres d'environnement modifiés.
+Contexte d'exÃ©cution
+Le contexte d'exÃ©cution est le cadre rÃ©el dans lequel se dÃ©roule une tÃ¢che ou plusieurs tÃ¢ches dans le cas d'un systÃ¨me couplÃ©. Il dÃ©finit notamment la portÃ©e des ressources manipulÃ©es ou des paramÃ¨tres d'environnement modifiÃ©s.
 Environnement
-L'environnement est l'ensemble des conditions externes à la configuration dans lesquelles se réalise une expérimentation numérique. Tout ce qui relève de l'implémentation informatique contribue ainsi à définir un environnement donné. Les variables d'environnement, sont les éléments paramétrables qui permettent de modifier cet environnement. Elles peuvent représenter n'importe quelle entité logique et pas seulement des valeurs « scalaires » (comme le sont les variables shell par exemple).
+L'environnement est l'ensemble des conditions externes Ã  la configuration dans lesquelles se rÃ©alise une expÃ©rimentation numÃ©rique. Tout ce qui relÃ¨ve de l'implÃ©mentation informatique contribue ainsi Ã  dÃ©finir un environnement donnÃ©. Les variables d'environnement, sont les Ã©lÃ©ments paramÃ©trables qui permettent de modifier cet environnement. Elles peuvent reprÃ©senter n'importe quelle entitÃ© logique et pas seulement des valeurs Â«Â scalairesÂ Â» (comme le sont les variables shell par exemple).
 Pilote
-Le pilote d'exécution réalise le séquencement physique effectif d'une configuration ou d'un sous-ensemble de la configuration. Il opère en particulier la coordination des différents contextes d'exécutions et définit les diverses responsabilités entre ceux-ci ainsi que ce qui peut-être factorisé et regroupé par ses soins.
-Système couplé
-Un système couplé permet la mise en ?uvre simultanée et coordonnée de plusieurs noyaux exécutables, définis au sein d'une même tâche ou dans des tâches distinctes pour exprimer plus précisément le flux de données. Le caractère couplé du système est assuré dans la mise en pratique de cet ensemble dans un contexte d'exécution donné ou par synchronisation de plusieurs contextes d'exécution.
+Le pilote d'exÃ©cution rÃ©alise le sÃ©quencement physique effectif d'une configuration ou d'un sous-ensemble de la configuration. Il opÃ¨re en particulier la coordination des diffÃ©rents contextes d'exÃ©cutions et dÃ©finit les diverses responsabilitÃ©s entre ceux-ci ainsi que ce qui peut-Ãªtre factorisÃ© et regroupÃ© par ses soins.
+SystÃ¨me couplÃ©
+Un systÃ¨me couplÃ© permet la mise en Å“uvre simultanÃ©e et coordonnÃ©e de plusieurs noyaux exÃ©cutables, dÃ©finis au sein d'une mÃªme tÃ¢che ou dans des tÃ¢ches distinctes pour exprimer plus prÃ©cisÃ©ment le flux de donnÃ©es. Le caractÃ¨re couplÃ© du systÃ¨me est assurÃ© dans la mise en pratique de cet ensemble dans un contexte d'exÃ©cution donnÃ© ou par synchronisation de plusieurs contextes d'exÃ©cution.

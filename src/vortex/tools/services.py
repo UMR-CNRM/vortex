@@ -14,7 +14,6 @@ import sys, re, os
 import mimetypes
 
 from smtplib import SMTP
-from email.message import Message
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
@@ -106,7 +105,7 @@ class MailService(Service):
         """Returns the internal body contents as a MIMEText object."""
         body = self.message
         if self.filename:
-            tmp = open(file_to_message, 'r')
+            tmp = open(self.filename, 'r')
             body += tmp.read()
             tmp.close()
         return MIMEText(body)

@@ -138,7 +138,7 @@ class Sequence(object):
 
     def inputs(self):
         """Return a list of current sequence sections with ``ixo.INPUT`` kind."""
-        return filter(lambda x: x.kind == ixo.INPUT, self.sections)
+        return [ x for x in self.sections if x.kind == ixo.INPUT ]
 
     def effective_inputs(self, **kw):
         """
@@ -159,7 +159,7 @@ class Sequence(object):
 
     def outputs(self):
         """Return a list of current sequence sections with ``ixo.OUTPUT`` kind."""
-        return filter(lambda x: x.kind == ixo.OUTPUT, self.sections)
+        return [ x for x in self.sections if x.kind == ixo.OUTPUT ]
 
     def effective_outputs(self, **kw):
         """

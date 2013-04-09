@@ -118,7 +118,7 @@ class Footprint(object):
         attrs = self.attr
         guess = dict()
         param = envfp()
-        input = set()
+        inputattr = set()
         for k, kdef in attrs.iteritems():
             if kdef['optional']:
                 if kdef['default'] == None:
@@ -129,18 +129,18 @@ class Footprint(object):
                 guess[k] = None
             if k in param:
                 guess[k] = param[k]
-                input.add(k)
+                inputattr.add(k)
             if k in desc:
                 guess[k] = desc[k]
-                input.add(k)
+                inputattr.add(k)
                 logger.debug(' > Attr %s in description : %s', k, desc[k])
             else:
                 for a in kdef['alias']:
                     if a in desc:
                         guess[k] = desc[a]
-                        input.add(k)
+                        inputattr.add(k)
                         break
-        return ( guess, input )
+        return ( guess, inputattr )
 
     def _findextras(self, desc):
         extras = dict(glove = env.current().glove)
@@ -215,7 +215,7 @@ class Footprint(object):
         opts = dict( fatal=True, fast=False, tracker=tracker(tag='fpresolve') )
         if kw: opts.update(kw)
 
-        guess, input = self._firstguess(desc)
+        guess, inputattr = self._firstguess(desc)
         extras = self._findextras(desc)
         self._addextras(guess, desc, extras)
 
@@ -278,7 +278,7 @@ class Footprint(object):
                 if not k in diags:
                     opts['tracker'].add('key', k, text='not valid')
             if guess[k] == None:
-                input.discard(k)
+                inputattr.discard(k)
                 if not k in diags:
                     opts['tracker'].add('key', k, text='missing')
                 if opts['fatal']:
@@ -286,7 +286,7 @@ class Footprint(object):
                 else:
                     logger.debug(' > No valid attribute %s', k)
 
-        return ( guess, input )
+        return ( guess, inputattr )
 
     @property
     def info(self):
@@ -410,7 +410,7 @@ class BFootprint(IFootprint):
         self._attributes.update(kw)
         if not checked:
             logger.debug('Resolve attributes at footprint init %s', repr(self))
-            self._attributes, input = self._instfp.resolve(self._attributes, fatal=True)
+            self._attributes, u_inputattr = self._instfp.resolve(self._attributes, fatal=True)
         self._observer = observers.classobserver(self.fullname())
         self._observer.notify_new(self, dict())
 
@@ -474,16 +474,16 @@ class BFootprint(IFootprint):
         if not trackroot:
             trackroot = tracker('garbage')
         fp = cls.footprint()
-        resolved, input = fp.resolve(rd, fatal=False, tracker=trackroot)
+        resolved, inputattr = fp.resolve(rd, fatal=False, tracker=trackroot)
         if resolved:
             logger.debug(' > Couldbe attrs %s ', resolved)
             for a in resolved:
                 if resolved[a] == None:
                     logger.debug(' > > Unresolved attr %s', a)
-                    return ( False, input )
-            return ( resolved, input )
+                    return ( False, inputattr )
+            return ( resolved, inputattr )
         else:
-            return ( False, input )
+            return ( False, inputattr )
 
     def cleanup(self, rd):
         """

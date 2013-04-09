@@ -10,7 +10,8 @@ mechanism.
 #: No automatic export
 __all__ = [ 'Store' ]
 
-import re, sys
+import re
+import sys
 from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.syntax.priorities import top
@@ -97,9 +98,9 @@ class StoreGlue(object):
         """Shortcut to contains for a specified file."""
         return self.contains('file', filename)
 
-    def containsformat(self, format):
+    def containsformat(self, aformat):
         """Shortcut to contains for a specified format."""
-        return self.contains('format', format)
+        return self.contains('format', aformat)
 
     def getitem(self, itemtype, itemname):
         """Generic function to obtain the associated description of the item specified by type and name."""
@@ -112,15 +113,15 @@ class StoreGlue(object):
         """Shortcut to get an item for a specified file."""
         return self.getitem('file', filename)
 
-    def getformat(self, format):
+    def getformat(self, aformat):
         """Shortcut to get an item for a specified format."""
-        return self.getitem('format', format)
+        return self.getitem('format', aformat)
 
     def filemap(self, system, dirname, basename):
         """Reformulates the actual physical path for the file requested."""
         gluedesc = self.getfile(basename)
         if len(gluedesc) > 1:
-            logger.error('Multiple glue entries %s', gludesc)
+            logger.error('Multiple glue entries %s', gluedesc)
             cleanpath, targetpath = ( None, None )
         else:
             gluedesc = gluedesc[0]
@@ -128,7 +129,7 @@ class StoreGlue(object):
             cleanpath = system.path.join(dirname, targetpath)
         return ( cleanpath, targetpath )
 
-        
+
 class IniStoreGlue(StoreGlue):
     """Initialised StoreGlue with a delayed ini file."""
 

@@ -192,6 +192,7 @@ class Parallel(AlgoComponent):
         """
         mpi = self.mpitool
         if not mpi:
+            # TODO Eclipse parser is not smart enough to know about this "load" 
             mpi = mpitools.load(sysname=self.system.sysname, mpiname=self.mpiname)
 
         if not mpi:

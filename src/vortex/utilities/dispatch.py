@@ -320,7 +320,7 @@ class Dispatcher(object):
         Return the actual number of items.
         """
         refilled = list()
-        ctable = catalogs.table()
+        ctable = catalogs.get_table()
         select = kw.keys()
         if not select:
             select = catalogs.autocatlist()

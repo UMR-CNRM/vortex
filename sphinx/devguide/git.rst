@@ -73,7 +73,7 @@ Let assume you want to work in a traditional directory :file:`git-dev` :
   total 4
   drwxr-xr-x 4 esevault gmap 4096 2012-09-26 17:25 vortex/
 
-You have know a full copy of the source history, with a view on the last master release.
+You have now a full copy of the source history, with a view on the last master release.
 
 ======
 Basics
@@ -91,7 +91,7 @@ If you run this command directly after a clone, you should see something like th
   % git status
   # On branch master
   nothing to commit (working directory clean)
-  
+
 Staging or adding a file
 ========================
 
@@ -238,5 +238,5 @@ Limit history depth :
 
   % git log --since=3.days
 
-  
-  
+
+
