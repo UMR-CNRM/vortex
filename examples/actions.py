@@ -1,10 +1,9 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+from vortex import sessions
 from vortex.tools.actions import actiond as ad
 from vortex.tools.actions import SendMail
-
-print ad.actions()
 
 class TagSubject(SendMail):
 
@@ -13,9 +12,15 @@ class TagSubject(SendMail):
         super(TagSubject, self).__init__()
 
     def service_info(self, **kw):
-        kw['Subject'] = self.tag + ': ' + kw.get('Subject', 'no subject')       
+        kw['subject'] = self.tag + ': ' + kw.get('subject', 'no subject')
         return super(TagSubject, self).service_info(**kw)
 
 ad.add(TagSubject())
+
 print ad.actions()
 print ad.candidates('mail')
+
+g = sessions.glove()
+g.setmail('eric.sevault@meteo.fr')
+
+ad.mail(to='eric.sevault@meteo.fr', subject='hello', body='hello world mail')

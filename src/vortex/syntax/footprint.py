@@ -10,7 +10,7 @@ The most important usage is done by :class:`BFootprint` derivated objects.
 __all__ = []
 
 #: Activate nice dump of footprint in docstring
-docstring_nicedump = True
+docstring_nicedump = False
 
 import copy, re
 from vortex.autolog import logdefault as logger

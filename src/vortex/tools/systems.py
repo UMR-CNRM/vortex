@@ -211,28 +211,44 @@ class System(BFootprint):
         if output == None:
             output = self.output
         if self.trace:
-            logger.info('System spawn < %s >', ' '.join(args))
+            logger.info('System spawn < %s >', args)
+        p = None
         try:
             if output:
-                # TODO new in 2.7
-                rc = subprocess.check_output(args, shell=shell)
+                cmdout, cmderr = subprocess.PIPE, subprocess.PIPE
             else:
-                rc = subprocess.check_call(args, shell=shell)
-        except OSError as u_ose:
-            logger.critical('Could not call %s', args)
+                cmdout, cmderr = None, None
+            p = subprocess.Popen(args, stdout=cmdout, stderr=cmderr, shell=shell)
+            p.wait()
+        except ValueError as perr:
+            logger.critical('Weird arguments to Popen ( %s, stdout=%s, stderr=%s, shell=%s )' %args, cmdout, cmderr, shell)
+            logger.critical('System returns %s', str(perr))
             return False
-        except subprocess.CalledProcessError as cpe:
-            if cpe.returncode in ok:
-                if output:
-                    rc = cpe.output
-            else:
-                if output:
-                    print cpe.output
-                raise RuntimeError, "System %s spawned %s got %s" % (self, cpe.cmd, cpe.returncode)
-        if output:
-            rc = rc.rstrip("\n")
+        except OSError as perr:
+            logger.critical('Could not call %s', args)
+            logger.critical('System returns %s', str(perr))
+            return False
+        except Exception as perr:
+            logger.critical('System returns %s', str(perr))
+            raise RuntimeError, "System %s spawned %s got [%s]" % (self, args, perr.returncode)
         else:
-            rc = not bool(rc)
+            if p.returncode in ok:
+                if output:
+                    rc = [ x.rstrip("\n") for x in p.stdout ]
+                    p.stdout.close()
+                else:
+                    rc = not bool(p.returncode)
+            else:
+                logger.warning('Bad return code [%d] for %s', p.returncode, args)
+                if output:
+                    for xerr in p.stderr:
+                        sys.stderr.write(xerr)
+                return False
+        finally:
+            if output and p:
+                p.stdout.close()
+                p.stderr.close()
+
         return rc
 
 
@@ -383,10 +399,12 @@ class OSExtended(System):
         cmd.extend([opt for opt in args if opt.startswith('-')])
         cmdlen = len(cmd)
         cmdargs = False
-        for pname in [x for x in args if not x.startswith('-')]:
+        globtries = [x for x in args if not x.startswith('-')]
+        for pname in globtries:
             cmdargs = True
             cmd.extend(self.glob(pname))
         if cmdargs and len(cmd) == cmdlen:
+            logger.warning('Could not find any matching pattern %s', globtries)
             return False
         else:
             return self.spawn(cmd, ok)

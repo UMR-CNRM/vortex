@@ -56,13 +56,24 @@ def expand(desc):
             break
         for i, d in enumerate(ld):
             for k, v in d.iteritems():
-                if type(v) == list or type(v) == tuple or type(v) == set:
-                    logger.info(' > List %s', v)
+                print "DEBUG", k, v
+                if isinstance(v, list) or isinstance(v, tuple) or isinstance(v, set):
+                    logger.info(' > List expansion %s', v)
                     ld[i:i+1] = [ inplace(d, k, x) for x in v ]
                     todo = True
                     break
-                if type(v) == str and re.search(',', v):
-                    logger.info(' > Coma string %s', v)       
+                if isinstance(v, str) and re.match('range\(\d+(,\d+)?(,\d+)?\)$', v, re.IGNORECASE):
+                    logger.info(' > Range expansion %s', v)
+                    lv = [ int(x) for x in re.split('[\(\),]+', v) if re.match('\d+$', x) ]
+                    print "COOL", lv
+                    if len(lv) < 2:
+                        lv.append(lv[0])
+                    lv[1] += 1
+                    ld[i:i+1] = [ inplace(d, k, x) for x in range(*lv) ]
+                    todo = True
+                    break
+                if isinstance(v, str) and re.search(',', v):
+                    logger.info(' > Coma separated string %s', v)
                     ld[i:i+1] = [ inplace(d, k, x) for x in v.split(',') ]
                     todo = True
                     break

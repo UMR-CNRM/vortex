@@ -8,136 +8,72 @@ from unittest import TestCase, main
 
 class utdate(TestCase):
 
-    def test__init__(self):
+    def test_basicdate(self):
         vdate = date.Date("20110726121314")
-        self.assertEquals(vdate.get_date(), "20110726121314")
+        self.assertEquals(vdate.compact(), "20110726121314")
         dt = datetime(2011, 7, 26, 12, 13, 14)
         vdate = date.Date(dt)
-        self.assertEquals(vdate.get_date(), "20110726121314")
+        self.assertEquals(vdate.compact(), "20110726121314")
         vdate = date.Date(2011, 7, 26)
-        self.assertEquals(vdate.get_date(), "20110726000000")
+        self.assertEquals(vdate.compact(), "20110726000000")
         vdate = date.Date(2011, 7, 26, 12)
-        self.assertEquals(vdate.get_date(), "20110726120000")
+        self.assertEquals(vdate.compact(), "20110726120000")
         vdate = date.Date(2011, 7, 26, 12, 13)
-        self.assertEquals(vdate.get_date(), "20110726121300")
+        self.assertEquals(vdate.compact(), "20110726121300")
         vdate = date.Date(2011, 7, 26, 12, 13, 14)
-        self.assertEquals(vdate.get_date(), "20110726121314")
-        print "test __init__ Ok"
+        self.assertEquals(vdate.compact(), "20110726121314")
+        vdate = date.Date("2011-0726121314")
+        self.assertEquals(vdate.compact(), "20110726121314")
+        vdate = date.Date("2011-07-26T121314Z")
+        self.assertEquals(vdate.compact(), "20110726121314")
 
-    def test_get_nbdays_month(self):
+    def test_basicperiod(self):
+        p = date.Period('PT12S')
+        self.assertEquals(str(p), '0:00:12')
+        self.assertEquals(p.iso8601(), 'PT12S')
+        self.assertEquals(p.days, 0)
+        self.assertEquals(p.seconds, 12)
+        p = date.Period('-P1DT12S')
+        self.assertEquals(str(p), '-2 days, 23:59:48')
+        self.assertEquals(p.iso8601(), '-P1DT12S')
+        self.assertEquals(p.days, -2)
+        self.assertEquals(p.seconds, 86388)
+
+    def test_dateperiod(self):
+        d = date.Date('2013-04-11T10:57Z')
+        self.assertEquals(repr(d), 'Date(2013, 4, 11, 10, 57)')
+        d = date.Date('2013-04-11T10:57Z/PT4M')
+        self.assertEquals(d.compact(), '20130411110100')
+        d = date.Date('2013-04-11T10:57Z/-P1DT2H58M')
+        self.assertEquals(d.compact(), '20130410075900')
+
+    def test_monthrange(self):
         vdate = date.Date("20110726121314")
-        self.assertEquals(vdate.get_nbdays_month(), 31)
-        print "test get_nbdays_month Ok"
+        self.assertEquals(vdate.monthrange(), 31)
 
-    def test_get_julian_day(self):
+    def test_julian(self):
         vdate = date.Date("20110726121314")
-        self.assertEquals(vdate.get_julian_day(), '207')
-        print "test get_julian_day Ok"
-
-    def test_fmt_date(self):
-        vdate = date.Date("20110726121314")
-        td = timedelta(days=1)
-        vd2 = vdate + td
-
-    def test_get_fmt_date(self):
-        vdate = date.Date("20110726121314")
-        args = [
-            "yyyy",
-            "yyyymm",
-            "yyyymmdd",
-            "yyyymmddhh",
-            "yyyymmddhhmn",
-            "yyyymmddhhmnss",
-            "mn"
-        ]
-        res = [
-            "2011",
-            "201107",
-            "20110726",
-            "2011072612",
-            "201107261213",
-            "20110726121314",
-            "13"
-        ]
-        for i, fmt in enumerate(args):
-            self.assertEquals(vdate.get_fmt_date(fmt), res[i])
-        print "test get_fmt_date Ok"
-
-    def test_get_mn_from_date(self):
-        vdate = date.Date("20110726121314")
-        self.assertEquals(vdate.get_mn_from_date(), '13')
-        print "test get_mn_from_date Ok"
-
-    def test_add_delta(self):
-        args = [
-            ("P1M", "yyyy"),
-            ("P1M", "yyyymm"),
-            ("P1M", "yyyymmdd"),
-            ("P1M", "yyyymmddhh"),
-            ("P1D", "yyyymmdd"),
-            ("P365D", "yyyymmdd"),
-            ("P3650D", "yyyymmdd")
-        ]
-        res = [
-            '2011',
-            '201108',
-            '20110826',
-            '2011082612',
-            '20110727',
-            '20120725',
-            '20210723'
-        ]
-        vdate = date.Date("20110726121314")
-        for i, delta in enumerate(args):
-            self.assertEquals(vdate.add_delta(*delta), res[i])
-        print "test add_delta Ok"
-
-    def test_sub_delta(self):
-        args = [
-            ("M1M", "yyyy"),
-            ("M1M", "yyyymm"),
-            ("M1M", "yyyymmdd"),
-            ("M1M", "yyyymmddhh"),
-            ("M13H", "yyyymmddhhmnss")
-        ]
-        res = [
-            '2011',
-            '201106',
-            '20110626',
-            '2011062612',
-            '20110725231314',
-        ]
-        vdate = date.Date("20110726121314")
-        for i, delta in enumerate(args):
-            self.assertEquals(vdate.sub_delta(*delta), res[i])
-        print "test sub_delta Ok"
-
-    def test_diff_dates(self):
-        vdate = date.Date("20110831")
-        self.assertEquals(vdate.diff_dates("20110601"), '2184h00mn')
-        print "test diff_dates Ok"
+        self.assertEquals(vdate.julian, '207')
 
     def test_add(self):
         vdate = date.Date("20110831")
         td = timedelta(days=1)
         vd2 = vdate + td
         self.assertTrue(isinstance(vd2, date.Date))
-        self.assertEquals(vd2.get_date(), "20110901000000")
-        vd2 = vdate + "P1D"
+        self.assertEquals(vd2.compact(), "20110901000000")
+        vd2 = vdate + date.Period("P1D")
         self.assertTrue(isinstance(vd2, date.Date))
-        self.assertEquals(vd2.get_date(), "20110901000000")
-        print "test __add__ Ok"
+        self.assertEquals(vd2.compact(), "20110901000000")
 
     def test_sub(self):
         vdate = date.Date("20110831")
         td = timedelta(days=1)
         vd2 = vdate - td
         self.assertTrue(isinstance(vd2, date.Date))
-        self.assertEquals(vd2.get_date(), "20110830000000")
-        vd2 = vdate + "M1D"
+        self.assertEquals(vd2.compact(), "20110830000000")
+        vd2 = vdate + date.Period("-P1D")
         self.assertTrue(isinstance(vd2, date.Date))
-        self.assertEquals(vd2.get_date(), "20110830000000")
-        print "test __add__ Ok"
+        self.assertEquals(vd2.compact(), "20110830000000")
 
     def test_replace(self):
         args = [
@@ -147,15 +83,14 @@ class utdate(TestCase):
             { 'year': 2015, 'second': 01 }
         ]
         res = [
-            date.Date("20111231").get_date(),
-            date.Date("201108310021").get_date(),
-            date.Date("20110831000059").get_date(),
-            date.Date("20150831000001").get_date()
+            date.Date("20111231").compact(),
+            date.Date("201108310021").compact(),
+            date.Date("20110831000059").compact(),
+            date.Date("20150831000001").compact()
         ]
         vdate = date.Date("20110831")
         for ind, value in enumerate(args):
-            self.assertEquals(vdate.replace(**value).get_date(), res[ind])
-        print "test replace Ok"
+            self.assertEquals(vdate.replace(**value).compact(), res[ind])
 
     def test_to_cnesjulian(self):
         test_dates = (
@@ -168,7 +103,6 @@ class utdate(TestCase):
         )
         for d, j in test_dates:
             self.assertEquals(date.Date(d).to_cnesjulian(), j)  
-        print "test to_cnesjulian Ok"
 
     def test_from_cnesjulian(self):
         test_dates = (
@@ -181,128 +115,95 @@ class utdate(TestCase):
         )
         do = date.Date('19000101')
         for j, d in test_dates:
-            self.assertEquals(do.from_cnesjulian(j), d)
-        print "test from_cnesjulian Ok"
+            self.assertEquals(do.from_cnesjulian(j).compact(), d)
 
 
-class utstrdate(TestCase):
+class utspecial(TestCase):
 
-    def test_get_tuple_ym_other(self):
-        svdate = date.StrDate("20110726121314")
-        self.assertEquals(svdate._get_tuple_ym_other("20110726121314"),
-                            ('2011', '07', '26121314'))
-        print "test _get_tuple_ym_other ok"
-
-    def test_verify_date(self):
-        svdate = date.StrDate("20110726121314")
+    def test_isleap(self):
         args = [
-            ('2011', '02', '31'),
-            ('2011', '04', '31'),
-            ('2011', '04', '31121506')
-        ]
-        res = [
-            ('2011', '02', '28'),
-            ('2011', '04', '30'),
-            ('2011', '04', '30121506')
-        ]
-        for i, val in enumerate(args):
-            self.assertEquals(svdate._verify_date(val), res[i])
-        print "test _verify_date ok"
-
-    def test__init__(self):
-        svdate = date.StrDate("20110726121314")
-        self.assertEquals(svdate._vxdate, "20110726121314")
-        svdate = date.StrDate("20110231121314")
-        self.assertEquals(svdate._vxdate, "20110228121314")
-        print "test __init__ Ok"
-
-    def test_date_type_1(self):
-        svdate = date.StrDate("20110726")
-        self.assertEquals(svdate._date_type_1([ 0, 4, 6, 8 ]), 
-                                        ('2011', '07', '26', '0', '0', '0'))
-        print "test _date_type_1 ok"
-
-    def test_date_type_2(self):
-        svdate = date.StrDate("2011072612")
-        self.assertEquals(svdate._date_type_2([ 0, 4, 6, 8, 10 ]), 
-                                        ('2011', '07', '26', '12', '0', '0'))
-        print "test _date_type_2 ok"
-
-    def test_date_type_3(self):
-        svdate = date.StrDate("201107261213")
-        self.assertEquals(svdate._date_type_3([ 0, 4, 6, 8, 10, 12 ]), 
-                                        ('2011', '07', '26', '12', '13', '0'))
-        print "test _date_type_3 ok"
-
-    def test_date_type_4(self):
-        svdate = date.StrDate("20110726121314")
-        self.assertEquals(svdate._date_type_4([ 0, 4, 6, 8, 10, 12, 14 ]),
-                                        ('2011', '07', '26', '12', '13', '14'))
-        svdate = date.StrDate("20110726")
-        self.assertEquals(svdate._date_type_4([ 0, 4, 6, 8, 10, 12, 14 ]),
-                                        ('2011', '07', '26', '', '', ''))
-        print "test _date_type_4 ok"
-
-    def test_gen_date_str(self):
-        args = [
-            "20110726",
-            "2011072613",
-            "201107261301",
-            "20110726130159"
-        ]
-        res = [
-            ('2011', '07', '26', '0', '0', '0'),
-            ('2011', '07', '26', '13', '0', '0'),
-            ('2011', '07', '26', '13', '01', '0'),
-            ('2011', '07', '26', '13', '01', '59')
-        ]
-        for i, val in enumerate(args):
-            svdate = date.StrDate(val)
-            self.assertEquals(svdate.gen_date_str(), res[i])
-        print "test _gen_date_str ok"
-
-    def test_bissextile(self):
-        args = [
-            '16000228',
             '20001211',
-            '19000701000001'
+            '19000701000001',
             '19920523090805'
         ]
         res = [
-            True,
             True,
             False,
             True]
 
         for i, val in enumerate(args):
-            svdate = date.StrDate(val)
-            self.assertEquals(svdate.leap_year(), res[i])
-        print "test _bissextile ok"
+            svdate = date.Date(val)
+            self.assertEquals(svdate.isleap(), res[i])
 
-    def test_gen_date_fmt(self):
-        args = [
-            ("20110726", 'yyyy'),
-            ("20110726", 'yyyymm'),
-            ("20110726", 'yyyymmdd'),
-            ("2011072613", 'yyyymmddhh'),
-            ("201107261213", 'mn'),
-            ("20110726", 'mn')
-        ]
-        res = [
-            '2011',
-            '201107',
-            '20110726',
-            '2011072613',
-            '13',
-            '0'
-        ]
-        for i, val in enumerate(args):
-            svdate = date.StrDate(val[0])
-            self.assertEquals(svdate._gen_date_fmt(val[1]), res[i])
-        print "test _bissextile ok"
+    def test_datesynop(self):
+        d = date.synop(base=date.Date('2013-04-11T19:48Z'))
+        self.assertEquals(d.iso8601(), '2013-04-11T18:00:00Z')
+        d = date.synop(base=date.Date('2013-04-11T11:48Z'))
+        self.assertEquals(d.iso8601(), '2013-04-11T06:00:00Z')
 
+    def test_dateround(self):
+        basedate = date.Date('2013-04-11T11:48Z')
+        d = date.lastround(3, base=basedate)
+        self.assertEquals(d.iso8601(), '2013-04-11T09:00:00Z')
+        d = date.lastround(12, base=basedate)
+        self.assertEquals(d.iso8601(), '2013-04-11T00:00:00Z')
+        d = date.lastround(1, base=basedate, delta=-3540)
+        self.assertEquals(d.iso8601(), '2013-04-11T10:00:00Z')
+        d = date.lastround(12, base=basedate, delta='-PT15H')
+        self.assertEquals(d.iso8601(), '2013-04-10T12:00:00Z')
+
+class utjeffrey(TestCase):
+
+        def test_addPeriods(self):
+            """ add two time periods together """
+            obj1 = date.Period('PT1S')
+            obj2 = date.Period('PT10S')
+            result = obj1 + obj2
+            self.assertEqual(str(result), '0:00:11')
+            self.assertEqual(result.iso8601(), 'PT11S')
+
+        def test_subPeriods(self):
+            """ subtract one time period from another """
+            obj1 = date.Period('PT1S')
+            obj2 = date.Period('PT10S')
+            result = obj2 - obj1
+            self.assertEqual(result.iso8601(), 'PT9S')
+
+        def test_mulPeriod(self):
+            """ multiply a time period by an int """
+            obj = date.Period('PT10S')
+            factor = 3
+            result = obj * factor
+            self.assertEqual(result.iso8601(), 'PT30S')
+
+        def test_subDates(self):
+            """ subtract two dates to get a time period """
+            obj1 = date.Date('2011-07-03T12:20:00Z')
+            obj2 = date.Date('2011-07-03T12:20:59Z')
+            expect = date.Period('-PT59S')
+            result = obj1 - obj2
+            self.assertEqual(result.iso8601(), expect.iso8601())
+            self.assertEqual(result, expect)
+
+        def test_addDateTime(self):
+            """ add a period of time to a date to get a new date """
+            obj1 = date.Date('2011-07-03T12:20:00Z')
+            obj2 = date.Period('PT1H')
+            expect = date.Date('2011-07-03T13:20:00Z')
+            result = obj1 + obj2
+            self.assertEqual(result, expect)
+
+        def test_subDateTime(self):
+            """ subtract a period of time from a date to get a new date """
+            obj1 = date.Date('2011-07-03T12:20:00Z')
+            obj2 = date.Period('PT1H')
+            expect = date.Date('2011-07-03T11:20:00Z')
+            result = obj1 - obj2
+            self.assertEqual(result, expect)
+
+            
 if __name__ == '__main__':
     main()
 
 def get_test_class():
-    return [ utdate ]
+    return [ utdate, utstrdate, utjeffrey ]
