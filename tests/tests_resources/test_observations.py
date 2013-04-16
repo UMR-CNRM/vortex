@@ -32,10 +32,9 @@ class UtObservations(TestCase):
             local='[nativefmt].[part]',
         )
         for rh in rl:
-            print ' > ', rh.location()
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/OPER/20120214H0600P/observation/obsoul.std.conv')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/OPER/20120214T0600P/observation/obsoul.std.conv')
 
 
     def test_v3(self):
@@ -53,8 +52,7 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/ecma.screen.full.tar')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0600P/observation/ecma.screen.full.tar')
 
 
     def test_o1(self):
@@ -71,7 +69,6 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/obsoul.conv')
 
     def test_o2(self):
@@ -88,7 +85,6 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/bufr.iasi')
 
     def test_o3(self):
@@ -105,7 +101,6 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/odb_screen.tar?extract=all')
 
     def test_o4(self):
@@ -122,7 +117,6 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/odb_cpl.tar?extract=all')
 
 
@@ -141,7 +135,6 @@ class UtRefdata(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
 
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/refdata')
 
@@ -156,8 +149,7 @@ class UtRefdata(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/refdata.all')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0600P/observation/refdata.all')
 
 
 class UtVarbc(TestCase):
@@ -176,7 +168,6 @@ class UtVarbc(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle')
 
 
@@ -191,7 +182,6 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle_alad')
 
     def test_v3(self):
@@ -205,7 +195,6 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle_arp')
 
     def test_v4(self):
@@ -219,7 +208,6 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arome/oper/production/2012/02/14/r0/VARBC.merge')
 
     def test_v5(self):
@@ -233,7 +221,6 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/france/oper/production/2012/02/14/r0/VARBC.merge')
 
     def test_v6(self):
@@ -249,7 +236,6 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A2/20110922H00P/observations/varbc')
 
     def test_v7(self):
@@ -264,7 +250,6 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A2/20110922H00P/minim/varbc')
 
     def test_v8(self):
@@ -280,9 +265,8 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20110922H0000P/minim/varbc.aladin')
-        self.assertEqual(rl[1].location(), 'vortex://open.cache.fr/play/sandbox/oper/20110922H0000P/minim/varbc.aladin.merge')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20110922T0000P/minim/varbc.aladin')
+        self.assertEqual(rl[1].location(), 'vortex://open.cache.fr/play/sandbox/oper/20110922T0000P/minim/varbc.aladin.merge')
 
 
 class UtBlackListDiap(TestCase):
@@ -302,9 +286,8 @@ class UtBlackListDiap(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
 
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/OPER/20120214H0600P/observation/blacklist.site.txt')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/OPER/20120214T0600P/observation/blacklist.site.txt')
 
     def test_o1(self):
         rl = toolbox.rload(
@@ -317,7 +300,6 @@ class UtBlackListDiap(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/LISTE_NOIRE_DIAP')
 
 
@@ -337,7 +319,6 @@ class UtBlackListLoc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/LISTE_LOC')
 
 class UtObsmap(TestCase):
@@ -357,9 +338,8 @@ class UtObsmap(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
 
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0600P/observation/obsmap.std')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0600P/observation/obsmap.std')
 
     def test_o1(self):
         rl = toolbox.rload(
@@ -371,7 +351,6 @@ class UtObsmap(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/BATOR_MAP')
 
     def test_o2(self):
@@ -387,7 +366,6 @@ class UtObsmap(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A0/20110922H00P/observations/OBSMAP_split')
 
 

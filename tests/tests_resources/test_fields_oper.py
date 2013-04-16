@@ -97,7 +97,6 @@ class UtRawFields(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(), 
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/sst.nesdis.bdap'
@@ -118,7 +117,6 @@ class UtRawFields(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
 
         self.assertEqual(
             rl[0].location(), 
@@ -139,7 +137,6 @@ class UtRawFields(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
 
         self.assertEqual(
             rl[0].location(), 
@@ -162,7 +159,6 @@ class UtRawFields(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
 
         self.assertEqual(
             rl[0].location(),
@@ -238,7 +234,6 @@ class UtGeoFields(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
 
         self.assertEqual(
             rl[0].location(), 
@@ -259,7 +254,6 @@ class UtGeoFields(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
 
         self.assertEqual(
             rl[0].location(), 

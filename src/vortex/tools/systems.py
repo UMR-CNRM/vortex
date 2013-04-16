@@ -98,10 +98,16 @@ class System(BFootprint):
 
     def cd(self, pathtogo):
         """Change directory to ``pathtogo``."""
-        return self._os.chdir(pathtogo)
+        try:
+            self._os.chdir(pathtogo)
+            return True
+        except OSError:
+            return False
+        except:
+            raise
 
     def ffind(self, *args):
-        """Récursive file find. Arguments are starting paths."""
+        """Recursive file find. Arguments are starting paths."""
         if not args:
             args = ['*']
         files = []
@@ -111,7 +117,6 @@ class System(BFootprint):
             else:
                 for root, u_dirs, filenames in self._os.walk(pathtogo):
                     files.extend([ self.path.join(root, f) for f in filenames ])
-
         return sorted(files)
 
     @property
@@ -299,7 +304,7 @@ class OSExtended(System):
             try:
                 self.makedirs(normdir)
                 return True
-            except:
+            except OSError:
                 return False
         else:
             return True
@@ -358,9 +363,10 @@ class OSExtended(System):
 
     def rmall(self, *args):
         """Unlink the specified `args` objects."""
+        rc = True
         for pname in args:
             for filename in self.glob(pname):
-                self.remove(filename)
+                rc = self.remove(filename) and rc
 
     def safepath(self, thispath, safedirs):
         """
@@ -389,12 +395,12 @@ class OSExtended(System):
         for pname in pathlist:
             for entry in filter(lambda x: self.safepath(x, safedirs), self.glob(pname)):
                 if self.path.isdir(entry):
-                    ok = ok and self.rmtree(entry)
+                    ok = self.rmtree(entry) and ok
                 else:
-                    ok = ok and self.remove(entry)
+                    ok = self.remove(entry) and ok
         return ok
 
-    def _globcmd(self, cmd, args, ok=[0]):
+    def _globcmd(self, cmd, args, **kw):
         """Globbing files or directories as arguments before running ``cmd``."""
         cmd.extend([opt for opt in args if opt.startswith('-')])
         cmdlen = len(cmd)
@@ -407,35 +413,42 @@ class OSExtended(System):
             logger.warning('Could not find any matching pattern %s', globtries)
             return False
         else:
-            return self.spawn(cmd, ok)
+            kw.setdefault('ok', [0])
+            return self.spawn(cmd, **kw)
 
-    def wc(self, *args):
+    def wc(self, *args, **kw):
         """Word count on globbed files."""
-        return self._globcmd([ 'wc' ], args)
+        return self._globcmd([ 'wc' ], args, **kw)
 
-    def ls(self, *args):
+    def ls(self, *args, **kw):
         """Globbing and optional files or directories listing."""
-        return self._globcmd([ 'ls' ], args)
+        return self._globcmd([ 'ls' ], args, **kw)
 
-    def dir(self, *args):
+    def dir(self, *args, **kw):
         """Proxy to ``ls('-l')``."""
-        return self._globcmd([ 'ls', '-l' ], args)
+        return self._globcmd([ 'ls', '-l' ], args, **kw)
 
-    def cat(self, *args):
+    def cat(self, *args, **kw):
         """Globbing and optional files or directories listing."""
-        return self._globcmd([ 'cat' ], args)
+        return self._globcmd([ 'cat' ], args, **kw)
 
-    def diff(self, *args):
+    def diff(self, *args, **kw):
         """Globbing and optional files or directories listing."""
-        return self._globcmd([ 'diff' ], args, ok=[0, 1])
+        kw.setdefault('ok', [0, 1])
+        return self._globcmd([ 'diff' ], args, **kw)
 
-    def rmglob(self, *args):
+    def rmglob(self, *args, **kw):
         """Wrapper of the ``rm`` command through the globcmd."""
-        return self._globcmd([ 'rm' ], args)
+        return self._globcmd([ 'rm' ], args, **kw)
 
     def mv(self, source, destination):
         """Move the ``source`` file or directory."""
-        return self.move(source, destination)
+        try:
+            self.move(source, destination)
+        except:
+            raise
+        else:
+            return True
 
     def mvglob(self, *args):
         """Wrapper of the ``mv`` command through the globcmd."""
@@ -450,12 +463,12 @@ class OSExtended(System):
         if not rl: rl.append('*')
         return self.glob(*rl)
 
-    def tar(self, *args):
+    def tar(self, *args, **kw):
         """Basic file archive command."""
         cmd = [ 'tar', args[0] ]
         cmd.extend(self.glob(args[1]))
         cmd.extend(args[2:])
-        return self.spawn(cmd)
+        return self.spawn(cmd, **kw)
 
 
 class Linux(OSExtended):

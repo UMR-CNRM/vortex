@@ -9,7 +9,7 @@ except ImportError, e:
 
 cr = vortex.data.resources.catalog()
 cr.track = True
-t.debug()
+t.warning()
 
 class UtBackgroundErrStd(TestCase):
     
@@ -34,8 +34,7 @@ class UtBackgroundErrStd(TestCase):
             term = 9,
             native_fmt = 'grib',
             geometry = self.std,
-            date = Date(today().get_fmt_date("yyyymmdd")).sub_delta("M12H",
-                                                                    "yyyymmddhh")
+            date = today() - Period('PT12H')
         )
 
         self.fp_bckgerr2 = dict(
@@ -45,8 +44,7 @@ class UtBackgroundErrStd(TestCase):
             term = 3,
             native_fmt = 'grib',
             geometry = self.std,
-            date = Date(today().get_fmt_date("yyyymmdd")).sub_delta("M6H",
-                                                                    "yyyymmddhh")
+            date = today() - Period('PT6H')
         )
 
         self.fp_bckgerr3 = dict(
@@ -56,8 +54,7 @@ class UtBackgroundErrStd(TestCase):
             term = 12,
             native_fmt = 'grib',
             geometry = self.std,
-            date = Date(today().get_fmt_date("yyyymmdd")).sub_delta("M12H",
-                                                                    "yyyymmddhh")
+            date = today() - Period('PT12H')
         )
 
         self.fp_bckgerr4 = dict(
@@ -67,8 +64,7 @@ class UtBackgroundErrStd(TestCase):
             term = 6,
             native_fmt = 'grib',
             geometry = self.std,
-            date = Date(today().get_fmt_date("yyyymmdd")).sub_delta("M6H",
-                                                                    "yyyymmddhh")
+            date = today() - Period('PT6H')
         )
 
         self.fp_cont = dict(local='errgribvor')
@@ -99,8 +95,7 @@ class UtBackgroundErrStd(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         name_ref = 'file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgribvor_production.'
-        date_ref = Date(today().get_date(fmt = "yyyymmdd"))
-        suffix_ref = date_ref.get_date(fmt = "yyyymmddhhmnss")
+        suffix_ref = today().compact()
         self.assertEqual(
             rl[0].location(), 
             name_ref + suffix_ref
@@ -122,8 +117,7 @@ class UtBackgroundErrStd(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         name_ref = 'file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgribvor_assim.'
-        date_ref = Date(today().get_date(fmt = "yyyymmdd"))
-        suffix_ref = date_ref.get_date(fmt = "yyyymmddhhmnss")
+        suffix_ref = today().compact()
         self.assertEqual(
             rl[0].location(), 
             name_ref + suffix_ref
@@ -144,10 +138,8 @@ class UtBackgroundErrStd(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        name_ref =\
-'file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgribvor_production_dsbscr.'
-        date_ref = Date(today().get_date(fmt = "yyyymmdd"))
-        suffix_ref = date_ref.get_date(fmt = "yyyymmddhhmnss")
+        name_ref ='file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgribvor_production_dsbscr.'
+        suffix_ref = today().compact()
         self.assertEqual(
             rl[0].location(), 
             name_ref + suffix_ref

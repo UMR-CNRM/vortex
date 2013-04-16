@@ -9,7 +9,7 @@ class which follow the :class:`vortex.syntax.Footprint` syntax.
 
 import sys
 from vortex.syntax import Footprint
-from vortex.tools.date import Date
+from vortex.tools.date import Date, Month
 
 #: Export a set of attributes :data:`a_model`, :data:`a_date`, etc..
 __all__ = [ 'a_month', 'a_domain', 'a_truncation', 'a_model', 'a_date', 'a_cutoff', 'a_term', 'a_nativefmt', 'a_suite' ]
@@ -60,17 +60,13 @@ class Term(FmtInt):
         return FmtInt.__new__(cls, value, fmt)
 
 
-class Month(FmtInt):
-    """Formated value ``(%O2d)`` for attributes related to month numbers."""
-
-    def __new__(cls, value, fmt='02'):
-        return FmtInt.__new__(cls, value, fmt)
-
-
 #: Usual definition of the ``nativefmt`` attribute.
 a_nativefmt = dict(
     optional = True,
-    values = [ 'auto', 'autoconfig', 'fa', 'lfi', 'lfa', 'ascii', 'netcdf', 'grib' ],
+    values = [
+        'auto', 'autoconfig', 'fa', 'lfi', 'lfa', 'ascii',
+        'netcdf', 'grib', 'bufr', 'obsoul'
+    ],
     remap = dict(
         auto = 'autoconfig'
     ),
@@ -126,7 +122,7 @@ date = Footprint( info = 'Abstract date', attr = dict( date = a_date ) )
 a_month = dict(
     type = Month,
     optional = False,
-    values = range(1,13)
+    values = range(1, 13)
 )
 
 month = Footprint( info = 'Abstract month', attr = dict( month = a_month ) )

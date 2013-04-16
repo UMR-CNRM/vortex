@@ -88,7 +88,8 @@ class OpArchiveStore(Store):
         info = 'Archive access',
         attr = dict(
             scheme = dict(
-                values = [ 'ftp', 'ftserv' ],
+                values = [ 'ftop', 'ftp' ],
+                remap = dict( ftop = 'ftp' ),
             ),
             netloc = dict(
                 values = [ 'oper.archive.fr', 'dbl.archive.fr', 'archive.meteo.fr' ],

@@ -1,25 +1,29 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-from vortex import sessions, toolbox
+# Status : Looks OK (v0.6.21)
+
+import vortex
 import sandbox.data
 import olive.data
 
-t = sessions.ticket()
+t = vortex.ticket()
 t.warning()
 
 ra = dict( model='arpege', kind='analysis', date='2011112800', cutoff='long' )
 
 print t.line
 
-c = t.system()
+sh = t.system()
 
 thefile = 'titi'
-if c.path.exists(thefile):
+if sh.path.exists(thefile):
     print 'Remove', thefile
-    c.unlink(thefile)
+    sh.unlink(thefile)
 
-lh = toolbox.rload(ra, remote='/tmp/toto', file=thefile)
+rl = vortex.toolbox.rload
+    
+lh = rl(ra, remote='/tmp/toto', file=thefile)
 a = lh.pop()
 
 print a
@@ -32,7 +36,7 @@ print a.historic
 
 print t.line
 
-lh = toolbox.rload(ra, remote='/tmp/toto', file='tmp/' + thefile)
+lh = rl(ra, remote='/tmp/toto', file='tmp/' + thefile)
 a = lh.pop()
 
 print a
@@ -43,9 +47,9 @@ print a.historic
 
 print t.line
 
-c.ftp('cougar.meteo.fr', 'mrpm631').put(thefile, 'tmp/titi')
+sh.ftp('cougar.meteo.fr', 'mrpm631').put(thefile, 'tmp/titi')
 
-lh = toolbox.rload(ra, tube='ftp', hostname='cougar.meteo.fr', remote='tmp/titi', file='bidon/' + thefile)
+lh = rl(ra, tube='ftp', hostname='cougar.meteo.fr', remote='tmp/titi', file='bidon/' + thefile)
 a = lh.pop()
 
 print a
@@ -57,11 +61,11 @@ print a.historic
 print t.line
 
 thefile = 'signum'
-if c.path.exists(thefile):
+if sh.path.exists(thefile):
     print 'Remove', thefile
-    c.unlink(thefile)
+    sh.unlink(thefile)
 
-lh = toolbox.rload(ra, remote='tmp/signum', file=thefile, hostname='cougar.meteo.fr', tube='ftp')
+lh = rl(ra, remote='tmp/signum', file=thefile, hostname='cougar.meteo.fr', tube='ftp')
 a = lh.pop()
 
 print a
@@ -71,7 +75,7 @@ a.get()
 
 print t.line
 
-lh = toolbox.rload(ra, experiment='A001', block='canari', file='titi')
+lh = rl(ra, experiment='A001', block='canari', file='titi')
 a = lh.pop()
 
 print a
@@ -83,3 +87,4 @@ print t.line
 print t.prompt, 'Duration time =', t.duration()
 print t.line
 
+vortex.exit()

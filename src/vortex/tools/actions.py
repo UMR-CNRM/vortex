@@ -89,6 +89,14 @@ class SendMail(Action):
         super(SendMail, self).__init__(kind=kind, active=active, service=service)
 
 
+class Report(Action):
+    """
+    Class responsible for sending reports.
+    """
+    def __init__(self, kind='report', active=True, service='sendreport'):
+        super(SendReport, self).__init__(kind=kind, active=active, service=service)
+
+
 class Dispatcher(Catalog):
     """
     Central office for dispatching actions.
@@ -138,5 +146,5 @@ class Dispatcher(Catalog):
 
 #: Default action dispatcher... containing an anonymous SendMail action
 actiond = Dispatcher()
-actiond.add(SendMail())
+actiond.add(SendMail(), Report())
 

@@ -24,7 +24,7 @@ strongly advised.
 
 """
 
-__version__ = '0.6.20'
+__version__ = '0.6.21'
 
 __all__ = []
 
@@ -39,7 +39,7 @@ logging.basicConfig(
 logger = logging.getLogger('vortex')
 
 import loader
-import sessions, algo, data, tools
+import sessions, toolbox, algo, data, tools
 
 # Set a background environment and a root session
 

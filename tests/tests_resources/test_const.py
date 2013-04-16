@@ -22,7 +22,6 @@ class UtRtCoef(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' resource gvar > ', rh.resource.gvar
 
         self.assertEqual(rl[0].resource.gvar, 'RTCOEF_TGZ')
 
@@ -44,9 +43,8 @@ class UtBcor(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
 
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/OPER/20120214H0600P/observation/bcor.noaa.txt')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/OPER/20120214T0600P/observation/bcor.noaa.txt')
 
 
     def test_b1(self):
@@ -62,7 +60,6 @@ class UtBcor(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
 
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/bcor_noaa.dat')
         self.assertEqual(rl[1].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r6/bcor_ssmi.dat')

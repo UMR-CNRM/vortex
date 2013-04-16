@@ -1,32 +1,26 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-from vortex import sessions, toolbox
+# Status : OK (v0.6.21)
+
+import vortex
 import vortex.data
 import common.data
 import common.algo
 
-t = sessions.ticket()
+t = vortex.ticket()
 t.warning()
 
+sh = t.system()
 g = t.glove
 e = t.env
 
-cr = vortex.data.resources.catalog()
-cr.track = True
+sh.cd(e.home + '/tmp/bidon')
+print sh.pwd, 
 
 print t.line
 
-#rx = toolbox.rh(remote=e.home + '/tmp/test.sh', file='test.sh', rawopts='coucou', language=e.trueshell())
-rx = toolbox.rh(remote=e.home + '/tmp/test.sh', file='test.sh', model='arpege', kind='ifsmodel')
-
-print t.line
-
-print t.prompt, 'Resource tracker =', cr.track
-
-print t.line
-
-print cr.track.alldump()
+rx = vortex.toolbox.rh(remote=g.siteroot + '/examples/tmp/test.sh', file='test.sh', model='arpege', kind='ifsmodel')
 
 print t.line
 
@@ -34,13 +28,16 @@ print rx.idcard()
 
 print t.line
 
-x = toolbox.component(kind='forecast', timestep=900, engine='parallel')
+x = vortex.toolbox.component(kind='forecast', timestep=900, engine='parallel')
 print t.prompt, 'Engine is', x
 
 print t.line
 
+rx.get()
 x.run(rx, mpiopts=dict(n=2))
 
 print t.line
 print t.prompt, 'Duration time =', t.duration()
 print t.line
+
+vortex.exit()

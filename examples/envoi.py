@@ -1,12 +1,15 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+# Status : OK (v0.6.21)
+
 import os
 
 from vortex import sessions
 from vortex.tools import env
-from vortex.tools.actions_handling import ActionsLoader
-from iga.services import services
+from iga.tools import services
+from vortex.tools.actions import SendMail
+from vortex.tools.actions import actiond as ad
 
 PATH_DATA = 'data'
 FILE_TEST = 'services.txt'
@@ -14,6 +17,7 @@ DATA = os.path.join(PATH_DATA, FILE_TEST)
 
 t = sessions.ticket()
 t.info()
+
 operenv = env.Environment(active=True)
 operenv.setvar('DEFAULT_ACTIONS', 'iga.services.actions')
 
@@ -56,19 +60,31 @@ dico5 = {
 
 }
 
-al = ActionsLoader()
+dico6 = {
+    'receiver': "stephane.mejias@meteo.fr",
+    'sender': "stephane.mejias@meteo.fr",
+    'message': 'tout est ok',
+    'subject': 'test mail report vortex',
+}
 
-al.mail(**dico1)
-al.mail_status()
-print '_'*150
-al.mail_on()
-al.mail(**dico1)
-al.mail(**dico3)
-print '_'*150
-# TODO: prepare a test to alert the supervision
-al.alarm(**dico4)
-al.alarm_status()
-print '_'*150
-al.alarm_on()
-al.alarm(**dico4)
-print '_'*150
+ad.mail(**dico1)
+ad.mail_status()
+print '_'*80
+
+ad.mail_on()
+ad.mail(**dico1)
+ad.mail(**dico3)
+print '_'*80
+
+#TODO: prepare a test to alert the supervision
+ad.alarm(**dico4)
+ad.alarm_status()
+print '_'*80
+
+ad.alarm_on()
+ad.alarm(**dico4)
+print '_'*80
+
+ad.add(SendMail(kind='mailreport'))
+ad.mailreport(**dico6)
+print '_'*80

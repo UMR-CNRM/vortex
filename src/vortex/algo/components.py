@@ -4,13 +4,14 @@
 #: No automatic export
 __all__ = []
 
-import re, sys
+import re
+import sys
+import shlex
+
 from vortex.autolog import logdefault as logger
 from vortex import sessions
 from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
-
-from vortex.utilities.decorators import printargs
 
 import mpitools
 
@@ -55,7 +56,6 @@ class AlgoComponent(BFootprint):
         self.system.chmod(absx, 0755)
         return absx
 
-    @printargs
     def spawn(self, args):
         """
         Spawn in the current system the command as defined in raw ``args``.
@@ -69,15 +69,17 @@ class AlgoComponent(BFootprint):
         if e.true('vortex_debug_env'):
             self.system.subtitle('{0:s} : dump environment'.format(realkind))
             e.osdump()
-            self.system.subtitle()
+
         self.system.subtitle('{0:s} : directory listing (pre-execution)'.format(realkind))
-        self.system.dir()
-        self.system.spawn(args)
+        self.system.dir(output=False)
+        self.system.subtitle('{0:s} : start execution'.format(realkind))
+        self.system.spawn(args, output=False)
         self.system.subtitle('{0:s} : directory listing (post-execution)'.format(realkind))
-        self.system.dir()
+        self.system.dir(output=False)
 
     def spawn_command_line(self, rh, ctx):
-        return rh.resource.command_line().split()
+        """Split the shell command line of the resource to be run."""
+        return shlex.split(rh.resource.command_line())
 
     def execute(self, rh, ctx, opts):
         """Abstract method."""

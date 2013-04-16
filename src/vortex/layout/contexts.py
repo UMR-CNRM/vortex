@@ -30,6 +30,7 @@ class Context(object):
         self._task = None
         self._void = True
         self._fstore = dict()
+        self._stampradical = '.'.join(('.ctx', str(id(self))))
 
         tree = idtree(self.tagtree)
         csys = tree.root.system()
@@ -185,10 +186,10 @@ class Context(object):
     def hasfocus(self):
         """Return either the current context has the active focus in the tree it belongs."""
         return self.tree.token == self
-
+        
     def stamp(self, tag='default'):
         """Return a stamp name that could be used for any generic purpose."""
-        return '.'.join(('.ctx', str(id(self)), tag))
+        return self._stampradical + '.' + str(tag)
 
     def fstrack_stamp(self, tag='default'):
         """Set a stamp to track changes on the filesystem."""
@@ -224,10 +225,33 @@ class Context(object):
         self._void = self._record
 
     def exit(self):
+        actualsys = None
+        try:
+            actualsys = self.system
+        except TypeError:
+            pass
+        except:
+            raise
+        if not actualsys:
+            try:
+                from vortex import sessions
+                actualsys = sessions.system()
+            except:
+                logger.critical('Could not get a ticket session while exiting context %s', self.tag)
+                raise
+        if not actualsys:
+            return False
+        if self._fstore:
+            fstamps = self._fstore.keys()
+            actualsys.rmall(*fstamps)
+            logger.info('Removing context stamps %s', fstamps)
         if self._keeprd:
             logger.warning('Preserving context rundir %s', self._rundir)
             return True
         else:
-            logger.warning('Removing context rundir %s', self._rundir)
-            return self.system.rmsafe(self._rundir, self.tree.root.glove.safedirs())
+            logger.info('Removing context rundir %s', self._rundir)
+            return actualsys.rmsafe(self._rundir, self.tree.root.glove.safedirs())
 
+    def __del__(self):
+        if logger:
+            self.exit()

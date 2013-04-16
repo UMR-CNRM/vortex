@@ -1,6 +1,8 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+# Status : OK (v0.6.20)
+
 from vortex import sessions
 from vortex.tools.actions import actiond as ad
 from vortex.tools.actions import SendMail

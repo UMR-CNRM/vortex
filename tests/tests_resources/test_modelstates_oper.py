@@ -35,8 +35,7 @@ class UtGridpoint(TestCase):
             origin = 'historic',
             model = 'arpege',
             cutoff = 'production',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P6H",
-                                                                    "yyyymmddhh"),
+            date = today() + 'PT6H',
             term = 0
         )
         self.fp_gridpoint2 = dict(
@@ -46,8 +45,7 @@ class UtGridpoint(TestCase):
             origin = 'historic',
             model = 'arpege',
             cutoff = 'production',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P6H",
-                                                                    "yyyymmddhh"),
+            date = today() + 'PT6H',
             term = 3
         )
 
@@ -58,8 +56,7 @@ class UtGridpoint(TestCase):
             origin = 'historic',
             model = 'aladin',
             cutoff = 'production',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P6H",
-                                                                    "yyyymmddhh"),
+            date = today() + 'PT6H',
             term = 6
         )
 
@@ -70,8 +67,7 @@ class UtGridpoint(TestCase):
             origin = 'historic',
             model = 'arome',
             cutoff = 'production',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P6H",
-                                                                    "yyyymmddhh"),
+            date = today() + 'PT6H',
             term = 6
         )
         
@@ -82,8 +78,7 @@ class UtGridpoint(TestCase):
             origin = 'historic',
             model = 'arpege',
             cutoff = 'assim',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P6H",
-                                                                    "yyyymmddhh"),
+            date = today() + 'PT6H',
             term = 0
         )
 
@@ -95,8 +90,7 @@ class UtGridpoint(TestCase):
             model = 'arpege',
             igakey = 'pearp',
             cutoff = 'assim',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P6H",
-                                                                    "yyyymmddhh"),
+            date = today() + 'PT6H',
             term = 6,
             member = 4
         )
@@ -282,8 +276,7 @@ class UtHistoric(TestCase):
             origin = 'historic',
             model = 'arome',
             cutoff = 'production',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P18H",
-                                                                    "yyyymmddhh"),
+            date = today() + 'PT18H',
             term = 0
         )
 
@@ -293,8 +286,7 @@ class UtHistoric(TestCase):
             origin = 'historic',
             model = 'aladin',
             cutoff = 'production',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P12H",
-                                                                    "yyyymmddhh"),
+            date = today() + 'PT12H',
             term = 0
         )
         self.fp_historic3 = dict(
@@ -303,8 +295,7 @@ class UtHistoric(TestCase):
             origin = 'historic',
             model = 'arpege',
             cutoff = 'production',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P18H",
-                                                                    "yyyymmddhh"),
+            date = today() + 'PT18H',
             term = 0
         )
 
@@ -406,8 +397,7 @@ class UtAnalysis(TestCase):
             cutoff = 'production',
             model = 'arome',
             geometry = self.frangp,
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P12H",
-                                                                    "yyyymmddhh")
+            date = today() + 'PT12H',
         )
 
         self.fp_analys1_b = dict(
@@ -417,8 +407,7 @@ class UtAnalysis(TestCase):
             geometry = self.frangp,
             nativefmt = 'lfi',
             filling = 'surf',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P12H",
-                                                                    "yyyymmddhh")
+            date = today() + 'PT12H',
         )
 
         self.fp_analys2 = dict(
@@ -426,8 +415,7 @@ class UtAnalysis(TestCase):
             cutoff = 'assim',
             model = 'aladin',
             geometry = self.frangp,
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P18H",
-                                                                    "yyyymmddhh")
+            date = today() + 'PT18H',
         )
 
         self.fp_analys3 = dict(
@@ -436,8 +424,7 @@ class UtAnalysis(TestCase):
             model = 'arpege',
             geometry = self.std,
             filling = 'surf',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P6H",
-                                                                    "yyyymmddhh")
+            date = today() + 'PT6H',
         )
 
         self.fp_cont1 = dict(
@@ -497,11 +484,11 @@ class UtAnalysis(TestCase):
             print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(), 
-            'file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.rPM'
+            'file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.lfi.rPM'
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arome/france/oper/data/fic_day/INIT_SURF.rPM'
+            '/ch/mxpt/mxpt001/arome/france/oper/data/fic_day/INIT_SURF.lfi.rPM'
         )
         #uniquement sur Nec oper
         if t.env['HOSTNAME'] == 'kumo':
@@ -556,8 +543,7 @@ class UtHistsurf(TestCase):
         self.geom = SpectralGeometry(id='Current op', area='frangp', resolution='02km50')
         self.fp_histsurf = dict(
             kind = 'histsurf',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P15H",
-                                                                    "yyyymmddhh"),
+            date = today() + 'PT15H',
             cutoff = 'production',
             geometry = self.geom,
             nativefmt = 'lfi',

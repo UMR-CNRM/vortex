@@ -41,10 +41,10 @@ class Glove(BFootprint):
     def __init__(self, *args, **kw):
         logger.debug('Glove abstract %s init', self.__class__)
         super(Glove, self).__init__(*args, **kw)
-        self._system = None
         self._vapp = 'play'
         self._vconf = 'sandbox'
         self._rmdepthmin = 3
+        self._siteroot = None
         self._siteconf = None
 
     @classmethod
@@ -58,10 +58,17 @@ class Glove(BFootprint):
         return Environment(active=False).HOME + '/.vortexrc'
 
     @property
+    def siteroot(self):
+        """Returns the path of the vortex install directory."""
+        if not self._siteroot:
+            self._siteroot = '/'.join(__file__.split('/')[0:-3])
+        return self._siteroot
+
+    @property
     def siteconf(self):
         """Returns the path of the default directory where ``.ini`` files are stored."""
         if not self._siteconf:
-            self._siteconf = '/'.join(__file__.split('/')[0:-3] + [ 'conf' ])
+            self._siteconf = '/'.join((self.siteroot, 'conf'))
         return self._siteconf
 
     def setvapp(self, app=None):

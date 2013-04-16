@@ -32,7 +32,6 @@ class UtClimGlobal(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
             
         self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/clim/clim.arpege.tl798-c24.fa.m10')
 
@@ -48,7 +47,6 @@ class UtClimGlobal(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' resource gvar > ', rh.resource.gvar
             
         self.assertEqual(rl[0].resource.gvar, 'CLIM_ARPEGE_T798')
  
@@ -72,7 +70,6 @@ class UtClimLAM(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
             
         self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/clim/clim.aladin.caledonie-08km00.fa.m10')   
     
@@ -87,7 +84,6 @@ class UtClimLAM(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' resource gvar > ', rh.resource.gvar
             
         self.assertEqual(rl[0].resource.gvar, 'CLIM_NCAL_08KM00')
         
@@ -112,7 +108,6 @@ class UtClimBDAP(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
             
         self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/clim/clim.arpege.glob15.fa.m10')   
         
@@ -129,7 +124,6 @@ class UtClimBDAP(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
             
         self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/clim/clim.arome.frangp0025.fa.m10')   
     
@@ -145,7 +139,6 @@ class UtClimBDAP(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' resource gvar > ', rh.resource.gvar
             
         self.assertEqual(rl[0].resource.gvar, 'CLIM_DAP_GLOB15')
     
@@ -160,7 +153,6 @@ class UtClimBDAP(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' resource gvar > ', rh.resource.gvar
             
         self.assertEqual(rl[0].resource.gvar, 'CLIM_DAP_FRANGP0025')
 

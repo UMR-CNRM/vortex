@@ -283,7 +283,7 @@ class MultiStore(BFootprint):
         rc = True
         for sto in self.openedstores:
             logger.info('Multi put at %s', sto)
-            rc = rc & sto.put(local, remote)
+            rc = sto.put(local, remote) and rc
         return rc
 
 
@@ -296,6 +296,9 @@ class Finder(Store):
             scheme = dict(
                 values = [ 'file', 'ftp', 'rcp', 'scp' ],
             ),
+            netloc = dict(
+                outcast = [ 'oper.inline.fr' ],
+            )
         ),
         priority = dict(
             level = top.DEFAULT

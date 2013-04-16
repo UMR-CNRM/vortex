@@ -37,7 +37,8 @@ class AlmostDictContent(DataContent):
     """Implement some dictionary-like functions."""
 
     def __init__(self, **kw):
-        kw.setdefault('data', dict())
+        if 'data' not in kw or not kw['data']:
+            kw['data'] = dict()
         super(AlmostDictContent, self).__init__(**kw)
 
     def __getitem__(self, idx):

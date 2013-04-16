@@ -183,7 +183,7 @@ def analysis_bnames(resource):
         if resource.nativefmt != 'lfi':
             return 'ICMSH' + model_info + 'INIT_SURF.' + suffix
         else:
-            return 'INIT_SURF.' + suffix
+            return 'INIT_SURF.lfi.' + suffix
     else:
         return 'ICMSH' + model_info + 'INIT.' + suffix
 
@@ -266,28 +266,23 @@ def refdata_bnames(resource):
     return localname
 
 def bgerrstd_bnames(resource, ens=None):
-    cutoff, term, ens, date = resource.cutoff, resource.term, ens, resource.date
-    prefix = 'errgribvor'
     if ens == 'france':
         #errgrib_scr type
-        delta = "P" + str(term) + "H"
-        target_date = Date(date.add_delta(delta, fmt="yyyymmddhh"))
-        new_run = int(target_date.get_date(fmt="hh"))
-        stdname = "errgrib_scr.r"
-        suffix = str(new_run)
-        return stdname + suffix
-
+        delta = 'PT' + str(resource.term) + 'H'
+        target_date = resource.date + delta
+        return 'errgrib_scr.r' + str(target_date.hour)
     else:
         #I have to calculate a new date so as to get the correct run
-        if term in [3, 9]:
-            delta = "P" + str(term + 3) + "H"
-            suffix = resource.date.add_delta(delta, fmt = "yyyymmddhhmnss")
-            stdname = cutoff
-        elif term == 12:
-            delta = "P" + str(term) + "H"
-            suffix = resource.date.add_delta(delta, fmt = "yyyymmddhhmnss")
+        prefix = 'errgribvor'
+        if resource.term in [3, 9]:
+            delta = 'PT' + str(resource.term + 3) + 'H'
+            suffix = resource.date + delta
+            stdname = resource.cutoff
+        elif resource.term == 12:
+            delta = 'PT' + str(resource.term) + 'H'
+            suffix = resource.date + delta
             stdname = 'production_' + 'dsbscr'
-        return prefix + '_' + stdname + '.' + suffix
+        return prefix + '_' + stdname + '.' + suffix.compact()
 
 def observations_bnames(resource):
     """docstring for observations_bnames"""

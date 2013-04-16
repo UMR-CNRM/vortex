@@ -70,7 +70,7 @@ def mkisodate(datestr):
 def today():
     """Return current date, hours, minutes."""
     td = datetime.today()
-    return Date(datetime(td.year, td.month, td.day, td.hour, td.minute))
+    return Date(datetime(td.year, td.month, td.day, 0, 0))
 
 def now():
     """Return current date, hours, minutes and seconds."""
@@ -93,7 +93,7 @@ def guess(*args):
     for isoclass in (Date, Period):
         try:
             return isoclass(*args)
-        except ValueError:
+        except (ValueError, TypeError):
             continue
     else:
          raise ValueError, "Cannot guess what Period or Date could be %s" % str(args)
@@ -286,7 +286,7 @@ class Date(datetime):
             ld = [ top.year, top.month, top.day, top.hour, top.minute, top.second ]
         elif isinstance(top, str):
             (top, sep, delta) = top.partition('/')
-            ld = [ int(x) for x in re.split('[-:TZ]+', mkisodate(top)) if re.match('\d+$', x) ]
+            ld = [ int(x) for x in re.split('[-:HTZ]+', mkisodate(top)) if re.match('\d+$', x) ]
         else:
             ld = [ int(x) for x in args if type(x) in (int, float) or (isinstance(x, str) and re.match('\d+$', x)) ]
         if not ld:
@@ -349,6 +349,9 @@ class Date(datetime):
 
     def compact(self):
         return self.strftime('%Y%m%d%H%M%S')
+
+    def vortex(self, cutoff='P'):
+        return self.strftime('%Y%m%dT%H%M') + str(cutoff)[0].upper()
 
     def reallynice(self):
         return self.strftime("%A %d. %B %Y, at %H:%M:%S")
@@ -431,7 +434,97 @@ class Date(datetime):
             month = self.month
         return calendar.monthrange(year, month)[1]
 
-        
+
+class Month(object):
+
+    def __init__(self, *args, **kw):
+        if kw:
+            args = (datetime(**kw),)
+        if not args:
+            raise ValueError("No initial value provided for Month")
+        top = args[0]
+        self._month = None
+        self._year = today().year
+        if isinstance(top, datetime):
+            self._month, self._year = top.month, top.year
+        elif isinstance(top, int) and top > 0 and top < 13:
+            self._month = top
+        else:
+            try:
+                tmpdate = Date(*args)
+            except (ValueError, TypeError):
+                raise ValueError("Could not create a Month from values provided %s", str(args))
+            else:
+                self._month, self._year = tmpdate.month, tmpdate.year
+
+    @property
+    def year(self):
+        return self._year
+
+    @property
+    def month(self):
+        return self._month
+
+    def __str__(self):
+        """Return a two digit value of the current month int value."""
+        return '{0:02d}'.format(self._month)
+
+    def __repr__(self):
+        """Return a formated id of the current month."""
+        return '<{0:s} object = {1:02d} in year {2:d}>'.format(self.__class__.__name__, self._month, self._year)
+
+    def __add__(self, delta):
+        """
+        Add to a Date object the specified ``delta`` which could be either
+        a string or a :class:`datetime.timedelta` or an ISO 6801 Period.
+        """
+        if isinstance(delta, int):
+            if delta < 0:
+                incr = -1
+                delta = abs(delta)
+            else:
+                incr = 1
+            year, month = self._year, self._month
+            while delta:
+                month += incr
+                if month > 12:
+                    year += 1
+                    month = 1
+                if month < 1:
+                    year -= 1
+                    month = 12
+                delta -= 1
+            return Month(Date(year, month, 1))
+        elif not isinstance(delta, timedelta):
+            delta = Period(delta)
+        return Month(Date(self._year, self._month, 14) + delta)
+
+    def __sub__(self, delta):
+        """
+        Substract to a Date object the specified ``delta`` which could be either
+        a string or a :class:`datetime.timedelta` or an ISO 6801 Period.
+        """
+
+        if isinstance(delta, int):
+            return self.__add__(-1 * delta)
+        elif not isinstance(delta, timedelta):
+            delta = Period(delta)
+        return Month(Date(self._year, self._month, 1) - delta)
+
+    def __int__(self):
+        return self._month
+
+    def __cmp__(self, other):
+        """
+        Compare two month values.
+        """
+        try:
+            rc = cmp(self._month, int(other))
+        except:
+            rc = -1
+        finally:
+            return rc
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()

@@ -53,7 +53,7 @@ class Olive(Provider):
         rinfo = self.pathinfo(resource)
         rdate = rinfo.get('date', '')
         if rdate:
-            rdate = rdate.get_fmt_date('yyyymmddhh')
+            rdate = rdate.ymdh
             rdate = re.sub(r'(\d\d)$', r'H\1', rdate)
             rdate = rdate + rinfo.get('cutoff', 'n')[0].upper()
         return '/'.join((
@@ -70,8 +70,8 @@ class OpArchive(Provider):
         attr = dict(
             tube = dict(
                 optional = True,
-                values = [ 'ftp' ],
-                default = 'ftp'
+                values = [ 'ftp', 'ftop' ],
+                default = 'ftop'
             ),
             namespace = dict(
                 optional = True,
@@ -152,10 +152,10 @@ class OpArchive(Provider):
     def pathname(self, resource):
         rinfo = self.pathinfo(resource)
         rdate = rinfo.get('date','')
-        yyyy = rdate.get_fmt_date('yyyy')
-        mm = rdate.get_fmt_date('mm')
-        dd = rdate.get_fmt_date('dd')
-        rr = 'r' + "%d" % int(rdate.get_fmt_date('hh'))
+        yyyy = str(rdate.year)
+        mm = '{0:02d}'.format(rdate.month)
+        dd = '{0:02d}'.format(rdate.day)
+        rr = 'r{0:d}'.format(rdate.hour)
         
         if self.member != None :
             run =  'RUN' + "%d" % self.member

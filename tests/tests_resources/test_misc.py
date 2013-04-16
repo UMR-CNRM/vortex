@@ -28,9 +28,8 @@ class UtListing(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
             
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120420H0000P/forecast/listing.forecast.2012042000.production')      
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120420T0000P/forecast/listing.forecast.2012042000.production')
 
 
 class UtMatFilter(TestCase):
@@ -52,7 +51,6 @@ class UtMatFilter(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
             
         self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/forecast/matfil.arpege.tl798-c24-glob15-f106')      
 
@@ -67,7 +65,6 @@ class UtMatFilter(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' resource gvar > ', rh.resource.gvar
             
         self.assertEqual(rl[0].resource.gvar, 'MAT_FILTER_GLOB15')
 

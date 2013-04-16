@@ -1,6 +1,8 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+# Status : OK (v0.6.21)
+
 from vortex import sessions, toolbox
 import vortex.data
 import common.algo
@@ -10,10 +12,12 @@ t.warning()
 
 g = t.glove
 e = t.env
+sh = t.system()
+sh.cd(e.HOME + '/tmp/rundir')
 
 print t.line
 
-script = toolbox.rh(remote=e.home + '/tmp/test.sh', file='test.sh', rawopts='coucou', language=e.trueshell())
+script = toolbox.rh(remote=g.siteroot + '/examples/tmp/test.sh', file='test.sh', rawopts='coucou', language=e.trueshell())
 
 print script.idcard()
 
@@ -51,7 +55,7 @@ x = toolbox.component(engine='parallel')
 print t.prompt, x
 print t.prompt, x.puredict()
 
-e.vortex_debug_env=1
+e.vortex_debug_env = True
 
 print t.line
 

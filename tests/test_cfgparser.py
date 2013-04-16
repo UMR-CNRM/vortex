@@ -24,16 +24,13 @@ class UtGenericConfigParser(TestCase):
         gcp = GenericConfigParser()
         self.assertTrue(type(gcp) == GenericConfigParser)
         self.assertTrue(gcp.file == None)
-        print "test __init__ without argument Ok"
 
     def test_init_1(self):
         self.assertRaises(Exception, GenericConfigParser, 'absent.ini')
-        print "test __init__ with an absent file Ok"
 
     def test_init_2(self):
         false_ini = os.path.join(self.path, 'false.ini')
         self.assertRaises(Exception, GenericConfigParser, false_ini)
-        print "test __init__ with a bad formatted file Ok"
 
     def test_init_3(self):
         real_ini = os.path.join(self.path, 'iga-map-resources.ini')
@@ -49,7 +46,6 @@ class UtGenericConfigParser(TestCase):
             igacfgp.get,
             'analysis',  'resolvedpath'
         )
-        print "test __init__ with a real ini file Ok"
 
     def test_setall(self):
         real_ini = os.path.join(self.path, 'iga-map-resources.ini')
@@ -65,7 +61,6 @@ class UtGenericConfigParser(TestCase):
         self.assertTrue(
             igacfgp.get('analysis',  'resolvedpath') == resolvedpath
         )
-        print "test setall Ok"
 
 
 class UtIgaCfgParser(TestCase):
@@ -74,16 +69,13 @@ class UtIgaCfgParser(TestCase):
         icp = IgaCfgParser()
         self.assertTrue(type(icp) == IgaCfgParser)
         self.assertTrue(icp.file == None)
-        print "test __init__ without argument Ok"
 
     def test_init_1(self):
         self.assertRaises(Exception, IgaCfgParser, 'absent.ini')
-        print "test __init__ with an absent file Ok"
 
     def test_init_2(self):
         false_ini = 'false.ini'
         self.assertRaises(Exception, IgaCfgParser, false_ini)
-        print "test __init__ with a bad formatted file Ok"
 
     def test_init_3(self):
         real_ini = 'iga-map-resources.ini'
@@ -97,7 +89,6 @@ class UtIgaCfgParser(TestCase):
             igacfgp.get,
             'analysis',  'resolvedpath'
         )
-        print "test __init__ with a real ini file Ok"
 
     def test_setall(self):
         real_ini = 'iga-map-resources.ini'
@@ -111,7 +102,6 @@ class UtIgaCfgParser(TestCase):
         resolvedpath = 'arpege/france/oper/data/autres'
         igacfgp.setall(kwargs)
         self.assertTrue( igacfgp.get('analysis', 'resolvedpath') == resolvedpath )
-        print "test setall Ok"
 
     def test_resolvedpath(self):
         real_ini = 'iga-map-resources.ini'
@@ -125,14 +115,13 @@ class UtIgaCfgParser(TestCase):
         resolvedpath = 'arpege/france/oper/data/autres'
         igacfgp.setall(kwargs)
         self.assertTrue(igacfgp.resolvedpath('analysis'), resolvedpath)
-        print "test resolvedpath Ok"
 
 if __name__ == '__main__':
     action = TestLoader().loadTestsFromTestCase
     tests = [ UtGenericConfigParser, UtIgaCfgParser ]
     suites = [action(elmt) for elmt in tests]
     for suite in suites:
-        TextTestRunner(verbosity=2).run(suite)
+        TextTestRunner(verbosity=1).run(suite)
 
 def get_test_class():
     return [ UtGenericConfigParser, UtIgaCfgParser ]

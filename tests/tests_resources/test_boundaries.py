@@ -37,8 +37,7 @@ class UtElscf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0000P/coupling/cpl.arpege.frangp-02km50+0012.fa')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000P/coupling/cpl.arpege.frangp-02km50+0012.fa')
 
     def test_e1(self):
         rl = toolbox.rload(
@@ -53,7 +52,6 @@ class UtElscf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arome/oper/production/2012/02/14/r0/COUPL0012.rCM')
  
     def test_e2(self):
@@ -70,7 +68,6 @@ class UtElscf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/COUPL0006.r00') 
         self.assertEqual(rl[1].location(), 'ftp://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/COUPL0006.rAM') 
         
@@ -88,7 +85,6 @@ class UtElscf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/COUPLIFS0006.r00') 
         self.assertEqual(rl[1].location(), 'ftp://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/COUPLIFS0006.rAM') 
         
@@ -105,7 +101,6 @@ class UtElscf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/testmp1/14/r0/COUPL0006.rAM') 
  
     def test_e5(self):
@@ -121,14 +116,13 @@ class UtElscf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/testmp2/oper/production/2012/02/14/r0/COUPL0006.rAM') 
  
     def test_e6(self):
         rh = toolbox.rload(
             self.attrset,
             local='ELSCFOLIVE+[term]',
-            namespace='open.archive.fr',
+            namespace='olive.archive.fr',
             geometry=self.aladin,
             source='arpege',
             experiment = '99A2', 
@@ -138,14 +132,13 @@ class UtElscf(TestCase):
             term='06'
         ).pop()
         self.assertTrue(rh.complete)
-        print ' > ', rh.location()
         self.assertEqual(rh.location(), 'olive://open.archive.fr/99A2/20110922H00P/coupling/ELSCFALAD_france+0006')
    
     def test_e7(self):
         rh = toolbox.rload(
             self.attrset,
             local='ELSCFOLIVE2+[term]',
-            namespace='open.archive.fr',
+            namespace='olive.archive.fr',
             geometry=self.arome,
             source='arpege',
             experiment = '99Q7', 
@@ -155,14 +148,13 @@ class UtElscf(TestCase):
             term='06'
         ).pop()
         self.assertTrue(rh.complete)
-        print ' > ', rh.location()
         self.assertEqual(rh.location(), 'olive://open.archive.fr/99Q7/20120208H00P/coupling/ELSCFAROM_frangp+0006')
               
               
 
 if __name__ == '__main__':
     for test in [ UtElscf ]:
-        x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
+        x = TextTestRunner(verbosity=1).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
             break 

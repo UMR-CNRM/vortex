@@ -22,7 +22,7 @@ class GStore(Store):
     """
     
     _footprint = dict(
-        info = 'Olive archive access',
+        info = 'GCO Central Store',
         attr = dict(
             scheme = dict(
                 values = [ 'gget' ],
@@ -49,15 +49,15 @@ class GStore(Store):
         gname = l.pop()
         tampon = '/' + '/'.join(l)
         system.env.gget_tampon = tampon
-        rc = system.spawn(['gget', gname])
-        if not rc and system.path.exists(gname):
+        rc = system.spawn(['gget', gname], output=False)
+        if rc and system.path.exists(gname):
             extract = remote['query'].get('extract', None)
             if extract:
                 logger.info('GStore get %s', gname + '/' + extract[0])
                 rc = system.cp(gname + '/' + extract[0] , local)
             else:
                 logger.info( 'GStore get %s', gname )
-                rc = system.move(gname, local)
+                rc = system.mv(gname, local)
         else:
             logger.warning('GStore get %s was not successful (%s)', gname, rc)
         del system.env.gget_tampon

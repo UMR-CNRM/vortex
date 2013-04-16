@@ -162,6 +162,56 @@ class MailService(Service):
         return len(msgcorpus)
 
 
+class ReportService(Service):
+    """
+    Class responsible for handling report data.
+    This class should not be called directly.
+    """
+
+    _abstract = True
+    _footprint = dict(
+        info = 'Report services class',
+        attr = dict(
+            kind = dict(
+                values = [ 'sendreport' ]
+            ),
+            sender = dict(
+                optional = True,
+                default = '[glove::user]',
+            ),
+            subject = dict(
+                optional = True,
+                default = 'Test'
+            ),
+            level = dict(
+                optional = True,
+                default = 'info',
+                values = criticals,
+            )
+        )
+    )
+
+    def __call__(self):
+        """Main action: ..."""
+        pass
+
+
+class FileReportService(ReportService):
+    """docstring for FileReportService"""
+
+    _footprint = dict(
+        info = 'File Report services class',
+        attr = dict(
+            kind = dict(
+                values = [ 'sendfilereport' ]
+            ),
+            file = dict(
+                default = 'info'
+            )
+        )
+    )
+
+
 class ServicesCatalog(ClassesCollector):
     """Class in charge of collecting :class:`MpiTool` items."""
 

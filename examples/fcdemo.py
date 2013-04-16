@@ -1,7 +1,9 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-from vortex import sessions, toolbox
+# Status : In progress (v0.6.21)
+
+import vortex
 from vortex.tools import date
 from vortex.syntax import footprint
 
@@ -18,17 +20,18 @@ import gco.syntax
 from gco.tools import genv 
 
 
-t = sessions.ticket()
+t = vortex.ticket()
 g = t.glove
-rl = toolbox.rload
+e = t.env
+sh = t.system()
+
+tb = vortex.toolbox
+rl = vortex.toolbox.rload
 
 t.warning()
 
-mysys = g.system
-myenv = mysys.env
-
-mysys.cd(myenv.TMPDIR + '/rundir')
-print t.prompt, mysys.pwd
+sh.cd(e.TMPDIR + '/rundir')
+print t.prompt, sh.pwd
 
 arpege_cycle = 'cy36t1_op2.16'
 
@@ -37,8 +40,6 @@ domains = [ 'GLOB15' ]
 rundate = date.Date('2011092200')
 geo = SpectralGeometry(id='Current op', area='france', truncation=798)
 geoBDAP = GridGeometry(area='GLOB15',resolution='15')
-
-print t.line
 
 fpenv = footprint.envfp(
     geometry=geo,
@@ -56,8 +57,8 @@ if g.realkind() == 'opuser':
     prvcst = dict()
 else:
     prvin  = dict(experiment='99A0', block='canari')
-    prvout = toolbox.provider(experiment='A001', block='forecast')
-    prvcst = toolbox.provider(genv=arpege_cycle)
+    prvout = tb.provider(experiment='A001', block='forecast')
+    prvcst = tb.provider(genv=arpege_cycle)
 
 print t.prompt, fpenv()
 
@@ -148,7 +149,7 @@ arpege = rl(
     local = 'ARPEGE.EX',
 ).pop()
 
-output = (
+outputs = (
 
     rl(
         provider = prvout,
@@ -191,14 +192,17 @@ print arpege.idcard()
 
 print t.line
 
-x = toolbox.component(engine='parallel')
+x = tb.component(engine='parallel')
+
 print t.prompt, x.puredict()
 
 x.run(arpege, mpiopts = dict(nn=1, nnp=4))
 
-for rh in output:
+for rh in outputs:
     for r in rh :
         print t.line, r.idcard()
         r.put()
 
 print t.prompt, 'Duration time =', t.duration()
+
+vortex.exit()

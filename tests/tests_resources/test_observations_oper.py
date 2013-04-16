@@ -283,8 +283,7 @@ class UtRefData(TestCase):
         self.fp_rdconv = dict(
             kind='refdata',
             cutoff = 'production',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P6H",
-                                                                    "yyyymmddhh"),
+            date = today() + Period('PT6H'),
             model = 'arpege',
             part = 'conv',
             nativefmt = 'obsoul'
@@ -292,8 +291,7 @@ class UtRefData(TestCase):
         self.fp_rdprof = dict(
             kind='refdata',
             cutoff = 'production',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P6H",
-                                                                    "yyyymmddhh"),
+            date = today() + Period('PT6H'),
             model = 'arpege',
             part = 'prof',
             nativefmt = 'obsoul'
@@ -301,8 +299,7 @@ class UtRefData(TestCase):
         self.fp_rdsurf = dict(
             kind='refdata',
             cutoff = 'production',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P6H",
-                                                                    "yyyymmddhh"),
+            date = today() + Period('PT6H'),
             model = 'arpege',
             part = 'surf',
             nativefmt = 'obsoul'
@@ -311,15 +308,13 @@ class UtRefData(TestCase):
         for i in ('airs', 'tovssh', 'tovsb', 'ssmis', 'iasi', 'tovsa', 'sev',
                   'gps', 'scat', 'geow'):
             for ct in ('assimilation', 'production'):
-                for delta in ('P0H', 'P6H', 'P12H', 'P18H'):
+                for delta in ('PT0H', 'PT6H', 'PT12H', 'PT18H'):
                     logging.debug('delta %s', delta)
                     fp_obs = dict(
                         kind='refdata',
                         stage = 'void',
                         cutoff = ct,
-                        date = Date(
-                            today().get_fmt_date("yyyymmdd")).add_delta(delta,
-                                                              "yyyymmddhh"),
+                        date = today() + Period(delta),
                         model = 'arpege',
                         part = i,
                         nativefmt = 'bufr'
@@ -444,8 +439,7 @@ class UtObservations(TestCase):
             kind='observations',
             geometry = self.std,
             cutoff = 'production',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P6H",
-                                                                    "yyyymmddhh"),
+            date = today() + Period('PT6H'),
             model = 'arpege',
             part = 'conv',
             nativefmt = 'obsoul'
@@ -454,8 +448,7 @@ class UtObservations(TestCase):
             kind='observations',
             geometry = self.std,
             cutoff = 'production',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P6H",
-                                                                    "yyyymmddhh"),
+            date = today() + Period('PT6H'),
             model = 'arpege',
             part = 'prof',
             nativefmt = 'obsoul'
@@ -464,8 +457,7 @@ class UtObservations(TestCase):
             kind='observations',
             geometry = self.std,
             cutoff = 'production',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P6H",
-                                                                    "yyyymmddhh"),
+            date = today() + Period('PT6H'),
             model = 'arpege',
             part = 'surf',
             nativefmt = 'obsoul'
@@ -474,16 +466,14 @@ class UtObservations(TestCase):
         for i in ('airs', 'tovssh', 'tovsb', 'ssmis', 'iasi', 'tovsa', 'sev',
                   'gps', 'scat', 'geow'):
             for ct in ('assimilation', 'production'):
-                for delta in ('P0H', 'P6H', 'P12H', 'P18H'):
+                for delta in ('PT0H', 'PT6H', 'PT12H', 'PT18H'):
                     logging.debug('delta %s', delta)
                     fp_obs = dict(
                         kind='observations',
                         stage = 'void',
                         geometry = self.std,
                         cutoff = ct,
-                        date = Date(
-                            today().get_fmt_date("yyyymmdd")).add_delta(delta,
-                                                              "yyyymmddhh"),
+                        date = today() + Period(delta),
                         model = 'arpege',
                         part = i,
                         nativefmt = 'bufr'
@@ -631,8 +621,7 @@ class UtRefdata(TestCase):
             kind='refdata',
             geometry = self.std,
             cutoff = 'production',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P6H",
-                                                                    "yyyymmddhh"),
+            date = today() + Period('PT6H'),
             model = 'arpege'
         )
 
@@ -688,24 +677,21 @@ class UtVarbc(TestCase):
             kind = 'varbc',
             cutoff = 'production',
             model = 'aladin',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P12H",
-                                                                    "yyyymmddhh")
+            date = today() + Period('PT12H'),
         )
 
         self.fp_varbc2 = dict(
             kind = 'varbc',
             cutoff = 'production',
             model = 'arpege',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P12H",
-                                                                    "yyyymmddhh")
+            date = today() + Period('PT12H'),
         )
 
         self.fp_varbc3 = dict(
             kind = 'varbc',
             cutoff = 'production',
             model = 'arome',
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P12H",
-                                                                    "yyyymmddhh")
+            date = today() + Period('PT12H'),
         )
 
 

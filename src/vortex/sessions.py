@@ -49,9 +49,9 @@ def glove(**kw):
     """
     return Desk().getglove(**kw)
 
-def system():
+def system(**kw):
     """Returns the system associated to the current ticket."""
-    return ticket().system()
+    return ticket().system(**kw)
 
 def glovestags():
     """Ask the :class:`Desk` to return the list of opened gloves tags."""
@@ -82,7 +82,7 @@ def exit():
     tags.append(xtag)
     ok = True
     for s in [ thedesk.getticket(tag=x) for x in tags ]:
-        ok = ok and s.exit()
+        ok = s.exit() and ok
     return ok
 
 class Ticket(object):
@@ -202,11 +202,11 @@ class Ticket(object):
 
     def exit(self):
         """Exit from the current session."""
-        self.close()
         ok = True
         for kid in self.tree.kids(self):
             logger.warning('Exit from session %s kid %s', self, kid)
             ok = ok and kid.exit()
+        self.close()
         return ok
 
     def warning(self):

@@ -75,13 +75,13 @@ class Gridpoint(GeoFlowResource):
                 if self.origin == 'hst':
                     name = 'HM' + self.geometry.area + '+' + str(self.term)
                 elif self.origin == 'sumo':
-                    deltastr = "P" + str(self.term) + "H"
-                    valid = str(self.date.add_delta(deltastr,"yyyymmdd"))
-                    name = 'SM' + self.geometry.area + '_void' + '+' + valid
+                    deltastr = 'PT' + str(self.term) + 'H'
+                    deltadate = self.date + deltastr
+                    name = 'SM' + self.geometry.area + '_void' + '+' + deltadate.ymd
                 elif self.origin == 'interp':
-                    deltastr = "P" + str(self.term) + "H"
-                    valid = str(self.date.add_delta(deltastr,"yyyymmdd"))
-                    name = 'SM' + self.geometry.area + '_interp' + '+' + valid
+                    deltastr = 'PT' + str(self.term) + 'H'
+                    deltadate = self.date + deltastr
+                    name = 'SM' + self.geometry.area + '_interp' + '+' + deltadate.ymd
             else:
                 name = 'PFFPOS' + self.origin.upper() + self.geometry.area + '+' + self.term.nice(t)
         else:
@@ -94,8 +94,7 @@ class Gridpoint(GeoFlowResource):
 
         if self.nativefmt == 'grib':
             if re.match('aladin|arome', self.model):
-                rr = "%d" % int(self.date.get_fmt_date('hh'))
-                name = 'GRID' + self.geometry.area + 'r' + rr + '_' + str(self.term)
+                name = 'GRID' + self.geometry.area + 'r' + str(self.date.hour) + '_' + str(self.term)
 
             rr = archivesuffix(self.model, self.cutoff, self.date)
             if re.match('arp', self.model):
@@ -103,13 +102,12 @@ class Gridpoint(GeoFlowResource):
             return name
 
         if self.model == 'mocage' and self.nativefmt == 'fa':
-            deltastr = "P" + str(self.term) + "H"
+            deltastr = 'PT' + str(self.term) + 'H'
+            deltadate = self.date + deltastr
             if self.origin == 'hst':
-                valid = str(self.date.add_delta(deltastr,"yyyymmddhh"))
-                name = 'HM' + self.geometry.area + '+' + valid
+                name = 'HM' + self.geometry.area + '+' + deltadate.ymdh
             elif self.origin == 'interp':
-                valid = str(self.date.add_delta(deltastr,"yyyymmdd"))
-                name = 'SM' + self.geometry.area + '+' + valid
+                name = 'SM' + self.geometry.area + '+' + deltadate.ymd
             return name
 
     def basename_info(self):

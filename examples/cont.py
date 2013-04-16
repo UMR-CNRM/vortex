@@ -1,11 +1,13 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-from vortex import sessions
+# Status : OK (v0.6.21)
+
+import vortex
 from vortex.data import containers
 from vortex.data.containers import Virtual, File
 
-t = sessions.ticket()
+t = vortex.ticket()
 
 print t.prompt, 'Playing with containers'
 print t.prompt, 'This session', t, t.tag, t.started
@@ -44,3 +46,5 @@ print t.prompt, 'Container footprint', rc.footprint()
 print t.prompt, 'File container resolved ?', rc
 
 print t.prompt, 'Duration time =', t.duration()
+
+vortex.exit()

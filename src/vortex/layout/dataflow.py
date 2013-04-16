@@ -9,7 +9,8 @@ This modules defines the low level physical layout for data handling.
 __all__ = []
 
 from vortex.autolog import logdefault as logger
-from collections import namedtuple, _itemgetter
+
+from collections import namedtuple
 
 
 #: Definition of a named tuple INTENT
@@ -147,14 +148,14 @@ class Sequence(object):
         it operates as a filter on the inputs list. If both keys are available
         the ``role`` applies first, and then the ``kind`` in case of empty match.
         """
-        inset = filter(lambda x: x.stage == 'get', self.inputs())
+        inset = [ x for x in self.inputs() if x.stage == 'get' ]
         if not kw: return inset
         inrole = list()
         inkind = list()
         if 'role' in kw:
-            inrole = filter(lambda x: x.role == kw['role'] or x.alternate == kw['role'], inset)
+            inrole = [ x for x in inset if x.role == kw['role'] or x.alternate == kw['role'] ]
         if not inrole and 'kind' in kw:
-            inkind = filter(lambda x: x.rh.resource.realkind() == kw['kind'], inset)
+            inkind = [ x for x in inset if x.rh.resource.realkind() == kw['kind'] ]
         return inrole or inkind
 
     def outputs(self):
@@ -173,9 +174,9 @@ class Sequence(object):
         outrole = list()
         outkind = list()
         if 'role' in kw:
-            outrole = filter(lambda x: x.role == kw['role'], outset)
+            outrole = [ x for x in outset if x.role == kw['role'] ]
         if not outrole and 'kind' in kw:
-            outkind = filter(lambda x: x.rh.resource.realkind() == kw['kind'], outset)
+            outkind = [ x for x in outset if x.rh.resource.realkind() == kw['kind'] ]
         return outrole or outkind or outset
 
 

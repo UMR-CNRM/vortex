@@ -25,7 +25,6 @@ class UtFootprint(TestCase):
         for cle, value in ft1._fp.iteritems():
             if cle != 'priority':
                 self.assertEquals(value, self.res[cle])
-        print "Test __init__ vide Ok"
 
     def test_init_ftvide(self):
         ft1 = Footprint()
@@ -33,7 +32,6 @@ class UtFootprint(TestCase):
         for cle, value in ft2._fp.iteritems():
             if cle != 'priority':
                 self.assertEquals(value, self.res[cle])
-        print "Test __init__ ftvide Ok"
 
     def test_init_argsdict(self):
         args = (
@@ -437,7 +435,7 @@ if __name__ == '__main__':
     #tests = [UtBFootprint]
     suites = [action(elmt) for elmt in tests]
     for suite in suites:
-        TextTestRunner(verbosity=2).run(suite)
+        TextTestRunner(verbosity=1).run(suite)
 
 def get_test_class():
     """docstring for get_test_class"""

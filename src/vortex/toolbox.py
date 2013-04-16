@@ -16,7 +16,7 @@ from vortex.algo import components
 from vortex.layout.dataflow import stripargs_section
 from vortex.utilities.decorators import printargs
 
-@printargs
+#@printargs
 def rload(*args, **kw):
     """
     Resource Loader.
@@ -89,7 +89,7 @@ def input(*args, **kw):
     """This function adds an input section to the current sequence."""
     ctx = sessions.ticket().context
     ctx.record_off()
-    ( opts, kwclean ) =  stripargs_section(**kw)
+    opts, kwclean =  stripargs_section(**kw)
     rl = rload(*args, **kwclean)
     for rhandler in rl:
         ctx.sequence.input(rh=rhandler, **opts)
@@ -101,7 +101,7 @@ def output(*args, **kw):
     """This function adds an output section to the current sequence."""
     ctx = sessions.ticket().context
     ctx.record_off()
-    ( opts, kwclean ) =  stripargs_section(**kw)
+    opts, kwclean =  stripargs_section(**kw)
     rl = rload(*args, **kwclean)
     for rhandler in rl:
         ctx.sequence.output(rh=rhandler, **opts)

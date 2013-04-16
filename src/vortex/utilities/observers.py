@@ -53,6 +53,10 @@ class ObserverSet(object):
         self._listen = set()
         self._items = set()
 
+    def __deepcopy__(self, memo):
+        """No deepcopy expected, so ``self`` is returned."""
+        return self
+
     def register(self, remote):
         """
         Push the ``remote`` object to the list of listening objects.

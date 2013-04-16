@@ -41,7 +41,7 @@ class UtElscf(TestCase):
             source = 'arpege',
             term = 12,
             geometry = self.frangp,
-            date = Date(today().get_fmt_date("yyyymmdd")).add_delta("P12H", "yyyymmddhh")
+            date = today() + Period('PT12H')
         )
 
         self.fp_elscf2 = dict(
@@ -51,7 +51,7 @@ class UtElscf(TestCase):
             source = 'ifs',
             term = 2,
             geometry = self.caledonie,
-            date = Date(today().get_fmt_date("yyyymmdd"))
+            date = today().ymd
         )
 
         self.fp_elscf3 = dict(
@@ -61,7 +61,7 @@ class UtElscf(TestCase):
             source = 'arpege',
             term = 16,
             geometry = self.mp1,
-            date = Date(today().get_fmt_date("yyyymmdd"))
+            date = today().ymd
         )
 
 

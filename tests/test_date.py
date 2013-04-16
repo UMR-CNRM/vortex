@@ -55,6 +55,11 @@ class utdate(TestCase):
         vdate = date.Date("20110726121314")
         self.assertEquals(vdate.julian, '207')
 
+    def test_datevortex(self):
+        d = date.Date(2013, 04, 15, 9, 27, 18)
+        self.assertEquals(d.vortex(), '20130415T0927P')
+        self.assertEquals(d.vortex('a'), '20130415T0927A')
+
     def test_add(self):
         vdate = date.Date("20110831")
         td = timedelta(days=1)

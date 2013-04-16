@@ -9,7 +9,7 @@ class IgaHelperSelect(IndexedTable):
 
     def __init__(self, data=None, filled=False):
         super(IgaHelperSelect, self).__init__(data=data)
-        self.parser = IgaHelperParser('helper_namselect.ini')
+        self.parser = IgaHelperParser('helper-namselect.ini')
 
     def xxtpos(self, n, g, x):
         #g for guess coming from _replacement function

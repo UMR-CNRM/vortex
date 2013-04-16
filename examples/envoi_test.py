@@ -1,6 +1,9 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+# Status : out of date
+# TODO phasing iga tools with new vortex.tools.services design
+
 import os
 
 from vortex import sessions

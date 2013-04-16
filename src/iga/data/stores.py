@@ -19,6 +19,7 @@ class IgaFinder(Finder):
         info = 'Iga file access',
         attr = dict(
             netloc = dict(
+                outcast = list(),
                 values = [ 'oper.inline.fr', 'dbl.inline.fr', 'dble.inline.fr', 'test.inline.fr' ],
                 remap = {
                     'dbl.inline.fr' : 'dble.inline.fr'

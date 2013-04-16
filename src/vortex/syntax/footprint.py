@@ -146,7 +146,8 @@ class Footprint(object):
         extras = dict(glove = env.current().glove)
         for vdesc in desc.values():
             if isinstance(vdesc, BFootprint): extras.update(vdesc.puredict())
-        if extras: logger.debug(' > Extras : %s', extras)
+        if extras:
+            logger.debug(' > Extras : %s', extras)
         return extras
 
     def _addextras(self, guess, desc, extras):
@@ -265,6 +266,11 @@ class Footprint(object):
                 if kdef.has_key('values') and guess[k] not in kdef['values']:
                     logger.debug(' > Attr %s value not in range = %s %s', k, guess[k], kdef['values'])
                     opts['tracker'].add('key', k, text='not in values')
+                    diags[k] = True
+                    guess[k] = None
+                if kdef.has_key('outcast') and guess[k] in kdef['outcast']:
+                    logger.debug(' > Attr %s value excluded from range = %s %s', k, guess[k], kdef['outcast'])
+                    opts['tracker'].add('key', k, text='is outcast')
                     diags[k] = True
                     guess[k] = None
 

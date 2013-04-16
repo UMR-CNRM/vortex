@@ -34,8 +34,7 @@ class UtBackgroundErrStd(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214H0000P/analysis/bgerrstd.arpege.tl224+0003.grib')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000P/analysis/bgerrstd.arpege.tl224+0003.grib')
 
 
     def test_e1(self):
@@ -51,7 +50,6 @@ class UtBackgroundErrStd(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r0/errgribvor')
 
     def test_e2(self):
@@ -70,7 +68,6 @@ class UtBackgroundErrStd(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor.in')
 
     def test_e3(self):
@@ -89,7 +86,6 @@ class UtBackgroundErrStd(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production.out')
 
     def test_e4(self):
@@ -109,7 +105,6 @@ class UtBackgroundErrStd(TestCase):
             if not rh.complete:
                 print cr.track.toprettyxml(indent='    ')
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production_dsbscr.out')
 
 
@@ -129,13 +124,12 @@ class UtInflFactor(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/inflation_factor')
 
 
 if __name__ == '__main__':
     for test in [ UtBackgroundErrStd, UtInflFactor ]:
-        x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
+        x = TextTestRunner(verbosity=1).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
             break

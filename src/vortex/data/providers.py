@@ -78,6 +78,13 @@ class Provider(BFootprint):
 
         The different operations of the algorithm can be redefined by subclasses.
         """
+        logger.debug(
+            'scheme %s domain %s normpath %s urlquery %s',
+            self.scheme(), self.domain(),
+            os.path.normpath(self.pathname(resource) + '/' +
+            self.basename(resource)),
+            self.urlquery(resource)
+        )
         return net.uriunparse((
             self.scheme(),
             self.domain(),
@@ -199,9 +206,7 @@ class Vortex(Provider):
         rinfo = self.pathinfo(resource)
         rdate = rinfo.get('date', '')
         if rdate:
-            rdate = rdate.get_fmt_date('yyyymmddhhmn')
-            rdate = re.sub(r'(\d{4})$', r'H\1', rdate)
-            rdate = rdate + rinfo.get('cutoff', 'n')[0].upper()
+            rdate = rdate.vortex(rinfo.get('cutoff', 'n'))
         return '/'.join((
             self.vapp,
             self.vconf,

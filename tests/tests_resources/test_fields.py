@@ -30,8 +30,7 @@ class UtRawFields(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120228H0000A/observation/seaice.bdm')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120228T0000A/observation/seaice.bdm')
 
     def test_r1(self):
         #sessions.current().debug()
@@ -44,7 +43,6 @@ class UtRawFields(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/assim/2012/02/28/r0/sst.nesdis.bdap')
         self.assertEqual(rl[1].location(), 'ftp://oper.archive.fr/arpege/oper/assim/2012/02/28/r0/sst.ostia')
 
@@ -58,7 +56,6 @@ class UtRawFields(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/assim/2012/02/28/r0/ice_concent')
 
 
@@ -79,7 +76,6 @@ class UtGeoFields(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
         self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/28/r6/icmshanalsst')
         self.assertEqual(rl[1].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/28/r6/icmshanalseaice')
 
@@ -95,8 +91,7 @@ class UtGeoFields(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120228H0600P/observation/sst.tl798-c24.fa')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120228T0600P/observation/sst.tl798-c24.fa')
 
 
 if __name__ == '__main__':
