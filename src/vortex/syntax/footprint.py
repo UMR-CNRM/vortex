@@ -173,10 +173,10 @@ class Footprint(object):
                     if replk not in todo:
                         if replm:
                             subattr = getattr(guess[replk], replm, None)
-                            if subattr:
-                                guess[k] = replattr.sub(str(subattr), guess[k], 1)
-                            else:
+                            if subattr == None:
                                 guess[k] = None
+                            else:
+                                guess[k] = replattr.sub(str(subattr), guess[k], 1)
                         else:
                             guess[k] = replattr.sub(str(guess[replk]), guess[k], 1)
                         changed = 1
@@ -280,7 +280,7 @@ class Footprint(object):
         for k in attrs.keys():
             if guess[k] == 'None':
                 guess[k] = None
-                logger.warning(' > Attr %s as a null string', k)
+                logger.warning(' > Attr %s is a null string', k)
                 if not k in diags:
                     opts['tracker'].add('key', k, text='not valid')
             if guess[k] == None:

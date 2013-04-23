@@ -27,7 +27,7 @@ class UtClimGlobal(TestCase):
             block='clim',
             geometry=self.std,
             local='clim.(month)',
-            month='10',
+            month=10,
             model='arpege'
         )
         for rh in rl:
@@ -42,7 +42,7 @@ class UtClimGlobal(TestCase):
             geometry=self.std,
             local='clim.(month)',
             genv='cy36t1_op1.01',
-            month='10',
+            month=10,
             model='arpege'
         )
         for rh in rl:
@@ -65,7 +65,7 @@ class UtClimLAM(TestCase):
             block='clim',
             geometry=self.caledonie,
             local='clim.(month)',
-            month='10',
+            month=10,
             model='aladin'
         )
         for rh in rl:
@@ -79,7 +79,7 @@ class UtClimLAM(TestCase):
             geometry=self.caledonie,
             local='clim.(month)',
             genv='cy36t1_op1.01',
-            month='10',
+            month=10,
             model='aladin'
         )
         for rh in rl:
@@ -103,7 +103,7 @@ class UtClimBDAP(TestCase):
             block='clim',
             geometry=self.glob15,
             local='clim.(month)',
-            month='10',
+            month=10,
             model='arpege'
         )
         for rh in rl:
@@ -119,7 +119,7 @@ class UtClimBDAP(TestCase):
             block='clim',
             geometry=self.frangp0025,
             local='clim.(month)',
-            month='10',
+            month=10,
             model='arome'
         )
         for rh in rl:
@@ -134,7 +134,7 @@ class UtClimBDAP(TestCase):
             geometry=self.glob15,
             local='clim.(month)',
             genv='cy36t1_op1.01',
-            month='10',
+            month=10,
             model='arpege'
         )
         for rh in rl:
@@ -148,7 +148,7 @@ class UtClimBDAP(TestCase):
             geometry=self.frangp0025,
             local='clim.(month)',
             genv='cy36t1_op1.01',
-            month='10',
+            month=10,
             model='arome'
         )
         for rh in rl:

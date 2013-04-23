@@ -66,7 +66,7 @@ class UtElscf(TestCase):
 
 
         self.fp_cont1 = dict(
-            local='ELSCFAROMALBC[term].rPM'
+            local='ELSCFAROMALBC[term::fmth].rPM'
         )
 
 

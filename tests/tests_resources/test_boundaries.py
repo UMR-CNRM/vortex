@@ -27,101 +27,101 @@ class UtElscf(TestCase):
         rl = toolbox.rload(
             self.attrset,
             geometry=self.arome, 
-            local='ELSCFAROME+[term]',
+            local='ELSCFAROME+[term::fmth]',
             namespace='vortex.cache.fr',
             experiment='oper',
             block='coupling',
             source='arpege',
-            term='12',
+            term=12,
             model='arome'
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000P/coupling/cpl.arpege.frangp-02km50+0012.fa')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000P/coupling/cpl.arpege.frangp-02km50+0012:00.fa')
 
     def test_e1(self):
         rl = toolbox.rload(
             self.attrset,
             geometry=self.arome, 
-            local='ELSCFAROME+[term]',
+            local='ELSCFAROME+[term::fmth]',
             source='arpege',
             suite='oper',
-            term='12',
+            term=12,
             model='arome',
             igakey='arome'
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arome/oper/production/2012/02/14/r0/COUPL0012.rCM')
+        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arome/oper/production/2012/02/14/r0/COUPL0012.rCM')
  
     def test_e2(self):
         rl = toolbox.rload(
             self.attrset,
             geometry=self.caledonie, 
-            local='ELSCFCALEDONIE+[term].[cutoff]',
+            local='ELSCFCALEDONIE+[term::fmth].[cutoff]',
             source='ifs',
             suite='oper',
-            term='6',
+            term=6,
             model='aladin',
             igakey='caledonie',
             cutoff='assim,production'
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/COUPL0006.r00') 
-        self.assertEqual(rl[1].location(), 'ftp://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/COUPL0006.rAM') 
+        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/COUPL0006.r00') 
+        self.assertEqual(rl[1].location(), 'ftop://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/COUPL0006.rAM') 
         
     def test_e3(self):
         rl = toolbox.rload(
             self.attrset,
             geometry=self.califs, 
-            local='ELSCFIFSCALEDONIE+[term].[cutoff]',
+            local='ELSCFIFSCALEDONIE+[term::fmth].[cutoff]',
             igakey='caledonie',
             suite='oper',
             source='ifs',
-            term='06',
+            term=6,
             cutoff='assim,production',
             model='aladin'
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/COUPLIFS0006.r00') 
-        self.assertEqual(rl[1].location(), 'ftp://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/COUPLIFS0006.rAM') 
+        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/COUPLIFS0006.r00') 
+        self.assertEqual(rl[1].location(), 'ftop://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/COUPLIFS0006.rAM') 
         
     def test_e4(self):
         rl = toolbox.rload(
             self.attrset,
             geometry=self.mp1, 
-            local='ELSCFTESTMP1+[term].[cutoff]',
+            local='ELSCFTESTMP1+[term::fmth].[cutoff]',
             igakey='testmp1',
             suite='oper',
             source='arpege',
-            term='06',
+            term=6,
             model='aladin'
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/testmp1/14/r0/COUPL0006.rAM') 
+        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/testmp1/14/r0/COUPL0006.rAM') 
  
     def test_e5(self):
         rl = toolbox.rload(
             self.attrset,
             geometry=self.mp2, 
-            local='ELSCFTESTMP2+[term].[cutoff]',
+            local='ELSCFTESTMP2+[term::fmth].[cutoff]',
             igakey='testmp2',
             suite='oper',
             source='arpege',
-            term='06',
+            term=6,
             model='aladin'
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/testmp2/oper/production/2012/02/14/r0/COUPL0006.rAM') 
+        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/testmp2/oper/production/2012/02/14/r0/COUPL0006.rAM') 
  
     def test_e6(self):
         rh = toolbox.rload(
             self.attrset,
-            local='ELSCFOLIVE+[term]',
+            local='ELSCFOLIVE+[term::fmth]',
             namespace='olive.archive.fr',
             geometry=self.aladin,
             source='arpege',
@@ -129,7 +129,7 @@ class UtElscf(TestCase):
             block='coupling',
             date='2011092200',
             model='aladin',
-            term='06'
+            term=6
         ).pop()
         self.assertTrue(rh.complete)
         self.assertEqual(rh.location(), 'olive://open.archive.fr/99A2/20110922H00P/coupling/ELSCFALAD_france+0006')
@@ -137,7 +137,7 @@ class UtElscf(TestCase):
     def test_e7(self):
         rh = toolbox.rload(
             self.attrset,
-            local='ELSCFOLIVE2+[term]',
+            local='ELSCFOLIVE2+[term::fmth]',
             namespace='olive.archive.fr',
             geometry=self.arome,
             source='arpege',
@@ -145,7 +145,7 @@ class UtElscf(TestCase):
             block='coupling',
             date='2012020800',
             model='arome',
-            term='06'
+            term=6
         ).pop()
         self.assertTrue(rh.complete)
         self.assertEqual(rh.location(), 'olive://open.archive.fr/99Q7/20120208H00P/coupling/ELSCFAROM_frangp+0006')

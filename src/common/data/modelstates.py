@@ -140,19 +140,19 @@ class Historic(GeoFlowResource):
         if self.geometry.lam() and re.match('testms1|testmp1|testmp2', self.geometry.area):
             suffix = '.r' + archivesuffix(self.model, self.cutoff, self.date)
 
-        name = prefix + midfix + '+' + str(self.term)
+        name = prefix + midfix + '+' + self.term.fmthour
 
         if re.match('aladin|arome', self.model):
-            name = prefix.upper() + midfix + '+' + str(self.term).upper()
+            name = prefix.upper() + midfix + '+' + self.term.fmthour
 
         return name + suffix
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
         if self.model == 'mesonh':
-            return self.model.upper() + '.' + self.geometry.area[:4].upper() + '+' + str(self.term) + '.' + self.nativefmt
+            return self.model.upper() + '.' + self.geometry.area[:4].upper() + '+' + self.term.fmthour + '.' + self.nativefmt
         else:
-            return 'ICMSH' + self.model[:4].upper() + '+' + str(self.term)
+            return 'ICMSH' + self.model[:4].upper() + '+' + self.term.fmthour
 
     def basename_info(self):
         """Generic information, radical = ``historic``."""
@@ -166,7 +166,7 @@ class Historic(GeoFlowResource):
             geo     = lgeo,
             radical = 'historic',
             src     = self.model,
-            term    = self.term,
+            term    = self.term.fmthm,
         )
 
 class Histsurf(GeoFlowResource):
@@ -191,11 +191,11 @@ class Histsurf(GeoFlowResource):
         return 'histsurf'
 
     def archive_basename(self):
-        return '(surf' + str(self.term) + ':inout)' + '.' + self.nativefmt
+        return '(surf' + self.term.fmthour + ':inout)' + '.' + self.nativefmt
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return '.'.join(('AROMOUT_SURF', self.geometry.area[:4], str(self.term), self.nativefmt))
+        return '.'.join(('AROMOUT_SURF', self.geometry.area[:4], self.term.fmthour, self.nativefmt))
 
     def basename_info(self):
         """Generic information, radical = ``histsurf``."""
@@ -209,6 +209,6 @@ class Histsurf(GeoFlowResource):
             geo     = lgeo,
             radical = 'histsurf',
             src     = self.model,
-            term    = self.term,
+            term    = self.term.fmthm,
         )
 

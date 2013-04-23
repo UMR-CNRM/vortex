@@ -8,7 +8,7 @@ import re
 from vortex.autolog import logdefault as logger
 from vortex.data.providers import Provider
 from iga.syntax.stdattrs import suites, fuzzyname, archivesuffix
-from vortex.syntax.stdattrs import Term
+from vortex.tools.date import Time
 
 
 class Olive(Provider):
@@ -71,6 +71,7 @@ class OpArchive(Provider):
             tube = dict(
                 optional = True,
                 values = [ 'ftp', 'ftop' ],
+                remap = dict( ftp = 'ftop' ),
                 default = 'ftop'
             ),
             namespace = dict(
@@ -133,14 +134,16 @@ class OpArchive(Provider):
                 elif entry == 'gribfix':
                     rr = archivesuffix(resource.model, resource.cutoff, resource.date)
                     if getattr(self, keyattr) == 'pearp':
-                        fuzzy = '_'.join(('fc', rr, str(self.member) , resource.geometry.area, str(resource.term)))
+                        fuzzy = '_'.join(('fc', rr, str(self.member) , resource.geometry.area, resource.term.fmthour))
                     else:
-                        t = Term(resource.term, fmt='03')
-                        fuzzy = fuzzyname('prefix', 'gridpoint', self.suite) + rr + str(t) + resource.geometry.area 
+                        t = '{0:03d}'.format(resource.term.hour)
+                        fuzzy = fuzzyname('prefix', 'gridpoint', self.suite) + rr + t + resource.geometry.area
                 elif entry == 'errgribfix':
                     fuzzy = 'errgribvor'
                     if getattr(self, keyattr)== 'aearp':
-                        fuzzy = 'errgribvor' + fuzzyname('term' + str(resource.term),resource.realkind(), self.inout) + '.' + fuzzyname('suffix',resource.realkind(),self.inout)
+                        fuzzy = 'errgribvor' \
+                            + fuzzyname('term' + resource.term.fmthour,resource.realkind(), self.inout) + '.' \
+                            + fuzzyname('suffix', resource.realkind(), self.inout)
                 else:
                     fuzzy = fuzzyname(entry, resource.realkind(), getattr(self, keyattr))
                 bname = bname.replace(i, fuzzy)

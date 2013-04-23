@@ -137,7 +137,7 @@ input = (
         kind = 'namselect',
         source='select_p',
         term = (0,3),
-        local = 'select_p[term]',
+        local = 'select_p[term::fmth]',
     )
 )
 
@@ -156,7 +156,7 @@ outputs = (
         role = 'ModelStateOutput',
         kind = 'historic',
         term = (0,3),
-        local = 'ICMSHFCST+[term]',
+        local = 'ICMSHFCST+[term::fmth]',
     ),
     
     rl(
@@ -167,7 +167,7 @@ outputs = (
         geometry=geoBDAP,
         nativefmt='fa',
         term=(0,3),
-        local='PFFPOS[geometry::area]+[term]'
+        local='PFFPOS[geometry::area]+[term::fmth]'
     ),
     
     rl(

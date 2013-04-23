@@ -81,8 +81,8 @@ toolbox.output(
     role = 'ModelStateOutput',
     kind = 'historic',
     term = (0,3),
-    remote = cache + 'out.model.[term]',
-    local = 'ICMSHFCST+[term]',
+    remote = cache + 'out.model.[term::fmth]',
+    local = 'ICMSHFCST+[term::fmth]',
 )
 
 toolbox.output(

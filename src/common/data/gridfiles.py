@@ -65,7 +65,7 @@ class Gridpoint(GeoFlowResource):
     def olive_basename(self):
         """OLIVE specific naming convention."""
 
-        t = self.term
+        t = self.term.hour
         e = env.current()
         if not 'SWAPP_ANA_TERMSHIFT' in e and self.origin == 'ana':
             t = 0
@@ -73,13 +73,13 @@ class Gridpoint(GeoFlowResource):
         if self.nativefmt == 'fa':
             if self.model == 'mocage':
                 if self.origin == 'hst':
-                    name = 'HM' + self.geometry.area + '+' + str(self.term)
+                    name = 'HM' + self.geometry.area + '+' + self.term.fmthour
                 elif self.origin == 'sumo':
-                    deltastr = 'PT' + str(self.term) + 'H'
+                    deltastr = 'PT' + str(self.term.hour) + 'H'
                     deltadate = self.date + deltastr
                     name = 'SM' + self.geometry.area + '_void' + '+' + deltadate.ymd
                 elif self.origin == 'interp':
-                    deltastr = 'PT' + str(self.term) + 'H'
+                    deltastr = 'PT' + str(self.term.hour) + 'H'
                     deltadate = self.date + deltastr
                     name = 'SM' + self.geometry.area + '_interp' + '+' + deltadate.ymd
             else:
@@ -94,7 +94,7 @@ class Gridpoint(GeoFlowResource):
 
         if self.nativefmt == 'grib':
             if re.match('aladin|arome', self.model):
-                name = 'GRID' + self.geometry.area + 'r' + str(self.date.hour) + '_' + str(self.term)
+                name = 'GRID' + self.geometry.area + 'r' + str(self.date.hour) + '_' + self.term.fmthour
 
             rr = archivesuffix(self.model, self.cutoff, self.date)
             if re.match('arp', self.model):
@@ -102,7 +102,7 @@ class Gridpoint(GeoFlowResource):
             return name
 
         if self.model == 'mocage' and self.nativefmt == 'fa':
-            deltastr = 'PT' + str(self.term) + 'H'
+            deltastr = 'PT' + str(self.term.hour) + 'H'
             deltadate = self.date + deltastr
             if self.origin == 'hst':
                 name = 'HM' + self.geometry.area + '+' + deltadate.ymdh
@@ -126,7 +126,7 @@ class Gridpoint(GeoFlowResource):
             format  = self.nativefmt,
             src     = [self.model, source],
             geo     = self.geometry.area,
-            term    = self.term
+            term    = self.term.fmthm
         )
 
     def iga_pathinfo(self):

@@ -9,22 +9,34 @@ from vortex.tools.date import synop
 from vortex.data.geometries import SpectralGeometry
 
 
-def analysis(date=None, suite='oper', cutoff='p', model='arpege', geo=None):
-    if not date:
-        date = synop()
-    if not geo:
-        geo = SpectralGeometry(id='Current op', area='france', truncation=798)
-    al = toolbox.rload(
-        kind='analysis',
-        suite=suite,
-        cutoff=cutoff,
-        model=model,
-        igakey='[model]',
-        date=date,
-        geometry=geo,
-        tempo=True,
-    )
+def fastload(**kw):
+    kw.setdefault('cutoff', 'production')
+    kw.setdefault('model', 'arpege')
+    kw.setdefault('date', synop())
+    kw.setdefault('geometry', SpectralGeometry(area='france', truncation=798))
+    al = toolbox.rload(**kw)
     if len(al) > 1:
         return al
     else:
         return al[0]
+    
+def analysis(**kw):
+    adesc = dict(
+        suite = 'oper',
+        kind = 'analysis',
+        igakey = '[model]',
+        tempo = True
+    )
+    adesc.update(kw)
+    return fastload(**adesc)
+
+def modelstate(**kw):
+    adesc = dict(
+        block = 'forecast',
+        kind = 'historic',
+        experiment = 'A001',
+        term = 0,
+        tempo=True
+    )
+    adesc.update(kw)
+    return fastload(**adesc)

@@ -6,7 +6,7 @@ __all__ = []
 
 
 from vortex.data.flow import GeoFlowResource
-from vortex.syntax.stdattrs import Term
+from vortex.tools.date import Time
 
 
 class BackgroundErrStd(GeoFlowResource):
@@ -18,7 +18,7 @@ class BackgroundErrStd(GeoFlowResource):
                 values = [ 'bgerrstd' ]
             ),
             term = dict(
-                type = Term,
+                type = Time,
                 values = [ 3, 6, 9, 12 ],
             ),
         )
@@ -34,13 +34,13 @@ class BackgroundErrStd(GeoFlowResource):
             format=self.nativefmt,
             geo=[{'truncation':self.geometry.truncation}],
             src=self.model,
-            term=self.term    
+            term=self.term.fmthm
         )
             
     def archive_basename(self):
         bname = 'errgribvor'
         if self.model == 'aearp':
-            bname = bname + '(term' + str(self.term) + ':inout).(suffix:inout)'
+            bname = bname + '(term' + self.term.fmthour + ':inout).(suffix:inout)'
         return bname
 
 

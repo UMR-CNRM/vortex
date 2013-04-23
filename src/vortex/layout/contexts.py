@@ -252,6 +252,3 @@ class Context(object):
             logger.info('Removing context rundir %s', self._rundir)
             return actualsys.rmsafe(self._rundir, self.tree.root.glove.safedirs())
 
-    def __del__(self):
-        if logger:
-            self.exit()

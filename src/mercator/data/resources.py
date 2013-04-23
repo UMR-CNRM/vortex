@@ -264,7 +264,7 @@ class MooringsPosition(Resource):
 
     def mercator_basename(self):
         if self.grid == 'orca025':
-            return 'position_ijproc.moor_bin_'+str(self.term)
+            return 'position_ijproc.moor_bin_' + self.term.fmthour
 
     def mercator_pathinfo(self):
         return dict(
@@ -336,7 +336,7 @@ class ModelBinaries(Resource):
             else:
                 return 'opa'
         elif self.type == 'block':
-            return 'main_block_'+str(int(self.term))
+            return 'main_block_' + self.term.fmthour
         elif self.type == 'pil':
             return 'SAMIAU_PALM_MULTIMP.pil'
         elif self.type == 'build_nc':

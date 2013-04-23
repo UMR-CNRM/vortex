@@ -44,7 +44,7 @@ class Elscf(GeoFlowResource):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'ELSCF' + self.model[:4].upper() + '_' + self.geometry.area + '+' + str(self.term)
+        return 'ELSCF' + self.model[:4].upper() + '_' + self.geometry.area + '+' + self.term.fmthour
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
@@ -55,7 +55,7 @@ class Elscf(GeoFlowResource):
         if re.match('ifs|ecmwf', self.source) and '16km' in self.geometry.resolution:
             prefix = 'COUPLIFS'
 
-        return prefix + str(self.term) + '.r' + str(suffix)
+        return prefix + self.term.fmthour + '.r' + str(suffix)
 
     def basename_info(self):
         """Generic information, radical = ``cpl``."""
@@ -64,7 +64,7 @@ class Elscf(GeoFlowResource):
             geo     = [self.geometry.area, self.geometry.resolution],
             src     = self.source,
             radical = 'cpl',
-            term    = str(self.term),
+            term    = self.term.fmthm,
         )
 
     def iga_pathinfo(self):

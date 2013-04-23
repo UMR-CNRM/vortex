@@ -95,13 +95,11 @@ class UtNamelist(TestCase):
                 print ' > ', rh.location()
             self.assertEqual(
                 rl[0].location(), 
-                'file://oper.inline.fr/arpege/france/oper/namel/'\
-+ self.namelistes[cpt]
+                'file://oper.inline.fr/arpege/france/oper/namel/' + self.namelistes[cpt]
             )
             self.assertEqual(
                 rl[0].locate(),
-                '/ch/mxpt/mxpt001/arpege/france/oper/namel/' +\
-self.namelistes[cpt]
+                '/ch/mxpt/mxpt001/arpege/france/oper/namel/' + self.namelistes[cpt]
             )
             cpt += 1
             #uniquement sur Nec oper

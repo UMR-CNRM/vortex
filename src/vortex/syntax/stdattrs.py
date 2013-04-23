@@ -9,7 +9,7 @@ class which follow the :class:`vortex.syntax.Footprint` syntax.
 
 import sys
 from vortex.syntax import Footprint
-from vortex.tools.date import Date, Month
+from vortex.tools.date import Date, Time, Month
 
 #: Export a set of attributes :data:`a_model`, :data:`a_date`, etc..
 __all__ = [ 'a_month', 'a_domain', 'a_truncation', 'a_model', 'a_date', 'a_cutoff', 'a_term', 'a_nativefmt', 'a_suite' ]
@@ -51,13 +51,6 @@ class FmtInt(int):
     def nice(self, value):
         """Returns the specified ``value`` with the format of the current object."""
         return '{0:{fmt}d}'.format(value, fmt=self._fmt)
-
-
-class Term(FmtInt):
-    """Formated value ``(%O4d)`` for attributes related to chronological model outputs."""
-
-    def __new__(cls, value, fmt='04'):
-        return FmtInt.__new__(cls, value, fmt)
 
 
 #: Usual definition of the ``nativefmt`` attribute.
@@ -145,7 +138,7 @@ domain = Footprint( info = 'Abstract domain', attr = dict( domain = a_domain ) )
 
 #: Usual definition of the ``term`` attribute.
 a_term = dict(
-    type = Term,
+    type = Time,
     optional = False,
 )
 

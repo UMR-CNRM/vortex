@@ -93,7 +93,7 @@ namselect = toolbox.rload(
     kind='namselect',
     term=(0,3),
     remote=inputdir+'selectfp',
-    local='selectfp+[term]',
+    local='selectfp+[term::fmth]',
 )
 
 arpege = toolbox.rload(
@@ -106,7 +106,7 @@ historic = toolbox.rload(
     prvout,
     kind='historic',
     term=(0,3),
-    local='ICMSHFCST+[term]',
+    local='ICMSHFCST+[term::fmth]',
 )
 
 gridpoint = toolbox.rload(
@@ -116,7 +116,7 @@ gridpoint = toolbox.rload(
     geometry=geoBDAP,
     nativefmt='fa',
     term=(0,3),
-    local='PFFPOS[geometry::area]+[term]'
+    local='PFFPOS[geometry::area]+[term::fmth]'
 )
 
 listing = toolbox.rload(

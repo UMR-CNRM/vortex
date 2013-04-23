@@ -7,9 +7,8 @@ __all__ = []
 from vortex.autolog import logdefault as logger
 from vortex.tools.config import GenericConfigParser
 
-_gc = dict()
 
-def geonames(inifile='geometries.ini'):
+def defaultnames(inifile='geometries.ini', _gc = dict()):
     """Pre-defined geometries names in configuration file."""
     if not inifile in _gc:
         _gc[inifile] = GenericConfigParser(inifile)
@@ -32,8 +31,34 @@ class Geometry(object):
         logger.debug('Abstract Geometry init %s %s', self, kw)
         self.id = 'abstract'
         self.area = None
+        self.nlon = None
+        self.nlat = None
         self.resolution = None
         self.__dict__.update(kw)
+
+    def idcard(self, indent=2):
+        """
+        Returns a multilines documentation string with a summary
+        of the valuable information contained by this geometry.
+        """
+        indent = ' ' * indent
+        card = "\n".join((
+            '{0}Geometry {1!r}',
+            '{0}{0}Id         : {2:s}',
+            '{0}{0}Resolution : {3:s}',
+            '{0}{0}Truncation : {4:s}',
+            '{0}{0}Stretching : {5:s}',
+            '{0}{0}Area       : {6:s}',
+            '{0}{0}Local      : {7:s}',
+            '{0}{0}NLon       : {8:s}',
+            '{0}{0}NLat       : {9:s}',
+        )).format(
+            indent,
+            self, self.id, str(self.resolution), str(self.truncation), str(self.stretching),
+            str(self.area), str(self.lam()), str(self.nlon), str(self.nlat)
+            
+        )
+        return card
 
 
 class SpectralGeometry(Geometry):
@@ -62,6 +87,7 @@ class GridGeometry(Geometry):
 
     def __init__(self, **kw):
         logger.debug('Grid Geometry init %s', self)
+        self.truncation = None
         self.nlon = 3200
         self.nlat = 1600
         super(GridGeometry, self).__init__(**kw)

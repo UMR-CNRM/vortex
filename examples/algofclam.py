@@ -38,7 +38,7 @@ inputs = (
     rl(
         kind='elscf',
         namespace='[suite].archive.fr',
-        local='ELSCFAROME+[term]',
+        local='ELSCFAROME+[term::fmth]',
         suite='oper',
         term=(0,3),
         igakey='arome',

@@ -29,12 +29,12 @@ class UtBackgroundErrStd(TestCase):
             experiment='oper',
             block='analysis',
             model='arpege',
-            term='3',
+            term=3,
             nativefmt='grib'
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000P/analysis/bgerrstd.arpege.tl224+0003.grib')
+        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000P/analysis/bgerrstd.arpege.tl224+0003:00.grib')
 
 
     def test_e1(self):
@@ -42,24 +42,24 @@ class UtBackgroundErrStd(TestCase):
         rl = toolbox.rload(
             self.attrset,
             geometry=self.std,
-            local='errgribvor+arpege+[term]',
+            local='errgribvor+arpege+[term::fmth]',
             suite='oper',
-            term='3',
+            term=3,
             model='arpege',
             igakey='arpege'
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/arpege/oper/production/2012/02/14/r0/errgribvor')
+        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r0/errgribvor')
 
     def test_e2(self):
 
         rl = toolbox.rload(
             self.attrset,
             geometry=self.std,
-            local='errgribvor+aearp+[term].in',
+            local='errgribvor+aearp+[term::fmth].in',
             suite='oper',
-            term='3',
+            term=3,
             inout='in',
             model='arpege',
             cutoff='assim',
@@ -68,16 +68,16 @@ class UtBackgroundErrStd(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor.in')
+        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor.in')
 
     def test_e3(self):
 
         rl = toolbox.rload(
             self.attrset,
             geometry=self.std,
-            local='errgribvor+aearp+[term].out',
+            local='errgribvor+aearp+[term::fmth].out',
             suite='oper',
-            term='9',
+            term=9,
             inout='out',
             model='arpege',
             cutoff='assim',
@@ -86,15 +86,15 @@ class UtBackgroundErrStd(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production.out')
+        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production.out')
 
     def test_e4(self):
         rl = toolbox.rload(
             self.attrset,
             geometry=self.std,
-            local='errgribvor+aearp+[term].dsbscr.out',
+            local='errgribvor+aearp+[term::fmth].dsbscr.out',
             suite='oper',
-            term='12',
+            term=12,
             inout='out',
             model='arpege',
             cutoff='assim',
@@ -105,7 +105,7 @@ class UtBackgroundErrStd(TestCase):
             if not rh.complete:
                 print cr.track.toprettyxml(indent='    ')
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production_dsbscr.out')
+        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production_dsbscr.out')
 
 
 
@@ -124,7 +124,7 @@ class UtInflFactor(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftp://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/inflation_factor')
+        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/inflation_factor')
 
 
 if __name__ == '__main__':

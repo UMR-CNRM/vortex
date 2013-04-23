@@ -190,7 +190,7 @@ def analysis_bnames(resource):
 def historic_bnames(resource):
     """docstring for historic_bnames"""
     model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model)
-    return 'ICMSH' + model_info + '+' + str(resource.term) + '.' + suffix
+    return 'ICMSH' + model_info + '+' + resource.term.fmthour + '.' + suffix
 
 def histsurf_bnames(resource):
     """docstring for histsurf"""
@@ -212,21 +212,20 @@ def gridpoint_bnames(resource, member=None):
     logger.debug('gridpoint_bnames: member %s', member)
     if resource.nativefmt == 'fa':
         model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model)
-        localname = 'PF' + model_info + resource.geometry.area + '+'\
-+ str(resource.term) + '.' + suffix
+        localname = 'PF' + model_info + resource.geometry.area + '+' \
+            + resource.term.fmthour + '.' + suffix
     elif resource.nativefmt == 'grib':
         if resource.model == 'arpege':
             prefix, suffix = gribNames(cutoff, reseau, model, member)
-            nw_term = "{0:03d}".format(resource.term)
+            nw_term = "{0:03d}".format(resource.term.hour)
             if member:
-                localname = prefix + '_' + suffix + '_' + str(member) + '_' +\
-resource.geometry.area + '_' + str(resource.term)
+                localname = prefix + '_' + suffix + '_' + str(member) + '_' \
+                    + resource.geometry.area + '_' + resource.term.fmthour
             else:
                 localname = prefix + suffix + nw_term + resource.geometry.area
         elif resource.model == 'arome':
             prefix, suffix = gribNames(cutoff, reseau, model, member)
-            localname = prefix + resource.geometry.area + suffix +\
-str(resource.term)
+            localname = prefix + resource.geometry.area + suffix + resource.term.fmthour
         else:
             return None
     return localname
@@ -249,11 +248,11 @@ def elscf_bnames(resource):
     cutoff, reseau, model, term = resource.cutoff, resource.date.hour, resource.model, resource.term
     if 'arome' in model:
         u_prefix, suffix = gribNames(cutoff, reseau, model)
-        nw_term = "{0:03d}".format(term)
+        nw_term = "{0:03d}".format(term.hour)
         localname = 'ELSCFAROMALBC' + nw_term + '.' + suffix
     else:
         u_model_info, suffix = faNames(cutoff, reseau, model)
-        nw_term = "{0:03d}".format(resource.term)
+        nw_term = "{0:03d}".format(resource.term.hour)
         localname = 'ELSCFALADALBC' + nw_term + '.' + suffix
     return localname
 
@@ -268,18 +267,18 @@ def refdata_bnames(resource):
 def bgerrstd_bnames(resource, ens=None):
     if ens == 'france':
         #errgrib_scr type
-        delta = 'PT' + str(resource.term) + 'H'
+        delta = 'PT' + str(resource.term.hour) + 'H'
         target_date = resource.date + delta
         return 'errgrib_scr.r' + str(target_date.hour)
     else:
         #I have to calculate a new date so as to get the correct run
         prefix = 'errgribvor'
-        if resource.term in [3, 9]:
-            delta = 'PT' + str(resource.term + 3) + 'H'
+        if resource.term.hour in [3, 9]:
+            delta = 'PT' + str(resource.term.hour + 3) + 'H'
             suffix = resource.date + delta
             stdname = resource.cutoff
         elif resource.term == 12:
-            delta = 'PT' + str(resource.term) + 'H'
+            delta = 'PT' + str(resource.term.hour) + 'H'
             suffix = resource.date + delta
             stdname = 'production_' + 'dsbscr'
         return prefix + '_' + stdname + '.' + suffix.compact()

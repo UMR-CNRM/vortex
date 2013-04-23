@@ -23,11 +23,12 @@ class UtGridpoint(TestCase):
             netloc = 'oper.inline.fr',
         )
         self.fp_cont = dict(
-            local='PFARPE[geometry::area]+[term].rSX'
+            local='PFARPE[geometry::area]+[term::fmth].rSX'
         )
         self.franx01 = GridGeometry(id='Current op', area='FRANX01', resolution=01, nlat=221, nlon=281)
         self.frangp0025 = GridGeometry(id='Current op', area='FRANGP0025', resolution=0025, nlat=601, nlon=801)
         self.glob15 = GridGeometry(id='Current op', area='GLOB15', resolution=15)
+
         self.fp_gridpoint1 = dict(
             kind = 'gridpoint',
             geometry = self.glob15,
@@ -263,7 +264,7 @@ class UtHistoric(TestCase):
         )
         
         self.fp_cont = dict(
-            local='ICMSH[geometry::area]+[term].rDH'
+            local='ICMSH[geometry::area]+[term::fmth].rDH'
         )
 
         self.std = SpectralGeometry(id='Current op', area='france', truncation=798)

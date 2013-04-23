@@ -95,9 +95,9 @@ inputs = (
         cutoff='production',
         namespace='[suite].archive.fr',
         geometry=SpectralGeometry(id='Current op', truncation='798'),
-        local='ICMSHARPE+[term]',
+        local='ICMSHARPE+[term::fmth]',
         suite='oper',
-        term='00,3',
+        term=(0,3),
         model='arpege',
         igakey='arpege',
         role='Couplingfile'

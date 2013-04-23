@@ -80,7 +80,6 @@ nams = rl(
     kind = 'namselect',
     source='[helper::xxtsrc]',
     term = (0,3),
-    #local = 'select_p[term]',
     local = '[helper::xxtnam]',
     helper = ttab,
 )

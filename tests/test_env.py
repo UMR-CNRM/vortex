@@ -4,6 +4,7 @@
 import os, logging
 logging.basicConfig(level=logging.ERROR)
 
+import vortex
 from unittest import TestCase, TestLoader, TextTestRunner
 from common.data.modelstates import Analysis
 from vortex.data.geometries import SpectralGeometry
@@ -13,7 +14,7 @@ from vortex.tools.env import Environment
 class UtEnv(TestCase):
 
     def setUp(self):
-        self.res = Analysis(geometry=SpectralGeometry(), model='arpege', date='2011111700', cutoff='prod', kind='analysis')
+        self.res = Analysis(geometry=SpectralGeometry(), model='arpege', date='201304231500', cutoff='prod', kind='analysis')
 
     def test_basic(self):
         e = Environment()
@@ -66,14 +67,16 @@ class UtEnv(TestCase):
         e['toto'] = dict(toto = 2, fun = 'coucou')
         self.assertEqual(os.environ['TOTO'], '{"fun": "coucou", "toto": 2}')
         e['toto'] = self.res
-        self.assertEqual(os.environ['TOTO'], '{"cutoff": "production", "kind": "analysis", "nativefmt": "fa", "geometry": {"area": "auto", "stretching": 2.4, "resolution": null, "id": "abstract", "truncation": 798}, "filling": "full", "filtering": null, "date": "201111170000", "clscontents": "DataRaw", "model": "arpege"}')
-                         
+        self.assertEqual(os.environ['TOTO'], '{"cutoff": "production", "kind": "analysis", "nativefmt": "fa", "geometry": {"area": "auto", "nlat": null, "stretching": 2.4, "nlon": null, "resolution": null, "id": "abstract", "truncation": 798}, "filling": "full", "filtering": null, "date": "201304231500", "clscontents": "DataRaw", "model": "arpege"}')
+
+
 if __name__ == '__main__':
     action = TestLoader().loadTestsFromTestCase
     tests = [ UtEnv ]
     suites = [action(elmt) for elmt in tests]
     for suite in suites:
         TextTestRunner(verbosity=1).run(suite)
-
+    vortex.exit()
+    
 def get_test_class():
     return [ UtEnv ]

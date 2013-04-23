@@ -124,7 +124,7 @@ namselect = toolbox.rload(
     term=(0,3),
     genv=arpege_cycle,
     source='select_p',
-    local='selectfp[term]',
+    local='selectfp[term::fmth]',
 )
 
 arpege = toolbox.rload(
@@ -138,7 +138,7 @@ historic = toolbox.rload(
     kind='historic',
     term=(0,3),
     block='forecast',
-    local='ICMSHFCST+[term]',
+    local='ICMSHFCST+[term::fmth]',
 )
 
 gridpoint = toolbox.rload(
@@ -149,7 +149,7 @@ gridpoint = toolbox.rload(
     nativefmt='fa',
     term=(0,3),
     block='forecast',
-    local='PFFPOS[geometry::area]+[term]'
+    local='PFFPOS[geometry::area]+[term::fmth]'
 )
 
 listing = toolbox.rload(

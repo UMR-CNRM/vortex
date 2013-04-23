@@ -44,7 +44,7 @@ The available methods in the Date class are:
 __all__ = []
 
 import re
-from datetime import timedelta, datetime
+import datetime
 import calendar
 
 
@@ -69,18 +69,18 @@ def mkisodate(datestr):
     
 def today():
     """Return current date, hours, minutes."""
-    td = datetime.today()
-    return Date(datetime(td.year, td.month, td.day, 0, 0))
+    td = datetime.datetime.today()
+    return Date(datetime.datetime(td.year, td.month, td.day, 0, 0))
 
 def now():
     """Return current date, hours, minutes and seconds."""
-    td = datetime.now()
-    return Date(datetime(td.year, td.month, td.day, td.hour, td.minute, td.second))
+    td = datetime.datetime.now()
+    return Date(datetime.datetime(td.year, td.month, td.day, td.hour, td.minute, td.second))
 
 def lastround(rh=1, delta=0, base=None):
     """Return last date with a plain hour multiple of ``rh``."""
     if not base:
-        base = today()
+        base = now()
     if delta:
         base += Period(delta)
     return Date(base.year, base.month, base.day, base.hour - base.hour % rh, 0)
@@ -121,7 +121,7 @@ def daterange(start, end=None, increment='P1D'):
             date += increment
 
 
-class Period(timedelta):
+class Period(datetime.timedelta):
     """Standard period objects, extending :class:`datetime.timedelta` features with iso8601 facilities."""
 
     _period_regex = staticmethod(
@@ -195,13 +195,15 @@ class Period(timedelta):
             * a string that could be reshaped as an ISO 8601 date string.
         """
         if kw:
-            args = (timedelta(**kw),)
+            args = (datetime.timedelta(**kw),)
         if not args:
             raise ValueError("No initial value provided for Period")
         top = args[0]
         ld = list()
-        if isinstance(top, timedelta):
+        if isinstance(top, datetime.timedelta):
             ld = [ top.days, top.seconds ]
+        elif isinstance(top, Time):
+            ld = [ 0, top.hour * 3600 + top.minute * 60 ]
         elif isinstance(top, int) and len(args) < 2:
             ld = [ 0, top ]
         elif isinstance(top, int) and len(args) == 2:
@@ -210,7 +212,7 @@ class Period(timedelta):
             ld = [ 0, Period.parse(top) ]
         if not ld:
             raise ValueError("Initial Period value unknown")
-        return timedelta.__new__(cls, *ld)
+        return datetime.timedelta.__new__(cls, *ld)
 
     def __len__(self):
         return self.days * 86400 + self.seconds
@@ -220,18 +222,18 @@ class Period(timedelta):
         Add to a Period object the specified ``delta`` which could be either
         a string or a :class:`datetime.timedelta` or an ISO 6801 Period.
         """
-        if not isinstance(delta, timedelta):
+        if not isinstance(delta, datetime.timedelta):
             delta = Period(delta)
-        return Period(super(Period, self).__add__(timedelta(delta.days, delta.seconds)))
+        return Period(super(Period, self).__add__(datetime.timedelta(delta.days, delta.seconds)))
 
     def __sub__(self, delta):
         """
         Substract to a Period object the specified ``delta`` which could be either
         a string or a :class:`datetime.timedelta` or an ISO 6801 Period.
         """
-        if not isinstance(delta, timedelta):
+        if not isinstance(delta, datetime.timedelta):
             delta = Period(delta)
-        return Period(super(Period, self).__sub__(timedelta(delta.days, delta.seconds)))
+        return Period(super(Period, self).__sub__(datetime.timedelta(delta.days, delta.seconds)))
 
     def __mul__(self, factor):
         """
@@ -259,10 +261,10 @@ class Period(timedelta):
         return self.iso8601()
 
     
-class Date(datetime):
+class Date(datetime.datetime):
     """Standard date objects, extending :class:`datetime.datetime` features with iso8601 facilities."""
 
-    _origin = datetime(1970, 1, 1, 0, 0, 0)
+    _origin = datetime.datetime(1970, 1, 1, 0, 0, 0)
 
     def __new__(cls, *args, **kw):
         """
@@ -273,16 +275,16 @@ class Date(datetime):
             * a string that could be reshaped as an ISO 8601 date string.
         """
         if kw:
-            args = (datetime(**kw),)
+            args = (datetime.datetime(**kw),)
         if not args:
             raise ValueError("No initial value provided for Date")
         top = args[0]
         delta = ''
         ld = list()
-        if isinstance(top, datetime):
+        if isinstance(top, datetime.datetime):
             ld = [ top.year, top.month, top.day, top.hour, top.minute, top.second ]
         elif isinstance(top, float):
-            top = Date._origin + timedelta(0, top)
+            top = Date._origin + datetime.timedelta(0, top)
             ld = [ top.year, top.month, top.day, top.hour, top.minute, top.second ]
         elif isinstance(top, str):
             (top, sep, delta) = top.partition('/')
@@ -291,7 +293,7 @@ class Date(datetime):
             ld = [ int(x) for x in args if type(x) in (int, float) or (isinstance(x, str) and re.match('\d+$', x)) ]
         if not ld:
             raise ValueError("Initial Date value unknown")
-        newdate = datetime.__new__(cls, *ld)
+        newdate = datetime.datetime.__new__(cls, *ld)
         if delta:
             newdate = newdate.__add__(delta)
         return newdate
@@ -364,9 +366,9 @@ class Date(datetime):
         Add to a Date object the specified ``delta`` which could be either
         a string or a :class:`datetime.timedelta` or an ISO 6801 Period.
         """
-        if not isinstance(delta, timedelta):
+        if not isinstance(delta, datetime.timedelta):
             delta = Period(delta)
-        return Date(super(Date, self).__add__(timedelta(delta.days, delta.seconds)))
+        return Date(super(Date, self).__add__(datetime.timedelta(delta.days, delta.seconds)))
 
     def __sub__(self, delta):
         """
@@ -374,10 +376,10 @@ class Date(datetime):
         a string or a :class:`datetime.timedelta` or an ISO 6801 Period.
         """
 
-        if not isinstance(delta, datetime) and not isinstance(delta, timedelta):
+        if not isinstance(delta, datetime.datetime) and not isinstance(delta, datetime.timedelta):
             delta = guess(delta)
         substract = super(Date, self).__sub__(delta)
-        if isinstance(delta, datetime):
+        if isinstance(delta, datetime.datetime):
             return Period(substract)
         else:
             return Date(substract)
@@ -386,12 +388,12 @@ class Date(datetime):
         """Possible arguments: year, month, day, hour, minute."""
         for datekey in ('year', 'month', 'day', 'hour', 'minute'):
             kw.setdefault(datekey, getattr(self, datekey))
-        return Date(datetime(**kw))
+        return Date(datetime.datetime(**kw))
 
 
     @property
     def cnes_origin(self):
-        return datetime(1950, 1, 1).toordinal()
+        return datetime.datetime(1950, 1, 1).toordinal()
 
     def to_cnesjulian(self, date=None):
         """
@@ -403,9 +405,9 @@ class Date(datetime):
         22579
         """
         if not date:
-            date = datetime(self.year, self.month, self.day)
+            date = datetime.datetime(self.year, self.month, self.day)
         if isinstance(date, list):
-            date = datetime(*date)
+            date = datetime.datetime(*date)
         return date.toordinal() - self.cnes_origin
     
     def from_cnesjulian(self, jdays=None):
@@ -435,17 +437,134 @@ class Date(datetime):
         return calendar.monthrange(year, month)[1]
 
 
+class Time(object):
+
+    def __init__(self, *args, **kw):
+        """
+        Initial values include:
+            * a datetime.time object;
+            * a tuple containing at least (hour, minute) values;
+            * a dictionary with this named values ;
+            * a string that could be reshaped as an ISO 8601 date string.
+        """
+        if kw:
+            kw.setdefault('hour', 0)
+            kw.setdefault('minute', 0)
+            args = (datetime.time(**kw),)
+        if not args:
+            raise ValueError("No initial value provided for Time")
+        top = args[0]
+        ld = list()
+        self._hour, self._minute = None, None
+        if isinstance(top, tuple) or isinstance(top, list):
+            zz = Time(*top)
+            self._hour, self._minute = zz.hour, zz.minute
+        elif isinstance(top, datetime.time) or isinstance(top, Time):
+            self._hour, self._minute = top.hour, top.minute
+        elif isinstance(top, float):
+            self._hour, self._minute = int(top), int((top-int(top))*60)
+        elif isinstance(top, str):
+            ld = [ int(x) for x in re.split('[-:HTZ]+', top) if re.match('\d+$', x) ]
+        else:
+            ld = [ int(x) for x in args if type(x) in (int, float) or (isinstance(x, str) and re.match('\d+$', x)) ]
+        if ld:
+            if len(ld) < 2:
+                ld.append(0)
+            self._hour, self._minute = ld[0], ld[1]
+        if self._hour == None or self._minute == None:
+            raise ValueError("No way to build a Time value")
+
+    @property
+    def hour(self):
+        return self._hour
+
+    @property
+    def minute(self):
+        return self._minute
+
+    def __deepcopy__(self, memo):
+        """No deepcopy expected, so ``self`` is returned."""
+        return self
+
+    def __repr__(self):
+        """Standard hour-minute representation."""
+        return 'Time({0:d}, {1:d})'.format(self.hour, self.minute)
+        
+    def __str__(self):
+        """Standard hour-minute string."""
+        return '{0:02d}:{1:02d}'.format(self.hour, self.minute)
+
+    def __int__(self):
+        """Convert to `int`, ie: returns hours."""
+        return self._hour
+
+    def __cmp__(self, other):
+        """Compare two Time values or a Time and an int value."""
+        try:
+            other = Time(other)
+        except:
+            rc = -1
+        finally:
+            return cmp(str(self), str(other))
+
+    def __add__(self, delta):
+        """
+        Add to a Date object the specified ``delta`` which could be either
+        a string or a :class:`datetime.timedelta` or an ISO 6801 Period.
+        """
+        delta = Time(delta)
+        hour, minute = self.hour + delta.hour, self.minute + delta.minute
+        hour, minute = hour + int(minute/60), minute % 60
+        return Time(hour, minute)
+
+    def __sub__(self, delta):
+        """
+        Add to a Date object the specified ``delta`` which could be either
+        a string or a :class:`datetime.timedelta` or an ISO 6801 Period.
+        """
+        delta = Time(delta)
+        hour, minute = self.hour - delta.hour, self.minute - delta.minute
+        if minute < 0:
+            minute = minute + 60
+            hour = hour - 1
+        return Time(hour, minute)
+
+    @property
+    def fmth(self):
+        return '{0:04d}'.format(self.hour)
+
+    @property
+    def fmthm(self):
+        return '{0:04d}:{1:02d}'.format(self.hour, self.minute)
+
+    @property
+    def fmthour(self):
+        return self.fmth
+
+    def isoformat(self):
+        """Almost ISO representation."""
+        return str(self)
+
+    def iso8601(self):
+        """Plain ISO 8601 representation."""
+        return 'T' + self.isoformat() + 'Z'
+
+    def nice(self, t):
+        """Return the specified value formatted as self should be."""
+        return '{0:04d}'.format(t)
+
+
 class Month(object):
 
     def __init__(self, *args, **kw):
         if kw:
-            args = (datetime(**kw),)
+            args = (datetime.datetime(**kw),)
         if not args:
             raise ValueError("No initial value provided for Month")
         top = args[0]
         self._month = None
         self._year = today().year
-        if isinstance(top, datetime):
+        if isinstance(top, datetime.datetime):
             self._month, self._year = top.month, top.year
         elif isinstance(top, int) and top > 0 and top < 13:
             self._month = top
@@ -495,7 +614,7 @@ class Month(object):
                     month = 12
                 delta -= 1
             return Month(Date(year, month, 1))
-        elif not isinstance(delta, timedelta):
+        elif not isinstance(delta, datetime.timedelta):
             delta = Period(delta)
         return Month(Date(self._year, self._month, 14) + delta)
 
@@ -507,7 +626,7 @@ class Month(object):
 
         if isinstance(delta, int):
             return self.__add__(-1 * delta)
-        elif not isinstance(delta, timedelta):
+        elif not isinstance(delta, datetime.timedelta):
             delta = Period(delta)
         return Month(Date(self._year, self._month, 1) - delta)
 
@@ -524,6 +643,7 @@ class Month(object):
             rc = -1
         finally:
             return rc
+
 
 if __name__ == '__main__':
     import doctest
