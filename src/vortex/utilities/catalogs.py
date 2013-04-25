@@ -85,7 +85,7 @@ class Catalog(object):
 
 
 class ClassesCollector(Catalog):
-    r"""
+    """
     A class collector is devoted to the gathering of class references that inherit
     from a given class, according to some other optional criteria such as the path
     of the module which defines the class.
@@ -151,7 +151,7 @@ class ClassesCollector(Catalog):
         return desc
 
     def findany(self, desc):
-        r"""
+        """
         Returns the first item of the catalog that :meth:`couldbe`
         as described by argument ``desc``.
         """
@@ -162,7 +162,7 @@ class ClassesCollector(Catalog):
         return None
 
     def findall(self, desc):
-        r"""
+        """
         Returns all the items of the catalog that :meth:`couldbe`
         as described by argument ``desc``.
         """
@@ -182,7 +182,7 @@ class ClassesCollector(Catalog):
         return found
 
     def findbest(self, desc):
-        r"""
+        """
         Returns the best of the items returned byt the :meth:`findall` method
         according to potential priorities rules.
         """

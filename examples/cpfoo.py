@@ -14,7 +14,9 @@ ra = dict( model='arpege', kind='analysis', date='2011112800', cutoff='long' )
 
 print t.line
 
+e = t.env
 sh = t.system()
+sh.cd(e.HOME + '/tmp/rundir')
 
 thefile = 'titi'
 if sh.path.exists(thefile):
@@ -26,24 +28,26 @@ rl = vortex.toolbox.rload
 lh = rl(ra, remote='/tmp/toto', file=thefile)
 a = lh.pop()
 
-print a
-print 'Complete ?', a.complete
-print 'URI =', a.location()
-a.get()
-a.clear()
-a.get()
-print a.historic
+print t.prompt, a
+print t.prompt, 'Complete ?', a.complete
+print t.prompt, 'URI =', a.location()
+print t.prompt, 'GET =', a.get()
+print t.prompt, 'CLEAR = ', a.clear()
+print t.prompt, 'GET =', a.get()
+print t.prompt, a.history()
+sh.dir(output=False)
 
 print t.line
 
 lh = rl(ra, remote='/tmp/toto', file='tmp/' + thefile)
 a = lh.pop()
 
-print a
-print 'Complete ?', a.complete
-print 'URI =', a.location()
-a.get()
-print a.historic
+print t.prompt, a
+print t.prompt, 'Complete ?', a.complete
+print t.prompt, 'URI =', a.location()
+print t.prompt, 'GET =', a.get()
+print t.prompt, a.history()
+sh.dir(output=False)
 
 print t.line
 
@@ -52,11 +56,12 @@ sh.ftp('cougar.meteo.fr', 'mrpm631').put(thefile, 'tmp/titi')
 lh = rl(ra, tube='ftp', hostname='cougar.meteo.fr', remote='tmp/titi', file='bidon/' + thefile)
 a = lh.pop()
 
-print a
-print 'Complete ?', a.complete
-print 'URI =', a.location()
-a.get()
-print a.historic
+print t.prompt, a
+print t.prompt, 'Complete ?', a.complete
+print t.prompt, 'URI =', a.location()
+print t.prompt, 'GET =', a.get()
+print t.prompt, a.history()
+sh.dir(output=False)
 
 print t.line
 
@@ -68,20 +73,24 @@ if sh.path.exists(thefile):
 lh = rl(ra, remote='tmp/signum', file=thefile, hostname='cougar.meteo.fr', tube='ftp')
 a = lh.pop()
 
-print a
-print 'Complete ?', a.complete
-print 'URI =', a.location()
-a.get()
+print t.prompt, a
+print t.prompt, 'Complete ?', a.complete
+print t.prompt, 'URI =', a.location()
+print t.prompt, 'GET =', a.get()
+print t.prompt, a.history()
+sh.dir(output=False)
 
 print t.line
 
 lh = rl(ra, experiment='A001', block='canari', file='titi')
 a = lh.pop()
 
-print a
-print 'Complete ?', a.complete
-print 'URI =', a.location()
-a.put()
+print t.prompt, a
+print t.prompt, 'Complete ?', a.complete
+print t.prompt, 'URI =', a.location()
+print t.prompt, 'PUT =', a.put()
+print t.prompt, a.history()
+sh.dir(output=False)
 
 print t.line
 print t.prompt, 'Duration time =', t.duration()

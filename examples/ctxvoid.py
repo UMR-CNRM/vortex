@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-from vortex import sessions, toolbox
+import vortex
 from vortex.tools import date
 from vortex.syntax import footprint
 
@@ -16,17 +16,17 @@ import gco.data
 import gco.syntax
 
 
-t = sessions.ticket()
+t = vortex.sessions.ticket()
 c = t.context
 g = t.glove
 
 t.warning()
 
-mysys = t.system()
-myenv = c.env
+e = t.env
+sh = t.system()
+sh.cd(e.HOME + '/tmp/rundir')
 
-mysys.cd(myenv.TMPDIR + '/rundir')
-print t.prompt, mysys.pwd
+print t.prompt, sh.pwd
 
 arpege_cycle = 'cy36t1_op2.16'
 
@@ -52,15 +52,15 @@ if g.realkind() == 'opuser':
     prvcst = dict()
 else:
     prvin  = dict(experiment='99A0', block='canari')
-    prvout = toolbox.provider(experiment='A001', block='forecast')
-    prvcst = toolbox.provider(genv=arpege_cycle)
+    prvout = vortex.toolbox.provider(experiment='A001', block='forecast')
+    prvcst = vortex.toolbox.provider(genv=arpege_cycle)
 
 print t.prompt, fpenv()
+print t.prompt, prvin
 
 print t.line
 
-
-toolbox.input(
+vortex.toolbox.input(
     prvin,
     role = 'Analysis',
     kind = 'analysis',
@@ -72,7 +72,7 @@ print t.line
 for section in c.sequence.inputs():
     print section.role, section.stage, section.kind, section.intent, section
     print ' > ', section.rh
-    section.rh.get()
+    print section.rh.get()
 
 print t.line
 
@@ -86,3 +86,5 @@ print 'Sequence inputs:', c.sequence.inputs()
 print t.line
 
 print t.prompt, 'Duration time =', t.duration()
+
+vortex.exit()

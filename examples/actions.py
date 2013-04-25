@@ -3,7 +3,8 @@
 
 # Status : OK (v0.6.20)
 
-from vortex import sessions
+import vortex
+
 from vortex.tools.actions import actiond as ad
 from vortex.tools.actions import SendMail
 
@@ -22,7 +23,9 @@ ad.add(TagSubject())
 print ad.actions()
 print ad.candidates('mail')
 
-g = sessions.glove()
+g = vortex.sessions.glove()
 g.setmail('eric.sevault@meteo.fr')
 
 ad.mail(to='eric.sevault@meteo.fr', subject='hello', body='hello world mail')
+
+vortex.exit()

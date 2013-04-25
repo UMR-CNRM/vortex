@@ -13,6 +13,7 @@ __all__ = []
 import re, os, platform, shutil, sys, io, filecmp, time
 import glob
 import subprocess
+import importlib
 
 from vortex.autolog import logdefault as logger
 from vortex.tools.env import Environment
@@ -209,6 +210,25 @@ class System(BFootprint):
     def sleep(self, nbsecs):
         """Clone of the unix command."""
         time.sleep(nbsecs)
+
+    def vortex_modules(self, only='.'):
+        """Return a filtered list of modules in the vortex package."""
+        g = self.env.glove
+        mroot = g.siteroot + '/src'
+        mfiles = [ re.sub('^' + mroot + '/', '', x) for x in self.ffind(mroot) ]
+        return [
+            re.sub('(?:\/__init__)?\.py', '', x).replace('/', '.')
+            for x in mfiles if re.search(only, x, re.IGNORECASE)
+        ]
+
+    def systems_reload(self):
+        """Load extra systems modules not yet loaded."""
+        extras = list()
+        for modname in self.vortex_modules('systems'):
+            if modname not in sys.modules:
+                importlib.import_module(modname)
+                extras.append(modname)
+        return extras
 
     def spawn(self, args, ok=[0], shell=False, output=None):
         """Subprocess call of ``args``."""
@@ -517,43 +537,6 @@ class LinuxDebug(Linux):
     @classmethod
     def realkind(cls):
         return 'linuxdebug'
-
-
-class SuperUX(OSExtended):
-    """NEC Operating System."""
-
-    _footprint = dict(
-        info = 'NEC operating system',
-        attr = dict(
-            sysname = dict(
-                values = [ 'SUPER-UX' ]
-            )
-        )
-    )
-
-    def __init__(self, *args, **kw):
-        logger.debug('SuperUX system init %s', self.__class__)
-        self._psopts = kw.setdefault('psopts', ['-f'])
-        del kw['psopts']
-        super(SuperUX, self).__init__(*args, **kw)
-
-    @classmethod
-    def realkind(cls):
-        return 'super-ux'
-
-    def cp(self, source, destination):
-        """
-        Copy the ``source`` file to a safe ``destination``.
-        The return value is produced by a raw compare of the two files.
-        """
-        if type(source) != str or type(destination) != str:
-            return self.hybridcp(source, destination)
-        if self.filecocoon(destination):
-            self.spawn(['cp', source, destination], output=False)
-            return bool(self.size(source) == self.size(destination))
-        else:
-            logger.error('Could not create cocoon for %s', destination)
-            return False
 
 
 class SystemsCatalog(ClassesCollector):

@@ -24,7 +24,7 @@ strongly advised.
 
 """
 
-__version__ = '0.6.22'
+__version__ = '0.6.23'
 
 __all__ = []
 
@@ -46,8 +46,12 @@ import sessions, toolbox, algo, data, tools
 rootenv = tools.env.Environment(active=True)
 rootenv.glove = sessions.glove()
 
-sessions.ticket(active=True, topenv=rootenv, glove=rootenv.glove, prompt='Vortex v-'+__version__+':')
+rs = sessions.ticket(active=True, topenv=rootenv, glove=rootenv.glove, prompt='Vortex v-'+__version__+':')
 
+if rs.system().systems_reload():
+    rs.system(refill=True)
+
+del rs
 
 # Shorthands to sessions components
 

@@ -5,7 +5,7 @@ r"""
 Vortex Sessions Handling
 
 A :mod:`vortex` session is a virtual identifier gathering information on the current
-usage of the toolbox. A session has a starting time, and possibly a closing
+#usage of the toolbox. A session has a starting time, and possibly a closing
 time. A session also defines the level of the internal logging used in all
 the vortex modules.
 
@@ -22,13 +22,11 @@ __all__ = []
 
 import logging
 
-from datetime import datetime
-
 from vortex.autolog import logdefault as logger
 
 from vortex.utilities.patterns import Singleton
 from vortex.utilities.structs import idtree
-from vortex.tools import systems
+from vortex.tools import systems, date
 from vortex.tools.env import Environment
 from vortex.layout.contexts import Context
 from vortex import gloves
@@ -93,7 +91,7 @@ class Ticket(object):
         self.config = config
         self.prompt = prompt
         self.line = "\n" + '-' * 80 + "\n"
-        self.started = datetime.now()
+        self.started = date.now()
         self.closed = 0
         self.fake = 0
         self._system = None
@@ -166,7 +164,11 @@ class Ticket(object):
         Returns the current OS handler used or set a new one according
         to ``kw`` dictionary-like arguments.
         """
-        if not self._system or kw:
+        refill = kw.setdefault('refill', False)
+        del kw['refill']
+        if refill:
+            systems.catalog().refill()
+        if not self._system or kw or refill:
             self._system = systems.load(**kw)
         return self._system
 
@@ -178,7 +180,7 @@ class Ticket(object):
         if self.closed:
             return self.closed - self.started
         else:
-            return datetime.now() - self.started
+            return date.now() - self.started
 
     @property
     def opened(self):
@@ -197,7 +199,7 @@ class Ticket(object):
         if self.closed:
             logger.warning('Session %s already closed at %s', self.tag, self.closed)
         else:
-            self.closed = datetime.now()
+            self.closed = date.now()
             logger.warning('Close session %s ( %s s. )', self.tag, self.duration())
 
     def exit(self):
@@ -286,10 +288,7 @@ class Desk(Singleton):
         of the current glove is used.
         A new glove is created if the actual tag value is unknown.
         """
-        if 'tag' in kw:
-            tag = kw.get('tag', 'current')
-        else:
-            tag = 'current'
+        tag = kw.get('tag', 'current')
 
         if tag == 'current':
             tag = self._current_glove

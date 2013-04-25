@@ -14,8 +14,9 @@ class Cycle(object):
     Could be optimised in order to compile the re only when requested.
     """
 
-    def __init__(self, regexp = '.', option = re.IGNORECASE):
+    def __init__(self, regexp='.', option=re.IGNORECASE, tag='default'):
         self.cstate = (regexp, option)
+        self.tag = str(tag)
         self._recomp = None
 
     @property
@@ -27,24 +28,41 @@ class Cycle(object):
     def findall(self, *args):
         return self.regexp.findall(*args)
 
+    def match(self, *args):
+        return self.regexp.match(*args)
+
     def search(self, *args):
         return self.regexp.search(*args)
 
     def __getstate__(self):
-        return self.cstate
+        return ( self.cstate, self.tag )
 
     def __setstate__(self, frozendata):
-        self.cstate = frozendata
+        self.cstate, self.tag = frozendata
+        self._recomp = None
+
+    def __str__(self):
+        """Return the current tag."""
+        return self.tag
+
+    def __repr__(self):
+        """Return a nice view of the current cycle."""
+        regexp, option = self.cstate
+        return 'Cycle {0:s}(re="{1:s}" options={2:d})'.format(self.tag, regexp, option)
+
+    def __cmp__(self, other):
+        """Compare current object and other as strings."""
+        return cmp(str(self), str(other))
 
 
 #: Default regular expression to evaluate if a given cycle could be operational or not.
-oper = Cycle(regexp = '^(?:cy)?\d{2}t\d_.*op\d')
+oper = Cycle(regexp='^(?:cy)?\d{2}t\d_.*op\d', tag='oper')
 
 #: Default regular expression to evaluate if a given cycle could be a bugfix or not.
-bugfix = Cycle(regexp = '^(?:cy)?\d{2}(?:t\d)?_.*bf\b')
+bugfix = Cycle(regexp='^(?:cy)?\d{2}(?:t\d)?_.*bf\b', tag='bugfix')
 
 #: Ordered and formatted list of cycles numbers.
-maincycles = [ '{0:02d}'.format(x) for x in range(28,39) ]
+maincycles = [ '{0:02d}'.format(x) for x in range(30, 40) ]
 
 #: List of subcycles extensions, such as ``_bf`` or ``t1_op``.
 subcycles = [ '', '_bf', 't1', 't1_bf', 't1_op', 't2', 't2_bf', 't2_op' ]
@@ -66,6 +84,7 @@ def generate():
         logger.debug('Remove cycle definition %s', k)
         del myself.__dict__[k]
     for c in monocycles():
-        myself.__dict__['cy'+c] = Cycle(regexp = '^(?:cy)?'+c+'$')
+        cytag = 'cy' + c
+        myself.__dict__[cytag] = Cycle(regexp='^(?:cy)?'+c+'$', tag=cytag)
 
 generate()

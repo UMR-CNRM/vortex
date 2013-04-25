@@ -3,11 +3,11 @@
 
 import re
 
-from vortex import sessions
+import vortex
 from vortex.syntax import cycles
 import copy
 
-t = sessions.ticket()
+t = vortex.sessions.ticket()
 t.warning()
 
 print t.prompt, cycles.maincycles
@@ -32,8 +32,10 @@ cycles.generate()
 print t.prompt, dir(cycles)
 
 for c in ( 'cy36op', 'cy36t1op2', 'cyt1_op2', '36t2_op1', 'cy36t2_op1', 'cy36t2_model-op2' ):
-    print t.prompt, 'Oper', c, '?', cycles.oper.search(c)
+    print t.prompt, 'Oper', c.ljust(16), '?', cycles.oper.search(c)
 
 print t.prompt, 'Reminder:', cycles.defined()
 
 print t.prompt, 'Duration time =', t.duration()
+
+vortex.exit()

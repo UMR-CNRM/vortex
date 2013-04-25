@@ -38,7 +38,7 @@ class Handler(object):
         for k in filter(lambda x: not self.__dict__.has_key(x), rd.keys()):
             self.options[k] = rd.get(k)
         self.options.update(kw)
-        self.historic = [(Date.now(), self.__class__.__name__, 'init', 1)]
+        self._history = [(Date.now(), self.__class__.__name__, 'init', 1)]
         self._observer = observers.classobserver('Resources-Handlers')
         self._observer.notify_new(self, dict(stage = 'load'))
         logger.debug('New resource handler %s', self.__dict__)
@@ -112,7 +112,7 @@ class Handler(object):
 
     def locate(self):
         """Try to figure out what would be the physical location of the resource."""
-        locst = None
+        rst = None
         if self.complete:
             remotelocation = self.location()
             uridata = net.uriparse(remotelocation)
@@ -121,17 +121,17 @@ class Handler(object):
                 logger.debug('Locate resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
-                locst = store.locate(uridata)
-                self.historic.append((Date.now(), store.fullname(), 'locate', locst))
+                rst = store.locate(uridata)
+                self._history.append((Date.now(), store.fullname(), 'locate', rst))
             else:
                 logger.error('Could not find any store to locate %s', remotelocation)
         else:
             logger.error('Could not locate an incomplete rh %s', self)
-        return locst
+        return rst
 
     def get(self):
         """Method to retrieve through the provider the resource and feed the current container."""
-        gst = False
+        rst = False
         if self.complete:
             remotelocation = self.location()
             uridata = net.uriparse(remotelocation)
@@ -140,20 +140,20 @@ class Handler(object):
                 logger.debug('Get resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
-                gst = store.get(uridata, self.container.localpath())
-                self.container.updfill(gst)
-                self.historic.append((Date.now(), store.fullname(), 'get', gst))
+                rst = store.get(uridata, self.container.localpath())
+                self.container.updfill(rst)
+                self._history.append((Date.now(), store.fullname(), 'get', rst))
                 self._observer.notify_upd(self, dict(stage = 'get'))
-                return gst
+                return rst
             else:
                 logger.error('Could not find any store to get %s', remotelocation)
         else:
             logger.error('Could not get an incomplete rh %s', self)
-        return gst
+        return rst
 
     def put(self):
         """Method to store data from the current container through the provider."""
-        pst = False
+        rst = False
         if self.complete:
             logger.debug('Put resource %s', self)
             remotelocation = self.location()
@@ -163,18 +163,18 @@ class Handler(object):
                 logger.debug('Put resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
-                pst = store.put(self.container.localpath(), uridata)
-                self.historic.append((Date.now(), store.fullname(), 'put', pst))
+                rst = store.put(self.container.localpath(), uridata)
+                self._history.append((Date.now(), store.fullname(), 'put', rst))
                 self._observer.notify_upd(self, dict(stage = 'put'))
             else:
                 logger.error('Could not find any store to put %s', remotelocation)
         else:
             logger.error('Could not put an incomplete rh %s', self)
-        return pst
+        return rst
 
     def check(self):
         """Returns a stat-like information to the remote resource."""
-        stcheck = None
+        rst = None
         if self.resource and self.provider:
             logger.debug('Check resource %s', self)
             remotelocation = self.location()
@@ -184,27 +184,36 @@ class Handler(object):
                 logger.debug('Check resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
-                stcheck = store.check(uridata)
-                self.historic.append((Date.now(), store.fullname(), 'check', stcheck))
+                rst = store.check(uridata)
+                self._history.append((Date.now(), store.fullname(), 'check', rst))
             else:
                 logger.error('Could not find any store to check %s', remotelocation)
         else:
             logger.error('Could not check a rh without defined resource and provider %s', self)
-        return stcheck
+        return rst
 
     def clear(self):
         """Clear the local container contents."""
+        rst = False
         if self.container:
             logger.debug('Remove resource container %s', self.container)
-            self.historic.append((Date.now(), sessions.system().fullname(), 'clear', sessions.system().remove(self.container.localpath())))
+            rst = sessions.system().remove(self.container.localpath())
+            self._history.append((Date.now(), sessions.system().fullname(), 'clear', rst))
+        return rst
 
     def save(self):
         """Rewrite data if contents have been updated."""
+        rst = False
         if self.contents:
-            self.contents.rewrite(self.container)
+            rst = self.contents.rewrite(self.container)
         else:
             logger.warning('Try to save undefined contents %s', self)
+        return rst
 
     def strlast(self):
         """String formatted log of the last action."""
-        return ' '.join([ str(x) for x in self.historic[-1] ])
+        return ' '.join([ str(x) for x in self._history[-1] ])
+
+    def history(self):
+        """Copy of the internal history of the current handler."""
+        return self._history[:]

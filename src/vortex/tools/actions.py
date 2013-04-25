@@ -94,7 +94,7 @@ class Report(Action):
     Class responsible for sending reports.
     """
     def __init__(self, kind='report', active=True, service='sendreport'):
-        super(SendReport, self).__init__(kind=kind, active=active, service=service)
+        super(Report, self).__init__(kind=kind, active=active, service=service)
 
 
 class Dispatcher(Catalog):

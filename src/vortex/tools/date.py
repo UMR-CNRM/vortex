@@ -75,7 +75,7 @@ def today():
 def now():
     """Return current date, hours, minutes and seconds."""
     td = datetime.datetime.now()
-    return Date(datetime.datetime(td.year, td.month, td.day, td.hour, td.minute, td.second))
+    return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
 
 def lastround(rh=1, delta=0, base=None):
     """Return last date with a plain hour multiple of ``rh``."""
@@ -201,7 +201,7 @@ class Period(datetime.timedelta):
         top = args[0]
         ld = list()
         if isinstance(top, datetime.timedelta):
-            ld = [ top.days, top.seconds ]
+            ld = [ top.days, top.seconds, top.microseconds ]
         elif isinstance(top, Time):
             ld = [ 0, top.hour * 3600 + top.minute * 60 ]
         elif isinstance(top, int) and len(args) < 2:

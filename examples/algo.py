@@ -3,11 +3,11 @@
 
 # Status : OK (v0.6.21)
 
-from vortex import sessions, toolbox
+import vortex
 import vortex.data
 import common.algo
 
-t = sessions.ticket()
+t = vortex.ticket()
 t.warning()
 
 g = t.glove
@@ -15,9 +15,11 @@ e = t.env
 sh = t.system()
 sh.cd(e.HOME + '/tmp/rundir')
 
+tb = vortex.toolbox
+
 print t.line
 
-script = toolbox.rh(remote=g.siteroot + '/examples/tmp/test.sh', file='test.sh', rawopts='coucou', language=e.trueshell())
+script = tb.rh(remote=g.siteroot + '/examples/tmp/test.sh', file='test.sh', rawopts='coucou', language=e.trueshell())
 
 print script.idcard()
 
@@ -27,7 +29,7 @@ print t.prompt, "Get resource... ", script.get()
 
 print t.line
 
-x = toolbox.component(engine='launch', interpreter=script.resource.language)
+x = tb.component(engine='launch', interpreter=script.resource.language)
 
 print t.prompt, x
 print t.prompt, x.puredict()
@@ -39,7 +41,7 @@ x.run(script)
 
 print t.line
 
-x = toolbox.component(engine='blind')
+x = tb.component(engine='blind')
 
 print t.prompt, x
 print t.prompt, x.puredict()
@@ -50,7 +52,7 @@ x.run(script)
 
 print t.line
 
-x = toolbox.component(engine='parallel')
+x = tb.component(engine='parallel')
 
 print t.prompt, x
 print t.prompt, x.puredict()
@@ -64,3 +66,5 @@ x.run(script, mpiopts=dict(n=2))
 print t.line
 print t.prompt, 'Duration time =', t.duration()
 print t.line
+
+vortex.exit()

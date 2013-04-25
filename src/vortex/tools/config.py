@@ -66,7 +66,7 @@ class GenericConfigParser(object):
         """Return if this configuration has been updated or not."""
         return bool(self.updates)
 
-    def historic(self):
+    def history(self):
         """Return a list of the description for each update performed."""
         return self.updates
 
