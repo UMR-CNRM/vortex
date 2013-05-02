@@ -1,13 +1,12 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-from vortex import sessions
-import vortex.data
+import vortex
 import common.data
 import olive.data
 from common.tools.shortcuts import analysis
 
-t = sessions.ticket()
+t = vortex.ticket()
 
 cr = vortex.data.resources.catalog()
 cr.track = True
@@ -31,5 +30,9 @@ print t.line
 print cr.track.alldump()
 
 print t.line
+
 print t.prompt, 'Duration time =', t.duration()
+
 print t.line
+
+vortex.exit()

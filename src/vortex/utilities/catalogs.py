@@ -170,7 +170,7 @@ class ClassesCollector(Catalog):
         found = list()
         trcat = None
         if self.track and type(self.track) == bool:
-            self.track = tracker(tag='fpresolve')
+            self.track = tracker(tag='footprint-' + self.itementry)
         if self.track:
             trcat = self.track.new_entry('catalog', self.fullname())
         for item in self._items:

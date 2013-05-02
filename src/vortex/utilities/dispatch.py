@@ -412,7 +412,7 @@ class Dispatcher(object):
         Display the tagged references to internal trackers table.
         Return a shallow copy of the table itself.
         """
-        info = trackers.tracktable()
+        info = trackers.trackcopy()
         return (0, str(info), info)
 
     def trackfp(self, t, kw):

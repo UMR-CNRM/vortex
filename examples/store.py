@@ -1,13 +1,13 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-from vortex import sessions
+import vortex
 from vortex.tools import net
-
-t = sessions.ticket()
-t.warning()
-
 from vortex.data import stores
+
+
+t = vortex.ticket()
+t.warning()
 
 print t.line
 
@@ -25,4 +25,9 @@ print t.prompt, 'Store', s
 print t.prompt, 'dict =', s.puredict()
 
 print t.line
+
 print t.prompt, 'Duration time =', t.duration()
+
+print t.line
+
+vortex.exit()

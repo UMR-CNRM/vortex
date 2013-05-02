@@ -153,7 +153,7 @@ class ClimBDAP(Clim):
                     default = 'clim_dap_[gdomain]'
                     ),
                 kind = dict(
-                    values = [ 'climbdap' ]
+                    values = [ 'clim_bdap' ]
                 )
             )
           )

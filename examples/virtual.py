@@ -1,10 +1,10 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-from vortex import toolbox, sessions
+import vortex
 import sandbox.data
 
-t = sessions.ticket()
+t = vortex.ticket()
 t.warning()
 
 print t.line
@@ -13,32 +13,28 @@ print t.prompt, 'Load the test resource'
 
 print t.line
 
-test = toolbox.rload(
+test = vortex.toolbox.rh(
     tube='ftp',
     hostname='cougar.meteo.fr',
-    #remote='bidon/toto',
     remote='tmp/titi',
     kind='simple',
     extra=2,
     cutoff='p',
     foo='treize',
     bigmodel='arpege',
-    #file='bidon/bof'
-    #virtual=True
     incore=True
-).pop()
+)
 
 print test.idcard()
+print test.get()
 
 print t.line
-
-test.get()
 
 print test.container.localpath(), '- filled ?', test.container.filled, test.container._tmpfile
 
 print t.line
 
-print test.historic
+print test.history()
 
 print t.line
 
@@ -56,7 +52,10 @@ for x in c:
 print 'LEN:', len(c)
 print 'RAW:', c()
 
-
 print t.line
 
 print t.prompt, 'Duration time =', t.duration()
+
+print t.line
+
+vortex.exit()

@@ -21,7 +21,7 @@ def nicedeco(decorator):
         g.__dict__.update(f.__dict__)
         return g
     return new_decorator
-        
+
 @nicedeco
 def disabled(func):
     """This decorator disables the provided function, and does nothing."""
@@ -35,7 +35,7 @@ def printargs(func):
     argnames = func.func_code.co_varnames[:func.func_code.co_argcount]
     fname = func.func_name
     def echo_func_args(*args, **kw):
-        print '>>>', fname, '(', ', '.join(
+        print '> > >', fname, '(', ', '.join(
             '%s=%r' % entry
             for entry in zip(argnames, args) + kw.items()), ')'
         return func(*args, **kw)

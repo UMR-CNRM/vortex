@@ -18,7 +18,7 @@ def register(**kw):
     entry = kw.setdefault('entry', None)
     del kw['cycle']
     del kw['entry']
-    regcycle = filter(lambda x: p[x]['CYCLE'] == cycle, p.keys())
+    regcycle = [ x for x in p.keys() if p[x]['CYCLE'] == cycle ]
     if not regcycle:
         if entry:
             nextcycle = entry
@@ -35,7 +35,7 @@ def register(**kw):
 def contents(**kw):
     p = handler()
     cycle = kw.setdefault('cycle', 'default')
-    regcycle = filter(lambda x: p[x]['CYCLE'] == cycle, p.keys())
+    regcycle = [ x for x in p.keys() if p[x]['CYCLE'] == cycle ]
     if regcycle:
         items = copy(p[regcycle.pop()])
         del items['CYCLE']

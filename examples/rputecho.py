@@ -1,13 +1,13 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-from vortex import sessions, toolbox
-import vortex.data
-import common.data
-import iga.data
+import vortex
 from vortex.data.geometries import SpectralGeometry
 
-t = sessions.ticket()
+import common.data
+import iga.data
+
+t = vortex.ticket()
 t.warning()
 
 cr = vortex.data.providers.catalog()
@@ -17,26 +17,24 @@ ctx = t.context
 
 ctx.system.cd(ctx.env.tmpdir + '/rundir')
 
-print t.prompt, ctx.env.pwd
+print t.prompt, ctx.system.pwd
 
 print t.line
 
 spgeo = SpectralGeometry(id='Current op', area='france', truncation=798, stretching=24)
 
-provider_op = toolbox.provider(suite='dbl', namespace='[suite].inline.fr', igakey='arpege')
-provider_vx = toolbox.provider(experiment='DBLE', namespace='vortex.cache.fr', block='canari')
+provider_op = vortex.toolbox.provider(suite='dbl', namespace='[suite].inline.fr', igakey='arpege')
+provider_vx = vortex.toolbox.provider(experiment='DBLE', namespace='vortex.cache.fr', block='canari')
 
-a = toolbox.rh(
-    provider = provider_op,
-    kind = 'analysis',
-    local = 'analysis_op_[date::ymdh]',
+a = vortex.toolbox.rh(
+    provider=provider_op,
+    kind='analysis',
+    local='analysis_op_[date::ymdh]',
     geometry=spgeo,
-    date='2012062900',
+    date='20130501T18',
     cutoff='assim',
     model='arpege',
 )
-
-#print cr.track.toprettyxml(indent='    ')
 
 print t.line
 print a.idcard()
@@ -55,3 +53,7 @@ print a.locate()
 print t.line
 
 print t.prompt, 'Duration time =', t.duration()
+
+print t.line
+
+vortex.exit()

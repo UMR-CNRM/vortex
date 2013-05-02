@@ -33,11 +33,11 @@ t.warning()
 sh.cd(e.TMPDIR + '/rundir')
 print t.prompt, sh.pwd
 
-arpege_cycle = 'cy36t1_op2.16'
+arpege_cycle = 'cy37t1_op1.17'
 
 #domain = ['GLOB15','GLOB25','EURAT01','EUROC25','GLOB05']
 domains = [ 'GLOB15' ]
-rundate = date.Date('2011092200')
+rundate = date.Date(2013, 4, 25, 0)
 geo = SpectralGeometry(id='Current op', area='france', truncation=798)
 geoBDAP = GridGeometry(area='GLOB15',resolution='15')
 
@@ -46,7 +46,8 @@ fpenv = footprint.envfp(
     namespace='open.archive.fr',
     date=rundate,
     cutoff='production',
-    model='arpege'
+    model='arpege',
+    gspool=e.HOME + '/gco-tampon',
 )
 
 print t.line
@@ -56,8 +57,8 @@ if g.realkind() == 'opuser':
     prvout = dict()
     prvcst = dict()
 else:
-    prvin  = dict(experiment='99A0', block='canari')
-    prvout = tb.provider(experiment='A001', block='forecast')
+    prvin  = tb.provider(suite='oper', namespace='oper.archive.fr', vapp='arpege')
+    prvout = tb.provider(experiment='A001', block='forecast', namespace='vortex.cache.fr')
     prvcst = tb.provider(genv=arpege_cycle)
 
 print t.prompt, fpenv()
@@ -68,14 +69,14 @@ genv.register(
     # current arpege cycle
     cycle=arpege_cycle,
     # a shorthand to acces this cycle
-    entry='double',
+    entry='oper',
     # items to be defined
-    MASTER_ARPEGE='cy36t1_masterodb-op2.12.SX20r411.x.exe',
+    MASTER_ARPEGE='cy37t1_master-op1.09.SX20r411.x.exe',
     RTCOEF_TGZ='var.sat.misc_rtcoef.12.tgz',
     CLIM_ARPEGE_T798='clim_arpege.tl798.02',
     CLIM_DAP_GLOB15='clim_dap.glob15.07',
     MAT_FILTER_GLOB15='mat.filter.glob15.07',
-    NAMELIST_ARPEGE='cy36t1_op2.11.nam'
+    NAMELIST_ARPEGE='cy37t1_op1.03.nam'
 )
 
 print genv.cycles()
@@ -85,7 +86,7 @@ print t.line
 input = (
 
     rl(
-        prvin,
+        provider = prvin,
         role = 'Analysis',
         kind = 'analysis',
         local = 'ICMSHFCSTINIT',
@@ -101,7 +102,7 @@ input = (
     rl(
         provider = prvcst,
         role = 'ClimatologicalModelFile',
-        kind = 'modelclim',
+        kind = 'clim_model',
         month = rundate.month,
         local = 'Const.Clim',
     ),
@@ -109,7 +110,7 @@ input = (
     rl(
         provider = prvcst,
         role = 'ClimatologicalBDAPFile',
-        kind = 'bdapclim',
+        kind = 'clim_bdap',
         month = rundate.month,
         geometry = geoBDAP,
         local = 'const.clim.[geometry::area]',
@@ -144,7 +145,7 @@ input = (
 arpege = rl(
     provider = prvcst,
     role = 'Model',
-    kind = 'nwpmodel',
+    kind = 'mfmodel',
     binopts = '-vmeteo -eFCST -c001 -asli -t600 -fh3',
     local = 'ARPEGE.EX',
 ).pop()
@@ -158,7 +159,7 @@ outputs = (
         term = (0,3),
         local = 'ICMSHFCST+[term::fmth]',
     ),
-    
+
     rl(
         provider = prvout,
         role = 'GridPointOutput',
@@ -169,7 +170,7 @@ outputs = (
         term=(0,3),
         local='PFFPOS[geometry::area]+[term::fmth]'
     ),
-    
+
     rl(
         provider = prvout,
         role = 'ModelListing',
@@ -183,12 +184,12 @@ outputs = (
 for rh in input:
     for r in rh :
         print t.line, r.idcard()
-        r.get()
+        print 'GET:', r.get()
 
 print t.line
 
-arpege.get()
 print arpege.idcard()
+print 'GET:', arpege.get()
 
 print t.line
 
@@ -201,8 +202,13 @@ x.run(arpege, mpiopts = dict(nn=1, nnp=4))
 for rh in outputs:
     for r in rh :
         print t.line, r.idcard()
-        r.put()
+        print 'Locate:', r.locate()
+        sh.touch(r.container.localpath())
+        print 'PUT:', r.put()
+
+print t.line
 
 print t.prompt, 'Duration time =', t.duration()
 
+print t.line
 vortex.exit()

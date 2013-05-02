@@ -16,7 +16,7 @@ g = t.glove
 e = t.env
 
 sh.cd(e.home + '/tmp/bidon')
-print sh.pwd, 
+print sh.pwd
 
 print t.line
 

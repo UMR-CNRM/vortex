@@ -32,15 +32,22 @@ class OliveArchiveStore(VortexArchiveStore):
         super(OliveArchiveStore, self).__init__(*args, **kw)
 
     def remapget(self, system, remote):
+        """Remap actual remote path to distant store path."""
         xpath = remote['path'].split('/')
         xpath[1:2] = list(xpath[1])
         xpath[:0] = [ system.path.sep, self.headdir ]
         remote['path'] = system.path.join(*xpath)
 
+    def olivelocate(self, system, remote):
+        """Gateway to :meth:`vortexlocate`."""
+        return self.vortexlocate(system, remote)
+
     def oliveget(self, system, remote, local):
+        """Gateway to :meth:`vortexget`."""
         return self.vortexget(system, remote, local)
 
     def oliveput(self, system, local, remote):
+        """Gateway to :meth:`vortexput`."""
         return self.vortexput(system, local, remote)
 
 
@@ -62,10 +69,16 @@ class OliveCacheStore(VortexCacheStore):
         logger.debug('Olive cache store init %s', self.__class__)
         super(OliveCacheStore, self).__init__(*args, **kw)
 
+    def olivelocate(self, system, remote):
+        """Gateway to :meth:`vortexlocate`."""
+        return self.vortexlocate(system, remote)
+
     def oliveget(self, system, remote, local):
+        """Gateway to :meth:`vortexget`."""
         return self.vortexget(system, remote, local)
 
     def oliveput(self, system, local, remote):
+        """Gateway to :meth:`vortexput`."""
         return self.vortexput(system, local, remote)
 
 

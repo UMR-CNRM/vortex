@@ -95,6 +95,31 @@ class Provider(BFootprint):
         ))
 
 
+class Magic(Provider):
+
+    _footprint = dict(
+        info = 'Remote provider',
+        attr = dict(
+            fake = dict(
+                alias = ( 'nowhere', 'noprovider' ),
+                type = bool,
+                default = True,
+                optional = True,
+            ),
+            magic = dict(
+            )
+        )
+    )
+
+    @classmethod
+    def realkind(cls):
+        return 'magic'
+
+    def uri(self, resource):
+        """URI is supposed to be the magic value !"""
+        return self.magic
+
+
 class Remote(Provider):
 
     _footprint = dict(

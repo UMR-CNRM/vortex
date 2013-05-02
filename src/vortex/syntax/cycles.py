@@ -56,16 +56,16 @@ class Cycle(object):
 
 
 #: Default regular expression to evaluate if a given cycle could be operational or not.
-oper = Cycle(regexp='^(?:cy)?\d{2}t\d_.*op\d', tag='oper')
+oper = Cycle(regexp='^(?:cy)?\d{2}t\d_.*op\d+(?:\.\d+)?', tag='oper')
 
 #: Default regular expression to evaluate if a given cycle could be a bugfix or not.
-bugfix = Cycle(regexp='^(?:cy)?\d{2}(?:t\d)?_.*bf\b', tag='bugfix')
+bugfix = Cycle(regexp='^(?:cy)?\d{2}(?:t\d+)?_.*bf(?:\.\d+)?\b', tag='bugfix')
 
 #: Ordered and formatted list of cycles numbers.
 maincycles = [ '{0:02d}'.format(x) for x in range(30, 40) ]
 
 #: List of subcycles extensions, such as ``_bf`` or ``t1_op``.
-subcycles = [ '', '_bf', 't1', 't1_bf', 't1_op', 't2', 't2_bf', 't2_op' ]
+subcycles = [ '', '_bf', 't1', 't1_bf', 't1_op1', 't1_op2', 't2', 't2_bf', 't2_op1', 't2_op2' ]
 
 def monocycles():
     """Returns a sorted list combining of :data:`maincycles` and :data:`subcycles`."""
@@ -85,6 +85,6 @@ def generate():
         del myself.__dict__[k]
     for c in monocycles():
         cytag = 'cy' + c
-        myself.__dict__[cytag] = Cycle(regexp='^(?:cy)?'+c+'$', tag=cytag)
+        myself.__dict__[cytag] = Cycle(regexp='^(?:cy)?'+c+'(?:\.\d+)?$', tag=cytag)
 
 generate()

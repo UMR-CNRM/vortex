@@ -260,17 +260,17 @@ class Footprint(object):
                         logger.debug(' > Attr %s reclassed = %s', k, guess[k])
                     except:
                         logger.debug(' > Attr %s badly reclassed as %s = %s', k, ktype, guess[k])
-                        opts['tracker'].add('key', k, text='could not reclass')
+                        opts['tracker'].add('key', k, why='could not reclass')
                         diags[k] = True
                         guess[k] = None
                 if kdef.has_key('values') and guess[k] not in kdef['values']:
                     logger.debug(' > Attr %s value not in range = %s %s', k, guess[k], kdef['values'])
-                    opts['tracker'].add('key', k, text='not in values')
+                    opts['tracker'].add('key', k, why='not in values')
                     diags[k] = True
                     guess[k] = None
                 if kdef.has_key('outcast') and guess[k] in kdef['outcast']:
                     logger.debug(' > Attr %s value excluded from range = %s %s', k, guess[k], kdef['outcast'])
-                    opts['tracker'].add('key', k, text='is outcast')
+                    opts['tracker'].add('key', k, why='is outcast')
                     diags[k] = True
                     guess[k] = None
 
@@ -282,17 +282,57 @@ class Footprint(object):
                 guess[k] = None
                 logger.warning(' > Attr %s is a null string', k)
                 if not k in diags:
-                    opts['tracker'].add('key', k, text='not valid')
+                    opts['tracker'].add('key', k, why='not valid')
             if guess[k] == None:
                 inputattr.discard(k)
                 if not k in diags:
-                    opts['tracker'].add('key', k, text='missing')
+                    opts['tracker'].add('key', k, why='missing')
                 if opts['fatal']:
                     logger.critical('No valid attribute %s', k)
                 else:
                     logger.debug(' > No valid attribute %s', k)
 
         return ( guess, inputattr )
+
+    def checkonly(self, rd, tracker):
+        """Be sure that the resolved description also match at least one item per ``only`` feature."""
+
+        params = envfp()
+        for k, v in self.only.items():
+            if not hasattr(v, '__iter__'):
+                v = (v, )
+
+            after, before = False, False
+            if k.startswith('after_'):
+                after = True
+                k = k.split('after_', 1)[-1]
+            if k.startswith('before_'):
+                before = True
+                k = k.split('before_', 1)[-1]
+
+            actualvalue = rd.get(k, params.get(k.upper(), None))
+            if actualvalue == None:
+                rd = False
+                tracker.add('only', k, why='no value found')
+                break
+
+            checkflag = False
+            for checkvalue in v:
+                if after:
+                    checkflag = checkflag or bool(actualvalue >= checkvalue)
+                elif before:
+                    checkflag = checkflag or bool(actualvalue < checkvalue)
+                elif hasattr(checkvalue, 'match'):
+                    checkflag = checkflag or bool(checkvalue.match(actualvalue))
+                else:
+                    checkflag = checkflag or not bool(cmp(actualvalue, checkvalue))
+
+            if not checkflag:
+                rd = False
+                tracker.add('only', k, why='do not match')
+                break
+
+        return rd
 
     @property
     def info(self):
@@ -470,24 +510,19 @@ class BFootprint(IFootprint):
     @classmethod
     def couldbe(cls, rd, trackroot=None):
         """
-        This is the heart of any selection purpose, particularly in link
+        This is the heart of any selection purpose, particularly in relation
         with the :meth:`findall` mechanism of :class:`vortex.utilities.catalogs.ClassesCollector` classes.
         It returns the *resolved* form in which the current ``rd`` description
         could be recognized as a footprint of the current class, :data:`False` otherwise.
         """
-        logger.debug("-"*180)
+        logger.debug('-' * 180)
         logger.debug('Couldbe a %s ?', cls)
         if not trackroot:
             trackroot = tracker('garbage')
         fp = cls.footprint()
         resolved, inputattr = fp.resolve(rd, fatal=False, tracker=trackroot)
-        if resolved:
-            logger.debug(' > Couldbe attrs %s ', resolved)
-            for a in resolved:
-                if resolved[a] == None:
-                    logger.debug(' > > Unresolved attr %s', a)
-                    return ( False, inputattr )
-            return ( resolved, inputattr )
+        if resolved and None not in resolved.values():
+            return ( fp.checkonly(resolved, trackroot), inputattr )
         else:
             return ( False, inputattr )
 
@@ -506,7 +541,7 @@ class BFootprint(IFootprint):
     def weightsort(cls, realinputs):
         """Tuple with ordered weights to make a choice possible between various electible footprints."""
         fp = cls.footprint()
-        return ( fp.priority['level'].value, realinputs )
+        return ( fp.priority['level'].rank, realinputs )
 
     @classmethod
     def authvalues(cls, attrname):

@@ -46,7 +46,7 @@ fpenv = footprint.envfp(
     date=rundate,
     cutoff='production',
     model='arpege',
-    spool=myenv.HOME + '/gco-tampon',
+    gspool=myenv.HOME + '/gco-tampon',
 )
 
 print t.prompt, fpenv()

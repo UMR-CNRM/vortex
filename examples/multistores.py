@@ -1,11 +1,11 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-from vortex import sessions, toolbox
-
+import vortex
 import vortex.data
 from vortex.data.geometries import SpectralGeometry
 from vortex.syntax import footprint
+from vortex.tools.date import Date
 
 import common.data
 import olive.data
@@ -13,34 +13,33 @@ import gco.data
 import gco.syntax
 
 
-t = sessions.ticket()
+t = vortex.ticket()
 t.info()
 
-mysys = t.system()
-myenv = mysys.env
+g = t.glove
+e = t.env
+sh = t.system()
+sh.cd(e.HOME + '/tmp/rundir')
 
-mysys.chdir(myenv.TMPDIR + '/rundir')
-print t.prompt, mysys.pwd
+print t.prompt, sh.pwd
 
-#prvin  = toolbox.provider(experiment='99A0', block='canari', namespace='olive.archive.fr')
-prvin  = toolbox.provider(suite='oper', vapp='arpege')
-prvout = toolbox.provider(experiment='A001', block='canari', namespace='open.meteo.fr')
+prvin  = vortex.toolbox.provider(suite='oper', vapp='arpege')
+prvout = vortex.toolbox.provider(experiment='A001', block='canari', namespace='open.meteo.fr')
 
 print t.line
 
 fpenv = footprint.envfp(
     model='arpege',
     geometry = SpectralGeometry(id='Current op', area='france', truncation=798),
-    date='2011092200',
+    date=Date('2013050100'),
     cutoff='production',
 )
 
-#MTOOL include files=toto.[this:target]
 print t.prompt, fpenv()
 
 print t.line
 
-a =  toolbox.rh(
+a = vortex.toolbox.rh(
     provider=prvin,
     kind='analysis',
     local='ICMSHFCSTINIT',
@@ -48,16 +47,26 @@ a =  toolbox.rh(
 
 print t.line, a.idcard()
 
-print a.get()
+print 'GET:', a.get()
 
-mysys.dir()
+print t.line
+
+sh.dir(output=False)
 
 a.provider = prvout
 
 print t.line, a.idcard()
 
-print t.prompt, 'Duration time =', t.duration()
-
-a.put()
+print t.line
 
 print t.prompt, 'Duration time =', t.duration()
+
+print t.line
+
+print 'PUT:', a.put()
+
+print t.prompt, 'Duration time =', t.duration()
+
+print t.line
+
+vortex.exit()

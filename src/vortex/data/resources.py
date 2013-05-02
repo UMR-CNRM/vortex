@@ -92,6 +92,22 @@ class Resource(BFootprint):
         return cclass()
 
 
+class Unknown(Resource):
+
+    _footprint = dict(
+        info = 'Unknown assumed NWP Resource',
+        attr = dict(
+            unknown = dict(
+                type = bool
+            )
+        )
+    )
+
+    @classmethod
+    def realkind(cls):
+        return 'resource'
+
+
 class ResourcesCatalog(ClassesCollector):
 
     def __init__(self, **kw):

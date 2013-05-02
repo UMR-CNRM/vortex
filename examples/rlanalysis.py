@@ -1,27 +1,27 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-from vortex import sessions, toolbox
+import vortex
 
 from vortex.data.geometries import SpectralGeometry
 
 import common.data
 import olive.data
 
-t = sessions.ticket()
+t = vortex.ticket()
 t.warning()
 
 ctx = t.context
 
 ctx.system.cd(ctx.env.tmpdir + '/rundir')
 
-print t.prompt, ctx.env.pwd
+print t.prompt, ctx.system.pwd
 
 print t.line
 
 spgeo = SpectralGeometry(id='Current op', area='france', truncation=798, stretching=24)
 
-rh=toolbox.rload(
+rh = vortex.toolbox.rload(
     namespace='oper.archive.fr',
     suite='oper',
     igakey='arpege',
@@ -29,20 +29,23 @@ rh=toolbox.rload(
     kind = 'analysis',
     local = 'analysis_op_[date::ymdh]',
     geometry=spgeo,
-    date=('2012060500', '2012060512'),
+    date=('20130501T00', '20130501T12'),
     cutoff='assim',
     model='arpege',
 )
 
 for r in rh:
     print t.line, r.idcard()
-    r.get()
+    print 'GET:', r.get()
 
+
+print t.line
 
 print t.prompt, 'Duration time =', t.duration()
 
+print t.line
 
-rh=toolbox.rload(
+rh = vortex.toolbox.rload(
     namespace='olive.archive.fr',
     experiment='9A0Q',
     role = 'Analysis',
@@ -50,19 +53,23 @@ rh=toolbox.rload(
     local = 'analysis_xp_[date::ymdh]',
     block='canari',
     geometry=spgeo,
-    date='2012060500',
+    date='20130501T00',
     cutoff='assim',
     model='arpege',
 )
 
 for r in rh:
     print t.line, r.idcard()
-    r.get()
+    print 'GET:', r.get()
 
 print t.line
 
-ctx.system.dir()
+ctx.system.dir('analysis_*', output=False)
 
 print t.line
 
 print t.prompt, 'Duration time =', t.duration()
+
+print t.line
+
+vortex.exit()

@@ -108,6 +108,9 @@ def output(*args, **kw):
     ctx.record_on()
     return rl
 
+def magic(uri, localpath):
+    return rh(unknown=True, magic=uri, filename=localpath)
+
 def namespaces(**kw):
     """
     Some kind of interactive help to find out quickly which namespaces are in used.

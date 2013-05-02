@@ -1,11 +1,7 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-from vortex import sessions, toolbox
-
-import vortex.data
-import vortex.algo
-
+import vortex
 from vortex.data.contents import IndexedTable
 
 import common.data
@@ -15,10 +11,11 @@ import gco.syntax
 
 from gco.tools import genv 
 
-
-t = sessions.ticket()
+t = vortex.ticket()
 g = t.glove
-rl = toolbox.rload
+rl = vortex.toolbox.rload
+
+print t.line
 
 print t.prompt, 'Playing with table and callable attributes'
 
@@ -91,3 +88,6 @@ print t.line
 
 print t.prompt, 'Duration time =', t.duration()
 
+print t.line
+
+vortex.exit()

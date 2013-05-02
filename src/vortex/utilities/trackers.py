@@ -13,17 +13,20 @@ __all__ = []
 from datetime import datetime
 from xml.dom.minidom import Document
 
-_tracktable = dict()
 
-def tracktable():
-    """Get a copy of the table of index."""
-    return _tracktable.copy()
+def tracktable(_tracktable = dict()):
+    """Default track table."""
+    return _tracktable
+
+def trackcopy():
+    return tracktable().copy()
 
 def tracker(tag='default', xmlbase=None):
     """Factory to retrieve a information tracker document, according to the ``tag`` provided."""
-    if tag not in _tracktable:
-        _tracktable[tag] = InformationTracker(tag, xmlbase)
-    return _tracktable[tag]
+    trtab = tracktable()
+    if tag not in trtab:
+        trtab[tag] = InformationTracker(tag, xmlbase)
+    return trtab[tag]
 
 
 class InformationTracker(Document):
@@ -44,14 +47,14 @@ class InformationTracker(Document):
         self.root.appendChild(entry)
         return self.root.lastChild
 
-    def add(self, kind, name, base=None, text=None):
+    def add(self, kind, name, base=None, why=None):
         """Add a information node to the ``base`` or current note."""
         if not base:
             base = self.current()
         entry = self.createElement(str(kind))
         entry.setAttribute('name', name)
-        if text:
-            entry.setAttribute('text', text)
+        if why:
+            entry.setAttribute('why', why)
         base.appendChild(entry)
         return base.lastChild
 

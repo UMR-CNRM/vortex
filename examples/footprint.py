@@ -1,12 +1,12 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-from vortex import sessions
+import vortex
 
-t = sessions.ticket()
+t = vortex.ticket()
 t.warning()
 
-from vortex.syntax import Footprint
+from vortex.syntax.footprint import Footprint
 from vortex.data.resources import Resource
 from vortex.syntax.stdattrs import a_model
 
@@ -43,12 +43,24 @@ class R02(R01):
 
     def realkind(self):
         return 'R02'
-    
-    
+
+print t.line
+
 print R01.footprint(), R01.footprint().as_dict(), "\n"
+
+print t.line
 
 print R02.footprint(), R02.footprint().as_dict(), "\n"
 
-rfp = R02.footprint()
+print t.line
 
+rfp = R02.footprint()
 print rfp.info, rfp.only
+
+print t.line
+
+print t.prompt, 'Duration time =', t.duration()
+
+print t.line
+
+vortex.exit()

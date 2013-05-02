@@ -17,14 +17,15 @@ class GGet(Provider):
     Extended footprint:
     
     * gget (mandatory)
-    * spool (optional, default: ``tampon``)
+    * gspool (optional, default: ``tampon``)
     """
 
     _footprint = dict(
         info = 'GGet provider',
         attr = dict(
             gget = dict(),
-            spool = dict(
+            gspool = dict(
+                alias = ( 'gtmp', 'gcotmp', 'gcospool', 'tampon' ),
                 optional = True,
                 default = 'tampon'
             )
@@ -49,8 +50,8 @@ class GGet(Provider):
         return 'gco.meteo.fr'
 
     def pathname(self, resource):
-        """Equal to spool name."""
-        return self.spool
+        """Equal to gspool name."""
+        return self.gspool
 
     def basename(self, resource):
         """Concatenation of gget attribute and current resource basename."""
@@ -64,7 +65,7 @@ class GEnv(Provider):
     Extended footprint:
     
     * genv (mandatory)
-    * spool (optional, default: ``tampon``)
+    * gspool (optional, default: ``tampon``)
     """
     
     _footprint = dict(
@@ -73,7 +74,8 @@ class GEnv(Provider):
             genv = dict(
                 alias = ( 'gco_cycle', 'gcycle' )
             ),
-            spool = dict(
+            gspool = dict(
+                alias = ( 'gtmp', 'gcotmp', 'gcospool', 'tampon' ),
                 optional = True,
                 default = 'tampon'
             )
@@ -99,8 +101,8 @@ class GEnv(Provider):
         return 'gco.meteo.fr'
 
     def pathname(self, resource):
-        """Equal to spool name."""
-        return self.spool
+        """Equal to gspool name."""
+        return self.gspool
 
     def basename(self, resource):
         """Relies on :mod:`gco.tools.genv` contents for current ``genv`` attribute value

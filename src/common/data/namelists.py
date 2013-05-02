@@ -196,7 +196,7 @@ class NamTerm(Namelist):
         except IOError:
             logger.error('Could not open file xxt.def')
 
-        select = lines[self.term].split()[2]
+        select = lines[self.term.hour].split()[2]
 
         if not re.match('undef', select):
             if fp :
@@ -231,7 +231,7 @@ class NamTerm(Namelist):
                     dirpath = ''
                 ext = ''
                 if r == r1 or r == r2 :
-                    if self.term == 0:
+                    if self.term.hour == 0:
                         p = '0'
                     else :
                         p = ''
@@ -240,11 +240,11 @@ class NamTerm(Namelist):
                         if ext == None:
                             ext = ''
                 else :
-                    if self.term == 0:
+                    if self.term.hour == 0:
                         p = '0'
-                    elif self.term%6 == 0 :
+                    elif self.term.hour % 6 == 0 :
                         p = '6'
-                    elif self.term%3 == 0 :
+                    elif self.term.hour % 3 == 0 :
                         p = '3'
                     else :
                         p ='1'

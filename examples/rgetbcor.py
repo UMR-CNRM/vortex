@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import vortex
-from vortex import sessions, toolbox
 import common.data
 import olive.data
 
-t = sessions.ticket()
+t = vortex.ticket()
 t.warning()
 
 cr = vortex.data.providers.catalog()
@@ -19,9 +18,9 @@ print t.prompt, ctx.system.getcwd()
 
 print t.line
 
-provider_op = toolbox.provider(suite='oper', namespace='[suite].archive.fr', igakey='arpege')
+provider_op = vortex.toolbox.provider(suite='oper', namespace='[suite].archive.fr', igakey='arpege')
 
-bcor = toolbox.rh(
+bcor = vortex.toolbox.rh(
     provider = provider_op,
     kind = 'bcor',
     satbias='ssmi',
@@ -52,3 +51,7 @@ ctx.system.dir(bcor.container.localpath())
 
 print t.line
 print t.prompt, 'Duration time =', t.duration()
+
+print t.line
+
+vortex.exit()

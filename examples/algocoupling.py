@@ -29,7 +29,7 @@ if sh.cd(e.HOME + '/tmp/rundir'):
 today = date.today()
 
 fpenv = footprint.envfp(
-    spool=e.HOME + '/gco-tampon',
+    gspool=e.HOME + '/gco-tampon',
     date=today,
     month=today,
 )

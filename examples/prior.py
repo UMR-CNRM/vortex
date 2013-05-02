@@ -1,17 +1,12 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-from vortex import toolbox, sessions
+import vortex
 from vortex.syntax.priorities import top
 from sandbox.data.resources import SimpleTest
 
-t = sessions.ticket()
+t = vortex.ticket()
 t.warning()
-
-def jumpzozo(self):
-    return 'Ah que coucou'
-
-SimpleTest.zozo = jumpzozo
 
 print t.line
 
@@ -23,30 +18,81 @@ for x in top:
 
 print t.line
 
-test = toolbox.rload(remote='databox', kind='simple', cutoff='long', extra=2, foo='douze', bigmodel='arpege', virtual=True).pop()
-print t.prompt, 'SimpleTest from load', test
+test = vortex.toolbox.rh(
+    remote='databox',
+    kind='simple',
+    cutoff='long',
+    extra=2,
+    foo='douze',
+    bigmodel='arpege',
+    virtual=True
+)
+
+print t.line
+
+print t.prompt, 'SimpleTest from load 1', test
 print t.prompt, 'SimpleTest handler complete ?', test.complete
 print t.prompt, 'SimpleTest resource ?', test.resource.realkind(), test.resource
 
-print test.resource.zozo()
+print 'xtest() :', test.resource.xtest()
 
 print t.line
 
 print t.prompt, top()
-print t.prompt, top.OLIVE.value
+print t.prompt, top.OLIVE.rank
 top.OLIVE.up()
 print t.prompt, top()
-print t.prompt, top.OLIVE.value
+print t.prompt, top.OLIVE.rank
 
 print t.line
 
-test = toolbox.rload(remote='databox', kind='simple', cutoff='long', extra=2, foo='douze', bigmodel='arpege', virtual=True).pop()
-print t.prompt, 'SimpleTest from load', test
+test = vortex.toolbox.rh(
+    remote='databox',
+    kind='simple',
+    cutoff='long',
+    extra=2,
+    foo='douze',
+    bigmodel='arpege',
+    virtual=True
+)
+
+print t.line
+
+print t.prompt, 'SimpleTest from load 2', test
 print t.prompt, 'SimpleTest handler complete ?', test.complete
 print t.prompt, 'SimpleTest resource ?', test.resource.realkind(), test.resource
 
-print test.resource.zozo()
+print 'xtest() :', test.resource.xtest()
+
+print t.line
+
+top.reset()
+print top()
+
+print t.line
+
+test = vortex.toolbox.rh(
+    remote='databox',
+    kind='simple',
+    cutoff='long',
+    extra=2,
+    foo='douze',
+    bigmodel='arpege',
+    virtual=True
+)
+
+print t.line
+
+print t.prompt, 'SimpleTest from load 3', test
+print t.prompt, 'SimpleTest handler complete ?', test.complete
+print t.prompt, 'SimpleTest resource ?', test.resource.realkind(), test.resource
+
+print 'xtest() :', test.resource.xtest()
 
 print t.line
 
 print t.prompt, 'Duration time =', t.duration()
+
+print t.line
+
+vortex.exit()
