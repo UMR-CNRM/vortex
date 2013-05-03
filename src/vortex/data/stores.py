@@ -157,8 +157,8 @@ class Store(BFootprint):
         logger.debug('Abstract store init %s', self.__class__)
         super(Store, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         """Defines the kind of this object, here ``store``."""
         return 'store'
 
@@ -309,8 +309,8 @@ class Finder(Store):
         logger.debug('Abstract store init %s', self.__class__)
         super(Finder, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'finder'
 
     def hostname(self):
@@ -412,8 +412,8 @@ class VortexArchiveStore(Store):
         logger.debug('Vortex archive store init %s', self.__class__)
         super(VortexArchiveStore, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'archive'
 
     def hostname(self):
@@ -508,8 +508,8 @@ class VortexCacheStore(Store):
         logger.debug('Vortex cache store init %s', self.__class__)
         super(VortexCacheStore, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'cache'
 
     def hostname(self):
@@ -574,7 +574,7 @@ class StoresCatalog(ClassesCollector):
         cat = dict(
             remod = re.compile(r'.*\.stores'),
             classes = [ Store, MultiStore ],
-            itementry = Store.realkind()
+            itementry = 'store'
         )
         cat.update(kw)
         super(StoresCatalog, self).__init__(**cat)

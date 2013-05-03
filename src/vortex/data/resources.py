@@ -31,8 +31,8 @@ class Resource(BFootprint):
         logger.debug('Resource init %s', self)
         super(Resource, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'resource'
 
     def vortex_pathinfo(self):
@@ -103,9 +103,9 @@ class Unknown(Resource):
         )
     )
 
-    @classmethod
-    def realkind(cls):
-        return 'resource'
+    @property
+    def realkind(self):
+        return 'unknown'
 
 
 class ResourcesCatalog(ClassesCollector):
@@ -115,7 +115,7 @@ class ResourcesCatalog(ClassesCollector):
         cat = dict(
             remod = re.compile(r'.*(?:resources|data)'),
             classes = [ Resource ],
-            itementry = Resource.realkind()
+            itementry = 'resource'
         )
         cat.update(kw)
         super(ResourcesCatalog, self).__init__(**cat)

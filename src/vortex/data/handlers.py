@@ -103,7 +103,7 @@ class Handler(object):
                     '{0}{0}Attributes : {4:s}'
                 )).format(
                     indent,
-                    subobj.capitalize(), obj, obj.realkind(), obj.puredict()
+                    subobj.capitalize(), obj, obj.realkind, obj.puredict()
                 )
             else:
                 thisdoc = '{0}{1:s} undefined'.format(indent, subobj.capitalize())

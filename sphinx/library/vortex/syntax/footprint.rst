@@ -39,10 +39,6 @@ Footprint mechanism
    :members:
    :member-order: alphabetical
 
-.. autoclass:: IFootprint
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
 .. autoclass:: AFootprint
    :show-inheritance:

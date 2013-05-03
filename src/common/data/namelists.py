@@ -119,8 +119,8 @@ class Namelist(ModelResource):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'namelist'
 
     def gget_urlquery(self):
@@ -153,8 +153,8 @@ class NamUtil(Namelist):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'namutil'
 
 
@@ -174,8 +174,8 @@ class NamTerm(Namelist):
         )
     ]
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'namterm'
 
     def incoming_xxt_fixup(self, attr, key=None, prefix=None):
@@ -270,8 +270,8 @@ class NamSelect(NamTerm):
         )
     ]
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'namselect'
 
     def gget_urlquery(self):
@@ -298,8 +298,8 @@ class Namelistfp(NamTerm):
         )
     ]
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'namelistfp'
 
     def gget_urlquery(self):
@@ -336,8 +336,8 @@ class Namselectdef(NoDateResource):
         bind = [ 'gvar', 'source' ]
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'namselectdef'
 
     def gget_urlquery(self):

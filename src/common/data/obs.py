@@ -28,8 +28,8 @@ class Observations(GeoFlowResource):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'observations'
 
     def basename_info(self):
@@ -108,8 +108,8 @@ class Refdata(FlowResource):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'refdata'
 
     def basename_info(self):
@@ -141,8 +141,8 @@ class Varbc(FlowResource):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'varbc'
 
     def basename_info(self):
@@ -188,8 +188,8 @@ class BlackList(FlowResource):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'blacklist'
 
     def basename_info(self):
@@ -230,8 +230,8 @@ class Obsmap(FlowResource):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'obsmap'
 
     def olive_basename(self):
@@ -268,8 +268,8 @@ class Bcor(FlowResource):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'bcor'
 
     def basename_info(self):

@@ -67,8 +67,8 @@ class UtMatFilter(TestCase):
             self.assertTrue(rh.complete)
             
         self.assertEqual(rl[0].resource.kind, 'matfilter')
-        self.assertEqual(rl[0].provider.realkind(), 'iga')
-        self.assertEqual(rl[0].container.realkind(), 'file')
+        self.assertEqual(rl[0].provider.realkind, 'iga')
+        self.assertEqual(rl[0].container.realkind, 'file')
         self.assertEqual(
             rh.location(),
             'file://oper.inline.fr/arpege/france/oper/const/autres/matrix.fil.GLOB15'
@@ -88,8 +88,8 @@ class UtMatFilter(TestCase):
             self.assertTrue(rh.complete)
             
         self.assertEqual(rl[0].resource.kind, 'matfilter')
-        self.assertEqual(rl[0].provider.realkind(), 'iga')
-        self.assertEqual(rl[0].container.realkind(), 'file')
+        self.assertEqual(rl[0].provider.realkind, 'iga')
+        self.assertEqual(rl[0].container.realkind, 'file')
         self.assertEqual(
             rh.location(),
             'file://oper.inline.fr/arpege/france/oper/const/autres/matrix.fil.FABEC0125'

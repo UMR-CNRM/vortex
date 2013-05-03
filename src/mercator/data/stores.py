@@ -36,9 +36,9 @@ class MercatorArchiveStore(Store):
         logger.debug('Mercator Archive store init %s', self.__class__)
         super(MercatorArchiveStore, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
-        return 'mercator archive'
+    @property
+    def realkind(self):
+        return 'mercatorarchive'
 
     def hostname(self):
         return self.storage

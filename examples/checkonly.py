@@ -38,7 +38,7 @@ print t.prompt, envfp()
 
 x = rl(kind='onlyselect', model='arpege', date=date.today())
 
-print t.prompt, x.realkind()
+print t.prompt, x.realkind
 
 print t.line
 

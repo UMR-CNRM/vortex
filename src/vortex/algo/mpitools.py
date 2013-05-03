@@ -35,10 +35,15 @@ class MpiTool(BFootprint):
         logger.debug('Abstract mpi tool init %s', self.__class__)
         super(MpiTool, self).__init__(*args, **kw)
 
+
+    @property
+    def realkind(self):
+        return 'mpitool'
+
     def setup(self):
         """Abstract method."""
         pass
-    
+
     def clean(self):
         """Abstract method."""
         pass
@@ -62,9 +67,6 @@ class MpiTool(BFootprint):
             opts.extend(['-' + x, str(kopts[x])])
         return opts
 
-    @classmethod
-    def realkind(cls):
-        return 'mpitool'
 
 
 class MpiRun(MpiTool):
@@ -91,7 +93,7 @@ class MpiToolsCatalog(ClassesCollector):
         cat = dict(
             remod = re.compile(r'.*\.mpitools'),
             classes = [ MpiTool ],
-            itementry = MpiTool.realkind()
+            itementry = 'mpitool'
         )
         cat.update(kw)
         super(MpiToolsCatalog, self).__init__(**cat)

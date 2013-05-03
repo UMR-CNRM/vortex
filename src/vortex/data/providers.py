@@ -37,8 +37,8 @@ class Provider(BFootprint):
         logger.debug('Abstract provider init %s', self.__class__)
         super(Provider, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'provider'
 
     def scheme(self):
@@ -55,15 +55,15 @@ class Provider(BFootprint):
 
     def pathinfo(self, resource):
         """Delegates to resource eponym method."""
-        return resource.pathinfo(self.realkind())
+        return resource.pathinfo(self.realkind)
 
     def basename(self, resource):
         """Delegates to resource eponym method."""
-        return resource.basename(self.realkind())
+        return resource.basename(self.realkind)
 
     def urlquery(self, resource):
         """Delegates to resource eponym method."""
-        return resource.urlquery(self.realkind())
+        return resource.urlquery(self.realkind)
 
     def uri(self, resource):
         """
@@ -111,8 +111,8 @@ class Magic(Provider):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'magic'
 
     def uri(self, resource):
@@ -150,8 +150,8 @@ class Remote(Provider):
         logger.debug('Remote provider init %s', self)
         super(Remote, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'remote'
 
     def scheme(self):
@@ -214,8 +214,8 @@ class Vortex(Provider):
         logger.debug('Vortex experiment provider init %s', self)
         super(Vortex, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'vortex'
 
     def scheme(self):
@@ -255,7 +255,7 @@ class ProvidersCatalog(ClassesCollector):
         cat = dict(
             remod = re.compile(r'.*\.providers'),
             classes = [ Provider ],
-            itementry = Provider.realkind()
+            itementry = 'provider'
         )
         cat.update(kw)
         super(ProvidersCatalog, self).__init__(**cat)

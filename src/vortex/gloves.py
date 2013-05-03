@@ -47,8 +47,8 @@ class Glove(BFootprint):
         self._siteroot = None
         self._siteconf = None
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         """Returns the litteral string identity of the current glove."""
         return 'glove'
 
@@ -144,8 +144,8 @@ class ResearchGlove(Glove):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'tourist'
 
 
@@ -171,8 +171,8 @@ class OperGlove(Glove):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'opuser'
 
 
@@ -184,7 +184,7 @@ class GlovesCatalog(ClassesCollector):
         cat = dict(
             remod = re.compile(r'.*\.(?:sessions|gloves)'),
             classes = [ Glove ],
-            itementry = Glove.realkind()
+            itementry = 'glove'
         )
         cat.update(kw)
         super(GlovesCatalog, self).__init__(**cat)

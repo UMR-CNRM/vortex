@@ -129,8 +129,8 @@ class OpArchiveStore(Store):
         logger.debug('Archive store init %s', self.__class__)
         super(OpArchiveStore, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'archive'
 
     def hostname(self):

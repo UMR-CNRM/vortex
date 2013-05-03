@@ -72,6 +72,10 @@ class System(BFootprint):
             del kw[flag]
         super(System, self).__init__(*args, **kw)
 
+    @property
+    def realkind(self):
+        return 'system'
+
     def __getattr__(self, key):
         if key in self._os.__dict__:
             return self._os.__dict__[key]
@@ -79,10 +83,6 @@ class System(BFootprint):
             return self._sh.__dict__[key]
         else:
             raise AttributeError('method ' + key + ' not found')
-
-    @classmethod
-    def realkind(cls):
-        return 'system'
 
     @property
     def _os(self):
@@ -291,10 +291,6 @@ class OSExtended(System):
         self._cmpaftercp = kw.setdefault('cmpaftercp', True)
         del kw['cmpaftercp']
         super(OSExtended, self).__init__(*args, **kw)
-
-    @classmethod
-    def realkind(cls):
-        return 'linux'
 
     def ftp(self, hostname, logname):
         """Returns an open ftp session on the specified target."""
@@ -509,8 +505,8 @@ class Linux(OSExtended):
         del kw['psopts']
         super(Linux, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'linux'
 
 
@@ -534,8 +530,8 @@ class LinuxDebug(Linux):
         logger.debug('LinuxDebug system init %s', self.__class__)
         super(LinuxDebug, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'linuxdebug'
 
 
@@ -547,7 +543,7 @@ class SystemsCatalog(ClassesCollector):
         cat = dict(
             remod = re.compile(r'.*\.system'),
             classes = [ System ],
-            itementry = System.realkind()
+            itementry = 'system'
         )
         cat.update(kw)
         super(SystemsCatalog, self).__init__(**cat)

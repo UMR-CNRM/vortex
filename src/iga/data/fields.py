@@ -29,14 +29,14 @@ class RawFields(Resource):
             )
         )
     ]
-    
-    @classmethod
-    def realkind(cls):
+
+    @property
+    def realkind(self):
         return 'rawfields'
 
     def olive_basename(self):
         return self.fields + self.origin
-    
+
     def archive_basename(self):
         if (self.origin == 'nesdis' and self.fields == 'sst'):
             bname = '.'.join((self.fields, self.origin, 'bdap'))
@@ -44,7 +44,7 @@ class RawFields(Resource):
             bname = 'ice_concent'
         else :
             bname = '.'.join((self.fields, self.origin))
-            
+
         return bname
 
     def basename_info(self):
@@ -52,7 +52,7 @@ class RawFields(Resource):
             radical=self.fields,
             src=self.origin,  
         )
-    
+
     def vortex_pathinfo(self):
         return dict(
             nativefmt = self.nativefmt,
@@ -60,8 +60,9 @@ class RawFields(Resource):
             cutoff = self.cutoff
         )
 
+
 class GeoFields(Resource):
-    
+
     _footprint = [
         date,
         cutoff,
@@ -88,9 +89,9 @@ class GeoFields(Resource):
             )
         )
     ]
-    
-    @classmethod
-    def realkind(cls):
+
+    @property
+    def realkind(self):
         return 'geofields'
 
     def olive_basename(self):
@@ -108,7 +109,7 @@ class GeoFields(Resource):
             date = self.date,
             cutoff = self.cutoff
         )
-            
+
     def basename_info(self):
         if self.geometry.lam():
             lgeo=[self.geometry.area, self.geometry.resolution]
@@ -119,5 +120,4 @@ class GeoFields(Resource):
             geo=lgeo,
             format=self.nativefmt
         )
-    
-    
+

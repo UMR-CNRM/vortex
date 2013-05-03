@@ -31,8 +31,8 @@ class SuperUX(OSExtended):
         del kw['psopts']
         super(SuperUX, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'super-ux'
 
     def cp(self, source, destination):

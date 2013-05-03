@@ -180,13 +180,13 @@ class UtClimBDAP(TestCase):
             local='const.clim.[geometry::area]'
         )
         self.fp_climbdap_1 = dict(
-            kind='bdapclim',
+            kind='clim_bdap',
             month = today().month,
             geometry = self.glob15,
             model = 'arpege'
         )
         self.fp_climbdap_2 = dict(
-            kind='bdapclim',
+            kind='clim_bdap',
             month = today().month,
             geometry = self.frangp0025,
             model = 'arome'

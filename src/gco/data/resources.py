@@ -32,8 +32,8 @@ class MiscGenv(NoDateResource):
       	)
     )
  
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         """Default realkind is ``miscgenv``."""
         return 'miscgenv' 
 

@@ -23,7 +23,8 @@ class Analysis(FlowResource):
             )
         ),
     )
-    
+
+    @property
     def realkind(self):
         return 'analysis'
 
@@ -62,6 +63,7 @@ class SimpleTest(Resource):
         logger.debug('SimpleTest resource init %s', self)
         super(SimpleTest, self).__init__(*args, **kw)
 
+    @property
     def realkind(self):
         return 'simpletest'
 
@@ -94,6 +96,7 @@ class Parasite(Resource):
         logger.debug('SimpleTest resource init %s', self)
         super(Parasite, self).__init__(*args, **kw)
 
+    @property
     def realkind(self):
         return 'simple'
 
@@ -119,6 +122,7 @@ class CheckOnlyBase(Resource):
         logger.debug('CheckOnlyBase resource init %s', self)
         super(CheckOnlyBase, self).__init__(*args, **kw)
 
+    @property
     def realkind(self):
         return 'onlyselect'
 
@@ -138,6 +142,7 @@ class CheckOnlyCycle37(CheckOnlyBase):
         logger.debug('CheckOnlyBase resource init %s', self)
         super(CheckOnlyBase, self).__init__(*args, **kw)
 
+    @property
     def realkind(self):
         return 'only37'
 
@@ -154,6 +159,7 @@ class CheckOnlyCycle38(CheckOnlyBase):
         )
     )
 
+    @property
     def realkind(self):
         return 'only38'
 

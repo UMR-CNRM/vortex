@@ -9,6 +9,7 @@ from vortex.data.providers import Provider
 
 
 class MercatorArchive(Provider):
+
     _footprint = dict(
         info = 'Mercator archive provider',
         attr = dict(
@@ -19,7 +20,7 @@ class MercatorArchive(Provider):
         )
     )
 
-    @classmethod
+    @property
     def realkind(self):
         return 'mercator'
     

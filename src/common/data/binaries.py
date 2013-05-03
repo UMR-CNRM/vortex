@@ -11,7 +11,7 @@ from gco.syntax.stdattrs import GenvKey
 
 class IFSModel(NWPModel):
     """Yet an other IFS Model."""
-    
+
     _footprint = dict(
          info = 'IFS Model',
         attr = dict(
@@ -26,8 +26,8 @@ class IFSModel(NWPModel):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'ifsmodel'
 
     def iga_pathinfo(self):

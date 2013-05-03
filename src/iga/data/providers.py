@@ -79,8 +79,8 @@ class IgaProvider(Provider):
         #self.register(self.logger)
         #self.notifyAll()
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'iga'
 
     def scheme(self):
@@ -92,7 +92,7 @@ class IgaProvider(Provider):
         return self.namespace
 
     def basename(self, resource):
-        #return resource.basename(self.realkind())
+        """Use mod:`iga.utilities.bpnames` as name factory."""
         return bp.global_bnames(resource, self)
 
     def pathname(self, resource):
@@ -104,7 +104,7 @@ class IgaProvider(Provider):
         #patch pour les couplages
         if (
             "fmt" in info and
-            resource.realkind() == 'elscf' and
+            resource.realkind == 'elscf' and
             self.igakey != 'reunion'
         ):
             info['fmt'] = 'fic_day'
@@ -116,12 +116,12 @@ class IgaProvider(Provider):
         if self.member:
             suffix = 'RUN' + str(self.member)
             new_path = os.path.join(
-                self.config.resolvedpath(resource.realkind()),
+                self.config.resolvedpath(resource.realkind),
                 suffix
             )
             return new_path
         else:
-            return self.config.resolvedpath(resource.realkind())
+            return self.config.resolvedpath(resource.realkind)
 
     def register(self, alogger):
         """docstring for register"""
@@ -174,8 +174,8 @@ class SopranoProvider(Provider):
         logger.debug('IGA job provider init %s', self)
         super(SopranoProvider, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'soprano'
 
     def scheme(self):

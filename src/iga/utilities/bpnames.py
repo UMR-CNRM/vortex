@@ -122,7 +122,7 @@ def global_pnames(provider, resource):
         -geometry,
         -fmt
     """
-    info = getattr(resource, provider.realkind() + '_pathinfo',
+    info = getattr(resource, provider.realkind + '_pathinfo',
                    resource.vortex_pathinfo)()
     for mnd in ("suite", "igakey", "fmt"):
         if mnd not in info:
@@ -319,7 +319,7 @@ def global_bnames(resource, provider):
                 current_file = None
             if current_file == __file__:
                 itself = sys.modules[elmt]
-    searched_func = resource.realkind() + '_bnames'
+    searched_func = resource.realkind + '_bnames'
     attr = hasattr(itself, searched_func)
     member = getattr(provider, 'member', None)
     if member and attr:
@@ -330,22 +330,22 @@ def global_bnames(resource, provider):
         else:
             return getattr(itself, searched_func)(resource)
     else:
-        if resource.realkind() == 'rtcoef':
-            return resource.realkind() + '.tar'
-        if resource.realkind() == 'matfilter':
+        if resource.realkind == 'rtcoef':
+            return resource.realkind + '.tar'
+        if resource.realkind == 'matfilter':
             return 'matrix.fil.' + resource.scopedomain.area
-        if resource.realkind() == 'namelist':
+        if resource.realkind == 'namelist':
             return resource.source
-        if resource.realkind() == 'namselect':
+        if resource.realkind == 'namselect':
             return resource.source
-        if resource.realkind() == 'blacklist':
+        if resource.realkind == 'blacklist':
             if 'loc' in resource.scope:
                 return 'LISTE_LOC'
             else:
                 return 'LISTE_NOIRE_LOC'
-        if resource.realkind() == 'bcor':
+        if resource.realkind == 'bcor':
             return 'bcor_' + resource.satbias + '.dat'
-        if resource.realkind() == 'obsmap':
+        if resource.realkind == 'obsmap':
             return 'BATOR_MAP_' + resource.cutoff
 
 def global_snames(resource):
@@ -381,12 +381,12 @@ def global_snames(resource):
         return None
 
     bname = None
-    if resource.realkind() == 'rawfields':
+    if resource.realkind == 'rawfields':
         if resource.origin == 'ostia' and resource.fields == 'sst':
             bname = 'sst.ostia'
         if resource.origin == 'bdm' and resource.fields == 'seaice':
             bname = 'SSMI.AM'
-    if resource.realkind() == 'observations':
+    if resource.realkind == 'observations':
         suff = map_suffix[(cutoff, resource.date.hour)]
         if resource.nativefmt == 'obsoul' and resource.part == 'conv':
             bname = 'OBSOUL1F.' + suff
@@ -397,7 +397,7 @@ def global_snames(resource):
         if resource.nativefmt == 'bufr':
             bname = 'BUFR.' + resource.part + '.' + suff
         logger.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
-    if resource.realkind() == 'refdata':
+    if resource.realkind == 'refdata':
         suff = map_suffix[(cutoff, resource.date.hour)]
         if resource.nativefmt == 'obsoul' and resource.part == 'conv':
             bname = 'RD_1.' + suff

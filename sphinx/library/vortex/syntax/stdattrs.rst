@@ -48,11 +48,6 @@ Class attributes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Term
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: Month
    :show-inheritance:
    :members:

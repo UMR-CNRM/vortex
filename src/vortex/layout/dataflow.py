@@ -155,7 +155,7 @@ class Sequence(object):
         if 'role' in kw:
             inrole = [ x for x in inset if x.role == kw['role'] or x.alternate == kw['role'] ]
         if not inrole and 'kind' in kw:
-            inkind = [ x for x in inset if x.rh.resource.realkind() == kw['kind'] ]
+            inkind = [ x for x in inset if x.rh.resource.realkind == kw['kind'] ]
         return inrole or inkind
 
     def outputs(self):
@@ -176,7 +176,7 @@ class Sequence(object):
         if 'role' in kw:
             outrole = [ x for x in outset if x.role == kw['role'] ]
         if not outrole and 'kind' in kw:
-            outkind = [ x for x in outset if x.rh.resource.realkind() == kw['kind'] ]
+            outkind = [ x for x in outset if x.rh.resource.realkind == kw['kind'] ]
         return outrole or outkind or outset
 
 

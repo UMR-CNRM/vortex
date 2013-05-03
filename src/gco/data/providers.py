@@ -36,8 +36,8 @@ class GGet(Provider):
         logger.debug('GGet provider init %s', self)
         super(GGet, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         """Default realkind is ``gget``."""
         return 'gget'
 
@@ -55,7 +55,7 @@ class GGet(Provider):
 
     def basename(self, resource):
         """Concatenation of gget attribute and current resource basename."""
-        return self.gget + resource.basename(self.realkind())
+        return self.gget + resource.basename(self.realkind)
 
 
 class GEnv(Provider):
@@ -87,8 +87,8 @@ class GEnv(Provider):
         super(GEnv, self).__init__(*args, **kw)
 
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         """Default realkind is ``genv``."""
         return 'genv'
 
@@ -115,4 +115,4 @@ class GEnv(Provider):
         if gkey not in gconf:
             logger.error('Key %s unknown in cycle %s', gkey, self.genv)
             raise Exception('Unknow gvar ' + gkey)
-        return gconf[gkey] + resource.basename(self.realkind())
+        return gconf[gkey] + resource.basename(self.realkind)

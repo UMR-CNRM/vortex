@@ -54,8 +54,8 @@ class Script(Executable):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'script'
 
     def command_line(self):
@@ -103,8 +103,8 @@ class BlackBox(Binary):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'blackbox'
 
     def command_line(self):

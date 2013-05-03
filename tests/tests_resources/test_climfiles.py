@@ -97,7 +97,7 @@ class UtClimBDAP(TestCase):
         
     def test_v1(self):
         rl = toolbox.rload(
-            kind='climbdap',
+            kind='clim_bdap',
             namespace='vortex.cache.fr',
             experiment='oper',
             block='clim',
@@ -113,7 +113,7 @@ class UtClimBDAP(TestCase):
         
     def test_v2(self):
         rl = toolbox.rload(
-            kind='climbdap',
+            kind='clim_bdap',
             namespace='vortex.cache.fr',
             experiment='oper',
             block='clim',
@@ -130,7 +130,7 @@ class UtClimBDAP(TestCase):
     
     def test_c1(self):
         rl = toolbox.rload(
-            kind='climbdap',
+            kind='clim_bdap',
             geometry=self.glob15,
             local='clim.(month)',
             genv='cy36t1_op1.01',
@@ -144,7 +144,7 @@ class UtClimBDAP(TestCase):
     
     def test_c2(self):
         rl = toolbox.rload(
-            kind='climbdap',
+            kind='clim_bdap',
             geometry=self.frangp0025,
             local='clim.(month)',
             genv='cy36t1_op1.01',

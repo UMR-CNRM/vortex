@@ -10,7 +10,7 @@ from vortex.tools.date import Time
 
 
 class BackgroundErrStd(GeoFlowResource):
-    
+
     _footprint = dict(
         info = 'Background error standard deviation file',
         attr = dict(
@@ -23,11 +23,11 @@ class BackgroundErrStd(GeoFlowResource):
             ),
         )
     )
-     
-    @classmethod
-    def realkind(cls):
+
+    @property
+    def realkind(self):
         return 'bgerrstd'
-    
+
     def basename_info(self):
         return dict(
             radical='bgerrstd',
@@ -36,7 +36,7 @@ class BackgroundErrStd(GeoFlowResource):
             src=self.model,
             term=self.term.fmthm
         )
-            
+
     def archive_basename(self):
         bname = 'errgribvor'
         if self.model == 'aearp':

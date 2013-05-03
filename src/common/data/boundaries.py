@@ -38,8 +38,8 @@ class Elscf(GeoFlowResource):
         )
     ]
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'elscf'
 
     def olive_basename(self):

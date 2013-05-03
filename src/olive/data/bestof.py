@@ -23,8 +23,8 @@ class InflFactor(FlowResource):
         )
     )
     
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'inflfactor'
 
     def basename_info(self):

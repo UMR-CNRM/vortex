@@ -28,6 +28,7 @@ class R01(Resource):
         ),
     )
 
+    @property
     def realkind(self):
         return 'R01'
     
@@ -41,6 +42,7 @@ class R02(R01):
         )
     )
 
+    @property
     def realkind(self):
         return 'R02'
 

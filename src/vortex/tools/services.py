@@ -28,7 +28,7 @@ from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 
 criticals = [ 'debug', 'info', 'error', 'warning', 'critical' ]
 
-        
+
 class Service(BFootprint):
     """
     Abstract base class for services.
@@ -41,7 +41,7 @@ class Service(BFootprint):
         )
     )
 
-    @classmethod
+    @property
     def realkind(self):
         return 'service'
 
@@ -220,7 +220,7 @@ class ServicesCatalog(ClassesCollector):
         cat = dict(
             remod = re.compile(r'.*\.services'),
             classes = [ Service ],
-            itementry = Service.realkind()
+            itementry = 'service'
         )
         cat.update(kw)
         super(ServicesCatalog, self).__init__(**cat)

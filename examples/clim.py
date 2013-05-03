@@ -43,12 +43,12 @@ lh8 = vortex.toolbox.rload(kind='gridpoint', local='GRID+0003',area='france', mo
 print t.line
 
 def show(r):
-    print 'Provider kind : ', r.provider.realkind()
+    print 'Provider kind : ', r.provider.realkind
     print 'Provider attr : ', r.provider._attributes
     print 'Provider pathname : ', r.provider.pathname(r.resource)
-    print 'Container kind: ', r.container.realkind()
+    print 'Container kind: ', r.container.realkind
     print 'Container attr : ', r.container._attributes
-    print 'Resource kind : ' ,r.resource.realkind()
+    print 'Resource kind : ' ,r.resource.realkind
     print 'Resource archive basename  :' , r.resource.archive_basename()
     print 'Resource attr : ', r.resource._attributes
     print 'Options       : ', r.options

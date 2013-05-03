@@ -31,8 +31,8 @@ class RawFields(Resource):
         )
     ]
     
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'rawfields'
 
     def olive_basename(self):
@@ -87,8 +87,8 @@ class GeoFields(Resource):
         )
     ]
     
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'geofields'
 
     def olive_basename(self):
@@ -106,7 +106,7 @@ class GeoFields(Resource):
             date = self.date,
             cutoff = self.cutoff
         )
-            
+
     def basename_info(self):
         if self.geometry.lam():
             lgeo=[self.geometry.area, self.geometry.resolution]
@@ -117,5 +117,3 @@ class GeoFields(Resource):
             geo=lgeo,
             format=self.nativefmt
         )
-    
-    

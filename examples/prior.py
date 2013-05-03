@@ -32,7 +32,7 @@ print t.line
 
 print t.prompt, 'SimpleTest from load 1', test
 print t.prompt, 'SimpleTest handler complete ?', test.complete
-print t.prompt, 'SimpleTest resource ?', test.resource.realkind(), test.resource
+print t.prompt, 'SimpleTest resource ?', test.resource.realkind, test.resource
 
 print 'xtest() :', test.resource.xtest()
 
@@ -60,7 +60,7 @@ print t.line
 
 print t.prompt, 'SimpleTest from load 2', test
 print t.prompt, 'SimpleTest handler complete ?', test.complete
-print t.prompt, 'SimpleTest resource ?', test.resource.realkind(), test.resource
+print t.prompt, 'SimpleTest resource ?', test.resource.realkind, test.resource
 
 print 'xtest() :', test.resource.xtest()
 
@@ -85,7 +85,7 @@ print t.line
 
 print t.prompt, 'SimpleTest from load 3', test
 print t.prompt, 'SimpleTest handler complete ?', test.complete
-print t.prompt, 'SimpleTest resource ?', test.resource.realkind(), test.resource
+print t.prompt, 'SimpleTest resource ?', test.resource.realkind, test.resource
 
 print 'xtest() :', test.resource.xtest()
 

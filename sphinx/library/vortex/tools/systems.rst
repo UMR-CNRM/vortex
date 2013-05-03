@@ -59,8 +59,3 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-.. autoclass:: SuperUX
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical

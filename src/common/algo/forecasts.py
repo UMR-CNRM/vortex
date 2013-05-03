@@ -51,7 +51,7 @@ class IFSModelParallel(Parallel):
 
     def valid_executable(self, rh):
         try:
-            return bool(rh.resource.realkind() == 'ifsmodel')
+            return bool(rh.resource.realkind == 'ifsmodel')
         except:
             return False
 

@@ -40,8 +40,8 @@ class IgaFinder(Finder):
         logger.debug('IgaFinder store init %s', self.__class__)
         super(IgaFinder, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'igafinder'
 
     def hostname(self):
@@ -82,8 +82,8 @@ class SopranoStore(Store):
         logger.debug('Soprano store init %s', self.__class__)
         super(SopranoStore, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'prodsoprano'
 
     def hostname(self):

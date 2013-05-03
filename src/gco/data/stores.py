@@ -37,8 +37,8 @@ class GStore(Store):
         logger.debug('Gco store init %s', self.__class__)
         super(GStore, self).__init__(*args, **kw)
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         """Default realkind is ``gstore``."""
         return 'gstore'
 

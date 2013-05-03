@@ -46,7 +46,7 @@ fpenv = footprint.envfp(
 
 print t.line
 
-if g.realkind() == 'opuser':
+if g.realkind == 'opuser':
     prvin  = dict()
     prvout = dict()
     prvcst = dict()

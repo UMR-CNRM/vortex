@@ -22,8 +22,8 @@ class Listing(FlowResource):
         )
     ]
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'listing'
 
     def basename_info(self):

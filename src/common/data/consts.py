@@ -29,7 +29,7 @@ class RtCoef(ModelResource):
         )
     ]
 
-    @classmethod
+    @property
     def realkind(self):
         return 'rtcoef'
 
@@ -62,8 +62,8 @@ class MatFilter(StaticResource):
         )
     ]
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'matfilter'
 
     def basename_info(self):

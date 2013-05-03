@@ -20,8 +20,8 @@ class Container(BFootprint):
         super(Container, self).__init__(*args, **kw)
 
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'container'
 
     @property
@@ -134,6 +134,10 @@ class InCore(Virtual):
         super(InCore, self).__init__(*args, incore = True, **kw)
         self._tmpfile = None
 
+    @property
+    def realkind(self):
+        return 'incore'
+
     def localpath(self):
         """
         Returns the actual name of the spooled temporary file object
@@ -142,11 +146,6 @@ class InCore(Virtual):
         if not self._tmpfile:
             self._tmpfile = tempfile.SpooledTemporaryFile(prefix=self.prefix, max_size=self.maxsize)
         return self._tmpfile
-
-
-    @classmethod
-    def realkind(cls):
-        return 'incore'
 
 
 class MayFly(Virtual):
@@ -171,6 +170,10 @@ class MayFly(Virtual):
         super(MayFly, self).__init__(*args, mayfly = True, **kw)
         self._tmpfile = None
 
+    @property
+    def realkind(self):
+        return 'mayfly'
+
     def localpath(self):
         """
         Returns the actual name of the temporary file object
@@ -179,11 +182,6 @@ class MayFly(Virtual):
         if not self._tmpfile:
             self._tmpfile = tempfile.NamedTemporaryFile(prefix=self.prefix, delete=self.delete)
         return self._tmpfile.name
-
-
-    @classmethod
-    def realkind(cls):
-        return 'mayfly'
 
 
 class File(Container):
@@ -204,8 +202,8 @@ class File(Container):
         super(File, self).__init__(*args, **kw)
         self._iod = None
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'file'
 
     def localpath(self):
@@ -238,7 +236,7 @@ class ContainersCatalog(ClassesCollector):
         cat = dict(
             remod = re.compile(r'.*\.containers'),
             classes = [ Container ],
-            itementry = Container.realkind()
+            itementry = 'container'
         )
         cat.update(kw)
         super(ContainersCatalog, self).__init__(**cat)

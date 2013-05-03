@@ -29,14 +29,14 @@ class AlgoComponent(BFootprint):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         """Default kind is ``algo``."""
         return 'algo'
 
     def fstag(self):
         """Defines a tag specific to the current algo component."""
-        return '.'.join((self.realkind(), self.engine))
+        return '.'.join((self.realkind, self.engine))
 
     def fsstamp(self, ctx, opts):
         """Ask the current context to put a stamp on file system."""
@@ -65,7 +65,7 @@ class AlgoComponent(BFootprint):
           * VORTEX_DEBUG_ENV : dump current environment before spawn
         """
         e = self.env
-        realkind = self.realkind()
+        realkind = self.realkind
         if e.true('vortex_debug_env'):
             self.system.subtitle('{0:s} : dump environment'.format(realkind))
             e.osdump()
@@ -220,7 +220,7 @@ class AlgoComponentsCatalog(ClassesCollector):
         cat = dict(
             remod = re.compile(r'.*\.algo'),
             classes = [ AlgoComponent ],
-            itementry = AlgoComponent.realkind()
+            itementry = 'algo'
         )
         cat.update(kw)
         super(AlgoComponentsCatalog, self).__init__(**cat)

@@ -31,7 +31,7 @@ class Namelist(Resource):
         ),
     )
 
-    @classmethod
+    @property
     def realkind(self):
         return 'namelist'
 
@@ -128,7 +128,7 @@ class Bogus(Resource):
         ),
     )
 
-    @classmethod
+    @property
     def realkind(self):
         return 'bogus'
 
@@ -154,7 +154,7 @@ class Bathymetry(Resource):
         ),
     )
 
-    @classmethod
+    @property
     def realkind(self):
         return 'bathymetry'
 
@@ -193,7 +193,7 @@ class Runoff(Resource):
         ),
     )
 
-    @classmethod
+    @property
     def realkind(self):
         return 'runoff'
 
@@ -228,7 +228,7 @@ class Moorings(Resource):
         )
     ]
 
-    @classmethod
+    @property
     def realkind(self):
         return 'moorings'
 
@@ -258,7 +258,7 @@ class MooringsPosition(Resource):
         )
     ]
 
-    @classmethod
+    @property
     def realkind(self):
         return 'moorings'
 
@@ -286,7 +286,7 @@ class Coordinates(Resource):
         ),
     )
 
-    @classmethod
+    @property
     def realkind(self):
         return 'coordinates'
 
@@ -325,7 +325,7 @@ class ModelBinaries(Resource):
         )
     ]
 
-    @classmethod
+    @property
     def realkind(self):
         return 'binary'
 
@@ -380,7 +380,7 @@ class ClimatologyLevitus(Resource):
         ),
     )
 
-    @classmethod
+    @property
     def realkind(self):
         return 'climatology'
 
@@ -430,7 +430,7 @@ class AtmosphericForcing(Resource):
         )
     )
 
-    @classmethod
+    @property
     def realkind(self):
         return 'atmospheric forcing'
 

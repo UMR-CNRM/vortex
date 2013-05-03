@@ -24,8 +24,8 @@ class Target(BFootprint):
         logger.debug('Abstract target computer init %s', self.__class__)
         super(Target, self).__init__(*args, **kw)
     
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'target'
 
 
@@ -37,7 +37,7 @@ class TargetsCatalog(ClassesCollector):
         cat = dict(
             remod = re.compile(r'.*\.targets'),
             classes = [ Target ],
-            itementry = Target.realkind()
+            itementry = 'target'
         )
         cat.update(kw)
         super(TargetsCatalog, self).__init__(**cat)

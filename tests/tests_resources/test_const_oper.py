@@ -45,8 +45,8 @@ class UtRtCoef(TestCase):
             self.assertTrue(rh.complete)
 
         self.assertEqual(rl[0].resource.kind, 'rtcoef')
-        self.assertEqual(rl[0].provider.realkind(), 'iga')
-        self.assertEqual(rl[0].container.realkind(), 'file')
+        self.assertEqual(rl[0].provider.realkind, 'iga')
+        self.assertEqual(rl[0].container.realkind, 'file')
         self.assertEqual(
             rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/const/autres/rtcoef.tar'
@@ -98,8 +98,8 @@ class UtBcor(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             self.assertEqual(rh.resource.kind, 'bcor')
-            self.assertEqual(rh.provider.realkind(), 'iga')
-            self.assertEqual(rh.container.realkind(), 'file')
+            self.assertEqual(rh.provider.realkind, 'iga')
+            self.assertEqual(rh.container.realkind, 'file')
 
         self.assertEqual(
             rl[0].location(),

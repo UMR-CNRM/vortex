@@ -58,8 +58,8 @@ class Gridpoint(GeoFlowResource):
         )
     ]
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'gridpoint'
 
     def olive_basename(self):

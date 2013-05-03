@@ -31,8 +31,8 @@ class Clim(StaticResource):
           )
     ]
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'clim'
 
     @property
@@ -64,8 +64,8 @@ class ClimModel(Clim):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'clim_model'
 
 
@@ -117,8 +117,8 @@ class ClimLAM(ClimModel):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'clim_model'
 
     def basename_info(self):
@@ -159,8 +159,8 @@ class ClimBDAP(Clim):
           )
     ]
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'clim_bdap'
 
     def basename_info(self):

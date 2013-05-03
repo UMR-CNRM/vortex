@@ -24,8 +24,8 @@ class BackgroundErrStd(GeoFlowResource):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'bgerrstd'
 
     def basename_info(self):

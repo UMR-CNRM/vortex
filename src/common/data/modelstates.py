@@ -42,8 +42,8 @@ class Analysis(GeoFlowResource):
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'analysis'
 
     def archive_basename(self):
@@ -128,8 +128,8 @@ class Historic(GeoFlowResource):
         )
     ]
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'historic'
 
     def archive_basename(self):
@@ -186,8 +186,8 @@ class Histsurf(GeoFlowResource):
         )
     ]
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'histsurf'
 
     def archive_basename(self):

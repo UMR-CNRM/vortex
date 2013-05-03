@@ -10,7 +10,7 @@ The most important usage is done by :class:`BFootprint` derivated objects.
 __all__ = []
 
 #: Activate nice dump of footprint in docstring
-docstring_nicedump = False
+docstring_nicedump = True
 
 import copy, re
 from vortex.autolog import logdefault as logger
@@ -112,7 +112,6 @@ class Footprint(object):
         """Returns the list of mandatory attributes in the current footprint."""
         fpa = self._fp['attr']
         return filter(lambda x: not fpa[x]['optional'] or not fpa[x]['default'], fpa.keys())
-
 
     def _firstguess(self, desc):
         attrs = self.attr
@@ -360,30 +359,6 @@ class Footprint(object):
         return self._fp['priority']
 
 
-class IFootprint(object):
-    """
-    Interface for base classes which are supposed to create footprints.
-    """
-
-    @classmethod
-    def footprint(cls, **kw):
-        pass
-
-    @classmethod
-    def mandatory(cls):
-        pass
-
-    @classmethod
-    def couldbe(cls, rd):
-        pass
-
-    @classmethod
-    def optional(cls):
-        pass
-
-    def realkind(self):
-        pass
-
 class AFootprint(object):
     """Accessor class to footprint attributes."""
 
@@ -433,7 +408,7 @@ class MFootprint(type):
         return realcls
 
 
-class BFootprint(IFootprint):
+class BFootprint(object):
     """
     Base class for any other thematic class that would need to incorporate a :class:`Footprint`.
     Its metaclass is :class:`MFootprint`.
@@ -459,6 +434,11 @@ class BFootprint(IFootprint):
             self._attributes, u_inputattr = self._instfp.resolve(self._attributes, fatal=True)
         self._observer = observers.classobserver(self.fullname())
         self._observer.notify_new(self, dict())
+
+    @property
+    def realkind(self):
+        """Must be implemented by subclasses."""
+        pass
 
     def __del__(self):
         self._observer.notify_del(self, dict())
@@ -506,6 +486,11 @@ class BFootprint(IFootprint):
         in order to be able to match the current object.
         """
         return cls.footprint().mandatory()
+
+    @classmethod
+    def optional(cls, a):
+        """Returns either the specified attribute ``a`` is optional or not."""
+        return cls.footprint().optional()
 
     @classmethod
     def couldbe(cls, rd, trackroot=None):
