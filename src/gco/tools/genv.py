@@ -4,15 +4,18 @@
 #: No automatic export
 __all__ = []
 
+import vortex
 from vortex.autolog import logdefault as logger
 from copy import copy
 
-from vortex.tools import env
+genvtool = 'genv'
 
 def handler():
-    return env.param(tag='genvitems')
+    """Return default environment object storing genv items"""
+    return vortex.tools.env.param(tag='genvitems')
 
 def register(**kw):
+    """Set key - values for a given ``cycle`` recorded as an ``entry`` (parameters)."""
     p = handler()
     cycle = kw.setdefault('cycle', 'default')
     entry = kw.setdefault('entry', None)
@@ -33,6 +36,7 @@ def register(**kw):
     return regcycle
 
 def contents(**kw):
+    """Return definition of a given ``cycle``."""
     p = handler()
     cycle = kw.setdefault('cycle', 'default')
     regcycle = [ x for x in p.keys() if p[x]['CYCLE'] == cycle ]
@@ -43,6 +47,38 @@ def contents(**kw):
     else:
         return None
 
+def nicedump(**kw):
+    """Return a nice sequence of string, ready to print."""
+    ldump = list()
+    c = contents(**kw)
+    if c:
+        ldump = [ '{0:s}="{1:s}"'.format(k, v) for k, v in c.items() ]
+    return ldump
+
 def cycles():
+    """Return curretnly defined cycles."""
     p = handler()
     return [ p[x]['CYCLE'] for x in p.keys() ]
+
+def clearall():
+    """Flush the current environment object storing cycles."""
+    p = handler()
+    p.clear()
+
+def autofill(kselect):
+    """Use the ``genv`` external tool to fill the specified cycle."""
+    cycle = None
+    gcout = vortex.sh().spawn([genvtool, kselect], output=True)
+    if gcout:
+        gcdict = dict()
+        for item in gcout:
+            k, v = item.split('=', 1)
+            v = v.strip('"')
+            if k == 'CYCLE_NAME':
+                cycle = v.rstrip('.gco')
+                k, v = 'cycle', cycle
+            gcdict[k] = v
+        register(**gcdict)
+    else:
+        logger.warning('Could not automaticaly fetch cycle %s contents', cycle)
+    return contents(cycle=cycle)

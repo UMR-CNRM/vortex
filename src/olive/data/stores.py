@@ -185,14 +185,10 @@ class OpArchiveStore(Store):
                 rc = ftp.get(cleanpath, targetpath)
                 ftp.close()
                 if rc and extract:
-                    if re.match('tgz$', targetpath):
-                        cmdltar = 'xvfz'
-                    else:
-                        cmdltar = 'xvf'
                     if extract == 'all' :
-                        rc = rc and system.tar(cmdltar, targetpath)
+                        rc = system.untar(targetpath, output=False)
                     else:
-                        rc = system.tar(cmdltar, targetpath , extract)
+                        rc = system.untar(targetpath, extract, output=False)
                         if local != extract:
                             rc = rc and system.mv(extract, local)
             return rc

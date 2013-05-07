@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-r"""
+"""
 This modules defines the low level physical layout for data handling.
 """
 
@@ -131,15 +131,19 @@ class Sequence(object):
 
     def input(self, **kw):
         """Create a section with default kind equal to ``ixo.INPUT``."""
-        self.section(kind=ixo.INPUT, **kw)
+        self.section(kind=ixo.INPUT, intent=intent.IN, **kw)
 
     def output(self, **kw):
         """Create a section with default kind equal to ``ixo.OUTPUT`` and intent equal to ``intent.OUT``."""
         self.section(kind=ixo.OUTPUT, intent=intent.OUT, **kw)
 
+    def executable(self, **kw):
+        """Create a section with default kind equal to to ``ixo.EXEC."""
+        self.section(kind=ixo.EXEC, intent=intent.IN, **kw)
+
     def inputs(self):
-        """Return a list of current sequence sections with ``ixo.INPUT`` kind."""
-        return [ x for x in self.sections if x.kind == ixo.INPUT ]
+        """Return a list of current sequence sections with ``ixo.INPUT`` or ``ixo.EXEC`` kind."""
+        return [ x for x in self.sections if ( x.kind == ixo.INPUT or x.kind == ixo.EXEC ) ]
 
     def effective_inputs(self, **kw):
         """
@@ -178,5 +182,3 @@ class Sequence(object):
         if not outrole and 'kind' in kw:
             outkind = [ x for x in outset if x.rh.resource.realkind == kw['kind'] ]
         return outrole or outkind or outset
-
-

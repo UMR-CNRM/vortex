@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-r"""
+"""
 Top level interface for accessing to the VORTEX facilities.
 """
 
@@ -16,7 +16,11 @@ from vortex.algo import components
 from vortex.layout.dataflow import stripargs_section
 from vortex.utilities.decorators import printargs
 
-#@printargs
+#: Shortcut to footprint env defaults
+defaults = syntax.footprint.envfp
+
+# Most commonly used functions
+
 def rload(*args, **kw):
     """
     Resource Loader.
@@ -47,8 +51,6 @@ def rload(*args, **kw):
     logger.debug('Resource desc %s', rx)
     return [data.handlers.Handler(x) for x in rx]
 
-
-@printargs
 def rh(*args, **kw):
     """
     This function selects the first complete resource handler as returned
@@ -60,8 +62,6 @@ def rh(*args, **kw):
     else:
         return None
 
-
-@printargs
 def rget(*args, **kw):
     """
     This function calls the :meth:`get` method on any resource handler returned
@@ -72,8 +72,6 @@ def rget(*args, **kw):
         rh.get()
     return rl
 
-
-@printargs
 def rput(*args, **kw):
     """
     This function calls the :meth:`put` method on any resource handler returned
@@ -84,29 +82,32 @@ def rput(*args, **kw):
         rh.put()
     return rl
 
-@printargs
-def input(*args, **kw):
-    """This function adds an input section to the current sequence."""
+def pushsection(section, args, kw):
+    """Add a ``section`` type to the current sequence."""
     ctx = sessions.ticket().context
     ctx.record_off()
     opts, kwclean =  stripargs_section(**kw)
     rl = rload(*args, **kwclean)
+    push = getattr(ctx.sequence, section)
     for rhandler in rl:
-        ctx.sequence.input(rh=rhandler, **opts)
+        push(rh=rhandler, **opts)
     ctx.record_on()
     return rl
 
-@printargs
+def input(*args, **kw):
+    """Add an input section to the current sequence."""
+    return pushsection('input', args, kw)
+
 def output(*args, **kw):
-    """This function adds an output section to the current sequence."""
-    ctx = sessions.ticket().context
-    ctx.record_off()
-    opts, kwclean =  stripargs_section(**kw)
-    rl = rload(*args, **kwclean)
-    for rhandler in rl:
-        ctx.sequence.output(rh=rhandler, **opts)
-    ctx.record_on()
-    return rl
+    """Add an output section to the current sequence."""
+    return pushsection('output', args, kw)
+
+def executable(*args, **kw):
+    """Add an executable section to the current sequence."""
+    loaded = pushsection('executable', args, kw)
+    if len(loaded) == 1:
+        loaded = loaded[0]
+    return loaded
 
 def magic(uri, localpath):
     return rh(unknown=True, magic=uri, filename=localpath)

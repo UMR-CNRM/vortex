@@ -39,6 +39,7 @@ class Handler(object):
             self.options[k] = rd.get(k)
         self.options.update(kw)
         self._history = [(Date.now(), self.__class__.__name__, 'init', 1)]
+        self._stage = [ 'load' ]
         self._observer = observers.classobserver('Resources-Handlers')
         self._observer.notify_new(self, dict(stage = 'load'))
         logger.debug('New resource handler %s', self.__dict__)
@@ -53,6 +54,16 @@ class Handler(object):
     def complete(self):
         """Returns either all the internal components are defined."""
         return bool(self.resource and self.provider and self.container)
+
+    @property
+    def stage(self):
+        """Return current resource handler stage (load, get, put)."""
+        return self._stage[-1]
+
+    def updstage(self, newstage):
+        """Notify the new stage to any observing system."""
+        self._stage.append(newstage)
+        self._observer.notify_upd(self, dict(stage = newstage))
 
     @property
     def contents(self):
@@ -143,7 +154,7 @@ class Handler(object):
                 rst = store.get(uridata, self.container.localpath())
                 self.container.updfill(rst)
                 self._history.append((Date.now(), store.fullname(), 'get', rst))
-                self._observer.notify_upd(self, dict(stage = 'get'))
+                self.updstage('get')
                 return rst
             else:
                 logger.error('Could not find any store to get %s', remotelocation)
@@ -165,7 +176,7 @@ class Handler(object):
                 del uridata['netloc']
                 rst = store.put(self.container.localpath(), uridata)
                 self._history.append((Date.now(), store.fullname(), 'put', rst))
-                self._observer.notify_upd(self, dict(stage = 'put'))
+                self.updstage('put')
             else:
                 logger.error('Could not find any store to put %s', remotelocation)
         else:

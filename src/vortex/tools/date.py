@@ -98,27 +98,25 @@ def guess(*args):
     else:
          raise ValueError, "Cannot guess what Period or Date could be %s" % str(args)
 
-def daterange(start, end=None, increment='P1D'):
+def daterange(start, end=None, step='P1D'):
     """Date generator."""
+
     if not isinstance(start, Date):
         start = Date(start)
 
-    if end:
+    if end == None:
+        end = start + Period('P10D')
+    else:
         if not isinstance(end, Date):
             end = Date(end)
 
-    if not isinstance(increment, Period):
-        increment = Period(increment)
+    if not isinstance(step, Period):
+        step = Period(step)
 
-    date = start
-    if end:
-        while date <= end:
-            yield date
-            date += increment
-    else:
-        while True:
-            yield date
-            date += increment
+    rollingdate = start
+    while rollingdate <= end:
+        yield rollingdate
+        rollingdate += step
 
 
 class Period(datetime.timedelta):

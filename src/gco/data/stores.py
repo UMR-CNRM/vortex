@@ -14,13 +14,13 @@ rextract = re.compile('^extract=(.*)$')
 class GStore(Store):
     """
     GCO central storage class.
-    
+
     Extended footprint:
-    
+
     * scheme (in values: ``gget``)
     * netloc (in values: ``gco.meteo.fr``) 
     """
-    
+
     _footprint = dict(
         info = 'GCO Central Store',
         attr = dict(
@@ -29,6 +29,14 @@ class GStore(Store):
             ),
             netloc = dict(
                 values = [ 'gco.meteo.fr' ],
+            ),
+            gcobin = dict(
+                optional = True,
+                default = 'gget'
+            ),
+            gcopath = dict(
+                optional = True,
+                default = None
             ),
         )
     )
@@ -49,12 +57,17 @@ class GStore(Store):
         gname = l.pop()
         tampon = '/' + '/'.join(l)
         system.env.gget_tampon = tampon
-        rc = system.spawn(['gget', gname], output=False)
+        gtool = self.gcobin
+        if self.gcopath:
+            gtool = system.path.join(self.gcopath, gtool)
+        rc = system.spawn([gtool, gname], output=False)
         if rc and system.path.exists(gname):
+            if not system.path.isdir(gname) and system.is_tarfile(gname):
+                rc = system.untar(gname, output=False)
             extract = remote['query'].get('extract', None)
             if extract:
                 logger.info('GStore get %s', gname + '/' + extract[0])
-                rc = system.cp(gname + '/' + extract[0] , local)
+                rc = system.cp(gname + '/' + extract[0], local)
             else:
                 logger.info( 'GStore get %s', gname )
                 rc = system.mv(gname, local)

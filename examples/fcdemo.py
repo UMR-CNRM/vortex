@@ -35,11 +35,9 @@ print t.prompt, sh.pwd
 
 arpege_cycle = 'cy37t1_op1.17'
 
-#domain = ['GLOB15','GLOB25','EURAT01','EUROC25','GLOB05']
-domains = [ 'GLOB15' ]
 rundate = date.Date(2013, 4, 25, 0)
 geo = SpectralGeometry(id='Current op', area='france', truncation=798)
-geoBDAP = GridGeometry(area='GLOB15',resolution='15')
+geoBDAP = GridGeometry(area='GLOB15', resolution='15')
 
 fpenv = footprint.envfp(
     geometry=geo,

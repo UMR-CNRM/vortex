@@ -17,13 +17,13 @@ class RtCoef(ModelResource):
         dict(
             info = 'Set of satellite  coefficients',
             attr = dict(
-				kind = dict(
+                kind = dict(
                     values = [ 'rtcoef' ]
-				),
-            	gvar = dict(
-                	type = GenvKey,
-                	optional = True,
-                	default = 'rtcoef_tgz'
+                ),
+                gvar = dict(
+                    type = GenvKey,
+                    optional = True,
+                    default = 'rtcoef_tgz'
                 ),
             )
         )
@@ -50,13 +50,13 @@ class MatFilter(StaticResource):
                 kind = dict(
                     values = [ 'matfilter' ]
                 ),
-                scopedomain = dict(
+                scope = dict(
                     type = GridGeometry,
                 ),
                 gvar = dict(
                     type = GenvKey,
                     optional = True,
-                    default = 'mat_filter_[scopedomain::area]'
+                    default = 'mat_filter_[scope::area]'
                 )
             )
         )
@@ -69,12 +69,12 @@ class MatFilter(StaticResource):
     def basename_info(self):
         """Generic information, radical = ``matfil``."""
         return dict(
-            geo     = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}, self.scopedomain.area, {'filtering':self.scopedomain.filtering}],
+            geo     = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}, self.scope.area, {'filtering':self.scope.filtering}],
             radical = 'matfil',
             src     = self.model,
         )
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'matrix.fil.' + self.scopedomain.area + '.t' + str(self.geometry.truncation) + '.c' + str(self.geometry.stretching)
+        return 'matrix.fil.' + self.scope.area + '.t' + str(self.geometry.truncation) + '.c' + str(self.geometry.stretching)
 

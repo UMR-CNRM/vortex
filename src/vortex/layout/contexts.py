@@ -27,7 +27,7 @@ class Context(object):
         self._tag = tag
         self.tagtree = tagtree
         self._keeprd = keeprd
-        self._task = None
+        self._task = task
         self._void = True
         self._fstore = dict()
         self._stampradical = '.'.join(('.ctx', str(id(self))))
@@ -59,7 +59,7 @@ class Context(object):
         else:
             self._sequence = dataflow.Sequence()
 
-        self.bind(task)
+        self.bind(self._task)
         observers.classobserver('Resources-Handlers').register(self)
 
     def newobsitem(self, item, info):
@@ -90,14 +90,19 @@ class Context(object):
                 if section.rh == item:
                     section.updstage(info)
 
-    def tag(self, tag=None):
+    def _gettag(self):
+        """Return the current tag name."""
+        return self._tag
+
+    def _settag(self, value):
         """
         Set the formal tag name of the current context to the provided value, if any.
         The current tag name is returned.
         """
-        if tag: self._tag = tag
+        if tag: self._tag = value
         return self._tag
 
+    tag = property(_gettag, _settag, None)
 
     @property
     def tree(self):
@@ -165,7 +170,7 @@ class Context(object):
         The task sequence becomes the current context sequence.
         """
         if task and hasattr(task, 'sequence'):
-            logger.info('Binded context <%s> to task %s', self.tag(), task)
+            logger.info('Binding context <%s> to task %s', self.tag(), task)
             self._sequence = task.sequence
             self._task = task
             self._void = False
@@ -186,7 +191,7 @@ class Context(object):
     def hasfocus(self):
         """Return either the current context has the active focus in the tree it belongs."""
         return self.tree.token == self
-        
+
     def stamp(self, tag='default'):
         """Return a stamp name that could be used for any generic purpose."""
         return self._stampradical + '.' + str(tag)
@@ -225,6 +230,7 @@ class Context(object):
         self._void = self._record
 
     def exit(self):
+        """Clean exit from the current context."""
         actualsys = None
         try:
             actualsys = self.system

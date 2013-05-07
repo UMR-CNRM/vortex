@@ -9,5 +9,6 @@ List of modules.
    
    vortex
    gloves
+   loader
    sessions
    toolbox

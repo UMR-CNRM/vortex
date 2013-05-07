@@ -12,8 +12,8 @@ __all__ = []
 
 import re, os, platform, shutil, sys, io, filecmp, time
 import glob
+import tarfile
 import subprocess
-import importlib
 
 from vortex.autolog import logdefault as logger
 from vortex.tools.env import Environment
@@ -217,8 +217,8 @@ class System(BFootprint):
         mroot = g.siteroot + '/src'
         mfiles = [ re.sub('^' + mroot + '/', '', x) for x in self.ffind(mroot) ]
         return [
-            re.sub('(?:\/__init__)?\.py', '', x).replace('/', '.')
-            for x in mfiles if re.search(only, x, re.IGNORECASE)
+            re.sub('(?:\/__init__)?\.py$', '', x).replace('/', '.')
+            for x in mfiles if ( re.search(only, x, re.IGNORECASE) and x.endswith('.py') )
         ]
 
     def systems_reload(self):
@@ -226,7 +226,7 @@ class System(BFootprint):
         extras = list()
         for modname in self.vortex_modules('systems'):
             if modname not in sys.modules:
-                importlib.import_module(modname)
+                self.import_module(modname)
                 extras.append(modname)
         return extras
 
@@ -479,17 +479,47 @@ class OSExtended(System):
         if not rl: rl.append('*')
         return self.glob(*rl)
 
-    def tar(self, *args, **kw):
-        """Basic file archive command."""
-        cmd = [ 'tar', args[0] ]
-        cmd.extend(self.glob(args[1]))
-        cmd.extend(args[2:])
+    def is_tarfile(self, filename):
+        """Return a boolean according to the tar status of the ``filename``."""
+        return tarfile.is_tarfile(filename)
+
+    def _tarcx(self, *args, **kw):
+        """Raw file archive command."""
+        cmd = [ 'tar', kw.setdefault('cx', 'c') ]
+        del kw['cx']
+        cmd.extend(self.glob(args[0]))
+        optforce = 'opts' in kw
+        zopt = set(cmd[1]) | set(kw.setdefault('opts', 'f'))
+        del kw['opts']
+        if not optforce:
+            if kw.setdefault('verbose', True):
+                zopt.add('v')
+            else:
+                zopt.discard('v')
+            del kw['verbose']
+            if cmd[-1].endswith('gz'):
+                zopt.add('z')
+            else:
+                zopt.discard('z')
+        cmd[1] = ''.join(zopt)
+        cmd.extend(args[1:])
         return self.spawn(cmd, **kw)
+
+    def tar(self, *args, **kw):
+        """Create a file archive (always c-something)'"""
+        kw['cx'] = 'c'
+        self._tarcx(*args, **kw)
+
+    def untar(self, *args, **kw):
+        """Unpack a file archive (always x-something)'"""
+        kw['cx'] = 'x'
+        self._tarcx(*args, **kw)
 
 
 class Linux(OSExtended):
     """Default system class for most linux based systems."""
 
+    _abstract = True
     _footprint = dict(
         info = 'Linux base system',
         attr = dict(
@@ -510,7 +540,56 @@ class Linux(OSExtended):
         return 'linux'
 
 
-class LinuxDebug(Linux):
+class Linux26(Linux):
+    """Specific Linux system with python version < 2.7"""
+
+    _footprint = dict(
+        info = 'Linux base system with pretty old python version',
+        attr = dict(
+            python = dict(
+                values = [ '2.6.4', '2.6.5', '2.6.6' ]
+            )
+        )
+    )
+
+    def import_module(self, modname):
+        import imp
+        path = None
+        buildname = ''
+        for mod in modname.split('.'):
+            mfile, mpath, minfo = imp.find_module(mod, path)
+            path = [ mpath ]
+            buildname = buildname + mod
+            imp.load_module(buildname, mfile, mpath, minfo)
+            buildname = buildname + '.'
+
+
+class Linux27(Linux):
+    """Specific Linux system with python version >= 2.7"""
+
+    _footprint = dict(
+        info = 'Linux base system with pretty new python version',
+        attr = dict(
+            python = dict(
+                values = [ '2.7.2', '2.7.3', '2.7.4' ]
+            )
+        )
+    )
+
+    def import_module(self, modname):
+        try:
+            import importlib
+        except ImportError:
+            logger.critical('No way to get importlob in python 2.7 ... something really weird !')
+            raise
+        except:
+            logger.critical('Unexpected error: %s', sys.exc_info()[0])
+            raise
+        else:
+            importlib.import_module(modname)
+
+
+class LinuxDebug(Linux27):
     """Special system class for crude debugging on linux based systems."""
 
     _footprint = dict(

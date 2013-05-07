@@ -117,14 +117,10 @@ class SopranoStore(Store):
             ftp.close()
             extract = remote['query'].get('extract', None)
             if extract:
-                if re.match('tgz$', remote['path']):
-                    cmdltar = 'xvfz'
-                else:
-                    cmdltar = 'xvf'
                 if extract == 'all' :
-                    rc = system.tar(cmdltar, local)
+                    rc = system.untar(local, output=False)
                 else:
-                    rc = system.tar(cmdltar, local , extract)
+                    rc = system.untar(local , extract, output=False)
                     if local != extract:
                         rc = system.mv(extract, local)
             return rc

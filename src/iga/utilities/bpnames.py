@@ -333,7 +333,7 @@ def global_bnames(resource, provider):
         if resource.realkind == 'rtcoef':
             return resource.realkind + '.tar'
         if resource.realkind == 'matfilter':
-            return 'matrix.fil.' + resource.scopedomain.area
+            return 'matrix.fil.' + resource.scope.area
         if resource.realkind == 'namelist':
             return resource.source
         if resource.realkind == 'namselect':

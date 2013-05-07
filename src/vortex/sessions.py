@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-r"""
+"""
 Vortex Sessions Handling
 
 A :mod:`vortex` session is a virtual identifier gathering information on the current

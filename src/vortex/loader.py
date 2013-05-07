@@ -11,18 +11,27 @@ import autolog
 logger = autolog.logdefault
 
 class VortexImporter(object):
+    """Import hook for modules from the install package of VORTEX."""
 
-    _import_prefix = set([ 'vortex', 'common', 'olive' ])
+    def __init__(self, prefix=set([ 'vortex', 'common', 'olive' ])):
+        self._import_prefix = prefix
+        logger.debug('Vortex Importer < name: %s >', self._import_prefix)
 
-    @classmethod
-    def register(cls, package):
-        cls._import_prefix.add(package)
+    def register(self, package):
+        """Add a prefix package nam to the current set."""
+        self._import_prefix.add(package)
 
-    @classmethod
-    def unregister(cls, package):
-        cls._import_prefix.discard(package)
+    def unregister(self, package):
+        """Discard a prefix package nam to the current set."""
+        self._import_prefix.discard(package)
+
+    @property
+    def prefixes(self):
+        """Return a list of the internal set of prefixes the hook applies to."""
+        return list(self._import_prefix)
 
     def load_module(self, fullname):
+        """Standard load overwritting. Set the logger value."""
         if fullname in sys.modules:
             return sys.modules[fullname]
         modname = fullname.rpartition('.')[-1]
@@ -41,17 +50,15 @@ class VortexImporter(object):
         return None
 
     def find_module(self, fullname, path=None):
-        logger.debug('Vortex Module Finder < name: %s >', fullname)
-        logger.debug('Vortex Module Finder < path: %s >', path)
-        vp = False
-        for prefix in self.__class__._import_prefix:
-            if fullname.startswith(prefix  + '.'):
-                vp = True
-                break
-        if vp:
-            self.path = path
+        """Standard find overwritting. Return the current loader when ``fullname`` module matchs prefixes."""
+        logger.debug('Vortex Module Finder <name: %s> <path: %s>', fullname, path)
+        modparts = fullname.split('.')
+        if modparts and modparts[0] in self._import_prefix:
             logger.info('Vortex Module Finder < load: %s %s >', fullname, path)
+            self.path = path
             return self
-        return None
+        else:
+            return None
+
 
 sys.meta_path.append(VortexImporter())

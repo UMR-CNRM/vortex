@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-r"""
+"""
 *Versatile Objects Rounded-up in a Toolbox for Environmental eXperiments*
 
 VORTEX is a set of objects for basic resources handling in the context
@@ -21,10 +21,9 @@ sessions could coexist.
 Advanced users could access to specific classes of objects, but the use
 of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
-
 """
 
-__version__ = '0.6.25'
+__version__ = '0.6.26'
 
 __all__ = []
 
