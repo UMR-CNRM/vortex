@@ -21,8 +21,11 @@ class Jacket(object):
         self._initfile = afile
 
     def dumpinfp(self):
-        return "{0:s}.{1:s}(file={2:s})".format(self.__module__,
-                            self.__class__.__name__, repr(self._initfile))
+        return "{0:s}.{1:s}(file={2:s})".format(
+            self.__module__,
+            self.__class__.__name__,
+            repr(self._initfile)
+        )
 
 
 class Executable(Resource):
@@ -58,7 +61,7 @@ class Script(Executable):
     def realkind(self):
         return 'script'
 
-    def command_line(self):
+    def command_line(self, **opts):
         """Returns optional attribute :attr:`rawopts`."""
         if self.rawopts == None:
             return ''
@@ -107,7 +110,7 @@ class BlackBox(Binary):
     def realkind(self):
         return 'blackbox'
 
-    def command_line(self):
+    def command_line(self, **opts):
         """Returns current attribute :attr:`binopts`."""
         return self.binopts
 
@@ -130,6 +133,6 @@ class NWPModel(Binary):
     def realkind(cls):
         return 'nwpmodel'
 
-    def command_line(self):
+    def command_line(self, **opts):
         """Abstract method."""
         return ''

@@ -31,7 +31,7 @@ cache = myenv.home + '/tmp/fcdemo/'
 arpege_cycle = 'cy36t1_op2.16'
 
 rundate = date.Date('2012041300')
-geo = SpectralGeometry(id='Current op', area='france', truncation=798)
+geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
 
 fpenv = footprint.envfp(
     geometry=geo,

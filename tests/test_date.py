@@ -231,6 +231,7 @@ class utTime(TestCase):
         self.assertEquals(t.iso8601(), 'T18:30Z')
         self.assertEquals(t.fmth, '0018')
         self.assertEquals(t.fmthm, '0018:30')
+        self.assertEquals(t.fmtraw, '001830')
 
     def test_opTime(self):
         t = date.Time('07:45')

@@ -70,6 +70,12 @@ class Container(BFootprint):
         if self.totalsize < 4194304:
             return iod.read()
 
+    def readlines(self):
+        """Read in one jump all the data as a sequens of lines as long as the data is not too big."""
+        iod = self.iodesc()
+        if self.totalsize < 4194304:
+            return iod.readlines()
+
     def close(self):
         """Close the logical io descriptor."""
         pass

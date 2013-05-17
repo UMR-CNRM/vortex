@@ -138,7 +138,7 @@ def clim_bdap_bnames(resource):
     if 'arome' in resource.model:
         localname = 'BDAP_frangp_isba' + str(resource.month)
     elif resource.model == 'aladin':
-        if "08" in resource.geometry.resolution:
+        if "08" in resource.geometry.rnice:
             #clim_dap.caled01.m01
             resolution = "01"
         else:

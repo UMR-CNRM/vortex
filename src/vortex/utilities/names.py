@@ -18,13 +18,13 @@ class VNameBuilder(object):
         self.default = dict(
             radical = 'vortexdata',
             src = None,
+            fmt = None,
             term = None,
             geo = None,
             suffix = None,
             nativefmt = None,
             stage = None,
             part = None,
-            format = None,
         )
         self.default.update(kw)
     
@@ -100,8 +100,8 @@ class VNameBuilder(object):
         if d['term'] != None:
             name = name + '+' + str(d['term'])
 
-        if d['format'] != None:
-            name = name + '.' + d['format']
+        if d['fmt'] != None:
+            name = name + '.' + d['fmt']
 
         if d['suffix'] != None:
             name = name + '.' + '.'.join(self.pack_std_items(d['suffix']))

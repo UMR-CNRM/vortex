@@ -52,7 +52,7 @@ class Elscf(GeoFlowResource):
         prefix = 'COUPL'
         if re.match('assist1bis|testms1', self.geometry.area):
             prefix = 'COUPL1'
-        if re.match('ifs|ecmwf', self.source) and '16km' in self.geometry.resolution:
+        if re.match('ifs|ecmwf', self.source) and '16km' in self.geometry.rnice:
             prefix = 'COUPLIFS'
 
         return prefix + self.term.fmthour + '.r' + str(suffix)
@@ -60,8 +60,8 @@ class Elscf(GeoFlowResource):
     def basename_info(self):
         """Generic information, radical = ``cpl``."""
         return dict(
-            format  = self.nativefmt,
-            geo     = [self.geometry.area, self.geometry.resolution],
+            fmt     = self.nativefmt,
+            geo     = [self.geometry.area, self.geometry.rnice],
             src     = self.source,
             radical = 'cpl',
             term    = self.term.fmthm,

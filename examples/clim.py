@@ -4,14 +4,14 @@
 # Status : TODO From a long long time...
 
 import vortex
-import vortex.data
+from vortex.data import geometries
+from vortex.tools import date
+import common.data
 import olive.data
 import gco.data
 import gco.syntax
 
 t = vortex.sessions.ticket()
-
-print t.line
 
 #lh1 = toolbox.rload(toto='titi',kind='modelclim', model='arpege', truncation='798,107', month='10,11',genv='cy36t1_op1.01',local='clim.(month).(truncation)')
 #lh2 = toolbox.rload(kind='bdapclim', model='arpege', month='11',genv='cy36t1_op1.01',local='clim.(month).(domain)',domain='GLOB15,EUROC25')
@@ -38,29 +38,28 @@ print t.line
 #lh8 = toolbox.rload( namespace='[suite].archive.fr',kind='historic',local='toto',model='aladin',date='2011111400',cutoff='production', term=3,suite='oper',area='testmp2')
 #lh8= toolbox.rload( kind='gridpoint',local='GRID+0003',model='arpege',date='2011111400',cutoff='production', term=3,origin='historic',nativefmt='grib', domain='GLOB15',suite='oper')
 
-lh8 = vortex.toolbox.rload(kind='gridpoint', local='GRID+0003',area='france', model='aladin', date='2011111406', cutoff='production', term=3, origin='historic', nativefmt='grib', domain='GLOB15', suite='oper')
-
 print t.line
 
-def show(r):
-    print 'Provider kind : ', r.provider.realkind
-    print 'Provider attr : ', r.provider._attributes
-    print 'Provider pathname : ', r.provider.pathname(r.resource)
-    print 'Container kind: ', r.container.realkind
-    print 'Container attr : ', r.container._attributes
-    print 'Resource kind : ' ,r.resource.realkind
-    print 'Resource archive basename  :' , r.resource.archive_basename()
-    print 'Resource attr : ', r.resource._attributes
-    print 'Options       : ', r.options
+vortex.toolbox.fast_resolve = True
+
+lh8 = vortex.toolbox.rload(
+    kind='gridpoint', model='arpege', vapp='arpege', vconf='france',
+    date=date.today(), cutoff='production', term=3, origin='historic',
+    nativefmt='grib', suite='oper',
+    geometry = geometries.getbyname('glob15'),
+    local = 'GRID+[term::fmth]',
+)
 
 lrh=(lh8,)
 for rh in lrh:
     for r in rh :
-        show(r)
-        r.get()
+        print t.line, r.idcard(), t.line
+        print 'GET', r.location(), '...', r.get()
 
 print t.line
 
-print t.duration()
+print t.prompt, 'Duration', t.duration()
+
+print t.line
 
 vortex.exit()

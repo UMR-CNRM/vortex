@@ -24,7 +24,8 @@ c = t.context
 sh = t.system()
 
 if sh.cd(e.HOME + '/tmp/rundir'):
-    sh.rmglob('-rf','*')
+    #sh.rmglob('-rf', '*')
+    print t.prompt, sh.pwd
 
 today = date.today()
 
@@ -70,7 +71,7 @@ inputs = (
         genv=arpege_cycle,
         local='climarpege',
         model='arpege',
-        geometry=SpectralGeometry(id='Current op',  truncation='798'),
+        geometry=SpectralGeometry(id='Current op',  truncation='798', lam=False),
         role='Fatherclim'
     ),
     rl(
@@ -79,7 +80,7 @@ inputs = (
         local='climaladin',
         role='Sonclim',
         model='aladin',
-        geometry=SpectralGeometry(id='Current op', area='reunion', resolution='08km00')
+        geometry=SpectralGeometry(id='Current op', area='reunion', resolution=8.0, lam=True)
     ),
     rl(
         kind='namelist',
@@ -110,7 +111,7 @@ t.warning()
 for rh in inputs:
     for r in rh:
         print 'Get', r.location(), '...',
-        print r.get()
+        print r.get(insitu=False)
 
 
 rx = vortex.toolbox.rh(remote=g.siteroot + '/examples/tmp/test.sh', file='testcpl.sh', language='bash', kind='script')

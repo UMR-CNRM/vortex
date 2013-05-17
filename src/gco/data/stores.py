@@ -50,8 +50,9 @@ class GStore(Store):
         """Default realkind is ``gstore``."""
         return 'gstore'
 
-    def ggetget(self, system, remote, local):
+    def ggetget(self, remote, local, options):
         """System call to ``gget`` external tool."""
+        system = options.get('system', None)
         rpath = remote['path']
         l = rpath.lstrip('/').split('/')
         gname = l.pop()

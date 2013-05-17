@@ -19,7 +19,7 @@ print t.prompt, ctx.system.pwd
 
 print t.line
 
-spgeo = SpectralGeometry(id='Current op', area='france', truncation=798, stretching=24)
+spgeo = SpectralGeometry(id='Current op', area='france', truncation=798, stretching=2.4, lam=False)
 
 rh = vortex.toolbox.rload(
     namespace='oper.archive.fr',

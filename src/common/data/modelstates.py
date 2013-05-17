@@ -71,13 +71,13 @@ class Analysis(GeoFlowResource):
 
     def basename_info(self):
         """Generic information, radical = ``analysis``."""
-        if self.geometry.lam():
-            lgeo = [self.geometry.area, self.geometry.resolution]
+        if self.geometry.lam:
+            lgeo = [self.geometry.area, self.geometry.rnice]
         else:
             lgeo = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}]
 
         return dict(
-            format  = self.nativefmt,
+            fmt     = self.nativefmt,
             geo     = lgeo,
             radical = 'analysis',
             src     = [self.filling, self.model],
@@ -137,7 +137,7 @@ class Historic(GeoFlowResource):
         prefix = 'icmsh'
         midfix = '(histfix:igakey)'
         suffix = ''
-        if self.geometry.lam() and re.match('testms1|testmp1|testmp2', self.geometry.area):
+        if self.geometry.lam and re.match('testms1|testmp1|testmp2', self.geometry.area):
             suffix = '.r' + archivesuffix(self.model, self.cutoff, self.date)
 
         name = prefix + midfix + '+' + self.term.fmthour
@@ -156,13 +156,13 @@ class Historic(GeoFlowResource):
 
     def basename_info(self):
         """Generic information, radical = ``historic``."""
-        if self.geometry.lam():
-            lgeo = [self.geometry.area, self.geometry.resolution]
+        if self.geometry.lam:
+            lgeo = [self.geometry.area, self.geometry.rnice]
         else:
             lgeo = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}]
 
         return dict(
-            format  = self.nativefmt,
+            fmt     = self.nativefmt,
             geo     = lgeo,
             radical = 'historic',
             src     = self.model,
@@ -199,13 +199,13 @@ class Histsurf(GeoFlowResource):
 
     def basename_info(self):
         """Generic information, radical = ``histsurf``."""
-        if self.geometry.lam():
-            lgeo = [self.geometry.area, self.geometry.resolution]
+        if self.geometry.lam:
+            lgeo = [self.geometry.area, self.geometry.rnice]
         else:
             lgeo = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}]
 
         return dict(
-            format  = self.nativefmt,
+            fmt     = self.nativefmt,
             geo     = lgeo,
             radical = 'histsurf',
             src     = self.model,

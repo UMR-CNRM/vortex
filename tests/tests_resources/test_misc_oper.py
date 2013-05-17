@@ -8,35 +8,32 @@ except ImportError, e:
     print e
     raise
 
-#t.debug()
-
-
 
 class UtMatFilter(TestCase):
 
     def setUp(self):
-        self.std = SpectralGeometry(id='oper', area='france', truncation=798)
-        self.glob15 = GridGeometry(id='oper', area='GLOB15', resolution=15)
-        self.fabec125 = GridGeometry(id='oper', area='FABEC0125', resolution=12.5)
+        self.std = SpectralGeometry(id='oper', area='france', truncation=798, stretching=2.4, lam=False)
+        self.glob15 = GridGeometry(id='oper', area='GLOB15', resolution=1.5)
+        self.fabec125 = GridGeometry(id='oper', area='FABEC0125', resolution=0.125)
         self.fp_prov = dict(
             username = 'mxpt001',
             suite = 'oper',
             igakey = self.std.area,
         )
         self.fp_cont = dict(
-            local='matrix.fil.[scopedomain::area]'
+            local='matrix.fil.[scope::area]'
         )
         self.fp_matfilter = dict(
             kind='matfilter',
             geometry = self.std,
-            scopedomain = self.glob15,
+            scope = self.glob15,
             model='arpege'
         )
 
         self.fp_matfilter2 = dict(
             kind='matfilter',
             geometry = self.std,
-            scopedomain = self.fabec125,
+            scope = self.fabec125,
             model='arpege'
         )
 

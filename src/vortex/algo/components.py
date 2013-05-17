@@ -77,9 +77,14 @@ class AlgoComponent(BFootprint):
         self.system.subtitle('{0:s} : directory listing (post-execution)'.format(realkind))
         self.system.dir(output=False)
 
+    def spawn_command_options(self):
+        """Prepare options for the resource's command line."""
+        return dict()
+
     def spawn_command_line(self, rh, ctx):
         """Split the shell command line of the resource to be run."""
-        return shlex.split(rh.resource.command_line())
+        opts = self.spawn_command_options()
+        return shlex.split(rh.resource.command_line(**opts))
 
     def execute(self, rh, ctx, opts):
         """Abstract method."""
@@ -107,7 +112,9 @@ class AlgoComponent(BFootprint):
         self.fscheck(ctx, kw)
         self.postfix(rh, ctx, kw)
         self.env = None
+        self.system = None
         return self._status
+
 
 class Expresso(AlgoComponent):
     """
@@ -198,6 +205,7 @@ class Parallel(AlgoComponent):
             mpi = mpitools.load(sysname=self.system.sysname, mpiname=self.mpiname)
 
         if not mpi:
+            logger.critical('Component %s could not find any mpitool', self.shortname())
             raise AttributeError, 'No valid mpitool attr could be found.'
 
         mpiopts = mpi.options(kw.get('mpiopts', dict()))
@@ -206,7 +214,7 @@ class Parallel(AlgoComponent):
         args.append(self.absexcutable(rh.container.localpath()))
 
         args.extend(self.spawn_command_line(rh, ctx))
-        logger.debug('Run in parallel mode %s', args)
+        logger.info('Run in parallel mode %s', args)
         mpi.setup()
         self.spawn(args)
         mpi.clean()

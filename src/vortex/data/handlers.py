@@ -31,13 +31,13 @@ class Handler(object):
         self.resource = rd.get('resource', None)
         self.provider = rd.get('provider', None)
         self.container = rd.get('container', None)
-        self.options = dict()
+        self._options = dict()
         self._contents = None
         if 'glove' in rd:
             del rd['glove']
         for k in filter(lambda x: not self.__dict__.has_key(x), rd.keys()):
-            self.options[k] = rd.get(k)
-        self.options.update(kw)
+            self._options[k] = rd.get(k)
+        self._options.update(kw)
         self._history = [(Date.now(), self.__class__.__name__, 'init', 1)]
         self._stage = [ 'load' ]
         self._observer = observers.classobserver('Resources-Handlers')
@@ -80,6 +80,15 @@ class Handler(object):
             logger.warning('Contents requested without container or empty container [%s]', self.container)
             return None
 
+    def options(self, *dicos, **kw):
+        """Returns options associated to that handler and a system reference."""
+        opts = dict( system = sessions.system() )
+        opts.update(self._options)
+        for d in dicos:
+            opts.update(d)
+        opts.update(kw)
+        return opts
+
     def location(self):
         """Returns the URL as defined by the internal provider and resource."""
         if self.provider and self.resource:
@@ -103,7 +112,7 @@ class Handler(object):
             '{0}{0}Location  : {6}'
        )).format(
             indent,
-            self, self.role, self.alternate, self.complete, self.options, self.location()
+            self, self.role, self.alternate, self.complete, self._options, self.location()
         )
         for subobj in ( 'resource', 'provider', 'container' ):
             obj = getattr(self, subobj, None)
@@ -121,18 +130,18 @@ class Handler(object):
             card = card + "\n\n" + thisdoc
         return card
 
-    def locate(self):
+    def locate(self, **extras):
         """Try to figure out what would be the physical location of the resource."""
         rst = None
         if self.complete:
             remotelocation = self.location()
             uridata = net.uriparse(remotelocation)
-            store = stores.load(scheme = uridata['scheme'], netloc = uridata['netloc'])
+            store = stores.load(scheme=uridata['scheme'], netloc=uridata['netloc'])
             if store:
                 logger.debug('Locate resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
-                rst = store.locate(uridata)
+                rst = store.locate(uridata, self.options(extras))
                 self._history.append((Date.now(), store.fullname(), 'locate', rst))
             else:
                 logger.error('Could not find any store to locate %s', remotelocation)
@@ -140,18 +149,18 @@ class Handler(object):
             logger.error('Could not locate an incomplete rh %s', self)
         return rst
 
-    def get(self):
+    def get(self, **extras):
         """Method to retrieve through the provider the resource and feed the current container."""
         rst = False
         if self.complete:
             remotelocation = self.location()
             uridata = net.uriparse(remotelocation)
-            store = stores.load(scheme = uridata['scheme'], netloc = uridata['netloc'])
+            store = stores.load(scheme=uridata['scheme'], netloc=uridata['netloc'])
             if store:
                 logger.debug('Get resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
-                rst = store.get(uridata, self.container.localpath())
+                rst = store.get(uridata, self.container.localpath(), self.options(extras))
                 self.container.updfill(rst)
                 self._history.append((Date.now(), store.fullname(), 'get', rst))
                 self.updstage('get')
@@ -162,19 +171,19 @@ class Handler(object):
             logger.error('Could not get an incomplete rh %s', self)
         return rst
 
-    def put(self):
+    def put(self, **extras):
         """Method to store data from the current container through the provider."""
         rst = False
         if self.complete:
             logger.debug('Put resource %s', self)
             remotelocation = self.location()
             uridata = net.uriparse(remotelocation)
-            store = stores.load(scheme = uridata['scheme'], netloc = uridata['netloc'])
+            store = stores.load(scheme=uridata['scheme'], netloc=uridata['netloc'])
             if store:
                 logger.debug('Put resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
-                rst = store.put(self.container.localpath(), uridata)
+                rst = store.put(self.container.localpath(), uridata, self.options(extras))
                 self._history.append((Date.now(), store.fullname(), 'put', rst))
                 self.updstage('put')
             else:
@@ -183,19 +192,19 @@ class Handler(object):
             logger.error('Could not put an incomplete rh %s', self)
         return rst
 
-    def check(self):
+    def check(self, **extras):
         """Returns a stat-like information to the remote resource."""
         rst = None
         if self.resource and self.provider:
             logger.debug('Check resource %s', self)
             remotelocation = self.location()
             uridata = net.uriparse(remotelocation)
-            store = stores.load(scheme = uridata['scheme'], netloc = uridata['netloc'])
+            store = stores.load(scheme=uridata['scheme'], netloc=uridata['netloc'])
             if store:
                 logger.debug('Check resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
-                rst = store.check(uridata)
+                rst = store.check(uridata, self.options(extras))
                 self._history.append((Date.now(), store.fullname(), 'check', rst))
             else:
                 logger.error('Could not find any store to check %s', remotelocation)
@@ -208,8 +217,9 @@ class Handler(object):
         rst = False
         if self.container:
             logger.debug('Remove resource container %s', self.container)
-            rst = sessions.system().remove(self.container.localpath())
-            self._history.append((Date.now(), sessions.system().fullname(), 'clear', rst))
+            system = self.options().get('system')
+            rst = system.remove(self.container.localpath())
+            self._history.append((Date.now(), system.fullname(), 'clear', rst))
         return rst
 
     def save(self):

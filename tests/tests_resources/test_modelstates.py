@@ -16,9 +16,9 @@ class UtGridpoint(TestCase):
 
     def setUp(self):
         self.attrset = dict(kind='gridpoint', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
-        self.franx01 = GridGeometry(id='Current op', area='FRANX01', resolution=01, nlat=221, nlon=281)
-        self.frangp0025 = GridGeometry(id='Current op', area='FRANGP0025', resolution=0025, nlat=601, nlon=801)
-        self.glob15 = GridGeometry(id='Current op', area='GLOB15', resolution=15)
+        self.franx01 = GridGeometry(id='Current op', area='FRANX01', resolution=0.1, nlat=221, nlon=281)
+        self.frangp0025 = GridGeometry(id='Current op', area='FRANGP0025', resolution=0.025, nlat=601, nlon=801)
+        self.glob15 = GridGeometry(id='Current op', area='GLOB15', resolution=1.5)
 
 
     def test_v1(self):
@@ -255,10 +255,10 @@ class UtHistoric(TestCase):
 
     def setUp(self):
         self.attrset = dict(kind='historic', date='2012021400', cutoff='production', namespace='[suite].archive.fr')
-        self.std = SpectralGeometry(id='Current op', area='france', truncation=798)
-        self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution='08km00')
+        self.std = SpectralGeometry(id='Current op', area='france', truncation=798, stretching=2.4, lam=False)
+        self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution=8.0)
         self.arome = SpectralGeometry(id='Current op', area='frangp')
-        self.mnh = SpectralGeometry(id='Current op', area='france', resolution='01km50')
+        self.mnh = SpectralGeometry(id='Current op', area='france', resolution=1.5)
 
 
     def test_v1(self):
@@ -434,9 +434,9 @@ class UtAnalysis(TestCase):
 
     def setUp(self):
         self.attrset = dict(kind='analysis', date = '20120214', cutoff='production', namespace='[suite].archive.fr')
-        self.std = SpectralGeometry(id='Current op', area='france', truncation=798)
-        self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution='08km00')
-        self.arome = SpectralGeometry(id='Current op', area='frangp', resolution='02km50')
+        self.std = SpectralGeometry(id='Current op', area='france', truncation=798, stretching=2.4, lam=False)
+        self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution=8.0)
+        self.arome = SpectralGeometry(id='Current op', area='frangp', resolution=2.5)
 
 
     def test_v1(self):
@@ -560,7 +560,7 @@ class UtHistsurf(TestCase):
 
     def setUp(self):
         self.attrset = dict(kind='histsurf', date = '2012021400', cutoff='production', namespace='[suite].archive.fr')
-        self.arome = SpectralGeometry(id='Current op', area='frangp', resolution='02km50')
+        self.arome = SpectralGeometry(id='Current op', area='frangp', resolution=2.5)
 
 
     def test_v1(self):

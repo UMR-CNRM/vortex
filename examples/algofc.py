@@ -15,10 +15,10 @@ sh = t.system()
 g = t.glove
 e = t.env
 
+print t.line
+
 sh.cd(e.home + '/tmp/bidon')
 print sh.pwd
-
-print t.line
 
 rx = vortex.toolbox.rh(remote=g.siteroot + '/examples/tmp/test.sh', file='test.sh', model='arpege', kind='ifsmodel')
 

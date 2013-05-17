@@ -16,7 +16,7 @@ import gco.syntax
 class UtClimGlobal(TestCase):
 
     def setUp(self):
-        self.std = SpectralGeometry(id='Current op',  truncation=798, stretching=2.4)
+        self.std = SpectralGeometry(id='Current op',  truncation=798, stretching=2.4, lam=False)
         # sessions.current().debug()
 
     def test_v1(self):
@@ -54,7 +54,7 @@ class UtClimGlobal(TestCase):
 class UtClimLAM(TestCase):
 
     def setUp(self):
-        self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution='08km00')
+        self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution=8.0)
         #sessions.current().debug()
     
     def test_v1(self):
@@ -91,8 +91,8 @@ class UtClimLAM(TestCase):
 class UtClimBDAP(TestCase):
 
     def setUp(self):
-        self.frangp0025 = GridGeometry(id='Current op', area='FRANGP0025', resolution='0025', nlat=601, nlon=801)
-        self.glob15 = GridGeometry(id='Current op', area='GLOB15', resolution='15')
+        self.frangp0025 = GridGeometry(id='Current op', area='FRANGP0025', resolution=0.025, nlat=601, nlon=801)
+        self.glob15 = GridGeometry(id='Current op', area='GLOB15', resolution=1.5)
         #sessions.current().debug()
         
     def test_v1(self):

@@ -29,7 +29,7 @@ footprint.envfp(
     source='arpege',
     model='arome',
     cutoff='production',
-    geometry=SpectralGeometry(id='Current op', area='frangp', resolution='02km50'),
+    geometry=SpectralGeometry(id='Current op', area='frangp', resolution=2.5, runit='km'),
 )
 
 rl = vortex.toolbox.rload

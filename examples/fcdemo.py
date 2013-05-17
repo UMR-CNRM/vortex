@@ -36,8 +36,8 @@ print t.prompt, sh.pwd
 arpege_cycle = 'cy37t1_op1.17'
 
 rundate = date.Date(2013, 4, 25, 0)
-geo = SpectralGeometry(id='Current op', area='france', truncation=798)
-geoBDAP = GridGeometry(area='GLOB15', resolution='15')
+geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
+geoBDAP = GridGeometry(area='GLOB15', resolution=1.5, runit='dg')
 
 fpenv = footprint.envfp(
     geometry=geo,

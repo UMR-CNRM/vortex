@@ -31,24 +31,25 @@ class OliveArchiveStore(VortexArchiveStore):
         logger.debug('Olive archive store init %s', self.__class__)
         super(OliveArchiveStore, self).__init__(*args, **kw)
 
-    def remapget(self, system, remote):
+    def remapget(self, remote, options):
         """Remap actual remote path to distant store path."""
+        system = options.get('system', None)
         xpath = remote['path'].split('/')
         xpath[1:2] = list(xpath[1])
         xpath[:0] = [ system.path.sep, self.headdir ]
         remote['path'] = system.path.join(*xpath)
 
-    def olivelocate(self, system, remote):
+    def olivelocate(self, remote, options):
         """Gateway to :meth:`vortexlocate`."""
-        return self.vortexlocate(system, remote)
+        return self.vortexlocate(remote, options)
 
-    def oliveget(self, system, remote, local):
+    def oliveget(self, remote, local, options):
         """Gateway to :meth:`vortexget`."""
-        return self.vortexget(system, remote, local)
+        return self.vortexget(remote, local, options)
 
-    def oliveput(self, system, local, remote):
+    def oliveput(self, local, remote, options):
         """Gateway to :meth:`vortexput`."""
-        return self.vortexput(system, local, remote)
+        return self.vortexput(local, remote, options)
 
 
 class OliveCacheStore(VortexCacheStore):
@@ -69,17 +70,17 @@ class OliveCacheStore(VortexCacheStore):
         logger.debug('Olive cache store init %s', self.__class__)
         super(OliveCacheStore, self).__init__(*args, **kw)
 
-    def olivelocate(self, system, remote):
+    def olivelocate(self, remote, options):
         """Gateway to :meth:`vortexlocate`."""
-        return self.vortexlocate(system, remote)
+        return self.vortexlocate(remote, options)
 
-    def oliveget(self, system, remote, local):
+    def oliveget(self, remote, local, options):
         """Gateway to :meth:`vortexget`."""
-        return self.vortexget(system, remote, local)
+        return self.vortexget(remote, local, options)
 
-    def oliveput(self, system, local, remote):
+    def oliveput(self, local, remote, options):
         """Gateway to :meth:`vortexput`."""
-        return self.vortexput(system, local, remote)
+        return self.vortexput(local, remote, options)
 
 
 
@@ -140,8 +141,9 @@ class OpArchiveStore(Store):
     def _realpath(self, remote):
         return self.rootdir + remote['path']
 
-    def ftplocate(self, system, remote):
+    def ftplocate(self, remote, options):
         """Delegates to ``system`` a distant check."""
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             extract = remote['query'].get('extract', None)
@@ -155,8 +157,9 @@ class OpArchiveStore(Store):
         else:
             return None
 
-    def ftpcheck(self, system, remote):
+    def ftpcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             extract = remote['query'].get('extract', None)
@@ -168,8 +171,9 @@ class OpArchiveStore(Store):
             ftp.close()
             return rc
 
-    def ftpget(self, system, remote, local):
+    def ftpget(self, remote, local, options):
         """File transfert: get from store."""
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             targetpath = local
@@ -196,8 +200,9 @@ class OpArchiveStore(Store):
             logger.error('Could not get ftp connection to %s', self.hostname())
             return False
 
-    def ftpput(self, system, local, remote):
+    def ftpput(self, local, remote, options):
         """File transfert: put to store."""
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.put(local, self._realpath(remote))

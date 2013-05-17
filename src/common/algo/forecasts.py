@@ -5,6 +5,8 @@
 __all__ = []
 
 
+from vortex.autolog import logdefault as logger
+
 from vortex.algo.components import Parallel
 
 
@@ -14,6 +16,9 @@ class IFSModelParallel(Parallel):
     _abstract = True
     _footprint = dict(
         attr = dict(
+            conf = dict(
+                optional = True,
+            ),
             timescheme = dict(
                 optional = True,
                 default = 'sli',
@@ -55,14 +60,14 @@ class IFSModelParallel(Parallel):
         except:
             return False
 
-    def spawn_command_line(self, rh, ctx):
-        return rh.resource.rootcmdline(
-            name=(self.xpname+'xxxx')[:4].upper(),
-            timescheme=self.timescheme,
-            timestep=self.timestep,
-            fcterm=self.fcterm,
-            fcunit=self.fcunit,
-        ).split()
+    def spawn_command_options(self):
+        return dict(
+            name       = (self.xpname + 'xxxx')[:4].upper(),
+            timescheme = self.timescheme,
+            timestep   = self.timestep,
+            fcterm     = self.fcterm,
+            fcunit     = self.fcunit,
+        )
 
 
 class Forecast(IFSModelParallel):
@@ -85,10 +90,16 @@ class Forecast(IFSModelParallel):
 
     def prepare(self, rh, ctx, opts):
         """Default pre-link for the initial condition file"""
-        ininame = 'ICMSH{0:s}INIT'.format(self.xpname)
-        initrh =  [x.rh for x in ctx.sequence.effective_inputs(role='Initialcondition')]
+        initrole = 'InitialCondition'
+        initname = 'ICMSH{0:s}INIT'.format(self.xpname)
+        initrh = [x.rh for x in ctx.sequence.effective_inputs(role=initrole)]
+        if not initrh:
+            logger.warning('Could not find logical %s - assuming already renamed', initrole)
+        if len(initrh) > 1:
+            logger.warning('More than one %s - using the first one', initrole)
         for l in [x.container.localpath() for x in initrh]:
-            self.system.symlink(l, ininame)
+            if not self.system.path.exists(initname):
+                self.system.symlink(l, initname)
 
 
 class LAMForecast(Forecast):
@@ -102,32 +113,32 @@ class LAMForecast(Forecast):
         )
     )
 
-    def spawn_command_line(self, rh, ctx):
-        return rh.resource.rootcmdline(
-            name=(self.xpname+'xxxx')[:4].upper(),
-            timescheme=self.timescheme,
-            timestep=self.timestep,
-            fcterm=self.fcterm,
-            fcunit=self.fcunit,
-            model='aladin',
-        ).split()
+    def spawn_command_options(self):
+        return dict(
+            name       = (self.xpname+'xxxx')[:4].upper(),
+            timescheme = self.timescheme,
+            timestep   = self.timestep,
+            fcterm     = self.fcterm,
+            fcunit     = self.fcunit,
+            model      = 'aladin',
+        )
 
     def prepare(self, rh, ctx, opts):
         """Default pre-link for boundary conditions files."""
-        cplrh = [ x.rh for x in ctx.sequence.effective_inputs(role='Boundarycondition', kind='elscf') ]
+        cplrh = [ x.rh for x in ctx.sequence.effective_inputs(role='BoundaryCondition', kind='elscf') ]
         cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
         llocal = [x.container.localpath() for x in cplrh]
 
         i = 0
         for l in llocal:
-            self.system.symlink(l,'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, i))
+            self.system.symlink(l, 'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, i))
             i=i+1
 
         # Default pre-link for the initial condition file
-        ininame = 'ICMSH{0:s}INIT'.format(self.xpname)
-        initrh =  [x.rh for x in ctx.sequence.effective_inputs(role='Initialcondition')]
+        initname = 'ICMSH{0:s}INIT'.format(self.xpname)
+        initrh = [x.rh for x in ctx.sequence.effective_inputs(role='InitialCondition')]
         for l in [x.container.localpath() for x in initrh]:
-            self.system.symlink(l,ininame)
+            self.system.symlink(l,initname)
 
 
 class DFIForecast(LAMForecast):
@@ -142,13 +153,11 @@ class DFIForecast(LAMForecast):
 
     def prepare(self, rh, ctx, opts):
         """Default pre-link for the initial condition file."""
-        ininame = 'ICMSH{0:s}INIT'.format(self.xpname)
-        initrh =  [x.rh for x in ctx.sequence.effective_inputs(role='Initialcondition')]
+        initname = 'ICMSH{0:s}INIT'.format(self.xpname)
+        initrh =  [x.rh for x in ctx.sequence.effective_inputs(role='InitialCondition')]
         for l in [x.container.localpath() for x in initrh]:
-            self.system.symlink(l,ininame)
+            self.system.symlink(l, initname)
 
         # Pre-link boundary conditions as special DFI files
         for pseudoterm in (999, 0, 1):
-            self.system.symlink(ininame, 'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, pseudoterm))
-
-
+            self.system.symlink(initname, 'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, pseudoterm))

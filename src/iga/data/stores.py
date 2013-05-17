@@ -92,8 +92,9 @@ class SopranoStore(Store):
     def _realpath(self, remote):
         return self.rootdir + remote['path']
 
-    def ftplocate(self, system, remote):
+    def ftplocate(self, remote, options):
         """Delegates to ``system`` a distant check."""
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rloc = ftp.fullpath(self._realpath(remote))
@@ -102,15 +103,17 @@ class SopranoStore(Store):
         else:
             return None
 
-    def ftpcheck(self, system, remote):
+    def ftpcheck(self, remote, options):
         """Delegates to ``system`` a distant check."""
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.size(self._realpath(remote))
             ftp.close()
             return rc
 
-    def ftpget(self, system, remote, local):
+    def ftpget(self, remote, local, options):
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.get(self._realpath(remote), local)
@@ -125,7 +128,8 @@ class SopranoStore(Store):
                         rc = system.mv(extract, local)
             return rc
 
-    def ftpput(self, system, local, remote):
+    def ftpput(self, local, remote, options):
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.put(local, self._realpath(remote))

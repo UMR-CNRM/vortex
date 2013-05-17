@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-r"""
+"""
 This package handles system interfaces objects that are in charge of
 system interaction. The associated modules defines the catalog
 factory based on the shared footprint mechanism.
@@ -17,7 +17,7 @@ import subprocess
 
 from vortex.autolog import logdefault as logger
 from vortex.tools.env import Environment
-from vortex.syntax import BFootprint
+from vortex.syntax import BFootprint, priorities
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 from vortex.tools.net import StdFtp
 
@@ -516,6 +516,60 @@ class OSExtended(System):
         self._tarcx(*args, **kw)
 
 
+class Python26(object):
+    """Old fashion features before Python 2.7."""
+
+    def import_module(self, modname):
+        import imp
+        path = None
+        buildname = ''
+        for mod in modname.split('.'):
+            mfile, mpath, minfo = imp.find_module(mod, path)
+            path = [ mpath ]
+            buildname = buildname + mod
+            imp.load_module(buildname, mfile, mpath, minfo)
+            buildname = buildname + '.'
+
+
+class Python27(object):
+    """Python features starting at version 2.7."""
+
+    def import_module(self, modname):
+        try:
+            import importlib
+        except ImportError:
+            logger.critical('No way to get importlob in python 2.7 ... something really weird !')
+            raise
+        except:
+            logger.critical('Unexpected error: %s', sys.exc_info()[0])
+            raise
+        else:
+            importlib.import_module(modname)
+
+
+class Garbage(OSExtended, Python26):
+    """
+    Default system class for weird systems.
+    Hopefully an extended system will be loaded latyer on.
+    """
+
+    _footprint = dict(
+        info = 'Garbage base system',
+        attr = dict(
+            sysname = dict(
+                outcast = [ 'Linux', 'Darwin' ]
+            )
+        ),
+        priority = dict(
+            level = priorities.top.DEFAULT
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('Garbage system init %s', self.__class__)
+        super(Garbage, self).__init__(*args, **kw)
+
+
 class Linux(OSExtended):
     """Default system class for most linux based systems."""
 
@@ -540,7 +594,7 @@ class Linux(OSExtended):
         return 'linux'
 
 
-class Linux26(Linux):
+class Linux26(Linux, Python26):
     """Specific Linux system with python version < 2.7"""
 
     _footprint = dict(
@@ -552,19 +606,8 @@ class Linux26(Linux):
         )
     )
 
-    def import_module(self, modname):
-        import imp
-        path = None
-        buildname = ''
-        for mod in modname.split('.'):
-            mfile, mpath, minfo = imp.find_module(mod, path)
-            path = [ mpath ]
-            buildname = buildname + mod
-            imp.load_module(buildname, mfile, mpath, minfo)
-            buildname = buildname + '.'
 
-
-class Linux27(Linux):
+class Linux27(Linux, Python27):
     """Specific Linux system with python version >= 2.7"""
 
     _footprint = dict(
@@ -575,18 +618,6 @@ class Linux27(Linux):
             )
         )
     )
-
-    def import_module(self, modname):
-        try:
-            import importlib
-        except ImportError:
-            logger.critical('No way to get importlob in python 2.7 ... something really weird !')
-            raise
-        except:
-            logger.critical('Unexpected error: %s', sys.exc_info()[0])
-            raise
-        else:
-            importlib.import_module(modname)
 
 
 class LinuxDebug(Linux27):

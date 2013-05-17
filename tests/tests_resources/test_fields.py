@@ -62,7 +62,7 @@ class UtRawFields(TestCase):
 class UtGeoFields(TestCase):
 
     def setUp(self):
-        self.std = SpectralGeometry(id='Current op', truncation=798, stretching=2.4)
+        self.std = SpectralGeometry(id='Current op', truncation=798, stretching=2.4, area='france', lam=False)
         self.attrset = dict(kind='geofields', suite='oper', date = '2012022806', cutoff='production', namespace='[suite].archive.fr')
         #sessions.current().debug()
 

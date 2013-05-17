@@ -532,12 +532,16 @@ class Time(object):
         return '{0:04d}'.format(self.hour)
 
     @property
+    def fmthour(self):
+        return self.fmth
+
+    @property
     def fmthm(self):
         return '{0:04d}:{1:02d}'.format(self.hour, self.minute)
 
     @property
-    def fmthour(self):
-        return self.fmth
+    def fmtraw(self):
+        return '{0:04d}{1:02d}'.format(self.hour, self.minute)
 
     def isoformat(self):
         """Almost ISO representation."""

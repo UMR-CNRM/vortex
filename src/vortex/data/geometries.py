@@ -4,6 +4,8 @@
 #: No automatic export
 __all__ = []
 
+import re
+
 from vortex.autolog import logdefault as logger
 from vortex.tools.config import GenericConfigParser
 
@@ -19,7 +21,7 @@ def defaultnames(fromset='geometries'):
     if fromset.endswith('.ini'):
         fromset = fromset.rstrip('.ini')
     if fromset not in gs:
-        geoset(fromset) 
+        geoset(fromset)
     return gs[fromset].sections()
 
 def getbyname(geoname, fromset='geometries'):
@@ -36,31 +38,39 @@ def getbyname(geoname, fromset='geometries'):
     else:
         return GridGeometry(**desc)
 
-class HGeometry(object):
-    """Abstract horizontal geometry."""
-
-    def __init__(self, **kw):
-        logger.debug('Abstract Horizontal Geometry init %s %s', self, kw)
-        self.id = 'abstract'
-        self.__dict__.update(kw)
-
 
 class Geometry(object):
     """Abstract geometry."""
-    
+
     def __init__(self, **kw):
         logger.debug('Abstract Geometry init %s %s', self, kw)
+        self.id = 'abstract'
+        self.hgeo = None
+        self.vgeo = None
+        self.__dict__.update(kw)
+
+
+class HGeometry(object):
+    """Abstract horizontal geometry."""
+    
+    def __init__(self, **kw):
+        logger.debug('Abstract Horizontal Geometry init %s %s', self, kw)
         self.id = 'abstract'
         self.area = None
         self.nlon = None
         self.nlat = None
-        self.resolution = None
+        self.resolution = 0.
         self.truncation = None
         self.stretching = None
+        self.lam = True
         self.__dict__.update(kw)
         for k, v in self.__dict__.items():
-            if v == 'none':
+            if type(v) == str and re.match('none', v, re.IGNORECASE):
                 self.__dict__[k] = None
+            if type(v) == str and re.match('true', v, re.IGNORECASE):
+                self.__dict__[k] = True
+            if type(v) == str and re.match('false', v, re.IGNORECASE):
+                self.__dict__[k] = False
         for item in ('nlon', 'nlat', 'truncation'):
             cv = getattr(self, item)
             if cv != None:
@@ -69,6 +79,18 @@ class Geometry(object):
             cv = getattr(self, item)
             if cv != None:
                 setattr(self, item, float(cv))
+
+    @property
+    def gam(self):
+        return not self.lam
+
+    @property
+    def rnice(self):
+        if self.runit == 'km':
+            res = '{0:05.2f}'.format(self.resolution)
+        else:
+            res = '{0:06.3f}'.format(self.resolution)
+        return re.sub('\.', self.runit, res, 1)
 
     def idcard(self, indent=2):
         """
@@ -89,12 +111,12 @@ class Geometry(object):
         )).format(
             indent,
             self, self.id, str(self.resolution), str(self.truncation), str(self.stretching),
-            str(self.area), str(self.lam()), str(self.nlon), str(self.nlat)
+            str(self.area), str(self.lam), str(self.nlon), str(self.nlat)
         )
         return card
 
 
-class SpectralGeometry(Geometry):
+class SpectralGeometry(HGeometry):
     """
     Horizontal spectral geometry,
     mostly defined through its ``truncation`` and ``stretching`` attributes.
@@ -102,17 +124,12 @@ class SpectralGeometry(Geometry):
     
     def __init__(self, **kw):
         logger.debug('Spectral Geometry init %s', self)
-        kw.setdefault('truncation', 798)
-        kw.setdefault('stretching', 2.4)
-        kw.setdefault('area', 'auto')
+        kw.setdefault('runit', 'km')
         super(SpectralGeometry, self).__init__(**kw)
-
-    def lam(self):
-        """Boolean: is it a local area model geometry?"""
-        return bool(self.resolution)
+        self.kind = 'spectral'
 
 
-class GridGeometry(Geometry):
+class GridGeometry(HGeometry):
     """
     Horizontal grid points geometry,
     mostly defined through its ``nlon`` and ``nlat`` attributes.
@@ -122,8 +139,9 @@ class GridGeometry(Geometry):
         logger.debug('Grid Geometry init %s', self)
         kw.setdefault('nlon', 3200)
         kw.setdefault('nlat', 1600)
+        kw.setdefault('runit', 'dg')
         super(GridGeometry, self).__init__(**kw)
+        self.kind = 'grid'
+        self.truncation = None
+        self.stretching = None
 
-    def lam(self):
-        """Boolean: is it a local area model geometry?"""
-        return self.truncation and not self.stretching

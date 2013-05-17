@@ -27,8 +27,8 @@ print t.prompt, mysys.pwd
 #domain = ['GLOB15','GLOB25','EURAT01','EUROC25','GLOB05']
 domains = [ 'GLOB15' ]
 rundate = date.Date('2011092200')
-geo = SpectralGeometry(id='Current op', area='france', truncation=798)
-geoBDAP = GridGeometry(area='GLOB15',resolution='15')
+geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
+geoBDAP = GridGeometry(area='GLOB15',resolution=1.5, runit='dg')
 
 inputdir = myenv.HOME + '/tmp/inputs/'
 

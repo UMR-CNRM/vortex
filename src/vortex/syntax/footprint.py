@@ -12,6 +12,9 @@ __all__ = []
 #: Activate nice dump of footprint in docstring
 docstring_nicedump = False
 
+#: Stop footprint resolution on first undef value
+fast_resolve = False
+
 import copy, re
 from vortex.autolog import logdefault as logger
 from priorities import top
@@ -22,6 +25,7 @@ from vortex.tools import env
 
 UNKNOWN = '__unknown__'
 replattr = re.compile(r'\[(\w+)(?:\:+(\w+))?\]')
+
 
 def envfp(**kw):
     """Returns the the parameter set associated to tag ``footprint`` in current env."""
@@ -156,7 +160,7 @@ class Footprint(object):
 
     def _replacement(self, nbpass, k, guess, extras, todo):
         if nbpass > 25:
-            logger.error('Resolve probably cycling too much... (%d) ?', nbpass)
+            logger.error('Resolve probably cycling too much... %d tries ?', nbpass)
             raise MaxLoopIter('Too many Footprint replacements')
 
         changed = 1
@@ -170,6 +174,7 @@ class Footprint(object):
                     raise UnreachableAttr('Could not replace attribute ' + replk)
                 if replk in guess:
                     if replk not in todo:
+                        changed = 1
                         if replm:
                             subattr = getattr(guess[replk], replm, None)
                             if subattr == None:
@@ -178,31 +183,30 @@ class Footprint(object):
                                 guess[k] = replattr.sub(str(subattr), guess[k], 1)
                         else:
                             guess[k] = replattr.sub(str(guess[replk]), guess[k], 1)
-                        changed = 1
                 elif replk in extras:
+                    changed = 1
                     if replm:
                         subattr = getattr(extras[replk], replm, None)
-                        if subattr:
+                        if subattr == None:
+                            guess[k] = None
+                        else:
                             if callable(subattr):
                                 try:
                                     attrcall = subattr(guess, extras)
                                 except:
                                     attrcall = '__SKIP__'
+                                    changed = 0
                                 if attrcall == None:
                                     guess[k] = None
                                 elif attrcall != '__SKIP__':
                                     guess[k] = replattr.sub(str(attrcall), guess[k], 1)
                             else:
                                 guess[k] = replattr.sub(str(subattr), guess[k], 1)
-                        else:
-                            guess[k] = None
                     else:
                         guess[k] = replattr.sub(str(extras[replk]), guess[k], 1)
-                    changed = 1
-
 
         if guess[k] != None and replattr.search(str(guess[k])):
-            logger.debug(' > Requeue resolve %s : %s', k, guess[k])
+            logger.debug(' > Requeue resolve < %s > : %s', k, guess[k])
             todo.append(k)
             return False
         else:
@@ -212,7 +216,7 @@ class Footprint(object):
     def resolve(self, desc, **kw):
         """Try to guess how the given description ``desc`` could possibly match the current footprint."""
 
-        opts = dict( fatal=True, fast=False, tracker=tracker(tag='fpresolve') )
+        opts = dict(fatal=True, fast=fast_resolve, tracker=tracker(tag='fpresolve'))
         if kw: opts.update(kw)
 
         guess, inputattr = self._firstguess(desc)
@@ -273,7 +277,7 @@ class Footprint(object):
                     diags[k] = True
                     guess[k] = None
 
-            if opts['fast'] and guess[k] == None:
+            if guess[k] == None and ( opts['fast'] or k == 'kind' ):
                 break
 
         for k in attrs.keys():
@@ -444,9 +448,13 @@ class BFootprint(object):
         self._observer.notify_del(self, dict())
 
     @classmethod
-    def fullname(self):
+    def fullname(cls):
         """Returns a nicely formated name of the current class (dump usage)."""
-        return '{0:s}.{1:s}'.format(self.__module__, self.__name__)
+        return '{0:s}.{1:s}'.format(cls.__module__, cls.__name__)
+
+    def shortname(self):
+        """Returns the short name of the object's class."""
+        return self.__class__.__name__
 
     def attributes(self):
         """Returns the list of current attributes."""

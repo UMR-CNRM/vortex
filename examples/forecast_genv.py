@@ -29,7 +29,7 @@ print t.prompt, mysys.pwd
 #domain = ['GLOB15','GLOB25','EURAT01','EUROC25','GLOB05']
 domains = [ 'GLOB15' ]
 rundate = date.Date('2011092200')
-geo = SpectralGeometry(id='Current op', area='france', truncation=798)
+geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
 geo_bdap = GridGeometry(id='Current op', area='GLOB15')
 inputdir = myenv.HOME + '/tmp/inputs/'
 prvin = dict(experiment = '99A0') 

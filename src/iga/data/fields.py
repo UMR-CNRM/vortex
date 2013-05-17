@@ -49,15 +49,15 @@ class RawFields(Resource):
 
     def basename_info(self):
         return dict(
-            radical=self.fields,
-            src=self.origin,  
+            radical = self.fields,
+            src     = self.origin,  
         )
 
     def vortex_pathinfo(self):
         return dict(
             nativefmt = self.nativefmt,
-            date = self.date,
-            cutoff = self.cutoff
+            date      = self.date,
+            cutoff    = self.cutoff
         )
 
 
@@ -111,13 +111,13 @@ class GeoFields(Resource):
         )
 
     def basename_info(self):
-        if self.geometry.lam():
-            lgeo=[self.geometry.area, self.geometry.resolution]
+        if self.geometry.lam:
+            lgeo=[self.geometry.area, self.geometry.rnice]
         else:
             lgeo=[{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}]
         return dict(
             radical=self.fields,
             geo=lgeo,
-            format=self.nativefmt
+            fmt=self.nativefmt
         )
 

@@ -30,7 +30,7 @@ print t.line
 
 fpenv = footprint.envfp(
     model='arpege',
-    geometry = SpectralGeometry(id='Current op', area='france', truncation=798),
+    geometry = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False),
     date=Date('2013050100'),
     cutoff='production',
 )

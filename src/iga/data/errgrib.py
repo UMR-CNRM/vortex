@@ -30,11 +30,11 @@ class BackgroundErrStd(GeoFlowResource):
 
     def basename_info(self):
         return dict(
-            radical='bgerrstd',
-            format=self.nativefmt,
-            geo=[{'truncation':self.geometry.truncation}],
-            src=self.model,
-            term=self.term.fmthm
+            radical = 'bgerrstd',
+            fmt     = self.nativefmt,
+            geo     = [{'truncation':self.geometry.truncation}],
+            src     = self.model,
+            term    = self.term.fmthm
         )
 
     def archive_basename(self):
@@ -42,5 +42,3 @@ class BackgroundErrStd(GeoFlowResource):
         if self.model == 'aearp':
             bname = bname + '(term' + self.term.fmthour + ':inout).(suffix:inout)'
         return bname
-
-

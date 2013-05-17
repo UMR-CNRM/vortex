@@ -7,6 +7,8 @@ __all__ = []
 import collections
 
 class DataContent(object):
+    """Root class for data contents used by resources."""
+
     def __init__(self, **kw):
         self._data = None
         self._io = None
@@ -41,14 +43,18 @@ class AlmostDictContent(DataContent):
             kw['data'] = dict()
         super(AlmostDictContent, self).__init__(**kw)
 
+    def fmtkey(self, key):
+        """Reshape entry keys of the internal dictionary."""
+        return key
+
     def __getitem__(self, idx):
-        return self._data[idx]
+        return self._data[self.fmtkey(idx)]
 
     def __setitem__(self, idx, value):
-        self._data[idx] = value
+        self._data[self.fmtkey(idx)] = value
 
     def __delitem__(self, idx):
-        del self._data[idx]
+        del self._data[self.fmtkey(idx)]
 
     def __len__(self):
         return len(self._data)
@@ -58,10 +64,10 @@ class AlmostDictContent(DataContent):
             yield t
 
     def __contains__(self, item):
-        return self.has_key(item)
+        return self.has_key(self.fmtkey(item))
 
     def has_key(self, item):
-        return item in self._data
+        return self.fmtkey(item) in self._data
 
     def keys(self):
         return self._data.keys()
@@ -71,6 +77,9 @@ class AlmostDictContent(DataContent):
 
     def get(self, *args):
         return self._data.get(*args)
+
+    def items(self):
+        return self._data.items()
 
     def iteritems(self):
         return self._data.iteritems()
@@ -83,9 +92,15 @@ class IndexedTable(AlmostDictContent):
     """
 
     def add(self, addlist):
+        """Insert data according to index position given as the first item of ``addlist``."""
         for idxinput in addlist:
             i = idxinput.pop(0)
-            self._data[i] = idxinput
+            self._data[self.fmtkey(i)] = idxinput
+
+    def slurp(self, container):
+        """Get data from the ``container``."""
+        container.rewind()
+        self.add([ x.split() for x in container.readlines() ])
 
 
 class DataRaw(DataContent):

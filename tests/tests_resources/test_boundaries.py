@@ -16,10 +16,10 @@ class UtElscf(TestCase):
     def setUp(self):
         self.attrset = dict(kind='elscf', date = '2012021400', cutoff='production', namespace='[suite].archive.fr')
         self.std = SpectralGeometry(id='Current op', area='france', truncation=798)
-        self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution='08km00')
-        self.arome = SpectralGeometry(id='Current op', area='frangp', resolution='02km50')
+        self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution=8.0)
+        self.arome = SpectralGeometry(id='Current op', area='frangp', resolution=2.5)
         self.aladin = SpectralGeometry(id='Current op', area='france')
-        self.califs = SpectralGeometry(id='Current op', area='ifs', resolution='16km00')
+        self.califs = SpectralGeometry(id='Current op', area='ifs', resolution=16.0)
         self.mp1 = SpectralGeometry(id='Current op', area='testmp1')
         self.mp2 = SpectralGeometry(id='Current op', area='testmp2')
 

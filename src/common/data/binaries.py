@@ -21,7 +21,7 @@ class IFSModel(NWPModel):
                 default = 'master_[model]'
             ),
             kind = dict(
-                values = [ 'ifsmodel', 'mfmodel', 'aaa' ]
+                values = [ 'ifsmodel', 'mfmodel', 'aaa' ],
             )
         )
     )
@@ -38,11 +38,12 @@ class IFSModel(NWPModel):
     def iga_basename(self):
         return 'ARPEGE'
 
-    def rootcmdline(self, model=None, vmodel='meteo', name='XPVT', conf=1, timescheme='sli', timestep=600, fcterm=0, fcunit='h'):
+    def command_line(self, model=None, vmodel='meteo', name='XPVT', conf=1, timescheme='sli', timestep=600, fcterm=0, fcunit='h'):
         if model:
             return '-v{0:s} -e{1:s} -c{2:d} -a{3:s} -t{4:d} -f{5:s}{6:d} -m{7:s}'.format(
-            vmodel, name, conf, timescheme, timestep, fcunit, fcterm, model)
+                vmodel, name, conf, timescheme, timestep, fcunit, fcterm, model
+            )
         else:
             return '-v{0:s} -e{1:s} -c{2:d} -a{3:s} -t{4:d} -f{5:s}{6:d}'.format(
-            vmodel, name, conf, timescheme, timestep, fcunit, fcterm)
-
+                vmodel, name, conf, timescheme, timestep, fcunit, fcterm
+            )

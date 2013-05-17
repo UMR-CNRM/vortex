@@ -108,12 +108,12 @@ class GeoFields(Resource):
         )
 
     def basename_info(self):
-        if self.geometry.lam():
-            lgeo=[self.geometry.area, self.geometry.resolution]
+        if self.geometry.lam:
+            lgeo=[self.geometry.area, self.geometry.rnice]
         else:
             lgeo=[{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}]
         return dict(
-            radical=self.fields,
-            geo=lgeo,
-            format=self.nativefmt
+            radical = self.fields,
+            geo     = lgeo,
+            fmt     = self.nativefmt
         )

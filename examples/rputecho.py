@@ -21,7 +21,7 @@ print t.prompt, ctx.system.pwd
 
 print t.line
 
-spgeo = SpectralGeometry(id='Current op', area='france', truncation=798, stretching=24)
+spgeo = SpectralGeometry(id='Current op', area='france', truncation=798, stretching=2.4, lam=False)
 
 provider_op = vortex.toolbox.provider(suite='dbl', namespace='[suite].inline.fr', igakey='arpege')
 provider_vx = vortex.toolbox.provider(experiment='DBLE', namespace='vortex.cache.fr', block='canari')

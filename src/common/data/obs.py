@@ -194,9 +194,9 @@ class BlackList(FlowResource):
 
     def basename_info(self):
         return dict(
-            format  = self.nativefmt,
+            fmt     = self.nativefmt,
+            src     = self.scope,
             radical = 'blacklist',
-            src     = self.scope
         )
 
     def iga_pathinfo(self):
@@ -242,7 +242,7 @@ class Obsmap(FlowResource):
 
     def basename_info(self):
         return dict(
-            format  = self.nativefmt,
+            fmt     = self.nativefmt,
             radical = 'obsmap',
             stage   = self.stage,
             style   = 'obsmap',
@@ -274,7 +274,7 @@ class Bcor(FlowResource):
 
     def basename_info(self):
         return dict(
-            format  = self.nativefmt,
+            fmt     = self.nativefmt,
             radical = self.kind,
             src     = self.satbias,
         )

@@ -25,9 +25,9 @@ class UtGridpoint(TestCase):
         self.fp_cont = dict(
             local='PFARPE[geometry::area]+[term::fmth].rSX'
         )
-        self.franx01 = GridGeometry(id='Current op', area='FRANX01', resolution=01, nlat=221, nlon=281)
-        self.frangp0025 = GridGeometry(id='Current op', area='FRANGP0025', resolution=0025, nlat=601, nlon=801)
-        self.glob15 = GridGeometry(id='Current op', area='GLOB15', resolution=15)
+        self.franx01 = GridGeometry(id='Current op', area='FRANX01', resolution=0.1, nlat=221, nlon=281)
+        self.frangp0025 = GridGeometry(id='Current op', area='FRANGP0025', resolution=0.025, nlat=601, nlon=801)
+        self.glob15 = GridGeometry(id='Current op', area='GLOB15', resolution=1.5)
 
         self.fp_gridpoint1 = dict(
             kind = 'gridpoint',
@@ -268,7 +268,7 @@ class UtHistoric(TestCase):
         )
 
         self.std = SpectralGeometry(id='Current op', area='france', truncation=798)
-        self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution='08km00')
+        self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution=8.0)
         self.frangp = SpectralGeometry(area='frangp')
 
         self.fp_historic1 = dict(
@@ -378,8 +378,8 @@ class UtAnalysis(TestCase):
 
     def setUp(self):
         self.std = SpectralGeometry(id='Current op', area='france', truncation=798)
-        self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution='08km00')
-        self.frangp = SpectralGeometry(id='Current op', area='frangp', resolution='02km50')
+        self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution=8.0)
+        self.frangp = SpectralGeometry(id='Current op', area='frangp', resolution=2.5)
 
         self.fp_prov1 = dict(
             username = 'mxpt001',
@@ -541,7 +541,7 @@ class UtAnalysis(TestCase):
 class UtHistsurf(TestCase):
 
     def setUp(self):
-        self.geom = SpectralGeometry(id='Current op', area='frangp', resolution='02km50')
+        self.geom = SpectralGeometry(id='Current op', area='frangp', resolution=2.5)
         self.fp_histsurf = dict(
             kind = 'histsurf',
             date = today() + 'PT15H',

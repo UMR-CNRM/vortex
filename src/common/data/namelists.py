@@ -7,9 +7,10 @@ __all__ = []
 import re
 from vortex.autolog import logdefault as logger
 from vortex.tools import env
-from vortex.data.outflow import ModelResource, NoDateResource
-from vortex.data.contents import AlmostDictContent
 from vortex.tools.fortran import NamelistParser, NamelistBlock
+from vortex.tools.date import Time
+from vortex.data.outflow import ModelResource, NoDateResource
+from vortex.data.contents import AlmostDictContent, IndexedTable
 from vortex.syntax.stdattrs import binaries, term
 from gco.syntax.stdattrs import GenvKey
 
@@ -186,7 +187,7 @@ class NamTerm(Namelist):
         suffix = regex.search(myenv.SWAPP_XXT_DEF)
         if suffix:
             fp = suffix.group(1)
-        else :
+        else:
             fp = None
 
         try:
@@ -199,7 +200,7 @@ class NamTerm(Namelist):
         select = lines[self.term.hour].split()[2]
 
         if not re.match('undef', select):
-            if fp :
+            if fp:
                 rgx = re.compile(key + '(.*)$')
                 sfx = rgx.search(select)
                 if sfx:
@@ -223,31 +224,32 @@ class NamTerm(Namelist):
         fixed = 0
 
         for r in (r1, r2, r3) :
-            s = re.search(r, val)
-            if s :
+            s = r.search(val)
+            if s:
                 fixed = 1
                 ( dirpath, base ) = (s.group(1), s.group(2))
                 if dirpath == None:
                     dirpath = ''
                 ext = ''
-                if r == r1 or r == r2 :
+                if r == r3:
                     if self.term.hour == 0:
                         p = '0'
+                    elif self.term.hour % 6 == 0:
+                        p = '6'
+                    elif self.term.hour % 3 == 0:
+                        p = '3'
                     else :
+                        p ='1'
+                else:
+                    if self.term.hour == 0:
+                        p = '0'
+                    else:
                         p = ''
                     if r == r2:
                         ext = s.group(3)
                         if ext == None:
                             ext = ''
-                else :
-                    if self.term.hour == 0:
-                        p = '0'
-                    elif self.term.hour % 6 == 0 :
-                        p = '6'
-                    elif self.term.hour % 3 == 0 :
-                        p = '3'
-                    else :
-                        p ='1'
+
 
         if fixed:
             return dirpath + base + p + ext
@@ -277,7 +279,7 @@ class NamSelect(NamTerm):
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
         myenv = env.current()
-        if myenv.has_key('SWAPP_XXT_DEF') and re.match('1', myenv.SWAPP_XXT_DEF):
+        if myenv.has_key('SWAPP_XXT_DEF') and myenv.true('SWAPP_XXT_DEF'):
             return 'extract=' + self.incoming_xxt_fixup('source', 'select')
         else:
             return 'extract=' + self.incoming_namelist_fixup('source', 'select')
@@ -307,6 +309,34 @@ class Namelistfp(NamTerm):
         return 'extract=' + self.incoming_namelist_fixup('source', 'namel')
 
 
+class XXTContent(IndexedTable):
+    """Indexed table of selection namelist used by inlined fullpos forecasts."""
+
+    def fmtkey(self, key):
+        key = Time(key)
+        return key.fmthm
+
+    def xxtpos(self, n, g, x):
+        t = g.get('term', x.get('term', None))
+        if t == None:
+            return None
+        else:
+            value = None
+            tkey = self.get(t.fmthm, self.get(str(t.hour), None))
+            if tkey != None:
+                try:
+                    value = tkey[n]
+                except IndexError:
+                    return None
+            return value
+
+    def xxtnam(self, g, x):
+        return self.xxtpos(0, g, x)
+
+    def xxtsrc(self, g, x):
+        return self.xxtpos(1, g, x)
+
+
 class Namselectdef(NoDateResource):
     """
     Class for the xxt file
@@ -331,6 +361,9 @@ class Namselectdef(NoDateResource):
             ),
             kind = dict(
                 values = [ 'xxtdef', 'namselectdef' ]
+            ),
+            clscontents = dict(
+                default = XXTContent
             )
         ),
         bind = [ 'gvar', 'source' ]
@@ -343,5 +376,4 @@ class Namselectdef(NoDateResource):
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
         return 'extract=' + self.source
-
 

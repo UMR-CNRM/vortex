@@ -123,7 +123,7 @@ class Gridpoint(GeoFlowResource):
 
         return dict(
             radical = 'grid',
-            format  = self.nativefmt,
+            fmt     = self.nativefmt,
             src     = [self.model, source],
             geo     = self.geometry.area,
             term    = self.term.fmthm

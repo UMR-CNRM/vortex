@@ -88,7 +88,7 @@ class ClimGlobal(ClimModel):
     def basename_info(self):
         """Generic information, radical = ``clim``."""
         return dict(
-            format  = self.nativefmt,
+            fmt     = self.nativefmt,
             geo     = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}],
             radical = 'clim',
             src     = self.model,
@@ -112,7 +112,7 @@ class ClimLAM(ClimModel):
                     default = '[geometry::area]'
             ),
             gvar = dict(
-                default = 'clim_[gdomain]_[geometry::resolution]'
+                default = 'clim_[gdomain]_[geometry::rnice]'
             ),
         )
     )
@@ -124,8 +124,8 @@ class ClimLAM(ClimModel):
     def basename_info(self):
         """Generic information, radical = ``clim``."""
         return dict(
-            format  = self.nativefmt,
-            geo     = [self.geometry.area,self.geometry.resolution],
+            fmt     = self.nativefmt,
+            geo     = [self.geometry.area, self.geometry.rnice],
             radical = 'clim',
             src     = self.model,
             suffix  = {'month':self.month},
@@ -166,7 +166,7 @@ class ClimBDAP(Clim):
     def basename_info(self):
         """Generic information, radical = ``clim``."""
         return dict(
-            format  = self.nativefmt,
+            fmt     = self.nativefmt,
             geo     = self.geometry.area,
             radical = 'clim',
             src     = self.model,

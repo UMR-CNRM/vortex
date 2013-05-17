@@ -170,6 +170,8 @@ class Ticket(object):
             systems.catalog().refill()
         if not self._system or kw or refill:
             self._system = systems.load(**kw)
+            if not self._system:
+                logger.critical('Could not load a system object with description %s', str(kw))
         return self._system
 
     def duration(self):

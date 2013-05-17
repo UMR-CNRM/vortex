@@ -23,7 +23,7 @@ sh.cd(e.TMPDIR + '/rundir')
 print t.prompt, sh.pwd
 
 rundate = date.Date('2011092200')
-geo = SpectralGeometry(id='Current op', area='france', truncation=798)
+geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
 
 print t.line
 

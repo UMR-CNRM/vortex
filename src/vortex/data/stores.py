@@ -1,13 +1,13 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-r"""
-This package handles store objects in charge of physically accessing resources.
+"""
+This module handles store objects in charge of physically accessing resources.
 The associated modules defines the catalog factory based on the shared footprint
 mechanism.
 """
 
-#: No automatic export
+#: Export base class
 __all__ = [ 'Store' ]
 
 import re
@@ -17,8 +17,6 @@ from vortex.syntax import BFootprint
 from vortex.syntax.priorities import top
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 from vortex.tools.config import DelayedConfigParser
-
-from vortex import sessions
 
 
 class StoreGlue(object):
@@ -162,32 +160,40 @@ class Store(BFootprint):
         """Defines the kind of this object, here ``store``."""
         return 'store'
 
-    def notyet(self, system, desc):
+    def in_situ(self, local, options):
+        system = options.get('system', None)
+        return bool(system and options.get('insitu', False) and system.path.exists(local))
+
+    def notyet(self, *args):
         """
         Internal method to be used as a critical backup method
         when a specific method is not yet defined.
         """
         logger.critical('Scheme %s not yet implemented', self.scheme)
 
-    def check(self, remote):
+    def check(self, remote, options=None):
         """Proxy method to dedicated check method accordind to scheme."""
         logger.debug('Store check from %s', remote)
-        return getattr(self, self.scheme + 'check', self.notyet)(sessions.system(), remote)
+        return getattr(self, self.scheme + 'check', self.notyet)(remote, options)
 
-    def locate(self, remote):
+    def locate(self, remote, options=None):
         """Proxy method to dedicated get method accordind to scheme."""
         logger.debug('Store locate %s', remote)
-        return getattr(self, self.scheme + 'locate', self.notyet)(sessions.system(), remote)
+        return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
 
-    def get(self, remote, local):
+    def get(self, remote, local, options=None):
         """Proxy method to dedicated get method accordind to scheme."""
         logger.debug('Store get from %s to %s', remote, local)
-        return getattr(self, self.scheme + 'get', self.notyet)(sessions.system(), remote, local)
+        if self.in_situ(local, options):
+            logger.warning('Store %s using in situ resource: %s', self.shortname(), local)
+            return True
+        else:
+            return getattr(self, self.scheme + 'get', self.notyet)(remote, local, options)
 
-    def put(self, local, remote):
+    def put(self, local, remote, options=None):
         """Proxy method to dedicated put method accordind to scheme."""
         logger.debug('Store put from %s to %s', local, remote)
-        return getattr(self, self.scheme + 'put', self.notyet)(sessions.system(), local, remote)
+        return getattr(self, self.scheme + 'put', self.notyet)(local, remote, options)
 
 
 class MultiStore(BFootprint):
@@ -243,17 +249,17 @@ class MultiStore(BFootprint):
         """Abstract method."""
         pass
 
-    def check(self, remote):
+    def check(self, remote, options=None):
         """Go through internal opened stores and check for the resource."""
         logger.debug('Multi Store check from %s', remote)
         rc = False
         for sto in self.openedstores:
-            rc = sto.check(remote)
+            rc = sto.check(remote, options)
             if rc:
                 break
         return rc
 
-    def locate(self, remote):
+    def locate(self, remote, options=None):
         """Go through internal opened stores and locate the expected resource for each of them."""
         logger.debug('Multi Store locate %s', remote)
         if not self.openedstores:
@@ -261,21 +267,21 @@ class MultiStore(BFootprint):
         rloc = list
         for sto in self.openedstores:
             logger.info('Multi locate at %s', sto)
-            rloc.append(sto.locate(remote))
+            rloc.append(sto.locate(remote, options))
         return ';'.join(rloc)
 
-    def get(self, remote, local):
+    def get(self, remote, local, options=None):
         """Go through internal opened stores for the first available resource."""
-        logger.info('Multi Store get from %s to %s', remote, local)
+        logger.info('Multi Store get from %s to %s', remote, local, options)
         rc = False
         for sto in self.openedstores:
             logger.info('Multi get at %s', sto)
-            rc = sto.get(remote, local)
+            rc = sto.get(remote, local, options)
             if rc:
                 break
         return rc
 
-    def put(self, local, remote):
+    def put(self, local, remote, options=None):
         """Go through internal opened stores and put resource for each of them."""
         logger.debug('Multi Store put from %s to %s', local, remote)
         if not self.openedstores:
@@ -323,36 +329,41 @@ class Finder(Store):
         else:
             return remote['path']
 
-    def filecheck(self, system, remote):
+    def filecheck(self, remote, options):
         """Returns a stat-like object if the ``remote`` exists on the ``system`` provided."""
+        system = options.get('system', None)
         try:
             st = system.stat(self._realpath(remote))
         except OSError:
             st = None
         return st
 
-    def filelocate(self, system, remote):
+    def filelocate(self, remote, options):
         """Returns the real path."""
         return self._realpath(remote)
 
-    def fileget(self, system, remote, local):
+    def fileget(self, remote, local, options):
         """Delegates to ``system`` the copy of ``remote`` to ``local``."""
+        system = options.get('system', None)
         return system.cp(self._realpath(remote), local)
 
-    def fileput(self, system, local, remote):
+    def fileput(self, local, remote, options):
         """Delegates to ``system`` the copy of ``local`` to ``remote``."""
+        system = options.get('system', None)
         return system.cp(local, self._realpath(remote))
 
-    def ftpcheck(self, system, remote):
+    def ftpcheck(self, remote, options):
         """Delegates to ``system`` a distant check."""
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.size(self._realpath(remote))
             ftp.close()
             return rc
 
-    def ftplocate(self, system, remote):
+    def ftplocate(self, remote, options):
         """Delegates to ``system`` qualified name creation."""
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rloc = ftp.fullpath(self._realpath(remote))
@@ -361,16 +372,18 @@ class Finder(Store):
         else:
             return None
 
-    def ftpget(self, system, remote, local):
+    def ftpget(self, remote, local):
         """Delegates to ``system`` the file transfert of ``remote`` to ``local``."""
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.get(self._realpath(remote), local)
             ftp.close()
             return rc
 
-    def ftpput(self, system, local, remote):
+    def ftpput(self, local, remote):
         """Delegates to ``system`` the file transfert of ``local`` to ``remote``."""
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.put(local, self._realpath(remote))
@@ -420,15 +433,17 @@ class VortexArchiveStore(Store):
         """Returns the current :attr:`storage`."""
         return self.storage
 
-    def remapget(self, system, remote):
+    def remapget(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
+        system = options.get('system', None)
         xpath = remote['path'].split('/')
         xpath[3:4] = list(xpath[3])
         xpath[:0] = [ system.path.sep, self.headdir ]
         remote['path'] = system.path.join(*xpath)
 
-    def ftplocate(self, system, remote):
+    def ftplocate(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rloc = ftp.fullpath(self.rootdir + remote['path'])
@@ -437,13 +452,14 @@ class VortexArchiveStore(Store):
         else:
             return None
 
-    def vortexlocate(self, system, remote):
+    def vortexlocate(self, remote, options):
         """Remap and ftplocate sequence."""
-        self.remapget(system, remote)
-        return self.ftplocate(system, remote)
+        self.remapget(remote, options)
+        return self.ftplocate(remote, options)
 
-    def ftpget(self, system, remote, local):
+    def ftpget(self, remote, local, options):
         """Delegates to ``system.ftp`` the put action."""
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.get(self.rootdir + remote['path'], local)
@@ -452,13 +468,14 @@ class VortexArchiveStore(Store):
         else:
             return False
 
-    def vortexget(self, system, remote, local):
+    def vortexget(self, remote, local, options):
         """Remap and ftpget sequence."""
-        self.remapget(system, remote)
-        return self.ftpget(system, remote, local)
+        self.remapget(remote, options)
+        return self.ftpget(remote, local, options)
 
-    def ftpput(self, system, local, remote):
+    def ftpput(self, local, remote, options):
         """Delegates to ``system.ftp`` the put action."""
+        system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             rootpath = remote.get('root', self.rootdir)
@@ -468,10 +485,10 @@ class VortexArchiveStore(Store):
         else:
             return False
 
-    def vortexput(self, system, local, remote):
+    def vortexput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
         if not 'root' in remote: remote['root'] = self.headdir
-        return self.ftpput(system, local, remote)
+        return self.ftpput(local, remote, options)
 
 
 class VortexCacheStore(Store):
@@ -529,16 +546,19 @@ class VortexCacheStore(Store):
                 logger.debug('Store %s uses default cache %s', self, cache)
         return system.path.join(cache, self.headdir)
 
-    def vortexlocate(self, system, remote):
+    def vortexlocate(self, remote, options):
         """Agregates cache to remore subpath."""
+        system = options.get('system', None)
         return self.cachepath(system) + remote['path']
 
-    def vortexget(self, system, remote, local):
+    def vortexget(self, remote, local, options):
         """Simple copy from vortex cache to ``local``."""
+        system = options.get('system', None)
         return system.cp(self.cachepath(system) + remote['path'], local)
 
-    def vortexput(self, system, local, remote):
+    def vortexput(self, local, remote, options):
         """Simple copy from ``local`` to vortex cache in readonly mode."""
+        system = options.get('system', None)
         targetcp = self.cachepath(system) + remote['path']
         system.remove(targetcp)
         pst = system.cp(local, targetcp)

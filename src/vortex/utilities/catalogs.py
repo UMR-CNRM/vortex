@@ -191,7 +191,7 @@ class ClassesCollector(Catalog):
         if not candidates:
             return None
         if len(candidates) > 1:
-            logger.warning('Multiple candidates for %s', desc)
+            logger.warning('Multiple %s candidates with description %s', self.itementry, desc)
             candidates.sort(key=lambda x: x[0].weightsort(x[2]), reverse=True)
             for i, c in enumerate(candidates):
                 thisclass, u_resolved, theinput = c
