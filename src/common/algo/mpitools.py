@@ -5,8 +5,8 @@
 __all__ = []
 
 import re
+from vortex.autolog import logdefault as logger
 from vortex.algo.mpitools import MpiRun
-
 from vortex.tools import env
 
 
@@ -21,16 +21,18 @@ class NecMpiRun(MpiRun):
         )
     )
 
-    def setup(self):
+    def setup(self, ctx, target=None):
         """
         Prepares automatic export of variables through the MPIEXPORT mechanism.
         The list of variables could be extended or reduced through:
-        
+
          * MPIRUN_FILTER
          * MPIRUN_DISCARD
         """
-        
-        e = env.current()
+
+        super(NecMpiRun, self).setup(ctx, target)
+
+        e = ctx.env
 
         if not e.false('mpirun_export'):
             if 'mpiexport' in e:
@@ -41,9 +43,11 @@ class NecMpiRun(MpiRun):
             if not e.false('mpirun_filter'):
                 mpifilter = re.sub(',', '|', e.mpirun_filter)
                 mpix.update(filter(lambda x: re.match(mpifilter, x), e.keys()))
-        
+
             if not e.false('mpirun_discard'):
                 mpidiscard = re.sub(',', '|', e.mpirun_discard)
                 mpix = set(filter(lambda x: not re.match(mpidiscard, x), mpix))
-            
+
             e.mpiexport = ','.join(mpix)
+            logger.info('MPI export environment %s', e.mpiexport)
+

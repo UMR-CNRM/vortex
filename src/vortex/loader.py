@@ -13,7 +13,7 @@ logger = autolog.logdefault
 class VortexImporter(object):
     """Import hook for modules from the install package of VORTEX."""
 
-    def __init__(self, prefix=set([ 'vortex', 'common', 'olive' ])):
+    def __init__(self, prefix=set([ 'vortex', 'common', 'olive', 'gco' ])):
         self._import_prefix = prefix
         logger.debug('Vortex Importer < name: %s >', self._import_prefix)
 

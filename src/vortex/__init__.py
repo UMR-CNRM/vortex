@@ -23,7 +23,7 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.6.27'
+__version__ = '0.6.28'
 
 __all__ = []
 
@@ -66,3 +66,4 @@ providers = data.providers.catalog
 resources = data.resources.catalog
 stores = data.stores.catalog
 systems = tools.systems.catalog
+targets = tools.targets.catalog

@@ -12,9 +12,9 @@ verification.
 __all__ = []
 
 import re
-from vortex.autolog import logdefault as logger
 from collections import namedtuple
 
+from vortex.autolog import logdefault as logger
 from vortex import sessions
 from vortex.tools.config import GenericConfigParser
 

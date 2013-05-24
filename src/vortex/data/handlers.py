@@ -10,6 +10,7 @@ from vortex import sessions
 from vortex.tools import net
 from vortex.tools.date import Date
 from vortex.utilities import observers, roles
+from vortex.layout import dataflow
 
 import stores
 
@@ -82,7 +83,7 @@ class Handler(object):
 
     def options(self, *dicos, **kw):
         """Returns options associated to that handler and a system reference."""
-        opts = dict( system = sessions.system() )
+        opts = dict( system=sessions.system(), intent=dataflow.intent.IN )
         opts.update(self._options)
         for d in dicos:
             opts.update(d)

@@ -8,7 +8,7 @@ import vortex
 from vortex.autolog import logdefault as logger
 from copy import copy
 
-genvtool = 'genv'
+genvbin = 'genv'
 
 def handler():
     """Return default environment object storing genv items"""
@@ -68,7 +68,7 @@ def clearall():
 def autofill(kselect):
     """Use the ``genv`` external tool to fill the specified cycle."""
     cycle = None
-    gcout = vortex.sh().spawn([genvtool, kselect], output=True)
+    gcout = vortex.sh().spawn([genvbin, kselect], output=True)
     if gcout:
         gcdict = dict()
         for item in gcout:

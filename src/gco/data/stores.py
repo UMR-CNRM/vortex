@@ -30,11 +30,11 @@ class GStore(Store):
             netloc = dict(
                 values = [ 'gco.meteo.fr' ],
             ),
-            gcobin = dict(
+            ggetbin = dict(
                 optional = True,
                 default = 'gget'
             ),
-            gcopath = dict(
+            ggetpath = dict(
                 optional = True,
                 default = None
             ),
@@ -58,9 +58,9 @@ class GStore(Store):
         gname = l.pop()
         tampon = '/' + '/'.join(l)
         system.env.gget_tampon = tampon
-        gtool = self.gcobin
-        if self.gcopath:
-            gtool = system.path.join(self.gcopath, gtool)
+        gtool = self.ggetbin
+        if self.ggetpath:
+            gtool = system.path.join(self.ggetpath, gtool)
         rc = system.spawn([gtool, gname], output=False)
         if rc and system.path.exists(gname):
             if not system.path.isdir(gname) and system.is_tarfile(gname):

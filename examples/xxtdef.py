@@ -7,10 +7,7 @@ from vortex import toolbox
 from vortex.tools import date
 from vortex.data import geometries
 
-import common.data
-import olive.data
-import gco.data
-import gco.syntax
+import common, olive, gco
 from gco.tools import genv
 
 t = vortex.ticket()
@@ -24,7 +21,7 @@ print t.line
 sh.cd(e.HOME + '/tmp/bidon')
 print t.prompt, sh.pwd
 
-genv.genvtool = e.HOME  + '/bin/genvfake'
+genv.genvbin = e.HOME  + '/bin/genvfake'
 genv.autofill('cy37t1_op1.20')
 
 print t.line

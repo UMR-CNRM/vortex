@@ -48,8 +48,8 @@ class Section(object):
         self.role      = kw.get('role', None)
         self.alternate = None
         self.rh        = None
-        self.stages    = [ kw.get('stage', 'void') ]
-        if 'stage' in kw: del kw['stage']
+        self.stages    = [ kw.setdefault('stage', 'void') ]
+        del kw['stage']
         self.__dict__.update(kw)
         if self.rh:
             if self.rh.role and not self.role: self.role = self.rh.role
@@ -81,6 +81,24 @@ class Section(object):
         updmethod = getattr(self, 'updstage_' + info.get('stage'), self.updignore)
         updmethod(info)
 
+    def get(self, **kw):
+        """Shortcut to resource handler :meth:`~vortex.data.handlers.get`."""
+        if self.kind == ixo.INPUT or self.kind == ixo.EXEC:
+            kw['intent'] = self.intent
+            return self.rh.get(**kw)
+        else:
+            logger.error('Try to get from an output section.')
+            return False
+
+    def put(self, **kw):
+        """Shortcut to resource handler :meth:`~vortex.data.handlers.put`."""
+        if self.kind == ixo.OUTPUT:
+            kw['intent'] = self.intent
+            return self.rh.put(**kw)
+        else:
+            logger.error('Try to put from an input section.')
+            return False
+
 
 class Sequence(object):
     """
@@ -98,6 +116,10 @@ class Sequence(object):
 
     def __call__(self):
         return self.sections[:]
+
+    def clear(self):
+        """Clear the internal list of sections."""
+        self.sections = list()
 
     def add(self, candidate):
         """
@@ -131,15 +153,21 @@ class Sequence(object):
 
     def input(self, **kw):
         """Create a section with default kind equal to ``ixo.INPUT``."""
-        self.section(kind=ixo.INPUT, intent=intent.IN, **kw)
+        if 'kind' in kw: del kw['kind']
+        kw.setdefault('intent', intent.IN)
+        self.section(kind=ixo.INPUT, **kw)
 
     def output(self, **kw):
         """Create a section with default kind equal to ``ixo.OUTPUT`` and intent equal to ``intent.OUT``."""
-        self.section(kind=ixo.OUTPUT, intent=intent.OUT, **kw)
+        if 'kind' in kw: del kw['kind']
+        kw.setdefault('intent', intent.OUT)
+        self.section(kind=ixo.OUTPUT, **kw)
 
     def executable(self, **kw):
         """Create a section with default kind equal to to ``ixo.EXEC."""
-        self.section(kind=ixo.EXEC, intent=intent.IN, **kw)
+        if 'kind' in kw: del kw['kind']
+        kw.setdefault('intent', intent.IN)
+        self.section(kind=ixo.EXEC, **kw)
 
     def inputs(self):
         """Return a list of current sequence sections with ``ixo.INPUT`` or ``ixo.EXEC`` kind."""

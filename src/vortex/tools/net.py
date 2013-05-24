@@ -81,7 +81,7 @@ class StdFtp(FTP):
             else:
                 return None
 
-    def fullpath(self, remote):
+    def netpath(self, remote):
         return self.logname + '@' + self.host + ':' + remote
 
     def list(self, *args):

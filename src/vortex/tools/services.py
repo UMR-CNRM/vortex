@@ -213,7 +213,7 @@ class FileReportService(ReportService):
 
 
 class ServicesCatalog(ClassesCollector):
-    """Class in charge of collecting :class:`MpiTool` items."""
+    """Class in charge of collecting :class:`Service` items."""
 
     def __init__(self, **kw):
         logger.debug('Services catalog init %s', self)

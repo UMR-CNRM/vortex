@@ -200,11 +200,14 @@ class System(BFootprint):
             psall = filter(lambda x: re.search(search, x), psall)
         return [ x.strip() for x in psall ]
 
-    def readonly(self, filename):
+    def readonly(self, inodename):
         """Set permissions of the `filename` object to read-only."""
         rc = None
-        if os.path.exists(filename):
-            rc = self.chmod(filename, 0444)
+        if os.path.exists(inodename):
+            if os.path.isdir(inodename):
+                rc = self.chmod(inodename, 0555)
+            else:
+                rc = self.chmod(inodename, 0444)
         return rc
 
     def sleep(self, nbsecs):
@@ -316,7 +319,7 @@ class OSExtended(System):
         """Normalizes path name and recursively creates this directory."""
         normdir = self.path.normpath(dirpath)
         if normdir and not self.path.isdir(normdir):
-            logger.info('Cocooning directory %s', normdir)
+            logger.debug('Cocooning directory %s', normdir)
             try:
                 self.makedirs(normdir)
                 return True
@@ -324,6 +327,14 @@ class OSExtended(System):
                 return False
         else:
             return True
+
+    def rawcp(self, source, destination):
+        """Internal basic cp command used by :meth:`cp` or :meth:`smartcp`."""
+        self.copyfile(source, destination)
+        if self._cmpaftercp:
+            return filecmp.cmp(source, destination)
+        else:
+            return bool(self.size(source) == self.size(destination))
 
     def hybridcp(self, source, destination):
         """
@@ -336,9 +347,16 @@ class OSExtended(System):
         else:
             xsource = False
         if type(destination) == str:
-            self.filecocoon(destination)
-            destination = io.open(destination, 'w')
-            xdestination = True
+            if self.filecocoon(destination):
+                if self.remove(destination):
+                    destination = io.open(destination, 'w')
+                    xdestination = True
+                else:
+                    logger.error('Could not remove destination before copy %s', destination)
+                    return False
+            else:
+                logger.error('Could not create a cocoon for file %s', destination)
+                return False
         else:
             destination.seek(0)
             xdestination = False
@@ -351,6 +369,37 @@ class OSExtended(System):
             destination.close()
         return rc
 
+    def smartcp(self, source, destination):
+        """
+        Hard link the ``source`` file to a safe ``destination`` if possible.
+        Otherwise, let the standard copy do the job.
+        """
+        if type(source) != str or type(destination) != str:
+            return self.hybridcp(source, destination)
+        if self.filecocoon(destination):
+            if self.remove(destination):
+                st1 = self.stat(source)
+                st2 = self.stat(self.path.dirname(self.path.realpath(destination)))
+                if st1 and st2:
+                    if st1.st_dev == st2.st_dev and not self.path.islink(source):
+                        self.link(source, destination)
+                        self.readlonly(destination)
+                        return self.path.samefile(source, destination)
+                    else:
+                        rc = self.rawcp(source, destination)
+                        if rc:
+                            self.readonly(destination)
+                        return rc
+                else:
+                    logger.error('Could not stat either source or destination (%s/%s)', st1, st2)
+                    return False
+            else:
+                logger.error('Could not remove destination before copy %s', destination)
+                return False
+        else:
+            logger.error('Could not create a cocoon for file %s', destination)
+            return False
+
     def cp(self, source, destination):
         """
         Copy the ``source`` file to a safe ``destination``.
@@ -359,12 +408,13 @@ class OSExtended(System):
         if type(source) != str or type(destination) != str:
             return self.hybridcp(source, destination)
         if self.filecocoon(destination):
-            self.copyfile(source, destination)
-            if self._cmpaftercp:
-                return filecmp.cmp(source, destination)
+            if self.remove(destination):
+                return self.rawcp(source, destination)
             else:
-                return bool(self.size(source) == self.size(destination))
+                logger.error('Could not remove destination before copy %s', destination)
+                return False
         else:
+            logger.error('Could not create a cocoon for file %s', destination)
             return False
 
     def glob(self, *args):
@@ -614,7 +664,7 @@ class Linux27(Linux, Python27):
         info = 'Linux base system with pretty new python version',
         attr = dict(
             python = dict(
-                values = [ '2.7.2', '2.7.3', '2.7.4' ]
+                values = [ '2.7.' + str(x) for x in range(2,7) ]
             )
         )
     )

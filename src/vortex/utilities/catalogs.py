@@ -243,13 +243,27 @@ def cataloginterface(xmodule, xclass):
         """
         return pickup(kw).get(itementry, None)
 
-    for floc in ( catalog, pickup, load ):
+    def default(**kw):
+        """
+        Try to find in existing instances of XCLASS
+        a suitable candidate according to description.
+        """
+        kw.setdefault('tag', 'default')
+        c = xmodule.catalog(tag=kw['tag'])
+        del kw['tag']
+        for inst in c.instances():
+            if inst.compatible(kw):
+                return inst
+        return xmodule.load(**kw)
+
+    for floc in ( catalog, pickup, load, default ):
         floc.__doc__ = re.sub('XCLASS', ':class:`{0:s}.{1:s}`'.format(xmodule.__name__, xclass.__name__), floc.__doc__)
         floc.__doc__ = re.sub('XCANDIDATES', candidates, floc.__doc__)
 
     xmodule.catalog = catalog
     xmodule.pickup = pickup
     xmodule.load = load
+    xmodule.default = default
     catalogtrack = get_track()
     catalogtrack[xclass.tablekey()] = xmodule.catalog
 
@@ -263,6 +277,3 @@ def autocatload(kind='systems', tag='default'):
 
 def fromtable(kind='systems', tag='default'):
     return get_table()[kind].get(tag, None)
-
-
-

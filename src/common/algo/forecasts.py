@@ -69,6 +69,10 @@ class IFSModelParallel(Parallel):
             fcunit     = self.fcunit,
         )
 
+    def prepare(self, rh, ctx, opts):
+        """Set some variables according to target definition."""
+        super(IFSModelParallel, self).prepare(rh, ctx, opts)
+        self.export('drhook')
 
 class Forecast(IFSModelParallel):
     """Forecast for IFS-like Models."""
@@ -90,14 +94,15 @@ class Forecast(IFSModelParallel):
 
     def prepare(self, rh, ctx, opts):
         """Default pre-link for the initial condition file"""
+        super(Forecast, self).prepare(rh, ctx, opts)
         initrole = 'InitialCondition'
         initname = 'ICMSH{0:s}INIT'.format(self.xpname)
-        initrh = [x.rh for x in ctx.sequence.effective_inputs(role=initrole)]
+        initrh = [ x.rh for x in ctx.sequence.effective_inputs(role=initrole) ]
         if not initrh:
             logger.warning('Could not find logical %s - assuming already renamed', initrole)
         if len(initrh) > 1:
             logger.warning('More than one %s - using the first one', initrole)
-        for l in [x.container.localpath() for x in initrh]:
+        for l in [ x.container.localpath() for x in initrh ]:
             if not self.system.path.exists(initname):
                 self.system.symlink(l, initname)
 
@@ -125,9 +130,10 @@ class LAMForecast(Forecast):
 
     def prepare(self, rh, ctx, opts):
         """Default pre-link for boundary conditions files."""
+        super(LAMForecast, self).prepare(rh, ctx, opts)
         cplrh = [ x.rh for x in ctx.sequence.effective_inputs(role='BoundaryCondition', kind='elscf') ]
         cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
-        llocal = [x.container.localpath() for x in cplrh]
+        llocal = [ x.container.localpath() for x in cplrh ]
 
         i = 0
         for l in llocal:
@@ -136,9 +142,9 @@ class LAMForecast(Forecast):
 
         # Default pre-link for the initial condition file
         initname = 'ICMSH{0:s}INIT'.format(self.xpname)
-        initrh = [x.rh for x in ctx.sequence.effective_inputs(role='InitialCondition')]
-        for l in [x.container.localpath() for x in initrh]:
-            self.system.symlink(l,initname)
+        initrh = [ x.rh for x in ctx.sequence.effective_inputs(role='InitialCondition') ]
+        for l in [ x.container.localpath() for x in initrh ]:
+            self.system.symlink(l, initname)
 
 
 class DFIForecast(LAMForecast):
@@ -153,8 +159,9 @@ class DFIForecast(LAMForecast):
 
     def prepare(self, rh, ctx, opts):
         """Default pre-link for the initial condition file."""
+        super(DFIForecast, self).prepare(rh, ctx, opts)
         initname = 'ICMSH{0:s}INIT'.format(self.xpname)
-        initrh =  [x.rh for x in ctx.sequence.effective_inputs(role='InitialCondition')]
+        initrh =  [ x.rh for x in ctx.sequence.effective_inputs(role='InitialCondition') ]
         for l in [x.container.localpath() for x in initrh]:
             self.system.symlink(l, initname)
 

@@ -8,11 +8,11 @@ import re
 import sys
 import shlex
 
+import vortex
 from vortex.autolog import logdefault as logger
-from vortex import sessions
 from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
-
+from vortex.tools import targets
 import mpitools
 
 class AlgoComponent(BFootprint):
@@ -46,9 +46,17 @@ class AlgoComponent(BFootprint):
         """Ask the current context to check changes on file system since last stamp."""
         self.fslog = ctx.fstrack_check(tag=self.fstag())
 
+    def export(self, packenv):
+        """Export environment variables in given pack."""
+        if self.target.config.has_section(packenv):
+            for k, v in self.target.config.items(packenv):
+                logger.info('Setting %s env %s = %s', packenv.upper(), k, v)
+                self.env[k] = v
+
     def prepare(self, rh, ctx, opts):
-        """Abstract method."""
-        pass
+        """Set some defaults env values."""
+        if opts.get('fortran', True):
+            self.export('fortran')
 
     def absexcutable(self, xfile):
         """Retuns the absolute pathname of the ``xfile`` executable."""
@@ -64,17 +72,18 @@ class AlgoComponent(BFootprint):
 
           * VORTEX_DEBUG_ENV : dump current environment before spawn
         """
-        e = self.env
-        realkind = self.realkind
-        if e.true('vortex_debug_env'):
-            self.system.subtitle('{0:s} : dump environment'.format(realkind))
-            e.osdump()
+        if self.env.true('vortex_debug_env'):
+            self.system.subtitle('{0:s} : dump environment (os bound: {1:s}'.format(
+                self.realkind,
+                str(self.env.osbound())
+            ))
+            self.env.osdump()
 
-        self.system.subtitle('{0:s} : directory listing (pre-execution)'.format(realkind))
+        self.system.subtitle('{0:s} : directory listing (pre-execution)'.format(self.realkind))
         self.system.dir(output=False)
-        self.system.subtitle('{0:s} : start execution'.format(realkind))
+        self.system.subtitle('{0:s} : start execution'.format(self.realkind))
         self.system.spawn(args, output=False)
-        self.system.subtitle('{0:s} : directory listing (post-execution)'.format(realkind))
+        self.system.subtitle('{0:s} : directory listing (post-execution)'.format(self.realkind))
         self.system.dir(output=False)
 
     def spawn_command_options(self):
@@ -103,9 +112,11 @@ class AlgoComponent(BFootprint):
         if not self.valid_executable(rh):
             logger.warning('Resource %s is not a valid executable', rh.resource)
             return False
-        ctx = sessions.ticket().context
+        ctx = vortex.sessions.ticket().context
         self.system = ctx.system
         self.env = ctx.env
+        self.target = kw.setdefault('target', targets.default(hostname=self.system.hostname, sysname=self.system.sysname))
+        del kw['target']
         self.prepare(rh, ctx, kw)
         self.fsstamp(ctx, kw)
         self.execute(rh, ctx, kw)
@@ -208,16 +219,15 @@ class Parallel(AlgoComponent):
             logger.critical('Component %s could not find any mpitool', self.shortname())
             raise AttributeError, 'No valid mpitool attr could be found.'
 
-        mpiopts = mpi.options(kw.get('mpiopts', dict()))
-        args = [ mpi.launcher() ]
-        args.extend(mpiopts)
-        args.append(self.absexcutable(rh.container.localpath()))
+        mpi.setoptions(kw.get('mpiopts', dict()))
+        mpi.setmaster(self.absexcutable(rh.container.localpath()))
 
-        args.extend(self.spawn_command_line(rh, ctx))
+        args = mpi.commandline(self.system, self.env, self.spawn_command_line(rh, ctx))
         logger.info('Run in parallel mode %s', args)
-        mpi.setup()
+
+        mpi.setup(ctx, self.target)
         self.spawn(args)
-        mpi.clean()
+        mpi.clean(ctx, self.target)
 
 
 class AlgoComponentsCatalog(ClassesCollector):

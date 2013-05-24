@@ -4,4 +4,5 @@
 #: No automatic export
 __all__ = []
 
-import tools
+# Recursive inclusion of packages with potential BFootprint classes
+import algo, data, tools

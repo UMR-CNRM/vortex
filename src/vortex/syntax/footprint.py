@@ -519,6 +519,19 @@ class BFootprint(object):
         else:
             return ( False, inputattr )
 
+    def compatible(self, rd):
+        """
+        Resolve a subset of a description according to my footprint,
+        and then compare to my actual values.
+        """
+        fp = self.footprint()
+        resolved, inputattr = fp.resolve(rd, fatal=False, fast=False, tracker=None)
+        rc = True
+        for k, v in rd.items():
+            if resolved[k] == None or self._attributes[k] != resolved[k]:
+                rc = False
+        return rc
+
     def cleanup(self, rd):
         """
         Removes in the specified ``rd`` description the keys that are

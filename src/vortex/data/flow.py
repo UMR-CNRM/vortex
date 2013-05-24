@@ -11,9 +11,10 @@ from vortex.syntax.stdattrs import model, date, cutoff
  
 
 class FlowResource(Resource):
-    
-    _footprint = [ model, date, cutoff ]
+    """Abstract resource binded to a model, a date and a cutoff."""
+
     _abstract = True
+    _footprint = [ model, date, cutoff ]
 
     def vortex_pathinfo(self):
         """Default path informations (used by :class:`vortex.data.providers.Vortex`)."""
@@ -24,8 +25,11 @@ class FlowResource(Resource):
             cutoff = self.cutoff
         )
 
+
 class GeoFlowResource(FlowResource):
-    
+    """Abstract class which is a :class:`FlowResource` binded to a geometry."""
+
+    _abstract = True
     _footprint = dict(
         attr = dict(
             geometry = dict(
@@ -33,7 +37,6 @@ class GeoFlowResource(FlowResource):
             )
         )
     )
-    _abstract = True
 
     def vortex_pathinfo(self):
         """Default path informations (used by :class:`vortex.data.providers.Vortex`)."""

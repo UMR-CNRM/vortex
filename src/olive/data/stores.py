@@ -22,7 +22,8 @@ class OliveArchiveStore(VortexArchiveStore):
             ),
             headdir = dict(
                 optional = True,
-                default = 'xp'
+                default = 'xp',
+                outcast = 'vortex'
             ),
         )
     )
@@ -61,7 +62,8 @@ class OliveCacheStore(VortexCacheStore):
                 values = [ 'olive' ],
             ),
             headdir = dict(
-                default = 'xp'
+                default = 'xp',
+                outcast = 'vortex'
             ),
         )
     )
@@ -138,7 +140,7 @@ class OpArchiveStore(Store):
         """Returns the current :attr:`storage`."""
         return self.storage
 
-    def _realpath(self, remote):
+    def fullpath(self, remote):
         return self.rootdir + remote['path']
 
     def ftplocate(self, remote, options):
@@ -147,11 +149,11 @@ class OpArchiveStore(Store):
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             extract = remote['query'].get('extract', None)
-            cleanpath = self._realpath(remote)
+            cleanpath = self.fullpath(remote)
             (dirname, basename) = system.path.split(cleanpath)
             if not extract and self.collector.containsfile(basename):
                 cleanpath, u_targetpath = self.collector.filemap(system, dirname, basename)
-            rloc = ftp.fullpath(cleanpath)
+            rloc = ftp.netpath(cleanpath)
             ftp.close()
             return rloc
         else:
@@ -163,7 +165,7 @@ class OpArchiveStore(Store):
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             extract = remote['query'].get('extract', None)
-            cleanpath = self._realpath(remote)
+            cleanpath = self.fullpath(remote)
             (dirname, basename) = system.path.split(cleanpath)
             if not extract and self.collector.containsfile(basename):
                 cleanpath, u_targetpath = self.collector.filemap(system, dirname, basename)
@@ -177,7 +179,7 @@ class OpArchiveStore(Store):
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
             targetpath = local
-            cleanpath = self._realpath(remote)
+            cleanpath = self.fullpath(remote)
             extract = remote['query'].get('extract', None)
             (dirname, basename) = system.path.split(cleanpath)
             if not extract and self.collector.containsfile(basename):
@@ -205,8 +207,6 @@ class OpArchiveStore(Store):
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rc = ftp.put(local, self._realpath(remote))
+            rc = ftp.put(local, self.fullpath(remote))
             ftp.close()
             return rc
-
-

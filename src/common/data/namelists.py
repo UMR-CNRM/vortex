@@ -48,7 +48,7 @@ class NamelistContent(AlmostDictContent):
 
     def macros(self):
         """Returns the dictionary of macros already registered."""
-        return self._macros
+        return self._macros.copy()
 
     def setmacro(self, item, value):
         """Set macro value for further substitution."""

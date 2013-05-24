@@ -199,7 +199,7 @@ class LiteralParser(object):
         """If the argument looks like a FORTRAN complex, returns the matching python complex."""
         if ( self.complex.match(string) ):
             # Splits real and imag parts.
-            (real_string, imag_string) = string[1:-1].split(",")
+            (real_string, imag_string) = string[1:-1].split(',')
             # Parse real part
             if ( self.integer.match(real_string) ):
                 real = self.parse_integer(real_string)

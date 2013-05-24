@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This package handles some common system interfacesused at Meteo France.
+This package handles some common system interfaces used at Meteo France.
 """
 
 #: No automatic export
@@ -30,21 +30,16 @@ class SuperUX(OSExtended):
         self._psopts = kw.setdefault('psopts', ['-f'])
         del kw['psopts']
         super(SuperUX, self).__init__(*args, **kw)
+        if self.hostname == 'unix':
+            hl = self.spawn(['hostname'])
+            if len(hl) > 0:
+                self._attributes['hostname'] = hl[0]
 
     @property
     def realkind(self):
         return 'super-ux'
 
-    def cp(self, source, destination):
-        """
-        Copy the ``source`` file to a safe ``destination``.
-        The return value is produced by a raw compare of the two files.
-        """
-        if type(source) != str or type(destination) != str:
-            return self.hybridcp(source, destination)
-        if self.filecocoon(destination):
-            self.spawn(['cp', source, destination], output=False)
-            return bool(self.size(source) == self.size(destination))
-        else:
-            logger.error('Could not create cocoon for %s', destination)
-            return False
+    def rawcp(self, source, destination):
+        """NEC SX raw copy is a spawn of the shell cp."""
+        self.spawn(['cp', source, destination], output=False)
+        return bool(self.path.isfile(destination) and self.size(source) == self.size(destination))

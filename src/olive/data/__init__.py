@@ -4,5 +4,6 @@
 #: No automatic export
 __all__ = []
 
-
+# Recursive inclusion of packages with potential BFootprint classes
+import bestof, errgrib, fields
 import providers, stores

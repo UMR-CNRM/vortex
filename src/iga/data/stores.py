@@ -47,7 +47,7 @@ class IgaFinder(Finder):
     def hostname(self):
         return self.netloc
 
-    def _realpath(self, remote):
+    def fullpath(self, remote):
         if remote['query'].get('relative', False):
             return remote['path'].lstrip('/')
         else:
@@ -89,7 +89,7 @@ class SopranoStore(Store):
     def hostname(self):
         return self.storage
 
-    def _realpath(self, remote):
+    def fullpath(self, remote):
         return self.rootdir + remote['path']
 
     def ftplocate(self, remote, options):
@@ -97,7 +97,7 @@ class SopranoStore(Store):
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rloc = ftp.fullpath(self._realpath(remote))
+            rloc = ftp.netpath(self.fullpath(remote))
             ftp.close()
             return rloc
         else:
@@ -108,7 +108,7 @@ class SopranoStore(Store):
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rc = ftp.size(self._realpath(remote))
+            rc = ftp.size(self.fullpath(remote))
             ftp.close()
             return rc
 
@@ -116,7 +116,7 @@ class SopranoStore(Store):
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rc = ftp.get(self._realpath(remote), local)
+            rc = ftp.get(self.fullpath(remote), local)
             ftp.close()
             extract = remote['query'].get('extract', None)
             if extract:
@@ -132,7 +132,7 @@ class SopranoStore(Store):
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rc = ftp.put(local, self._realpath(remote))
+            rc = ftp.put(local, self.fullpath(remote))
             ftp.close()
             return rc
 

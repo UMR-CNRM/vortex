@@ -68,9 +68,10 @@ class Environment(object):
 
     _os = list()
 
-    def __init__(self, env=None, active=False, clear=False, trace=False, noexport=[]):
+    def __init__(self, env=None, active=False, clear=False, verbose=False, noexport=[]):
         self.__dict__['_history'] = []
         self.__dict__['_active'] = False
+        self.__dict__['_verbose'] = False
         self.__dict__['_pool'] = dict()
         self.__dict__['_mods'] = set()
         if env and isinstance(env, Environment):
@@ -116,14 +117,18 @@ class Environment(object):
         Set uppercase ``varname`` to value.
         Also used as internal for attribute access or dictionary access.
         """
-        self._pool[varname.upper()] = value
-        self._mods.add(varname.upper())
-        self._history.append((varname.upper(), value, datetime.now(), traceback.format_stack()))
+        upvar = varname.upper()
+        self._pool[upvar] = value
+        self._mods.add(upvar)
+        self._history.append((upvar, value, datetime.now(), traceback.format_stack()))
         if self.osbound():
             if isinstance(value, str):
-                os.environ[varname.upper()] = str(value)
+                actualvalue = str(value)
             else:
-                os.environ[varname.upper()] = json.dumps(value, cls=ShellEncoder)
+                actualvalue = json.dumps(value, cls=ShellEncoder)
+            os.environ[upvar] = actualvalue
+            if self.verbose():
+                logger.info('Export %s="%s"', upvar, actualvalue)
 
     def __setitem__(self, varname, value):
         return self.setvar(varname, value)
@@ -234,6 +239,12 @@ class Environment(object):
             return str(value)
         else:
             return json.dumps(value, cls=ShellEncoder)
+
+    def verbose(self, switch=None):
+        """Switch on or off the verbose mode. Returns actual value."""
+        if switch != None:
+            self.__dict__['_verbose'] = switch
+        return self.__dict__['_verbose']
 
     def active(self, *args):
         """

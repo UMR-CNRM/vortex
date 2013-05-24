@@ -1,23 +1,24 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-r"""
+"""
 Configuration management through ini files.
 """
 
 __all__ = []
 
-from vortex.autolog import logdefault as logger
 from ConfigParser import SafeConfigParser
 
-from vortex import sessions
+import vortex
+from vortex.autolog import logdefault as logger
 
 
 class GenericConfigParser(object):
     """Basic configuration file parser."""
 
-    def __init__(self, inifile=None, parser=None, clsparser=SafeConfigParser):
+    def __init__(self, inifile=None, parser=None, mkforce=False, clsparser=SafeConfigParser):
         self.parser = parser
+        self.mkforce = mkforce
         self.clsparser = clsparser
         if inifile:
             self.setfile(inifile)
@@ -38,16 +39,27 @@ class GenericConfigParser(object):
         """Read the specified ``inifile`` as new configuration."""
         if self.parser == None:
             self.parser = self.clsparser()
-        self.file = inifile
-        local = sessions.system()
-        if not local.path.exists(self.file):
-            glove = sessions.glove()
-            self.file = glove.configrc + '/' + local.path.basename(inifile)
-            if not local.path.exists(self.file):
-                self.file = glove.siteconf + '/' + local.path.basename(inifile)
-                if not local.path.exists(self.file):
-                    raise Exception(self.file + ' not found')
-        self.parser.read(self.file)
+        self.file = None
+        local = vortex.sessions.system()
+        if local.path.exists(inifile):
+            self.file = local.path.abspath(self.file)
+        else:
+            glove = vortex.sessions.glove()
+            persofile = glove.configrc + '/' + local.path.basename(inifile)
+            if local.path.exists(persofile):
+                self.file = persofile
+            else:
+                sitefile = glove.siteconf + '/' + local.path.basename(inifile)
+                if local.path.exists(sitefile):
+                    self.file = sitefile
+                else:
+                    if self.mkforce:
+                        self.file = persofile
+                        local.touch(persofile)
+                    else:
+                        raise Exception('Configuration file ' + inifile + ' not found')
+        if self.file != None:
+            self.parser.read(self.file)
 
     def setall(self, kw):
         """Define in all section the couples of ( key, values ) given as dictionary argument."""
@@ -68,7 +80,7 @@ class GenericConfigParser(object):
 
     def history(self):
         """Return a list of the description for each update performed."""
-        return self.updates
+        return self.updates[:]
 
     def as_dict(self):
         dico = dict()

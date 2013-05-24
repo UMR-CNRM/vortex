@@ -15,8 +15,9 @@ import sys
 from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.syntax.priorities import top
+from vortex.layout import dataflow
+from vortex.tools import config, caches
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
-from vortex.tools.config import DelayedConfigParser
 
 
 class StoreGlue(object):
@@ -133,7 +134,7 @@ class IniStoreGlue(StoreGlue):
 
     def __init__(self, inifile=None):
         logger.debug('IniStoreGlue init %s', self.__class__)
-        super(IniStoreGlue, self).__init__(DelayedConfigParser(inifile))
+        super(IniStoreGlue, self).__init__(config.DelayedConfigParser(inifile))
 
 
 class Store(BFootprint):
@@ -323,7 +324,7 @@ class Finder(Store):
         """Returns the current :attr:`netloc`."""
         return self.netloc
 
-    def _realpath(self, remote):
+    def fullpath(self, remote):
         if remote['query'].get('relative', False):
             return remote['path'].lstrip('/')
         else:
@@ -333,31 +334,34 @@ class Finder(Store):
         """Returns a stat-like object if the ``remote`` exists on the ``system`` provided."""
         system = options.get('system', None)
         try:
-            st = system.stat(self._realpath(remote))
+            st = system.stat(self.fullpath(remote))
         except OSError:
             st = None
         return st
 
     def filelocate(self, remote, options):
         """Returns the real path."""
-        return self._realpath(remote)
+        return self.fullpath(remote)
 
     def fileget(self, remote, local, options):
         """Delegates to ``system`` the copy of ``remote`` to ``local``."""
         system = options.get('system', None)
-        return system.cp(self._realpath(remote), local)
+        rpath = self.fullpath(remote)
+        if 'intent' in options and options['intent'] == dataflow.intent.IN:
+            logger.warning('Ignoring intent in for remote input %s', rpath)
+        return system.cp(rpath, local)
 
     def fileput(self, local, remote, options):
         """Delegates to ``system`` the copy of ``local`` to ``remote``."""
         system = options.get('system', None)
-        return system.cp(local, self._realpath(remote))
+        return system.cp(local, self.fullpath(remote))
 
     def ftpcheck(self, remote, options):
         """Delegates to ``system`` a distant check."""
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rc = ftp.size(self._realpath(remote))
+            rc = ftp.size(self.fullpath(remote))
             ftp.close()
             return rc
 
@@ -366,7 +370,7 @@ class Finder(Store):
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rloc = ftp.fullpath(self._realpath(remote))
+            rloc = ftp.netpath(self.fullpath(remote))
             ftp.close()
             return rloc
         else:
@@ -377,7 +381,7 @@ class Finder(Store):
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rc = ftp.get(self._realpath(remote), local)
+            rc = ftp.get(self.fullpath(remote), local)
             ftp.close()
             return rc
 
@@ -386,7 +390,7 @@ class Finder(Store):
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rc = ftp.put(local, self._realpath(remote))
+            rc = ftp.put(local, self.fullpath(remote))
             ftp.close()
             return rc
 
@@ -446,7 +450,7 @@ class VortexArchiveStore(Store):
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rloc = ftp.fullpath(self.rootdir + remote['path'])
+            rloc = ftp.netpath(self.rootdir + remote['path'])
             ftp.close()
             return rloc
         else:
@@ -506,13 +510,18 @@ class VortexCacheStore(Store):
                 },
                 default = 'open.cache.fr'
             ),
+            strategy = dict(
+                optional = True,
+                default = 'mtool',
+            ),
             rootdir = dict(
                 optional = True,
-                default = 'mtool'
+                default = '/tmp/toolbox'
             ),
             headdir = dict(
                 optional = True,
-                default = 'vortex'
+                default = 'vortex',
+                outcast = [ 'xp' ],
             ),
             storage = dict(
                 optional = True,
@@ -524,47 +533,50 @@ class VortexCacheStore(Store):
     def __init__(self, *args, **kw):
         logger.debug('Vortex cache store init %s', self.__class__)
         super(VortexCacheStore, self).__init__(*args, **kw)
+        self.resetcache()
 
     @property
     def realkind(self):
-        return 'cache'
+        return 'storecache'
 
+    @property
     def hostname(self):
         """Returns the current :attr:`storage`."""
         return self.storage
 
-    def cachepath(self, system):
-        """Tries to figure out what could be the actual cache space."""
-        cache = self.rootdir
-        e = system.env
-        if ( cache == 'mtool' or ( e.SWAPP_OUTPUT_CACHE and e.SWAPP_OUTPUT_CACHE == 'mtool' ) ):
-            if e.MTOOL_STEP_CACHE and system.path.isdir(e.MTOOL_STEP_CACHE):
-                cache = e.MTOOL_STEP_CACHE
-                logger.debug('Store %s uses mtool cache %s', self, cache)
-            else:
-                cache = e.WORKDIR or e.TMPDIR
-                logger.debug('Store %s uses default cache %s', self, cache)
-        return system.path.join(cache, self.headdir)
+    def resetcache(self):
+        """Invalidate internal cache reference."""
+        self._cache = None
+
+    @property
+    def cache(self):
+        if not self._cache:
+            self._cache = caches.default(
+                kind    = self.strategy,
+                storage = self.storage,
+                rootdir = self.rootdir,
+                headdir = self.headdir
+            )
+        return self._cache
 
     def vortexlocate(self, remote, options):
         """Agregates cache to remore subpath."""
         system = options.get('system', None)
-        return self.cachepath(system) + remote['path']
+        return self.cache.entry(system) + remote['path']
 
     def vortexget(self, remote, local, options):
         """Simple copy from vortex cache to ``local``."""
         system = options.get('system', None)
-        return system.cp(self.cachepath(system) + remote['path'], local)
+        rpath = self.cache.entry(system) + remote['path']
+        if 'intent' in options and options['intent'] == dataflow.intent.IN:
+            return system.smartcp(rpath, local)
+        else:
+            return system.cp(rpath, local)
 
     def vortexput(self, local, remote, options):
         """Simple copy from ``local`` to vortex cache in readonly mode."""
         system = options.get('system', None)
-        targetcp = self.cachepath(system) + remote['path']
-        system.remove(targetcp)
-        pst = system.cp(local, targetcp)
-        if pst:
-            system.readonly(targetcp)
-        return pst
+        return system.smartcp(local, self.cache.entry(system) + remote['path'])
 
 
 class VortexStore(MultiStore):
