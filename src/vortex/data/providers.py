@@ -194,12 +194,11 @@ class Vortex(Provider):
             ),
             namespace = dict(
                 optional = True,
-                values = [ 'open.vortex.fr', 'vortex.cache.fr', 'vortex.archive.fr', 'multi.vortex.fr', 'open.cache.fr', 'open.archive.fr' ],
+                values = [ 'vortex.cache.fr', 'vortex.archive.fr', 'vortex.multi.fr', 'open.cache.fr', 'open.archive.fr' ],
                 default = 'open.cache.fr',
                 remap = {
-                    'vortex.cache.fr' : 'open.cache.fr',
-                    'vortex.archive.fr' : 'open.archive.fr',
-                    'multi.vortex.fr' : 'open.vortex.fr'
+                    'open.cache.fr' : 'vortex.cache.fr',
+                    'open.archive.fr' : 'vortex.archive.fr',
                 }
             ),
             namebuild = dict(

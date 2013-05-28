@@ -49,7 +49,7 @@ import calendar
 
 
 def mkisodate(datestr):
-    """A crude temptative to reshape the iso8601 format."""
+    """A crude attempt to reshape the iso8601 format."""
     l = list(datestr)
     if len(l) > 4 and l[4] != '-':
         l[4:4] = [ '-' ]

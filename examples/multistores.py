@@ -2,8 +2,7 @@
 # -*- coding:Utf-8 -*-
 
 import vortex
-import vortex.data
-from vortex.data.geometries import SpectralGeometry
+from vortex.data import geometries
 from vortex.syntax import footprint
 from vortex.tools.date import Date
 
@@ -21,23 +20,23 @@ e = t.env
 sh = t.system()
 sh.cd(e.HOME + '/tmp/rundir')
 
-print t.prompt, sh.pwd
+print t.line
 
-prvin  = vortex.toolbox.provider(suite='oper', vapp='arpege')
-prvout = vortex.toolbox.provider(experiment='A001', block='canari', namespace='open.meteo.fr')
+print t.prompt, sh.pwd
 
 print t.line
 
+prvin  = vortex.toolbox.provider(suite='oper', vapp='arpege')
+prvout = vortex.toolbox.provider(experiment='A001', block='canari', namespace='multi.olive.fr')
+
 fpenv = footprint.envfp(
     model='arpege',
-    geometry = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False),
+    geometry = geometries.getbyname('globalsp'),
     date=Date('2013050100'),
     cutoff='production',
 )
 
 print t.prompt, fpenv()
-
-print t.line
 
 a = vortex.toolbox.rh(
     provider=prvin,
@@ -45,9 +44,9 @@ a = vortex.toolbox.rh(
     local='ICMSHFCSTINIT',
 )
 
-print t.line, a.idcard()
+print t.line, a.idcard(), t.line
 
-print 'GET:', a.get()
+print 'GET', a.location(), '...', a.get()
 
 print t.line
 
@@ -63,7 +62,7 @@ print t.prompt, 'Duration time =', t.duration()
 
 print t.line
 
-print 'PUT:', a.put()
+print 'PUT', a.location(), '...', a.put()
 
 print t.prompt, 'Duration time =', t.duration()
 

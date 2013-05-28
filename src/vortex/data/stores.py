@@ -290,7 +290,7 @@ class MultiStore(BFootprint):
         rc = True
         for sto in self.openedstores:
             logger.info('Multi put at %s', sto)
-            rc = sto.put(local, remote) and rc
+            rc = sto.put(local, remote, options) and rc
         return rc
 
 
@@ -364,6 +364,8 @@ class Finder(Store):
             rc = ftp.size(self.fullpath(remote))
             ftp.close()
             return rc
+        else:
+            return None
 
     def ftplocate(self, remote, options):
         """Delegates to ``system`` qualified name creation."""
@@ -376,7 +378,7 @@ class Finder(Store):
         else:
             return None
 
-    def ftpget(self, remote, local):
+    def ftpget(self, remote, local, options):
         """Delegates to ``system`` the file transfert of ``remote`` to ``local``."""
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
@@ -385,7 +387,7 @@ class Finder(Store):
             ftp.close()
             return rc
 
-    def ftpput(self, local, remote):
+    def ftpput(self, local, remote, options):
         """Delegates to ``system`` the file transfert of ``local`` to ``remote``."""
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
@@ -395,20 +397,17 @@ class Finder(Store):
             return rc
 
 
-class VortexArchiveStore(Store):
+class ArchiveStore(Store):
+    """Generic Archive Store."""
 
     _footprint = dict(
-        info = 'VORTEX archive access',
+        info = 'Generic archive store',
         attr = dict(
             scheme = dict(
-                values = [ 'vortex', 'ftp', 'ftserv' ],
+                values = [ 'ftp', 'ftserv' ],
             ),
             netloc = dict(
-                values = [ 'open.archive.fr', 'vortex.archive.fr' ],
-                remap = {
-                    'vortex.archive.fr' : 'open.archive.fr'
-                },
-                default = 'open.archive.fr'
+                values = [ 'open.archive.fr' ],
             ),
             rootdir = dict(
                 optional = True,
@@ -416,7 +415,7 @@ class VortexArchiveStore(Store):
             ),
             headdir = dict(
                 optional = True,
-                default = 'vortex'
+                default = 'sto'
             ),
             storage = dict(
                 optional = True,
@@ -426,12 +425,12 @@ class VortexArchiveStore(Store):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Vortex archive store init %s', self.__class__)
-        super(VortexArchiveStore, self).__init__(*args, **kw)
+        logger.debug('Archive store init %s', self.__class__)
+        super(ArchiveStore, self).__init__(*args, **kw)
 
     @property
     def realkind(self):
-        return 'archive'
+        return 'archivestore'
 
     def hostname(self):
         """Returns the current :attr:`storage`."""
@@ -439,14 +438,21 @@ class VortexArchiveStore(Store):
 
     def remapget(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
+        pass
+
+    def ftpcheck(self, remote, options):
+        """Delegates to ``system.ftp`` a distant check."""
         system = options.get('system', None)
-        xpath = remote['path'].split('/')
-        xpath[3:4] = list(xpath[3])
-        xpath[:0] = [ system.path.sep, self.headdir ]
-        remote['path'] = system.path.join(*xpath)
+        ftp = system.ftp(self.hostname(), remote['username'])
+        if ftp:
+            rc = ftp.size(self.rootdir + remote['path'])
+            ftp.close()
+            return rc
+        else:
+            return None
 
     def ftplocate(self, remote, options):
-        """Delegates to ``system.ftp`` a distant check."""
+        """Delegates to ``system.ftp`` the path evaluation."""
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
         if ftp:
@@ -455,11 +461,6 @@ class VortexArchiveStore(Store):
             return rloc
         else:
             return None
-
-    def vortexlocate(self, remote, options):
-        """Remap and ftplocate sequence."""
-        self.remapget(remote, options)
-        return self.ftplocate(remote, options)
 
     def ftpget(self, remote, local, options):
         """Delegates to ``system.ftp`` the put action."""
@@ -471,11 +472,6 @@ class VortexArchiveStore(Store):
             return rc
         else:
             return False
-
-    def vortexget(self, remote, local, options):
-        """Remap and ftpget sequence."""
-        self.remapget(remote, options)
-        return self.ftpget(remote, local, options)
 
     def ftpput(self, local, remote, options):
         """Delegates to ``system.ftp`` the put action."""
@@ -489,39 +485,85 @@ class VortexArchiveStore(Store):
         else:
             return False
 
+
+class VortexArchiveStore(ArchiveStore):
+    """Some kind of archive for VORTEX experiments."""
+
+    _footprint = dict(
+        info = 'VORTEX archive access',
+        attr = dict(
+            scheme = dict(
+                values = [ 'vortex', 'ftp', 'ftserv' ],
+            ),
+            netloc = dict(
+                values = [ 'open.archive.fr', 'vortex.archive.fr' ],
+                remap = {
+                    'vortex.archive.fr' : 'open.archive.fr'
+                },
+            ),
+            headdir = dict(
+                default = 'vortex',
+                outcast = [ 'xp' ]
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('Vortex archive store init %s', self.__class__)
+        super(VortexArchiveStore, self).__init__(*args, **kw)
+
+    def remapget(self, remote, options):
+        """Reformulates the remote path to compatible vortex namespace."""
+        system = options.get('system', None)
+        xpath = remote['path'].split('/')
+        xpath[3:4] = list(xpath[3])
+        xpath[:0] = [ system.path.sep, self.headdir ]
+        remote['path'] = system.path.join(*xpath)
+
+    def vortexcheck(self, remote, options):
+        """Remap and ftpcheck sequence."""
+        self.remapget(remote, options)
+        return self.ftpcheck(remote, options)
+
+    def vortexlocate(self, remote, options):
+        """Remap and ftplocate sequence."""
+        self.remapget(remote, options)
+        return self.ftplocate(remote, options)
+
+    def vortexget(self, remote, local, options):
+        """Remap and ftpget sequence."""
+        self.remapget(remote, options)
+        return self.ftpget(remote, local, options)
+
     def vortexput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
         if not 'root' in remote: remote['root'] = self.headdir
         return self.ftpput(local, remote, options)
 
 
-class VortexCacheStore(Store):
+class CacheStore(Store):
+    """Generic Cache Store."""
 
     _footprint = dict(
-        info = 'VORTEX cache access',
+        info = 'Generic cache store',
         attr = dict(
             scheme = dict(
-                values = [ 'vortex' ],
+                values = [ 'incache' ],
             ),
             netloc = dict(
-                values = [ 'open.cache.fr', 'vortex.cache.fr' ],
-                remap = {
-                    'vortex.cache.fr' : 'open.cache.fr'
-                },
-                default = 'open.cache.fr'
+                values = [ 'open.cache.fr' ],
             ),
             strategy = dict(
                 optional = True,
-                default = 'mtool',
+                default = 'std',
             ),
             rootdir = dict(
                 optional = True,
-                default = '/tmp/toolbox'
+                default = 'conf'
             ),
             headdir = dict(
                 optional = True,
-                default = 'vortex',
-                outcast = [ 'xp' ],
+                default = 'conf',
             ),
             storage = dict(
                 optional = True,
@@ -531,8 +573,8 @@ class VortexCacheStore(Store):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Vortex cache store init %s', self.__class__)
-        super(VortexCacheStore, self).__init__(*args, **kw)
+        logger.debug('Generic cache store init %s', self.__class__)
+        super(CacheStore, self).__init__(*args, **kw)
         self.resetcache()
 
     @property
@@ -543,6 +585,10 @@ class VortexCacheStore(Store):
     def hostname(self):
         """Returns the current :attr:`storage`."""
         return self.storage
+
+    def setcache(self, newcache):
+        """Set a new cache reference."""
+        self._cache = newcache
 
     def resetcache(self):
         """Invalidate internal cache reference."""
@@ -559,13 +605,22 @@ class VortexCacheStore(Store):
             )
         return self._cache
 
-    def vortexlocate(self, remote, options):
+    def incachecheck(self, remote, options):
+        """Returns a stat-like object if the ``remote`` exists in the current cache."""
+        system = options.get('system', None)
+        try:
+            st = system.stat(self.incachelocate(remote, options))
+        except OSError:
+            st = None
+        return st
+
+    def incachelocate(self, remote, options):
         """Agregates cache to remore subpath."""
         system = options.get('system', None)
         return self.cache.entry(system) + remote['path']
 
-    def vortexget(self, remote, local, options):
-        """Simple copy from vortex cache to ``local``."""
+    def incacheget(self, remote, local, options):
+        """Simple copy from current cache cache to ``local``."""
         system = options.get('system', None)
         rpath = self.cache.entry(system) + remote['path']
         if 'intent' in options and options['intent'] == dataflow.intent.IN:
@@ -573,13 +628,64 @@ class VortexCacheStore(Store):
         else:
             return system.cp(rpath, local)
 
-    def vortexput(self, local, remote, options):
-        """Simple copy from ``local`` to vortex cache in readonly mode."""
+    def incacheput(self, local, remote, options):
+        """Simple copy from ``local`` to the current cache in readonly mode."""
         system = options.get('system', None)
         return system.smartcp(local, self.cache.entry(system) + remote['path'])
 
 
+class VortexCacheStore(CacheStore):
+    """Some kind of cache for VORTEX experiments."""
+
+    _footprint = dict(
+        info = 'VORTEX cache access',
+        attr = dict(
+            scheme = dict(
+                values = [ 'vortex' ],
+            ),
+            netloc = dict(
+                values = [ 'open.cache.fr', 'vortex.cache.fr' ],
+                remap = {
+                    'vortex.cache.fr' : 'open.cache.fr'
+                },
+            ),
+            strategy = dict(
+                default = 'mtool',
+            ),
+            rootdir = dict(
+                default = 'auto'
+            ),
+            headdir = dict(
+                default = 'vortex',
+                outcast = [ 'xp' ],
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('Vortex cache store init %s', self.__class__)
+        super(VortexCacheStore, self).__init__(*args, **kw)
+        self.resetcache()
+
+    def vortexcheck(self, remote, options):
+        """Gateway to :meth:`incachecheck`."""
+        return self.incachecheck(remote, options)
+
+    def vortexlocate(self, remote, options):
+        """Gateway to :meth:`incachelocate`."""
+        return self.incachelocate(remote, options)
+
+    def vortexget(self, remote, local, options):
+        """Gateway to :meth:`incacheget`."""
+        return self.incacheget(remote, local, options)
+
+    def vortexput(self, local, remote, options):
+        """Gateway to :meth:`incacheputt`."""
+        return self.incacheput(local, remote, options)
+
+
 class VortexStore(MultiStore):
+    """Combined cache and archive VORTEX stores."""
 
     _footprint = dict(
         info = 'Vortex multi access',
@@ -588,14 +694,14 @@ class VortexStore(MultiStore):
                 values = [ 'vortex' ],
             ),
             netloc = dict(
-                values = [ 'open.meteo.fr', 'multi.open.fr' ],
+                values = [ 'vortex.multi.fr' ],
             ),
         )
     )
 
     def alternates_netloc(self):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
-        return ( 'open.cache.fr', 'open.archive.fr' )
+        return ( 'vortex.cache.fr', 'vortex.archive.fr' )
 
 
 class StoresCatalog(ClassesCollector):

@@ -11,7 +11,7 @@ import olive.data
 import gco.data
 from vortex.syntax import footprint
 from vortex.tools import env, date
-from vortex.data.geometries import SpectralGeometry
+from vortex.data import geometries
 from gco.tools import genv
 
 t = vortex.ticket()
@@ -71,7 +71,7 @@ inputs = (
         genv=arpege_cycle,
         local='climarpege',
         model='arpege',
-        geometry=SpectralGeometry(id='Current op',  truncation='798', lam=False),
+        geometry=geometries.getbyname('globalsp'),
         role='Fatherclim'
     ),
     rl(
@@ -80,7 +80,7 @@ inputs = (
         local='climaladin',
         role='Sonclim',
         model='aladin',
-        geometry=SpectralGeometry(id='Current op', area='reunion', resolution=8.0, lam=True)
+        geometry=geometries.getbyname('reunionsp'),
     ),
     rl(
         kind='namelist',
@@ -95,7 +95,7 @@ inputs = (
         kind='historic',
         cutoff='production',
         namespace='[suite].archive.fr',
-        geometry=SpectralGeometry(id='Current op', truncation='798'),
+        geometry=geometries.getbyname('globalsp'),
         local='ICMSHARPE+[term::fmth]',
         suite='oper',
         term=(0,3),

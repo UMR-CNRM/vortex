@@ -383,7 +383,7 @@ class OSExtended(System):
                 if st1 and st2:
                     if st1.st_dev == st2.st_dev and not self.path.islink(source):
                         self.link(source, destination)
-                        self.readlonly(destination)
+                        self.readonly(destination)
                         return self.path.samefile(source, destination)
                     else:
                         rc = self.rawcp(source, destination)

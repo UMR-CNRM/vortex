@@ -42,7 +42,7 @@ class GenericConfigParser(object):
         self.file = None
         local = vortex.sessions.system()
         if local.path.exists(inifile):
-            self.file = local.path.abspath(self.file)
+            self.file = local.path.abspath(inifile)
         else:
             glove = vortex.sessions.glove()
             persofile = glove.configrc + '/' + local.path.basename(inifile)

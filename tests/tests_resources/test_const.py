@@ -44,7 +44,7 @@ class UtBcor(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/OPER/20120214T0600P/observation/bcor.noaa.txt')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/OPER/20120214T0600P/observation/bcor.noaa.txt')
 
 
     def test_b1(self):

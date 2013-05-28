@@ -6,13 +6,13 @@ __all__ = []
 
 import re
 from vortex.autolog import logdefault as logger
-from vortex.data.stores import StoreGlue, IniStoreGlue, Store, VortexStore, VortexArchiveStore, VortexCacheStore
+from vortex.data.stores import StoreGlue, IniStoreGlue, ArchiveStore, CacheStore, MultiStore
 
 rextract = re.compile('^extract=(.*)$')
 oparchivemap = IniStoreGlue('oparchive-collector.ini')
 
 
-class OliveArchiveStore(VortexArchiveStore):
+class OliveArchiveStore(ArchiveStore):
 
     _footprint = dict(
         info = 'Olive archive access',
@@ -20,10 +20,15 @@ class OliveArchiveStore(VortexArchiveStore):
             scheme = dict(
                 values = [ 'olive' ],
             ),
+            netloc = dict(
+                values = [ 'open.archive.fr', 'olive.archive.fr' ],
+                remap = {
+                    'olive.archive.fr' : 'open.archive.fr'
+                },
+            ),
             headdir = dict(
-                optional = True,
                 default = 'xp',
-                outcast = 'vortex'
+                outcast = [ 'vortex' ]
             ),
         )
     )
@@ -41,19 +46,22 @@ class OliveArchiveStore(VortexArchiveStore):
         remote['path'] = system.path.join(*xpath)
 
     def olivelocate(self, remote, options):
-        """Gateway to :meth:`vortexlocate`."""
-        return self.vortexlocate(remote, options)
+        """Remap and ftplocate sequence."""
+        self.remapget(remote, options)
+        return self.ftplocate(remote, options)
 
     def oliveget(self, remote, local, options):
-        """Gateway to :meth:`vortexget`."""
-        return self.vortexget(remote, local, options)
+        """Remap and ftpget sequence."""
+        self.remapget(remote, options)
+        return self.ftpget(remote, local, options)
 
     def oliveput(self, local, remote, options):
-        """Gateway to :meth:`vortexput`."""
-        return self.vortexput(local, remote, options)
+        """Remap root dir and ftpput sequence."""
+        if not 'root' in remote: remote['root'] = self.headdir
+        return self.ftpput(local, remote, options)
 
 
-class OliveCacheStore(VortexCacheStore):
+class OliveCacheStore(CacheStore):
 
     _footprint = dict(
         info = 'Olive cache access',
@@ -61,9 +69,21 @@ class OliveCacheStore(VortexCacheStore):
             scheme = dict(
                 values = [ 'olive' ],
             ),
+            netloc = dict(
+                values = [ 'open.cache.fr', 'olive.cache.fr' ],
+                remap = {
+                    'olive.cache.fr' : 'open.cache.fr'
+                },
+            ),
+            strategy = dict(
+                default = 'mtool',
+            ),
+            rootdir = dict(
+                default = 'auto'
+            ),
             headdir = dict(
                 default = 'xp',
-                outcast = 'vortex'
+                outcast = [ 'vortex' ]
             ),
         )
     )
@@ -72,21 +92,24 @@ class OliveCacheStore(VortexCacheStore):
         logger.debug('Olive cache store init %s', self.__class__)
         super(OliveCacheStore, self).__init__(*args, **kw)
 
+    def olivecheck(self, remote, options):
+        """Gateway to :meth:`incachecheck`."""
+        return self.incachecheck(remote, options)
+
     def olivelocate(self, remote, options):
-        """Gateway to :meth:`vortexlocate`."""
-        return self.vortexlocate(remote, options)
+        """Gateway to :meth:`incachelocate`."""
+        return self.incachelocate(remote, options)
 
     def oliveget(self, remote, local, options):
-        """Gateway to :meth:`vortexget`."""
-        return self.vortexget(remote, local, options)
+        """Gateway to :meth:`incacheget`."""
+        return self.incacheget(remote, local, options)
 
     def oliveput(self, local, remote, options):
-        """Gateway to :meth:`vortexput`."""
-        return self.vortexput(local, remote, options)
+        """Gateway to :meth:`incacheputt`."""
+        return self.incacheput(local, remote, options)
 
 
-
-class OliveStore(VortexStore):
+class OliveStore(MultiStore):
 
     _footprint = dict(
         info = 'Olive multi access',
@@ -94,11 +117,18 @@ class OliveStore(VortexStore):
             scheme = dict(
                 values = [ 'olive' ],
             ),
+            netloc = dict(
+                values = [ 'olive.multi.fr' ],
+            ),
         )
     )
 
+    def alternates_netloc(self):
+        """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
+        return ( 'olive.cache.fr', 'olive.archive.fr' )
 
-class OpArchiveStore(Store):
+
+class OpArchiveStore(ArchiveStore):
 
     _footprint = dict(
         info = 'Archive access',
@@ -131,14 +161,6 @@ class OpArchiveStore(Store):
     def __init__(self, *args, **kw):
         logger.debug('Archive store init %s', self.__class__)
         super(OpArchiveStore, self).__init__(*args, **kw)
-
-    @property
-    def realkind(self):
-        return 'archive'
-
-    def hostname(self):
-        """Returns the current :attr:`storage`."""
-        return self.storage
 
     def fullpath(self, remote):
         return self.rootdir + remote['path']

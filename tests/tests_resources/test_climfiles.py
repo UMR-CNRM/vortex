@@ -33,7 +33,7 @@ class UtClimGlobal(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/clim/clim.arpege.tl798-c24.fa.m10')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/clim/clim.arpege.tl798-c24.fa.m10')
 
 
     def test_c1(self):
@@ -71,7 +71,7 @@ class UtClimLAM(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/clim/clim.aladin.caledonie-08km00.fa.m10')   
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/clim/clim.aladin.caledonie-08km00.fa.m10')
     
     def test_c1(self):
         rl = toolbox.rload(
@@ -109,7 +109,7 @@ class UtClimBDAP(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/clim/clim.arpege.glob15.fa.m10')   
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/clim/clim.arpege.glob15.fa.m10')
         
     def test_v2(self):
         rl = toolbox.rload(
@@ -125,7 +125,7 @@ class UtClimBDAP(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/clim/clim.arome.frangp0025.fa.m10')   
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/clim/clim.arome.frangp0025.fa.m10')
     
     
     def test_c1(self):

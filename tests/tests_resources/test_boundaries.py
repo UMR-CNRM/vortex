@@ -37,7 +37,7 @@ class UtElscf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000P/coupling/cpl.arpege.frangp-02km50+0012:00.fa')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000P/coupling/cpl.arpege.frangp-02km50+0012:00.fa')
 
     def test_e1(self):
         rl = toolbox.rload(
@@ -132,7 +132,7 @@ class UtElscf(TestCase):
             term=6
         ).pop()
         self.assertTrue(rh.complete)
-        self.assertEqual(rh.location(), 'olive://open.archive.fr/99A2/20110922H00P/coupling/ELSCFALAD_france+0006')
+        self.assertEqual(rh.location(), 'olive://olive.archive.fr/99A2/20110922H00P/coupling/ELSCFALAD_france+0006')
    
     def test_e7(self):
         rh = toolbox.rload(
@@ -148,7 +148,7 @@ class UtElscf(TestCase):
             term=6
         ).pop()
         self.assertTrue(rh.complete)
-        self.assertEqual(rh.location(), 'olive://open.archive.fr/99Q7/20120208H00P/coupling/ELSCFAROM_frangp+0006')
+        self.assertEqual(rh.location(), 'olive://olive.archive.fr/99Q7/20120208H00P/coupling/ELSCFAROM_frangp+0006')
               
               
 

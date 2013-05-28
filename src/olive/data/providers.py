@@ -21,15 +21,13 @@ class Olive(Provider):
             member = dict(
                 type = int,
                 optional = True,
-            ),    
+            ),
             namespace = dict(
                 optional = True,
-                values = [ 'open.olive.fr', 'open.meteo.fr', 'olive.cache.fr', 'open.cache.fr', 'open.archive.fr', 'olive.archive.fr' ],
-                default = 'open.meteo.fr',
+                values = [ 'olive.cache.fr', 'olive.archive.fr', 'olive.multi.fr', 'multi.olive.fr' ],
+                default = 'olive.cache.fr',
                 remap = {
-                    'open.olive.fr' : 'open.meteo.fr',
-                    'olive.cache.fr' : 'open.cache.fr',
-                    'olive.archive.fr' : 'open.archive.fr',
+                    'multi.olive.fr' : 'olive.multi.fr',
                 }
             )
         )
@@ -111,11 +109,13 @@ class OpArchive(Provider):
         return 'archive'
 
     def scheme(self):
+        """Return the actual tube as scheme."""
         return self.tube
 
     def domain(self):
+        """Return the actual namespace as domain."""
         return self.namespace
-    
+
     def basename(self, resource):
         bname = resource.basename(self.realkind)
         sublist = re.findall('\(\w+\:\w+\)|\(\w+\)', bname)
@@ -149,9 +149,9 @@ class OpArchive(Provider):
                 bname = bname.replace(i, fuzzy)
             else:
                 bname = bname.replace(i, str(getattr(self, s1)))
-        
+
         return bname  
-    
+
     def pathname(self, resource):
         rinfo = self.pathinfo(resource)
         rdate = rinfo.get('date','')
@@ -159,7 +159,7 @@ class OpArchive(Provider):
         mm = '{0:02d}'.format(rdate.month)
         dd = '{0:02d}'.format(rdate.day)
         rr = 'r{0:d}'.format(rdate.hour)
-        
+
         if self.member != None :
             run =  'RUN' + "%d" % self.member
             if re.match('pearp',self.igakey) and resource.realkind == 'gridpoint':
@@ -176,5 +176,3 @@ class OpArchive(Provider):
                     return '/'.join((self.igakey, dd))
                 else:
                     return '/'.join((self.igakey, self.suite, rinfo['cutoff'], yyyy, mm, dd, rr ))
-       
-

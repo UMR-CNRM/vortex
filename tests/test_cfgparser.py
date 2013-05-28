@@ -35,7 +35,7 @@ class UtGenericConfigParser(TestCase):
     def test_init_3(self):
         real_ini = os.path.join(self.path, 'iga-map-resources.ini')
         igacfgp = GenericConfigParser(real_ini)
-        self.assertTrue(igacfgp.file == real_ini)
+        self.assertTrue(igacfgp.file.startswith('/'))
         sections = ['analysis', 'matfilter', 'rtcoef', 'namelist', 'climmodel',
                     'climmodel', 'climdomain']
         self.assertTrue(sorted(igacfgp.sections()), sorted(sections))

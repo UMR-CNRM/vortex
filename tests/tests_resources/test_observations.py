@@ -34,7 +34,7 @@ class UtObservations(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/OPER/20120214T0600P/observation/obsoul.std.conv')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/OPER/20120214T0600P/observation/obsoul.std.conv')
 
 
     def test_v3(self):
@@ -52,7 +52,7 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0600P/observation/ecma.screen.full.tar')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600P/observation/ecma.screen.full.tar')
 
 
     def test_o1(self):
@@ -149,7 +149,7 @@ class UtRefdata(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0600P/observation/refdata.all')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600P/observation/refdata.all')
 
 
 class UtVarbc(TestCase):
@@ -236,7 +236,7 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A2/20110922H00P/observations/varbc')
+        self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A2/20110922H00P/observations/varbc')
 
     def test_v7(self):
         rl = toolbox.rload(
@@ -250,7 +250,7 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A2/20110922H00P/minim/varbc')
+        self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A2/20110922H00P/minim/varbc')
 
     def test_v8(self):
         rl = toolbox.rload(
@@ -265,8 +265,8 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20110922T0000P/minim/varbc.aladin')
-        self.assertEqual(rl[1].location(), 'vortex://open.cache.fr/play/sandbox/oper/20110922T0000P/minim/varbc.aladin.merge')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20110922T0000P/minim/varbc.aladin')
+        self.assertEqual(rl[1].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20110922T0000P/minim/varbc.aladin.merge')
 
 
 class UtBlackListDiap(TestCase):
@@ -287,7 +287,7 @@ class UtBlackListDiap(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/OPER/20120214T0600P/observation/blacklist.site.txt')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/OPER/20120214T0600P/observation/blacklist.site.txt')
 
     def test_o1(self):
         rl = toolbox.rload(
@@ -339,7 +339,7 @@ class UtObsmap(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0600P/observation/obsmap.std')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600P/observation/obsmap.std')
 
     def test_o1(self):
         rl = toolbox.rload(
@@ -366,7 +366,7 @@ class UtObsmap(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A0/20110922H00P/observations/OBSMAP_split')
+        self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A0/20110922H00P/observations/OBSMAP_split')
 
 
 

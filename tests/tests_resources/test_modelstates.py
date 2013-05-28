@@ -37,8 +37,8 @@ class UtGridpoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0600A/forecast/grid.aladin-forecast.franx01+0006:00.grib')
-        self.assertEqual(rl[1].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0600A/forecast/grid.aladin-forecast.franx01+0006:00.fa')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600A/forecast/grid.aladin-forecast.franx01+0006:00.grib')
+        self.assertEqual(rl[1].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600A/forecast/grid.aladin-forecast.franx01+0006:00.fa')
 
 
     def test_g1(self):
@@ -133,8 +133,8 @@ class UtGridpoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A0/20120214H06P/fc_004/GRIDHSTGLOB15+0006')
-        self.assertEqual(rl[1].location(), 'olive://open.archive.fr/99A0/20120214H06P/fc_004/PFFPOSHSTGLOB15+0006')
+        self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A0/20120214H06P/fc_004/GRIDHSTGLOB15+0006')
+        self.assertEqual(rl[1].location(), 'olive://olive.archive.fr/99A0/20120214H06P/fc_004/PFFPOSHSTGLOB15+0006')
 
 
     def test_g6(self):
@@ -153,7 +153,7 @@ class UtGridpoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A0/20120214H06P/forecast/HMGLOB15+0006')
+        self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A0/20120214H06P/forecast/HMGLOB15+0006')
 
 
     def test_g7(self):
@@ -190,7 +190,7 @@ class UtGridpoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0600P/forecast/grid.mocage-forecast.glob15+0006:00.fa')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600P/forecast/grid.mocage-forecast.glob15+0006:00.fa')
 
     def test_g8(self):
         rl = toolbox.rload(
@@ -208,8 +208,8 @@ class UtGridpoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A0/20120214H06P/cplsurf/SMGLOB15_void+20120215')
-        self.assertEqual(rl[1].location(), 'olive://open.archive.fr/99A0/20120214H06P/cplsurf/SMGLOB15_interp+20120215')
+        self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A0/20120214H06P/cplsurf/SMGLOB15_void+20120215')
+        self.assertEqual(rl[1].location(), 'olive://olive.archive.fr/99A0/20120214H06P/cplsurf/SMGLOB15_interp+20120215')
 
 
     def test_g9(self):
@@ -246,8 +246,8 @@ class UtGridpoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0600P/coupling/grid.mocage-sumo.glob15+0024:00.fa')
-        self.assertEqual(rl[1].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0600P/coupling/grid.mocage-sumo.glob15+0024:00.fa')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600P/coupling/grid.mocage-sumo.glob15+0024:00.fa')
+        self.assertEqual(rl[1].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600P/coupling/grid.mocage-sumo.glob15+0024:00.fa')
 
 
 
@@ -275,7 +275,7 @@ class UtHistoric(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000A/forecast/historic.arpege.tl798-c24+0006:00.fa')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000A/forecast/historic.arpege.tl798-c24+0006:00.fa')
 
 
     def test_v2(self):
@@ -292,7 +292,7 @@ class UtHistoric(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000A/forecast/historic.aladin.caledonie-08km00+0006:00.fa')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000A/forecast/historic.aladin.caledonie-08km00+0006:00.fa')
 
 
     def test_v3(self):
@@ -310,7 +310,7 @@ class UtHistoric(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/A000/20120214T0000A/forecast/historic.mesonh.france-01km50+0006:00.lfi')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/A000/20120214T0000A/forecast/historic.mesonh.france-01km50+0006:00.lfi')
 
 
     def test_h1(self):
@@ -407,7 +407,7 @@ class UtHistoric(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A0/20120214H00P/forecast/ICMSHARPE+0006')
+        self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A0/20120214H00P/forecast/ICMSHARPE+0006')
 
 
     def test_h7(self):
@@ -425,7 +425,7 @@ class UtHistoric(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'olive://open.archive.fr/99A0/20120214H00P/forecast/MESONH.FRAN+0006.lfi')
+        self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A0/20120214H00P/forecast/MESONH.FRAN+0006.lfi')
 
 
 
@@ -452,8 +452,8 @@ class UtAnalysis(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000P/analysis/analysis.full-arome.frangp-02km50.fa')
-        self.assertEqual(rl[1].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000P/analysis/analysis.surf-arome.frangp-02km50.fa')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000P/analysis/analysis.full-arome.frangp-02km50.fa')
+        self.assertEqual(rl[1].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000P/analysis/analysis.surf-arome.frangp-02km50.fa')
 
     def test_v2(self):
         rl = toolbox.rload(
@@ -468,8 +468,8 @@ class UtAnalysis(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000P/analysis/analysis.full-arpege.tl798-c24.fa')
-        self.assertEqual(rl[1].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000P/analysis/analysis.surf-arpege.tl798-c24.fa')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000P/analysis/analysis.full-arpege.tl798-c24.fa')
+        self.assertEqual(rl[1].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000P/analysis/analysis.surf-arpege.tl798-c24.fa')
 
     def test_a1(self):
         rl = toolbox.rload(
@@ -538,7 +538,7 @@ class UtAnalysis(TestCase):
             model='arpege'
         ).pop()
         self.assertTrue(rh.complete)
-        self.assertEqual(rh.location(), 'olive://open.archive.fr/99A0/20110922H00P/canari/analyse')
+        self.assertEqual(rh.location(), 'olive://olive.archive.fr/99A0/20110922H00P/canari/analyse')
 
     def test_a6(self):
         rh = toolbox.rload(
@@ -553,7 +553,7 @@ class UtAnalysis(TestCase):
             model='aladin'
         ).pop()
         self.assertTrue(rh.complete)
-        self.assertEqual(rh.location(), 'olive://open.archive.fr/99A0/20110922H00P/canari/surfanalyse')
+        self.assertEqual(rh.location(), 'olive://olive.archive.fr/99A0/20110922H00P/canari/surfanalyse')
 
 
 class UtHistsurf(TestCase):
@@ -577,7 +577,7 @@ class UtHistsurf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000P/forecast/histsurf.arome.frangp-02km50+0006:00.lfi')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000P/forecast/histsurf.arome.frangp-02km50+0006:00.lfi')
 
     def test_o1(self):
         rl = toolbox.rload(
@@ -593,7 +593,7 @@ class UtHistsurf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'olive://open.archive.fr/A000/20120214H00P/forecast/AROMOUT_SURF.fran.0006.lfi')
+        self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/A000/20120214H00P/forecast/AROMOUT_SURF.fran.0006.lfi')
 
     def test_h1(self):
         rl = toolbox.rload(

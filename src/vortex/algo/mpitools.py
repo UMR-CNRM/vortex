@@ -40,14 +40,6 @@ class MpiTool(BFootprint):
     def realkind(self):
         return 'mpitool'
 
-    def setup(self, ctx, target=None):
-        """Abstract method."""
-        pass
-
-    def clean(self, ctx, target=None):
-        """Abstract method."""
-        pass
-
     def launcher(self, system, e):
         """
         Returns the name of the mpi tool to be used,
@@ -130,6 +122,10 @@ class MpiTool(BFootprint):
         self.setup_namelists(ctx, target)
         if target:
             self.setup_environment(ctx, target)
+
+    def clean(self, ctx, target=None):
+        """Abstract method fot the time being."""
+        pass
 
 
 class MpiRun(MpiTool):

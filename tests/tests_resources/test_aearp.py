@@ -34,7 +34,7 @@ class UtBackgroundErrStd(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://open.cache.fr/play/sandbox/oper/20120214T0000P/analysis/bgerrstd.arpege.tl224+0003:00.grib')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000P/analysis/bgerrstd.arpege.tl224+0003:00.grib')
 
 
     def test_e1(self):

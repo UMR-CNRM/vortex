@@ -28,7 +28,7 @@ print t.line
 
 x = rl(kind='onlyselect', model='arpege', date=date.today())
 
-print x
+print t.prompt, x
 
 print t.line
 
@@ -38,13 +38,15 @@ print t.prompt, envfp()
 
 x = rl(kind='onlyselect', model='arpege', date=date.today())
 
-print t.prompt, x.realkind
+print t.prompt, x
+if x:
+    print t.prompt, x.realkind
 
 print t.line
 
 x = rl(kind='onlyselect', model='arpege', date=date.Date(2011,12,24,18))
 
-print x
+print t.prompt, x
 
 print t.line
 
