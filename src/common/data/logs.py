@@ -31,5 +31,4 @@ class Listing(FlowResource):
         return dict(
             radical = 'listing',
             src     = self.task,
-            suffix  = [self.date.ymdh, self.cutoff]
         )

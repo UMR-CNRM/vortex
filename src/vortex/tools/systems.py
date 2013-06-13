@@ -376,6 +376,9 @@ class OSExtended(System):
         """
         if type(source) != str or type(destination) != str:
             return self.hybridcp(source, destination)
+        if not self.path.exists(source):
+            logger.warning('Source does not exist: %s', source)
+            return False
         if self.filecocoon(destination):
             if self.remove(destination):
                 st1 = self.stat(source)

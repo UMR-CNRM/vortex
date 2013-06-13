@@ -68,19 +68,19 @@ class OpArchive(Provider):
         attr = dict(
             tube = dict(
                 optional = True,
-                values = [ 'ftp', 'ftop' ],
-                remap = dict( ftp = 'ftop' ),
-                default = 'ftop'
+                values = [ 'op', 'ftop' ],
+                remap = dict( ftop = 'op' ),
+                default = 'op'
             ),
             namespace = dict(
                 optional = True,
-                values= [ 'oper.archive.fr', 'dbl.archive.fr'],
-                default = '[suite].archive.fr'
+                values= [ 'oper.archive.fr', 'dble.archive.fr', 'oper.multi.fr', 'dble.multi.fr' ],
+                default = '[suite].multi.fr'
             ),
             suite = dict(
                 values = suites,
                 remap = dict(
-                    dble = 'dbl',
+                    dbl = 'dble',
                 )
             ),
             igakey = dict(

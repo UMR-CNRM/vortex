@@ -99,7 +99,7 @@ class Context(object):
         Set the formal tag name of the current context to the provided value, if any.
         The current tag name is returned.
         """
-        if tag: self._tag = value
+        if value: self._tag = value
         return self._tag
 
     tag = property(_gettag, _settag, None)

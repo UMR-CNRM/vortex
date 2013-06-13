@@ -76,6 +76,10 @@ class Container(BFootprint):
         if self.totalsize < 4194304:
             return iod.readlines()
 
+    def iodesc(self):
+        """Returns the file object descripteur."""
+        raise NotImplementedError()
+
     def close(self):
         """Close the logical io descriptor."""
         pass

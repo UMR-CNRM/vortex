@@ -28,7 +28,12 @@ class GGet(Provider):
                 alias = ( 'gtmp', 'gcotmp', 'gcospool', 'tampon' ),
                 optional = True,
                 default = 'tampon'
-            )
+            ),
+            gnamespace = dict(
+                optional = True,
+                values = [ 'gco.cache.fr', 'gco.meteo.fr', 'gco.multi.fr' ],
+                default = 'gco.meteo.fr',
+            ),
         )
     )
 
@@ -47,7 +52,7 @@ class GGet(Provider):
 
     def domain(self):
         """Default domain is ``gco.meteo.fr``."""
-        return 'gco.meteo.fr'
+        return self.gnamespace
 
     def pathname(self, resource):
         """Equal to gspool name."""
@@ -78,7 +83,12 @@ class GEnv(Provider):
                 alias = ( 'gtmp', 'gcotmp', 'gcospool', 'tampon' ),
                 optional = True,
                 default = 'tampon'
-            )
+            ),
+            gnamespace = dict(
+                optional = True,
+                values = [ 'gco.cache.fr', 'gco.meteo.fr', 'gco.multi.fr' ],
+                default = 'gco.meteo.fr',
+            ),
         )
     )
 
@@ -98,7 +108,7 @@ class GEnv(Provider):
 
     def domain(self):
         """Default domain is ``gco.meteo.fr``."""
-        return 'gco.meteo.fr'
+        return self.gnamespace
 
     def pathname(self, resource):
         """Equal to gspool name."""

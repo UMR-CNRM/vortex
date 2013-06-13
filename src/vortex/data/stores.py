@@ -209,6 +209,11 @@ class MultiStore(BFootprint):
             netloc = dict(
                 alias = ( 'domain', 'namespace' )
             ),
+            refillstore = dict(
+                optional = True,
+                type = bool,
+                default = False,
+            )
         ),
     )
 
@@ -231,7 +236,7 @@ class MultiStore(BFootprint):
             xstore = thisloader(**desc)
             if xstore:
                 activestores.append(xstore)
-        logger.info('Multi active stores %s = %s', self, activestores)
+        logger.info('Multi store %s includes active stores %s', self, activestores)
         return activestores
 
     def alternatefp(self):
@@ -255,7 +260,7 @@ class MultiStore(BFootprint):
         logger.debug('Multi Store check from %s', remote)
         rc = False
         for sto in self.openedstores:
-            rc = sto.check(remote, options)
+            rc = sto.check(remote.copy(), options)
             if rc:
                 break
         return rc
@@ -265,20 +270,24 @@ class MultiStore(BFootprint):
         logger.debug('Multi Store locate %s', remote)
         if not self.openedstores:
             return False
-        rloc = list
+        rloc = list()
         for sto in self.openedstores:
             logger.info('Multi locate at %s', sto)
-            rloc.append(sto.locate(remote, options))
+            rloc.append(sto.locate(remote.copy(), options))
         return ';'.join(rloc)
 
     def get(self, remote, local, options=None):
         """Go through internal opened stores for the first available resource."""
-        logger.info('Multi Store get from %s to %s', remote, local, options)
+        logger.info('Multi Store get from %s to %s', remote, local)
         rc = False
-        for sto in self.openedstores:
+        for num, sto in enumerate(self.openedstores):
             logger.info('Multi get at %s', sto)
-            rc = sto.get(remote, local, options)
+            rc = sto.get(remote.copy(), local, options)
             if rc:
+                if self.refillstore and num > 0:
+                    restore = self.openedstores[num-1]
+                    logger.info('Refill back in previous store %s', restore)
+                    rc = restore.put(local, remote.copy(), options)
                 break
         return rc
 
@@ -290,7 +299,7 @@ class MultiStore(BFootprint):
         rc = True
         for sto in self.openedstores:
             logger.info('Multi put at %s', sto)
-            rc = sto.put(local, remote, options) and rc
+            rc = sto.put(local, remote.copy(), options) and rc
         return rc
 
 
@@ -696,6 +705,9 @@ class VortexStore(MultiStore):
             netloc = dict(
                 values = [ 'vortex.multi.fr' ],
             ),
+            refillstore = dict(
+                default = True,
+            )
         )
     )
 

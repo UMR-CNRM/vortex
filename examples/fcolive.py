@@ -8,7 +8,7 @@ from vortex.tools import date
 from vortex.data import geometries 
 
 import common, olive, gco
-from gco.tools import genv 
+from gco.tools import genv
 
 t = vortex.ticket()
 t.warning()
@@ -52,7 +52,7 @@ print t.line, fp(), t.line
 geofp = [ geometries.getbyname(x) for x in ('glob15', 'glob25', 'euroc25', 'glob05', 'eurat01') ]
 
 prvin  = toolbox.provider(suite='oper', namespace='oper.archive.fr', vapp='arpege')
-prvout = toolbox.provider(experiment='A001', block='forecast', namespace='vortex.cache.fr')
+prvout = toolbox.provider(experiment='A001', block='forecast', namespace='vortex.multi.fr')
 prvcst = toolbox.provider(genv='cy37t1_op1.20', gspool=tg.get('gco:tampon', e.HOME + '/gco-tampon'))
 
 toolbox.input(
@@ -166,7 +166,7 @@ print t.line
 
 for s in t.context.sequence.inputs():
     print 'GET', s.rh.location(), '...'
-    print s.rh.get(insitu=getinsitu)
+    print ' >', s.rh.get(insitu=getinsitu)
 
 
 if nstep == 0 or nstep == 2:
@@ -183,7 +183,8 @@ if nstep == 0 or nstep >= 2:
 
     for s in t.context.sequence.outputs():
         print 'PUT', s.rh.location(), '...'
-        print ' >', s.rh.locate(), s.rh.put()
+        print ' >', s.rh.locate()
+        print ' >', s.rh.put()
 
 print t.line
 

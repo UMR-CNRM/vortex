@@ -66,7 +66,7 @@ def mkisodate(datestr):
     if len(l) > 13 and l[-1] != 'Z':
         l.append('Z')
     return ''.join(l)
-    
+
 def today():
     """Return current date, hours, minutes."""
     td = datetime.datetime.today()
@@ -258,7 +258,7 @@ class Period(datetime.timedelta):
         """Return default ISO representation."""
         return self.iso8601()
 
-    
+
 class Date(datetime.datetime):
     """Standard date objects, extending :class:`datetime.datetime` features with iso8601 facilities."""
 
@@ -407,7 +407,7 @@ class Date(datetime.datetime):
         if isinstance(date, list):
             date = datetime.datetime(*date)
         return date.toordinal() - self.cnes_origin
-    
+
     def from_cnesjulian(self, jdays=None):
         """
         >>> d = Date('20111025')
@@ -422,15 +422,15 @@ class Date(datetime.datetime):
 
     def isleap(self, year=None):
         """Return either the current of specified year is a leap year."""
-        if year==None:
+        if year == None:
             year = self.year 
         return calendar.isleap(year)
 
     def monthrange(self, year=None, month=None):
         """Return the number of days in the current of specified year-month couple."""
-        if not year:
+        if year == None:
             year = self.year
-        if not month:
+        if month == None:
             month = self.month
         return calendar.monthrange(year, month)[1]
 

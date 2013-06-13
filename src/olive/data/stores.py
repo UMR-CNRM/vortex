@@ -134,12 +134,13 @@ class OpArchiveStore(ArchiveStore):
         info = 'Archive access',
         attr = dict(
             scheme = dict(
-                values = [ 'ftop', 'ftp' ],
-                remap = dict( ftop = 'ftp' ),
+                values = [ 'op', 'ftop' ],
+                remap = dict( ftop = 'op' ),
             ),
             netloc = dict(
-                values = [ 'oper.archive.fr', 'dbl.archive.fr', 'archive.meteo.fr' ],
-                default = 'archive.meteo.fr'
+                values = [ 'oper.archive.fr', 'dbl.archive.fr', 'dble.archive.fr' ],
+                default = 'oper.archive.fr',
+                remap = { 'dbl.archive.fr' : 'dble.archive.fr' }
             ),
             rootdir = dict(
                 optional = True,
@@ -165,7 +166,7 @@ class OpArchiveStore(ArchiveStore):
     def fullpath(self, remote):
         return self.rootdir + remote['path']
 
-    def ftplocate(self, remote, options):
+    def oplocate(self, remote, options):
         """Delegates to ``system`` a distant check."""
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
@@ -181,7 +182,7 @@ class OpArchiveStore(ArchiveStore):
         else:
             return None
 
-    def ftpcheck(self, remote, options):
+    def opcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
@@ -195,7 +196,7 @@ class OpArchiveStore(ArchiveStore):
             ftp.close()
             return rc
 
-    def ftpget(self, remote, local, options):
+    def opget(self, remote, local, options):
         """File transfert: get from store."""
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
@@ -224,7 +225,7 @@ class OpArchiveStore(ArchiveStore):
             logger.error('Could not get ftp connection to %s', self.hostname())
             return False
 
-    def ftpput(self, local, remote, options):
+    def opput(self, local, remote, options):
         """File transfert: put to store."""
         system = options.get('system', None)
         ftp = system.ftp(self.hostname(), remote['username'])
@@ -232,3 +233,75 @@ class OpArchiveStore(ArchiveStore):
             rc = ftp.put(local, self.fullpath(remote))
             ftp.close()
             return rc
+
+
+class OpCacheStore(CacheStore):
+    """User cache for Op resources."""
+
+    _footprint = dict(
+        info = 'OP cache access',
+        attr = dict(
+            scheme = dict(
+                values = [ 'op' ],
+            ),
+            netloc = dict(
+                values = [ 'oper.cache.fr', 'dble.cache.fr' ],
+            ),
+            strategy = dict(
+                default = 'mtool',
+            ),
+            rootdir = dict(
+                default = 'conf'
+            ),
+            headdir = dict(
+                default = 'op',
+                outcast = [ 'xp', 'vortex', 'gco' ],
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('OP cache store init %s', self.__class__)
+        super(OpCacheStore, self).__init__(*args, **kw)
+        self.resetcache()
+
+    def opcheck(self, remote, options):
+        """Gateway to :meth:`incachecheck`."""
+        return self.incachecheck(remote, options)
+
+    def oplocate(self, remote, options):
+        """Gateway to :meth:`incachelocate`."""
+        return self.incachelocate(remote, options)
+
+    def opget(self, remote, local, options):
+        """Gateway to :meth:`incacheget`."""
+        return self.incacheget(remote, local, options)
+
+    def opput(self, local, remote, options):
+        """Gateway to :meth:`incacheputt`."""
+        return self.incacheput(local, remote, options)
+
+
+class OpStore(MultiStore):
+    """Combined cache and archive Oper/Dble stores."""
+
+    _footprint = dict(
+        info = 'Op multi access',
+        attr = dict(
+            scheme = dict(
+                values = [ 'op' ],
+            ),
+            netloc = dict(
+                values = [ 'oper.multi.fr', 'dble.multi.fr' ],
+            ),
+            refillstore = dict(
+                default = True,
+            )
+        )
+    )
+
+    def alternates_netloc(self):
+        """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
+        prefix, multi, region = self.netloc.split('.')
+        return ( prefix + '.cache.fr', prefix + '.archive.fr' )
+

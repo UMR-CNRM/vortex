@@ -40,7 +40,7 @@ class Task(Node):
 
     def __init__(self, tag, **kw):
         logger.debug('Task init %s', self)
-        super(Task, self).__init__(*args, **kw)
+        super(Task, self).__init__(tag, **kw)
         self.sequence = dataflow.Sequence()
 
     @property
@@ -61,7 +61,7 @@ class Family(Node):
 
     def __init__(self, tag, **kw):
         logger.debug('Family init %s', self)
-        super(Family, self).__init__(*args, **kw)
+        super(Family, self).__init__(tag, **kw)
         self.contents = list()
 
     @property

@@ -13,7 +13,7 @@ from vortex.autolog import logdefault as logger
 from vortex import sessions, syntax, data
 from vortex.data import resources, containers, providers, stores
 from vortex.algo import components
-from vortex.tools import targets
+from vortex.tools import caches, targets
 from vortex.layout.dataflow import stripargs_section
 from vortex.utilities.decorators import printargs
 
@@ -158,3 +158,4 @@ provider = providers.load
 resource = resources.load
 store = stores.load
 target = targets.load
+cache = caches.load
