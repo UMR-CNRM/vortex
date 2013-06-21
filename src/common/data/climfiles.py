@@ -98,7 +98,9 @@ class ClimGlobal(ClimModel):
 
 class ClimLAM(ClimModel):
     """
-    class for a model climatology of a Local Area Model. A SpectralGeometry object is needed. A Genvkey can be given with a default name retrieved thanks to a GenvDomain object.
+    Class for a model climatology of a Local Area Model.
+    A SpectralGeometry object is needed. A Genvkey can be given
+    with a default name retrieved thanks to a GenvDomain object.
     """
     _footprint = dict(
         info = 'Model climatology for Local Area Models',
@@ -107,19 +109,15 @@ class ClimLAM(ClimModel):
                 values = [ 'aladin', 'arome' ]
             ),
             gdomain = dict(
-                    type = GenvDomain,
-                    optional = True,
-                    default = '[geometry::area]'
+                type = GenvDomain,
+                optional = True,
+                default = '[geometry::area]'
             ),
             gvar = dict(
                 default = 'clim_[gdomain]_[geometry::rnice]'
             ),
         )
     )
-
-    @property
-    def realkind(self):
-        return 'clim_model'
 
     def basename_info(self):
         """Generic information, radical = ``clim``."""
@@ -131,9 +129,12 @@ class ClimLAM(ClimModel):
             suffix  = {'month':self.month},
         )
 
+
 class ClimBDAP(Clim):
     """
-    class for a climatology of a BDAP domain. A GridGeometry object is needed. A Genvkey can be given with a default name retrieved thanks to a GenvDomain object.
+    Class for a climatology of a BDAP domain.
+    A GridGeometry object is needed. A Genvkey can be given
+    with a default name retrieved thanks to a GenvDomain object.
     """
     _footprint = [
         dict(

@@ -60,7 +60,7 @@ class NamelistContent(AlmostDictContent):
         """Returns the namelist contents as a string."""
         return ''.join([ self.get(x).dumps() for x in sorted(self.keys()) ])
 
-    def merge(self, delta, rmblocks=None):
+    def merge(self, delta, rmkeys=None, rmblocks=None, clblocks=None):
         """Merge of the current namelist content with the set of namelist blocks provided."""
         for namblock in delta.values():
             if namblock.name in self:
@@ -72,8 +72,15 @@ class NamelistContent(AlmostDictContent):
                 self[namblock.name] = newblock
         if rmblocks == None and hasattr(delta, 'rmblocks'):
             rmblocks = delta.rmblocks()
-        for item in rmblocks:
-            del self[item]
+        if rmblocks != None:
+            for item in [ x for x in rmblocks if x in self ]:
+                del self[item]
+        if clblocks != None:
+            for item in [ x for x in clblocks if x in self ]:
+                self[item].clear()
+        if rmkeys != None:
+            for item in self:
+                self[item].clear(rmkeys)
 
     def slurp(self, container):
         """Get data from the ``container`` namelist."""
@@ -191,9 +198,8 @@ class NamTerm(Namelist):
             fp = None
 
         try:
-            f = open('xxt.def', 'r')
-            lines = f.readlines()
-            f.close
+            with open('xxt.def', 'r') as f:
+                lines = f.readlines()
         except IOError:
             logger.error('Could not open file xxt.def')
 

@@ -19,7 +19,9 @@ from vortex.utilities.decorators import printargs
 
 #: Shortcut to footprint env defaults
 defaults = syntax.footprint.envfp
+sectionmap = {'input':'get', 'output':'put', 'executable':'get'}
 justdoit = False
+getinsitu = False
 
 # Most commonly used functions
 
@@ -93,13 +95,12 @@ def pushsection(section, args, kw):
     opts, kwclean = stripargs_section(**kw)
     rl = rload(*args, **kwclean)
     rlok = list()
-    smap = {'input':'get', 'output':'put', 'executable':'get'}
     push = getattr(ctx.sequence, section)
     for rhandler in rl:
         push(rh=rhandler, **opts)
         ok = True
         if now:
-            ok = getattr(rhandler, smap[section])()
+            ok = getattr(rhandler, sectionmap[section])()
         if ok:
             rlok.append(rhandler)
     ctx.record_on()
@@ -107,6 +108,7 @@ def pushsection(section, args, kw):
 
 def input(*args, **kw):
     """Add an input section to the current sequence."""
+    kw.setdefault('insitu', getinsitu)
     return pushsection('input', args, kw)
 
 def output(*args, **kw):
@@ -115,6 +117,7 @@ def output(*args, **kw):
 
 def executable(*args, **kw):
     """Add an executable section to the current sequence."""
+    kw.setdefault('insitu', getinsitu)
     loaded = pushsection('executable', args, kw)
     if len(loaded) == 1:
         loaded = loaded[0]

@@ -52,7 +52,6 @@ class GCOCentralStore(Store):
 
     def actualgget(self, system, remotepath):
         """Return actual (gtool, gname)."""
-        rpath = remote['path']
         l = rpath.lstrip('/').split('/')
         gname = l.pop()
         tampon = '/' + '/'.join(l)
@@ -66,7 +65,7 @@ class GCOCentralStore(Store):
         gloc = self.ggetlocate(remote, options)
         if gloc:
             system = options.get('system', None)
-            return ssytem.size(gloc)
+            return system.size(gloc)
         else:
             return False
 

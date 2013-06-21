@@ -5,11 +5,11 @@
 Net tools.
 """
 
-from os.path import dirname
 from vortex.autolog import logdefault as logger
+
+from os.path import dirname
 import urlparse
 import io, ftplib
-from ftplib import FTP
 from netrc import netrc
 
 #: No automatic export
@@ -55,7 +55,7 @@ def uriunparse(uridesc):
     return urlparse.urlunparse(uridesc)
 
 
-class StdFtp(FTP):
+class StdFtp(ftplib.FTP):
     """
     Standard wrapper for the crude FTP object from :mod:`ftplib`.
     First argument of the constructor is the calling OS interface.
@@ -63,7 +63,7 @@ class StdFtp(FTP):
 
     def __init__(self, system, hostname):
         self._local_system = system
-        FTP.__init__(self, hostname)
+        ftplib.FTP.__init__(self, hostname)
         self.logname = None
 
     def identify(self):

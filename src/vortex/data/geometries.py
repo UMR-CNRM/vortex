@@ -34,6 +34,7 @@ def getbyname(geoname, fromset='geometries'):
     kind = desc['kind']
     del desc['kind']
     if kind in ('spectral', 'global'):
+        logger.warning('GET BY NAME %s', desc)
         return SpectralGeometry(**desc)
     else:
         return GridGeometry(**desc)
@@ -52,33 +53,43 @@ class Geometry(object):
 
 class HGeometry(object):
     """Abstract horizontal geometry."""
-    
-    def __init__(self, **kw):
+
+    def __new__(cls, *args, **kw):
+        if ( args ):
+            hg = getbyname(args[0].lower())
+            hg.initialised = True
+        else:
+            hg = super(HGeometry, cls).__new__(cls, **kw)
+            hg.initialised = False
+        return hg
+
+    def __init__(self, *args, **kw):
         logger.debug('Abstract Horizontal Geometry init %s %s', self, kw)
-        self.id = 'abstract'
-        self.area = None
-        self.nlon = None
-        self.nlat = None
-        self.resolution = 0.
-        self.truncation = None
-        self.stretching = None
-        self.lam = True
-        self.__dict__.update(kw)
-        for k, v in self.__dict__.items():
-            if type(v) == str and re.match('none', v, re.IGNORECASE):
-                self.__dict__[k] = None
-            if type(v) == str and re.match('true', v, re.IGNORECASE):
-                self.__dict__[k] = True
-            if type(v) == str and re.match('false', v, re.IGNORECASE):
-                self.__dict__[k] = False
-        for item in ('nlon', 'nlat', 'truncation'):
-            cv = getattr(self, item)
-            if cv != None:
-                setattr(self, item, int(cv))
-        for item in ('stretching', 'resolution'):
-            cv = getattr(self, item)
-            if cv != None:
-                setattr(self, item, float(cv))
+        if not self.initialised:
+            self.id = 'abstract'
+            self.area = None
+            self.nlon = None
+            self.nlat = None
+            self.resolution = 0.
+            self.truncation = None
+            self.stretching = None
+            self.lam = True
+            self.__dict__.update(kw)
+            for k, v in self.__dict__.items():
+                if type(v) == str and re.match('none', v, re.IGNORECASE):
+                    self.__dict__[k] = None
+                if type(v) == str and re.match('true', v, re.IGNORECASE):
+                    self.__dict__[k] = True
+                if type(v) == str and re.match('false', v, re.IGNORECASE):
+                    self.__dict__[k] = False
+            for item in ('nlon', 'nlat', 'truncation'):
+                cv = getattr(self, item)
+                if cv != None:
+                    setattr(self, item, int(cv))
+            for item in ('stretching', 'resolution'):
+                cv = getattr(self, item)
+                if cv != None:
+                    setattr(self, item, float(cv))
 
     @property
     def gam(self):
@@ -121,8 +132,8 @@ class SpectralGeometry(HGeometry):
     Horizontal spectral geometry,
     mostly defined through its ``truncation`` and ``stretching`` attributes.
     """
-    
-    def __init__(self, **kw):
+
+    def __init__(self, *args, **kw):
         logger.debug('Spectral Geometry init %s', self)
         kw.setdefault('runit', 'km')
         super(SpectralGeometry, self).__init__(**kw)
@@ -135,7 +146,7 @@ class GridGeometry(HGeometry):
     mostly defined through its ``nlon`` and ``nlat`` attributes.
     """
 
-    def __init__(self, **kw):
+    def __init__(self, *args, **kw):
         logger.debug('Grid Geometry init %s', self)
         kw.setdefault('nlon', 3200)
         kw.setdefault('nlat', 1600)

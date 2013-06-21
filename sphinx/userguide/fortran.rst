@@ -241,7 +241,7 @@ Handling namelist contents
 ==========================
 
 We have seen that the output of the parse command of a :class:`vortex.tools.fortran.NamelistParser`
-object produces a dictionary of :class:`vortex.tools.fortran.NamelistBlock` values which could be handle as such.
+object produces a dictionary of :class:`vortex.tools.fortran.NamelistBlock` values which could be handled as such.
 However it is possible to go a bit further with the :class:`common.data.namelists.NamelistContent`.
 
 Namelist content as internal resource content

@@ -472,7 +472,7 @@ class NamelistParser(object):
 
     def __init__(self,
         literal  = LiteralParser(),
-        macros = list(),
+        macros = None,
         re_flags = None,
         re_clean = "^(\s+|![^\n]*\n)",
         re_block = r'&.*/',
@@ -483,7 +483,10 @@ class NamelistParser(object):
         re_comma = "\s*,"
         ):
         self._literal = literal
-        self.macros = set(macros)
+        if macros:
+            self.macros = set(macros)
+        else:
+            self.macros = set()
         if re_flags:
             self._re_flags = re_flags
         else:
@@ -633,13 +636,17 @@ class NamelistParser(object):
                 obj = iod.read()
                 iod.close()
             return self._namelist_parse(obj)
-              
+
         elif isinstance(obj, file):
             obj.seek(0)
             return self._namelist_parse(obj.read())
         else:
             raise ValueError("Argument %s cannot be parsed." % str(obj))
 
+def namparse(obj):
+    """Raw parsing with an default anonymous fortran parser."""
+    np = NamelistParser()
+    return np.parse(obj)
 
 def _test_literal(lp):
     """

@@ -315,3 +315,18 @@ class Environment(object):
             return True
         else:
             return bool(varfalse.match(str(xvar)))
+
+    def setbinpath(self, value, pos=None):
+        """Insert a new path value to the bin search path at given position."""
+        mypath = self.getvar('PATH').split(':')
+        if pos == None:
+            pos = len(mypath)
+        mypath.insert(pos, value)
+        self.setvar('PATH', ':'.join(mypath))
+
+    def rmbinpath(self, value):
+        """Remove the specified value from bin path."""
+        mypath = self.getvar('PATH').split(':')
+        while value in mypath:
+            mypath.remove(value)
+        self.setvar('PATH', ':'.join(mypath))
