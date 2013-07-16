@@ -34,6 +34,32 @@ class RtCoef(ModelResource):
         return 'rtcoef'
 
 
+class RRTM(ModelResource):
+    """
+    Class of a tar-zip file of coefficients for radiative transferts computations.
+    A Genvkey can be given.
+    """
+    _footprint = [
+        dict(
+            info = 'Coefficients of RRTM scheme',
+            attr = dict(
+                kind = dict(
+                    values = [ 'rrtm' ]
+                ),
+                gvar = dict(
+                    type = GenvKey,
+                    optional = True,
+                    default = 'rrtm_const'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'rrtm'
+
+
 class MatFilter(StaticResource):
     """
     Class of a filtering matrix. A SpectralGeometry object is needed,

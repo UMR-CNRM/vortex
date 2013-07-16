@@ -50,7 +50,7 @@ class GCOCentralStore(Store):
         """Default realkind is ``gstore``."""
         return 'gstore'
 
-    def actualgget(self, system, remotepath):
+    def actualgget(self, system, rpath):
         """Return actual (gtool, gname)."""
         l = rpath.lstrip('/').split('/')
         gname = l.pop()

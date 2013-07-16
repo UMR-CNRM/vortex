@@ -22,7 +22,7 @@ myenv = env.current()
 mysys = t.system()
 
 mysys.chdir(myenv.TMPDIR + '/rundir')
-print t.prompt, mysys.pwd
+print t.prompt, mysys.pwd()
 
 #domain = ['GLOB15','GLOB25','EURAT01','EUROC25','GLOB05']
 domains = [ 'GLOB15' ]

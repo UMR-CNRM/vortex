@@ -15,7 +15,7 @@ ctx = t.context
 
 ctx.system.cd(ctx.env.tmpdir + '/rundir')
 
-print t.prompt, ctx.system.pwd
+print t.prompt, ctx.system.pwd()
 
 print t.line
 

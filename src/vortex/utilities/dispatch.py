@@ -78,7 +78,7 @@ class Dispatcher(object):
         Print the current working directory of the daemon.
         Return the same value.
         """
-        return (0, t.system().pwd, t.system().pwd)
+        return (0, t.system().pwd, t.system().pwd())
 
     def sleep(self, t, kw):
         """

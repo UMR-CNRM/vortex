@@ -30,8 +30,8 @@ class IFSModelParallel(Parallel):
             ),
             timestep = dict(
                 optional = True,
-                default = 600,
-                type = int
+                default = 600.,
+                type = float
             ),
             fcterm = dict(
                 optional = True,

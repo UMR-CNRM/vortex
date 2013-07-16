@@ -18,7 +18,7 @@ e = t.env
 print t.line
 
 sh.cd(e.home + '/tmp/bidon')
-print sh.pwd
+print sh.pwd()
 
 rx = vortex.toolbox.rh(remote=g.siteroot + '/examples/tmp/test.sh', file='test.sh', model='arpege', kind='ifsmodel')
 

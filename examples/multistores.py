@@ -22,7 +22,7 @@ sh.cd(e.HOME + '/tmp/rundir')
 
 print t.line
 
-print t.prompt, sh.pwd
+print t.prompt, sh.pwd()
 
 print t.line
 

@@ -6,6 +6,8 @@ __all__ = []
 
 import re, socket
 
+from vortex.autolog import logdefault as logger
+
 
 def xplabel(sh, env, tag=None, target=None):
     """Return a nice label string for sms monitoring."""
@@ -29,7 +31,7 @@ def xplabel(sh, env, tag=None, target=None):
 
     return label
 
-def guesslocout(output):
+def guesslocout(sh, env, output):
     """Keep compatibility with previous versions whithout local filename."""
 
     login = env.SWAPP_USER or sh.getlogin()
@@ -40,7 +42,7 @@ def xplocout(sh, env, output, localout=None):
     """Return the local path to OLIVE execution output."""
 
     if localout == None:
-        localout = guesslocout(output)
+        localout = guesslocout(sh, env, output)
 
     return sh.path.join(env.HOME, localout)
 
@@ -48,7 +50,7 @@ def xpjobout(sh, env, output, localout=None):
     """Connect to OLIVE daemon in charge of SMS outputs."""
 
     if localout == None:
-        localout = guesslocout(output)
+        localout = guesslocout(sh, env, output)
 
     mstep = 'off'
 
@@ -58,7 +60,7 @@ def xpjobout(sh, env, output, localout=None):
         localout = ':'.join(
             [ x for x in sh.ls(depot + '/step.[0-9][0-9]') if (
                 sh.path.exists(x+'.done') and
-                int(re.search('\.(\d+)$', x).group(1)) < int(e.MTOOL_STEP)
+                int(re.search('\.(\d+)$', x).group(1)) < int(env.MTOOL_STEP)
             ) ]
         )
 
@@ -67,12 +69,18 @@ def xpjobout(sh, env, output, localout=None):
     swapp_email = swapp_user + '@' + swapp_host
     user = env.SWAPP_TARGET_LOGNAME or env.TARGET_LOGNAME or env.SWAPP_USER or sh.getlogin();
 
-    client_socket = socket.creat_connection((swapp_host, swapp_port), 10)
+    timeout = int(env.SWAPP_SOCKET_TIMEOUT) or 10
+
+    try:
+        client_socket = socket.create_connection((swapp_host, swapp_port), timeout)
+    except socket.timeout:
+        logger.critical('Got timeout after %s seconds.', timeout)
+        client_socket = None
 
     if client_socket:
         rc = client_socket.send(
             "user:{0:s}\nhost:{0:s}\nname:{0:s}\nfile:{0:s}\nlout:{0:s}\nstep:{0:s}\n".format(
-                user, localhots, env.SMSNAME, output, localout, step
+                user, localhots, env.SMSNAME, output, localout, mstep
             )
         )
         client_socket.close()

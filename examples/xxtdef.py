@@ -19,7 +19,7 @@ e = t.context.env
 print t.line
 
 sh.cd(e.HOME + '/tmp/bidon')
-print t.prompt, sh.pwd
+print t.prompt, sh.pwd()
 
 genv.genvbin = e.HOME  + '/bin/genvfake'
 genv.autofill('cy37t1_op1.20')
@@ -68,7 +68,7 @@ fpnams = toolbox.input(
 for fp in fpnams:
     print t.prompt, fp.location(), '...', fp.get()
 
-print t.prompt, sh.pwd
+print t.prompt, sh.pwd()
 
 sh.dir(output=False)
 

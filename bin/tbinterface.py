@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import vortex, common, olive
+import vortex, common, gco, olive
 
 def catdump(catalogset):
     for c in catalogset.items():

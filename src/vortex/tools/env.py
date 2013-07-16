@@ -299,7 +299,7 @@ class Environment(object):
 
     def mydump(self):
         """Dump the actual values of the current environment."""
-        return [ '{0:s}="{1:s}"'.format(k, self._pool[k]) for k in sorted(self._pool.keys()) ]
+        return [ '{0:s}="{1:s}"'.format(k, str(self._pool[k])) for k in sorted(self._pool.keys()) ]
 
     def trueshell(self):
         return re.sub('^.*/', '', self.getvar('shell'))

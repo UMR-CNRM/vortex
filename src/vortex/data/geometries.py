@@ -34,7 +34,6 @@ def getbyname(geoname, fromset='geometries'):
     kind = desc['kind']
     del desc['kind']
     if kind in ('spectral', 'global'):
-        logger.warning('GET BY NAME %s', desc)
         return SpectralGeometry(**desc)
     else:
         return GridGeometry(**desc)

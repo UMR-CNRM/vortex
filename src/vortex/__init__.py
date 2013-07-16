@@ -23,7 +23,7 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.6.31'
+__version__ = '0.6.32'
 
 __all__ = []
 
@@ -31,7 +31,7 @@ import logging
 
 logging.basicConfig(
     format='[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
-    datefmt='%m/%d/%Y %H:%M:%S',
+    datefmt='%Y/%d/%m-%H:%M:%S',
     level=logging.WARNING
 )
 

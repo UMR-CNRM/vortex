@@ -24,7 +24,7 @@ g = t.glove
 mysys = g.system
 myenv = mysys.env
 mysys.cd(myenv.tmpdir)
-print t.prompt, mysys.pwd
+print t.prompt, mysys.pwd()
 
 cache = myenv.home + '/tmp/fcdemo/'
 

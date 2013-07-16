@@ -31,7 +31,7 @@ rl = vortex.toolbox.rload
 t.warning()
 
 sh.cd(e.TMPDIR + '/rundir')
-print t.prompt, sh.pwd
+print t.prompt, sh.pwd()
 
 arpege_cycle = 'cy37t1_op1.17'
 

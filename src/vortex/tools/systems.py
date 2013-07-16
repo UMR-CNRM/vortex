@@ -10,7 +10,7 @@ factory based on the shared footprint mechanism.
 #: No automatic export
 __all__ = []
 
-import re, os, platform, shutil, sys, io, filecmp, time
+import re, os, platform, shutil, sys, io, filecmp, datetime, time
 import glob
 import tarfile
 import subprocess
@@ -67,7 +67,10 @@ class System(BFootprint):
         if 'sh' in kw:
             self._shmod = kw['sh']
             del kw['sh']
-        for flag in ( 'trace', 'output' ):
+        for flag in ( 'trace', ):
+            self.__dict__[flag] = kw.setdefault(flag, False)
+            del kw[flag]
+        for flag in ( 'output', ):
             self.__dict__[flag] = kw.setdefault(flag, True)
             del kw[flag]
         super(System, self).__init__(*args, **kw)
@@ -92,13 +95,31 @@ class System(BFootprint):
     def _sh(self):
         return self.__dict__.get('_shmod', shutil)
 
-    @property
-    def pwd(self):
+    def stderr(self, args):
+        """Write a formatted message to standard error."""
+        if self.trace:
+            sys.stderr.write(
+                "+ [{0:s}] {1:s}\n".format(
+                    datetime.datetime.now().strftime('%Y/%m/%d-%H:%M:%S'),
+                    ' '.join(args)
+                )
+            )
+
+    def pwd(self, output=None):
         """Current working directory."""
-        return self._os.getcwd()
+        if output == None:
+            output = self.output
+        self.stderr(['pwd'])
+        realpwd = self._os.getcwd()
+        if output:
+            return realpwd
+        else:
+            print realpwd
+            return True
 
     def cd(self, pathtogo):
         """Change directory to ``pathtogo``."""
+        self.stderr(['cd', pathtogo])
         try:
             self._os.chdir(pathtogo)
             return True
@@ -112,6 +133,7 @@ class System(BFootprint):
         if not args:
             args = ['*']
         files = []
+        self.stderr(['ffind'] + list(args))
         for pathtogo in self.glob(*args):
             if self.path.isfile(pathtogo):
                 files.append(pathtogo)
@@ -161,6 +183,7 @@ class System(BFootprint):
 
     def which(self, command):
         """Clone of the unix command."""
+        self.stderr(['which', command])
         if command.startswith('/'):
             if self.xperm(command): return command
         else:
@@ -170,6 +193,7 @@ class System(BFootprint):
 
     def touch(self, filename):
         """Clone of the unix command."""
+        self.stderr(['touch', filename])
         fh = file(filename, 'a')
         rc = True
         try:
@@ -182,6 +206,7 @@ class System(BFootprint):
 
     def remove(self, filename):
         """Unlink the specified `filename` object."""
+        self.stderr(['remove', filename])
         if os.path.exists(filename):
             self.unlink(filename)
         return not os.path.exists(filename)
@@ -195,6 +220,7 @@ class System(BFootprint):
             pscmd = ['ps']
         pscmd.extend(self._psopts)
         pscmd.extend(opts)
+        self.stderr(pscmd)
         psall = subprocess.Popen(pscmd, stdout=subprocess.PIPE).communicate()[0].split('\n')
         if search:
             psall = filter(lambda x: re.search(search, x), psall)
@@ -202,6 +228,7 @@ class System(BFootprint):
 
     def readonly(self, inodename):
         """Set permissions of the `filename` object to read-only."""
+        self.stderr(['readonly', nbsecs])
         rc = None
         if os.path.exists(inodename):
             if os.path.isdir(inodename):
@@ -212,6 +239,7 @@ class System(BFootprint):
 
     def sleep(self, nbsecs):
         """Clone of the unix command."""
+        self.stderr(['sleep', nbsecs])
         time.sleep(nbsecs)
 
     def vortex_modules(self, only='.'):
@@ -238,8 +266,7 @@ class System(BFootprint):
         rc = False
         if output == None:
             output = self.output
-        if self.trace:
-            logger.info('System spawn < %s >', args)
+        self.stderr(args)
         p = None
         try:
             if output:
@@ -310,6 +337,7 @@ class OSExtended(System):
 
     def size(self, filepath):
         """Returns the actual size in bytes of the specified ``filepath``."""
+        self.stderr(['size', filepath])
         try:
             return self.stat(filepath).st_size
         except:
@@ -320,6 +348,7 @@ class OSExtended(System):
         normdir = self.path.normpath(dirpath)
         if normdir and not self.path.isdir(normdir):
             logger.debug('Cocooning directory %s', normdir)
+            self.stderr(['mkdir', normdir])
             try:
                 self.makedirs(normdir)
                 return True
@@ -330,6 +359,7 @@ class OSExtended(System):
 
     def rawcp(self, source, destination):
         """Internal basic cp command used by :meth:`cp` or :meth:`smartcp`."""
+        self.stderr(['rawcp', source, destination])
         self.copyfile(source, destination)
         if self._cmpaftercp:
             return filecmp.cmp(source, destination)
@@ -408,6 +438,7 @@ class OSExtended(System):
         Copy the ``source`` file to a safe ``destination``.
         The return value is produced by a raw compare of the two files.
         """
+        self.stderr(['cp', source, destination])
         if type(source) != str or type(destination) != str:
             return self.hybridcp(source, destination)
         if self.filecocoon(destination):
@@ -525,6 +556,7 @@ class OSExtended(System):
 
     def listdir(self, *args):
         if not args: args = ('.',)
+        self.stderr(['listdir'] + list(args))
         return self._os.listdir(args[0])
 
     def l(self, *args):

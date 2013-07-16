@@ -28,7 +28,7 @@ getinsitu = True
 
 rundir = tg.get('rundir', e.HOME  +'/tmp/bidon')
 sh.cd(rundir)
-print t.prompt, sh.pwd, 'pass:', nstep
+print t.prompt, sh.pwd(), 'pass:', nstep
 
 genv.genvbin = tg.get('gco:genvbin', e.HOME + '/bin/genvfake')
 genv.autofill('cy37t1_op1.20')

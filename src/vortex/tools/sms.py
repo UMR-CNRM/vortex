@@ -8,23 +8,22 @@ Interface to SMS commands.
 __all__ = []
 
 from vortex.autolog import logdefault as logger
-
 from vortex import sessions
 
 class SMSGateway(object):
 
-    def __init__(self, tag='void', system=None, env=None):
+    def __init__(self, tag='void', system=None, env=None, path=None):
         logger.debug('SMS gateway init %s', self)
         self.tag = tag
         self._system = system
-        self._binpath = None
-        if not system:
-            self._system = system or sessions.current().context.system
+        if not self._system:
+            self._system = sessions.current().context.system
         self._env = env
         if not self._env:
             self._env = sessions.current().context.env
-        if not self._system.which('smschild'):
-            logger.warning('No SMS client found at init time <%s>', self.tag)
+        self.binpath(path)
+        if not self._system.path.exists(self.cmdpath('init')):
+            logger.warning('No SMS client found at init time [sms tag:%s]>', self.tag)
 
     def setenv(self, **kw):
         """Possibly export the provided sms variables and return a dictionary of positioned variables."""
@@ -47,18 +46,23 @@ class SMSGateway(object):
             self._binpath = self._system.path.normpath(path)
         return self._binpath
 
+    def cmdpath(self, cmd):
+        """Return a complete binary path to cmd."""
+        cmd = cmd.lower()
+        if not cmd.startswith('sms'):
+            cmd = 'sms' + cmd
+        if self.binpath():
+            return self._system.path.join(self.binpath(), cmd)
+        else:
+            return cmd
+
     def child(self, command, options):
         """Miscellaneous smschild subcommand."""
-        smscmd = 'sms' + command
-        smsbin = self.binpath()
-        if smsbin:
-            smscmd = self._system.path.join(smsbin, smscmd)
-        args = [ smscmd ]
+        args = [ self.cmdpath(command) ]
         if type(options) == list or type(options) == tuple:
             args.extend(options)
         else:
             args.append(options)
-        print 'DEBUG SMS', smscmd
         return self._system.spawn(args, output=False)
 
     def abort(self, *opts):

@@ -6,14 +6,15 @@ __all__ = [ 'analysis' ]
 from vortex import toolbox
 from vortex.tools.date import synop
 
-from vortex.data.geometries import SpectralGeometry
+from vortex.data import geometries
 
 
 def fastload(**kw):
     kw.setdefault('cutoff', 'production')
     kw.setdefault('model', 'arpege')
     kw.setdefault('date', synop())
-    kw.setdefault('geometry', SpectralGeometry(area='france', truncation=798))
+    kw.setdefault('geometry', geometries.getbyname(kw.setdefault('geoname', 'globalsp')))
+    del kw['geoname']
     al = toolbox.rload(**kw)
     if len(al) > 1:
         return al
@@ -32,9 +33,10 @@ def analysis(**kw):
 
 def modelstate(**kw):
     adesc = dict(
+        suite = 'oper',
         block = 'forecast',
         kind = 'historic',
-        experiment = 'A001',
+        igakey = '[model]',
         term = 0,
         tempo=True
     )

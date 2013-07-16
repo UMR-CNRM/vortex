@@ -19,11 +19,25 @@ from vortex.utilities.decorators import printargs
 
 #: Shortcut to footprint env defaults
 defaults = syntax.footprint.envfp
+setfpext = syntax.footprint.setfpext
 sectionmap = {'input':'get', 'output':'put', 'executable':'get'}
 justdoit = False
 getinsitu = False
+verbose = False
 
 # Most commonly used functions
+
+def quickview(args, nb=0, indent=0):
+    """Recursive call to any quick view of objects specified as arguments."""
+    if not isinstance(args, list) and not isinstance(args, tuple):
+        args = ( args, )
+    for x in args:
+        nb += 1
+        quickview = getattr(x, 'quickview', None)
+        if quickview:
+            quickview(nb, indent)
+        else:
+            print '{0:02d}. {1:s}'.format(nb, x)
 
 def rload(*args, **kw):
     """
@@ -96,11 +110,18 @@ def pushsection(section, args, kw):
     rl = rload(*args, **kwclean)
     rlok = list()
     push = getattr(ctx.sequence, section)
+    doitmethod = sectionmap[section]
+    if verbose and now:
+        logger.info('Just Do It ... active for method [%s]', doitmethod)
     for rhandler in rl:
         push(rh=rhandler, **opts)
         ok = True
         if now:
-            ok = getattr(rhandler, sectionmap[section])()
+            if verbose:
+                logger.info(' > %s %s ...', doitmethod, rhandler.location())
+            ok = getattr(rhandler, doitmethod)()
+            if verbose:
+                logger.info(' > %s', str(ok))
         if ok:
             rlok.append(rhandler)
     ctx.record_on()
@@ -155,6 +176,7 @@ def namespaces(**kw):
 
 # Shortcuts
 
+algo = components.load
 component = components.load
 container = containers.load
 provider = providers.load

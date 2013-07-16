@@ -15,6 +15,9 @@ docstring_nicedump = False
 #: Stop footprint resolution on first undef value
 fast_resolve = False
 
+#: Let extra parameters from the footprint defaults to be part of the description
+extended_defaults = False
+
 import copy, re
 from vortex.autolog import logdefault as logger
 from priorities import top
@@ -26,6 +29,12 @@ from vortex.tools import env
 UNKNOWN = '__unknown__'
 replattr = re.compile(r'\[(\w+)(?:\:+(\w+))?\]')
 
+def setfpext(switch=None):
+    """Commut to extended mode or not for footprint defaults. Return current status."""
+    global extended_defaults
+    if switch != None:
+        extended_defaults = bool(switch)
+    return extended_defaults
 
 def envfp(**kw):
     """Returns the the parameter set associated to tag ``footprint`` in current env."""
@@ -153,10 +162,10 @@ class Footprint(object):
             logger.debug(' > Extras : %s', extras)
         return extras
 
-    def _addextras(self, guess, desc, extras):
-        for kdesc in desc.keys():
-            if kdesc not in extras and kdesc not in guess:
-                extras[kdesc] = desc[kdesc]
+    def _addextras(self, extras, guess, more):
+        for k in [ x.lower() for x in more.keys() ]:
+            if k not in extras and k not in guess:
+                extras[k] = more[k]
 
     def _replacement(self, nbpass, k, guess, extras, todo):
         if nbpass > 25:
@@ -171,6 +180,10 @@ class Footprint(object):
                 replk = mobj.group(1)
                 replm = mobj.group(2)
                 if replk not in guess and replk not in extras:
+                    logger.critical('No %s attribute in guess:', replk)
+                    logger.critical('%s', guess)
+                    logger.critical('No %s attribute in extras:', replk)
+                    logger.critical('%s', extras)
                     raise UnreachableAttr('Could not replace attribute ' + replk)
                 if replk in guess:
                     if replk not in todo:
@@ -221,7 +234,13 @@ class Footprint(object):
 
         guess, inputattr = self._firstguess(desc)
         extras = self._findextras(desc)
-        self._addextras(guess, desc, extras)
+
+        # Add arguments from current description not yet used to extra parameters
+        self._addextras(extras, guess, desc)
+
+        # Add arguments from defaults footprint not already defined to extra parameters
+        if extended_defaults:
+            self._addextras(extras, guess, envfp())
 
         attrs = self.attr
 

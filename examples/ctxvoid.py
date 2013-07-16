@@ -26,7 +26,7 @@ e = t.env
 sh = t.system()
 sh.cd(e.HOME + '/tmp/rundir')
 
-print t.prompt, sh.pwd
+print t.prompt, sh.pwd()
 
 arpege_cycle = 'cy36t1_op2.16'
 

@@ -103,7 +103,7 @@ class Handler(object):
         Returns a multilines documentation string with a summary
         of the valuable information contained by this handler.
         """
-        indent = ' ' * indent
+        tab = ' ' * indent
         card = "\n".join((
             '{0}Handler {1!r}',
             '{0}{0}Role      : {2:s}',
@@ -112,7 +112,7 @@ class Handler(object):
             '{0}{0}Options   : {5}',
             '{0}{0}Location  : {6}'
        )).format(
-            indent,
+            tab,
             self, self.role, self.alternate, self.complete, self._options, self.location()
         )
         for subobj in ( 'resource', 'provider', 'container' ):
@@ -123,13 +123,24 @@ class Handler(object):
                     '{0}{0}Realkind   : {3:s}',
                     '{0}{0}Attributes : {4:s}'
                 )).format(
-                    indent,
+                    tab,
                     subobj.capitalize(), obj, obj.realkind, obj.puredict()
                 )
             else:
-                thisdoc = '{0}{1:s} undefined'.format(indent, subobj.capitalize())
+                thisdoc = '{0}{1:s} undefined'.format(tab, subobj.capitalize())
             card = card + "\n\n" + thisdoc
         return card
+
+    def quickview(self, nb=0, indent=0):
+        """Standard glance to objects."""
+        tab = '  ' * indent
+        print '{0}{1:02d}. {2:s}'.format(tab, nb, repr(self))
+        print '{0}  Complete  : {1:s}'.format(tab, str(self.complete))
+        for subobj in ( 'resource', 'provider', 'container' ):
+            obj = getattr(self, subobj, None)
+            if obj:
+                print '{0}  {1:10s}: {2:s}'.format(tab, subobj.capitalize(), obj)
+
 
     def locate(self, **extras):
         """Try to figure out what would be the physical location of the resource."""
