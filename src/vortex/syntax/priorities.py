@@ -189,3 +189,16 @@ class PrioritySet(Singleton):
 #: Predefined ordered object.
 top = PrioritySet(levels = ['none', 'default', 'toolbox', 'olive', 'oper', 'debug'])
 
+
+def simple_doctest():
+    """
+    >>> top.OPER < 'olive'
+    False
+    >>> top.OPER < 'DEBUG'
+    True
+    """
+    pass
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
