@@ -10,8 +10,8 @@
 
 .. warning::
 
-   Documention in progress? 
-   
+   Documentation in progress?
+
 Package
 -------
 
@@ -24,7 +24,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: Executable
    :show-inheritance:
    :members:

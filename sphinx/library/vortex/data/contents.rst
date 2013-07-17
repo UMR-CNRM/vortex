@@ -10,8 +10,8 @@
 
 .. warning::
 
-   Documention in progress? 
-   
+   Documentation in progress?
+
 Package
 -------
 
