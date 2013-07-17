@@ -164,7 +164,7 @@ class Sequence(object):
         self.section(kind=ixo.OUTPUT, **kw)
 
     def executable(self, **kw):
-        """Create a section with default kind equal to to ``ixo.EXEC."""
+        """Create a section with default kind equal to to ``ixo.EXEC``."""
         if 'kind' in kw: del kw['kind']
         kw.setdefault('intent', intent.IN)
         self.section(kind=ixo.EXEC, **kw)

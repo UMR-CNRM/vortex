@@ -37,8 +37,8 @@ logging.basicConfig(
 
 logger = logging.getLogger('vortex')
 
-import loader
-import sessions, toolbox, algo, data, tools
+from vortex import loader
+from vortex import sessions, toolbox, algo, data, tools
 
 # Set a background environment and a root session
 

@@ -10,7 +10,7 @@ from vortex.syntax.stdattrs import a_model, a_date, a_cutoff, cutoff
 from vortex.syntax.cycles import cy37t1_op1, cy37t1_op2, cy38t1
 
 from vortex.syntax.priorities import top
-from vortex.tools.date import today, Date
+from vortex.tools.date import Date
 
 
 class Analysis(FlowResource):

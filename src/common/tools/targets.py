@@ -8,8 +8,6 @@ This package handles some common targets sused at Meteo France.
 #: No automatic export
 __all__ = []
 
-from vortex.autolog import logdefault as logger
-
 from vortex.tools.targets import Target
 
 

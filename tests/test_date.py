@@ -2,6 +2,7 @@
 # -*- coding:Utf-8 -*-
 
 import vortex
+from calendar import IllegalMonthError
 from datetime import datetime, timedelta
 from vortex.tools import date
 from unittest import TestCase, main
@@ -52,6 +53,18 @@ class utDate(TestCase):
         vdate = date.Date("20110726121314")
         self.assertEquals(vdate.monthrange(), 31)
 
+    def test_monthrangefail(self):
+        vdate = date.Date('19640131')
+        self.assertRaises(IllegalMonthError, vdate.monthrange, vdate.year, 0)
+        self.assertRaises(IllegalMonthError, vdate.monthrange, vdate.year, 13)
+
+    def test_easter(self):
+        check = {2011: 20110424, 2012: 20120408, 2013: 20130331,
+                 2014: 20140420, 2015: 20150405, 2016: 20160327,
+                 2017: 20170416, 2018: 20180401, 2019: 20190421 }
+        for y, d in check.iteritems():
+            self.assertEqual(date.Date(str(d)), date.easter(y))
+   
     def test_julian(self):
         vdate = date.Date("20110726121314")
         self.assertEquals(vdate.julian, '207')

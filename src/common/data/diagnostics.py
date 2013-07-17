@@ -4,8 +4,6 @@
 #: No automatic export
 __all__ = []
 
-import re
-
 from vortex.data.flow import GeoFlowResource
 
 class FSI(GeoFlowResource):

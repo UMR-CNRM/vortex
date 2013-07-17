@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-
 import sys
 from os import getcwd, walk
 import os.path
@@ -105,8 +104,3 @@ if __name__  == '__main__':
     options, arguments = parser.parse_args()
     sys.argv[:] = arguments
     main(options, arguments, parser)
-
-
-
-
-

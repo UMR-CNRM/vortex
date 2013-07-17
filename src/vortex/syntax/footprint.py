@@ -10,7 +10,7 @@ The most important usage is done by :class:`BFootprint` derivated objects.
 __all__ = []
 
 #: Activate nice dump of footprint in docstring
-docstring_nicedump = False
+docstring_nicedump = True
 
 #: Stop footprint resolution on first undef value
 fast_resolve = False
@@ -427,7 +427,7 @@ class MFootprint(type):
             basedoc = realcls.__doc__
             if not basedoc:
                 basedoc = 'Not documented yet.'
-            realcls.__doc__ = basedoc + "\n    Footprint::\n\n" + realcls.footprint().nice()
+            realcls.__doc__ = basedoc + "\n\n    Footprint::\n\n" + realcls.footprint().nice()
         return realcls
 
 
@@ -544,9 +544,9 @@ class BFootprint(object):
         and then compare to my actual values.
         """
         fp = self.footprint()
-        resolved, inputattr = fp.resolve(rd, fatal=False, fast=False, tracker=None)
+        resolved, u_inputattr = fp.resolve(rd, fatal=False, fast=False, tracker=None)
         rc = True
-        for k, v in rd.items():
+        for k in rd.keys():
             if resolved[k] == None or self._attributes[k] != resolved[k]:
                 rc = False
         return rc

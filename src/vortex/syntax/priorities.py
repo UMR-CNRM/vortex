@@ -10,7 +10,7 @@ class PriorityLevel(object):
     """
     Single level to be used inside footprints.
     """
-    
+
     def __init__(self, tagname):
         self.tag = tagname
 
@@ -28,7 +28,7 @@ class PriorityLevel(object):
 
     def __cmp__(self, other):
         if not isinstance(other, PriorityLevel):
-            other = selt.inset.level(str(other))
+            other = self.inset.level(str(other))
         if other:
             return cmp(self.rank, other.rank)
         else:
@@ -189,3 +189,16 @@ class PrioritySet(Singleton):
 #: Predefined ordered object.
 top = PrioritySet(levels = ['none', 'default', 'toolbox', 'olive', 'oper', 'debug'])
 
+
+def simple_doctest():
+    """
+    >>> top.OPER < 'olive'
+    False
+    >>> top.OPER < 'DEBUG'
+    True
+    """
+    pass
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

@@ -17,7 +17,7 @@ import olive.data
 import gco.data
 import gco.syntax
 
-from gco.tools import genv 
+from gco.tools import genv
 
 
 t = vortex.ticket()
@@ -30,7 +30,12 @@ rl = vortex.toolbox.rload
 
 t.warning()
 
-sh.cd(e.TMPDIR + '/rundir')
+# plpl AAARGH ! Ca tourne en plein au milieu du source
+if not sh.cd(e.TMPDIR + '/rundir'):
+    import sys
+    print "cannot chdir to",e.TMPDIR+'/rundir'
+    print "sorry."
+    sys.exit (1) 
 print t.prompt, sh.pwd()
 
 arpege_cycle = 'cy37t1_op1.17'

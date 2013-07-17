@@ -13,7 +13,7 @@ from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 from vortex.tools import targets
-import mpitools
+from vortex.algo import mpitools
 
 class AlgoComponent(BFootprint):
     """
@@ -212,7 +212,6 @@ class Parallel(AlgoComponent):
         """
         mpi = self.mpitool
         if not mpi:
-            # TODO Eclipse parser is not smart enough to know about this "load" 
             mpi = mpitools.load(sysname=self.system.sysname, mpiname=self.mpiname)
 
         if not mpi:

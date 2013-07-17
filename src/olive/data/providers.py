@@ -8,7 +8,6 @@ import re
 from vortex.autolog import logdefault as logger
 from vortex.data.providers import Provider
 from iga.syntax.stdattrs import suites, fuzzyname, archivesuffix
-from vortex.tools.date import Time
 
 
 class Olive(Provider):

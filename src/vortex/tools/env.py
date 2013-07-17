@@ -7,6 +7,7 @@ Advanced environment settings.
 
 import os, re, json, traceback
 from datetime import datetime
+from vortex.autolog import logdefault as logger
 
 #: No automatic export
 __all__ = []

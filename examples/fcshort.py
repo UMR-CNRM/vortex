@@ -21,6 +21,7 @@ t = sessions.ticket()
 t.warning()
 
 g = t.glove
+# TODO AttributeError: 'ResearchGlove' object has no attribute 'system'
 mysys = g.system
 myenv = mysys.env
 mysys.cd(myenv.tmpdir)

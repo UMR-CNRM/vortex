@@ -302,6 +302,6 @@ class OpStore(MultiStore):
 
     def alternates_netloc(self):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
-        prefix, multi, region = self.netloc.split('.')
+        prefix, u_multi, u_region = self.netloc.split('.')
         return ( prefix + '.cache.fr', prefix + '.archive.fr' )
 

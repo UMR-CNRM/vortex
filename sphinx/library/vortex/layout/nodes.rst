@@ -9,17 +9,12 @@
 .. versionadded:: 0.2.0
 
 .. todo::
-   
+
       Nothing written for :mod:`vortex.layout.nodes` handling yet !
 
 
 Classes
 -------
-
-.. autoclass:: Sequence
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
 .. autoclass:: Node
    :show-inheritance:

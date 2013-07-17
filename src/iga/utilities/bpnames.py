@@ -10,7 +10,6 @@ __all__ = []
 
 import sys
 from vortex.autolog import logdefault as logger
-from vortex.tools.date import Date
 
 
 def faNames(cutoff, reseau, model, filling=None):
