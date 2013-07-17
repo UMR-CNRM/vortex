@@ -249,7 +249,7 @@ class System(BFootprint):
         mfiles = [ re.sub('^' + mroot + '/', '', x) for x in self.ffind(mroot) ]
         return [
             re.sub('(?:\/__init__)?\.py$', '', x).replace('/', '.')
-            for x in mfiles if ( re.search(only, x, re.IGNORECASE) and x.endswith('.py') )
+            for x in mfiles if ( not x.startswith('.' ) and re.search(only, x, re.IGNORECASE) and x.endswith('.py') )
         ]
 
     def systems_reload(self):
@@ -257,7 +257,6 @@ class System(BFootprint):
         extras = list()
         for modname in self.vortex_modules('systems'):
             if modname not in sys.modules:
-                # échec à l'import de rsrc venant de mac (e.g. tools/._systems.py)
                 try:
                     self.import_module(modname)
                     extras.append(modname)

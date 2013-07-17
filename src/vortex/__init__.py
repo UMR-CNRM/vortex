@@ -23,7 +23,7 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.6.32'
+__version__ = '0.6.33'
 
 __all__ = []
 
@@ -37,8 +37,8 @@ logging.basicConfig(
 
 logger = logging.getLogger('vortex')
 
-from vortex import loader
-from vortex import sessions, toolbox, algo, data, tools
+import loader
+import sessions, toolbox, algo, data, tools
 
 # Set a background environment and a root session
 

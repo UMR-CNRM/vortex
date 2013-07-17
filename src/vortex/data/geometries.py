@@ -58,7 +58,7 @@ class HGeometry(object):
             hg = getbyname(args[0].lower())
             hg.initialised = True
         else:
-            hg = super(HGeometry, cls).__new__(cls, **kw)
+            hg = super(HGeometry, cls).__new__(cls)
             hg.initialised = False
         return hg
 
