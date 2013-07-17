@@ -133,6 +133,20 @@ class Period(datetime.timedelta):
         r'(?P<m>[0-9]+([,.][0-9]+)?M)?'
         r'(?P<s>[0-9]+([,.][0-9]+)?S)?)?$').match(s))
 
+    _my_re  =re.compile(
+        r'(?P<X>[+-]?P)(?P<Y>[0-9]+([,.][0-9]+)?Y)?'
+        r'(?P<M>[0-9]+([,.][0-9]+)?M)?'
+        r'(?P<W>[0-9]+([,.][0-9]+)?W)?'
+        r'(?P<D>[0-9]+([,.][0-9]+)?D)?'
+        r'((?P<T>T)(?P<h>[0-9]+([,.][0-9]+)?H)?'
+        r'(?P<m>[0-9]+([,.][0-9]+)?M)?'
+        r'(?P<s>[0-9]+([,.][0-9]+)?S)?)?$')
+
+    @staticmethod
+    def period_regex(s):
+        return Period._my_re.match(s)
+
+
     _const_times = [
         # in a [0], there are [1] [2]
         ('m',  60, 's'),
@@ -323,14 +337,6 @@ class Date(datetime.datetime):
     def __str__(self):
         return self.iso8601()
 
-    def get_nbdays_month(self):
-        """Returns the number of days of a month."""
-        return nbdays_month(self.get_date())
-
-    def is_leap_year(self):
-        """Returns True in case of a leap year, False elsewhere"""
-        return leap_year(self.get_date())
-
     @property
     def julian(self):
         """Returns Julian day."""
@@ -502,7 +508,7 @@ class Time(object):
         try:
             other = Time(other)
         except:
-            rc = -1
+            pass
         finally:
             return cmp(str(self), str(other))
 
@@ -646,6 +652,22 @@ class Month(object):
             rc = -1
         finally:
             return rc
+
+def easter (year):
+    """ return the Date for easter of the given year
+    >>> dates = [2013, 2014, 2015, 2016, 2017, 2018]
+    >>> [easter(d).ymd for d in dates]
+    ['20130331', '20140420', '20150405', '20160327', '20170416', '20180401']
+    """
+    G = year % 19
+    C = year / 100
+    H = (C - C / 4 - (8 * C + 13) / 25 + 19 * G + 15) % 30
+    I = H - (H / 28) * (1 - (29 / (H + 1)) * ((21 - G) / 11))
+    J = (year + year / 4 + I + 2 - C + C / 4) % 7
+    L = I - J
+    month = 3 + (L + 40) / 44
+    day = L + 28 - 31 * (month / 4)
+    return Date (year, month, day)
 
 
 if __name__ == '__main__':
