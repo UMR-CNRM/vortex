@@ -5,7 +5,7 @@ import vortex
 
 from vortex import toolbox
 from vortex.tools import date
-from vortex.data import geometries 
+from vortex.data import geometries
 
 import common, olive, gco
 from gco.tools import genv
@@ -145,7 +145,7 @@ toolbox.output(
     term     = (0,1),
     local    = 'ICMSHFCST+[term::fmth]',
 )
-    
+
 toolbox.output(
     provider = prvout,
     role     = 'Listing',

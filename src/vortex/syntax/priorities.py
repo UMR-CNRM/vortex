@@ -10,7 +10,7 @@ class PriorityLevel(object):
     """
     Single level to be used inside footprints.
     """
-    
+
     def __init__(self, tagname):
         self.tag = tagname
 
@@ -28,7 +28,7 @@ class PriorityLevel(object):
 
     def __cmp__(self, other):
         if not isinstance(other, PriorityLevel):
-            other = selt.inset.level(str(other))
+            other = self.inset.level(str(other))
         if other:
             return cmp(self.rank, other.rank)
         else:

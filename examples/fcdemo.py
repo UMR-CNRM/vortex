@@ -17,7 +17,7 @@ import olive.data
 import gco.data
 import gco.syntax
 
-from gco.tools import genv 
+from gco.tools import genv
 
 
 t = vortex.ticket()

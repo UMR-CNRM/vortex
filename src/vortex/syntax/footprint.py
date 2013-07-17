@@ -544,9 +544,9 @@ class BFootprint(object):
         and then compare to my actual values.
         """
         fp = self.footprint()
-        resolved, inputattr = fp.resolve(rd, fatal=False, fast=False, tracker=None)
+        resolved, u_inputattr = fp.resolve(rd, fatal=False, fast=False, tracker=None)
         rc = True
-        for k, v in rd.items():
+        for k in rd.keys():
             if resolved[k] == None or self._attributes[k] != resolved[k]:
                 rc = False
         return rc

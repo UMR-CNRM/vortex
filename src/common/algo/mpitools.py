@@ -7,7 +7,6 @@ __all__ = []
 import re
 from vortex.autolog import logdefault as logger
 from vortex.algo.mpitools import MpiRun
-from vortex.tools import env
 
 
 class NecMpiRun(MpiRun):

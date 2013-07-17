@@ -10,7 +10,7 @@ factory based on the shared footprint mechanism.
 #: No automatic export
 __all__ = []
 
-import re, sys, platform
+import re, sys
 
 from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint

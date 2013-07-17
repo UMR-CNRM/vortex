@@ -50,7 +50,7 @@ class UtEnv(TestCase):
         self.assertFalse(z.active())
         self.assertFalse(z.osbound())
         self.assertEqual(z['toto'], 42)
- 
+
         z = Environment(env=e, active=True)
         self.assertTrue(z.active())
         self.assertTrue(z.osbound())
@@ -77,6 +77,6 @@ if __name__ == '__main__':
     for suite in suites:
         TextTestRunner(verbosity=1).run(suite)
     vortex.exit()
-    
+
 def get_test_class():
     return [ UtEnv ]

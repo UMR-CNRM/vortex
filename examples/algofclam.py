@@ -61,7 +61,6 @@ for rh in inputs:
         print 'Get', r.location(), '...',
         print r.get()
 
-        
 rx = vortex.toolbox.rh(remote=g.siteroot + '/examples/tmp/test.sh', file='test.sh', model='arpege', kind='ifsmodel')
 
 print t.line

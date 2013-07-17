@@ -66,7 +66,7 @@ def xpjobout(sh, env, output, localout=None):
 
     localhost = env.SWAPP_TARGET or env.SWAPP_TARGET_HOST or env.TARGET_HOST or sh.hostname
     swapp_user, swapp_host, swapp_port = env.SWAPP_OUTPUT_ID.split(':')
-    swapp_email = swapp_user + '@' + swapp_host
+    u_swapp_email = swapp_user + '@' + swapp_host
     user = env.SWAPP_TARGET_LOGNAME or env.TARGET_LOGNAME or env.SWAPP_USER or sh.getlogin();
 
     timeout = int(env.SWAPP_SOCKET_TIMEOUT) or 10
@@ -80,7 +80,7 @@ def xpjobout(sh, env, output, localout=None):
     if client_socket:
         rc = client_socket.send(
             "user:{0:s}\nhost:{0:s}\nname:{0:s}\nfile:{0:s}\nlout:{0:s}\nstep:{0:s}\n".format(
-                user, localhots, env.SMSNAME, output, localout, mstep
+                user, localhost, env.SMSNAME, output, localout, mstep
             )
         )
         client_socket.close()

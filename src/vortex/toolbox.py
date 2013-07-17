@@ -15,7 +15,6 @@ from vortex.data import resources, containers, providers, stores
 from vortex.algo import components
 from vortex.tools import caches, targets
 from vortex.layout.dataflow import stripargs_section
-from vortex.utilities.decorators import printargs
 
 #: Shortcut to footprint env defaults
 defaults = syntax.footprint.envfp

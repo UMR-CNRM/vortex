@@ -12,7 +12,7 @@ from vortex.tools.date import Date
 from vortex.utilities import observers, roles
 from vortex.layout import dataflow
 
-import stores
+from vortex.data import stores
 
 
 class Handler(object):

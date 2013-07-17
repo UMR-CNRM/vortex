@@ -12,7 +12,7 @@ Formats hypothesis:
    minutes and ss as the seconds.
 
 2. so as to add or substract a duration to a date expressed in the preceding
-   format(yyyymmdd[hh[mn[ss]]])the arguments must follow:
+   format (yyyymmdd[hh[mn[ss]]]) the arguments must follow:
 
       * P starts an ISO 8601 Period definition
       * nY, the number of years (n positive integer),
@@ -21,13 +21,13 @@ Formats hypothesis:
       * T as a time separator,
       * nH, the number of hours (n positive integer),
       * nM, the number of minutes (n positive integer),
-      * nS, the number of secondes (n positive integer)
+      * nS, the number of seconds (n positive integer)
 
    Example::
 
       P1Y <=> is a 1 year period
-      M20D <=> is a 20 days period
-      PT15H10M55S <=> is a 15 hours, 10 minutes and 55 secondes period
+      P20D <=> is a 20 days period
+      PT15H10M55S <=> is a 15 hours, 10 minutes and 55 seconds period
 
 The available methods in the Date class are:
 
@@ -37,7 +37,8 @@ The available methods in the Date class are:
    * add/substract a duration to a date (y, m, d, h, mn, s)
    * deliver the number of days of a month
    * determine if a year is a leap year
-   * deliver the time gap between two dates and the result is expressed in hours, minutes and secondes.
+   * deliver the time gap between two dates and the result is expressed
+     in hours, minutes and seconds.
 
 """
 
@@ -96,7 +97,7 @@ def guess(*args):
         except (ValueError, TypeError):
             continue
     else:
-         raise ValueError, "Cannot guess what Period or Date could be %s" % str(args)
+        raise ValueError, "Cannot guess what Period or Date could be %s" % str(args)
 
 def daterange(start, end=None, step='P1D'):
     """Date generator."""
@@ -267,7 +268,7 @@ class Date(datetime.datetime):
     def __new__(cls, *args, **kw):
         """
         Initial values include:
-            * a datetime object; 
+            * a datetime object;
             * a tuple containing at least (year, month, day) values;
             * a dictionary with this named values ;
             * a string that could be reshaped as an ISO 8601 date string.
@@ -285,7 +286,7 @@ class Date(datetime.datetime):
             top = Date._origin + datetime.timedelta(0, top)
             ld = [ top.year, top.month, top.day, top.hour, top.minute, top.second ]
         elif isinstance(top, str):
-            (top, sep, delta) = top.partition('/')
+            (top, u_sep, delta) = top.partition('/')
             ld = [ int(x) for x in re.split('[-:HTZ]+', mkisodate(top)) if re.match('\d+$', x) ]
         else:
             ld = [ int(x) for x in args if type(x) in (int, float) or (isinstance(x, str) and re.match('\d+$', x)) ]
@@ -299,7 +300,7 @@ class Date(datetime.datetime):
     def __init__(self, *args, **kw):
         super(Date, self).__init__()
         delta_o = self - Date._origin
-        self._epoch = delta_o.days * 86400 + delta_o.seconds 
+        self._epoch = delta_o.days * 86400 + delta_o.seconds
 
     def __deepcopy__(self, memo):
         """No deepcopy expected, so ``self`` is returned."""
@@ -338,7 +339,7 @@ class Date(datetime.datetime):
     @property
     def ymd(self):
         return self.strftime('%Y%m%d')
-    
+
     @property
     def ymdh(self):
         return self.strftime('%Y%m%d%H')
@@ -423,7 +424,7 @@ class Date(datetime.datetime):
     def isleap(self, year=None):
         """Return either the current of specified year is a leap year."""
         if year == None:
-            year = self.year 
+            year = self.year
         return calendar.isleap(year)
 
     def monthrange(self, year=None, month=None):
@@ -487,7 +488,7 @@ class Time(object):
     def __repr__(self):
         """Standard hour-minute representation."""
         return 'Time({0:d}, {1:d})'.format(self.hour, self.minute)
-        
+
     def __str__(self):
         """Standard hour-minute string."""
         return '{0:02d}:{1:02d}'.format(self.hour, self.minute)

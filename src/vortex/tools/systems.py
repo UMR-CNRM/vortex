@@ -635,7 +635,7 @@ class Python27(object):
 class Garbage(OSExtended, Python26):
     """
     Default system class for weird systems.
-    Hopefully an extended system will be loaded latyer on.
+    Hopefully an extended system will be loaded later on.
     """
 
     _footprint = dict(

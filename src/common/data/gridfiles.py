@@ -96,7 +96,7 @@ class Gridpoint(GeoFlowResource):
             if re.match('aladin|arome', self.model):
                 name = 'GRID' + self.geometry.area + 'r' + str(self.date.hour) + '_' + self.term.fmthour
 
-            rr = archivesuffix(self.model, self.cutoff, self.date)
+            u_rr = archivesuffix(self.model, self.cutoff, self.date)
             if re.match('arp', self.model):
                 name = '(gribfix:igakey)'
             return name

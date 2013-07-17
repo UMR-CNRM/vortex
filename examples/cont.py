@@ -38,7 +38,7 @@ print t.prompt, 'Catalog called', c3()
 print t.prompt, 'Catalog iterator'
 for c in c3:
     print t.prompt, '  ', c
-    
+
 print t.line
 
 rc = containers.File(local='bidon')
