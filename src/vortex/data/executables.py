@@ -13,7 +13,7 @@ from vortex.tools.config import JacketConfigParser
 class Jacket(object):
 
     def __init__(self, afile=None):
-        if file:
+        if afile:
             self.config = JacketConfigParser(afile)
             self.virtual = False
         else:

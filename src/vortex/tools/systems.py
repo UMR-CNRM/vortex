@@ -228,7 +228,7 @@ class System(BFootprint):
 
     def readonly(self, inodename):
         """Set permissions of the `filename` object to read-only."""
-        self.stderr(['readonly', nbsecs])
+        self.stderr(['readonly', inodename])
         rc = None
         if os.path.exists(inodename):
             if os.path.isdir(inodename):
@@ -257,8 +257,12 @@ class System(BFootprint):
         extras = list()
         for modname in self.vortex_modules('systems'):
             if modname not in sys.modules:
-                self.import_module(modname)
-                extras.append(modname)
+                # échec à l'import de rsrc venant de mac (e.g. tools/._systems.py)
+                try:
+                    self.import_module(modname)
+                    extras.append(modname)
+                except ValueError as err:
+                    logger.critical('systems_reload: cannot import module %s (%s)' % (modname, str(err)))
         return extras
 
     def spawn(self, args, ok=[0], shell=False, output=None):
