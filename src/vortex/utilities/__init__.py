@@ -5,6 +5,12 @@
 __all__ = []
 
 
+def mktuple(obj):
+    if isinstance(obj, list) or isinstance(obj, tuple):
+        return tuple(obj)
+    else:
+        return (obj,)
+
 def dictmerge(d1, d2):
     """
     Merge two dictionaries d1 and d2 with a recursive function (d1 and d2 can be dictionaries of dictionaries).

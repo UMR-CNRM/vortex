@@ -6,7 +6,9 @@ __all__ = []
 
 import re
 from vortex.autolog import logdefault as logger
-from vortex.data.stores import Store, CacheStore, MultiStore
+from vortex.data.stores import Store, MultiStore, CacheStore
+from vortex.utilities.dumper import nicedump
+
 
 rextract = re.compile('^extract=(.*)$')
 
@@ -54,7 +56,10 @@ class GCOCentralStore(Store):
         """Return actual (gtool, gname)."""
         l = rpath.lstrip('/').split('/')
         gname = l.pop()
-        tampon = '/' + '/'.join(l)
+        if 'GGET_TAMPON' in system.env:
+            tampon = system.env.GGET_TAMPON
+        else:
+            tampon = '/' + '/'.join(l)
         gtool = self.ggetbin
         if self.ggetpath:
             gtool = system.path.join(self.ggetpath, gtool)
@@ -98,7 +103,6 @@ class GCOCentralStore(Store):
                 rc = system.mv(gname, local)
         else:
             logger.warning('GCOCentralStore get %s was not successful (%s)', gname, rc)
-        del system.env.gget_tampon
         return rc
 
 
@@ -118,7 +122,7 @@ class GCOCacheStore(CacheStore):
                 default = 'mtool',
             ),
             rootdir = dict(
-                default = 'conf'
+                default = 'auto'
             ),
             headdir = dict(
                 default = 'gco',
@@ -132,21 +136,35 @@ class GCOCacheStore(CacheStore):
         super(GCOCacheStore, self).__init__(*args, **kw)
         self.resetcache()
 
-    def gcocheck(self, remote, options):
+    def ggetcheck(self, remote, options):
         """Gateway to :meth:`incachecheck`."""
         return self.incachecheck(remote, options)
 
-    def gcolocate(self, remote, options):
+    def ggetlocate(self, remote, options):
         """Gateway to :meth:`incachelocate`."""
         return self.incachelocate(remote, options)
 
-    def gcoget(self, remote, local, options):
+    def ggetget(self, remote, local, options):
         """Gateway to :meth:`incacheget`."""
-        return self.incacheget(remote, local, options)
+        extract = remote['query'].get('extract', None)
+        if extract:
+            logger.warning('Skip cache get with extracted %s', extract)
+            return False
+        else:
+            rc = self.incacheget(remote, local, options)
+            system = options.get('system', None)
+            if rc and not system.path.isdir(local) and system.is_tarfile(local):
+                rc = system.untar(local, output=False)
+            return rc
 
-    def gcoput(self, local, remote, options):
+    def ggetput(self, local, remote, options):
         """Gateway to :meth:`incacheputt`."""
-        return self.incacheput(local, remote, options)
+        extract = remote['query'].get('extract', None)
+        if extract:
+            logger.warning('Skip cache put with extracted %s', extract)
+            return True
+        else:
+            return self.incacheput(local, remote, options)
 
 
 class GCOStore(MultiStore):
@@ -156,7 +174,7 @@ class GCOStore(MultiStore):
         info = 'GCO multi access',
         attr = dict(
             scheme = dict(
-                values = [ 'gco' ],
+                values = [ 'gget' ],
             ),
             netloc = dict(
                 values = [ 'gco.multi.fr' ],

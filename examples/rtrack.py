@@ -27,7 +27,7 @@ print t.prompt, 'Resource tracker =', cr.track
 
 print t.line
 
-print cr.track.alldump()
+print cr.track.dump_all()
 
 print t.line
 

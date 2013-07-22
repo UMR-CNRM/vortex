@@ -14,16 +14,16 @@ from vortex.tools import env
 
 
 class Gridpoint(GeoFlowResource):
-
     """
     Class for gridpoint model files calculated in a post-treatment task. Possible formats are 'grib' and 'fa'.
     A gridpoint file can be calculated for files from different sources given by the "origin" attribute.
     """
 
+    _abstract = True
     _footprint = [
         term,
         dict(
-            info = 'Grib file',
+            info = 'Gridpoint fields',
             attr = dict(
                 origin = dict(
                     values = [
@@ -41,9 +41,6 @@ class Gridpoint(GeoFlowResource):
                         era40 = 'e40',
                         era15 = 'e15'
                     )
-                ),
-                nativefmt = dict(
-                    values = [ 'fa', 'grib'],
                 ),
                 geometry = dict(
                     type = GridGeometry,
@@ -63,52 +60,10 @@ class Gridpoint(GeoFlowResource):
         return 'gridpoint'
 
     def olive_basename(self):
-        """OLIVE specific naming convention."""
-
-        t = self.term.hour
-        e = env.current()
-        if not 'SWAPP_ANA_TERMSHIFT' in e and self.origin == 'ana':
-            t = 0
-
-        if self.nativefmt == 'fa':
-            if self.model == 'mocage':
-                if self.origin == 'hst':
-                    name = 'HM' + self.geometry.area + '+' + self.term.fmthour
-                elif self.origin == 'sumo':
-                    deltastr = 'PT' + str(self.term.hour) + 'H'
-                    deltadate = self.date + deltastr
-                    name = 'SM' + self.geometry.area + '_void' + '+' + deltadate.ymd
-                elif self.origin == 'interp':
-                    deltastr = 'PT' + str(self.term.hour) + 'H'
-                    deltadate = self.date + deltastr
-                    name = 'SM' + self.geometry.area + '_interp' + '+' + deltadate.ymd
-            else:
-                name = 'PFFPOS' + self.origin.upper() + self.geometry.area + '+' + self.term.nice(t)
-        else:
-            name = 'GRID' + self.origin.upper() + self.geometry.area + '+' + self.term.nice(t)
-
-        return name
+        pass
 
     def archive_basename(self):
-        """OP ARCHIVE specific naming convention."""
-
-        if self.nativefmt == 'grib':
-            if re.match('aladin|arome', self.model):
-                name = 'GRID' + self.geometry.area + 'r' + str(self.date.hour) + '_' + self.term.fmthour
-
-            u_rr = archivesuffix(self.model, self.cutoff, self.date)
-            if re.match('arp', self.model):
-                name = '(gribfix:igakey)'
-            return name
-
-        if self.model == 'mocage' and self.nativefmt == 'fa':
-            deltastr = 'PT' + str(self.term.hour) + 'H'
-            deltadate = self.date + deltastr
-            if self.origin == 'hst':
-                name = 'HM' + self.geometry.area + '+' + deltadate.ymdh
-            elif self.origin == 'interp':
-                name = 'SM' + self.geometry.area + '+' + deltadate.ymd
-            return name
+        pass
 
     def basename_info(self):
         """Generic information, radical = ``grid``."""
@@ -139,3 +94,85 @@ class Gridpoint(GeoFlowResource):
             nativefmt = self.nativefmt,
             model     = self.model,
         )
+
+
+class GridpointFullpos(Gridpoint):
+
+    _footprint = dict(
+        info = 'Gridpoint fields as produced by Fullpos',
+        attr = dict(
+            nativefmt = dict(
+                values = [ 'fa' ],
+                default = 'fa',
+            ),
+        )
+    )
+
+    def olive_basename(self):
+        """OLIVE specific naming convention."""
+
+        t = self.term.hour
+        e = env.current()
+        if not 'SWAPP_ANA_TERMSHIFT' in e and self.origin == 'ana':
+            t = 0
+
+        if self.model == 'mocage':
+            if self.origin == 'hst':
+                name = 'HM' + self.geometry.area + '+' + self.term.fmthour
+            elif self.origin == 'sumo':
+                deltastr = 'PT' + str(self.term.hour) + 'H'
+                deltadate = self.date + deltastr
+                name = 'SM' + self.geometry.area + '_void' + '+' + deltadate.ymd
+            elif self.origin == 'interp':
+                deltastr = 'PT' + str(self.term.hour) + 'H'
+                deltadate = self.date + deltastr
+                name = 'SM' + self.geometry.area + '_interp' + '+' + deltadate.ymd
+        else:
+            name = 'PFFPOS' + self.origin.upper() + self.geometry.area + '+' + self.term.nice(t)
+
+        return name
+
+    def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
+
+        deltastr = 'PT' + str(self.term.hour) + 'H'
+        deltadate = self.date + deltastr
+        if self.origin == 'hst':
+            name = 'HM' + self.geometry.area + '+' + deltadate.ymdh
+        elif self.origin == 'interp':
+            name = 'SM' + self.geometry.area + '+' + deltadate.ymd
+        return name
+
+
+class GridpointExport(Gridpoint):
+
+    _footprint = dict(
+        info = 'Gridpoint fields as exported for dissemination',
+        attr = dict(
+            nativefmt = dict(
+                values = [ 'grib' ],
+                default = 'grib',
+            ),
+        )
+    )
+
+    def olive_basename(self):
+        """OLIVE specific naming convention."""
+
+        t = self.term.hour
+        e = env.current()
+        if not 'SWAPP_ANA_TERMSHIFT' in e and self.origin == 'ana':
+            t = 0
+        return 'GRID' + self.origin.upper() + self.geometry.area + '+' + self.term.nice(t)
+
+    def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
+
+        if re.match('aladin|arome', self.model):
+            name = 'GRID' + self.geometry.area + 'r' + str(self.date.hour) + '_' + self.term.fmthour
+
+        u_rr = archivesuffix(self.model, self.cutoff, self.date)
+
+        if re.match('arp', self.model):
+            name = '(gribfix:igakey)'
+        return name

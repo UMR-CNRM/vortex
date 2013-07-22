@@ -106,16 +106,12 @@ class Footprint(object):
 
     def track(self, desc):
         """Returns if the items of ``desc`` are found in the specified footstep ``fp``."""
-        found = []
         fpa = self._fp['attr']
         attrs = fpa.keys()
         aliases = []
         for x in attrs:
             aliases.extend(fpa[x]['alias'])
-        for a in desc:
-            if a in attrs or a in aliases:
-                found.append(a)
-        return found
+        return [ a for a in desc if a in attrs or a in aliases ]
 
     def optional(self, a):
         """Returns either the given attribute ``a`` is optional or not in the current footprint."""
@@ -282,17 +278,17 @@ class Footprint(object):
                         logger.debug(' > Attr %s reclassed = %s', k, guess[k])
                     except:
                         logger.debug(' > Attr %s badly reclassed as %s = %s', k, ktype, guess[k])
-                        opts['tracker'].add('key', k, why='could not reclass')
+                        opts['tracker'].add('key', k, why='Could not reclass to [{0:s}]: {1:s}'.format(ktype.__name__, str(guess[k])))
                         diags[k] = True
                         guess[k] = None
                 if kdef.has_key('values') and guess[k] not in kdef['values']:
                     logger.debug(' > Attr %s value not in range = %s %s', k, guess[k], kdef['values'])
-                    opts['tracker'].add('key', k, why='not in values')
+                    opts['tracker'].add('key', k, why='Not in values: {0:s}'.format(str(guess[k])))
                     diags[k] = True
                     guess[k] = None
                 if kdef.has_key('outcast') and guess[k] in kdef['outcast']:
                     logger.debug(' > Attr %s value excluded from range = %s %s', k, guess[k], kdef['outcast'])
-                    opts['tracker'].add('key', k, why='is outcast')
+                    opts['tracker'].add('key', k, why='Outcast value: {0:s}'.format(str(guess[k])))
                     diags[k] = True
                     guess[k] = None
 
@@ -304,11 +300,11 @@ class Footprint(object):
                 guess[k] = None
                 logger.warning(' > Attr %s is a null string', k)
                 if not k in diags:
-                    opts['tracker'].add('key', k, why='not valid')
+                    opts['tracker'].add('key', k, why='Not valid')
             if guess[k] == None:
                 inputattr.discard(k)
                 if not k in diags:
-                    opts['tracker'].add('key', k, why='missing')
+                    opts['tracker'].add('key', k, why='Missing value')
                 if opts['fatal']:
                     logger.critical('No valid attribute %s', k)
                 else:
@@ -335,7 +331,7 @@ class Footprint(object):
             actualvalue = rd.get(k, params.get(k.upper(), None))
             if actualvalue == None:
                 rd = False
-                tracker.add('only', k, why='no value found')
+                tracker.add('only', k, why='No value found')
                 break
 
             checkflag = False
@@ -351,7 +347,7 @@ class Footprint(object):
 
             if not checkflag:
                 rd = False
-                tracker.add('only', k, why='do not match')
+                tracker.add('only', k, why='Do not match')
                 break
 
         return rd

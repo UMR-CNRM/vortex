@@ -15,6 +15,9 @@ from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 
 
+class MpiException(Exception):
+    pass
+
 class MpiTool(BFootprint):
     """Root class for any :class:`MpiTool` subclasses."""
 
@@ -25,7 +28,11 @@ class MpiTool(BFootprint):
             mpiname = dict(),
             mpiopts = dict(
                 optional = True,
-                default = '-v'
+                default = 'v'
+            ),
+            optprefix = dict(
+                optional = True,
+                default = '-'
             )
         )
     )
@@ -33,7 +40,6 @@ class MpiTool(BFootprint):
     def __init__(self, *args, **kw):
         logger.debug('Abstract mpi tool init %s', self.__class__)
         super(MpiTool, self).__init__(*args, **kw)
-        self.setoptions()
         self.setmaster(None)
 
     @property
@@ -51,23 +57,26 @@ class MpiTool(BFootprint):
         else:
             return self.mpiname
 
-    def setoptions(self, opts=None):
+    def setoptions(self, system, e, opts=None):
         """Raw list of mpi tool command line options."""
         self._options = dict()
         klast = None
         for optdef in shlex.split(self.mpiopts):
             if optdef.startswith('-'):
+                optdef = optdef.lstrip('-')
                 self._options[optdef] = None
                 klast = optdef
             elif klast != None:
                 self._options[klast] = optdef
             else:
-                raise Exception('Badly shaped mpi option around %s', optdef)
+                raise MpiException('Badly shaped mpi option around %s', optdef)
         if opts:
             for k, v in opts.items():
-                if not k.startswith('-'):
-                    k = '-' + k
-                self._options[k] = v
+                self._options[k.lstrip('-')] = v
+        if 'nn' not in self._options:
+            self._options['nn'] = e.SWAPP_SUBMIT_NODES
+        if 'nnp' not in self._options:
+            self._options['nnp'] = e.SWAPP_SUBMIT_TASKS
         return self._options
 
     def setmaster(self, master):
@@ -78,21 +87,24 @@ class MpiTool(BFootprint):
         """Builds the mpi command line."""
         cmdl = [ self.launcher(system, e) ]
         for k, v in self._options.items():
-            cmdl.append(str(k))
+            cmdl.append(self.optprefix + str(k))
             if v != None:
                 cmdl.append(str(v))
         if self._master == None:
-            raise Exception('No master defined before launching MPI')
+            raise MpiException('No master defined before launching MPI')
+        if self.optprefix == '--':
+            cmdl.append('--')
         cmdl.append(self._master)
         cmdl.extend(args)
         return cmdl
 
     def setup_namelists(self, ctx, target=None):
         """Braodcast number of MPI tasks to namelists."""
-        if '-np' in self._options:
-            nbproc = int(self._options['-np'])
+        if 'np' in self._options:
+            nbproc = int(self._options['np'])
         else:
-            nbproc = int(self._options.get('-nnp', 1)) * int(self._options.get('-nn', 1))
+            nbproc = int(self._options.get('nnp', 1)) * int(self._options.get('nn', 1))
+        #TODO move to namelist class
         for namrh in [ x.rh for x in ctx.sequence.effective_inputs(kind='namelist') ]:
             namc = namrh.contents
             namw = False

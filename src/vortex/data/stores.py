@@ -186,7 +186,7 @@ class Store(BFootprint):
         """Proxy method to dedicated get method accordind to scheme."""
         logger.debug('Store get from %s to %s', remote, local)
         if self.in_situ(local, options):
-            logger.warning('Store %s using in situ resource: %s', self.shortname(), local)
+            logger.warning('Store %s in situ resource %s', self.shortname(), local)
             return True
         else:
             return getattr(self, self.scheme + 'get', self.notyet)(remote, local, options)
@@ -357,7 +357,7 @@ class Finder(Store):
         system = options.get('system', None)
         rpath = self.fullpath(remote)
         if 'intent' in options and options['intent'] == dataflow.intent.IN:
-            logger.warning('Ignoring intent in for remote input %s', rpath)
+            logger.warning('Ignore intent <in> for remote input %s', rpath)
         return system.cp(rpath, local)
 
     def fileput(self, local, remote, options):

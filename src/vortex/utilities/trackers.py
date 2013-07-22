@@ -39,6 +39,10 @@ class InformationTracker(Document):
         self._current = self.root
 
 
+    def __call__(self):
+        """Print the complete dump of the current tracker."""
+        print self.dumpall()
+
     def new_entry(self, kind, name):
         """Insert a top level entry (child of the root node)."""
         entry = self.createElement(str(kind))
@@ -64,6 +68,14 @@ class InformationTracker(Document):
             self._current = node
         return self._current
 
-    def alldump(self):
+    def dump_all(self):
         """Return a string with a complete formatted dump of the document."""
         return self.toprettyxml(indent='    ')
+
+    def dump_last(self):
+        """Return a string with a complete formatted dump of the last entry."""
+        return self.root.lastChild.toprettyxml(indent='    ')
+
+    def info(self):
+        """Return a simple description as a string."""
+        return '{0:s} {1:s}'.format(self.root.tagName, self.root.getAttribute('tag')).title()

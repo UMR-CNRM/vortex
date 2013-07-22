@@ -9,6 +9,7 @@ This modules defines the low level physical layout for data handling.
 __all__ = []
 
 from vortex.autolog import logdefault as logger
+from vortex.utilities import mktuple
 
 from collections import namedtuple
 
@@ -17,7 +18,7 @@ from collections import namedtuple
 IntentTuple = namedtuple('IntentTuple', ['IN', 'OUT', 'INOUT'], verbose=False)
 
 #: Predefined INTENT values IN, OUT and INOUT.
-intent = IntentTuple(IN=1, OUT=2, INOUT=3)
+intent = IntentTuple(IN='in', OUT='out', INOUT='inout')
 
 #: Definition of a named tuple IXO sequence
 IXOTuple = namedtuple('IXOTuple', ['INPUT', 'OUTPUT', 'EXEC'], verbose=False)
@@ -145,29 +146,33 @@ class Sequence(object):
         rhset = kw.get('rh', list())
         if type(rhset) != list: rhset = [ rhset ]
         ralter = kw.get('alternate', kw.get('role', 'anonymous'))
+        newsections = list()
         for rh in rhset:
             kw['rh'] = rh
-            self.add(Section(**kw))
+            this_section = Section(**kw)
+            self.add(this_section)
+            newsections.append(this_section)
             kw['alternate'] = ralter
             if 'role' in kw: del kw['role']
+        return newsections
 
     def input(self, **kw):
         """Create a section with default kind equal to ``ixo.INPUT``."""
         if 'kind' in kw: del kw['kind']
         kw.setdefault('intent', intent.IN)
-        self.section(kind=ixo.INPUT, **kw)
+        return self.section(kind=ixo.INPUT, **kw)
 
     def output(self, **kw):
         """Create a section with default kind equal to ``ixo.OUTPUT`` and intent equal to ``intent.OUT``."""
         if 'kind' in kw: del kw['kind']
         kw.setdefault('intent', intent.OUT)
-        self.section(kind=ixo.OUTPUT, **kw)
+        return self.section(kind=ixo.OUTPUT, **kw)
 
     def executable(self, **kw):
         """Create a section with default kind equal to to ``ixo.EXEC``."""
         if 'kind' in kw: del kw['kind']
         kw.setdefault('intent', intent.IN)
-        self.section(kind=ixo.EXEC, **kw)
+        return self.section(kind=ixo.EXEC, **kw)
 
     def inputs(self):
         """Return a list of current sequence sections with ``ixo.INPUT`` or ``ixo.EXEC`` kind."""
@@ -185,9 +190,11 @@ class Sequence(object):
         inrole = list()
         inkind = list()
         if 'role' in kw:
-            inrole = [ x for x in inset if x.role == kw['role'] or x.alternate == kw['role'] ]
+            selectrole = mktuple(kw['role'])
+            inrole = [ x for x in inset if x.role in selectrole or x.alternate in selectrole ]
         if not inrole and 'kind' in kw:
-            inkind = [ x for x in inset if x.rh.resource.realkind == kw['kind'] ]
+            selectkind = mktuple(kw['kind'])
+            inkind = [ x for x in inset if x.rh.resource.realkind in selectkind ]
         return inrole or inkind
 
     def outputs(self):

@@ -37,7 +37,7 @@ print t.line
 print bcor.locate()
 
 #print t.line
-#print cr.track.alldump()
+#print cr.track.dump_all()
 
 print t.line
 print bcor.check()

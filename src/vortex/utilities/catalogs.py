@@ -14,6 +14,7 @@ __all__ = []
 import sys, re
 import observers
 from vortex.autolog import logdefault as logger
+from vortex.utilities.dumper import nicedump
 from trackers import tracker
 
 
@@ -96,6 +97,7 @@ class ClassesCollector(Catalog):
         self.included = False
         self.register = True
         self.track = True
+        self.autoreport = True
         self.instances = Catalog()
         super(ClassesCollector, self).__init__(**kw)
 
@@ -140,6 +142,8 @@ class ClassesCollector(Catalog):
     def pickup_attributes(self, desc):
         """Try to pickup inside the catalogue a item that could match the description."""
         logger.debug('Pick up a "%s" in description %s with catalog %s', self.itementry, desc, self)
+        report = desc.setdefault('report', self.autoreport)
+        del desc['report']
         if self.itementry in desc:
             logger.debug('A %s is already defined %s', self.itementry, desc[self.itementry])
         else:
@@ -147,18 +151,35 @@ class ClassesCollector(Catalog):
         if desc[self.itementry]:
             desc = desc[self.itementry].cleanup(desc)
         else:
-            logger.warning('No %s found in description %s', self.itementry, desc)
+            logger.warning('No %s found in description %s', self.itementry, "\n" + nicedump(desc))
+            if report and self.track:
+                print "\n", self.track.info()
+                print self.track.dump_last()
         return desc
+
+    def trackcatnode(self):
+        """Return the tracking node for this catalog when tracking is activated."""
+        trcat = None
+        if self.track and type(self.track) == bool:
+            self.track = tracker(tag='footprint-' + self.itementry)
+        if self.track:
+            trcat = self.track.new_entry('catalog', self.fullname())
+        return trcat
 
     def findany(self, desc):
         """
-        Returns the first item of the catalog that :meth:`couldbe`
+        Return the first item of the catalog that :meth:`couldbe`
         as described by argument ``desc``.
         """
         logger.debug('Search any %s in catalog %s', desc, self._items)
+        trcat = self.trackcatnode()
         for item in self._items:
-            resolved, u_input = item.couldbe(desc)
-            if resolved: return item(resolved, checked=True)
+            if trcat:
+                trnode = self.track.add('class', item.fullname(), base=trcat)
+                self.track.current(trnode)
+            resolved, u_input = item.couldbe(desc, trackroot=self.track)
+            if resolved:
+                return item(resolved, checked=True)
         return None
 
     def findall(self, desc):
@@ -168,11 +189,7 @@ class ClassesCollector(Catalog):
         """
         logger.debug('Search all %s in catalog %s', desc, self._items)
         found = list()
-        trcat = None
-        if self.track and type(self.track) == bool:
-            self.track = tracker(tag='footprint-' + self.itementry)
-        if self.track:
-            trcat = self.track.new_entry('catalog', self.fullname())
+        trcat = self.trackcatnode()
         for item in self._items:
             if trcat:
                 trnode = self.track.add('class', item.fullname(), base=trcat)
@@ -191,7 +208,7 @@ class ClassesCollector(Catalog):
         if not candidates:
             return None
         if len(candidates) > 1:
-            logger.warning('Multiple %s candidates with description %s', self.itementry, desc)
+            logger.warning('Multiple %s candidates for %s', self.itementry, "\n" + nicedump(desc))
             candidates.sort(key=lambda x: x[0].weightsort(x[2]), reverse=True)
             for i, c in enumerate(candidates):
                 thisclass, u_resolved, theinput = c
@@ -277,3 +294,9 @@ def autocatload(kind='systems', tag='default'):
 
 def fromtable(kind='systems', tag='default'):
     return get_table()[kind].get(tag, None)
+
+def autoreport(switch=False):
+    tc = get_table()
+    for kind in [ x for x in autocatlist() if x in tc ]:
+        for cat in tc[kind].values():
+            cat.autoreport = switch

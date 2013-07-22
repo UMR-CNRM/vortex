@@ -196,7 +196,6 @@ class Parallel(AlgoComponent):
             mpiname = dict(
                 optional = True,
                 alias = [ 'mpi' ],
-                default = 'mpirun'
             ),
             engine = dict(
                 values = [ 'parallel' ]
@@ -212,13 +211,19 @@ class Parallel(AlgoComponent):
         """
         mpi = self.mpitool
         if not mpi:
-            mpi = mpitools.load(sysname=self.system.sysname, mpiname=self.mpiname)
+            mpiname = self.mpiname
+            if not mpiname:
+                mpiname = self.env.VORTEX_MPI_NAME
+            mpi = mpitools.load(sysname=self.system.sysname, mpiname=mpiname)
 
         if not mpi:
             logger.critical('Component %s could not find any mpitool', self.shortname())
             raise AttributeError, 'No valid mpitool attr could be found.'
 
-        mpi.setoptions(kw.get('mpiopts', dict()))
+        self.system.subtitle('{0:s} : parallel engine'.format(self.realkind))
+        print mpi
+
+        mpi.setoptions(self.system, self.env, kw.get('mpiopts', dict()))
         mpi.setmaster(self.absexcutable(rh.container.localpath()))
 
         args = mpi.commandline(self.system, self.env, self.spawn_command_line(rh, ctx))

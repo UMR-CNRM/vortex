@@ -15,6 +15,7 @@ from vortex.data import resources, containers, providers, stores
 from vortex.algo import components
 from vortex.tools import caches, targets
 from vortex.layout.dataflow import stripargs_section
+from vortex.utilities.dumper import nicedump
 
 #: Shortcut to footprint env defaults
 defaults = syntax.footprint.envfp
@@ -22,7 +23,7 @@ setfpext = syntax.footprint.setfpext
 sectionmap = {'input':'get', 'output':'put', 'executable':'get'}
 justdoit = False
 getinsitu = False
-verbose = False
+verbose = 0
 
 # Most commonly used functions
 
@@ -64,9 +65,9 @@ def rload(*args, **kw):
         else:
             logger.warning('Discard rload argument <%s>', a)
     rd.update(kw)
-    rx = [ containers.pickup(providers.pickup(resources.pickup(x))) for x in syntax.expand(rd)]
+    rx = [ containers.pickup(providers.pickup(resources.pickup(x))) for x in syntax.expand(rd) ]
     logger.debug('Resource desc %s', rx)
-    return [data.handlers.Handler(x) for x in rx]
+    return [ data.handlers.Handler(x) for x in rx ]
 
 def rh(*args, **kw):
     """
@@ -106,6 +107,11 @@ def pushsection(section, args, kw):
     ctx = sessions.ticket().context
     ctx.record_off()
     opts, kwclean = stripargs_section(**kw)
+    if verbose > 1:
+        print 'New {0:s} section, options:'.format(section)
+        print nicedump(opts)
+        print 'Loading resource handler(s), arguments:'
+        print nicedump(kwclean), "\n"
     rl = rload(*args, **kwclean)
     rlok = list()
     push = getattr(ctx.sequence, section)
@@ -113,12 +119,12 @@ def pushsection(section, args, kw):
     if verbose and now:
         logger.info('Just Do It ... active for method [%s]', doitmethod)
     for rhandler in rl:
-        push(rh=rhandler, **opts)
-        ok = True
-        if now:
+        newsections = push(rh=rhandler, **opts)
+        ok = bool(newsections)
+        if ok and now:
             if verbose:
                 logger.info(' > %s %s ...', doitmethod, rhandler.location())
-            ok = getattr(rhandler, doitmethod)()
+            ok = getattr(newsections[0], doitmethod)()
             if verbose:
                 logger.info(' > %s', str(ok))
         if ok:
@@ -138,10 +144,7 @@ def output(*args, **kw):
 def executable(*args, **kw):
     """Add an executable section to the current sequence."""
     kw.setdefault('insitu', getinsitu)
-    loaded = pushsection('executable', args, kw)
-    if len(loaded) == 1:
-        loaded = loaded[0]
-    return loaded
+    return pushsection('executable', args, kw)
 
 def magic(uri, localpath):
     return rh(unknown=True, magic=uri, filename=localpath)

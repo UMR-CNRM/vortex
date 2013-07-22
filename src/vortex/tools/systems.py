@@ -21,6 +21,8 @@ from vortex.syntax import BFootprint, priorities
 from vortex.utilities.catalogs import ClassesCollector, cataloginterface
 from vortex.tools.net import StdFtp
 
+class ExecutionError(StandardError):
+    pass
 
 class System(BFootprint):
     """
@@ -80,12 +82,23 @@ class System(BFootprint):
         return 'system'
 
     def __getattr__(self, key):
+        actualattr = None
         if key in self._os.__dict__:
-            return self._os.__dict__[key]
+            actualattr = self._os.__dict__[key]
         elif key in self._sh.__dict__:
-            return self._sh.__dict__[key]
+            actualattr = self._sh.__dict__[key]
         else:
-            raise AttributeError('method ' + key + ' not found')
+            raise AttributeError('Method ' + key + ' not found')
+        if callable(actualattr):
+            def osproxy(*args, **kw):
+                cmd = [key]
+                cmd.extend(args)
+                cmd.extend([ '{0:s}={1:s}'.format(x, str(kw[x])) for x in kw.keys() ])
+                self.stderr(cmd)
+                return actualattr(*args, **kw)
+            return osproxy
+        else:
+            return actualattr
 
     @property
     def _os(self):
@@ -101,7 +114,7 @@ class System(BFootprint):
             sys.stderr.write(
                 "+ [{0:s}] {1:s}\n".format(
                     datetime.datetime.now().strftime('%Y/%m/%d-%H:%M:%S'),
-                    ' '.join(args)
+                    ' '.join([ str(x) for x in args ])
                 )
             )
 
@@ -117,16 +130,13 @@ class System(BFootprint):
             print realpwd
             return True
 
-    def cd(self, pathtogo):
+    def cd(self, pathtogo, create=False):
         """Change directory to ``pathtogo``."""
-        self.stderr(['cd', pathtogo])
-        try:
-            self._os.chdir(pathtogo)
-            return True
-        except OSError:
-            return False
-        except:
-            raise
+        self.stderr(['cd', pathtogo, create])
+        if create:
+            self.mkdir(pathtogo)
+        self._os.chdir(pathtogo)
+        return True
 
     def ffind(self, *args):
         """Recursive file find. Arguments are starting paths."""
@@ -206,9 +216,11 @@ class System(BFootprint):
 
     def remove(self, filename):
         """Unlink the specified `filename` object."""
-        self.stderr(['remove', filename])
         if os.path.exists(filename):
+            self.stderr(['remove', filename])
             self.unlink(filename)
+        else:
+            self.stderr(['clear', filename])
         return not os.path.exists(filename)
 
     def rm(self, filename):
@@ -280,12 +292,10 @@ class System(BFootprint):
             p.wait()
         except ValueError as perr:
             logger.critical('Weird arguments to Popen ( %s, stdout=%s, stderr=%s, shell=%s )' %args, cmdout, cmderr, shell)
-            logger.critical('System returns %s', str(perr))
-            return False
+            raise
         except OSError as perr:
             logger.critical('Could not call %s', args)
-            logger.critical('System returns %s', str(perr))
-            return False
+            raise
         except Exception as perr:
             logger.critical('System returns %s', str(perr))
             raise RuntimeError, "System %s spawned %s got [%s]" % (self, args, perr.returncode)
@@ -301,7 +311,8 @@ class System(BFootprint):
                 if output:
                     for xerr in p.stderr:
                         sys.stderr.write(xerr)
-                return False
+                logger.critical('Unexpected return code %d', p.returncode)
+                raise ExecutionError
         finally:
             if output and p:
                 p.stdout.close()
@@ -346,7 +357,7 @@ class OSExtended(System):
         except:
             return -1
 
-    def mkdir(self, dirpath):
+    def mkdir(self, dirpath, fatal=True):
         """Normalizes path name and recursively creates this directory."""
         normdir = self.path.normpath(dirpath)
         if normdir and not self.path.isdir(normdir):
@@ -356,6 +367,7 @@ class OSExtended(System):
                 self.makedirs(normdir)
                 return True
             except OSError:
+                if fatal: raise
                 return False
         else:
             return True
@@ -409,8 +421,9 @@ class OSExtended(System):
         """
         if type(source) != str or type(destination) != str:
             return self.hybridcp(source, destination)
+        self.stderr(['smartcp', source, destination])
         if not self.path.exists(source):
-            logger.warning('Source does not exist: %s', source)
+            logger.warning('Missing source %s', source)
             return False
         if self.filecocoon(destination):
             if self.remove(destination):

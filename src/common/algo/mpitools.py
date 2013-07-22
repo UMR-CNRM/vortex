@@ -50,3 +50,20 @@ class NecMpiRun(MpiRun):
             e.mpiexport = ','.join(mpix)
             logger.info('MPI export environment %s', e.mpiexport)
 
+
+class MpiAuto(MpiRun):
+    """Standard MPI launcher on most systems."""
+
+    _footprint = dict(
+        attr = dict(
+            mpiname = dict(
+                values = [ 'mpiauto' ],
+            ),
+            mpiopts = dict(
+                default = '--wrap --verbose',
+            ),
+            optprefix = dict(
+                default = '--'
+            )
+        )
+    )

@@ -6,6 +6,7 @@ from vortex.autolog import logdefault as logger
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource
 
+import common.data.modelstates
 from vortex.syntax.stdattrs import a_model, a_date, a_cutoff, cutoff
 from vortex.syntax.cycles import cy37t1_op1, cy37t1_op2, cy38t1
 
@@ -13,26 +14,20 @@ from vortex.syntax.priorities import top
 from vortex.tools.date import Date
 
 
-class Analysis(FlowResource):
+class Analysis(common.data.modelstates.Analysis):
     
     _footprint = dict(
         info = 'Atmospheric Analysis',
         attr = dict(
-            kind = dict(
-                values = [ 'analysis', 'analyse', 'atm_analysis' ]
+            model = dict(
+                values = [ 'robin' ]
             )
         ),
     )
 
     @property
     def realkind(self):
-        return 'analysis'
-
-    def vortex_basename(self):
-        return 'analysis'
-
-    def olive_basename(self):
-        return 'analyse'
+        return 'coucou'
 
 
 class SimpleTest(Resource):

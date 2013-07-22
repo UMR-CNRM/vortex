@@ -420,7 +420,7 @@ class Dispatcher(object):
         Display a complete dump of the footprint resolution tracker.
         Return nothing.
         """
-        info = trackers.tracker(tag='fpresolve').alldump()
+        info = trackers.tracker(tag='fpresolve').dump_all()
         return (0, str(info), None)
 
 

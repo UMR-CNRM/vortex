@@ -74,6 +74,7 @@ class IFSModelParallel(Parallel):
         super(IFSModelParallel, self).prepare(rh, ctx, opts)
         self.export('drhook')
 
+
 class Forecast(IFSModelParallel):
     """Forecast for IFS-like Models."""
 
@@ -95,7 +96,7 @@ class Forecast(IFSModelParallel):
     def prepare(self, rh, ctx, opts):
         """Default pre-link for the initial condition file"""
         super(Forecast, self).prepare(rh, ctx, opts)
-        initrole = 'InitialCondition'
+        initrole = ('InitialCondition', 'Analysis')
         initname = 'ICMSH{0:s}INIT'.format(self.xpname)
         initrh = [ x.rh for x in ctx.sequence.effective_inputs(role=initrole) ]
         if not initrh:
@@ -141,10 +142,12 @@ class LAMForecast(Forecast):
             i=i+1
 
         # Default pre-link for the initial condition file
+        initrole = ('InitialCondition', 'Analysis')
         initname = 'ICMSH{0:s}INIT'.format(self.xpname)
-        initrh = [ x.rh for x in ctx.sequence.effective_inputs(role='InitialCondition') ]
+        initrh = [ x.rh for x in ctx.sequence.effective_inputs(role=initrole) ]
         for l in [ x.container.localpath() for x in initrh ]:
-            self.system.symlink(l, initname)
+            if not self.system.path.exists(initname):
+                self.system.symlink(l, initname)
 
 
 class DFIForecast(LAMForecast):

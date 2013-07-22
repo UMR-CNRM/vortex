@@ -44,6 +44,6 @@ class IFSModel(NWPModel):
                 vmodel, name, conf, timescheme, timestep, fcunit, fcterm, model
             )
         else:
-            return '-v{0:s} -e{1:s} -c{2:d} -a{3:s} -t{4:d} -f{5:s}{6:d}'.format(
+            return '-v{0:s} -e{1:s} -c{2:d} -a{3:s} -t{4:g} -f{5:s}{6:d}'.format(
                 vmodel, name, conf, timescheme, timestep, fcunit, fcterm
             )

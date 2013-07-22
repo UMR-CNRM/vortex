@@ -5,8 +5,9 @@
 __all__ = []
 
 from vortex.data.flow import GeoFlowResource
+from vortex.syntax.stdattrs import a_term
 
-class FSI(GeoFlowResource):
+class ISP(GeoFlowResource):
 
     """
     Class for Forecasted Satellite Image resource.
@@ -27,7 +28,7 @@ class FSI(GeoFlowResource):
 
     @property
     def realkind(self):
-        return 'fsi'
+        return 'isp'
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
@@ -38,7 +39,7 @@ class FSI(GeoFlowResource):
         return 'ISP' + self.model[:4].upper()
 
     def basename_info(self):
-        """Generic information, radical = ``fsi``."""
+        """Generic information, radical = ``isp``."""
         if self.geometry.lam:
             lgeo = [self.geometry.area, self.geometry.rnice]
         else:
@@ -47,7 +48,7 @@ class FSI(GeoFlowResource):
         return dict(
             fmt     = self.nativefmt,
             geo     = lgeo,
-            radical = 'fsi',
+            radical = self.realkind,
             src     = self.model,
         )
 
@@ -71,7 +72,8 @@ class DDH(GeoFlowResource):
            scope = dict(
             values = [ 'limited', 'dlimited', 'global', 'zonal' ],
             remap = dict( limited = 'dlimited' )
-           )
+           ),
+           term = a_term
         )
     )
 
@@ -88,7 +90,7 @@ class DDH(GeoFlowResource):
         return 'DHF{0:s}{0:s}+{0:s}'.format(self.scope[:2].upper(), self.model[:4].upper(), self.term.fmth)
 
     def basename_info(self):
-        """Generic information, radical = ``fsi``."""
+        """Generic information, radical = ``isp``."""
         if self.geometry.lam:
             lgeo = [self.geometry.area, self.geometry.rnice]
         else:
