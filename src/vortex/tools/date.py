@@ -570,6 +570,7 @@ class Month(object):
             args = (datetime.datetime(**kw),)
         if not args:
             raise ValueError("No initial value provided for Month")
+        args = list(args)
         top = args[0]
         self._month = None
         self._year = today().year
@@ -578,12 +579,26 @@ class Month(object):
         elif isinstance(top, int) and top > 0 and top < 13:
             self._month = top
         else:
+            mmod = False
+            if isinstance(top, str):
+                mmod = re.search(':(next|prev)$', top)
+                if mmod:
+                    args[0] = re.sub(':(?:next|prev)$', '', top)
+                    if mmod.group(1) == 'next':
+                        mmod = 1
+                    else:
+                        mmod = -1
+            if len(args) == 2:
+                mmod = args.pop()
             try:
                 tmpdate = Date(*args)
             except (ValueError, TypeError):
                 raise ValueError("Could not create a Month from values provided %s", str(args))
             else:
                 self._month, self._year = tmpdate.month, tmpdate.year
+                if mmod:
+                    mtmp = self + mmod
+                    self._month, self._year = mtmp.month, mtmp.year
 
     @property
     def year(self):
@@ -592,6 +607,14 @@ class Month(object):
     @property
     def month(self):
         return self._month
+
+    def nextmonth(self):
+        """Return the month after the current one."""
+        return self + 1
+
+    def prevmonth(self):
+        """Return the month before the current one."""
+        return self - 1
 
     def __str__(self):
         """Return a two digit value of the current month int value."""

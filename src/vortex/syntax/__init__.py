@@ -14,6 +14,30 @@ from vortex.autolog import logdefault as logger
 from footprint import BFootprint, Footprint
 
 
+def rangex(start, end=None, step=None, shift=None):
+    """Extended range exansion."""
+    sstart = str(start)
+    if re.search('_', sstart):
+        prefix, realstart = sstart.split('_')
+        start = int(realstart)
+    else:
+        prefix = None
+    if end == None:
+        end = start
+    if step == None:
+        step=1
+    if step < 0:
+        end = end - 1
+    else:
+        end = end + 1
+    if shift != None:
+        start = start + shift
+        end = end + shift
+    if prefix:
+        return [ prefix + '_' + str(x) for x in range(start, end, step) ]
+    else:
+        return range(start, end, step)
+
 def inplace(desc, key, value):
     """
     Redefined the ``key`` value in a deep copy of the description ``desc``.
@@ -41,7 +65,7 @@ def expand(desc):
 
     >>> expand({'test': 'alpha', 'niv2': 'x,y,z'})
     [{'test': 'alpha', 'niv2': 'x'}, {'test': 'alpha', 'niv2': 'y'}, {'test': 'alpha', 'niv2': 'z'}]
-    
+
     """
 
     ld = [ desc ]
