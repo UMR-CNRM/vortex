@@ -90,7 +90,7 @@ class Ticket(object):
         self._active = active
         self.config = config
         self.prompt = prompt
-        self.line = "\n" + '-' * 80 + "\n"
+        self.line = "\n" + '-' * 100 + "\n"
         self.started = date.now()
         self.closed = 0
         self.fake = 0

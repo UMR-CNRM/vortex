@@ -213,7 +213,9 @@ class OpArchiveStore(ArchiveStore):
             else:
                 rc = ftp.get(cleanpath, targetpath)
                 ftp.close()
-                if rc and extract:
+                if not rc:
+                    logger.error('FTP could not get file %s', cleanpath)
+                elif extract:
                     if extract == 'all' :
                         rc = system.untar(targetpath, output=False)
                     else:
@@ -251,7 +253,7 @@ class OpCacheStore(CacheStore):
                 default = 'mtool',
             ),
             rootdir = dict(
-                default = 'conf'
+                default = 'auto'
             ),
             headdir = dict(
                 default = 'op',

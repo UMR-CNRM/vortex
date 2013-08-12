@@ -12,7 +12,7 @@ from vortex.syntax.stdattrs import term
 from iga.syntax.stdattrs import archivesuffix
 
 
-class Elscf(GeoFlowResource):
+class LAMBoundary(GeoFlowResource):
     """
     Class of a coupling file for a Limited Area Model. A SpectralGeometry object is needed and the source model is given in the footprint.
     """
@@ -22,9 +22,10 @@ class Elscf(GeoFlowResource):
             info = 'Coupling file for a limited area model',
             attr = dict(
                 kind = dict(
-                    values = [ 'elscf', 'coupled' ],
+                    values = [ 'boundary', 'elscf', 'coupled' ],
                     remap = dict(
-                        coupled = 'elscf'
+                        elscf = 'boundary',
+                        coupled = 'boundary'
                     )
                 ),
                 nativefmt = dict(
@@ -40,7 +41,7 @@ class Elscf(GeoFlowResource):
 
     @property
     def realkind(self):
-        return 'elscf'
+        return 'boundary'
 
     def olive_basename(self):
         """OLIVE specific naming convention."""

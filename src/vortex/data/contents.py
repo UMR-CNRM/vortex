@@ -93,14 +93,14 @@ class IndexedTable(AlmostDictContent):
 
     def add(self, addlist):
         """Insert data according to index position given as the first item of ``addlist``."""
-        for idxinput in addlist:
+        for idxinput in [ x for x in addlist if len(x) > 0 ]:
             i = idxinput.pop(0)
             self._data[self.fmtkey(i)] = idxinput
 
     def slurp(self, container):
         """Get data from the ``container``."""
         container.rewind()
-        self.add([ x.split() for x in container.readlines() ])
+        self.add([ x.split() for x in container.readlines() if not x.startswith('#') ])
 
 
 class DataRaw(DataContent):

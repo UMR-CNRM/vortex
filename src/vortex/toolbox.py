@@ -125,8 +125,8 @@ def pushsection(section, args, kw):
             if verbose:
                 logger.info(' > %s %s ...', doitmethod, rhandler.location())
             ok = getattr(newsections[0], doitmethod)()
-            if verbose:
-                logger.info(' > %s', str(ok))
+            if verbose and not ok:
+                logger.warning(' > Could not %s on %s', doitmethod, rhandler)
         if ok:
             rlok.append(rhandler)
     ctx.record_on()

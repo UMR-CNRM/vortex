@@ -108,7 +108,6 @@ class Analysis(GeoFlowResource):
 
 
 class Historic(GeoFlowResource):
-
     """
     Class for historical state of a model (e.g. from a forecast).
     """
@@ -118,7 +117,10 @@ class Historic(GeoFlowResource):
             info = 'Historic forecast file',
             attr = dict(
                 kind = dict(
-                    values = ['historic']
+                    values = [ 'historic', 'modelstate' ],
+                    remap = dict(
+                        modelstate = 'historic'
+                    )
                 ),
                 nativefmt = dict(
                     values = [ 'fa', 'grib', 'lfi' ],
@@ -169,46 +171,4 @@ class Historic(GeoFlowResource):
             term    = self.term.fmthm,
         )
 
-class Histsurf(GeoFlowResource):
-
-    """
-    Class for historical surface state of a model (using surfex)
-    """
-    _footprint = [
-        term,
-        dict(
-            info = 'Historic surface file',
-            attr = dict(
-                kind = dict(
-                    values = [ 'histsurf']
-                )
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'histsurf'
-
-    def archive_basename(self):
-        return '(surf' + self.term.fmthour + ':inout)' + '.' + self.nativefmt
-
-    def olive_basename(self):
-        """OLIVE specific naming convention."""
-        return '.'.join(('AROMOUT_SURF', self.geometry.area[:4], self.term.fmthour, self.nativefmt))
-
-    def basename_info(self):
-        """Generic information, radical = ``histsurf``."""
-        if self.geometry.lam:
-            lgeo = [self.geometry.area, self.geometry.rnice]
-        else:
-            lgeo = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}]
-
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = lgeo,
-            radical = 'histsurf',
-            src     = self.model,
-            term    = self.term.fmthm,
-        )
 

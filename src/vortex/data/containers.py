@@ -77,7 +77,7 @@ class Container(BFootprint):
             return iod.readlines()
 
     def iodesc(self):
-        """Returns the file object descripteur."""
+        """Returns the file object descriptor."""
         raise NotImplementedError()
 
     def close(self):
@@ -103,7 +103,7 @@ class Virtual(Container):
     )
 
     def iodesc(self):
-        """Returns the file object descripteur."""
+        """Returns the file object descriptor."""
         return self._tmpfile
 
     def close(self):
@@ -177,7 +177,7 @@ class MayFly(Virtual):
 
     def __init__(self, *args, **kw):
         logger.debug('Virtual container init %s', self)
-        super(MayFly, self).__init__(*args, mayfly = True, **kw)
+        super(MayFly, self).__init__(*args, mayfly=True, **kw)
         self._tmpfile = None
 
     @property
@@ -190,8 +190,13 @@ class MayFly(Virtual):
         which is created if not yet defined.
         """
         if not self._tmpfile:
-            self._tmpfile = tempfile.NamedTemporaryFile(prefix=self.prefix, delete=self.delete)
-        return self._tmpfile.name
+            self._tmpfile = tempfile.NamedTemporaryFile(mode='w+b', prefix=self.prefix, delete=self.delete)
+        return self._tmpfile
+
+    def write(self, data):
+        """Rewind and dump the data content in container."""
+        self.rewind()
+        self._tmpfile.write(data)
 
 
 class File(Container):
@@ -221,7 +226,7 @@ class File(Container):
         return self.file
 
     def iodesc(self):
-        """Returns an active (opened) file descripteur in binary read mode by default."""
+        """Returns an active (opened) file descriptor in binary read mode by default."""
         if not self._iod:
             self._iod = io.open(self.localpath(), 'rb')
         return self._iod
@@ -238,6 +243,7 @@ class File(Container):
         with io.open(self.localpath(), 'wb') as fd:
             fd.write(data)
             fd.close()
+
 
 class ContainersCatalog(ClassesCollector):
 

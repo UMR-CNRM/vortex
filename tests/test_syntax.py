@@ -4,7 +4,7 @@
 from copy import deepcopy
 import logging
 from unittest import TestCase, TestLoader, TextTestRunner
-from vortex.syntax import Footprint, BFootprint
+from vortex.syntax import Footprint, BFootprint, rangex
 from vortex.syntax.footprint import MFootprint, UNKNOWN
 from vortex.data.containers import InCore
 
@@ -429,14 +429,36 @@ class UtBFootprint(TestCase):
             for k in guess.keys():
                 self.assertEqual(guess[k], ref_guess[cas][k])
 
+class UtRangex(TestCase):
+
+    def setUp(self):
+        pass
+
+    def test_simple(self):
+        self.assertListEqual(rangex(2),              [2])
+        self.assertListEqual(rangex(2,5),            [2, 3, 4, 5])
+        self.assertListEqual(rangex(7,4,-1),         [4, 5, 6, 7])
+        self.assertListEqual(rangex(-9,-7, shift=2), [-7, -6, -5])
+        self.assertListEqual(rangex(0, 12, 3, 1),    [1, 4, 7, 10, 13])
+
+    def test_minus_syntax(self):
+        self.assertListEqual(rangex('0-30-6,36-72-12'),       [0, 6, 12, 18, 24, 30, 36, 48, 60, 72])
+        self.assertListEqual(rangex('0-30-6,36', 48, 12),     [0, 6, 12, 18, 24, 30, 36, 48])
+        self.assertListEqual(rangex('0-12', step=3, shift=1), [1, 4, 7, 10, 13])
+
+    def test_comma_syntax(self):
+        self.assertListEqual(rangex('0,4', 12, 3, 0), [0, 3, 4, 6, 7, 9, 10, 12])
+
+
+def get_test_class():
+    """docstring for get_test_class"""
+    return [UtFootprint, UtMFootprint, UtBFootprint, UtRangex]
+
 if __name__ == '__main__':
     action = TestLoader().loadTestsFromTestCase
-    tests = [UtFootprint, UtMFootprint, UtBFootprint]
+    tests = get_test_class()
     #tests = [UtBFootprint]
     suites = [action(elmt) for elmt in tests]
     for suite in suites:
         TextTestRunner(verbosity=1).run(suite)
 
-def get_test_class():
-    """docstring for get_test_class"""
-    return [UtFootprint, UtMFootprint, UtBFootprint]

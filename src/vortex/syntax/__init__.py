@@ -16,27 +16,52 @@ from footprint import BFootprint, Footprint
 
 def rangex(start, end=None, step=None, shift=None):
     """Extended range exansion."""
-    sstart = str(start)
-    if re.search('_', sstart):
-        prefix, realstart = sstart.split('_')
-        start = int(realstart)
-    else:
-        prefix = None
-    if end == None:
-        end = start
-    if step == None:
-        step=1
-    if step < 0:
-        end = end - 1
-    else:
-        end = end + 1
-    if shift != None:
-        start = start + shift
-        end = end + shift
-    if prefix:
-        return [ prefix + '_' + str(x) for x in range(start, end, step) ]
-    else:
-        return range(start, end, step)
+    rangevalues = list()
+
+    for pstart in str(start).split(','):
+
+        if re.search('_', pstart):
+            prefix, realstart = pstart.split('_')
+        else:
+            prefix = None
+            realstart = pstart
+        if realstart.startswith('-'):
+            actualrange = [ realstart ]
+        else:
+            actualrange = realstart.split('-')
+        realstart = int(actualrange[0])
+
+        if len(actualrange) > 1:
+            realend = actualrange[1]
+        elif end == None:
+            realend = realstart
+        else:
+            realend = end
+        realend = int(realend)
+
+        if len(actualrange) > 2:
+            realstep = actualrange[2]
+        elif step == None:
+            realstep = 1
+        else:
+            realstep = step
+        realstep = int(realstep)
+
+        if realstep < 0:
+            realend = realend - 1
+        else:
+            realend = realend + 1
+        if shift != None:
+            realshift = int(shift)
+            realstart = realstart + realshift
+            realend = realend + realshift
+
+        pvalues = range(realstart, realend, realstep)
+        if prefix:
+            pvalues = [ prefix + '_' + str(x) for x in pvalues ]
+        rangevalues.extend(pvalues)
+
+    return sorted(set(rangevalues))
 
 def inplace(desc, key, value):
     """

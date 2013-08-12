@@ -4,7 +4,10 @@
 #: No automatic export
 __all__ = []
 
+import re
+
 from common.algo.forecasts import IFSModelParallel
+from vortex.tools import date
 
 
 class Coupling(IFSModelParallel):
@@ -26,34 +29,46 @@ class Coupling(IFSModelParallel):
 
     def prepare(self, rh, ctx, opts):
         """Default pre-link for climatological files"""
-        climfrh = [ x.rh for x in ctx.sequence.effective_inputs(role='Fatherclim', kind='clim_model') ]
-        self.system.symlink(climfrh[0].container.localpath(), 'Const.Clim')
+        super(Coupling, self).prepare(rh, ctx, opts)
+        namrh = self.setlink(ctx, initrole='Namelist', initkind='namelist', initname='fort.4')
+        for nam in [ x for x in namrh if 'NAMFPC' in x.contents ]:
+            self.system.stderr(['Substitute "AREA" to CFPDOM namelist entry'])
+            nam.contents['NAMFPC']['CFPDOM'] = 'AREA'
+            nam.save()
 
-        climsrh = [ x.rh for x in ctx.sequence.effective_inputs(role='Sonclim', kind='clim_model') ]
-        self.system.symlink(climsrh[0].container.localpath(), 'const.clim.AREA')
-
-        """Default pre-link for namelist"""
-        namrh = [ x.rh for x in ctx.sequence.effective_inputs(kind='namelist') ]
-        self.system.symlink(namrh[0].container.localpath(), 'fort.4')
-
-    def execute(self, rh, ctx, kw):
-        """
-        Preparation of the coupling files and call to the execute method of the father
-        """
-        self.system.mkdir('PFFPOS')
-        cplrh = [ x.rh for x in ctx.sequence.effective_inputs(role='Couplingfile', kind='historic') ]
+    def execute(self, rh, ctx, opts):
+        """Loop on the various initial conditions provided."""
+        cplrh = [ x.rh for x in ctx.sequence.effective_inputs(role=('InitialCondition', 'CouplingSource'), kind='historic') ]
         cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
-        i = 0
         for r in cplrh:
-            self.system.symlink(r.container.localpath(), 'ICMSHFPOSINIT')
-            super(Coupling, self).execute(rh, ctx, kw)
-            self.system.mv('PFFPOSAREA+0000', 'PFFPOS/PFFPOSAREA+' + str(r.resource.term) )
-            self.system.mv('NODE.001_01', 'NODE.001_01.' + str(r.resource.term) )
+            # Set a local storage place
+            runstore = 'RUNOUT' + r.resource.term.fmtraw
+            self.system.mkdir(runstore)
+            # Find out actual monthly climatological resource
+            actualmonth = date.Month(r.resource.date + r.resource.term)
+            def checkmonth(actualrh):
+                return bool(actualrh.resource.month == actualmonth)
+            self.system.remove('Const.Clim')
+            self.setlink(ctx, initrole='GlobalClim', initkind='clim_model', initname='Const.Clim', inittest=checkmonth)
+            self.system.remove('const.clim.AREA')
+            self.setlink(ctx, initrole='LocalClim', initkind='clim_model', initname='const.clim.AREA', inittest=checkmonth)
+            # Finaly set the actual init file
             self.system.remove('ICMSHFPOSINIT')
-            i=i+1
+            self.system.softlink(r.container.localpath(), 'ICMSHFPOSINIT')
+            # Standard execution
+            super(Coupling, self).execute(rh, ctx, opts)
+            # Freeze the current output
+            for posfile in [ x for x in self.system.glob('PFFPOSAREA+*') if re.match('PFFPOSAREA\+\d+(?:\d+)$', x) ]:
+                self.system.move(posfile, self.system.path.join(runstore, 'CPLOUT+' + str(r.resource.term.fmthm)))
+            for logfile in self.system.glob('NODE.*', 'std*'):
+                self.system.move(logfile, self.system.path.join(runstore, logfile))
+            # Some cleaning
+            self.system.rmall('PXFPOS*', 'ncf927', 'dirlst')
 
     def postfix(self, rh, ctx, opts):
-        self.system.mvglob('PFFPOS/*', '.')
-        self.system.cat('NODE.001_01.*', ':>>', ':NODE.001')
-        self.system.rmglob('NODE.001_01.*')
-        self.system.rmglob('-rf','PFFPOS')
+        """Post coupling cleaning."""
+        super(Coupling, self).postfix(rh, ctx, opts)
+        self.system.mvglob('RUNOUT*/CPLOUT*', '.')
+        self.system.cat('RUNOUT*/NODE.001_01', output='NODE.all')
+        self.system.dir(output=False)
+

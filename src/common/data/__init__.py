@@ -5,4 +5,4 @@
 __all__ = []
 
 # Recursive inclusion of packages with potential BFootprint classes
-import binaries, boundaries, climfiles, consts, diagnostics, gridfiles, logs, modelstates, namelists, obs
+import binaries, boundaries, climfiles, consts, diagnostics, gridfiles, logs, modelstates, namelists, obs, surfex

@@ -104,7 +104,7 @@ class IgaProvider(Provider):
         #patch pour les couplages
         if (
             "fmt" in info and
-            resource.realkind == 'elscf' and
+            resource.realkind == 'boundary' and
             self.igakey != 'reunion'
         ):
             info['fmt'] = 'fic_day'

@@ -125,12 +125,21 @@ class AlgoComponent(BFootprint):
         self.env = None
         self.system = None
         return self._status
-
+    
+    def quickview(self, nb=0, indent=0):
+        """Standard glance to objects."""
+        tab = '  ' * indent
+        print '{0}{1:02d}. {2:s}'.format(tab, nb, repr(self))
+        for subobj in ( 'kind', 'engine', 'interpreter'):
+            obj = getattr(self, subobj, None)
+            if obj:
+                print '{0}  {1:s}: {2:s}'.format(tab, subobj, obj)
+        print
 
 class Expresso(AlgoComponent):
     """
     Run a script resource in the good environment. Mandatory arguments are:
-     * interpreter (values = bash, perl, python)
+     * interpreter (values = ksh, bash, perl, python)
      * engine ( values =  exec, launch )
     """
 
@@ -145,7 +154,7 @@ class Expresso(AlgoComponent):
         )
     )
 
-    def execute(self, rh, ctx, kw):
+    def execute(self, rh, ctx, opts):
         """
         Run the specified resource handler through the current interpreter,
         using the resource command_line method as args.
@@ -170,7 +179,7 @@ class BlindRun(AlgoComponent):
         )
     )
 
-    def execute(self, rh, ctx, kw):
+    def execute(self, rh, ctx, opts):
         """
         Run the specified resource handler as an absolute executable,
         using the resource command_line method as args.
@@ -203,7 +212,7 @@ class Parallel(AlgoComponent):
         )
     )
 
-    def execute(self, rh, ctx, kw):
+    def execute(self, rh, ctx, opts):
         """
         Run the specified resource handler through the `mitool` launcher,
         using the resource command_line method as args. A named argument `mpiopts`
@@ -223,7 +232,7 @@ class Parallel(AlgoComponent):
         self.system.subtitle('{0:s} : parallel engine'.format(self.realkind))
         print mpi
 
-        mpi.setoptions(self.system, self.env, kw.get('mpiopts', dict()))
+        mpi.setoptions(self.system, self.env, opts.get('mpiopts', dict()))
         mpi.setmaster(self.absexcutable(rh.container.localpath()))
 
         args = mpi.commandline(self.system, self.env, self.spawn_command_line(rh, ctx))
@@ -253,4 +262,8 @@ class AlgoComponentsCatalog(ClassesCollector):
 
 
 cataloginterface(sys.modules.get(__name__), AlgoComponentsCatalog)
+
+if __name__ == '__main__':
+    e = Expresso(engine='exec', interpreter='bash')
+    e.quickview(1, 0)
 

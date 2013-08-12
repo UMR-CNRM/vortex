@@ -96,13 +96,12 @@ def indent(level=0, nextline=True):
         return ""
 
 class Dumper():
+    """
+    Could almost dump anything.
+    """
+
     def __init__(self):
         self.seen = {}
-
-
-    @classmethod
-    def clearcache(cls):
-        _cache = dict()
 
     def reset(self):
         self.seen = {}
@@ -114,10 +113,14 @@ class Dumper():
         else:
             result = "%s::%s <<" % (type(obj).__name__, obj.__class__)
             if hasattr(obj, '__dict__'):
+                if hasattr(obj, 'puredict'):
+                    exploredict = obj.puredict()
+                else:
+                    exploredict = obj.__dict__
                 result = "%s%s__dict__ :: %s" % (
                     result,
                     indent(level+1),
-                    self.dump_dict(obj.__dict__, level+1)
+                    self.dump_dict(exploredict, level+1)
                 )
 
             if isinstance(obj, dict):
@@ -133,7 +136,7 @@ class Dumper():
                     self.dump_list(obj, level+1)
                 )
 
-            result = result = "%s%s>>" % (result, indent(level))
+            result = "%s%s>>" % (result, indent(level))
 
         return result
 

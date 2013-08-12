@@ -467,6 +467,22 @@ class NamelistBlock(object):
         for dk in filter(lambda x: x in self, delta.rmkeys()):
             self.delvar(dk)
 
+class NamelistSet(object):
+
+    def __init__(self, namdict):
+        self._namset = namdict
+
+    def __getattr__(self, attr):
+        return getattr(self._namset, attr)
+
+    def keys(self):
+        return sorted(self._namset.keys())
+
+    def dumps(self):
+        return ''.join([ self._namset[x].dumps() for x in self.keys() ])
+
+    def as_dict(self):
+        return self._namset
 
 class NamelistParser(object):
 
@@ -527,7 +543,7 @@ class NamelistParser(object):
                 namelists.update({namblock.name : namblock})
             else:
                 break
-        return namelists
+        return NamelistSet(namelists)
 
     def _namelist_clean(self, dirty_source):
         """Removes spaces and comments before data."""

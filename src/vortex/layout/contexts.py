@@ -213,11 +213,14 @@ class Context(object):
             logger.warning('Missing stamp %s', stamp)
             return None
         ffinded = self.system.ffind()
+        bkuptrace = self.system.trace
+        self.system.trace = False
         fscheck = dict()
         fscheck['deleted'] = filter(lambda f: f not in ffinded, self._fstore[stamp])
         fscheck['created'] = filter(lambda f: f not in self._fstore[stamp], ffinded)
         stroot = self.system.stat(stamp)
         fscheck['updated'] = filter(lambda f: self.system.stat(f).st_mtime > stroot.st_mtime and f not in fscheck['created'], ffinded)
+        self.system.trace = bkuptrace
         return fscheck
 
     def record_off(self):

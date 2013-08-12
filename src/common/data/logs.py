@@ -30,5 +30,5 @@ class Listing(FlowResource):
         """Generic information, radical = ``listing``."""
         return dict(
             radical = 'listing',
-            src     = self.task,
+            src     = [ self.model, self.task.split('/').pop() ],
         )

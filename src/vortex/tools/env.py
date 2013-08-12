@@ -100,7 +100,7 @@ class Environment(object):
     def osstack(cls):
         """Return a list of the environment binding stack."""
         return cls._os[:]
-        
+
     def dumps(self, value):
         """Dump the specified ``value`` as a string."""
         if isinstance(value, str):
@@ -129,7 +129,9 @@ class Environment(object):
                 actualvalue = json.dumps(value, cls=ShellEncoder)
             os.environ[upvar] = actualvalue
             if self.verbose():
-                logger.info('Export %s="%s"', upvar, actualvalue)
+                if self.osbound() and self._sh:
+                    self._sh.stderr(['export', '{0:s}={1:s}'.format(upvar, actualvalue)])
+                logger.info('Env export %s="%s"', upvar, actualvalue)
 
     def __setitem__(self, varname, value):
         return self.setvar(varname, value)
@@ -241,10 +243,12 @@ class Environment(object):
         else:
             return json.dumps(value, cls=ShellEncoder)
 
-    def verbose(self, switch=None):
+    def verbose(self, switch=None, sh=None):
         """Switch on or off the verbose mode. Returns actual value."""
         if switch != None:
             self.__dict__['_verbose'] = switch
+        if sh:
+            self.__dict__['_sh'] = sh
         return self.__dict__['_verbose']
 
     def active(self, *args):

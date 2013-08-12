@@ -19,7 +19,10 @@ class NamelistContent(AlmostDictContent):
     """Fortran namelist including namelist blocks."""
 
     def __init__(self, **kw):
-        kw.setdefault('macros', dict(NBPROC = None))
+        kw.setdefault('macros', dict(
+            NBPROC=None, NCPROC=None, NDPROC=None,
+            NBPROCIN=None, NBPROCOUT=None
+        ))
         kw.setdefault('remove', set())
         kw.setdefault('parser', None)
         kw.setdefault('automkblock', 0)
@@ -87,7 +90,11 @@ class NamelistContent(AlmostDictContent):
         container.rewind()
         if not self._parser:
             self._parser = NamelistParser(macros=self._macros.keys())
-        self._data = self._parser.parse(container.readall())
+        namset = self._parser.parse(container.readall())
+        if namset:
+            self._data = namset.as_dict()
+        else:
+            raise Exception('Could not parse container contents')
 
     def rewrite(self, container):
         """Write the namelist contents in the specified container."""
@@ -272,7 +279,7 @@ class NamSelect(NamTerm):
              info = 'Select namelist for fullpos ',
              attr = dict(
                 kind = dict(
-                    values = [ 'namselect']
+                    values = [ 'namselect' ]
                 )
             )
         )

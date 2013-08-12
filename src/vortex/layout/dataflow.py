@@ -189,7 +189,7 @@ class Sequence(object):
         if not kw: return inset
         inrole = list()
         inkind = list()
-        if 'role' in kw:
+        if 'role' in kw and kw['role'] != None:
             selectrole = mktuple(kw['role'])
             inrole = [ x for x in inset if x.role in selectrole or x.alternate in selectrole ]
         if not inrole and 'kind' in kw:
@@ -212,7 +212,7 @@ class Sequence(object):
         if not kw: return outset
         outrole = list()
         outkind = list()
-        if 'role' in kw:
+        if 'role' in kw  and kw['role'] != None:
             outrole = [ x for x in outset if x.role == kw['role'] ]
         if not outrole and 'kind' in kw:
             outkind = [ x for x in outset if x.rh.resource.realkind == kw['kind'] ]

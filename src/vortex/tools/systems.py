@@ -69,6 +69,7 @@ class System(BFootprint):
         if 'sh' in kw:
             self._shmod = kw['sh']
             del kw['sh']
+        self.__dict__['prompt'] = ''
         for flag in ( 'trace', ):
             self.__dict__[flag] = kw.setdefault(flag, False)
             del kw[flag]
@@ -161,7 +162,7 @@ class System(BFootprint):
         """Joined args are echoed."""
         print '>>>', ' '.join(args)
 
-    def title(self, text='', tchar='=', autolen=76):
+    def title(self, text='', tchar='=', autolen=96):
         """Formated title output."""
         if autolen:
             nbc = autolen
@@ -169,11 +170,11 @@ class System(BFootprint):
             nbc = len(text)
         print "\n", tchar * ( nbc + 4 )
         if text:
-            print '{0:s} {1:^{size}s} {0:s}'.format(tchar, text.title(), size=nbc)
+            print '{0:s} {1:^{size}s} {0:s}'.format(tchar, text.upper(), size=nbc)
             print tchar * ( nbc + 4 )
         print "\n"
 
-    def subtitle(self, text='', tchar='-', autolen=76):
+    def subtitle(self, text='', tchar='-', autolen=96):
         """Formated subtitle output."""
         if autolen:
             nbc = autolen
@@ -183,6 +184,24 @@ class System(BFootprint):
         if text:
             print '# {0:{size}s} #'.format(text.title(), size=nbc)
             print tchar * ( nbc + 4 )
+
+    def header(self, text='', tchar='-', autolen=False, xline=True, prompt=None):
+        """Formated subtitle output."""
+        if autolen:
+            nbc = len(prompt+text)+1
+        else:
+            nbc = 100
+        print "\n", tchar * nbc
+        if text:
+            if not prompt:
+                prompt = self.prompt
+            if prompt:
+                prompt = str(prompt) + ' '
+            else:
+                prompt = ''
+            print prompt + text
+            if xline:
+                print tchar * nbc
 
     def xperm(self, filename):
         """Return either a file exists and is executable or not."""
@@ -214,18 +233,21 @@ class System(BFootprint):
             fh.close()
         return rc
 
-    def remove(self, filename):
-        """Unlink the specified `filename` object."""
-        if os.path.exists(filename):
-            self.stderr(['remove', filename])
-            self.unlink(filename)
+    def remove(self, objpath):
+        """Unlink the specified object (file or directory)."""
+        if os.path.exists(objpath):
+            self.stderr(['remove', objpath])
+            if os.path.isdir(objpath):
+                self.rmtree(objpath)
+            else:
+                self.unlink(objpath)
         else:
-            self.stderr(['clear', filename])
-        return not os.path.exists(filename)
+            self.stderr(['clear', objpath])
+        return not os.path.exists(objpath)
 
-    def rm(self, filename):
-        """Shortcut to remove."""
-        return self.remove(filename)
+    def rm(self, objpath):
+        """Shortcut to :meth:`remove` method (file or directory)."""
+        return self.remove(objpath)
 
     def ps(self, opts=[], search=None, pscmd=None):
         if not pscmd:
@@ -276,7 +298,7 @@ class System(BFootprint):
                     logger.critical('systems_reload: cannot import module %s (%s)' % (modname, str(err)))
         return extras
 
-    def spawn(self, args, ok=[0], shell=False, output=None):
+    def spawn(self, args, ok=[0], shell=False, output=None, outmode='a'):
         """Subprocess call of ``args``."""
         rc = False
         if output == None:
@@ -284,10 +306,15 @@ class System(BFootprint):
         self.stderr(args)
         p = None
         try:
-            if output:
-                cmdout, cmderr = subprocess.PIPE, subprocess.PIPE
+            if isinstance(output, bool):
+                if output:
+                    cmdout, cmderr = subprocess.PIPE, subprocess.PIPE
+                else:
+                    cmdout, cmderr = None, None
             else:
-                cmdout, cmderr = None, None
+                if isinstance(output, str):
+                    output = open(output, outmode)
+                cmdout, cmderr = output, output
             p = subprocess.Popen(args, stdout=cmdout, stderr=cmderr, shell=shell)
             p.wait()
         except ValueError as perr:
@@ -301,22 +328,25 @@ class System(BFootprint):
             raise RuntimeError, "System %s spawned %s got [%s]" % (self, args, perr.returncode)
         else:
             if p.returncode in ok:
-                if output:
+                if isinstance(output, bool) and output:
                     rc = [ x.rstrip("\n") for x in p.stdout ]
                     p.stdout.close()
                 else:
                     rc = not bool(p.returncode)
             else:
                 logger.warning('Bad return code [%d] for %s', p.returncode, args)
-                if output:
+                if isinstance(output, bool) and output:
                     for xerr in p.stderr:
                         sys.stderr.write(xerr)
                 logger.critical('Unexpected return code %d', p.returncode)
                 raise ExecutionError
         finally:
-            if output and p:
-                p.stdout.close()
-                p.stderr.close()
+            if isinstance(output, bool) and p:
+                if output:
+                    p.stdout.close()
+                    p.stderr.close()
+            else:
+                output.close()
 
         return rc
 
@@ -344,6 +374,14 @@ class OSExtended(System):
         else:
             logger.warning('Could not login on %s as %s', hostname, logname)
             return None
+
+    def softlink(self, source, destination):
+        """Set a symbolic link if source is not destination."""
+        self.stderr(['softlink', source, destination])
+        if source == destination:
+            return False
+        else:
+            return self.symlink(source, destination)
 
     def filecocoon(self, destination):
         """Normalizes path name of the ``destination`` and creates this directory."""
@@ -375,11 +413,15 @@ class OSExtended(System):
     def rawcp(self, source, destination):
         """Internal basic cp command used by :meth:`cp` or :meth:`smartcp`."""
         self.stderr(['rawcp', source, destination])
-        self.copyfile(source, destination)
-        if self._cmpaftercp:
-            return filecmp.cmp(source, destination)
+        if self.path.isdir(source):
+            self.copytree(source, destination)
+            return self.path.isdir(destination)
         else:
-            return bool(self.size(source) == self.size(destination))
+            self.copyfile(source, destination)
+            if self._cmpaftercp:
+                return filecmp.cmp(source, destination)
+            else:
+                return bool(self.size(source) == self.size(destination))
 
     def hybridcp(self, source, destination):
         """
@@ -387,14 +429,14 @@ class OSExtended(System):
         The return value is produced by a raw compare of the two files.
         """
         if type(source) == str:
-            source = io.open(source, 'r')
+            source = io.open(source, 'rb')
             xsource = True
         else:
             xsource = False
         if type(destination) == str:
             if self.filecocoon(destination):
                 if self.remove(destination):
-                    destination = io.open(destination, 'w')
+                    destination = io.open(destination, 'wb')
                     xdestination = True
                 else:
                     logger.error('Could not remove destination before copy %s', destination)
@@ -478,11 +520,11 @@ class OSExtended(System):
         return entries
 
     def rmall(self, *args):
-        """Unlink the specified `args` objects."""
+        """Unlink the specified `args` objects with globbing."""
         rc = True
         for pname in args:
-            for filename in self.glob(pname):
-                rc = self.remove(filename) and rc
+            for objpath in self.glob(pname):
+                rc = self.remove(objpath) and rc
 
     def safepath(self, thispath, safedirs):
         """
@@ -510,10 +552,7 @@ class OSExtended(System):
             pathlist = [ pathlist ]
         for pname in pathlist:
             for entry in filter(lambda x: self.safepath(x, safedirs), self.glob(pname)):
-                if self.path.isdir(entry):
-                    ok = self.rmtree(entry) and ok
-                else:
-                    ok = self.remove(entry) and ok
+                ok = self.remove(entry) and ok
         return ok
 
     def _globcmd(self, cmd, args, **kw):
@@ -609,12 +648,12 @@ class OSExtended(System):
     def tar(self, *args, **kw):
         """Create a file archive (always c-something)'"""
         kw['cx'] = 'c'
-        self._tarcx(*args, **kw)
+        return self._tarcx(*args, **kw)
 
     def untar(self, *args, **kw):
         """Unpack a file archive (always x-something)'"""
         kw['cx'] = 'x'
-        self._tarcx(*args, **kw)
+        return self._tarcx(*args, **kw)
 
 
 class Python26(object):

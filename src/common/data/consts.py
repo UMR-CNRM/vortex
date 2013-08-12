@@ -13,21 +13,19 @@ class RtCoef(ModelResource):
     """
     Class of a tar-zip file of satellite coefficients. A Genvkey can be given.
     """
-    _footprint = [
-        dict(
-            info = 'Set of satellite  coefficients',
-            attr = dict(
-                kind = dict(
-                    values = [ 'rtcoef' ]
-                ),
-                gvar = dict(
-                    type = GenvKey,
-                    optional = True,
-                    default = 'rtcoef_tgz'
-                ),
-            )
+    _footprint = dict(
+        info = 'Set of satellite  coefficients',
+        attr = dict(
+            kind = dict(
+                values = [ 'rtcoef' ]
+            ),
+            gvar = dict(
+                type = GenvKey,
+                optional = True,
+                default = 'rtcoef_tgz'
+            ),
         )
-    ]
+    )
 
     @property
     def realkind(self):
@@ -39,21 +37,19 @@ class RRTM(ModelResource):
     Class of a tar-zip file of coefficients for radiative transferts computations.
     A Genvkey can be given.
     """
-    _footprint = [
-        dict(
-            info = 'Coefficients of RRTM scheme',
-            attr = dict(
-                kind = dict(
-                    values = [ 'rrtm' ]
-                ),
-                gvar = dict(
-                    type = GenvKey,
-                    optional = True,
-                    default = 'rrtm_const'
-                ),
-            )
+    _footprint = dict(
+        info = 'Coefficients of RRTM scheme',
+        attr = dict(
+            kind = dict(
+                values = [ 'rrtm' ]
+            ),
+            gvar = dict(
+                type = GenvKey,
+                optional = True,
+                default = 'rrtm_const'
+            ),
         )
-    ]
+    )
 
     @property
     def realkind(self):
@@ -66,27 +62,25 @@ class MatFilter(StaticResource):
 	as well as the GridGeometry of the scope domain (countaining the filtering used).
 	A GenvKey can be given.
     """
-    _footprint = [
-        dict(
-            info = 'Filtering matrix',
-            attr = dict(
-                model = dict(
-                    optional = True,
-                ),
-                kind = dict(
-                    values = [ 'matfilter' ]
-                ),
-                scope = dict(
-                    type = GridGeometry,
-                ),
-                gvar = dict(
-                    type = GenvKey,
-                    optional = True,
-                    default = 'mat_filter_[scope::area]'
-                )
+    _footprint = dict(
+        info = 'Filtering matrix',
+        attr = dict(
+            model = dict(
+                optional = True,
+            ),
+            kind = dict(
+                values = [ 'matfilter' ]
+            ),
+            scope = dict(
+                type = GridGeometry,
+            ),
+            gvar = dict(
+                type = GenvKey,
+                optional = True,
+                default = 'mat_filter_[scope::area]'
             )
         )
-    ]
+    )
 
     @property
     def realkind(self):

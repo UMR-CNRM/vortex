@@ -111,6 +111,8 @@ class MpiTool(BFootprint):
             if 'NBPROC' in namc.macros():
                 logger.info('Setup NBPROC=%s in %s', nbproc, namrh.container.localpath())
                 namc.setmacro('NBPROC', nbproc)
+                namc.setmacro('NCPROC', nbproc)
+                namc.setmacro('NDPROC', 1)
                 namw = True
             if 'NAMPAR1' in namc:
                 np1 = namc['NAMPAR1']

@@ -35,6 +35,10 @@ class Resource(BFootprint):
     def realkind(self):
         return 'resource'
 
+    @classmethod
+    def classkind(cls):
+        return cls.realkind.fget(cls)
+
     def vortex_pathinfo(self):
         """
         Returns anonymous dict with suitable informations from vortex point of view.
@@ -86,10 +90,10 @@ class Resource(BFootprint):
     def genv_urlquery(self):
         return self.gget_urlquery()
 
-    def contents_handler(self):
+    def contents_handler(self, **kw):
         """Returns class content handler according to attribute ``clscontents``."""
         cclass = self.clscontents
-        return cclass()
+        return cclass(**kw)
 
 
 class Unknown(Resource):
@@ -115,7 +119,7 @@ class ResourcesCatalog(ClassesCollector):
         cat = dict(
             remod = re.compile(r'.*(?:resources|data)'),
             classes = [ Resource ],
-            itementry = 'resource'
+            itementry = 'resource',
         )
         cat.update(kw)
         super(ResourcesCatalog, self).__init__(**cat)

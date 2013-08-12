@@ -242,8 +242,8 @@ def varbc_bnames(resource):
     localname = 'VARBC.cycle' + suffix + '.r' + str(reseau)
     return localname
 
-def elscf_bnames(resource):
-    """docstring for elscf_bnames"""
+def boundary_bnames(resource):
+    """docstring for boundary_bnames"""
     cutoff, reseau, model, term = resource.cutoff, resource.date.hour, resource.model, resource.term
     if 'arome' in model:
         u_prefix, suffix = gribNames(cutoff, reseau, model)

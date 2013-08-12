@@ -15,7 +15,7 @@ import sys, re
 import observers
 from vortex.autolog import logdefault as logger
 from vortex.utilities.dumper import nicedump
-from trackers import tracker
+from trackers import tracker, FactorizedTracker
 
 
 def get_table(_catalogtable=dict()):
@@ -98,6 +98,7 @@ class ClassesCollector(Catalog):
         self.register = True
         self.track = True
         self.autoreport = True
+        self.orderedreport = list()
         self.instances = Catalog()
         super(ClassesCollector, self).__init__(**kw)
 
@@ -155,6 +156,11 @@ class ClassesCollector(Catalog):
             if report and self.track:
                 print "\n", self.track.info()
                 print self.track.dump_last()
+                if self.orderedreport:
+                    ft = FactorizedTracker('classname', *self.orderedreport)
+                    for trdico in self.track.iter_last():
+                        ft.add(**trdico)
+                    ft.dumper()
         return desc
 
     def trackcatnode(self):
