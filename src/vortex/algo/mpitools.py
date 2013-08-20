@@ -12,7 +12,7 @@ __all__ = []
 import re, sys, shlex
 from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
-from vortex.utilities.catalogs import ClassesCollector, cataloginterface
+from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 
 class MpiException(Exception):
@@ -176,4 +176,4 @@ class MpiToolsCatalog(ClassesCollector):
         return 'mpitools'
 
 
-cataloginterface(sys.modules.get(__name__), MpiToolsCatalog)
+build_catalog_functions(sys.modules.get(__name__), MpiToolsCatalog)

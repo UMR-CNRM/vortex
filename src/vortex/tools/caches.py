@@ -15,7 +15,7 @@ import re, sys
 from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.tools.config import GenericConfigParser
-from vortex.utilities.catalogs import ClassesCollector, cataloginterface
+from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 
 class Cache(BFootprint):
@@ -182,4 +182,4 @@ class CachesCatalog(ClassesCollector):
         return 'caches'
 
 
-cataloginterface(sys.modules.get(__name__), CachesCatalog)
+build_catalog_functions(sys.modules.get(__name__), CachesCatalog)

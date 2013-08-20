@@ -63,7 +63,10 @@ class SMSGateway(object):
             args.extend(options)
         else:
             args.append(options)
-        return self._system.spawn(args, output=False)
+        self._env.SMSACTUALPATH = self.binpath()
+        rc = self._system.spawn(args, output=False)
+        del self._env.SMSACTUALPATH
+        return rc
 
     def abort(self, *opts):
         """Gateway to :meth:`child` abort method."""

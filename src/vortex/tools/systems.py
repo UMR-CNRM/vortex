@@ -18,7 +18,7 @@ import subprocess
 from vortex.autolog import logdefault as logger
 from vortex.tools.env import Environment
 from vortex.syntax import BFootprint, priorities
-from vortex.utilities.catalogs import ClassesCollector, cataloginterface
+from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from vortex.tools.net import StdFtp
 
 class ExecutionError(StandardError):
@@ -345,7 +345,7 @@ class System(BFootprint):
                 if output:
                     p.stdout.close()
                     p.stderr.close()
-            else:
+            elif not isinstance(output, bool):
                 output.close()
 
         return rc
@@ -803,4 +803,4 @@ class SystemsCatalog(ClassesCollector):
         return 'systems'
 
 
-cataloginterface(sys.modules.get(__name__), SystemsCatalog)
+build_catalog_functions(sys.modules.get(__name__), SystemsCatalog)

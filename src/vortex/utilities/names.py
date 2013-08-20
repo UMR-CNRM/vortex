@@ -30,8 +30,8 @@ class VNameBuilder(object):
     
     def setdefault(self, **kw):
         self.default.update(kw)
-    
-    def dumpinfp(self):
+
+    def dumpshortcut(self):
         """Nicely formated view of the current class in dump context."""
         return "{0:s}.{1:s}({2:s})".format(self.__module__, self.__class__.__name__, str(self.default))
 
@@ -42,7 +42,7 @@ class VNameBuilder(object):
         components = dict()
         components.update(self.default)
         components.update(d)
-        
+
         packstyle = getattr(self, 'pack_' + components.get('style', 'std'), self.pack_std)
         return packstyle(components)
 

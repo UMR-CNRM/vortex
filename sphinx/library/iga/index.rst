@@ -16,3 +16,4 @@ List of modules.
    data/index
    syntax/index
    tools/index
+   utilities/index

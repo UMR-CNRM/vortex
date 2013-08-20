@@ -15,7 +15,7 @@ from vortex.data import resources, containers, providers, stores
 from vortex.algo import components
 from vortex.tools import caches, targets
 from vortex.layout.dataflow import stripargs_section
-from vortex.utilities.dumper import nicedump
+from vortex.utilities.dumper import light_dict_dumper
 
 #: Shortcut to footprint env defaults
 defaults = syntax.footprint.envfp
@@ -109,9 +109,9 @@ def pushsection(section, args, kw):
     opts, kwclean = stripargs_section(**kw)
     if verbose > 1:
         print 'New {0:s} section, options:'.format(section)
-        print nicedump(opts)
+        print light_dict_dumper(opts)
         print 'Loading resource handler(s), arguments:'
-        print nicedump(kwclean), "\n"
+        print light_dict_dumper(kwclean), "\n"
     rl = rload(*args, **kwclean)
     rlok = list()
     push = getattr(ctx.sequence, section)

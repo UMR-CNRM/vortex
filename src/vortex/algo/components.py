@@ -11,7 +11,7 @@ import shlex
 import vortex
 from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
-from vortex.utilities.catalogs import ClassesCollector, cataloginterface
+from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from vortex.tools import targets
 from vortex.algo import mpitools
 
@@ -261,7 +261,7 @@ class AlgoComponentsCatalog(ClassesCollector):
         return 'components'
 
 
-cataloginterface(sys.modules.get(__name__), AlgoComponentsCatalog)
+build_catalog_functions(sys.modules.get(__name__), AlgoComponentsCatalog)
 
 if __name__ == '__main__':
     e = Expresso(engine='exec', interpreter='bash')

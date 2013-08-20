@@ -8,7 +8,7 @@ __all__ = []
 import sys, re
 from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
-from vortex.utilities.catalogs import ClassesCollector, cataloginterface
+from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from vortex.tools.env import Environment
 
 
@@ -194,4 +194,4 @@ class GlovesCatalog(ClassesCollector):
         return 'gloves'
 
 
-cataloginterface(sys.modules.get(__name__), GlovesCatalog)
+build_catalog_functions(sys.modules.get(__name__), GlovesCatalog)

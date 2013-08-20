@@ -17,7 +17,7 @@ from vortex.syntax import BFootprint
 from vortex.syntax.priorities import top
 from vortex.layout import dataflow
 from vortex.tools import config, caches
-from vortex.utilities.catalogs import ClassesCollector, cataloginterface
+from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 
 class StoreGlue(object):
@@ -29,7 +29,7 @@ class StoreGlue(object):
         self._asdict = None
         self._cross = dict()
 
-    def dumpinfp(self):
+    def dumpshortcut(self):
         """Return a nicely formated class name for dump in footprint."""
         return "{0:s}.{1:s}('{2:s}')".format(self.__module__, self.__class__.__name__, str(self.gluemap))
 
@@ -734,5 +734,5 @@ class StoresCatalog(ClassesCollector):
         return 'stores'
 
 
-cataloginterface(sys.modules.get(__name__), StoresCatalog)
+build_catalog_functions(sys.modules.get(__name__), StoresCatalog)
 

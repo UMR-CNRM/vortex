@@ -10,7 +10,7 @@ import re, sys, os.path
 import vortex  # @UnusedImport
 from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
-from vortex.utilities.catalogs import ClassesCollector, cataloginterface
+from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from vortex.utilities.names import VNameBuilder
 from vortex.tools import net
 
@@ -36,6 +36,13 @@ class Provider(BFootprint):
     def __init__(self, *args, **kw):
         logger.debug('Abstract provider init %s', self.__class__)
         super(Provider, self).__init__(*args, **kw)
+
+    def strinfo(self):
+        """Nicely formatted print."""
+        try:
+            return 'namespace=\'{0:s}\''.format(self.namespace)
+        except AttributeError:
+            return super(Provider, self).strinfo()
 
     @property
     def realkind(self):
@@ -154,6 +161,10 @@ class Remote(Provider):
     def realkind(self):
         return 'remote'
 
+    def strinfo(self):
+        """Nicely formatted print."""
+        return 'path=\'{0:s}\''.format(self.remote)
+
     def scheme(self):
         """The Remote scheme is its tube."""
         return self.tube
@@ -264,4 +275,4 @@ class ProvidersCatalog(ClassesCollector):
         return 'providers'
 
 
-cataloginterface(sys.modules.get(__name__), ProvidersCatalog)
+build_catalog_functions(sys.modules.get(__name__), ProvidersCatalog)

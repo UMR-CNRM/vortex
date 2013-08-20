@@ -17,7 +17,7 @@ Package
 Classes
 -------
  
-.. autoclass:: Elscf
+.. autoclass:: LAMBoundary
    :show-inheritance:
    :members:
    :member-order: alphabetical

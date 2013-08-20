@@ -4,11 +4,11 @@
 #: No automatic export
 __all__ = [ 'Container' ]
 
-import re, sys, io
+import re, sys, io, os
 import tempfile
 from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
-from vortex.utilities.catalogs import ClassesCollector, cataloginterface
+from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 
 class Container(BFootprint):
@@ -148,6 +148,17 @@ class InCore(Virtual):
     def realkind(self):
         return 'incore'
 
+    def strinfo(self):
+        """Nicely formatted print."""
+        if self._tmpfile:
+            if self._tmpfile._rolled:
+                actualfile = self._tmpfile.name
+            else:
+                actualfile = 'MemoryResident'
+        else:
+            actualfile = 'NotSpooled'
+        return 'maxsize={0:d} tmpfile={1:s}'.format(self.maxsize, actualfile)
+
     def localpath(self):
         """
         Returns the actual name of the spooled temporary file object
@@ -184,6 +195,14 @@ class MayFly(Virtual):
     def realkind(self):
         return 'mayfly'
 
+    def strinfo(self):
+        """Nicely formatted print."""
+        if self._tmpfile:
+            actualfile = "'" + self._tmpfile.name + "'"
+        else:
+            actualfile = 'NotDefined'
+        return 'delete={0:s} tmpfile={1:s}'.format(str(self.delete), actualfile)
+
     def localpath(self):
         """
         Returns the actual name of the temporary file object
@@ -208,6 +227,11 @@ class File(Container):
         attr = dict(
             file = dict(
                 alias = ('filepath', 'filename', 'filedir', 'local')
+            ),
+            cwdtied = dict(
+                optional = True,
+                type = bool,
+                default = False,
             )
         )
     )
@@ -216,19 +240,29 @@ class File(Container):
         logger.debug('File container init %s', self)
         super(File, self).__init__(*args, **kw)
         self._iod = None
+        if self.cwdtied:
+            self._actualpath = os.path.realpath(self.file)
+        else:
+            self._actualpath = self.file
 
     @property
     def realkind(self):
         return 'file'
 
+    def strinfo(self):
+        """Nicely formatted print."""
+        return 'path=\'{0:s}\''.format(self._actualpath)
+
     def localpath(self):
         """Returns the actual name of the file object."""
-        return self.file
+        return self._actualpath
 
     def iodesc(self):
         """Returns an active (opened) file descriptor in binary read mode by default."""
         if not self._iod:
-            self._iod = io.open(self.localpath(), 'rb')
+            if not self.cwdtied:
+                self._actualpath = os.path.realpath(self.file)
+            self._iod = io.open(self._actualpath, 'rb')
         return self._iod
 
     def close(self):
@@ -261,5 +295,5 @@ class ContainersCatalog(ClassesCollector):
     def tablekey(cls):
         return 'containers'
 
-cataloginterface(sys.modules.get(__name__), ContainersCatalog)
+build_catalog_functions(sys.modules.get(__name__), ContainersCatalog)
 

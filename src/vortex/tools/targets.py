@@ -15,7 +15,7 @@ import re, sys, platform
 from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.tools.config import GenericConfigParser
-from vortex.utilities.catalogs import ClassesCollector, cataloginterface
+from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 
 class Target(BFootprint):
@@ -104,4 +104,4 @@ class TargetsCatalog(ClassesCollector):
         return 'targets'
 
 
-cataloginterface(sys.modules.get(__name__), TargetsCatalog)
+build_catalog_functions(sys.modules.get(__name__), TargetsCatalog)

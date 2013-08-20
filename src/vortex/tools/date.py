@@ -337,6 +337,10 @@ class Date(datetime.datetime):
     def __str__(self):
         return self.iso8601()
 
+    def dumpshortcut(self):
+        """Nicely formatted representation in dumper."""
+        return self.__repr__()
+
     @property
     def julian(self):
         """Returns Julian day."""
@@ -495,6 +499,10 @@ class Time(object):
         """Standard hour-minute representation."""
         return 'Time({0:d}, {1:d})'.format(self.hour, self.minute)
 
+    def dumpshortcut(self):
+        """Nicely formatted representation in dumper."""
+        return self.__repr__()
+
     def __str__(self):
         """Standard hour-minute string."""
         return '{0:02d}:{1:02d}'.format(self.hour, self.minute)
@@ -622,7 +630,11 @@ class Month(object):
 
     def __repr__(self):
         """Return a formated id of the current month."""
-        return '<{0:s} object = {1:02d} in year {2:d}>'.format(self.__class__.__name__, self._month, self._year)
+        return '{0:s}({1:02d}, year={2:d})'.format(self.__class__.__name__, self._month, self._year)
+
+    def dumpshortcut(self):
+        """Nicely formatted representation in dumper."""
+        return self.__repr__()
 
     def __add__(self, delta):
         """

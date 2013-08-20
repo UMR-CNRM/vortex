@@ -20,7 +20,7 @@ class Jacket(object):
             self.virtual = True
         self._initfile = afile
 
-    def dumpinfp(self):
+    def dumpshortcut(self):
         return "{0:s}.{1:s}(file={2:s})".format(
             self.__module__,
             self.__class__.__name__,

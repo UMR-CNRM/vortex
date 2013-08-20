@@ -8,7 +8,7 @@ import re, sys
 from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.syntax.stdattrs import a_nativefmt
-from vortex.utilities.catalogs import ClassesCollector, cataloginterface
+from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from contents import DataContent, DataRaw
 
 
@@ -38,6 +38,13 @@ class Resource(BFootprint):
     @classmethod
     def classkind(cls):
         return cls.realkind.fget(cls)
+
+    def strinfo(self):
+        """Return a string representation of all attributes but ``kind`` for formatted output."""
+        d = self.puredict()
+        for xdel in [ x for x in ('kind', 'unknown') if x in d ]:
+            del d[xdel]
+        return ' '.join([ '{0:s}=\'{1:s}\''.format(k, str(v)) for k, v in d.items() ])
 
     def vortex_pathinfo(self):
         """
@@ -129,4 +136,4 @@ class ResourcesCatalog(ClassesCollector):
         """The entry used in the global catalogs table, eg: ``resources``."""
         return 'resources'
 
-cataloginterface(sys.modules.get(__name__), ResourcesCatalog)
+build_catalog_functions(sys.modules.get(__name__), ResourcesCatalog)

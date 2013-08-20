@@ -10,7 +10,7 @@ The most important usage is done by :class:`BFootprint` derivated objects.
 __all__ = []
 
 #: Activate nice dump of footprint in docstring
-docstring_nicedump = False
+docstring_nicedump = True
 
 #: Stop footprint resolution on first undef value
 fast_resolve = False
@@ -485,6 +485,17 @@ class BFootprint(object):
     def shellexport(self):
         """See the current footprint as a pure dictionary when exported."""
         return self.puredict()
+
+    def strinfo(self):
+        """Default information to be combined in str output."""
+        return 'object at ' + hex(id(self))
+
+    def __str__(self):
+        """
+        Basic layout for nicely formatted print, built as the concatenation
+        of the class full name and some :meth:`strinfo` additional information.
+        """
+        return '<{0:s} | {1:s}>'.format(self.fullname(), self.strinfo())
 
     @property
     def info(self):

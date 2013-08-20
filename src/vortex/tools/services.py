@@ -24,7 +24,7 @@ from email.utils import COMMASPACE
 from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
 from vortex.syntax.stdattrs import FPList
-from vortex.utilities.catalogs import ClassesCollector, cataloginterface
+from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 criticals = [ 'debug', 'info', 'error', 'warning', 'critical' ]
 
@@ -230,5 +230,5 @@ class ServicesCatalog(ClassesCollector):
         return 'services'
 
 
-cataloginterface(sys.modules.get(__name__), ServicesCatalog)
+build_catalog_functions(sys.modules.get(__name__), ServicesCatalog)
 

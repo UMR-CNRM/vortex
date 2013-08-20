@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-r"""
+"""
 Functions and tools to handle resources names or other kind of names.
 """
 
@@ -144,8 +144,7 @@ def clim_bdap_bnames(resource):
             resolution = "025"
         if "caled" in resource.geometry.area:
             igadomain = "caled"
-        localname = 'clim_dap' + "." + igadomain + resolution + '.m' +\
-str(resource.month)
+        localname = 'clim_dap' + "." + igadomain + resolution + '.m' + str(resource.month)
     else:
         localname = 'const.clim.' + resource.geometry.area + '_m' + str(resource.month)
     return localname

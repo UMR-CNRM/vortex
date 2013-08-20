@@ -223,11 +223,12 @@ class ClassesCollector(Catalog):
         return topcl(topr, checked=True)
 
 
-def cataloginterface(xmodule, xclass):
+def build_catalog_functions(xmodule, xclass):
     """
     Implements in the specified module ``xmodule`` references to tuned functions:
     * catalog
     * pickup
+    * default
     * load
     according to the proper base ``xclass`` class given as second argument.
     """

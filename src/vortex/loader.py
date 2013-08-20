@@ -22,7 +22,7 @@ class VortexImporter(object):
         self._import_prefix.add(package)
 
     def unregister(self, package):
-        """Discard a prefix package nam to the current set."""
+        """Discard a prefix package nam from the current set."""
         self._import_prefix.discard(package)
 
     @property

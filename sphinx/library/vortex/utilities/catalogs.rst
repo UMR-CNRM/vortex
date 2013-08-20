@@ -11,7 +11,7 @@
 Interface
 ---------
 
-.. autofunction:: cataloginterface
+.. autofunction:: build_catalog_functions
 
 
 Base Catalog

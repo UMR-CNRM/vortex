@@ -230,9 +230,9 @@ class Dumper():
         if self.seen.has_key(id(obj)):
             return self.seen[id(obj)]
 
-        if is_instance(obj) and hasattr(obj, 'dumpinfp'):
-            DEBUG('dump in fp', obj)
-            self.seen[id(obj)] = obj.dumpinfp()
+        if is_instance(obj) and hasattr(obj, 'dumpshortcut'):
+            DEBUG('dump shortcut', obj)
+            self.seen[id(obj)] = obj.dumpshortcut()
             return self.seen[id(obj)]
 
         if is_class(obj):
@@ -255,3 +255,15 @@ def nicedump(obj):
 
 def xxxxdump(obj):
     return str(obj)
+
+def light_dict_dumper(obj, break_before_dict_key=True, break_before_dict_value=False):
+    """Have a quick glance to an assumed 1-depth dictionary."""
+    DEBUG('dump_dict', obj)
+    items = [
+        "%s = %s%s," % (
+            str(k),
+            indent(1, break_before_dict_value),
+            str(v)
+        ) for k, v in sorted(obj.items())
+    ]
+    return indent(0, break_before_dict_key).join(items)
