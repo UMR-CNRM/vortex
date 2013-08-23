@@ -260,10 +260,11 @@ def light_dict_dumper(obj, break_before_dict_key=True, break_before_dict_value=F
     """Have a quick glance to an assumed 1-depth dictionary."""
     DEBUG('dump_dict', obj)
     items = [
-        "%s = %s%s," % (
+        "%s%s = %s%s," % (
+            indent(0, break_before_dict_key),
             str(k),
             indent(1, break_before_dict_value),
             str(v)
         ) for k, v in sorted(obj.items())
     ]
-    return indent(0, break_before_dict_key).join(items)
+    return ''.join(items)

@@ -37,12 +37,12 @@ class Provider(BFootprint):
         logger.debug('Abstract provider init %s', self.__class__)
         super(Provider, self).__init__(*args, **kw)
 
-    def strinfo(self):
-        """Nicely formatted print."""
+    def addrepr(self):
+        """Additional information to internal representation."""
         try:
-            return 'namespace=\'{0:s}\''.format(self.namespace)
+            return '| namespace=\'{0:s}\''.format(self.namespace)
         except AttributeError:
-            return super(Provider, self).strinfo()
+            return super(Provider, self).addrepr()
 
     @property
     def realkind(self):
@@ -161,9 +161,9 @@ class Remote(Provider):
     def realkind(self):
         return 'remote'
 
-    def strinfo(self):
-        """Nicely formatted print."""
-        return 'path=\'{0:s}\''.format(self.remote)
+    def addrepr(self):
+        """Additional information to internal representation."""
+        return '| path=\'{0:s}\''.format(self.remote)
 
     def scheme(self):
         """The Remote scheme is its tube."""

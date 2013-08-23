@@ -1,0 +1,144 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import inspect
+
+import re
+istrue = re.compile('on|true|ok', re.IGNORECASE)
+isfalse = re.compile('off|false|ko', re.IGNORECASE)
+
+import sys
+opts = dict(
+    verbose = 'on',
+    mkrst = 'off',
+)
+opts.update( dict([ x.split('=') for x in sys.argv[1:] ]) )
+for k, v in opts.iteritems():
+    if istrue.match(v):
+        opts[k] = True
+    if isfalse.match(v):
+        opts[k] = False
+
+import vortex
+sh = vortex.sh()
+g = vortex.sessions.glove()
+print '=' * 80
+print 'Checking vortex', vortex.__version__, 'library documentation'
+print ' > Options:', opts
+
+
+def rstfile(modpath):
+    subpath = re.sub(g.sitesrc, '', modpath)
+    subpath = re.sub('.py', '', subpath)
+    subpath = subpath.split('/')
+    if subpath[-1] == '__init__':
+        subpath[-1] = subpath[-2]
+    subpath[-1] += '.rst'
+
+    if subpath[1] == 'vortex' and len(subpath) == 3:
+        subpath[2:2] = [ 'kernel' ]
+    subpath[1:1] = [ 'library' ]
+    return g.sitedoc + '/'.join(subpath)
+
+def rstshort(filename):
+    return re.sub(g.siteroot, '', filename)[1:]
+
+def rstcreate(rstf, mname, m):
+    print ' > Creating', rstf
+    header = ':mod:`' + modname + '` --- TODO Module Header'
+    newdoc = [
+        header,
+        '=' * len(header),
+        '',
+        '.. automodule:: '  + modname,
+        '   :synopsis: TODO Module Synopsis',
+        '',
+        '.. moduleauthor:: The Vortex Team',
+        '.. sectionauthor:: The Vortex Team',
+        '.. versionadded:: 0.7',
+        '',
+        'Package',
+        '-------',
+        '',
+        '.. autodata:: __all__',
+        '',
+        'Classes',
+        '-------',
+        ''
+    ]
+    with open(rstf, 'w') as fdoc:
+        for docline in newdoc:
+            fdoc.write(docline + "\n")
+            if opts['verbose']:
+                print docline
+    return sh.path.exists(rstf) and sh.size(rstf) > 100
+
+def rstfind(pattern, lines):
+    return bool([x for x in lines if re.search(pattern, x) ])
+
+def getrealmembers(m):
+    objs = dict()
+    for x, y in inspect.getmembers(m):
+        if inspect.isclass(y) or inspect.isfunction(y) or inspect.ismethod(y):
+            try:
+                if m.__file__ == inspect.getsourcefile(y):
+                    if opts['verbose']: print x, y
+                    objs[x] = y
+            except TypeError:
+                pass
+    return objs
+
+report = dict(
+    mkrst = list(),
+    todo = list(),
+    quid = list(),
+    nope = list(),
+    miss = list(),
+)
+
+print '=' * 80
+print 'MODULES REVIEW'
+
+for modname, loaded in sh.loaded_modules():
+    print '---'
+    if not loaded:
+        sh.import_module(modname)
+    m = sys.modules[modname]
+    rst = rstfile(m.__file__)
+    rstloc = rstshort(rst)
+    okdoc = sh.path.exists(rst)
+    print modname, '(', 'loaded:', loaded, '/', 'doc:', okdoc, ')'
+
+    if opts['verbose']:
+        print ' >', m.__file__
+        print ' >', rst
+
+    if not okdoc:
+        if opts['mkrst']:
+            report['mkrst'].append(rstloc)
+            okdoc = rstcreate(rst, modname, m)
+
+    if okdoc:
+        rstinfo = list()
+        with open(rst, 'r') as fdrst:
+            rstinfo = fdrst.readlines()
+        if rstfind('TODO', rstinfo):
+            report['todo'].append(rstloc)
+    else:
+        report['nope'].append(rstloc)
+
+    mobjs = getrealmembers(m)
+    for objname, objptr in mobjs.iteritems():
+        thedoc = inspect.getdoc(objptr)
+        if not thedoc:
+            report['miss'].append(modname + ': ' + objname)
+        elif re.search('docstring|todo', thedoc, re.IGNORECASE):
+            report['quid'].append(modname + ': ' + objname)
+
+
+
+for k, v in sorted(report.iteritems()):
+    print '=' * 80
+    print 'REPORT /', k, '(', len(v), ')'
+    for reportrst in v:
+        print ' >', reportrst

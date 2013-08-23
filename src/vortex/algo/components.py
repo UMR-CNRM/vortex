@@ -16,9 +16,7 @@ from vortex.tools import targets
 from vortex.algo import mpitools
 
 class AlgoComponent(BFootprint):
-    """
-    Component in charge of running executable resources.
-    """
+    """Component in charge of running executable resources."""
 
     _footprint = dict(
         info = 'Abstract algo component',
@@ -28,6 +26,11 @@ class AlgoComponent(BFootprint):
             )
         )
     )
+
+    def __init__(self, *args, **kw):
+        logger.debug('Algo component init %s', self)
+        self.fslog = list()
+        super(AlgoComponent, self).__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -44,7 +47,7 @@ class AlgoComponent(BFootprint):
 
     def fscheck(self, ctx, opts):
         """Ask the current context to check changes on file system since last stamp."""
-        self.fslog = ctx.fstrack_check(tag=self.fstag())
+        self.fslog.append( ctx.fstrack_check(tag=self.fstag()) )
 
     def export(self, packenv):
         """Export environment variables in given pack."""
@@ -103,6 +106,10 @@ class AlgoComponent(BFootprint):
         """Abstract method."""
         pass
 
+    def dumplog(self, ctx, opts):
+        """Dump to local file the internal log of the current algo component."""
+        self.system.pickle_dump(self.fslog, 'log.' + self.fstag())
+
     def valid_executable(self, rh):
         return True
 
@@ -122,6 +129,7 @@ class AlgoComponent(BFootprint):
         self.execute(rh, ctx, kw)
         self.fscheck(ctx, kw)
         self.postfix(rh, ctx, kw)
+        self.dumplog(ctx, kw)
         self.env = None
         self.system = None
         return self._status
@@ -133,7 +141,7 @@ class AlgoComponent(BFootprint):
         for subobj in ( 'kind', 'engine', 'interpreter'):
             obj = getattr(self, subobj, None)
             if obj:
-                print '{0}  {1:s}: {2:s}'.format(tab, subobj, obj)
+                print '{0}  {1:s}: {2:s}'.format(tab, subobj, str(obj))
         print
 
 class Expresso(AlgoComponent):

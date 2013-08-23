@@ -46,6 +46,8 @@ class Glove(BFootprint):
         self._rmdepthmin = 3
         self._siteroot = None
         self._siteconf = None
+        self._sitedoc = None
+        self._sitesrc = None
 
     @property
     def realkind(self):
@@ -70,6 +72,20 @@ class Glove(BFootprint):
         if not self._siteconf:
             self._siteconf = '/'.join((self.siteroot, 'conf'))
         return self._siteconf
+
+    @property
+    def sitedoc(self):
+        """Returns the path of the default directory where ``.ini`` files are stored."""
+        if not self._sitedoc:
+            self._sitedoc = '/'.join((self.siteroot, 'sphinx'))
+        return self._sitedoc
+
+    @property
+    def sitesrc(self):
+        """Returns the path of the default directory where ``.ini`` files are stored."""
+        if not self._sitesrc:
+            self._sitesrc = '/'.join((self.siteroot, 'src'))
+        return self._sitesrc
 
     def setvapp(self, app=None):
         """Change the default vortex application name."""

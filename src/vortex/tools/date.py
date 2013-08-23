@@ -69,9 +69,21 @@ def mkisodate(datestr):
     return ''.join(l)
 
 def today():
-    """Return current date, hours, minutes."""
+    """Return current date, at 0 hour, 0 minute."""
     td = datetime.datetime.today()
     return Date(datetime.datetime(td.year, td.month, td.day, 0, 0))
+
+def yesterday(base=None):
+    """Return date of yesterday (relative to today or specified ``base`` date)."""
+    if not base:
+        base = today()
+    return base - Period(days=1)
+
+def tomorrow(base=None):
+    """Return date of tomorrow (relative to today or specified ``base`` date)."""
+    if not base:
+        base = today()
+    return base + Period(days=1)
 
 def now():
     """Return current date, hours, minutes and seconds."""
@@ -379,6 +391,10 @@ class Date(datetime.datetime):
             delta = Period(delta)
         return Date(super(Date, self).__add__(datetime.timedelta(delta.days, delta.seconds)))
 
+    def __radd__(self, delta):
+        """Commutative add."""
+        return self.__add__(delta)
+
     def __sub__(self, delta):
         """
         Substract to a Date object the specified ``delta`` which could be either
@@ -530,6 +546,10 @@ class Time(object):
         hour, minute = hour + int(minute/60), minute % 60
         return Time(hour, minute)
 
+    def __radd__(self, delta):
+        """Commutative add."""
+        return self.__add__(delta)
+
     def __sub__(self, delta):
         """
         Add to a Date object the specified ``delta`` which could be either
@@ -582,10 +602,12 @@ class Month(object):
         top = args[0]
         self._month = None
         self._year = today().year
-        if isinstance(top, datetime.datetime):
+        if isinstance(top, datetime.datetime) or isinstance(top, Month):
             self._month, self._year = top.month, top.year
         elif isinstance(top, int) and top > 0 and top < 13:
             self._month = top
+            if len(args) == 2:
+                self._year = int(args[1])
         else:
             mmod = False
             if isinstance(top, str):
@@ -601,7 +623,7 @@ class Month(object):
             try:
                 tmpdate = Date(*args)
             except (ValueError, TypeError):
-                raise ValueError("Could not create a Month from values provided %s", str(args))
+                raise ValueError('Could not create a Month from values provided %s', str(args))
             else:
                 self._month, self._year = tmpdate.month, tmpdate.year
                 if mmod:
@@ -615,6 +637,14 @@ class Month(object):
     @property
     def month(self):
         return self._month
+
+    @property
+    def fmtym(self):
+        return '{0:04d}-{1:02d}'.format(self._year, self._month)
+
+    @property
+    def fmtraw(self):
+        return '{0:04d}{1:02d}'.format(self._year, self._month)
 
     def nextmonth(self):
         """Return the month after the current one."""
@@ -662,6 +692,10 @@ class Month(object):
             delta = Period(delta)
         return Month(Date(self._year, self._month, 14) + delta)
 
+    def __radd__(self, delta):
+        """Commutative add."""
+        return self.__add__(delta)
+
     def __sub__(self, delta):
         """
         Substract to a Date object the specified ``delta`` which could be either
@@ -678,18 +712,21 @@ class Month(object):
         return self._month
 
     def __cmp__(self, other):
-        """
-        Compare two month values.
-        """
+        """Compare two month values."""
         try:
-            rc = cmp(self._month, int(other))
+            if isinstance(other, int) or ( isinstance(other, str) and len(other.lstrip('0')) < 3 ):
+                rc = cmp(self.month, Month(int(other), self.year).month)
+            elif isinstance(other, tuple) or isinstance(other, list):
+                rc = cmp(self.fmtym, Month(*other).fmtym)
+            else:
+                rc = cmp(self.fmtym, Month(other).fmtym)
         except:
-            rc = -1
+            rc = 1
         finally:
             return rc
 
 def easter (year):
-    """ return the Date for easter of the given year
+    """Return the Date for easter of the given year
     >>> dates = [2013, 2014, 2015, 2016, 2017, 2018]
     >>> [easter(d).ymd for d in dates]
     ['20130331', '20140420', '20150405', '20160327', '20170416', '20180401']
@@ -702,7 +739,7 @@ def easter (year):
     L = I - J
     month = 3 + (L + 40) / 44
     day = L + 28 - 31 * (month / 4)
-    return Date (year, month, day)
+    return Date(year, month, day)
 
 
 if __name__ == '__main__':

@@ -16,6 +16,9 @@ class IFSModelParallel(Parallel):
     _abstract = True
     _footprint = dict(
         attr = dict(
+            kind = dict(
+                default = 'ifsrun',
+            ),
             conf = dict(
                 optional = True,
             ),
@@ -54,13 +57,19 @@ class IFSModelParallel(Parallel):
         )
     )
 
+    def fstag(self):
+        """Extend default tag with ``kind`` value."""
+        return super(IFSModelParallel, self).fstag + '.' + self.kind
+
     def valid_executable(self, rh):
+        """Be sure that the specifed executable is ifsmodel compatible."""
         try:
             return bool(rh.resource.realkind == 'ifsmodel')
         except:
             return False
 
     def spawn_command_options(self):
+        """Dictionary provided for command line factory."""
         return dict(
             name       = (self.xpname + 'xxxx')[:4].upper(),
             timescheme = self.timescheme,
@@ -130,10 +139,15 @@ class LAMForecast(Forecast):
                     lamforecast = 'lamfc'
                 )
             ),
+            synctool = dict(
+                optional = True,
+                default = None,
+            )
         )
     )
 
     def spawn_command_options(self):
+        """Dictionary provided for command line factory."""
         return dict(
             name       = (self.xpname+'xxxx')[:4].upper(),
             timescheme = self.timescheme,
@@ -146,6 +160,9 @@ class LAMForecast(Forecast):
     def prepare(self, rh, ctx, opts):
         """Default pre-link for boundary conditions files."""
         super(LAMForecast, self).prepare(rh, ctx, opts)
+        if self.synctool:
+            self.system.cp(self.synctool, 'atcp.alad')
+            self.system.chmod('atcp.alad', 0755)
         cplrh = [ x.rh for x in ctx.sequence.effective_inputs(role='BoundaryConditions', kind='boundary') ]
         cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
         i = 0

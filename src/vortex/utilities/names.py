@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-r"""
+"""
 Functions and tools to handle resources names or other kind of names.
 """
 
@@ -12,10 +12,10 @@ from vortex.autolog import logdefault as logger
 
 
 class VNameBuilder(object):
-
+    """Baseames factory for resources handled by some Vortex like provider."""
     def __init__(self, *args, **kw):
         logger.debug('New VNameBuilder %s', self.__class__)
-        self.default = dict(
+        self._default = dict(
             radical = 'vortexdata',
             src = None,
             fmt = None,
@@ -25,22 +25,27 @@ class VNameBuilder(object):
             nativefmt = None,
             stage = None,
             part = None,
+            compute = None,
         )
-        self.default.update(kw)
-    
+        self.setdefault(**kw)
+
     def setdefault(self, **kw):
-        self.default.update(kw)
+        """Update or set new default values as the background description used in packing."""
+        self._default.update(kw)
+
+    @property
+    def defaults(self):
+        """List of currently declared defaults (defined or not)."""
+        return self._default.keys()
 
     def dumpshortcut(self):
         """Nicely formated view of the current class in dump context."""
-        return "{0:s}.{1:s}({2:s})".format(self.__module__, self.__class__.__name__, str(self.default))
+        return "{0:s}.{1:s}({2:s})".format(self.__module__, self.__class__.__name__, str(self._default))
 
     def pack(self, d):
-        """
-        Build the resource vortex basename according to ``style`` value.
-        """
+        """Build the resource vortex basename according to ``style`` value."""
         components = dict()
-        components.update(self.default)
+        components.update(self._default)
         components.update(d)
 
         packstyle = getattr(self, 'pack_' + components.get('style', 'std'), self.pack_std)
@@ -50,6 +55,14 @@ class VNameBuilder(object):
     def pack_void(self, value):
         """The most trivial conversion mechanism: the ``value`` as string."""
         return str(value)
+
+    def pack_std_item_mpi(self, value):
+        """Packing of a MPI-task number."""
+        return 'n{0:04d}'.format(int(value))
+
+    def pack_std_item_openmp(self, value):
+        """Packing of an OpenMP id number."""
+        return 'omp{0:02d}'.format(int(value))
 
     def pack_std_item_month(self, value):
         """Packing of a month-number value."""
@@ -62,7 +75,7 @@ class VNameBuilder(object):
     def pack_std_item_truncation(self, value):
         """Packing of the geometry's truncation value."""
         return 'tl' + str(value)
-    
+
     def pack_std_item_filtering(self, value):
         """Packing of the geometry's filtering value."""
         return 'f' + str(value)
@@ -83,20 +96,23 @@ class VNameBuilder(object):
             else:
                 packed.append(self.pack_void(i))
         return packed
-            
+
     def pack_std(self, d):
-        r"""
+        """
         Main entry point to convert a description into a file name
         according to the so-called standard style.
         """
         name = d['radical']
-    
+
         if d['src'] != None:
             name = name + '.' + '-'.join(self.pack_std_items(d['src']))
 
         if d['geo'] != None:
             name = name + '.' + '-'.join(self.pack_std_items(d['geo']))
-        
+
+        if d['compute'] != None:
+            name = name + '.' + '-'.join(self.pack_std_items(d['compute']))
+
         if d['term'] != None:
             name = name + '+' + str(d['term'])
 
@@ -105,25 +121,24 @@ class VNameBuilder(object):
 
         if d['suffix'] != None:
             name = name + '.' + '.'.join(self.pack_std_items(d['suffix']))
-        
+
         return name.lower()
-    
+
     def pack_obs(self,d):
-        r"""
+        """
         Main entry point to convert a description into a file name
         according to the so-called observation style.
         """
         name = '.'.join([d['nativefmt'], d['stage'], d['part']])
         if d['suffix'] != None:
             name = name + '.' + d['suffix']
-            
+
         return name.lower()
-    
+
     def pack_obsmap(self,d):
-        r"""
+        """
         Main entry point to convert a description into a file name
         according to the so-called observation-map style.
         """
         name = '.'.join([d['radical'], d['stage']])
         return name.lower()
-    

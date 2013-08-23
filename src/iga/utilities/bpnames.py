@@ -116,10 +116,12 @@ def global_pnames(provider, resource):
     """
     Return a dictionary whose content is the paired (key, values) so as to
     resolved the path using the config parser.
+
     Must defined:
-        -suite,
-        -geometry,
-        -fmt
+
+        * suite,
+        * geometry,
+        * fmt
     """
     info = getattr(resource, provider.realkind + '_pathinfo',
                    resource.vortex_pathinfo)()

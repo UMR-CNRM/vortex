@@ -14,8 +14,8 @@ from vortex.autolog import logdefault as logger
 from footprint import BFootprint, Footprint
 
 
-def rangex(start, end=None, step=None, shift=None):
-    """Extended range exansion."""
+def rangex(start, end=None, step=None, shift=None, fmt=None):
+    """Extended range expansion."""
     rangevalues = list()
 
     for pstart in str(start).split(','):

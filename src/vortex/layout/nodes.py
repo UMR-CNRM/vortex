@@ -42,6 +42,7 @@ class Task(Node):
         logger.debug('Task init %s', self)
         super(Task, self).__init__(tag, **kw)
         self.sequence = dataflow.Sequence()
+        self.algo = None
 
     @property
     def realkind(self):
@@ -55,6 +56,14 @@ class Task(Node):
         """Get all input data."""
         for indata in self.sequence.inputs:
             indata.get()
+
+    def process(self, t, **kw):
+        """Abstract method: recursively process or run contents."""
+        self.retrieve()
+        if self.algo:
+            for x in self.sequence.executables():
+                self.algo.run(x.rh)
+
 
 class Family(Node):
     """Logical group of :class:`Family` or :class:`Task`."""
@@ -74,3 +83,30 @@ class Family(Node):
 
     def __call__(self):
         return self.contents[:]
+
+    def process(self, t, **kw):
+        """Abstract method: recursively process or run contents."""
+        for node in self.contents:
+            self.process(t, **kw)
+
+
+class Configuration(Node):
+    """Logical group of :class:`Family` or :class:`Task` that could be processed."""
+
+    def __init__(self, tag, **kw):
+        logger.debug('Configuration init %s', self)
+        super(Configuration, self).__init__(tag, **kw)
+        self.contents = list()
+
+    @property
+    def realkind(self):
+        return 'configuration'
+
+    def setup(self, t, **kw):
+        """Abstract method: defines the interaction with vortex env."""
+        pass
+
+    def build(self, t, **kw):
+        """Abstract method: fills the configuration contents."""
+        pass
+

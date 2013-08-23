@@ -197,13 +197,17 @@ class Sequence(object):
             inkind = [ x for x in inset if x.rh.resource.realkind in selectkind ]
         return inrole or inkind
 
+    def executables(self):
+        """Return a list of current sequence sections with ``ixo.EXEC`` kind."""
+        return [ x for x in self.sections if ( x.kind == ixo.EXEC ) ]
+
     def outputs(self):
         """Return a list of current sequence sections with ``ixo.OUTPUT`` kind."""
         return [ x for x in self.sections if x.kind == ixo.OUTPUT ]
 
     def effective_outputs(self, **kw):
         """
-        Wakl through the outputs of the current sequence whatever the stage value is.
+        Walk through the outputs of the current sequence whatever the stage value is.
         If a ``role`` or ``kind`` (or both) is provided as named argument,
         it operates as a filter on the inputs list. If both keys are available
         the ``role`` applies first, and then the ``kind`` in case of empty match.

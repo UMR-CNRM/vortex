@@ -256,14 +256,15 @@ class utTime(TestCase):
         self.assertEquals(int(t), 18)
         t = date.Time(2, 45)
         d = date.Date(2013,4,23,15,30)
-        r = d+t
+        r = d + t
         self.assertEquals(str(r), '2013-04-23T18:15:00Z')
-        r = d-t
+        r = d - t
         self.assertEquals(str(r), '2013-04-23T12:45:00Z')
 
 
     def test_cmpTime(self):
         t = date.Time(6)
+        self.assertFalse(t == None)
         self.assertTrue(t == 6)
         self.assertFalse(t > 6)
         self.assertFalse(t < 6)

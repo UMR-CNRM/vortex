@@ -7,7 +7,7 @@ __all__ = [ 'Resource', 'ResourcesCatalog' ]
 import re, sys
 from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
-from vortex.syntax.stdattrs import a_nativefmt
+from vortex.syntax.stdattrs import a_nativefmt, notinrepr
 from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from contents import DataContent, DataRaw
 
@@ -39,12 +39,12 @@ class Resource(BFootprint):
     def classkind(cls):
         return cls.realkind.fget(cls)
 
-    def strinfo(self):
-        """Return a string representation of all attributes but ``kind`` for formatted output."""
+    def addrepr(self):
+        """Return a string representation of meaningful attributes for formatted output."""
         d = self.puredict()
-        for xdel in [ x for x in ('kind', 'unknown') if x in d ]:
+        for xdel in [ x for x in notinrepr if x in d ]:
             del d[xdel]
-        return ' '.join([ '{0:s}=\'{1:s}\''.format(k, str(v)) for k, v in d.items() ])
+        return '| ' + ' '.join([ '{0:s}=\'{1:s}\''.format(k, str(v)) for k, v in d.items() ])
 
     def vortex_pathinfo(self):
         """

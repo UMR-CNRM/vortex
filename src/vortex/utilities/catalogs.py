@@ -145,7 +145,7 @@ class ClassesCollector(Catalog):
         logger.debug('Pick up a "%s" in description %s with catalog %s', self.itementry, desc, self)
         report = desc.setdefault('report', self.autoreport)
         del desc['report']
-        if self.itementry in desc:
+        if self.itementry in desc and desc[self.itementry] != None:
             logger.debug('A %s is already defined %s', self.itementry, desc[self.itementry])
         else:
             desc[self.itementry] = self.findbest(desc)

@@ -102,9 +102,9 @@ class GEnv(Provider):
         """Default realkind is ``genv``."""
         return 'genv'
 
-    def strinfo(self):
-        """Nicely formatted print."""
-        return 'cycle={0:s}'.format(self.genv)
+    def addrepr(self):
+        """Additional information to internal representation."""
+        return '| cycle={0:s}'.format(self.genv)
 
     def scheme(self):
         """Default scheme is ``gget``."""

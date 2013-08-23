@@ -18,10 +18,13 @@ myself = sys.modules.get(__name__)
 
 
 #: Default values for atmospheric models.
-models = [ 'arpege', 'arp', 'aladin', 'ald', 'arome', 'aro' , 'aearp' ,'pearp', 'mocage', 'mesonh']
+models = set(['arpege', 'arp', 'aladin', 'ald', 'arome', 'aro' , 'aearp' ,'pearp', 'mocage', 'mesonh'])
 
 #: Default values for the most common binaries.
-binaries = ['arpege', 'aladin', 'arome', 'peace', 'mocage', 'mesonh']
+binaries = set(['arpege', 'aladin', 'arome', 'peace', 'mocage', 'mesonh'])
+
+#: Default attributes excluded from `repr` display
+notinrepr = set(['kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'])
 
 
 class FPList(list):
@@ -40,7 +43,7 @@ class FPList(list):
 class FmtInt(int):
     """Formated integer."""
 
-    def __new__(cls, value, fmt):
+    def __new__(cls, value, fmt='02'):
         obj = int.__new__(cls, value)
         obj._fmt = fmt
         return obj

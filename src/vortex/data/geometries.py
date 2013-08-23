@@ -33,6 +33,7 @@ def getbyname(geoname, fromset='geometries'):
     desc = dict(gs[fromset].items(geoname))
     kind = desc['kind']
     del desc['kind']
+    desc.setdefault('id', geoname)
     if kind in ('spectral', 'global'):
         return SpectralGeometry(**desc)
     else:
@@ -44,7 +45,7 @@ class Geometry(object):
 
     def __init__(self, **kw):
         logger.debug('Abstract Geometry init %s %s', self, kw)
-        self.id = 'abstract'
+        self.id = 'anonymous'
         self.hgeo = None
         self.vgeo = None
         self.__dict__.update(kw)
@@ -65,7 +66,7 @@ class HGeometry(object):
     def __init__(self, *args, **kw):
         logger.debug('Abstract Horizontal Geometry init %s %s', self, kw)
         if not self.initialised:
-            self.id = 'abstract'
+            self.id = 'anonymous'
             self.area = None
             self.nlon = None
             self.nlat = None
@@ -102,6 +103,18 @@ class HGeometry(object):
             res = '{0:06.3f}'.format(self.resolution)
         return re.sub('\.', self.runit, res, 1)
 
+    def anonymous_info(self, *args):
+        """Try to build a meaningful information from an anonymous geometry."""
+        return '{0:s}, {1:s}'.format( self.area, self.rnice)
+
+    def __str__(self):
+        """Very short presentation."""
+        if self.id == 'anonymous':
+            return '{0:s}({1:s})'.format(self.__class__.__name__, self.anonymous_info())
+        else:
+            return self.id
+
+
     def idcard(self, indent=2):
         """
         Returns a multilines documentation string with a summary
@@ -125,6 +138,10 @@ class HGeometry(object):
         )
         return card
 
+    def reprheader(self):
+        """Return beginning of internal formatted representation."""
+        return '{0:s}.{1:s} | id=\'{2:s}\' area=\'{3:s}\''.format(self.__module__, self.__class__.__name__, self.id, self.area)
+
 
 class SpectralGeometry(HGeometry):
     """
@@ -137,6 +154,13 @@ class SpectralGeometry(HGeometry):
         kw.setdefault('runit', 'km')
         super(SpectralGeometry, self).__init__(**kw)
         self.kind = 'spectral'
+
+    def __repr__(self):
+        """Standard formatted representation."""
+        if self.lam:
+            return '<{0:s} r=\'{1:s}\'>'.format(self.reprheader(), self.rnice)
+        else:
+            return '<{0:s} t={1:d} c={2:g}>'.format(self.reprheader(), self.truncation, self.stretching)
 
 
 class GridGeometry(HGeometry):
@@ -155,3 +179,6 @@ class GridGeometry(HGeometry):
         self.truncation = None
         self.stretching = None
 
+    def __repr__(self):
+        """Standard formatted representation."""
+        return '<{0:s} r=\'{1:s}\'>'.format(self.reprheader(), self.rnice)

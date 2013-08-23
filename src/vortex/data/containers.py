@@ -148,8 +148,8 @@ class InCore(Virtual):
     def realkind(self):
         return 'incore'
 
-    def strinfo(self):
-        """Nicely formatted print."""
+    def addrepr(self):
+        """Additional information to internal representation."""
         if self._tmpfile:
             if self._tmpfile._rolled:
                 actualfile = self._tmpfile.name
@@ -157,7 +157,7 @@ class InCore(Virtual):
                 actualfile = 'MemoryResident'
         else:
             actualfile = 'NotSpooled'
-        return 'maxsize={0:d} tmpfile={1:s}'.format(self.maxsize, actualfile)
+        return '| maxsize={0:d} tmpfile={1:s}'.format(self.maxsize, actualfile)
 
     def localpath(self):
         """
@@ -195,13 +195,13 @@ class MayFly(Virtual):
     def realkind(self):
         return 'mayfly'
 
-    def strinfo(self):
-        """Nicely formatted print."""
+    def addrepr(self):
+        """Additional information to internal representation."""
         if self._tmpfile:
             actualfile = "'" + self._tmpfile.name + "'"
         else:
             actualfile = 'NotDefined'
-        return 'delete={0:s} tmpfile={1:s}'.format(str(self.delete), actualfile)
+        return '| delete={0:s} tmpfile={1:s}'.format(str(self.delete), actualfile)
 
     def localpath(self):
         """
@@ -249,9 +249,9 @@ class File(Container):
     def realkind(self):
         return 'file'
 
-    def strinfo(self):
-        """Nicely formatted print."""
-        return 'path=\'{0:s}\''.format(self._actualpath)
+    def addrepr(self):
+        """Additional information to internal representation."""
+        return '| path=\'{0:s}\''.format(self._actualpath)
 
     def localpath(self):
         """Returns the actual name of the file object."""

@@ -31,7 +31,7 @@ class Analysis(common.data.modelstates.Analysis):
 
 
 class SimpleTest(Resource):
-    
+
     _footprint = [ cutoff, dict(
         info = 'The test resource',
         attr = dict(

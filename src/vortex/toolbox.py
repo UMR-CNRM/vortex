@@ -108,10 +108,8 @@ def pushsection(section, args, kw):
     ctx.record_off()
     opts, kwclean = stripargs_section(**kw)
     if verbose > 1:
-        print 'New {0:s} section, options:'.format(section)
-        print light_dict_dumper(opts)
-        print 'Loading resource handler(s), arguments:'
-        print light_dict_dumper(kwclean), "\n"
+        print 'New {0:s} section, options:'.format(section), light_dict_dumper(opts)
+        print 'Loading resource handler(s), arguments:', light_dict_dumper(kwclean), "\n"
     rl = rload(*args, **kwclean)
     rlok = list()
     push = getattr(ctx.sequence, section)

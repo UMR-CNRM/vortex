@@ -486,16 +486,16 @@ class BFootprint(object):
         """See the current footprint as a pure dictionary when exported."""
         return self.puredict()
 
-    def strinfo(self):
-        """Default information to be combined in str output."""
+    def addrepr(self):
+        """Additional information to be combined in repr output."""
         return 'object at ' + hex(id(self))
 
-    def __str__(self):
+    def __repr__(self):
         """
         Basic layout for nicely formatted print, built as the concatenation
-        of the class full name and some :meth:`strinfo` additional information.
+        of the class full name and some :meth:`addrepr` additional information.
         """
-        return '<{0:s} | {1:s}>'.format(self.fullname(), self.strinfo())
+        return '<{0:s} {1:s}>'.format(self.fullname(), self.addrepr())
 
     @property
     def info(self):

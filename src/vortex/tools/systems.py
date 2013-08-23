@@ -14,6 +14,7 @@ import re, os, platform, shutil, sys, io, filecmp, datetime, time
 import glob
 import tarfile
 import subprocess
+import pickle
 
 from vortex.autolog import logdefault as logger
 from vortex.tools.env import Environment
@@ -285,6 +286,20 @@ class System(BFootprint):
             re.sub('(?:\/__init__)?\.py$', '', x).replace('/', '.')
             for x in mfiles if ( not x.startswith('.' ) and re.search(only, x, re.IGNORECASE) and x.endswith('.py') )
         ]
+
+    def loaded_modules(self, only='.', output=None):
+        """Check loaded modules, producing either a dump or a list of tuple (status, modulename)."""
+        checklist = list()
+        if output == None:
+            output = self.output
+        for modname in self.vortex_modules(only):
+            checklist.append((modname, modname in sys.modules))
+        if not output:
+            for m, s in checklist:
+                print s, m
+            return True
+        else:
+            return checklist
 
     def systems_reload(self):
         """Load extra systems modules not yet loaded."""
@@ -655,6 +670,30 @@ class OSExtended(System):
         kw['cx'] = 'x'
         return self._tarcx(*args, **kw)
 
+    def pickle_dump(self, obj, destination):
+        """
+        Dump a pickled representation of specified ``obj`` in file ``destination``,
+        (either a file descriptor or a filename).
+        """
+        if hasattr(destination, 'write'):
+            rc = pickle.dump(obj, destination)
+        else:
+            if self.filecocoon(destination):
+                with io.open(destination, 'ab') as fd:
+                    rc = pickle.dump(obj, fd)
+        return rc
+
+    def pickle_load(self, source):
+        """
+        Load fron a pickled representation stored in file ``source``,
+        (either a file descriptor or a filename).
+        """
+        if hasattr(source, 'read'):
+            obj = pickle.load(source)
+        else:
+            with io.open(source, 'rb') as fd:
+                obj = pickle.load(fd)
+        return obj
 
 class Python26(object):
     """Old fashion features before Python 2.7."""
@@ -678,7 +717,7 @@ class Python27(object):
         try:
             import importlib
         except ImportError:
-            logger.critical('No way to get importlob in python 2.7 ... something really weird !')
+            logger.critical('No way to get importlib in python 2.7 ... something really weird !')
             raise
         except:
             logger.critical('Unexpected error: %s', sys.exc_info()[0])
