@@ -9,6 +9,7 @@ This package handles some common targets sused at Meteo France.
 __all__ = []
 
 from vortex.tools.targets import Target
+from vortex.syntax.priorities import top
 
 
 class NECSX9(Target):
@@ -26,5 +27,29 @@ class NECSX9(Target):
             inifile = dict(
                 default = 'target-necsx9.ini',
             )
+        )
+    )
+
+class MeteoBull(Target):
+    """Bull Computer."""
+
+    _footprint = dict(
+        info = 'Bull Supercomputer at Meteo France',
+        attr = dict(
+            hostname = dict(
+                values = \
+                    [ x+str(y) for x in ('beaufix',) for y in range(1000) ] + \
+                    [ x+str(y) for x in ('beaufixlogin',) for y in range(6) ] + \
+                    [ x+str(y) for x in ('beaufixtransfert',) for y in range(4) ]
+            ),
+            sysname = dict(
+                values = [ 'Linux' ]
+            ),
+            inifile = dict(
+                default = 'target-beaufix.ini',
+            )
+        ),
+        priority = dict(
+            level = top.OPER
         )
     )

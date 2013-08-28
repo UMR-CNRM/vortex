@@ -33,7 +33,11 @@ class Glove(BFootprint):
                 default = Environment(active=False)['logname']
             ),
             profile = dict(
-                alias = ( 'kind', 'membership' )
+                alias = ( 'kind', 'membership' ),
+                values = [ 'oper', 'dble', 'test', 'research', 'tourist' ],
+                remap = dict(
+                    tourist = 'research'
+                )
             )
         )
     )
@@ -155,14 +159,13 @@ class ResearchGlove(Glove):
             profile = dict(
                 optional = True,
                 default = 'research',
-                values = [ 'research', 'tourist' ]
             )
         )
     )
 
     @property
     def realkind(self):
-        return 'tourist'
+        return 'research'
 
 
 class OperGlove(Glove):
@@ -182,7 +185,6 @@ class OperGlove(Glove):
             ),
             profile = dict(
                 optional = False,
-                values = [ 'oper', 'opuser', 'optest' ]
             )
         )
     )

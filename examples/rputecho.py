@@ -55,5 +55,3 @@ print t.line
 print t.prompt, 'Duration time =', t.duration()
 
 print t.line
-
-vortex.exit()

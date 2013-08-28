@@ -23,11 +23,13 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.7.1'
+__version__ = '0.7.2'
+__prompt__  = 'Vortex v-' + __version__+ ':'
 
 __all__ = []
 
 import logging
+import atexit
 
 logging.basicConfig(
     format='[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
@@ -45,7 +47,7 @@ import sessions, toolbox, algo, data, tools
 rootenv = tools.env.Environment(active=True)
 rootenv.glove = sessions.glove()
 
-rs = sessions.ticket(active=True, topenv=rootenv, glove=rootenv.glove, prompt='Vortex v-'+__version__+':')
+rs = sessions.ticket(active=True, topenv=rootenv, glove=rootenv.glove, prompt=__prompt__)
 
 if rs.system().systems_reload():
     rs.system(refill=True)
@@ -57,6 +59,10 @@ del rs
 ticket = sessions.ticket
 exit = sessions.exit
 sh = sessions.system
+
+# Register proper vortex exit before the end of interpreter session
+atexit.register(sessions.exit)
+del atexit
 
 # Shorthands to the most useful class catalogs
 

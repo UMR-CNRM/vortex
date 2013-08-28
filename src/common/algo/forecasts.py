@@ -59,7 +59,7 @@ class IFSModelParallel(Parallel):
 
     def fstag(self):
         """Extend default tag with ``kind`` value."""
-        return super(IFSModelParallel, self).fstag + '.' + self.kind
+        return super(IFSModelParallel, self).fstag() + '.' + self.kind
 
     def valid_executable(self, rh):
         """Be sure that the specifed executable is ifsmodel compatible."""
@@ -81,7 +81,8 @@ class IFSModelParallel(Parallel):
     def prepare(self, rh, ctx, opts):
         """Set some variables according to target definition."""
         super(IFSModelParallel, self).prepare(rh, ctx, opts)
-        self.export('drhook')
+        for optpack in ('drhook', 'gribapi'):
+            self.export(optpack)
 
     def setlink(self, ctx, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
         """Set a symbolic link for actual resource playing defined role."""

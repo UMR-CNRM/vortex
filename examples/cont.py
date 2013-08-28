@@ -45,6 +45,3 @@ rc = containers.File(local='bidon')
 print t.prompt, 'Container footprint', rc.footprint()
 print t.prompt, 'File container resolved ?', rc
 
-print t.prompt, 'Duration time =', t.duration()
-
-vortex.exit()

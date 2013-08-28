@@ -77,5 +77,3 @@ print t0.line, vortex.tools.env.Environment._os
 print t1.prompt, 'Duration time =', t1.duration()
 
 print t0.line
-
-vortex.exit()

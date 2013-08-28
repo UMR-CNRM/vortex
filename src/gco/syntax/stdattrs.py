@@ -18,7 +18,7 @@ domain_remap = dict(
 
 def lowerattr(matchobj):
     return matchobj.group(0).lower()
-    
+
 class GenvKey(str):
     """
     Attribute for a GEnv cycle name.
@@ -34,6 +34,6 @@ class GenvDomain(str):
     Remap plain area names to specific Genv short domain names.
     See also :mod:`gco.tools.genv`.
     """
-    
+
     def __new__(cls, value):
         return str.__new__(cls, domain_remap.get(value, value))

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/bin/env python
 # -*- coding: utf-8 -*-
 
 import vortex, common, gco, olive

@@ -173,7 +173,7 @@ class Environment(object):
 
     def __delitem__(self, varname):
         self.delvar(varname)
-    
+
     def __delattr__(self, varname):
         self.delvar(varname)
 
@@ -193,7 +193,7 @@ class Environment(object):
         Also used as internal for dictionary access.
         """
         return item in self._pool or item.upper() in self._pool
-    
+
     def __cmp__(self, other):
         return cmp(self._pool, other._pool)
 
@@ -234,6 +234,10 @@ class Environment(object):
     def clear(self):
         """Flush the current pool of variables."""
         return self._pool.clear()
+
+    def clone(self):
+        """Return a non-active copy of the current env."""
+        return self.__class__(env=self, active=False)
 
     def native(self, varname):
         """Returns the native form this variable could have in a shell environment."""

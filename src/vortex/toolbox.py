@@ -144,6 +144,16 @@ def executable(*args, **kw):
     kw.setdefault('insitu', getinsitu)
     return pushsection('executable', args, kw)
 
+def algo(*args, **kw):
+    """Load an algo component and display the description provided."""
+    ctx = sessions.ticket().context
+    ctx.record_off()
+    if verbose > 1:
+        print 'Loading algo component, arguments:', light_dict_dumper(kw), "\n"
+    ok = components.load(**kw)
+    ctx.record_on()
+    return ok
+
 def magic(uri, localpath):
     return rh(unknown=True, magic=uri, filename=localpath)
 
@@ -176,7 +186,6 @@ def namespaces(**kw):
 
 # Shortcuts
 
-algo = components.load
 component = components.load
 container = containers.load
 provider = providers.load

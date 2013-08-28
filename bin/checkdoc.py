@@ -1,47 +1,23 @@
-#!/usr/bin/env python
+#!/bin/env python
 # -*- coding: utf-8 -*-
 
-import inspect
-
-import re
-istrue = re.compile('on|true|ok', re.IGNORECASE)
-isfalse = re.compile('off|false|ko', re.IGNORECASE)
-
-import sys
-opts = dict(
-    verbose = 'on',
-    mkrst = 'off',
-)
-opts.update( dict([ x.split('=') for x in sys.argv[1:] ]) )
-for k, v in opts.iteritems():
-    if istrue.match(v):
-        opts[k] = True
-    if isfalse.match(v):
-        opts[k] = False
+import inspect, re, sys
 
 import vortex
 sh = vortex.sh()
-g = vortex.sessions.glove()
-print '=' * 80
-print 'Checking vortex', vortex.__version__, 'library documentation'
+
+opts = sh.rawopts(
+    defaults = dict(
+        verbose = 'on',
+        mkrst = 'off',
+    )
+)
+
+sh.header('Checking vortex ' + vortex.__version__ + 'library documentation')
 print ' > Options:', opts
 
-
-def rstfile(modpath):
-    subpath = re.sub(g.sitesrc, '', modpath)
-    subpath = re.sub('.py', '', subpath)
-    subpath = subpath.split('/')
-    if subpath[-1] == '__init__':
-        subpath[-1] = subpath[-2]
-    subpath[-1] += '.rst'
-
-    if subpath[1] == 'vortex' and len(subpath) == 3:
-        subpath[2:2] = [ 'kernel' ]
-    subpath[1:1] = [ 'library' ]
-    return g.sitedoc + '/'.join(subpath)
-
-def rstshort(filename):
-    return re.sub(g.siteroot, '', filename)[1:]
+from vortex.utilities.introspection import Sherlock
+intro = Sherlock()
 
 def rstcreate(rstf, mname, m):
     print ' > Creating', rstf
@@ -76,18 +52,6 @@ def rstcreate(rstf, mname, m):
 def rstfind(pattern, lines):
     return bool([x for x in lines if re.search(pattern, x) ])
 
-def getrealmembers(m):
-    objs = dict()
-    for x, y in inspect.getmembers(m):
-        if inspect.isclass(y) or inspect.isfunction(y) or inspect.ismethod(y):
-            try:
-                if m.__file__ == inspect.getsourcefile(y):
-                    if opts['verbose']: print x, y
-                    objs[x] = y
-            except TypeError:
-                pass
-    return objs
-
 report = dict(
     mkrst = list(),
     todo = list(),
@@ -99,13 +63,13 @@ report = dict(
 print '=' * 80
 print 'MODULES REVIEW'
 
-for modname, loaded in sh.loaded_modules():
+for modname, loaded in sh.vortex_loaded_modules():
     print '---'
     if not loaded:
         sh.import_module(modname)
     m = sys.modules[modname]
-    rst = rstfile(m.__file__)
-    rstloc = rstshort(rst)
+    rst = intro.rstfile(m)
+    rstloc = intro.rstshort(rst)
     okdoc = sh.path.exists(rst)
     print modname, '(', 'loaded:', loaded, '/', 'doc:', okdoc, ')'
 
@@ -127,15 +91,19 @@ for modname, loaded in sh.loaded_modules():
     else:
         report['nope'].append(rstloc)
 
-    mobjs = getrealmembers(m)
-    for objname, objptr in mobjs.iteritems():
-        thedoc = inspect.getdoc(objptr)
+    for objname, objptr1 in intro.getlocalmembers(m).iteritems():
+        thedoc = inspect.getdoc(objptr1)
         if not thedoc:
             report['miss'].append(modname + ': ' + objname)
         elif re.search('docstring|todo', thedoc, re.IGNORECASE):
             report['quid'].append(modname + ': ' + objname)
-
-
+        if inspect.isclass(objptr1):
+            for objmeth, objptr2 in intro.getlocalmembers(objptr1, m).iteritems():
+                thedoc = inspect.getdoc(objptr2)
+                if not thedoc:
+                    report['miss'].append(modname + ': ' + objname + '.' + objmeth)
+                elif re.search('docstring|todo', thedoc, re.IGNORECASE):
+                    report['quid'].append(modname + ': ' + objname + '.' + objmeth)
 
 for k, v in sorted(report.iteritems()):
     print '=' * 80

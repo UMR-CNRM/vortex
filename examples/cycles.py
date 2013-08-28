@@ -37,5 +37,3 @@ for c in ( 'cy36op', 'cy36t1op2', 'cyt1_op2', '36t2_op1', 'cy36t2_op1', 'cy36t2_
 print t.prompt, 'Reminder:', cycles.defined()
 
 print t.prompt, 'Duration time =', t.duration()
-
-vortex.exit()

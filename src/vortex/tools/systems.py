@@ -22,7 +22,11 @@ from vortex.syntax import BFootprint, priorities
 from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from vortex.tools.net import StdFtp
 
+istruedef  = re.compile('on|true|ok', re.IGNORECASE)
+isfalsedef = re.compile('off|false|ko', re.IGNORECASE)
+
 class ExecutionError(StandardError):
+    """Go through exception for internal :meth:`spawn` errors."""
     pass
 
 class System(BFootprint):
@@ -63,6 +67,14 @@ class System(BFootprint):
     )
 
     def __init__(self, *args, **kw):
+        """
+        Before going through parent initialisation, pickle this attributes:
+          * os - as an alternativer to :mod:`os`.
+          * sh - as an alternativer to :mod:`shutil`.
+          * prompt - as a starting comment line in :meth:`title` like methods.
+          * trace - as a boolean to mimic ``set -x`` behavior (default: False).
+          * output - as a default value for any external spawning command (default: True).
+        """
         logger.debug('Abstract System init %s', self.__class__)
         if 'os' in kw:
             self._osmod = kw['os']
@@ -84,6 +96,7 @@ class System(BFootprint):
         return 'system'
 
     def __getattr__(self, key):
+        """Gateway to undefined method or attributes if present in ``_os`` or ``_sh`` internals."""
         actualattr = None
         if key in self._os.__dict__:
             actualattr = self._os.__dict__[key]
@@ -98,6 +111,9 @@ class System(BFootprint):
                 cmd.extend([ '{0:s}={1:s}'.format(x, str(kw[x])) for x in kw.keys() ])
                 self.stderr(cmd)
                 return actualattr(*args, **kw)
+            osproxy.func_name = key
+            osproxy.func_doc = actualattr.__doc__
+            setattr(self, key, osproxy)
             return osproxy
         else:
             return actualattr
@@ -119,6 +135,19 @@ class System(BFootprint):
                     ' '.join([ str(x) for x in args ])
                 )
             )
+
+    def pythonpath(self, output=None):
+        """Return or print actual ``sys.path``."""
+        if output == None:
+            output = self.output
+        self.stderr(['pythonpath'])
+        if output:
+            return sys.path[:]
+        else:
+            self.subtitle('Python PATH')
+            for pypath in sys.path:
+                print pypath
+            return True
 
     def pwd(self, output=None):
         """Current working directory."""
@@ -173,7 +202,7 @@ class System(BFootprint):
         if text:
             print '{0:s} {1:^{size}s} {0:s}'.format(tchar, text.upper(), size=nbc)
             print tchar * ( nbc + 4 )
-        print "\n"
+        print ''
 
     def subtitle(self, text='', tchar='-', autolen=96):
         """Formated subtitle output."""
@@ -251,6 +280,10 @@ class System(BFootprint):
         return self.remove(objpath)
 
     def ps(self, opts=[], search=None, pscmd=None):
+        """
+        Performs a standard process inquiry through :class:`subprocess.Popen`
+        and filter the output if a ``search`` expression is provided.
+        """
         if not pscmd:
             pscmd = ['ps']
         pscmd.extend(self._psopts)
@@ -287,7 +320,7 @@ class System(BFootprint):
             for x in mfiles if ( not x.startswith('.' ) and re.search(only, x, re.IGNORECASE) and x.endswith('.py') )
         ]
 
-    def loaded_modules(self, only='.', output=None):
+    def vortex_loaded_modules(self, only='.', output=None):
         """Check loaded modules, producing either a dump or a list of tuple (status, modulename)."""
         checklist = list()
         if output == None:
@@ -374,12 +407,36 @@ class OSExtended(System):
     )
 
     def __init__(self, *args, **kw):
+        """
+        Before going through parent initialisation, pickle this attributes:
+          * rmtreemin - as the minimal depth needed for a :meth:`rmsafe`.
+          * cmpaftercp - as a boolean for activating full comparison after pain cp (default: True).
+        """
         logger.debug('Abstract System init %s', self.__class__)
         self._rmtreemin = kw.setdefault('rmtreemin', 3)
         del kw['rmtreemin']
         self._cmpaftercp = kw.setdefault('cmpaftercp', True)
         del kw['cmpaftercp']
         super(OSExtended, self).__init__(*args, **kw)
+
+    def rawopts(self, cmdline=None, defaults=None, istrue=istruedef, isfalse=isfalsedef):
+        """Parse a simple options command line as key=value."""
+        opts = dict()
+        try:
+            opts.update(defaults)
+        except Exception as pb:
+            logger.warning('Could not update options default: %s', defaults)
+
+        if cmdline == None:
+            cmdline = sys.argv[1:]
+        opts.update( dict([ x.split('=') for x in cmdline ]) )
+        for k, v in opts.iteritems():
+            if v != None:
+                if istrue.match(v):
+                    opts[k] = True
+                if isfalse.match(v):
+                    opts[k] = False
+        return opts
 
     def ftp(self, hostname, logname):
         """Returns an open ftp session on the specified target."""
@@ -625,13 +682,16 @@ class OSExtended(System):
         return self._globcmd([ 'mv' ], args)
 
     def listdir(self, *args):
+        """Proxy to standard :mod:`os` directory listing function."""
         if not args: args = ('.',)
         self.stderr(['listdir'] + list(args))
         return self._os.listdir(args[0])
 
     def l(self, *args):
+        """Proxy to globbing after removing any option. A bit like :meth:`ls` method."""
         rl = [x for x in args if not x.startswith('-')]
         if not rl: rl.append('*')
+        self.stderr(['l'] + rl)
         return self.glob(*rl)
 
     def is_tarfile(self, filename):
@@ -699,6 +759,7 @@ class Python26(object):
     """Old fashion features before Python 2.7."""
 
     def import_module(self, modname):
+        """Import the module named ``modname`` with :mod:`imp` package."""
         import imp
         path = None
         buildname = ''
@@ -714,6 +775,7 @@ class Python27(object):
     """Python features starting at version 2.7."""
 
     def import_module(self, modname):
+        """Import the module named ``modname`` with :mod:`importlib` package."""
         try:
             import importlib
         except ImportError:
@@ -745,6 +807,7 @@ class Garbage(OSExtended, Python26):
     )
 
     def __init__(self, *args, **kw):
+        """Gateway to parent method after debug logging."""
         logger.debug('Garbage system init %s', self.__class__)
         super(Garbage, self).__init__(*args, **kw)
 
@@ -763,6 +826,10 @@ class Linux(OSExtended):
     )
 
     def __init__(self, *args, **kw):
+        """
+        Before going through parent initialisation, pickle this attributes:
+          * psopts - as default option for the ps command (default: ``-w -f -a``).
+        """
         logger.debug('Linux system init %s', self.__class__)
         self._psopts = kw.setdefault('psopts', ['-w', '-f', '-a'])
         del kw['psopts']
@@ -816,6 +883,7 @@ class LinuxDebug(Linux27):
     )
 
     def __init__(self, *args, **kw):
+        """Gateway to parent method after debug logging."""
         logger.debug('LinuxDebug system init %s', self.__class__)
         super(LinuxDebug, self).__init__(*args, **kw)
 
@@ -828,6 +896,7 @@ class SystemsCatalog(ClassesCollector):
     """Class in charge of collecting :class:`System` items."""
 
     def __init__(self, **kw):
+        """Collect kind of :class:`System` classes."""
         logger.debug('Systems catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.system'),
@@ -839,6 +908,7 @@ class SystemsCatalog(ClassesCollector):
 
     @classmethod
     def tablekey(cls):
+        """The entry point for global catalogs table."""
         return 'systems'
 
 

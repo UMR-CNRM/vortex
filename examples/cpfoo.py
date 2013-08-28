@@ -90,7 +90,3 @@ print t.prompt, a.history()
 sh.dir(output=False)
 
 print t.line
-print t.prompt, 'Duration time =', t.duration()
-print t.line
-
-vortex.exit()

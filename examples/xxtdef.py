@@ -71,5 +71,3 @@ for fp in fpnams:
 print t.prompt, sh.pwd()
 
 sh.dir(output=False)
-
-vortex.exit()

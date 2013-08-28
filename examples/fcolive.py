@@ -118,7 +118,6 @@ if xxt:
     for k, v in sorted(xxt.contents.items()):
         print k, v
 else:
-    vortex.exit()
     exit()
 
 toolbox.input(
@@ -191,5 +190,3 @@ print t.line
 print t.prompt, 'Duration time =', t.duration()
 
 print t.line
-
-vortex.exit()

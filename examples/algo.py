@@ -64,7 +64,4 @@ print t.line
 x.run(script, mpiopts=dict(n=2))
 
 print t.line
-print t.prompt, 'Duration time =', t.duration()
-print t.line
 
-vortex.exit()

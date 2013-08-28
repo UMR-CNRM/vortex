@@ -53,8 +53,9 @@ class AlgoComponent(BFootprint):
         """Export environment variables in given pack."""
         if self.target.config.has_section(packenv):
             for k, v in self.target.config.items(packenv):
-                logger.info('Setting %s env %s = %s', packenv.upper(), k, v)
-                self.env[k] = v
+                if k not in self.env:
+                    logger.info('Setting %s env %s = %s', packenv.upper(), k, v)
+                    self.env[k] = v
 
     def prepare(self, rh, ctx, opts):
         """Set some defaults env values."""
@@ -219,6 +220,12 @@ class Parallel(AlgoComponent):
             )
         )
     )
+
+    def prepare(self, rh, ctx, opts):
+        """Add some defaults env values for mpitool itself."""
+        super(Parallel, self).prepare(rh, ctx, opts)
+        if opts.get('mpitool', True):
+            self.export('mpitool')
 
     def execute(self, rh, ctx, opts):
         """

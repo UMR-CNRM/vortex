@@ -85,7 +85,8 @@ class GenericConfigParser(object):
     def as_dict(self):
         dico = dict()
         for section in self.sections():
-            dico[section] = dict(self.items(section))
+            dico[section] = dict(self.defaults())
+            dico[section].update(dict(self.items(section)))
         return dico
 
     def __getattr__(self, attr):

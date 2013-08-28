@@ -27,5 +27,3 @@ g = vortex.sessions.glove()
 g.setmail('eric.sevault@meteo.fr')
 
 ad.mail(to='eric.sevault@meteo.fr', subject='hello', body='hello world mail')
-
-vortex.exit()

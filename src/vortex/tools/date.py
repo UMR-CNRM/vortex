@@ -86,9 +86,14 @@ def tomorrow(base=None):
     return base + Period(days=1)
 
 def now():
-    """Return current date, hours, minutes and seconds."""
+    """Return current date, hours, minutes, seconds and microseconds."""
     td = datetime.datetime.now()
     return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
+
+def atsecond():
+    """Return current date, hours, minutes and seconds."""
+    td = datetime.datetime.now()
+    return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, 0)
 
 def lastround(rh=1, delta=0, base=None):
     """Return last date with a plain hour multiple of ``rh``."""

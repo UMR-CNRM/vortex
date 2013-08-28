@@ -57,9 +57,3 @@ for rh in lrh:
         print 'GET', r.location(), '...', r.get()
 
 print t.line
-
-print t.prompt, 'Duration', t.duration()
-
-print t.line
-
-vortex.exit()

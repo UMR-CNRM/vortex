@@ -82,9 +82,3 @@ for section in c.sequence:
 print t.line
 
 print 'Sequence inputs:', c.sequence.inputs()
-
-print t.line
-
-print t.prompt, 'Duration time =', t.duration()
-
-vortex.exit()
