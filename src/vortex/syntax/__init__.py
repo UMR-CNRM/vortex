@@ -10,12 +10,21 @@ The most important usage is done by :class:`BFootprint` derivated objects.
 __all__ = []
 
 import re, copy
+import vortex
 from vortex.autolog import logdefault as logger
 from footprint import BFootprint, Footprint
 
 
 def rangex(start, end=None, step=None, shift=None, fmt=None):
-    """Extended range expansion."""
+    """
+    Extended range expansion.
+    
+    When ``start`` is already a complex definition (as a string), ``end`` and ``step`` only apply
+    as default when the sub-definition in ``start`` does not contain any ``end`` or ``step`` value.
+
+    >>> rangex(2)
+    [2]
+    """
     rangevalues = list()
 
     for pstart in str(start).split(','):
@@ -63,7 +72,7 @@ def rangex(start, end=None, step=None, shift=None, fmt=None):
 
     return sorted(set(rangevalues))
 
-def inplace(desc, key, value):
+def inplace(desc, key, value, globs=None):
     """
     Redefined the ``key`` value in a deep copy of the description ``desc``.
 
@@ -76,6 +85,10 @@ def inplace(desc, key, value):
     """
     newd = copy.deepcopy(desc)
     newd[key] = value
+    if globs:
+        for k in [ x for x in newd.keys() if (x != key and type(newd[x]) == str)]:
+            for g in globs.keys():
+                newd[k] = re.sub('\[glob:'+g+'\]', globs[g], newd[k])
     return newd
 
 def expand(desc):
@@ -106,12 +119,12 @@ def expand(desc):
         for i, d in enumerate(ld):
             for k, v in d.iteritems():
                 if isinstance(v, list) or isinstance(v, tuple) or isinstance(v, set):
-                    logger.info(' > List expansion %s', v)
+                    logger.debug(' > List expansion %s', v)
                     ld[i:i+1] = [ inplace(d, k, x) for x in v ]
                     todo = True
                     break
                 if isinstance(v, str) and re.match('range\(\d+(,\d+)?(,\d+)?\)$', v, re.IGNORECASE):
-                    logger.info(' > Range expansion %s', v)
+                    logger.debug(' > Range expansion %s', v)
                     lv = [ int(x) for x in re.split('[\(\),]+', v) if re.match('\d+$', x) ]
                     if len(lv) < 2:
                         lv.append(lv[0])
@@ -120,12 +133,35 @@ def expand(desc):
                     todo = True
                     break
                 if isinstance(v, str) and re.search(',', v):
-                    logger.info(' > Coma separated string %s', v)
+                    logger.debug(' > Coma separated string %s', v)
                     ld[i:i+1] = [ inplace(d, k, x) for x in v.split(',') ]
                     todo = True
                     break
+                if isinstance(v, str) and re.search('{glob:', v):
+                    logger.debug(' > Globbing from string %s', v)
+                    sh = vortex.sh()
+                    vglob = v
+                    globitems = list()
+                    def getglob(matchobj):
+                        globitems.append(matchobj.group(1))
+                        return '*'
+                    while ( re.search('{glob:', vglob) ):
+                        vglob = re.sub('{glob:(\w+):([^\}]+)}', getglob, vglob)
+                    repld = list()
+                    while ( re.search('{glob:', v) ):
+                        v = re.sub('{glob:\w+:([^\}]+)}', r'(\1)', v)
+                    for filename in sh.glob(vglob):
+                        m = re.search(r'^'+v+ r'$', filename)
+                        if m:
+                            globmap = dict()
+                            for ig in range(len(globitems)):
+                                globmap[globitems[ig]] = m.group(ig+1)
+                            repld.append(inplace(d, k, filename, globmap))
+                    ld[i:i+1] = repld
+                    todo = True
+                    break
 
-    logger.debug('Expand in %d loops', nbpass)       
+    logger.debug('Expand in %d loops', nbpass)
     return ld
 
 

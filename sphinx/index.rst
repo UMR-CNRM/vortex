@@ -30,14 +30,16 @@ Global shorcuts:
    :maxdepth: 1
    
    table
-   todo
+   tododev
+   tododoc
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
    table
-   todo
+   tododev
+   tododoc
    dico
    userguide/index
    devguide/index

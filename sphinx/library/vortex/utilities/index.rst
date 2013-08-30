@@ -8,12 +8,14 @@ Utilities
    :maxdepth: 1
 
    utilities
+
    authorizations
    catalogs
    decorators
    dispatch
    dumper
    empty
+   introspection
    names
    observers
    patterns

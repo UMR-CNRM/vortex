@@ -56,6 +56,14 @@ class VNameBuilder(object):
         """The most trivial conversion mechanism: the ``value`` as string."""
         return str(value)
 
+    def pack_std_item_seta(self, value):
+        """Packing of a MPI-task number in first direction."""
+        return 'a{0:04d}'.format(int(value))
+
+    def pack_std_item_setb(self, value):
+        """Packing of a MPI-task number in second direction."""
+        return 'b{0:04d}'.format(int(value))
+
     def pack_std_item_mpi(self, value):
         """Packing of a MPI-task number."""
         return 'n{0:04d}'.format(int(value))

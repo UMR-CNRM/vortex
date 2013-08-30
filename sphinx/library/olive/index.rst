@@ -12,7 +12,9 @@ List of modules.
 .. toctree::
    :numbered:
    :maxdepth: 2
-   
-   data/index
 
+   olive
+
+   data/index
+   tools/index
 

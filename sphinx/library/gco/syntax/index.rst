@@ -7,4 +7,6 @@ Syntax features related to GCO framework
 .. toctree::
    :maxdepth: 1
 
+   syntax
+
    stdattrs

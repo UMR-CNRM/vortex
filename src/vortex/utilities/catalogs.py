@@ -125,19 +125,22 @@ class ClassesCollector(Catalog):
         if self.register:
             self.instances.clear()
             for cls in self._items:
-                observers.classobserver(cls.fullname()).register(self)
+                observers.getobserver(cls.fullname()).register(self)
         self._filled = True
         return len(self._items)
 
     def newobsitem(self, item, info):
+        """Register a new instance of some of the classes in the catalog."""
         logger.debug('Notified %s new item %s', self, item)
         self.instances.add(item)
 
     def delobsitem(self, item, info):
+        """Unregister an existing object in the current catalog of instances."""
         logger.debug('Notified %s del item %s', self, item)
         self.instances.discard(item)
 
     def updobsitem(self, item, info):
+        """Not yet specialised..."""
         logger.debug('Notified %s upd item %s', self, item)
 
     def pickup_attributes(self, desc):

@@ -7,7 +7,7 @@ __all__ = [ 'Resource', 'ResourcesCatalog' ]
 import re, sys
 from vortex.autolog import logdefault as logger
 from vortex.syntax import BFootprint
-from vortex.syntax.stdattrs import a_nativefmt, notinrepr
+from vortex.syntax.stdattrs import a_nativefmt, a_format, notinrepr
 from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from contents import DataContent, DataRaw
 
@@ -18,6 +18,7 @@ class Resource(BFootprint):
         info = 'Abstract NWP Resource',
         attr = dict(
             nativefmt = a_nativefmt,
+            format = a_format,
             clscontents = dict(
                 type = DataContent,
                 isclass = True,
@@ -87,13 +88,13 @@ class Resource(BFootprint):
 
     def gget_basename(self):
         return ''
-    
+
     def genv_basename(self):
         return self.gget_basename()
-    
+
     def gget_urlquery(self):
         return ''
-    
+
     def genv_urlquery(self):
         return self.gget_urlquery()
 
@@ -122,6 +123,10 @@ class Unknown(Resource):
 class ResourcesCatalog(ClassesCollector):
 
     def __init__(self, **kw):
+        """
+        Define defaults regular expresion for module search, list of tracked classes
+        and the item entry name in pickled footprint resolution.
+        """
         logger.debug('Resources catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*(?:resources|data)'),
@@ -133,7 +138,7 @@ class ResourcesCatalog(ClassesCollector):
 
     @classmethod
     def tablekey(cls):
-        """The entry used in the global catalogs table, eg: ``resources``."""
+        """The entry point for global catalogs table. -- Here: resources."""
         return 'resources'
 
 build_catalog_functions(sys.modules.get(__name__), ResourcesCatalog)

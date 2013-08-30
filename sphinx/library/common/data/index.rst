@@ -13,8 +13,10 @@ Data resources
    boundaries
    climfiles
    consts
+   diagnostics
    gridfiles
    logs
    obs
    modelstates
    namelists
+   surfex

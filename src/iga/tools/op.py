@@ -1,6 +1,9 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+#: No automatic export
+__all__ = []
+
 import re
 
 from iga.utilities import swissknife
@@ -87,3 +90,35 @@ def complete(t, **kw):
 def rescue(**kw):
     """Something goes wrong... so, do your best to save current state."""
     print 'Bad luck...'
+
+def fulltraceback(localsd=None):
+    """Produce some nice traceback at the point of failure."""
+
+    if not localsd:
+        localsd = dict()
+
+    if 't' in localsd:
+        sh = localsd['t'].sh
+    else:
+        sh = None
+
+    if sh:
+        sh.title('Handling exception')
+    else:
+        print '-' * 100
+
+    import sys, traceback
+    (exc_type, exc_value, exc_traceback) = sys.exc_info()
+
+    print 'Exception type: ' + str(exc_type)
+    print 'Exception info: ' + str(localsd.get('last_error', None))
+    if sh:
+        sh.header('Traceback Error / BEGIN')
+    else:
+        print '-' * 100
+    print "\n".join(traceback.format_tb(exc_traceback))
+    if sh:
+        sh.header('Traceback Error / END')
+    else:
+        print '-' * 100
+

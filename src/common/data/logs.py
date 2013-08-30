@@ -50,13 +50,25 @@ class ParallelListing(Listing):
                 ),
                 mpi = dict(
                     optional = True,
-                    default = 1,
+                    default = None,
                     type = FmtInt,
                     args = dict( fmt = '03' ),
                 ),
                 openmp = dict(
                     optional = True,
-                    default = 1,
+                    default = None,
+                    type = FmtInt,
+                    args = dict( fmt = '02' ),
+                ),
+                seta = dict(
+                    optional = True,
+                    default = None,
+                    type = FmtInt,
+                    args = dict( fmt = '03' ),
+                ),
+                setb = dict(
+                    optional = True,
+                    default = None,
                     type = FmtInt,
                     args = dict( fmt = '02' ),
                 ),
@@ -71,5 +83,8 @@ class ParallelListing(Listing):
     def basename_info(self):
         """From base information of ``listing`` add mpi and openmp values."""
         info = super(ParallelListing, self).basename_info()
-        info['compute'] = [{'mpi':self.mpi}, {'openmp':self.openmp}]
+        if self.mpi and self.openmp:
+            info['compute'] = [{'mpi':self.mpi}, {'openmp':self.openmp}]
+        if self.seta and self.setb:
+            info['compute'] = [{'seta':self.seta}, {'setb':self.setb}]
         return info

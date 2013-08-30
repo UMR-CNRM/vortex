@@ -1,15 +1,16 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
+#: No automatic export
+__all__ = []
+
 import re
 
 import collections
 OpSetValues = collections.namedtuple('OpSetValues', ['suite', 'vapp', 'vconf'])
 
-from string import Template
-
 from vortex.tools import date
-from vortex.tools.config import GenericConfigParser
+from vortex.tools.config import GenericConfigParser, loadtemplate
 from vortex.autolog import logdefault as logger
 
 
@@ -33,8 +34,8 @@ def getopsetfrompath(sh, path=None):
 def mkjob(t, **kw):
     """Build a complete job file according to a template and some parameters."""
     opts = dict(
-        template = 'job_template.txt',
-        inifile  = 'job_template.ini',
+        template = 'job.default.tpl',
+        inifile  = 'job.default.ini',
         create   = date.atsecond().iso8601(),
         mkuser   = t.glove.user,
         name = 'autojob',
@@ -42,15 +43,13 @@ def mkjob(t, **kw):
     )
     opts.update(kw)
 
-    try:
-        with open(opts['template'], 'r') as tpl:
-            corejob = Template(tpl.read())
-    except Exception as pb:
-        logger.error('Could not read template %s', str(pb))
-        exit(1)
+    corejob = loadtemplate(opts['template'])
+    opts['tplfile'] = corejob.srcfile
 
     try:
-        tplconf = GenericConfigParser(inifile=opts['inifile']).as_dict()
+        iniparser = GenericConfigParser(inifile=opts['inifile'])
+        opts['tplinit'] = iniparser.file
+        tplconf = iniparser.as_dict()
     except Exception as pb:
         logger.warning('Could not read config %s', str(pb))
         tplconf = dict()
@@ -67,7 +66,6 @@ def mkjob(t, **kw):
 
     tplconf.setdefault('file', opts['name'] + '.py')
 
-    print 'TEMPLATE SUBSTITUTE', tplconf
     corejob = corejob.substitute(tplconf)
 
     if opts['wrap']:
@@ -102,9 +100,11 @@ def slurm_parameters(t, **kw):
         slurm['openmp'] = e.OMP_NUM_THREADS
     else:
         try:
-            slurm['openmp'] = int(e.SLURM_CPUS_ON_NODE)
+            guess_cpus  = int(re.sub('\(.*$', '', e.SLURM_JOB_CPUS_PER_NODE))
+            guess_tasks = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
+            slurm['openmp'] = guess_cpus / guess_tasks
         except Exception as pb:
-            print '[WARNING] SLURM_CPUS_ON_NODE:', pb
+            print '[WARNING] SLURM_JOB_CPUS_PER_NODE:', pb
 
     for x in ('nn', 'nnp', 'openmp'):
         if x in kw:

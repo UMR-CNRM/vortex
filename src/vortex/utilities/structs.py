@@ -18,6 +18,7 @@ def idtree(tag):
     return _tableroots[tag]
 
 class Tree(object):
+    """A Miscelaneous hierarchical structure which is also able to track an changing active node."""
 
     def __init__(self, name='all', root=None):
         self.name = name

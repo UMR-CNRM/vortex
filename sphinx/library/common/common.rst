@@ -1,8 +1,8 @@
-:mod:`common` --- TODO Module Header
-====================================
+:mod:`common` --- Main package for commonly shared resources and tools
+======================================================================
 
 .. automodule:: common
-   :synopsis: TODO Module Synopsis
+   :synopsis: Commonly shared resources and tools
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -13,6 +13,6 @@ Package
 
 .. autodata:: __all__
 
-Classes
--------
-
+* :mod:`common.algo`
+* :mod:`common.data`
+* :mod:`common.tools`

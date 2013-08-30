@@ -1,5 +1,5 @@
-:mod:`vortex.syntax.footprint` --- Crude priority rules
-=======================================================
+:mod:`vortex.syntax.footprint` --- Footprint mechanism
+======================================================
 
 .. automodule:: vortex.syntax.footprint
    :synopsis: Generic footprint implementation
@@ -16,10 +16,16 @@ Package
 
 .. autodata:: docstring_nicedump
 
+.. autodata:: fast_resolve
+
+.. autodata:: extended_defaults
+
 Interface functions
 -------------------
 
 .. autofunction:: envfp
+
+.. autofunction:: setfpext
 
 
 Exceptions

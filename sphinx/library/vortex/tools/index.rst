@@ -7,11 +7,13 @@ Miscellaneous Tools
 
    tools
    actions
+   caches
    config
    date
    env
    fortran
    net
    services
+   sms
    systems
    targets

@@ -14,10 +14,19 @@ Package
 
 .. autodata:: __all__
 
-Data definition
----------------
+Pre-defined sets
+----------------
 
 .. autodata:: models
+
+.. autodata:: binaries
+
+.. autodata:: notinrepr
+
+.. autodata:: knownfmt
+
+Pre-defined attributes
+----------------------
 
 .. autodata:: a_cutoff
 
@@ -25,11 +34,15 @@ Data definition
 
 .. autodata:: a_domain
 
+.. autodata:: a_format
+
 .. autodata:: a_model
 
 .. autodata:: a_month
 
 .. autodata:: a_nativefmt
+
+.. autodata:: a_suite
 
 .. autodata:: a_term
 
@@ -48,7 +61,7 @@ Class attributes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Month
+.. autoclass:: FPList
    :show-inheritance:
    :members:
    :member-order: alphabetical

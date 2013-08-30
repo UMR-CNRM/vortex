@@ -8,6 +8,7 @@ Algo components
    :maxdepth: 1
 
    algo
-   
+
+   coupling
    forecasts
    mpitools

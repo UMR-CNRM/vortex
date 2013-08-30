@@ -1,6 +1,9 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+#: No automatic export
+__all__ = []
+
 from vortex.autolog import logdefault as logger
 from vortex.data.containers import Container
 

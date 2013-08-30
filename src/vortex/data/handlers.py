@@ -41,7 +41,7 @@ class Handler(object):
         self._options.update(kw)
         self._history = [(Date.now(), self.__class__.__name__, 'init', 1)]
         self._stage = [ 'load' ]
-        self._observer = observers.classobserver('Resources-Handlers')
+        self._observer = observers.getobserver('Resources-Handlers')
         self._observer.notify_new(self, dict(stage = 'load'))
         logger.debug('New resource handler %s', self.__dict__)
 

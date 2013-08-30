@@ -896,7 +896,10 @@ class SystemsCatalog(ClassesCollector):
     """Class in charge of collecting :class:`System` items."""
 
     def __init__(self, **kw):
-        """Collect kind of :class:`System` classes."""
+        """
+        Define defaults regular expresion for module search, list of tracked classes
+        and the item entry name in pickled footprint resolution.
+        """
         logger.debug('Systems catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.system'),
@@ -908,7 +911,7 @@ class SystemsCatalog(ClassesCollector):
 
     @classmethod
     def tablekey(cls):
-        """The entry point for global catalogs table."""
+        """The entry point for global catalogs table. -- Here: systems."""
         return 'systems'
 
 

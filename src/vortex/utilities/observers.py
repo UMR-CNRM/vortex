@@ -1,10 +1,10 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-r"""
+"""
 Various gateways to observing systems.
 
-Using the factory :func:`classobserver` should provide a convenient way to register
+Using the factory :func:`getobserver` should provide a convenient way to register
 to an undetermined number of objects hold by :class:`ObserverSet` objects.
 """
 
@@ -14,11 +14,11 @@ __all__ = []
 from vortex.autolog import logdefault as logger
 
 
-def classobserver(clsname, _obstable=dict()):
-    """Return an observer for the specifief class name."""
-    if clsname not in _obstable:
-        _obstable[clsname] = ObserverSet(tag=clsname)
-    return _obstable[clsname]
+def getobserver(tagname, _obstable=dict()):
+    """Return an observer for the specified tag name (a class name for example)."""
+    if tagname not in _obstable:
+        _obstable[tagname] = ObserverSet(tag=tagname)
+    return _obstable[tagname]
 
 
 class Observer(object):
@@ -26,7 +26,7 @@ class Observer(object):
     Pseudo-Interface class. These three methods should be implemented
     by any Observer object.
     """
-    
+
     def newobsitem(self, item, info):
         """A new ``item`` has been created. Some information is provided through the dict ``info``."""
         logger.info('Notified %s new item %s info %s', self, item, info)
@@ -43,7 +43,7 @@ class Observer(object):
 class ObserverSet(object):
     """
     A ObserverSet provides an indirection for observing pattern.
-    It holds two lists: the one of objects that are abserved and
+    It holds two lists: the one of objects that are observed and
     an other list of observers, listening to any creation, deletion
     or update of the observed objects.
     """

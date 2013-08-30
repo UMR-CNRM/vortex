@@ -12,7 +12,10 @@ from vortex.syntax import Footprint
 from vortex.tools.date import Date, Time, Month
 
 #: Export a set of attributes :data:`a_model`, :data:`a_date`, etc..
-__all__ = [ 'a_month', 'a_domain', 'a_truncation', 'a_model', 'a_date', 'a_cutoff', 'a_term', 'a_nativefmt', 'a_suite' ]
+__all__ = [
+    'a_month', 'a_domain', 'a_truncation', 'a_model', 'a_date', 'a_cutoff', 'a_term',
+    'a_nativefmt', 'a_format', 'a_suite'
+]
 
 myself = sys.modules.get(__name__)
 
@@ -25,6 +28,13 @@ binaries = set(['arpege', 'aladin', 'arome', 'peace', 'mocage', 'mesonh'])
 
 #: Default attributes excluded from `repr` display
 notinrepr = set(['kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'])
+
+#: Known formats
+knownfmt = set([
+    'auto', 'autoconfig', 'unknown', 'foo',
+    'ascii', 'fa', 'lfi', 'lfa', 'netcdf', 'grib', 'bufr', 'obsoul',
+    'bullx', 'sx'
+])
 
 
 class FPList(list):
@@ -59,17 +69,26 @@ class FmtInt(int):
 #: Usual definition of the ``nativefmt`` attribute.
 a_nativefmt = dict(
     optional = True,
-    values = [
-        'auto', 'autoconfig', 'fa', 'lfi', 'lfa', 'ascii',
-        'netcdf', 'grib', 'bufr', 'obsoul'
-    ],
+    values = knownfmt,
     remap = dict(
-        auto = 'autoconfig'
+        auto = 'foo'
     ),
-    default = 'autoconfig',
+    default = 'foo',
 )
 
 nativefmt = Footprint( info = 'Native format', attr = dict( nativefmt = a_nativefmt ) )
+
+#: Usual definition of the ``format`` attribute.
+a_format = dict(
+    optional = True,
+    values = knownfmt,
+    remap = dict(
+        auto = 'foo'
+    ),
+    default = '[nativefmt]',
+)
+
+format = Footprint( info = 'Actual format', attr = dict( format = a_format ) )
 
 #: Usual definition of the ``cutoff`` attribute.
 a_cutoff = dict(
@@ -151,7 +170,7 @@ term = Footprint( info = 'Abstract term', attr = dict( term = a_term ) )
 a_suite = dict(
     values = [ 'oper', 'dble', 'dbl', 'test' ],
     remap = dict(
-        dble = 'dbl'
+        dbl = 'dble'
     )
 )
 

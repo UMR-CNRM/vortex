@@ -13,6 +13,5 @@ Package
 
 .. autodata:: __all__
 
-Classes
--------
+
 

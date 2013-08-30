@@ -197,7 +197,7 @@ class ReportService(Service):
 
 
 class FileReportService(ReportService):
-    """docstring for FileReportService"""
+    """Building the report as a simple file."""
 
     _footprint = dict(
         info = 'File Report services class',
@@ -216,6 +216,10 @@ class ServicesCatalog(ClassesCollector):
     """Class in charge of collecting :class:`Service` items."""
 
     def __init__(self, **kw):
+        """
+        Define defaults regular expresion for module search, list of tracked classes
+        and the item entry name in pickled footprint resolution.
+        """
         logger.debug('Services catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.services'),
@@ -227,6 +231,7 @@ class ServicesCatalog(ClassesCollector):
 
     @classmethod
     def tablekey(cls):
+        """The entry point for global catalogs table. -- Here: services."""
         return 'services'
 
 

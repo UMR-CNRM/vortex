@@ -13,7 +13,10 @@ List of modules.
    :numbered:
    :maxdepth: 2
 
+   iga
+
    data/index
    syntax/index
+   tasks/index
    tools/index
    utilities/index

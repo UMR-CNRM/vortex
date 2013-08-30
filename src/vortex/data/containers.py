@@ -282,6 +282,10 @@ class File(Container):
 class ContainersCatalog(ClassesCollector):
 
     def __init__(self, **kw):
+        """
+        Define defaults regular expresion for module search, list of tracked classes
+        and the item entry name in pickled footprint resolution.
+        """
         logger.debug('Containers catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.containers'),
@@ -293,6 +297,7 @@ class ContainersCatalog(ClassesCollector):
 
     @classmethod
     def tablekey(cls):
+        """The entry point for global catalogs table. -- Here: containers."""
         return 'containers'
 
 build_catalog_functions(sys.modules.get(__name__), ContainersCatalog)

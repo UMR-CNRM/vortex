@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Top level interface for accessing to the VORTEX facilities.
+Top level interface for accessing the VORTEX facilities.
 """
 
 #: Automatic export of superstar interface.
@@ -154,8 +154,12 @@ def algo(*args, **kw):
     ctx.record_on()
     return ok
 
-def magic(uri, localpath):
-    return rh(unknown=True, magic=uri, filename=localpath)
+def magic(url, localpath):
+    """
+    Return a minimal resource handler build with an unknown resource,
+    a file container and an anonymous provider described with its url.
+    """
+    return rh(unknown=True, magic=url, filename=localpath)
 
 def namespaces(**kw):
     """

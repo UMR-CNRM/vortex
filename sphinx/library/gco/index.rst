@@ -12,7 +12,9 @@ List of modules.
 .. toctree::
    :numbered:
    :maxdepth: 2
-   
+
+   gco
+
    data/index
    syntax/index
    tools/index

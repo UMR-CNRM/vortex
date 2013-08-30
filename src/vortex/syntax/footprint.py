@@ -451,7 +451,7 @@ class BFootprint(object):
         if not checked:
             logger.debug('Resolve attributes at footprint init %s', repr(self))
             self._attributes, u_inputattr = self._instfp.resolve(self._attributes, fatal=True)
-        self._observer = observers.classobserver(self.fullname())
+        self._observer = observers.getobserver(self.fullname())
         self._observer.notify_new(self, dict())
 
     @property

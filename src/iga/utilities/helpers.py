@@ -1,6 +1,8 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
+#: No automatic export
+__all__ = []
 
 from vortex.tools.config import GenericConfigParser
 from vortex.data.contents import IndexedTable

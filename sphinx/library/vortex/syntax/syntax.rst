@@ -21,6 +21,8 @@ Package
 Interface functions
 -------------------
 
+.. autofunction:: rangex
+
 .. autofunction:: inplace
 
 .. autofunction:: expand

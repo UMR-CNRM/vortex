@@ -82,9 +82,11 @@ class StdFtp(ftplib.FTP):
                 return None
 
     def netpath(self, remote):
+        """The complete qualified net path of the remote resource."""
         return self.logname + '@' + self.host + ':' + remote
 
     def list(self, *args):
+        """Returns standard directory listing from ftp protocol."""
         contents = []
         self.retrlines('LIST', callback=contents.append)
         return contents

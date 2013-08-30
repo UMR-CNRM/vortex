@@ -90,6 +90,10 @@ class TargetsCatalog(ClassesCollector):
     """Class in charge of collecting :class:`Target` items."""
 
     def __init__(self, **kw):
+        """
+        Define defaults regular expresion for module search, list of tracked classes
+        and the item entry name in pickled footprint resolution.
+        """
         logger.debug('Target computers catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.targets'),
@@ -101,6 +105,7 @@ class TargetsCatalog(ClassesCollector):
 
     @classmethod
     def tablekey(cls):
+        """The entry point for global catalogs table. -- Here: targets."""
         return 'targets'
 
 

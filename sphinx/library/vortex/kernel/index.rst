@@ -8,6 +8,8 @@ List of modules.
    :maxdepth: 1
    
    vortex
+
+   autolog
    gloves
    loader
    sessions

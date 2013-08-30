@@ -16,6 +16,7 @@ from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 
 class MpiException(Exception):
+    """Raise an exception in the parallel execution mode."""
     pass
 
 class MpiTool(BFootprint):
@@ -36,8 +37,9 @@ class MpiTool(BFootprint):
             )
         )
     )
-    
+
     def __init__(self, *args, **kw):
+        """After parent initialization, set the master undefined."""
         logger.debug('Abstract mpi tool init %s', self.__class__)
         super(MpiTool, self).__init__(*args, **kw)
         self.setmaster(None)
@@ -162,6 +164,10 @@ class MpiToolsCatalog(ClassesCollector):
     """Class in charge of collecting :class:`MpiTool` items."""
 
     def __init__(self, **kw):
+        """
+        Define defaults regular expresion for module search, list of tracked classes
+        and the item entry name in pickled footprint resolution.
+        """
         logger.debug('Mpi tools catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.mpitools'),
@@ -173,6 +179,7 @@ class MpiToolsCatalog(ClassesCollector):
 
     @classmethod
     def tablekey(cls):
+        """The entry point for global catalogs table. -- Here: mpitools."""
         return 'mpitools'
 
 

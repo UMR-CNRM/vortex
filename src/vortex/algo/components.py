@@ -28,6 +28,7 @@ class AlgoComponent(BFootprint):
     )
 
     def __init__(self, *args, **kw):
+        """Before parent initialization, preset the internal FS log to an empty list."""
         logger.debug('Algo component init %s', self)
         self.fslog = list()
         super(AlgoComponent, self).__init__(*args, **kw)
@@ -112,6 +113,10 @@ class AlgoComponent(BFootprint):
         self.system.pickle_dump(self.fslog, 'log.' + self.fstag())
 
     def valid_executable(self, rh):
+        """
+        Return a boolean value according to the effective executable nature
+        of the resource handler provided.
+        """
         return True
 
     def run(self, rh, **kw):
@@ -262,6 +267,10 @@ class AlgoComponentsCatalog(ClassesCollector):
     """Class in charge of collecting :class:`AlgoComponent` items."""
 
     def __init__(self, **kw):
+        """
+        Define defaults regular expresion for module search, list of tracked classes
+        and the item entry name in pickled footprint resolution.
+        """
         logger.debug('Algorithmic Components catalog init %s', self)
         cat = dict(
             remod = re.compile(r'.*\.algo'),
@@ -273,6 +282,7 @@ class AlgoComponentsCatalog(ClassesCollector):
 
     @classmethod
     def tablekey(cls):
+        """The entry point for global catalogs table. -- Here: components."""
         return 'components'
 
 

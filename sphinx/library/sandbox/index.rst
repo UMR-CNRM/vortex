@@ -1,8 +1,8 @@
-.. _common-index:
+.. _sandbox-index:
 
-################
-COMMON extension
-################
+##################
+Sandbox playground
+##################
 
 :Release: |version|
 :Date: |today|
@@ -13,10 +13,7 @@ List of modules.
    :numbered:
    :maxdepth: 2
 
-   common
+   sandbox
 
-   algo/index
    data/index
-   tools/index
-
 

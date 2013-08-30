@@ -60,7 +60,7 @@ class Context(object):
             self._sequence = dataflow.Sequence()
 
         self.bind(self._task)
-        observers.classobserver('Resources-Handlers').register(self)
+        observers.getobserver('Resources-Handlers').register(self)
 
     def newobsitem(self, item, info):
         """
@@ -74,7 +74,7 @@ class Context(object):
     def delobsitem(self, item, info):
         """
         Resources-Handlers observing facility.
-        Should removed the associated section. Todo.
+        Should removed the associated section. Yet to coded.
         """
         if self.hasfocus():
             logger.debug('Notified %s del item %s', self, item)
@@ -116,7 +116,7 @@ class Context(object):
 
     @property
     def keeprundir(self):
-        """Return pêrmanent status of the directory associated to that context."""
+        """Return permanent status of the directory associated to that context."""
         return self._keeprd
 
     def cocoon(self):

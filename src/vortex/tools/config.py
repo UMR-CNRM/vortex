@@ -7,10 +7,39 @@ Configuration management through ini files.
 
 __all__ = []
 
+from string import Template
+
 from ConfigParser import SafeConfigParser
 
 import vortex
 from vortex.autolog import logdefault as logger
+
+
+def loadtemplate(tplfile):
+    """Load a template according to filename provided, either absolute or relative path."""
+    tpl = None
+    local = vortex.sessions.system()
+    if local.path.exists(tplfile):
+        tplfile = local.path.abspath(tplfile)
+    else:
+        glove = vortex.sessions.glove()
+        persofile = glove.configrc + '/templates/' + local.path.basename(tplfile)
+        if local.path.exists(persofile):
+            tplfile = persofile
+        else:
+            sitefile = glove.siteroot + '/templates/' + local.path.basename(tplfile)
+            if local.path.exists(sitefile):
+                tplfile = sitefile
+            else:
+                raise Exception('Template file ' + tplfile + ' not found')
+    try:
+        with open(tplfile, 'r') as tplfd:
+            tpl = Template(tplfd.read())
+        tpl.srcfile = tplfile
+    except Exception as pb:
+        logger.error('Could not read template %s', str(pb))
+        raise
+    return tpl
 
 
 class GenericConfigParser(object):

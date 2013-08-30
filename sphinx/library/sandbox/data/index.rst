@@ -1,5 +1,3 @@
-.. data-index:
-
 ##############
 Data resources
 ##############
@@ -11,4 +9,4 @@ Data resources
 
    providers
    resources
-   stores
+

@@ -12,6 +12,8 @@ List of modules.
 .. toctree::
    :numbered:
    :maxdepth: 2
-   
+
+   mercator
+
    data/index
    syntax/index
