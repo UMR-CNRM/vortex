@@ -143,19 +143,27 @@ def expand(desc):
                     vglob = v
                     globitems = list()
                     def getglob(matchobj):
-                        globitems.append(matchobj.group(1))
+                        globitems.append([matchobj.group(1), matchobj.group(2)])
                         return '*'
                     while ( re.search('{glob:', vglob) ):
                         vglob = re.sub('{glob:(\w+):([^\}]+)}', getglob, vglob)
-                    repld = list()
+                    ngrp = 0
                     while ( re.search('{glob:', v) ):
-                        v = re.sub('{glob:\w+:([^\}]+)}', r'(\1)', v)
+                        v = re.sub('{glob:\w+:([^\}]+)}', '{'+str(ngrp)+'}', v)
+                        ngrp += 1
+                    v = v.replace('+', '\+')
+                    v = v.replace('.', '\.')
+                    ngrp = 0
+                    while ( re.search('{\d+}', v) ):
+                        v = re.sub('{\d+}', '('+globitems[ngrp][1]+')', v)
+                        ngrp += 1
+                    repld = list()
                     for filename in sh.glob(vglob):
                         m = re.search(r'^'+v+ r'$', filename)
                         if m:
                             globmap = dict()
                             for ig in range(len(globitems)):
-                                globmap[globitems[ig]] = m.group(ig+1)
+                                globmap[globitems[ig][0]] = m.group(ig+1)
                             repld.append(inplace(d, k, filename, globmap))
                     ld[i:i+1] = repld
                     todo = True

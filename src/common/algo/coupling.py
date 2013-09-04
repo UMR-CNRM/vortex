@@ -6,11 +6,12 @@ __all__ = []
 
 import re
 
-from common.algo.forecasts import IFSModelParallel
 from vortex.tools import date
 
+from ifsroot import IFSParallel
 
-class Coupling(IFSModelParallel):
+
+class Coupling(IFSParallel):
     """Coupling for IFS-like LAM Models."""
 
     _footprint = dict(
@@ -41,9 +42,12 @@ class Coupling(IFSModelParallel):
         cplrh = [ x.rh for x in ctx.sequence.effective_inputs(role=('InitialCondition', 'CouplingSource'), kind='historic') ]
         cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
         for r in cplrh:
+            self.system.title('Loop on {0:s}'.format(str(r.resource)))
+
             # Set a local storage place
             runstore = 'RUNOUT' + r.resource.term.fmtraw
             self.system.mkdir(runstore)
+
             # Find out actual monthly climatological resource
             actualmonth = date.Month(r.resource.date + r.resource.term)
             def checkmonth(actualrh):
@@ -52,16 +56,20 @@ class Coupling(IFSModelParallel):
             self.setlink(ctx, initrole='GlobalClim', initkind='clim_model', initname='Const.Clim', inittest=checkmonth)
             self.system.remove('const.clim.AREA')
             self.setlink(ctx, initrole='LocalClim', initkind='clim_model', initname='const.clim.AREA', inittest=checkmonth)
+
             # Finaly set the actual init file
             self.system.remove('ICMSHFPOSINIT')
             self.system.softlink(r.container.localpath(), 'ICMSHFPOSINIT')
+
             # Standard execution
             super(Coupling, self).execute(rh, ctx, opts)
+
             # Freeze the current output
             for posfile in [ x for x in self.system.glob('PFFPOSAREA+*') if re.match('PFFPOSAREA\+\d+(?:\d+)$', x) ]:
-                self.system.move(posfile, self.system.path.join(runstore, 'CPLOUT+' + str(r.resource.term.fmthm)))
+                self.system.move(posfile, self.system.path.join(runstore, 'CPLOUT+' + r.resource.term.fmthm))
             for logfile in self.system.glob('NODE.*', 'std*'):
                 self.system.move(logfile, self.system.path.join(runstore, logfile))
+
             # Some cleaning
             self.system.rmall('PXFPOS*', 'ncf927', 'dirlst')
 

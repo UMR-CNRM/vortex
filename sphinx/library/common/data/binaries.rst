@@ -17,7 +17,22 @@ Package
 Classes
 -------
  
-.. autoclass:: NWPModel
+.. autoclass:: IFSModel
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Aladin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ProGrid
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ProTool
    :show-inheritance:
    :members:
    :member-order: alphabetical

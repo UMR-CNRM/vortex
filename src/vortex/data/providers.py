@@ -228,6 +228,13 @@ class Vortex(Provider):
     def realkind(self):
         return 'vortex'
 
+    def addrepr(self):
+        """Additional information to internal representation."""
+        try:
+            return '| namespace=\'{0:s}\' block=\'{1:s}\''.format(self.namespace, self.block)
+        except AttributeError:
+            return super(Provider, self).addrepr()
+
     def scheme(self):
         """Default: ``vortex``."""
         return 'vortex'

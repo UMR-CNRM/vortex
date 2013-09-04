@@ -175,7 +175,8 @@ class Handler(object):
                 rst = store.get(uridata, self.container.localpath(), self.options(extras))
                 self.container.updfill(rst)
                 self._history.append((Date.now(), store.fullname(), 'get', rst))
-                self.updstage('get')
+                if rst:
+                    self.updstage('get')
                 return rst
             else:
                 logger.error('Could not find any store to get %s', remotelocation)

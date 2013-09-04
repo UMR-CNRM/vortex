@@ -69,7 +69,11 @@ class AlgoComponent(BFootprint):
         self.system.chmod(absx, 0755)
         return absx
 
-    def spawn(self, args):
+    def spawn_hook(self, ctx):
+        """Last chance to say something before execution."""
+        pass
+
+    def spawn(self, ctx, args):
         """
         Spawn in the current system the command as defined in raw ``args``.
 
@@ -78,7 +82,7 @@ class AlgoComponent(BFootprint):
           * VORTEX_DEBUG_ENV : dump current environment before spawn
         """
         if self.env.true('vortex_debug_env'):
-            self.system.subtitle('{0:s} : dump environment (os bound: {1:s}'.format(
+            self.system.subtitle('{0:s} : dump environment (os bound: {1:s})'.format(
                 self.realkind,
                 str(self.env.osbound())
             ))
@@ -86,6 +90,7 @@ class AlgoComponent(BFootprint):
 
         self.system.subtitle('{0:s} : directory listing (pre-execution)'.format(self.realkind))
         self.system.dir(output=False)
+        self.spawn_hook(ctx)
         self.system.subtitle('{0:s} : start execution'.format(self.realkind))
         self.system.spawn(args, output=False)
         self.system.subtitle('{0:s} : directory listing (post-execution)'.format(self.realkind))
@@ -139,7 +144,7 @@ class AlgoComponent(BFootprint):
         self.env = None
         self.system = None
         return self._status
-    
+
     def quickview(self, nb=0, indent=0):
         """Standard glance to objects."""
         tab = '  ' * indent
@@ -176,7 +181,7 @@ class Expresso(AlgoComponent):
         args = [ self.interpreter, rh.container.localpath() ]
         args.extend(self.spawn_command_line(rh, ctx))
         logger.debug('Run script %s', args)
-        self.spawn(args)
+        self.spawn(ctx, args)
 
 
 class BlindRun(AlgoComponent):
@@ -202,7 +207,7 @@ class BlindRun(AlgoComponent):
         args = [ self.absexcutable(rh.container.localpath()) ]
         args.extend(self.spawn_command_line(rh, ctx))
         logger.debug('BlindRun executable resource %s', args)
-        self.spawn(args)
+        self.spawn(ctx, args)
 
 
 class Parallel(AlgoComponent):
@@ -258,9 +263,9 @@ class Parallel(AlgoComponent):
         args = mpi.commandline(self.system, self.env, self.spawn_command_line(rh, ctx))
         logger.info('Run in parallel mode %s', args)
 
-        mpi.setup(ctx, self.target)
-        self.spawn(args)
-        mpi.clean(ctx, self.target)
+        mpi.setup(ctx, self.target, opts)
+        self.spawn(ctx, args)
+        mpi.clean(ctx, self.target, opts)
 
 
 class AlgoComponentsCatalog(ClassesCollector):

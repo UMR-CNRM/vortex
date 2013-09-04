@@ -5,4 +5,4 @@
 __all__ = []
 
 # Recursive inclusion of packages with potential BFootprint classes
-import forecasts, coupling, mpitools
+import forecasts, coupling, mpitools, stdpost

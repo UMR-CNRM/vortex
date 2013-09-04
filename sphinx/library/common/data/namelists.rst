@@ -42,12 +42,12 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Namelistfp
+.. autoclass:: NamelistFullPos
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Namselectdef
+.. autoclass:: NamSelectDef
    :show-inheritance:
    :members:
    :member-order: alphabetical

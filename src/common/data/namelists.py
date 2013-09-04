@@ -298,7 +298,7 @@ class NamSelect(NamTerm):
             return 'extract=' + self.incoming_namelist_fixup('source', 'select')
 
 
-class Namelistfp(NamTerm):
+class NamelistFullPos(NamTerm):
     """
     Class for the fullpos term dependent namelists
     """
@@ -307,7 +307,7 @@ class Namelistfp(NamTerm):
              info = 'Namelist for offline fullpos ',
              attr = dict(
                 kind = dict(
-                    values = [ 'namelistfp']
+                    values = [ 'namelistfp' ]
                 )
             )
         )
@@ -350,10 +350,8 @@ class XXTContent(IndexedTable):
         return self.xxtpos(1, g, x)
 
 
-class Namselectdef(NoDateResource):
-    """
-    Class for the xxt file
-    """
+class NamSelectDef(NoDateResource):
+    """Utility, so-called xxt file."""
     _footprint = dict(
         info = 'xxt.def file from namelist pack',
         attr = dict(

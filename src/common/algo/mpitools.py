@@ -20,7 +20,7 @@ class NecMpiRun(MpiRun):
         )
     )
 
-    def setup(self, ctx, target=None):
+    def setup(self, ctx, target=None, opts=None):
         """
         Prepares automatic export of variables through the MPIEXPORT mechanism.
         The list of variables could be extended or reduced through:

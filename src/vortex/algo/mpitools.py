@@ -100,14 +100,23 @@ class MpiTool(BFootprint):
         cmdl.extend(args)
         return cmdl
 
-    def setup_namelists(self, ctx, target=None):
+    def setup_namelists(self, ctx, target=None, opts=None):
         """Braodcast number of MPI tasks to namelists."""
+
+        # Figure out what is the effective number of tasks
         if 'np' in self._options:
             nbproc = int(self._options['np'])
         else:
             nbproc = int(self._options.get('nnp', 1)) * int(self._options.get('nn', 1))
-        #TODO move to namelist class
-        for namrh in [ x.rh for x in ctx.sequence.effective_inputs(kind='namelist') ]:
+
+        # Define the actual list of active namelist
+        namcandidates = [ x.rh for x in ctx.sequence.effective_inputs(kind=('namelist', 'namelistfp')) ]
+        if opts != None and 'loop' in opts:
+            namcandidates = [ x for x in namcandidates if (hasattr(x.resource, 'term') and x.resource.term == opts['loop']) ]
+        else:
+            logger.warning('No loop option.')
+        logger.warning('Namelist candidates %s', namcandidates)
+        for namrh in namcandidates:
             namc = namrh.contents
             namw = False
             if 'NBPROC' in namc.macros():
@@ -126,20 +135,20 @@ class MpiTool(BFootprint):
             if namw:
                 namc.rewrite(namrh.container)
 
-    def setup_environment(self, ctx, target):
+    def setup_environment(self, ctx, target, opts):
         """Fix some environmental or behavior according to target definition."""
         if target.config.has_section('mpienv'):
             for k, v in target.config.items('mpienv'):
                 logger.info('Setting MPI env %s = %s', k, v)
                 ctx.env[k] = str(v)
 
-    def setup(self, ctx, target=None):
+    def setup(self, ctx, target=None, opts=None):
         """Specific MPI settings before running."""
-        self.setup_namelists(ctx, target)
+        self.setup_namelists(ctx, target, opts)
         if target:
-            self.setup_environment(ctx, target)
+            self.setup_environment(ctx, target, opts)
 
-    def clean(self, ctx, target=None):
+    def clean(self, ctx, target=None, opts=None):
         """Abstract method fot the time being."""
         pass
 

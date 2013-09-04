@@ -108,8 +108,8 @@ def pushsection(section, args, kw):
     ctx.record_off()
     opts, kwclean = stripargs_section(**kw)
     if verbose > 1:
-        print 'New {0:s} section, options:'.format(section), light_dict_dumper(opts)
-        print 'Loading resource handler(s), arguments:', light_dict_dumper(kwclean), "\n"
+        print 'New {0:s} section with options:'.format(section), light_dict_dumper(opts), "\n"
+        print 'Loading resource handlers with description:', light_dict_dumper(kwclean), "\n"
     rl = rload(*args, **kwclean)
     rlok = list()
     push = getattr(ctx.sequence, section)
@@ -149,7 +149,7 @@ def algo(*args, **kw):
     ctx = sessions.ticket().context
     ctx.record_off()
     if verbose > 1:
-        print 'Loading algo component, arguments:', light_dict_dumper(kw), "\n"
+        print 'Loading algo component with description:', light_dict_dumper(kw), "\n"
     ok = components.load(**kw)
     ctx.record_on()
     return ok

@@ -21,7 +21,8 @@ class Context(object):
 
     _count = 0
 
-    def __init__(self, tag='foo', rundir=None, tagtree=None, topenv=None, sequence=None, task=None, mkrundir=True, rootrd=None, keeprd=False):
+    def __init__(self, tag='foo', rundir=None, tagtree=None, topenv=None, sequence=None, task=None, mkrundir=False, rootrd=None, keeprd=False):
+        """Initate a new execution context."""
         logger.debug('Context initialisation %s', self)
         self._env = Environment(env=topenv, active=topenv.active)
         self._tag = tag
@@ -258,6 +259,7 @@ class Context(object):
             logger.warning('Preserving context rundir %s', self._rundir)
             return True
         else:
-            logger.info('Removing context rundir %s', self._rundir)
-            return actualsys.rmsafe(self._rundir, self.tree.root.glove.safedirs())
+            if actualsys.path.isdir(self._rundir):
+                logger.info('Removing context rundir %s', self._rundir)
+                return actualsys.rmsafe(self._rundir, self.tree.root.glove.safedirs())
 

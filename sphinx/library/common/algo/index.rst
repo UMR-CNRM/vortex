@@ -10,5 +10,7 @@ Algo components
    algo
 
    coupling
+   ifsroot
    forecasts
    mpitools
+   stdpost
