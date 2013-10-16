@@ -52,7 +52,7 @@ class UtElscf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arome/oper/production/2012/02/14/r0/COUPL0012.rCM')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r0/COUPL0012.rCM')
  
     def test_e2(self):
         rl = toolbox.rload(
@@ -68,8 +68,8 @@ class UtElscf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/COUPL0006.r00') 
-        self.assertEqual(rl[1].location(), 'ftop://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/COUPL0006.rAM') 
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/COUPL0006.r00')
+        self.assertEqual(rl[1].location(), 'op://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/COUPL0006.rAM')
         
     def test_e3(self):
         rl = toolbox.rload(
@@ -85,8 +85,8 @@ class UtElscf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/COUPLIFS0006.r00') 
-        self.assertEqual(rl[1].location(), 'ftop://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/COUPLIFS0006.rAM') 
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/COUPLIFS0006.r00')
+        self.assertEqual(rl[1].location(), 'op://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/COUPLIFS0006.rAM')
         
     def test_e4(self):
         rl = toolbox.rload(
@@ -101,7 +101,7 @@ class UtElscf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/testmp1/14/r0/COUPL0006.rAM') 
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/testmp1/14/r0/COUPL0006.rAM')
  
     def test_e5(self):
         rl = toolbox.rload(
@@ -116,7 +116,7 @@ class UtElscf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/testmp2/oper/production/2012/02/14/r0/COUPL0006.rAM') 
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/testmp2/oper/production/2012/02/14/r0/COUPL0006.rAM')
  
     def test_e6(self):
         rh = toolbox.rload(

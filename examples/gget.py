@@ -4,7 +4,6 @@
 import vortex
 from vortex.data.geometries import SpectralGeometry
 from vortex.tools import date
-from vortex.syntax import footprint
 
 import common.data
 
@@ -27,7 +26,7 @@ geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False
 
 print t.line
 
-fpenv = footprint.envfp(
+fpenv = vortex.toolbox.defaults(
     geometry=geo,
     date=rundate,
     model='arpege',

@@ -5,7 +5,6 @@
 
 import vortex
 from vortex.tools import date
-from vortex.syntax import footprint
 
 import vortex.data
 import vortex.algo
@@ -44,7 +43,7 @@ rundate = date.Date(2013, 4, 25, 0)
 geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
 geoBDAP = GridGeometry(area='GLOB15', resolution=1.5, runit='dg')
 
-fpenv = footprint.envfp(
+fpenv = vortex.toolbox.defaults(
     geometry=geo,
     namespace='open.archive.fr',
     date=rundate,

@@ -9,17 +9,18 @@ Top level interface for accessing the VORTEX facilities.
 __all__ = [ 'rload', 'rget', 'rput' ]
 
 import re
+import footprints
+
 from vortex.autolog import logdefault as logger
-from vortex import sessions, syntax, data
+from vortex import sessions, data
 from vortex.data import resources, containers, providers, stores
 from vortex.algo import components
 from vortex.tools import caches, targets
 from vortex.layout.dataflow import stripargs_section
-from vortex.utilities.dumper import light_dict_dumper
 
 #: Shortcut to footprint env defaults
-defaults = syntax.footprint.envfp
-setfpext = syntax.footprint.setfpext
+defaults = footprints.setup.setfpenv
+setfpext = footprints.setup.setfpext
 sectionmap = {'input':'get', 'output':'put', 'executable':'get'}
 justdoit = False
 getinsitu = False
@@ -50,8 +51,8 @@ def rload(*args, **kw):
     parameters. Other type of arguments will be discarded.
 
     An abstract resource descriptor is built as the agregation of these arguments
-    and then expanded according to rules defined in the syntax module. For any
-    expanded descriptor, the resources module will try to pickup the best
+    and then expanded according to rules defined in the :mod:`footprints.util` module.
+    For any expanded descriptor, the resources module will try to pickup the best
     candidate (if any) that could match the description (ie: Resource,
     Provider, Container, etc.)
 
@@ -65,7 +66,7 @@ def rload(*args, **kw):
         else:
             logger.warning('Discard rload argument <%s>', a)
     rd.update(kw)
-    rx = [ containers.pickup(providers.pickup(resources.pickup(x))) for x in syntax.expand(rd) ]
+    rx = [ containers.pickup(providers.pickup(resources.pickup(x))) for x in footprints.util.expand(rd) ]
     logger.debug('Resource desc %s', rx)
     return [ data.handlers.Handler(x) for x in rx ]
 
@@ -102,14 +103,13 @@ def rput(*args, **kw):
 
 def pushsection(section, args, kw):
     """Add a ``section`` type to the current sequence."""
-    now = kw.setdefault('now', justdoit)
-    del kw['now']
+    now = kw.pop('now', justdoit)
     ctx = sessions.ticket().context
     ctx.record_off()
     opts, kwclean = stripargs_section(**kw)
     if verbose > 1:
-        print 'New {0:s} section with options:'.format(section), light_dict_dumper(opts), "\n"
-        print 'Loading resource handlers with description:', light_dict_dumper(kwclean), "\n"
+        print 'New {0:s} section with options:'.format(section), footprints.dump.lightdump(opts), "\n"
+        print 'Loading resource handlers with description:', footprints.dump.lightdump(kwclean), "\n"
     rl = rload(*args, **kwclean)
     rlok = list()
     push = getattr(ctx.sequence, section)
@@ -149,7 +149,7 @@ def algo(*args, **kw):
     ctx = sessions.ticket().context
     ctx.record_off()
     if verbose > 1:
-        print 'Loading algo component with description:', light_dict_dumper(kw), "\n"
+        print 'Loading algo component with description:', footprints.dump.lightdump(kw), "\n"
     ok = components.load(**kw)
     ctx.record_on()
     return ok

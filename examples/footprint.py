@@ -1,12 +1,13 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+import footprints
+
 import vortex
 
 t = vortex.ticket()
 t.warning()
 
-from vortex.syntax.footprint import Footprint
 from vortex.data.resources import Resource
 from vortex.syntax.stdattrs import a_model
 
@@ -31,10 +32,10 @@ class R01(Resource):
     @property
     def realkind(self):
         return 'R01'
-    
+
 class R02(R01):
-    
-    _footprint = Footprint(
+
+    _footprint = footprints.Footprint(
         nodefault = True,
         attr = dict(
             foo = dict( optional = False ),

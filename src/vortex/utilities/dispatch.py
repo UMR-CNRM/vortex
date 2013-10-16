@@ -1,16 +1,18 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-r"""
+"""
 First version of command line dispatcher.
 Mainly for demonstration purpose ?
 """
 
 import re
+
+import footprints
+
 from vortex.autolog import logdefault as logger
 from vortex import toolbox
-from vortex.syntax import footprint
-from vortex.utilities import catalogs, dumper, trackers
+from vortex.utilities import catalogs, trackers
 from vortex.data.geometries import SpectralGeometry, GridGeometry
 from vortex import data, algo, tools
 
@@ -214,7 +216,7 @@ class Dispatcher(object):
         Set and print the current default footprint values.
         Result current <fpenv> object.
         """
-        fpenv = footprint.envfp(**kw)
+        fpenv = footprints.setup.setfpenv(**kw)
         return (0, str(fpenv()), fpenv)
 
     def rmfp(self, t, kw):
@@ -222,7 +224,7 @@ class Dispatcher(object):
         Remove from current default footprint the specified keys.
         Return the list of removed keys.
         """
-        fpenv = footprint.envfp()
+        fpenv = footprints.setup.defaults
         removed = list()
         for item in kw.keys():
             if item in fpenv:
@@ -249,9 +251,8 @@ class Dispatcher(object):
         if 'method' in kw:
             rattr = getattr(obj, kw['method'], None)
             if callable(rattr):
-                args = kw.setdefault('args', False)
+                args = kw.pop('args', False)
                 if args:
-                    del kw['args']
                     del kw['method']
                     info = rattr(kw)
                 else:
@@ -301,7 +302,7 @@ class Dispatcher(object):
         strdumps = list()
         for k, v in kw.iteritems():
             strdumps.append('  ' + k + ':')
-            strdumps.append(dumper.nicedump(v))
+            strdumps.append(footprints.dump.fulldump(v))
         return (0, "\n".join(strdumps), None)
 
 

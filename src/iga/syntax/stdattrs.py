@@ -40,12 +40,15 @@ fuzzystr = dict(
     ),
     surf0000 = dict(
         histsurf = dict( input = 'INIT_SURF', output = 'INIT_SURF' ),
+        historic = dict( input = 'INIT_SURF', output = 'INIT_SURF' ),
     ),
     surf0003 = dict(
         histsurf = dict( input = 'PREP', output = 'AROMOUT_.0003' ),
+        historic = dict( input = 'PREP', output = 'AROMOUT_.0003' ),
     ),
     surf0006 = dict(
         histsurf = dict( input = 'PREP', output = 'AROMOUT_.0006' ),
+        historic = dict( input = 'PREP', output = 'AROMOUT_.0006' ),
     ),
 )
 

@@ -1,10 +1,10 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-r"""
+"""
 This module provides some pre-defined attributes descriptions or combined sets
 of attributes description that could be used in the footprint definition of any
-class which follow the :class:`vortex.syntax.footprint.Footprint` syntax.
+class which follow the :class:`footprints.Footprint` syntax.
 """
 
 import re

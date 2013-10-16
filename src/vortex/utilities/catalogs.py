@@ -12,9 +12,10 @@ which inherit from a given root class.
 __all__ = []
 
 import sys, re
+from footprints.dump import fulldump
+
 import observers
 from vortex.autolog import logdefault as logger
-from vortex.utilities.dumper import nicedump
 from trackers import tracker, FactorizedTracker
 
 
@@ -146,8 +147,7 @@ class ClassesCollector(Catalog):
     def pickup_attributes(self, desc):
         """Try to pickup inside the catalogue a item that could match the description."""
         logger.debug('Pick up a "%s" in description %s with catalog %s', self.itementry, desc, self)
-        report = desc.setdefault('report', self.autoreport)
-        del desc['report']
+        report = desc.pop('report', self.autoreport)
         if self.itementry in desc and desc[self.itementry] != None:
             logger.debug('A %s is already defined %s', self.itementry, desc[self.itementry])
         else:
@@ -155,7 +155,7 @@ class ClassesCollector(Catalog):
         if desc[self.itementry]:
             desc = desc[self.itementry].cleanup(desc)
         else:
-            logger.warning('No %s found in description %s', self.itementry, "\n" + nicedump(desc))
+            logger.warning('No %s found in description %s', self.itementry, "\n" + fulldump(desc))
             if report and self.track:
                 print "\n", self.track.info()
                 print self.track.dump_last()
@@ -217,7 +217,7 @@ class ClassesCollector(Catalog):
         if not candidates:
             return None
         if len(candidates) > 1:
-            logger.warning('Multiple %s candidates for %s', self.itementry, "\n" + nicedump(desc))
+            logger.warning('Multiple %s candidates for %s', self.itementry, "\n" + fulldump(desc))
             candidates.sort(key=lambda x: x[0].weightsort(x[2]), reverse=True)
             for i, c in enumerate(candidates):
                 thisclass, u_resolved, theinput = c
@@ -275,9 +275,7 @@ def build_catalog_functions(xmodule, xclass):
         Try to find in existing instances of XCLASS
         a suitable candidate according to description.
         """
-        kw.setdefault('tag', 'default')
-        c = xmodule.catalog(tag=kw['tag'])
-        del kw['tag']
+        c = xmodule.catalog(tag=kw.pop('tag', 'default'))
         for inst in c.instances():
             if inst.compatible(kw):
                 return inst

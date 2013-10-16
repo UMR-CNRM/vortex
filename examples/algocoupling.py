@@ -9,7 +9,6 @@ import common.data
 import common.algo
 import olive.data
 import gco.data
-from vortex.syntax import footprint
 from vortex.tools import env, date
 from vortex.data import geometries
 from gco.tools import genv
@@ -29,7 +28,7 @@ if sh.cd(e.HOME + '/tmp/rundir'):
 
 today = date.today()
 
-fpenv = footprint.envfp(
+fpenv = vortex.toolbox.defaults(
     gspool=e.HOME + '/gco-tampon',
     date=today,
     month=today,

@@ -50,7 +50,7 @@ class UtBackgroundErrStd(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r0/errgribvor')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r0/errgribvor')
 
     def test_e2(self):
 
@@ -68,7 +68,7 @@ class UtBackgroundErrStd(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor.in')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor.in')
 
     def test_e3(self):
 
@@ -86,7 +86,7 @@ class UtBackgroundErrStd(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production.out')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production.out')
 
     def test_e4(self):
         rl = toolbox.rload(
@@ -105,7 +105,7 @@ class UtBackgroundErrStd(TestCase):
             if not rh.complete:
                 print cr.track.toprettyxml(indent='    ')
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production_dsbscr.out')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production_dsbscr.out')
 
 
 
@@ -124,7 +124,7 @@ class UtInflFactor(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/inflation_factor')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/inflation_factor')
 
 
 if __name__ == '__main__':

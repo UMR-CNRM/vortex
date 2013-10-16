@@ -49,8 +49,7 @@ class Section(object):
         self.role      = kw.get('role', None)
         self.alternate = None
         self.rh        = None
-        self.stages    = [ kw.setdefault('stage', 'void') ]
-        del kw['stage']
+        self.stages    = [ kw.pop('stage', 'void') ]
         self.__dict__.update(kw)
         if self.rh:
             if self.rh.role and not self.role: self.role = self.rh.role

@@ -20,7 +20,7 @@ def fastload(**kw):
         return al
     else:
         return al[0]
-    
+
 def analysis(**kw):
     adesc = dict(
         suite = 'oper',

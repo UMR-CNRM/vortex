@@ -5,7 +5,6 @@ import vortex
 import sandbox.data
 
 from vortex.tools import date
-from vortex.syntax.footprint import envfp
 
 rl = vortex.toolbox.resource
 
@@ -32,9 +31,9 @@ print t.prompt, x
 
 print t.line
 
-envfp(cycle='cy38t1.02')
+vortex.toolbox.defaults(cycle='cy38t1.02')
 
-print t.prompt, envfp()
+print t.prompt, vortex.toolbox.defaults()
 
 x = rl(kind='onlyselect', model='arpege', date=date.today())
 

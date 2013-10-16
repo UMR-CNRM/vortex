@@ -1,14 +1,16 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-r"""
+"""
 This module provides some pre-defined attributes descriptions or combined sets
 of attributes description that could be used in the footprint definition of any
-class which follow the :class:`vortex.syntax.Footprint` syntax.
+class which follow the :class:`footprints.Footprint` syntax.
 """
 
 import sys
-from vortex.syntax import Footprint
+
+import footprints
+
 from vortex.tools.date import Date, Time, Month
 
 #: Export a set of attributes :data:`a_model`, :data:`a_date`, etc..
@@ -32,7 +34,8 @@ notinrepr = set(['kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'])
 #: Known formats
 knownfmt = set([
     'auto', 'autoconfig', 'unknown', 'foo',
-    'ascii', 'fa', 'lfi', 'lfa', 'netcdf', 'grib', 'bufr', 'obsoul',
+    'ascii', 'txt', 'fa', 'lfi', 'lfa', 'netcdf', 'grib',
+    'bufr', 'obsoul', 'odb', 'ecma', 'ccma',
     'bullx', 'sx'
 ])
 
@@ -76,7 +79,7 @@ a_nativefmt = dict(
     default = 'foo',
 )
 
-nativefmt = Footprint( info = 'Native format', attr = dict( nativefmt = a_nativefmt ) )
+nativefmt = footprints.Footprint( info = 'Native format', attr = dict( nativefmt = a_nativefmt ) )
 
 #: Usual definition of the ``format`` attribute.
 a_format = dict(
@@ -88,7 +91,7 @@ a_format = dict(
     default = '[nativefmt]',
 )
 
-format = Footprint( info = 'Actual format', attr = dict( format = a_format ) )
+format = footprints.Footprint( info = 'Actual format', attr = dict( format = a_format ) )
 
 #: Usual definition of the ``cutoff`` attribute.
 a_cutoff = dict(
@@ -108,7 +111,7 @@ a_cutoff = dict(
     )
 )
 
-cutoff = Footprint( info = 'Abstract cutoff', attr = dict( cutoff = a_cutoff ) )
+cutoff = footprints.Footprint( info = 'Abstract cutoff', attr = dict( cutoff = a_cutoff ) )
 
 #: Usual definition of the ``model`` attribute.
 a_model = dict(
@@ -123,7 +126,7 @@ a_model = dict(
     alias = ( 'engine', 'turtle' )
 )
 
-model = Footprint( info = 'Abstract model', attr = dict( model = a_model ) )
+model = footprints.Footprint( info = 'Abstract model', attr = dict( model = a_model ) )
 
 #: Usual definition of the ``date`` attribute.
 a_date = dict(
@@ -131,7 +134,7 @@ a_date = dict(
     optional = False,
 )
 
-date = Footprint( info = 'Abstract date', attr = dict( date = a_date ) )
+date = footprints.Footprint( info = 'Abstract date', attr = dict( date = a_date ) )
 
 #: Usual definition of the ``month`` attribute.
 a_month = dict(
@@ -140,7 +143,7 @@ a_month = dict(
     values = range(1, 13)
 )
 
-month = Footprint( info = 'Abstract month', attr = dict( month = a_month ) )
+month = footprints.Footprint( info = 'Abstract month', attr = dict( month = a_month ) )
 
 #: Usual definition of the ``truncation`` attribute.
 a_truncation = dict(
@@ -148,7 +151,7 @@ a_truncation = dict(
     optional = False,
 )
 
-truncation = Footprint( info = 'Abstract truncation', attr = dict( truncation = a_truncation ) )
+truncation = footprints.Footprint( info = 'Abstract truncation', attr = dict( truncation = a_truncation ) )
 
 #: Usual definition of the ``domain`` attribute.
 a_domain = dict(
@@ -156,7 +159,7 @@ a_domain = dict(
     optional = False,
 )
 
-domain = Footprint( info = 'Abstract domain', attr = dict( domain = a_domain ) )
+domain = footprints.Footprint( info = 'Abstract domain', attr = dict( domain = a_domain ) )
 
 #: Usual definition of the ``term`` attribute.
 a_term = dict(
@@ -164,7 +167,7 @@ a_term = dict(
     optional = False,
 )
 
-term = Footprint( info = 'Abstract term', attr = dict( term = a_term ) )
+term = footprints.Footprint( info = 'Abstract term', attr = dict( term = a_term ) )
 
 #: Usual definition of operational suite
 a_suite = dict(
@@ -177,5 +180,5 @@ a_suite = dict(
 def show():
     """Returns available items and their type."""
     dmod = myself.__dict__
-    for stda in sorted(filter(lambda x: x.startswith('a_') or type(dmod[x]) == Footprint, dmod.keys())):
+    for stda in sorted(filter(lambda x: x.startswith('a_') or type(dmod[x]) == footprints.Footprint, dmod.keys())):
         print '>> {0:<16} {1:<16} : {2}'.format(stda, type(dmod[stda]).__name__, dmod[stda])

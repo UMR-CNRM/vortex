@@ -169,8 +169,7 @@ class Ticket(object):
         Returns the current OS handler used or set a new one according
         to ``kw`` dictionary-like arguments.
         """
-        refill = kw.setdefault('refill', False)
-        del kw['refill']
+        refill = kw.pop('refill', False)
         if refill:
             systems.catalog().refill()
         if not self._system or kw or refill:

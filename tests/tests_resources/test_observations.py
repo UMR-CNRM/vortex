@@ -69,7 +69,7 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r6/obsoul.conv')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/obsoul.conv')
 
     def test_o2(self):
         rl = toolbox.rload(
@@ -85,7 +85,7 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r6/bufr.iasi')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/bufr.iasi')
 
     def test_o3(self):
         rl = toolbox.rload(
@@ -101,7 +101,7 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r6/odb_screen.tar?extract=all')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/odb_screen.tar?extract=all')
 
     def test_o4(self):
         rl = toolbox.rload(
@@ -117,7 +117,7 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r6/odb_cpl.tar?extract=all')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/odb_cpl.tar?extract=all')
 
 
 class UtRefdata(TestCase):
@@ -136,7 +136,7 @@ class UtRefdata(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r6/refdata')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/refdata')
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -155,7 +155,7 @@ class UtRefdata(TestCase):
 class UtVarbc(TestCase):
 
     def setUp(self):
-        self.attrset = dict(kind='varbc', date = '2012021400', cutoff='production', namespace='[suite].archive.fr')
+        self.attrset = dict(kind='varbc', date='2012021400', cutoff='production', namespace='[suite].archive.fr')
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -168,7 +168,7 @@ class UtVarbc(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle')
 
 
     def test_v2(self):
@@ -182,7 +182,7 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle_alad')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle_alad')
 
     def test_v3(self):
         rl = toolbox.rload(
@@ -195,7 +195,7 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle_arp')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle_arp')
 
     def test_v4(self):
         rl = toolbox.rload(
@@ -208,7 +208,7 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arome/oper/production/2012/02/14/r0/VARBC.merge')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r0/VARBC.merge')
 
     def test_v5(self):
         rl = toolbox.rload(
@@ -221,7 +221,7 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/france/oper/production/2012/02/14/r0/VARBC.merge')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/france/oper/production/2012/02/14/r0/VARBC.merge')
 
     def test_v6(self):
         rl = toolbox.rload(
@@ -300,7 +300,7 @@ class UtBlackListDiap(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r6/LISTE_NOIRE_DIAP')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/LISTE_NOIRE_DIAP')
 
 
 class UtBlackListLoc(TestCase):
@@ -319,7 +319,7 @@ class UtBlackListLoc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r6/LISTE_LOC')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/LISTE_LOC')
 
 class UtObsmap(TestCase):
 
@@ -351,7 +351,7 @@ class UtObsmap(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r6/BATOR_MAP')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/BATOR_MAP')
 
     def test_o2(self):
         rl = toolbox.rload(

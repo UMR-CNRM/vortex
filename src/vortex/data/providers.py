@@ -7,15 +7,17 @@ __all__ = [ 'Provider' ]
 
 
 import re, sys, os.path
+
+import footprints
+
 import vortex  # @UnusedImport
 from vortex.autolog import logdefault as logger
-from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from vortex.utilities.names import VNameBuilder
 from vortex.tools import net
 
 
-class Provider(BFootprint):
+class Provider(footprints.BFootprint):
 
     _footprint = dict(
         info = 'Abstract root provider',

@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-r"""
+"""
 Hierarchical documents to store information.
 Derived from :class:`xml.dom.minidom.Document`.
 Used to track structured information given by :mod:`~vortex.utilities.observers`.

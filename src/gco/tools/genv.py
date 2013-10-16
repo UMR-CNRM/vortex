@@ -17,10 +17,8 @@ def handler():
 def register(**kw):
     """Set key - values for a given ``cycle`` recorded as an ``entry`` (parameters)."""
     p = handler()
-    cycle = kw.setdefault('cycle', 'default')
-    entry = kw.setdefault('entry', None)
-    del kw['cycle']
-    del kw['entry']
+    cycle = kw.pop('cycle', 'default')
+    entry = kw.pop('entry', None)
     regcycle = [ x for x in p.keys() if p[x]['CYCLE'] == cycle ]
     if not regcycle:
         if entry:

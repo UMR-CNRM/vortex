@@ -56,8 +56,8 @@ class UtGridpoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/france/oper/assim/2012/02/14/r6/GRIDFRANX01r6_0006')
-        self.assertEqual(rl[1].location(), 'ftop://oper.archive.fr/france/oper/production/2012/02/14/r6/GRIDFRANX01r6_0006')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/france/oper/assim/2012/02/14/r6/GRIDFRANX01r6_0006')
+        self.assertEqual(rl[1].location(), 'op://oper.archive.fr/france/oper/production/2012/02/14/r6/GRIDFRANX01r6_0006')
 
 
     def test_g2(self):
@@ -75,7 +75,7 @@ class UtGridpoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arome/oper/production/2012/02/14/r6/GRIDFRANGP0025r6_0006')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r6/GRIDFRANGP0025r6_0006')
 
 
     def test_g3(self):
@@ -93,8 +93,8 @@ class UtGridpoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arpege/oper/assim/2012/02/14/r6/PE06006GLOB15')
-        self.assertEqual(rl[1].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r6/PESX006GLOB15')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/assim/2012/02/14/r6/PE06006GLOB15')
+        self.assertEqual(rl[1].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/PESX006GLOB15')
 
 
     def test_g4(self):
@@ -113,7 +113,7 @@ class UtGridpoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/pearp/oper/14/r6/fc_SX_4_GLOB15_0006')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/pearp/oper/14/r6/fc_SX_4_GLOB15_0006')
 
 
     def test_g5(self):
@@ -171,7 +171,7 @@ class UtGridpoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/mocage/14/HMGLOB15+2012021510')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/mocage/14/HMGLOB15+2012021510')
 
 
     def test_v7(self):
@@ -227,7 +227,7 @@ class UtGridpoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/mocage/14/SMGLOB15+20120215')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/mocage/14/SMGLOB15+20120215')
 
 
     def test_v9(self):
@@ -326,10 +326,10 @@ class UtHistoric(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arpege/oper/assim/2012/02/14/r0/icmsharpe+0000')
-        self.assertEqual(rl[1].location(), 'ftop://oper.archive.fr/arpege/oper/assim/2012/02/14/r0/icmsharpe+0006')
-        self.assertEqual(rl[2].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r0/icmsharpe+0000')
-        self.assertEqual(rl[3].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r0/icmsharpe+0006')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/assim/2012/02/14/r0/icmsharpe+0000')
+        self.assertEqual(rl[1].location(), 'op://oper.archive.fr/arpege/oper/assim/2012/02/14/r0/icmsharpe+0006')
+        self.assertEqual(rl[2].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r0/icmsharpe+0000')
+        self.assertEqual(rl[3].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r0/icmsharpe+0006')
 
 
     def test_h2(self):
@@ -345,7 +345,7 @@ class UtHistoric(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/ICMSHALAD+0006')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/ICMSHALAD+0006')
 
 
     def test_h3(self):
@@ -362,7 +362,7 @@ class UtHistoric(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/RUN4/icmsharpe+0006')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/RUN4/icmsharpe+0006')
 
     def test_h4(self):
         rl = toolbox.rload(
@@ -378,7 +378,7 @@ class UtHistoric(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/pearp/oper/production/2012/02/14/r0/RUN4/icmshprev+0006')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/pearp/oper/production/2012/02/14/r0/RUN4/icmshprev+0006')
 
     def test_h5(self):
         rl = toolbox.rload(
@@ -392,7 +392,7 @@ class UtHistoric(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arome/oper/production/2012/02/14/r0/ICMSHAROM+0006')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r0/ICMSHAROM+0006')
 
     def test_h6(self):
         rl = toolbox.rload(
@@ -483,8 +483,8 @@ class UtAnalysis(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arome/oper/production/2012/02/14/r0/analyse')
-        self.assertEqual(rl[1].location(), 'ftop://oper.archive.fr/arome/oper/production/2012/02/14/r0/analyse_surf')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r0/analyse')
+        self.assertEqual(rl[1].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r0/analyse_surf')
 
     def test_a2(self):
         rl = toolbox.rload(
@@ -498,8 +498,8 @@ class UtAnalysis(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r0/analyse')
-        self.assertEqual(rl[1].location(), 'ftop://oper.archive.fr/arpege/oper/production/2012/02/14/r0/analyse_surface1')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r0/analyse')
+        self.assertEqual(rl[1].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r0/analyse_surface1')
 
     def test_a3(self):
         rh = toolbox.rload(
@@ -511,7 +511,7 @@ class UtAnalysis(TestCase):
             suite='oper',
         ).pop()
         self.assertTrue(rh.complete)
-        self.assertEqual(rh.location(), 'ftop://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/analyse')
+        self.assertEqual(rh.location(), 'op://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/analyse')
 
     def test_a4(self):
         rh = toolbox.rload(
@@ -524,7 +524,7 @@ class UtAnalysis(TestCase):
             suite='oper',
         ).pop()
         self.assertTrue(rh.complete)
-        self.assertEqual(rh.location(), 'ftop://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/ANALYSE_DFI')
+        self.assertEqual(rh.location(), 'op://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/ANALYSE_DFI')
 
     def test_a5(self):
         rh = toolbox.rload(
@@ -559,7 +559,7 @@ class UtAnalysis(TestCase):
 class UtHistsurf(TestCase):
 
     def setUp(self):
-        self.attrset = dict(kind='histsurf', date = '2012021400', cutoff='production', namespace='[suite].archive.fr')
+        self.attrset = dict(kind='historic', date='2012021400', cutoff='production', namespace='[suite].archive.fr')
         self.arome = SpectralGeometry(id='Current op', area='frangp', resolution=2.5)
 
 
@@ -572,12 +572,12 @@ class UtHistsurf(TestCase):
             experiment='oper',
             block='forecast',
             term=6,
-            model='arome',
+            model='surfex',
             nativefmt='lfi'
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000P/forecast/histsurf.arome.frangp-02km50+0006:00.lfi')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000P/forecast/historic.surfex.frangp-02km50+0006:00.lfi')
 
     def test_o1(self):
         rl = toolbox.rload(
@@ -588,7 +588,7 @@ class UtHistsurf(TestCase):
             experiment='A000',
             block='forecast',
             term=6,
-            model='arome',
+            model='surfex',
             nativefmt='lfi'
         )
         for rh in rl:
@@ -602,16 +602,16 @@ class UtHistsurf(TestCase):
             geometry=self.arome,
             local='AROMOUT+[term:fmthour]',
             term=6,
-            model='arome',
+            model='surfex',
             nativefmt='lfi',
             suite='oper',
             inout='in,out',
-            igakey='[model]'
+            igakey='arome'
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arome/oper/production/2012/02/14/r0/PREP.lfi')
-        self.assertEqual(rl[1].location(), 'ftop://oper.archive.fr/arome/oper/production/2012/02/14/r0/AROMOUT_.0006.lfi')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r0/PREP.lfi')
+        self.assertEqual(rl[1].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r0/AROMOUT_.0006.lfi')
 
 
     def test_h2(self):
@@ -621,16 +621,16 @@ class UtHistsurf(TestCase):
             geometry=self.arome,
             local='AROMOUT+[term:fmthour]',
             term=0,
-            model='arome',
+            model='surfex',
             nativefmt='lfi',
             suite='oper',
             inout='in,out',
-            igakey='[model]'
+            igakey='arome'
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'ftop://oper.archive.fr/arome/oper/production/2012/02/14/r0/INIT_SURF.lfi')
-        self.assertEqual(rl[1].location(), 'ftop://oper.archive.fr/arome/oper/production/2012/02/14/r0/INIT_SURF.lfi')
+        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r0/INIT_SURF.lfi')
+        self.assertEqual(rl[1].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r0/INIT_SURF.lfi')
 
 
 if __name__ == '__main__':

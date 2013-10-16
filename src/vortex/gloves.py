@@ -6,13 +6,15 @@ __all__ = []
 
 
 import sys, re
+
+import footprints
+
 from vortex.autolog import logdefault as logger
-from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from vortex.tools.env import Environment
 
 
-class Glove(BFootprint):
+class Glove(footprints.BFootprint):
     """Base class for GLObal Versatile Environment."""
 
     _footprint = dict(

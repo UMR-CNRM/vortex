@@ -1,11 +1,13 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-from copy import deepcopy
 import logging
+from copy import deepcopy
 from unittest import TestCase, TestLoader, TextTestRunner
-from vortex.syntax import Footprint, BFootprint, rangex
-from vortex.syntax.footprint import MFootprint, UNKNOWN
+
+from footprints import Footprint, BFootprint, MFootprint, UNKNOWN
+from footprints.util import rangex
+
 from vortex.data.containers import InCore
 
 class UtFootprint(TestCase):
@@ -256,6 +258,7 @@ class UtFootprint(TestCase):
         self.assertTrue(done)
         self.assertEquals('clim_arpege_t798', guess['gvar'])
 
+
 class UtMFootprint(TestCase):
 
     def test_new_vide(self):
@@ -359,7 +362,8 @@ class UtBFootprint(TestCase):
         for cle, value in BFootprint._footprint._fp.iteritems():
             if cle == 'priority': continue
             self.assertEquals(value, self.res[cle])
-        self.assertEquals(vars(BFootprint._footprint._fp['priority']['level']), {'tag': 'TOOLBOX'})
+        dp = { k:v for k,v in vars(BFootprint._footprint._fp['priority']['level']).items() if not k.startswith('_') }
+        self.assertEquals(dp, {'tag': 'TOOLBOX'})
 
     def test_init_vide(self):
         mybft = BFootprint()
@@ -367,7 +371,8 @@ class UtBFootprint(TestCase):
         for cle, value in mybft._footprint._fp.iteritems():
             if cle == 'priority': continue
             self.assertEquals(value, self.res[cle])
-        self.assertEquals(vars(BFootprint._footprint._fp['priority']['level']), {'tag': 'TOOLBOX'})
+        dp = { k:v for k,v in vars(BFootprint._footprint._fp['priority']['level']).items() if not k.startswith('_') }
+        self.assertEquals(dp, {'tag': 'TOOLBOX'})
 
     def test_couldbe(self):
         rd = dict(
@@ -451,7 +456,6 @@ class UtRangex(TestCase):
 
 
 def get_test_class():
-    """docstring for get_test_class"""
     return [UtFootprint, UtMFootprint, UtBFootprint, UtRangex]
 
 if __name__ == '__main__':

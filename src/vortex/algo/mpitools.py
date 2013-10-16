@@ -10,8 +10,10 @@ The associated modules defines the catalog factory based on the shared footprint
 __all__ = []
 
 import re, sys, shlex
+
+import footprints
+
 from vortex.autolog import logdefault as logger
-from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 
@@ -19,7 +21,7 @@ class MpiException(Exception):
     """Raise an exception in the parallel execution mode."""
     pass
 
-class MpiTool(BFootprint):
+class MpiTool(footprints.BFootprint):
     """Root class for any :class:`MpiTool` subclasses."""
 
     _footprint = dict(

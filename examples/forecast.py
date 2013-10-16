@@ -4,7 +4,6 @@
 from vortex import sessions, toolbox
 
 import vortex.data
-from vortex.syntax import footprint
 from vortex.data.geometries import SpectralGeometry, GridGeometry
 from vortex.algo import components
 from vortex.tools import env, date
@@ -37,7 +36,7 @@ prvout = dict(experiment = 'A001', block='forecast')
 
 print t.line
 
-fpenv = footprint.envfp(
+fpenv = vortex.toolbox.defaults(
     geometry = geo,
     namespace='open.archive.fr',
     date=rundate,

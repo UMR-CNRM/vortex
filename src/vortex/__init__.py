@@ -23,7 +23,7 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.7.4'
+__version__ = '0.8.0'
 __prompt__  = 'Vortex v-' + __version__+ ':'
 
 __all__ = []
@@ -39,8 +39,25 @@ logging.basicConfig(
 
 logger = logging.getLogger('vortex')
 
+import footprints
+
+priorities = footprints.priorities.top
+priorities.TOOLBOX.addafter('OLIVE')
+priorities.DEBUG.addbefore('OPER')
+
 import loader
-import sessions, toolbox, algo, data, tools
+import vortex.utilities.trackers
+import vortex.utilities.observers
+
+import tools
+def getglove():
+    return dict(glove = tools.env.current().glove)
+
+footprints.setup.defcallback = getglove
+footprints.setup.observers   = vortex.utilities.observers
+footprints.setup.tracker     = vortex.utilities.trackers.tracker
+
+import sessions, toolbox, algo, data
 
 # Set a background environment and a root session
 

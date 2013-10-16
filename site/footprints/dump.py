@@ -2,7 +2,7 @@
 # -*- coding:Utf-8 -*-
 
 """
-Data dumper.
+Data dumper... mostly used in objects' docstring with a footprint.
 """
 
 #: No automatic export
@@ -13,6 +13,7 @@ from types import *  # @UnusedWildImport
 _dumpcache = dict()
 
 def DEBUG(msg, obj=None, level=None):
+    """Fake method for debug purpose (then should provide a print statement)."""
     #print msg, str(obj)
     pass
 
@@ -97,14 +98,14 @@ def indent(level=0, nextline=True):
 
 class Dumper():
     """
-    Could almost dump anything.
+    Could dump almost anything.
     """
 
     def __init__(self):
-        self.seen = {}
+        self.seen = dict()
 
     def reset(self):
-        self.seen = {}
+        self.seen = dict()
 
     def dump_default(self, obj, level=0, nextline=True):
         DEBUG('dump_default')
@@ -248,15 +249,19 @@ class Dumper():
         dump_func = getattr(self, "dump_%s" % name, self.dump_default)
         return dump_func(obj, level, nextline)
 
-def nicedump(obj):
-    """Entry point. Return a string"""
+    def cleandump(self, obj):
+        """Clear cache dump and provide a top indented dump of the provided ``obj``."""
+        self.reset()
+        return indent_space * indent_first + self.dump(obj)
+
+
+def fulldump(obj):
+    """Entry point. Return a string."""
     d = Dumper()
     return indent_space * indent_first + d.dump(obj)
 
-def xxxxdump(obj):
-    return str(obj)
 
-def light_dict_dumper(obj, break_before_dict_key=True, break_before_dict_value=False):
+def lightdump(obj, break_before_dict_key=True, break_before_dict_value=False):
     """Have a quick glance to an assumed 1-depth dictionary."""
     DEBUG('dump_dict', obj)
     items = [

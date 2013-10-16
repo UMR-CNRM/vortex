@@ -5,11 +5,15 @@
 
 import vortex
 import olive, sandbox.data
+from vortex.data import geometries
 
 t = vortex.ticket()
 t.warning()
 
-ra = dict(model='arpege', kind='analysis', date='2011112800', cutoff='long')
+ra = dict(
+    model='arpege', kind='analysis', date='2011112800', cutoff='long',
+    geometry=geometries.getbyname('globalsp')
+)
 
 print t.line
 

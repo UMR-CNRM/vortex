@@ -12,9 +12,10 @@ __all__ = [ 'Store' ]
 
 import re
 import sys
+
+import footprints
+
 from vortex.autolog import logdefault as logger
-from vortex.syntax import BFootprint
-from vortex.syntax.priorities import top
 from vortex.layout import dataflow
 from vortex.tools import config, caches
 from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
@@ -137,7 +138,7 @@ class IniStoreGlue(StoreGlue):
         super(IniStoreGlue, self).__init__(config.DelayedConfigParser(inifile))
 
 
-class Store(BFootprint):
+class Store(footprints.BFootprint):
     """Root class for any :class:`Store` subclasses."""
 
     _footprint = dict(
@@ -197,7 +198,7 @@ class Store(BFootprint):
         return getattr(self, self.scheme + 'put', self.notyet)(local, remote, options)
 
 
-class MultiStore(BFootprint):
+class MultiStore(footprints.BFootprint):
     """Agregate various :class:`Store` items."""
 
     _footprint = dict(
@@ -317,7 +318,7 @@ class Finder(Store):
             )
         ),
         priority = dict(
-            level = top.DEFAULT
+            level = footprints.priorities.top.DEFAULT
         )
     )
 

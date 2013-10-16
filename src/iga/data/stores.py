@@ -4,8 +4,9 @@
 #: No automatic export
 __all__ = []
 
+import footprints
+
 from vortex.autolog import logdefault as logger
-from vortex.syntax.priorities import top
 from vortex.data.stores import Store, Finder
 
 class IgaFinder(Finder):
@@ -31,7 +32,7 @@ class IgaFinder(Finder):
             )
         ),
         priority = dict(
-            level = top.OPER
+            level = footprints.priorities.top.OPER
         )
     )
 

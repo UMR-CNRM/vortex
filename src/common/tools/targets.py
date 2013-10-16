@@ -8,8 +8,9 @@ This package handles some common targets sused at Meteo France.
 #: No automatic export
 __all__ = []
 
+import footprints
+
 from vortex.tools.targets import Target
-from vortex.syntax.priorities import top
 
 
 class NECSX9(Target):
@@ -50,6 +51,6 @@ class MeteoBull(Target):
             )
         ),
         priority = dict(
-            level = top.OPER
+            level = footprints.priorities.top.OPER
         )
     )

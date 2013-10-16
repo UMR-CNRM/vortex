@@ -29,7 +29,7 @@ class UtListing(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120420T0000P/forecast/listing.forecast.2012042000.production')
+        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120420T0000P/forecast/listing.arpege-forecast')
 
 
 class UtMatFilter(TestCase):

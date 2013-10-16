@@ -12,13 +12,14 @@ __all__ = []
 
 import re, sys
 
+import footprints
+
 from vortex.autolog import logdefault as logger
-from vortex.syntax import BFootprint
 from vortex.tools.config import GenericConfigParser
 from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 
-class Cache(BFootprint):
+class Cache(footprints.BFootprint):
     """Root class for any :class:Cache subclasses."""
 
     _footprint = dict(

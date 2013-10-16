@@ -10,7 +10,6 @@ import common.algo
 import olive.data
 from vortex.data.geometries import SpectralGeometry
 from vortex.tools import env, date
-from vortex.syntax import footprint
 
 t = vortex.ticket()
 t.warning()
@@ -24,7 +23,7 @@ sh = t.system()
 if sh.cd(e.HOME + '/tmp/rundir'):
     sh.rmglob('-rf','*')
 
-footprint.envfp(
+vortex.toolbox.defaults(
     date = date.today(),
     source='arpege',
     model='arome',

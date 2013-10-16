@@ -3,23 +3,22 @@
 
 __all__ = [ 'top' ]
 
-from vortex.utilities.patterns import Singleton
-
 
 class PriorityLevel(object):
     """
     Single level to be used inside footprints.
     """
 
-    def __init__(self, tagname):
+    def __init__(self, tagname, pset=None):
         self.tag = tagname
+        self._pset = pset
 
     def __call__(self):
         return self.rank
 
     @property
     def inset(self):
-        return PrioritySet()
+        return self._pset
 
     @property
     def rank(self):
@@ -75,7 +74,7 @@ class PriorityLevel(object):
         return "{0:s}.{1:s}('{2:s}')".format(self.__module__, self.__class__.__name__, self.tag)
 
 
-class PrioritySet(Singleton):
+class PrioritySet(object):
     """
     Iterable class for handling unsortable priority levels.
     """
@@ -84,18 +83,18 @@ class PrioritySet(Singleton):
         if levels:
             self._levels = []
             self.extend(*levels)
-            self._freeze = dict( default=self._levels[:] )
+            self._freeze = dict(default=self._levels[:])
 
     def __iter__(self):
         for l in self._levels:
             yield l
 
     def __call__(self):
-        return self._levels[:]
+        return tuple(self._levels)
 
     @property
     def levels(self):
-        return self._levels[:]
+        return tuple(self._levels)
 
     def __len__(self):
         return len(self._levels)
@@ -132,7 +131,7 @@ class PrioritySet(Singleton):
             while levelname in self._levels:
                 self._levels.remove(levelname)
             self._levels.append(levelname)
-            self.__dict__[levelname] = PriorityLevel(levelname)
+            self.__dict__[levelname] = PriorityLevel(levelname, pset=self)
 
     def levelbyindex(self, ipos):
         """Returns the relative position of the priority named ``tag``."""
@@ -187,14 +186,14 @@ class PrioritySet(Singleton):
 
 
 #: Predefined ordered object.
-top = PrioritySet(levels = ['none', 'default', 'toolbox', 'olive', 'oper', 'debug'])
+top = PrioritySet(levels=['none', 'default', 'toolbox', 'debug'])
 
 
 def simple_doctest():
     """
-    >>> top.OPER < 'olive'
+    >>> top.DEFAULT > 'toolbox'
     False
-    >>> top.OPER < 'DEBUG'
+    >>> top.NONE < 'DEBUG'
     True
     """
     pass

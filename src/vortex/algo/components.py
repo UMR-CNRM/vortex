@@ -8,14 +8,15 @@ import re
 import sys
 import shlex
 
+import footprints
+
 import vortex
 from vortex.autolog import logdefault as logger
-from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from vortex.tools import targets
 from vortex.algo import mpitools
 
-class AlgoComponent(BFootprint):
+class AlgoComponent(footprints.BFootprint):
     """Component in charge of running executable resources."""
 
     _footprint = dict(

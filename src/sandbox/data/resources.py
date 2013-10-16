@@ -4,6 +4,8 @@
 #: No automatic export
 __all__ = []
 
+import footprints
+
 from vortex.autolog import logdefault as logger
 
 from vortex.data.resources import Resource
@@ -12,8 +14,6 @@ from vortex.data.flow import FlowResource
 import common.data.modelstates
 from vortex.syntax.stdattrs import a_model, a_date, a_cutoff, cutoff
 from vortex.syntax.cycles import cy37t1_op1, cy37t1_op2, cy38t1
-
-from vortex.syntax.priorities import top
 from vortex.tools.date import Date
 
 
@@ -53,7 +53,7 @@ class SimpleTest(Resource):
             )
         ),
         priority = dict(
-            level = top.OLIVE
+            level = footprints.priorities.top.OLIVE
         ),
     ) ]
 
@@ -70,7 +70,7 @@ class SimpleTest(Resource):
 
 
 class Parasite(Resource):
-    
+
     _footprint = dict(
         info = 'Insidious parasite resource',
         attr = dict(
@@ -86,7 +86,7 @@ class Parasite(Resource):
             )
         ),
         priority = dict(
-            level = top.OPER
+            level = footprints.priorities.top.OPER
         ),
     )
 

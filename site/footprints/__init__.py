@@ -1,52 +1,68 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-r"""
-The :mod:`vortex` syntax mostly deals with attributes resolution and arguments expansion.
-The most important usage is done by :class:`BFootprint` derivated objects.
+"""
+Fabric for objects with parametrable footprints, i.e. the set of keys/values
+that attributes (possibly optionals) could cover.
 """
 
 #: No automatic export
 __all__ = []
 
-#: Activate nice dump of footprint in docstring
-docstring_nicedump = True
-
-#: Stop footprint resolution on first undef value
-fast_resolve = False
-
-#: Let extra parameters from the footprint defaults to be part of the description
-extended_defaults = False
-
 import copy, re
-from vortex.autolog import logdefault as logger
-from priorities import top
-from vortex.utilities import dictmerge, list2dict, dumper, observers
-from vortex.utilities.trackers import tracker
-from vortex.tools import env
 
+import logging
+logger = logging.getLogger('footprints')
+
+import priorities, dump, util
 
 UNKNOWN = '__unknown__'
 replattr = re.compile(r'\[(\w+)(?:\:+(\w+))?\]')
 
-def setfpext(switch=None):
-    """Commut to extended mode or not for footprint defaults. Return current status."""
-    global extended_defaults
-    if switch != None:
-        extended_defaults = bool(switch)
-    return extended_defaults
-
-def envfp(**kw):
-    """Returns the the parameter set associated to tag ``footprint`` in current env."""
-    p = env.param(tag='footprint')
-    if kw: p.update(kw)
-    return p
 
 class MaxLoopIter(Exception):
     pass
 
 class UnreachableAttr(Exception):
     pass
+
+class FootprintSetup(object):
+    """Defines some defaults and external tools."""
+
+    def __init__(self, docstring=True, fastmode=False, extended=False, dumper=dump.Dumper(), observers=None, tracker=None):
+        self.dumper = dumper
+        self.observers = observers
+        self.tracker = tracker
+        self.extended = extended
+        self.docstring = docstring
+        self.fastmode = fastmode
+        self.ground = dict()
+        self.defaults = dict()
+        self.defcallback = None
+
+    def setfpenv(self, **kw):
+        """Extend the current defaults environnement for footprint resolution."""
+        self.defaults.update({ k.lower():v for k,v in kw.items() })
+        return self.defaults
+
+    def dumpfpenv(self):
+        """Dump the actual values of the default environment."""
+        return [ '{0:s}="{1:s}"'.format(k, str(self.defaults[k])) for k in sorted(self.defaults.keys()) ]
+
+    def setfpext(self, switch=None):
+        """Commut to extended mode or not for footprint defaults. Return current status."""
+        if switch != None:
+            self.extended = bool(switch)
+        return self.extended
+
+    def extras(self):
+        if self.defcallback:
+            cb = self.defcallback
+            return cb()
+        else:
+            return dict()
+
+setup = FootprintSetup()
 
 class Footprint(object):
 
@@ -64,16 +80,16 @@ class Footprint(object):
                 attr = dict(),
                 bind = list(),
                 only = dict(),
-                priority = dict( level = top.TOOLBOX )
+                priority = dict( level = priorities.top.TOOLBOX )
             )
         for a in args:
             if isinstance(a, dict):
                 logger.debug('Init Footprint updated with dict %s', a)
-                dictmerge(fp, list2dict(a, ('attr', 'only')))
+                util.dictmerge(fp, util.list2dict(a, ('attr', 'only')))
             if isinstance(a, Footprint):
                 logger.debug('Init Footprint updated with object %s', a)
-                dictmerge(fp, a.as_dict())
-        dictmerge(fp, list2dict(kw, ('attr', 'only')))
+                util.dictmerge(fp, a.as_dict())
+        util.dictmerge(fp, util.list2dict(kw, ('attr', 'only')))
         for a in fp['attr'].keys():
             fp['attr'][a].setdefault('alias', tuple())
             fp['attr'][a].setdefault('remap', dict())
@@ -102,7 +118,7 @@ class Footprint(object):
 
     def nice(self):
         """Retruns a nice dump version of the actual footprint."""
-        return dumper.nicedump(self._fp)
+        return setup.dumper.cleandump(self._fp)
 
     def track(self, desc):
         """Returns if the items of ``desc`` are found in the specified footstep ``fp``."""
@@ -125,7 +141,7 @@ class Footprint(object):
     def _firstguess(self, desc):
         attrs = self.attr
         guess = dict()
-        param = envfp()
+        param = setup.defaults
         inputattr = set()
         for k, kdef in attrs.iteritems():
             if kdef['optional']:
@@ -151,7 +167,7 @@ class Footprint(object):
         return ( guess, inputattr )
 
     def _findextras(self, desc):
-        extras = dict(glove = env.current().glove)
+        extras = setup.extras()
         for vdesc in desc.values():
             if isinstance(vdesc, BFootprint): extras.update(vdesc.puredict())
         if extras:
@@ -225,7 +241,7 @@ class Footprint(object):
     def resolve(self, desc, **kw):
         """Try to guess how the given description ``desc`` could possibly match the current footprint."""
 
-        opts = dict(fatal=True, fast=fast_resolve, tracker=tracker(tag='fpresolve'))
+        opts = dict(fatal=True, fast=setup.fastmode, tracker=setup.tracker(tag='fpresolve'))
         if kw: opts.update(kw)
 
         guess, inputattr = self._firstguess(desc)
@@ -235,8 +251,8 @@ class Footprint(object):
         self._addextras(extras, guess, desc)
 
         # Add arguments from defaults footprint not already defined to extra parameters
-        if extended_defaults:
-            self._addextras(extras, guess, envfp())
+        if setup.extended:
+            self._addextras(extras, guess, setup.defaults)
 
         attrs = self.attr
 
@@ -315,7 +331,7 @@ class Footprint(object):
     def checkonly(self, rd, tracker):
         """Be sure that the resolved description also match at least one item per ``only`` feature."""
 
-        params = envfp()
+        params = setup.defaults
         for k, v in self.only.items():
             if not hasattr(v, '__iter__'):
                 v = (v, )
@@ -419,7 +435,7 @@ class MFootprint(type):
         for k in d['_footprint'].attr.keys():
             d[k] = AFootprint(k, fset=None, fdel=None)
         realcls = super(MFootprint, cls).__new__(cls, n, b, d)
-        if docstring_nicedump:
+        if setup.docstring:
             basedoc = realcls.__doc__
             if not basedoc:
                 basedoc = 'Not documented yet.'
@@ -437,11 +453,8 @@ class BFootprint(object):
 
     def __init__(self, *args, **kw):
         logger.debug('Abstract %s init', self.__class__)
+        checked = kw.pop('checked', False)
         self._instfp = Footprint(self._footprint.as_dict())
-        checked = False
-        if kw.has_key('checked'):
-            checked = kw.get('checked', False)
-            del kw['checked']
         self._attributes = dict()
         for a in args:
             logger.debug('BFootprint %s arg %s', self, a)
@@ -449,10 +462,13 @@ class BFootprint(object):
                 self._attributes.update(a)
         self._attributes.update(kw)
         if not checked:
-            logger.debug('Resolve attributes at footprint init %s', repr(self))
+            logger.debug('Resolve attributes at footprint init %s', object.__repr__(self))
             self._attributes, u_inputattr = self._instfp.resolve(self._attributes, fatal=True)
-        self._observer = observers.getobserver(self.fullname())
-        self._observer.notify_new(self, dict())
+        if setup.observers:
+            self._observer = setup.observers.getobserver(self.fullname())
+            self._observer.notify_new(self, dict())
+        else:
+            self._observer = None
 
     @property
     def realkind(self):
@@ -460,7 +476,8 @@ class BFootprint(object):
         pass
 
     def __del__(self):
-        self._observer.notify_del(self, dict())
+        if self._observer:
+            self._observer.notify_del(self, dict())
 
     @classmethod
     def fullname(cls):
@@ -537,7 +554,7 @@ class BFootprint(object):
         logger.debug('-' * 180)
         logger.debug('Couldbe a %s ?', cls)
         if not trackroot:
-            trackroot = tracker('garbage')
+            trackroot = setup.tracker('garbage')
         fp = cls.footprint()
         resolved, inputattr = fp.resolve(rd, fatal=False, tracker=trackroot)
         if resolved and None not in resolved.values():

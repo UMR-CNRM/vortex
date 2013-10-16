@@ -16,9 +16,10 @@ import tarfile
 import subprocess
 import pickle
 
+import footprints
+
 from vortex.autolog import logdefault as logger
 from vortex.tools.env import Environment
-from vortex.syntax import BFootprint, priorities
 from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from vortex.tools.net import StdFtp
 
@@ -29,7 +30,7 @@ class ExecutionError(StandardError):
     """Go through exception for internal :meth:`spawn` errors."""
     pass
 
-class System(BFootprint):
+class System(footprints.BFootprint):
     """
     Root class for any :class:`System` subclasses.
     """
@@ -84,11 +85,9 @@ class System(BFootprint):
             del kw['sh']
         self.__dict__['prompt'] = ''
         for flag in ( 'trace', ):
-            self.__dict__[flag] = kw.setdefault(flag, False)
-            del kw[flag]
+            self.__dict__[flag] = kw.pop(flag, False)
         for flag in ( 'output', ):
-            self.__dict__[flag] = kw.setdefault(flag, True)
-            del kw[flag]
+            self.__dict__[flag] = kw.pop(flag, True)
         super(System, self).__init__(*args, **kw)
 
     @property
@@ -413,10 +412,8 @@ class OSExtended(System):
           * cmpaftercp - as a boolean for activating full comparison after pain cp (default: True).
         """
         logger.debug('Abstract System init %s', self.__class__)
-        self._rmtreemin = kw.setdefault('rmtreemin', 3)
-        del kw['rmtreemin']
-        self._cmpaftercp = kw.setdefault('cmpaftercp', True)
-        del kw['cmpaftercp']
+        self._rmtreemin = kw.pop('rmtreemin', 3)
+        self._cmpaftercp = kw.pop('cmpaftercp', True)
         super(OSExtended, self).__init__(*args, **kw)
 
     def rawopts(self, cmdline=None, defaults=None, istrue=istruedef, isfalse=isfalsedef):
@@ -700,18 +697,15 @@ class OSExtended(System):
 
     def _tarcx(self, *args, **kw):
         """Raw file archive command."""
-        cmd = [ 'tar', kw.setdefault('cx', 'c') ]
-        del kw['cx']
+        cmd = [ 'tar', kw.pop('cx', 'c') ]
         cmd.extend(self.glob(args[0]))
         optforce = 'opts' in kw
-        zopt = set(cmd[1]) | set(kw.setdefault('opts', 'f'))
-        del kw['opts']
+        zopt = set(cmd[1]) | set(kw.pop('opts', 'f'))
         if not optforce:
-            if kw.setdefault('verbose', True):
+            if kw.pop('verbose', True):
                 zopt.add('v')
             else:
                 zopt.discard('v')
-            del kw['verbose']
             if cmd[-1].endswith('gz'):
                 zopt.add('z')
             else:
@@ -802,7 +796,7 @@ class Garbage(OSExtended, Python26):
             )
         ),
         priority = dict(
-            level = priorities.top.DEFAULT
+            level = footprints.priorities.top.DEFAULT
         )
     )
 
@@ -831,8 +825,7 @@ class Linux(OSExtended):
           * psopts - as default option for the ps command (default: ``-w -f -a``).
         """
         logger.debug('Linux system init %s', self.__class__)
-        self._psopts = kw.setdefault('psopts', ['-w', '-f', '-a'])
-        del kw['psopts']
+        self._psopts = kw.pop('psopts', ['-w', '-f', '-a'])
         super(Linux, self).__init__(*args, **kw)
 
     @property

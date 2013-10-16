@@ -5,14 +5,16 @@
 __all__ = [ 'Resource', 'ResourcesCatalog' ]
 
 import re, sys
+
+import footprints
+
 from vortex.autolog import logdefault as logger
-from vortex.syntax import BFootprint
 from vortex.syntax.stdattrs import a_nativefmt, a_format, notinrepr
 from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from contents import DataContent, DataRaw
 
 
-class Resource(BFootprint):
+class Resource(footprints.BFootprint):
 
     _footprint = dict(
         info = 'Abstract NWP Resource',

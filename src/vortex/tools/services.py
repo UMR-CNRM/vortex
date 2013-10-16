@@ -21,15 +21,16 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import COMMASPACE
 
+import footprints
+
 from vortex.autolog import logdefault as logger
-from vortex.syntax import BFootprint
 from vortex.syntax.stdattrs import FPList
 from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 criticals = [ 'debug', 'info', 'error', 'warning', 'critical' ]
 
 
-class Service(BFootprint):
+class Service(footprints.BFootprint):
     """
     Abstract base class for services.
     """

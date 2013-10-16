@@ -8,7 +8,7 @@ class which follow the :class:`vortex.syntax.Footprint` syntax.
 """
 
 import sys
-from vortex.syntax import Footprint
+import footprints
  
 #: Export a set of attributes :data:`grids`, :data:`bogus`, etc..
 __all__ = [ 'grids', 'bogus', 'experiences' ]
@@ -36,6 +36,6 @@ Model = dict(
   ),
 )
 
-model = Footprint( info = 'Model', attr = dict( model = Model ) )
+model = footprints.Footprint( info = 'Model', attr = dict( model = Model ) )
 
 

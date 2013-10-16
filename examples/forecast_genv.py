@@ -6,7 +6,6 @@ from vortex import sessions, toolbox
 import vortex.data
 import vortex.algo
 
-from vortex.syntax import footprint
 from vortex.data.geometries import SpectralGeometry, GridGeometry
 from vortex.tools import env, date
 from gco.tools import genv 
@@ -40,7 +39,7 @@ arpege_cycle='cy36t1_op2.16'
 
 print t.line
 
-fpenv = footprint.envfp(
+fpenv = vortex.toolbox.defaults(
     geometry = geo,
     namespace='open.archive.fr',
     date=rundate,

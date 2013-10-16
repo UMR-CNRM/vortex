@@ -1,8 +1,10 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+import footprints
+from footprints.priorities import top
+
 import vortex
-from vortex.syntax.priorities import top
 from sandbox.data.resources import SimpleTest
 
 t = vortex.ticket()
@@ -67,6 +69,9 @@ print 'xtest() :', test.resource.xtest()
 print t.line
 
 top.reset()
+print top()
+top.insert('olive', after='toolbox')
+top.insert('oper', before='debug')
 print top()
 
 print t.line

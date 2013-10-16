@@ -27,8 +27,7 @@ class SuperUX(OSExtended):
 
     def __init__(self, *args, **kw):
         logger.debug('SuperUX system init %s', self.__class__)
-        self._psopts = kw.setdefault('psopts', ['-f'])
-        del kw['psopts']
+        self._psopts = kw.pop('psopts', ['-f'])
         super(SuperUX, self).__init__(*args, **kw)
         if self.hostname == 'unix':
             hl = self.spawn(['hostname'])

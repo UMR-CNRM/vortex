@@ -3,7 +3,6 @@
 
 from vortex import sessions, toolbox
 from vortex.tools import date
-from vortex.syntax import footprint
 
 import vortex.data
 import vortex.algo
@@ -34,7 +33,7 @@ arpege_cycle = 'cy36t1_op2.16'
 rundate = date.Date('2012041300')
 geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
 
-fpenv = footprint.envfp(
+fpenv = vortex.toolbox.defaults(
     geometry=geo,
     namespace='open.archive.fr',
     date=rundate,

@@ -5,9 +5,9 @@
 __all__ = []
 
 import re
+
 from vortex.autolog import logdefault as logger
 from vortex.data.stores import Store, MultiStore, CacheStore
-from vortex.utilities.dumper import nicedump
 
 
 rextract = re.compile('^extract=(.*)$')

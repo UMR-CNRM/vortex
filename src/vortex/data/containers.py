@@ -6,12 +6,14 @@ __all__ = [ 'Container' ]
 
 import re, sys, io, os
 import tempfile
+
+import footprints
+
 from vortex.autolog import logdefault as logger
-from vortex.syntax import BFootprint
 from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 
-class Container(BFootprint):
+class Container(footprints.BFootprint):
 
     def __init__(self, *args, **kw):
         logger.debug('Container %s init', self.__class__)
@@ -141,8 +143,8 @@ class InCore(Virtual):
 
     def __init__(self, *args, **kw):
         logger.debug('Virtual container init %s', self)
-        super(InCore, self).__init__(*args, incore = True, **kw)
         self._tmpfile = None
+        super(InCore, self).__init__(*args, incore=True, **kw)
 
     @property
     def realkind(self):

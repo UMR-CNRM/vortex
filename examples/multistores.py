@@ -3,7 +3,6 @@
 
 import vortex
 from vortex.data import geometries
-from vortex.syntax import footprint
 from vortex.tools.date import Date
 
 import common.data
@@ -29,7 +28,7 @@ print t.line
 prvin  = vortex.toolbox.provider(suite='oper', vapp='arpege')
 prvout = vortex.toolbox.provider(experiment='A001', block='canari', namespace='multi.olive.fr')
 
-fpenv = footprint.envfp(
+fpenv = vortex.toolbox.defaults(
     model='arpege',
     geometry = geometries.getbyname('globalsp'),
     date=Date('2013050100'),
