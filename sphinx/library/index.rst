@@ -12,6 +12,8 @@ List of modules.
 .. toctree::
    :maxdepth: 3
 
+   footprints/index
+
    vortex/index
 
    common/index

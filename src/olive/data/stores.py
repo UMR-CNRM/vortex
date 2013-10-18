@@ -9,7 +9,7 @@ from vortex.autolog import logdefault as logger
 from vortex.data.stores import StoreGlue, IniStoreGlue, ArchiveStore, CacheStore, MultiStore
 
 rextract = re.compile('^extract=(.*)$')
-oparchivemap = IniStoreGlue('oparchive-collector.ini')
+oparchivemap = IniStoreGlue('oparchive-glue.ini')
 
 
 class OliveArchiveStore(ArchiveStore):
@@ -151,7 +151,7 @@ class OpArchiveStore(ArchiveStore):
                 optional = True,
                 default = 'cougar.meteo.fr'
             ),
-            collector = dict(
+            glue = dict(
                 optional = True,
                 default = oparchivemap,
                 type = StoreGlue
@@ -174,8 +174,8 @@ class OpArchiveStore(ArchiveStore):
             extract = remote['query'].get('extract', None)
             cleanpath = self.fullpath(remote)
             (dirname, basename) = system.path.split(cleanpath)
-            if not extract and self.collector.containsfile(basename):
-                cleanpath, u_targetpath = self.collector.filemap(system, dirname, basename)
+            if not extract and self.glue.containsfile(basename):
+                cleanpath, u_targetpath = self.glue.filemap(system, dirname, basename)
             rloc = ftp.netpath(cleanpath)
             ftp.close()
             return rloc
@@ -190,8 +190,8 @@ class OpArchiveStore(ArchiveStore):
             extract = remote['query'].get('extract', None)
             cleanpath = self.fullpath(remote)
             (dirname, basename) = system.path.split(cleanpath)
-            if not extract and self.collector.containsfile(basename):
-                cleanpath, u_targetpath = self.collector.filemap(system, dirname, basename)
+            if not extract and self.glue.containsfile(basename):
+                cleanpath, u_targetpath = self.glue.filemap(system, dirname, basename)
             rc = ftp.size(cleanpath)
             ftp.close()
             return rc
@@ -205,9 +205,9 @@ class OpArchiveStore(ArchiveStore):
             cleanpath = self.fullpath(remote)
             extract = remote['query'].get('extract', None)
             (dirname, basename) = system.path.split(cleanpath)
-            if not extract and self.collector.containsfile(basename):
+            if not extract and self.glue.containsfile(basename):
                 extract = basename
-                cleanpath, targetpath = self.collector.filemap(system, dirname, basename)
+                cleanpath, targetpath = self.glue.filemap(system, dirname, basename)
             if cleanpath == None:
                 rc = False
             else:

@@ -1,8 +1,8 @@
-:mod:`vortex.syntax.priorities` --- Crude priority rules
-========================================================
+:mod:`footprints.priorities` --- Crude priority rules
+=====================================================
 
-.. automodule:: vortex.syntax.priorities
-   :synopsis: Crude definition of priority rules
+.. automodule:: footprints.priorities
+   :synopsis: Crude definition of priority rules used in footprints
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

@@ -1,6 +1,7 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+import footprints
 
 try:
     from oper_test_config import *
@@ -10,9 +11,8 @@ except ImportError, e:
 
 #t.debug()
 
-
 class UtRawFields(TestCase):
-    
+
     def setUp(self):
         self.fp_prov = dict(
             username = 'mxpt001',
@@ -71,20 +71,19 @@ class UtRawFields(TestCase):
         del self.fp_nesdis
 
     def test_ctlg(self):
+        ctlg = footprints.proxy.resources
+
         nesdis = self.fp_nesdis
-        ctlg = resources.catalog()
         res = ctlg.findbest(nesdis)
 
         self.assertTrue(res.kind, 'rawfields')
 
         ostia = self.fp_ostia
-        ctlg = resources.catalog()
         res = ctlg.findbest(ostia)
 
         self.assertEqual(res.kind, 'rawfields')
 
         seaice = self.fp_seaice
-        ctlg = resources.catalog()
         res = ctlg.findbest(seaice)
 
         self.assertTrue(res.kind, 'rawfields')
@@ -212,18 +211,17 @@ class UtGeoFields(TestCase):
         del self.fp_sst
         del self.fp_seaice
         del self.std
-        
+
     def test_ctlg(self):
+        ctlg = footprints.proxy.resources
+
         sstgeofields = self.fp_sst
-        ctlg = resources.catalog()
         res = ctlg.findbest(sstgeofields)
         self.assertTrue(res.kind, 'geofields')
 
         icegeofields = self.fp_seaice
-        ctlg = resources.catalog()
         res = ctlg.findbest(icegeofields)
         self.assertTrue(res.kind, 'geofields')
-
 
     def test_g1(self):
         rl = toolbox.rload(

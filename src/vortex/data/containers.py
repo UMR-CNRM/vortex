@@ -4,16 +4,18 @@
 #: No automatic export
 __all__ = [ 'Container' ]
 
-import re, sys, io, os
+import re, io, os
 import tempfile
 
 import footprints
 
 from vortex.autolog import logdefault as logger
-from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 
 class Container(footprints.BFootprint):
+
+    _abstract  = True
+    _collector = ('container',)
 
     def __init__(self, *args, **kw):
         logger.debug('Container %s init', self.__class__)
@@ -280,27 +282,4 @@ class File(Container):
             fd.write(data)
             fd.close()
 
-
-class ContainersCatalog(ClassesCollector):
-
-    def __init__(self, **kw):
-        """
-        Define defaults regular expresion for module search, list of tracked classes
-        and the item entry name in pickled footprint resolution.
-        """
-        logger.debug('Containers catalog init %s', self)
-        cat = dict(
-            remod = re.compile(r'.*\.containers'),
-            classes = [ Container ],
-            itementry = 'container'
-        )
-        cat.update(kw)
-        super(ContainersCatalog, self).__init__(**cat)
-
-    @classmethod
-    def tablekey(cls):
-        """The entry point for global catalogs table. -- Here: containers."""
-        return 'containers'
-
-build_catalog_functions(sys.modules.get(__name__), ContainersCatalog)
 

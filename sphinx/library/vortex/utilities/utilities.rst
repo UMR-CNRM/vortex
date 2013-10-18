@@ -16,22 +16,17 @@ This package
 Pure Functions
 --------------
 
-.. autofunction:: dictmerge
+.. autofunction:: mktuple
 
-.. autofunction:: list2dict
 
 Modules
 -------
 
 * :mod:`vortex.utilities.authorizations`
-* :mod:`vortex.utilities.catalogs`
 * :mod:`vortex.utilities.decorators`
 * :mod:`vortex.utilities.dispatch`
-* :mod:`vortex.utilities.dumper`
 * :mod:`vortex.utilities.empty`
 * :mod:`vortex.utilities.names`
-* :mod:`vortex.utilities.observers`
 * :mod:`vortex.utilities.patterns`
 * :mod:`vortex.utilities.roles`
 * :mod:`vortex.utilities.structs`
-* :mod:`vortex.utilities.trackers`

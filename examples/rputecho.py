@@ -10,9 +10,6 @@ import iga.data
 t = vortex.ticket()
 t.warning()
 
-cr = vortex.data.providers.catalog()
-cr.track = True
-
 ctx = t.context
 
 ctx.system.cd(ctx.env.tmpdir + '/rundir')

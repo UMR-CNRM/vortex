@@ -10,15 +10,11 @@ Utilities
    utilities
 
    authorizations
-   catalogs
    decorators
    dispatch
-   dumper
    empty
    introspection
    names
-   observers
    patterns
    roles
    structs
-   trackers

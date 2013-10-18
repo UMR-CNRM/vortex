@@ -10,7 +10,7 @@ a default Mail Service is provided.
 #: No automatic export
 __all__ = []
 
-import sys, re, os
+import re, os
 import mimetypes
 
 from smtplib import SMTP
@@ -25,7 +25,6 @@ import footprints
 
 from vortex.autolog import logdefault as logger
 from vortex.syntax.stdattrs import FPList
-from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 criticals = [ 'debug', 'info', 'error', 'warning', 'critical' ]
 
@@ -35,6 +34,8 @@ class Service(footprints.BFootprint):
     Abstract base class for services.
     """
 
+    _abstract  = True
+    _collector = ('service',)
     _footprint = dict(
         info = 'Abstract services class',
         attr = dict(
@@ -212,29 +213,4 @@ class FileReportService(ReportService):
         )
     )
 
-
-class ServicesCatalog(ClassesCollector):
-    """Class in charge of collecting :class:`Service` items."""
-
-    def __init__(self, **kw):
-        """
-        Define defaults regular expresion for module search, list of tracked classes
-        and the item entry name in pickled footprint resolution.
-        """
-        logger.debug('Services catalog init %s', self)
-        cat = dict(
-            remod = re.compile(r'.*\.services'),
-            classes = [ Service ],
-            itementry = 'service'
-        )
-        cat.update(kw)
-        super(ServicesCatalog, self).__init__(**cat)
-
-    @classmethod
-    def tablekey(cls):
-        """The entry point for global catalogs table. -- Here: services."""
-        return 'services'
-
-
-build_catalog_functions(sys.modules.get(__name__), ServicesCatalog)
 

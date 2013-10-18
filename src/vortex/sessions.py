@@ -22,6 +22,8 @@ __all__ = []
 
 import logging
 
+import footprints
+
 from vortex.autolog import logdefault as logger
 
 from vortex.utilities.patterns import Singleton
@@ -170,10 +172,8 @@ class Ticket(object):
         to ``kw`` dictionary-like arguments.
         """
         refill = kw.pop('refill', False)
-        if refill:
-            systems.catalog().refill()
         if not self._system or kw or refill:
-            self._system = systems.load(**kw)
+            self._system = footprints.proxy.system(**kw)
             if not self._system:
                 logger.critical('Could not load a system object with description %s', str(kw))
         return self._system
@@ -301,7 +301,7 @@ class Desk(Singleton):
             tag = self._current_glove
 
         if not self._gloves.has_key(tag):
-            self._gloves[tag] = gloves.load(**kw)
+            self._gloves[tag] = footprints.proxy.glove(**kw)
 
         return self._gloves[tag]
 

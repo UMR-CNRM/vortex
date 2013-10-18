@@ -4,12 +4,14 @@
 #: No automatic export
 __all__ = []
 
+import footprints
+
 from vortex.autolog import logdefault as logger
 
 from vortex import sessions
 from vortex.tools import net
 from vortex.tools.date import Date
-from vortex.utilities import observers, roles
+from vortex.utilities import roles
 from vortex.layout import dataflow
 
 from vortex.data import stores
@@ -41,7 +43,7 @@ class Handler(object):
         self._options.update(kw)
         self._history = [(Date.now(), self.__class__.__name__, 'init', 1)]
         self._stage = [ 'load' ]
-        self._observer = observers.getobserver('Resources-Handlers')
+        self._observer = footprints.observers.getbyname('Resources-Handlers')
         self._observer.notify_new(self, dict(stage = 'load'))
         logger.debug('New resource handler %s', self.__dict__)
 
@@ -148,7 +150,7 @@ class Handler(object):
         if self.complete:
             remotelocation = self.location()
             uridata = net.uriparse(remotelocation)
-            store = stores.load(scheme=uridata['scheme'], netloc=uridata['netloc'])
+            store = footprints.proxy.store(scheme=uridata['scheme'], netloc=uridata['netloc'])
             if store:
                 logger.debug('Locate resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
@@ -167,7 +169,7 @@ class Handler(object):
         if self.complete:
             remotelocation = self.location()
             uridata = net.uriparse(remotelocation)
-            store = stores.load(scheme=uridata['scheme'], netloc=uridata['netloc'])
+            store = footprints.proxy.store(scheme=uridata['scheme'], netloc=uridata['netloc'])
             if store:
                 logger.debug('Get resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
@@ -191,7 +193,7 @@ class Handler(object):
             logger.debug('Put resource %s', self)
             remotelocation = self.location()
             uridata = net.uriparse(remotelocation)
-            store = stores.load(scheme=uridata['scheme'], netloc=uridata['netloc'])
+            store = footprints.proxy.store(scheme=uridata['scheme'], netloc=uridata['netloc'])
             if store:
                 logger.debug('Put resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
@@ -212,7 +214,7 @@ class Handler(object):
             logger.debug('Check resource %s', self)
             remotelocation = self.location()
             uridata = net.uriparse(remotelocation)
-            store = stores.load(scheme=uridata['scheme'], netloc=uridata['netloc'])
+            store = footprints.proxy.store(scheme=uridata['scheme'], netloc=uridata['netloc'])
             if store:
                 logger.debug('Check resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']

@@ -3,8 +3,7 @@
 
 """
 This module handles store objects in charge of physically accessing resources.
-The associated modules defines the catalog factory based on the shared footprint
-mechanism.
+Store objects use the :mod:`footprints` mechanism.
 """
 
 #: Export base class
@@ -18,7 +17,6 @@ import footprints
 from vortex.autolog import logdefault as logger
 from vortex.layout import dataflow
 from vortex.tools import config, caches
-from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 
 class StoreGlue(object):
@@ -141,6 +139,8 @@ class IniStoreGlue(StoreGlue):
 class Store(footprints.BFootprint):
     """Root class for any :class:`Store` subclasses."""
 
+    _abstract  = True
+    _collector = ('store',)
     _footprint = dict(
         info = 'Default store',
         attr = dict(
@@ -201,6 +201,8 @@ class Store(footprints.BFootprint):
 class MultiStore(footprints.BFootprint):
     """Agregate various :class:`Store` items."""
 
+    _abstract  = True
+    _collector = ('store',)
     _footprint = dict(
         info = 'Multi store',
         attr = dict(
@@ -231,10 +233,9 @@ class MultiStore(footprints.BFootprint):
         and an alternate list of footprint descriptors as returned by method
         :func:`alternatefp`.
         """
-        thisloader = sys.modules.get(__name__).load
         activestores = list()
         for desc in self.alternatefp():
-            xstore = thisloader(**desc)
+            xstore = footprints.proxy.store(**desc)
             if xstore:
                 activestores.append(xstore)
         logger.info('Multi store %s includes active stores %s', self, activestores)
@@ -607,7 +608,7 @@ class CacheStore(Store):
     @property
     def cache(self):
         if not self._cache:
-            self._cache = caches.default(
+            self._cache = footprints.proxy.caches.default(
                 kind    = self.strategy,
                 storage = self.storage,
                 rootdir = self.rootdir,
@@ -716,29 +717,4 @@ class VortexStore(MultiStore):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
         return ( 'vortex.cache.fr', 'vortex.archive.fr' )
 
-
-class StoresCatalog(ClassesCollector):
-    """Class in charge of collecting :class:`Store` items."""
-
-    def __init__(self, **kw):
-        """
-        Define defaults regular expresion for module search, list of tracked classes
-        and the item entry name in pickled footprint resolution.
-        """
-        logger.debug('Stores catalog init %s', self)
-        cat = dict(
-            remod = re.compile(r'.*\.stores'),
-            classes = [ Store, MultiStore ],
-            itementry = 'store'
-        )
-        cat.update(kw)
-        super(StoresCatalog, self).__init__(**cat)
-
-    @classmethod
-    def tablekey(cls):
-        """The entry point for global catalogs table. -- Here: stores."""
-        return 'stores'
-
-
-build_catalog_functions(sys.modules.get(__name__), StoresCatalog)
 

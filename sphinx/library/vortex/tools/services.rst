@@ -19,26 +19,8 @@ Package
 .. autodata:: __all__
 
 
-Interface
----------
-
-As a :mod:`vortex.utilities.catalogs` based module,
-:mod:`vortex.tools.services` automaticaly defined the following functions:
-
-.. autofunction:: catalog
-   
-.. autofunction:: pickup
-
-.. autofunction:: load
-
-
 Classes
 -------
-   
-.. autoclass:: ServicesCatalog
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
 .. autoclass:: Service
    :show-inheritance:

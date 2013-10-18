@@ -2,7 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import os
-from vortex.tools import services as sv
+
+import footprints
+
+from vortex.tools import services
 from iga.services import services as sviga
 from vortex.tools.date import Date
 from unittest import TestCase, main
@@ -16,7 +19,7 @@ DATA = os.path.join(PATH_DATA, FILE_TEST)
 class utdate(TestCase):
 
     def setUp(self):
-        self.ctlg = sv.catalog()
+        self.ctlg = footprints.proxy.services
 
     def tearDown(self):
         del self.ctlg
@@ -207,7 +210,7 @@ class utdate(TestCase):
             ( dico2['receiver'], dico2['sender'], dico2['subject'], 'info')
         )
         self.assertEquals(ms.get_file(), 'Test Vortex : envoi message\n')
-        print "test Mail services via the catalog ok"
+        print "test Mail services via the collector ok"
 
     def test_alarmserv_via_ctlg(self):
         dico1 = {
@@ -232,7 +235,7 @@ class utdate(TestCase):
         self.assertEquals(al.message, dico2['message'])
         self.assertEquals(al.get_message(), dico2['message'])
         self.assertEquals(al.get_loggerservice(),ref_logger.error)
-        print "test alarm services via the catalog ok"
+        print "test alarm services via the collector ok"
 
     def test_bdapserv_via_ctlg(self):
         dico1 = {
@@ -274,7 +277,7 @@ class utdate(TestCase):
         )
         nom_exec = 'send_bdap'
         self.assertEquals(al.get_cmd_line(), [nom_exec + ' ' + ref_cmd_line])
-        print "test Bdap services via the catalog ok"
+        print "test Bdap services via the collector ok"
 
     def test_routingserv_via_ctlg(self):
         dico1 = {
@@ -314,7 +317,7 @@ class utdate(TestCase):
         al = self.ctlg.findbest(dico1)
         nom_exec = os.path.join('/ch/mxpt/mxpt001/util/agt/', 'router_pe')
         self.assertEquals(al.get_cmd_line(), [nom_exec + ' ' + ref_cmd_line])
-        print "test Routing services via the catalog ok"
+        print "test Routing services via the collector ok"
 
 
 if __name__ == '__main__':

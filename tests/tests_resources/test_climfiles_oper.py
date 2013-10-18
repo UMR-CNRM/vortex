@@ -1,6 +1,7 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+import footprints
 
 try:
     from oper_test_config import *
@@ -9,8 +10,6 @@ except ImportError, e:
     raise
 
 #t.debug()
-
-
 
 class UtClimGlobal(TestCase):
 
@@ -38,7 +37,7 @@ class UtClimGlobal(TestCase):
 
     def test_ctlg(self):
         climmodel = self.fp_climmodel
-        ctlg = resources.catalog()
+        ctlg = footprints.proxy.resources
         res = ctlg.findbest(climmodel)
 
         month = "{0:02d}".format(today().month)
@@ -87,7 +86,7 @@ class UtClimLAM(TestCase):
 
     def test_ctlg(self):
         climbdap = self.fp_climmodel
-        ctlg = resources.catalog()
+        ctlg = footprints.proxy.resources
         res = ctlg.findbest(climbdap)
 
         self.assertTrue(res.kind, 'clim_bdap')
@@ -137,7 +136,7 @@ class UtClimBDAPLAM(TestCase):
 
     def test_ctlg(self):
         climbdap = self.fp_climmodel
-        ctlg = resources.catalog()
+        ctlg = footprints.proxy.resources
         res = ctlg.findbest(climbdap)
 
         self.assertTrue(res.kind, 'clim_bdap')
@@ -193,7 +192,7 @@ class UtClimBDAP(TestCase):
         )
     def test_ctlg(self):
         climbdap = self.fp_climbdap_1
-        ctlg = resources.catalog()
+        ctlg = footprints.proxy.resources
         res = ctlg.findbest(climbdap)
 
         self.assertTrue(res.kind, 'clim_bdap')
@@ -236,7 +235,7 @@ class UtClimBDAP(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-            
+
         month = "{0:02d}".format(today().month)
         self.assertEqual(
             rl[0].location(),

@@ -14,29 +14,20 @@ print t.prompt, 'This session', t, t.tag, t.started
 
 print t.line
 
-c1 = containers.catalog()
-print t.prompt, 'Catalog', c1
-print t.prompt, 'Catalog called', c1()
-print t.prompt, 'Catalog iterator'
+c1 = vortex.proxy.containers
+print t.prompt, 'Collector', c1
+print t.prompt, 'Collector called', c1()
+print t.prompt, 'Collector iterator'
 for c in c1:
     print t.prompt, '  ', c
 
 print t.line
 
-c2 = containers.catalog(tag='zozo', itementry='bof', classes = [ Virtual ], included = True)
-print t.prompt, 'Catalog', c2
-print t.prompt, 'Catalog called', c2()
-print t.prompt, 'Catalog iterator'
+c2 = vortex.proxy.containers(keypoint='bof')
+print t.prompt, 'Collector', c2
+print t.prompt, 'Collector called', c2()
+print t.prompt, 'Collector iterator'
 for c in c2:
-    print t.prompt, '  ', c
-
-print t.line
-
-c3 = containers.catalog(tag='zozo', itementry='bof', classes = [ File ], included = True)
-print t.prompt, 'Catalog', c3
-print t.prompt, 'Catalog called', c3()
-print t.prompt, 'Catalog iterator'
-for c in c3:
     print t.prompt, '  ', c
 
 print t.line

@@ -8,9 +8,10 @@ This modules defines the physical layout.
 #: No automatic export.
 __all__ = []
 
+from footprints import observers
+
 from vortex.autolog import logdefault as logger
 
-from vortex.utilities import observers
 from vortex.utilities.structs import idtree
 from vortex.tools.env import Environment
 import dataflow
@@ -61,7 +62,7 @@ class Context(object):
             self._sequence = dataflow.Sequence()
 
         self.bind(self._task)
-        observers.getobserver('Resources-Handlers').register(self)
+        observers.getbyname('Resources-Handlers').register(self)
 
     def newobsitem(self, item, info):
         """

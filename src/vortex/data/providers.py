@@ -12,13 +12,14 @@ import footprints
 
 import vortex  # @UnusedImport
 from vortex.autolog import logdefault as logger
-from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from vortex.utilities.names import VNameBuilder
 from vortex.tools import net
 
 
 class Provider(footprints.BFootprint):
 
+    _abstract  = True
+    _collector = ('provider',)
     _footprint = dict(
         info = 'Abstract root provider',
         attr = dict(
@@ -266,27 +267,3 @@ class Vortex(Provider):
         """
         return self.namebuild.pack(resource.basename_info())
 
-
-class ProvidersCatalog(ClassesCollector):
-
-    def __init__(self, **kw):
-        """
-        Define defaults regular expresion for module search, list of tracked classes
-        and the item entry name in pickled footprint resolution.
-        """
-        logger.debug('Providers catalog init %s', self)
-        cat = dict(
-            remod = re.compile(r'.*\.providers'),
-            classes = [ Provider ],
-            itementry = 'provider'
-        )
-        cat.update(kw)
-        super(ProvidersCatalog, self).__init__(**cat)
-
-    @classmethod
-    def tablekey(cls):
-        """The entry point for global catalogs table. -- Here: providers."""
-        return 'providers'
-
-
-build_catalog_functions(sys.modules.get(__name__), ProvidersCatalog)

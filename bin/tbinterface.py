@@ -1,10 +1,12 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
+import footprints
+
 import vortex, common, gco, olive
 
-def catdump(catalogset):
-    for c in catalogset.items():
+def catdump(thiscollector):
+    for c in thiscollector.items():
         attrx = list()
         attro = list()
         attrs = c.footprint().attr
@@ -23,8 +25,7 @@ def catdump(catalogset):
 print '= VERSION', 'v' + vortex.__version__
 print '= CONTEXT Research'
 
-for clname in ( 'containers', 'providers', 'resources', 'components' ):
-    catcl = getattr(vortex, clname)
+for clname in ( 'container', 'provider', 'resource', 'component' ):
     print
-    print '= CLASS', clname.upper()
-    catdump(catcl())
+    print '= CLASS', (clname+'s').upper()
+    catdump(footprints.collector(clname))

@@ -5,20 +5,19 @@
 __all__ = []
 
 import re
-import sys
 import shlex
 
 import footprints
 
 import vortex
 from vortex.autolog import logdefault as logger
-from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
-from vortex.tools import targets
 from vortex.algo import mpitools
 
 class AlgoComponent(footprints.BFootprint):
     """Component in charge of running executable resources."""
 
+    _abstract  = True
+    _collector = ('component',)
     _footprint = dict(
         info = 'Abstract algo component',
         attr = dict(
@@ -134,7 +133,7 @@ class AlgoComponent(footprints.BFootprint):
         ctx = vortex.sessions.ticket().context
         self.system = ctx.system
         self.env = ctx.env
-        self.target = kw.setdefault('target', targets.default(hostname=self.system.hostname, sysname=self.system.sysname))
+        self.target = kw.setdefault('target', vortex.proxy.target(hostname=self.system.hostname, sysname=self.system.sysname))
         del kw['target']
         self.prepare(rh, ctx, kw)
         self.fsstamp(ctx, kw)
@@ -249,7 +248,7 @@ class Parallel(AlgoComponent):
             mpiname = self.mpiname
             if not mpiname:
                 mpiname = self.env.VORTEX_MPI_NAME
-            mpi = mpitools.load(sysname=self.system.sysname, mpiname=mpiname)
+            mpi = footprints.proxy.mpitool(sysname=self.system.sysname, mpiname=mpiname)
 
         if not mpi:
             logger.critical('Component %s could not find any mpitool', self.shortname())
@@ -268,31 +267,6 @@ class Parallel(AlgoComponent):
         self.spawn(ctx, args)
         mpi.clean(ctx, self.target, opts)
 
-
-class AlgoComponentsCatalog(ClassesCollector):
-    """Class in charge of collecting :class:`AlgoComponent` items."""
-
-    def __init__(self, **kw):
-        """
-        Define defaults regular expresion for module search, list of tracked classes
-        and the item entry name in pickled footprint resolution.
-        """
-        logger.debug('Algorithmic Components catalog init %s', self)
-        cat = dict(
-            remod = re.compile(r'.*\.algo'),
-            classes = [ AlgoComponent ],
-            itementry = 'algo'
-        )
-        cat.update(kw)
-        super(AlgoComponentsCatalog, self).__init__(**cat)
-
-    @classmethod
-    def tablekey(cls):
-        """The entry point for global catalogs table. -- Here: components."""
-        return 'components'
-
-
-build_catalog_functions(sys.modules.get(__name__), AlgoComponentsCatalog)
 
 if __name__ == '__main__':
     e = Expresso(engine='exec', interpreter='bash')

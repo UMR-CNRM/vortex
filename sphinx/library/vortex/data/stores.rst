@@ -13,18 +13,6 @@ Package
 
 .. autodata:: __all__
 
-Interface
----------
-
-As a :mod:`vortex.utilities.catalogs` based module,
-:mod:`vortex.data.stores` automaticaly defined the following functions:
-
-.. autofunction:: catalog
-
-.. autofunction:: pickup
-
-.. autofunction:: load
-
 
 Classes
 -------
@@ -35,11 +23,6 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: IniStoreGlue
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: StoresCatalog
    :show-inheritance:
    :members:
    :member-order: alphabetical

@@ -1,13 +1,13 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+import footprints
 
 try:
     from oper_test_config import *
 except ImportError, e:
     print e
     raise
-
 
 class UtElscf(TestCase):
 
@@ -71,18 +71,17 @@ class UtElscf(TestCase):
 
 
     def test_ctlg1(self):
+        ctlg = footprints.proxy.resources
+
         elscf = self.fp_elscf1
-        ctlg = resources.catalog()
         res = ctlg.findbest(elscf)
         self.assertEqual(res.kind, 'elscf')
 
         elscf = self.fp_elscf2
-        ctlg = resources.catalog()
         res = ctlg.findbest(elscf)
         self.assertEqual(res.kind, 'elscf')
 
         elscf = self.fp_elscf3
-        ctlg = resources.catalog()
         res = ctlg.findbest(elscf)
         self.assertEqual(res.kind, 'elscf')
  

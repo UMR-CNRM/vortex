@@ -215,6 +215,65 @@ def expand(desc):
     logger.debug('Expand in %d loops', nbpass)
     return ld
 
+    
+class Catalog(object):
+    """
+    Abstract class for managing a collection of *items*.
+    The interface is very light : :meth:`clear` and :meth:`refill` !
+    Of course a catalog is an iterable object. It is also callable,
+    and then returns a copy of the list of its items.
+    """
+
+    def __init__(self, **kw):
+        logger.debug('Abstract %s init', self.__class__)
+        self._items = set(kw.pop('items', list()))
+        self._filled = bool(self._items)
+        self.__dict__.update(kw)
+
+    @classmethod
+    def fullname(self):
+        """Returns a nicely formated name of the current class (dump usage)."""
+        return '{0:s}.{1:s}'.format(self.__module__, self.__name__)
+
+    def items(self):
+        return tuple(self._items)
+
+    def __iter__(self):
+        """Catalog is iterable... at least!"""
+        for c in self._items:
+            yield c
+
+    def __call__(self):
+        return self.items()
+
+    def __len__(self):
+        return len(self._items)
+
+    def add(self, *items):
+        """Add the ``item`` entry in the current catalog."""
+        for item in items:
+            self._items.add(item)
+
+    def discard(self, bye):
+        """Remove the ``bye`` entry from current catalog."""
+        self._items.discard(bye)
+
+    def clear(self):
+        """Completly clear the list of items previously recorded in this catalog."""
+        self._items = set()
+
+    def refresh(self, **kw):
+        """Redo the init sequence."""
+        kw.setdefault('tag', self.tag)
+        items = kw.pop('items', list())
+        if len(kw) > 1:
+            self.__dict__.update(kw)
+            self.refill(items)
+
+    def refill(self, items):
+        """Set the contents of the current catalog with the ``items`` provided."""
+        self._items = set(items)
+
 
 if __name__ == '__main__':
     import doctest

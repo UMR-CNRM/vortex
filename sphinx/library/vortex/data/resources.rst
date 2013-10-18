@@ -18,18 +18,6 @@ Package
 
 .. autodata:: __all__
 
-Interface
----------
-
-As a :mod:`vortex.utilities.catalogs` based module,
-:mod:`vortex.data.resources` automaticaly defined the following functions:
-
-.. autofunction:: catalog
-   
-.. autofunction:: pickup
-
-.. autofunction:: load
-   
 
 Classes
 -------
@@ -38,8 +26,4 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
-.. autoclass:: ResourcesCatalog
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
+

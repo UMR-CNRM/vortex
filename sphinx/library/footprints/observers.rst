@@ -1,8 +1,8 @@
-:mod:`vortex.utilities.observers` --- Observers Set
-===================================================
+:mod:`footprints.observers` --- Observers Set
+=============================================
 
-.. automodule:: vortex.utilities.observers
-   :synopsis: Observer hangling
+.. automodule:: footprints.observers
+   :synopsis: Observer/Observed handling
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -11,7 +11,7 @@
 Interface functions
 -------------------
 
-.. autofunction: classobserver
+.. autofunction: getbyname
 
 Base Classes
 ------------

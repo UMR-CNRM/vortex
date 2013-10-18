@@ -1,6 +1,7 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
+import footprints
 
 try:
     from oper_test_config import *
@@ -60,18 +61,17 @@ class UtObsmap(TestCase):
         del self.fp_store
 
     def test_ctlg(self):
+        ctlg = footprints.proxy.resources
+
         obsmap = self.fp_obsmap
-        ctlg = resources.catalog()
         res = ctlg.findbest(obsmap)
         self.assertTrue(res.kind, 'obsmap')
 
         obsmap = self.fp_obsmap2
-        ctlg = resources.catalog()
         res = ctlg.findbest(obsmap)
         self.assertTrue(res.kind, 'obsmap')
 
         obsmap = self.fp_obsmap3
-        ctlg = resources.catalog()
         res = ctlg.findbest(obsmap)
         self.assertTrue(res.kind, 'obsmap')
 
@@ -164,13 +164,13 @@ class UtBlackListLoc(TestCase):
         del self.fp_bckll2
 
     def test_ctlg(self):
+        ctlg = footprints.proxy.resources
+
         bckll = self.fp_bckll
-        ctlg = resources.catalog()
         res = ctlg.findbest(bckll)
         self.assertTrue(res.kind, 'blacklist')
 
         bckll = self.fp_bckll2
-        ctlg = resources.catalog()
         res = ctlg.findbest(bckll)
         self.assertTrue(res.kind, 'blacklist')
 
@@ -237,8 +237,9 @@ class UtBlackListDiap(TestCase):
         del self.fp_bckld
 
     def test_ctlg(self):
+        ctlg = footprints.proxy.resources
+
         bckld = self.fp_bckld
-        ctlg = resources.catalog()
         res = ctlg.findbest(bckld)
         self.assertTrue(res.kind, 'blacklist')
 
@@ -322,8 +323,9 @@ class UtRefData(TestCase):
                     self.liste_fp_bufr.append(fp_obs)
 
     def test_ctlg1(self):
+        ctlg = footprints.proxy.resources
+
          obs = self.fp_rdconv
-         ctlg = resources.catalog()
          res = ctlg.findbest(obs)
          self.assertTrue(res.kind, 'refdata')
 
@@ -336,10 +338,10 @@ class UtRefData(TestCase):
          self.assertTrue(res.kind, 'refdata')
 
     def test_ctlg_bufr(self):
-         ctlg = resources.catalog()
-         for obs in self.liste_fp_bufr:
-            res = ctlg.findbest(obs)
-            self.assertTrue(res.kind, 'refdata')
+        ctlg = footprints.proxy.resources
+        for obs in self.liste_fp_bufr:
+           res = ctlg.findbest(obs)
+           self.assertTrue(res.kind, 'refdata')
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -481,24 +483,25 @@ class UtObservations(TestCase):
                     self.liste_fp_bufr.append(fp_obs)
 
     def test_ctlg1(self):
-         obs = self.fp_obsconv
-         ctlg = resources.catalog()
-         res = ctlg.findbest(obs)
-         self.assertTrue(res.kind, 'observations')
+        ctlg = footprints.proxy.resources
 
-         obs = self.fp_obsprof
-         res = ctlg.findbest(obs)
-         self.assertTrue(res.kind, 'observations')
+        obs = self.fp_obsconv
+        res = ctlg.findbest(obs)
+        self.assertTrue(res.kind, 'observations')
 
-         obs = self.fp_obssurf
-         res = ctlg.findbest(obs)
-         self.assertTrue(res.kind, 'observations')
+        obs = self.fp_obsprof
+        res = ctlg.findbest(obs)
+        self.assertTrue(res.kind, 'observations')
+
+        obs = self.fp_obssurf
+        res = ctlg.findbest(obs)
+        self.assertTrue(res.kind, 'observations')
 
     def test_ctlg_bufr(self):
-         ctlg = resources.catalog()
-         for obs in self.liste_fp_bufr:
-            res = ctlg.findbest(obs)
-            self.assertTrue(res.kind, 'observations')
+        ctlg = footprints.proxy.resources
+        for obs in self.liste_fp_bufr:
+           res = ctlg.findbest(obs)
+           self.assertTrue(res.kind, 'observations')
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -626,8 +629,8 @@ class UtRefdata(TestCase):
         )
 
     def test_ctlg1(self):
+        ctlg = footprints.proxy.resources
         refdata = self.fp_refdata
-        ctlg = resources.catalog()
         res = ctlg.findbest(refdata)
         self.assertTrue(res.kind, 'refdata')
 
@@ -696,8 +699,9 @@ class UtVarbc(TestCase):
 
 
     def test_ctlg1(self):
+        ctlg = footprints.proxy.resources
+
         varbc = self.fp_varbc1
-        ctlg = resources.catalog()
         res = ctlg.findbest(varbc)
         self.assertTrue(res.kind, 'varbc')
 

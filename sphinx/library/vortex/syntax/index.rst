@@ -9,6 +9,4 @@ Contains:
 
    syntax
    cycles
-   footprint
-   priorities
    stdattrs

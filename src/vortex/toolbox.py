@@ -13,9 +13,6 @@ import footprints
 
 from vortex.autolog import logdefault as logger
 from vortex import sessions, data
-from vortex.data import resources, containers, providers, stores
-from vortex.algo import components
-from vortex.tools import caches, targets
 from vortex.layout.dataflow import stripargs_section
 
 #: Shortcut to footprint env defaults
@@ -25,6 +22,16 @@ sectionmap = {'input':'get', 'output':'put', 'executable':'get'}
 justdoit = False
 getinsitu = False
 verbose = 0
+
+#: Shortcut to collectors ... others are populated automatically
+containers = footprints.proxy.containers
+providers  = footprints.proxy.providers
+resources  = footprints.proxy.resources
+
+#: Other shortcuts to direct load ... others are populated automatically
+container  = containers.load
+provider   = providers.load
+resource   = resources.load
 
 # Most commonly used functions
 
@@ -150,7 +157,7 @@ def algo(*args, **kw):
     ctx.record_off()
     if verbose > 1:
         print 'Loading algo component with description:', footprints.dump.lightdump(kw), "\n"
-    ok = components.load(**kw)
+    ok = component(**kw)
     ctx.record_on()
     return ok
 
@@ -167,15 +174,12 @@ def namespaces(**kw):
     By default tracks ``stores`` and ``providers`` but one could give an ``only`` argument.
     """
     rematch = re.compile('|'.join(kw.get('match', '.').split(',')), re.IGNORECASE)
-    usedcat = dict(
-        providers = providers.catalog(),
-        stores = stores.catalog()
-    )
-    select = usedcat.keys()
     if 'only' in kw:
-        select = kw['only'].split(',')
+        usedcat = kw['only'].split(',')
+    else:
+        usedcat = ( 'providers', 'stores' )
     nameseen = dict()
-    for cat in [ usedcat[x] for x in select ]:
+    for cat in [ footprints.collector(x) for x in usedcat ]:
         for cls in cat():
             fp = cls.footprint().attr
             netattr = fp.get('namespace', None)
@@ -188,12 +192,4 @@ def namespaces(**kw):
                     nameseen[netname].append(cls.fullname())
     return nameseen
 
-# Shortcuts
 
-component = components.load
-container = containers.load
-provider = providers.load
-resource = resources.load
-store = stores.load
-target = targets.load
-cache = caches.load

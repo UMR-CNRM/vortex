@@ -1,6 +1,7 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+import footprints
 
 try:
     from oper_test_config import *
@@ -43,13 +44,13 @@ class UtMatFilter(TestCase):
         del self.fp_prov
 
     def test_ctlg(self):
+        ctlg = footprints.proxy.resources
+
         mat_filter = self.fp_matfilter
-        ctlg = resources.catalog()
         res = ctlg.findbest(mat_filter)
         self.assertTrue(res.kind, 'matfilter')
 
         mat_filter = self.fp_matfilter2
-        ctlg = resources.catalog()
         res = ctlg.findbest(mat_filter)
         self.assertTrue(res.kind, 'matfilter')
 

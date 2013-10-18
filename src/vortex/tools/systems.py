@@ -3,8 +3,7 @@
 
 """
 This package handles system interfaces objects that are in charge of
-system interaction. The associated modules defines the catalog
-factory based on the shared footprint mechanism.
+system interaction. Systems objects use the :mod:`footprints` mechanism.
 """
 
 #: No automatic export
@@ -20,7 +19,6 @@ import footprints
 
 from vortex.autolog import logdefault as logger
 from vortex.tools.env import Environment
-from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from vortex.tools.net import StdFtp
 
 istruedef  = re.compile('on|true|ok', re.IGNORECASE)
@@ -35,6 +33,8 @@ class System(footprints.BFootprint):
     Root class for any :class:`System` subclasses.
     """
 
+    _abstract  = True
+    _collector = ('system',)
     _footprint = dict(
         info = 'Default information system',
         attr = dict(
@@ -884,28 +884,3 @@ class LinuxDebug(Linux27):
     def realkind(self):
         return 'linuxdebug'
 
-
-class SystemsCatalog(ClassesCollector):
-    """Class in charge of collecting :class:`System` items."""
-
-    def __init__(self, **kw):
-        """
-        Define defaults regular expresion for module search, list of tracked classes
-        and the item entry name in pickled footprint resolution.
-        """
-        logger.debug('Systems catalog init %s', self)
-        cat = dict(
-            remod = re.compile(r'.*\.system'),
-            classes = [ System ],
-            itementry = 'system'
-        )
-        cat.update(kw)
-        super(SystemsCatalog, self).__init__(**cat)
-
-    @classmethod
-    def tablekey(cls):
-        """The entry point for global catalogs table. -- Here: systems."""
-        return 'systems'
-
-
-build_catalog_functions(sys.modules.get(__name__), SystemsCatalog)

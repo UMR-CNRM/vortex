@@ -40,9 +40,6 @@ Session and system interface
 Shortcuts
 ---------
 
-.. autofunction:: components
-.. autofunction:: containers
-.. autofunction:: providers
-.. autofunction:: resources
-.. autofunction:: stores
+.. autodata:: proxy
+
 

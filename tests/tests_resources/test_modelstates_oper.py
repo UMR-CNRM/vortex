@@ -1,6 +1,7 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+import footprints
 
 try:
     from oper_test_config import *
@@ -9,7 +10,6 @@ except ImportError, e:
     raise
 
 #t.debug()
-
 
 class UtGridpoint(TestCase):
 
@@ -98,7 +98,7 @@ class UtGridpoint(TestCase):
 
     def test_ctlg1(self):
         gridpoint = self.fp_gridpoint1
-        ctlg = resources.catalog()
+        ctlg = footprints.proxy.resources
         res = ctlg.findbest(gridpoint)
         self.assertEqual(res.kind, 'gridpoint')
 
@@ -302,7 +302,7 @@ class UtHistoric(TestCase):
 
     def test_ctlg1(self):
         historic = self.fp_historic1
-        ctlg = resources.catalog()
+        ctlg = footprints.proxy.resources
         res = ctlg.findbest(historic)
         self.assertEqual(res.kind, 'historic')
 
@@ -433,23 +433,21 @@ class UtAnalysis(TestCase):
         )
 
     def test_ctlg1(self):
+        ctlg = footprints.proxy.resources
+
         analys = self.fp_analys1
-        ctlg = resources.catalog()
         res = ctlg.findbest(analys)
         self.assertEqual(res.kind, 'analysis')
 
         analys = self.fp_analys1_b
-        ctlg = resources.catalog()
         res = ctlg.findbest(analys)
         self.assertEqual(res.kind, 'analysis')
 
         analys = self.fp_analys2
-        ctlg = resources.catalog()
         res = ctlg.findbest(analys)
         self.assertEqual(res.kind, 'analysis')
 
         analys = self.fp_analys3
-        ctlg = resources.catalog()
         res = ctlg.findbest(analys)
         self.assertEqual(res.kind, 'analysis')
 
@@ -564,7 +562,7 @@ class UtHistsurf(TestCase):
 
     def test_ctlg1(self):
         histsurf = self.fp_histsurf
-        ctlg = resources.catalog()
+        ctlg = footprints.proxy.resources
         res = ctlg.findbest(histsurf)
         self.assertEqual(res.kind, 'histsurf')
 

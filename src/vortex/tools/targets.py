@@ -3,25 +3,25 @@
 
 """
 This package handles target computers objects that could in charge of
-hosting a specific execution. The associated modules defines the catalog
-factory based on the shared footprint mechanism.
+hosting a specific execution.Target objects use the :mod:`footprints` mechanism.
 """
 
 #: No automatic export
 __all__ = []
 
-import re, sys, platform
+import re, platform
 
 import footprints
 
 from vortex.autolog import logdefault as logger
 from vortex.tools.config import GenericConfigParser
-from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 
 class Target(footprints.BFootprint):
     """Root class for any :class:`Target` subclasses."""
 
+    _abstract  = True
+    _collector = ('target',)
     _footprint = dict(
         info = 'Default target description',
         attr = dict(
@@ -86,28 +86,3 @@ class LocalTarget(Target):
         )
     )
 
-
-class TargetsCatalog(ClassesCollector):
-    """Class in charge of collecting :class:`Target` items."""
-
-    def __init__(self, **kw):
-        """
-        Define defaults regular expresion for module search, list of tracked classes
-        and the item entry name in pickled footprint resolution.
-        """
-        logger.debug('Target computers catalog init %s', self)
-        cat = dict(
-            remod = re.compile(r'.*\.targets'),
-            classes = [ Target ],
-            itementry = 'target'
-        )
-        cat.update(kw)
-        super(TargetsCatalog, self).__init__(**cat)
-
-    @classmethod
-    def tablekey(cls):
-        """The entry point for global catalogs table. -- Here: targets."""
-        return 'targets'
-
-
-build_catalog_functions(sys.modules.get(__name__), TargetsCatalog)

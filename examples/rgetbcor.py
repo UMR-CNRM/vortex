@@ -8,8 +8,6 @@ import olive.data
 t = vortex.ticket()
 t.warning()
 
-cr = vortex.data.providers.catalog()
-
 ctx = t.context
 
 ctx.system.cd(ctx.env.tmpdir + '/rundir')
@@ -35,9 +33,6 @@ print bcor.idcard()
 
 print t.line
 print bcor.locate()
-
-#print t.line
-#print cr.track.dump_all()
 
 print t.line
 print bcor.check()

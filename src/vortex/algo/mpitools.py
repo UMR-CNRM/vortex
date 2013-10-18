@@ -3,18 +3,17 @@
 
 """
 This package handles MPI interface objects responsible of parallel executions.
-The associated modules defines the catalog factory based on the shared footprint mechanism.
+MpiTool objects use the :mod:`footprints` mechanism.
 """
 
 #: No automatic export
 __all__ = []
 
-import re, sys, shlex
+import re, shlex
 
 import footprints
 
 from vortex.autolog import logdefault as logger
-from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 
 class MpiException(Exception):
@@ -24,6 +23,8 @@ class MpiException(Exception):
 class MpiTool(footprints.BFootprint):
     """Root class for any :class:`MpiTool` subclasses."""
 
+    _abstract  = True
+    _collector = ('mpitool',)
     _footprint = dict(
         info = 'MPI toolkit',
         attr = dict(
@@ -170,28 +171,3 @@ class MpiRun(MpiTool):
         )
     )
 
-
-class MpiToolsCatalog(ClassesCollector):
-    """Class in charge of collecting :class:`MpiTool` items."""
-
-    def __init__(self, **kw):
-        """
-        Define defaults regular expresion for module search, list of tracked classes
-        and the item entry name in pickled footprint resolution.
-        """
-        logger.debug('Mpi tools catalog init %s', self)
-        cat = dict(
-            remod = re.compile(r'.*\.mpitools'),
-            classes = [ MpiTool ],
-            itementry = 'mpitool'
-        )
-        cat.update(kw)
-        super(MpiToolsCatalog, self).__init__(**cat)
-
-    @classmethod
-    def tablekey(cls):
-        """The entry point for global catalogs table. -- Here: mpitools."""
-        return 'mpitools'
-
-
-build_catalog_functions(sys.modules.get(__name__), MpiToolsCatalog)

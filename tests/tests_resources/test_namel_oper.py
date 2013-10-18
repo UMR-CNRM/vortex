@@ -77,7 +77,7 @@ class UtNamelist(TestCase):
 
 
     def test_ctlg1(self):
-        ctlg = resources.catalog()
+        ctlg = footprints.proxy.resources
         for fp in self.liste_fp_namel:
             res = ctlg.findbest(fp)
             self.assertTrue(res.kind, 'namelist')
@@ -107,12 +107,11 @@ class UtNamelist(TestCase):
                 self.assertTrue(os.stat(rl[0].locate()))
 
     def test_ctlg2(self):
-        ctlg = resources.catalog()
+        ctlg = footprints.proxy.resources
         res = ctlg.findbest(self.fp_namsel1)
         self.assertTrue(res.kind, 'namselect')
 
     def test_v2(self):
-        """docstring for test_v2"""
         rl = toolbox.rload(
             self.fp_prov1,
             self.fp_cont2,

@@ -21,11 +21,11 @@ print t.line
 
 print providers.Remote
 
-cat = providers.catalog()
-print t.prompt, 'Catalog', cat
-print t.prompt, 'Catalog called', cat()
-print t.prompt, 'Catalog iterator'
-for c in cat:
+clp = vortex.proxy.providers
+print t.prompt, 'Collector', clp
+print t.prompt, 'Collector called', clp()
+print t.prompt, 'Collector iterator'
+for c in clp:
     print t.prompt, '  ', c
 
 rp = providers.Remote(remfile = '/tmp/anyfile')

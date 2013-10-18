@@ -2,20 +2,21 @@
 # -*- coding:Utf-8 -*-
 
 #: Export Resource and associated Catalog classes.
-__all__ = [ 'Resource', 'ResourcesCatalog' ]
+__all__ = [ 'Resource' ]
 
-import re, sys
+import re
 
 import footprints
 
 from vortex.autolog import logdefault as logger
 from vortex.syntax.stdattrs import a_nativefmt, a_format, notinrepr
-from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from contents import DataContent, DataRaw
 
 
 class Resource(footprints.BFootprint):
 
+    _abstract  = True
+    _collector = ('resource',)
     _footprint = dict(
         info = 'Abstract NWP Resource',
         attr = dict(
@@ -121,26 +122,3 @@ class Unknown(Resource):
     def realkind(self):
         return 'unknown'
 
-
-class ResourcesCatalog(ClassesCollector):
-
-    def __init__(self, **kw):
-        """
-        Define defaults regular expresion for module search, list of tracked classes
-        and the item entry name in pickled footprint resolution.
-        """
-        logger.debug('Resources catalog init %s', self)
-        cat = dict(
-            remod = re.compile(r'.*(?:resources|data)'),
-            classes = [ Resource ],
-            itementry = 'resource',
-        )
-        cat.update(kw)
-        super(ResourcesCatalog, self).__init__(**cat)
-
-    @classmethod
-    def tablekey(cls):
-        """The entry point for global catalogs table. -- Here: resources."""
-        return 'resources'
-
-build_catalog_functions(sys.modules.get(__name__), ResourcesCatalog)

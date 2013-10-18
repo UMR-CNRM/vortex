@@ -8,12 +8,11 @@ from common.tools.shortcuts import analysis
 
 t = vortex.ticket()
 
-cr = vortex.data.resources.catalog()
-cr.track = True
+cr = vortex.proxy.resources
 
 print t.line
 
-print t.prompt, 'Resource tracker =', cr.track
+print t.prompt, 'Resource report =', cr.report
 
 a = analysis()
 
@@ -23,11 +22,11 @@ print a.idcard()
 
 print t.line
 
-print t.prompt, 'Resource tracker =', cr.track
+print t.prompt, 'Resource report =', cr.report
 
 print t.line
 
-print cr.track.dump_all()
+print cr.report.dump_all()
 
 print t.line
 

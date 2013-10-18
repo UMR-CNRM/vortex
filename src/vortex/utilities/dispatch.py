@@ -12,7 +12,6 @@ import footprints
 
 from vortex.autolog import logdefault as logger
 from vortex import toolbox
-from vortex.utilities import catalogs, trackers
 from vortex.data.geometries import SpectralGeometry, GridGeometry
 from vortex import data, algo, tools
 
@@ -306,31 +305,14 @@ class Dispatcher(object):
         return (0, "\n".join(strdumps), None)
 
 
-    # Catalogs
+    # Entries to collectors
 
-    def catalogs(self, t, kw):
+    def collectors(self, t, kw):
         """
-        Return current entries in catalogs table.
+        Return current entries in collectors table.
         """
-        tc = catalogs.get_table().keys()
+        tc = footprints.collected_footprints()
         return(0, str(tc), tc)
-
-    def refill(self, t, kw):
-        """
-        Refill the specified catalogs already in the calatogs table.
-        Return the actual number of items.
-        """
-        refilled = list()
-        ctable = catalogs.get_table()
-        select = kw.keys()
-        if not select:
-            select = catalogs.autocatlist()
-        for item in sorted(select):
-            if item in ctable:
-                refilled.append(item + ': ' + str(catalogs.fromtable(item).refill()))
-            else:
-                refilled.append(item + ': ' + str(len(catalogs.autocatload(kind=item))))
-        return(0, "\n".join(refilled), len(refilled))
 
     def namespaces(self, t, kw):
         """
@@ -346,83 +328,67 @@ class Dispatcher(object):
 
     def containers(self, t, kw):
         """
-        Display containers catalog contents.
-        Return the catalog itself.
+        Display containers collector contents.
+        Return the collector itself.
         """
-        cat = data.containers.catalog()
+        cat = footprints.proxy.containers
         return (0, self._objectslist(cat()), cat)
 
     def providers(self, t, kw):
         """
-        Display providers catalog contents.
-        Return the catalog itself.
+        Display providers collector contents.
+        Return the collector itself.
         """
-        cat = data.providers.catalog()
+        cat = footprints.proxy.providers
         return (0, self._objectslist(cat()), cat)
 
     def resources(self, t, kw):
         """
-        Display resources catalog contents.
-        Return the catalog itself.
+        Display resources collector contents.
+        Return the collector itself.
         """
-        cat = data.resources.catalog()
+        cat = footprints.proxy.resources
         return (0, self._objectslist(cat()), cat)
 
     def stores(self, t, kw):
         """
-        Display stores catalog contents.
-        Return the catalog itself.
+        Display stores collector contents.
+        Return the collector itself.
         """
-        cat = data.stores.catalog()
+        cat = footprints.proxy.stores
         return (0, self._objectslist(cat()), cat)
 
     def components(self, t, kw):
         """
-        Display algo components catalog contents.
-        Return the catalog itself.
+        Display algo components collector contents.
+        Return the collector itself.
         """
-        cat = algo.components.catalog()
+        cat = footprints.proxy.components
         return (0, self._objectslist(cat()), cat)
 
     def mpitools(self, t, kw):
         """
-        Display mpitools catalog contents.
-        Return the catalog itself.
+        Display mpitools collector contents.
+        Return the collector itself.
         """
-        cat = algo.mpitools.catalog()
+        cat = footprints.proxy.mpitools
         return (0, self._objectslist(cat()), cat)
 
     def systems(self, t, kw):
         """
-        Display systems catalog contents.
-        Return the catalog itself.
+        Display systems collector contents.
+        Return the collector itself.
         """
-        cat = tools.systems.catalog()
+        cat = footprints.proxy.systems
         return (0, self._objectslist(cat()), cat)
 
     def services(self, t, kw):
         """
-        Display services catalog contents.
-        Return the catalog itself.
+        Display services collector contents.
+        Return the collector itself.
         """
-        cat = tools.services.catalog()
+        cat = footprints.proxy.services
         return (0, self._objectslist(cat()), cat)
-
-    def trackers(self, t, kw):
-        """
-        Display the tagged references to internal trackers table.
-        Return a shallow copy of the table itself.
-        """
-        info = trackers.trackcopy()
-        return (0, str(info), info)
-
-    def trackfp(self, t, kw):
-        """
-        Display a complete dump of the footprint resolution tracker.
-        Return nothing.
-        """
-        info = trackers.tracker(tag='fpresolve').dump_all()
-        return (0, str(info), None)
 
 
     # shortcuts to load commands
@@ -432,7 +398,7 @@ class Dispatcher(object):
         Load a container object according to description.
         Return the object itself.
         """
-        info = data.containers.load(**kw)
+        info = footprints.proxy.container(**kw)
         return (0, str(info), info)
 
     def provider(self, t, kw):
@@ -440,7 +406,7 @@ class Dispatcher(object):
         Load a provider object according to description.
         Return the object itself.
         """
-        info = data.providers.load(**kw)
+        info = footprints.proxy.provider(**kw)
         return (0, str(info), info)
 
     def resource(self, t, kw):
@@ -448,7 +414,7 @@ class Dispatcher(object):
         Load a resource object according to description.
         Return the object itself.
         """
-        info = data.resources.load(**kw)
+        info = footprints.proxy.resource(**kw)
         return (0, str(info), info)
 
     def store(self, t, kw):
@@ -456,7 +422,7 @@ class Dispatcher(object):
         Load a store object according to description.
         Return the object itself.
         """
-        info = data.stores.load(**kw)
+        info = footprints.proxy.store(**kw)
         return (0, str(info), info)
 
     def component(self, t, kw):
@@ -464,7 +430,7 @@ class Dispatcher(object):
         Load an algo component object according to description.
         Return the object itself.
         """
-        info = algo.components.load(**kw)
+        info = footprints.proxy.component(**kw)
         return (0, str(info), info)
 
     def mpitool(self, t, kw):
@@ -472,7 +438,7 @@ class Dispatcher(object):
         Load a mpitool object according to description.
         Return the object itself.
         """
-        info = algo.mpitools.load(**kw)
+        info = footprints.proxy.mpitool(**kw)
         return (0, str(info), info)
 
     def system(self, t, kw):
@@ -480,7 +446,7 @@ class Dispatcher(object):
         Load a system object according to description.
         Return the object itself.
         """
-        info = tools.systems.load(**kw)
+        info = footprints.proxy.system(**kw)
         return (0, str(info), info)
 
     def service(self, t, kw):
@@ -488,7 +454,7 @@ class Dispatcher(object):
         Load a service object according to description.
         Return the object itself.
         """
-        info = tools.services.load(**kw)
+        info = footprints.proxy.service(**kw)
         return (0, str(info), info)
 
 

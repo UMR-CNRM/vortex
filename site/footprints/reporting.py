@@ -2,9 +2,8 @@
 # -*- coding:Utf-8 -*-
 
 """
-Hierarchical documents to store information.
+Hierarchical documents to store footprints information.
 Derived from :class:`xml.dom.minidom.Document`.
-Used to track structured information given by :mod:`~vortex.utilities.observers`.
 """
 
 #: No automatic export
@@ -14,34 +13,34 @@ from datetime import datetime
 from xml.dom.minidom import Document
 
 
-def tracktable(_tracktable = dict()):
-    """Default track table."""
-    return _tracktable
+def reportmap(_reportmap = dict()):
+    """Default reporting table."""
+    return _reportmap
 
-def trackcopy():
-    return tracktable().copy()
+def reportcopy():
+    return reportmap().copy()
 
-def tracker(tag='default', xmlbase=None):
-    """Factory to retrieve a information tracker document, according to the ``tag`` provided."""
-    trtab = tracktable()
-    if tag not in trtab:
-        trtab[tag] = InformationTracker(tag, xmlbase)
-    return trtab[tag]
+def report(tag='default', xmlbase=None):
+    """Factory to retrieve a information report document, according to the ``tag`` provided."""
+    rtab = reportmap()
+    if tag not in rtab:
+        rtab[tag] = StandardReport(tag, xmlbase)
+    return rtab[tag]
 
 
-class InformationTracker(Document):
+class StandardReport(Document):
 
     def __init__(self, tag=None, xmlbase=None):
         Document.__init__(self)
-        self.root = self.createElement('tracker')
+        self.root = self.createElement('report')
         self.root.setAttribute('tag', tag)
         self.appendChild(self.root)
         self._current = self.root
 
 
     def __call__(self):
-        """Print the complete dump of the current tracker."""
-        print self.dumpall()
+        """Print the complete dump of the current report object."""
+        print self.dump_all()
 
     def new_entry(self, kind, name):
         """Insert a top level entry (child of the root node)."""
@@ -90,11 +89,11 @@ class InformationTracker(Document):
                 yield dico
 
 
-class FactorizedTracker(object):
+class FactorizedReport(object):
 
     def __init__(self, tag, *listofkeys, **kw):
         """
-        Generates a Tracker whose reports are sorted using some parameters
+        Generates a report whose items are sorted using some parameters
 
          - tag is the end-level entry that have to be sorted
          - listofkeys describes the sorting options. It must be a
@@ -108,7 +107,7 @@ class FactorizedTracker(object):
         self.indent = kw.get('indent', '    ')
         self._tree = dict()
 
-    def getOrder(self, dic, depth):
+    def get_order(self, dic, depth):
         order = list()
         other = dic.keys()
         for val in self.interestingValues(self.keys()[depth]):
@@ -146,7 +145,7 @@ class FactorizedTracker(object):
                     print
         else:
             if ordered:
-                order = self.getOrder(dic, depth)
+                order = self.get_order(dic, depth)
             else:
                 order = dic
             for v in order:
@@ -173,7 +172,7 @@ class FactorizedTracker(object):
             if mess:
                 print self.indent*3, mess
         else:
-            for v in self.getOrder(dic, depth):
+            for v in self.get_order(dic, depth):
                 if mess:
                     newMess = mess + ' | ' + self.keys()[depth] + ' = ' + v
                 else:
@@ -193,7 +192,7 @@ class FactorizedTracker(object):
                     separator='-'
                 elif separator =='-':
                     separator='~'
-            for v in self.getOrder(dic, depth):
+            for v in self.get_order(dic, depth):
                 if mess:
                     newMess = mess + ' | ' + self.keys()[depth] + ' = ' + v
                 else:
@@ -210,29 +209,29 @@ class FactorizedTracker(object):
         self.niceprinter(self._tree, 0, maxDepth, group)
 
 if __name__ == '__main__':
-    ft = FactorizedTracker(
+    fr = FactorizedReport(
         'classname',
         ('name', ('kind', 'date')),
         ('why', ('Missing value', 'Not valid', 'Not in values', 'Outcast value')),
         indent = '   '
     )
 
-    ft.add(classname='toto',name='kind',why='Not Valid', info='blabla')
-    ft.add(classname='tata',name='kind',why='Invalid')
-    ft.add(classname='tata2',name='kind',why='Invalid', info = 'idem')
-    ft.add(classname='grosMinet',name='date',why='Not in values : test', info='values = [today, 20130807]')
-    ft.add(classname='titi', name='date', why = 'Missing value')
-    ft.add(classname='tutu',name='bidon',why='Invalid')
-    ft.add(classname='tyty',name='aa',why='n\'importe quoi ' )
+    fr.add(classname='toto',name='kind',why='Not Valid', info='blabla')
+    fr.add(classname='tata',name='kind',why='Invalid')
+    fr.add(classname='tata2',name='kind',why='Invalid', info = 'idem')
+    fr.add(classname='grosMinet',name='date',why='Not in values : test', info='values = [today, 20130807]')
+    fr.add(classname='titi', name='date', why = 'Missing value')
+    fr.add(classname='tutu',name='bidon',why='Invalid')
+    fr.add(classname='tyty',name='aa',why='n\'importe quoi ' )
 
-    ft.orderedprint()
+    fr.orderedprint()
 
     print
     print '=======================new Version========================'
     print
-    ft.dumper()
+    fr.dumper()
 
     print
     print '=======================new Version bis========================'
     print
-    ft.dumper(maxDepth=2)
+    fr.dumper(maxDepth=2)

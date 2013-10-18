@@ -13,9 +13,10 @@ to be processed: e.g. mail, sendbdap, routing, alarm.
 #: No automatic export
 __all__ = []
 
+import footprints
+
 from vortex.autolog import logdefault as logger
 
-from vortex.utilities.catalogs import Catalog
 from vortex.utilities.authorizations import is_authorized_user
 from vortex.tools import services
 
@@ -62,7 +63,7 @@ class Action(object):
     def get_actual_service(self, **kw):
         """Build the service instance determined by the actual description."""
         info = self.service_info(**kw)
-        return services.load(**info)
+        return footprints.proxy.service(**info)
 
     def execute(self, **kw):
         """Generic method to perform the action through a service."""
@@ -97,7 +98,7 @@ class Report(Action):
         super(Report, self).__init__(kind=kind, active=active, service=service)
 
 
-class Dispatcher(Catalog):
+class Dispatcher(footprints.util.Catalog):
     """
     Central office for dispatching actions.
     """
@@ -111,11 +112,11 @@ class Dispatcher(Catalog):
         return set([x.kind for x in self.items()])
 
     def candidates(self, kind):
-        """Return a selection of the catalog's items with the specified ``kind``."""
+        """Return a selection of the dispatcher's items with the specified ``kind``."""
         return [x for x in self.items() if x.kind == kind]
 
     def discard_kind(self, kind):
-        """A shortcut to discard from the catalog any item with the specified ``kind``."""
+        """A shortcut to discard from the dispatcher any item with the specified ``kind``."""
         for item in self:
             if item.kind == kind:
                 self.discard(item)

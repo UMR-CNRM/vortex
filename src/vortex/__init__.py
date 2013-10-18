@@ -23,7 +23,7 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.8.0'
+__version__ = '0.8.1'
 __prompt__  = 'Vortex v-' + __version__+ ':'
 
 __all__ = []
@@ -46,16 +46,11 @@ priorities.TOOLBOX.addafter('OLIVE')
 priorities.DEBUG.addbefore('OPER')
 
 import loader
-import vortex.utilities.trackers
-import vortex.utilities.observers
-
 import tools
 def getglove():
     return dict(glove = tools.env.current().glove)
 
 footprints.setup.defcallback = getglove
-footprints.setup.observers   = vortex.utilities.observers
-footprints.setup.tracker     = vortex.utilities.trackers.tracker
 
 import sessions, toolbox, algo, data
 
@@ -71,22 +66,18 @@ if rs.system().systems_reload():
 
 del rs
 
-# Shorthands to sessions components
+# Shorthands to sessions or footprints components
 
 ticket = sessions.ticket
 exit = sessions.exit
 sh = sessions.system
+proxy = footprints.proxy
+
+# Populate toolbox module with tube shortcuts
+
+proxy.popul(toolbox)
 
 # Register proper vortex exit before the end of interpreter session
 atexit.register(sessions.exit)
 del atexit
 
-# Shorthands to the most useful class catalogs
-
-components = algo.components.catalog
-containers = data.containers.catalog
-providers = data.providers.catalog
-resources = data.resources.catalog
-stores = data.stores.catalog
-systems = tools.systems.catalog
-targets = tools.targets.catalog

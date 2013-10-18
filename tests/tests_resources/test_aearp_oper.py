@@ -1,13 +1,16 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+import footprints
+
 try:
     from oper_test_config import *
 except ImportError, e:
     print e
     raise
 
-cr = vortex.data.resources.catalog()
+cr = footprints.proxy.resources
+
 cr.track = True
 t.warning()
 
@@ -71,8 +74,8 @@ class UtBackgroundErrStd(TestCase):
         self.fp_cont2 = dict(local='errgribscr')
 
     def test_ctlg(self):
+        ctlg = footprints.proxy.resources
         bckgerr = self.fp_bckgerr1
-        ctlg = resources.catalog()
         res = ctlg.findbest(bckgerr)
         self.assertEqual(res.kind, 'bgerrstd')
         bckgerr = self.fp_bckgerr2

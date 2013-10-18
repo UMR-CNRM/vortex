@@ -3,25 +3,25 @@
 
 """
 This package handles cache objects that could be in charge of
-hosting data resources. The associated modules defines the catalog
-factory based on the shared footprint mechanism.
+hosting data resources. Cache objects use the :mod:`footprints` mechanism.
 """
 
 #: No automatic export
 __all__ = []
 
-import re, sys
+import re
 
 import footprints
 
 from vortex.autolog import logdefault as logger
 from vortex.tools.config import GenericConfigParser
-from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 
 
 class Cache(footprints.BFootprint):
     """Root class for any :class:Cache subclasses."""
 
+    _abstract  = True
+    _collector = ('cache',)
     _footprint = dict(
         info = 'Default cache description',
         attr = dict(
@@ -165,27 +165,3 @@ class MtoolCache(Cache):
         return system.path.join(cache, self.actual_headdir)
 
 
-class CachesCatalog(ClassesCollector):
-    """Class in charge of collecting :class:`Cache` items."""
-
-    def __init__(self, **kw):
-        """
-        Define defaults regular expresion for module search, list of tracked classes
-        and the item entry name in pickled footprint resolution.
-        """
-        logger.debug('Caches catalog init %s', self)
-        cat = dict(
-            remod = re.compile(r'.*\.caches'),
-            classes = [ Cache ],
-            itementry = 'cache'
-        )
-        cat.update(kw)
-        super(CachesCatalog, self).__init__(**cat)
-
-    @classmethod
-    def tablekey(cls):
-        """The entry point for global catalogs table. -- Here: caches."""
-        return 'caches'
-
-
-build_catalog_functions(sys.modules.get(__name__), CachesCatalog)

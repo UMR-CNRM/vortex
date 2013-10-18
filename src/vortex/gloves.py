@@ -5,18 +5,19 @@
 __all__ = []
 
 
-import sys, re
+import re
 
 import footprints
 
 from vortex.autolog import logdefault as logger
-from vortex.utilities.catalogs import ClassesCollector, build_catalog_functions
 from vortex.tools.env import Environment
 
 
 class Glove(footprints.BFootprint):
     """Base class for GLObal Versatile Environment."""
 
+    _abstract  = True
+    _collector = ('glove',)
     _footprint = dict(
         info = 'Abstract glove',
         attr = dict(
@@ -195,28 +196,3 @@ class OperGlove(Glove):
     def realkind(self):
         return 'opuser'
 
-
-class GlovesCatalog(ClassesCollector):
-    """Class in charge of collecting :class:`Store` items."""
-
-    def __init__(self, **kw):
-        """
-        Define defaults regular expresion for module search, list of tracked classes
-        and the item entry name in pickled footprint resolution.
-        """
-        logger.debug('Gloves catalog init %s', self)
-        cat = dict(
-            remod = re.compile(r'.*\.(?:sessions|gloves)'),
-            classes = [ Glove ],
-            itementry = 'glove'
-        )
-        cat.update(kw)
-        super(GlovesCatalog, self).__init__(**cat)
-
-    @classmethod
-    def tablekey(cls):
-        """The entry point for global catalogs table. -- Here: gloves."""
-        return 'gloves'
-
-
-build_catalog_functions(sys.modules.get(__name__), GlovesCatalog)

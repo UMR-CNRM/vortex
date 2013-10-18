@@ -30,7 +30,7 @@ class UtRtCoef(TestCase):
         )
 
     def test_ctlg(self):
-        ctlg = resources.catalog()
+        ctlg = footprints.proxy.resources
         res = ctlg.findbest(self.fp_rtcoef)
 
         self.assertTrue(res.kind, 'rtcoef')
@@ -82,10 +82,10 @@ class UtBcor(TestCase):
         del self.fp_bcor
 
     def test_ctlg(self):
+        ctlg = footprints.proxy.resources
         for cat in ['noaa','ssmi','mtop']:
             bcor = self.fp_bcor
             bcor['satbias'] = cat
-            ctlg = resources.catalog()
             res = ctlg.findbest(bcor)
             self.assertTrue(res.kind, 'rtcoef')
 
