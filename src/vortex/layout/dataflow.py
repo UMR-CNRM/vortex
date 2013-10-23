@@ -26,6 +26,8 @@ IXOTuple = namedtuple('IXOTuple', ['INPUT', 'OUTPUT', 'EXEC'], verbose=False)
 #: Predefined IXO sequence values INPUT, OUTPUT and EXEC.
 ixo = IXOTuple(INPUT=1, OUTPUT=2, EXEC=3)
 
+#: Arguments specific to a section (to be striped away from a resource handler description)
+section_args = [ 'role', 'alternate', 'intent', 'fatal' ]
 
 def stripargs_section(**kw):
     """
@@ -33,9 +35,8 @@ def stripargs_section(**kw):
     and any other ones. Return a tuple with ( section_options, other_options ).
     """
     opts = dict()
-    for opt in filter(lambda x: x in kw, ( 'role', 'alternate', 'intent' )):
-        opts[opt] = kw[opt]
-        del kw[opt]
+    for opt in [ x for x in section_args if x in kw ]:
+        opts[opt] = kw.pop(opt)
     return ( opts, kw )
 
 
@@ -46,6 +47,7 @@ class Section(object):
         logger.debug('Section initialisation %s', self)
         self.kind      = ixo.INPUT
         self.intent    = intent.INOUT
+        self.fatal     = False
         self.role      = kw.get('role', None)
         self.alternate = None
         self.rh        = None
@@ -188,7 +190,7 @@ class Sequence(object):
         if not kw: return inset
         inrole = list()
         inkind = list()
-        if 'role' in kw and kw['role'] != None:
+        if 'role' in kw and kw['role'] is not None:
             selectrole = mktuple(kw['role'])
             inrole = [ x for x in inset if x.role in selectrole or x.alternate in selectrole ]
         if not inrole and 'kind' in kw:
@@ -215,7 +217,7 @@ class Sequence(object):
         if not kw: return outset
         outrole = list()
         outkind = list()
-        if 'role' in kw  and kw['role'] != None:
+        if 'role' in kw  and kw['role'] is not None:
             outrole = [ x for x in outset if x.role == kw['role'] ]
         if not outrole and 'kind' in kw:
             outkind = [ x for x in outset if x.rh.resource.realkind == kw['kind'] ]

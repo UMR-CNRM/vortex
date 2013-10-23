@@ -43,11 +43,3 @@ Informations
 .. autofunction:: namespaces
 
 
-Shortcuts
----------
-
-.. autofunction:: component
-.. autofunction:: container
-.. autofunction:: provider
-.. autofunction:: resource
-.. autofunction:: store

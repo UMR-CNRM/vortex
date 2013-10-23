@@ -42,7 +42,7 @@ class NamelistContent(AlmostDictContent):
 
     def newblock(self, name=None):
         """Construct a new block."""
-        if name == None:
+        if name is None:
             self._automkblock += 1
             name = 'AUTOBLOCK{0:03d}'.format(self._automkblock)
         if name not in self._data:
@@ -73,7 +73,7 @@ class NamelistContent(AlmostDictContent):
                 for dk in namblock.keys():
                     newblock[dk] = namblock[dk]
                 self[namblock.name] = newblock
-        if rmblocks == None and hasattr(delta, 'rmblocks'):
+        if rmblocks is None and hasattr(delta, 'rmblocks'):
             rmblocks = delta.rmblocks()
         if rmblocks != None:
             for item in [ x for x in rmblocks if x in self ]:
@@ -241,7 +241,7 @@ class NamTerm(Namelist):
             if s:
                 fixed = 1
                 ( dirpath, base ) = (s.group(1), s.group(2))
-                if dirpath == None:
+                if dirpath is None:
                     dirpath = ''
                 ext = ''
                 if r == r3:
@@ -260,7 +260,7 @@ class NamTerm(Namelist):
                         p = ''
                     if r == r2:
                         ext = s.group(3)
-                        if ext == None:
+                        if ext is None:
                             ext = ''
 
 
@@ -331,7 +331,7 @@ class XXTContent(IndexedTable):
 
     def xxtpos(self, n, g, x):
         t = g.get('term', x.get('term', None))
-        if t == None:
+        if t is None:
             return None
         else:
             value = None

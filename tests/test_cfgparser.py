@@ -23,7 +23,7 @@ class UtGenericConfigParser(TestCase):
     def test_void_init(self):
         gcp = GenericConfigParser()
         self.assertTrue(type(gcp) == GenericConfigParser)
-        self.assertTrue(gcp.file == None)
+        self.assertTrue(gcp.file is None)
 
     def test_init_1(self):
         self.assertRaises(Exception, GenericConfigParser, 'absent.ini')
@@ -68,7 +68,7 @@ class UtIgaCfgParser(TestCase):
     def test_void_init(self):
         icp = IgaCfgParser()
         self.assertTrue(type(icp) == IgaCfgParser)
-        self.assertTrue(icp.file == None)
+        self.assertTrue(icp.file is None)
 
     def test_init_1(self):
         self.assertRaises(Exception, IgaCfgParser, 'absent.ini')

@@ -110,7 +110,7 @@ class Tree(object):
             self.rdump(kid, indent+1)
 
     def dump(self, node=None):
-        if node == None:
+        if node is None:
             node = self.root
         if self.contains(node):
             print ' *[{0}]...'.format(self._root)

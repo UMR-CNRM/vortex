@@ -319,7 +319,11 @@ class NamelistBlock(object):
 
     def __repr__(self):
         """Returns a formated id of the current namelist block, including number of items."""
-        return '<NamelistBlock: {0:s} has {1:d} item(s)>'.format(self.name, len(self._pool))
+        sr = object.__repr__(self).rstrip('>')
+        return '{0:s} | name={1:s} len={2:d}>'.format(sr, self.name, len(self._pool))
+
+    def __str__(self):
+        return self.dumps()
 
     def setvar(self, varname, value):
         """Insert or change a namelist block key."""
@@ -411,7 +415,6 @@ class NamelistBlock(object):
     def update(self, dico):
         """Updates the pool of keys, and keeps as much as possible the initial order."""
         for var, value in dico.iteritems():
-            #print "DBUG", var, value
             self.setvar(var, value)
 
     def clear(self, rmkeys=None):
@@ -444,7 +447,7 @@ class NamelistBlock(object):
         if not literal:
             literal = LiteralParser()
         if item in self._subs:
-            if self._subs[item] == None:
+            if self._subs[item] is None:
                 return item
             else:
                 return literal.encode(self._subs[item])

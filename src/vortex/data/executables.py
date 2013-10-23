@@ -63,7 +63,7 @@ class Script(Executable):
 
     def command_line(self, **opts):
         """Returns optional attribute :attr:`rawopts`."""
-        if self.rawopts == None:
+        if self.rawopts is None:
             return ''
         else:
             return self.rawopts

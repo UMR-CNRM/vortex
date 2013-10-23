@@ -122,7 +122,7 @@ def daterange(start, end=None, step='P1D'):
     if not isinstance(start, Date):
         start = Date(start)
 
-    if end == None:
+    if end is None:
         end = start + Period('P10D')
     else:
         if not isinstance(end, Date):
@@ -333,6 +333,10 @@ class Date(datetime.datetime):
         delta_o = self - Date._origin
         self._epoch = delta_o.days * 86400 + delta_o.seconds
 
+    def __reduce__(self):
+        """Return a compatible args sequence for the Date constructor (used by :mod:`pickle`)."""
+        return (self.__class__, (self.iso8601(),))
+
     def __deepcopy__(self, memo):
         """No deepcopy expected, so ``self`` is returned."""
         return self
@@ -448,21 +452,21 @@ class Date(datetime.datetime):
         >>> d.from_cnesjulian(22578)
         Date(2011, 10, 26, 0, 0)
         """
-        if jdays == None:
+        if jdays is None:
             jdays = self.toordinal() - self.cnes_origin
         return Date(self.fromordinal(jdays + self.cnes_origin))
 
     def isleap(self, year=None):
         """Return either the current of specified year is a leap year."""
-        if year == None:
+        if year is None:
             year = self.year
         return calendar.isleap(year)
 
     def monthrange(self, year=None, month=None):
         """Return the number of days in the current of specified year-month couple."""
-        if year == None:
+        if year is None:
             year = self.year
-        if month == None:
+        if month is None:
             month = self.month
         return calendar.monthrange(year, month)[1]
 
@@ -501,7 +505,7 @@ class Time(object):
             if len(ld) < 2:
                 ld.append(0)
             self._hour, self._minute = ld[0], ld[1]
-        if self._hour == None or self._minute == None:
+        if self._hour is None or self._minute is None:
             raise ValueError("No way to build a Time value")
 
     @property

@@ -14,8 +14,7 @@ __all__ = []
 import logging
 logger = logging.getLogger('footprints.observers')
 
-import weakref
-
+import util
 
 def getbyname(tag=None, _obstable=dict()):
     """Return an observer for the specified tag name (a class name for example)."""
@@ -56,74 +55,51 @@ class ObserverSet(object):
     def __init__(self, tag='void', info=dict()):
         self.tag = tag
         self.info = info
-        self._listen = set()
-        self._items = set()
+        self._listen = util.Catalog(weak=True)
+        self._items = util.Catalog(weak=True)
 
     def __deepcopy__(self, memo):
         """No deepcopy expected, so ``self`` is returned."""
         return self
-
-    def ref(self, o):
-        """Provides the reference internaly stored, e.g., a weakref."""
-        ro = None
-        try:
-            ro = weakref.ref(o)
-        except AttributeError:
-            logger.critical('No more weak referencing possible')
-        finally:
-            return ro
-
-    def unref(self, r):
-        """Return the actual referenced object if still alive."""
-        return r()
 
     def register(self, remote):
         """
         Push the ``remote`` object to the list of listening objects.
         A listening object should implement the :class:`Observer` interface.
         """
-        self._listen.add(self.ref(remote))
+        self._listen.add(remote)
 
     def observers(self):
         """List of observing objects."""
-        return [ x() for x in self._listen if x() is not None ]
+        return list(self._listen)
 
     def observed(self):
         """List of observed objects."""
-        return [ x() for x in self._items if x() is not None ]
+        return list(self._items)
 
     def unregister(self, remote):
         """Remove the ``remote`` object from the list of listening objects."""
-        self._listen.discard(self.ref(remote))
+        self._listen.discard(remote)
 
     def notify_new(self, item, info):
         """Notify the listening objects that a new observed object is born."""
-        self._items.add(self.ref(item))
+        logger.info('Notify new %s info %s', repr(item), info)
+        self._items.add(item)
         for remote in list(self._listen):
-            rr = self.unref(remote)
-            if rr is not None:
-                rr.newobsitem(item, info)
-            else:
-                self._listen.discard(remote)
+            remote.newobsitem(item, info)
 
     def notify_del(self, item, info):
         """Notify the listening objects that an observed object does not exists anymore."""
-        ri = self.ref(item)
-        if ri is not None and ri in self._items:
-            self._items.discard(ri)
+        if item in self._items:
+            logger.info('Notify del %s info %s', repr(item), info)
             for remote in list(self._listen):
-                rr = self.unref(remote)
-                if rr is not None:
-                    rr.delobsitem(item, info)
-                else:
-                    self._listen.discard(remote)
+                remote.delobsitem(item, info)
+            self._items.discard(item)
 
     def notify_upd(self, item, info):
         """Notify the listening objects that an observed object has been updated."""
-        if self.ref(item) in self._items:
+        if item in self._items:
+            logger.info('Notify upd %s info %s', repr(item), info)
             for remote in list(self._listen):
-                rr = self.unref(remote)
-                if rr is not None:
-                    rr.updobsitem(item, info)
-                else:
-                    self._listen.discard(remote)
+                remote.updobsitem(item, info)
+

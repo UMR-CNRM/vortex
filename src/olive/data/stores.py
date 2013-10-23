@@ -208,7 +208,7 @@ class OpArchiveStore(ArchiveStore):
             if not extract and self.glue.containsfile(basename):
                 extract = basename
                 cleanpath, targetpath = self.glue.filemap(system, dirname, basename)
-            if cleanpath == None:
+            if cleanpath is None:
                 rc = False
             else:
                 rc = ftp.get(cleanpath, targetpath)

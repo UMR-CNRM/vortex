@@ -35,7 +35,7 @@ class Cycle(object):
         return self.regexp.search(*args)
 
     def __getstate__(self):
-        return ( self.cstate, self.tag )
+        return (self.cstate, self.tag)
 
     def __setstate__(self, frozendata):
         self.cstate, self.tag = frozendata
@@ -47,8 +47,9 @@ class Cycle(object):
 
     def __repr__(self):
         """Return a nice view of the current cycle."""
+        sr = object.__repr__(self).rstrip('>')
         regexp, option = self.cstate
-        return 'Cycle {0:s}(re="{1:s}" options={2:d})'.format(self.tag, regexp, option)
+        return '{0:s} | cycle={1:s} re="{2:s}" options={3:d}>'.format(sr, self.tag, regexp, option)
 
     def __cmp__(self, other):
         """Compare current object and other as strings."""

@@ -20,7 +20,7 @@ class IgaHelperSelect(IndexedTable):
         model = g.get('model', x.get('model', None))
         self.add(self.parser.get_info(model))
         t = g.get('term', x.get('term', None))
-        if t == None:
+        if t is None:
             return None
         else:
             t = int(t)

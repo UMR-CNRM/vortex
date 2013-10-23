@@ -23,39 +23,48 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.8.1'
+__version__ = '0.8.2'
 __prompt__  = 'Vortex v-' + __version__+ ':'
 
 __all__ = []
 
-import logging
-import atexit
+# Default logging mechanism
 
+import logging
 logging.basicConfig(
     format='[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
     datefmt='%Y/%d/%m-%H:%M:%S',
     level=logging.WARNING
 )
-
 logger = logging.getLogger('vortex')
 
-import footprints
+# Set vortex specific priorities for footprints usage
 
-priorities = footprints.priorities.top
-priorities.TOOLBOX.addafter('OLIVE')
-priorities.DEBUG.addbefore('OPER')
+import footprints
+footprints.set_before('debug', 'olive', 'oper')
+
+# Populate a fake proxy module with footprints shortcuts
+
+import proxy
+footprints.setup.popul(proxy)
+proxy.cat = footprints.proxy.cat
+proxy.objects = footprints.proxy.objects
+
+# The module loader set the local logger to each module of the vortex packages
 
 import loader
+
+# Insert a dynamic callback so that any footprint resolution could check the current Glove
+
 import tools
 def getglove():
     return dict(glove = tools.env.current().glove)
 
 footprints.setup.defcallback = getglove
 
-import sessions, toolbox, algo, data
-
 # Set a background environment and a root session
 
+import sessions
 rootenv = tools.env.Environment(active=True)
 rootenv.glove = sessions.glove()
 
@@ -71,13 +80,14 @@ del rs
 ticket = sessions.ticket
 exit = sessions.exit
 sh = sessions.system
-proxy = footprints.proxy
 
-# Populate toolbox module with tube shortcuts
+# Load some superstars sub-packages
 
-proxy.popul(toolbox)
+import toolbox, algo, data
 
 # Register proper vortex exit before the end of interpreter session
+
+import atexit
 atexit.register(sessions.exit)
 del atexit
 

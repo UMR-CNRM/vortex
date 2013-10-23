@@ -112,22 +112,22 @@ class VNameBuilder(object):
         """
         name = d['radical']
 
-        if d['src'] != None:
+        if d['src'] is not None:
             name = name + '.' + '-'.join(self.pack_std_items(d['src']))
 
-        if d['geo'] != None:
+        if d['geo'] is not None:
             name = name + '.' + '-'.join(self.pack_std_items(d['geo']))
 
-        if d['compute'] != None:
+        if d['compute'] is not None:
             name = name + '.' + '-'.join(self.pack_std_items(d['compute']))
 
-        if d['term'] != None:
+        if d['term'] is not None:
             name = name + '+' + str(d['term'])
 
-        if d['fmt'] != None:
+        if d['fmt'] is not None:
             name = name + '.' + d['fmt']
 
-        if d['suffix'] != None:
+        if d['suffix'] is not None:
             name = name + '.' + '.'.join(self.pack_std_items(d['suffix']))
 
         return name.lower()
@@ -138,7 +138,7 @@ class VNameBuilder(object):
         according to the so-called observation style.
         """
         name = '.'.join([d['nativefmt'], d['stage'], d['part']])
-        if d['suffix'] != None:
+        if d['suffix'] is not None:
             name = name + '.' + d['suffix']
 
         return name.lower()

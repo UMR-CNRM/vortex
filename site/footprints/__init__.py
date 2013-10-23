@@ -10,7 +10,6 @@ that attributes (possibly optionals) could cover.
 __all__ = []
 
 import copy, re
-import weakref
 import inspect
 
 import logging
@@ -33,6 +32,16 @@ class MaxLoopIter(Exception):
 class UnreachableAttr(Exception):
     pass
 
+def set_before(priorityref, *args):
+    """Set `args` priority before specified `priorityref'."""
+    for newpriority in args:
+        priorities.top.insert(tag=newpriority, before=priorityref)
+
+def set_after(priorityref, *args):
+    """Set `args` priority after specified `priorityref'."""
+    for newpriority in reversed(args):
+        priorities.top.insert(tag=newpriority, after=priorityref)
+
 class FootprintSetup(object):
     """Defines some defaults and external tools."""
 
@@ -49,6 +58,19 @@ class FootprintSetup(object):
         self.ground = dict()
         self.defaults = dict()
         self.defcallback = None
+        self.modtarget = None
+
+    def popul(self, remotemodule, clear=False):
+        """Populate the ``remotemodule`` with references to active collectors and load methods."""
+        if inspect.ismodule(remotemodule):
+            self.modtarget = remotemodule
+            for k, v in collectorsmap().items():
+                if clear or not hasattr(self.modtarget, k):
+                    setattr(self.modtarget, k, v.load)
+                if clear or not hasattr(self.modtarget, k+'s'):
+                    setattr(self.modtarget, k+'s', v)
+        else:
+            logger.warning('Could not populate a non-module object: %s', remotemodule)
 
     def setfpenv(self, **kw):
         """Extend the current defaults environnement for footprint resolution."""
@@ -91,29 +113,25 @@ class Collector(util.Catalog):
         self.report = True
         self.autoreport = True
         self.orderedreport = list()
-        self.instances = util.Catalog()
+        self.instances = util.Catalog(weak=True)
         super(Collector, self).__init__(**kw)
+        if setup.modtarget is not None:
+            setattr(setup.modtarget, self.keypoint, self.load)
+            setattr(setup.modtarget, self.keypoint+'s', self)
 
     def newobsitem(self, item, info):
         """Register a new instance of some of the classes in the current collector."""
         logger.debug('Notified %s new item %s', self, item)
-        self.instances.add(weakref.ref(item))
+        self.instances.add(item)
 
     def delobsitem(self, item, info):
         """Unregister an existing object in the current collector of instances."""
         logger.debug('Notified %s del item %s', self, item)
-        self.instances.discard(weakref.ref(item))
+        self.instances.discard(item)
 
     def updobsitem(self, item, info):
         """Not yet specialised..."""
         logger.debug('Notified %s upd item %s', self, item)
-
-    def actualrefs(self, reset=False):
-        """Return only alive instances. Reset the ``instance`` catalog on demand."""
-        alive = [ x() for x in self.instances.items() if x() is not None ]
-        if reset and len(alive) < len(self.instances.items()):
-            self.instances.refill([ x for x in self.instances.items() if x() is not None ])
-        return alive
 
     def pickup_attributes(self, desc):
         """Try to pickup inside the collector a item that could match the description."""
@@ -192,7 +210,7 @@ class Collector(util.Catalog):
             candidates.sort(key=lambda x: x[0].weightsort(x[2]), reverse=True)
             for i, c in enumerate(candidates):
                 thisclass, u_resolved, theinput = c
-                logger.warning(' > no.%d in.%d is %s', i+1, len(theinput), thisclass)
+                logger.warning('  no.%d in.%d is %s', i+1, len(theinput), thisclass)
         topcl, topr, u_topinput = candidates[0]
         return topcl(topr, checked=True)
 
@@ -209,7 +227,7 @@ class Collector(util.Catalog):
         Try to find in existing instances tracked by the ``tag`` collector
         a suitable candidate according to description.
         """
-        for inst in self.actualrefs():
+        for inst in self.instances():
             if inst.compatible(kw):
                 return inst
         return self.load(**kw)
@@ -226,7 +244,9 @@ def collected_footprints():
 def collector(tag='garbage'):
     """Main entry point to get a footprinted classes collector."""
     cmap = collectorsmap()
-    return cmap.setdefault(tag, Collector(keypoint=tag))
+    if tag not in cmap:
+        cmap[tag] = Collector(keypoint=tag)
+    return cmap[tag]
 
 def pickup(rd):
     """Find in current description the attributes that are collected under the ``tag`` name."""
@@ -250,25 +270,20 @@ def default(**kw):
 class FootprintProxy(object):
     """Access to alive footprint items."""
 
-    def popul(self, remotemodule):
-        """Populate the ``remotemodule`` with references to active collectors and load methods."""
-        if inspect.ismodule(remotemodule):
-            for k, v in collectorsmap().items():
-                if not hasattr(remotemodule, k):
-                    setattr(remotemodule, k, v.load)
-                if not hasattr(remotemodule, k+'s'):
-                    setattr(remotemodule, k+'s', v)
-        else:
-            logger.warning('Could not populate a non-module object: %s', remotemodule)
-
     def cat(self):
         """Cat a list of all existing collectors."""
         for k, v in sorted(collectorsmap().items()):
-            print str(len(v)).rjust(3), (k+'s').ljust(16), v
+            print str(len(v)).rjust(4), (k+'s').ljust(16), v
 
     def catlist(self):
         """Same as cat but as a list of tuples (len, name, collector)."""
         return [ (len(v), k+'s', v) for k, v in sorted(collectorsmap().items()) ]
+
+    def objects(self):
+        """Cat the list of all existing objects tracked by the collectors."""
+        for k, c in sorted(collectorsmap().items()):
+            objs = c.instances()
+            print str(len(objs)).rjust(4), (k+'s').ljust(16), objs
 
     def __getattr__(self, attr):
         """Gateway to collector (plural noun) or load method (singular)."""
@@ -364,7 +379,7 @@ class Footprint(object):
         inputattr = set()
         for k, kdef in attrs.iteritems():
             if kdef['optional']:
-                if kdef['default'] == None:
+                if kdef['default'] is None:
                     guess[k] = UNKNOWN
                 else:
                     guess[k] = kdef['default']
@@ -421,7 +436,7 @@ class Footprint(object):
                         changed = 1
                         if replm:
                             subattr = getattr(guess[replk], replm, None)
-                            if subattr == None:
+                            if subattr is None:
                                 guess[k] = None
                             else:
                                 guess[k] = replattr.sub(str(subattr), guess[k], 1)
@@ -431,7 +446,7 @@ class Footprint(object):
                     changed = 1
                     if replm:
                         subattr = getattr(extras[replk], replm, None)
-                        if subattr == None:
+                        if subattr is None:
                             guess[k] = None
                         else:
                             if callable(subattr):
@@ -440,7 +455,7 @@ class Footprint(object):
                                 except:
                                     attrcall = '__SKIP__'
                                     changed = 0
-                                if attrcall == None:
+                                if attrcall is None:
                                     guess[k] = None
                                 elif attrcall != '__SKIP__':
                                     guess[k] = replattr.sub(str(attrcall), guess[k], 1)
@@ -494,7 +509,7 @@ class Footprint(object):
             k = todo.pop(0)
             kdef = attrs[k]
             nbpass = nbpass + 1
-            if not replshortcut(nbpass, k, guess, extras, todo) or guess[k] == None: continue
+            if not replshortcut(nbpass, k, guess, extras, todo) or guess[k] is None: continue
 
             while kdef['remap'].has_key(guess[k]):
                 logger.debug(' > Attr %s remap(%s) = %s', k, guess[k], kdef['remap'][guess[k]])
@@ -527,7 +542,7 @@ class Footprint(object):
                     diags[k] = True
                     guess[k] = None
 
-            if guess[k] == None and ( opts['fast'] or k == 'kind' ):
+            if guess[k] is None and ( opts['fast'] or k == 'kind' ):
                 break
 
         for k in attrs.keys():
@@ -536,7 +551,7 @@ class Footprint(object):
                 logger.warning(' > Attr %s is a null string', k)
                 if not k in diags:
                     opts['report'].add('key', k, why='Not valid')
-            if guess[k] == None:
+            if guess[k] is None:
                 inputattr.discard(k)
                 if not k in diags:
                     opts['report'].add('key', k, why='Missing value')
@@ -564,7 +579,7 @@ class Footprint(object):
                 k = k.split('before_', 1)[-1]
 
             actualvalue = rd.get(k, params.get(k.upper(), None))
-            if actualvalue == None:
+            if actualvalue is None:
                 rd = False
                 report.add('only', k, why='No value found')
                 break
@@ -695,12 +710,25 @@ class BFootprint(object):
             logger.debug('Resolve attributes at footprint init %s', object.__repr__(self))
             self._attributes, u_inputattr = self._instfp.resolve(self._attributes, fatal=True)
         self._observer = observers.getbyname(self.__class__.fullname())
-        self._observer.notify_new(self, dict())
+        self.make_alive()
 
     @property
     def realkind(self):
         """Must be implemented by subclasses."""
         pass
+
+    def make_alive(self):
+        """Thnigs to do after new or init construction."""
+        self._observer.notify_new(self, dict())
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['_observer']
+        return d
+
+    def __setstate__(self, state):
+        self._observer = observers.getbyname(self.__class__.fullname())
+        self.make_alive()
 
     def __del__(self):
         try:
@@ -732,16 +760,16 @@ class BFootprint(object):
         """See the current footprint as a pure dictionary when exported."""
         return self.puredict()
 
-    def addrepr(self):
+    def _str_more(self):
         """Additional information to be combined in repr output."""
-        return 'object at ' + hex(id(self))
+        return 'footprint=' + str(len(self.attributes()))
 
-    def __repr__(self):
+    def __str__(self):
         """
         Basic layout for nicely formatted print, built as the concatenation
         of the class full name and some :meth:`addrepr` additional information.
         """
-        return '<{0:s} {1:s}>'.format(self.fullname(), self.addrepr())
+        return '{0:s} | {1:s}>'.format(repr(self).rstrip('>'), self._str_more())
 
     @property
     def info(self):
@@ -800,7 +828,7 @@ class BFootprint(object):
         resolved, u_inputattr = fp.resolve(rd, fatal=False, fast=False, report=None)
         rc = True
         for k in rd.keys():
-            if resolved[k] == None or self._attributes[k] != resolved[k]:
+            if resolved[k] is None or self._attributes[k] != resolved[k]:
                 rc = False
         return rc
 

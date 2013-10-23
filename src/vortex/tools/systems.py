@@ -137,7 +137,7 @@ class System(footprints.BFootprint):
 
     def pythonpath(self, output=None):
         """Return or print actual ``sys.path``."""
-        if output == None:
+        if output is None:
             output = self.output
         self.stderr(['pythonpath'])
         if output:
@@ -150,7 +150,7 @@ class System(footprints.BFootprint):
 
     def pwd(self, output=None):
         """Current working directory."""
-        if output == None:
+        if output is None:
             output = self.output
         self.stderr(['pwd'])
         realpwd = self._os.getcwd()
@@ -322,7 +322,7 @@ class System(footprints.BFootprint):
     def vortex_loaded_modules(self, only='.', output=None):
         """Check loaded modules, producing either a dump or a list of tuple (status, modulename)."""
         checklist = list()
-        if output == None:
+        if output is None:
             output = self.output
         for modname in self.vortex_modules(only):
             checklist.append((modname, modname in sys.modules))
@@ -348,7 +348,7 @@ class System(footprints.BFootprint):
     def spawn(self, args, ok=[0], shell=False, output=None, outmode='a'):
         """Subprocess call of ``args``."""
         rc = False
-        if output == None:
+        if output is None:
             output = self.output
         self.stderr(args)
         p = None
@@ -424,11 +424,11 @@ class OSExtended(System):
         except Exception as pb:
             logger.warning('Could not update options default: %s', defaults)
 
-        if cmdline == None:
+        if cmdline is None:
             cmdline = sys.argv[1:]
         opts.update( dict([ x.split('=') for x in cmdline ]) )
         for k, v in opts.iteritems():
-            if v != None:
+            if v is not None:
                 if istrue.match(v):
                     opts[k] = True
                 if isfalse.match(v):
@@ -517,7 +517,7 @@ class OSExtended(System):
             destination.seek(0)
             xdestination = False
         rc = self.copyfileobj(source, destination)
-        if rc == None:
+        if rc is None:
             rc = True
         if xsource:
             source.close()
@@ -748,6 +748,10 @@ class OSExtended(System):
             with io.open(source, 'rb') as fd:
                 obj = pickle.load(fd)
         return obj
+
+    def pickle_clone(self, obj):
+        """Clone an object through pickling / unpickling."""
+        return pickle.loads(pickle.dumps(obj))
 
 class Python26(object):
     """Old fashion features before Python 2.7."""

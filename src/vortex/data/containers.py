@@ -38,7 +38,7 @@ class Container(footprints.BFootprint):
 
     def updfill(self, getrc=None):
         """Change current filled status according to return code of the get command."""
-        if getrc != None and getrc:
+        if getrc is not None and getrc:
             self._filled = True
 
     def localpath(self):
@@ -48,7 +48,7 @@ class Container(footprints.BFootprint):
     @property
     def totalsize(self):
         """Returns the complete size of the container."""
-        if self._totalsize == None:
+        if self._totalsize is None:
             self.rewind()
         return self._totalsize
 
@@ -152,8 +152,8 @@ class InCore(Virtual):
     def realkind(self):
         return 'incore'
 
-    def addrepr(self):
-        """Additional information to internal representation."""
+    def _str_more(self):
+        """Additional information to print representation."""
         if self._tmpfile:
             if self._tmpfile._rolled:
                 actualfile = self._tmpfile.name
@@ -161,7 +161,7 @@ class InCore(Virtual):
                 actualfile = 'MemoryResident'
         else:
             actualfile = 'NotSpooled'
-        return '| maxsize={0:d} tmpfile={1:s}'.format(self.maxsize, actualfile)
+        return 'maxsize={0:d} tmpfile={1:s}'.format(self.maxsize, actualfile)
 
     def localpath(self):
         """
@@ -199,13 +199,13 @@ class MayFly(Virtual):
     def realkind(self):
         return 'mayfly'
 
-    def addrepr(self):
+    def _str_more(self):
         """Additional information to internal representation."""
         if self._tmpfile:
             actualfile = "'" + self._tmpfile.name + "'"
         else:
             actualfile = 'NotDefined'
-        return '| delete={0:s} tmpfile={1:s}'.format(str(self.delete), actualfile)
+        return 'delete={0:s} tmpfile={1:s}'.format(str(self.delete), actualfile)
 
     def localpath(self):
         """
@@ -253,9 +253,9 @@ class File(Container):
     def realkind(self):
         return 'file'
 
-    def addrepr(self):
-        """Additional information to internal representation."""
-        return '| path=\'{0:s}\''.format(self._actualpath)
+    def _str_more(self):
+        """Additional information to print representation."""
+        return 'path=\'{0:s}\''.format(self._actualpath)
 
     def localpath(self):
         """Returns the actual name of the file object."""

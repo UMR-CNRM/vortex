@@ -102,8 +102,8 @@ class GEnv(Provider):
         """Default realkind is ``genv``."""
         return 'genv'
 
-    def addrepr(self):
-        """Additional information to internal representation."""
+    def _str_more(self):
+        """Additional information to print representation."""
         return '| cycle={0:s}'.format(self.genv)
 
     def scheme(self):

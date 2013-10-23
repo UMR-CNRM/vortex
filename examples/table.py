@@ -24,7 +24,7 @@ print t.line
 class TablePerso(IndexedTable):
     def xxtpos(self, n, g, x):
         t = g.get('term', x.get('term', None))
-        if t == None:
+        if t is None:
             return None
         else:
             t = int(t)

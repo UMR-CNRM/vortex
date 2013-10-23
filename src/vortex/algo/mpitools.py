@@ -71,7 +71,7 @@ class MpiTool(footprints.BFootprint):
                 optdef = optdef.lstrip('-')
                 self._options[optdef] = None
                 klast = optdef
-            elif klast != None:
+            elif klast is not None:
                 self._options[klast] = optdef
             else:
                 raise MpiException('Badly shaped mpi option around %s', optdef)
@@ -93,9 +93,9 @@ class MpiTool(footprints.BFootprint):
         cmdl = [ self.launcher(system, e) ]
         for k, v in self._options.items():
             cmdl.append(self.optprefix + str(k))
-            if v != None:
+            if v is not None:
                 cmdl.append(str(v))
-        if self._master == None:
+        if self._master is None:
             raise MpiException('No master defined before launching MPI')
         if self.optprefix == '--':
             cmdl.append('--')
@@ -114,7 +114,7 @@ class MpiTool(footprints.BFootprint):
 
         # Define the actual list of active namelist
         namcandidates = [ x.rh for x in ctx.sequence.effective_inputs(kind=('namelist', 'namelistfp')) ]
-        if opts != None and 'loop' in opts:
+        if opts is not None and 'loop' in opts:
             namcandidates = [ x for x in namcandidates if (hasattr(x.resource, 'term') and x.resource.term == opts['loop']) ]
         else:
             logger.warning('No loop option.')

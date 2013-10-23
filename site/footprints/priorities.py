@@ -167,7 +167,7 @@ class PrioritySet(object):
 
     def insert(self, tag=None, after=None, before=None):
         """Insert a new priority after or before an other one (which the tag name is given)."""
-        if tag == None:
+        if tag is None:
             return tag
         else:
             tag = str(tag).upper()

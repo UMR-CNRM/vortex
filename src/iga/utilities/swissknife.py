@@ -23,7 +23,7 @@ def getopsetfrompath(sh, path=None):
     """
     Extract from specified or current ``path`` what could be actual
     ``suite``, ``vapp`` and ``vconf`` values."""
-    if path == None:
+    if path is None:
         path = sh.pwd()
     lpath = path.split('/')
     if lpath[-1] in ('demo', 'gco', 'genv', 'jobs', 'logs', 'src', 'tasks', 'vortex'):

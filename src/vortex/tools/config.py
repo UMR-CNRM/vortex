@@ -66,7 +66,7 @@ class GenericConfigParser(object):
 
     def setfile(self, inifile):
         """Read the specified ``inifile`` as new configuration."""
-        if self.parser == None:
+        if self.parser is None:
             self.parser = self.clsparser()
         self.file = None
         local = vortex.sessions.system()
@@ -87,7 +87,7 @@ class GenericConfigParser(object):
                         local.touch(persofile)
                     else:
                         raise Exception('Configuration file ' + inifile + ' not found')
-        if self.file != None:
+        if self.file is not None:
             self.parser.read(self.file)
 
     def setall(self, kw):

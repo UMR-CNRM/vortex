@@ -13,6 +13,8 @@ import re, copy, glob
 import logging
 logger = logging.getLogger('footprints.util')
 
+from weakref import WeakSet
+
 
 def dictmerge(d1, d2):
     """
@@ -30,10 +32,10 @@ def dictmerge(d1, d2):
     {'a': '1', 'i': {'b': '2', 'f': {'g': '5'}}, 'c': {'h': '6', 'e': '7', 'd': '3'}}
     """
 
-    for key,value in d2.iteritems():
+    for key, value in d2.iteritems():
         if type(value) == type(dict()):
             if d1.has_key(key):
-                dictmerge(d1[key],d2[key])
+                dictmerge(d1[key], d2[key])
             else :
                 d1[key] = value
         else:
@@ -84,7 +86,7 @@ def rangex(start, end=None, step=None, shift=None, fmt=None):
 
         if len(actualrange) > 1:
             realend = actualrange[1]
-        elif end == None:
+        elif end is None:
             realend = realstart
         else:
             realend = end
@@ -92,7 +94,7 @@ def rangex(start, end=None, step=None, shift=None, fmt=None):
 
         if len(actualrange) > 2:
             realstep = actualrange[2]
-        elif step == None:
+        elif step is None:
             realstep = 1
         else:
             realstep = step
@@ -215,7 +217,7 @@ def expand(desc):
     logger.debug('Expand in %d loops', nbpass)
     return ld
 
-    
+
 class Catalog(object):
     """
     Abstract class for managing a collection of *items*.
@@ -226,7 +228,12 @@ class Catalog(object):
 
     def __init__(self, **kw):
         logger.debug('Abstract %s init', self.__class__)
-        self._items = set(kw.pop('items', list()))
+        self._weak  = kw.pop('weak', False)
+        self._items = kw.pop('items', list())
+        if self._weak:
+            self._items = WeakSet(self._items)
+        else:
+            self._items = set(self._items)
         self._filled = bool(self._items)
         self.__dict__.update(kw)
 
@@ -236,7 +243,7 @@ class Catalog(object):
         return '{0:s}.{1:s}'.format(self.__module__, self.__name__)
 
     def items(self):
-        return tuple(self._items)
+        return list(self._items)
 
     def __iter__(self):
         """Catalog is iterable... at least!"""
@@ -248,6 +255,15 @@ class Catalog(object):
 
     def __len__(self):
         return len(self._items)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d['_items'] = list(self._items)
+        return d
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._items = WeakSet(self._items) if self._weak else set(self._items)
 
     def add(self, *items):
         """Add the ``item`` entry in the current catalog."""
@@ -261,18 +277,6 @@ class Catalog(object):
     def clear(self):
         """Completly clear the list of items previously recorded in this catalog."""
         self._items = set()
-
-    def refresh(self, **kw):
-        """Redo the init sequence."""
-        kw.setdefault('tag', self.tag)
-        items = kw.pop('items', list())
-        if len(kw) > 1:
-            self.__dict__.update(kw)
-            self.refill(items)
-
-    def refill(self, items):
-        """Set the contents of the current catalog with the ``items`` provided."""
-        self._items = set(items)
 
 
 if __name__ == '__main__':

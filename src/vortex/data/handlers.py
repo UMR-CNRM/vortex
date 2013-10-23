@@ -141,7 +141,7 @@ class Handler(object):
         for subobj in ( 'resource', 'provider', 'container' ):
             obj = getattr(self, subobj, None)
             if obj:
-                print '{0}  {1:10s}: {2:s}'.format(tab, subobj.capitalize(), repr(obj))
+                print '{0}  {1:10s}: {2:s}'.format(tab, subobj.capitalize(), str(obj))
 
 
     def locate(self, **extras):

@@ -48,7 +48,7 @@ class AlgoComponent(footprints.BFootprint):
 
     def fscheck(self, ctx, opts):
         """Ask the current context to check changes on file system since last stamp."""
-        self.fslog.append( ctx.fstrack_check(tag=self.fstag()) )
+        self.fslog.append(ctx.fstrack_check(tag=self.fstag()))
 
     def export(self, packenv):
         """Export environment variables in given pack."""

@@ -264,7 +264,7 @@ class utTime(TestCase):
 
     def test_cmpTime(self):
         t = date.Time(6)
-        self.assertFalse(t == None)
+        self.assertFalse(t is None)
         self.assertTrue(t == 6)
         self.assertFalse(t > 6)
         self.assertFalse(t < 6)

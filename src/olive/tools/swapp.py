@@ -18,7 +18,7 @@ def olive_label(sh, env, tag=None, target=None):
         depot = env.MTOOL_STEP_DEPOT or env.MTOOL_STEP_STORE
         renum = re.search('\/mstep_(\d+)', depot)
         num = renum.group(1)
-        if ( target == None ):
+        if target is None:
             label = re.sub('-batch', '', label)
             label = re.sub('^\d+:', '', label)
         else:
@@ -41,7 +41,7 @@ def guesslocout(sh, env, output):
 def olive_logname(sh, env, output, localout=None):
     """Return the local path to OLIVE execution output."""
 
-    if localout == None:
+    if localout is None:
         localout = guesslocout(sh, env, output)
 
     return sh.path.join(env.HOME, localout)
@@ -51,7 +51,7 @@ def olive_jobout(sh, env, output, localout=None):
 
     sh.stderr(['olive_jobout', output, localout])
 
-    if localout == None:
+    if localout is None:
         localout = guesslocout(sh, env, output)
 
     mstep = 'off'
@@ -129,7 +129,7 @@ def olive_rescue(sh, env, *files):
             bkupdir = sh.path.join(env.MTOOL_STEP_ABORT, env.MTOOL_STEP_ID)
             logger.info('Rescue mtool defined backup directory is %s', bkupdir)
 
-        if bkupdir == None:
+        if bkupdir is None:
             logger.error('No rescue directory defined.')
         else:
             sh.mkdir(bkupdir)

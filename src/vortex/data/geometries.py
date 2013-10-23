@@ -84,11 +84,11 @@ class HGeometry(object):
                     self.__dict__[k] = False
             for item in ('nlon', 'nlat', 'truncation'):
                 cv = getattr(self, item)
-                if cv != None:
+                if cv is not None:
                     setattr(self, item, int(cv))
             for item in ('stretching', 'resolution'):
                 cv = getattr(self, item)
-                if cv != None:
+                if cv is not None:
                     setattr(self, item, float(cv))
 
     @property
@@ -138,8 +138,8 @@ class HGeometry(object):
         )
         return card
 
-    def reprheader(self):
-        """Return beginning of internal formatted representation."""
+    def strheader(self):
+        """Return beginning of formatted print representation."""
         return '{0:s}.{1:s} | id=\'{2:s}\' area=\'{3:s}\''.format(self.__module__, self.__class__.__name__, self.id, self.area)
 
 
@@ -155,12 +155,12 @@ class SpectralGeometry(HGeometry):
         super(SpectralGeometry, self).__init__(**kw)
         self.kind = 'spectral'
 
-    def __repr__(self):
-        """Standard formatted representation."""
+    def __str__(self):
+        """Standard formatted print representation."""
         if self.lam:
-            return '<{0:s} r=\'{1:s}\'>'.format(self.reprheader(), self.rnice)
+            return '<{0:s} r=\'{1:s}\'>'.format(self.strheader(), self.rnice)
         else:
-            return '<{0:s} t={1:d} c={2:g}>'.format(self.reprheader(), self.truncation, self.stretching)
+            return '<{0:s} t={1:d} c={2:g}>'.format(self.strheader(), self.truncation, self.stretching)
 
 
 class GridGeometry(HGeometry):
@@ -179,6 +179,6 @@ class GridGeometry(HGeometry):
         self.truncation = None
         self.stretching = None
 
-    def __repr__(self):
-        """Standard formatted representation."""
-        return '<{0:s} r=\'{1:s}\'>'.format(self.reprheader(), self.rnice)
+    def __str__(self):
+        """Standard formatted print representation."""
+        return '<{0:s} r=\'{1:s}\'>'.format(self.strheader(), self.rnice)

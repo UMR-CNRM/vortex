@@ -40,12 +40,12 @@ class Provider(footprints.BFootprint):
         logger.debug('Abstract provider init %s', self.__class__)
         super(Provider, self).__init__(*args, **kw)
 
-    def addrepr(self):
-        """Additional information to internal representation."""
+    def _str_more(self):
+        """Additional information to print representation."""
         try:
-            return '| namespace=\'{0:s}\''.format(self.namespace)
+            return 'namespace=\'{0:s}\''.format(self.namespace)
         except AttributeError:
-            return super(Provider, self).addrepr()
+            return super(Provider, self)._str_more()
 
     @property
     def realkind(self):
@@ -164,9 +164,9 @@ class Remote(Provider):
     def realkind(self):
         return 'remote'
 
-    def addrepr(self):
-        """Additional information to internal representation."""
-        return '| path=\'{0:s}\''.format(self.remote)
+    def _str_more(self):
+        """Additional information to print representation."""
+        return 'path=\'{0:s}\''.format(self.remote)
 
     def scheme(self):
         """The Remote scheme is its tube."""
@@ -231,12 +231,12 @@ class Vortex(Provider):
     def realkind(self):
         return 'vortex'
 
-    def addrepr(self):
-        """Additional information to internal representation."""
+    def _str_more(self):
+        """Additional information to print representation."""
         try:
-            return '| namespace=\'{0:s}\' block=\'{1:s}\''.format(self.namespace, self.block)
+            return 'namespace=\'{0:s}\' block=\'{1:s}\''.format(self.namespace, self.block)
         except AttributeError:
-            return super(Provider, self).addrepr()
+            return super(Provider, self)._str_more()
 
     def scheme(self):
         """Default: ``vortex``."""

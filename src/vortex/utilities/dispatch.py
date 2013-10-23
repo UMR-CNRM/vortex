@@ -132,7 +132,7 @@ class Dispatcher(object):
         """
         info = list()
         for x in kw:
-            if kw[x] == None:
+            if kw[x] is None:
                 if x in t.env: del t.env[x]
             else:
                 t.env[x] = kw[x]

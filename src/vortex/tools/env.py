@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 
-r"""
+"""
 Advanced environment settings.
 """
 
@@ -155,7 +155,10 @@ class Environment(object):
         return self.getvar(varname)
 
     def __getattr__(self, varname):
-        return self.getvar(varname)
+        if varname.startswith('_'):
+            raise AttributeError
+        else:
+            return self.getvar(varname)
 
     def delvar(self, varname):
         """
@@ -249,7 +252,7 @@ class Environment(object):
 
     def verbose(self, switch=None, sh=None):
         """Switch on or off the verbose mode. Returns actual value."""
-        if switch != None:
+        if switch is not None:
             self.__dict__['_verbose'] = switch
         if sh:
             self.__dict__['_sh'] = sh
@@ -320,7 +323,7 @@ class Environment(object):
     def false(self, varname):
         """Extended boolean negative test of the variable given as argument."""
         xvar = self.getvar(varname)
-        if xvar == None:
+        if xvar is None:
             return True
         else:
             return bool(varfalse.match(str(xvar)))
@@ -328,7 +331,7 @@ class Environment(object):
     def setbinpath(self, value, pos=None):
         """Insert a new path value to the bin search path at given position."""
         mypath = self.getvar('PATH').split(':')
-        if pos == None:
+        if pos is None:
             pos = len(mypath)
         mypath.insert(pos, value)
         self.setvar('PATH', ':'.join(mypath))

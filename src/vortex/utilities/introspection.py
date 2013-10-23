@@ -47,7 +47,7 @@ class Sherlock(object):
     def getlocalmembers(self, obj, topmodule=None):
         """Return members of the module ``m`` which are defined in the source file of the module."""
         objs = dict()
-        if topmodule == None:
+        if topmodule is None:
             topmodule = obj
         for x, y in inspect.getmembers(obj):
             if inspect.isclass(y) or inspect.isfunction(y) or inspect.ismethod(y):

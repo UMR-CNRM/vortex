@@ -25,7 +25,7 @@ class Action(object):
 
     def __init__(self, kind='foo', service=None, active=False):
         self.kind = kind
-        if service == None:
+        if service is None:
             service = 'send' + self.kind
         self.service = service
         self._active = active

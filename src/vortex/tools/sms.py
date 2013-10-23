@@ -42,7 +42,7 @@ class SMSGateway(object):
 
     def binpath(self, path=None):
         """Set and return the binary path to sms tools."""
-        if path != None:
+        if path is not None:
             self._binpath = self._system.path.normpath(path)
         return self._binpath
 
