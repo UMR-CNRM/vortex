@@ -12,7 +12,7 @@ import re
 import footprints
 
 from vortex.autolog import logdefault as logger
-from vortex import sessions, data
+from vortex import sessions, data, proxy
 from vortex.layout.dataflow import stripargs_section
 
 #: Shortcut to footprint env defaults
@@ -22,16 +22,6 @@ sectionmap = {'input':'get', 'output':'put', 'executable':'get'}
 justdoit = False
 getinsitu = False
 verbose = 0
-
-#: Shortcut to collectors ... others are populated automatically
-containers = footprints.proxy.containers
-providers  = footprints.proxy.providers
-resources  = footprints.proxy.resources
-
-#: Other shortcuts to direct load ... others are populated automatically
-container  = containers.load
-provider   = providers.load
-resource   = resources.load
 
 # Most commonly used functions
 
@@ -73,7 +63,13 @@ def rload(*args, **kw):
         else:
             logger.warning('Discard rload argument <%s>', a)
     rd.update(kw)
-    rx = [ containers.pickup(providers.pickup(resources.pickup(x))) for x in footprints.util.expand(rd) ]
+    rx = [
+        proxy.containers.pickup(
+            proxy.providers.pickup(
+                proxy.resources.pickup(x)
+            )
+        ) for x in footprints.util.expand(rd)
+    ]
     logger.debug('Resource desc %s', rx)
     return [ data.handlers.Handler(x) for x in rx ]
 
@@ -157,7 +153,7 @@ def algo(*args, **kw):
     ctx.record_off()
     if verbose > 1:
         print 'Loading algo component with description:', footprints.dump.lightdump(kw), "\n"
-    ok = component(**kw)
+    ok = proxy.component(**kw)
     ctx.record_on()
     return ok
 
