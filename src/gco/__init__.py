@@ -4,6 +4,6 @@
 #: No automatic export
 __all__ = []
 
-# Recursive inclusion of packages with potential BFootprint classes
+# Recursive inclusion of packages with potential FootprintBase classes
 import syntax
 import data, tools

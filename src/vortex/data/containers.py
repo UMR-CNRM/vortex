@@ -12,7 +12,7 @@ import footprints
 from vortex.autolog import logdefault as logger
 
 
-class Container(footprints.BFootprint):
+class Container(footprints.FootprintBase):
 
     _abstract  = True
     _collector = ('container',)

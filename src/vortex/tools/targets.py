@@ -17,7 +17,7 @@ from vortex.autolog import logdefault as logger
 from vortex.tools.config import GenericConfigParser
 
 
-class Target(footprints.BFootprint):
+class Target(footprints.FootprintBase):
     """Root class for any :class:`Target` subclasses."""
 
     _abstract  = True

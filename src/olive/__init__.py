@@ -4,5 +4,5 @@
 #: Automatic export of data subpackage
 __all__ = []
 
-# Recursive inclusion of packages with potential BFootprint classes
+# Recursive inclusion of packages with potential FootprintBase classes
 import data

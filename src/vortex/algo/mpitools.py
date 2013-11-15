@@ -20,7 +20,7 @@ class MpiException(Exception):
     """Raise an exception in the parallel execution mode."""
     pass
 
-class MpiTool(footprints.BFootprint):
+class MpiTool(footprints.FootprintBase):
     """Root class for any :class:`MpiTool` subclasses."""
 
     _abstract  = True
@@ -78,10 +78,8 @@ class MpiTool(footprints.BFootprint):
         if opts:
             for k, v in opts.items():
                 self._options[k.lstrip('-')] = v
-        if 'nn' not in self._options:
-            self._options['nn'] = e.SWAPP_SUBMIT_NODES
-        if 'nnp' not in self._options:
-            self._options['nnp'] = e.SWAPP_SUBMIT_TASKS
+        self._options.setdefault('nn',  e.SWAPP_SUBMIT_NODES)
+        self._options.setdefault('nnp', e.SWAPP_SUBMIT_TASKS)
         return self._options
 
     def setmaster(self, master):
@@ -148,7 +146,7 @@ class MpiTool(footprints.BFootprint):
     def setup(self, ctx, target=None, opts=None):
         """Specific MPI settings before running."""
         self.setup_namelists(ctx, target, opts)
-        if target:
+        if target is not None:
             self.setup_environment(ctx, target, opts)
 
     def clean(self, ctx, target=None, opts=None):

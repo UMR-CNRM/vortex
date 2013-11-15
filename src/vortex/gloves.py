@@ -13,7 +13,7 @@ from vortex.autolog import logdefault as logger
 from vortex.tools.env import Environment
 
 
-class Glove(footprints.BFootprint):
+class Glove(footprints.FootprintBase):
     """Base class for GLObal Versatile Environment."""
 
     _abstract  = True

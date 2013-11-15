@@ -25,21 +25,18 @@ class Handler(object):
     """
 
     def __init__(self, rd, **kw):
-        self.role = roles.setrole(rd.get('role', 'anonymous'))
-        if 'role' in rd: del rd['role']
+        if 'glove' in rd:
+            del rd['glove']
+        self.role = roles.setrole(rd.pop('role', 'anonymous'))
         self.alternate = roles.setrole(rd.get('alternate', None))
         if 'alternate' in rd:
             del rd['alternate']
             self.role = None
-        self.resource = rd.get('resource', None)
-        self.provider = rd.get('provider', None)
-        self.container = rd.get('container', None)
-        self._options = dict()
+        self.resource = rd.pop('resource', None)
+        self.provider = rd.pop('provider', None)
+        self.container = rd.pop('container', None)
         self._contents = None
-        if 'glove' in rd:
-            del rd['glove']
-        for k in filter(lambda x: not self.__dict__.has_key(x), rd.keys()):
-            self._options[k] = rd.get(k)
+        self._options = rd.copy()
         self._options.update(kw)
         self._history = [(Date.now(), self.__class__.__name__, 'init', 1)]
         self._stage = [ 'load' ]
@@ -48,7 +45,13 @@ class Handler(object):
         logger.debug('New resource handler %s', self.__dict__)
 
     def __del__(self):
-        self._observer.notify_del(self, dict())
+        try:
+            self._observer.notify_del(self, dict())
+        except TypeError:
+            try:
+                logger.debug('Too late to notify del of %s', self)
+            except AttributeError:
+                pass
 
     def __str__(self):
         return str(self.__dict__)

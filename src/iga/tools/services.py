@@ -3,7 +3,7 @@
 
 r"""
 The module contains the service adapted to the actions present in the actions
-module. We have an abstract class Services (inheritating from BFootprint)
+module. We have an abstract class Services (inheritating from FootprintBase)
 and 3 more classes inheritating from it: AlarmService, BdapService, RoutingService.
 These classes are adpated to handle the data dedicated to the action to be
 performed.

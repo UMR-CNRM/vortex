@@ -302,19 +302,17 @@ class Footprint(object):
 
     def __init__(self, *args, **kw):
         """Initialisation and checking of a given set of footprint."""
-        nodef = False
-        if 'nodefault' in kw:
-            nodef = kw['nodefault']
-            del kw['nodefault']
-        if nodef:
-            fp = dict()
+        if kw.pop('nodefault', False):
+            fp = dict(attr = dict())
         else:
             fp = dict(
-                info = 'Not documented',
                 attr = dict(),
                 bind = list(),
+                info = 'Not documented',
                 only = dict(),
-                priority = dict( level = priorities.top.TOOLBOX )
+                priority = dict(
+                    level = priorities.top.TOOLBOX
+                )
             )
         for a in args:
             if isinstance(a, dict):
@@ -342,7 +340,7 @@ class Footprint(object):
         """
         return copy.deepcopy(self._fp)
 
-    def asopts(self):
+    def as_opts(self):
         """Returns the list of all the possible values as attributes or aliases."""
         opts = list()
         for k in self.attr.keys():
@@ -403,7 +401,7 @@ class Footprint(object):
     def _findextras(self, desc):
         extras = setup.extras()
         for vdesc in desc.values():
-            if isinstance(vdesc, BFootprint): extras.update(vdesc.puredict())
+            if isinstance(vdesc, FootprintBase): extras.update(vdesc.puredict())
         if extras:
             logger.debug(' > Extras : %s', extras)
         return extras
@@ -628,7 +626,7 @@ class Footprint(object):
         return self._fp['priority']
 
 
-class AFootprint(object):
+class FootprintAttrAccess(object):
     """Accessor class to footprint attributes."""
 
     def __init__(self, attr, fget=getattr, fset=setattr, fdel=delattr):
@@ -649,9 +647,9 @@ class AFootprint(object):
         raise AttributeError, 'This attribute should not be deleted'
 
 
-class MFootprint(type):
+class FootprintBaseMeta(type):
     """
-    Meta class constructor for :class:`BFootprint`.
+    Meta class constructor for :class:`FootprintBase`.
     The current :data:`_footprint` data which could be a simple dict
     or a :class:`Footprint` object is used to instantiate a new :class:`Footprint`,
     built as a merge of the footprint of the base classes.
@@ -668,8 +666,8 @@ class MFootprint(type):
             bcfp.append(fplocal)
         d['_footprint'] = Footprint( *bcfp )
         for k in d['_footprint'].attr.keys():
-            d[k] = AFootprint(k, fset=None, fdel=None)
-        realcls = super(MFootprint, cls).__new__(cls, n, b, d)
+            d[k] = FootprintAttrAccess(k, fset=None, fdel=None)
+        realcls = super(FootprintBaseMeta, cls).__new__(cls, n, b, d)
         if not abstract:
             for cname in realcls._collector:
                 thiscollector = collector(cname)
@@ -685,13 +683,13 @@ class MFootprint(type):
         return realcls
 
 
-class BFootprint(object):
+class FootprintBase(object):
     """
     Base class for any other thematic class that would need to incorporate a :class:`Footprint`.
-    Its metaclass is :class:`MFootprint`.
+    Its metaclass is :class:`FootprintBaseMeta`.
     """
 
-    __metaclass__ = MFootprint
+    __metaclass__ = FootprintBaseMeta
 
     _abstract  = True
     _collector = ('garbage',)
@@ -702,14 +700,15 @@ class BFootprint(object):
         self._instfp = Footprint(self._footprint.as_dict())
         self._attributes = dict()
         for a in args:
-            logger.debug('BFootprint %s arg %s', self, a)
+            logger.debug('FootprintBase %s arg %s', self, a)
             if isinstance(a, dict):
                 self._attributes.update(a)
         self._attributes.update(kw)
         if not checked:
             logger.debug('Resolve attributes at footprint init %s', object.__repr__(self))
             self._attributes, u_inputattr = self._instfp.resolve(self._attributes, fatal=True)
-        self._observer = observers.getbyname(self.__class__.fullname())
+        if not self.__class__._abstract:
+            self._observer = observers.getbyname(self.__class__.fullname())
         self.make_alive()
 
     @property
@@ -719,7 +718,8 @@ class BFootprint(object):
 
     def make_alive(self):
         """Thnigs to do after new or init construction."""
-        self._observer.notify_new(self, dict())
+        if not self.__class__._abstract:
+            self._observer.notify_new(self, dict())
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -733,8 +733,8 @@ class BFootprint(object):
     def __del__(self):
         try:
             self._observer.notify_del(self, dict())
-        except TypeError:
-            logger.critical('Too late for notify_del')
+        except (TypeError, AttributeError):
+            logger.debug('Too late for notify_del')
 
     @classmethod
     def fullname(cls):
@@ -798,7 +798,7 @@ class BFootprint(object):
     @classmethod
     def optional(cls, a):
         """Returns either the specified attribute ``a`` is optional or not."""
-        return cls.footprint().optional()
+        return cls.footprint().optional(a)
 
     @classmethod
     def couldbe(cls, rd, reportroot=None):
@@ -857,5 +857,3 @@ class BFootprint(object):
         except KeyError:
             logger.debug('No values list associated with this attribute %s', attrname)
             return None
-
-

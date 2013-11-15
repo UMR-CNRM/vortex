@@ -52,11 +52,14 @@ class ObserverSet(object):
     or update of the observed objects.
     """
 
-    def __init__(self, tag='void', info=dict()):
-        self.tag = tag
-        self.info = info
+    def __init__(self, tag='void'):
+        self._tag = tag
         self._listen = util.Catalog(weak=True)
         self._items = util.Catalog(weak=True)
+
+    @property
+    def tag(self):
+        return self._tag
 
     def __deepcopy__(self, memo):
         """No deepcopy expected, so ``self`` is returned."""

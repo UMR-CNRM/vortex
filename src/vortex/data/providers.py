@@ -16,7 +16,7 @@ from vortex.utilities.names import VNameBuilder
 from vortex.tools import net
 
 
-class Provider(footprints.BFootprint):
+class Provider(footprints.FootprintBase):
 
     _abstract  = True
     _collector = ('provider',)

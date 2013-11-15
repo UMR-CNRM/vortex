@@ -9,12 +9,16 @@ class PriorityLevel(object):
     Single level to be used inside footprints.
     """
 
-    def __init__(self, tagname, pset=None):
-        self.tag = tagname
+    def __init__(self, tagname, pset):
+        self._tag  = tagname
         self._pset = pset
 
     def __call__(self):
         return self.rank
+
+    @property
+    def tag(self):
+        return self._tag
 
     @property
     def inset(self):
@@ -80,10 +84,9 @@ class PrioritySet(object):
     """
 
     def __init__(self, levels=[]):
-        if levels:
-            self._levels = []
-            self.extend(*levels)
-            self._freeze = dict(default=self._levels[:])
+        self._levels = []
+        self.extend(*levels)
+        self._freeze = dict(default=self._levels[:])
 
     def __iter__(self):
         for l in self._levels:
@@ -92,12 +95,15 @@ class PrioritySet(object):
     def __call__(self):
         return tuple(self._levels)
 
+    def __len__(self):
+        return len(self._levels)
+
+    def __contains__(self, item):
+        return bool(self.level(item))
+
     @property
     def levels(self):
         return tuple(self._levels)
-
-    def __len__(self):
-        return len(self._levels)
 
     def level(self, tag):
         """Return the :class:`PriorityLevel` object of this set associated to the specified ``tag`` name."""
@@ -108,19 +114,25 @@ class PrioritySet(object):
 
     def reset(self):
         """Restore the frozen defaults as defined at the initialisation phase."""
-        self._levels = self._freeze['default'][:]
+        self.restore('default')
+
+    def freezed(self):
+        """Return a tuple of tags used for naming past freezings."""
+        return sorted(self._freeze.keys())
 
     def freeze(self, tag):
         """Store the current ordered list of priorities with a ``tag``."""
         tag = tag.lower()
         if tag == 'default':
-            raise Exception('Could not freeze a new default')
+            raise ValueError('Could not freeze a new default')
         else:
             self._freeze[tag] = self._levels[:]
 
     def restore(self, tag):
         """Restore previously frozen defaults under the specified ``tag``."""
         self._levels = self._freeze[tag.lower()][:]
+        for levelname in [ x for x in self._levels if x not in self.__dict__ ]:
+            self.__dict__[levelname] = PriorityLevel(levelname, pset=self)
 
     def extend(self, *levels):
         """
@@ -188,16 +200,3 @@ class PrioritySet(object):
 #: Predefined ordered object.
 top = PrioritySet(levels=['none', 'default', 'toolbox', 'debug'])
 
-
-def simple_doctest():
-    """
-    >>> top.DEFAULT > 'toolbox'
-    False
-    >>> top.NONE < 'DEBUG'
-    True
-    """
-    pass
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()

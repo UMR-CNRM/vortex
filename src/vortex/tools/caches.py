@@ -17,7 +17,7 @@ from vortex.autolog import logdefault as logger
 from vortex.tools.config import GenericConfigParser
 
 
-class Cache(footprints.BFootprint):
+class Cache(footprints.FootprintBase):
     """Root class for any :class:Cache subclasses."""
 
     _abstract  = True

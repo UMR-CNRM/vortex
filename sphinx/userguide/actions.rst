@@ -116,7 +116,7 @@ An action derives from the :class:`vortex.tools.actions.Action` class. It can be
 Services
 ========
 
-A service derives from a :class:`~vortex.syntax.footprint.BFootprint` base class.
+A service derives from a :class:`~footprints.FootprintBase base class.
 Root class and usual module interface for such object is available
 through the :mod:`vortex.tools.services` module.
 

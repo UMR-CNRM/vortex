@@ -18,7 +18,7 @@ e = t.context.env
 
 print t.line
 
-tg = toolbox.target(hostname=sh.hostname)
+tg = vortex.proxy.target(hostname=sh.hostname)
 print t.prompt, tg.hostname, tg.sysname, tg.inifile
 
 print t.line
@@ -51,9 +51,9 @@ print t.line, fp(), t.line
 
 geofp = [ geometries.getbyname(x) for x in ('glob15', 'glob25', 'euroc25', 'glob05', 'eurat01') ]
 
-prvin  = toolbox.provider(suite='oper', namespace='oper.archive.fr', vapp='arpege')
-prvout = toolbox.provider(experiment='A001', block='forecast', namespace='vortex.multi.fr')
-prvcst = toolbox.provider(genv='cy37t1_op1.20', gspool=tg.get('gco:tampon', e.HOME + '/gco-tampon'))
+prvin  = vortex.proxy.provider(suite='oper', namespace='oper.archive.fr', vapp='arpege')
+prvout = vortex.proxy.provider(experiment='A001', block='forecast', namespace='vortex.multi.fr')
+prvcst = vortex.proxy.provider(genv='cy37t1_op1.20', gspool=tg.get('gco:tampon', e.HOME + '/gco-tampon'))
 
 toolbox.input(
     provider = prvin,
@@ -155,7 +155,7 @@ toolbox.output(
 
 print t.line
 
-x = vortex.toolbox.component(kind='forecast', engine='parallel', fcterm=1)
+x = vortex.proxy.component(kind='forecast', engine='parallel', fcterm=1)
 
 print t.prompt, 'COMPONENT', x.puredict()
 

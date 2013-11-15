@@ -33,8 +33,8 @@ def dictmerge(d1, d2):
     """
 
     for key, value in d2.iteritems():
-        if type(value) == type(dict()):
-            if d1.has_key(key):
+        if type(value) is dict:
+            if d1.has_key(key) and type(d1[key])is dict:
                 dictmerge(d1[key], d2[key])
             else :
                 d1[key] = value
@@ -46,12 +46,12 @@ def dictmerge(d1, d2):
 
 def list2dict(a, klist):
     """
-    Convert any list value in a merged dictionary for the specified top entries
-    of the ``klist`` from the dictionnary ``a``.
+    Reshape any entry of ``a`` specified in ``klist`` as a dictionary of the iterable contents
+    of these entry.
     """
 
     for k in klist:
-        if k in a and type(a[k]) != dict:
+        if k in a and ( type(a[k]) is tuple or type(a[k]) is list):
             ad = dict()
             for item in a[k]:
                 ad.update(item)
@@ -59,7 +59,7 @@ def list2dict(a, klist):
     return a
 
 
-def rangex(start, end=None, step=None, shift=None, fmt=None):
+def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     """
     Extended range expansion.
 
@@ -75,8 +75,8 @@ def rangex(start, end=None, step=None, shift=None, fmt=None):
 
         if re.search('_', pstart):
             prefix, realstart = pstart.split('_')
+            prefix += '_'
         else:
-            prefix = None
             realstart = pstart
         if realstart.startswith('-'):
             actualrange = [ realstart ]
@@ -110,8 +110,12 @@ def rangex(start, end=None, step=None, shift=None, fmt=None):
             realend = realend + realshift
 
         pvalues = range(realstart, realend, realstep)
-        if prefix:
-            pvalues = [ prefix + '_' + str(x) for x in pvalues ]
+        if fmt is not None:
+            if fmt.startswith('%'):
+                fmt = '{0:' + fmt[1:] + '}'
+            pvalues = [ fmt.format(x, i+1, type(x).__name__) for i, x in enumerate(pvalues) ]
+        if prefix is not None:
+            pvalues = [ prefix + str(x) for x in pvalues ]
         rangevalues.extend(pvalues)
 
     return sorted(set(rangevalues))
@@ -131,7 +135,7 @@ def inplace(desc, key, value, globs=None):
     newd = copy.deepcopy(desc)
     newd[key] = value
     if globs:
-        for k in [ x for x in newd.keys() if (x != key and type(newd[x]) == str)]:
+        for k in [ x for x in newd.keys() if (x != key and type(newd[x]) is str) ]:
             for g in globs.keys():
                 newd[k] = re.sub('\[glob:'+g+'\]', globs[g], newd[k])
     return newd
@@ -159,9 +163,9 @@ def expand(desc):
     while todo:
         todo = False
         nbpass = nbpass + 1
-        if nbpass > 100:
+        if nbpass > 25:
             logger.error('Expansion is getting messy... (%d) ?', nbpass)
-            break
+            raise MemoryError('Expand depth too high')
         for i, d in enumerate(ld):
             for k, v in d.iteritems():
                 if isinstance(v, list) or isinstance(v, tuple) or isinstance(v, set):
@@ -234,7 +238,6 @@ class Catalog(object):
             self._items = WeakSet(self._items)
         else:
             self._items = set(self._items)
-        self._filled = bool(self._items)
         self.__dict__.update(kw)
 
     @classmethod
@@ -242,7 +245,18 @@ class Catalog(object):
         """Returns a nicely formated name of the current class (dump usage)."""
         return '{0:s}.{1:s}'.format(self.__module__, self.__name__)
 
+    @property
+    def filled(self):
+        """Boolean value, true if at least one item in the catalog."""
+        return bool(self._items)
+
+    @property
+    def weak(self):
+        """Boolean value, true if catalog built with weaked references."""
+        return self._weak
+
     def items(self):
+        """A list copy of catalog items."""
         return list(self._items)
 
     def __iter__(self):
@@ -255,6 +269,9 @@ class Catalog(object):
 
     def __len__(self):
         return len(self._items)
+
+    def __contains__(self, item):
+        return item in self._items
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -276,7 +293,7 @@ class Catalog(object):
 
     def clear(self):
         """Completly clear the list of items previously recorded in this catalog."""
-        self._items = set()
+        self._items = WeakSet() if self._weak else set()
 
 
 if __name__ == '__main__':

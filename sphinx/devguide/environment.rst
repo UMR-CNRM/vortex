@@ -247,7 +247,7 @@ There is no way to avoid the definition of this default glove which is associate
 to the ``root`` session and therefore to current binded environment
 (this will be discussed later).
 
-As a :class:`vortex.syntax.footprint.BFootprint` based class, the :class:`vortex.gloves.Glove` derivated classes
+As a :class:`footprints.FootprintBase class, the :class:`vortex.gloves.Glove` derivated classes
 could be instanciated through the :func:`vortex.gloves.load` interface method.
 This is a bad practice unless you really want to enforce the creation of a new glove, whatever the existings
 instances could already exist.

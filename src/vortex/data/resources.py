@@ -13,7 +13,7 @@ from vortex.syntax.stdattrs import a_nativefmt, a_format, notinrepr
 from contents import DataContent, DataRaw
 
 
-class Resource(footprints.BFootprint):
+class Resource(footprints.FootprintBase):
 
     _abstract  = True
     _collector = ('resource',)

@@ -3,7 +3,7 @@
 
 """
 Standard services to be used by user defined actions.
-With the abstract class Service (inheritating from BFootprint)
+With the abstract class Service (inheritating from FootprintBase)
 a default Mail Service is provided.
 """
 
@@ -29,7 +29,7 @@ from vortex.syntax.stdattrs import FPList
 criticals = [ 'debug', 'info', 'error', 'warning', 'critical' ]
 
 
-class Service(footprints.BFootprint):
+class Service(footprints.FootprintBase):
     """
     Abstract base class for services.
     """

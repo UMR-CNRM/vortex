@@ -136,7 +136,7 @@ class IniStoreGlue(StoreGlue):
         super(IniStoreGlue, self).__init__(config.DelayedConfigParser(inifile))
 
 
-class Store(footprints.BFootprint):
+class Store(footprints.FootprintBase):
     """Root class for any :class:`Store` subclasses."""
 
     _abstract  = True
@@ -198,7 +198,7 @@ class Store(footprints.BFootprint):
         return getattr(self, self.scheme + 'put', self.notyet)(local, remote, options)
 
 
-class MultiStore(footprints.BFootprint):
+class MultiStore(footprints.FootprintBase):
     """Agregate various :class:`Store` items."""
 
     _abstract  = True

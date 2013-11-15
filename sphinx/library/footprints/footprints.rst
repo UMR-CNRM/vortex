@@ -73,17 +73,17 @@ Footprint mechanism
    :member-order: alphabetical
 
 
-.. autoclass:: AFootprint
+.. autoclass:: FootprintAttrAccess
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MFootprint
+.. autoclass:: FootprintBaseMeta
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: BFootprint
+.. autoclass:: FootprintBase
    :show-inheritance:
    :members:
    :member-order: alphabetical

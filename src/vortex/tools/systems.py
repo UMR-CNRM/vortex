@@ -28,7 +28,7 @@ class ExecutionError(StandardError):
     """Go through exception for internal :meth:`spawn` errors."""
     pass
 
-class System(footprints.BFootprint):
+class System(footprints.FootprintBase):
     """
     Root class for any :class:`System` subclasses.
     """

@@ -13,7 +13,7 @@ import vortex
 from vortex.autolog import logdefault as logger
 from vortex.algo import mpitools
 
-class AlgoComponent(footprints.BFootprint):
+class AlgoComponent(footprints.FootprintBase):
     """Component in charge of running executable resources."""
 
     _abstract  = True
@@ -133,8 +133,12 @@ class AlgoComponent(footprints.BFootprint):
         ctx = vortex.sessions.ticket().context
         self.system = ctx.system
         self.env = ctx.env
-        self.target = kw.setdefault('target', vortex.proxy.target(hostname=self.system.hostname, sysname=self.system.sysname))
-        del kw['target']
+        self.target = kw.pop('target', None)
+        if self.target is None:
+            self.target = vortex.proxy.target(
+                hostname = self.system.hostname,
+                sysname  = self.system.sysname
+            )
         self.prepare(rh, ctx, kw)
         self.fsstamp(ctx, kw)
         self.execute(rh, ctx, kw)
@@ -245,9 +249,7 @@ class Parallel(AlgoComponent):
         """
         mpi = self.mpitool
         if not mpi:
-            mpiname = self.mpiname
-            if not mpiname:
-                mpiname = self.env.VORTEX_MPI_NAME
+            mpiname = self.mpiname or self.env.VORTEX_MPI_NAME
             mpi = footprints.proxy.mpitool(sysname=self.system.sysname, mpiname=mpiname)
 
         if not mpi:
