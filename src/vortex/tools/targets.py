@@ -2,7 +2,7 @@
 # -*- coding:Utf-8 -*-
 
 """
-This package handles target computers objects that could in charge of
+This package handles targets computers objects that could in charge of
 hosting a specific execution.Target objects use the :mod:`footprints` mechanism.
 """
 

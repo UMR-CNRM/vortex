@@ -32,6 +32,9 @@ class MaxLoopIter(Exception):
 class UnreachableAttr(Exception):
     pass
 
+class ResolveFatalError(Exception):
+    pass
+
 def set_before(priorityref, *args):
     """Set `args` priority before specified `priorityref'."""
     for newpriority in args:
@@ -46,18 +49,25 @@ class FootprintSetup(object):
     """Defines some defaults and external tools."""
 
     def __init__(self,
-        docstring=False, fastmode=False, extended=False,
-        dumper=dump.Dumper(),
-        report=reporting.report(tag='fpresolve')
+        docstring=False, fatal=True, fastmode=False, fastkeys=('kind',),
+        extended=False, dumper=None, report=None
     ):
-        self.dumper = dumper
-        self.report = report
-        self.extended = extended
-        self.docstring = docstring
-        self.fastmode = fastmode
-        self.ground = dict()
-        self.defaults = dict()
-        self.defcallback = None
+        """Initialisation of a simple footprint setup driver."""
+        if dumper is None:
+            self.dumper = dump.Dumper()
+        else:
+            self.dumper = dumper
+        if report is None:
+            self.report = reporting.report(tag='fpresolve')
+        else:
+            self.report = report
+        self.extended  = bool(extended)
+        self.docstring = bool(docstring)
+        self.fatal     = bool(fatal)
+        self.fastmode  = bool(fastmode)
+        self.fastkeys  = tuple(fastkeys)
+        self.defaults  = dict()
+        self.callback  = None
         self.modtarget = None
 
     def popul(self, remotemodule, clear=False):
@@ -74,11 +84,7 @@ class FootprintSetup(object):
 
     def setfpenv(self, **kw):
         """Extend the current defaults environnement for footprint resolution."""
-        dupd = dict()
-        for k,v in kw.items():
-            dupd[k.lower()] = v
-        self.defaults.update(dupd)
-        #self.defaults.update({ k.lower():v for k,v in kw.items() })
+        self.defaults.update({ k.lower():v for k, v in kw.items() })
         return self.defaults
 
     def dumpfpenv(self):
@@ -92,8 +98,8 @@ class FootprintSetup(object):
         return self.extended
 
     def extras(self):
-        if self.defcallback:
-            cb = self.defcallback
+        if self.callback:
+            cb = self.callback
             return cb()
         else:
             return dict()
@@ -244,6 +250,7 @@ def collected_footprints():
 def collector(tag='garbage'):
     """Main entry point to get a footprinted classes collector."""
     cmap = collectorsmap()
+    tag = tag.rstrip('s')
     if tag not in cmap:
         cmap[tag] = Collector(keypoint=tag)
     return cmap[tag]
@@ -323,10 +330,12 @@ class Footprint(object):
                 util.dictmerge(fp, a.as_dict())
         util.dictmerge(fp, util.list2dict(kw, ('attr', 'only')))
         for a in fp['attr'].keys():
-            fp['attr'][a].setdefault('alias', tuple())
-            fp['attr'][a].setdefault('remap', dict())
             fp['attr'][a].setdefault('default', None)
             fp['attr'][a].setdefault('optional', False)
+            fp['attr'][a]['alias'] = set(fp['attr'][a].get('alias', set()))
+            fp['attr'][a]['remap'] = dict(fp['attr'][a].get('remap', dict()))
+            fp['attr'][a]['values'] = set(fp['attr'][a].get('values', set()))
+            fp['attr'][a]['outcast'] = set(fp['attr'][a].get('outcast', set()))
         self._fp = fp
 
     def __str__(self):
@@ -368,14 +377,14 @@ class Footprint(object):
     def mandatory(self):
         """Returns the list of mandatory attributes in the current footprint."""
         fpa = self._fp['attr']
-        return filter(lambda x: not fpa[x]['optional'] or not fpa[x]['default'], fpa.keys())
+        return [ x for x in fpa.keys() if not fpa[x]['optional'] or fpa[x]['default'] is None ]
 
     def _firstguess(self, desc):
-        attrs = self.attr
+        """Produces a complete guess of the actual footprint according to actual description ``desc``."""
         guess = dict()
         param = setup.defaults
         inputattr = set()
-        for k, kdef in attrs.iteritems():
+        for k, kdef in self.attr.iteritems():
             if kdef['optional']:
                 if kdef['default'] is None:
                     guess[k] = UNKNOWN
@@ -399,19 +408,43 @@ class Footprint(object):
         return ( guess, inputattr )
 
     def _findextras(self, desc):
+        """
+        Return a flat dictionary including ground values as defined by ``setup.extras``
+        extended by a dictionary view of any :class:`FootprintBase` object found
+        in ``desc`` values.
+        """
         extras = setup.extras()
         for vdesc in desc.values():
-            if isinstance(vdesc, FootprintBase): extras.update(vdesc.puredict())
+            if isinstance(vdesc, FootprintBase):
+                extras.update(vdesc.puredict())
         if extras:
             logger.debug(' > Extras : %s', extras)
         return extras
 
     def _addextras(self, extras, guess, more):
+        """
+        Extend the specified ``extras`` dictionay with pairs of key/value
+        suggested in the ``more`` dictionary which are not already defined
+        in ``extras`` or the actual ``guess``.
+        """
         for k in [ x.lower() for x in more.keys() ]:
             if k not in extras and k not in guess:
                 extras[k] = more[k]
 
     def _replacement(self, nbpass, k, guess, extras, todo):
+        """
+        Try to resolve any replacement sequence inside the ``guess[k]`` value
+        according to actual values in the ``guess`` or ``extras`` current dictionaries.
+
+        A replacement sequence is a list of one or more items in brackets of the form:
+
+          * '[key-name]'
+          * '[key-name:attr-name]' or '[key-name::attr-name]'
+          * '[key-name:meth-name]' or '[key-name::meth-name]'
+
+        If the ``key-name`` could not be found in actual ``guess`` or ``extras`` dictionaries
+        the method raises an :exception:`UnreachableAttr`.
+        """
         if nbpass > 25:
             logger.error('Resolve probably cycling too much... %d tries ?', nbpass)
             raise MaxLoopIter('Too many Footprint replacements')
@@ -424,10 +457,10 @@ class Footprint(object):
                 replk = mobj.group(1)
                 replm = mobj.group(2)
                 if replk not in guess and replk not in extras:
-                    logger.critical('No %s attribute in guess:', replk)
-                    logger.critical('%s', guess)
-                    logger.critical('No %s attribute in extras:', replk)
-                    logger.critical('%s', extras)
+                    logger.error('No %s attribute in guess:', replk)
+                    logger.error('%s', guess)
+                    logger.error('No %s attribute in extras:', replk)
+                    logger.error('%s', extras)
                     raise UnreachableAttr('Could not replace attribute ' + replk)
                 if replk in guess:
                     if replk not in todo:
@@ -450,7 +483,8 @@ class Footprint(object):
                             if callable(subattr):
                                 try:
                                     attrcall = subattr(guess, extras)
-                                except:
+                                except Exception as trouble:
+                                    logger.critical(trouble)
                                     attrcall = '__SKIP__'
                                     changed = 0
                                 if attrcall is None:
@@ -462,7 +496,7 @@ class Footprint(object):
                     else:
                         guess[k] = replattr.sub(str(extras[replk]), guess[k], 1)
 
-        if guess[k] != None and replattr.search(str(guess[k])):
+        if guess[k] is not None and replattr.search(str(guess[k])):
             logger.debug(' > Requeue resolve < %s > : %s', k, guess[k])
             todo.append(k)
             return False
@@ -473,11 +507,12 @@ class Footprint(object):
     def resolve(self, desc, **kw):
         """Try to guess how the given description ``desc`` could possibly match the current footprint."""
 
-        opts = dict(fatal=True, fast=setup.fastmode, report=setup.report)
-        if kw: opts.update(kw)
+        opts = dict(fatal=setup.fatal, fast=setup.fastmode, report=setup.report)
+        opts.update(kw)
 
-        guess, inputattr = self._firstguess(desc)
+        guess, attr_input = self._firstguess(desc)
         extras = self._findextras(desc)
+        attr_seen = set()
 
         # Add arguments from current description not yet used to extra parameters
         self._addextras(extras, guess, desc)
@@ -488,26 +523,25 @@ class Footprint(object):
 
         attrs = self.attr
 
-        nbpass = 0
         if None in guess.values():
             todo = []
         else:
             todo = attrs.keys()
-            try:
-                todo.remove('kind')
-                todo.insert(0, 'kind')
-            except ValueError:
-                pass
-        replshortcut = self._replacement
+            for kfast in [ x for x in setup.fastkeys if x in todo ]:
+                todo.remove(kfast)
+                todo.insert(0, kfast)
 
+        nbpass = 0
         diags = dict()
 
         while todo:
 
             k = todo.pop(0)
             kdef = attrs[k]
-            nbpass = nbpass + 1
-            if not replshortcut(nbpass, k, guess, extras, todo) or guess[k] is None: continue
+            nbpass += 1
+            if not self._replacement(nbpass, k, guess, extras, todo) or guess[k] is None: continue
+
+            attr_seen.add(k)
 
             while kdef['remap'].has_key(guess[k]):
                 logger.debug(' > Attr %s remap(%s) = %s', k, guess[k], kdef['remap'][guess[k]])
@@ -517,8 +551,13 @@ class Footprint(object):
                 logger.debug(' > Optional attr still unknown : %s', k)
             else:
                 ktype = kdef.get('type', str)
-                kclass = kdef.get('isclass', False)
-                if not isinstance(guess[k], ktype) and not kclass:
+                if kdef.get('isclass', False):
+                    if not issubclass(guess[k], ktype):
+                        logger.debug(' > Attr %s class %s not a subclass %s', k, guess[k], ktype)
+                        opts['report'].add('key', k, why='Not a subclass of {0:s}'.format(ktype.__name__))
+                        diags[k] = True
+                        guess[k] = None
+                elif not isinstance(guess[k], ktype):
                     logger.debug(' > Attr %s reclass(%s) as %s', k, guess[k], ktype)
                     kargs = kdef.get('args', dict())
                     try:
@@ -529,38 +568,39 @@ class Footprint(object):
                         opts['report'].add('key', k, why='Could not reclass to [{0:s}]: {1:s}'.format(ktype.__name__, str(guess[k])))
                         diags[k] = True
                         guess[k] = None
-                if kdef.has_key('values') and guess[k] not in kdef['values']:
+                if kdef['values'] and guess[k] not in kdef['values']:
                     logger.debug(' > Attr %s value not in range = %s %s', k, guess[k], kdef['values'])
                     opts['report'].add('key', k, why='Not in values: {0:s}'.format(str(guess[k])))
                     diags[k] = True
                     guess[k] = None
-                if kdef.has_key('outcast') and guess[k] in kdef['outcast']:
+                if kdef['outcast'] and guess[k] in kdef['outcast']:
                     logger.debug(' > Attr %s value excluded from range = %s %s', k, guess[k], kdef['outcast'])
                     opts['report'].add('key', k, why='Outcast value: {0:s}'.format(str(guess[k])))
                     diags[k] = True
                     guess[k] = None
 
-            if guess[k] is None and ( opts['fast'] or k == 'kind' ):
+            if guess[k] is None and ( opts['fast'] or k in setup.fastkeys ):
                 break
 
         for k in attrs.keys():
             if guess[k] == 'None':
                 guess[k] = None
                 logger.warning(' > Attr %s is a null string', k)
-                if not k in diags:
+                if k not in diags:
                     opts['report'].add('key', k, why='Not valid')
             if guess[k] is None:
-                inputattr.discard(k)
-                if not k in diags:
+                attr_input.discard(k)
+                if k not in diags:
                     opts['report'].add('key', k, why='Missing value')
                 if opts['fatal']:
                     logger.critical('No valid attribute %s', k)
+                    raise ResolveFatalError('No attribute `' + k + '` is fatal')
                 else:
                     logger.debug(' > No valid attribute %s', k)
 
-        return ( guess, inputattr )
+        return ( guess, attr_input, attr_seen )
 
-    def checkonly(self, rd, report):
+    def checkonly(self, rd, report=None):
         """Be sure that the resolved description also match at least one item per ``only`` feature."""
 
         params = setup.defaults
@@ -576,10 +616,11 @@ class Footprint(object):
                 before = True
                 k = k.split('before_', 1)[-1]
 
-            actualvalue = rd.get(k, params.get(k.upper(), None))
+            actualvalue = rd.get(k, params.get(k.lower(), None))
             if actualvalue is None:
                 rd = False
-                report.add('only', k, why='No value found')
+                if report:
+                    report.add('only', k, why='No value found')
                 break
 
             checkflag = False
@@ -595,7 +636,8 @@ class Footprint(object):
 
             if not checkflag:
                 rd = False
-                report.add('only', k, why='Do not match')
+                if report:
+                    report.add('only', k, why='Do not match')
                 break
 
         return rd
@@ -629,11 +671,9 @@ class Footprint(object):
 class FootprintAttrAccess(object):
     """Accessor class to footprint attributes."""
 
-    def __init__(self, attr, fget=getattr, fset=setattr, fdel=delattr):
+    def __init__(self, attr, doc='Undocumented footprint attribute'):
         self.attr = attr
-        self.fget = fget
-        self.fset = fset
-        self.fdel = fdel
+        self.__doc__ = doc
 
     def __get__(self, instance, owner):
         thisattr = instance._attributes.get(self.attr, None)
@@ -658,7 +698,7 @@ class FootprintBaseMeta(type):
     def __new__(cls, n, b, d):
         logger.debug('Base class for footprint usage "%s / %s", bc = ( %s ), internal = %s', cls, n, b, d)
         fplocal  = d.get('_footprint', dict())
-        abstract = d.get('_abstract', False)
+        abstract = d.setdefault('_abstract', False)
         bcfp = [ c.__dict__.get('_footprint', dict()) for c in b ]
         if type(fplocal) == list:
             bcfp.extend(fplocal)
@@ -666,7 +706,7 @@ class FootprintBaseMeta(type):
             bcfp.append(fplocal)
         d['_footprint'] = Footprint( *bcfp )
         for k in d['_footprint'].attr.keys():
-            d[k] = FootprintAttrAccess(k, fset=None, fdel=None)
+            d[k] = FootprintAttrAccess(k)
         realcls = super(FootprintBaseMeta, cls).__new__(cls, n, b, d)
         if not abstract:
             for cname in realcls._collector:
@@ -675,11 +715,13 @@ class FootprintBaseMeta(type):
                 if thiscollector.register:
                     observers.getbyname(realcls.fullname()).register(thiscollector)
             logger.debug('Register class %s in collector %s (%s)', realcls, thiscollector, cname)
+        basedoc = realcls.__doc__
+        if not basedoc:
+            basedoc = 'Not documented yet.'
         if setup.docstring:
-            basedoc = realcls.__doc__
-            if not basedoc:
-                basedoc = 'Not documented yet.'
             realcls.__doc__ = basedoc + "\n\n    Footprint::\n\n" + realcls.footprint().nice()
+        else:
+            realcls.__doc__ = basedoc
         return realcls
 
 
@@ -706,7 +748,7 @@ class FootprintBase(object):
         self._attributes.update(kw)
         if not checked:
             logger.debug('Resolve attributes at footprint init %s', object.__repr__(self))
-            self._attributes, u_inputattr = self._instfp.resolve(self._attributes, fatal=True)
+            self._attributes, u_attr_input, u_attr_seen = self._instfp.resolve(self._attributes, fatal=True)
         if not self.__class__._abstract:
             self._observer = observers.getbyname(self.__class__.fullname())
         self.make_alive()
@@ -735,6 +777,11 @@ class FootprintBase(object):
             self._observer.notify_del(self, dict())
         except (TypeError, AttributeError):
             logger.debug('Too late for notify_del')
+
+    @classmethod
+    def is_abstract(cls):
+        """Returns either the current class could be instanciated or not."""
+        return cls._abstract
 
     @classmethod
     def fullname(cls):
@@ -813,11 +860,11 @@ class FootprintBase(object):
         if not reportroot:
             reportroot = reporting.report('garbage')
         fp = cls.footprint()
-        resolved, inputattr = fp.resolve(rd, fatal=False, report=reportroot)
+        resolved, attr_input, u_attr_seen = fp.resolve(rd, fatal=False, report=reportroot)
         if resolved and None not in resolved.values():
-            return ( fp.checkonly(resolved, reportroot), inputattr )
+            return ( fp.checkonly(resolved, reportroot), attr_input )
         else:
-            return ( False, inputattr )
+            return ( False, attr_input )
 
     def compatible(self, rd):
         """
@@ -852,8 +899,4 @@ class FootprintBase(object):
     @classmethod
     def authvalues(cls, attrname):
         """Return the list of authorized values of a footprint attribute (if any)."""
-        try:
-            return cls.footprint().attr[attrname]['values']
-        except KeyError:
-            logger.debug('No values list associated with this attribute %s', attrname)
-            return None
+        return list(cls.footprint().attr[attrname]['values'])

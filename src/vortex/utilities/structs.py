@@ -1,6 +1,7 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
-r"""
+
+"""
 This module defines common base classes for miscellaneous purposes.
 """
 
@@ -9,16 +10,13 @@ __all__ = []
 
 from vortex.autolog import logdefault as logger
 
-
-_tableroots = dict()
-
-def idtree(tag):
+def idtree(tag, _tableroots=dict()):
     if tag not in _tableroots:
         _tableroots[tag] = Tree(name=tag)
     return _tableroots[tag]
 
 class Tree(object):
-    """A Miscelaneous hierarchical structure which is also able to track an changing active node."""
+    """A Miscelaneous hierarchical structure which is also able to track and change active node."""
 
     def __init__(self, name='all', root=None):
         self.name = name

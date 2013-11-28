@@ -173,10 +173,12 @@ def namespaces(**kw):
     if 'only' in kw:
         usedcat = kw['only'].split(',')
     else:
-        usedcat = ( 'providers', 'stores' )
+        usedcat = ( 'provider', 'store' )
     nameseen = dict()
     for cat in [ footprints.collector(x) for x in usedcat ]:
+        print '>', cat
         for cls in cat():
+            print '>>', cat, cls
             fp = cls.footprint().attr
             netattr = fp.get('namespace', None)
             if not netattr:
