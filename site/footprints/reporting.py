@@ -3,7 +3,7 @@
 
 """
 Hierarchical documents to store footprints information.
-Derived from :class:`xml.dom.minidom.Document`.
+StandardReport is derived from :class:`xml.dom.minidom.Document`.
 """
 
 #: No automatic export
@@ -12,54 +12,329 @@ __all__ = []
 from datetime import datetime
 from xml.dom.minidom import Document
 
+import re
+import weakref
+import dump
 
-def reportmap(_reportmap = dict()):
+REPORT_WHY_MISSING  = 'Missing value'
+REPORT_WHY_INVALID  = 'Invalid value'
+REPORT_WHY_OUTSIDE  = 'Not in values'
+REPORT_WHY_OUTCAST  = 'Outcast value'
+REPORT_WHY_RECLASS  = 'Could not reclass'
+REPORT_WHY_SUBCLASS = 'Not a subclass'
+
+REPORT_ONLY_NOTFOUND = 'No value found'
+REPORT_ONLY_NOTMATCH = 'Do not match'
+
+def report_map(_reportmap=dict()):
     """Default reporting table."""
     return _reportmap
 
-def reportcopy():
+def report_keys():
+    """Default reporting table."""
+    return sorted(report_map().keys())
+
+def report_copy():
+    """Return a copy of the table of reports."""
     return reportmap().copy()
 
-def report(tag='default', xmlbase=None):
+def report(tag='default'):
     """Factory to retrieve a information report document, according to the ``tag`` provided."""
-    rtab = reportmap()
+    rtab = report_map()
     if tag not in rtab:
-        rtab[tag] = StandardReport(tag, xmlbase)
+        rtab[tag] = FootprintLog(tag)
     return rtab[tag]
 
+class FootprintBadLogEntry(Exception):
+    pass
+
+class NullReport(object):
+    """Fake reporting: accept any log report command but do nothing."""
+
+    def __init__(self, *args, **kw):
+        self._blindlog = list()
+
+    def clear(self):
+        """Rewind internal raw list of log commands."""
+        self._blindlog = list()
+
+    def add(self, *args, **kw):
+        """Push any arg provided to the internal raw list of log commands."""
+        if args:
+            self._blindlog.append(args)
+        if kw:
+            self._blindlog.append(kw)
+
+class FootprintLogEntry(object):
+    """
+    Generic entry item in the footprint log.
+    Could be :
+
+      * a collector item
+      * a candidate item (ie: a class)
+    """
+    def __init__(self, node, **kw):
+        self.context = 'void'
+        self.stamp = datetime.now()
+        self._items = list()
+        self._weak = kw.pop('weak', True)
+        self.__dict__.update(kw)
+        if self._weak:
+            self._node = weakref.ref(node)
+        else:
+            self._node = node
+
+    @property
+    def node(self):
+        if self._weak:
+            return self._node()
+        else:
+            return self._node
+
+    def add(self, item):
+        """Push the specified item at the end of the internal log list."""
+        self._items.append(item)
+
+class FootprintLogCollector(FootprintLogEntry):
+    """Dedicated entry to :class:`footprints.Collector` items."""
+
+    def __init__(self, node, **kw):
+        """Default name is the ``node`` entry keypoint."""
+        super(FootprintLogCollector, self).__init__(node, **kw)
+        self.name = self.node.entry
+
+    def __iter__(self):
+        """Iterates on :class:`FootprintLogClass` items."""
+        for kid in sorted(self._items, lambda a,b: cmp(a.name, b.name)):
+            yield kid
+
+    def feed_xml(self, xmlnode):
+        """Insert in the specified ``xmlnode`` informations relative to candidate classes."""
+        xmlbase = xmlnode.new_entry('collector', name=self.name, stamp=self.stamp.isoformat())
+        for kid in self:
+            xmlnode.current(xmlbase)
+            kid.feed_xml(xmlnode)
+
+    def as_dict(self):
+        """Convenient method for retrieving an handy dictionary."""
+        dico = dict()
+        for item in self._items:
+            dico[item.name] = item.as_dict()
+        return dico
+
+    def as_tree(self, **kw):
+        """Feed a FactorizedReport according to the order specified."""
+        return FactorizedReport(**kw)
+
+    def as_flat(self, **kw):
+        """Feed a FactorizedReport according to the order specified."""
+        fr = FlatReport(**kw)
+        for kid in self:
+            for item in kid:
+                info = item.copy()
+                info['attribute'] = info.pop('name')
+                fr.add(focus=kid.name, **info)
+        return fr
+
+    def lightdump(self, **kw):
+        """Pseudo structured dump of the current collector item report."""
+        for kid in self:
+            kid.lightdump(**kw)
+
+class FootprintLogClass(FootprintLogEntry):
+    """Dedicated entry to :class:`footprints.FootprintBase` items."""
+
+    def __init__(self, node, **kw):
+        """Default name is the ``node`` fullname method output."""
+        super(FootprintLogClass, self).__init__(node, **kw)
+        self.name = self.node.fullname()
+        self.parent.add(self)
+
+    def __iter__(self):
+        for kid in self._items:
+            yield kid
+
+    def feed_xml(self, xmlnode):
+        """Insert in the specified ``xmlnode`` informations relative to attributes of the candidate class."""
+        xmlnode.current(xmlnode.add('class', name=self.name))
+        for kid in self._items:
+            kidstr = { k: str(v) for k, v in kid.items() }
+            xmlnode.add('attribute', **kidstr)
+
+    def as_dict(self):
+        """Convenient method for retrieving an handy dictionary."""
+        dico = dict()
+        for item in self._items:
+            info = item.copy()
+            attr = info.pop('name')
+            dico[attr] = info
+        return dico
+
+    def lightdump(self, indent='    ', attrjust=10):
+        """Pseudo structured dump of the current class item report."""
+        if self._items:
+            print indent, self.name + ':'
+            for item in self._items:
+                info = item.copy()
+                print indent * 2, info.pop('name').ljust(attrjust), ':', info
+        else:
+            print '=>'.rjust(len(indent)), self.name
+        print
+
+class FootprintLog(object):
+    """Collect log informations to produce footprints reports."""
+
+    def __init__(self, tag='default', weak=True):
+        self._tag  = tag
+        self._log = list()
+        self._weak = weak
+        self._current = None
+        self._xml = None
+        self._dict = dict()
+        self._touch = False
+
+    @property
+    def tag(self):
+        return self._tag
+
+    def info(self):
+        """Return a simple description as a string."""
+        return 'Report ' + self.tag.title()
+
+    @property
+    def weak(self):
+        """Boolean value, true if log built with weaked references (default)."""
+        return self._weak
+
+    def clear(self):
+        """Start a fresh new log history."""
+        self._log = list()
+
+    def reduce_to_last(self):
+        """Restrain the current log history to the last collector resolution attempt."""
+        self._log[0:-1] = []
+
+    @property
+    def last(self):
+        return self._log[-1] if self._log else None
+
+    def current(self, node=None):
+        """Return current active entry (collector or class) of the log."""
+        if node:
+            self._current = node
+        return self._current
+
+    def add_collector(self, node, **kw):
+        """Insert a collector entry to the log."""
+        self._current = FootprintLogCollector(node, **kw)
+        self._log.append(self._current)
+        self._touch = True
+
+    def add_candidate(self, node, **kw):
+        """Insert a class entry to the log."""
+        if self._current is not None and isinstance(self._current, FootprintLogClass):
+            self._current = self._current.parent
+        if self._current is None or not isinstance(self._current, FootprintLogCollector):
+            raise FootprintBadLogEntry('Current log context is either empty or not a collector')
+        self._current = FootprintLogClass(node, parent=self._current, **kw)
+        self._touch = True
+
+    def add_attribute(self, name, **kw):
+        """Insert an attribute resolution information entry to the log."""
+        if self._current is None or not isinstance(self._current, FootprintLogClass):
+            raise FootprintBadLogEntry('Current log context is either empty or not a class candidate')
+        kw['name'] = name
+        self._current.add(kw)
+        self._touch = True
+
+    def add(self, **kw):
+        """
+        Miscellaneous entry to the current log.
+        One of these argument should be provided:
+
+          * collector
+          * candidate
+          * attribute
+        """
+        this_collector = kw.pop('collector', None)
+        if this_collector is not None:
+            return self.add_collector(this_collector, weak=self.weak, **kw)
+        this_candidate = kw.pop('candidate', None)
+        if this_candidate is not None:
+            return self.add_candidate(this_candidate, weak=self.weak, **kw)
+        this_attribute = kw.pop('attribute', None)
+        if this_attribute is not None:
+            return self.add_attribute(this_attribute, **kw)
+        raise FootprintBadLogEntry('Log entry should be a collector, a class candidate or an attribute.')
+
+    def whynot(self, select):
+        """
+        Diagnostic method for retrieving valuable information on the reason why some class candidates
+        had failed. The ``select`` argument is used as a pattern matching on full class names
+        (case insensitive).
+        """
+        if self.last:
+            info = self.last.as_dict()
+            for k in [ x for x in info if not re.search(select, x, re.IGNORECASE) or not info[x] ]:
+                del info[k]
+            return info
+        else:
+            return None
+
+    def as_xml(self, force=False):
+        """Return a true class:`xml.dom.minidom.Document`."""
+        if not self._xml or self._touch or force:
+            self._xml = StandardReport(tag=self.tag)
+            for item in self._log:
+                item.feed_xml(self._xml)
+            self._touch = False
+        return self._xml
+
+    def as_dict(self, force=False, stamp=True):
+        """Convenient method for retrieving an handy dictionary."""
+        if not self._dict or self._touch or force:
+            self._dict = dict()
+            for i, item in enumerate(self._log):
+                key = item.name
+                if stamp:
+                    key += ' ' + item.stamp.isoformat()
+                else:
+                    key += '_{0:04d}'.format(i+1)
+                self._dict[key] = item.as_dict()
+            self._touch = False
+        return self._dict
+
+    def fulldump(self, stamp=False):
+        """Shortcut to :mod:``dump`` facilities."""
+        print dump.fulldump(self.as_dict(force=True, stamp=stamp))
 
 class StandardReport(Document):
 
-    def __init__(self, tag=None, xmlbase=None):
+    def __init__(self, tag=None):
+        """Inherit from xml.minidom Document."""
         Document.__init__(self)
         self.root = self.createElement('report')
         self.root.setAttribute('tag', tag)
         self.appendChild(self.root)
         self._current = self.root
 
-
     def __call__(self):
         """Print the complete dump of the current report object."""
         print self.dump_all()
 
-    def new_entry(self, kind, name):
-        """Insert a top level entry (child of the root node)."""
-        entry = self.createElement(str(kind))
-        entry.setAttribute('name', name)
-        entry.setAttribute('stamp', str(datetime.now()))
-        self.root.appendChild(entry)
-        return self.root.lastChild
-
-    def add(self, kind, name, base=None, why=None):
+    def add(self, key, **kw):
         """Add a information node to the ``base`` or current note."""
-        if not base:
-            base = self.current()
-        entry = self.createElement(str(kind))
-        entry.setAttribute('name', name)
-        if why:
-            entry.setAttribute('why', why)
+        base = kw.pop('base', self.current())
+        entry = self.createElement(key)
+        for k, v in kw.items():
+            entry.setAttribute(k, v)
         base.appendChild(entry)
         return base.lastChild
+
+    def new_entry(self, key, **kw):
+        """Insert a top level entry (child of the root node)."""
+        kw['base'] = self.root
+        return self.add(key, **kw)
 
     def current(self, node=None):
         """Return current active node of the document."""
@@ -75,10 +350,6 @@ class StandardReport(Document):
         """Return a string with a complete formatted dump of the last entry."""
         return self.root.lastChild.toprettyxml(indent='    ')
 
-    def info(self):
-        """Return a simple description as a string."""
-        return '{0:s} {1:s}'.format(self.root.tagName, self.root.getAttribute('tag')).title()
-
     def iter_last(self):
         """Iterate on last node and return ( class, name, why ) information."""
         for kid in self.root.lastChild.childNodes:
@@ -89,23 +360,82 @@ class StandardReport(Document):
                 yield dico
 
 
+class FlatReport(object):
+    """Store entries as simple dictionaries that could be hierarchically reshuffled afterward."""
+
+    def __init__(self, sortlist=[]):
+        """By default the report is empty."""
+        self._items = list()
+        self._tree  = dict()
+        self._sort  = list(sortlist)
+
+    def add(self, **kw):
+        """Push the current key-value description as a new report entry."""
+        self._items.append(kw)
+
+    def reshuffle(self, sortlist=None, skip=True):
+        """Sort the entire set of items as a hierarchical tree driven by keys of the specified ``sortlist``."""
+        self._tree = dict()
+        if sortlist is not None:
+            self._sort = sortlist[:]
+        for item in self._items:
+            current = self._tree
+            info = item.copy()
+            done = True
+            for k in self._sort:
+                if k in info:
+                    entry = k + ': ' + info.pop(k)
+                    if entry not in current:
+                        current[entry] = dict()
+                    current = current[entry]
+                else:
+                    done = False
+                    if not skip:
+                        break
+            if done or skip:
+                focus = info.pop('focus')
+                if info:
+                    current[focus] = ' / '.join([str(x)+': '+str(info[x]) for x in info.keys()])
+                else:
+                    current[focus] = None
+
+    def fulldump(self):
+        """Print out the internal tree."""
+        print '-' * 80
+        print self.__class__.__name__, 'shuffle', self._sort
+        print dump.fulldump(self._tree)
+        print
+
 class FactorizedReport(object):
 
-    def __init__(self, tag, *listofkeys, **kw):
+    def __init__(self,
+        focus='class',
+        indent='    ',
+        xordering=None,
+        ordering=(
+            ('name',
+                ('kind', 'date', 'geometry')),
+            ('why',
+                (REPORT_WHY_MISSING, REPORT_WHY_INVALID, REPORT_WHY_OUTSIDE, REPORT_WHY_OUTCAST,
+                REPORT_WHY_RECLASS, REPORT_WHY_SUBCLASS)),
+            ('only',
+                (REPORT_ONLY_NOTFOUND, REPORT_ONLY_NOTMATCH))
+        )
+    ):
         """
         Generates a report whose items are sorted using some parameters
 
-         - tag is the end-level entry that have to be sorted
-         - listofkeys describes the sorting options. It must be a
-         list of pair (keyName, interestingValues) where :
+         - ``tag`` is the end-level entry that have to be sorted
+         - ``ordering`` describes the sorting options. It must be a
+         list of pair (key-name, selected-values) where :
              * the order of the list defines the priority order for sorting
-             * interestingValues is a tuple of values you want to be signaled first if encountered.
+             * the selected-values is a tuple of values to focus on if encountered.
         """
-        self.tag = tag
-        self._define = dict(listofkeys)
-        self._order = [ x[0] for x in listofkeys ]
-        self.indent = kw.get('indent', '    ')
-        self._tree = dict()
+        self.focus   = focus
+        self._define = dict(ordering)
+        self._order  = [ x[0] for x in ordering ]
+        self._indent = indent
+        self._tree   = dict()
 
     def get_order(self, dic, depth):
         order = list()
@@ -125,7 +455,7 @@ class FactorizedReport(object):
         return self._define[key]
 
     def add(self, **kw):
-        tagValue = kw[self.tag]
+        tagValue = kw[self.focus]
         dic = self._tree
         for k in self.keys():
             v = kw.get(k)
@@ -135,10 +465,10 @@ class FactorizedReport(object):
         info = kw.get('info', None)
         dic[tagValue] = info
 
-    def printer(self,dic, currentIndent, depth, ordered=False):
+    def printer(self, dic, currentIndent, depth, ordered=False):
         if depth == len(self.keys()):
             for tagValue in dic:
-                print currentIndent, self.tag , ':', tagValue,
+                print currentIndent, self.focus , ':', tagValue,
                 if dic[tagValue]:
                     print '(' + dic[tagValue]+')'
                 else :
@@ -150,69 +480,71 @@ class FactorizedReport(object):
                 order = dic
             for v in order:
                 print currentIndent, self.keys()[depth], '=', v
-                self.printer(dic[v],currentIndent+self.indent, depth+1, ordered)
+                self.printer(dic[v],currentIndent+self._indent, depth+1, ordered)
 
 
     def softprint(self):
-        self.printer(self._tree,self.indent,0)
+        self.printer(self._tree, self._indent, 0)
 
     def orderedprint(self):
-        self.printer(self._tree,self.indent,0, ordered = True)
+        self.printer(self._tree, self._indent, 0, ordered = True)
 
-    def simpleprinter(self,dic, depth, mess=None, space=True):
+    def simpleprinter(self,dic, depth, msg=None, space=True):
         if depth == len(self.keys()):
             if space:
                 print
             for tagValue in dic:
-                print self.indent, self.tag , ':', tagValue,
+                print self._indent, self.focus , ':', tagValue,
                 if dic[tagValue]:
                     print '(' + dic[tagValue]+')'
                 else :
                     print
-            if mess:
-                print self.indent*3, mess
+            if msg:
+                print self._indent*3, msg
         else:
             for v in self.get_order(dic, depth):
-                if mess:
-                    newMess = mess + ' | ' + self.keys()[depth] + ' = ' + v
+                if msg:
+                    newmsg = msg + ' | ' + self.keys()[depth] + ' = ' + v
                 else:
-                    newMess = self.keys()[depth] + ' = ' + v
-                self.simpleprinter(dic[v], depth+1, newMess) 
+                    newmsg = self.keys()[depth] + ' = ' + v
+                self.simpleprinter(dic[v], depth+1, newmsg)
 
-    def niceprinter(self, dic, depth, maxDepth, group, mess=None, separator='+'):
-        if depth == maxDepth:
-            self.simpleprinter(dic,depth,mess,depth%group!=0)
+    def niceprinter(self, dic, depth, maxdepth, group, msg=None, separator='+'):
+        if depth == maxdepth:
+            self.simpleprinter(dic, depth, msg, depth%group!=0)
         else:
             toPrint=None
             if depth % group == 0:
-                toPrint=mess
-                mess=None
+                toPrint=msg
+                msg=None
             if toPrint:
                 if separator=='+':
                     separator='-'
                 elif separator =='-':
                     separator='~'
             for v in self.get_order(dic, depth):
-                if mess:
-                    newMess = mess + ' | ' + self.keys()[depth] + ' = ' + v
+                if msg:
+                    newmsg = msg + ' | ' + self.keys()[depth] + ' = ' + v
                 else:
-                    newMess = self.keys()[depth] + ' = ' + v
-                self.niceprinter(dic[v], depth+1, maxDepth, group, newMess, separator)
+                    newmsg = self.keys()[depth] + ' = ' + v
+                self.niceprinter(dic[v], depth+1, maxdepth, group, newmsg, separator)
                 if depth % group ==0:
-                    print self.indent+(separator*(40+5*len(self.indent)))
+                    print self._indent+(separator*(40+5*len(self._indent)))
             if toPrint:
-                print self.indent*((maxDepth-depth)/group + 4), toPrint
+                print self._indent*((maxdepth-depth)/group + 4), toPrint
 
-    def dumper(self,maxDepth=1, group=1):
-        if maxDepth > len(self.keys()):
-            maxDepth = len(self.keys())
-        self.niceprinter(self._tree, 0, maxDepth, group)
+    def dumper(self, maxdepth=1, group=1):
+        if maxdepth > len(self.keys()):
+            maxdepth = len(self.keys())
+        self.niceprinter(self._tree, 0, maxdepth, group)
 
 if __name__ == '__main__':
     fr = FactorizedReport(
-        'classname',
-        ('name', ('kind', 'date')),
-        ('why', ('Missing value', 'Not valid', 'Not in values', 'Outcast value')),
+        focus='classname',
+        ordering=(
+            ('name', ('kind', 'date', 'geometry')),
+            ('why', ('Missing value', 'Not Valid', 'Invalid'))
+        ),
         indent = '   '
     )
 
@@ -224,6 +556,15 @@ if __name__ == '__main__':
     fr.add(classname='tutu',name='bidon',why='Invalid')
     fr.add(classname='tyty',name='aa',why='n\'importe quoi ' )
 
+    print
+    print '=======================raw Version========================'
+    print
+    print dump.fulldump(fr._tree)
+
+    print
+    print '=======================old Version========================'
+    print
+
     fr.orderedprint()
 
     print
@@ -234,4 +575,4 @@ if __name__ == '__main__':
     print
     print '=======================new Version bis========================'
     print
-    fr.dumper(maxDepth=2)
+    fr.dumper(maxdepth=2)

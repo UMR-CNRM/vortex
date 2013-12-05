@@ -26,13 +26,16 @@ UNKNOWN = '__unknown__'
 replattr = re.compile(r'\[(\w+)(?:\:+(\w+))?\]')
 
 
-class MaxLoopIter(Exception):
+class FootprintMaxIter(Exception):
     pass
 
-class UnreachableAttr(Exception):
+class FootprintUnreachableAttr(Exception):
     pass
 
-class ResolveFatalError(Exception):
+class FootprintFatalError(Exception):
+    pass
+
+class FootprintInvalidDefinition(Exception):
     pass
 
 def set_before(priorityref, *args):
@@ -50,25 +53,23 @@ class FootprintSetup(object):
 
     def __init__(self,
         docstring=False, fatal=True, fastmode=False, fastkeys=('kind',),
-        extended=False, dumper=None, report=None
+        extended=False, dumper=None, report=True, nullreport=reporting.NullReport()
     ):
         """Initialisation of a simple footprint setup driver."""
         if dumper is None:
             self.dumper = dump.Dumper()
         else:
             self.dumper = dumper
-        if report is None:
-            self.report = reporting.report(tag='fpresolve')
-        else:
-            self.report = report
-        self.extended  = bool(extended)
-        self.docstring = bool(docstring)
-        self.fatal     = bool(fatal)
-        self.fastmode  = bool(fastmode)
-        self.fastkeys  = tuple(fastkeys)
-        self.defaults  = dict()
-        self.callback  = None
-        self.modtarget = None
+        self.extended   = bool(extended)
+        self.docstring  = bool(docstring)
+        self.fatal      = bool(fatal)
+        self.report     = bool(report)
+        self.nullreport = nullreport
+        self.fastmode   = bool(fastmode)
+        self.fastkeys   = tuple(fastkeys)
+        self.defaults   = dict()
+        self.callback   = None
+        self.modtarget  = None
 
     def popul(self, remotemodule, clear=False):
         """Populate the ``remotemodule`` with references to active collectors and load methods."""
@@ -114,16 +115,20 @@ class Collector(util.Catalog):
 
     def __init__(self, **kw):
         logger.debug('Footprints collector init %s', self)
-        self.keypoint = 'garbage'
+        self.entry = 'garbage'
+        self.instances = util.Catalog(weak=True)
         self.register = True
         self.report = True
         self.autoreport = True
-        self.orderedreport = list()
-        self.instances = util.Catalog(weak=True)
+        self.tagreport = None
+        self.altreport = False
         super(Collector, self).__init__(**kw)
+        if self.tagreport is None:
+            self.tagreport = 'footprint-' + self.entry
+        self.logreport = reporting.report(self.tagreport)
         if setup.modtarget is not None:
-            setattr(setup.modtarget, self.keypoint, self.load)
-            setattr(setup.modtarget, self.keypoint+'s', self)
+            setattr(setup.modtarget, self.entry, self.load)
+            setattr(setup.modtarget, self.entry+'s', self)
 
     def newobsitem(self, item, info):
         """Register a new instance of some of the classes in the current collector."""
@@ -141,78 +146,67 @@ class Collector(util.Catalog):
 
     def pickup_attributes(self, desc):
         """Try to pickup inside the collector a item that could match the description."""
-        logger.debug('Pick up a "%s" in description %s with collector %s', self.keypoint, desc, self)
+        logger.debug('Pick up a "%s" in description %s with collector %s', self.entry, desc, self)
         mkreport = desc.pop('report', self.autoreport)
-        if self.keypoint in desc and desc[self.keypoint] is not None:
-            logger.debug('A %s is already defined %s', self.keypoint, desc[self.keypoint])
+        mkaltreport = desc.pop('altreport', self.altreport)
+        if self.entry in desc and desc[self.entry] is not None:
+            logger.debug('A %s is already defined %s', self.entry, desc[self.entry])
         else:
-            desc[self.keypoint] = self.findbest(desc)
-        if desc[self.keypoint] is not None:
-            desc = desc[self.keypoint].cleanup(desc)
+            desc[self.entry] = self.find_best(desc)
+        if desc[self.entry] is not None:
+            desc = desc[self.entry].cleanup(desc)
         else:
-            logger.warning('No %s found in description %s', self.keypoint, "\n" + setup.dumper.cleandump(desc))
+            logger.warning('No %s found in description %s', self.entry, "\n" + setup.dumper.cleandump(desc))
             if mkreport and self.report:
-                print "\n", self.report.info()
-                print self.report.dump_last()
-                if self.orderedreport:
-                    fr = reporting.FactorizedReport('classname', *self.orderedreport)
-                    for rdico in self.report.iter_last():
-                        fr.add(**rdico)
-                    fr.dumper()
+                print "\n", self.logreport.info()
+                self.lastreport.lightdump()
+                if mkaltreport:
+                    altreport = self.lastreport.as_flat()
+                    altreport.reshuffle(['why', 'attribute'], skip=False)
+                    altreport.fulldump()
+                    altreport.reshuffle(['only', 'attribute'], skip=False)
+                    altreport.fulldump()
         return desc
 
-    def reportnode(self):
-        """Return the report node for this collector when reporting is activated."""
-        reportcat = None
-        if self.report and type(self.report) == bool:
-            self.report = reporting.report(tag='footprint-' + self.keypoint)
-        if self.report:
-            reportcat = self.report.new_entry('collector', self.keypoint)
-        return reportcat
-
-    def findany(self, desc):
+    def find_any(self, desc):
         """
         Return the first item of the collector that :meth:`couldbe`
         as described by argument ``desc``.
         """
         logger.debug('Search any %s in collector %s', desc, self._items)
-        reportcat = self.reportnode()
+        if self.report:
+            self.logreport.add(collector=self)
         for item in self._items:
-            if reportcat:
-                rnode = self.report.add('class', item.fullname(), base=reportcat)
-                self.report.current(rnode)
-            resolved, u_input = item.couldbe(desc, reportroot=self.report)
+            resolved, u_input = item.couldbe(desc, report=self.logreport)
             if resolved:
                 return item(resolved, checked=True)
         return None
 
-    def findall(self, desc):
+    def find_all(self, desc):
         """
         Returns all the items of the collector that :meth:`couldbe`
         as described by argument ``desc``.
         """
         logger.debug('Search all %s in collector %s', desc, self._items)
         found = list()
-        reportcat = self.reportnode()
+        if self.report:
+            self.logreport.add(collector=self)
         for item in self._items:
-            if reportcat:
-                rnode = self.report.add('class', item.fullname(), base=reportcat)
-                self.report.current(rnode)
-            resolved, theinput = item.couldbe(desc, reportroot=self.report)
+            resolved, theinput = item.couldbe(desc, report=self.logreport)
             if resolved: found.append((item, resolved, theinput))
         return found
 
-    def findbest(self, desc):
+    def find_best(self, desc):
         """
-        Returns the best of the items returned byt the :meth:`findall` method
+        Returns the best of the items returned byt the :meth:`find_all` method
         according to potential priorities rules.
         """
         logger.debug('Search all %s in collector %s', desc, self._items)
-        candidates = self.findall(desc)
+        candidates = self.find_all(desc)
         if not candidates:
             return None
         if len(candidates) > 1:
-            logger.warning('Multiple %s candidates for %s', self.keypoint, "\n" + setup.dumper.cleandump(desc))
+            logger.warning('Multiple %s candidates for %s', self.entry, "\n" + setup.dumper.cleandump(desc))
             candidates.sort(key=lambda x: x[0].weightsort(x[2]), reverse=True)
             for i, c in enumerate(candidates):
                 thisclass, u_resolved, theinput = c
@@ -225,8 +219,8 @@ class Collector(util.Catalog):
         return self.pickup_attributes(desc)
 
     def load(self, **desc):
-        """Return the keypoint entry after pickup_attributes."""
-        return self.pickup(desc).get(self.keypoint, None)
+        """Return the entry entry after pickup_attributes."""
+        return self.pickup(desc).get(self.entry, None)
 
     def default(self, **kw):
         """
@@ -238,6 +232,35 @@ class Collector(util.Catalog):
                 return inst
         return self.load(**kw)
 
+    def dump_report(self, stamp=False):
+        """Print a nicelly formatted dump report as a dict."""
+        self.logreport.fulldump(stamp=stamp)
+
+    @property
+    def lastreport(self):
+        """
+        Return the subpart of the report related to the last sequence
+        of evaluation through the current collector.
+        """
+        return self.logreport.last
+
+    def sortedreport(self, **kw):
+        """
+        Return the subpart of the report related to the last sequence
+        of evaluation through the current collector ordered by 
+        """
+        return self.lastreport.as_tree(**kw)
+
+    def dump_lastreport(self, stamp=False):
+        """Print a nicelly formatted dump report as a dict."""
+        print dump.fulldump(self.lastreport.as_dict())
+
+    def report_why(self, classname):
+        """
+        Report why the specified any class mathching the ``classname`` pattern
+        had not been selected through the last evaluation.
+        """
+        return self.logreport.whynot(classname)
 
 def collectorsmap(_collectorsmap=dict()):
     """Cached table of collectors currently activated."""
@@ -252,7 +275,7 @@ def collector(tag='garbage'):
     cmap = collectorsmap()
     tag = tag.rstrip('s')
     if tag not in cmap:
-        cmap[tag] = Collector(keypoint=tag)
+        cmap[tag] = Collector(entry=tag)
     return cmap[tag]
 
 def pickup(rd):
@@ -443,11 +466,11 @@ class Footprint(object):
           * '[key-name:meth-name]' or '[key-name::meth-name]'
 
         If the ``key-name`` could not be found in actual ``guess`` or ``extras`` dictionaries
-        the method raises an :exception:`UnreachableAttr`.
+        the method raises an :exception:`FootprintUnreachableAttr`.
         """
         if nbpass > 25:
             logger.error('Resolve probably cycling too much... %d tries ?', nbpass)
-            raise MaxLoopIter('Too many Footprint replacements')
+            raise FootprintMaxIter('Too many Footprint replacements')
 
         changed = 1
         while changed:
@@ -461,7 +484,7 @@ class Footprint(object):
                     logger.error('%s', guess)
                     logger.error('No %s attribute in extras:', replk)
                     logger.error('%s', extras)
-                    raise UnreachableAttr('Could not replace attribute ' + replk)
+                    raise FootprintUnreachableAttr('Could not replace attribute ' + replk)
                 if replk in guess:
                     if replk not in todo:
                         changed = 1
@@ -507,8 +530,9 @@ class Footprint(object):
     def resolve(self, desc, **kw):
         """Try to guess how the given description ``desc`` could possibly match the current footprint."""
 
-        opts = dict(fatal=setup.fatal, fast=setup.fastmode, report=setup.report)
+        opts = dict(fatal=setup.fatal, fast=setup.fastmode)
         opts.update(kw)
+        report = opts.pop('report', False) or setup.nullreport
 
         guess, attr_input = self._firstguess(desc)
         extras = self._findextras(desc)
@@ -554,7 +578,7 @@ class Footprint(object):
                 if kdef.get('isclass', False):
                     if not issubclass(guess[k], ktype):
                         logger.debug(' > Attr %s class %s not a subclass %s', k, guess[k], ktype)
-                        opts['report'].add('key', k, why='Not a subclass of {0:s}'.format(ktype.__name__))
+                        report.add(attribute=k, why=reporting.REPORT_WHY_SUBCLASS, args=ktype.__name__)
                         diags[k] = True
                         guess[k] = None
                 elif not isinstance(guess[k], ktype):
@@ -563,23 +587,24 @@ class Footprint(object):
                     try:
                         guess[k] = ktype(guess[k], **kargs)
                         logger.debug(' > Attr %s reclassed = %s', k, guess[k])
-                    except:
+                    except Exception:
                         logger.debug(' > Attr %s badly reclassed as %s = %s', k, ktype, guess[k])
-                        opts['report'].add('key', k, why='Could not reclass to [{0:s}]: {1:s}'.format(ktype.__name__, str(guess[k])))
+                        report.add(attribute=k, why=reporting.REPORT_WHY_RECLASS, args=(ktype.__name__, str(guess[k])))
                         diags[k] = True
                         guess[k] = None
                 if kdef['values'] and guess[k] not in kdef['values']:
                     logger.debug(' > Attr %s value not in range = %s %s', k, guess[k], kdef['values'])
-                    opts['report'].add('key', k, why='Not in values: {0:s}'.format(str(guess[k])))
+                    report.add(attribute=k, why=reporting.REPORT_WHY_OUTSIDE, args=guess[k])
                     diags[k] = True
                     guess[k] = None
                 if kdef['outcast'] and guess[k] in kdef['outcast']:
                     logger.debug(' > Attr %s value excluded from range = %s %s', k, guess[k], kdef['outcast'])
-                    opts['report'].add('key', k, why='Outcast value: {0:s}'.format(str(guess[k])))
+                    report.add(attribute=k, why=reporting.REPORT_WHY_OUTCAST, args=guess[k])
                     diags[k] = True
                     guess[k] = None
 
             if guess[k] is None and ( opts['fast'] or k in setup.fastkeys ):
+                logger.debug(' > Fast exit from resolve on key "%s"', k)
                 break
 
         for k in attrs.keys():
@@ -587,20 +612,20 @@ class Footprint(object):
                 guess[k] = None
                 logger.warning(' > Attr %s is a null string', k)
                 if k not in diags:
-                    opts['report'].add('key', k, why='Not valid')
+                    report.add(attribute=k, why=reporting.REPORT_WHY_INVALID)
             if guess[k] is None:
                 attr_input.discard(k)
                 if k not in diags:
-                    opts['report'].add('key', k, why='Missing value')
+                    report.add(attribute=k, why=reporting.REPORT_WHY_MISSING)
                 if opts['fatal']:
                     logger.critical('No valid attribute %s', k)
-                    raise ResolveFatalError('No attribute `' + k + '` is fatal')
+                    raise FootprintFatalError('No attribute `' + k + '` is fatal')
                 else:
                     logger.debug(' > No valid attribute %s', k)
 
         return ( guess, attr_input, attr_seen )
 
-    def checkonly(self, rd, report=None):
+    def checkonly(self, rd, report=setup.nullreport):
         """Be sure that the resolved description also match at least one item per ``only`` feature."""
 
         params = setup.defaults
@@ -608,19 +633,19 @@ class Footprint(object):
             if not hasattr(v, '__iter__'):
                 v = (v, )
 
+            actualattr = k
             after, before = False, False
             if k.startswith('after_'):
                 after = True
-                k = k.split('after_', 1)[-1]
             if k.startswith('before_'):
                 before = True
-                k = k.split('before_', 1)[-1]
+            if after or before:
+                actualattr = k.partition('_')[-1]
 
-            actualvalue = rd.get(k, params.get(k.lower(), None))
+            actualvalue = rd.get(actualattr, params.get(actualattr.lower(), None))
             if actualvalue is None:
                 rd = False
-                if report:
-                    report.add('only', k, why='No value found')
+                report.add(attribute=actualattr, only=reporting.REPORT_ONLY_NOTFOUND, args=k)
                 break
 
             checkflag = False
@@ -637,7 +662,7 @@ class Footprint(object):
             if not checkflag:
                 rd = False
                 if report:
-                    report.add('only', k, why='Do not match')
+                    report.add(attribute=actualattr, only=reporting.REPORT_ONLY_NOTMATCH, args=v)
                 break
 
         return rd
@@ -709,6 +734,8 @@ class FootprintBaseMeta(type):
             d[k] = FootprintAttrAccess(k)
         realcls = super(FootprintBaseMeta, cls).__new__(cls, n, b, d)
         if not abstract:
+            if realcls._explicit and not realcls.mandatory():
+                raise FootprintInvalidDefinition('Explicit class without any mandatory footprint attribute.')
             for cname in realcls._collector:
                 thiscollector = collector(cname)
                 thiscollector.add(realcls)
@@ -718,10 +745,10 @@ class FootprintBaseMeta(type):
         basedoc = realcls.__doc__
         if not basedoc:
             basedoc = 'Not documented yet.'
+        realcls.__doc__ = basedoc
         if setup.docstring:
-            realcls.__doc__ = basedoc + "\n\n    Footprint::\n\n" + realcls.footprint().nice()
-        else:
-            realcls.__doc__ = basedoc
+            realcls.__doc__ += "\n\n    Footprint::\n\n" + realcls.footprint().nice()
+
         return realcls
 
 
@@ -734,10 +761,13 @@ class FootprintBase(object):
     __metaclass__ = FootprintBaseMeta
 
     _abstract  = True
+    _explicit  = True
     _collector = ('garbage',)
 
     def __init__(self, *args, **kw):
         logger.debug('Abstract %s init', self.__class__)
+        if self.__class__._abstract:
+            raise FootprintInvalidDefinition('Could not instanciate abstract class.')
         checked = kw.pop('checked', False)
         self._instfp = Footprint(self._footprint.as_dict())
         self._attributes = dict()
@@ -749,8 +779,7 @@ class FootprintBase(object):
         if not checked:
             logger.debug('Resolve attributes at footprint init %s', object.__repr__(self))
             self._attributes, u_attr_input, u_attr_seen = self._instfp.resolve(self._attributes, fatal=True)
-        if not self.__class__._abstract:
-            self._observer = observers.getbyname(self.__class__.fullname())
+        self._observer = observers.getbyname(self.__class__.fullname())
         self.make_alive()
 
     @property
@@ -760,8 +789,7 @@ class FootprintBase(object):
 
     def make_alive(self):
         """Thnigs to do after new or init construction."""
-        if not self.__class__._abstract:
-            self._observer.notify_new(self, dict())
+        self._observer.notify_new(self, dict())
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -848,22 +876,27 @@ class FootprintBase(object):
         return cls.footprint().optional(a)
 
     @classmethod
-    def couldbe(cls, rd, reportroot=None):
+    def couldbe(cls, rd, report=None, mkreport=False):
         """
         This is the heart of any selection purpose, particularly in relation
-        with the :meth:`findall` mechanism of :class:`footprints.Collector` classes.
+        with the :meth:`find_all` mechanism of :class:`footprints.Collector` classes.
         It returns the *resolved* form in which the current ``rd`` description
         could be recognized as a footprint of the current class, :data:`False` otherwise.
         """
         logger.debug('-' * 180)
         logger.debug('Couldbe a %s ?', cls)
-        if not reportroot:
-            reportroot = reporting.report('garbage')
+        if mkreport and not report:
+            report = reporting.report('void')
+            report.add(collector=proxy.garbages)
+        if report:
+            report.add(candidate=cls)
         fp = cls.footprint()
-        resolved, attr_input, u_attr_seen = fp.resolve(rd, fatal=False, report=reportroot)
+        resolved, attr_input, u_attr_seen = fp.resolve(rd, fatal=False, report=report)
         if resolved and None not in resolved.values():
-            return ( fp.checkonly(resolved, reportroot), attr_input )
+            return ( fp.checkonly(resolved, report), attr_input )
         else:
+            if mkreport:
+                report.last.lightdump()
             return ( False, attr_input )
 
     def compatible(self, rd):

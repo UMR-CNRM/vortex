@@ -43,10 +43,10 @@ Interface functions
 Exceptions
 ----------
 
-.. autoclass:: MaxLoopIter
+.. autoclass:: FootprintMaxIter
    :show-inheritance:
 
-.. autoclass:: UnreachableAttr
+.. autoclass:: FootprintUnreachableAttr
    :show-inheritance:
 
 Footprint mechanism

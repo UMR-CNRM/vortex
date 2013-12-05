@@ -23,7 +23,7 @@ for c in c1:
 
 print t.line
 
-c2 = vortex.proxy.containers(keypoint='bof')
+c2 = vortex.proxy.containers(entry='bof')
 print t.prompt, 'Collector', c2
 print t.prompt, 'Collector called', c2()
 print t.prompt, 'Collector iterator'

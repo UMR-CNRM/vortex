@@ -47,6 +47,7 @@ __all__ = []
 import re
 import datetime
 import calendar
+import inspect
 
 
 def mkisodate(datestr):
@@ -69,9 +70,9 @@ def mkisodate(datestr):
     return ''.join(l)
 
 def today():
-    """Return current date, at 0 hour, 0 minute."""
+    """Return date of the day, at 0 hour, 0 minute."""
     td = datetime.datetime.today()
-    return Date(datetime.datetime(td.year, td.month, td.day, 0, 0))
+    return Date(td.year, td.month, td.day, 0, 0)
 
 def yesterday(base=None):
     """Return date of yesterday (relative to today or specified ``base`` date)."""
@@ -86,17 +87,17 @@ def tomorrow(base=None):
     return base + Period(days=1)
 
 def now():
-    """Return current date, hours, minutes, seconds and microseconds."""
+    """Return date just now, with hours, minutes, seconds and microseconds."""
     td = datetime.datetime.now()
     return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
 
 def atsecond():
-    """Return current date, hours, minutes and seconds."""
+    """Return date just now, with only hours, minutes and seconds."""
     td = datetime.datetime.now()
     return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, 0)
 
 def lastround(rh=1, delta=0, base=None):
-    """Return last date with a plain hour multiple of ``rh``."""
+    """Return date just before ``base`` with a plain hour multiple of ``rh``."""
     if not base:
         base = now()
     if delta:
@@ -104,8 +105,37 @@ def lastround(rh=1, delta=0, base=None):
     return Date(base.year, base.month, base.day, base.hour - base.hour % rh, 0)
 
 def synop(delta=0, base=None):
-    """Return the date associated to the last synoptic hour."""
+    """Return date associated to the last synoptic hour."""
     return lastround(6, delta, base)
+
+def easter(year=None):
+    """Return date for easter of the given year
+    >>> dates = [2013, 2014, 2015, 2016, 2017, 2018]
+    >>> [easter(d).ymd for d in dates]
+    ['20130331', '20140420', '20150405', '20160327', '20170416', '20180401']
+    """
+    if not year:
+        year = today().year
+    G = year % 19
+    C = year / 100
+    H = (C - C / 4 - (8 * C + 13) / 25 + 19 * G + 15) % 30
+    I = H - (H / 28) * (1 - (29 / (H + 1)) * ((21 - G) / 11))
+    J = (year + year / 4 + I + 2 - C + C / 4) % 7
+    L = I - J
+    month = 3 + (L + 40) / 44
+    day = L + 28 - 31 * (month / 4)
+    return Date(year, month, day)
+
+local_date_functions = {
+    x.__name__:x
+        for x in locals().values()
+            if inspect.isfunction(x) and x.__doc__.startswith('Return date')
+}
+
+def stardates():
+    """Nice dump of predefined dates functions."""
+    for k, v in sorted(local_date_functions.items()):
+        print k.ljust(12), v()
 
 def guess(*args):
     for isoclass in (Date, Period):
@@ -304,15 +334,23 @@ class Date(datetime.datetime):
             * a dictionary with this named values ;
             * a string that could be reshaped as an ISO 8601 date string.
         """
-        if kw:
+        if kw and not args:
             args = (datetime.datetime(**kw),)
         if not args:
             raise ValueError("No initial value provided for Date")
         top = args[0]
         delta = ''
         ld = list()
+        if isinstance(top, str) and top in local_date_functions:
+            try:
+                top = local_date_functions[top](**kw)
+                kw = dict()
+            except Exception:
+                pass
         if isinstance(top, datetime.datetime):
             ld = [ top.year, top.month, top.day, top.hour, top.minute, top.second ]
+        elif isinstance(top, tuple) or isinstance(top, list):
+            ld = list(top)
         elif isinstance(top, float):
             top = Date._origin + datetime.timedelta(0, top)
             ld = [ top.year, top.month, top.day, top.hour, top.minute, top.second ]
@@ -733,22 +771,6 @@ class Month(object):
             rc = 1
         finally:
             return rc
-
-def easter (year):
-    """Return the Date for easter of the given year
-    >>> dates = [2013, 2014, 2015, 2016, 2017, 2018]
-    >>> [easter(d).ymd for d in dates]
-    ['20130331', '20140420', '20150405', '20160327', '20170416', '20180401']
-    """
-    G = year % 19
-    C = year / 100
-    H = (C - C / 4 - (8 * C + 13) / 25 + 19 * G + 15) % 30
-    I = H - (H / 28) * (1 - (29 / (H + 1)) * ((21 - G) / 11))
-    J = (year + year / 4 + I + 2 - C + C / 4) % 7
-    L = I - J
-    month = 3 + (L + 40) / 44
-    day = L + 28 - 31 * (month / 4)
-    return Date(year, month, day)
 
 
 if __name__ == '__main__':

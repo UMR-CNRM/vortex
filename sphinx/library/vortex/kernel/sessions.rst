@@ -12,18 +12,19 @@
 Interface to sessions tickets
 -----------------------------
 
-.. autofunction:: ticket
-
-.. autofunction:: sessionstags
-
 .. autofunction:: current
-
-.. autofunction:: switch
-
-.. autofunction:: prompt
 
 .. autofunction:: exit
 
+.. autofunction:: prompt
+
+.. autofunction:: sessionstags
+
+.. autofunction:: switch
+
+.. autofunction:: system
+
+.. autofunction:: ticket
 
 Interface to gloves
 -------------------

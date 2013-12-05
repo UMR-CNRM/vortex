@@ -14,7 +14,7 @@ class MercatorArchive(Provider):
         info = 'Mercator archive provider',
         attr = dict(
             namespace = dict(
-                optional = True,
+                optional = False,
                 default = 'mercator.archive.fr'
             ),
         )
@@ -23,10 +23,10 @@ class MercatorArchive(Provider):
     @property
     def realkind(self):
         return 'mercator'
-    
+
     def scheme(self):
         return 'mercator'
-    
+
     def domain(self):
         return self.namespace
 

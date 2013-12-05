@@ -34,7 +34,9 @@ class System(footprints.FootprintBase):
     """
 
     _abstract  = True
+    _explicit  = False
     _collector = ('system',)
+
     _footprint = dict(
         info = 'Default information system',
         attr = dict(
@@ -312,8 +314,11 @@ class System(footprints.FootprintBase):
     def vortex_modules(self, only='.'):
         """Return a filtered list of modules in the vortex package."""
         g = self.env.glove
-        mroot = g.siteroot + '/src'
-        mfiles = [ re.sub('^' + mroot + '/', '', x) for x in self.ffind(mroot) ]
+        mfiles = [
+            re.sub('^' + mroot + '/', '', x)
+            for mroot in (g.siteroot + '/src', g.siteroot + '/site')
+            for x in self.ffind(mroot)
+        ]
         return [
             re.sub('(?:\/__init__)?\.py$', '', x).replace('/', '.')
             for x in mfiles if ( not x.startswith('.' ) and re.search(only, x, re.IGNORECASE) and x.endswith('.py') )
@@ -857,7 +862,7 @@ class Linux27(Linux, Python27):
         info = 'Linux base system with pretty new python version',
         attr = dict(
             python = dict(
-                values = [ '2.7.' + str(x) for x in range(2,7) ]
+                values = [ '2.7.' + str(x) for x in range(3,9) ]
             )
         )
     )

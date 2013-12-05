@@ -12,5 +12,6 @@ List of modules.
    autolog
    gloves
    loader
+   proxy
    sessions
    toolbox

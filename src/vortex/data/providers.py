@@ -116,8 +116,7 @@ class Magic(Provider):
                 default = True,
                 optional = True,
             ),
-            magic = dict(
-            )
+            magic = dict()
         )
     )
 

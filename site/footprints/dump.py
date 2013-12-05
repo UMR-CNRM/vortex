@@ -255,10 +255,10 @@ class Dumper():
         return indent_space * indent_first + self.dump(obj)
 
 
-def fulldump(obj):
+def fulldump(obj, startpos=indent_first):
     """Entry point. Return a string."""
     d = Dumper()
-    return indent_space * indent_first + d.dump(obj)
+    return indent_space * startpos + d.dump(obj)
 
 
 def lightdump(obj, break_before_dict_key=True, break_before_dict_value=False):
