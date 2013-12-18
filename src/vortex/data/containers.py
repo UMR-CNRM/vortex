@@ -11,6 +11,8 @@ import footprints
 
 from vortex.autolog import logdefault as logger
 
+CONTAINER_INCORELIMIT=1048576
+CONTAINER_MAXBLOCKSIZE=4194304
 
 class Container(footprints.FootprintBase):
 
@@ -71,26 +73,26 @@ class Container(footprints.FootprintBase):
     def readall(self):
         """Read in one jump all the data as long as the data is not too big."""
         iod = self.iodesc()
-        if self.totalsize < 4194304:
+        if self.totalsize < CONTAINER_MAXBLOCKSIZE:
             return iod.read()
 
     def readlines(self):
         """Read in one jump all the data as a sequens of lines as long as the data is not too big."""
         iod = self.iodesc()
-        if self.totalsize < 4194304:
+        if self.totalsize < CONTAINER_MAXBLOCKSIZE:
             return iod.readlines()
 
     def iodesc(self):
         """Returns the file object descriptor."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def close(self):
         """Close the logical io descriptor."""
-        pass
+        raise NotImplementedError
 
     def write(self, data):
         """Write the data in container."""
-        pass
+        raise NotImplementedError
 
 
 class Virtual(Container):
@@ -134,11 +136,11 @@ class InCore(Virtual):
                 type = bool,
                 alias = ('mem', 'memory')
             ),
-            maxsize = dict(
+            incorelimit = dict(
                 type = int,
                 optional = True,
-                default = 65536,
-                alias = ('memlimit',)
+                default = CONTAINER_INCORELIMIT,
+                alias = ('memlimit', 'spooledlimit', 'maxsize')
             ),
         )
     )
@@ -161,7 +163,7 @@ class InCore(Virtual):
                 actualfile = 'MemoryResident'
         else:
             actualfile = 'NotSpooled'
-        return 'maxsize={0:d} tmpfile={1:s}'.format(self.maxsize, actualfile)
+        return 'incorelimit={0:d} tmpfile={1:s}'.format(self.incorelimit, actualfile)
 
     def localpath(self):
         """
@@ -169,7 +171,7 @@ class InCore(Virtual):
         which is created if not yet defined.
         """
         if not self._tmpfile:
-            self._tmpfile = tempfile.SpooledTemporaryFile(prefix=self.prefix, max_size=self.maxsize)
+            self._tmpfile = tempfile.SpooledTemporaryFile(prefix=self.prefix, max_size=self.incorelimit)
         return self._tmpfile
 
 
@@ -261,12 +263,14 @@ class File(Container):
         """Returns the actual name of the file object."""
         return self._actualpath
 
-    def iodesc(self):
+    def iodesc(self, mode='rb'):
         """Returns an active (opened) file descriptor in binary read mode by default."""
-        if not self._iod:
+        if not self._iod or mode != self._iomode:
+            self.close()
             if not self.cwdtied:
                 self._actualpath = os.path.realpath(self.file)
-            self._iod = io.open(self._actualpath, 'rb')
+            self._iomode = mode
+            self._iod = io.open(self._actualpath, self._iomode)
         return self._iod
 
     def close(self):
@@ -281,5 +285,3 @@ class File(Container):
         with io.open(self.localpath(), 'wb') as fd:
             fd.write(data)
             fd.close()
-
-

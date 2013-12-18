@@ -6,7 +6,9 @@ Advanced environment settings.
 """
 
 import os, re, json, traceback
+import types
 from datetime import datetime
+
 from vortex.autolog import logdefault as logger
 
 #: No automatic export
@@ -265,7 +267,7 @@ class Environment(object):
         """
         previous = self._active
         osrewind = None
-        if args and type(args[0]) == bool:
+        if args and type(args[0]) is types.BooleanType:
             self.__dict__['_active'] = args[0]
         if previous and not self._active and self.__class__._os and id(self) == id(self.__class__._os[-1]):
             self.__class__._os.pop()

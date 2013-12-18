@@ -10,6 +10,7 @@ __all__ = []
 
 from vortex.autolog import logdefault as logger
 
+from types import *
 
 class VNameBuilder(object):
     """Baseames factory for resources handled by some Vortex like provider."""
@@ -93,11 +94,11 @@ class VNameBuilder(object):
         Go through all items and pack them according to the so-called standard way.
         Result is always a list of string values.
         """
-        if not type(items) == list:
+        if type(items) is not ListType:
             items = [ items ]
         packed = list()
         for i in items:
-            if type(i) == dict:
+            if type(i) is DictType:
                 for k, v in i.iteritems():
                     packmtd = getattr(self, 'pack_std_item_' + k, self.pack_void)
                     packed.append(packmtd(v))

@@ -35,7 +35,7 @@ class PriorityLevel(object):
         if other:
             return cmp(self.rank, other.rank)
         else:
-            return False
+            return -1
 
     def delete(self):
         """Removes itself from the priority set."""
@@ -156,7 +156,7 @@ class PrioritySet(object):
         """Returns the relative position of the priority named ``tag``."""
         tag = tag.upper()
         if tag not in self._levels:
-            raise Exception('No such level priority %s', tag)
+            raise ValueError('No such level priority %s', tag)
         return self._levels.index(tag)
 
     def rerank(self, tag, upd):
@@ -180,7 +180,7 @@ class PrioritySet(object):
     def insert(self, tag=None, after=None, before=None):
         """Insert a new priority after or before an other one (which the tag name is given)."""
         if tag is None:
-            return tag
+            return None
         else:
             tag = str(tag).upper()
         self.extend(tag)

@@ -215,7 +215,7 @@ class Dispatcher(object):
         Set and print the current default footprint values.
         Result current <fpenv> object.
         """
-        fpenv = footprints.setup.setfpenv(**kw)
+        fpenv = footprints.setup.defaults.update(**kw)
         return (0, str(fpenv()), fpenv)
 
     def rmfp(self, t, kw):

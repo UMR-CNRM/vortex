@@ -9,19 +9,26 @@ Top level interface for accessing the VORTEX facilities.
 __all__ = [ 'rload', 'rget', 'rput' ]
 
 import re
+
 import footprints
 
 from vortex.autolog import logdefault as logger
 from vortex import sessions, data, proxy
 from vortex.layout.dataflow import stripargs_section
+from vortex.utilities.structs import History
 
 #: Shortcut to footprint env defaults
-defaults = footprints.setup.setfpenv
-setfpext = footprints.setup.setfpext
+defaults = footprints.setup.defaults
+extended = footprints.setup.extended
+
 sectionmap = {'input':'get', 'output':'put', 'executable':'get'}
 justdoit = False
 getinsitu = False
 verbose = 0
+
+# History recording
+
+history = History(tag='rload')
 
 # Most commonly used functions
 
@@ -63,6 +70,8 @@ def rload(*args, **kw):
         else:
             logger.warning('Discard rload argument <%s>', a)
     rd.update(kw)
+    if rd:
+        history.append(rd.copy())
     rx = [
         proxy.containers.pickup(
             proxy.providers.pickup(
@@ -111,8 +120,11 @@ def pushsection(section, args, kw):
     ctx.record_off()
     opts, kwclean = stripargs_section(**kw)
     if verbose > 1:
-        print 'New {0:s} section with options:'.format(section), footprints.dump.lightdump(opts), "\n"
-        print 'Loading resource handlers with description:', footprints.dump.lightdump(kwclean), "\n"
+        print "New {0:s} section with options: {1:s}\n\nAnd resource handlersdescription: {2:s}\n".format(
+            section,
+            footprints.dump.lightdump(opts),
+            footprints.dump.lightdump(kwclean)
+        )
     rl = rload(*args, **kwclean)
     rlok = list()
     push = getattr(ctx.sequence, section)
@@ -176,9 +188,7 @@ def namespaces(**kw):
         usedcat = ( 'provider', 'store' )
     nameseen = dict()
     for cat in [ footprints.collector(x) for x in usedcat ]:
-        print '>', cat
         for cls in cat():
-            print '>>', cat, cls
             fp = cls.footprint().attr
             netattr = fp.get('namespace', None)
             if not netattr:
@@ -190,4 +200,12 @@ def namespaces(**kw):
                     nameseen[netname].append(cls.fullname())
     return nameseen
 
+def print_namespaces(**kw):
+    """Formatted print of current namespaces."""
+    justify = kw.pop('ljust', 24)
+    prefix  = kw.pop('prefix', '+ ')
+    linesep = ",\n" + ' ' * (justify+len(prefix)+2)
+    for k, v in sorted(namespaces(**kw).iteritems()):
+        nice_v = linesep.join(v) if len(v) > 1 else v[0]
+        print prefix + k.ljust(justify), '[' + nice_v + ']'
 

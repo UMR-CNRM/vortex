@@ -46,7 +46,7 @@ break_after_dict_begin = False
 break_before_dict_end = True
 break_after_dict_end = False
 
-DICT_TYPES = {DictionaryType: 1}
+DICT_TYPES = {DictionaryType:1}
 
 def atomic_type(t):
     return t in (NoneType, StringType, IntType, LongType, FloatType, ComplexType)
@@ -68,25 +68,21 @@ def is_class(val):
 def simple_value(val):
     t = type(val)
 
-    if atomic_type (val):
+    if atomic_type(val):
         return True
 
-    if (not DICT_TYPES.has_key(t) and t not in (ListType, TupleType) and
-            not is_instance(val)):
+    if (t not in DICT_TYPES and t not in (ListType, TupleType) and not is_instance(val)):
         return True
-
-    elif t in (ListType, TupleType) and len (val) <= 10:
+    elif t in (ListType, TupleType) and len(val) <= 10:
         for x in val:
-            if not atomic_type (type (x)):
+            if not atomic_type(type(x)):
                 return False
         return True
-
-    elif DICT_TYPES.has_key(t) and len (val) <= 5:
-        for (k,v) in val.items():
-            if not (atomic_type (type (k)) and atomic_type (type (v))):
+    elif t in DICT_TYPES and len(val) <= 5:
+        for (k, v) in val.items():
+            if not (atomic_type(type(k)) and atomic_type(type(v))):
                 return False
         return True
-
     else:
         return False
 

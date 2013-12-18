@@ -60,6 +60,42 @@ class FootprintTestTwo(FootprintTestOne):
         )
     )
 
+# Tests for miscellaneous dumps
+
+class utDump(TestCase):
+
+    def test_dump_types(self):
+        for x in (None, 'foo', 2, long(2), 2., 1+2j):
+            self.assertTrue(dump.atomic_type(type(x)))
+
+        self.assertFalse(dump.is_instance(Foo))
+        self.assertTrue(dump.is_instance(Foo()))
+
+        class FooBis(Foo):
+            pass
+
+        self.assertFalse(dump.is_instance(FooBis))
+        self.assertTrue(dump.is_class(Foo))
+        self.assertTrue(dump.is_class(FooBis))
+
+        for x in (None, 'foo', 2, long(2), 2., 1+2j, Foo):
+            self.assertTrue(dump.simple_value(x))
+
+        for x in (Foo(),):
+            self.assertFalse(dump.simple_value(x))
+
+        for x in (range(10), tuple(range(10)), {str(i):i for i in range(5)}):
+            self.assertTrue(dump.simple_value(x))
+
+        for x in (range(11), tuple(range(11)), {str(i):i for i in range(7)}, {'foo': Foo()}, [Foo(), Foo()]):
+            self.assertFalse(dump.simple_value(x))
+
+    def test_dump_indent(self):
+        self.assertEqual(dump.indent(nextline=False), '')
+        self.assertEqual(dump.indent(nextline=False, level=2), '')
+        self.assertEqual(dump.indent(), '\n      ')
+        self.assertEqual(dump.indent(level=1), '\n          ')
+
 # Tests for footprints util
 
 class utDictMerge(TestCase):
@@ -534,18 +570,33 @@ class utPriorities(TestCase):
         self.assertIn('Default', rv)
         self.assertIsInstance(rv.levels, tuple)
         self.assertTupleEqual(rv.levels, ('DEFAULT', 'TOOLBOX'))
+        self.assertListEqual([x for x in rv], ['DEFAULT', 'TOOLBOX'])
 
         rv.extend('debug')
         self.assertEqual(len(rv), 3)
         self.assertIn('DEBUG', rv)
         self.assertIsInstance(rv.DEBUG, priorities.PriorityLevel)
         self.assertGreater(rv.DEBUG, rv.TOOLBOX)
+        self.assertEqual(rv.DEFAULT(), 0)
+        self.assertEqual(rv.TOOLBOX(), 1)
+        self.assertEqual(rv.DEBUG(),   2)
+        self.assertEqual(cmp(rv.DEBUG, 'bof'), -1)
+        self.assertEqual(rv.DEBUG.dumpshortcut(), "footprints.priorities.PriorityLevel('DEBUG')")
 
         rv.reset()
         self.assertEqual(len(rv), 2)
         self.assertNotIn('debug', rv)
 
+        rv.extend('default')
+        self.assertEqual(len(rv), 2)
+        self.assertTupleEqual(rv.levels, ('TOOLBOX', 'DEFAULT'))
+
         rv.remove('toolbox')
+        self.assertEqual(len(rv), 1)
+        self.assertNotIn('toolbox', rv)
+
+        rv.reset()
+        rv.remove(rv.TOOLBOX)
         self.assertEqual(len(rv), 1)
         self.assertNotIn('toolbox', rv)
 
@@ -570,6 +621,9 @@ class utPriorities(TestCase):
         self.assertEqual(rv.levelbyindex(0), rv.DEFAULT)
         self.assertEqual(rv.levelbyindex(1), rv.TOOLBOX)
         self.assertEqual(rv.levelbyindex(2), rv.DEBUG)
+
+        with self.assertRaises(ValueError):
+            rv.levelindex('foo')
 
         rv = priorities.top
         self.assertTrue(rv.NONE < rv.DEFAULT < rv.TOOLBOX < rv.DEBUG)
@@ -635,13 +689,22 @@ class utPriorities(TestCase):
         self.assertTupleEqual(rv.levels, ('DEFAULT', 'TOOLBOX', 'DEBUG'))
         self.assertListEqual(rv.freezed(), ['default'])
 
+        rtag = rv.insert(None, after='toolbox')
+        self.assertIsNone(rtag)
+
         rv.insert('hip', after='toolbox')
+        self.assertTupleEqual(rv.levels, ('DEFAULT', 'TOOLBOX', 'HIP', 'DEBUG'))
+
+        rv.insert('hip', after=rv.TOOLBOX)
         self.assertTupleEqual(rv.levels, ('DEFAULT', 'TOOLBOX', 'HIP', 'DEBUG'))
 
         rv.freeze('hip-added')
         self.assertListEqual(rv.freezed(), ['default', 'hip-added'])
 
         rv.insert('hop', before='debug')
+        self.assertTupleEqual(rv.levels, ('DEFAULT', 'TOOLBOX', 'HIP', 'HOP', 'DEBUG'))
+
+        rv.insert('hop', before=rv.DEBUG)
         self.assertTupleEqual(rv.levels, ('DEFAULT', 'TOOLBOX', 'HIP', 'HOP', 'DEBUG'))
 
         rv.freeze('hop-added')
@@ -698,8 +761,58 @@ class utObservers(TestCase):
 
 class utReporting(TestCase):
 
-    def test_reporting_basics(self):
-        pass
+    def test_reporting_methods(self):
+        rv = reporting.report_map()
+        self.assertIsInstance(rv, dict)
+        self.assertEqual(len(rv), 2)
+        self.assertItemsEqual(rv.keys(), ['void', 'footprint-garbage'])
+
+        rv = reporting.report_keys()
+        self.assertListEqual(rv, ['footprint-garbage', 'void'])
+
+        rv = reporting.report_map()
+        self.assertIsInstance(rv, dict)
+        self.assertItemsEqual(rv, reporting.report_map())
+
+        rv = reporting.report()
+        self.assertIsInstance(rv, reporting.FootprintLog)
+        self.assertEqual(rv.tag, 'default')
+
+        rv = reporting.report_keys()
+        self.assertListEqual(rv, ['default', 'footprint-garbage', 'void'])
+
+        rv = reporting.report('void')
+        self.assertIsInstance(rv, reporting.FootprintLog)
+        self.assertEqual(rv.tag, 'void')
+
+        rv = reporting.report(tag='footprint-garbage')
+        self.assertIsInstance(rv, reporting.FootprintLog)
+        self.assertEqual(rv.tag, 'footprint-garbage')
+
+    def test_reporting_null(self):
+        rv = reporting.NullReport()
+        self.assertIsInstance(rv, reporting.NullReport)
+
+        rv = reporting.NullReport(1, 2, foo=3)
+        self.assertIsInstance(rv, reporting.NullReport)
+
+        rv.add('any', 2)
+        self.assertEqual(len(rv), 1)
+
+        rv.add(foo=3)
+        self.assertEqual(len(rv), 2)
+
+        rv.add('more', extra='hello')
+        self.assertEqual(len(rv), 4)
+
+    def test_reporting_log(self):
+        rv = reporting.FootprintLog('void')
+        self.assertEqual(rv.tag, 'void')
+        self.assertTrue(rv.weak)
+        self.assertIsNone(rv.last)
+        self.assertIsNone(rv.current())
+        self.assertEqual(rv.info(), 'Report Void')
+        self.assertEqual(len(rv), 0)
 
 # Tests for footprints top module methods and objects
 
@@ -716,35 +829,44 @@ class utFootprintSetup(TestCase):
         self.assertIsInstance(setup.fastmode, bool)
         self.assertIsInstance(setup.fastkeys, tuple)
         self.assertIsInstance(setup.defaults, dict)
+        self.assertIsInstance(setup.populset, set)
         self.assertIs(setup.callback, None)
-        self.assertIs(setup.modtarget, None)
 
-        rv = setup.setfpenv(hello='foo')
-        self.assertIsInstance(rv, dict)
-        self.assertIs(rv, setup.defaults)
-        self.assertDictEqual(rv, dict(hello='foo'))
+        setup.defaults.update(hello='foo')
+        self.assertIsInstance(setup.defaults, dict)
+        self.assertDictEqual(setup.defaults, dict(hello='foo'))
 
-        rv = setup.setfpenv(BIGCASE=2)
-        self.assertDictEqual(rv, dict(hello='foo', bigcase=2))
+        setup.defaults.update(BIGCASE=2)
+        self.assertDictEqual(setup.defaults, dict(hello='foo', bigcase=2))
 
-        rv = setup.setfpext()
-        self.assertIsInstance(rv, bool)
-        self.assertEqual(rv, False)
+        with self.assertRaises(AttributeError):
+            del setup.defaults
 
-        rv = setup.setfpext(True)
-        self.assertIsInstance(rv, bool)
-        self.assertEqual(rv, True)
-        self.assertEqual(setup.extended, True)
-
-        rv = setup.setfpext(switch=False)
-        self.assertIsInstance(rv, bool)
-        self.assertEqual(rv, False)
+        self.assertIsInstance(setup.extended, bool)
         self.assertEqual(setup.extended, False)
 
-        rv = setup.setfpext(switch=2)
-        self.assertIsInstance(rv, bool)
-        self.assertEqual(rv, True)
+        setup.extended = True
+        self.assertIsInstance(setup.extended, bool)
         self.assertEqual(setup.extended, True)
+
+        setup.extended = False
+        self.assertIsInstance(setup.extended, bool)
+        self.assertEqual(setup.extended, False)
+
+        setup.extended = 2
+        self.assertIsInstance(setup.extended, bool)
+        self.assertEqual(setup.extended, True)
+
+        with self.assertRaises(AttributeError):
+            del setup.extended
+
+        with self.assertRaises(ValueError):
+            setup.popul(Foo)
+
+        foo = Foo()
+        setup.popul(foo)
+        self.assertTrue(hasattr(foo, 'garbage'))
+        self.assertTrue(hasattr(foo, 'garbages'))
 
     def test_footprint_callback(self):
         setup = footprints.FootprintSetup()
@@ -1267,14 +1389,14 @@ class utFootprint(TestCase):
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.setfpenv(rdate=datetime.date(2013,11,01))
+        footprints.setup.defaults.update(rdate=datetime.date(2013,11,01))
 
         rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.setfpenv(rdate=datetime.date(2013,11,02))
+        footprints.setup.defaults.update(rdate=datetime.date(2013,11,02))
 
         rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
@@ -1287,21 +1409,21 @@ class utFootprint(TestCase):
             )
         ))
 
-        footprints.setup.setfpenv(rdate=datetime.date(2013,11,02))
+        footprints.setup.defaults.update(rdate=datetime.date(2013,11,02))
 
         rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
-        footprints.setup.setfpenv(rdate=datetime.date(2013,11,05))
+        footprints.setup.defaults.update(rdate=datetime.date(2013,11,05))
 
         rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
-        footprints.setup.setfpenv(rdate=datetime.date(2013,11,04))
+        footprints.setup.defaults.update(rdate=datetime.date(2013,11,04))
 
         rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
@@ -1314,14 +1436,14 @@ class utFootprint(TestCase):
             )
         ))
 
-        footprints.setup.setfpenv(rdate=datetime.date(2013,11,01))
+        footprints.setup.defaults.update(rdate=datetime.date(2013,11,01))
 
         rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.setfpenv(rdate=datetime.date(2013,12,03))
+        footprints.setup.defaults.update(rdate=datetime.date(2013,12,03))
 
         rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
@@ -1334,14 +1456,14 @@ class utFootprint(TestCase):
             )
         ))
 
-        footprints.setup.setfpenv(rdate=datetime.date(2013,11,01))
+        footprints.setup.defaults.update(rdate=datetime.date(2013,11,01))
 
         rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
-        footprints.setup.setfpenv(rdate=datetime.date(2013,12,03))
+        footprints.setup.defaults.update(rdate=datetime.date(2013,12,03))
 
         rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
@@ -1355,21 +1477,21 @@ class utFootprint(TestCase):
             )
         ))
 
-        footprints.setup.setfpenv(rdate=datetime.date(2013,11,01))
+        footprints.setup.defaults.update(rdate=datetime.date(2013,11,01))
 
         rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.setfpenv(rdate=datetime.date(2013,11,29))
+        footprints.setup.defaults.update(rdate=datetime.date(2013,11,29))
 
         rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.setfpenv(rdate=datetime.date(2013,11,15))
+        footprints.setup.defaults.update(rdate=datetime.date(2013,11,15))
 
         rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
@@ -1538,6 +1660,7 @@ class utFootprintBase(TestCase):
         self.assertDictEqual(report.last.as_dict(), {
             '__main__.FootprintTestOne': {'someint': {'why': 'Not in values', 'args': 12}}
         })
+
         rv, attr_input = FootprintTestOne.couldbe(dict(kind='hip', someint=2), mkreport=True)
         self.assertTrue(rv)
         self.assertSetEqual(attr_input, set(['kind', 'someint']))
@@ -1545,7 +1668,6 @@ class utFootprintBase(TestCase):
             '__main__.FootprintTestOne': {}
         })
 
-# TODO
 
 class utCollector(TestCase):
 

@@ -14,7 +14,7 @@ import logging
 logger = logging.getLogger('footprints.util')
 
 from weakref import WeakSet
-
+from types import *
 
 def dictmerge(d1, d2):
     """
@@ -33,8 +33,8 @@ def dictmerge(d1, d2):
     """
 
     for key, value in d2.iteritems():
-        if type(value) is dict:
-            if d1.has_key(key) and type(d1[key])is dict:
+        if type(value) is DictType:
+            if d1.has_key(key) and type(d1[key])is DictType:
                 dictmerge(d1[key], d2[key])
             else :
                 d1[key] = value
@@ -51,7 +51,7 @@ def list2dict(a, klist):
     """
 
     for k in klist:
-        if k in a and ( type(a[k]) is tuple or type(a[k]) is list):
+        if k in a and ( type(a[k]) is TupleType or type(a[k]) is ListType):
             ad = dict()
             for item in a[k]:
                 ad.update(item)
@@ -135,7 +135,7 @@ def inplace(desc, key, value, globs=None):
     newd = copy.deepcopy(desc)
     newd[key] = value
     if globs:
-        for k in [ x for x in newd.keys() if (x != key and type(newd[x]) is str) ]:
+        for k in [ x for x in newd.keys() if (x != key and type(newd[x]) is StringType) ]:
             for g in globs.keys():
                 newd[k] = re.sub('\[glob:'+g+'\]', globs[g], newd[k])
     return newd
@@ -295,6 +295,27 @@ class Catalog(object):
         """Completly clear the list of items previously recorded in this catalog."""
         self._items = WeakSet() if self._weak else set()
 
+class LowerCaseDict(dict):
+    """A dictionary with only lower case keys."""
+
+    def __getitem__(self, key):
+        dict.__setitem__(self, key.lower())
+
+    def __setitem__(self, key, value):
+        dict.__setitem__(self, key.lower(), value)
+
+    def __delitem__(self, key):
+        dict.__setitem__(self, key.lower())
+
+    def __contains__(self, key):
+        return dict.__contains__(self, key.lower())
+
+    def update(self, *args, **kw):
+        args = list(args)
+        args.append(kw)
+        for objiter in args:
+            for k, v in objiter.items():
+                self.__setitem__(k, v)
 
 if __name__ == '__main__':
     import doctest

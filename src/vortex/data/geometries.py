@@ -5,6 +5,7 @@
 __all__ = []
 
 import re
+import types
 
 from vortex.autolog import logdefault as logger
 from vortex.tools.config import GenericConfigParser
@@ -76,11 +77,11 @@ class HGeometry(object):
             self.lam = True
             self.__dict__.update(kw)
             for k, v in self.__dict__.items():
-                if type(v) == str and re.match('none', v, re.IGNORECASE):
+                if type(v) is types.StringType and re.match('none', v, re.IGNORECASE):
                     self.__dict__[k] = None
-                if type(v) == str and re.match('true', v, re.IGNORECASE):
+                if type(v) is types.StringType and re.match('true', v, re.IGNORECASE):
                     self.__dict__[k] = True
-                if type(v) == str and re.match('false', v, re.IGNORECASE):
+                if type(v) is types.StringType and re.match('false', v, re.IGNORECASE):
                     self.__dict__[k] = False
             for item in ('nlon', 'nlat', 'truncation'):
                 cv = getattr(self, item)

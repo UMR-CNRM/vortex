@@ -5,12 +5,14 @@
 Net tools.
 """
 
-from vortex.autolog import logdefault as logger
 
 from os.path import dirname
+import types
 import urlparse
 import io, ftplib
 from netrc import netrc
+
+from vortex.autolog import logdefault as logger
 
 #: No automatic export
 __all__ = []
@@ -97,7 +99,7 @@ class StdFtp(ftplib.FTP):
 
     def get(self, source, destination):
         """Retrieve a remote `destination` file to a local `source` file object."""
-        if type(destination) == str:
+        if type(destination) is types.StringType:
             self._local_system.filecocoon(destination)
             target = io.open(destination, 'wb')
             xdestination = True
@@ -117,7 +119,7 @@ class StdFtp(ftplib.FTP):
     def put(self, source, destination):
         """Store a local `source` file object to a remote `destination`."""
         inputsrc = open(source, 'rb')
-        if type(source) == str:
+        if type(source) is types.StringType:
             inputsrc = io.open(source, 'rb')
             xsource = True
         else:

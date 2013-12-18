@@ -8,6 +8,9 @@ This module defines common base classes for miscellaneous purposes.
 #: No automatic export
 __all__ = []
 
+import collections
+from datetime import datetime
+
 from vortex.autolog import logdefault as logger
 
 def idtree(tag, _tableroots=dict()):
@@ -115,3 +118,64 @@ class Tree(object):
             self.rdump(id(node), 1)
         else:
             logger.critical('Object %s does not belong this tree', node)
+
+class History(object):
+    """Multi-purpose history like object."""
+
+    def __init__(self, tag='void', status=False, histsize=512):
+        self._tag = tag
+        self._history = collections.deque(maxlen=histsize)
+        self._status = status
+        self._count = 0
+
+    @property
+    def tag(self):
+        return self._tag
+
+    @property
+    def count(self):
+        return self._count
+
+    @property
+    def histsize(self):
+        return self._history.maxlen
+
+    def resize(self, histsize=None):
+        """Resize the internal history log to the specified length."""
+        if maxlen:
+            self._history = collections.deque(self._history, maxlen=int(histsize))
+        return self._history.maxlen
+
+    def __len__(self):
+        return len(self._history)
+
+    def __getitem__(self, key):
+        return self._history[key]
+
+    def __setitem__(self, key, value):
+        logger.warning('Could not set a value to a history item.')
+
+    def __delitem__(self, key, value):
+        logger.warning('Could not delete a value of a history item.')
+
+    def __contains__(self, key):
+        return key in [ item for stamp, item in self._history ]
+
+    def append(self, item):
+        stamp = datetime.now()
+        self._count += 1
+        self._history.append((self._count, stamp, item))
+        return (self._count, stamp)
+
+    def get(self, start=1, end=None):
+        if end is None:
+            end = self._count
+        return [ (c, t, i) for c, t, i in self._history if c>=start and c<=end ]
+
+    def show(self, start=1, end=None):
+        for c, t, i in self.get(start, end):
+            print str(c).rjust(4), ':', i
+
+    @property
+    def last(self):
+        return self._history[-1][-1]

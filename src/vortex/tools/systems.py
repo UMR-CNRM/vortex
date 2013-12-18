@@ -9,7 +9,8 @@ system interaction. Systems objects use the :mod:`footprints` mechanism.
 #: No automatic export
 __all__ = []
 
-import re, os, platform, shutil, sys, io, filecmp, datetime, time
+import re, os, platform, shutil, sys, io, filecmp, time
+import types
 import glob
 import tarfile
 import subprocess
@@ -20,6 +21,7 @@ import footprints
 from vortex.autolog import logdefault as logger
 from vortex.tools.env import Environment
 from vortex.tools.net import StdFtp
+from vortex.utilities.structs import History
 
 istruedef  = re.compile('on|true|ok', re.IGNORECASE)
 isfalsedef = re.compile('off|false|ko', re.IGNORECASE)
@@ -79,13 +81,10 @@ class System(footprints.FootprintBase):
           * output - as a default value for any external spawning command (default: True).
         """
         logger.debug('Abstract System init %s', self.__class__)
-        if 'os' in kw:
-            self._osmod = kw['os']
-            del kw['os']
-        if 'sh' in kw:
-            self._shmod = kw['sh']
-            del kw['sh']
+        self.__dict__['_os'] = kw.pop('os', os)
+        self.__dict__['_sh'] = kw.pop('shutil', kw.pop('sh', shutil))
         self.__dict__['prompt'] = ''
+        self.__dict__['history'] = History(tag='shell')
         for flag in ( 'trace', ):
             self.__dict__[flag] = kw.pop(flag, False)
         for flag in ( 'output', ):
@@ -104,7 +103,7 @@ class System(footprints.FootprintBase):
         elif key in self._sh.__dict__:
             actualattr = self._sh.__dict__[key]
         else:
-            raise AttributeError('Method ' + key + ' not found')
+            raise AttributeError('Method or attribute ' + key + ' not found')
         if callable(actualattr):
             def osproxy(*args, **kw):
                 cmd = [key]
@@ -119,20 +118,13 @@ class System(footprints.FootprintBase):
         else:
             return actualattr
 
-    @property
-    def _os(self):
-        return self.__dict__.get('_osmod', os)
-
-    @property
-    def _sh(self):
-        return self.__dict__.get('_shmod', shutil)
-
     def stderr(self, args):
         """Write a formatted message to standard error."""
+        justnow, count = self.history.append(args)
         if self.trace:
             sys.stderr.write(
                 "+ [{0:s}] {1:s}\n".format(
-                    datetime.datetime.now().strftime('%Y/%m/%d-%H:%M:%S'),
+                    justnow.strftime('%Y/%m/%d-%H:%M:%S'),
                     ' '.join([ str(x) for x in args ])
                 )
             )
@@ -421,6 +413,15 @@ class OSExtended(System):
         self._cmpaftercp = kw.pop('cmpaftercp', True)
         super(OSExtended, self).__init__(*args, **kw)
 
+    def clear(self):
+        """Clear screen."""
+        self._os.system('clear')
+
+    @property
+    def cls(self):
+        """Property chortcut to clear screen."""
+        self.clear()
+
     def rawopts(self, cmdline=None, defaults=None, istrue=istruedef, isfalse=isfalsedef):
         """Parse a simple options command line as key=value."""
         opts = dict()
@@ -502,12 +503,12 @@ class OSExtended(System):
         Copy the ``source`` file to a safe ``destination``.
         The return value is produced by a raw compare of the two files.
         """
-        if type(source) == str:
+        if type(source) is types.StringType:
             source = io.open(source, 'rb')
             xsource = True
         else:
             xsource = False
-        if type(destination) == str:
+        if type(destination) is types.StringType:
             if self.filecocoon(destination):
                 if self.remove(destination):
                     destination = io.open(destination, 'wb')
@@ -535,7 +536,7 @@ class OSExtended(System):
         Hard link the ``source`` file to a safe ``destination`` if possible.
         Otherwise, let the standard copy do the job.
         """
-        if type(source) != str or type(destination) != str:
+        if type(source) is not types.StringType or type(destination) is not types.StringType:
             return self.hybridcp(source, destination)
         self.stderr(['smartcp', source, destination])
         if not self.path.exists(source):
@@ -571,7 +572,7 @@ class OSExtended(System):
         The return value is produced by a raw compare of the two files.
         """
         self.stderr(['cp', source, destination])
-        if type(source) != str or type(destination) != str:
+        if type(source) is not types.StringType or type(destination) is not types.StringType:
             return self.hybridcp(source, destination)
         if self.filecocoon(destination):
             if self.remove(destination):
@@ -622,7 +623,7 @@ class OSExtended(System):
     def rmsafe(self, pathlist, safedirs):
         """Recursive unlinks the specified `args` objects if safe."""
         ok = True
-        if type(pathlist) == str:
+        if type(pathlist) is types.StringType:
             pathlist = [ pathlist ]
         for pname in pathlist:
             for entry in filter(lambda x: self.safepath(x, safedirs), self.glob(pname)):

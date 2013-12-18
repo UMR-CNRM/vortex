@@ -38,7 +38,7 @@ def report_copy():
     """Return a copy of the table of reports."""
     return reportmap().copy()
 
-def report(tag='default'):
+def report(tag='default', weak=True):
     """Factory to retrieve a information report document, according to the ``tag`` provided."""
     rtab = report_map()
     if tag not in rtab:
@@ -53,6 +53,13 @@ class NullReport(object):
 
     def __init__(self, *args, **kw):
         self._blindlog = list()
+
+    def __len__(self):
+        return len(self._blindlog)
+
+    def items(self):
+        """Internal list of items recorded."""
+        return self._blindlog
 
     def clear(self):
         """Rewind internal raw list of log commands."""
@@ -205,6 +212,17 @@ class FootprintLog(object):
     def weak(self):
         """Boolean value, true if log built with weaked references (default)."""
         return self._weak
+
+    def __len__(self):
+        return len(self._log)
+
+    def __iter__(self):
+        for x in self._log:
+            yield x
+
+    def items(self):
+        """Internal list of items recorded."""
+        return self._log
 
     def clear(self):
         """Start a fresh new log history."""
@@ -541,6 +559,10 @@ class FactorizedReport(object):
 if __name__ == '__main__':
     fr = FactorizedReport(
         focus='classname',
+
+
+
+        
         ordering=(
             ('name', ('kind', 'date', 'geometry')),
             ('why', ('Missing value', 'Not Valid', 'Invalid'))

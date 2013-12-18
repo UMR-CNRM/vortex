@@ -7,6 +7,8 @@ Interface to SMS commands.
 
 __all__ = []
 
+from types import *
+
 from vortex.autolog import logdefault as logger
 from vortex import sessions
 
@@ -59,7 +61,7 @@ class SMSGateway(object):
     def child(self, command, options):
         """Miscellaneous smschild subcommand."""
         args = [ self.cmdpath(command) ]
-        if type(options) == list or type(options) == tuple:
+        if type(options) is ListType or type(options) is TupleType:
             args.extend(options)
         else:
             args.append(options)

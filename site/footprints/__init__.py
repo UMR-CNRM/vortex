@@ -11,6 +11,7 @@ __all__ = []
 
 import copy, re
 import inspect
+import types
 
 import logging
 logging.basicConfig(
@@ -60,43 +61,57 @@ class FootprintSetup(object):
             self.dumper = dump.Dumper()
         else:
             self.dumper = dumper
-        self.extended   = bool(extended)
+        self._extended  = bool(extended)
         self.docstring  = bool(docstring)
         self.fatal      = bool(fatal)
         self.report     = bool(report)
         self.nullreport = nullreport
         self.fastmode   = bool(fastmode)
         self.fastkeys   = tuple(fastkeys)
-        self.defaults   = dict()
         self.callback   = None
-        self.modtarget  = None
+        self.populset   = set()
+        self._defaults  = util.LowerCaseDict()
 
-    def popul(self, remotemodule, clear=False):
-        """Populate the ``remotemodule`` with references to active collectors and load methods."""
-        if inspect.ismodule(remotemodule):
-            self.modtarget = remotemodule
+    def popul(self, obj, clear=False):
+        """Populate the ``obj`` with references to active collectors and load methods."""
+        if inspect.ismodule(obj) or (isinstance(obj, object) and not inspect.isclass(obj)):
+            self.populset.add(obj)
             for k, v in collectorsmap().items():
-                if clear or not hasattr(self.modtarget, k):
-                    setattr(self.modtarget, k, v.load)
-                if clear or not hasattr(self.modtarget, k+'s'):
-                    setattr(self.modtarget, k+'s', v)
+                if clear or not hasattr(obj, k):
+                    setattr(obj, k, v.load)
+                if clear or not hasattr(obj, k+'s'):
+                    setattr(obj, k+'s', v)
         else:
-            logger.warning('Could not populate a non-module object: %s', remotemodule)
+            logger.error('Could not populate a non-module or non-instance object: %s', obj)
+            raise ValueError('Not a module nor an object instance: %s', obj)
 
-    def setfpenv(self, **kw):
-        """Extend the current defaults environnement for footprint resolution."""
-        self.defaults.update({ k.lower():v for k, v in kw.items() })
-        return self.defaults
 
-    def dumpfpenv(self):
+    def get_defaults(self):
+        """Property getter for footprints defaults."""
+        return self._defaults
+
+    def set_defaults(self, *args, **kw):
+        """Property setter for current defaults environnement of the footprint resolution."""
+        self._defaults = util.LowerCaseDict()
+        self._defaults.update(*args, **kw)
+
+    defaults = property(get_defaults, set_defaults)
+
+    def print_defaults(self, ljust=24):
         """Dump the actual values of the default environment."""
-        return [ '{0:s}="{1:s}"'.format(k, str(self.defaults[k])) for k in sorted(self.defaults.keys()) ]
+        for k in sorted(self._defaults.keys()):
+            print k.ljust(ljust), self._defaults[k]
 
-    def setfpext(self, switch=None):
-        """Commut to extended mode or not for footprint defaults. Return current status."""
-        if switch != None:
-            self.extended = bool(switch)
-        return self.extended
+    def get_extended(self):
+        """Property getter to ``extended`` switch."""
+        return self._extended
+
+    def set_extended(self, switch):
+        """Property setter to ``extended`` mode for footprint defaults."""
+        if switch is not None:
+            self._extended = bool(switch)
+
+    extended = property(get_extended, set_extended)
 
     def extras(self):
         if self.callback:
@@ -126,9 +141,9 @@ class Collector(util.Catalog):
         if self.tagreport is None:
             self.tagreport = 'footprint-' + self.entry
         self.logreport = reporting.report(self.tagreport)
-        if setup.modtarget is not None:
-            setattr(setup.modtarget, self.entry, self.load)
-            setattr(setup.modtarget, self.entry+'s', self)
+        for obj in setup.populset:
+            setattr(obj, self.entry, self.load)
+            setattr(obj, self.entry+'s', self)
 
     def newobsitem(self, item, info):
         """Register a new instance of some of the classes in the current collector."""
@@ -301,19 +316,23 @@ class FootprintProxy(object):
     """Access to alive footprint items."""
 
     def cat(self):
-        """Cat a list of all existing collectors."""
+        """Print a list of all existing collectors."""
         for k, v in sorted(collectorsmap().items()):
             print str(len(v)).rjust(4), (k+'s').ljust(16), v
 
     def catlist(self):
-        """Same as cat but as a list of tuples (len, name, collector)."""
+        """Return a list of tuples (len, name, collector) for all alive collectors."""
         return [ (len(v), k+'s', v) for k, v in sorted(collectorsmap().items()) ]
 
     def objects(self):
-        """Cat the list of all existing objects tracked by the collectors."""
+        """Print the list of all existing objects tracked by the collectors."""
         for k, c in sorted(collectorsmap().items()):
             objs = c.instances()
             print str(len(objs)).rjust(4), (k+'s').ljust(16), objs
+
+    def objectsmap(self):
+        """Return a dictionary of instances sorted by collectors entries."""
+        return { k+'s':c.instances() for k, c in collectorsmap().items() }
 
     def __getattr__(self, attr):
         """Gateway to collector (plural noun) or load method (singular)."""
@@ -359,6 +378,18 @@ class Footprint(object):
             fp['attr'][a]['remap'] = dict(fp['attr'][a].get('remap', dict()))
             fp['attr'][a]['values'] = set(fp['attr'][a].get('values', set()))
             fp['attr'][a]['outcast'] = set(fp['attr'][a].get('outcast', set()))
+            ktype = fp['attr'][a].get('type', str)
+            kargs = fp['attr'][a].get('args', dict())
+            for v in fp['attr'][a]['values']:
+                if not isinstance(v, ktype):
+                    fp['attr'][a]['values'].remove(v)
+                    try:
+                        v = ktype(v, **kargs)
+                        fp['attr'][a]['values'].add(v)
+                        logger.debug('Init Footprint value %s reclassed = %s', a, v)
+                    except Exception:
+                        logger.error('Bad init footprint value')
+                        raise
         self._fp = fp
 
     def __str__(self):
@@ -527,6 +558,13 @@ class Footprint(object):
             logger.debug(' > No more substitution for %s', k)
             return True
 
+    def in_values(self, item, values):
+        """Check that item is inside values or compare to one of these values."""
+        if item in values:
+            return True
+        else:
+            return bool([ x for x in values if x == item ])
+
     def resolve(self, desc, **kw):
         """Try to guess how the given description ``desc`` could possibly match the current footprint."""
 
@@ -592,7 +630,7 @@ class Footprint(object):
                         report.add(attribute=k, why=reporting.REPORT_WHY_RECLASS, args=(ktype.__name__, str(guess[k])))
                         diags[k] = True
                         guess[k] = None
-                if kdef['values'] and guess[k] not in kdef['values']:
+                if kdef['values'] and not self.in_values(guess[k], kdef['values']):
                     logger.debug(' > Attr %s value not in range = %s %s', k, guess[k], kdef['values'])
                     report.add(attribute=k, why=reporting.REPORT_WHY_OUTSIDE, args=guess[k])
                     diags[k] = True
@@ -725,7 +763,7 @@ class FootprintBaseMeta(type):
         fplocal  = d.get('_footprint', dict())
         abstract = d.setdefault('_abstract', False)
         bcfp = [ c.__dict__.get('_footprint', dict()) for c in b ]
-        if type(fplocal) == list:
+        if type(fplocal) is types.ListType:
             bcfp.extend(fplocal)
         else:
             bcfp.append(fplocal)

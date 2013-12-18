@@ -38,7 +38,6 @@ class UtBackgroundErrStd(TestCase):
 
 
     def test_e1(self):
-        #sessions.current().debug()
         rl = toolbox.rload(
             self.attrset,
             geometry=self.std,
@@ -102,8 +101,6 @@ class UtBackgroundErrStd(TestCase):
         )
 
         for rh in rl:
-            if not rh.complete:
-                print cr.track.toprettyxml(indent='    ')
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production_dsbscr.out')
 

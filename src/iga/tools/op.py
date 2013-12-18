@@ -48,7 +48,7 @@ def setup(**kw):
     # Set toolbox verbosity
     vortex.toolbox.verbose = 2
     # Allow extended footprints resolution
-    vortex.toolbox.setfpext(True)
+    vortex.toolbox.extended = True
 
     #some usefull import for footprint resolution
     import olive.data.providers
