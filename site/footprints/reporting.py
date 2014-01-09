@@ -99,7 +99,7 @@ class FootprintLogEntry(object):
             return self._node
 
     def add(self, item):
-        """Push the specified item at the end of the internal log list."""
+        """Push the specified ``item`` at the end of the internal log list."""
         self._items.append(item)
 
 class FootprintLogCollector(FootprintLogEntry):
@@ -123,18 +123,18 @@ class FootprintLogCollector(FootprintLogEntry):
             kid.feed_xml(xmlnode)
 
     def as_dict(self):
-        """Convenient method for retrieving an handy dictionary."""
+        """Convenient method for retrieving some handy dictionary."""
         dico = dict()
         for item in self._items:
             dico[item.name] = item.as_dict()
         return dico
 
     def as_tree(self, **kw):
-        """Feed a FactorizedReport according to the order specified."""
+        """Feed a :class:`FactorizedReport` according to the order specified."""
         return FactorizedReport(**kw)
 
     def as_flat(self, **kw):
-        """Feed a FactorizedReport according to the order specified."""
+        """Feed a :class:`FlatReport` according to the order specified."""
         fr = FlatReport(**kw)
         for kid in self:
             for item in kid:
@@ -309,7 +309,7 @@ class FootprintLog(object):
         return self._xml
 
     def as_dict(self, force=False, stamp=True):
-        """Convenient method for retrieving an handy dictionary."""
+        """Convenient method for retrieving some handy dictionary."""
         if not self._dict or self._touch or force:
             self._dict = dict()
             for i, item in enumerate(self._log):
@@ -559,10 +559,6 @@ class FactorizedReport(object):
 if __name__ == '__main__':
     fr = FactorizedReport(
         focus='classname',
-
-
-
-        
         ordering=(
             ('name', ('kind', 'date', 'geometry')),
             ('why', ('Missing value', 'Not Valid', 'Invalid'))

@@ -139,6 +139,7 @@ date = footprints.Footprint( info = 'Abstract date', attr = dict( date = a_date 
 #: Usual definition of the ``month`` attribute.
 a_month = dict(
     type = Month,
+    args = dict(year=0),
     optional = False,
     values = range(1, 13)
 )

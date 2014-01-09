@@ -4,8 +4,9 @@
 import os, logging
 logging.basicConfig(level=logging.ERROR)
 
+from unittest import TestCase, main
+
 import vortex
-from unittest import TestCase, TestLoader, TextTestRunner
 from common.data.modelstates import Analysis
 from vortex.data.geometries import SpectralGeometry
 from vortex.tools.env import Environment
@@ -69,12 +70,7 @@ class UtEnv(TestCase):
 
 
 if __name__ == '__main__':
-    action = TestLoader().loadTestsFromTestCase
-    tests = [ UtEnv ]
-    suites = [action(elmt) for elmt in tests]
-    for suite in suites:
-        TextTestRunner(verbosity=1).run(suite)
+    main(verbosity=2)
     vortex.exit()
 
-def get_test_class():
-    return [ UtEnv ]
+

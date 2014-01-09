@@ -38,7 +38,7 @@ class ShellEncoder(json.JSONEncoder):
     """Encoder for :mod:`json` dumps method."""
 
     def default(self, obj):
-        """Overwrite the default encoding if the current object has a ``puredict`` method."""
+        """Overwrite the default encoding if the current object has a ``shellexport`` method."""
         if hasattr(obj, 'shellexport'):
             return obj.shellexport()
         elif hasattr(obj, '__dict__'):

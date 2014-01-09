@@ -197,7 +197,7 @@ print t.line
 
 x = tb.component(engine='parallel')
 
-print t.prompt, x.puredict()
+print t.prompt, x.as_dict()
 
 x.run(arpege, mpiopts = dict(nn=1, nnp=4))
 

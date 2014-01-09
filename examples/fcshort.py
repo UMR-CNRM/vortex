@@ -96,7 +96,7 @@ toolbox.output(
 print t.line
 
 x = toolbox.component(engine='parallel')
-print t.prompt, x.puredict()
+print t.prompt, x.as_dict()
 
 myenv.update(
     F_PROGINF="DETAIL",

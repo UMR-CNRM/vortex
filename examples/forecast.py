@@ -138,7 +138,7 @@ print t.line
 arpege = arpege.pop()
 
 x = components.load(engine='launch', interpreter=arpege.resource.language)
-print t.prompt, x.puredict()
+print t.prompt, x.as_dict()
 
 x.run(arpege)
 

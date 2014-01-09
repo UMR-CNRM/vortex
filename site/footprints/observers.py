@@ -5,7 +5,7 @@
 Observing systems to be used in footprints package.
 
 Using the factory :func:`getbyname` should provide a convenient way to register
-to an undetermined number of items hold by :class:`ObserverSet` objects.
+to an undetermined number of items hold by :class:`ObserverBoard` objects.
 """
 
 #: No automatic export
@@ -21,7 +21,7 @@ def getbyname(tag=None, _obstable=dict()):
     if tag is None:
         return _obstable.keys()
     if tag not in _obstable:
-        _obstable[tag] = ObserverSet(tag=tag)
+        _obstable[tag] = ObserverBoard(tag=tag)
     return _obstable[tag]
 
 
@@ -44,9 +44,9 @@ class Observer(object):
         logger.info('Notified %s upd item %s info %s', self, item, info)
 
 
-class ObserverSet(object):
+class ObserverBoard(object):
     """
-    A ObserverSet provides an indirection for observing pattern.
+    A ObserverBoard provides an indirection for observing pattern.
     It holds two lists: the one of objects that are observed and
     an other list of observers, listening to any creation, deletion
     or update of the observed objects.

@@ -42,7 +42,7 @@ class Forecast(IFSParallel):
                 self.system.header('FullPos InLine '  + str(self.inline))
                 namc.rewrite(namrh.container)
             except Exception:
-                logger.critical('Could not fix NAMCT0 in %s', namrh.container.localpath())
+                logger.critical('Could not fix NAMCT0 in %s', namrh.container.actualpath())
                 raise
 
 

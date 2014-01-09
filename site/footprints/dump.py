@@ -110,8 +110,8 @@ class Dumper():
         else:
             result = "%s::%s <<" % (type(obj).__name__, obj.__class__)
             if hasattr(obj, '__dict__'):
-                if hasattr(obj, 'puredict'):
-                    exploredict = obj.puredict()
+                if hasattr(obj, 'as_dict'):
+                    exploredict = obj.as_dict()
                 else:
                     exploredict = obj.__dict__
                 result = "%s%s__dict__ :: %s" % (

@@ -11,24 +11,63 @@ import footprints
 
 from vortex.autolog import logdefault as logger
 
-CONTAINER_INCORELIMIT=1048576
-CONTAINER_MAXBLOCKSIZE=4194304
+CONTAINER_INCORELIMIT = 1048576 * 8
+CONTAINER_MAXREADSIZE = 1048576 * 64
+
+class DataSizeTooBig(Exception):
+    pass
 
 class Container(footprints.FootprintBase):
 
     _abstract  = True
     _collector = ('container',)
+    _footprint = dict(
+        info = 'Abstract Virtual Container',
+        attr = dict(
+            maxreadsize = dict(
+                type = int,
+                optional = True,
+                default = CONTAINER_MAXREADSIZE
+            ),
+            mode = dict(
+                optional = True,
+                default = 'rb',
+                values = ['a', 'ab', 'a+b', 'ab+', 'r', 'rb', 'rb+', 'r+b', 'w', 'wb', 'w+b', 'wb+'],
+                remap = {'a+b':'ab+', 'r+b':'rb+', 'w+b':'wb+'}
+            )
+        )
+    )
 
     def __init__(self, *args, **kw):
         logger.debug('Container %s init', self.__class__)
+        self._iod = None
+        self._iomode = None
         self._filled = False
-        self._totalsize = None
         super(Container, self).__init__(*args, **kw)
 
+    def __getattr__(self, key):
+        """Gateway to undefined method or attributes if present in internal io descriptor."""
+        iod = self.iodesc()
+        if iod:
+            return getattr(iod, key)
+        else:
+            raise AttributeError('Could not get an io descriptor')
 
     @property
     def realkind(self):
         return 'container'
+
+    def localpath(self):
+        """Abstract method to be overwritten."""
+        raise NotImplementedError
+
+    def iodesc(self, mode=None):
+        """Returns the file object descriptor."""
+        raise NotImplementedError
+
+    def iotarget(self):
+        """Abstract method to be overwritten."""
+        raise NotImplementedError
 
     @property
     def filled(self):
@@ -43,23 +82,26 @@ class Container(footprints.FootprintBase):
         if getrc is not None and getrc:
             self._filled = True
 
-    def localpath(self):
-        """Abstract method to be overwritten."""
-        pass
-
     @property
     def totalsize(self):
         """Returns the complete size of the container."""
-        if self._totalsize is None:
-            self.rewind()
-        return self._totalsize
-
-    def rewind(self):
-        """Performs the rewind of the current io descriptor of the container."""
         iod = self.iodesc()
-        iod.seek(0, 2)
-        self._totalsize = iod.tell()
-        iod.seek(0)
+        if iod:
+            pos = self._iod.tell()
+            self._iod.seek(0, 2)
+            ts = iod.tell()
+            self._iod.seek(pos)
+            return ts
+        else:
+            return None
+
+    def rewind(self, mode=None):
+        """Performs the rewind of the current io descriptor of the container."""
+        self.seek(0)
+
+    def endoc(self):
+        """Go to the end of the container."""
+        self.seek(0, 2)
 
     def dataread(self):
         """
@@ -68,31 +110,58 @@ class Container(footprints.FootprintBase):
         """
         iod = self.iodesc()
         line = iod.readline()
-        return ( line, bool(iod.tell() == self._totalsize) )
+        return ( line, bool(iod.tell() == self.totalsize) )
 
-    def readall(self):
+    def read(self, n=-1):
         """Read in one jump all the data as long as the data is not too big."""
         iod = self.iodesc()
-        if self.totalsize < CONTAINER_MAXBLOCKSIZE:
-            return iod.read()
+        if iod:
+            if self.totalsize < self.maxreadsize or (n > 0 and n < self.maxreadsize):
+                return iod.read(n)
+            else:
+                raise DataSizeTooBig('Input is more than {0:d} bytes.'.format(self.maxreadsize))
+        else:
+            return None
 
     def readlines(self):
-        """Read in one jump all the data as a sequens of lines as long as the data is not too big."""
+        """Read in one jump all the data as a sequence of lines as long as the data is not too big."""
         iod = self.iodesc()
-        if self.totalsize < CONTAINER_MAXBLOCKSIZE:
-            return iod.readlines()
-
-    def iodesc(self):
-        """Returns the file object descriptor."""
-        raise NotImplementedError
+        if iod:
+            if self.totalsize < self.maxreadsize:
+                self.rewind()
+                return iod.readlines()
+            else:
+                raise DataSizeTooBig('Input is more than {0:d} bytes.'.format(self.maxreadsize))
+        else:
+            return None
 
     def close(self):
         """Close the logical io descriptor."""
-        raise NotImplementedError
+        if self._iod:
+            self._iod.close()
+            self._iod = None
+            self._iomode = None
 
-    def write(self, data):
-        """Write the data in container."""
-        raise NotImplementedError
+    @property
+    def actualmode(self):
+        return self._iomode or self.mode
+
+    def wmode(self, actualmode):
+        """Upgrade the ``actualmode`` to a write-compatible mode."""
+        wm = re.sub('r', 'w', actualmode)
+        wm = wm.replace('+', '')
+        return wm + '+'
+
+    def write(self, data, mode=None):
+        """Write the data content in container."""
+        if mode is None:
+            mode = self.wmode(self.mode)
+        iod = self.iodesc(mode)
+        iod.write(data)
+        self._filled = True
+
+    def __del__(self):
+        self.close()
 
 
 class Virtual(Container):
@@ -101,6 +170,9 @@ class Virtual(Container):
     _footprint = dict(
         info = 'Abstract Virtual Container',
         attr = dict(
+            mode = dict(
+                default = 'wb+'
+            ),
             prefix = dict(
                 optional = True,
                 default = 'vortex.tmp.'
@@ -108,23 +180,19 @@ class Virtual(Container):
         )
     )
 
-    def iodesc(self):
-        """Returns the file object descriptor."""
-        return self._tmpfile
-
-    def close(self):
-        """Close the logical io descriptor."""
-        iod = self.iodesc()
-        iod.close()
-
     def cat(self):
         """Perform a trivial cat of the virtual container."""
         if self._filled:
-            pos = self._tmpfile.tell()
-            self._tmpfile.seek(0)
-            for xchunk in self._tmpfile:
+            iod = self.iodesc()
+            pos = iod.tell()
+            iod.seek(0)
+            for xchunk in iod:
                 print xchunk.rstrip('\n')
-            self._tmpfile.seek(pos)
+            iod.seek(pos)
+
+    def iotarget(self):
+        """Virtual container's io target is an io descriptor."""
+        return self.iodesc()
 
 
 class InCore(Virtual):
@@ -146,33 +214,106 @@ class InCore(Virtual):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Virtual container init %s', self)
-        self._tmpfile = None
+        logger.debug('InCore container init %s', self)
+        self._tempo = False
         super(InCore, self).__init__(*args, incore=True, **kw)
 
     @property
     def realkind(self):
         return 'incore'
 
-    def _str_more(self):
-        """Additional information to print representation."""
-        if self._tmpfile:
-            if self._tmpfile._rolled:
-                actualfile = self._tmpfile.name
+    def actualpath(self):
+        """Returns path information, if any, of the spooled object."""
+        if self._iod:
+            if self._tempo or self._iod._rolled:
+                actualfile = self._iod.name
             else:
                 actualfile = 'MemoryResident'
         else:
             actualfile = 'NotSpooled'
-        return 'incorelimit={0:d} tmpfile={1:s}'.format(self.incorelimit, actualfile)
+        return actualfile
+
+    def _str_more(self):
+        """Additional information to print representation."""
+        return 'incorelimit={0:d} tmpfile="{1:s}"'.format(self.incorelimit, self.actualpath())
+
+    def iodesc(self, mode=None):
+        """Returns an active (opened) spooled file descriptor in binary read mode by default."""
+        if mode is None:
+            mode = self.actualmode
+        if not self._iod or self._iod.closed or mode != self.actualmode:
+            self.close()
+            self._iomode = mode
+            if self._tempo:
+                self._iod = tempfile.NamedTemporaryFile(
+                    mode    = self._iomode,
+                    prefix  = self.prefix,
+                    dir     = os.getcwd(),
+                    delete  = True
+                )
+            else:
+                self._iod = tempfile.SpooledTemporaryFile(
+                    mode     = self._iomode,
+                    prefix   = self.prefix,
+                    dir      = os.getcwd(),
+                    max_size = self.incorelimit
+                )
+
+        return self._iod
+
+    @property
+    def rolled(self):
+        iod = self.iodesc()
+        return iod._rolled
+
+    @property
+    def temporized(self):
+        return self._tempo
+
+    def temporize(self):
+        """Migrate any memory data to a :class:`NamedTemporaryFile`."""
+        if not self.temporized:
+            iomem = self.iodesc()
+            self.rewind()
+            self._tempo = True
+            self._iod = tempfile.NamedTemporaryFile(
+                mode    = self._iomode,
+                prefix  = self.prefix,
+                dir     = os.getcwd(),
+                delete  = True
+            )
+            for data in iomem:
+                self._iod.write(data)
+            iomem.close()
+
+    def unroll(self):
+        """Replace rolled data to memory (when possible)."""
+        if ( self.temporized or self.rolled ) and self.totalsize < self.incorelimit:
+            iotmp = self.iodesc()
+            self.rewind()
+            self._tempo = False
+            self._iod = tempfile.SpooledTemporaryFile(
+                mode     = self._iomode,
+                prefix   = self.prefix,
+                dir      = os.getcwd(),
+                max_size = self.incorelimit
+            )
+            for data in iotmp:
+                self._iod.write(data)
+            iotmp.close()
 
     def localpath(self):
         """
-        Returns the actual name of the spooled temporary file object
-        which is created if not yet defined.
+        Roll the current memory file in a :class:`NamedTemporaryFile`
+        and returns associated file name.
         """
-        if not self._tmpfile:
-            self._tmpfile = tempfile.SpooledTemporaryFile(prefix=self.prefix, max_size=self.incorelimit)
-        return self._tmpfile
+        self.temporize()
+        iod = self.iodesc()
+        try:
+            return iod.name
+        except Exception:
+            logger.warning('Could not get local temporary rolled file pathname %s', self)
+            raise
 
 
 class MayFly(Virtual):
@@ -193,35 +334,51 @@ class MayFly(Virtual):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Virtual container init %s', self)
+        logger.debug('MayFly container init %s', self)
         super(MayFly, self).__init__(*args, mayfly=True, **kw)
-        self._tmpfile = None
 
     @property
     def realkind(self):
         return 'mayfly'
 
+    def actualpath(self):
+        """Returns path information, if any, of the spooled object."""
+        if self._iod:
+            return self._iod.name
+        else:
+            return 'NotDefined'
+
     def _str_more(self):
         """Additional information to internal representation."""
-        if self._tmpfile:
-            actualfile = "'" + self._tmpfile.name + "'"
-        else:
-            actualfile = 'NotDefined'
-        return 'delete={0:s} tmpfile={1:s}'.format(str(self.delete), actualfile)
+
+        return 'delete={0:s} tmpfile="{1:s}"'.format(str(self.delete), self.actualpath())
+
+    def iodesc(self, mode=None):
+        """Returns an active (opened) temporary file descriptor in binary read mode by default."""
+        if mode is None:
+            mode = self.actualmode
+        if not self._iod or self._iod.closed or mode != self.actualmode:
+            self.close()
+            self._iomode = mode
+            self._iod = tempfile.NamedTemporaryFile(
+                mode    = self._iomode,
+                prefix  = self.prefix,
+                dir     = os.getcwd(),
+                delete  = self.delete
+            )
+        return self._iod
 
     def localpath(self):
         """
         Returns the actual name of the temporary file object
         which is created if not yet defined.
         """
-        if not self._tmpfile:
-            self._tmpfile = tempfile.NamedTemporaryFile(mode='w+b', prefix=self.prefix, delete=self.delete)
-        return self._tmpfile
-
-    def write(self, data):
-        """Rewind and dump the data content in container."""
-        self.rewind()
-        self._tmpfile.write(data)
+        iod = self.iodesc()
+        try:
+            return iod.name
+        except Exception:
+            logger.warning('Could not get local temporary file pathname %s', self)
+            raise
 
 
 class File(Container):
@@ -235,8 +392,8 @@ class File(Container):
                 alias = ('filepath', 'filename', 'filedir', 'local')
             ),
             cwdtied = dict(
-                optional = True,
                 type = bool,
+                optional = True,
                 default = False,
             )
         )
@@ -245,7 +402,6 @@ class File(Container):
     def __init__(self, *args, **kw):
         logger.debug('File container init %s', self)
         super(File, self).__init__(*args, **kw)
-        self._iod = None
         if self.cwdtied:
             self._actualpath = os.path.realpath(self.file)
         else:
@@ -255,17 +411,23 @@ class File(Container):
     def realkind(self):
         return 'file'
 
+    def actualpath(self):
+        """Returns the actual pathname of the file object."""
+        return self._actualpath
+
     def _str_more(self):
         """Additional information to print representation."""
         return 'path=\'{0:s}\''.format(self._actualpath)
 
     def localpath(self):
         """Returns the actual name of the file object."""
-        return self._actualpath
+        return self.actualpath()
 
-    def iodesc(self, mode='rb'):
+    def iodesc(self, mode=None):
         """Returns an active (opened) file descriptor in binary read mode by default."""
-        if not self._iod or mode != self._iomode:
+        if mode is None:
+            mode = self.actualmode
+        if not self._iod or self._iod.closed or mode != self.actualmode:
             self.close()
             if not self.cwdtied:
                 self._actualpath = os.path.realpath(self.file)
@@ -273,15 +435,6 @@ class File(Container):
             self._iod = io.open(self._actualpath, self._iomode)
         return self._iod
 
-    def close(self):
-        """Close the logical io descriptor."""
-        if self._iod:
-            self._iod.close()
-            self._iod = None
-
-    def write(self, data):
-        """Rewind and dump the data content in container."""
-        self.close()
-        with io.open(self.localpath(), 'wb') as fd:
-            fd.write(data)
-            fd.close()
+    def iotarget(self):
+        """File container's io target is a plain pathname."""
+        return self.localpath()

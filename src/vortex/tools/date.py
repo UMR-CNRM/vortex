@@ -641,14 +641,17 @@ class Time(object):
 class Month(object):
 
     def __init__(self, *args, **kw):
-        if kw:
+        delta = kw.pop('delta', 0)
+        try:
             args = (datetime.datetime(**kw),)
+        except Exception:
+            pass
         if not args:
             raise ValueError("No initial value provided for Month")
         args = list(args)
         top = args[0]
         self._month = None
-        self._year = today().year
+        self._year = max(0, int(kw.pop('year', today().year)))
         if isinstance(top, datetime.datetime) or isinstance(top, Month):
             self._month, self._year = top.month, top.year
         elif isinstance(top, int) and top > 0 and top < 13:
@@ -656,26 +659,25 @@ class Month(object):
             if len(args) == 2:
                 self._year = int(args[1])
         else:
-            mmod = False
             if isinstance(top, str):
                 mmod = re.search(':(next|prev)$', top)
                 if mmod:
                     args[0] = re.sub(':(?:next|prev)$', '', top)
                     if mmod.group(1) == 'next':
-                        mmod = 1
+                        delta = 1
                     else:
-                        mmod = -1
+                        delta = -1
             if len(args) == 2:
-                mmod = args.pop()
+                delta = args.pop()
             try:
                 tmpdate = Date(*args)
             except (ValueError, TypeError):
                 raise ValueError('Could not create a Month from values provided %s', str(args))
             else:
                 self._month, self._year = tmpdate.month, tmpdate.year
-                if mmod:
-                    mtmp = self + mmod
-                    self._month, self._year = mtmp.month, mtmp.year
+        if delta:
+            mtmp = self + delta
+            self._month, self._year = mtmp.month, mtmp.year
 
     @property
     def year(self):
@@ -734,7 +736,8 @@ class Month(object):
                     year -= 1
                     month = 12
                 delta -= 1
-            return Month(Date(year, month, 1))
+            if self._year == 0: year = 0
+            return Month(month, year)
         elif not isinstance(delta, datetime.timedelta):
             delta = Period(delta)
         return Month(Date(self._year, self._month, 14) + delta)
@@ -763,10 +766,15 @@ class Month(object):
         try:
             if isinstance(other, int) or ( isinstance(other, str) and len(other.lstrip('0')) < 3 ):
                 rc = cmp(self.month, Month(int(other), self.year).month)
-            elif isinstance(other, tuple) or isinstance(other, list):
-                rc = cmp(self.fmtym, Month(*other).fmtym)
             else:
-                rc = cmp(self.fmtym, Month(other).fmtym)
+                if isinstance(other, tuple) or isinstance(other, list):
+                    mtest = Month(*other)
+                else:
+                    mtest = Month(other)
+                if self.year * mtest.year == 0:
+                    rc = cmp(self.month, mtest.month)
+                else:
+                    rc = cmp(self.fmtym, mtest.fmtym)
         except:
             rc = 1
         finally:

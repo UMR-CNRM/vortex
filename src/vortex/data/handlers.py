@@ -16,6 +16,12 @@ from vortex.layout import dataflow
 
 from vortex.data import stores
 
+OBSERVER_TAG = 'Resources-Handlers'
+
+def observer_board(obsname=None):
+    if obsname is None:
+        obsname = OBSERVER_TAG
+    return footprints.observers.getbyname(obsname)
 
 class Handler(object):
     """
@@ -36,11 +42,11 @@ class Handler(object):
         self.provider = rd.pop('provider', None)
         self.container = rd.pop('container', None)
         self._contents = None
+        self._observer = observer_board(kw.pop('observer', None))
         self._options = rd.copy()
         self._options.update(kw)
         self._history = [(Date.now(), self.__class__.__name__, 'init', 1)]
         self._stage = [ 'load' ]
-        self._observer = footprints.observers.getbyname('Resources-Handlers')
         self._observer.notify_new(self, dict(stage = 'load'))
         logger.debug('New resource handler %s', self.__dict__)
 
@@ -55,6 +61,19 @@ class Handler(object):
 
     def __str__(self):
         return str(self.__dict__)
+
+    @property
+    def observer(self):
+        """Footprint observer devoted to ressource handlers tracking."""
+        return self._observer
+
+    def observers(self):
+        """Remote objects observing the current ressource handler... and my be some others."""
+        return self._observer.observers()
+
+    def observed(self):
+        """Other objects observed by the observers of the current ressource handler."""
+        return [ x for x in self._observer.observed() if x is not self ]
 
     @property
     def complete(self):
@@ -129,7 +148,7 @@ class Handler(object):
                     '{0}{0}Attributes : {4:s}'
                 )).format(
                     tab,
-                    subobj.capitalize(), obj, obj.realkind, obj.puredict()
+                    subobj.capitalize(), obj, obj.realkind, obj.as_dict()
                 )
             else:
                 thisdoc = '{0}{1:s} undefined'.format(tab, subobj.capitalize())
@@ -177,7 +196,7 @@ class Handler(object):
                 logger.debug('Get resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
-                rst = store.get(uridata, self.container.localpath(), self.options(extras))
+                rst = store.get(uridata, self.container.iotarget(), self.options(extras))
                 self.container.updfill(rst)
                 self._history.append((Date.now(), store.fullname(), 'get', rst))
                 if rst:
@@ -201,7 +220,7 @@ class Handler(object):
                 logger.debug('Put resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
-                rst = store.put(self.container.localpath(), uridata, self.options(extras))
+                rst = store.put(self.container.iotarget(), uridata, self.options(extras))
                 self._history.append((Date.now(), store.fullname(), 'put', rst))
                 self.updstage('put')
             else:

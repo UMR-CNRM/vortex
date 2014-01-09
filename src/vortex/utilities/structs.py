@@ -122,7 +122,7 @@ class Tree(object):
 class History(object):
     """Multi-purpose history like object."""
 
-    def __init__(self, tag='void', status=False, histsize=512):
+    def __init__(self, tag='void', status=False, histsize=1024):
         self._tag = tag
         self._history = collections.deque(maxlen=histsize)
         self._status = status
@@ -146,6 +146,14 @@ class History(object):
             self._history = collections.deque(self._history, maxlen=int(histsize))
         return self._history.maxlen
 
+    def nice(self, item):
+        """Try to build some nice string of the item."""
+        if type(item) is list or type(item) is tuple:
+            niceitem = ' '.join(item)
+        else:
+            niceitem = item
+        return niceitem
+
     def __len__(self):
         return len(self._history)
 
@@ -158,8 +166,11 @@ class History(object):
     def __delitem__(self, key, value):
         logger.warning('Could not delete a value of a history item.')
 
+    def grep(self, key):
+        return [ (count, stamp, item) for count, stamp, item in self._history if key in self.nice(item) ]
+
     def __contains__(self, key):
-        return key in [ item for stamp, item in self._history ]
+        return bool(self.grep(key))
 
     def append(self, item):
         stamp = datetime.now()
@@ -174,7 +185,7 @@ class History(object):
 
     def show(self, start=1, end=None):
         for c, t, i in self.get(start, end):
-            print str(c).rjust(4), ':', i
+            print '[', str(c).rjust(4), '] :', self.nice(i)
 
     @property
     def last(self):

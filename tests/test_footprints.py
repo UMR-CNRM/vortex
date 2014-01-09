@@ -829,7 +829,7 @@ class utFootprintSetup(TestCase):
         self.assertIsInstance(setup.fastmode, bool)
         self.assertIsInstance(setup.fastkeys, tuple)
         self.assertIsInstance(setup.defaults, dict)
-        self.assertIsInstance(setup.populset, set)
+        self.assertIsInstance(setup.proxies, set)
         self.assertIs(setup.callback, None)
 
         setup.defaults.update(hello='foo')
@@ -861,10 +861,10 @@ class utFootprintSetup(TestCase):
             del setup.extended
 
         with self.assertRaises(ValueError):
-            setup.popul(Foo)
+            setup.add_proxy(Foo)
 
         foo = Foo()
-        setup.popul(foo)
+        setup.add_proxy(foo)
         self.assertTrue(hasattr(foo, 'garbage'))
         self.assertTrue(hasattr(foo, 'garbages'))
 
@@ -1547,7 +1547,7 @@ class utFootprintBase(TestCase):
         self.assertIsInstance(ftm._instfp, Footprint)
         self.assertIsNot(FootprintTestMeta._footprint._fp, ftm._instfp)
         self.assertListEqual(ftm.attributes(), list())
-        self.assertDictEqual(ftm.puredict(), dict())
+        self.assertDictEqual(ftm.as_dict(), dict())
         self.assertDictEqual(ftm.shellexport(), dict())
         self.assertEqual(ftm.shortname(), 'FootprintTestMeta')
         self.assertEqual(ftm.info, 'Not documented')
@@ -1579,14 +1579,14 @@ class utFootprintBase(TestCase):
         fp1 = FootprintTestOne(stuff='hip', someint=7)
         self.assertIsInstance(fp1, FootprintTestOne)
         self.assertListEqual(fp1.attributes(), ['somestr', 'someint', 'kind'])
-        self.assertDictEqual(fp1.puredict(), dict(
+        self.assertDictEqual(fp1.as_dict(), dict(
             kind = 'hip',
             someint = 7,
             somestr = 'this',
         ))
 
         fp1 = FootprintTestOne(stuff='foo', someint='7')
-        self.assertDictEqual(fp1.puredict(), dict(
+        self.assertDictEqual(fp1.as_dict(), dict(
             kind = 'hop',
             someint = 7,
             somestr = 'this',
@@ -1594,13 +1594,13 @@ class utFootprintBase(TestCase):
 
         with self.assertRaises(AttributeError):
             fp1 = FootprintTestOne(stuff='foo', someint='7', checked=True)
-            self.assertDictEqual(fp1.puredict(), dict(
+            self.assertDictEqual(fp1.as_dict(), dict(
                 stuff = 'foo',
                 someint = '7',
             ))
 
         fp1 = FootprintTestOne(kind='foo', someint='7', checked=True)
-        self.assertDictEqual(fp1.puredict(), dict(
+        self.assertDictEqual(fp1.as_dict(), dict(
             kind = 'foo',
             someint = '7',
         ))
@@ -1630,7 +1630,7 @@ class utFootprintBase(TestCase):
         self.assertIsInstance(fp2, FootprintTestTwo)
         self.assertListEqual(fp2.attributes(), ['somestr', 'someint', 'kind', 'somefoo'])
         self.assertEqual(fp2.info, 'Another test class')
-        self.assertDictEqual(fp2.puredict(), dict(
+        self.assertDictEqual(fp2.as_dict(), dict(
             kind = 'hip',
             someint = 5,
             somestr = 'this',

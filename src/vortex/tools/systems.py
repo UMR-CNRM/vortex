@@ -120,11 +120,11 @@ class System(footprints.FootprintBase):
 
     def stderr(self, args):
         """Write a formatted message to standard error."""
-        justnow, count = self.history.append(args)
+        count, justnow,  = self.history.append(args)
         if self.trace:
             sys.stderr.write(
-                "+ [{0:s}] {1:s}\n".format(
-                    justnow.strftime('%Y/%m/%d-%H:%M:%S'),
+                "+ [{0:s}][{1:d}] {2:s}\n".format(
+                    justnow.strftime('%Y/%m/%d-%H:%M:%S'), count,
                     ' '.join([ str(x) for x in args ])
                 )
             )

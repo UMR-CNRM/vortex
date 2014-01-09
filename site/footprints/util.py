@@ -299,16 +299,24 @@ class LowerCaseDict(dict):
     """A dictionary with only lower case keys."""
 
     def __getitem__(self, key):
-        dict.__setitem__(self, key.lower())
+        return dict.__getitem__(self, key.lower())
 
     def __setitem__(self, key, value):
         dict.__setitem__(self, key.lower(), value)
 
     def __delitem__(self, key):
-        dict.__setitem__(self, key.lower())
+        dict.__delitem__(self, key.lower())
 
     def __contains__(self, key):
         return dict.__contains__(self, key.lower())
+
+    def __call__(self, **kw):
+        self.update(**kw)
+
+    def show(self, ljust=24):
+        """Print the actual values of the dictionary."""
+        for k in sorted(self.keys()):
+            print ' +', k.ljust(ljust), '=', self.get(k)
 
     def update(self, *args, **kw):
         args = list(args)

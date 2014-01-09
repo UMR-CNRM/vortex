@@ -157,7 +157,7 @@ print t.line
 
 x = vortex.proxy.component(kind='forecast', engine='parallel', fcterm=1)
 
-print t.prompt, 'COMPONENT', x.puredict()
+print t.prompt, 'COMPONENT', x.as_dict()
 
 e.VORTEX_DEBUG_ENV = 'ok'
 

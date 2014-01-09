@@ -13,21 +13,21 @@ print t.line
 g = t.glove
 
 print t.prompt, 'Glove =', g
-print t.prompt, 'dict =', g.puredict()
+print t.prompt, 'dict =', g.as_dict()
 
 print t.line
 
 g = vortex.sessions.glove(user='mxpt001', tag='test')
 
 print t.prompt, 'Glove =', g
-print t.prompt, 'dict =', g.puredict()
+print t.prompt, 'dict =', g.as_dict()
 
 print t.line
 
 g = vortex.sessions.glove(user='mxpt001', kind='oper', tag='default')
 
 print t.prompt, 'Glove =', g
-print t.prompt, 'dict =', g.puredict()
+print t.prompt, 'dict =', g.as_dict()
 
 print t.line
 

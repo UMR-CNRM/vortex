@@ -121,7 +121,7 @@ class MpiTool(footprints.FootprintBase):
             namc = namrh.contents
             namw = False
             if 'NBPROC' in namc.macros():
-                logger.info('Setup NBPROC=%s in %s', nbproc, namrh.container.localpath())
+                logger.info('Setup NBPROC=%s in %s', nbproc, namrh.container.actualpath())
                 namc.setmacro('NBPROC', nbproc)
                 namc.setmacro('NCPROC', nbproc)
                 namc.setmacro('NDPROC', 1)
@@ -130,7 +130,7 @@ class MpiTool(footprints.FootprintBase):
                 np1 = namc['NAMPAR1']
                 for nstr in [ x for x in ('NSTRIN', 'NSTROUT') if x in np1 ]:
                     if np1[nstr] > nbproc:
-                        logger.info('Setup %s=%s in NAMPAR1 %s', nstr, nbproc, namrh.container.localpath())
+                        logger.info('Setup %s=%s in NAMPAR1 %s', nstr, nbproc, namrh.container.actualpath())
                         np1[nstr] = nbproc
                         namw = True
             if namw:

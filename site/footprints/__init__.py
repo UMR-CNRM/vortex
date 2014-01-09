@@ -54,6 +54,7 @@ class FootprintSetup(object):
 
     def __init__(self,
         docstring=False, fatal=True, fastmode=False, fastkeys=('kind',),
+        callback=None, defaults=None, proxies=None,
         extended=False, dumper=None, report=True, nullreport=reporting.NullReport()
     ):
         """Initialisation of a simple footprint setup driver."""
@@ -68,14 +69,41 @@ class FootprintSetup(object):
         self.nullreport = nullreport
         self.fastmode   = bool(fastmode)
         self.fastkeys   = tuple(fastkeys)
-        self.callback   = None
-        self.populset   = set()
+        self.callback   = callback
+        if proxies is None:
+            self.proxies = set()
+        else:
+            self.proxies = set(proxies)
         self._defaults  = util.LowerCaseDict()
+        if defaults is not None:
+            self._defaults.update(defaults)
 
-    def popul(self, obj, clear=False):
-        """Populate the ``obj`` with references to active collectors and load methods."""
+    def __call__(self, **kw):
+        if kw:
+            initvalues = self.as_dict()
+            initvalues.update(kw)
+            thesetup = self.__class__(**initvalues)
+        else:
+            thesetup = self
+        thesetup.info()
+        return thesetup
+
+    def as_dict(self):
+        """Return a standalone dictionary or current setup attributes."""
+        return { k.lstrip('_'):v for k,v in self.__dict__.items() }
+
+    def info(self):
+        """Summuray of actual settings."""
+        for k, v in sorted(self.as_dict().items()):
+            print k.ljust(12), ':', v
+
+    def add_proxy(self, obj, clear=False):
+        """
+        Populate an ``obj`` with references to active collectors and load methods
+        so that it could behave like a static proxy.
+        """
         if inspect.ismodule(obj) or (isinstance(obj, object) and not inspect.isclass(obj)):
-            self.populset.add(obj)
+            self.proxies.add(obj)
             for k, v in collectorsmap().items():
                 if clear or not hasattr(obj, k):
                     setattr(obj, k, v.load)
@@ -84,7 +112,6 @@ class FootprintSetup(object):
         else:
             logger.error('Could not populate a non-module or non-instance object: %s', obj)
             raise ValueError('Not a module nor an object instance: %s', obj)
-
 
     def get_defaults(self):
         """Property getter for footprints defaults."""
@@ -96,11 +123,6 @@ class FootprintSetup(object):
         self._defaults.update(*args, **kw)
 
     defaults = property(get_defaults, set_defaults)
-
-    def print_defaults(self, ljust=24):
-        """Dump the actual values of the default environment."""
-        for k in sorted(self._defaults.keys()):
-            print k.ljust(ljust), self._defaults[k]
 
     def get_extended(self):
         """Property getter to ``extended`` switch."""
@@ -119,6 +141,7 @@ class FootprintSetup(object):
             return cb()
         else:
             return dict()
+
 
 setup = FootprintSetup()
 
@@ -141,7 +164,7 @@ class Collector(util.Catalog):
         if self.tagreport is None:
             self.tagreport = 'footprint-' + self.entry
         self.logreport = reporting.report(self.tagreport)
-        for obj in setup.populset:
+        for obj in setup.proxies:
             setattr(obj, self.entry, self.load)
             setattr(obj, self.entry+'s', self)
 
@@ -272,7 +295,7 @@ class Collector(util.Catalog):
 
     def report_why(self, classname):
         """
-        Report why the specified any class mathching the ``classname`` pattern
+        Report why any class mathching the ``classname`` pattern
         had not been selected through the last evaluation.
         """
         return self.logreport.whynot(classname)
@@ -315,6 +338,9 @@ def default(**kw):
 class FootprintProxy(object):
     """Access to alive footprint items."""
 
+    def __call__(self):
+        self.cat()
+
     def cat(self):
         """Print a list of all existing collectors."""
         for k, v in sorted(collectorsmap().items()):
@@ -334,9 +360,29 @@ class FootprintProxy(object):
         """Return a dictionary of instances sorted by collectors entries."""
         return { k+'s':c.instances() for k, c in collectorsmap().items() }
 
+    def exists(self, tag):
+        """Check if a given ``tag`` of objects is tracked or not."""
+        return tag.rstrip('s') in collected_footprints()
+
+    def __contains__(self, item):
+        """Similar as ``self.exists(item)``."""
+        return self.exists(item)
+
+    def __iter__(self):
+        """Iterates over collectors."""
+        for item in collectorsmap().values():
+            yield item
+
+    def get(self, item, default=None):
+        """Mimic the get access of a dictionary for defined collectors."""
+        if item in self:
+            return collector(item.rstrip('s'))
+        else:
+            return default
+
     def __getattr__(self, attr):
         """Gateway to collector (plural noun) or load method (singular)."""
-        if attr.startswith('_'):
+        if attr.startswith('_') or attr not in self:
             return None
         else:
             if attr.endswith('s'):
@@ -470,7 +516,7 @@ class Footprint(object):
         extras = setup.extras()
         for vdesc in desc.values():
             if isinstance(vdesc, FootprintBase):
-                extras.update(vdesc.puredict())
+                extras.update(vdesc.as_dict())
         if extras:
             logger.debug(' > Extras : %s', extras)
         return extras
@@ -515,6 +561,7 @@ class Footprint(object):
                     logger.error('%s', guess)
                     logger.error('No %s attribute in extras:', replk)
                     logger.error('%s', extras)
+                    logger.error('Actual defaults: %s', setup.defaults)
                     raise FootprintUnreachableAttr('Could not replace attribute ' + replk)
                 if replk in guess:
                     if replk not in todo:
@@ -862,7 +909,7 @@ class FootprintBase(object):
         """Returns the list of current attributes."""
         return self._attributes.keys()
 
-    def puredict(self):
+    def as_dict(self):
         """Returns a shallow copy of the current attributes."""
         pure = dict()
         for k in self._attributes.keys():
@@ -871,7 +918,7 @@ class FootprintBase(object):
 
     def shellexport(self):
         """See the current footprint as a pure dictionary when exported."""
-        return self.puredict()
+        return self.as_dict()
 
     def _str_more(self):
         """Additional information to be combined in repr output."""

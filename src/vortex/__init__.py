@@ -23,7 +23,7 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.8.7'
+__version__ = '0.8.8'
 __prompt__  = 'Vortex v-' + __version__+ ':'
 
 __all__ = []
@@ -46,7 +46,7 @@ footprints.set_before('debug', 'olive', 'oper')
 # Populate a fake proxy module with footprints shortcuts
 
 import proxy
-footprints.setup.popul(proxy)
+footprints.setup.add_proxy(proxy)
 proxy.cat = footprints.proxy.cat
 proxy.objects = footprints.proxy.objects
 

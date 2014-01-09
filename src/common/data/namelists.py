@@ -90,7 +90,7 @@ class NamelistContent(AlmostDictContent):
         container.rewind()
         if not self._parser:
             self._parser = NamelistParser(macros=self._macros.keys())
-        namset = self._parser.parse(container.readall())
+        namset = self._parser.parse(container.read())
         if namset:
             self._data = namset.as_dict()
         else:
@@ -98,7 +98,9 @@ class NamelistContent(AlmostDictContent):
 
     def rewrite(self, container):
         """Write the namelist contents in the specified container."""
+        container.close()
         container.write(self.dumps())
+        container.close()
 
 
 class Namelist(ModelResource):

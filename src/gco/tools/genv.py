@@ -75,7 +75,10 @@ def autofill(kselect):
             if k == 'CYCLE_NAME':
                 cycle = v.rstrip('.gco')
                 k, v = 'cycle', cycle
-            gcdict[k] = v
+            if ' ' in v:
+                gcdict[k] = v.split(' ')
+            else:
+                gcdict[k] = v
         register(**gcdict)
     else:
         logger.warning('Could not automaticaly fetch cycle %s contents', cycle)

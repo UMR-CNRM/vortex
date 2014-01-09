@@ -19,7 +19,6 @@ from vortex.utilities.structs import History
 
 #: Shortcut to footprint env defaults
 defaults = footprints.setup.defaults
-extended = footprints.setup.extended
 
 sectionmap = {'input':'get', 'output':'put', 'executable':'get'}
 justdoit = False
@@ -120,7 +119,7 @@ def pushsection(section, args, kw):
     ctx.record_off()
     opts, kwclean = stripargs_section(**kw)
     if verbose > 1:
-        print "New {0:s} section with options: {1:s}\n\nAnd resource handlersdescription: {2:s}\n".format(
+        print "New {0:s} section with options: {1:s}\n\nResource handler's description: {2:s}\n".format(
             section,
             footprints.dump.lightdump(opts),
             footprints.dump.lightdump(kwclean)

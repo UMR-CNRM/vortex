@@ -21,7 +21,7 @@ Base Classes
    :members:
    :member-order: alphabetical 
 
-.. autoclass:: ObserverSet
+.. autoclass:: ObserverBoard
    :show-inheritance:
    :members:
    :member-order: alphabetical

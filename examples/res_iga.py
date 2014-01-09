@@ -20,7 +20,7 @@ def bilan(hdls):
         print hdl.provider
         print hdl.provider.pathname(hdl.resource)
         print hdl.resource
-        print hdl.resource.puredict()
+        print hdl.resource.as_dict()
         print hdl.container
         print hdl.location()
         hdl.get()
