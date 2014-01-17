@@ -84,7 +84,7 @@ class System(footprints.FootprintBase):
         self.__dict__['_os'] = kw.pop('os', os)
         self.__dict__['_sh'] = kw.pop('shutil', kw.pop('sh', shutil))
         self.__dict__['prompt'] = ''
-        self.__dict__['history'] = History(tag='shell')
+        self.__dict__['_history'] = History(tag='shell')
         for flag in ( 'trace', ):
             self.__dict__[flag] = kw.pop(flag, False)
         for flag in ( 'output', ):
@@ -94,6 +94,10 @@ class System(footprints.FootprintBase):
     @property
     def realkind(self):
         return 'system'
+
+    @property
+    def history(self):
+        return self._history
 
     def __getattr__(self, key):
         """Gateway to undefined method or attributes if present in ``_os`` or ``_sh`` internals."""
@@ -109,7 +113,7 @@ class System(footprints.FootprintBase):
                 cmd = [key]
                 cmd.extend(args)
                 cmd.extend([ '{0:s}={1:s}'.format(x, str(kw[x])) for x in kw.keys() ])
-                self.stderr(cmd)
+                self.stderr(*cmd)
                 return actualattr(*args, **kw)
             osproxy.func_name = key
             osproxy.func_doc = actualattr.__doc__
@@ -118,9 +122,9 @@ class System(footprints.FootprintBase):
         else:
             return actualattr
 
-    def stderr(self, args):
+    def stderr(self, *args):
         """Write a formatted message to standard error."""
-        count, justnow,  = self.history.append(args)
+        count, justnow,  = self.history.append(*args)
         if self.trace:
             sys.stderr.write(
                 "+ [{0:s}][{1:d}] {2:s}\n".format(
@@ -133,7 +137,7 @@ class System(footprints.FootprintBase):
         """Return or print actual ``sys.path``."""
         if output is None:
             output = self.output
-        self.stderr(['pythonpath'])
+        self.stderr('pythonpath')
         if output:
             return sys.path[:]
         else:
@@ -146,7 +150,7 @@ class System(footprints.FootprintBase):
         """Current working directory."""
         if output is None:
             output = self.output
-        self.stderr(['pwd'])
+        self.stderr('pwd')
         realpwd = self._os.getcwd()
         if output:
             return realpwd
@@ -156,7 +160,7 @@ class System(footprints.FootprintBase):
 
     def cd(self, pathtogo, create=False):
         """Change directory to ``pathtogo``."""
-        self.stderr(['cd', pathtogo, create])
+        self.stderr('cd', pathtogo, create)
         if create:
             self.mkdir(pathtogo)
         self._os.chdir(pathtogo)
@@ -166,8 +170,10 @@ class System(footprints.FootprintBase):
         """Recursive file find. Arguments are starting paths."""
         if not args:
             args = ['*']
+        else:
+            args = list(args)
         files = []
-        self.stderr(['ffind'] + list(args))
+        self.stderr('ffind', *args)
         for pathtogo in self.glob(*args):
             if self.path.isfile(pathtogo):
                 files.append(pathtogo)
@@ -235,7 +241,7 @@ class System(footprints.FootprintBase):
 
     def which(self, command):
         """Clone of the unix command."""
-        self.stderr(['which', command])
+        self.stderr('which', command)
         if command.startswith('/'):
             if self.xperm(command): return command
         else:
@@ -245,7 +251,7 @@ class System(footprints.FootprintBase):
 
     def touch(self, filename):
         """Clone of the unix command."""
-        self.stderr(['touch', filename])
+        self.stderr('touch', filename)
         fh = file(filename, 'a')
         rc = True
         try:
@@ -259,13 +265,13 @@ class System(footprints.FootprintBase):
     def remove(self, objpath):
         """Unlink the specified object (file or directory)."""
         if os.path.exists(objpath):
-            self.stderr(['remove', objpath])
+            self.stderr('remove', objpath)
             if os.path.isdir(objpath):
                 self.rmtree(objpath)
             else:
                 self.unlink(objpath)
         else:
-            self.stderr(['clear', objpath])
+            self.stderr('clear', objpath)
         return not os.path.exists(objpath)
 
     def rm(self, objpath):
@@ -281,7 +287,7 @@ class System(footprints.FootprintBase):
             pscmd = ['ps']
         pscmd.extend(self._psopts)
         pscmd.extend(opts)
-        self.stderr(pscmd)
+        self.stderr(*pscmd)
         psall = subprocess.Popen(pscmd, stdout=subprocess.PIPE).communicate()[0].split('\n')
         if search:
             psall = filter(lambda x: re.search(search, x), psall)
@@ -289,7 +295,7 @@ class System(footprints.FootprintBase):
 
     def readonly(self, inodename):
         """Set permissions of the `filename` object to read-only."""
-        self.stderr(['readonly', inodename])
+        self.stderr('readonly', inodename)
         rc = None
         if os.path.exists(inodename):
             if os.path.isdir(inodename):
@@ -300,7 +306,7 @@ class System(footprints.FootprintBase):
 
     def sleep(self, nbsecs):
         """Clone of the unix command."""
-        self.stderr(['sleep', nbsecs])
+        self.stderr('sleep', nbsecs)
         time.sleep(nbsecs)
 
     def vortex_modules(self, only='.'):
@@ -347,7 +353,7 @@ class System(footprints.FootprintBase):
         rc = False
         if output is None:
             output = self.output
-        self.stderr(args)
+        self.stderr(*args)
         p = None
         try:
             if isinstance(output, bool):
@@ -452,7 +458,7 @@ class OSExtended(System):
 
     def softlink(self, source, destination):
         """Set a symbolic link if source is not destination."""
-        self.stderr(['softlink', source, destination])
+        self.stderr('softlink', source, destination)
         if source == destination:
             return False
         else:
@@ -464,7 +470,7 @@ class OSExtended(System):
 
     def size(self, filepath):
         """Returns the actual size in bytes of the specified ``filepath``."""
-        self.stderr(['size', filepath])
+        self.stderr('size', filepath)
         try:
             return self.stat(filepath).st_size
         except:
@@ -475,7 +481,7 @@ class OSExtended(System):
         normdir = self.path.normpath(dirpath)
         if normdir and not self.path.isdir(normdir):
             logger.debug('Cocooning directory %s', normdir)
-            self.stderr(['mkdir', normdir])
+            self.stderr('mkdir', normdir)
             try:
                 self.makedirs(normdir)
                 return True
@@ -487,7 +493,7 @@ class OSExtended(System):
 
     def rawcp(self, source, destination):
         """Internal basic cp command used by :meth:`cp` or :meth:`smartcp`."""
-        self.stderr(['rawcp', source, destination])
+        self.stderr('rawcp', source, destination)
         if self.path.isdir(source):
             self.copytree(source, destination)
             return self.path.isdir(destination)
@@ -538,7 +544,7 @@ class OSExtended(System):
         """
         if type(source) is not types.StringType or type(destination) is not types.StringType:
             return self.hybridcp(source, destination)
-        self.stderr(['smartcp', source, destination])
+        self.stderr('smartcp', source, destination)
         if not self.path.exists(source):
             logger.warning('Missing source %s', source)
             return False
@@ -571,7 +577,7 @@ class OSExtended(System):
         Copy the ``source`` file to a safe ``destination``.
         The return value is produced by a raw compare of the two files.
         """
-        self.stderr(['cp', source, destination])
+        self.stderr('cp', source, destination)
         if type(source) is not types.StringType or type(destination) is not types.StringType:
             return self.hybridcp(source, destination)
         if self.filecocoon(destination):
@@ -687,14 +693,14 @@ class OSExtended(System):
     def listdir(self, *args):
         """Proxy to standard :mod:`os` directory listing function."""
         if not args: args = ('.',)
-        self.stderr(['listdir'] + list(args))
+        self.stderr('listdir', *args)
         return self._os.listdir(args[0])
 
     def l(self, *args):
         """Proxy to globbing after removing any option. A bit like :meth:`ls` method."""
         rl = [x for x in args if not x.startswith('-')]
         if not rl: rl.append('*')
-        self.stderr(['l'] + rl)
+        self.stderr('l', *rl)
         return self.glob(*rl)
 
     def is_tarfile(self, filename):

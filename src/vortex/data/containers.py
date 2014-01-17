@@ -135,6 +135,12 @@ class Container(footprints.FootprintBase):
         else:
             return None
 
+    def __iter__(self):
+        iod = self.iodesc()
+        iod.seek(0)
+        for x in iod:
+            yield x
+
     def close(self):
         """Close the logical io descriptor."""
         if self._iod:
@@ -145,6 +151,12 @@ class Container(footprints.FootprintBase):
     @property
     def actualmode(self):
         return self._iomode or self.mode
+
+    def amode(self, actualmode):
+        """Upgrade the ``actualmode`` to a write-compatible mode."""
+        am = re.sub('[rw]', 'a', actualmode)
+        am = am.replace('+', '')
+        return am + '+'
 
     def wmode(self, actualmode):
         """Upgrade the ``actualmode`` to a write-compatible mode."""
@@ -159,6 +171,23 @@ class Container(footprints.FootprintBase):
         iod = self.iodesc(mode)
         iod.write(data)
         self._filled = True
+
+    def append(self, data):
+        """Write the data content at the end of the container."""
+        iod = self.iodesc(self.amode(self.mode))
+        self.endoc()
+        iod.write(data)
+        self._filled = True
+
+    def cat(self):
+        """Perform a trivial cat of the container."""
+        if self._filled:
+            iod = self.iodesc()
+            pos = iod.tell()
+            iod.seek(0)
+            for xchunk in iod:
+                print xchunk.rstrip('\n')
+            iod.seek(pos)
 
     def __del__(self):
         self.close()
@@ -179,16 +208,6 @@ class Virtual(Container):
             )
         )
     )
-
-    def cat(self):
-        """Perform a trivial cat of the virtual container."""
-        if self._filled:
-            iod = self.iodesc()
-            pos = iod.tell()
-            iod.seek(0)
-            for xchunk in iod:
-                print xchunk.rstrip('\n')
-            iod.seek(pos)
 
     def iotarget(self):
         """Virtual container's io target is an io descriptor."""

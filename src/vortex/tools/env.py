@@ -10,6 +10,8 @@ import types
 from datetime import datetime
 
 from vortex.autolog import logdefault as logger
+from vortex.utilities.structs import History
+
 
 #: No automatic export
 __all__ = []
@@ -51,16 +53,16 @@ class Environment(object):
     Advanced handling of environment features. Either for binding to the system
     or to store and brodacast parameters. Creating an ``active`` environment results
     in the fact that this new environment is binded to the system environment.
-    
+
     New objects could be instancied from an already existing ``env`` and could be
     active or not according to the flag given at initialisation time.
-    
+
     The ``clear`` boolean flag implies the cration of an empty environment. In that case
     the new environment is by default not active.
-    
+
     The ``noexport`` list defines the variables names that would not be broadcasted to the
     system environment.
-    
+
     An :class:`Environment` could be manipulated as an dictionary for the following mechanisms:
 
     * key acces / contains
@@ -72,7 +74,7 @@ class Environment(object):
     _os = list()
 
     def __init__(self, env=None, active=False, clear=False, verbose=False, noexport=[]):
-        self.__dict__['_history'] = []
+        self.__dict__['_history'] = History(tag='env')
         self.__dict__['_active'] = False
         self.__dict__['_verbose'] = False
         self.__dict__['_pool'] = dict()
@@ -89,6 +91,13 @@ class Environment(object):
                     self._pool.update(os.environ)
         self.__dict__['_noexport'] = [x.upper() for x in noexport]
         self.active(active)
+
+    @property
+    def history(self):
+        return self._history
+
+    def __str__(self):
+        return '{0:s} | including {1:d} variables>'.format(repr(self).rstrip('>'), len(self))
 
     def __getstate__(self):
         return self.__dict__
@@ -123,7 +132,7 @@ class Environment(object):
         upvar = varname.upper()
         self._pool[upvar] = value
         self._mods.add(upvar)
-        self._history.append((upvar, value, datetime.now(), traceback.format_stack()))
+        self.history.append(upvar, value, traceback.format_stack()[:-1])
         if self.osbound():
             if isinstance(value, str):
                 actualvalue = str(value)
@@ -298,10 +307,10 @@ class Environment(object):
         """Returns either this current environment is bound to the os.environ."""
         return self._active and self.__class__._os and id(self) == id(self.__class__._os[-1])
 
-    def history(self):
+    def tracebacks(self):
         """Dump the stack of manipulations of the current environment."""
-        for action in self._history:
-            varname, value, stamp, stack = action 
+        for count, stamp, action in self.history:
+            varname, value, stack = action
             print "[", stamp, "]", varname, "=", value, "\n"
             for xs in stack:
                 print xs
@@ -309,11 +318,12 @@ class Environment(object):
     def osdump(self):
         """Dump the actual values of the OS environment."""
         for k in sorted(os.environ.keys()):
-            print '{0:s}="{1:s}"'.format(k, os.environ[k])  
+            print '{0:s}="{1:s}"'.format(k, os.environ[k])
 
     def mydump(self):
         """Dump the actual values of the current environment."""
-        return [ '{0:s}="{1:s}"'.format(k, str(self._pool[k])) for k in sorted(self._pool.keys()) ]
+        for k in sorted(self._pool.keys()):
+            print '{0:s}="{1:s}"'.format(k, str(self._pool[k]))
 
     def trueshell(self):
         return re.sub('^.*/', '', self.getvar('shell'))

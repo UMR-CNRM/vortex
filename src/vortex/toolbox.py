@@ -173,7 +173,9 @@ def magic(url, localpath):
     Return a minimal resource handler build with an unknown resource,
     a file container and an anonymous provider described with its url.
     """
-    return rh(unknown=True, magic=url, filename=localpath)
+    rhmagic = rh(unknown=True, magic=url, filename=localpath)
+    rhmagic.get()
+    return rhmagic
 
 def namespaces(**kw):
     """

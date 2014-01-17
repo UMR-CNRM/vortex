@@ -9,7 +9,7 @@ This module defines common base classes for miscellaneous purposes.
 __all__ = []
 
 import collections
-from datetime import datetime
+import datetime
 
 from vortex.autolog import logdefault as logger
 
@@ -142,17 +142,21 @@ class History(object):
 
     def resize(self, histsize=None):
         """Resize the internal history log to the specified length."""
-        if maxlen:
+        if histsize:
             self._history = collections.deque(self._history, maxlen=int(histsize))
         return self._history.maxlen
 
     def nice(self, item):
         """Try to build some nice string of the item."""
         if type(item) is list or type(item) is tuple:
-            niceitem = ' '.join(item)
+            niceitem = ' '.join([str(x) for x in item])
         else:
             niceitem = item
         return niceitem
+
+    def __iter__(self):
+        for item in self._history:
+            yield item
 
     def __len__(self):
         return len(self._history)
@@ -167,25 +171,65 @@ class History(object):
         logger.warning('Could not delete a value of a history item.')
 
     def grep(self, key):
+        """Match the ``key`` in the string representation of history items."""
         return [ (count, stamp, item) for count, stamp, item in self._history if key in self.nice(item) ]
 
     def __contains__(self, key):
         return bool(self.grep(key))
 
-    def append(self, item):
-        stamp = datetime.now()
-        self._count += 1
-        self._history.append((self._count, stamp, item))
+    def stamp(self):
+        """Return a time stamp."""
+        return datetime.datetime.now()
+
+    def append(self, *items):
+        """Add the specified ``items`` as a new history entry."""
+        stamp = self.stamp()
+        if items:
+            self._count += 1
+            self._history.append((self._count, stamp, items))
         return (self._count, stamp)
 
     def get(self, start=1, end=None):
+        """
+        Extract history entries with a count value contained
+        in the inclusive interval ``start`` - ``end``.
+        """
         if end is None:
             end = self._count
         return [ (c, t, i) for c, t, i in self._history if c>=start and c<=end ]
 
     def show(self, start=1, end=None):
+        """
+        Display a numbered list of history items with a count value contained
+        in the inclusive interval ``start`` - ``end``.
+        """
         for c, t, i in self.get(start, end):
             print '[', str(c).rjust(4), '] :', self.nice(i)
+
+    def showlast(self):
+        """Display the last entry of the current history."""
+        return self.show(start=self._count)
+
+    def getaround(self, focus, delta=60):
+        """
+        Extract history entries with a stamp value contained
+        in the exclusive interval [``focus`` - ``delta``, ``focus`` + ``delta``].
+        """
+        delta = datetime.timedelta(0, delta)
+        return [ (c, t, i) for c, t, i in self._history if abs(t-focus) < delta ]
+
+    def around(self, focus=None, delta=60):
+        """
+        Display a numbered list of history items with a stamp value contained
+        in the exclusive interval [``focus`` - ``delta``, ``focus`` + ``delta``].
+        """
+        if focus is None:
+            focus = self.stamp()
+        for c, t, i in self.getaround(focus, delta):
+            print '[', str(c).rjust(4), 'at', t, '] :', self.nice(i)
+
+    def __call__(self):
+        return self.show()
 
     @property
     def last(self):

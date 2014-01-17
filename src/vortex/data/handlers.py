@@ -11,7 +11,7 @@ from vortex.autolog import logdefault as logger
 from vortex import sessions
 from vortex.tools import net
 from vortex.tools.date import Date
-from vortex.utilities import roles
+from vortex.utilities import roles, structs
 from vortex.layout import dataflow
 
 from vortex.data import stores
@@ -45,7 +45,8 @@ class Handler(object):
         self._observer = observer_board(kw.pop('observer', None))
         self._options = rd.copy()
         self._options.update(kw)
-        self._history = [(Date.now(), self.__class__.__name__, 'init', 1)]
+        self._history = structs.History(tag='data-handler')
+        self._history.append(self.__class__.__name__, 'init', 1)
         self._stage = [ 'load' ]
         self._observer.notify_new(self, dict(stage = 'load'))
         logger.debug('New resource handler %s', self.__dict__)
@@ -61,6 +62,10 @@ class Handler(object):
 
     def __str__(self):
         return str(self.__dict__)
+
+    @property
+    def history(self):
+        return self._history
 
     @property
     def observer(self):
@@ -178,7 +183,7 @@ class Handler(object):
                 del uridata['scheme']
                 del uridata['netloc']
                 rst = store.locate(uridata, self.options(extras))
-                self._history.append((Date.now(), store.fullname(), 'locate', rst))
+                self.history.append(store.fullname(), 'locate', rst)
             else:
                 logger.error('Could not find any store to locate %s', remotelocation)
         else:
@@ -198,7 +203,7 @@ class Handler(object):
                 del uridata['netloc']
                 rst = store.get(uridata, self.container.iotarget(), self.options(extras))
                 self.container.updfill(rst)
-                self._history.append((Date.now(), store.fullname(), 'get', rst))
+                self.history.append(store.fullname(), 'get', rst)
                 if rst:
                     self.updstage('get')
                 return rst
@@ -221,7 +226,7 @@ class Handler(object):
                 del uridata['scheme']
                 del uridata['netloc']
                 rst = store.put(self.container.iotarget(), uridata, self.options(extras))
-                self._history.append((Date.now(), store.fullname(), 'put', rst))
+                self.history.append(store.fullname(), 'put', rst)
                 self.updstage('put')
             else:
                 logger.error('Could not find any store to put %s', remotelocation)
@@ -242,7 +247,7 @@ class Handler(object):
                 del uridata['scheme']
                 del uridata['netloc']
                 rst = store.check(uridata, self.options(extras))
-                self._history.append((Date.now(), store.fullname(), 'check', rst))
+                self.history.append(store.fullname(), 'check', rst)
             else:
                 logger.error('Could not find any store to check %s', remotelocation)
         else:
@@ -256,7 +261,7 @@ class Handler(object):
             logger.debug('Remove resource container %s', self.container)
             system = self.options().get('system')
             rst = system.remove(self.container.localpath())
-            self._history.append((Date.now(), system.fullname(), 'clear', rst))
+            self.history.append(system.fullname(), 'clear', rst)
         return rst
 
     def save(self):
@@ -270,8 +275,5 @@ class Handler(object):
 
     def strlast(self):
         """String formatted log of the last action."""
-        return ' '.join([ str(x) for x in self._history[-1] ])
+        return ' '.join([ str(x) for x in self.history.last ])
 
-    def history(self):
-        """Copy of the internal history of the current handler."""
-        return self._history[:]

@@ -304,6 +304,37 @@ class MultiStore(footprints.FootprintBase):
             rc = sto.put(local, remote.copy(), options) and rc
         return rc
 
+class MagicPlace(Store):
+    """Somewher, over the rainbow!"""
+
+    _footprint = dict(
+        info = 'Evanescent physical store',
+        attr = dict(
+            scheme = dict(
+                values = [ 'magic' ],
+            ),
+        ),
+        priority = dict(
+            level = footprints.priorities.top.DEFAULT
+        )
+    )
+
+    def magiccheck(self, remote, options):
+        """Void - Always False."""
+        return False
+
+    def magiclocate(self, remote, options):
+        """Void - Empty string returned."""
+        return ''
+
+    def magicget(self, remote, local, options):
+        """Void - Always True."""
+        return True
+
+    def magicput(self, local, remote, options):
+        """Void - Always True."""
+        return True
+
 
 class Finder(Store):
     """The most usual store: your current filesystem!"""

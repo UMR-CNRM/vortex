@@ -23,7 +23,7 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.8.8'
+__version__ = '0.8.9'
 __prompt__  = 'Vortex v-' + __version__+ ':'
 
 __all__ = []
@@ -78,7 +78,6 @@ del rs
 # Shorthands to sessions or footprints components
 
 ticket = sessions.ticket
-exit = sessions.exit
 sh = sessions.system
 
 # Load some superstars sub-packages
@@ -87,7 +86,12 @@ import toolbox, algo, data
 
 # Register proper vortex exit before the end of interpreter session
 
+def complete():
+    sessions.exit()
+    print 'Vortex', __version__, 'completed', '(', tools.date.atsecond().reallynice(), ')'
+
 import atexit
-atexit.register(sessions.exit)
+atexit.register(complete)
 del atexit
 
+print 'Vortex', __version__, 'loaded', '(', tools.date.atsecond().reallynice(), ')'
