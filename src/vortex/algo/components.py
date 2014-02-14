@@ -135,10 +135,7 @@ class AlgoComponent(footprints.FootprintBase):
         self.env = ctx.env
         self.target = kw.pop('target', None)
         if self.target is None:
-            self.target = vortex.proxy.target(
-                hostname = self.system.hostname,
-                sysname  = self.system.sysname
-            )
+            self.target = self.system.target()
         self.prepare(rh, ctx, kw)
         self.fsstamp(ctx, kw)
         self.execute(rh, ctx, kw)

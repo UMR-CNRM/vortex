@@ -7,34 +7,35 @@ Configuration management through ini files.
 
 __all__ = []
 
-from string import Template
 
 from ConfigParser import SafeConfigParser
 
-import vortex
 from vortex.autolog import logdefault as logger
 
+import env
 
-def loadtemplate(tplfile):
-    """Load a template according to filename provided, either absolute or relative path."""
+def load_template(t, tplfile):
+    """
+    Load a template according to filename provided, either absolute or relative path.
+    The first argument ``t`` should be a valid ticket session.
+    """
     tpl = None
-    local = vortex.sessions.system()
-    if local.path.exists(tplfile):
-        tplfile = local.path.abspath(tplfile)
+    if t.sh.path.exists(tplfile):
+        tplfile = t.sh.path.abspath(tplfile)
     else:
-        glove = vortex.sessions.glove()
-        persofile = glove.configrc + '/templates/' + local.path.basename(tplfile)
-        if local.path.exists(persofile):
+        persofile = t.glove.configrc + '/templates/' + t.sh.path.basename(tplfile)
+        if t.sh.path.exists(persofile):
             tplfile = persofile
         else:
-            sitefile = glove.siteroot + '/templates/' + local.path.basename(tplfile)
-            if local.path.exists(sitefile):
+            sitefile = t.glove.siteroot + '/templates/' + t.sh.path.basename(tplfile)
+            if t.sh.path.exists(sitefile):
                 tplfile = sitefile
             else:
                 raise Exception('Template file ' + tplfile + ' not found')
     try:
+        import string
         with open(tplfile, 'r') as tplfd:
-            tpl = Template(tplfd.read())
+            tpl = string.Template(tplfd.read())
         tpl.srcfile = tplfile
     except Exception as pb:
         logger.error('Could not read template %s', str(pb))
@@ -69,11 +70,11 @@ class GenericConfigParser(object):
         if self.parser is None:
             self.parser = self.clsparser()
         self.file = None
-        local = vortex.sessions.system()
+        local = env.param('shared').system
         if local.path.exists(inifile):
             self.file = local.path.abspath(inifile)
         else:
-            glove = vortex.sessions.glove()
+            glove = env.param('shared').glove
             persofile = glove.configrc + '/' + local.path.basename(inifile)
             if local.path.exists(persofile):
                 self.file = persofile

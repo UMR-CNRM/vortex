@@ -1,6 +1,8 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
+import footprints
+
 try:
     from oper_test_config import *
 except ImportError, e:
@@ -8,7 +10,6 @@ except ImportError, e:
     raise
 
 #t.debug()
-
 
 class UtNamelist(TestCase):
 
@@ -79,7 +80,7 @@ class UtNamelist(TestCase):
     def test_ctlg1(self):
         ctlg = footprints.proxy.resources
         for fp in self.liste_fp_namel:
-            res = ctlg.findbest(fp)
+            res = ctlg.find_best(fp)
             self.assertTrue(res.kind, 'namelist')
 
     def test_v1(self):
@@ -99,7 +100,7 @@ class UtNamelist(TestCase):
             )
             self.assertEqual(
                 rl[0].locate(),
-                '/ch/mxpt/mxpt001/arpege/france/oper/namel/' + self.namelistes[cpt]
+                datadir + '/arpege/france/oper/namel/' + self.namelistes[cpt]
             )
             cpt += 1
             #uniquement sur Nec oper
@@ -108,7 +109,7 @@ class UtNamelist(TestCase):
 
     def test_ctlg2(self):
         ctlg = footprints.proxy.resources
-        res = ctlg.findbest(self.fp_namsel1)
+        res = ctlg.find_best(self.fp_namsel1)
         self.assertTrue(res.kind, 'namselect')
 
     def test_v2(self):
@@ -130,7 +131,7 @@ class UtNamelist(TestCase):
             )
             self.assertEqual(
                 rh.locate(),
-                '/ch/mxpt/mxpt001/arpege/france/oper/namel/'\
+                datadir + '/arpege/france/oper/namel/'\
 +ref_name[cpt]
             )
             self.assertEqual(
@@ -159,7 +160,7 @@ class UtNamelist(TestCase):
             )
             self.assertEqual(
                 rh.locate(),
-                '/ch/mxpt/mxpt001/arome/france/oper/namel/'\
+                datadir + '/arome/france/oper/namel/'\
 +ref_name[cpt]
             )
             self.assertEqual(

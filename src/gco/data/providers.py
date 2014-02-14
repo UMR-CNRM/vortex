@@ -9,21 +9,13 @@ from vortex.autolog import logdefault as logger
 from vortex.data.providers import Provider
 from gco.tools import genv
 
+class GcoProvider(Provider):
+    """Abstract GCO base class for GGet and GEnv providers."""
 
-class GGet(Provider):
-    """
-    Provides a description of GCO central repository of op components.
-    
-    Extended footprint:
-    
-    * gget (mandatory)
-    * gspool (optional, default: ``tampon``)
-    """
-
+    _abstract = True
     _footprint = dict(
-        info = 'GGet provider',
+        info = 'GCO abstract provider',
         attr = dict(
-            gget = dict(),
             gspool = dict(
                 alias = ( 'gtmp', 'gcotmp', 'gcospool', 'tampon' ),
                 optional = True,
@@ -34,6 +26,32 @@ class GGet(Provider):
                 values = [ 'gco.cache.fr', 'gco.meteo.fr', 'gco.multi.fr' ],
                 default = 'gco.meteo.fr',
             ),
+        )
+    )
+
+    def domain(self):
+        """Default domain is ``gco.meteo.fr``."""
+        return self.gnamespace
+
+    def pathname(self, resource):
+        """Equal to gspool name."""
+        return self.gspool
+
+
+class GGet(GcoProvider):
+    """
+    Provides a description of GCO central repository of op components.
+
+    Extended footprint:
+
+    * gget (mandatory)
+    * gspool (optional, default: ``tampon``)
+    """
+
+    _footprint = dict(
+        info = 'GGet provider',
+        attr = dict(
+            gget = dict(),
         )
     )
 
@@ -50,50 +68,32 @@ class GGet(Provider):
         """Default scheme is ``gget``."""
         return 'gget'
 
-    def domain(self):
-        """Default domain is ``gco.meteo.fr``."""
-        return self.gnamespace
-
-    def pathname(self, resource):
-        """Equal to gspool name."""
-        return self.gspool
-
     def basename(self, resource):
         """Concatenation of gget attribute and current resource basename."""
         return self.gget + resource.basename(self.realkind)
 
 
-class GEnv(Provider):
+class GEnv(GcoProvider):
     """
     Provides a description of GCO global cycles contents.
-    
+
     Extended footprint:
-    
+
     * genv (mandatory)
     * gspool (optional, default: ``tampon``)
     """
-    
+
     _footprint = dict(
         info = 'GEnv provider',
         attr = dict(
             genv = dict(
-                alias = ( 'gco_cycle', 'gcycle' )
-            ),
-            gspool = dict(
-                alias = ( 'gtmp', 'gcotmp', 'gcospool', 'tampon' ),
-                optional = True,
-                default = 'tampon'
-            ),
-            gnamespace = dict(
-                optional = True,
-                values = [ 'gco.cache.fr', 'gco.meteo.fr', 'gco.multi.fr' ],
-                default = 'gco.meteo.fr',
+                alias = ( 'gco_cycle', 'gcocycle', 'cyclegco', 'gcycle' )
             ),
         )
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Genv provider init %s', self)
+        logger.debug('GEnv provider init %s', self)
         super(GEnv, self).__init__(*args, **kw)
 
 
@@ -109,14 +109,6 @@ class GEnv(Provider):
     def scheme(self):
         """Default scheme is ``gget``."""
         return 'gget'
-
-    def domain(self):
-        """Default domain is ``gco.meteo.fr``."""
-        return self.gnamespace
-
-    def pathname(self, resource):
-        """Equal to gspool name."""
-        return self.gspool
 
     def basename(self, resource):
         """Relies on :mod:`gco.tools.genv` contents for current ``genv`` attribute value

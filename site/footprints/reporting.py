@@ -10,7 +10,6 @@ StandardReport is derived from :class:`xml.dom.minidom.Document`.
 __all__ = []
 
 from datetime import datetime
-from xml.dom.minidom import Document
 
 import re
 import weakref
@@ -165,7 +164,7 @@ class FootprintLogClass(FootprintLogEntry):
         """Insert in the specified ``xmlnode`` informations relative to attributes of the candidate class."""
         xmlnode.current(xmlnode.add('class', name=self.name))
         for kid in self._items:
-            kidstr = { k: str(v) for k, v in kid.items() }
+            kidstr = dict([ (k, str(v)) for k, v in kid.items() ])
             xmlnode.add('attribute', **kidstr)
 
     def as_dict(self):
@@ -326,24 +325,31 @@ class FootprintLog(object):
         """Shortcut to :mod:``dump`` facilities."""
         print dump.fulldump(self.as_dict(force=True, stamp=stamp))
 
-class StandardReport(Document):
+class StandardReport(object):
 
-    def __init__(self, tag=None):
-        """Inherit from xml.minidom Document."""
-        Document.__init__(self)
-        self.root = self.createElement('report')
+    def __init__(self, doc=None, tag=None):
+        if doc is None:
+            import xml.dom.minidom
+            self._doc = xml.dom.minidom.Document()
+        else:
+            self._doc = doc
+        self.root = self._doc.createElement('report')
         self.root.setAttribute('tag', tag)
-        self.appendChild(self.root)
+        self._doc.appendChild(self.root)
         self._current = self.root
 
     def __call__(self):
         """Print the complete dump of the current report object."""
         print self.dump_all()
 
+    @property
+    def doc(self):
+        return self._doc
+
     def add(self, key, **kw):
         """Add a information node to the ``base`` or current note."""
         base = kw.pop('base', self.current())
-        entry = self.createElement(key)
+        entry = self.doc.createElement(key)
         for k, v in kw.items():
             entry.setAttribute(k, v)
         base.appendChild(entry)
@@ -362,7 +368,7 @@ class StandardReport(Document):
 
     def dump_all(self):
         """Return a string with a complete formatted dump of the document."""
-        return self.toprettyxml(indent='    ')
+        return self.doc.toprettyxml(indent='    ')
 
     def dump_last(self):
         """Return a string with a complete formatted dump of the last entry."""
@@ -419,7 +425,7 @@ class FlatReport(object):
 
     def fulldump(self):
         """Print out the internal tree."""
-        print '-' * 80
+        print '- ' * 20
         print self.__class__.__name__, 'shuffle', self._sort
         print dump.fulldump(self._tree)
         print

@@ -10,7 +10,7 @@ import collections
 OpSetValues = collections.namedtuple('OpSetValues', ['suite', 'vapp', 'vconf'])
 
 from vortex.tools import date
-from vortex.tools.config import GenericConfigParser, loadtemplate
+from vortex.tools.config import GenericConfigParser, load_template
 from vortex.autolog import logdefault as logger
 
 
@@ -43,7 +43,7 @@ def mkjob(t, **kw):
     )
     opts.update(kw)
 
-    corejob = loadtemplate(opts['template'])
+    corejob = load_template(t, opts['template'])
     opts['tplfile'] = corejob.srcfile
 
     try:
@@ -53,6 +53,8 @@ def mkjob(t, **kw):
     except Exception as pb:
         logger.warning('Could not read config %s', str(pb))
         tplconf = dict()
+
+    opts['name'] = re.sub('\.py$', '', opts['name'])
 
     tplconf = tplconf.get(opts['name'], dict())
 
@@ -65,6 +67,8 @@ def mkjob(t, **kw):
     tplconf.update(opts)
 
     tplconf.setdefault('file', opts['name'] + '.py')
+
+    print 'DBUG CONF', tplconf.keys()
 
     corejob = corejob.substitute(tplconf)
 
@@ -84,11 +88,13 @@ def slurm_parameters(t, **kw):
     slurm = dict(
         openmp = 1,
     )
+
     try:
         slurm['nn'] = int(e.SLURM_NNODES)
     except Exception as pb:
         print '[WARNING] SLURM_NNODES:', pb
         slurm['nn'] = 1
+
     try:
         slurm['nnp'] = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
         if slurm['nnp'] > 1:
@@ -96,6 +102,7 @@ def slurm_parameters(t, **kw):
     except Exception as pb:
         print '[WARNING] SLURM_TASKS_PER_NODE:', pb
         slurm['nnp'] = 1
+
     if 'OMP_NUM_THREADS' in e:
         slurm['openmp'] = e.OMP_NUM_THREADS
     else:

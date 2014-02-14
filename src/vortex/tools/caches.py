@@ -9,8 +9,6 @@ hosting data resources. Cache objects use the :mod:`footprints` mechanism.
 #: No automatic export
 __all__ = []
 
-import re
-
 import footprints
 
 from vortex.autolog import logdefault as logger

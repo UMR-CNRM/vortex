@@ -30,7 +30,8 @@ rundir = tg.get('rundir', e.HOME  +'/tmp/bidon')
 sh.cd(rundir)
 print t.prompt, sh.pwd(), 'pass:', nstep
 
-genv.genvbin = tg.get('gco:genvbin', e.HOME + '/bin/genvfake')
+genv.genvcmd  = tg.get('gco:genvcmd', 'genvfake')
+genv.genvpath = tg.get('gco:genvpath', e.HOME + '/bin')
 genv.autofill('cy37t1_op1.20')
 
 print t.line

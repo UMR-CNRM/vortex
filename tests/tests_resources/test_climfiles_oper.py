@@ -38,7 +38,7 @@ class UtClimGlobal(TestCase):
     def test_ctlg(self):
         climmodel = self.fp_climmodel
         ctlg = footprints.proxy.resources
-        res = ctlg.findbest(climmodel)
+        res = ctlg.find_best(climmodel)
 
         month = "{0:02d}".format(today().month)
         self.assertTrue(res.kind, 'clim_model')
@@ -61,7 +61,7 @@ class UtClimGlobal(TestCase):
         )
         self.assertEqual(
             rl[0].locate(), 
-            '/ch/mxpt/mxpt001/arpege/france/oper/const/clim/mens/clim_t798_isba'+month
+            homedir + '/arpege/france/oper/const/clim/mens/clim_t798_isba'+month
         )
         self.assertTrue(os.stat(rl[0].locate()))
 
@@ -87,7 +87,7 @@ class UtClimLAM(TestCase):
     def test_ctlg(self):
         climbdap = self.fp_climmodel
         ctlg = footprints.proxy.resources
-        res = ctlg.findbest(climbdap)
+        res = ctlg.find_best(climbdap)
 
         self.assertTrue(res.kind, 'clim_bdap')
     
@@ -110,7 +110,7 @@ class UtClimLAM(TestCase):
     
         self.assertEqual(
             rl[0].locate(), 
-            '/ch/mxpt/mxpt001/aladin/caledonie/oper/const/clim/mens/clim_caledonie_isba'+month
+            homedir + '/aladin/caledonie/oper/const/clim/mens/clim_caledonie_isba'+month
         )
         self.assertTrue(os.stat(rl[0].locate()))
 
@@ -137,7 +137,7 @@ class UtClimBDAPLAM(TestCase):
     def test_ctlg(self):
         climbdap = self.fp_climmodel
         ctlg = footprints.proxy.resources
-        res = ctlg.findbest(climbdap)
+        res = ctlg.find_best(climbdap)
 
         self.assertTrue(res.kind, 'clim_bdap')
     
@@ -160,7 +160,7 @@ class UtClimBDAPLAM(TestCase):
     
         self.assertEqual(
             rl[0].locate(), 
-            '/ch/mxpt/mxpt001/aladin/caledonie/oper/const/clim/domaine/clim_dap.caled01.m'+month
+            homedir + '/aladin/caledonie/oper/const/clim/domaine/clim_dap.caled01.m'+month
         )
         self.assertTrue(os.stat(rl[0].locate()))
 
@@ -193,12 +193,12 @@ class UtClimBDAP(TestCase):
     def test_ctlg(self):
         climbdap = self.fp_climbdap_1
         ctlg = footprints.proxy.resources
-        res = ctlg.findbest(climbdap)
+        res = ctlg.find_best(climbdap)
 
         self.assertTrue(res.kind, 'clim_bdap')
 
         climbdap = self.fp_climbdap_2
-        res = ctlg.findbest(climbdap)
+        res = ctlg.find_best(climbdap)
 
         self.assertTrue(res.kind, 'clim_bdap')
  
@@ -213,7 +213,7 @@ class UtClimBDAP(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-            
+
         month = "{0:02d}".format(today().month)
         self.assertEqual(
             rl[0].location(),
@@ -221,7 +221,7 @@ class UtClimBDAP(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/const/clim/domaine/const.clim.GLOB15_m' + month
+            homedir + '/arpege/france/oper/const/clim/domaine/const.clim.GLOB15_m' + month
         )
         self.assertTrue(os.stat(rl[0].locate()))
 
@@ -243,7 +243,7 @@ class UtClimBDAP(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arome/france/oper/const/clim/domaine/BDAP_frangp_isba' + month
+            homedir + '/arome/france/oper/const/clim/domaine/BDAP_frangp_isba' + month
         )
         self.assertTrue(os.stat(rl[0].locate()))
 

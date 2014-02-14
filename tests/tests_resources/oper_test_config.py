@@ -5,7 +5,7 @@ __all__ = [ 'os', 'logging', 'TestCase', 'TestLoader', 'TextTestRunner',
             'common', 'iga', 'toolbox', 'sessions',
             'resources', 'SpectralGeometry', 'GridGeometry',
             'today', 'Date', 'Period', 'vortex', 't', 'get_default_provider',
-            'get_spec_provider', 'IgaHelperSelect'
+            'get_spec_provider', 'IgaHelperSelect', 'datadir', 'homedir'
         ]
 
 import os
@@ -35,6 +35,11 @@ t = sessions.ticket(
     prompt='Vortex_oper' + vortex.__version__+':'
 )
 
+tg = t.sh.target()
+datadir = tg.get('op:datadir')
+homedir = tg.get('op:homedir')
+
+toolbox.defaults(namespace='[suite].inline.fr')
 sessions.switch('oper')
 
 def get_default_provider():

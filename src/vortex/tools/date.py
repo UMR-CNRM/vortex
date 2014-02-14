@@ -47,7 +47,6 @@ __all__ = []
 import re
 import datetime
 import calendar
-import inspect
 
 
 def mkisodate(datestr):
@@ -126,11 +125,11 @@ def easter(year=None):
     day = L + 28 - 31 * (month / 4)
     return Date(year, month, day)
 
-local_date_functions = {
-    x.__name__:x
+local_date_functions = dict([
+    (x.__name__, x)
         for x in locals().values()
-            if inspect.isfunction(x) and x.__doc__.startswith('Return date')
-}
+            if hasattr(x, 'func_name') and x.__doc__.startswith('Return date')
+])
 
 def stardates():
     """Nice dump of predefined dates functions."""
@@ -170,24 +169,15 @@ def daterange(start, end=None, step='P1D'):
 class Period(datetime.timedelta):
     """Standard period objects, extending :class:`datetime.timedelta` features with iso8601 facilities."""
 
-    _period_regex = staticmethod(
-            lambda s: re.compile(
+    _my_re  = re.compile(
         r'(?P<X>[+-]?P)(?P<Y>[0-9]+([,.][0-9]+)?Y)?'
         r'(?P<M>[0-9]+([,.][0-9]+)?M)?'
         r'(?P<W>[0-9]+([,.][0-9]+)?W)?'
         r'(?P<D>[0-9]+([,.][0-9]+)?D)?'
         r'((?P<T>T)(?P<h>[0-9]+([,.][0-9]+)?H)?'
         r'(?P<m>[0-9]+([,.][0-9]+)?M)?'
-        r'(?P<s>[0-9]+([,.][0-9]+)?S)?)?$').match(s))
-
-    _my_re  =re.compile(
-        r'(?P<X>[+-]?P)(?P<Y>[0-9]+([,.][0-9]+)?Y)?'
-        r'(?P<M>[0-9]+([,.][0-9]+)?M)?'
-        r'(?P<W>[0-9]+([,.][0-9]+)?W)?'
-        r'(?P<D>[0-9]+([,.][0-9]+)?D)?'
-        r'((?P<T>T)(?P<h>[0-9]+([,.][0-9]+)?H)?'
-        r'(?P<m>[0-9]+([,.][0-9]+)?M)?'
-        r'(?P<s>[0-9]+([,.][0-9]+)?S)?)?$')
+        r'(?P<s>[0-9]+([,.][0-9]+)?S)?)?$'
+    )
 
     @staticmethod
     def period_regex(s):
@@ -222,7 +212,7 @@ class Period(datetime.timedelta):
         if len(string) < 2:
             raise ValueError, "Badly formed short string %s" % string
 
-        match = Period._period_regex(string)
+        match = Period.period_regex(string)
         if not match:
             raise ValueError, "Badly formed string %s" % string
 

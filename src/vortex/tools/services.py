@@ -11,15 +11,12 @@ a default Mail Service is provided.
 __all__ = []
 
 import re, os
-import mimetypes
 
-from smtplib import SMTP
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.utils import COMMASPACE
 
 import footprints
 
@@ -94,6 +91,10 @@ class MailService(Service):
                 optional = True,
                 default = 'info',
                 values = criticals,
+            ),
+            commaspace = dict(
+                optional = True,
+                default = ', '
             )
         )
     )
@@ -125,6 +126,7 @@ class MailService(Service):
             if isinstance(xtra, MIMEBase):
                 multi.attach(xtra)
             elif os.path.isfile(xtra):
+                import mimetypes
                 ctype, encoding = mimetypes.guess_type(xtra)
                 if ctype is None or encoding is not None:
                     # No guess could be made, or the file is encoded (compressed), so
@@ -148,17 +150,18 @@ class MailService(Service):
     def set_headers(self, msg):
         """Put on the current message the header items associated to footprint attributes."""
         msg['From'] = self.sender
-        msg['To'] = COMMASPACE.join(self.to.split())
+        msg['To'] = self.commaspace.join(self.to.split())
         msg['Subject'] = self.subject
 
     def __call__(self):
         """Main action: pack the message body, add the attachments, and send via SMTP."""
+        import smtplib
         msg = self.get_message_body()
         if self.attachments:
             msg = self.as_multipart(msg)
         self.set_headers(msg)
         msgcorpus = msg.as_string()
-        smtp = SMTP(self.server)
+        smtp = smtplib.SMTP(self.server)
         smtp.sendmail(self.sender, self.to.split(), msgcorpus)
         smtp.quit()
         return len(msgcorpus)

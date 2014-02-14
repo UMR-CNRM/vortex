@@ -21,7 +21,8 @@ print t.line
 sh.cd(e.HOME + '/tmp/bidon')
 print t.prompt, sh.pwd()
 
-genv.genvbin = e.HOME  + '/bin/genvfake'
+genv.genvcmd  = 'genvfake'
+genv.genvpath = e.HOME  + '/bin'
 genv.autofill('cy37t1_op1.20')
 
 print t.line

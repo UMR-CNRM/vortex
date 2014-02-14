@@ -14,6 +14,7 @@ except ImportError, e:
 class UtRawFields(TestCase):
 
     def setUp(self):
+        toolbox.defaults(namespace='prod.inline.fr')
         self.fp_prov = dict(
             username = 'mxpt001',
             suite = 'oper',
@@ -74,17 +75,17 @@ class UtRawFields(TestCase):
         ctlg = footprints.proxy.resources
 
         nesdis = self.fp_nesdis
-        res = ctlg.findbest(nesdis)
+        res = ctlg.find_best(nesdis)
 
         self.assertTrue(res.kind, 'rawfields')
 
         ostia = self.fp_ostia
-        res = ctlg.findbest(ostia)
+        res = ctlg.find_best(ostia)
 
         self.assertEqual(res.kind, 'rawfields')
 
         seaice = self.fp_seaice
-        res = ctlg.findbest(seaice)
+        res = ctlg.find_best(seaice)
 
         self.assertTrue(res.kind, 'rawfields')
 
@@ -103,7 +104,7 @@ class UtRawFields(TestCase):
 
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/data/fic_day/sst.nesdis.bdap'
+            datadir + '/arpege/france/oper/data/fic_day/sst.nesdis.bdap'
         )
         #uniquement sur kumo (sst.nesdis.bdap non phase)
         if t.env['HOSTNAME'] == 'kumo':
@@ -123,7 +124,7 @@ class UtRawFields(TestCase):
 
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/data/fic_day/sst.ostia'
+            datadir + '/arpege/france/oper/data/fic_day/sst.ostia'
         )
         #uniquement sur kumo (sst.ostia non phase)
         if t.env['HOSTNAME'] == 'kumo':
@@ -171,7 +172,7 @@ class UtRawFields(TestCase):
 
 
 class UtGeoFields(TestCase):
-    
+
     def setUp(self):
         self.std = SpectralGeometry(id='Current op', area='france', truncation=798)
         self.fp_prov = dict(
@@ -179,7 +180,7 @@ class UtGeoFields(TestCase):
             suite = 'oper',
             igakey = '[geometry::area]',
             vapp = 'arpege'
-        )       
+        )
         self.fp_cont = dict(
             local='ICMSHANALSST'
         )
@@ -216,11 +217,11 @@ class UtGeoFields(TestCase):
         ctlg = footprints.proxy.resources
 
         sstgeofields = self.fp_sst
-        res = ctlg.findbest(sstgeofields)
+        res = ctlg.find_best(sstgeofields)
         self.assertTrue(res.kind, 'geofields')
 
         icegeofields = self.fp_seaice
-        res = ctlg.findbest(icegeofields)
+        res = ctlg.find_best(icegeofields)
         self.assertTrue(res.kind, 'geofields')
 
     def test_g1(self):
@@ -239,7 +240,7 @@ class UtGeoFields(TestCase):
         )
         self.assertEqual(
             rl[0].locate(), 
-            '/ch/mxpt/mxpt001/arpege/france/oper/data/fic_day/ICMSHANALSST'
+            datadir + '/arpege/france/oper/data/fic_day/ICMSHANALSST'
         )
         self.assertTrue(os.stat(rl[0].locate()))
 
@@ -259,7 +260,7 @@ class UtGeoFields(TestCase):
         )
         self.assertEqual(
             rl[0].locate(), 
-            '/ch/mxpt/mxpt001/arpege/france/oper/data/fic_day/ICMSHANALSEAICE'
+            datadir + '/arpege/france/oper/data/fic_day/ICMSHANALSEAICE'
         )
         self.assertTrue(os.stat(rl[0].locate()))
 

@@ -22,15 +22,29 @@ vartrue  = re.compile(r'^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$', flags=re.IGNOREC
 #: Precompiled evaluation mostly used by :class:`Environment` method (false).
 varfalse = re.compile(r'^\s*(?:0|ko|off|false|no|n)\s*$', flags=re.IGNORECASE)
 
+def paramsmap(_paramsmap=dict()):
+    """Cached table of parameters sets currently available."""
+    return _paramsmap
 
-def param(tag='default', _params=dict()):
+def paramstags():
+    """List of current tags defined as set of parameters."""
+    return paramsmap().keys()
+
+def param(tag='default', pmap=None):
     """
     Returns of defines an dedicated environment to store a set of parameters.
     Different sets could be defined and accessed through specific tagnames.
     """
-    if not tag in _params:
-        _params[tag] = Environment(active=False, clear=True)
-    return _params[tag]
+    if pmap is None:
+        pmap = paramsmap()
+    if not tag in pmap:
+        pmap[tag] = Environment(active=False, clear=True)
+    return pmap[tag]
+
+def share(**kw):
+    """Populate a special shared environment parameters set."""
+    shared = param(tag='shared')
+    shared.update(kw)
 
 def current():
     """Return current binded :class:`Environment` object."""
@@ -141,7 +155,7 @@ class Environment(object):
             os.environ[upvar] = actualvalue
             if self.verbose():
                 if self.osbound() and self._sh:
-                    self._sh.stderr(['export', '{0:s}={1:s}'.format(upvar, actualvalue)])
+                    self._sh.stderr('export', '{0:s}={1:s}'.format(upvar, actualvalue))
                 logger.info('Env export %s="%s"', upvar, actualvalue)
 
     def __setitem__(self, varname, value):

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 
+import footprints
+
 try:
     from oper_test_config import *
 except ImportError, e:
@@ -31,7 +33,7 @@ class UtRtCoef(TestCase):
 
     def test_ctlg(self):
         ctlg = footprints.proxy.resources
-        res = ctlg.findbest(self.fp_rtcoef)
+        res = ctlg.find_best(self.fp_rtcoef)
 
         self.assertTrue(res.kind, 'rtcoef')
 
@@ -53,7 +55,7 @@ class UtRtCoef(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/const/autres/rtcoef.tar'
+            datadir + '/arpege/france/oper/const/autres/rtcoef.tar'
         )
         if t.env['HOSTNAME'] == 'kumo':
             self.assertTrue(os.stat(rl[0].locate()))
@@ -86,7 +88,7 @@ class UtBcor(TestCase):
         for cat in ['noaa','ssmi','mtop']:
             bcor = self.fp_bcor
             bcor['satbias'] = cat
-            res = ctlg.findbest(bcor)
+            res = ctlg.find_best(bcor)
             self.assertTrue(res.kind, 'rtcoef')
 
     def test_r1(self):
@@ -107,7 +109,7 @@ class UtBcor(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/const/autres/bcor_noaa.dat'
+            datadir + '/arpege/france/oper/const/autres/bcor_noaa.dat'
         )
 
         self.assertEqual(
@@ -116,7 +118,7 @@ class UtBcor(TestCase):
         )
         self.assertEqual(
             rl[1].locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/const/autres/bcor_ssmi.dat'
+            datadir + '/arpege/france/oper/const/autres/bcor_ssmi.dat'
         )
 
         self.assertEqual(
@@ -125,7 +127,7 @@ class UtBcor(TestCase):
         )
         self.assertEqual(
             rl[2].locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/const/autres/bcor_mtop.dat'
+            datadir + '/arpege/france/oper/const/autres/bcor_mtop.dat'
         )
 
 if __name__ == '__main__':

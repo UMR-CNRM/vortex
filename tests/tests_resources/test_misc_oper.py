@@ -47,11 +47,11 @@ class UtMatFilter(TestCase):
         ctlg = footprints.proxy.resources
 
         mat_filter = self.fp_matfilter
-        res = ctlg.findbest(mat_filter)
+        res = ctlg.find_best(mat_filter)
         self.assertTrue(res.kind, 'matfilter')
 
         mat_filter = self.fp_matfilter2
-        res = ctlg.findbest(mat_filter)
+        res = ctlg.find_best(mat_filter)
         self.assertTrue(res.kind, 'matfilter')
 
 
@@ -73,7 +73,7 @@ class UtMatFilter(TestCase):
         )
         self.assertEqual(
             rh.locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/const/autres/matrix.fil.GLOB15'
+            datadir + '/arpege/france/oper/const/autres/matrix.fil.GLOB15'
         )
 
     def test_r2(self):
@@ -84,7 +84,7 @@ class UtMatFilter(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            
+
         self.assertEqual(rl[0].resource.kind, 'matfilter')
         self.assertEqual(rl[0].provider.realkind, 'iga')
         self.assertEqual(rl[0].container.realkind, 'file')
@@ -94,7 +94,7 @@ class UtMatFilter(TestCase):
         )
         self.assertEqual(
             rh.locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/const/autres/matrix.fil.FABEC0125'
+            datadir + '/arpege/france/oper/const/autres/matrix.fil.FABEC0125'
         )
 
 

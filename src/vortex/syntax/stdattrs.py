@@ -7,8 +7,6 @@ of attributes description that could be used in the footprint definition of any
 class which follow the :class:`footprints.Footprint` syntax.
 """
 
-import sys
-
 import footprints
 
 from vortex.tools.date import Date, Time, Month
@@ -18,9 +16,6 @@ __all__ = [
     'a_month', 'a_domain', 'a_truncation', 'a_model', 'a_date', 'a_cutoff', 'a_term',
     'a_nativefmt', 'a_format', 'a_suite'
 ]
-
-myself = sys.modules.get(__name__)
-
 
 #: Default values for atmospheric models.
 models = set(['arpege', 'arp', 'aladin', 'ald', 'arome', 'aro' , 'aearp' ,'pearp', 'mocage', 'mesonh'])
@@ -180,6 +175,6 @@ a_suite = dict(
 
 def show():
     """Returns available items and their type."""
-    dmod = myself.__dict__
+    dmod = globals()
     for stda in sorted(filter(lambda x: x.startswith('a_') or type(dmod[x]) == footprints.Footprint, dmod.keys())):
-        print '>> {0:<16} {1:<16} : {2}'.format(stda, type(dmod[stda]).__name__, dmod[stda])
+        print '{0} ( {1} ) :\n  {2}\n'.format(stda, type(dmod[stda]).__name__, dmod[stda])

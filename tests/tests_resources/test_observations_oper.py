@@ -64,15 +64,15 @@ class UtObsmap(TestCase):
         ctlg = footprints.proxy.resources
 
         obsmap = self.fp_obsmap
-        res = ctlg.findbest(obsmap)
+        res = ctlg.find_best(obsmap)
         self.assertTrue(res.kind, 'obsmap')
 
         obsmap = self.fp_obsmap2
-        res = ctlg.findbest(obsmap)
+        res = ctlg.find_best(obsmap)
         self.assertTrue(res.kind, 'obsmap')
 
         obsmap = self.fp_obsmap3
-        res = ctlg.findbest(obsmap)
+        res = ctlg.find_best(obsmap)
         self.assertTrue(res.kind, 'obsmap')
 
     def test_r1(self):
@@ -91,7 +91,7 @@ class UtObsmap(TestCase):
         )
         self.assertEqual(
             rh.locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/const/autres/BATOR_MAP_production'
+            datadir + '/arpege/france/oper/const/autres/BATOR_MAP_production'
         )
 
         rl = toolbox.rload(
@@ -108,7 +108,7 @@ class UtObsmap(TestCase):
         )
         self.assertEqual(
             rh.locate(),
-            '/ch/mxpt/mxpt001/arome/france/oper/const/autres/BATOR_MAP_production'
+            datadir + '/arome/france/oper/const/autres/BATOR_MAP_production'
         )
 
         rl = toolbox.rload(
@@ -125,7 +125,7 @@ class UtObsmap(TestCase):
         )
         self.assertEqual(
             rh.locate(),
-            '/ch/mxpt/mxpt001/aladin/reunion/oper/const/autres/BATOR_MAP_assim'
+            datadir + '/aladin/reunion/oper/const/autres/BATOR_MAP_assim'
         )
 
 
@@ -167,11 +167,11 @@ class UtBlackListLoc(TestCase):
         ctlg = footprints.proxy.resources
 
         bckll = self.fp_bckll
-        res = ctlg.findbest(bckll)
+        res = ctlg.find_best(bckll)
         self.assertTrue(res.kind, 'blacklist')
 
         bckll = self.fp_bckll2
-        res = ctlg.findbest(bckll)
+        res = ctlg.find_best(bckll)
         self.assertTrue(res.kind, 'blacklist')
 
 
@@ -190,7 +190,7 @@ class UtBlackListLoc(TestCase):
         )
         self.assertEqual(
             rh.locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/const/autres/LISTE_LOC'
+            datadir + '/arpege/france/oper/const/autres/LISTE_LOC'
         )
 
         rl = toolbox.rload(
@@ -207,7 +207,7 @@ class UtBlackListLoc(TestCase):
         )
         self.assertEqual(
             rh.locate(),
-            '/ch/mxpt/mxpt001/arome/france/oper/const/autres/LISTE_LOC'
+            datadir + '/arome/france/oper/const/autres/LISTE_LOC'
         )
 
 class UtBlackListDiap(TestCase):
@@ -240,7 +240,7 @@ class UtBlackListDiap(TestCase):
         ctlg = footprints.proxy.resources
 
         bckld = self.fp_bckld
-        res = ctlg.findbest(bckld)
+        res = ctlg.find_best(bckld)
         self.assertTrue(res.kind, 'blacklist')
 
     def test_r1(self):
@@ -258,7 +258,7 @@ class UtBlackListDiap(TestCase):
         )
         self.assertEqual(
             rh.locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/const/autres/LISTE_NOIRE_LOC'
+            datadir + '/arpege/france/oper/const/autres/LISTE_NOIRE_LOC'
         )
 
 class UtRefData(TestCase):
@@ -323,24 +323,24 @@ class UtRefData(TestCase):
                     self.liste_fp_bufr.append(fp_obs)
 
     def test_ctlg1(self):
-        ctlg = footprints.proxy.resources
+         ctlg = footprints.proxy.resources
 
          obs = self.fp_rdconv
-         res = ctlg.findbest(obs)
+         res = ctlg.find_best(obs)
          self.assertTrue(res.kind, 'refdata')
 
          obs = self.fp_rdprof
-         res = ctlg.findbest(obs)
+         res = ctlg.find_best(obs)
          self.assertTrue(res.kind, 'refdata')
 
          obs = self.fp_rdsurf
-         res = ctlg.findbest(obs)
+         res = ctlg.find_best(obs)
          self.assertTrue(res.kind, 'refdata')
 
     def test_ctlg_bufr(self):
         ctlg = footprints.proxy.resources
         for obs in self.liste_fp_bufr:
-           res = ctlg.findbest(obs)
+           res = ctlg.find_best(obs)
            self.assertTrue(res.kind, 'refdata')
 
     def test_v1(self):
@@ -486,21 +486,21 @@ class UtObservations(TestCase):
         ctlg = footprints.proxy.resources
 
         obs = self.fp_obsconv
-        res = ctlg.findbest(obs)
+        res = ctlg.find_best(obs)
         self.assertTrue(res.kind, 'observations')
 
         obs = self.fp_obsprof
-        res = ctlg.findbest(obs)
+        res = ctlg.find_best(obs)
         self.assertTrue(res.kind, 'observations')
 
         obs = self.fp_obssurf
-        res = ctlg.findbest(obs)
+        res = ctlg.find_best(obs)
         self.assertTrue(res.kind, 'observations')
 
     def test_ctlg_bufr(self):
         ctlg = footprints.proxy.resources
         for obs in self.liste_fp_bufr:
-           res = ctlg.findbest(obs)
+           res = ctlg.find_best(obs)
            self.assertTrue(res.kind, 'observations')
 
     def test_v1(self):
@@ -631,7 +631,7 @@ class UtRefdata(TestCase):
     def test_ctlg1(self):
         ctlg = footprints.proxy.resources
         refdata = self.fp_refdata
-        res = ctlg.findbest(refdata)
+        res = ctlg.find_best(refdata)
         self.assertTrue(res.kind, 'refdata')
 
     def test_v1(self):
@@ -649,7 +649,7 @@ class UtRefdata(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/data/workdir/obs/refdata.rSX'
+            datadir + '/arpege/france/oper/data/workdir/obs/refdata.rSX'
         )
         #uniquement sur machine oper (pas de phasage)
         if t.env['HOSTNAME'] == 'kumo':
@@ -702,15 +702,15 @@ class UtVarbc(TestCase):
         ctlg = footprints.proxy.resources
 
         varbc = self.fp_varbc1
-        res = ctlg.findbest(varbc)
+        res = ctlg.find_best(varbc)
         self.assertTrue(res.kind, 'varbc')
 
         varbc2 = self.fp_varbc2
-        res = ctlg.findbest(varbc2)
+        res = ctlg.find_best(varbc2)
         self.assertTrue(res.kind, 'varbc2')
 
         varbc3 = self.fp_varbc3
-        res = ctlg.findbest(varbc3)
+        res = ctlg.find_best(varbc3)
         self.assertTrue(res.kind, 'varbc3')
 
     def test_v1(self):
@@ -728,7 +728,7 @@ class UtVarbc(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/aladin/reunion/oper/data/fic_day/VARBC.cycle_alad.r12'
+            datadir + '/aladin/reunion/oper/data/fic_day/VARBC.cycle_alad.r12'
         )
         self.assertTrue(os.stat(rl[0].locate()))
 
@@ -747,7 +747,7 @@ class UtVarbc(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/data/fic_day/VARBC.cycle.r12'
+            datadir + '/arpege/france/oper/data/fic_day/VARBC.cycle.r12'
         )
         self.assertTrue(os.stat(rl[0].locate()))
 
@@ -766,7 +766,7 @@ class UtVarbc(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arome/france/oper/data/fic_day/VARBC.cycle_aro.r12'
+            datadir + '/arome/france/oper/data/fic_day/VARBC.cycle_aro.r12'
         )
         self.assertTrue(os.stat(rl[0].locate()))
 

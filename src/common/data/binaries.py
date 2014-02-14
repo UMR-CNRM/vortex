@@ -60,7 +60,7 @@ class Aladin(IFSModel):
         attr = dict(
             model = dict(
                 values = [ 'aladin', 'arome' ],
-                outcast = [],
+                outcast = list(),
             )
         )
     )
@@ -83,7 +83,7 @@ class ProGrid(BlackBox):
                 default = 'master_progrid'
             ),
             kind = dict(
-                values = [ 'progrid', 'gribtool'],
+                values = [ 'progrid', 'gribtool' ],
                 remap = dict(
                     gribtool = 'progrid'
                 )
@@ -108,7 +108,7 @@ class ProTool(BlackBox):
                 default = 'master_addsurf'
             ),
             kind = dict(
-                values = [ 'protool', 'addsurf'],
+                values = [ 'protool', 'addsurf' ],
                 remap = dict(
                     gribtool = 'protool'
                 )

@@ -78,9 +78,7 @@ class OpArchive(Provider):
             ),
             suite = dict(
                 values = suites,
-                remap = dict(
-                    dbl = 'dble',
-                )
+                remap = dict(dbl='dble')
             ),
             igakey = dict(
                 optional = True,

@@ -22,6 +22,6 @@ class utImport(TestCase):
 if __name__ == '__main__':
     main()
     vortex.exit()
-    
+
 def get_test_class():
     return [ utImport ]

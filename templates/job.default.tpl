@@ -34,7 +34,7 @@ oplocals = locals()
 import os, sys
 sys.stderr = sys.stdout
 
-pathdirs = [os.path.join(op_rootdir, xpath) for xpath in ('', 'src', 'vortex/src')]
+pathdirs = [os.path.join(op_rootdir, xpath) for xpath in ('', 'src', 'vortex/src', 'vortex/site')]
 sys.path.extend([os.path.realpath(d) for d in pathdirs if os.path.isdir(d)])
 
 from iga.tools import op
@@ -43,12 +43,12 @@ from $package import $task as todo
 try:
     t = op.setup(actual=oplocals)
     e = op.setenv(t, actual=oplocals)
-    for task in todo.setup(t):
-        task.title('starting ' + op_jobname + ' for HH = ' + str(task.ticket.env.DATE.hour))
-        task.process()
-        task.complete()
+    for app in todo.setup(t):
+        app.title('starting ' + op_jobname + ' for HH = ' + str(app.ticket.env.DATE.hour))
+        app.process()
+        app.complete()
     op.complete(t)
-except Exception as last_error:
+except Exception:
     op.fulltraceback(locals())
     op.rescue(actual=locals())
     raise

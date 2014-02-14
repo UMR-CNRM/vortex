@@ -99,27 +99,27 @@ class UtGridpoint(TestCase):
     def test_ctlg1(self):
         gridpoint = self.fp_gridpoint1
         ctlg = footprints.proxy.resources
-        res = ctlg.findbest(gridpoint)
+        res = ctlg.find_best(gridpoint)
         self.assertEqual(res.kind, 'gridpoint')
 
         gridpoint = self.fp_gridpoint2
-        res = ctlg.findbest(gridpoint)
+        res = ctlg.find_best(gridpoint)
         self.assertEqual(res.kind, 'gridpoint')
 
         gridpoint = self.fp_gridpoint3
-        res = ctlg.findbest(gridpoint)
+        res = ctlg.find_best(gridpoint)
         self.assertEqual(res.kind, 'gridpoint')
  
         gridpoint = self.fp_gridpoint4
-        res = ctlg.findbest(gridpoint)
+        res = ctlg.find_best(gridpoint)
         self.assertEqual(res.kind, 'gridpoint')
 
         gridpoint = self.fp_gridpoint5
-        res = ctlg.findbest(gridpoint)
+        res = ctlg.find_best(gridpoint)
         self.assertEqual(res.kind, 'gridpoint')
 
         gridpoint = self.fp_gridpoint6
-        res = ctlg.findbest(gridpoint)
+        res = ctlg.find_best(gridpoint)
         self.assertEqual(res.kind, 'gridpoint')
 
     def test_v1(self):
@@ -138,7 +138,7 @@ class UtGridpoint(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/data/fic_day/PFARPEGLOB15+0000.rSX'
+            datadir + '/arpege/france/oper/data/fic_day/PFARPEGLOB15+0000.rSX'
         )
         #uniquement sur machine oper (pas de phasage)
         if t.env['HOSTNAME'] == 'kumo':
@@ -159,7 +159,7 @@ class UtGridpoint(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/data/fic_day/PFARPEGLOB15+0003.rSX'
+            datadir + '/arpege/france/oper/data/fic_day/PFARPEGLOB15+0003.rSX'
         )
         #uniquement sur machine oper (pas de phasage)
         if t.env['HOSTNAME'] == 'kumo':
@@ -180,7 +180,7 @@ class UtGridpoint(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/aladin/france/oper/data/fic_day/PFALADFRANX01+0006.rSX'
+            datadir + '/aladin/france/oper/data/fic_day/PFALADFRANX01+0006.rSX'
         )
         #uniquement sur machine oper (pas de phasage)
         if t.env['HOSTNAME'] == 'kumo':
@@ -201,7 +201,7 @@ class UtGridpoint(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0006.rSX'
+            datadir + '/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0006.rSX'
         )
         #uniquement sur machine oper (pas de phasage)
         if t.env['HOSTNAME'] == 'kumo':
@@ -222,7 +222,7 @@ class UtGridpoint(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/data/bdap/PE06000GLOB15'
+            datadir + '/arpege/france/oper/data/bdap/PE06000GLOB15'
         )
         #uniquement sur machine oper (pas de phasage)
         if t.env['HOSTNAME'] == 'kumo':
@@ -243,7 +243,7 @@ class UtGridpoint(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arpege/pearp/oper/data/bdap/RUN4/fc_SX_4_GLOB15_0006'
+            datadir + '/arpege/pearp/oper/data/bdap/RUN4/fc_SX_4_GLOB15_0006'
         )
         #uniquement sur machine oper (pas de phasage)
         if t.env['HOSTNAME'] == 'kumo':
@@ -303,15 +303,15 @@ class UtHistoric(TestCase):
     def test_ctlg1(self):
         historic = self.fp_historic1
         ctlg = footprints.proxy.resources
-        res = ctlg.findbest(historic)
+        res = ctlg.find_best(historic)
         self.assertEqual(res.kind, 'historic')
 
         historic = self.fp_historic2
-        res = ctlg.findbest(historic)
+        res = ctlg.find_best(historic)
         self.assertEqual(res.kind, 'historic')
 
         historic = self.fp_historic3
-        res = ctlg.findbest(historic)
+        res = ctlg.find_best(historic)
         self.assertEqual(res.kind, 'historic')
 
     def test_v1(self):
@@ -329,7 +329,7 @@ class UtHistoric(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arome/france/oper/data/fic_day/ICMSHAROM+0000.rDH'
+            datadir + '/arome/france/oper/data/fic_day/ICMSHAROM+0000.rDH'
         )
         self.assertTrue(os.stat(rl[0].locate()))
 
@@ -348,7 +348,7 @@ class UtHistoric(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/aladin/caledonie/oper/data/fic_day/ICMSHALAD+0000.rPM'
+            datadir + '/aladin/caledonie/oper/data/fic_day/ICMSHALAD+0000.rPM'
         )
         #uniquement sur machine oper (pas de phasage)
         if t.env['HOSTNAME'] == 'kumo':
@@ -369,7 +369,7 @@ class UtHistoric(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rDH'
+            datadir + '/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rDH'
         )
         self.assertTrue(os.stat(rl[0].locate()))
 
@@ -436,19 +436,19 @@ class UtAnalysis(TestCase):
         ctlg = footprints.proxy.resources
 
         analys = self.fp_analys1
-        res = ctlg.findbest(analys)
+        res = ctlg.find_best(analys)
         self.assertEqual(res.kind, 'analysis')
 
         analys = self.fp_analys1_b
-        res = ctlg.findbest(analys)
+        res = ctlg.find_best(analys)
         self.assertEqual(res.kind, 'analysis')
 
         analys = self.fp_analys2
-        res = ctlg.findbest(analys)
+        res = ctlg.find_best(analys)
         self.assertEqual(res.kind, 'analysis')
 
         analys = self.fp_analys3
-        res = ctlg.findbest(analys)
+        res = ctlg.find_best(analys)
         self.assertEqual(res.kind, 'analysis')
 
     def test_v1(self):
@@ -466,7 +466,7 @@ class UtAnalysis(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rPM'
+            datadir + '/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rPM'
         )
         #uniquement sur Nec oper
         if t.env['HOSTNAME'] == 'kumo':
@@ -487,7 +487,7 @@ class UtAnalysis(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arome/france/oper/data/fic_day/INIT_SURF.lfi.rPM'
+            datadir + '/arome/france/oper/data/fic_day/INIT_SURF.lfi.rPM'
         )
         #uniquement sur Nec oper
         if t.env['HOSTNAME'] == 'kumo':
@@ -509,7 +509,7 @@ class UtAnalysis(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/aladin/caledonie/oper/data/workdir/analyse/ICMSHALADINIT.r18'
+            datadir + '/aladin/caledonie/oper/data/workdir/analyse/ICMSHALADINIT.r18'
         )
         #uniquement sur Nec oper
         if t.env['HOSTNAME'] == 'kumo':
@@ -530,7 +530,7 @@ class UtAnalysis(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.r06'
+            datadir + '/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.r06'
         )
         #uniquement sur Nec oper
         if t.env['HOSTNAME'] == 'kumo':
@@ -563,7 +563,7 @@ class UtHistsurf(TestCase):
     def test_ctlg1(self):
         histsurf = self.fp_histsurf
         ctlg = footprints.proxy.resources
-        res = ctlg.findbest(histsurf)
+        res = ctlg.find_best(histsurf)
         self.assertEqual(res.kind, 'histsurf')
 
 
@@ -583,7 +583,7 @@ class UtHistsurf(TestCase):
         )
         self.assertEqual(
             rl[0].locate(), 
-            '/ch/mxpt/mxpt001/arome/france/oper/data/fic_day/PREP.lfi.rQZ'
+            datadir + '/arome/france/oper/data/fic_day/PREP.lfi.rQZ'
         )
 
 if __name__ == '__main__':

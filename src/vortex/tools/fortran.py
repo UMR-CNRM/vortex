@@ -108,15 +108,15 @@ _LITERAL_CONSTANT = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + _BOZ_LITERAL_CO
 class LiteralParser(object):
 
     def __init__(self,
-        re_flags     = _RE_FLAGS,
-        re_integer   = '^' + _SIGNED_INT_LITERAL_CONSTANT + '$',
-        re_boz       = '^' + _BOZ_LITERAL_CONSTANT + '$',
-        re_real      = '^' + _SIGNED_REAL_LITERAL_CONSTANT + '$',
-        re_complex   = '^' + _COMPLEX_LITERAL_CONSTANT + '$',
-        re_character = '^' + _CHAR_LITERAL_CONSTANT + '$',
-        re_logical   = '^' + _LOGICAL_LITERAL_CONSTANT + '$',
-        re_true      = '\.T(?:RUE)?\.',
-        re_false     = '\.F(?:ALSE)?\.',
+            re_flags     = _RE_FLAGS,
+            re_integer   = '^' + _SIGNED_INT_LITERAL_CONSTANT + '$',
+            re_boz       = '^' + _BOZ_LITERAL_CONSTANT + '$',
+            re_real      = '^' + _SIGNED_REAL_LITERAL_CONSTANT + '$',
+            re_complex   = '^' + _COMPLEX_LITERAL_CONSTANT + '$',
+            re_character = '^' + _CHAR_LITERAL_CONSTANT + '$',
+            re_logical   = '^' + _LOGICAL_LITERAL_CONSTANT + '$',
+            re_true      = '\.T(?:RUE)?\.',
+            re_false     = '\.F(?:ALSE)?\.',
         ):
         self._re_flags     = re_flags
         self._re_integer   = re_integer
@@ -131,7 +131,7 @@ class LiteralParser(object):
         self.recompile()
 
     def recompile(self):
-        """Recompile regexps according to internal characters strings by type."""
+        """Recompile regexps according to internal characters strings by literal types."""
         self.integer   = re.compile(self._re_integer,   self._re_flags)
         self.boz       = re.compile(self._re_boz,       self._re_flags)
         self.real      = re.compile(self._re_real,      self._re_flags)
@@ -312,6 +312,7 @@ class NamelistBlock(object):
         self.__dict__['_mods'] = set()
         self.__dict__['_dels'] = set()
         self.__dict__['_subs'] = dict()
+        self.__dict__['_literal'] = None
 
     @property
     def name(self):
@@ -444,8 +445,10 @@ class NamelistBlock(object):
 
     def nice(self, item, literal=None):
         """Nice encoded value of the item, possibly substitue with macros."""
-        if not literal:
-            literal = LiteralParser()
+        if literal is None:
+            if self._literal is None:
+                self._literal = LiteralParser()
+            literal = self._literal
         if item in self._subs:
             if self._subs[item] is None:
                 return item
@@ -457,8 +460,10 @@ class NamelistBlock(object):
     def dumps(self, literal=None):
         """Returns a string of the namelist block, readable by fortran parsers."""
         namout= " &{0:s}\n".format(self.name.upper())
-        if not literal:
-            literal = LiteralParser()
+        if literal is None:
+            if self._literal is None:
+                self.__dict__['_literal'] = LiteralParser()
+            literal = self._literal
         for key in self._keys:
             value_strings = [ self.nice(value, literal) for value in self._pool[key] ]
             namout += '   {0:s}={1:s},\n'.format(key, ','.join(value_strings))
@@ -520,7 +525,7 @@ class NamelistParser(object):
         self.recompile()
 
     def recompile(self):
-        """Recompile regexps according to internal characters strings by type."""
+        """Recompile regexps according to internal characters strings by namelist entity."""
         self.clean = re.compile(self._re_clean, self._re_flags)
         self.block = re.compile(self._re_block, self._re_flags)
         self.bname = re.compile(self._re_bname, self._re_flags)

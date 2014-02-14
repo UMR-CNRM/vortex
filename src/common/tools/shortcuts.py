@@ -13,8 +13,7 @@ def fastload(**kw):
     kw.setdefault('cutoff', 'production')
     kw.setdefault('model', 'arpege')
     kw.setdefault('date', synop())
-    kw.setdefault('geometry', geometries.getbyname(kw.setdefault('geoname', 'globalsp')))
-    del kw['geoname']
+    kw.setdefault('geometry', geometries.getbyname(kw.pop('geoname', 'globalsp')))
     al = toolbox.rload(**kw)
     if len(al) > 1:
         return al

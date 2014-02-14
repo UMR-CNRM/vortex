@@ -221,6 +221,7 @@ class InCore(Virtual):
         attr = dict(
             incore = dict(
                 type = bool,
+                values = [ True ],
                 alias = ('mem', 'memory')
             ),
             incorelimit = dict(
@@ -342,6 +343,7 @@ class MayFly(Virtual):
         attr = dict(
             mayfly = dict(
                 type = bool,
+                values = [ True ],
                 alias = ('tempo', 'virtual')
             ),
             delete = dict(

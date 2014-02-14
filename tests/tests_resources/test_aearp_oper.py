@@ -76,16 +76,16 @@ class UtBackgroundErrStd(TestCase):
     def test_ctlg(self):
         ctlg = footprints.proxy.resources
         bckgerr = self.fp_bckgerr1
-        res = ctlg.findbest(bckgerr)
+        res = ctlg.find_best(bckgerr)
         self.assertEqual(res.kind, 'bgerrstd')
         bckgerr = self.fp_bckgerr2
-        res = ctlg.findbest(bckgerr)
+        res = ctlg.find_best(bckgerr)
         self.assertEqual(res.kind, 'bgerrstd')
         bckgerr = self.fp_bckgerr3
-        res = ctlg.findbest(bckgerr)
+        res = ctlg.find_best(bckgerr)
         self.assertEqual(res.kind, 'bgerrstd')
         bckgerr = self.fp_bckgerr4
-        res = ctlg.findbest(bckgerr)
+        res = ctlg.find_best(bckgerr)
         self.assertEqual(res.kind, 'bgerrstd')
 
     def test_r1(self):
@@ -104,7 +104,7 @@ class UtBackgroundErrStd(TestCase):
             name_ref + suffix_ref
         )
 
-        name_ref = '/ch/mxpt/mxpt001/arpege/aearp/oper/data/fic_day/errgribvor_production.'
+        name_ref = datadir + '/arpege/aearp/oper/data/fic_day/errgribvor_production.'
         self.assertEqual(
             rl[0].locate(),
             name_ref + suffix_ref
@@ -126,7 +126,7 @@ class UtBackgroundErrStd(TestCase):
             name_ref + suffix_ref
         )
 
-        name_ref = '/ch/mxpt/mxpt001/arpege/aearp/oper/data/fic_day/errgribvor_assim.'
+        name_ref = datadir + '/arpege/aearp/oper/data/fic_day/errgribvor_assim.'
         self.assertEqual(
             rl[0].locate(),
             name_ref + suffix_ref
@@ -149,7 +149,7 @@ class UtBackgroundErrStd(TestCase):
         )
 
         name_ref =\
-'/ch/mxpt/mxpt001/arpege/aearp/oper/data/fic_day/errgribvor_production_dsbscr.'
+datadir + '/arpege/aearp/oper/data/fic_day/errgribvor_production_dsbscr.'
         self.assertEqual(
             rl[0].locate(),
             name_ref + suffix_ref
@@ -172,7 +172,7 @@ class UtBackgroundErrStd(TestCase):
         )
 
         name_ref =\
-'/ch/mxpt/mxpt001/arpege/france/oper/data/fic_day/errgrib_scr.r0'
+datadir + '/arpege/france/oper/data/fic_day/errgrib_scr.r0'
         self.assertEqual(
             rl[0].locate(),
             name_ref

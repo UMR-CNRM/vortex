@@ -26,9 +26,9 @@ class IgaFinder(Finder):
                 }
             ),
             rootdir = dict(
-                alias = [ 'suitehome' ],
+                alias = [ 'opdata', 'datadir' ],
                 optional = True,
-                default = '/ch/mxpt/mxpt001'
+                default = '/chaine/mxpt001'
             )
         ),
         priority = dict(

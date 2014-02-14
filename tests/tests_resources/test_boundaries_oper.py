@@ -12,8 +12,8 @@ except ImportError, e:
 class UtElscf(TestCase):
 
     def setUp(self):
-        self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution='08km00')
-        self.frangp = SpectralGeometry(id='Current op', area='frangp', resolution='02km50')
+        self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution=8.0)
+        self.frangp = SpectralGeometry(id='Current op', area='frangp', resolution=2.50)
         self.mp1 = SpectralGeometry(id='Current op', area='testmp1')
 
         self.fp_prov = dict(
@@ -74,16 +74,16 @@ class UtElscf(TestCase):
         ctlg = footprints.proxy.resources
 
         elscf = self.fp_elscf1
-        res = ctlg.findbest(elscf)
-        self.assertEqual(res.kind, 'elscf')
+        res = ctlg.find_best(elscf)
+        self.assertEqual(res.kind, 'boundary')
 
         elscf = self.fp_elscf2
-        res = ctlg.findbest(elscf)
-        self.assertEqual(res.kind, 'elscf')
+        res = ctlg.find_best(elscf)
+        self.assertEqual(res.kind, 'boundary')
 
         elscf = self.fp_elscf3
-        res = ctlg.findbest(elscf)
-        self.assertEqual(res.kind, 'elscf')
+        res = ctlg.find_best(elscf)
+        self.assertEqual(res.kind, 'boundary')
  
     def test_v1(self):
         rl = toolbox.rload(
@@ -100,7 +100,7 @@ class UtElscf(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/arome/france/oper/data/fic_day/ELSCFAROMALBC012.rPM'
+            datadir + '/arome/france/oper/data/fic_day/ELSCFAROMALBC012.rPM'
         )
         #uniquement sur Nec oper
         if t.env['HOSTNAME'] == 'kumo':
@@ -121,7 +121,7 @@ class UtElscf(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/aladin/caledonie/oper/data/fic_day/ELSCFALADALBC002.r00'
+            datadir + '/aladin/caledonie/oper/data/fic_day/ELSCFALADALBC002.r00'
         )
         #uniquement sur Nec oper
         if t.env['HOSTNAME'] == 'kumo':
@@ -142,7 +142,7 @@ class UtElscf(TestCase):
         )
         self.assertEqual(
             rl[0].locate(),
-            '/ch/mxpt/mxpt001/aladin/testmp1/oper/data/fic_day/ELSCFALADALBC016.rAM'
+            datadir + '/aladin/testmp1/oper/data/fic_day/ELSCFALADALBC016.rAM'
         )
         #uniquement sur Nec oper
         if t.env['HOSTNAME'] == 'kumo':

@@ -3,10 +3,10 @@
 
 __all__ = []
 
-import sys, re
+import  re
+
 from vortex.autolog import logdefault as logger
 
-myself = sys.modules.get(__name__)
 
 class Cycle(object):
     """
@@ -74,18 +74,20 @@ def monocycles():
 
 def defined():
     """Returns the cycles-regular expressions currently defined in the namespace of the module."""
-    return filter(lambda x: re.match('cy\d{2}', x), myself.__dict__.keys())
+    myself = globals()
+    return filter(lambda x: re.match('cy\d{2}', x), myself.keys())
 
 def generate():
     """
     Called at the fisrt import but could be called again is data
     :data:`maincycles` and :data:`subcycles` have been alterated.
     """
+    myself = globals()
     for k in defined():
         logger.debug('Remove cycle definition %s', k)
-        del myself.__dict__[k]
+        del myself[k]
     for c in monocycles():
         cytag = 'cy' + c
-        myself.__dict__[cytag] = Cycle(regexp='^(?:cy)?'+c+'(?:\.\d+)?$', tag=cytag)
+        myself[cytag] = Cycle(regexp='^(?:cy)?'+c+'(?:\.\d+)?$', tag=cytag)
 
 generate()

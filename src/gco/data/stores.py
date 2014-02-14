@@ -4,14 +4,8 @@
 #: No automatic export
 __all__ = []
 
-import re
-
 from vortex.autolog import logdefault as logger
 from vortex.data.stores import Store, MultiStore, CacheStore
-
-
-rextract = re.compile('^extract=(.*)$')
-
 
 class GCOCentralStore(Store):
     """
@@ -32,11 +26,15 @@ class GCOCentralStore(Store):
             netloc = dict(
                 values = [ 'gco.meteo.fr' ],
             ),
-            ggetbin = dict(
+            ggetcmd = dict(
                 optional = True,
-                default = 'gget'
+                default = None
             ),
             ggetpath = dict(
+                optional = True,
+                default = None
+            ),
+            ggetroot = dict(
                 optional = True,
                 default = None
             ),
@@ -54,16 +52,31 @@ class GCOCentralStore(Store):
 
     def actualgget(self, system, rpath):
         """Return actual (gtool, gname)."""
+        tg = system.target()
+
         l = rpath.lstrip('/').split('/')
         gname = l.pop()
+
         if 'GGET_TAMPON' in system.env:
             tampon = system.env.GGET_TAMPON
         else:
-            tampon = '/' + '/'.join(l)
-        gtool = self.ggetbin
-        if self.ggetpath:
-            gtool = system.path.join(self.ggetpath, gtool)
-        return ( gtool, tampon, gname )
+            rootdir = self.ggetroot
+            if rootdir is None:
+                rootdir = tg.get('gco:rootdir', '')
+            tampon = rootdir + '/' + '/'.join(l)
+
+        gcmd = self.ggetcmd
+        if gcmd is None:
+            gcmd = tg.get('gco:ggetcmd', 'gget')
+
+        gpath = self.ggetpath
+        if gpath is None:
+            if 'GGET_PATH' in system.env:
+                gpath = system.env.GGET_PATH
+            else:
+                gpath = tg.get('gco:ggetpath', '')
+
+        return (system.path.join(gpath, gcmd), tampon, gname)
 
     def ggetcheck(self, remote, options):
         """Verify disponibility in GCO's tampon using ``gget`` external tool."""
@@ -80,8 +93,8 @@ class GCOCentralStore(Store):
         (gtool, tampon, gname) = self.actualgget(system, remote['path'])
         system.env.gget_tampon = tampon
         gloc = system.spawn([gtool, '-path', gname], output=True)
-        if gloc and system.path.exists(gloc):
-            return gloc
+        if gloc and system.path.exists(gloc[0]):
+            return gloc[0]
         else:
             return False
 
@@ -187,4 +200,4 @@ class GCOStore(MultiStore):
 
     def alternates_netloc(self):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
-        return ( 'gco.cache.fr', 'gco.meteo.fr' )
+        return ('gco.cache.fr', 'gco.meteo.fr')

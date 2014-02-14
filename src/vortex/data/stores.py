@@ -10,7 +10,6 @@ Store objects use the :mod:`footprints` mechanism.
 __all__ = [ 'Store' ]
 
 import re
-import sys
 
 import footprints
 

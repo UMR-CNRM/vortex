@@ -15,6 +15,7 @@ import glob
 import tarfile
 import subprocess
 import pickle
+import datetime
 
 import footprints
 
@@ -331,7 +332,8 @@ class System(footprints.FootprintBase):
             checklist.append((modname, modname in sys.modules))
         if not output:
             for m, s in checklist:
-                print s, m
+                print str(s).ljust(8), m
+            print '--'
             return True
         else:
             return checklist
@@ -339,7 +341,7 @@ class System(footprints.FootprintBase):
     def systems_reload(self):
         """Load extra systems modules not yet loaded."""
         extras = list()
-        for modname in self.vortex_modules('systems'):
+        for modname in self.vortex_modules(only='systems'):
             if modname not in sys.modules:
                 try:
                     self.import_module(modname)
@@ -418,6 +420,15 @@ class OSExtended(System):
         self._rmtreemin = kw.pop('rmtreemin', 3)
         self._cmpaftercp = kw.pop('cmpaftercp', True)
         super(OSExtended, self).__init__(*args, **kw)
+
+    def target(self, **kw):
+        """Provide a default target according to system own attributes."""
+        desc = dict(
+            hostname = self.hostname,
+            sysname  = self.sysname
+        )
+        desc.update(kw)
+        return footprints.proxy.targets.default(**desc)
 
     def clear(self):
         """Clear screen."""

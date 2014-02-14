@@ -23,7 +23,7 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.8.9'
+__version__ = '0.8.10'
 __prompt__  = 'Vortex v-' + __version__+ ':'
 
 __all__ = []
@@ -37,6 +37,7 @@ logging.basicConfig(
     level=logging.WARNING
 )
 logger = logging.getLogger('vortex')
+del logging
 
 # Set vortex specific priorities for footprints usage
 
@@ -69,13 +70,13 @@ rootenv = tools.env.Environment(active=True)
 rootenv.glove = sessions.glove()
 
 rs = sessions.ticket(active=True, topenv=rootenv, glove=rootenv.glove, prompt=__prompt__)
-
 if rs.system().systems_reload():
     rs.system(refill=True)
-
 del rs
 
-# Shorthands to sessions or footprints components
+tools.env.share(system=sessions.system(), glove=sessions.glove())
+
+# Shorthands to sessions components
 
 ticket = sessions.ticket
 sh = sessions.system
@@ -95,3 +96,7 @@ atexit.register(complete)
 del atexit
 
 print 'Vortex', __version__, 'loaded', '(', tools.date.atsecond().reallynice(), ')'
+if __version__ != footprints.__version__:
+    print '   ... with a non-matching footprints version (', footprints.__version__, ')'
+
+del footprints

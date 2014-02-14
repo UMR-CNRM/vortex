@@ -9,8 +9,9 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
+__version__ = '0.8.10'
+
 import copy, re
-import inspect
 import types
 
 import logging
@@ -27,16 +28,19 @@ UNKNOWN = '__unknown__'
 replattr = re.compile(r'\[(\w+)(?:\:+(\w+))?\]')
 
 
-class FootprintMaxIter(Exception):
+class FootprintException(Exception):
     pass
 
-class FootprintUnreachableAttr(Exception):
+class FootprintMaxIter(FootprintException):
     pass
 
-class FootprintFatalError(Exception):
+class FootprintUnreachableAttr(FootprintException):
     pass
 
-class FootprintInvalidDefinition(Exception):
+class FootprintFatalError(FootprintException):
+    pass
+
+class FootprintInvalidDefinition(FootprintException):
     pass
 
 def set_before(priorityref, *args):
@@ -90,7 +94,7 @@ class FootprintSetup(object):
 
     def as_dict(self):
         """Return a standalone dictionary or current setup attributes."""
-        return { k.lstrip('_'):v for k,v in self.__dict__.items() }
+        return dict([ (k.lstrip('_'), v) for k,v in self.__dict__.items() ])
 
     def info(self):
         """Summuray of actual settings."""
@@ -102,7 +106,7 @@ class FootprintSetup(object):
         Populate an ``obj`` with references to active collectors and load methods
         so that it could behave like a static proxy.
         """
-        if inspect.ismodule(obj) or (isinstance(obj, object) and not inspect.isclass(obj)):
+        if isinstance(obj, object):
             self.proxies.add(obj)
             for k, v in collectorsmap().items():
                 if clear or not hasattr(obj, k):
@@ -185,8 +189,11 @@ class Collector(util.Catalog):
     def pickup_attributes(self, desc):
         """Try to pickup inside the collector a item that could match the description."""
         logger.debug('Pick up a "%s" in description %s with collector %s', self.entry, desc, self)
-        mkreport = desc.pop('report', self.autoreport)
-        mkaltreport = desc.pop('altreport', self.altreport)
+        mkreport = desc.pop('_report', self.autoreport)
+        mkaltreport = desc.pop('_altreport', self.altreport)
+        for hidden in [ x for x in desc.keys() if x.startswith('_') ]:
+            logger.warning('Hidden argument "%s" ignored in pickup attributes', hidden)
+            del desc[hidden]
         if self.entry in desc and desc[self.entry] is not None:
             logger.debug('A %s is already defined %s', self.entry, desc[self.entry])
         else:
@@ -266,9 +273,58 @@ class Collector(util.Catalog):
         a suitable candidate according to description.
         """
         for inst in self.instances():
-            if inst.compatible(kw):
+            if inst.reusable() and inst.compatible(kw):
                 return inst
         return self.load(**kw)
+
+    def grep(self, **kw):
+        """
+        Grep in the current instances of the collector items that match
+        the set of attributes given as named arguments.
+        """
+        okmatch = list()
+        for item in self.instances:
+            ok = True
+            for k, v in kw.items():
+                if not hasattr(item, k) or getattr(item, k) != v:
+                    ok = False
+                    break
+            if ok:
+                okmatch.append(item)
+        return okmatch
+
+    def buildattrmap(self, attrmap=None):
+        """Build a reversed attr-class map."""
+        if attrmap is None:
+            attrmap = dict()
+        for c in self:
+            fp = c.footprint()
+            for k, v in fp.attr.items():
+                opt = ' (optional)' if fp.optional(k) else ''
+                alist = attrmap.setdefault(k+opt, list())
+                alist.append(dict(
+                    name=c.__name__,
+                    module=c.__module__,
+                    values=fp.get_values(k),
+                    outcast=fp.get_outcast(k)
+                ))
+        return attrmap
+
+    def showmap(self):
+        """
+        Show the complete set of attributes that could be found in classes
+        collected by the current collector, documented with ``values``
+        or ``outcast`` sets if present.
+        """
+        indent = ' ' * 3
+        attrmap = self.buildattrmap()
+        for a in sorted(attrmap.keys()):
+            print '*', a, ':'
+            for info in sorted(attrmap[a]):
+                print ' ' * 3, info['name'].ljust(24), '+', info['module']
+                for k in [ x for x in info.keys() if x not in ('name', 'module') and info[x] ]:
+                    print ' ' * 28, '|', k, '=', info[k]
+            print
 
     def dump_report(self, stamp=False):
         """Print a nicelly formatted dump report as a dict."""
@@ -285,7 +341,7 @@ class Collector(util.Catalog):
     def sortedreport(self, **kw):
         """
         Return the subpart of the report related to the last sequence
-        of evaluation through the current collector ordered by 
+        of evaluation through the current collector ordered by args.
         """
         return self.lastreport.as_tree(**kw)
 
@@ -293,12 +349,13 @@ class Collector(util.Catalog):
         """Print a nicelly formatted dump report as a dict."""
         print dump.fulldump(self.lastreport.as_dict())
 
-    def report_why(self, classname):
+    def report_whynot(self, classname):
         """
         Report why any class mathching the ``classname`` pattern
         had not been selected through the last evaluation.
         """
         return self.logreport.whynot(classname)
+
 
 def collectorsmap(_collectorsmap=dict()):
     """Cached table of collectors currently activated."""
@@ -334,6 +391,12 @@ def default(**kw):
     """
     return collector(kw.pop('tag', 'garbage')).default(**kw)
 
+def grep(**kw):
+    """Try to find any instance in all collectors that could match given attributes."""
+    allgrep = list()
+    for c in collectorsmap().values():
+        allgrep.extend(c.grep(**kw))
+    return allgrep
 
 class FootprintProxy(object):
     """Access to alive footprint items."""
@@ -358,7 +421,7 @@ class FootprintProxy(object):
 
     def objectsmap(self):
         """Return a dictionary of instances sorted by collectors entries."""
-        return { k+'s':c.instances() for k, c in collectorsmap().items() }
+        return dict([ (k+'s', c.instances()) for k, c in collectorsmap().items() ])
 
     def exists(self, tag):
         """Check if a given ``tag`` of objects is tracked or not."""
@@ -426,16 +489,17 @@ class Footprint(object):
             fp['attr'][a]['outcast'] = set(fp['attr'][a].get('outcast', set()))
             ktype = fp['attr'][a].get('type', str)
             kargs = fp['attr'][a].get('args', dict())
-            for v in fp['attr'][a]['values']:
-                if not isinstance(v, ktype):
-                    fp['attr'][a]['values'].remove(v)
-                    try:
-                        v = ktype(v, **kargs)
-                        fp['attr'][a]['values'].add(v)
-                        logger.debug('Init Footprint value %s reclassed = %s', a, v)
-                    except Exception:
-                        logger.error('Bad init footprint value')
-                        raise
+            for autoreclass in ('values', 'outcast'):
+                for v in fp['attr'][a][autoreclass]:
+                    if not isinstance(v, ktype):
+                        fp['attr'][a][autoreclass].remove(v)
+                        try:
+                            v = ktype(v, **kargs)
+                            fp['attr'][a][autoreclass].add(v)
+                            logger.debug('Init Footprint [%s] %s reclassed = %s', autoreclass, a, v)
+                        except Exception:
+                            logger.error('Bad init footprint in [%s]', autoreclass)
+                            raise
         self._fp = fp
 
     def __str__(self):
@@ -606,7 +670,7 @@ class Footprint(object):
             return True
 
     def in_values(self, item, values):
-        """Check that item is inside values or compare to one of these values."""
+        """Check that item is inside ``values`` or compare as equal to one of these values."""
         if item in values:
             return True
         else:
@@ -647,8 +711,9 @@ class Footprint(object):
 
             k = todo.pop(0)
             kdef = attrs[k]
-            nbpass += 1
-            if not self._replacement(nbpass, k, guess, extras, todo) or guess[k] is None: continue
+            nbpass = nbpass + 1
+            if not self._replacement(nbpass, k, guess, extras, todo) or guess[k] is None:
+                continue
 
             attr_seen.add(k)
 
@@ -682,7 +747,7 @@ class Footprint(object):
                     report.add(attribute=k, why=reporting.REPORT_WHY_OUTSIDE, args=guess[k])
                     diags[k] = True
                     guess[k] = None
-                if kdef['outcast'] and guess[k] in kdef['outcast']:
+                if kdef['outcast'] and self.in_values(guess[k], kdef['outcast']):
                     logger.debug(' > Attr %s value excluded from range = %s %s', k, guess[k], kdef['outcast'])
                     report.add(attribute=k, why=reporting.REPORT_WHY_OUTCAST, args=guess[k])
                     diags[k] = True
@@ -752,6 +817,14 @@ class Footprint(object):
 
         return rd
 
+    def get_values(self, attrname):
+        """Return acceptable values for a given ``attrname``."""
+        return tuple(self.attr[attrname]['values'])
+
+    def get_outcast(self, attrname):
+        """Return inacceptable values for a given ``attrname``."""
+        return tuple(self.attr[attrname]['outcast'])
+
     @property
     def info(self):
         """Read-only property. Direct access to internal footprint informative description."""
@@ -814,7 +887,7 @@ class FootprintBaseMeta(type):
             bcfp.extend(fplocal)
         else:
             bcfp.append(fplocal)
-        d['_footprint'] = Footprint( *bcfp )
+        d['_footprint'] = Footprint(*bcfp)
         for k in d['_footprint'].attr.keys():
             d[k] = FootprintAttrAccess(k)
         realcls = super(FootprintBaseMeta, cls).__new__(cls, n, b, d)
@@ -833,7 +906,6 @@ class FootprintBaseMeta(type):
         realcls.__doc__ = basedoc
         if setup.docstring:
             realcls.__doc__ += "\n\n    Footprint::\n\n" + realcls.footprint().nice()
-
         return realcls
 
 
@@ -847,6 +919,7 @@ class FootprintBase(object):
 
     _abstract  = True
     _explicit  = True
+    _reusable  = True
     _collector = ('garbage',)
 
     def __init__(self, *args, **kw):
@@ -867,10 +940,18 @@ class FootprintBase(object):
         self._observer = observers.getbyname(self.__class__.fullname())
         self.make_alive()
 
+    def dumpshortcut(self):
+        """Nicely formated view of the current class in dump context."""
+        return str(self)
+
     @property
     def realkind(self):
         """Must be implemented by subclasses."""
         pass
+
+    @classmethod
+    def reusable(cls):
+        return cls._reusable
 
     def make_alive(self):
         """Thnigs to do after new or init construction."""
@@ -890,6 +971,17 @@ class FootprintBase(object):
             self._observer.notify_del(self, dict())
         except (TypeError, AttributeError):
             logger.debug('Too late for notify_del')
+
+    def clone(self, full=False):
+        """
+        Return a deep copy of the current object as a brand new one.
+        Only footprint attributes are carried around.
+        """
+        objcp = self.__class__(**self._attributes)
+        if full:
+            for a in [ x for x in self.__dict__.keys() if not x.startswith('_') ]:
+                setattr(objcp, a, getattr(self, a))
+        return objcp
 
     @classmethod
     def is_abstract(cls):
@@ -990,7 +1082,7 @@ class FootprintBase(object):
         and then compare to my actual values.
         """
         fp = self.footprint()
-        resolved, u_inputattr = fp.resolve(rd, fatal=False, fast=False, report=None)
+        resolved, u_inputattr, u_attr_seen = fp.resolve(rd, fatal=False, fast=False, report=None)
         rc = True
         for k in rd.keys():
             if resolved[k] is None or self._attributes[k] != resolved[k]:

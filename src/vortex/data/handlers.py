@@ -46,7 +46,7 @@ class Handler(object):
         self._options = rd.copy()
         self._options.update(kw)
         self._history = structs.History(tag='data-handler')
-        self._history.append(self.__class__.__name__, 'init', 1)
+        self._history.append(self.__class__.__name__, 'init', True)
         self._stage = [ 'load' ]
         self._observer.notify_new(self, dict(stage = 'load'))
         logger.debug('New resource handler %s', self.__dict__)

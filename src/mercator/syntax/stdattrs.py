@@ -1,19 +1,16 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-r"""
+"""
 This module provides some pre-defined attributes descriptions or combined sets
 of attributes description that could be used in the footprint definition of any
 class which follow the :class:`vortex.syntax.Footprint` syntax.
 """
 
-import sys
 import footprints
  
 #: Export a set of attributes :data:`grids`, :data:`bogus`, etc..
 __all__ = [ 'grids', 'bogus', 'experiences' ]
-
-myself = sys.modules.get(__name__)
 
 grids = ['orca025', 'atl12', 'neatl36']
 experiences = [ 'ORCA025_LIM-T00', 'ATL12-T00', 'NEATL36-T03', 'PISC_BIO', 'PSY2G2R1', 'ORCA12_LIM-T103' ]

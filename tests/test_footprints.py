@@ -860,9 +860,6 @@ class utFootprintSetup(TestCase):
         with self.assertRaises(AttributeError):
             del setup.extended
 
-        with self.assertRaises(ValueError):
-            setup.add_proxy(Foo)
-
         foo = Foo()
         setup.add_proxy(foo)
         self.assertTrue(hasattr(foo, 'garbage'))

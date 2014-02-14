@@ -11,11 +11,12 @@ Welcome!
 
 This is the documentation for Vortex |version|, last updated |today|. 
 
-Contents:
+Contents
+--------
 
 .. toctree::
    :maxdepth: 1
-   
+
    User Guide <userguide/index>
    Developper Guide <devguide/index>
    Standard Library <library/index>
@@ -24,11 +25,9 @@ Contents:
 Extras
 ------
 
-Global shorcuts:
-
 .. toctree::
    :maxdepth: 1
-   
+
    table
    tododev
    tododoc
