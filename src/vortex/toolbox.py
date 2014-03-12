@@ -36,6 +36,7 @@ def quickview(args, nb=0, indent=0):
     if not isinstance(args, list) and not isinstance(args, tuple):
         args = ( args, )
     for x in args:
+        if nb: print
         nb += 1
         quickview = getattr(x, 'quickview', None)
         if quickview:
@@ -115,7 +116,8 @@ def rput(*args, **kw):
 def pushsection(section, args, kw):
     """Add a ``section`` type to the current sequence."""
     now = kw.pop('now', justdoit)
-    ctx = sessions.ticket().context
+    t = sessions.ticket()
+    ctx = t.context
     ctx.record_off()
     opts, kwclean = stripargs_section(**kw)
     if verbose > 1:
@@ -139,6 +141,7 @@ def pushsection(section, args, kw):
             ok = getattr(newsections[0], doitmethod)()
             if verbose and not ok:
                 logger.warning(' > Could not %s on %s', doitmethod, rhandler)
+            if t.sh.trace: print
         if ok:
             rlok.append(rhandler)
     ctx.record_on()
@@ -203,10 +206,11 @@ def namespaces(**kw):
 
 def print_namespaces(**kw):
     """Formatted print of current namespaces."""
-    justify = kw.pop('ljust', 24)
     prefix  = kw.pop('prefix', '+ ')
+    nd = namespaces(**kw)
+    justify = max([ len(x) for x in nd.keys() ])
     linesep = ",\n" + ' ' * (justify+len(prefix)+2)
-    for k, v in sorted(namespaces(**kw).iteritems()):
+    for k, v in sorted(nd.iteritems()):
         nice_v = linesep.join(v) if len(v) > 1 else v[0]
         print prefix + k.ljust(justify), '[' + nice_v + ']'
 

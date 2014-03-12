@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.8.10'
+__version__ = '0.8.11'
 
 import copy, re
 import types
@@ -147,7 +147,7 @@ class FootprintSetup(object):
             return dict()
 
 
-setup = FootprintSetup()
+setup = FootprintSetup(docstring=False)
 
 class Collector(util.Catalog):
     """
@@ -483,6 +483,7 @@ class Footprint(object):
         for a in fp['attr'].keys():
             fp['attr'][a].setdefault('default', None)
             fp['attr'][a].setdefault('optional', False)
+            fp['attr'][a].setdefault('access', 'rxx')
             fp['attr'][a]['alias'] = set(fp['attr'][a].get('alias', set()))
             fp['attr'][a]['remap'] = dict(fp['attr'][a].get('remap', dict()))
             fp['attr'][a]['values'] = set(fp['attr'][a].get('values', set()))
@@ -851,23 +852,72 @@ class Footprint(object):
         return self._fp['priority']
 
 
-class FootprintAttrAccess(object):
-    """Accessor class to footprint attributes."""
+class FootprintAttrDescriptor(object):
+    """Abstract accessor class to footprint attributes."""
+    access_mode = None
 
     def __init__(self, attr, doc='Undocumented footprint attribute'):
-        self.attr = attr
+        self._attr = attr
         self.__doc__ = doc
 
     def __get__(self, instance, owner):
-        thisattr = instance._attributes.get(self.attr, None)
+        thisattr = instance._attributes.get(self._attr, None)
         if thisattr is UNKNOWN: thisattr = None
         return thisattr
 
+class FootprintAttrDescriptorRWD(FootprintAttrDescriptor):
+    """Read-write-del accessor class to footprint attributes."""
+    access_mode = 'rwd'
+
     def __set__(self, instance, value):
-        raise AttributeError, 'This attribute should not be overwritten'
+        fp = instance.footprint()
+        if self._attr is not None:
+            fpdef = fp.attr[self._attr]
+            atype = fpdef.get('type', str)
+            if fpdef.get('isclass', False):
+                if not issubclass(value, atype):
+                    raise ValueError('Attempt to set {0:s} as a non compatible subclass {1:s}'.format(self._attr, str(value)))
+            elif not isinstance(value, atype):
+                logger.debug(' > Attr %s reclass(%s) as %s', self._attr, value, atype)
+                initargs = fpdef.get('args', dict())
+                try:
+                    value = atype(value, **initargs)
+                    logger.debug(' > Attr %s reclassed = %s', self._attr, value)
+                except Exception:
+                    raise ValueError('Unable to reclass {0:s} as {1:s}'.format(str(value), str(atype)))
+            if fpdef['values'] and not fp.in_values(value, fpdef['values']):
+                raise ValueError('Value {0:s} not in range {1:s}'.format(str(value), str(list(fpdef['values']))))
+            if fpdef['outcast'] and fp.in_values(value, fpdef['outcast']):
+                raise ValueError('Value {0:s} excluded from range {1:s}'.format(str(value), str(list(fpdef['outcast']))))
+            instance._attributes[self._attr] = value
 
     def __delete__(self, instance):
-        raise AttributeError, 'This attribute should not be deleted'
+        del instance._attributes[self._attr]
+        del self._attr
+
+class FootprintAttrDescriptorRWX(FootprintAttrDescriptorRWD):
+    """Read-write accessor class to footprint attributes."""
+    access_mode = 'rwx'
+
+    def __delete__(self, instance):
+        raise AttributeError, 'Read-only attribute [' + self._attr + '] (delete)'
+
+class FootprintAttrDescriptorRXX(FootprintAttrDescriptor):
+    """Read-only accessor class to footprint attributes."""
+    access_mode = 'rxx'
+
+    def __set__(self, instance, value):
+        raise AttributeError, 'Read-only attribute [' + self._attr + '] (write)'
+
+    def __delete__(self, instance):
+        raise AttributeError, 'Read-only attribute [' + self._attr + '] (delete)'
+
+
+local_attribute_accessors = dict([
+    (x.access_mode, x)
+        for x in locals().values()
+            if hasattr(x, 'access_mode') and x.access_mode is not None
+])
 
 
 class FootprintBaseMeta(type):
@@ -887,9 +937,16 @@ class FootprintBaseMeta(type):
             bcfp.extend(fplocal)
         else:
             bcfp.append(fplocal)
-        d['_footprint'] = Footprint(*bcfp)
-        for k in d['_footprint'].attr.keys():
-            d[k] = FootprintAttrAccess(k)
+        thisfp = d['_footprint'] = Footprint(*bcfp)
+        for k in thisfp.attr.keys():
+            if isinstance(thisfp.attr[k]['access'], FootprintAttrDescriptor):
+                d[k] = thisfp.attr[k]['access'](k)
+            else:
+                try:
+                    d[k] = local_attribute_accessors[thisfp.attr[k]['access']](k)
+                except AttributeError:
+                    logger.error('Could not find any local descriptor with acces mode %s', hisfp.attr['access'])
+                    raise
         realcls = super(FootprintBaseMeta, cls).__new__(cls, n, b, d)
         if not abstract:
             if realcls._explicit and not realcls.mandatory():
@@ -1019,7 +1076,7 @@ class FootprintBase(object):
     def __str__(self):
         """
         Basic layout for nicely formatted print, built as the concatenation
-        of the class full name and some :meth:`addrepr` additional information.
+        of the class full name and some :meth:`_str_more` additional information.
         """
         return '{0:s} | {1:s}>'.format(repr(self).rstrip('>'), self._str_more())
 
@@ -1110,3 +1167,11 @@ class FootprintBase(object):
     def authvalues(cls, attrname):
         """Return the list of authorized values of a footprint attribute (if any)."""
         return list(cls.footprint().attr[attrname]['values'])
+
+    @classmethod
+    def attraccess(cls, attrname):
+        """Return the access mode of a footprint attribute."""
+        rwd = cls.footprint().attr[attrname]['access']
+        if isinstance(rwd, FootprintAttrDescriptor):
+            rwd = rwd.access_mode
+        return rwd

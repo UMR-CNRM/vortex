@@ -10,6 +10,5 @@ Common tools
    tools
 
    shortcuts
-   systems
-   targets
+
 

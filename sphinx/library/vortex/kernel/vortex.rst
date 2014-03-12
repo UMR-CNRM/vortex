@@ -38,9 +38,5 @@ Session and system interface
 .. autofunction:: sh
 
 
-Shortcuts
----------
-
-.. autodata:: proxy
 
 

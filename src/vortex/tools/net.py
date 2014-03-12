@@ -11,6 +11,7 @@ import types
 import urlparse
 import io, ftplib
 from netrc import netrc
+from datetime import datetime
 
 from vortex.autolog import logdefault as logger
 
@@ -64,24 +65,94 @@ class StdFtp(ftplib.FTP):
     """
 
     def __init__(self, system, hostname):
-        self._local_system = system
+        self._system = system
+        self._closed = True
+        logger.debug('FTP init host %s', hostname)
         ftplib.FTP.__init__(self, hostname)
-        self.logname = None
+        self._logname = None
+        self._created = datetime.now()
+        self._opened  = None
+        self._deleted = None
+
+    def _str_more(self):
+        """Additional information to be combined in repr output."""
+        return 'footprint=' + str(len(self.attributes()))
+
+    def __str__(self):
+        """
+        Nicely formatted print, built as the concatenation
+        of the class full name and `logname` and `length` attributes.
+        """
+        return '{0:s} | host={1:s} logname={2:s} since={3:s}>'.format(
+            repr(self).rstrip('>'),
+            self.host,
+            self.logname,
+            str(self.length)
+        )
 
     def identify(self):
         print self
 
-    def fastlogin(self, login, password=None):
-        if login and password:
-            self.logname = login
-            return self.login(login, password)
+    @property
+    def system(self):
+        """Current local system interface."""
+        return self._system
+
+    def stderr(self, cmd, *args):
+        """Proxy to local system's standard error."""
+        self.system.stderr('ftp:'+cmd, *args)
+
+    @property
+    def closed(self):
+        """Current status of the ftp connection."""
+        return self._closed
+
+    @property
+    def logname(self):
+        """Current logname of the ftp connection."""
+        return self._logname
+
+    @property
+    def length(self):
+        """Length in seconds of the current opened connection."""
+        try:
+            topnow = datetime.now() if self._deleted is None else self._deleted
+            timelength = ( topnow - self._opened ).total_seconds()
+        except TypeError:
+            timelength = 0
+        finally:
+            return timelength
+
+    def close(self):
+        """Proxy to ftplib :meth:`ftplib.FTP.close`."""
+        self._closed = True
+        self._deleted = datetime.now()
+        return ftplib.FTP.close(self)
+
+    def login(self, *args):
+        """Proxy to ftplib :meth:`ftplib.FTP.login`."""
+        logger.debug('FTP login %s', str(args))
+        self.stderr('login', args[0])
+        rc = ftplib.FTP.login(self, *args)
+        if rc:
+            self._closed = False
+            self._opened = datetime.now()
+        else:
+            logger.warning('FTP could not login with args %s', str(args))
+        return rc
+
+    def fastlogin(self, logname, password=None):
+        """Simple heuristic using actual attributes and/or netrc information to log in."""
+        rc = False
+        if logname and password:
+            self._logname = logname
+            rc = self.login(logname, password)
         else:
             auth = netrc().authenticators(self.host)
             if auth:
-                self.logname = auth[0]
-                return self.login(self.logname, auth[2])
-            else:
-                return None
+                self._logname = auth[0]
+                rc = self.login(self._logname, auth[2])
+        return bool(rc)
 
     def netpath(self, remote):
         """The complete qualified net path of the remote resource."""
@@ -93,14 +164,20 @@ class StdFtp(ftplib.FTP):
         self.retrlines('LIST', callback=contents.append)
         return contents
 
+    def dir(self, *args):
+        """Proxy to ftplib :meth:`ftplib.FTP.login`."""
+        self.stderr('dir', *args)
+        return ftplib.FTP.dir(self, *args)
+
     def ls(self, *args):
         """Returns directory listing."""
         return self.dir(*args)
 
     def get(self, source, destination):
         """Retrieve a remote `destination` file to a local `source` file object."""
+        self.stderr('get', source, destination)
         if type(destination) is types.StringType:
-            self._local_system.filecocoon(destination)
+            self.system.filecocoon(destination)
             target = io.open(destination, 'wb')
             xdestination = True
         else:
@@ -118,6 +195,7 @@ class StdFtp(ftplib.FTP):
 
     def put(self, source, destination):
         """Store a local `source` file object to a remote `destination`."""
+        self.stderr('put', source, destination)
         inputsrc = open(source, 'rb')
         if type(source) is types.StringType:
             inputsrc = io.open(source, 'rb')
@@ -156,6 +234,7 @@ class StdFtp(ftplib.FTP):
                 self.cwd(current)
                 path = current
             except ftplib.error_perm:
+                self.stderr('mkdir', current)
                 self.mkd(current)
                 self.cwd(current)
             path = current

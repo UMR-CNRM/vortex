@@ -296,7 +296,27 @@ class Catalog(object):
         """Completly clear the list of items previously recorded in this catalog."""
         self._items = WeakSet() if self._weak else set()
 
-class LowerCaseDict(dict):
+class SpecialDict(dict):
+    """Add some special features to std dict for dealing to dedicated case dictionaries."""
+
+    def show(self, ljust=24):
+        """Print the actual values of the dictionary."""
+        for k in sorted(self.keys()):
+            print ' +', k.ljust(ljust), '=', self.get(k)
+
+    def update(self, *args, **kw):
+        args = list(args)
+        args.append(kw)
+        for objiter in args:
+            for k, v in objiter.items():
+                self.__setitem__(k, v)
+
+    def __call__(self, **kw):
+        """Calling a special dict is equivalent to updating."""
+        self.update(**kw)
+
+
+class LowerCaseDict(SpecialDict):
     """A dictionary with only lower case keys."""
 
     def __getitem__(self, key):
@@ -311,20 +331,22 @@ class LowerCaseDict(dict):
     def __contains__(self, key):
         return dict.__contains__(self, key.lower())
 
-    def __call__(self, **kw):
-        self.update(**kw)
 
-    def show(self, ljust=24):
-        """Print the actual values of the dictionary."""
-        for k in sorted(self.keys()):
-            print ' +', k.ljust(ljust), '=', self.get(k)
+class UpperCaseDict(SpecialDict):
+    """A dictionary with only upper case keys."""
 
-    def update(self, *args, **kw):
-        args = list(args)
-        args.append(kw)
-        for objiter in args:
-            for k, v in objiter.items():
-                self.__setitem__(k, v)
+    def __getitem__(self, key):
+        return dict.__getitem__(self, key.upper())
+
+    def __setitem__(self, key, value):
+        dict.__setitem__(self, key.upper(), value)
+
+    def __delitem__(self, key):
+        dict.__delitem__(self, key.upper())
+
+    def __contains__(self, key):
+        return dict.__contains__(self, key.upper())
+
 
 if __name__ == '__main__':
     import doctest

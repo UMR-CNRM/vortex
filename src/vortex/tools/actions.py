@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*- coding:Utf-8 -*-
 
-r"""
+"""
 Module managing the sending of messages.
 Default action classes must provide four methods: on, off, status, execute.
 The on, off and status functions must return a boolean value reflecting the
@@ -143,7 +143,7 @@ class Dispatcher(footprints.util.Catalog):
                 else:
                     rc.append(None)
         return rc
-        
+
 
 #: Default action dispatcher... containing an anonymous SendMail action
 actiond = Dispatcher()

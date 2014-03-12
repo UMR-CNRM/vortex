@@ -12,6 +12,7 @@ Miscellaneous Tools
    date
    env
    fortran
+   lfi
    net
    services
    sms

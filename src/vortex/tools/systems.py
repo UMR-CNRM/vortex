@@ -84,6 +84,8 @@ class System(footprints.FootprintBase):
         logger.debug('Abstract System init %s', self.__class__)
         self.__dict__['_os'] = kw.pop('os', os)
         self.__dict__['_sh'] = kw.pop('shutil', kw.pop('sh', shutil))
+        self.__dict__['_search'] = [ self.__dict__['_os'], self.__dict__['_sh'] ]
+        self.__dict__['_rclast'] = 0
         self.__dict__['prompt'] = ''
         self.__dict__['_history'] = History(tag='shell')
         for flag in ( 'trace', ):
@@ -100,13 +102,28 @@ class System(footprints.FootprintBase):
     def history(self):
         return self._history
 
+    @property
+    def rclast(self):
+        return self._rclast
+
+    @property
+    def search(self):
+        return self._search
+
+    def extend(self, obj=None):
+        """Extend the current external attribute resolution to ``obj`` (module or object)."""
+        if obj is not None:
+            obj.sh = self
+            self.search.append(obj)
+        return len(self.search)
+
     def __getattr__(self, key):
         """Gateway to undefined method or attributes if present in ``_os`` or ``_sh`` internals."""
         actualattr = None
-        if key in self._os.__dict__:
-            actualattr = self._os.__dict__[key]
-        elif key in self._sh.__dict__:
-            actualattr = self._sh.__dict__[key]
+        for shxobj in self.search:
+            if hasattr(shxobj, key):
+                actualattr = getattr(shxobj, key)
+                break
         else:
             raise AttributeError('Method or attribute ' + key + ' not found')
         if callable(actualattr):
@@ -350,9 +367,11 @@ class System(footprints.FootprintBase):
                     logger.critical('systems_reload: cannot import module %s (%s)' % (modname, str(err)))
         return extras
 
-    def spawn(self, args, ok=[0], shell=False, output=None, outmode='a'):
+    def spawn(self, args, ok=None, shell=False, output=None, outmode='a'):
         """Subprocess call of ``args``."""
         rc = False
+        if ok is None:
+            ok = [ 0 ]
         if output is None:
             output = self.output
         self.stderr(*args)
@@ -368,7 +387,7 @@ class System(footprints.FootprintBase):
                     output = open(output, outmode)
                 cmdout, cmderr = output, output
             p = subprocess.Popen(args, stdout=cmdout, stderr=cmderr, shell=shell)
-            p.wait()
+            p_out, p_err = p.communicate()
         except ValueError as perr:
             logger.critical('Weird arguments to Popen ( %s, stdout=%s, stderr=%s, shell=%s )' %args, cmdout, cmderr, shell)
             raise
@@ -381,22 +400,24 @@ class System(footprints.FootprintBase):
         else:
             if p.returncode in ok:
                 if isinstance(output, bool) and output:
-                    rc = [ x.rstrip("\n") for x in p.stdout ]
+                    rc = p_out.rstrip('\n').split('\n')
                     p.stdout.close()
                 else:
                     rc = not bool(p.returncode)
             else:
                 logger.warning('Bad return code [%d] for %s', p.returncode, args)
                 if isinstance(output, bool) and output:
-                    for xerr in p.stderr:
+                    for xerr in p_err:
                         sys.stderr.write(xerr)
-                logger.critical('Unexpected return code %d', p.returncode)
                 raise ExecutionError
         finally:
+            self._rclast = p.returncode if p else 1
             if isinstance(output, bool) and p:
                 if output:
-                    p.stdout.close()
-                    p.stderr.close()
+                    if p.stdout:
+                        p.stdout.close()
+                    if p.stderr:
+                        p.stderr.close()
             elif not isinstance(output, bool):
                 output.close()
 
@@ -458,9 +479,11 @@ class OSExtended(System):
                     opts[k] = False
         return opts
 
-    def ftp(self, hostname, logname):
+    def ftp(self, hostname, logname=None):
         """Returns an open ftp session on the specified target."""
         ftpbox = StdFtp(self, hostname)
+        if logname is None:
+            logname = self.env.glove.user
         if ftpbox.fastlogin(logname):
             return ftpbox
         else:
@@ -548,6 +571,12 @@ class OSExtended(System):
             destination.close()
         return rc
 
+    def is_samefs(self, path1, path2):
+        """Check either two paths are on the same filesystem."""
+        st1 = self.stat(path1)
+        st2 = self.stat(self.path.dirname(self.path.realpath(path2)))
+        return st1.st_dev == st2.st_dev and not self.path.islink(path1)
+
     def smartcp(self, source, destination):
         """
         Hard link the ``source`` file to a safe ``destination`` if possible.
@@ -561,21 +590,15 @@ class OSExtended(System):
             return False
         if self.filecocoon(destination):
             if self.remove(destination):
-                st1 = self.stat(source)
-                st2 = self.stat(self.path.dirname(self.path.realpath(destination)))
-                if st1 and st2:
-                    if st1.st_dev == st2.st_dev and not self.path.islink(source):
-                        self.link(source, destination)
-                        self.readonly(destination)
-                        return self.path.samefile(source, destination)
-                    else:
-                        rc = self.rawcp(source, destination)
-                        if rc:
-                            self.readonly(destination)
-                        return rc
+                if self.is_samefs(source, destination):
+                    self.link(source, destination)
+                    self.readonly(destination)
+                    return self.path.samefile(source, destination)
                 else:
-                    logger.error('Could not stat either source or destination (%s/%s)', st1, st2)
-                    return False
+                    rc = self.rawcp(source, destination)
+                    if rc:
+                        self.readonly(destination)
+                    return rc
             else:
                 logger.error('Could not remove destination before copy %s', destination)
                 return False
@@ -692,7 +715,7 @@ class OSExtended(System):
         """Move the ``source`` file or directory."""
         try:
             self.move(source, destination)
-        except:
+        except Exception:
             raise
         else:
             return True

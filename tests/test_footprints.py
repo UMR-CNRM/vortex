@@ -12,7 +12,8 @@ from weakref import WeakSet
 import footprints
 from footprints import \
     dump, observers, priorities, reporting, util, \
-    Footprint, FootprintBase, FootprintBaseMeta, FootprintSetup
+    Footprint, FootprintBase, FootprintBaseMeta, FootprintSetup, \
+    FootprintAttrDescriptorRXX
 
 # Classes to be used in module scope
 
@@ -56,6 +57,26 @@ class FootprintTestTwo(FootprintTestOne):
             ),
             someint = dict(
                 outcast = (2, 7)
+            )
+        )
+    )
+
+class FootprintTestRWD(FootprintBase):
+    _footprint = dict(
+        info = 'Test attributes access',
+        attr = dict(
+            someint = dict(
+                type = int,
+                access = 'rwx',
+                outcast = (2, 7)
+            ),
+            somefoo = dict(
+                type = Foo,
+                access = 'rxx'
+            ),
+            somestr = dict(
+                access = 'rwd',
+                values = ('one', 'two', 'five')
             )
         )
     )
@@ -753,6 +774,7 @@ class utObservers(TestCase):
         rv = observers.getbyname()
         self.assertListEqual(rv, [
             '__main__.FootprintTestOne',
+            '__main__.FootprintTestRWD',
             '__main__.FootprintTestTwo',
             '__main__.FootprintTestMeta',
         ])
@@ -927,6 +949,7 @@ class utFootprint(TestCase):
         self.assertEqual(fp.info, 'Some stuff there')
         self.assertDictEqual(fp.attr, dict(
             stuff = dict(
+                access = 'rxx',
                 alias = set(),
                 default = None,
                 optional = False,
@@ -955,6 +978,7 @@ class utFootprint(TestCase):
         self.assertDictEqual(fp2.as_dict(), {
             'attr': {
                 'stuff': {
+                    'access': 'rxx',
                     'alias': set(),
                     'default': None,
                     'optional': False,
@@ -1633,6 +1657,51 @@ class utFootprintBase(TestCase):
             somestr = 'this',
             somefoo = thefoo
         ))
+
+    def test_baseclass_rwd(self):
+        x = FootprintTestRWD(somefoo=Foo(inside=2), someint=4, somestr='two')
+        self.assertIsInstance(x, FootprintTestRWD)
+        fprwd = x.footprint()
+        self.assertIsInstance(fprwd, Footprint)
+
+        self.assertEqual(fprwd.attr['someint']['access'], 'rwx')
+        self.assertEqual(fprwd.attr['somefoo']['access'], 'rxx')
+        self.assertEqual(fprwd.attr['somestr']['access'], 'rwd')
+
+        self.assertEqual(x.attraccess('someint'), 'rwx')
+        self.assertEqual(x.attraccess('somefoo'), 'rxx')
+        self.assertEqual(x.attraccess('somestr'), 'rwd')
+
+        self.assertIsInstance(x.someint, int)
+        self.assertIsInstance(x.somefoo, Foo)
+        self.assertIsInstance(x.somestr, str)
+
+        x.someint = 4
+        self.assertEqual(x.someint, 4)
+
+        x.someint = '004'
+        self.assertEqual(x.someint, 4)
+
+        with self.assertRaises(ValueError):
+            x.someint = 2
+
+        with self.assertRaises(AttributeError):
+            del x.someint
+
+        with self.assertRaises(AttributeError):
+            x.somefoo = 2
+
+        with self.assertRaises(AttributeError):
+            del x.somefoo
+
+        x.somestr = 'one'
+        self.assertEqual(x.somestr, 'one')
+
+        with self.assertRaises(ValueError):
+            x.somestr = 'bof'
+
+        delattr(x, 'somestr')
+        self.assertFalse(hasattr(x, 'somestr'))
 
     def test_baseclass_couldbe(self):
         rv, attr_input = FootprintTestOne.couldbe(dict(kind='hip'), mkreport=False)

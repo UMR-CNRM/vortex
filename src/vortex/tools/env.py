@@ -319,7 +319,7 @@ class Environment(object):
 
     def osbound(self):
         """Returns either this current environment is bound to the os.environ."""
-        return self._active and self.__class__._os and id(self) == id(self.__class__._os[-1])
+        return self._active and self.__class__._os and self is self.__class__._os[-1]
 
     def tracebacks(self):
         """Dump the stack of manipulations of the current environment."""

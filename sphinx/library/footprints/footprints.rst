@@ -73,7 +73,22 @@ Footprint mechanism
    :member-order: alphabetical
 
 
-.. autoclass:: FootprintAttrAccess
+.. autoclass:: FootprintAttrDescriptor
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FootprintAttrDescriptorRWD
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FootprintAttrDescriptorRWX
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FootprintAttrDescriptorRXX
    :show-inheritance:
    :members:
    :member-order: alphabetical

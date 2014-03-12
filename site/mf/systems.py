@@ -69,23 +69,52 @@ class NECSX9(Target):
 class MeteoBull(Target):
     """Bull Computer."""
 
+    _abstract = True
     _footprint = dict(
         info = 'Bull Supercomputer at Meteo France',
         attr = dict(
-            hostname = dict(
-                values = \
-                    [ x+str(y) for x in ('beaufix',) for y in range(1000) ] + \
-                    [ x+str(y) for x in ('beaufixlogin',) for y in range(6) ] + \
-                    [ x+str(y) for x in ('beaufixtransfert',) for y in range(4) ]
-            ),
             sysname = dict(
                 values = [ 'Linux' ]
+            ),
+        ),
+        priority = dict(
+            level = footprints.priorities.top.OPER
+        )
+    )
+
+
+class Beaufix(MeteoBull):
+    """Beaufix Computer at Meteo-France."""
+
+    _footprint = dict(
+        info = 'Bull Beaufix Supercomputer at Meteo France',
+        attr = dict(
+            hostname = dict(
+                values = \
+                    [ x+str(y) for x in ('beaufix',) for y in range(1080) ] + \
+                    [ x+str(y) for x in ('beaufixlogin',) for y in range(6) ] + \
+                    [ x+str(y) for x in ('beaufixtransfert',) for y in range(4) ]
             ),
             inifile = dict(
                 default = 'target-beaufix.ini',
             )
-        ),
-        priority = dict(
-            level = footprints.priorities.top.OPER
+        )
+    )
+
+class Prolix(MeteoBull):
+    """Prolix Computer at Meteo-France."""
+
+    _footprint = dict(
+        info = 'Bull Prolix Supercomputer at Meteo France',
+        attr = dict(
+            hostname = dict(
+                values = \
+                    [ x+str(y) for x in ('prolix',) for y in range(990) ] + \
+                    [ x+str(y) for x in ('prolixlogin',) for y in range(6) ] + \
+                    [ x+str(y) for x in ('prolixtransfert',) for y in range(4) ]
+            ),
+            inifile = dict(
+                default = 'target-prolix.ini',
+            )
         )
     )
