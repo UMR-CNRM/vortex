@@ -30,7 +30,7 @@ r2 = rl(lrd, model='arpege', remfile='bidon', remote='/tmp/should/be/selected', 
 print t.line
 t.debug()
 print t.prompt, 'Load the test resource'
-print t.prompt, 'SimpleTest footprint', SimpleTest.footprint()
+print t.prompt, 'SimpleTest footprint', SimpleTest.retrieve_footprint()
 for gh in rl(bigmodel='arpege', remote='databox_[cutoff]', cutoff='p,a', kind='simple', extra=2, foo='treize', virtual=True):
     print t.line, gh.idcard()
 

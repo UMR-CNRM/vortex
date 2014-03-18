@@ -7,7 +7,6 @@ __all__ = []
 import re
 from vortex.autolog import logdefault as logger
 from vortex.tools import env
-from vortex.tools.fortran import NamelistParser, NamelistBlock
 from vortex.tools.date import Time
 from vortex.data.outflow import ModelResource, NoDateResource
 from vortex.data.contents import AlmostDictContent, IndexedTable
@@ -26,10 +25,13 @@ class NamelistContent(AlmostDictContent):
         kw.setdefault('remove', set())
         kw.setdefault('parser', None)
         kw.setdefault('automkblock', 0)
+        if 'namblockcls' not in kw:
+            import vortex.tools.fortran
+            kw['namblockcls'] = vortex.tools.fortran.NamelistBlock
         super(NamelistContent, self).__init__(**kw)
 
     def add(self, addlist):
-        for nam in filter(lambda x: x.isinstance(NamelistBlock), addlist):
+        for nam in filter(lambda x: x.isinstance(self._namblockcls), addlist):
             self._data[nam.name] = nam
 
     def toremove(self, bname):
@@ -46,7 +48,7 @@ class NamelistContent(AlmostDictContent):
             self._automkblock += 1
             name = 'AUTOBLOCK{0:03d}'.format(self._automkblock)
         if name not in self._data:
-            self._data[name] = NamelistBlock(name=name)
+            self._data[name] = self._namblockcls(name=name)
         return self._data[name]
 
     def macros(self):
@@ -69,7 +71,7 @@ class NamelistContent(AlmostDictContent):
             if namblock.name in self:
                 self[namblock.name].merge(namblock)
             else:
-                newblock = NamelistBlock(name=namblock.name)
+                newblock = self._namblockcls(name=namblock.name)
                 for dk in namblock.keys():
                     newblock[dk] = namblock[dk]
                 self[namblock.name] = newblock
@@ -89,7 +91,8 @@ class NamelistContent(AlmostDictContent):
         """Get data from the ``container`` namelist."""
         container.rewind()
         if not self._parser:
-            self._parser = NamelistParser(macros=self._macros.keys())
+            import vortex.tools.fortran
+            self._parser = vortex.tools.fortran.NamelistParser(macros=self._macros.keys())
         namset = self._parser.parse(container.read())
         if namset:
             self._data = namset.as_dict()

@@ -163,11 +163,11 @@ class LFI_Standard(LFI_Tool):
     def lfi_diff(self, lfi1, lfi2, **kw):
         """
         Difference between two lfi-files.
-        
+
         Mandatory args are:
           * lfi1 : first file to compare
           * lfi2 : second file to compare
-        
+
         Options are:
           * maxprint   : Maximum number of values to print
           * skipfields : LFI fields not to be compared

@@ -50,15 +50,15 @@ class GCOCentralStore(Store):
         """Default realkind is ``gstore``."""
         return 'gstore'
 
-    def actualgget(self, system, rpath):
+    def actualgget(self, rpath):
         """Return actual (gtool, gname)."""
-        tg = system.target()
+        tg = self.system.target()
 
         l = rpath.lstrip('/').split('/')
         gname = l.pop()
 
-        if 'GGET_TAMPON' in system.env:
-            tampon = system.env.GGET_TAMPON
+        if 'GGET_TAMPON' in self.system.env:
+            tampon = self.system.env.GGET_TAMPON
         else:
             rootdir = self.ggetroot
             if rootdir is None:
@@ -71,49 +71,46 @@ class GCOCentralStore(Store):
 
         gpath = self.ggetpath
         if gpath is None:
-            if 'GGET_PATH' in system.env:
-                gpath = system.env.GGET_PATH
+            if 'GGET_PATH' in self.system.env:
+                gpath = self.system.env.GGET_PATH
             else:
                 gpath = tg.get('gco:ggetpath', '')
 
-        return (system.path.join(gpath, gcmd), tampon, gname)
+        return (self.system.path.join(gpath, gcmd), tampon, gname)
 
     def ggetcheck(self, remote, options):
         """Verify disponibility in GCO's tampon using ``gget`` external tool."""
         gloc = self.ggetlocate(remote, options)
         if gloc:
-            system = options.get('system', None)
-            return system.size(gloc)
+            return self.system.size(gloc)
         else:
             return False
 
     def ggetlocate(self, remote, options):
         """Get location in GCO's tampon using ``gget`` external tool."""
-        system = options.get('system', None)
-        (gtool, tampon, gname) = self.actualgget(system, remote['path'])
-        system.env.gget_tampon = tampon
-        gloc = system.spawn([gtool, '-path', gname], output=True)
-        if gloc and system.path.exists(gloc[0]):
+        (gtool, tampon, gname) = self.actualgget(remote['path'])
+        self.system.env.gget_tampon = tampon
+        gloc = self.system.spawn([gtool, '-path', gname], output=True)
+        if gloc and self.system.path.exists(gloc[0]):
             return gloc[0]
         else:
             return False
 
     def ggetget(self, remote, local, options):
         """System call to ``gget`` external tool."""
-        system = options.get('system', None)
-        (gtool, tampon, gname) = self.actualgget(system, remote['path'])
-        system.env.gget_tampon = tampon
-        rc = system.spawn([gtool, gname], output=False)
-        if rc and system.path.exists(gname):
-            if not system.path.isdir(gname) and system.is_tarfile(gname):
-                rc = system.untar(gname, output=False)
+        (gtool, tampon, gname) = self.actualgget(remote['path'])
+        self.system.env.gget_tampon = tampon
+        rc = self.system.spawn([gtool, gname], output=False)
+        if rc and self.system.path.exists(gname):
+            if not self.system.path.isdir(gname) and self.system.is_tarfile(gname):
+                rc = self.system.untar(gname, output=False)
             extract = remote['query'].get('extract', None)
             if extract:
                 logger.info('GCOCentralStore get %s', gname + '/' + extract[0])
-                rc = system.cp(gname + '/' + extract[0], local)
+                rc = self.system.cp(gname + '/' + extract[0], local)
             else:
                 logger.info( 'GCOCentralStore get %s', gname )
-                rc = system.mv(gname, local)
+                rc = self.system.mv(gname, local)
         else:
             logger.warning('GCOCentralStore get %s was not successful (%s)', gname, rc)
         return rc
@@ -165,9 +162,8 @@ class GCOCacheStore(CacheStore):
             return False
         else:
             rc = self.incacheget(remote, local, options)
-            system = options.get('system', None)
-            if rc and not system.path.isdir(local) and system.is_tarfile(local):
-                rc = system.untar(local, output=False)
+            if rc and not self.system.path.isdir(local) and self.system.is_tarfile(local):
+                rc = self.system.untar(local, output=False)
             return rc
 
     def ggetput(self, local, remote, options):

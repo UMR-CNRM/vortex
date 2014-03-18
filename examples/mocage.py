@@ -17,7 +17,7 @@ print t.prompt, 'Load the test resource'
 
 print t.line
 
-print t.prompt, 'SimpleTest footprint', SimpleTest.footprint().as_dict()
+print t.prompt, 'SimpleTest footprint', SimpleTest.retrieve_footprint().as_dict()
 
 print t.line
 

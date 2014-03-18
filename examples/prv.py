@@ -29,7 +29,7 @@ for c in clp:
     print t.prompt, '  ', c
 
 rp = providers.Remote(remfile = '/tmp/anyfile')
-print t.prompt, 'Provider footprint', rp.footprint()
+print t.prompt, 'Provider footprint', rp.footprint
 print t.prompt, 'Remote resolved ?', rp
 
 print t.line

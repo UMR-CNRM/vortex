@@ -35,10 +35,10 @@ def dictmerge(d1, d2):
 
     for key, value in d2.iteritems():
         if type(value) is types.DictType:
-            if d1.has_key(key) and type(d1[key])is types.DictType:
+            if key in d1 and type(d1[key])is types.DictType:
                 dictmerge(d1[key], d2[key])
             else :
-                d1[key] = value
+                d1[key] = copy.deepcopy(value)
         else:
             d1[key] = value
 
@@ -63,12 +63,8 @@ def list2dict(a, klist):
 def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     """
     Extended range expansion.
-
     When ``start`` is already a complex definition (as a string), ``end`` and ``step`` only apply
     as default when the sub-definition in ``start`` does not contain any ``end`` or ``step`` value.
-
-    >>> rangex(2)
-    [2]
     """
     rangevalues = list()
 
@@ -131,7 +127,6 @@ def inplace(desc, key, value, globs=None):
 
     >>> inplace({'test':'alpha', 'recurs':{'a':1, 'b':2}}, 'ajout', 'beta')
     {'test': 'alpha', 'ajout': 'beta', 'recurs': {'a': 1, 'b': 2}}
-
     """
     newd = copy.deepcopy(desc)
     newd[key] = value

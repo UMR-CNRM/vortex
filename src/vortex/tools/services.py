@@ -10,13 +10,7 @@ a default Mail Service is provided.
 #: No automatic export
 __all__ = []
 
-import re, os
-
-from email.mime.audio import MIMEAudio
-from email.mime.base import MIMEBase
-from email.mime.image import MIMEImage
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+import os
 
 import footprints
 
@@ -113,15 +107,27 @@ class MailService(Service):
             tmp.close()
         return MIMEText(body)
 
+    def get_mimemap(self):
+        try:
+            md = self._mimemap
+        except AttributeError:
+            from email.mime.audio import MIMEAudio
+            from email.mime.image import MIMEImage
+            from email.mime.text import MIMEText
+            self._mimemap = dict(
+                text  = MIMEText,
+                image = MIMEImage,
+                audio = MIMEAudio
+            )
+        finally:
+            return self._mimemap
+
     def as_multipart(self, msg):
         """Build a new multipart mail with default text contents and attachments."""
+        from email.mime.base import MIMEBase
+        from email.mime.multipart import MIMEMultipart
         multi = MIMEMultipart()
         multi.attach(msg)
-        mimemap = dict(
-            text  = MIMEText,
-            image = MIMEImage,
-            audio = MIMEAudio,
-        )
         for xtra in self.attachments:
             if isinstance(xtra, MIMEBase):
                 multi.attach(xtra)
@@ -133,6 +139,7 @@ class MailService(Service):
                     # use a generic bag-of-bits type.
                     ctype = 'application/octet-stream'
                 maintype, subtype = ctype.split('/', 1)
+                mimemap = self.get_mimemap()
                 mimeclass = mimemap.get(maintype, None)
                 if mimeclass:
                     fp = open(xtra)

@@ -1565,8 +1565,7 @@ class utFootprintBase(TestCase):
             _explicit = False
 
         ftm = FootprintTestMeta()
-        self.assertIsInstance(ftm._instfp, Footprint)
-        self.assertIsNot(FootprintTestMeta._footprint._fp, ftm._instfp)
+        self.assertIsInstance(ftm._footprint, Footprint)
         self.assertListEqual(ftm.attributes(), list())
         self.assertDictEqual(ftm.as_dict(), dict())
         self.assertDictEqual(ftm.shellexport(), dict())
@@ -1581,7 +1580,7 @@ class utFootprintBase(TestCase):
         self.assertTrue(FootprintTestOne.optional('somestr'))
         self.assertListEqual(FootprintTestOne.authvalues('kind'), ['hip', 'hop'])
         self.assertSetEqual(
-            FootprintTestOne.footprint().as_opts(),
+            FootprintTestOne.retrieve_footprint().as_opts(),
             set(['someint', 'somestr', 'kind', 'stuff'])
         )
 
@@ -1632,7 +1631,7 @@ class utFootprintBase(TestCase):
         self.assertTrue(FootprintTestTwo.optional('somestr'))
         self.assertListEqual(FootprintTestTwo.authvalues('kind'), ['hip', 'hop'])
         self.assertSetEqual(
-            FootprintTestTwo.footprint().as_opts(),
+            FootprintTestTwo.retrieve_footprint().as_opts(),
             set(['someint', 'somestr', 'kind', 'stuff', 'somefoo'])
         )
 
@@ -1661,7 +1660,7 @@ class utFootprintBase(TestCase):
     def test_baseclass_rwd(self):
         x = FootprintTestRWD(somefoo=Foo(inside=2), someint=4, somestr='two')
         self.assertIsInstance(x, FootprintTestRWD)
-        fprwd = x.footprint()
+        fprwd = x.footprint
         self.assertIsInstance(fprwd, Footprint)
 
         self.assertEqual(fprwd.attr['someint']['access'], 'rwx')

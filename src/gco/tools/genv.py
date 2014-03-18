@@ -87,7 +87,9 @@ def autofill(kselect):
                 cycle = v.rstrip('.gco')
                 k, v = 'cycle', cycle
             if ' ' in v:
-                gcdict[k] = v.split(' ')
+                vlist = v.split(' ')
+                gcdict[k] = vlist[0]
+                gcdict[k+'_LIST'] = vlist
             else:
                 gcdict[k] = v
         register(**gcdict)

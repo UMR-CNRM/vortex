@@ -33,6 +33,6 @@ for c in c2:
 print t.line
 
 rc = containers.File(local='bidon')
-print t.prompt, 'Container footprint', rc.footprint()
+print t.prompt, 'Container footprint', rc.retrieve_footprint()
 print t.prompt, 'File container resolved ?', rc
 

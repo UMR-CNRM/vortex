@@ -17,11 +17,11 @@ print t.prompt, 'Checking only filter'
 
 print t.line
 
-print sandbox.data.resources.CheckOnlyCycle37.footprint().only
+print sandbox.data.resources.CheckOnlyCycle37.retrieve_footprint().only
 
 print t.line
 
-print sandbox.data.resources.CheckOnlyCycle38.footprint().only
+print sandbox.data.resources.CheckOnlyCycle38.retrieve_footprint().only
 
 print t.line
 

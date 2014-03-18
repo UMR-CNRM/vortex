@@ -8,7 +8,6 @@ import footprints
 
 from vortex.autolog import logdefault as logger
 
-from vortex import sessions
 from vortex.tools import net
 from vortex.tools.date import Date
 from vortex.utilities import roles, structs
@@ -45,6 +44,7 @@ class Handler(object):
         self._observer = observer_board(kw.pop('observer', None))
         self._options = rd.copy()
         self._options.update(kw)
+        self.ghost = self._options.pop('ghost', True)
         self._history = structs.History(tag='data-handler')
         self._history.append(self.__class__.__name__, 'init', True)
         self._stage = [ 'load' ]
@@ -112,7 +112,7 @@ class Handler(object):
 
     def options(self, *dicos, **kw):
         """Returns options associated to that handler and a system reference."""
-        opts = dict( system=sessions.system(), intent=dataflow.intent.IN )
+        opts = dict( intent=dataflow.intent.IN )
         opts.update(self._options)
         for d in dicos:
             opts.update(d)
@@ -222,16 +222,23 @@ class Handler(object):
             uridata = net.uriparse(remotelocation)
             store = footprints.proxy.store(scheme=uridata['scheme'], netloc=uridata['netloc'])
             if store:
-                logger.debug('Put resource %s at %s from %s', self, remotelocation, store)
-                del uridata['scheme']
-                del uridata['netloc']
-                rst = store.put(self.container.iotarget(), uridata, self.options(extras))
-                self.history.append(store.fullname(), 'put', rst)
-                self.updstage('put')
+                iotarget = self.container.iotarget()
+                if store.in_place(iotarget):
+                    logger.debug('Put resource %s at %s from %s', self, remotelocation, store)
+                    del uridata['scheme']
+                    del uridata['netloc']
+                    rst = store.put(iotarget, uridata, self.options(extras))
+                    self.history.append(store.fullname(), 'put', rst)
+                    self.updstage('put')
+                elif self.ghost:
+                    self.history.append(store.fullname(), 'put', False)
+                    self.updstage('ghost')
+                else:
+                    logger.error('Could not find any source to put [%s]', iotarget)
             else:
-                logger.error('Could not find any store to put %s', remotelocation)
+                logger.error('Could not find any store to put [%s]', remotelocation)
         else:
-            logger.error('Could not put an incomplete rh %s', self)
+            logger.error('Could not put an incomplete rh [%s]', self)
         return rst
 
     def check(self, **extras):

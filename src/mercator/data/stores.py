@@ -44,16 +44,14 @@ class MercatorArchiveStore(Store):
         return self.storage
 
     def mercatorget(self, remote, local, options):
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.get(self.rootdir + remote['path'], local)
             ftp.close()
             return rc
 
     def mercatorput(self, local, remote, options):
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.put(local, self.rootdir + remote['path'])
             ftp.close()

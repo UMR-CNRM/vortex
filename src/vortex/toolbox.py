@@ -140,7 +140,8 @@ def pushsection(section, args, kw):
                 logger.info(' > %s %s ...', doitmethod, rhandler.location())
             ok = getattr(newsections[0], doitmethod)()
             if verbose and not ok:
-                logger.warning(' > Could not %s on %s', doitmethod, rhandler)
+                logger.warning(' > Could not %s resource:', doitmethod)
+                rhandler.quickview(indent=4)
             if t.sh.trace: print
         if ok:
             rlok.append(rhandler)
@@ -193,7 +194,7 @@ def namespaces(**kw):
     nameseen = dict()
     for cat in [ footprints.collector(x) for x in usedcat ]:
         for cls in cat():
-            fp = cls.footprint().attr
+            fp = cls.retrieve_footprint().attr
             netattr = fp.get('namespace', None)
             if not netattr:
                 netattr = fp.get('netloc', None)

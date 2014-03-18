@@ -13,6 +13,7 @@ import re
 
 import footprints
 
+from vortex import sessions
 from vortex.autolog import logdefault as logger
 from vortex.layout import dataflow
 from vortex.tools import config, caches
@@ -154,16 +155,27 @@ class Store(footprints.FootprintBase):
 
     def __init__(self, *args, **kw):
         logger.debug('Abstract store init %s', self.__class__)
+        sh = kw.pop('system', sessions.system())
         super(Store, self).__init__(*args, **kw)
+        self._sh = sh
 
     @property
     def realkind(self):
         """Defines the kind of this object, here ``store``."""
         return 'store'
 
+    @property
+    def system(self):
+        """Shortcut to current system interface."""
+        return self._sh
+
     def in_situ(self, local, options):
-        system = options.get('system', None)
-        return bool(system and options.get('insitu', False) and system.path.exists(local))
+        """Return true when insitu option is active and local file exists."""
+        return bool(options.get('insitu', False) and self.system.path.exists(local))
+
+    def in_place(self, localio):
+        """Return true when the current io resource is defined (either io descriptor or file."""
+        return bool(localio is not None and (type(localio) is not str or self.system.path.exists(localio)))
 
     def notyet(self, *args):
         """
@@ -256,6 +268,20 @@ class MultiStore(footprints.FootprintBase):
         """Abstract method."""
         pass
 
+    def in_situ(self, local, options):
+        """Return cumulative value for the same method of internal opened stores."""
+        rc = True
+        for sto in self.openedstores:
+            rc = rc and sto.in_situ(local)
+        return rc
+
+    def in_place(self, localio):
+        """Return cumulative value for the same method of internal opened stores."""
+        rc = True
+        for sto in self.openedstores:
+            rc = rc and sto.in_place(localio)
+        return rc
+
     def check(self, remote, options=None):
         """Go through internal opened stores and check for the resource."""
         logger.debug('Multi Store check from %s', remote)
@@ -302,6 +328,7 @@ class MultiStore(footprints.FootprintBase):
             logger.info('Multi put at %s', sto)
             rc = sto.put(local, remote.copy(), options) and rc
         return rc
+
 
 class MagicPlace(Store):
     """Somewher, over the rainbow!"""
@@ -373,9 +400,8 @@ class Finder(Store):
 
     def filecheck(self, remote, options):
         """Returns a stat-like object if the ``remote`` exists on the ``system`` provided."""
-        system = options.get('system', None)
         try:
-            st = system.stat(self.fullpath(remote))
+            st = self.system.stat(self.fullpath(remote))
         except OSError:
             st = None
         return st
@@ -386,21 +412,18 @@ class Finder(Store):
 
     def fileget(self, remote, local, options):
         """Delegates to ``system`` the copy of ``remote`` to ``local``."""
-        system = options.get('system', None)
         rpath = self.fullpath(remote)
         if 'intent' in options and options['intent'] == dataflow.intent.IN:
             logger.warning('Ignore intent <in> for remote input %s', rpath)
-        return system.cp(rpath, local)
+        return self.system.cp(rpath, local)
 
     def fileput(self, local, remote, options):
         """Delegates to ``system`` the copy of ``local`` to ``remote``."""
-        system = options.get('system', None)
-        return system.cp(local, self.fullpath(remote))
+        return self.system.cp(local, self.fullpath(remote))
 
     def ftpcheck(self, remote, options):
         """Delegates to ``system`` a distant check."""
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.size(self.fullpath(remote))
             ftp.close()
@@ -410,8 +433,7 @@ class Finder(Store):
 
     def ftplocate(self, remote, options):
         """Delegates to ``system`` qualified name creation."""
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rloc = ftp.netpath(self.fullpath(remote))
             ftp.close()
@@ -421,8 +443,7 @@ class Finder(Store):
 
     def ftpget(self, remote, local, options):
         """Delegates to ``system`` the file transfert of ``remote`` to ``local``."""
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.get(self.fullpath(remote), local)
             ftp.close()
@@ -430,8 +451,7 @@ class Finder(Store):
 
     def ftpput(self, local, remote, options):
         """Delegates to ``system`` the file transfert of ``local`` to ``remote``."""
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.put(local, self.fullpath(remote))
             ftp.close()
@@ -483,8 +503,7 @@ class ArchiveStore(Store):
 
     def ftpcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.size(self.rootdir + remote['path'])
             ftp.close()
@@ -494,8 +513,7 @@ class ArchiveStore(Store):
 
     def ftplocate(self, remote, options):
         """Delegates to ``system.ftp`` the path evaluation."""
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rloc = ftp.netpath(self.rootdir + remote['path'])
             ftp.close()
@@ -505,8 +523,7 @@ class ArchiveStore(Store):
 
     def ftpget(self, remote, local, options):
         """Delegates to ``system.ftp`` the put action."""
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.get(self.rootdir + remote['path'], local)
             ftp.close()
@@ -516,11 +533,10 @@ class ArchiveStore(Store):
 
     def ftpput(self, local, remote, options):
         """Delegates to ``system.ftp`` the put action."""
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rootpath = remote.get('root', self.rootdir)
-            rc = ftp.put(local, system.path.join(rootpath, remote['path'].lstrip(system.path.sep)))
+            rc = ftp.put(local, self.system.path.join(rootpath, remote['path'].lstrip(self.system.path.sep)))
             ftp.close()
             return rc
         else:
@@ -555,11 +571,10 @@ class VortexArchiveStore(ArchiveStore):
 
     def remapget(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
-        system = options.get('system', None)
         xpath = remote['path'].split('/')
         xpath[3:4] = list(xpath[3])
-        xpath[:0] = [ system.path.sep, self.headdir ]
-        remote['path'] = system.path.join(*xpath)
+        xpath[:0] = [ self.system.path.sep, self.headdir ]
+        remote['path'] = self.system.path.join(*xpath)
 
     def vortexcheck(self, remote, options):
         """Remap and ftpcheck sequence."""
@@ -648,31 +663,27 @@ class CacheStore(Store):
 
     def incachecheck(self, remote, options):
         """Returns a stat-like object if the ``remote`` exists in the current cache."""
-        system = options.get('system', None)
         try:
-            st = system.stat(self.incachelocate(remote, options))
+            st = self.system.stat(self.incachelocate(remote, options))
         except OSError:
             st = None
         return st
 
     def incachelocate(self, remote, options):
         """Agregates cache to remore subpath."""
-        system = options.get('system', None)
-        return self.cache.entry(system) + remote['path']
+        return self.cache.entry(self.system) + remote['path']
 
     def incacheget(self, remote, local, options):
         """Simple copy from current cache cache to ``local``."""
-        system = options.get('system', None)
-        rpath = self.cache.entry(system) + remote['path']
+        rpath = self.cache.entry(self.system) + remote['path']
         if 'intent' in options and options['intent'] == dataflow.intent.IN:
-            return system.smartcp(rpath, local)
+            return self.system.smartcp(rpath, local)
         else:
-            return system.cp(rpath, local)
+            return self.system.cp(rpath, local)
 
     def incacheput(self, local, remote, options):
         """Simple copy from ``local`` to the current cache in readonly mode."""
-        system = options.get('system', None)
-        return system.smartcp(local, self.cache.entry(system) + remote['path'])
+        return self.system.smartcp(local, self.cache.entry(self.system) + remote['path'])
 
 
 class VortexCacheStore(CacheStore):

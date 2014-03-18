@@ -78,6 +78,11 @@ class Section(object):
         if info.get('stage') == 'put' and self.kind == ixo.OUTPUT:
             self.stages.append('put')
 
+    def updstage_ghost(self, info):
+        """Upgrade current section to 'ghost' level."""
+        if info.get('stage') == 'ghost' and self.kind == ixo.OUTPUT:
+            self.stages.append('ghost')
+
     def updstage(self, info):
         """Upgrade current section level according to information given in dict ``info``."""
         updmethod = getattr(self, 'updstage_' + info.get('stage'), self.updignore)

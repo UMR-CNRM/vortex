@@ -8,7 +8,6 @@ __all__ = []
 from vortex.autolog import logdefault as logger
 
 from vortex.algo.components import BlindRun
-from vortex.tools.fortran import NamelistBlock
 
 
 class Fa2Grib(BlindRun):
@@ -70,6 +69,7 @@ class Fa2Grib(BlindRun):
             self.system.remove(self.fortnam)
 
             # Build the local namelist block
+            from vortex.tools.fortran import NamelistBlock
             nb = NamelistBlock(name='NAML')
             nb.NBDOM = 1
             nb.CHOPER = self.compact

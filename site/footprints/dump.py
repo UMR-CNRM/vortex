@@ -33,6 +33,12 @@ break_after_list_begin = False
 break_before_list_end = False
 break_after_list_end = False
 
+break_before_set_item = False
+break_before_set_begin = False
+break_after_set_begin = False
+break_before_set_end = False
+break_after_set_end = False
+
 break_before_tuple_item = False
 break_before_tuple_begin = False
 break_after_tuple_begin = False
@@ -193,6 +199,28 @@ class Dumper():
                 indent(level + 1, break_after_list_begin), ', '.join(items),
                 indent(level, break_before_list_end),
                 indent(level, break_after_list_end)
+            )
+
+    def dump_set(self, obj, level=0, nextline=True):
+        DEBUG('dump_set', obj)
+        if level + 1 > max_depth:
+            exit()
+            return "%sset([...])%s" % (
+                indent(level, break_before_set_begin),
+                indent(level, break_after_set_end)
+            )
+        else:
+            items = [
+                "%s%s" % (
+                    indent(level + 1, break_before_set_item),
+                    self.dump(x, level + 1)
+                ) for x in obj
+            ]
+            return "%sset([%s%s%s])%s" % (
+                indent(level, nextline and break_before_set_begin),
+                indent(level + 1, break_after_set_begin), ', '.join(items),
+                indent(level, break_before_set_end),
+                indent(level, break_after_set_end)
             )
 
     def dump_dict(self, obj, level=0, nextline=True):

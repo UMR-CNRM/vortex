@@ -85,6 +85,7 @@ class GenericConfigParser(object):
                 else:
                     if self.mkforce:
                         self.file = persofile
+                        local.filecocoon(persofile)
                         local.touch(persofile)
                     else:
                         raise Exception('Configuration file ' + inifile + ' not found')

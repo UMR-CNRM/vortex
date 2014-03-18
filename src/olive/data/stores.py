@@ -39,11 +39,10 @@ class OliveArchiveStore(ArchiveStore):
 
     def remapget(self, remote, options):
         """Remap actual remote path to distant store path."""
-        system = options.get('system', None)
         xpath = remote['path'].split('/')
         xpath[1:2] = list(xpath[1])
-        xpath[:0] = [ system.path.sep, self.headdir ]
-        remote['path'] = system.path.join(*xpath)
+        xpath[:0] = [ self.system.path.sep, self.headdir ]
+        remote['path'] = self.system.path.join(*xpath)
 
     def olivelocate(self, remote, options):
         """Remap and ftplocate sequence."""
@@ -168,14 +167,13 @@ class OpArchiveStore(ArchiveStore):
 
     def oplocate(self, remote, options):
         """Delegates to ``system`` a distant check."""
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             extract = remote['query'].get('extract', None)
             cleanpath = self.fullpath(remote)
-            (dirname, basename) = system.path.split(cleanpath)
+            (dirname, basename) = self.system.path.split(cleanpath)
             if not extract and self.glue.containsfile(basename):
-                cleanpath, u_targetpath = self.glue.filemap(system, dirname, basename)
+                cleanpath, u_targetpath = self.glue.filemap(self.system, dirname, basename)
             rloc = ftp.netpath(cleanpath)
             ftp.close()
             return rloc
@@ -184,30 +182,28 @@ class OpArchiveStore(ArchiveStore):
 
     def opcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             extract = remote['query'].get('extract', None)
             cleanpath = self.fullpath(remote)
-            (dirname, basename) = system.path.split(cleanpath)
+            (dirname, basename) = self.system.path.split(cleanpath)
             if not extract and self.glue.containsfile(basename):
-                cleanpath, u_targetpath = self.glue.filemap(system, dirname, basename)
+                cleanpath, u_targetpath = self.glue.filemap(self.system, dirname, basename)
             rc = ftp.size(cleanpath)
             ftp.close()
             return rc
 
     def opget(self, remote, local, options):
         """File transfert: get from store."""
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             targetpath = local
             cleanpath = self.fullpath(remote)
             extract = remote['query'].get('extract', None)
-            (dirname, basename) = system.path.split(cleanpath)
+            (dirname, basename) = self.system.path.split(cleanpath)
             if not extract and self.glue.containsfile(basename):
                 extract = basename
-                cleanpath, targetpath = self.glue.filemap(system, dirname, basename)
+                cleanpath, targetpath = self.glue.filemap(self.system, dirname, basename)
             if cleanpath is None:
                 rc = False
             else:
@@ -217,11 +213,11 @@ class OpArchiveStore(ArchiveStore):
                     logger.error('FTP could not get file %s', cleanpath)
                 elif extract:
                     if extract == 'all' :
-                        rc = system.untar(targetpath, output=False)
+                        rc = self.system.untar(targetpath, output=False)
                     else:
-                        rc = system.untar(targetpath, extract, output=False)
+                        rc = self.system.untar(targetpath, extract, output=False)
                         if local != extract:
-                            rc = rc and system.mv(extract, local)
+                            rc = rc and self.system.mv(extract, local)
             return rc
         else:
             logger.error('Could not get ftp connection to %s', self.hostname())
@@ -229,8 +225,7 @@ class OpArchiveStore(ArchiveStore):
 
     def opput(self, local, remote, options):
         """File transfert: put to store."""
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.put(local, self.fullpath(remote))
             ftp.close()

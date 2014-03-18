@@ -48,7 +48,6 @@ import re
 import datetime
 import calendar
 
-
 def mkisodate(datestr):
     """A crude attempt to reshape the iso8601 format."""
     l = list(datestr)

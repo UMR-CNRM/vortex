@@ -94,8 +94,7 @@ class SopranoStore(Store):
 
     def ftplocate(self, remote, options):
         """Delegates to ``system`` a distant check."""
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rloc = ftp.netpath(self.fullpath(remote))
             ftp.close()
@@ -105,32 +104,29 @@ class SopranoStore(Store):
 
     def ftpcheck(self, remote, options):
         """Delegates to ``system`` a distant check."""
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.size(self.fullpath(remote))
             ftp.close()
             return rc
 
     def ftpget(self, remote, local, options):
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.get(self.fullpath(remote), local)
             ftp.close()
             extract = remote['query'].get('extract', None)
             if extract:
                 if extract == 'all' :
-                    rc = system.untar(local, output=False)
+                    rc = self.system.untar(local, output=False)
                 else:
-                    rc = system.untar(local , extract, output=False)
+                    rc = self.system.untar(local , extract, output=False)
                     if local != extract:
-                        rc = system.mv(extract, local)
+                        rc = self.system.mv(extract, local)
             return rc
 
     def ftpput(self, local, remote, options):
-        system = options.get('system', None)
-        ftp = system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.put(local, self.fullpath(remote))
             ftp.close()
