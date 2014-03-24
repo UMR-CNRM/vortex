@@ -68,11 +68,11 @@ class IFSParallel(Parallel):
         except:
             return False
 
-    def spawn_hook(self, ctx):
+    def spawn_hook(self):
         """Usually a good habit to dump the fort.4 namelist."""
-        super(IFSParallel, self).spawn_hook(ctx)
+        super(IFSParallel, self).spawn_hook()
         if self.system.path.exists('fort.4'):
-            self.system.header('{0:s} : dump namelist <fort.4>'.format(self.realkind))
+            self.system.subtitle('{0:s} : dump namelist <fort.4>'.format(self.realkind))
             self.system.cat('fort.4', output=False)
 
     def spawn_command_options(self):
@@ -85,15 +85,15 @@ class IFSParallel(Parallel):
             fcunit     = self.fcunit,
         )
 
-    def prepare(self, rh, ctx, opts):
+    def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(IFSParallel, self).prepare(rh, ctx, opts)
+        super(IFSParallel, self).prepare(rh, opts)
         for optpack in ('drhook', 'gribapi'):
             self.export(optpack)
 
-    def setlink(self, ctx, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
+    def setlink(self, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
         """Set a symbolic link for actual resource playing defined role."""
-        initrh = [ x.rh for x in ctx.sequence.effective_inputs(role=initrole, kind=initkind) if inittest(x.rh) ]
+        initrh = [ x.rh for x in self.context.sequence.effective_inputs(role=initrole, kind=initkind) if inittest(x.rh) ]
         if not initrh:
             logger.warning('Could not find logical role %s with kind %s - assuming already renamed', initrole, initkind)
         if len(initrh) > 1:
@@ -105,8 +105,8 @@ class IFSParallel(Parallel):
                     break
         return initrh
 
-    def execute(self, rh, ctx, opts):
+    def execute(self, rh, opts):
         """Standard IFS-Like execution parallel execution."""
         self.system.ls(output='dirlst')
-        super(IFSParallel, self).execute(rh, ctx, opts)
+        super(IFSParallel, self).execute(rh, opts)
 

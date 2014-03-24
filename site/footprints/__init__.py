@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.8.12'
+__version__ = '0.8.13'
 
 import re
 import copy
@@ -26,7 +26,7 @@ logger = logging.getLogger('footprints')
 import dump, observers, priorities, reporting, util
 
 UNKNOWN = '__unknown__'
-replattr = re.compile(r'\[(\w+)(?:\:+(\w+))?\]')
+replattr = re.compile(r'\[(\w+)(?:\:+(\w+))?(?:\#(\w+))?\]')
 
 
 class FootprintException(Exception):
@@ -187,7 +187,7 @@ class Collector(util.Catalog):
         """Not yet specialised..."""
         logger.debug('Notified %s upd item %s', self, item)
 
-    def pickup_attributes(self, desc):
+    def pickup(self, desc):
         """Try to pickup inside the collector a item that could match the description."""
         logger.debug('Pick up a "%s" in description %s with collector %s', self.entry, desc, self)
         mkreport = desc.pop('_report', self.autoreport)
@@ -260,12 +260,8 @@ class Collector(util.Catalog):
         topcl, topr, u_topinput = candidates[0]
         return topcl(topr, checked=True)
 
-    def pickup(self, desc):
-        """Proxy to :meth:`pickup_attributes`."""
-        return self.pickup_attributes(desc)
-
     def load(self, **desc):
-        """Return the entry entry after pickup_attributes."""
+        """Return the entry entry after pickup of attributes."""
         return self.pickup(desc).get(self.entry, None)
 
     def default(self, **kw):
@@ -294,7 +290,7 @@ class Collector(util.Catalog):
                 okmatch.append(item)
         return okmatch
 
-    def buildattrmap(self, attrmap=None, only=None):
+    def build_attrmap(self, attrmap=None, only=None):
         """Build a reversed attr-class map."""
         if attrmap is None:
             attrmap = dict()
@@ -320,7 +316,7 @@ class Collector(util.Catalog):
         or ``outcast`` sets if present.
         """
         indent = ' ' * 3
-        attrmap = self.buildattrmap(only=only)
+        attrmap = self.build_attrmap(only=only)
         for a in sorted(attrmap.keys()):
             print '*', a, ':'
             for info in sorted(attrmap[a]):
@@ -388,7 +384,7 @@ def collector(tag='garbage'):
 
 def pickup(rd):
     """Find in current description the attributes that are collected under the ``tag`` name."""
-    return collector(rd.pop('tag', 'garbage')).pickup_attributes(rd)
+    return collector(rd.pop('tag', 'garbage')).pickup(rd)
 
 def load(**kw):
     """
@@ -640,13 +636,18 @@ class Footprint(object):
             if mobj:
                 replk = mobj.group(1)
                 replm = mobj.group(2)
+                replx = mobj.group(3)
                 if replk not in guess and replk not in extras:
-                    logger.error('No %s attribute in guess:', replk)
-                    logger.error('%s', guess)
-                    logger.error('No %s attribute in extras:', replk)
-                    logger.error('%s', extras)
-                    logger.error('Actual defaults: %s', setup.defaults)
-                    raise FootprintUnreachableAttr('Could not replace attribute ' + replk)
+                    if replx:
+                        changed = 1
+                        guess[k] = replattr.sub(replx, guess[k], 1)
+                    else:
+                        logger.error('No %s attribute in guess:', replk)
+                        logger.error('%s', guess)
+                        logger.error('No %s attribute in extras:', replk)
+                        logger.error('%s', extras)
+                        logger.error('Actual defaults: %s', setup.defaults)
+                        raise FootprintUnreachableAttr('Could not replace attribute ' + replk)
                 if replk in guess:
                     if replk not in todo:
                         changed = 1

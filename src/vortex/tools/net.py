@@ -6,7 +6,6 @@ Net tools.
 """
 
 
-from os.path import dirname
 import types
 import urlparse
 import io, ftplib
@@ -58,17 +57,17 @@ def uriunparse(uridesc):
     return urlparse.urlunparse(uridesc)
 
 
-class StdFtp(ftplib.FTP):
+class StdFtp(object):
     """
     Standard wrapper for the crude FTP object from :mod:`ftplib`.
     First argument of the constructor is the calling OS interface.
     """
 
     def __init__(self, system, hostname):
-        self._system = system
-        self._closed = True
         logger.debug('FTP init host %s', hostname)
-        ftplib.FTP.__init__(self, hostname)
+        self._system  = system
+        self._closed  = True
+        self._ftplib  = ftplib.FTP(hostname)
         self._logname = None
         self._created = datetime.now()
         self._opened  = None
@@ -90,8 +89,22 @@ class StdFtp(ftplib.FTP):
             str(self.length)
         )
 
-    def identify(self):
-        print self
+    def __getattr__(self, key):
+        """Gateway to undefined method or attributes if present in ``_ftplib``."""
+        actualattr = getattr(self._ftplib, key)
+        if callable(actualattr):
+            def osproxy(*args, **kw):
+                cmd = [key]
+                cmd.extend(args)
+                cmd.extend([ '{0:s}={1:s}'.format(x, str(kw[x])) for x in kw.keys() ])
+                self.stderr(*cmd)
+                return actualattr(*args, **kw)
+            osproxy.func_name = key
+            osproxy.func_doc = actualattr.__doc__
+            setattr(self, key, osproxy)
+            return osproxy
+        else:
+            return actualattr
 
     @property
     def system(self):
@@ -125,15 +138,16 @@ class StdFtp(ftplib.FTP):
 
     def close(self):
         """Proxy to ftplib :meth:`ftplib.FTP.close`."""
+        self.stderr('close')
         self._closed = True
         self._deleted = datetime.now()
-        return ftplib.FTP.close(self)
+        return self._ftplib.close()
 
     def login(self, *args):
         """Proxy to ftplib :meth:`ftplib.FTP.login`."""
-        logger.debug('FTP login %s', str(args))
         self.stderr('login', args[0])
-        rc = ftplib.FTP.login(self, *args)
+        logger.debug('FTP login %s', str(args))
+        rc = self._ftplib.login(*args)
         if rc:
             self._closed = False
             self._opened = datetime.now()
@@ -143,6 +157,7 @@ class StdFtp(ftplib.FTP):
 
     def fastlogin(self, logname, password=None):
         """Simple heuristic using actual attributes and/or netrc information to log in."""
+        self.stderr('fastlogin', logname)
         rc = False
         if logname and password:
             self._logname = logname
@@ -160,6 +175,7 @@ class StdFtp(ftplib.FTP):
 
     def list(self, *args):
         """Returns standard directory listing from ftp protocol."""
+        self.stderr('list', *args)
         contents = []
         self.retrlines('LIST', callback=contents.append)
         return contents
@@ -167,10 +183,11 @@ class StdFtp(ftplib.FTP):
     def dir(self, *args):
         """Proxy to ftplib :meth:`ftplib.FTP.login`."""
         self.stderr('dir', *args)
-        return ftplib.FTP.dir(self, *args)
+        return self._ftplib.dir(*args)
 
     def ls(self, *args):
         """Returns directory listing."""
+        self.stderr('ls', *args)
         return self.dir(*args)
 
     def get(self, source, destination):
@@ -222,13 +239,14 @@ class StdFtp(ftplib.FTP):
 
     def rmkdir(self, destination):
         """Recursive directory creation."""
+        self.stderr('rmkdir', destination)
         origin = self.pwd()
         if destination.startswith('/'):
             path = ''
         else:
-            path = self.pwd()
+            path = origin
 
-        for subdir in filter(lambda x: x, dirname(destination).split('/')):
+        for subdir in self.system.path.dirname(destination).split('/'):
             current = path + '/' + subdir
             try:
                 self.cwd(current)
@@ -239,3 +257,7 @@ class StdFtp(ftplib.FTP):
                 self.cwd(current)
             path = current
         self.cwd(origin)
+
+    def cd(self, destination):
+        """Change to a directory."""
+        return self.cwd(destination)

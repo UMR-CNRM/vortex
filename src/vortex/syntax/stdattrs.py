@@ -14,7 +14,7 @@ from vortex.tools.date import Date, Time, Month
 #: Export a set of attributes :data:`a_model`, :data:`a_date`, etc..
 __all__ = [
     'a_month', 'a_domain', 'a_truncation', 'a_model', 'a_date', 'a_cutoff', 'a_term',
-    'a_nativefmt', 'a_format', 'a_suite'
+    'a_nativefmt', 'a_actualfmt', 'a_suite'
 ]
 
 #: Default values for atmospheric models.
@@ -67,26 +67,22 @@ class FmtInt(int):
 #: Usual definition of the ``nativefmt`` attribute.
 a_nativefmt = dict(
     optional = True,
-    values = knownfmt,
-    remap = dict(
-        auto = 'foo'
-    ),
     default = 'foo',
+    values = knownfmt,
+    remap = dict(auto = 'foo'),
 )
 
 nativefmt = footprints.Footprint( info = 'Native format', attr = dict( nativefmt = a_nativefmt ) )
 
-#: Usual definition of the ``format`` attribute.
-a_format = dict(
+#: Usual definition of the ``actualfmt`` attribute.
+a_actualfmt = dict(
     optional = True,
+    default = '[nativefmt#unknown]',
     values = knownfmt,
-    remap = dict(
-        auto = 'foo'
-    ),
-    default = '[nativefmt]',
+    remap = dict(auto = 'foo'),
 )
 
-format = footprints.Footprint( info = 'Actual format', attr = dict( format = a_format ) )
+actualfmt = footprints.Footprint( info = 'Actual data format', attr = dict( actualfmt = a_actualfmt ) )
 
 #: Usual definition of the ``cutoff`` attribute.
 a_cutoff = dict(

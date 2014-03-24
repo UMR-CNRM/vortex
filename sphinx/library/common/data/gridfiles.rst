@@ -17,7 +17,17 @@ Package
 Classes
 -------
  
-.. autoclass:: Gridpoint
+.. autoclass:: GridPoint
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GridPointFullPos
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GridPointExport
    :show-inheritance:
    :members:
    :member-order: alphabetical

@@ -27,7 +27,7 @@ IXOTuple = namedtuple('IXOTuple', ['INPUT', 'OUTPUT', 'EXEC'], verbose=False)
 ixo = IXOTuple(INPUT=1, OUTPUT=2, EXEC=3)
 
 #: Arguments specific to a section (to be striped away from a resource handler description)
-section_args = [ 'role', 'alternate', 'intent', 'fatal' ]
+section_args = [ 'role', 'alternate', 'intent', 'fatal', 'expected' ]
 
 def stripargs_section(**kw):
     """

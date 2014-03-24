@@ -50,9 +50,9 @@ class LFI_Status(object):
 
     def _set_rc(self, value):
         if value is not None:
-            self._rc = bool(value == 0)
-        else:
-            self._rc = False
+            if type(value) is bool:
+                value = 1 - int(value)
+            self._rc = self._rc + value
 
     rc = property(_get_rc, _set_rc, None, None)
 
@@ -98,6 +98,7 @@ class LFI_Tool(footprints.FootprintBase):
             lfipath = dict(
                 optional = True,
                 default = None,
+                access = 'rwx'
             )
         )
     )
@@ -127,6 +128,7 @@ class LFI_Tool(footprints.FootprintBase):
         return self._env
 
     def is_xlfi(self, source):
+        """Check if the given ``source`` is a multipart-lfi file."""
         rc = False
         with io.open(source, 'rb') as fd:
             rc = fd.read(8) == 'LFI_ALTM'
@@ -192,7 +194,7 @@ class LFI_Standard(LFI_Tool):
 
         return LFI_Status(rc=len(fields), stdout=rawout, result=fields)
 
-    def lfi_rm(self, *args):
+    def lfi_remove(self, *args):
         """Remove (possibly) multi lfi files."""
         st = LFI_Status(result=list())
         for pname in args:
@@ -202,26 +204,35 @@ class LFI_Standard(LFI_Tool):
                 if xlfi:
                     rc = self.sh.remove(objpath + '.d') and rc
                 st.result.append(dict(path=objpath, multi=xlfi, rc=rc))
-                st.rc = st.rc + ( 1 - int(rc))
+                st.rc = rc
+            for dirpath in self.sh.glob(pname + '.d'):
+                if self.sh.path.exists(dirpath):
+                    rc = self.sh.remove(dirpath)
+                    st.result.append(dict(path=dirpath, multi=True, rc=rc))
+                    st.rc = rc
         return st
 
+    lfi_rm    = lfi_remove
+    fa_rm     = lfi_remove
+    fa_remove = lfi_remove
+
     def _cp_pack_read(self, source, destination):
-        rc = self._spawn(['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', destination])
+        rc = self._spawn(['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', destination], output=False)
         self.sh.chmod(destination, 0444)
         return rc
 
     def _cp_pack_write(self, source, destination):
-        rc = self._spawn(['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', destination])
+        rc = self._spawn(['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', destination], output=False)
         self.sh.chmod(destination, 0644)
         return rc
 
     def _cp_copy_read(self, source, destination):
-        rc = self._spawn(['lfi_alt_copy', '--lfi-file-in', source, '--lfi-file-out', destination])
+        rc = self._spawn(['lfi_alt_copy', '--lfi-file-in', source, '--lfi-file-out', destination], output=False)
         self.sh.chmod(destination, 0444)
         return rc
 
     def _cp_copy_write(self, source, destination):
-        rc = self._spawn(['lfi_alt_copy', '--lfi-file-in', source, '--lfi-file-out', destination])
+        rc = self._spawn(['lfi_alt_copy', '--lfi-file-in', source, '--lfi-file-out', destination], output=False)
         self.sh.chmod(destination, 0644)
         return rc
 
@@ -242,19 +253,25 @@ class LFI_Standard(LFI_Tool):
             'read' if intent == 'in' else 'write',
         )
 
-    def lfi_cp(self, source, destination, intent='in', pack=False):
+    def lfi_copy(self, source, destination, intent='in', pack=False):
         """Extended copy for (possibly) multi lfi file."""
         st = LFI_Status()
+        if not self.sh.path.exists(source):
+            logger.error('Missing source %s', source)
+            st.rc = 2
+            st.stderr = 'No such source file or directory : [' + source + ']'
+            return st
         if self.is_xlfi(source):
-            if self.sh.filecocoon(destination) and self.lfi_rm(destination):
-                xcp = self.multicpmethod(pack, intent, self.sh.is_samefs(source, destination))
-                actualcp = getattr(self, xcp, None)
-                if actualcp is None:
-                    raise AttributeError('No actual LFI cp command ' + xcp)
-                else:
-                    st.rc = actualcp(source, self.sh.path.realpath(destination))
+            if not self.sh.filecocoon(destination):
+                raise OSError('Could not cocoon [' + destination + ']')
+            if not self.lfi_rm(destination):
+                raise OSError('Could not clean destination [' + destination + ']')
+            xcp = self.multicpmethod(pack, intent, self.sh.is_samefs(source, destination))
+            actualcp = getattr(self, xcp, None)
+            if actualcp is None:
+                raise AttributeError('No actual LFI cp command ' + xcp)
             else:
-                raise OSError('Could not prepare destination copy [' + destination + ']')
+                st.rc = actualcp(source, self.sh.path.realpath(destination))
         else:
             if intent == 'in':
                 st.rc = self.sh.smartcp(source, destination)
@@ -262,7 +279,11 @@ class LFI_Standard(LFI_Tool):
                 st.rc = self.sh.cp(source, destination)
         return st
 
-    def lfi_mv(self, source, destination, intent='in', pack=False):
+    lfi_cp  = lfi_copy
+    fa_cp   = lfi_copy
+    fa_copy = lfi_copy
+
+    def lfi_move(self, source, destination, intent='in', pack=False):
         """Extended mv for (possibly) multi lfi file."""
         if self.is_xlfi(source):
             st = self.lfi_cp(source, destination, intent=intent, pack=pack)
@@ -276,3 +297,7 @@ class LFI_Standard(LFI_Tool):
             else:
                 self.sh.chmod(destination, 0644)
         return st
+
+    lfi_mv  = lfi_move
+    fa_mv   = lfi_move
+    fa_move = lfi_move

@@ -42,13 +42,13 @@ class AlgoComponent(footprints.FootprintBase):
         """Defines a tag specific to the current algo component."""
         return '.'.join((self.realkind, self.engine))
 
-    def fsstamp(self, ctx, opts):
+    def fsstamp(self, opts):
         """Ask the current context to put a stamp on file system."""
-        ctx.fstrack_stamp(tag=self.fstag())
+        self.context.fstrack_stamp(tag=self.fstag())
 
-    def fscheck(self, ctx, opts):
+    def fscheck(self, opts):
         """Ask the current context to check changes on file system since last stamp."""
-        self.fslog.append(ctx.fstrack_check(tag=self.fstag()))
+        self.fslog.append(self.context.fstrack_check(tag=self.fstag()))
 
     def export(self, packenv):
         """Export environment variables in given pack."""
@@ -58,7 +58,7 @@ class AlgoComponent(footprints.FootprintBase):
                     logger.info('Setting %s env %s = %s', packenv.upper(), k, v)
                     self.env[k] = v
 
-    def prepare(self, rh, ctx, opts):
+    def prepare(self, rh, opts):
         """Set some defaults env values."""
         if opts.get('fortran', True):
             self.export('fortran')
@@ -69,11 +69,11 @@ class AlgoComponent(footprints.FootprintBase):
         self.system.chmod(absx, 0755)
         return absx
 
-    def spawn_hook(self, ctx):
+    def spawn_hook(self):
         """Last chance to say something before execution."""
         pass
 
-    def spawn(self, ctx, args):
+    def spawn(self, args):
         """
         Spawn in the current system the command as defined in raw ``args``.
 
@@ -90,7 +90,7 @@ class AlgoComponent(footprints.FootprintBase):
 
         self.system.subtitle('{0:s} : directory listing (pre-execution)'.format(self.realkind))
         self.system.dir(output=False)
-        self.spawn_hook(ctx)
+        self.spawn_hook()
         self.system.subtitle('{0:s} : start execution'.format(self.realkind))
         self.system.spawn(args, output=False)
         self.system.subtitle('{0:s} : directory listing (post-execution)'.format(self.realkind))
@@ -100,20 +100,20 @@ class AlgoComponent(footprints.FootprintBase):
         """Prepare options for the resource's command line."""
         return dict()
 
-    def spawn_command_line(self, rh, ctx):
+    def spawn_command_line(self, rh):
         """Split the shell command line of the resource to be run."""
         opts = self.spawn_command_options()
         return shlex.split(rh.resource.command_line(**opts))
 
-    def execute(self, rh, ctx, opts):
+    def execute(self, rh, opts):
         """Abstract method."""
         pass
 
-    def postfix(self, rh, ctx, opts):
+    def postfix(self, rh, opts):
         """Abstract method."""
         pass
 
-    def dumplog(self, ctx, opts):
+    def dumplog(self, opts):
         """Dump to local file the internal log of the current algo component."""
         self.system.pickle_dump(self.fslog, 'log.' + self.fstag())
 
@@ -130,18 +130,18 @@ class AlgoComponent(footprints.FootprintBase):
         if not self.valid_executable(rh):
             logger.warning('Resource %s is not a valid executable', rh.resource)
             return False
-        ctx = vortex.sessions.ticket().context
-        self.system = ctx.system
-        self.env = ctx.env
-        self.target = kw.pop('target', None)
+        self.context = vortex.sessions.ticket().context
+        self.system  = self.context.system
+        self.env     = self.context.env
+        self.target  = kw.pop('target', None)
         if self.target is None:
             self.target = self.system.target()
-        self.prepare(rh, ctx, kw)
-        self.fsstamp(ctx, kw)
-        self.execute(rh, ctx, kw)
-        self.fscheck(ctx, kw)
-        self.postfix(rh, ctx, kw)
-        self.dumplog(ctx, kw)
+        self.prepare(rh, kw)
+        self.fsstamp(kw)
+        self.execute(rh, kw)
+        self.fscheck(kw)
+        self.postfix(rh, kw)
+        self.dumplog(kw)
         self.env = None
         self.system = None
         return self._status
@@ -174,15 +174,15 @@ class Expresso(AlgoComponent):
         )
     )
 
-    def execute(self, rh, ctx, opts):
+    def execute(self, rh, opts):
         """
         Run the specified resource handler through the current interpreter,
         using the resource command_line method as args.
         """
         args = [ self.interpreter, rh.container.localpath() ]
-        args.extend(self.spawn_command_line(rh, ctx))
+        args.extend(self.spawn_command_line(rh))
         logger.debug('Run script %s', args)
-        self.spawn(ctx, args)
+        self.spawn(args)
 
 
 class BlindRun(AlgoComponent):
@@ -199,16 +199,16 @@ class BlindRun(AlgoComponent):
         )
     )
 
-    def execute(self, rh, ctx, opts):
+    def execute(self, rh, opts):
         """
         Run the specified resource handler as an absolute executable,
         using the resource command_line method as args.
         """
 
         args = [ self.absexcutable(rh.container.localpath()) ]
-        args.extend(self.spawn_command_line(rh, ctx))
+        args.extend(self.spawn_command_line(rh))
         logger.debug('BlindRun executable resource %s', args)
-        self.spawn(ctx, args)
+        self.spawn(args)
 
 
 class Parallel(AlgoComponent):
@@ -218,56 +218,89 @@ class Parallel(AlgoComponent):
 
     _footprint = dict(
         attr = dict(
+            engine = dict(
+                values = [ 'parallel' ]
+            ),
             mpitool = dict(
                 optional = True,
-                type = mpitools.MpiTool
+                type = mpitools.MpiSubmit
             ),
             mpiname = dict(
                 optional = True,
                 alias = [ 'mpi' ],
             ),
-            engine = dict(
-                values = [ 'parallel' ]
-            )
+            ioserver = dict(
+                optional = True,
+                type = mpitools.MpiServerIO
+            ),
         )
     )
 
-    def prepare(self, rh, ctx, opts):
+    def prepare(self, rh, opts):
         """Add some defaults env values for mpitool itself."""
-        super(Parallel, self).prepare(rh, ctx, opts)
+        super(Parallel, self).prepare(rh, opts)
         if opts.get('mpitool', True):
             self.export('mpitool')
 
-    def execute(self, rh, ctx, opts):
+    def execute(self, rh, opts):
         """
         Run the specified resource handler through the `mitool` launcher,
-        using the resource command_line method as args. A named argument `mpiopts`
-        could be provided.
+        using the resource command_line method as args.
+        A argument named `mpiopts` could be provided as a dictionary.
         """
         mpi = self.mpitool
         if not mpi:
             mpiname = self.mpiname or self.env.VORTEX_MPI_NAME
-            mpi = footprints.proxy.mpitool(sysname=self.system.sysname, mpiname=mpiname)
+            mpi = footprints.proxy.mpitool(
+                mpiname = mpiname,
+                sysname = self.system.sysname,
+                nodes   = self.env.VORTEX_SUBMIT_NODES,
+                tasks   = self.env.VORTEX_SUBMIT_TASKS,
+                openmp  = self.env.VORTEX_SUBMIT_OPENMP,
+            )
 
         if not mpi:
             logger.critical('Component %s could not find any mpitool', self.shortname())
             raise AttributeError, 'No valid mpitool attr could be found.'
 
+        mpi.import_basics(self)
+        mpi.options = opts.get('mpiopts', dict())
+        mpi.master  = self.absexcutable(rh.container.localpath())
+
         self.system.subtitle('{0:s} : parallel engine'.format(self.realkind))
         print mpi
 
-        mpi.setoptions(self.system, self.env, opts.get('mpiopts', dict()))
-        mpi.setmaster(self.absexcutable(rh.container.localpath()))
+        io = self.ioserver
+        if not io and self.env.VORTEX_IOSERVER_NODES:
+            io = footprints.proxy.mpitool(
+                io      = True,
+                sysname = self.system.sysname,
+                nodes   = self.env.VORTEX_IOSERVER_NODES,
+                tasks   = self.env.VORTEX_IOSERVER_TASKS,
+                openmp  = self.env.VORTEX_IOSERVER_OPENMP,
+            )
 
-        args = mpi.commandline(self.system, self.env, self.spawn_command_line(rh, ctx))
+        # Building full command line options, including executable options and optional io server
+        args = list()
+        if io:
+            io.import_basics(self)
+            io.options = { x.lstrip('io_'):opts[x] for x in opts.keys() if x.startswith('io_') }
+            mpi.options['nn'] = mpi.options['nn'] - io.options['nn']
+            io.master  = mpi.master
+            args = io.mkcmdline(self.spawn_command_line(rh))
+
+        args[:0] = mpi.mkcmdline(self.spawn_command_line(rh))
         logger.info('Run in parallel mode %s', args)
 
-        mpi.setup(ctx, self.target, opts)
-        self.spawn(ctx, args)
-        mpi.clean(ctx, self.target, opts)
+        # Specific parallel settings
+        mpi.setup(opts)
+        if io:
+            io.setup(opts)
 
+        # This is actual running command
+        self.spawn(args)
 
-if __name__ == '__main__':
-    e = Expresso(engine='exec', interpreter='bash')
-    e.quickview(1, 0)
-
+        # Specific parallel cleaning
+        if io:
+            io.clean(opts)
+        mpi.clean(opts)

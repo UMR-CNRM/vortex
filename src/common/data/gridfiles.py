@@ -13,7 +13,7 @@ from iga.syntax.stdattrs import archivesuffix
 from vortex.tools import env
 
 
-class Gridpoint(GeoFlowResource):
+class GridPoint(GeoFlowResource):
     """
     Class for gridpoint model files calculated in a post-treatment task. Possible formats are 'grib' and 'fa'.
     A gridpoint file can be calculated for files from different sources given by the "origin" attribute.
@@ -23,7 +23,7 @@ class Gridpoint(GeoFlowResource):
     _footprint = [
         term,
         dict(
-            info = 'Gridpoint fields',
+            info = 'GridPoint Fields',
             attr = dict(
                 origin = dict(
                     values = [
@@ -96,10 +96,10 @@ class Gridpoint(GeoFlowResource):
         )
 
 
-class GridpointFullpos(Gridpoint):
+class GridPointFullPos(GridPoint):
 
     _footprint = dict(
-        info = 'Gridpoint fields as produced by Fullpos',
+        info = 'GridPoint fields as produced by Fullpos',
         attr = dict(
             nativefmt = dict(
                 values = [ 'fa' ],
@@ -113,7 +113,7 @@ class GridpointFullpos(Gridpoint):
 
         t = self.term.hour
         e = env.current()
-        if not 'SWAPP_ANA_TERMSHIFT' in e and self.origin == 'ana':
+        if 'VORTEX_ANA_TERMSHIFT' not in e and self.origin == 'ana':
             t = 0
 
         if self.model == 'mocage':
@@ -144,10 +144,10 @@ class GridpointFullpos(Gridpoint):
         return name
 
 
-class GridpointExport(Gridpoint):
+class GridPointExport(GridPoint):
 
     _footprint = dict(
-        info = 'Gridpoint fields as exported for dissemination',
+        info = 'GridPoint fields as exported for dissemination',
         attr = dict(
             nativefmt = dict(
                 values = [ 'grib' ],
@@ -161,7 +161,7 @@ class GridpointExport(Gridpoint):
 
         t = self.term.hour
         e = env.current()
-        if not 'SWAPP_ANA_TERMSHIFT' in e and self.origin == 'ana':
+        if not 'VORTEX_ANA_TERMSHIFT' in e and self.origin == 'ana':
             t = 0
         return 'GRID' + self.origin.upper() + self.geometry.area + '+' + self.term.nice(t)
 

@@ -12,7 +12,7 @@ from vortex.data.geometries import SpectralGeometry, GridGeometry
 import common.data
 import olive.data
 
-class UtGridpoint(TestCase):
+class UtGridPoint(TestCase):
 
     def setUp(self):
         self.attrset = dict(kind='gridpoint', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
@@ -634,7 +634,7 @@ class UtHistsurf(TestCase):
 
 
 if __name__ == '__main__':
-    for test in [ UtGridpoint, UtHistoric, UtHistsurf, UtAnalysis ]:
+    for test in [ UtGridPoint, UtHistoric, UtHistsurf, UtAnalysis ]:
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"

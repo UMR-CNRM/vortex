@@ -12,7 +12,8 @@ __all__ = []
 import re, shlex
 
 import footprints
-
+from vortex.tools import env 
+from vortex.syntax.stdattrs import FPList
 from vortex.autolog import logdefault as logger
 
 
@@ -29,42 +30,82 @@ class MpiTool(footprints.FootprintBase):
         info = 'MPI toolkit',
         attr = dict(
             sysname = dict(),
-            mpiname = dict(),
             mpiopts = dict(
                 optional = True,
-                default = 'v'
+                default = ''
+            ),
+            nodes = dict(
+                optional = True,
+                type = int,
+                default = None,
+                access = 'rwx'
+            ),
+            tasks = dict(
+                optional = True,
+                type = int,
+                default = None,
+                access = 'rwx'
+            ),
+            openmp = dict(
+                optional = True,
+                type = int,
+                default = None,
+                access = 'rwx'
+            ),
+            optsep = dict(
+                optional = True,
+                default = '--'
             ),
             optprefix = dict(
                 optional = True,
-                default = '-'
+                default = '--'
+            ),
+            basics = dict(
+                optional = True,
+                type = FPList,
+                default = FPList('system', 'env', 'target', 'context')
             )
         )
     )
 
     def __init__(self, *args, **kw):
-        """After parent initialization, set the master undefined."""
+        """After parent initialization, set master, options and basics undefined."""
         logger.debug('Abstract mpi tool init %s', self.__class__)
         super(MpiTool, self).__init__(*args, **kw)
-        self.setmaster(None)
+        self._master = None
+        self._options = None
+        for k in self.basics:
+            self.__dict__['_'+k] = None
 
     @property
     def realkind(self):
         return 'mpitool'
 
-    def launcher(self, system, e):
-        """
-        Returns the name of the mpi tool to be used,
-        coming either from VORTEX_MPI_LAUNCHER environment variable
-        or the current attribute :attr:`mpiname`.
-        """
-        if 'vortex_mpi_launcher' in e:
-            return e.vortex_mpi_launcher
+    def __getattr__(self, key):
+        """Have a look to basics values provided by some proxy."""
+        if key in self.basics:
+            return getattr(self, '_'+key)
         else:
-            return self.mpiname
+            raise AttributeError('Attribute [%s] is not a basic mpitool attribute' % key)
 
-    def setoptions(self, system, e, opts=None):
+    def import_basics(self, obj, attrs=None):
+        """Import some current values such as system, env, target and context from provided ``obj``."""
+        if attrs is None:
+            attrs = self.basics
+        for k in [ x for x in attrs if x in self.basics and hasattr(obj, x) ]:
+            setattr(self, '_'+k, getattr(obj, k))
+
+    def _get_options(self):
+        """Retrieve current set of mpitool command line options."""
+        if self._options is None:
+            self._set_options(None)
+        return self._options
+
+    def _set_options(self, value=None):
         """Raw list of mpi tool command line options."""
         self._options = dict()
+        if value is None:
+            value = dict()
         klast = None
         for optdef in shlex.split(self.mpiopts):
             if optdef.startswith('-'):
@@ -75,87 +116,189 @@ class MpiTool(footprints.FootprintBase):
                 self._options[klast] = optdef
             else:
                 raise MpiException('Badly shaped mpi option around %s', optdef)
-        if opts:
-            for k, v in opts.items():
-                self._options[k.lstrip('-')] = v
-        self._options.setdefault('nn',  e.SWAPP_SUBMIT_NODES)
-        self._options.setdefault('nnp', e.SWAPP_SUBMIT_TASKS)
-        return self._options
+        if self.nodes is not None:
+            self._options['nn'] = self.nodes
+        if self.tasks is not None:
+            self._options['nnp'] = self.tasks
+        if self.openmp is not None:
+            self._options['openmp'] = self.openmp
+        for k, v in value.items():
+            self._options[k.lstrip('-').lower()] = v
 
-    def setmaster(self, master):
+    options = property(_get_options, _set_options)
+
+    @property
+    def nprocs(self):
+        """Figure out what is the effective number of tasks."""
+        if 'np' in self.options:
+            nbproc = int(self.options['np'])
+        else:
+            nbproc = int(self.options.get('nnp', 1)) * int(self.options.get('nn', 1))
+        return nbproc
+
+    def _get_master(self):
+        """Retrieve the master binary name that should be used."""
+        return self._master
+
+    def _set_master(self, master):
         """Keep a copy of local master pathname."""
         self._master = master
 
-    def commandline(self, system, e, args):
+    master = property(_get_master, _set_master)
+
+    def clean(self, opts=None):
+        """Abstract method for post-execution cleaning."""
+        pass
+
+    def find_namelists(self, opts=None):
+        """Find any namelists candidates in actual context inputs."""
+        namcandidates = [ x.rh for x in self.context.sequence.effective_inputs(kind=('namelist', 'namelistfp')) ]
+        if opts is not None and 'loop' in opts:
+            namcandidates = [
+                x for x in namcandidates
+                if (hasattr(x.resource, 'term') and x.resource.term == opts['loop'])
+            ]
+        else:
+            logger.info('No loop option in current parallel execution.')
+        print 'Namelist candidates:'
+        for nam in namcandidates:
+            print ' *', nam
+        return namcandidates
+
+    def setup_namelist_delta(self, namcontents, namlocal):
+        """Abstract method for applying a delta: return False."""
+        return False
+
+    def setup_namelists(self, opts=None):
+        """Braodcast some MPI information to input namelists."""
+        for namrh in self.find_namelists(opts):
+            namc = namrh.contents
+            if self.setup_namelist_delta(namc, namrh.container.actualpath()):
+                namc.rewrite(namrh.container)
+
+    def setup_environment(self, opts):
+        """Abstract mpi environment setup."""
+        pass
+
+    def setup(self, opts=None):
+        """Specific MPI settings before running."""
+        self.setup_namelists(opts)
+        if self.target is not None:
+            self.setup_environment(opts)
+
+
+class MpiServerIO(MpiTool):
+    """Standard MPI launcher interface."""
+
+    _abstract = True
+    _footprint = dict(
+        attr = dict(
+            io = dict(type=bool)
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        """After parent initialization, set launcher value."""
+        logger.debug('Abstract mpi tool init %s', self.__class__)
+        super(MpiServerIO, self).__init__(*args, **kw)
+        thisenv = env.current()
+        if self.tasks is None:
+            self.tasks = thisenv.VORTEX_IOSERVER_TASKS
+        if self.openmp is None:
+            self.openmp = thisenv.VORTEX_IOSERVER_OPENMP
+
+    def mkcmdline(self, args):
         """Builds the mpi command line."""
-        cmdl = [ self.launcher(system, e) ]
-        for k, v in self._options.items():
+        if self.master is None:
+            raise MpiException('No master defined before launching IO Server')
+        cmdl = [ self.optsep ]
+        for k, v in self.options.items():
             cmdl.append(self.optprefix + str(k))
             if v is not None:
                 cmdl.append(str(v))
-        if self._master is None:
-            raise MpiException('No master defined before launching MPI')
-        if self.optprefix == '--':
-            cmdl.append('--')
-        cmdl.append(self._master)
+        cmdl.append(self.optsep)
+        cmdl.append(self.master)
         cmdl.extend(args)
         return cmdl
 
-    def setup_namelists(self, ctx, target=None, opts=None):
-        """Braodcast number of MPI tasks to namelists."""
 
-        # Figure out what is the effective number of tasks
-        if 'np' in self._options:
-            nbproc = int(self._options['np'])
+class MpiSubmit(MpiTool):
+    """Standard MPI launcher interface."""
+
+    _abstract = True
+    _footprint = dict(
+        attr = dict(
+            mpiname = dict(),
+        ),
+    )
+
+    def __init__(self, *args, **kw):
+        """After parent initialization, set launcher value."""
+        logger.debug('Abstract mpi tool init %s', self.__class__)
+        super(MpiSubmit, self).__init__(*args, **kw)
+        thisenv = env.current()
+        if 'vortex_mpi_launcher' in thisenv:
+            self._launcher = thisenv.VORTEX_MPI_LAUNCHER
         else:
-            nbproc = int(self._options.get('nnp', 1)) * int(self._options.get('nn', 1))
+            self._launcher = self.mpiname
 
-        # Define the actual list of active namelist
-        namcandidates = [ x.rh for x in ctx.sequence.effective_inputs(kind=('namelist', 'namelistfp')) ]
-        if opts is not None and 'loop' in opts:
-            namcandidates = [ x for x in namcandidates if (hasattr(x.resource, 'term') and x.resource.term == opts['loop']) ]
-        else:
-            logger.warning('No loop option.')
-        logger.warning('Namelist candidates %s', namcandidates)
-        for namrh in namcandidates:
-            namc = namrh.contents
-            namw = False
-            if 'NBPROC' in namc.macros():
-                logger.info('Setup NBPROC=%s in %s', nbproc, namrh.container.actualpath())
-                namc.setmacro('NBPROC', nbproc)
-                namc.setmacro('NCPROC', nbproc)
-                namc.setmacro('NDPROC', 1)
-                namw = True
-            if 'NAMPAR1' in namc:
-                np1 = namc['NAMPAR1']
-                for nstr in [ x for x in ('NSTRIN', 'NSTROUT') if x in np1 ]:
-                    if np1[nstr] > nbproc:
-                        logger.info('Setup %s=%s in NAMPAR1 %s', nstr, nbproc, namrh.container.actualpath())
-                        np1[nstr] = nbproc
-                        namw = True
-            if namw:
-                namc.rewrite(namrh.container)
+    def _get_launcher(self):
+        """
+        Returns the name of the mpi tool to be used, set from VORTEX_MPI_LAUNCHER environment variable
+        or from the current attribute :attr:`mpiname` or explicit setting.
+        """
+        return self._launcher
 
-    def setup_environment(self, ctx, target, opts):
+    def _set_launcher(self, value):
+        """Set current launcher mpi name. Should be some special trick, so issue a warning."""
+        logger.warning('Setting a new value [%s] to mpi launcher [%s].' % value, self)
+        self._launcher = value
+
+    launcher = property(_get_launcher, _set_launcher)
+
+    def mkcmdline(self, args):
+        """Builds the mpi command line."""
+        if self.master is None:
+            raise MpiException('No master defined before launching MPI')
+        cmdl = [ self.launcher ]
+        for k, v in self.options.items():
+            cmdl.append(self.optprefix + str(k))
+            if v is not None:
+                cmdl.append(str(v))
+        if self.optprefix == '--':
+            cmdl.append('--')
+        cmdl.append(self.master)
+        cmdl.extend(args)
+        return cmdl
+
+    def setup_namelist_delta(self, namcontents, namlocal):
+        """Applying MPI profile on local namelist ``namlocal`` with contents namcontents."""
+        namw = False
+        if 'NBPROC' in namcontents.macros():
+            logger.info('Setup NBPROC=%s in %s', self.nprocs, namlocal)
+            namcontents.setmacro('NBPROC', self.nprocs)
+            namcontents.setmacro('NCPROC', self.nprocs)
+            namcontents.setmacro('NDPROC', 1)
+            namw = True
+        if 'NAMPAR1' in namcontents:
+            np1 = namcontents['NAMPAR1']
+            for nstr in [ x for x in ('NSTRIN', 'NSTROUT') if x in np1 ]:
+                if np1[nstr] > self.nprocs:
+                    logger.info('Setup %s=%s in NAMPAR1 %s', nstr, self.nprocs, namlocal)
+                    np1[nstr] = self.nprocs
+                    namw = True
+        return namw
+
+    def setup_environment(self, opts):
         """Fix some environmental or behavior according to target definition."""
-        if target.config.has_section('mpienv'):
-            for k, v in target.config.items('mpienv'):
+        if self.target.config.has_section('mpienv'):
+            for k, v in self.target.config.items('mpienv'):
                 logger.info('Setting MPI env %s = %s', k, v)
-                ctx.env[k] = str(v)
-
-    def setup(self, ctx, target=None, opts=None):
-        """Specific MPI settings before running."""
-        self.setup_namelists(ctx, target, opts)
-        if target is not None:
-            self.setup_environment(ctx, target, opts)
-
-    def clean(self, ctx, target=None, opts=None):
-        """Abstract method fot the time being."""
-        pass
+                self.env[k] = str(v)
 
 
-class MpiRun(MpiTool):
-    """Standard MPI launcher on most systems."""
+class MpiRun(MpiSubmit):
+    """Standard MPI launcher on most systems, e.g. `mpirun`."""
 
     _footprint = dict(
         attr = dict(
@@ -165,6 +308,9 @@ class MpiRun(MpiTool):
             mpiname = dict(
                 values = [ 'mpirun', 'mpiperso', 'default' ],
                 remap = dict(default='mpirun')
+            ),
+            optprefix = dict(
+                default = '-'
             )
         )
     )

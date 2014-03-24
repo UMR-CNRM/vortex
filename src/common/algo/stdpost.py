@@ -48,19 +48,19 @@ class Fa2Grib(BlindRun):
         )
     )
 
-    def prepare(self, rh, ctx, opts):
+    def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(Fa2Grib, self).prepare(rh, ctx, opts)
+        super(Fa2Grib, self).prepare(rh, opts)
         self.system.remove(self.fortinput)
         self.env.DR_HOOK_NOT_MPI = 1
 
-    def execute(self, rh, ctx, opts):
+    def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
-        gprh = [ x.rh for x in ctx.sequence.effective_inputs(role='Gridpoint', kind='gridpoint') ]
+        gprh = [ x.rh for x in self.context.sequence.effective_inputs(role='Gridpoint', kind='gridpoint') ]
         gprh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
+        compact    = self.env.get('VORTEX_GRIB_COMPACT', 'L')
+        timeshift  = self.env.get('VORTEX_GRIB_SHIFT', False)
         thisoutput = 'GRIDOUTPUT'
-        compact = self.env.get('SWAPP_GRIB_COMPACT', 'L')
-        timeshift = self.env.get('SWAPP_GRIB_SHIFT', False)
         for r in gprh:
             self.system.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area, r.resource.term.fmthm))
 
@@ -90,7 +90,7 @@ class Fa2Grib(BlindRun):
 
             # Standard execution
             opts['loop'] = r.resource.term
-            super(Fa2Grib, self).execute(rh, ctx, opts)
+            super(Fa2Grib, self).execute(rh, opts)
 
             # Freeze the current output
             if self.system.path.exists(thisoutput):
@@ -128,23 +128,23 @@ class AddField(BlindRun):
         )
     )
 
-    def prepare(self, rh, ctx, opts):
+    def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(AddField, self).prepare(rh, ctx, opts)
+        super(AddField, self).prepare(rh, opts)
         self.system.remove(self.fortinput)
 
-    def execute(self, rh, ctx, opts):
+    def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
 
         # Is there any namelist provided ?
-        namrh = [ x.rh for x in ctx.sequence.effective_inputs(role=('Namelist'), kind='namelist') ]
+        namrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('Namelist'), kind='namelist') ]
         if namrh:
             self.system.softlink(namrh[0].container.localpath(), self.fortnam)
         else:
             logger.warning('Do not find any namelist for %s', self.kind)
 
         # Look for some sources files
-        srcrh = [ x.rh for x in ctx.sequence.effective_inputs(role=('Gridpoint', 'Sources'), kind='gridpoint') ]
+        srcrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'), kind='gridpoint') ]
         srcrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
 
         for r in srcrh:
@@ -160,11 +160,11 @@ class AddField(BlindRun):
 
             # Standard execution
             opts['loop'] = r.resource.term
-            super(AddField, self).execute(rh, ctx, opts)
+            super(AddField, self).execute(rh, opts)
 
             # Some cleaning
             self.system.rmall('DAPDIR', self.fortinput, self.fortoutput)
 
-    def postfix(self, rh, ctx, opts):
+    def postfix(self, rh, opts):
         """Post add cleaning."""
         self.system.remove(self.fortnam)

@@ -20,12 +20,27 @@ import datetime
 import footprints
 
 from vortex.autolog import logdefault as logger
+from vortex.utilities.decorators import nicedeco
+
 from vortex.tools.env import Environment
 from vortex.tools.net import StdFtp
 from vortex.utilities.structs import History
 
+
 istruedef  = re.compile('on|true|ok', re.IGNORECASE)
 isfalsedef = re.compile('off|false|ko', re.IGNORECASE)
+
+@nicedeco
+def fmtshcmd(func):
+    """This decorator give a try to the equivalent formatted command."""
+    def formatted_method(self, *args, **kw):
+        fmt = kw.pop('fmt', None)
+        fmtcall = getattr(self, str(fmt).lower()  + '_' + func.func_name, func)
+        if getattr(fmtcall, 'func_extern', False):
+            return fmtcall(*args, **kw)
+        else:
+            return fmtcall(self, *args, **kw)
+    return formatted_method
 
 class ExecutionError(StandardError):
     """Go through exception for internal :meth:`spawn` errors."""
@@ -135,6 +150,7 @@ class System(footprints.FootprintBase):
                 return actualattr(*args, **kw)
             osproxy.func_name = key
             osproxy.func_doc = actualattr.__doc__
+            osproxy.func_extern = True
             setattr(self, key, osproxy)
             return osproxy
         else:
@@ -280,6 +296,7 @@ class System(footprints.FootprintBase):
             fh.close()
         return rc
 
+    @fmtshcmd
     def remove(self, objpath):
         """Unlink the specified object (file or directory)."""
         if os.path.exists(objpath):
@@ -292,6 +309,7 @@ class System(footprints.FootprintBase):
             self.stderr('clear', objpath)
         return not os.path.exists(objpath)
 
+    @fmtshcmd
     def rm(self, objpath):
         """Shortcut to :meth:`remove` method (file or directory)."""
         return self.remove(objpath)
@@ -367,6 +385,37 @@ class System(footprints.FootprintBase):
                     logger.critical('systems_reload: cannot import module %s (%s)' % (modname, str(err)))
         return extras
 
+    def popen(self, args, stdout=None, stderr=None, shell=False):
+        """Return an open pipe on output of args command."""
+        self.stderr(*args)
+        if stdout is None:
+            stdout = subprocess.PIPE
+        if stderr is None:
+            stderr = subprocess.PIPE
+        return subprocess.Popen(args, stdout=stdout, stderr=stderr, shell=shell)
+
+    def pclose(self, p, ok=None):
+        """Do its best to nicely opened pipe command linked to arg ``p``."""
+        p.wait()
+        p.stdout.close()
+        p.stderr.close()
+
+        try:
+            p.terminate
+        except OSError as e:
+            if e.errno == 3:
+                logger.info('Processus %s alreaded terminated.' % str(p))
+            else:
+                raise
+
+        self._rclast = p.returncode
+        if ok is None:
+            ok = [ 0 ]
+        if p.returncode in ok:
+            return True
+        else:
+            return False
+
     def spawn(self, args, ok=None, shell=False, output=None, outmode='a'):
         """Subprocess call of ``args``."""
         rc = False
@@ -396,7 +445,7 @@ class System(footprints.FootprintBase):
             raise
         except Exception as perr:
             logger.critical('System returns %s', str(perr))
-            raise RuntimeError, "System %s spawned %s got [%s]" % (self, args, perr.returncode)
+            raise RuntimeError, "System %s spawned %s got [%s]: %s" % (self, args, perr.returncode, perr)
         else:
             if p.returncode in ok:
                 if isinstance(output, bool) and output:
@@ -586,7 +635,7 @@ class OSExtended(System):
             return self.hybridcp(source, destination)
         self.stderr('smartcp', source, destination)
         if not self.path.exists(source):
-            logger.warning('Missing source %s', source)
+            logger.error('Missing source %s', source)
             return False
         if self.filecocoon(destination):
             if self.remove(destination):
@@ -606,14 +655,17 @@ class OSExtended(System):
             logger.error('Could not create a cocoon for file %s', destination)
             return False
 
-    def cp(self, source, destination):
-        """
-        Copy the ``source`` file to a safe ``destination``.
-        The return value is produced by a raw compare of the two files.
-        """
+    @fmtshcmd
+    def cp(self, source, destination, intent='inout', smartcp=True):
+        """Copy the ``source`` file to a safe ``destination``."""
         self.stderr('cp', source, destination)
         if type(source) is not types.StringType or type(destination) is not types.StringType:
             return self.hybridcp(source, destination)
+        if smartcp and intent == 'in':
+            return self.smartcp(source, destination)
+        if not self.path.exists(source):
+            logger.error('Missing source %s', source)
+            return False
         if self.filecocoon(destination):
             if self.remove(destination):
                 return self.rawcp(source, destination)
@@ -702,6 +754,7 @@ class OSExtended(System):
         """Globbing and optional files or directories listing."""
         return self._globcmd([ 'cat' ], args, **kw)
 
+    @fmtshcmd
     def diff(self, *args, **kw):
         """Globbing and optional files or directories listing."""
         kw.setdefault('ok', [0, 1])
@@ -711,14 +764,20 @@ class OSExtended(System):
         """Wrapper of the ``rm`` command through the globcmd."""
         return self._globcmd([ 'rm' ], args, **kw)
 
-    def mv(self, source, destination):
+    @fmtshcmd
+    def move(self, source, destination):
         """Move the ``source`` file or directory."""
         try:
-            self.move(source, destination)
+            self._sh.move(source, destination)
         except Exception:
             raise
         else:
             return True
+
+    @fmtshcmd
+    def mv(self, source, destination):
+        """Shortcut to :meth:`move` method (file or directory)."""
+        return self.move(source, destination)
 
     def mvglob(self, *args):
         """Wrapper of the ``mv`` command through the globcmd."""

@@ -165,7 +165,7 @@ inputs = ( rtcoef, analysis, climmodel, climbdap, namfcp, xxtdef, namselect, mat
 outputs = ( historic, gridpoint, listing )
 
 myenv.update(
-    SWAPP_XXT_DEF='1',
+    VORTEX_XXT_DEF='1',
 )
 
 for rh in inputs:

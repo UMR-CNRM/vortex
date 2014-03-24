@@ -66,12 +66,12 @@ def olive_jobout(sh, env, output, localout=None):
             ) ]
         )
 
-    localhost = env.SWAPP_TARGET or env.SWAPP_TARGET_HOST or env.TARGET_HOST or sh.hostname
-    swapp_user, swapp_host, swapp_port = env.SWAPP_OUTPUT_ID.split(':')
-    user = env.SWAPP_TARGET_LOGNAME or env.TARGET_LOGNAME or env.SWAPP_USER or sh.getlogin();
+    localhost = env.VORTEX_TARGET or env.VORTEX_TARGET_HOST or env.TARGET_HOST or sh.hostname
+    swapp_user, swapp_host, swapp_port = env.VORTEX_OUTPUT_ID.split(':')
+    user = env.VORTEX_TARGET_LOGNAME or env.TARGET_LOGNAME or env.SWAPP_USER or sh.getlogin();
 
-    if 'SWAPP_SOCKET_TIMEOUT' in env:
-        timeout = int(env.SWAPP_SOCKET_TIMEOUT)
+    if 'VORTEX_SOCKET_TIMEOUT' in env:
+        timeout = int(env.VORTEX_SOCKET_TIMEOUT)
     else:
         timeout = 10
 
@@ -99,8 +99,8 @@ def olive_rescue(sh, env, *files):
 
     sh.stderr(['olive_rescue', files])
 
-    if 'SWAPP_RESCUE' in env and env.false('SWAPP_RESCUE'):
-        logger.warning('Skip olive rescue (SWAPP_RESCUE=%s)', env.SWAPP_RESCUE)
+    if 'VORTEX_RESCUE' in env and env.false('VORTEX_RESCUE'):
+        logger.warning('Skip olive rescue (VORTEX_RESCUE=%s)', env.VORTEX_RESCUE)
         return False
 
     if files:
@@ -108,13 +108,13 @@ def olive_rescue(sh, env, *files):
     else:
         items = sh.glob('*')
 
-    if 'SWAPP_RESCUE_FILTER' in env:
-        select = '|'.join(re.split('[,;:]+', env.SWAPP_RESCUE_FILTER))
+    if 'VORTEX_RESCUE_FILTER' in env:
+        select = '|'.join(re.split('[,;:]+', env.VORTEX_RESCUE_FILTER))
         items = [ x for x in items if re.search(select, x, re.IGNORECASE) ]
         logger.info('Rescue filter (%s)', select)
 
-    if 'SWAPP_RESCUE_DISCARD' in env:
-        select = '|'.join(re.split('[,;:]+', env.SWAPP_RESCUE_DISCARD))
+    if 'VORTEX_RESCUE_DISCARD' in env:
+        select = '|'.join(re.split('[,;:]+', env.VORTEX_RESCUE_DISCARD))
         items = [ x for x in items if not re.search(select, x, re.IGNORECASE) ]
         logger.info('Rescue discard (%s)', select)
 
@@ -122,8 +122,8 @@ def olive_rescue(sh, env, *files):
 
         bkupdir = None;
 
-        if env.SWAPP_RESCUE_DIR != None:
-            bkupdir = env.SWAPP_RESCUE_DIR
+        if env.VORTEX_RESCUE_DIR != None:
+            bkupdir = env.VORTEX_RESCUE_DIR
             logger.info('Rescue user defined backup directory is %s', bkupdir)
         elif env.MTOOL_STEP_ABORT != None:
             bkupdir = sh.path.join(env.MTOOL_STEP_ABORT, env.MTOOL_STEP_ID)

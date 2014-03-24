@@ -52,7 +52,7 @@ class AlarmService(Service):
                 optional = True,
                 default = 'LOG_LOCAL2'
             ),
-            format = dict(
+            alarmfmt = dict(
                 optional = True,
                 default = None
             )
@@ -68,7 +68,7 @@ class AlarmService(Service):
         # create the handlers
         hand = SysLogHandler(self.log, facility)
         # create the format
-        fmt = logging.Formatter(self.format)
+        fmt = logging.Formatter(self.alarmfmt)
         # set the format of the handler
         hand.setFormatter(fmt)
         # add the handler to the logger

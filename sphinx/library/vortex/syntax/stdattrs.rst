@@ -28,13 +28,13 @@ Pre-defined sets
 Pre-defined attributes
 ----------------------
 
+.. autodata:: a_actualfmt
+
 .. autodata:: a_cutoff
 
 .. autodata:: a_date
 
 .. autodata:: a_domain
-
-.. autodata:: a_format
 
 .. autodata:: a_model
 

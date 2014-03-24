@@ -355,6 +355,9 @@ class Environment(object):
     def setbinpath(self, value, pos=None):
         """Insert a new path value to the bin search path at given position."""
         mypath = self.getvar('PATH').split(':')
+        value = str(value)
+        while value in mypath:
+            mypath.remove(value)
         if pos is None:
             pos = len(mypath)
         mypath.insert(pos, value)

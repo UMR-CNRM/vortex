@@ -8,6 +8,7 @@ import footprints
 
 from vortex.autolog import logdefault as logger
 
+from vortex import sessions
 from vortex.tools import net
 from vortex.tools.date import Date
 from vortex.utilities import roles, structs
@@ -182,7 +183,10 @@ class Handler(object):
                 logger.debug('Locate resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
-                rst = store.locate(uridata, self.options(extras))
+                rst = store.locate(
+                    uridata,
+                    self.options(extras)
+                )
                 self.history.append(store.fullname(), 'locate', rst)
             else:
                 logger.error('Could not find any store to locate %s', remotelocation)
@@ -201,7 +205,11 @@ class Handler(object):
                 logger.debug('Get resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
-                rst = store.get(uridata, self.container.iotarget(), self.options(extras))
+                rst = store.get(
+                    uridata,
+                    self.container.iotarget(),
+                    self.options(extras, fmt=self.container.actualfmt)
+                )
                 self.container.updfill(rst)
                 self.history.append(store.fullname(), 'get', rst)
                 if rst:
@@ -227,7 +235,11 @@ class Handler(object):
                     logger.debug('Put resource %s at %s from %s', self, remotelocation, store)
                     del uridata['scheme']
                     del uridata['netloc']
-                    rst = store.put(iotarget, uridata, self.options(extras))
+                    rst = store.put(
+                        iotarget,
+                        uridata,
+                        self.options(extras, fmt=self.container.actualfmt)
+                    )
                     self.history.append(store.fullname(), 'put', rst)
                     self.updstage('put')
                 elif self.ghost:
@@ -253,7 +265,10 @@ class Handler(object):
                 logger.debug('Check resource %s at %s from %s', self, remotelocation, store)
                 del uridata['scheme']
                 del uridata['netloc']
-                rst = store.check(uridata, self.options(extras))
+                rst = store.check(
+                    uridata,
+                    self.options(extras)
+                )
                 self.history.append(store.fullname(), 'check', rst)
             else:
                 logger.error('Could not find any store to check %s', remotelocation)
@@ -266,8 +281,10 @@ class Handler(object):
         rst = False
         if self.container:
             logger.debug('Remove resource container %s', self.container)
-            system = self.options().get('system')
-            rst = system.remove(self.container.localpath())
+            rst = sessions.system().remove(
+                self.container.localpath(),
+                fmt=self.container.actualfmt
+            )
             self.history.append(system.fullname(), 'clear', rst)
         return rst
 

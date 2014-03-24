@@ -272,7 +272,7 @@ class MultiStore(footprints.FootprintBase):
         """Return cumulative value for the same method of internal opened stores."""
         rc = True
         for sto in self.openedstores:
-            rc = rc and sto.in_situ(local)
+            rc = rc and sto.in_situ(local, options)
         return rc
 
     def in_place(self, localio):
@@ -415,11 +415,11 @@ class Finder(Store):
         rpath = self.fullpath(remote)
         if 'intent' in options and options['intent'] == dataflow.intent.IN:
             logger.warning('Ignore intent <in> for remote input %s', rpath)
-        return self.system.cp(rpath, local)
+        return self.system.cp(rpath, local, fmt=options.get('fmt'))
 
     def fileput(self, local, remote, options):
         """Delegates to ``system`` the copy of ``local`` to ``remote``."""
-        return self.system.cp(local, self.fullpath(remote))
+        return self.system.cp(local, self.fullpath(remote), fmt=options.get('fmt'))
 
     def ftpcheck(self, remote, options):
         """Delegates to ``system`` a distant check."""
@@ -675,15 +675,21 @@ class CacheStore(Store):
 
     def incacheget(self, remote, local, options):
         """Simple copy from current cache cache to ``local``."""
-        rpath = self.cache.entry(self.system) + remote['path']
-        if 'intent' in options and options['intent'] == dataflow.intent.IN:
-            return self.system.smartcp(rpath, local)
-        else:
-            return self.system.cp(rpath, local)
+        return self.system.cp(
+            self.cache.entry(self.system) + remote['path'],
+            local,
+            intent = options.get('intent'),
+            fmt    = options.get('fmt')
+        )
 
     def incacheput(self, local, remote, options):
         """Simple copy from ``local`` to the current cache in readonly mode."""
-        return self.system.smartcp(local, self.cache.entry(self.system) + remote['path'])
+        return self.system.cp(
+            local,
+            self.cache.entry(self.system) + remote['path'],
+            intent = 'in',
+            fmt    = options.get('fmt')
+        )
 
 
 class VortexCacheStore(CacheStore):

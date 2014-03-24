@@ -19,8 +19,11 @@ class NamelistContent(AlmostDictContent):
 
     def __init__(self, **kw):
         kw.setdefault('macros', dict(
-            NBPROC=None, NCPROC=None, NDPROC=None,
-            NBPROCIN=None, NBPROCOUT=None
+            NBPROC    = None,
+            NCPROC    = None,
+            NDPROC    = None,
+            NBPROCIN  = None,
+            NBPROCOUT = None
         ))
         kw.setdefault('remove', set())
         kw.setdefault('parser', None)
@@ -203,7 +206,7 @@ class NamTerm(Namelist):
 
         regex = re.compile(',(.*)$')
         myenv = env.current()
-        suffix = regex.search(myenv.SWAPP_XXT_DEF)
+        suffix = regex.search(myenv.VORTEX_XXT_DEF)
         if suffix:
             fp = suffix.group(1)
         else:
@@ -297,7 +300,7 @@ class NamSelect(NamTerm):
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
         myenv = env.current()
-        if myenv.has_key('SWAPP_XXT_DEF') and myenv.true('SWAPP_XXT_DEF'):
+        if myenv.true('VORTEX_XXT_DEF'):
             return 'extract=' + self.incoming_xxt_fixup('source', 'select')
         else:
             return 'extract=' + self.incoming_namelist_fixup('source', 'select')

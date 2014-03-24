@@ -300,6 +300,7 @@ class SpecialDict(dict):
             print ' +', k.ljust(ljust), '=', self.get(k)
 
     def update(self, *args, **kw):
+        """Extended dictionary update with args as dict and extra keywords."""
         args = list(args)
         args.append(kw)
         for objiter in args:
@@ -315,15 +316,19 @@ class LowerCaseDict(SpecialDict):
     """A dictionary with only lower case keys."""
 
     def __getitem__(self, key):
+        """Force lower case key retrieve."""
         return dict.__getitem__(self, key.lower())
 
     def __setitem__(self, key, value):
+        """Force lower case key setting."""
         dict.__setitem__(self, key.lower(), value)
 
     def __delitem__(self, key):
+        """Force lower case key deletion."""
         dict.__delitem__(self, key.lower())
 
     def __contains__(self, key):
+        """Force lower case ``in`` check."""
         return dict.__contains__(self, key.lower())
 
 
@@ -331,15 +336,19 @@ class UpperCaseDict(SpecialDict):
     """A dictionary with only upper case keys."""
 
     def __getitem__(self, key):
+        """Force upper case key retrieve."""
         return dict.__getitem__(self, key.upper())
 
     def __setitem__(self, key, value):
+        """Force upper case key setting."""
         dict.__setitem__(self, key.upper(), value)
 
     def __delitem__(self, key):
+        """Force upper case key deletion."""
         dict.__delitem__(self, key.upper())
 
     def __contains__(self, key):
+        """Force upper case ``in`` check."""
         return dict.__contains__(self, key.upper())
 
 

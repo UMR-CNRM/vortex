@@ -68,8 +68,6 @@ def mkjob(t, **kw):
 
     tplconf.setdefault('file', opts['name'] + '.py')
 
-    print 'DBUG CONF', tplconf.keys()
-
     corejob = corejob.substitute(tplconf)
 
     if opts['wrap']:

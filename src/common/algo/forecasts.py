@@ -31,11 +31,11 @@ class Forecast(IFSParallel):
         )
     )
 
-    def prepare(self, rh, ctx, opts):
+    def prepare(self, rh, opts):
         """Default pre-link for the initial condition file"""
-        super(Forecast, self).prepare(rh, ctx, opts)
-        self.setlink(ctx, initrole=('InitialCondition', 'Analysis'), initname='ICMSH{0:s}INIT'.format(self.xpname))
-        for namrh in [ x.rh for x in ctx.sequence.effective_inputs(role='Namelist', kind='namelist') ]:
+        super(Forecast, self).prepare(rh, opts)
+        self.setlink(initrole=('InitialCondition', 'Analysis'), initname='ICMSH{0:s}INIT'.format(self.xpname))
+        for namrh in [ x.rh for x in self.context.sequence.effective_inputs(role='Namelist', kind='namelist') ]:
             try:
                 namc = namrh.contents
                 namc['NAMCT0'].NFPOS = int(self.inline)
@@ -75,13 +75,13 @@ class LAMForecast(Forecast):
             model      = 'aladin',
         )
 
-    def prepare(self, rh, ctx, opts):
+    def prepare(self, rh, opts):
         """Default pre-link for boundary conditions files."""
-        super(LAMForecast, self).prepare(rh, ctx, opts)
+        super(LAMForecast, self).prepare(rh, opts)
         if self.synctool:
             self.system.cp(self.synctool, 'atcp.alad')
             self.system.chmod('atcp.alad', 0755)
-        cplrh = [ x.rh for x in ctx.sequence.effective_inputs(role='BoundaryConditions', kind='boundary') ]
+        cplrh = [ x.rh for x in self.context.sequence.effective_inputs(role='BoundaryConditions', kind='boundary') ]
         cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
         i = 0
         for l in [ x.container.localpath() for x in cplrh ]:
@@ -99,9 +99,9 @@ class DFIForecast(LAMForecast):
         )
     )
 
-    def prepare(self, rh, ctx, opts):
+    def prepare(self, rh, opts):
         """Pre-link boundary conditions as special DFI files."""
-        super(DFIForecast, self).prepare(rh, ctx, opts)
+        super(DFIForecast, self).prepare(rh, opts)
         initname = 'ICMSH{0:s}INIT'.format(self.xpname)
         for pseudoterm in (999, 0, 1):
             self.system.softlink(initname, 'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, pseudoterm))
@@ -122,11 +122,11 @@ class FullPos(IFSParallel):
         )
     )
 
-    def execute(self, rh, ctx, opts):
+    def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
-        namrh = [ x.rh for x in ctx.sequence.effective_inputs(role=('Namelist'), kind='namelistfp') ]
-        namxx = [ x.rh for x in ctx.sequence.effective_inputs(role=('FullPosSelection'), kind='namselect') ]
-        initrh = [ x.rh for x in ctx.sequence.effective_inputs(role=('InitialCondition', 'ModelState'), kind='historic') ]
+        namrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('Namelist'), kind='namelistfp') ]
+        namxx = [ x.rh for x in self.context.sequence.effective_inputs(role=('FullPosSelection'), kind='namselect') ]
+        initrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('InitialCondition', 'ModelState'), kind='historic') ]
         initrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
         for r in initrh:
             self.system.title('Loop on {0:s}'.format(r.resource.term.fmthm))
@@ -158,7 +158,7 @@ class FullPos(IFSParallel):
             self.system.softlink(r.container.localpath(), 'ICMSHFPOSINIT')
 
             # Standard execution
-            super(FullPos, self).execute(rh, ctx, opts)
+            super(FullPos, self).execute(rh, opts)
 
             # Freeze the current output
             for posfile in [ x for x in self.system.glob('PFFPOS*+*') ]:
@@ -170,9 +170,9 @@ class FullPos(IFSParallel):
             # Some cleaning
             self.system.rmall('PXFPOS*', 'ncf927', 'dirlst')
 
-    def postfix(self, rh, ctx, opts):
+    def postfix(self, rh, opts):
         """Post processing cleaning."""
-        super(FullPos, self).postfix(rh, ctx, opts)
+        super(FullPos, self).postfix(rh, opts)
         self.system.mvglob('RUNOUT*/PFFPOS*', '.')
         self.system.cat('RUNOUT*/NODE.001_01', output='NODE.all')
         self.system.dir(output=False)

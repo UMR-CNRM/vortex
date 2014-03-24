@@ -11,7 +11,7 @@ from vortex.data.geometries import SpectralGeometry
 
 
 class RawFields(Resource):
-    
+
     _footprint = [
         date,
         cutoff,
@@ -30,14 +30,14 @@ class RawFields(Resource):
             )
         )
     ]
-    
+
     @property
     def realkind(self):
         return 'rawfields'
 
     def olive_basename(self):
         return self.fields + self.origin
-    
+
     def archive_basename(self):
         if (self.origin == 'nesdis' and self.fields == 'sst'):
             bname = '.'.join((self.fields, self.origin, 'bdap'))
@@ -45,15 +45,14 @@ class RawFields(Resource):
             bname = 'ice_concent'
         else :
             bname = '.'.join((self.fields, self.origin))
-            
         return bname
-    
+
     def basename_info(self):
         return dict(
             radical=self.fields,
             src=self.origin,  
         )
-    
+
     def vortex_pathinfo(self):
         return dict(
             nativefmt = self.nativefmt,
@@ -61,9 +60,9 @@ class RawFields(Resource):
             cutoff = self.cutoff
         )
 
-    
+
 class GeoFields(Resource):
-    
+
     _footprint = [
         date,
         cutoff,
@@ -86,7 +85,7 @@ class GeoFields(Resource):
             )
         )
     ]
-    
+
     @property
     def realkind(self):
         return 'geofields'
@@ -96,10 +95,10 @@ class GeoFields(Resource):
         if self.fields == 'seaice':
             bname = bname.upper()
         return bname
-    
+
     def archive_basename(self):
         return 'icmshanal' + self.fields
-    
+
     def vortex_pathinfo(self):
         return dict(
             nativefmt = self.nativefmt,

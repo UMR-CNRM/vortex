@@ -9,7 +9,7 @@ import re
 import footprints
 
 from vortex.autolog import logdefault as logger
-from vortex.syntax.stdattrs import a_nativefmt, a_format, notinrepr
+from vortex.syntax.stdattrs import a_nativefmt, notinrepr
 from contents import DataContent, DataRaw
 
 
@@ -21,7 +21,6 @@ class Resource(footprints.FootprintBase):
         info = 'Abstract NWP Resource',
         attr = dict(
             nativefmt = a_nativefmt,
-            format = a_format,
             clscontents = dict(
                 type = DataContent,
                 isclass = True,

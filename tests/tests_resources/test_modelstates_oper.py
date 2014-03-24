@@ -11,7 +11,7 @@ except ImportError, e:
 
 #t.debug()
 
-class UtGridpoint(TestCase):
+class UtGridPoint(TestCase):
 
     def setUp(self):
         self.fp_prov = dict(
@@ -587,11 +587,11 @@ class UtHistsurf(TestCase):
         )
 
 if __name__ == '__main__':
-    for test in [ UtGridpoint, UtHistoric, UtAnalysis, UtHistsurf ]:
+    for test in [ UtGridPoint, UtHistoric, UtAnalysis, UtHistsurf ]:
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
             break 
 
 def get_test_class():
-    return [ UtGridpoint, UtHistoric, UtAnalysis, UtHistsurf ]
+    return [ UtGridPoint, UtHistoric, UtAnalysis, UtHistsurf ]
