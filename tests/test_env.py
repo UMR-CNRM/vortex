@@ -66,7 +66,7 @@ class UtEnv(TestCase):
         e['toto'] = dict(toto = 2, fun = 'coucou')
         self.assertEqual(os.environ['TOTO'], '{"fun": "coucou", "toto": 2}')
         e['toto'] = self.res
-        self.assertEqual(os.environ['TOTO'], '{"cutoff": "production", "kind": "analysis", "nativefmt": "fa", "format": "fa", "geometry": {"lam": true, "kind": "spectral", "initialised": false, "runit": "km", "area": null, "nlat": null, "stretching": 2.4, "id": "anonymous", "resolution": 0.0, "nlon": null, "truncation": null}, "filling": "full", "filtering": null, "date": "201304231500", "clscontents": "DataRaw", "model": "arpege"}')
+        self.assertEqual(os.environ['TOTO'], '{"cutoff": "production", "kind": "analysis", "nativefmt": "fa", "geometry": {"lam": true, "kind": "spectral", "initialised": false, "runit": "km", "area": null, "nlat": null, "stretching": 2.4, "id": "anonymous", "resolution": 0.0, "nlon": null, "truncation": null}, "filling": "full", "filtering": null, "date": "201304231500", "clscontents": "DataRaw", "model": "arpege"}')
 
 
 if __name__ == '__main__':

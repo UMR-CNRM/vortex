@@ -23,10 +23,16 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.8.13'
+__version__ = '0.8.14'
 __prompt__  = 'Vortex v-' + __version__+ ':'
 
 __all__ = []
+
+# Force stdout to be an unbuffered stream
+import os, sys
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+del os
+del sys
 
 # Default logging mechanism
 

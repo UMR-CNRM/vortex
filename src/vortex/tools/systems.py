@@ -9,7 +9,8 @@ system interaction. Systems objects use the :mod:`footprints` mechanism.
 #: No automatic export
 __all__ = []
 
-import re, os, platform, shutil, sys, io, filecmp, time
+import os, resource, shutil
+import re, platform, sys, io, filecmp, time
 import types
 import glob
 import tarfile
@@ -98,8 +99,9 @@ class System(footprints.FootprintBase):
         """
         logger.debug('Abstract System init %s', self.__class__)
         self.__dict__['_os'] = kw.pop('os', os)
+        self.__dict__['_rl'] = kw.pop('rlimit', resource)
         self.__dict__['_sh'] = kw.pop('shutil', kw.pop('sh', shutil))
-        self.__dict__['_search'] = [ self.__dict__['_os'], self.__dict__['_sh'] ]
+        self.__dict__['_search'] = [ self.__dict__['_os'], self.__dict__['_sh'], self.__dict__['_rl'] ]
         self.__dict__['_rclast'] = 0
         self.__dict__['prompt'] = ''
         self.__dict__['_history'] = History(tag='shell')
@@ -245,7 +247,7 @@ class System(footprints.FootprintBase):
             nbc = len(text)
         print tchar * ( nbc + 4 )
         if text:
-            print '# {0:{size}s} #'.format(text.title(), size=nbc)
+            print '# {0:{size}s} #'.format(text, size=nbc)
             print tchar * ( nbc + 4 )
 
     def header(self, text='', tchar='-', autolen=False, xline=True, prompt=None):
@@ -385,20 +387,21 @@ class System(footprints.FootprintBase):
                     logger.critical('systems_reload: cannot import module %s (%s)' % (modname, str(err)))
         return extras
 
-    def popen(self, args, stdout=None, stderr=None, shell=False):
+    def popen(self, args, stdin=None, stdout=None, stderr=None, shell=False, output=False, bufsize=0):
         """Return an open pipe on output of args command."""
         self.stderr(*args)
         if stdout is None:
             stdout = subprocess.PIPE
-        if stderr is None:
-            stderr = subprocess.PIPE
-        return subprocess.Popen(args, stdout=stdout, stderr=stderr, shell=shell)
+        #if stderr is None:
+        #    stderr = subprocess.PIPE
+        return subprocess.Popen(args, bufsize=bufsize, stdin=stdin, stdout=stdout, stderr=stderr, shell=shell)
 
     def pclose(self, p, ok=None):
         """Do its best to nicely opened pipe command linked to arg ``p``."""
         p.wait()
         p.stdout.close()
-        p.stderr.close()
+        if p.stderr is not None:
+            p.stderr.close()
 
         try:
             p.terminate
@@ -469,8 +472,52 @@ class System(footprints.FootprintBase):
                         p.stderr.close()
             elif not isinstance(output, bool):
                 output.close()
+            p.wait()
+            del p
 
         return rc
+
+    def numrlimit(self, r_id):
+        """Convert actual resource id in some acceptable int for module :mod:`resource`."""
+        if type(r_id) is not int:
+            r_id = r_id.upper()
+            if not r_id.startswith('RLIMIT_'):
+                r_id = 'RLIMIT_' + r_id
+            r_id = getattr(resource, r_id, None)
+        if r_id is None:
+            raise ValueError('Invalid resource specified')
+        return r_id
+
+    def setrlimit(self, r_id, r_limits):
+        """Proxy to :mod:`resource` function of the same name."""
+        self.stderr('setrlimit', r_id, r_limits)
+        try:
+            r_limits = tuple(r_limits)
+        except TypeError:
+            r_limits = (r_limits, r_limits)
+        return self._rl.setrlimit(self.numrlimit(r_id), r_limits)
+
+    def setulimit(self, r_id):
+        """Set an unlimited value to resource specified."""
+        self.stderr('setulimit', r_id)
+        return self.setrlimit(r_id, (self._rl.RLIM_INFINITY, self._rl.RLIM_INFINITY))
+
+    def getrlimit(self, r_id):
+        """Proxy to :mod:`resource` function of the same name."""
+        self.stderr('getrlimit', r_id)
+        return self._rl.getrlimit(self.numrlimit(r_id))
+
+    def getrusage(self, pid=None):
+        """Proxy to :mod:`resource` function of the same name with current process as defaut."""
+        if pid is None:
+            pid = self._rl.RUSAGE_SELF
+        self.stderr('getrusage', pid)
+        return self._rl.getrusage(pid)
+
+    def ulimit(self):
+        """Dump the user limits currently defined."""
+        for limit in [ r for r in dir(self._rl) if r.startswith('RLIMIT_') ]:
+            print ' ', limit.ljust(16), ':', self._rl.getrlimit(getattr(self._rl, limit))
 
 
 class OSExtended(System):
@@ -498,7 +545,8 @@ class OSExtended(System):
             sysname  = self.sysname
         )
         desc.update(kw)
-        return footprints.proxy.targets.default(**desc)
+        self._frozen_target = footprints.proxy.targets.default(**desc)
+        return self._frozen_target
 
     def clear(self):
         """Clear screen."""
@@ -538,6 +586,17 @@ class OSExtended(System):
         else:
             logger.warning('Could not login on %s as %s', hostname, logname)
             return None
+
+    @fmtshcmd
+    def ftput(self, source, destination, hostname=None, logname=None):
+        """Proceed direct ftp put on the specified target."""
+        ftp = self.ftp(hostname, logname)
+        if ftp:
+            rc = ftp.put(source, destination)
+            ftp.close()
+            return rc
+        else:
+            return False
 
     def softlink(self, source, destination):
         """Set a symbolic link if source is not destination."""
@@ -745,6 +804,16 @@ class OSExtended(System):
     def ls(self, *args, **kw):
         """Globbing and optional files or directories listing."""
         return self._globcmd([ 'ls' ], args, **kw)
+
+    def ll(self, *args, **kw):
+        """Globbing and optional files or directories listing."""
+        kw['output'] = True
+        llresult = self._globcmd([ 'ls', '-l' ], args, **kw)
+        if llresult:
+            for lline in [ x for x in llresult if not x.startswith('total') ]:
+                print lline
+        else:
+            return False
 
     def dir(self, *args, **kw):
         """Proxy to ``ls('-l')``."""

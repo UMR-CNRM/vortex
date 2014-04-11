@@ -69,6 +69,7 @@ class LAMBoundary(GeoFlowResource):
         )
 
     def iga_pathinfo(self):
+        """Standard path information for IGA inline cache."""
         if self.model == 'arome':
             directory = 'fic_day'
         else:

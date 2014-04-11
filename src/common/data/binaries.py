@@ -34,14 +34,20 @@ class IFSModel(NWPModel):
         return 'ifsmodel'
 
     def iga_pathinfo(self):
+        """Standard path information for IGA inline cache."""
         return dict(
             model = self.model
         )
 
     def iga_basename(self):
+        """Standard expected basename for IGA inline cache."""
         return 'ARPEGE'
 
-    def command_line(self, model=None, vmodel='meteo', name='XRUN', conf=1, timescheme='sli', timestep=600, fcterm=0, fcunit='h'):
+    def command_line(self,
+        model=None, vmodel='meteo', name='XRUN', conf=1,
+        timescheme='sli', timestep=600, fcterm=0, fcunit='h'
+    ):
+        """Build command line for execution as a single string."""
         if model:
             return '-v{0:s} -e{1:s} -c{2:d} -a{3:s} -t{4:g} -f{5:s}{6:d} -m{7:s}'.format(
                 vmodel, name, conf, timescheme, timestep, fcunit, fcterm, model

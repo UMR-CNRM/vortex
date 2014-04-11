@@ -37,19 +37,19 @@ class MpiTool(footprints.FootprintBase):
             nodes = dict(
                 optional = True,
                 type = int,
-                default = None,
+                default = 1,
                 access = 'rwx'
             ),
             tasks = dict(
                 optional = True,
                 type = int,
-                default = None,
+                default = 4,
                 access = 'rwx'
             ),
             openmp = dict(
                 optional = True,
                 type = int,
-                default = None,
+                default = 6,
                 access = 'rwx'
             ),
             optsep = dict(

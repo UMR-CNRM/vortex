@@ -153,9 +153,41 @@ def input(*args, **kw):
     kw.setdefault('insitu', getinsitu)
     return pushsection('input', args, kw)
 
+def inputs(ticket=None, context=None):
+    """Return effective inputs in specified context."""
+    if context is None:
+        if ticket is None:
+            ticket = sessions.ticket()
+        context = ticket.context
+    return context.sequence.effective_inputs()
+
+def show_inputs(context=None):
+    """Dump a summary of inputs sections."""
+    t = sessions.ticket()
+    for csi in inputs():
+        t.sh.header('Input ' + str(csi))
+        csi.show(ticket=t, context=context)
+        print
+
 def output(*args, **kw):
     """Add an output section to the current sequence."""
     return pushsection('output', args, kw)
+
+def outputs(ticket=None, context=None):
+    """Return effective outputs in specified context."""
+    if context is None:
+        if ticket is None:
+            ticket = sessions.ticket()
+        context = ticket.context
+    return context.sequence.effective_outputs()
+
+def show_outputs(context=None):
+    """Dump a summary of outputs sections."""
+    t = sessions.ticket()
+    for cso in outputs():
+        t.sh.header('Output ' + str(cso))
+        cso.show(ticket=t, context=context)
+        print
 
 def executable(*args, **kw):
     """Add an executable section to the current sequence."""

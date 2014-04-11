@@ -24,38 +24,38 @@ class Cache(footprints.FootprintBase):
         info = 'Default cache description',
         attr = dict(
             config = dict(
+                type     = GenericConfigParser,
                 optional = True,
-                default = None,
-                type = GenericConfigParser,
+                default  = None,
             ),
             inifile = dict(
                 optional = True,
-                default = 'cache-[storage].ini',
+                default  = 'cache-[storage].ini',
             ),
             iniauto = dict(
+                type     = bool,
                 optional = True,
-                type = bool,
-                default = True,
+                default  = True,
             ),
             kind = dict(
-                values = [ 'std' ]
+                values   = [ 'std' ]
             ),
             rootdir = dict(
                 optional = True,
-                default = '/tmp'
+                default  = '/tmp'
             ),
             headdir = dict(
                 optional = True,
-                default = 'cache',
+                default  = 'cache',
             ),
             storage = dict(
                 optional = True,
-                default = 'localhost'
+                default  = 'localhost'
             ),
             record = dict(
+                type     = bool,
                 optional = True,
-                type = bool,
-                default = False,
+                default  = False,
             )
         )
     )
@@ -132,34 +132,34 @@ class MtoolCache(Cache):
         info = 'Default cache description',
         attr = dict(
             kind = dict(
-                values = [ 'mtool', 'swapp' ],
-                remap = dict(
-                    swapp = 'mtool'
-                ),
+                values   = [ 'mtool', 'swapp' ],
+                remap    = dict(swapp = 'mtool'),
             ),
             rootdir = dict(
                 optional = True,
-                default = 'auto'
+                default  = 'auto'
             ),
             headdir = dict(
                 optional = True,
-                default = 'vortex',
+                default  = 'vortex',
             ),
         )
     )
 
     def entry(self, system):
         """Tries to figure out what could be the actual entry point for cache space."""
-        if ( self.rootdir == 'auto' ):
+        if self.rootdir == 'auto':
             e = system.env
             if e.MTOOL_STEP_CACHE and system.path.isdir(e.MTOOL_STEP_CACHE):
                 cache = e.MTOOL_STEP_CACHE
-                logger.info('Using %s mtool cache %s', self, cache)
+                logger.info('Using %s mtool step cache %s', self, cache)
+            elif e.MTOOLDIR and system.path.isdir(e.MTOOLDIR):
+                cache = system.path.join(e.MTOOLDIR, 'cache')
+                logger.info('Using %s mtool dir cache %s', self, cache)
             else:
-                cache = system.path.join(e.FTDIR or e.WORKDIR or e.TMPDIR, self.kind)
+                cache = system.path.join(e.FTDIR or e.WORKDIR or e.TMPDIR, self.kind, 'cache')
                 logger.info('Using %s default cache %s', self, cache)
         else:
             cache = self.actual_rootdir
         return system.path.join(cache, self.actual_headdir)
-
 

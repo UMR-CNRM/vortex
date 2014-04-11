@@ -250,14 +250,16 @@ class Parallel(AlgoComponent):
         """
         mpi = self.mpitool
         if not mpi:
-            mpiname = self.mpiname or self.env.VORTEX_MPI_NAME
-            mpi = footprints.proxy.mpitool(
-                mpiname = mpiname,
+            mpi_desc = dict(
                 sysname = self.system.sysname,
-                nodes   = self.env.VORTEX_SUBMIT_NODES,
-                tasks   = self.env.VORTEX_SUBMIT_TASKS,
-                openmp  = self.env.VORTEX_SUBMIT_OPENMP,
+                mpiname = self.mpiname or self.env.VORTEX_MPI_NAME,
+                nodes   = self.env.get('VORTEX_SUBMIT_NODES', 1),
             )
+            for mpi_k in ('tasks', 'openmp'):
+                mpi_kenv = 'VORTEX_SUBMIT_' + mpi_k.upper()
+                if mpi_kenv in self.env:
+                    mpi_desc[mpi_k] = self.env.get(mpi_kenv)
+            mpi = footprints.proxy.mpitool(**mpi_desc)
 
         if not mpi:
             logger.critical('Component %s could not find any mpitool', self.shortname())
@@ -276,8 +278,8 @@ class Parallel(AlgoComponent):
                 io      = True,
                 sysname = self.system.sysname,
                 nodes   = self.env.VORTEX_IOSERVER_NODES,
-                tasks   = self.env.VORTEX_IOSERVER_TASKS,
-                openmp  = self.env.VORTEX_IOSERVER_OPENMP,
+                tasks   = self.env.VORTEX_IOSERVER_TASKS  or mpi.tasks,
+                openmp  = self.env.VORTEX_IOSERVER_OPENMP or mpi.openmp,
             )
 
         # Building full command line options, including executable options and optional io server

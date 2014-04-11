@@ -126,9 +126,11 @@ class SopranoStore(Store):
             return rc
 
     def ftpput(self, local, remote, options):
-        ftp = self.system.ftp(self.hostname(), remote['username'])
-        if ftp:
-            rc = ftp.put(local, self.fullpath(remote))
-            ftp.close()
-            return rc
-
+         return self.system.ftput(
+            local,
+            self.fullpath(remote),
+            # ftp control
+            hostname = self.hostname(),
+            logname  = remote['username'],
+            fmt      = options.get('fmt')
+        )

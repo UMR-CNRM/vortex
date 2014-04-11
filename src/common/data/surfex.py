@@ -20,6 +20,7 @@ class SurfexHistoric(Historic):
     )
 
     def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
         return '(surf' + self.term.fmthour + ':inout)' + '.' + self.nativefmt
 
     def olive_basename(self):

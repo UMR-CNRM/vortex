@@ -225,11 +225,14 @@ class OpArchiveStore(ArchiveStore):
 
     def opput(self, local, remote, options):
         """File transfert: put to store."""
-        ftp = self.system.ftp(self.hostname(), remote['username'])
-        if ftp:
-            rc = ftp.put(local, self.fullpath(remote))
-            ftp.close()
-            return rc
+        return self.system.ftput(
+            local,
+            self.fullpath(remote),
+            # ftp control
+            hostname = self.hostname(),
+            logname  = remote['username'],
+            fmt      = options.get('fmt')
+        )
 
 
 class OpCacheStore(CacheStore):

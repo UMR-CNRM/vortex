@@ -13,6 +13,8 @@ from vortex.utilities import mktuple
 
 from collections import namedtuple
 
+class SectionFatalError(Exception):
+    pass
 
 #: Definition of a named tuple INTENT
 IntentTuple = namedtuple('IntentTuple', ['IN', 'OUT', 'INOUT'], verbose=False)
@@ -92,7 +94,10 @@ class Section(object):
         """Shortcut to resource handler :meth:`~vortex.data.handlers.get`."""
         if self.kind == ixo.INPUT or self.kind == ixo.EXEC:
             kw['intent'] = self.intent
-            return self.rh.get(**kw)
+            rc = self.rh.get(**kw)
+            if not rc and self.fatal:
+                raise SectionFatalError('Could not get resource [%s]', str(rc))
+            return rc
         else:
             logger.error('Try to get from an output section.')
             return False
@@ -101,10 +106,20 @@ class Section(object):
         """Shortcut to resource handler :meth:`~vortex.data.handlers.put`."""
         if self.kind == ixo.OUTPUT:
             kw['intent'] = self.intent
-            return self.rh.put(**kw)
+            rc = self.rh.put(**kw)
+            if not rc and self.fatal:
+                raise SectionFatalError('Could not put resource [%s]', str(rc))
+            return rc
         else:
             logger.error('Try to put from an input section.')
             return False
+
+    def show(self, **kw):
+        """Nice dump of the section attributs and contents."""
+        for k, v in sorted(vars(self).items()):
+            if k != 'rh':
+                print ' ', k.ljust(16), ':', v
+        self.rh.quickview(indent=1)
 
 
 class Sequence(object):

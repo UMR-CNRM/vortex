@@ -179,7 +179,7 @@ class FootprintLogClass(FootprintLogEntry):
     def lightdump(self, indent='    ', attrjust=10):
         """Pseudo structured dump of the current class item report."""
         if self._items:
-            print indent, self.name + ':'
+            print indent, self.name
             for item in self._items:
                 info = item.copy()
                 print indent * 2, info.pop('name').ljust(attrjust), ':', info
@@ -205,7 +205,7 @@ class FootprintLog(object):
 
     def info(self):
         """Return a simple description as a string."""
-        return 'Report ' + self.tag.title()
+        return 'Report ' + self.tag.title() + ':'
 
     @property
     def weak(self):
@@ -425,10 +425,11 @@ class FlatReport(object):
 
     def fulldump(self):
         """Print out the internal tree."""
-        print '- ' * 20
+        print '- ' * 5, "\n"
         print self.__class__.__name__, 'shuffle', self._sort
         print dump.fulldump(self._tree)
         print
+
 
 class FactorizedReport(object):
 

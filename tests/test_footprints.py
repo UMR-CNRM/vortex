@@ -833,7 +833,7 @@ class utReporting(TestCase):
         self.assertTrue(rv.weak)
         self.assertIsNone(rv.last)
         self.assertIsNone(rv.current())
-        self.assertEqual(rv.info(), 'Report Void')
+        self.assertEqual(rv.info(), 'Report Void:')
         self.assertEqual(len(rv), 0)
 
 # Tests for footprints top module methods and objects
@@ -865,7 +865,7 @@ class utFootprintSetup(TestCase):
             del setup.defaults
 
         self.assertIsInstance(setup.extended, bool)
-        self.assertEqual(setup.extended, False)
+        self.assertEqual(setup.extended, True)
 
         setup.extended = True
         self.assertIsInstance(setup.extended, bool)
@@ -917,7 +917,7 @@ class utFootprint(TestCase):
             info = 'Not documented',
             only = dict(),
             priority = dict(
-                level = priorities.top.TOOLBOX
+                level = priorities.top.DEFAULT
             )
         )
 
@@ -1542,7 +1542,7 @@ class utFootprintBase(TestCase):
             bind = list(),
             info = 'Not documented',
             only = dict(),
-            priority = dict( level = priorities.top.TOOLBOX )
+            priority = dict( level = priorities.top.DEFAULT )
         ))
 
         with self.assertRaises(KeyError):

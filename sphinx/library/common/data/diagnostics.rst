@@ -1,8 +1,8 @@
-:mod:`common.data.diagnostics` --- TODO Module Header
-=====================================================
+:mod:`common.data.diagnostics` --- Diagnostics from forecasts
+=============================================================
 
 .. automodule:: common.data.diagnostics
-   :synopsis: TODO Module Synopsis
+   :synopsis: Diagnostics from forecasts
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -16,3 +16,12 @@ Package
 Classes
 -------
 
+.. autoclass:: DDH
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ISP
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

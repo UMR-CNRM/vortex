@@ -84,6 +84,7 @@ class Analysis(GeoFlowResource):
         )
 
     def iga_pathinfo(self):
+        """Standard path information for IGA inline cache."""
         if self.model == 'arome':
             if self.filling == 'surf':
                 directory = 'fic_day'

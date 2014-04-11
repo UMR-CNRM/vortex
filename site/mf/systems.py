@@ -78,7 +78,7 @@ class MeteoBull(Target):
             ),
         ),
         priority = dict(
-            level = footprints.priorities.top.OPER
+            level = footprints.priorities.top.TOOLBOX
         )
     )
 

@@ -145,10 +145,10 @@ class Store(footprints.FootprintBase):
         info = 'Default store',
         attr = dict(
             scheme = dict(
-                alias = ( 'protocol', )
+                alias = ('protocol',)
             ),
             netloc = dict(
-                alias = ( 'domain', 'namespace' )
+                alias = ('domain', 'namespace')
             ),
         ),
     )
@@ -218,15 +218,15 @@ class MultiStore(footprints.FootprintBase):
         info = 'Multi store',
         attr = dict(
             scheme = dict(
-                alias = ( 'protocol', )
+                alias    = ('protocol',)
             ),
             netloc = dict(
-                alias = ( 'domain', 'namespace' )
+                alias    = ('domain', 'namespace')
             ),
             refillstore = dict(
+                type     = bool,
                 optional = True,
-                type = bool,
-                default = False,
+                default  = False,
             )
         ),
     )
@@ -337,7 +337,7 @@ class MagicPlace(Store):
         info = 'Evanescent physical store',
         attr = dict(
             scheme = dict(
-                values = [ 'magic' ],
+                values   = [ 'magic' ],
             ),
         ),
         priority = dict(
@@ -369,10 +369,10 @@ class Finder(Store):
         info = 'Miscellaneous file access',
         attr = dict(
             scheme = dict(
-                values = [ 'file', 'ftp', 'rcp', 'scp' ],
+                values   = [ 'file', 'ftp', 'rcp', 'scp' ],
             ),
             netloc = dict(
-                outcast = [ 'oper.inline.fr' ],
+                outcast  = [ 'oper.inline.fr' ],
             )
         ),
         priority = dict(
@@ -451,11 +451,14 @@ class Finder(Store):
 
     def ftpput(self, local, remote, options):
         """Delegates to ``system`` the file transfert of ``local`` to ``remote``."""
-        ftp = self.system.ftp(self.hostname(), remote['username'])
-        if ftp:
-            rc = ftp.put(local, self.fullpath(remote))
-            ftp.close()
-            return rc
+        return self.system.ftput(
+            local,
+            self.fullpath(remote),
+            # ftp control
+            hostname = self.hostname(),
+            logname  = remote['username'],
+            fmt      = options.get('fmt')
+        )
 
 
 class ArchiveStore(Store):
@@ -465,22 +468,22 @@ class ArchiveStore(Store):
         info = 'Generic archive store',
         attr = dict(
             scheme = dict(
-                values = [ 'ftp', 'ftserv' ],
+                values   = [ 'ftp', 'ftserv' ],
             ),
             netloc = dict(
-                values = [ 'open.archive.fr' ],
+                values   = [ 'open.archive.fr' ],
             ),
             rootdir = dict(
                 optional = True,
-                default = '/home/m/marp/marp999'
+                default  = '/home/m/marp/marp999'
             ),
             headdir = dict(
                 optional = True,
-                default = 'sto'
+                default  = 'sto'
             ),
             storage = dict(
                 optional = True,
-                default = 'cougar.meteo.fr'
+                default  = 'cougar.meteo.fr'
             ),
         )
     )
@@ -533,14 +536,17 @@ class ArchiveStore(Store):
 
     def ftpput(self, local, remote, options):
         """Delegates to ``system.ftp`` the put action."""
-        ftp = self.system.ftp(self.hostname(), remote['username'])
-        if ftp:
-            rootpath = remote.get('root', self.rootdir)
-            rc = ftp.put(local, self.system.path.join(rootpath, remote['path'].lstrip(self.system.path.sep)))
-            ftp.close()
-            return rc
-        else:
-            return False
+        return self.system.ftput(
+            local,
+            self.system.path.join(
+                remote.get('root', self.rootdir),
+                remote['path'].lstrip(self.system.path.sep)
+            ),
+            # ftp control
+            hostname = self.hostname(),
+            logname  = remote['username'],
+            fmt      = options.get('fmt')
+        )
 
 
 class VortexArchiveStore(ArchiveStore):
@@ -550,17 +556,17 @@ class VortexArchiveStore(ArchiveStore):
         info = 'VORTEX archive access',
         attr = dict(
             scheme = dict(
-                values = [ 'vortex', 'ftp', 'ftserv' ],
+                values   = [ 'vortex', 'ftp', 'ftserv' ],
             ),
             netloc = dict(
-                values = [ 'open.archive.fr', 'vortex.archive.fr' ],
-                remap = {
+                values   = [ 'open.archive.fr', 'vortex.archive.fr' ],
+                remap    = {
                     'vortex.archive.fr' : 'open.archive.fr'
                 },
             ),
             headdir = dict(
-                default = 'vortex',
-                outcast = [ 'xp' ]
+                default  = 'vortex',
+                outcast  = [ 'xp' ]
             ),
         )
     )
@@ -604,26 +610,26 @@ class CacheStore(Store):
         info = 'Generic cache store',
         attr = dict(
             scheme = dict(
-                values = [ 'incache' ],
+                values   = [ 'incache' ],
             ),
             netloc = dict(
-                values = [ 'open.cache.fr' ],
+                values   = [ 'open.cache.fr' ],
             ),
             strategy = dict(
                 optional = True,
-                default = 'std',
+                default  = 'std',
             ),
             rootdir = dict(
                 optional = True,
-                default = 'conf'
+                default  = 'conf'
             ),
             headdir = dict(
                 optional = True,
-                default = 'conf',
+                default  = 'conf',
             ),
             storage = dict(
                 optional = True,
-                default = 'localhost'
+                default  = 'localhost'
             ),
         )
     )

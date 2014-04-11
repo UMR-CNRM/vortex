@@ -29,6 +29,11 @@ class GcoProvider(Provider):
         )
     )
 
+    def __init__(self, *args, **kw):
+        """Proxy init abstract method. Logging only for the time being."""
+        logger.debug('GcoProvider abstract init %s', self)
+        super(GcoProvider, self).__init__(*args, **kw)
+
     def domain(self):
         """Default domain is ``gco.meteo.fr``."""
         return self.gnamespace
@@ -56,6 +61,7 @@ class GGet(GcoProvider):
     )
 
     def __init__(self, *args, **kw):
+        """Proxy init method. Logging only for the time being."""
         logger.debug('GGet provider init %s', self)
         super(GGet, self).__init__(*args, **kw)
 
@@ -93,6 +99,7 @@ class GEnv(GcoProvider):
     )
 
     def __init__(self, *args, **kw):
+        """Proxy init method. Logging only for the time being."""
         logger.debug('GEnv provider init %s', self)
         super(GEnv, self).__init__(*args, **kw)
 
@@ -104,7 +111,7 @@ class GEnv(GcoProvider):
 
     def _str_more(self):
         """Additional information to print representation."""
-        return '| cycle={0:s}'.format(self.genv)
+        return "cycle='{0:s}'".format(self.genv)
 
     def scheme(self):
         """Default scheme is ``gget``."""

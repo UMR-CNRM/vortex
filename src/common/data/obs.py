@@ -33,12 +33,17 @@ class Observations(GeoFlowResource):
         return 'observations'
 
     def basename_info(self):
-        if re.match('^odb|ecma|ccma',self.nativefmt):
-            return dict(style='obs', nativefmt=self.nativefmt, stage=self.stage, part=self.part, suffix='tar')
-        else:
-            return dict(style='obs',nativefmt=self.nativefmt, stage=self.stage, part=self.part)
+        """Generic information for names fabric, with style = ``obs``."""
+        return dict(
+            style     = 'obs',
+            nativefmt = self.nativefmt,
+            stage     = self.stage,
+            part      = self.part,
+            suffix    = 'tar' if re.match('^odb|ecma|ccma', self.nativefmt) else None
+        )
 
     def olive_basename(self):
+        """OLIVE specific naming convention."""
         fmt = self.nativefmt
 
         if re.match('^ascii$', fmt) :
@@ -62,6 +67,7 @@ class Observations(GeoFlowResource):
 
 
     def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
         fmt = self.nativefmt
         part = self.part
         stage = self.stage
@@ -87,6 +93,7 @@ class Observations(GeoFlowResource):
 
 
     def archive_urlquery(self):
+        """OP ARCHIVE special query for odb case."""
         if re.match('^odb', self.nativefmt):
             return 'extract=all'
         else :
@@ -113,15 +120,18 @@ class Refdata(FlowResource):
         return 'refdata'
 
     def basename_info(self):
+        """Generic information for names fabric, with radical = ``refdata``."""
         return dict(
             radical = 'refdata',
             suffix = self.part
         )
 
     def olive_basename(self):
+        """OLIVE specific naming convention."""
         return 'refdata.' + self.part
 
     def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
         return 'refdata'
 
 
@@ -146,22 +156,20 @@ class Varbc(FlowResource):
         return 'varbc'
 
     def basename_info(self):
-        if self.stage == 'void':
-            return dict(
-                radical = 'varbc',
-                src = self.model
-            )
-        else:
-            return dict(
-                radical = 'varbc',
-                src = self.model,
-                suffix = self.stage
-            )
+        """Generic information for names fabric, with radical = ``varbc``."""
+        return dict(
+            radical = 'varbc',
+            src     = self.model,
+            suffix  = self.stage if self.stage != 'void' else None
+        )
+
 
     def olive_basename(self):
+        """OLIVE specific naming convention."""
         return 'varbc'
 
     def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
         if self.stage == 'void':
             bname = 'VARBC' + '(varbc' + self.model + ':inout)'
         else:
@@ -193,6 +201,7 @@ class BlackList(FlowResource):
         return 'blacklist'
 
     def basename_info(self):
+        """Generic information for names fabric, with radical = ``varbc``."""
         return dict(
             fmt     = self.nativefmt,
             src     = self.scope,
@@ -200,11 +209,13 @@ class BlackList(FlowResource):
         )
 
     def iga_pathinfo(self):
+        """Standard path information for IGA inline cache."""
         return dict(
             model = self.model
         )
 
     def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
         if 'loc' in self.scope:
             return 'LISTE_LOC'
         else:
@@ -235,12 +246,15 @@ class Obsmap(FlowResource):
         return 'obsmap'
 
     def olive_basename(self):
+        """OLIVE specific naming convention."""
         return 'OBSMAP_' + self.stage
 
     def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
         return 'BATOR_MAP'
 
     def basename_info(self):
+        """Generic information for names fabric, with radical = ``obsmap``."""
         return dict(
             fmt     = self.nativefmt,
             radical = 'obsmap',
@@ -273,6 +287,7 @@ class Bcor(FlowResource):
         return 'bcor'
 
     def basename_info(self):
+        """Generic information for names fabric, with radical = ``bcor``."""
         return dict(
             fmt     = self.nativefmt,
             radical = self.kind,
@@ -280,4 +295,5 @@ class Bcor(FlowResource):
         )
 
     def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
         return 'bcor_' + self.satbias + '.dat'

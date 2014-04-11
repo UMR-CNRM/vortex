@@ -10,6 +10,14 @@ from vortex.data import geometries
 
 
 def fastload(**kw):
+    """
+    Generic load of some resource handler according to current description.
+    If not provided, these parameters are set:
+      * cutoff = production
+      * model = arpege
+      * date = last synoptic hour
+      * geometry = global spectral default geometry
+    """
     kw.setdefault('cutoff', 'production')
     kw.setdefault('model', 'arpege')
     kw.setdefault('date', synop())
@@ -21,6 +29,14 @@ def fastload(**kw):
         return al[0]
 
 def analysis(**kw):
+    """
+    Return a analysis according to a standard description and/or some additional information.
+    Defaults are:
+      * kind = analysis
+      * suite = oper
+      * igakey = same as model
+      * tempo = True
+    """
     adesc = dict(
         suite = 'oper',
         kind = 'analysis',
@@ -31,6 +47,16 @@ def analysis(**kw):
     return fastload(**adesc)
 
 def modelstate(**kw):
+    """
+    Return a model state according to a standard description and/or some additional information.
+    Defaults are:
+      * kind = historic
+      * suite = oper
+      * block = forecast
+      * igakey = same as model
+      * term = 0
+      * tempo = True
+    """
     adesc = dict(
         suite = 'oper',
         block = 'forecast',

@@ -41,6 +41,9 @@ class LFI_Status(object):
         self._stderr = stderr
         self._result = result
 
+    def __str__(self):
+        return '{0:s} | rc={1:d} result={2:d}>'.format(repr(self).rstrip('>'), self.rc, len(self.result))
+
     @property
     def ok(self):
         return self._ok
@@ -79,6 +82,14 @@ class LFI_Status(object):
         self._result = list(value)
 
     result = property(_get_result, _set_result, None, None)
+
+    def cat(self, maxlines=None):
+        """Cat the last stdout command up to ``maxlines`` lines. If maxlines is None, print all."""
+        if self.stdout is not None:
+            if maxlines is None:
+                maxlines = len(self.stdout) + 1
+            for l in self.stdout[:maxlines]:
+                print l
 
     def __nonzero__(self):
         return bool(self.rc in self.ok)
@@ -152,9 +163,15 @@ class LFI_Tool(footprints.FootprintBase):
         # Overwrite global module env values with specific ones
         localenv.update(self._env)
 
+        # Check if a pipe is requested
+        inpipe = kw.pop('pipe', False)
+
         # Ask the attached shell to run the lfi tool command
         localenv.active(True)
-        rc = self.sh.spawn(cmd, **kw)
+        if inpipe:
+            rc = self.sh.popen(cmd, **kw)
+        else:
+            rc = self.sh.spawn(cmd, **kw)
         localenv.active(False)
         return rc
 
@@ -175,7 +192,7 @@ class LFI_Standard(LFI_Tool):
           * skipfields : LFI fields not to be compared
           * skiplength : Offset at which the comparison starts for each LFI fields
         """
-        cmd = [ 'diff', '--lfi-file-1', lfi1, '--lfi-file-2', lfi2 ]
+        cmd = [ 'lfidiff', '--lfi-file-1', lfi1, '--lfi-file-2', lfi2 ]
 
         maxprint = kw.pop('maxprint', 2)
         if maxprint:
@@ -185,14 +202,55 @@ class LFI_Standard(LFI_Tool):
         if skipfields:
             cmd.extend(['--lfi-skip-fields', str(skipfields)])
 
-        skiplength = kw.pop('skiplength', 0)
+        skiplength = kw.pop('skiplength', 7)
         if skiplength:
             cmd.extend(['--lfi-skip-length', str(skiplength)])
+
+        kw['output'] = True
 
         rawout = self._spawn(cmd, **kw)
         fields = [ x.partition('!= ')[-1] for x in rawout if x.startswith(' !=') ]
 
-        return LFI_Status(rc=len(fields), stdout=rawout, result=fields)
+        return LFI_Status(rc=int(bool((fields))), stdout=rawout, result=fields)
+
+    def lfi_ftput(self, source, destination, hostname=None, logname=None):
+        """On the fly packing and ftp."""
+        if self.is_xlfi(source):
+            st = LFI_Status()
+            if hostname is None:
+                hostname = self.sh.env.VORTEX_ARCHIVE_HOST
+            if hostname is None:
+                st.rc = 1
+                st.result = [ 'No archive host provided.' ]
+                return st
+
+            if logname is None:
+                logname = self.sh.env.VORTEX_ARCHIVE_USER
+
+            ftp = self.sh.ftp(hostname, logname)
+            if ftp:
+                p = self._spawn(
+                    ['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', '-'],
+                    output  = False,
+                    pipe    = True,
+                    bufsize = 8192,
+                )
+                st.rc = ftp.put(p.stdout, destination)
+                self.sh.pclose(p)
+                st.result = [ destination ]
+                st.stdout = [
+                    'Connection time   : {0:f}'.format(ftp.length),
+                    'Actual target size: {0:d}'.format(ftp.size(destination))
+                ]
+                ftp.close()
+            else:
+                st.rc = 1
+                st.result = [ 'Could not connect to ' + hostname + ' as user ' + logname ]
+            return st
+        else:
+            return self.sh.ftput(source, destination, hostname=hostname, logname=logname)
+
+    fa_ftput = lfi_ftput
 
     def lfi_remove(self, *args):
         """Remove (possibly) multi lfi files."""

@@ -213,13 +213,17 @@ class StdFtp(object):
     def put(self, source, destination):
         """Store a local `source` file object to a remote `destination`."""
         self.stderr('put', source, destination)
-        inputsrc = open(source, 'rb')
         if type(source) is types.StringType:
             inputsrc = io.open(source, 'rb')
             xsource = True
         else:
             inputsrc = source
-            inputsrc.seek(0)
+            try:
+                inputsrc.seek(0)
+            except AttributeError as seek_error:
+                logger.warning('No rewind on source %s' % str(source))
+            except IOError as seek_error:
+                logger.debug('Seek trouble on source %s' % str(source))
             xsource = False
         self.rmkdir(destination)
         try:
@@ -261,3 +265,7 @@ class StdFtp(object):
     def cd(self, destination):
         """Change to a directory."""
         return self.cwd(destination)
+
+    def rm(self, source):
+        """Proxy to ftp delete command."""
+        return self.delete(source)

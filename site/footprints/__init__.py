@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.8.13'
+__version__ = '0.8.14'
 
 import re
 import copy
@@ -60,7 +60,7 @@ class FootprintSetup(object):
     def __init__(self,
         docstring=False, fatal=True, fastmode=False, fastkeys=('kind',),
         callback=None, defaults=None, proxies=None,
-        extended=False, dumper=None, report=True, nullreport=reporting.NullReport()
+        extended=True, dumper=None, report=True, nullreport=reporting.NullReport()
     ):
         """Initialisation of a simple footprint setup driver."""
         if dumper is None:
@@ -187,6 +187,12 @@ class Collector(util.Catalog):
         """Not yet specialised..."""
         logger.debug('Notified %s upd item %s', self, item)
 
+    def discard_kernel(self, rootname):
+        """Discard from current collector classes with name starting with ``rootname``."""
+        for x in [ cl for cl in self.items() if cl.fullname().startswith(rootname) ]:
+            print 'Bye...', x
+            self.discard(x)
+
     def pickup(self, desc):
         """Try to pickup inside the collector a item that could match the description."""
         logger.debug('Pick up a "%s" in description %s with collector %s', self.entry, desc, self)
@@ -204,7 +210,7 @@ class Collector(util.Catalog):
         else:
             logger.warning('No %s found in description %s', self.entry, "\n" + setup.dumper.cleandump(desc))
             if mkreport and self.report:
-                print "\n", self.logreport.info()
+                print "\n", self.logreport.info(), "\n"
                 self.lastreport.lightdump()
                 if mkaltreport:
                     altreport = self.lastreport.as_flat()
@@ -478,7 +484,7 @@ class Footprint(object):
                 info = 'Not documented',
                 only = dict(),
                 priority = dict(
-                    level = priorities.top.TOOLBOX
+                    level = priorities.top.DEFAULT
                 )
             )
         for a in args:
@@ -1005,6 +1011,7 @@ class FootprintBase(object):
             raise FootprintInvalidDefinition('Could not instanciate abstract class.')
         checked = kw.pop('checked', False)
         self._attributes = dict()
+        self._puredict = None
         for a in args:
             logger.debug('FootprintBase %s arg %s', self, a)
             if isinstance(a, dict):
@@ -1014,7 +1021,6 @@ class FootprintBase(object):
             logger.debug('Resolve attributes at footprint init %s', object.__repr__(self))
             self._attributes, u_attr_input, u_attr_seen = self._footprint.resolve(self._attributes, fatal=True)
         self._observer = observers.getbyname(self.__class__.fullname())
-        self._puredict = None
         self.make_alive()
 
     @property
@@ -1053,6 +1059,10 @@ class FootprintBase(object):
     def make_alive(self):
         """Thnigs to do after new or init construction."""
         self._observer.notify_new(self, dict())
+
+    def __deepcopy__(self, memo):
+        """No deepcopy expected, so ``self`` is returned."""
+        return self
 
     def __getstate__(self):
         d = self.__dict__.copy()

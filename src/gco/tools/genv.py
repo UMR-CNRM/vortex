@@ -11,6 +11,7 @@ from copy import copy
 genvcmd, genvpath = (None, None)
 
 def actualgenv():
+    """Nice try to return a valid full path of the genv command."""
     global genvpath
     global genvcmd
     if genvcmd is None or genvpath is None:
@@ -61,8 +62,14 @@ def nicedump(**kw):
     ldump = list()
     c = contents(**kw)
     if c:
-        ldump = [ '{0:s}="{1:s}"'.format(k, v) for k, v in c.items() ]
+        ldump = [ '{0:s}="{1:s}"'.format(k, ' '.join(v if type(v) is list else [v])) for k, v in sorted(c.items()) ]
     return ldump
+
+def as_rawstr(cycle):
+    """Return a raw string of the cycle contents."""
+    thisdump = nicedump(cycle=cycle)
+    thisdump[0:0] = [ 'CYCLE_NAME="' + cycle  + '"' ]
+    return "\n".join(thisdump)
 
 def cycles():
     """Return curretnly defined cycles."""
@@ -74,18 +81,18 @@ def clearall():
     p = handler()
     p.clear()
 
-def autofill(kselect):
+def autofill(cycle):
     """Use the ``genv`` external tool to fill the specified cycle."""
-    cycle = None
-    gcout = vortex.sh().spawn([actualgenv(), kselect], output=True)
+    actualcycle = None
+    gcout = vortex.sh().spawn([actualgenv(), cycle], output=True)
     if gcout:
         gcdict = dict()
         for item in gcout:
             k, v = item.split('=', 1)
             v = v.strip('"')
             if k == 'CYCLE_NAME':
-                cycle = v.rstrip('.gco')
-                k, v = 'cycle', cycle
+                actualcycle = v.rstrip('.gco')
+                k, v = 'cycle', actualcycle
             if ' ' in v:
                 vlist = v.split(' ')
                 gcdict[k] = vlist[0]
@@ -94,5 +101,5 @@ def autofill(kselect):
                 gcdict[k] = v
         register(**gcdict)
     else:
-        logger.warning('Could not automaticaly fetch cycle %s contents', cycle)
-    return contents(cycle=cycle)
+        logger.warning('Could not automaticaly fetch cycle %s contents', actualcycle)
+    return contents(cycle=actualcycle)

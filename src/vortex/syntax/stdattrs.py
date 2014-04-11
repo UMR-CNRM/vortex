@@ -78,6 +78,7 @@ nativefmt = footprints.Footprint( info = 'Native format', attr = dict( nativefmt
 a_actualfmt = dict(
     optional = True,
     default = '[nativefmt#unknown]',
+    alias = ('format',),
     values = knownfmt,
     remap = dict(auto = 'foo'),
 )
@@ -88,7 +89,7 @@ actualfmt = footprints.Footprint( info = 'Actual data format', attr = dict( actu
 a_cutoff = dict(
     type = str,
     optional = False,
-    alias = ( 'cut', ),
+    alias = ('cut',),
     values = [
         'a', 'assim', 'assimilation', 'long',
         'p', 'prod', 'production', 'short'

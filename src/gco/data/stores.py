@@ -7,6 +7,7 @@ __all__ = []
 from vortex.autolog import logdefault as logger
 from vortex.data.stores import Store, MultiStore, CacheStore
 
+
 class GCOCentralStore(Store):
     """
     GCO central storage class.
@@ -21,27 +22,28 @@ class GCOCentralStore(Store):
         info = 'GCO Central Store',
         attr = dict(
             scheme = dict(
-                values = [ 'gget' ],
+                values   = [ 'gget' ],
             ),
             netloc = dict(
-                values = [ 'gco.meteo.fr' ],
+                values   = [ 'gco.meteo.fr' ],
             ),
             ggetcmd = dict(
                 optional = True,
-                default = None
+                default  = None
             ),
             ggetpath = dict(
                 optional = True,
-                default = None
+                default  = None
             ),
             ggetroot = dict(
                 optional = True,
-                default = None
+                default  = None
             ),
         )
     )
 
     def __init__(self, *args, **kw):
+        """Proxy init abstract method. Logging only for the time being."""
         logger.debug('Gco store init %s', self.__class__)
         super(GCOCentralStore, self).__init__(*args, **kw)
 
@@ -123,25 +125,26 @@ class GCOCacheStore(CacheStore):
         info = 'VORTEX cache access',
         attr = dict(
             scheme = dict(
-                values = [ 'gget' ],
+                values   = [ 'gget' ],
             ),
             netloc = dict(
-                values = [ 'gco.cache.fr' ],
+                values   = [ 'gco.cache.fr' ],
             ),
             strategy = dict(
-                default = 'mtool',
+                default  = 'mtool',
             ),
             rootdir = dict(
-                default = 'auto'
+                default  = 'auto'
             ),
             headdir = dict(
-                default = 'gco',
-                outcast = [ 'xp', 'vortex' ],
+                default  = 'gco',
+                outcast  = [ 'xp', 'vortex' ],
             ),
         )
     )
 
     def __init__(self, *args, **kw):
+        """Proxy init method. Perform a cache reset after initialisation."""
         logger.debug('GCO cache store init %s', self.__class__)
         super(GCOCacheStore, self).__init__(*args, **kw)
         self.resetcache()
@@ -183,13 +186,13 @@ class GCOStore(MultiStore):
         info = 'GCO multi access',
         attr = dict(
             scheme = dict(
-                values = [ 'gget' ],
+                values   = [ 'gget' ],
             ),
             netloc = dict(
-                values = [ 'gco.multi.fr' ],
+                values   = [ 'gco.multi.fr' ],
             ),
             refillstore = dict(
-                default = True,
+                default  = True,
             )
         )
     )

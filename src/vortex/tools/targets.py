@@ -27,26 +27,26 @@ class Target(footprints.FootprintBase):
         attr = dict(
             hostname = dict(
                 optional = True,
-                default = platform.node(),
-                alias = ('nodename', 'computer')
+                default  = platform.node(),
+                alias    = ('nodename', 'computer')
             ),
             sysname = dict(
                 optional = True,
-                default = platform.system(),
+                default  = platform.system(),
             ),
             config = dict(
+                type     = GenericConfigParser,
                 optional = True,
-                default = None,
-                type = GenericConfigParser,
+                default  = None,
             ),
             inifile = dict(
                 optional = True,
-                default = 'target-[hostname].ini',
+                default  = 'target-[hostname].ini',
             ),
             iniauto = dict(
+                type     = bool,
                 optional = True,
-                type = bool,
-                default = True,
+                default  = True,
             )
         )
     )

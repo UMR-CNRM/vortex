@@ -16,13 +16,20 @@ Package
 
 Classes
 -------
- 
-.. autoclass:: RtCoef
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
 .. autoclass:: MatFilter
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: RRTM
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: RtCoef
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+

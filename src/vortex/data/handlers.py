@@ -166,7 +166,7 @@ class Handler(object):
         tab = '  ' * indent
         print '{0}{1:02d}. {2:s}'.format(tab, nb, repr(self))
         print '{0}  Complete  : {1:s}'.format(tab, str(self.complete))
-        for subobj in ( 'resource', 'provider', 'container' ):
+        for subobj in ( 'container', 'provider', 'resource' ):
             obj = getattr(self, subobj, None)
             if obj:
                 print '{0}  {1:10s}: {2:s}'.format(tab, subobj.capitalize(), str(obj))

@@ -18,6 +18,14 @@ class NamelistContent(AlmostDictContent):
     """Fortran namelist including namelist blocks."""
 
     def __init__(self, **kw):
+        """
+        Initialize default namelist content with optional parameters:
+          * macros : pre-defined macros for all namelist blocks
+          * remove : elements to remove from the contents
+          * parser : a namelist parser object (a default one will be built otherwise)
+          * automkblock : give automaticaly a name to new blocks when not provided
+          * namblockcls : class for new blocks
+        """
         kw.setdefault('macros', dict(
             NBPROC    = None,
             NCPROC    = None,
@@ -34,6 +42,7 @@ class NamelistContent(AlmostDictContent):
         super(NamelistContent, self).__init__(**kw)
 
     def add(self, addlist):
+        """Add namelist blocks to current contents."""
         for nam in filter(lambda x: x.isinstance(self._namblockcls), addlist):
             self._data[nam.name] = nam
 
@@ -334,10 +343,18 @@ class XXTContent(IndexedTable):
     """Indexed table of selection namelist used by inlined fullpos forecasts."""
 
     def fmtkey(self, key):
+        """Reshape entry keys of the internal dictionary as a :class:`~vortex.tools.date.Time` value."""
         key = Time(key)
         return key.fmthm
 
     def xxtpos(self, n, g, x):
+        """
+        Return value in position ``n`` for the ``term`` occurence défined in ``g`` or ``x``.
+          * ``g`` stands for a guess dictionary.
+          * ``g`` stands for an extra dictionary.
+
+        These naming convention refer to the footprints resolve mechanism.
+        """
         t = g.get('term', x.get('term', None))
         if t is None:
             return None
@@ -352,10 +369,12 @@ class XXTContent(IndexedTable):
             return value
 
     def xxtnam(self, g, x):
-        return self.xxtpos(0, g, x)
+        """Return local namelist filename according to first column."""
+        return self._xxtpos(0, g, x)
 
     def xxtsrc(self, g, x):
-        return self.xxtpos(1, g, x)
+        """Return local namelist source in gco set according to second column."""
+        return self._xxtpos(1, g, x)
 
 
 class NamSelectDef(NoDateResource):

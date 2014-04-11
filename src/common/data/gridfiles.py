@@ -60,9 +60,11 @@ class GridPoint(GeoFlowResource):
         return 'gridpoint'
 
     def olive_basename(self):
+        """OLIVE specific naming convention (abstract)."""
         pass
 
     def archive_basename(self):
+        """OP ARCHIVE specific naming convention (abstract)."""
         pass
 
     def basename_info(self):
@@ -85,6 +87,7 @@ class GridPoint(GeoFlowResource):
         )
 
     def iga_pathinfo(self):
+        """Standard path information for IGA inline cache."""
         directory = dict(
             fa = 'fic_day',
             grib = 'bdap'
