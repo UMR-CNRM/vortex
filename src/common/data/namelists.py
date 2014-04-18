@@ -370,11 +370,11 @@ class XXTContent(IndexedTable):
 
     def xxtnam(self, g, x):
         """Return local namelist filename according to first column."""
-        return self._xxtpos(0, g, x)
+        return self.xxtpos(0, g, x)
 
     def xxtsrc(self, g, x):
         """Return local namelist source in gco set according to second column."""
-        return self._xxtpos(1, g, x)
+        return self.xxtpos(1, g, x)
 
 
 class NamSelectDef(NoDateResource):

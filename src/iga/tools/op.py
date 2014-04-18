@@ -8,6 +8,7 @@ import re
 
 from iga.utilities import swissknife
 
+
 def setup(**kw):
     """
     Open a new vortex session with an op profile,
@@ -17,12 +18,23 @@ def setup(**kw):
     opd = kw.get('actual', dict())
 
     import vortex
-    gl = vortex.sessions.glove(tag='opid', profile=opd.get('op_suite', 'oper'))
-    t  = vortex.sessions.ticket(tag='opview', active=True, glove=gl, topenv=vortex.rootenv, prompt=vortex.__prompt__)
+    gl = vortex.sessions.glove(
+        tag     = 'opid',
+        profile = opd.get('op_suite', 'oper')
+    )
+
+    t  = vortex.sessions.ticket(
+        tag     = 'opview',
+        active  = True,
+        glove   = gl,
+        topenv  = vortex.rootenv,
+        prompt  = vortex.__prompt__
+    )
 
     t.warning()
-    gl.setvapp(kw.get('vapp', opd.get('op_vapp', None)))
-    gl.setvconf(kw.get('vconf', opd.get('op_vconf', None)))
+
+    gl.vapp  = kw.get('vapp',  opd.get('op_vapp',  None))
+    gl.vconf = kw.get('vconf', opd.get('op_vconf', None))
 
     # A nice summary of active session components
     t.sh.title('Op session')
@@ -36,21 +48,21 @@ def setup(**kw):
     t.env.verbose(True, t.sh)
 
     # Unlimited stack
-    import resource
-    resource.setrlimit(resource.RLIMIT_STACK, (-1, -1))
+    t.sh.setulimit('stack')
 
     # Define the actual running directory
     t.sh.subtitle('Switch to rundir')
-    t.env.RUNDIR = kw.get('rundir', t.env.TMPDIR)
-    t.sh.cd(t.env.RUNDIR)
+    t.env.RUNDIR = kw.get('rundir', t.env.TMPDIR + '/default')
+    t.sh.cd(t.env.RUNDIR, create=True)
     t.sh.pwd(output=False)
 
-    # Set toolbox verbosity
-    vortex.toolbox.verbose = 2
-    # Allow extended footprints resolution
-    vortex.toolbox.extended = True
+    # Set toolbox verbosity and default behavior
+    vortex.toolbox.verbose   = 2
+    vortex.toolbox.justdoit  = True
+    vortex.toolbox.getinsitu = True
 
     #some usefull import for footprint resolution
+    import common
     import olive.data.providers
     from iga.data import containers, providers, stores
 
@@ -59,29 +71,52 @@ def setup(**kw):
 def setenv(t, **kw):
     """Set up common environment for all oper execs"""
 
+    t.sh.title('Op setenv')
+
+    import vortex
+    t.env.OP_VORTEX = vortex.__version__
+
     # Nice display of current batch environment
     t.sh.header('SLURM Env')
-    e = t.env
-    for envslurm in sorted([ x for x in e.keys() if x.startswith('SLURM') ]):
+    nb_slurm = 0
+    for envslurm in sorted([ x for x in t.env.keys() if x.startswith('SLURM') ]):
         print '{0:s}="{1:s}"'.format(envslurm, e[envslurm])
+        nb_slurm += 1
+    print 'Looking for automatic batch variables:', nb_slurm, 'found.'
 
     # Set top levels OP variables from the job itself
     t.sh.header('TOP OP Env')
     opd = kw.get('actual', dict())
+    nb_op = 0
     for opvar in sorted([x for x in opd.keys() if x.startswith('op_') ]):
-        e.setvar(opvar, opd[opvar])
+        t.env.setvar(opvar, opd[opvar])
+        nb_op += 1
+    print 'Looking for global op variables:', nb_op, 'found.'
 
-    # Force some default values that should be valid accross most of the configurations.
-    import vortex
+    # Get default MPI options from current SLURM env
+    t.sh.header('MPI Env')
     mpi, rkw = swissknife.slurm_parameters(t, **kw)
-    t.sh.header('GUESS Env')
-    e.update(
-        DATE=swissknife.bestdate(),
-        MPIOPTS=mpi,
-        VORTEX=vortex.__version__,
-    )
+    t.env.OP_MPIOPTS = mpi
 
-    return e.clone()
+    # Set a default date according to DATE_PIVOT or last synoptic hour
+    t.sh.header('DATE Env')
+    if t.env.OP_RUNDATE:
+        if not isinstance(t.env.OP_RUNDATE, vortex.tools.date.Date):
+            t.env.OP_RUNDATE = vortex.tools.date.Date(t.env.OP_RUNDATE)
+    else:
+        anytime = kw.get('runtime', t.env.get('OP_RUNTIME', None))
+        anydate = kw.get(
+            'rundate',
+            t.env.get(
+                'DMT_DATE_PIVOT',
+                vortex.tools.date.synop(delta=kw.get('delta', '-PT2H'), time=anytime)
+            )
+        )
+        rundate = vortex.tools.date.Date(anydate)
+        t.env.OP_RUNDATE = rundate
+        t.env.OP_RUNTIME = rundate.time()
+
+    return t.env.clone()
 
 def complete(t, **kw):
     """Exit from OP session."""

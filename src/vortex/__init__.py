@@ -23,7 +23,7 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.8.14'
+__version__ = '0.8.15'
 __prompt__  = 'Vortex v-' + __version__+ ':'
 
 __all__ = []
@@ -80,8 +80,6 @@ if rs.system().systems_reload():
     rs.system(refill=True)
 del rs
 
-tools.env.share(system=sessions.system(), glove=sessions.glove())
-
 # Shorthands to sessions components
 
 ticket = sessions.ticket
@@ -95,13 +93,13 @@ import toolbox, algo, data
 
 def complete():
     sessions.exit()
-    print 'Vortex', __version__, 'completed', '(', tools.date.atsecond().reallynice(), ')'
+    print 'Vortex', __version__, 'completed', '(', tools.date.at_second().reallynice(), ')'
 
 import atexit
 atexit.register(complete)
 del atexit
 
-print 'Vortex', __version__, 'loaded', '(', tools.date.atsecond().reallynice(), ')'
+print 'Vortex', __version__, 'loaded', '(', tools.date.at_second().reallynice(), ')'
 if __version__ != footprints.__version__:
     print '   ... with a non-matching footprints version (', footprints.__version__, ')'
 

@@ -95,6 +95,10 @@ class Beaufix(MeteoBull):
                     [ x+str(y) for x in ('beaufixlogin',) for y in range(6) ] + \
                     [ x+str(y) for x in ('beaufixtransfert',) for y in range(4) ]
             ),
+            inetname = dict(
+                default = 'beaufix',
+                values  = ['beaufix']
+            ),
             inifile = dict(
                 default = 'target-beaufix.ini',
             )
@@ -112,6 +116,10 @@ class Prolix(MeteoBull):
                     [ x+str(y) for x in ('prolix',) for y in range(990) ] + \
                     [ x+str(y) for x in ('prolixlogin',) for y in range(6) ] + \
                     [ x+str(y) for x in ('prolixtransfert',) for y in range(4) ]
+            ),
+            inetname = dict(
+                default = 'prolix',
+                values  = ['prolix']
             ),
             inifile = dict(
                 default = 'target-prolix.ini',

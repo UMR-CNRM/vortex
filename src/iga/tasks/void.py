@@ -3,7 +3,7 @@
 
 __all__ = []
 
-from iga.utilities.swissknife import Application
+from iga.tools.app import Application
 
 def setup(t, verbose=False):
     return [ Application(t, tag='void') ]

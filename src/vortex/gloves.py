@@ -21,26 +21,35 @@ class Glove(footprints.FootprintBase):
     _footprint = dict(
         info = 'Abstract glove',
         attr = dict(
-            mail = dict(
-                alias = [ 'address' ],
+            email = dict(
+                alias    = ['address'],
                 optional = True,
-                default = Environment(active=False)['email']
+                default  = Environment(active=False)['email'],
+                access   = 'rwx',
+            ),
+            vapp = dict(
+                optional = True,
+                default  = 'play',
+                access   = 'rwx',
+            ),
+            vconf = dict(
+                optional = True,
+                default  = 'sandbox',
+                access   = 'rwx',
             ),
             tag = dict(
                 optional = True,
-                default = 'default',
+                default  = 'default',
             ),
             user = dict(
-                alias = ( 'logname', 'username' ),
+                alias    = ('logname', 'username'),
                 optional = True,
-                default = Environment(active=False)['logname']
+                default  = Environment(active=False)['logname']
             ),
             profile = dict(
-                alias = ( 'kind', 'membership' ),
-                values = [ 'oper', 'dble', 'test', 'research', 'tourist' ],
-                remap = dict(
-                    tourist = 'research'
-                )
+                alias    = ('kind', 'membership'),
+                values   = ['oper', 'dble', 'test', 'research', 'tourist'],
+                remap    = dict(tourist = 'research')
             )
         )
     )
@@ -48,13 +57,11 @@ class Glove(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         logger.debug('Glove abstract %s init', self.__class__)
         super(Glove, self).__init__(*args, **kw)
-        self._vapp = 'play'
-        self._vconf = 'sandbox'
         self._rmdepthmin = 3
-        self._siteroot = None
-        self._siteconf = None
-        self._sitedoc = None
-        self._sitesrc = None
+        self._siteroot   = None
+        self._siteconf   = None
+        self._sitedoc    = None
+        self._sitesrc    = None
 
     @property
     def realkind(self):
@@ -94,37 +101,26 @@ class Glove(footprints.FootprintBase):
             self._sitesrc = '/'.join((self.siteroot, 'src'))
         return self._sitesrc
 
-    def setvapp(self, app=None):
-        """Change the default vortex application name."""
-        if app:
-            self._vapp = app
-        return self._vapp
-
-    def setvconf(self, conf=None):
-        """Change the default vortex configuration name."""
-        if conf:
-            self._vconf = conf
-        return self._vconf
-
     def setenv(self, app=None, conf=None):
         """Change ``vapp`` or/and ``vconf`` in one call."""
-        self.setvapp(app)
-        self.setvconf(conf)
-        return ( self._vapp, self._vconf )
+        if app is not None:
+            self.vapp = app
+        if conf is not None:
+            self.vconf = conf
+        return (self.vapp, self.vconf)
+
+    def setmail(self, domain=None):
+        """Refresh actual email with current username and provided ``domain``."""
+        if domain is None:
+            from vortex import sessions
+            domain = sessions.system().getfqdn()
+        self.email = '@'.join((self.user, domain))
 
     @property
-    def vapp(self):
-        """Vortex application name."""
-        return self._vapp
-
-    @property
-    def vconf(self):
-        """Vortex configuration name."""
-        return self._vconf
-
-    def setmail(self, mailaddr):
-        """Redefine the mail address."""
-        self._attributes['mail'] = mailaddr
+    def xmail(self):
+        if self.email is None:
+            self.setmail()
+        return self.email
 
     def safedirs(self):
         """Protected paths as a list a tuples (path, depth)."""
@@ -142,7 +138,7 @@ class Glove(footprints.FootprintBase):
             '{0}Configrc : {5:s}'
         )).format(
             indent,
-            self.user, str(self.profile), str(self.vapp), self.vconf, self.configrc
+            self.user, str(self.profile), self.vapp, self.vconf, self.configrc
         )
         return card
 
@@ -161,7 +157,7 @@ class ResearchGlove(Glove):
         attr = dict(
             profile = dict(
                 optional = True,
-                default = 'research',
+                default  = 'research',
             )
         )
     )
@@ -184,7 +180,7 @@ class OperGlove(Glove):
         info = 'Operational glove',
         attr = dict(
             user = dict(
-                values = [ 'mxpt001' ]
+                values   = ['mxpt001']
             ),
             profile = dict(
                 optional = False,

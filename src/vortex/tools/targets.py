@@ -30,6 +30,10 @@ class Target(footprints.FootprintBase):
                 default  = platform.node(),
                 alias    = ('nodename', 'computer')
             ),
+            inetname = dict(
+                optional = True,
+                default  = platform.node(),
+            ),
             sysname = dict(
                 optional = True,
                 default  = platform.system(),

@@ -166,7 +166,7 @@ class Expresso(AlgoComponent):
     _footprint = dict(
         attr = dict(
             interpreter = dict(
-                values = [ 'ksh', 'bash', 'perl', 'python' ]
+                values = [ 'awk', 'ksh', 'bash', 'perl', 'python' ]
             ),
             engine = dict(
                 values = [ 'exec', 'launch' ]

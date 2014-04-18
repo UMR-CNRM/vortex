@@ -10,10 +10,12 @@ opts = t.sh.rawopts(
     defaults = dict(
         verbose  = 'on',
         name     = None,
+        python   = t.sh.which('python'),
     )
 )
 
 t.sh.header(' '.join(('Vortex', vortex.__version__, 'job builder')))
+
 for k, v in opts.iteritems():
     print ' >', k.ljust(16), ':', v
 
@@ -25,6 +27,7 @@ opts['wrap'] = False
 corejob, tplconf = swissknife.mkjob(t, **opts)
 
 t.sh.header('Template configuration')
+
 for k, v in sorted(tplconf.iteritems()):
     print ' >', k.ljust(16), ':', v
 
@@ -32,3 +35,4 @@ with open(tplconf['file'], 'w') as job:
     job.write(corejob)
 
 t.sh.header('Job creation completed')
+

@@ -281,11 +281,12 @@ class Handler(object):
         rst = False
         if self.container:
             logger.debug('Remove resource container %s', self.container)
-            rst = sessions.system().remove(
+            sh = sessions.system()
+            rst = sh.remove(
                 self.container.localpath(),
                 fmt=self.container.actualfmt
             )
-            self.history.append(system.fullname(), 'clear', rst)
+            self.history.append(sh.fullname(), 'clear', rst)
         return rst
 
     def save(self):

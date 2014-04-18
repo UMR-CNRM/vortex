@@ -35,9 +35,11 @@ class Action(object):
         """Current status of the action as a boolean property."""
         return self._active
 
-    def status(self):
+    def status(self, update=None):
         """Return current active status."""
-        return self.active
+        if update is not None:
+            self._active = bool(update)
+        return self._active
 
     def on(self):
         """Switch on this action."""
@@ -65,7 +67,7 @@ class Action(object):
         info = self.service_info(**kw)
         return footprints.proxy.service(**info)
 
-    def execute(self, **kw):
+    def execute(self, *args, **kw):
         """Generic method to perform the action through a service."""
         rc = None
         if is_authorized_user(self.kind):
@@ -86,7 +88,7 @@ class SendMail(Action):
     """
     Class responsible for sending emails.
     """
-    def __init__(self, kind='mail', active=True, service='sendmail'):
+    def __init__(self, kind='mail', service='sendmail', active=True):
         super(SendMail, self).__init__(kind=kind, active=active, service=service)
 
 
@@ -94,8 +96,45 @@ class Report(Action):
     """
     Class responsible for sending reports.
     """
-    def __init__(self, kind='report', active=True, service='sendreport'):
+    def __init__(self, kind='report', service='sendreport', active=True):
         super(Report, self).__init__(kind=kind, active=active, service=service)
+
+
+class SpooledActions(object):
+    """
+    Delayed action to be processed.
+    """
+    def __init__(self, kind=None, method=None, actions=None):
+        """Store effective action and method to be processed."""
+        self._kind = kind
+        self._method = method
+        self._actions = actions
+
+    @property
+    def kind(self):
+        return self._kind
+
+    @property
+    def method(self):
+        return self._method
+
+    @property
+    def actions(self):
+        return self._actions[:]
+
+    def __call__(self, *args, **kw):
+        return self.process(*args, **kw)
+
+    def process(self, *args, **kw):
+        """Process the actual method for all action candidates of a given kind."""
+        rc = list()
+        for item in self.actions:
+            xx = getattr(item, self.method, None)
+            if xx:
+                rc.append(xx(*args, **kw))
+            else:
+                rc.append(None)
+        return rc
 
 
 class Dispatcher(footprints.util.Catalog):
@@ -106,7 +145,6 @@ class Dispatcher(footprints.util.Catalog):
     def __init__(self, **kw):
         logger.debug('Action dispatcher init %s', self)
         super(Dispatcher, self).__init__(**kw)
-        self._todo = None
 
     def actions(self):
         return set([x.kind for x in self.items()])
@@ -121,28 +159,13 @@ class Dispatcher(footprints.util.Catalog):
             if item.kind == kind:
                 self.discard(item)
 
-    def __getattr__(self, action):
-        km = action.split('_')
-        kind = km[0]
-        if len(km) > 1:
-            self._todo = ( kind, km[1] )
-        else:
-            self._todo = ( kind, 'execute' )
-        return self._process
-
-    def _process(self, **kw):
-        rc = None
-        if self._todo:
-            kind, method = self._todo
-            self._todo = None
-            rc = list()
-            for item in self.candidates(kind):
-                xx = getattr(item, method, None)
-                if xx:
-                    rc.append(xx(**kw))
-                else:
-                    rc.append(None)
-        return rc
+    def __getattr__(self, attr):
+        if attr.startswith('_'):
+            raise AttributeError
+        a_kind, u_sep, a_method = attr.partition('_')
+        if not a_method:
+            a_method = 'execute'
+        return SpooledActions(a_kind, a_method, self.candidates(a_kind))
 
 
 #: Default action dispatcher... containing an anonymous SendMail action

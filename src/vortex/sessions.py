@@ -283,9 +283,9 @@ class Desk(Singleton):
     def __init__(self):
         if '_tickets' not in self.__dict__:
             self._tickets = dict()
-            self._gloves = dict()
+            self._gloves  = dict()
             self._current_ticket = 'root'
-            self._current_glove = 'default'
+            self._current_glove  = 'default'
         logger.debug('Tickets desk init %s', self._tickets)
 
     def getglove(self, **kw):
@@ -316,7 +316,14 @@ class Desk(Singleton):
             tag = self._current_ticket
 
         if not self._tickets.has_key(tag):
-            self._tickets[tag] = Ticket(active=active, tag=tag, prompt=prompt, topenv=topenv, glove=glove, context=context)
+            self._tickets[tag] = Ticket(
+                active  = active,
+                tag     = tag,
+                prompt  = prompt,
+                topenv  = topenv,
+                glove   = glove,
+                context = context
+            )
 
         if active:
             self.switch(tag)
@@ -348,7 +355,6 @@ class Desk(Singleton):
         """Shortcut to get the tag name of the current active session."""
         return self._current_ticket
 
-
     def switch(self, tag):
         """
         Allows the user to switch to an other session, as long that the actual tag
@@ -366,7 +372,6 @@ class Desk(Singleton):
         else:
             logger.warning('Try to switch to an undefined session: %s', tag)
             return None
-
 
     def sessionstags(self):
         """Returns an alphabeticaly sorted list of sessions tag names."""

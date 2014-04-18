@@ -16,6 +16,7 @@ import footprints
 
 from vortex.autolog import logdefault as logger
 from vortex.syntax.stdattrs import FPList
+from vortex import sessions
 
 criticals = [ 'debug', 'info', 'error', 'warning', 'critical' ]
 
@@ -30,13 +31,28 @@ class Service(footprints.FootprintBase):
     _footprint = dict(
         info = 'Abstract services class',
         attr = dict(
-            kind = dict()
+            kind = dict(),
+            level = dict(
+                optional = True,
+                default  = 'info',
+                values   = criticals,
+            ),
         )
     )
+
+    def __init__(self, *args, **kw):
+        logger.debug('Abstract service init %s', self.__class__)
+        sh = kw.pop('sh', sessions.system())
+        super(Service, self).__init__(*args, **kw)
+        self._sh = sh
 
     @property
     def realkind(self):
         return 'service'
+
+    @property
+    def sh(self):
+        return self._sh
 
     def __call__(self):
         pass
@@ -52,43 +68,38 @@ class MailService(Service):
         info = 'Mail services class',
         attr = dict(
             kind = dict(
-                values = [ 'sendmail' ]
+                values   = ['sendmail'],
             ),
             sender = dict(
                 optional = True,
-                default = '[glove::mail]',
+                default  = '[glove::xmail]',
             ),
             to = dict(
-                alias = ( 'receiver', 'recipients' )
+                alias    = ('receiver', 'recipients')
             ),
             message = dict(
-                alias = ( 'contents', 'body' ),
                 optional = True,
-                default = '',
+                default  = '',
+                alias    = ('contents', 'body'),
             ),
             filename = dict(
                 optional = True,
-                default = None,
+                default  = None,
             ),
             attachments = dict(
-                alias = ( 'files', 'attach' ),
+                type     = FPList,
                 optional = True,
-                type = FPList,
-                default = FPList()
+                default  = FPList(),
+                alias    = ( 'files', 'attach' ),
             ),
             subject = dict(),
             server = dict(
                 optional = True,
-                default = 'localhost',
-            ),
-            level = dict(
-                optional = True,
-                default = 'info',
-                values = criticals,
+                default  = 'localhost',
             ),
             commaspace = dict(
                 optional = True,
-                default = ', '
+                default  = ', '
             )
         )
     )
@@ -102,10 +113,10 @@ class MailService(Service):
         """Returns the internal body contents as a MIMEText object."""
         body = self.message
         if self.filename:
-            tmp = open(self.filename, 'r')
-            body += tmp.read()
-            tmp.close()
-        return MIMEText(body)
+            with open(self.filename, 'r') as tmp:
+                body += tmp.read()
+        mimetext = self.get_mimemap().get('text')
+        return mimetext(body)
 
     def get_mimemap(self):
         try:
@@ -185,21 +196,16 @@ class ReportService(Service):
         info = 'Report services class',
         attr = dict(
             kind = dict(
-                values = [ 'sendreport' ]
+                values   = ['sendreport']
             ),
             sender = dict(
                 optional = True,
-                default = '[glove::user]',
+                default  = '[glove::user]',
             ),
             subject = dict(
                 optional = True,
-                default = 'Test'
+                default  = 'Test'
             ),
-            level = dict(
-                optional = True,
-                default = 'info',
-                values = criticals,
-            )
         )
     )
 
@@ -215,10 +221,10 @@ class FileReportService(ReportService):
         info = 'File Report services class',
         attr = dict(
             kind = dict(
-                values = [ 'sendfilereport' ]
+                values   = ['sendfilereport']
             ),
             file = dict(
-                default = 'info'
+                default  = 'info'
             )
         )
     )

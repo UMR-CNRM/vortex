@@ -9,7 +9,7 @@ system interaction. Systems objects use the :mod:`footprints` mechanism.
 #: No automatic export
 __all__ = []
 
-import os, resource, shutil
+import os, resource, shutil, socket
 import re, platform, sys, io, filecmp, time
 import types
 import glob
@@ -28,7 +28,8 @@ from vortex.tools.net import StdFtp
 from vortex.utilities.structs import History
 
 
-istruedef  = re.compile('on|true|ok', re.IGNORECASE)
+isnonedef  = re.compile('none',         re.IGNORECASE)
+istruedef  = re.compile('on|true|ok',   re.IGNORECASE)
 isfalsedef = re.compile('off|false|ko', re.IGNORECASE)
 
 @nicedeco
@@ -61,29 +62,29 @@ class System(footprints.FootprintBase):
         attr = dict(
             hostname = dict(
                 optional = True,
-                default = platform.node(),
-                alias = ('nodename',)
+                default  = platform.node(),
+                alias    = ('nodename',)
             ),
             sysname = dict(
                 optional = True,
-                default = platform.system(),
+                default  = platform.system(),
             ),
             arch = dict(
                 optional = True,
-                default = platform.machine(),
-                alias = ('machine',)
+                default  = platform.machine(),
+                alias    = ('machine',)
             ),
             release = dict(
                 optional = True,
-                default = platform.release()
+                default  = platform.release()
             ),
             version = dict(
                 optional = True,
-                default = platform.version()
+                default  = platform.version()
             ),
             python = dict(
                 optional = True,
-                default = platform.python_version()
+                default  = platform.python_version()
             )
         )
     )
@@ -168,6 +169,12 @@ class System(footprints.FootprintBase):
                     ' '.join([ str(x) for x in args ])
                 )
             )
+
+    def getfqdn(self, name=None):
+        """Return a fully qualified domain name for ``name``. Default is to check for current ``hostname``."""
+        if name is None:
+            name = self.target().inetname
+        return socket.getfqdn(name)
 
     def pythonpath(self, output=None):
         """Return or print actual ``sys.path``."""
@@ -557,7 +564,7 @@ class OSExtended(System):
         """Property chortcut to clear screen."""
         self.clear()
 
-    def rawopts(self, cmdline=None, defaults=None, istrue=istruedef, isfalse=isfalsedef):
+    def rawopts(self, cmdline=None, defaults=None, isnone=isnonedef, istrue=istruedef, isfalse=isfalsedef):
         """Parse a simple options command line as key=value."""
         opts = dict()
         try:
@@ -574,6 +581,8 @@ class OSExtended(System):
                     opts[k] = True
                 if isfalse.match(v):
                     opts[k] = False
+                if isnone.match(v):
+                    opts[k] = None
         return opts
 
     def ftp(self, hostname, logname=None):
@@ -927,6 +936,7 @@ class OSExtended(System):
         """Clone an object through pickling / unpickling."""
         return pickle.loads(pickle.dumps(obj))
 
+
 class Python26(object):
     """Old fashion features before Python 2.7."""
 
@@ -992,7 +1002,7 @@ class Linux(OSExtended):
         info = 'Linux base system',
         attr = dict(
             sysname = dict(
-                values = [ 'Linux', 'Darwin' ]
+                values = ['Linux', 'Darwin']
             )
         )
     )
@@ -1045,7 +1055,7 @@ class LinuxDebug(Linux27):
         attr = dict(
             version = dict(
                 optional = False,
-                values = [ 'dbug', 'debug' ],
+                values = ['dbug', 'debug'],
                 remap = dict(
                     dbug = 'debug'
                 )

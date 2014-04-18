@@ -86,7 +86,7 @@ class MpiNWPIO(mpitools.MpiServerIO):
         namio.nprocess_level       = self.env.VORTEX_IOSERVER_PROCESS  or 5
 
         if 'VORTEX_IOSERVER_PIOMODEL' in self.env:
-            nam.io.pioprocr_MDL = self.env.VORTEX_IOSERVER_PIOMODEL
+            namio.pioprocr_MDL = self.env.VORTEX_IOSERVER_PIOMODEL
 
         self.system.subtitle('Parallel io namelist')
         print namio.dumps()

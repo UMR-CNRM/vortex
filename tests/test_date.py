@@ -261,7 +261,7 @@ class utTime(TestCase):
         t = t - date.Time(9, 5)
         self.assertEqual(str(t), '00:02')
         t = date.Time(18, 45)
-        self.assertEqual(int(t), 18)
+        self.assertEqual(int(t), 1125)
         t = date.Time(2, 45)
         d = date.Date(2013,4,23,15,30)
         r = d + t

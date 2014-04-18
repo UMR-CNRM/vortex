@@ -43,6 +43,7 @@ def share(**kw):
     """Populate a special shared environment parameters set."""
     shared = param(tag='shared')
     shared.update(kw)
+    return shared
 
 def current():
     """Return current binded :class:`Environment` object."""
@@ -240,7 +241,7 @@ class Environment(object):
 
     def get(self, *args):
         """Simulates the dictionary ``get`` mechanism on the internal pool of variables."""
-        return self._pool.get(*args)
+        return self._pool.get(args[0].upper(), *args[1:])
 
     def iteritems(self):
         return self._pool.iteritems()

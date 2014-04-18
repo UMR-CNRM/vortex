@@ -8,25 +8,28 @@ from vortex.tools.actions import Action, actiond
 
 
 class SendAlarm(Action):
-    r"""
-    Class responsible for sending alarm. You never call this class
-    directly. You must use x :func:`logger`.
+    """
+    Class responsible for sending alarm
     """
 
-    def __init__(self, kind='alarm'):
+    def __init__(self, kind='alarm', service=None, active=True):
         super(SendAlarm, self).__init__(kind)
+
+    def service_info(self, **kw):
+        """Force usage of /dev/log syslog."""
+        kw.setdefault('address', '/dev/log')
+        return super(SendAlarm, self).service_info(**kw)
 
 
 class SendAgt(Action):
-    r"""
-    Class responsible for sending data towards the BDAP machine. You never call this class
-    directly. You must use x :func:`sendbdap`.
+    """
+    Class responsible for sending data towards the BDAP machine.
 
     Arguments:
-        kw (dict): mandatory arguments used to send the data
+     * kw (dict): mandatory arguments used to send the data
     """
 
-    def __init__(self, kind='agt', service='routing'):
+    def __init__(self, kind='agt', service='routing', active=True):
         super(SendAgt, self).__init__(kind)
 
 

@@ -89,10 +89,15 @@ def now():
     td = datetime.datetime.now()
     return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
 
-def atsecond():
+def at_second():
     """Return date just now, with only hours, minutes and seconds."""
     td = datetime.datetime.now()
     return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, 0)
+
+def at_hour():
+    """Return date just now, with only hours."""
+    td = datetime.datetime.now()
+    return Date(td.year, td.month, td.day, td.hour, 0, 0, 0)
 
 def lastround(rh=1, delta=0, base=None):
     """Return date just before ``base`` with a plain hour multiple of ``rh``."""
@@ -102,9 +107,17 @@ def lastround(rh=1, delta=0, base=None):
         base += Period(delta)
     return Date(base.year, base.month, base.day, base.hour - base.hour % rh, 0)
 
-def synop(delta=0, base=None):
+def synop(delta=0, base=None, time=None):
     """Return date associated to the last synoptic hour."""
-    return lastround(6, delta, base)
+    synopdate = lastround(6, delta, base)
+    if time is not None:
+        time = Time(time)
+        if time in [ Time(x) for x in (0, 6, 12, 18) ]:
+            while synopdate.time() != time:
+                synopdate = synopdate - Period('PT6H')
+        else:
+            raise ValueError('Not a synoptic hour: ' + str(hh))
+    return synopdate
 
 def easter(year=None):
     """Return date for easter of the given year
@@ -383,6 +396,7 @@ class Date(datetime.datetime):
         return self.isoformat() + 'Z'
 
     def __str__(self):
+        """Default string representation is iso8601."""
         return self.iso8601()
 
     def dumpshortcut(self):
@@ -407,15 +421,19 @@ class Date(datetime.datetime):
         return self.strftime('%Y%m%d%H%M')
 
     def compact(self):
+        """Compact concatenation of date values, up to the second."""
         return self.strftime('%Y%m%d%H%M%S')
 
     def vortex(self, cutoff='P'):
+        """Semi-compact representation for vortex paths."""
         return self.strftime('%Y%m%dT%H%M') + str(cutoff)[0].upper()
 
     def reallynice(self):
+        """Nice and verbores string representation."""
         return self.strftime("%A %d. %B %Y, at %H:%M:%S")
 
     def shellexport(self):
+        """String representation for shell variable."""
         return self.ymdhm
 
     def __add__(self, delta):
@@ -497,6 +515,10 @@ class Date(datetime.datetime):
             month = self.month
         return calendar.monthrange(year, month)[1]
 
+    def time(self):
+        """Return a :class:`Time` object."""
+        return Time(self.hour, self.minute)
+
 
 class Time(object):
 
@@ -525,7 +547,7 @@ class Time(object):
         elif isinstance(top, float):
             self._hour, self._minute = int(top), int((top-int(top))*60)
         elif isinstance(top, str):
-            ld = [ int(x) for x in re.split('[-:HTZ]+', top) if re.match('\d+$', x) ]
+            ld = [ int(x) for x in re.split('[-:hHTZ]+', top) if re.match('\d+$', x) ]
         else:
             ld = [ int(x) for x in args if type(x) in (int, float) or (isinstance(x, str) and re.match('\d+$', x)) ]
         if ld:
@@ -555,22 +577,30 @@ class Time(object):
         """Nicely formatted representation in dumper."""
         return self.__repr__()
 
+    def shellexport(self):
+        """String representation for shell variable."""
+        return self.__str__()
+
     def __str__(self):
         """Standard hour-minute string."""
         return '{0:02d}:{1:02d}'.format(self.hour, self.minute)
 
     def __int__(self):
-        """Convert to `int`, ie: returns hours."""
-        return self._hour
+        """Convert to `int`, ie: returns hours * 60 + minutes."""
+        return self._hour * 60 + self._minute
 
     def __cmp__(self, other):
         """Compare two Time values or a Time and an int value."""
         try:
-            other = Time(other)
-        except:
+            other = self.__class__(other)
+        except Exception:
             pass
         finally:
             return cmp(str(self), str(other))
+
+    def __rcmp__(self, other):
+        """Commutative comparison."""
+        return self.__cmp__(other)
 
     def __add__(self, delta):
         """

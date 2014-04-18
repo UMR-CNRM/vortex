@@ -22,13 +22,13 @@ def bestdate(day=None, hh=None):
     return date.synop()
 
 
-def getopsetfrompath(sh, path=None):
+def getopsetfrompath(t, path=None):
     """
     Extract from specified or current ``path`` what could be actual
     ``suite``, ``vapp`` and ``vconf`` values.
     """
     if path is None:
-        path = sh.pwd()
+        path = t.sh.pwd()
     lpath = path.split('/')
     if lpath[-1] in ('demo', 'gco', 'genv', 'jobs', 'logs', 'src', 'tasks', 'vortex'):
         lpath.pop()
@@ -38,14 +38,28 @@ def getopsetfrompath(sh, path=None):
 def mkjob(t, **kw):
     """Build a complete job file according to a template and some parameters."""
     opts = dict(
+        python   = '/usr/bin/python',
+        pyopts   = '-u',
         template = 'job.default.tpl',
         inifile  = 'job.default.ini',
-        create   = date.atsecond().iso8601(),
+        create   = date.at_second().iso8601(),
         mkuser   = t.glove.user,
+        mkhost   = t.sh.hostname,
         name     = 'autojob',
+        rundate  = None,
+        runtime  = None,
         wrap     = True,
     )
     opts.update(kw)
+
+    # Try to find default runtime according to jobname
+    if opts['runtime'] is None:
+        jtime = re.search('_t?(\d+(?:[:-h]?\d+)?)', opts['name'], re.IGNORECASE)
+        if jtime:
+            jtime = re.sub('[:-hH]', '', jtime.group(1))
+            if len(jtime) > 2:
+                jtime = jtime[0:-2] + ':' + jtime[-2:]
+            opts['runtime'] = repr(str(date.Time(jtime)))
 
     corejob = load_template(t, opts['template'])
     opts['tplfile'] = corejob.srcfile
@@ -60,9 +74,9 @@ def mkjob(t, **kw):
 
     opts['name'] = re.sub('\.py$', '', opts['name'])
 
-    tplconf = tplconf.get(opts['name'], dict())
+    tplconf = tplconf.get(opts['name'], tplconf.get('void'))
 
-    opset = getopsetfrompath(t.sh)
+    opset = getopsetfrompath(t)
     tplconf.setdefault('suite',   opset.suite)
     tplconf.setdefault('suitebg', opset.suite)
     tplconf.setdefault('vapp',    opset.vapp)
@@ -228,37 +242,3 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     log.close()
 
     return ( increase, details )
-
-
-class Application(object):
-    """
-    Wrapper for setting up and performing a miscellaneous task.
-    The abstract interface is the same as :class:`vortex.layout.nodes.Configuration`.
-    """
-    def __init__(self, t, **kw):
-        self.__dict__.update(kw)
-        self.ticket = t
-
-    def title(self, *args, **kw):
-        """Proxy to :meth:`~vortex.tools.systems.title` method."""
-        return self.ticket.sh.title(*args, **kw)
-
-    def setup(self, **kw):
-        """Abstract method: defines the interaction with vortex env."""
-        pass
-
-    def refill(self, **kw):
-        """Populates the op vortex cache with expected input flow data."""
-        pass
-
-    def build(self, **kw):
-        """Abstract method: fills the configuration contents."""
-        pass
-
-    def process(self, **kw):
-        """Abstract method: perform the taks to do."""
-        pass
-
-    def complete(self, **kw):
-        """Abstract method: post processing before completion."""
-        pass

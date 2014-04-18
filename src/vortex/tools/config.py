@@ -12,7 +12,7 @@ from ConfigParser import SafeConfigParser
 
 from vortex.autolog import logdefault as logger
 
-import env
+from vortex import sessions
 
 def load_template(t, tplfile):
     """
@@ -70,11 +70,11 @@ class GenericConfigParser(object):
         if self.parser is None:
             self.parser = self.clsparser()
         self.file = None
-        local = env.param('shared').system
+        local = sessions.system()
         if local.path.exists(inifile):
             self.file = local.path.abspath(inifile)
         else:
-            glove = env.param('shared').glove
+            glove = sessions.glove()
             persofile = glove.configrc + '/' + local.path.basename(inifile)
             if local.path.exists(persofile):
                 self.file = persofile

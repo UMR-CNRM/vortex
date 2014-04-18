@@ -16,4 +16,5 @@ automodule documentation.
    
    git
    source
+   vortexify
    environment
