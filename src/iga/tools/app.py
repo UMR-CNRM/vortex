@@ -37,6 +37,7 @@ class ConfigSet(object):
             v = v.replace(' ', '').split(',')
         return v
 
+
 class Application(object):
     """
     Wrapper for setting up and performing a miscellaneous task.
@@ -56,6 +57,8 @@ class Application(object):
         )
         self.__dict__.update(kw)
         self.ticket = t
+        if type(self.steps) is str:
+            self.steps = tuple(self.steps.split(','))
         self.conf.update(read_config(self.iniconf).get(self.tag))
         for kr in self.conf.as_list('as_range'):
             setattr(self.conf, kr, rangex(getattr(self.conf, kr)))
@@ -119,7 +122,7 @@ class Application(object):
             elif int(self.env.get('SLURM_NPROCS', 1)) > 1:
                 self.steps = (self.fetch, self.compute)
             else:
-                self.steps = tuple(kw.pop('args', [self.fetch]))
+                self.steps = tuple(kw.pop('args', [ self.fetch ]))
         self.header('Active Steps: ' + ' '.join(self.steps))
 
     def refill(self, **kw):
@@ -137,5 +140,4 @@ class Application(object):
     def complete(self):
         """Abstract method: post processing before completion."""
         pass
-
 

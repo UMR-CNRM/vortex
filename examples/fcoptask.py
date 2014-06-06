@@ -21,12 +21,14 @@ class Forecast(app.Application):
         self.subtitle('Experiment Setup')
         self.conf.update(kw)
 
-        print 'FC term =', self.conf.fc_term, '/ FP terms =', self.conf.fp_terms
+        print 'FC term  =', self.conf.fc_term
+        print 'FC terms =', self.conf.fc_terms
+        print 'FP terms =', self.conf.fp_terms
 
-        geomodel = vortex.data.geometries.getbyname(self.conf.fc_geometry, 'globalsp'))
+        geomodel = vortex.data.geometries.getbyname(self.conf.fc_geometry)
 
-        print 'GEOMETRY OBJ =', geomodel
-        print 'BDAP DOMAINS =', self.conf.fp_domains
+        print 'FC MODEL GEOMETRY =', geomodel
+        print 'FC BDAP DOMAINS   =', self.conf.fp_domains
 
         # Attributs par défaut pour toutes les résolutions d'empreintes à suivre.
         toolbox.defaults(
@@ -89,6 +91,8 @@ class Forecast(app.Application):
 
     def process(self):
         """Core processing of a forecast experiment."""
+
+        t = self.ticket
 
         if self.fetch in self.steps:
 
@@ -230,7 +234,7 @@ class Forecast(app.Application):
                 # resource
                     # implicit: model
                     # optional: clscontents, compiler, gvar, jacket, nativefmt, static
-                kind='ifsmodel',
+                kind        = 'ifsmodel',
             )
 
         #--------------------------------------------------------------------------------------------------
@@ -249,7 +253,7 @@ class Forecast(app.Application):
                 engine      = 'parallel',
                 kind        = 'forecast',
                 fcterm      = self.conf.fc_term,
-                timestep=514.286
+                timestep    = 514.286
             )
 
             # L'exécution se fait en passant en premier argument le premier binaire récupéré auparavant.
@@ -257,8 +261,8 @@ class Forecast(app.Application):
             # qu'il n'y en a qu'un !
 
             fcalgo.run(
-                i_bin[0],                           # Le binaire arpege donc !
-                mpiopts = dict(nn=21, nnp=4)        # Les options à passer au lanceur mpi
+                i_bin[0],
+                mpiopts = dict(nn=t.env.SLURM_NNODES, nnp=4)
             )
 
         #--------------------------------------------------------------------------------------------------

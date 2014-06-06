@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.8.15'
+__version__ = '0.8.16'
 
 import re
 import copy
@@ -28,6 +28,7 @@ import dump, observers, priorities, reporting, util
 UNKNOWN = '__unknown__'
 replattr = re.compile(r'\[(\w+)(?:\:+(\w+))?(?:\#(\w+))?\]')
 
+# Footprint exceptions
 
 class FootprintException(Exception):
     pass
@@ -43,6 +44,49 @@ class FootprintFatalError(FootprintException):
 
 class FootprintInvalidDefinition(FootprintException):
     pass
+
+# Special derivated builtins to be used as attributes in footprints descriptions
+
+class FPDict(dict):
+    """A dict type for FootPrints arguments (without expansion)."""
+    def __hash__(self):
+        return hash(tuple(self.items()))
+
+class FPList(list):
+    """A list type for FootPrints arguments (without expansion)."""
+
+    def __init__(self, *args):
+        list.__init__(self, args)
+
+    def __hash__(self):
+        return hash(tuple(self))
+
+    def items(self):
+        return self[:]
+
+class FPSet(set):
+    """A set type for FootPrints arguments (without expansion)."""
+
+    def __init__(self, *args):
+        set.__init__(self, args)
+
+    def __hash__(self):
+        return hash(tuple(self))
+
+    def items(self):
+        return list(self)
+
+class FPTuple(tuple):
+    """A tuple type for FootPrints arguments (without expansion)."""
+
+    def __new__(cls, *args):
+        return tuple.__new__(cls, args)
+
+    def items(self):
+        return list(self)
+
+
+# Shortcuts to priorities settings
 
 def set_before(priorityref, *args):
     """Set `args` priority before specified `priorityref'."""
@@ -149,6 +193,7 @@ class FootprintSetup(object):
 
 
 setup = FootprintSetup(docstring=False)
+
 
 class Collector(util.Catalog):
     """
@@ -581,7 +626,7 @@ class Footprint(object):
             if k in param:
                 guess[k] = param[k]
                 inputattr.add(k)
-            if k in desc:
+            if k in desc and not ( kdef['optional'] and desc[k] is None ):
                 guess[k] = desc[k]
                 inputattr.add(k)
                 logger.debug(' > Attr %s in description : %s', k, desc[k])

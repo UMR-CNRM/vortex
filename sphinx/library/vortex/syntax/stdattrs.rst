@@ -60,8 +60,3 @@ Class attributes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-.. autoclass:: FPList
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical

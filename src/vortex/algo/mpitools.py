@@ -13,7 +13,6 @@ import re, shlex
 
 import footprints
 from vortex.tools import env 
-from vortex.syntax.stdattrs import FPList
 from vortex.autolog import logdefault as logger
 
 
@@ -62,8 +61,8 @@ class MpiTool(footprints.FootprintBase):
             ),
             basics = dict(
                 optional = True,
-                type = FPList,
-                default = FPList('system', 'env', 'target', 'context')
+                type = footprints.FPList,
+                default = footprints.FPList('system', 'env', 'target', 'context')
             )
         )
     )

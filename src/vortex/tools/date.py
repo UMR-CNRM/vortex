@@ -429,7 +429,7 @@ class Date(datetime.datetime):
         return self.strftime('%Y%m%dT%H%M') + str(cutoff)[0].upper()
 
     def reallynice(self):
-        """Nice and verbores string representation."""
+        """Nice and verbose string representation."""
         return self.strftime("%A %d. %B %Y, at %H:%M:%S")
 
     def shellexport(self):

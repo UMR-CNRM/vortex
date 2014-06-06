@@ -567,16 +567,17 @@ class OSExtended(System):
     def rawopts(self, cmdline=None, defaults=None, isnone=isnonedef, istrue=istruedef, isfalse=isfalsedef):
         """Parse a simple options command line as key=value."""
         opts = dict()
-        try:
-            opts.update(defaults)
-        except Exception as pb:
-            logger.warning('Could not update options default: %s', defaults)
+        if defaults:
+            try:
+                opts.update(defaults)
+            except Exception as pb:
+                logger.warning('Could not update options default: %s', defaults)
 
         if cmdline is None:
             cmdline = sys.argv[1:]
         opts.update( dict([ x.split('=') for x in cmdline ]) )
         for k, v in opts.iteritems():
-            if v is not None:
+            if v not in (None, True, False):
                 if istrue.match(v):
                     opts[k] = True
                 if isfalse.match(v):

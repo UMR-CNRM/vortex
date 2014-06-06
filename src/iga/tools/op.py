@@ -5,6 +5,7 @@
 __all__ = []
 
 import re
+from tempfile import mkdtemp
 
 from iga.utilities import swissknife
 
@@ -52,7 +53,7 @@ def setup(**kw):
 
     # Define the actual running directory
     t.sh.subtitle('Switch to rundir')
-    t.env.RUNDIR = kw.get('rundir', t.env.TMPDIR + '/default')
+    t.env.RUNDIR = kw.get('rundir', mkdtemp(prefix=t.glove.tag + '-'))
     t.sh.cd(t.env.RUNDIR, create=True)
     t.sh.pwd(output=False)
 
@@ -80,7 +81,7 @@ def setenv(t, **kw):
     t.sh.header('SLURM Env')
     nb_slurm = 0
     for envslurm in sorted([ x for x in t.env.keys() if x.startswith('SLURM') ]):
-        print '{0:s}="{1:s}"'.format(envslurm, e[envslurm])
+        print '{0:s}="{1:s}"'.format(envslurm, t.env[envslurm])
         nb_slurm += 1
     print 'Looking for automatic batch variables:', nb_slurm, 'found.'
 

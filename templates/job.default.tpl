@@ -50,7 +50,8 @@ from $package import $task as todo
 try:
     t = op.setup(actual=oplocals)
     e = op.setenv(t, actual=oplocals)
-    for app in todo.setup(t, play=op_fullplay, args=sys.argv[1:]):
+    opts = t.sh.rawopts(defaults=dict(play=op_fullplay))
+    for app in todo.setup(t, **opts):
         app.title(name=op_jobname)
         app.run()
     op.complete(t)

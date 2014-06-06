@@ -18,7 +18,6 @@ from vortex.tools.date import Date
 
 
 class Analysis(common.data.modelstates.Analysis):
-    
     _footprint = dict(
         info = 'Atmospheric Analysis',
         attr = dict(
