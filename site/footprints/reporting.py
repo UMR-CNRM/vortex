@@ -142,13 +142,13 @@ class FootprintLogCollector(FootprintLogEntry):
 
     def as_flat(self, **kw):
         """Feed a :class:`FlatReport` according to the order specified."""
-        fr = FlatReport(**kw)
+        flat = FlatReport(**kw)
         for kid in self:
             for item in kid:
                 info = item.copy()
                 info['attribute'] = info.pop('name')
-                fr.add(focus=kid.name, **info)
-        return fr
+                flat.add(focus=kid.name, **info)
+        return flat
 
     def lightdump(self, **kw):
         """Pseudo structured dump of the current collector item report."""
