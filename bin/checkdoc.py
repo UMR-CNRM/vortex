@@ -19,7 +19,8 @@ print ' > Options:', opts
 from vortex.utilities.introspection import Sherlock
 intro = Sherlock()
 
-def rstcreate(rstf, mname, m):
+
+def rstcreate(rstf, modname):
     print ' > Creating', rstf
     header = ':mod:`' + modname + '` --- TODO Module Header'
     newdoc = [
@@ -49,6 +50,7 @@ def rstcreate(rstf, mname, m):
                 print docline
     return sh.path.exists(rstf) and sh.size(rstf) > 100
 
+
 def rstfind(pattern, lines):
     return bool([x for x in lines if re.search(pattern, x) ])
 
@@ -63,15 +65,15 @@ report = dict(
 print '=' * 80
 print 'MODULES REVIEW'
 
-for modname, loaded in sh.vortex_loaded_modules():
+for modulename, loaded in sh.vortex_loaded_modules():
     print '---'
     if not loaded:
-        sh.import_module(modname)
-    m = sys.modules[modname]
+        sh.import_module(modulename)
+    m = sys.modules[modulename]
     rst = intro.rstfile(m)
     rstloc = intro.rstshort(rst)
     okdoc = sh.path.exists(rst)
-    print modname, '(', 'loaded:', loaded, '/', 'doc:', okdoc, ')'
+    print modulename, '(', 'loaded:', loaded, '/', 'doc:', okdoc, ')'
 
     if opts['verbose']:
         print ' >', m.__file__
@@ -80,7 +82,7 @@ for modname, loaded in sh.vortex_loaded_modules():
     if not okdoc:
         if opts['mkrst']:
             report['mkrst'].append(rstloc)
-            okdoc = rstcreate(rst, modname, m)
+            okdoc = rstcreate(rst, modulename)
 
     if okdoc:
         rstinfo = list()
@@ -94,16 +96,16 @@ for modname, loaded in sh.vortex_loaded_modules():
     for objname, objptr1 in intro.getlocalmembers(m).iteritems():
         thedoc = inspect.getdoc(objptr1)
         if not thedoc:
-            report['miss'].append(modname + ': ' + objname)
+            report['miss'].append(modulename + ': ' + objname)
         elif re.search('docstring|todo', thedoc, re.IGNORECASE):
-            report['quid'].append(modname + ': ' + objname)
+            report['quid'].append(modulename + ': ' + objname)
         if inspect.isclass(objptr1):
             for objmeth, objptr2 in intro.getlocalmembers(objptr1, m).iteritems():
                 thedoc = inspect.getdoc(objptr2)
                 if not thedoc:
-                    report['miss'].append(modname + ': ' + objname + '.' + objmeth)
+                    report['miss'].append(modulename + ': ' + objname + '.' + objmeth)
                 elif re.search('docstring|todo', thedoc, re.IGNORECASE):
-                    report['quid'].append(modname + ': ' + objname + '.' + objmeth)
+                    report['quid'].append(modulename + ': ' + objname + '.' + objmeth)
 
 for k, v in sorted(report.iteritems()):
     print '=' * 80
