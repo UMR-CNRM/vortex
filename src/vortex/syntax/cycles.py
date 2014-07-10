@@ -14,7 +14,7 @@ class Cycle(object):
     Could be optimised in order to compile the re only when requested.
     """
 
-    def __init__(self, regexp='.', option=re.IGNORECASE, tag='default'):
+    def __init__(self, regexp=r'.', option=re.IGNORECASE, tag='default'):
         self.cstate = (regexp, option)
         self.tag = str(tag)
         self._recomp = None
@@ -57,10 +57,10 @@ class Cycle(object):
 
 
 #: Default regular expression to evaluate if a given cycle could be operational or not.
-oper = Cycle(regexp='^(?:cy)?\d{2}t\d_.*op\d+(?:\.\d+)?', tag='oper')
+oper = Cycle(regexp=r'^(?:cy)?\d{2}t\d_.*op\d+(?:\.\d+)?', tag='oper')
 
 #: Default regular expression to evaluate if a given cycle could be a bugfix or not.
-bugfix = Cycle(regexp='^(?:cy)?\d{2}(?:t\d+)?_.*bf(?:\.\d+)?\b', tag='bugfix')
+bugfix = Cycle(regexp=r'^(?:cy)?\d{2}(?:t\d+)?_.*bf(?:\.\d+)?\b', tag='bugfix')
 
 #: Ordered and formatted list of cycles numbers.
 maincycles = [ '{0:02d}'.format(x) for x in range(36, 42) ]
@@ -68,14 +68,17 @@ maincycles = [ '{0:02d}'.format(x) for x in range(36, 42) ]
 #: List of subcycles extensions, such as ``_bf`` or ``t1_op``.
 subcycles = [ '', '_bf', 't1', 't1_bf', 't1_op1', 't1_op2', 't2', 't2_bf', 't2_op1', 't2_op2' ]
 
+
 def monocycles():
     """Returns a sorted list combining of :data:`maincycles` and :data:`subcycles`."""
     return sorted([ str(x) + y for y in subcycles for x in maincycles ])
 
+
 def defined():
     """Returns the cycles-regular expressions currently defined in the namespace of the module."""
     myself = globals()
-    return filter(lambda x: re.match('cy\d{2}', x), myself.keys())
+    return filter(lambda x: re.match(r'cy\d{2}', x), myself.keys())
+
 
 def generate():
     """
@@ -88,6 +91,6 @@ def generate():
         del myself[k]
     for c in monocycles():
         cytag = 'cy' + c
-        myself[cytag] = Cycle(regexp='^(?:cy)?'+c+'(?:\.\d+)?$', tag=cytag)
+        myself[cytag] = Cycle(regexp=r'^(?:cy)?' + c + r'(?:\.\d+)?$', tag=cytag)
 
 generate()

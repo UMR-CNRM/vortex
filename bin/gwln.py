@@ -16,11 +16,11 @@ except:
     print "Gateway link arg: Something weird in arguments"
     exit(1)
 
-if ( re.search('[^\w\.\-]', source, re.IGNORECASE) ):
+if re.search(r'[^\w\.\-]', source, re.IGNORECASE):
     print "Gateway link arg: Source argument badly formatted"
     exit(1)
 
-if ( re.search('[^\w\.\-]', target, re.IGNORECASE) ):
+if re.search(r'[^\w\.\-]', target, re.IGNORECASE):
     print "Gateway link arg: Target argument badly formatted"
     exit(1)
 

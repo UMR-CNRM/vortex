@@ -213,7 +213,7 @@ class NamTerm(Namelist):
     def incoming_xxt_fixup(self, attr, key=None, prefix=None):
         """Fix as best as possible the ``xxt.def`` file."""
 
-        regex = re.compile(',(.*)$')
+        regex = re.compile(r',(.*)$')
         myenv = env.current()
         suffix = regex.search(myenv.VORTEX_XXT_DEF)
         if suffix:
@@ -229,15 +229,15 @@ class NamTerm(Namelist):
 
         select = lines[self.term.hour].split()[2]
 
-        if not re.match('undef', select):
+        if not re.match(r'undef', select):
             if fp:
-                rgx = re.compile(key + '(.*)$')
+                rgx = re.compile(key + r'(.*)$')
                 sfx = rgx.search(select)
                 if sfx:
                     s = sfx.group(1)
                 else:
                     s = ''
-                return ''.join((key,'_', fp, s))
+                return ''.join((key, '_', fp, s))
             else:
                 return select
         else:
@@ -247,9 +247,9 @@ class NamTerm(Namelist):
         """Fix as best as possible the namelist term extensions."""
 
         val = getattr(self, attr)
-        r1 = re.compile('^(.*\/)?(' + key + '.*_fp|cpl)$')
-        r2 = re.compile('^(.*\/)?(' + key + '.*_fp)(\..*)$')
-        r3 = re.compile('^(.*\/)?(' + key + '.*_p)$')
+        r1 = re.compile(r'^(.*\/)?(' + key + r'.*_fp|cpl)$')
+        r2 = re.compile(r'^(.*\/)?(' + key + r'.*_fp)(\..*)$')
+        r3 = re.compile(r'^(.*\/)?(' + key + r'.*_p)$')
 
         fixed = 0
 

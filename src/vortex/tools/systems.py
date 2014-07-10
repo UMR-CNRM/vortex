@@ -28,9 +28,10 @@ from vortex.tools.net import StdFtp
 from vortex.utilities.structs import History
 
 
-isnonedef  = re.compile('none',         re.IGNORECASE)
-istruedef  = re.compile('on|true|ok',   re.IGNORECASE)
-isfalsedef = re.compile('off|false|ko', re.IGNORECASE)
+isnonedef  = re.compile(r'none',         re.IGNORECASE)
+istruedef  = re.compile(r'on|true|ok',   re.IGNORECASE)
+isfalsedef = re.compile(r'off|false|ko', re.IGNORECASE)
+
 
 @nicedeco
 def fmtshcmd(func):
@@ -358,12 +359,12 @@ class System(footprints.FootprintBase):
         """Return a filtered list of modules in the vortex package."""
         g = self.env.glove
         mfiles = [
-            re.sub('^' + mroot + '/', '', x)
+            re.sub(r'^' + mroot + r'/', '', x)
             for mroot in (g.siteroot + '/src', g.siteroot + '/site')
             for x in self.ffind(mroot)
         ]
         return [
-            re.sub('(?:\/__init__)?\.py$', '', x).replace('/', '.')
+            re.sub(r'(?:\/__init__)?\.py$', '', x).replace('/', '.')
             for x in mfiles if ( not x.startswith('.' ) and re.search(only, x, re.IGNORECASE) and x.endswith('.py') )
         ]
 

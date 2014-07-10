@@ -26,7 +26,7 @@ logger = logging.getLogger('footprints')
 import dump, observers, priorities, reporting, util
 
 UNKNOWN = '__unknown__'
-replattr = re.compile(r'\[(\w+)(?:\:+(\w+))?(?:\#(\w+))?\]')
+replattr = re.compile(r'\[(\w+)(?::+(\w+))?(?:#(\w+))?\]')
 
 # Footprint exceptions
 

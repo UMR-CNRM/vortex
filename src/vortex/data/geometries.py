@@ -102,7 +102,7 @@ class HGeometry(object):
             res = '{0:05.2f}'.format(self.resolution)
         else:
             res = '{0:06.3f}'.format(self.resolution)
-        return re.sub('\.', self.runit, res, 1)
+        return re.sub(r'\.', self.runit, res, 1)
 
     def anonymous_info(self, *args):
         """Try to build a meaningful information from an anonymous geometry."""

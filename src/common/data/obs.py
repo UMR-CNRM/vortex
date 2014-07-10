@@ -46,25 +46,24 @@ class Observations(GeoFlowResource):
         """OLIVE specific naming convention."""
         fmt = self.nativefmt
 
-        if re.match('^ascii$', fmt) :
+        if re.match(r'^ascii$', fmt):
             return '_'.join(('ascii', self.stage, self.part))
-        elif re.match('^obsoul$', fmt) :
+        elif re.match(r'^obsoul$', fmt):
             return '_'.join(('obsoul', self.stage, self.part))
-        elif re.match('^grib$', fmt) :
+        elif re.match(r'^grib$', fmt):
             return '_'.join(('obsgrib', self.stage, self.part))
-        elif re.match('^bufr$', fmt) :
+        elif re.match(r'^bufr$', fmt):
             return '_'.join(('obsbufr', self.stage, self.part))
-        elif re.match('^odb$', fmt) and re.match('raw', self.stage) :
+        elif re.match(r'^odb$', fmt) and re.match('raw', self.stage):
             return '_'.join(('ecma', self.stage, self.part)) + '.tar'
-        elif re.match('^odb$', fmt) :
+        elif re.match(r'^odb$', fmt):
             return '_'.join(('ecmascr', self.stage, self.part)) + '.tar'
-        elif re.match('^odb\/split$', fmt) :
+        elif re.match(r'^odb\/split$', fmt):
             return '_'.join(('ecma', self.stage, self.part)) + '.tar'
-        elif re.match('^odb\/compressed', fmt) :
+        elif re.match(r'^odb\/compressed', fmt):
             return '_'.join(('ccma', self.stage, self.part)) + '.tar'
-        else :
+        else:
             logger.error('No olive basename defined for such observations format %s', fmt)
-
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
@@ -72,31 +71,32 @@ class Observations(GeoFlowResource):
         part = self.part
         stage = self.stage
 
-        if re.match('^(?:bufr|obsoul|grib)$', fmt) and part != 'full' and stage == 'void':
+        if re.match(r'^(?:bufr|obsoul|grib)$', fmt) and part != 'full' and stage == 'void':
             return '.'.join((fmt, part))
-        elif re.match('^obsoul$', fmt) and part == 'full' and stage == 'void':
+        elif re.match(r'^obsoul$', fmt) and part == 'full' and stage == 'void':
             return 'obsoul'
-        elif re.match('^odb$', fmt) and part == 'full' and stage == 'void':
+        elif re.match(r'^odb$', fmt) and part == 'full' and stage == 'void':
             return 'ecmascr.tar'
-        elif re.match('^odb', fmt) and part == 'full' and stage == 'screen':
+        elif re.match(r'^odb', fmt) and part == 'full' and stage == 'screen':
             return 'odb_screen.tar'
-        elif re.match('^odb', fmt) and re.match('^(?:altitude|mix|full)$', part) and stage == 'traj':
-            return  'odb_traj.tar'
-        elif re.match('^odb', fmt) and re.match('^(?:altitude|mix|full)$', part) and stage == 'min ' and self.model == 'aladin':
-            return  'odb_cpl.tar'
-        elif re.match('^odb', fmt) and re.match('^(?:altitude|mix|full)$', part) and stage == 'complete':
-            return  'odb_cpl.tar'
-        elif re.match('^odb', fmt) and part == 'ground' and stage == 'cans':
+        elif re.match(r'^odb', fmt) and re.match(r'^(?:altitude|mix|full)$', part) and stage == 'traj':
+            return 'odb_traj.tar'
+        elif re.match(r'^odb', fmt) and re.match(r'^(?:altitude|mix|full)$', part) \
+                and stage == 'min' and self.model == 'aladin':
+            return 'odb_cpl.tar'
+        elif re.match(r'^odb', fmt) and re.match(r'^(?:altitude|mix|full)$', part) and stage == 'complete':
+            return 'odb_cpl.tar'
+        elif re.match(r'^odb', fmt) and part == 'ground' and stage == 'cans':
             return 'odb_canari.tar'
-        else :
-            logger.error('No archive basename defined for such observations (format=%s, part=%s, stage=%s)', fmt, part, stage)
-
+        else:
+            logger.error('No archive basename defined for such observations (format=%s, part=%s, stage=%s)',
+                         fmt, part, stage)
 
     def archive_urlquery(self):
         """OP ARCHIVE special query for odb case."""
         if re.match('^odb', self.nativefmt):
             return 'extract=all'
-        else :
+        else:
             return ''
 
 

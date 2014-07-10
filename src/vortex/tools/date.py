@@ -358,9 +358,10 @@ class Date(datetime.datetime):
             ld = [ top.year, top.month, top.day, top.hour, top.minute, top.second ]
         elif isinstance(top, str):
             (top, u_sep, delta) = top.partition('/')
-            ld = [ int(x) for x in re.split('[-:HTZ]+', mkisodate(top)) if re.match('\d+$', x) ]
+            ld = [ int(x) for x in re.split('[-:HTZ]+', mkisodate(top)) if re.match(r'\d+$', x) ]
         else:
-            ld = [ int(x) for x in args if type(x) in (int, float) or (isinstance(x, str) and re.match('\d+$', x)) ]
+            ld = [ int(x) for x in args if type(x) in (int, float) or (isinstance(x, str) and
+                                                                       re.match(r'\d+$', x)) ]
         if not ld:
             raise ValueError("Initial Date value unknown")
         newdate = datetime.datetime.__new__(cls, *ld)
@@ -547,9 +548,11 @@ class Time(object):
         elif isinstance(top, float):
             self._hour, self._minute = int(top), int((top-int(top))*60)
         elif isinstance(top, str):
-            ld = [ int(x) for x in re.split('[-:hHTZ]+', top) if re.match('\d+$', x) ]
+            ld = [ int(x) for x in re.split('[-:hHTZ]+', top) if re.match(r'\d+$', x) ]
         else:
-            ld = [ int(x) for x in args if type(x) in (int, float) or (isinstance(x, str) and re.match('\d+$', x)) ]
+            ld = [ int(x) for x in args
+                   if type(x) in (int, float)
+                   or (isinstance(x, str) and re.match(r'\d+$', x)) ]
         if ld:
             if len(ld) < 2:
                 ld.append(0)

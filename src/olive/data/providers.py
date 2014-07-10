@@ -115,10 +115,10 @@ class OpArchive(Provider):
 
     def basename(self, resource):
         bname = resource.basename(self.realkind)
-        sublist = re.findall('\(\w+\:\w+\)|\(\w+\)', bname)
+        sublist = re.findall(r'\(\w+\:\w+\)|\(\w+\)', bname)
         for i in sublist:
-            s1 = re.sub('\(|\)', '', i)
-            mobj = re.match('(\w+):(\w+)', s1)
+            s1 = re.sub(r'\(|\)', '', i)
+            mobj = re.match(r'(\w+):(\w+)', s1)
             if mobj:
                 entry = mobj.group(1)
                 keyattr = mobj.group(2)
@@ -157,19 +157,19 @@ class OpArchive(Provider):
         dd = '{0:02d}'.format(rdate.day)
         rr = 'r{0:d}'.format(rdate.hour)
 
-        if self.member != None :
-            run =  'RUN' + "%d" % self.member
-            if re.match('pearp',self.igakey) and resource.realkind == 'gridpoint':
-                    return '/'.join((self.igakey, self.suite, dd, rr)) 
+        if self.member is not None:
+            run = 'RUN' + "%d" % self.member
+            if re.match(r'pearp', self.igakey) and resource.realkind == 'gridpoint':
+                    return '/'.join((self.igakey, self.suite, dd, rr))
             else:
                 return '/'.join((self.igakey, self.suite, rinfo['cutoff'], yyyy, mm, dd, rr, run )) 
         else:
-            if re.match('arpege|arome|aearp', self.igakey):
+            if re.match(r'arpege|arome|aearp', self.igakey):
                 return '/'.join((self.igakey, self.suite, rinfo['cutoff'], yyyy, mm, dd, rr ))
             else:
-                if re.match('testms1|testmp1', self.igakey):
-                    return '/'.join((self.igakey, dd, rr )) 
-                elif re.match('mocage',self.igakey):
+                if re.match(r'testms1|testmp1', self.igakey):
+                    return '/'.join((self.igakey, dd, rr ))
+                elif re.match(r'mocage', self.igakey):
                     return '/'.join((self.igakey, dd))
                 else:
                     return '/'.join((self.igakey, self.suite, rinfo['cutoff'], yyyy, mm, dd, rr ))

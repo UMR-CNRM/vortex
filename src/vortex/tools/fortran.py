@@ -56,12 +56,13 @@ _POWER_OP  = "[*][*]"
 _MULT_OP   = "[*/]"
 _ADD_OP    = "[+-]"
 _CONCAT_OP = "[/][/]"
-_REL_OP    = "\.EQ\.|\.NE\.|\.LT\.|\.GT\.|\.GE\.|[=][=]|[/][=]|[<]|[<][=]|[>]|[>][=]"
-_NOT_OP    = "\.NOT\."
-_AND_OP    = "\.AND\."
-_OR_OP     = "\.OR\."
-_EQUIV_OP  = "\.EQV\.|\.NEQV\."
-_INTRINSIC_OPERATOR = '|'.join((_POWER_OP, _MULT_OP, _ADD_OP, _CONCAT_OP, _REL_OP, _NOT_OP, _AND_OP, _OR_OP, _EQUIV_OP))
+_REL_OP    = r"\.EQ\.|\.NE\.|\.LT\.|\.GT\.|\.GE\.|[=][=]|[/][=]|[<]|[<][=]|[>]|[>][=]"
+_NOT_OP    = r"\.NOT\."
+_AND_OP    = r"\.AND\."
+_OR_OP     = r"\.OR\."
+_EQUIV_OP  = r"\.EQV\.|\.NEQV\."
+_INTRINSIC_OPERATOR = '|'.join((_POWER_OP, _MULT_OP, _ADD_OP, _CONCAT_OP, _REL_OP, _NOT_OP,
+                                _AND_OP, _OR_OP, _EQUIV_OP))
 
 # Labels
 _LABEL = _DIGIT + "{1,5}"
@@ -84,25 +85,34 @@ _HEX_CONSTANT         = "Z" + "(?:'|\")" + _HEX_DIGIT + "+" + "(?:'|\")"
 _BOZ_LITERAL_CONSTANT = "(?:" + _BINARY_CONSTANT + "|" + _OCTAL_CONSTANT + "|" + _HEX_CONSTANT + ")"
 
 # Real
-_SIGNIFICAND                  = "(?:" + _DIGIT_STRING + "\." + "(?:" + _DIGIT_STRING +")?" + "|" + "\." + _DIGIT_STRING + ")"
+_SIGNIFICAND                  = "(?:" + _DIGIT_STRING + r"\." + "(?:" + _DIGIT_STRING + ")?" + \
+                                "|" + r"\." + _DIGIT_STRING + ")"
 _EXPONENT_LETTER              = "[DE]"
 _EXPONENT                     = _SIGNED_DIGIT_STRING
-_REAL_LITERAL_CONSTANT        = "(?:" + _SIGNIFICAND + "(?:" + _EXPONENT_LETTER + _EXPONENT + ")?" + "(?:_" + _KIND_PARAM + ")?" + "|" + _DIGIT_STRING + _EXPONENT_LETTER + _EXPONENT + "(?:_" + _KIND_PARAM + ")?" + ")"
+_REAL_LITERAL_CONSTANT        = "(?:" + _SIGNIFICAND + "(?:" + _EXPONENT_LETTER + _EXPONENT + \
+                                ")?" + "(?:_" + _KIND_PARAM + ")?" + "|" + _DIGIT_STRING +    \
+                                _EXPONENT_LETTER + _EXPONENT + "(?:_" + _KIND_PARAM + ")?" + ")"
 _SIGNED_REAL_LITERAL_CONSTANT = _SIGN + "?" + _REAL_LITERAL_CONSTANT
 
 # Complex
-_REAL_PART                = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + _SIGNED_REAL_LITERAL_CONSTANT + ")"
-_IMAG_PART                = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + _SIGNED_REAL_LITERAL_CONSTANT + ")"
+_REAL_PART                = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + \
+                            _SIGNED_REAL_LITERAL_CONSTANT + ")"
+_IMAG_PART                = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + \
+                            _SIGNED_REAL_LITERAL_CONSTANT + ")"
 _COMPLEX_LITERAL_CONSTANT = "[(]" + _REAL_PART + "," + _IMAG_PART + "[)]"
 
 # Character
-_CHAR_LITERAL_CONSTANT = "(?:" + "(?:" + _KIND_PARAM + "_)?" + "'[^']*'" + "|" + "(?:" + _KIND_PARAM + "_)?" + "\"[^\"]*\"" + ")"
+_CHAR_LITERAL_CONSTANT = "(?:" + "(?:" + _KIND_PARAM + "_)?" + "'[^']*'" + "|" + "(?:" + \
+                         _KIND_PARAM + "_)?" + "\"[^\"]*\"" + ")"
 
 # Logical
-_LOGICAL_LITERAL_CONSTANT = "(?:" + "\.TRUE\." + "(?:_" + _KIND_PARAM + ")?" + "|" + "\.FALSE\." + "(?:_" + _KIND_PARAM + ")?" + ")"
+_LOGICAL_LITERAL_CONSTANT = "(?:" + r"\.TRUE\." + "(?:_" + _KIND_PARAM + ")?" + "|" + \
+                            r"\.FALSE\." + "(?:_" + _KIND_PARAM + ")?" + ")"
 
 # Constants
-_LITERAL_CONSTANT = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + _BOZ_LITERAL_CONSTANT + "|" + _SIGNED_REAL_LITERAL_CONSTANT + "|" + _COMPLEX_LITERAL_CONSTANT + "|" + _CHAR_LITERAL_CONSTANT + "|" + _LOGICAL_LITERAL_CONSTANT + ")"
+_LITERAL_CONSTANT = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + _BOZ_LITERAL_CONSTANT + "|" + \
+                    _SIGNED_REAL_LITERAL_CONSTANT + "|" + _COMPLEX_LITERAL_CONSTANT + "|" + \
+                    _CHAR_LITERAL_CONSTANT + "|" + _LOGICAL_LITERAL_CONSTANT + ")"
 
 
 class LiteralParser(object):
@@ -115,8 +125,8 @@ class LiteralParser(object):
             re_complex   = '^' + _COMPLEX_LITERAL_CONSTANT + '$',
             re_character = '^' + _CHAR_LITERAL_CONSTANT + '$',
             re_logical   = '^' + _LOGICAL_LITERAL_CONSTANT + '$',
-            re_true      = '\.T(?:RUE)?\.',
-            re_false     = '\.F(?:ALSE)?\.',
+            re_true      = r'\.T(?:RUE)?\.',
+            re_false     = r'\.F(?:ALSE)?\.',
         ):
         self._re_flags     = re_flags
         self._re_integer   = re_integer
@@ -492,20 +502,20 @@ class NamelistSet(object):
     def as_dict(self):
         return self._namset
 
+
 class NamelistParser(object):
 
     def __init__(self,
-        literal  = LiteralParser(),
-        macros = None,
-        re_flags = None,
-        re_clean = "^(\s+|![^\n]*\n)",
-        re_block = r'&.*/',
-        re_bname = _NAME,
-        re_entry = _LETTER + '[ A-Z0-9_,\%\(\):]*' + "(?=\s*=)",
-        re_macro = _LETTER + '+',
-        re_endol = "(?=\s*(,|/|\n))",
-        re_comma = "\s*,"
-        ):
+                 literal  = LiteralParser(),
+                 macros = None,
+                 re_flags = None,
+                 re_clean = r"^(\s+|![^\n]*\n)",
+                 re_block = r'&.*/',
+                 re_bname = _NAME,
+                 re_entry = _LETTER + r'[ A-Z0-9_,\%\(\):]*' + r"(?=\s*=)",
+                 re_macro = _LETTER + r'+',
+                 re_endol = r"(?=\s*(,|/|\n))",
+                 re_comma = r"\s*,"):
         self._literal = literal
         if macros:
             self.macros = set(macros)
@@ -584,18 +594,21 @@ class NamelistParser(object):
                 source = self._namelist_clean(source[1:])
                 continue
 
-            elif re.match("^/(end)?", source, self._re_flags):
-                if current: namelist.update({current : values})
+            elif re.match(r"^/(end)?", source, self._re_flags):
+                if current:
+                    namelist.update({current: values})
                 source = source[1:]
-                if re.match('end', source, self._re_flags): source = source[3:]
+                if re.match(r'end', source, self._re_flags):
+                    source = source[3:]
                 break
 
-            elif re.match('\-+' + self._re_endol, source, self._re_flags):
-                item = re.match('\-+' + self._re_endol, source, self._re_flags).group(0)
+            elif re.match(r'\-+' + self._re_endol, source, self._re_flags):
+                item = re.match(r'\-+' + self._re_endol, source, self._re_flags).group(0)
                 namelist.todelete(current)
                 current = None
                 source = self._namelist_clean(source[len(item):])
-                if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
+                if self.comma.match(source):
+                    source = self._namelist_clean(self.comma.sub('', source, 1))
                 continue
 
             elif re.match(self._re_macro + self._re_endol, source, self._re_flags):

@@ -14,15 +14,15 @@ def olive_label(sh, env, tag=None, target=None):
 
     label = env.PBS_JOBID or env.SLURM_JOB_ID
 
-    if ( env.MTOOL_STEP and env.MTOOL_STEP_ID ):
+    if env.MTOOL_STEP and env.MTOOL_STEP_ID:
         depot = env.MTOOL_STEP_DEPOT or env.MTOOL_STEP_STORE
-        renum = re.search('\/mstep_(\d+)', depot)
+        renum = re.search(r'\/mstep_(\d+)', depot)
         num = renum.group(1)
         if target is None:
-            label = re.sub('-batch', '', label)
-            label = re.sub('^\d+:', '', label)
+            label = re.sub(r'-batch', '', label)
+            label = re.sub(r'^\d+:', '', label)
         else:
-            label = re.sub('\D+', '', label)
+            label = re.sub(r'\D+', '', label)
             label = label + '.' + target
         label = ':'.join(reversed(label.split('.')))
         label = '_'.join((label, 'mtool:' + num, env.MTOOL_STEP_ID))
@@ -31,12 +31,14 @@ def olive_label(sh, env, tag=None, target=None):
 
     return label
 
+
 def guesslocout(sh, env, output):
     """Keep compatibility with previous versions whithout local filename."""
 
     login = env.SWAPP_USER or sh.getlogin()
 
-    return re.sub('^.*?/' + login + '/', 'xpout/', output)
+    return re.sub(r'^.*?/' + login + '/', 'xpout/', output)
+
 
 def olive_logname(sh, env, output, localout=None):
     """Return the local path to OLIVE execution output."""
@@ -56,19 +58,19 @@ def olive_jobout(sh, env, output, localout=None):
 
     mstep = 'off'
 
-    if ( 'MTOOL_STEP' in env and env.MTOOL_STEP_ID ):
+    if 'MTOOL_STEP' in env and env.MTOOL_STEP_ID:
         mstep = 'on'
         depot = env.MTOOL_STEP_DEPOT or env.MTOOL_STEP_STORE
         localout = ':'.join(
             [ x for x in sh.ls(depot + '/step.[0-9][0-9]') if (
                 sh.path.exists(x+'.done') and
-                int(re.search('\.(\d+)$', x).group(1)) < int(env.MTOOL_STEP)
+                int(re.search(r'\.(\d+)$', x).group(1)) < int(env.MTOOL_STEP)
             ) ]
         )
 
     localhost = env.VORTEX_TARGET or env.VORTEX_TARGET_HOST or env.TARGET_HOST or sh.hostname
     swapp_user, swapp_host, swapp_port = env.VORTEX_OUTPUT_ID.split(':')
-    user = env.VORTEX_TARGET_LOGNAME or env.TARGET_LOGNAME or env.SWAPP_USER or sh.getlogin();
+    user = env.VORTEX_TARGET_LOGNAME or env.TARGET_LOGNAME or env.SWAPP_USER or sh.getlogin()
 
     if 'VORTEX_SOCKET_TIMEOUT' in env:
         timeout = int(env.VORTEX_SOCKET_TIMEOUT)

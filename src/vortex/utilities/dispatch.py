@@ -100,7 +100,7 @@ class Dispatcher(object):
         psfmt = '{0:16s} {1:24s} {2:32s}'
         psd = [ psfmt.format('USER', 'FIFOTAG', 'FIFODIR') ]
         psr = []
-        bl = re.compile('\s+')
+        bl = re.compile(r'\s+')
         for ps in psall:
             items = bl.split(ps)
             psr.append((items[0], items[-2], items[-1]))

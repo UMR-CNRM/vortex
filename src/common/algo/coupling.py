@@ -65,8 +65,10 @@ class Coupling(IFSParallel):
             super(Coupling, self).execute(rh, opts)
 
             # Freeze the current output
-            for posfile in [ x for x in self.system.glob('PFFPOSAREA+*') if re.match('PFFPOSAREA\+\d+(?:\d+)$', x) ]:
-                self.system.move(posfile, self.system.path.join(runstore, 'CPLOUT+' + r.resource.term.fmthm))
+            for posfile in [ x for x in self.system.glob('PFFPOSAREA+*')
+                             if re.match(r'PFFPOSAREA\+\d+(?:\d+)$', x) ]:
+                self.system.move(posfile,
+                                 self.system.path.join(runstore, 'CPLOUT+' + r.resource.term.fmthm))
             for logfile in self.system.glob('NODE.*', 'std*'):
                 self.system.move(logfile, self.system.path.join(runstore, logfile))
 

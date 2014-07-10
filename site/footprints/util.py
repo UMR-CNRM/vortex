@@ -133,7 +133,7 @@ def inplace(desc, key, value, globs=None):
     if globs:
         for k in [ x for x in newd.keys() if (x != key and type(newd[x]) is types.StringType) ]:
             for g in globs.keys():
-                newd[k] = re.sub('\[glob:'+g+'\]', globs[g], newd[k])
+                newd[k] = re.sub(r'\[glob:' + g + r'\]', globs[g], newd[k])
     return newd
 
 
@@ -169,42 +169,43 @@ def expand(desc):
                     ld[i:i+1] = [ inplace(d, k, x) for x in v ]
                     todo = True
                     break
-                if isinstance(v, str) and re.match('range\(\d+(,\d+)?(,\d+)?\)$', v, re.IGNORECASE):
+                if isinstance(v, str) and re.match(r'range\(\d+(,\d+)?(,\d+)?\)$', v, re.IGNORECASE):
                     logger.debug(' > Range expansion %s', v)
-                    lv = [ int(x) for x in re.split('[\(\),]+', v) if re.match('\d+$', x) ]
+                    lv = [ int(x) for x in re.split(r'[\(\),]+', v) if re.match(r'\d+$', x) ]
                     if len(lv) < 2:
                         lv.append(lv[0])
                     lv[1] += 1
                     ld[i:i+1] = [ inplace(d, k, x) for x in range(*lv) ]
                     todo = True
                     break
-                if isinstance(v, str) and re.search(',', v):
+                if isinstance(v, str) and re.search(r',', v):
                     logger.debug(' > Coma separated string %s', v)
                     ld[i:i+1] = [ inplace(d, k, x) for x in v.split(',') ]
                     todo = True
                     break
-                if isinstance(v, str) and re.search('{glob:', v):
+                if isinstance(v, str) and re.search(r'{glob:', v):
                     logger.debug(' > Globbing from string %s', v)
                     vglob = v
                     globitems = list()
+
                     def getglob(matchobj):
                         globitems.append([matchobj.group(1), matchobj.group(2)])
                         return '*'
-                    while ( re.search('{glob:', vglob) ):
-                        vglob = re.sub('{glob:(\w+):([^\}]+)}', getglob, vglob)
+                    while re.search(r'{glob:', vglob):
+                        vglob = re.sub(r'{glob:(\w+):([^\}]+)}', getglob, vglob)
                     ngrp = 0
-                    while ( re.search('{glob:', v) ):
-                        v = re.sub('{glob:\w+:([^\}]+)}', '{'+str(ngrp)+'}', v)
+                    while re.search(r'{glob:', v):
+                        v = re.sub(r'{glob:\w+:([^\}]+)}', '{' + str(ngrp) + '}', v)
                         ngrp += 1
-                    v = v.replace('+', '\+')
-                    v = v.replace('.', '\.')
+                    v = v.replace('+', r'\+')
+                    v = v.replace('.', r'\.')
                     ngrp = 0
-                    while ( re.search('{\d+}', v) ):
-                        v = re.sub('{\d+}', '('+globitems[ngrp][1]+')', v)
+                    while re.search(r'{\d+}', v):
+                        v = re.sub(r'{\d+}', '(' + globitems[ngrp][1] + ')', v)
                         ngrp += 1
                     repld = list()
                     for filename in glob.glob(vglob):
-                        m = re.search(r'^'+v+ r'$', filename)
+                        m = re.search(r'^' + v + r'$', filename)
                         if m:
                             globmap = dict()
                             for ig in range(len(globitems)):
