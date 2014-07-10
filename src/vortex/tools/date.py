@@ -612,10 +612,6 @@ class Time(object):
         finally:
             return cmp(str(self), str(other))
 
-    def __rcmp__(self, other):
-        """Commutative comparison."""
-        return self.__cmp__(other)
-
     def __add__(self, delta):
         """
         Add to a Date object the specified ``delta`` which could be either
