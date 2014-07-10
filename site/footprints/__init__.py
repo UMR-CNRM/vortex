@@ -1049,7 +1049,7 @@ class FootprintBaseMeta(type):
                 thiscollector.add(realcls)
                 if thiscollector.register:
                     observers.getbyname(realcls.fullname()).register(thiscollector)
-            logger.debug('Register class %s in collector %s (%s)', realcls, thiscollector, cname)
+                    logger.debug('Register class %s in collector %s (%s)', realcls, thiscollector, cname)
         basedoc = realcls.__doc__
         if not basedoc:
             basedoc = 'Not documented yet.'
