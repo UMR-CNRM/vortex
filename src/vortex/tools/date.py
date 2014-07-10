@@ -116,8 +116,9 @@ def synop(delta=0, base=None, time=None):
             while synopdate.time() != time:
                 synopdate = synopdate - Period('PT6H')
         else:
-            raise ValueError('Not a synoptic hour: ' + str(hh))
+            raise ValueError('Not a synoptic hour: ' + str(time))
     return synopdate
+
 
 def easter(year=None):
     """Return date for easter of the given year
