@@ -302,7 +302,7 @@ class System(footprints.FootprintBase):
         rc = True
         try:
             os.utime(filename, None)
-        except:
+        except StandardError:
             rc = False
         finally:
             fh.close()
@@ -573,7 +573,7 @@ class OSExtended(System):
         if defaults:
             try:
                 opts.update(defaults)
-            except Exception as pb:
+            except StandardError as pb:
                 logger.warning('Could not update options default: %s', defaults)
 
         if cmdline is None:
@@ -628,7 +628,7 @@ class OSExtended(System):
         self.stderr('size', filepath)
         try:
             return self.stat(filepath).st_size
-        except:
+        except StandardError:
             return -1
 
     def mkdir(self, dirpath, fatal=True):

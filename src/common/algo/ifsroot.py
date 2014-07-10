@@ -65,7 +65,7 @@ class IFSParallel(Parallel):
         """Be sure that the specifed executable is ifsmodel compatible."""
         try:
             return bool(rh.resource.realkind == 'ifsmodel')
-        except:
+        except StandardError:
             return False
 
     def spawn_hook(self):

@@ -206,7 +206,7 @@ class StdFtp(object):
         rc = True
         try:
             self.retrbinary('RETR ' + source, target.write)
-        except:
+        except StandardError:
             rc = False
         if xdestination:
             target.close()
@@ -237,7 +237,7 @@ class StdFtp(object):
         rc = True
         try:
             self.storbinary('STOR ' + destination, inputsrc)
-        except:
+        except StandardError:
             rc = False
         if xsource:
             inputsrc.close()

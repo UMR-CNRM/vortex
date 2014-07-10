@@ -12,7 +12,7 @@ bank = '/home_nfs/mastergroup/masteruser/dev/setuid/store.' + str(os.getpid())
 try:
     source = sys.argv[1]
     target = sys.argv[2]
-except:
+except StandardError:
     print "Gateway link arg: Something weird in arguments"
     exit(1)
 

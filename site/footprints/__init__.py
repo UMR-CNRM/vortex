@@ -738,7 +738,7 @@ class Footprint(object):
                             if callable(subattr):
                                 try:
                                     attrcall = subattr(guess, extras)
-                                except Exception as trouble:
+                                except StandardError as trouble:
                                     logger.critical(trouble)
                                     attrcall = '__SKIP__'
                                     changed = 0
@@ -827,7 +827,7 @@ class Footprint(object):
                     try:
                         guess[k] = ktype(guess[k], **kargs)
                         logger.debug(' > Attr %s reclassed = %s', k, guess[k])
-                    except Exception:
+                    except StandardError:
                         logger.debug(' > Attr %s badly reclassed as %s = %s', k, ktype, guess[k])
                         report.add(attribute=k, why=reporting.REPORT_WHY_RECLASS, args=(ktype.__name__, str(guess[k])))
                         diags[k] = True

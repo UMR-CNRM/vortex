@@ -359,7 +359,7 @@ class Date(datetime.datetime):
             try:
                 top = local_date_functions[top](**kw)
                 kw = dict()
-            except Exception:
+            except StandardError:
                 pass
         if isinstance(top, datetime.datetime):
             ld = [ top.year, top.month, top.day, top.hour, top.minute, top.second ]
@@ -607,7 +607,7 @@ class Time(object):
         """Compare two Time values or a Time and an int value."""
         try:
             other = self.__class__(other)
-        except Exception:
+        except StandardError:
             pass
         finally:
             return cmp(str(self), str(other))
@@ -677,7 +677,7 @@ class Month(object):
         delta = kw.pop('delta', 0)
         try:
             args = (datetime.datetime(**kw),)
-        except Exception:
+        except StandardError:
             pass
         if not args:
             raise ValueError("No initial value provided for Month")
@@ -808,7 +808,7 @@ class Month(object):
                     rc = cmp(self.month, mtest.month)
                 else:
                     rc = cmp(self.fmtym, mtest.fmtym)
-        except:
+        except StandardError:
             rc = 1
         finally:
             return rc
