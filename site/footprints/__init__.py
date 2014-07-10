@@ -1068,6 +1068,7 @@ class FootprintBase(object):
 
     __metaclass__ = FootprintBaseMeta
 
+    _footprint = Footprint()
     _abstract  = True
     _explicit  = True
     _reusable  = True
