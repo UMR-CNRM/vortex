@@ -83,9 +83,10 @@ class PrioritySet(object):
     Iterable class for handling unsortable priority levels.
     """
 
-    def __init__(self, levels=[]):
-        self._levels = []
-        self.extend(*levels)
+    def __init__(self, levels=None):
+        self._levels = list()
+        if levels is not None:
+            self.extend(*levels)
         self._freeze = dict(default=self._levels[:])
 
     def __iter__(self):
