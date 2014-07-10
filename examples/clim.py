@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 # Status : TODO From a long long time...

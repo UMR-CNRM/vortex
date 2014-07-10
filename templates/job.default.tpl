@@ -1,4 +1,5 @@
 #!$python $pyopts
+# -*- coding: utf-8 -*-
 #SBATCH --cpus-per-task=$openmp
 #SBATCH --export=NONE
 #SBATCH --job-name=$name

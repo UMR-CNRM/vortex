@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 # Status : In progress (v0.6.21)

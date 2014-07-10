@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding:Utf-8 -*-
+
 # author: stephane Mejias
 # date: 09/05/2012
 # purpose: script sending messages to the syslog system and a local log file

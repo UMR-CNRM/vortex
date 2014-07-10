@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding:Utf-8 -*-
 # vim: set ts=4 sw=4 expandtab et:
 
 from vortex import sessions, toolbox
