@@ -7,6 +7,7 @@ __all__ = []
 from vortex.data.flow import GeoFlowResource
 from vortex.syntax.stdattrs import a_term
 
+
 class ISP(GeoFlowResource):
 
     """
@@ -51,6 +52,7 @@ class ISP(GeoFlowResource):
             radical = self.realkind,
             src     = self.model,
         )
+
 
 class DDH(GeoFlowResource):
 

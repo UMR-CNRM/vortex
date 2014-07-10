@@ -15,6 +15,7 @@ from iga.data.providers import IgaCfgParser
 DATAPATHTEST = './data'
 IGADATAPATH = '/ch/mxpt/mxpt001/steph_perso/python/Vortex/src/iga/data'
 
+
 class UtGenericConfigParser(TestCase):
 
     def setUp(self):
@@ -122,6 +123,7 @@ if __name__ == '__main__':
     suites = [action(elmt) for elmt in tests]
     for suite in suites:
         TextTestRunner(verbosity=1).run(suite)
+
 
 def get_test_class():
     return [ UtGenericConfigParser, UtIgaCfgParser ]

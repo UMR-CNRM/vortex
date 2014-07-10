@@ -9,8 +9,10 @@ from unittest import TestCase, TestLoader, TextTestRunner
 import vortex
 from vortex import toolbox
 from vortex.data.geometries import SpectralGeometry
+
 import common.data
 import olive.data
+
 
 class UtObservations(TestCase):
 
@@ -36,7 +38,6 @@ class UtObservations(TestCase):
 
         self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/OPER/20120214T0600P/observation/obsoul.std.conv')
 
-
     def test_v3(self):
         rl = toolbox.rload(
             self.attrset,
@@ -53,7 +54,6 @@ class UtObservations(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600P/observation/ecma.screen.full.tar')
-
 
     def test_o1(self):
         rl = toolbox.rload(
@@ -169,7 +169,6 @@ class UtVarbc(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle')
-
 
     def test_v2(self):
         rl = toolbox.rload(
@@ -321,6 +320,7 @@ class UtBlackListLoc(TestCase):
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/LISTE_LOC')
 
+
 class UtObsmap(TestCase):
 
     def setUp(self):
@@ -369,11 +369,9 @@ class UtObsmap(TestCase):
         self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A0/20110922H00P/observations/OBSMAP_split')
 
 
-
 if __name__ == '__main__':
     for test in [ UtObservations, UtVarbc, UtRefdata, UtBlackListDiap, UtBlackListLoc, UtObsmap ]:
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
             break
-

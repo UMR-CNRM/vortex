@@ -15,8 +15,10 @@ from vortex.syntax.stdattrs import a_actualfmt
 CONTAINER_INCORELIMIT = 1048576 * 8
 CONTAINER_MAXREADSIZE = 1048576 * 64
 
+
 class DataSizeTooBig(Exception):
     pass
+
 
 class Container(footprints.FootprintBase):
 

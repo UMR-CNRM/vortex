@@ -12,6 +12,7 @@ from types import *
 from vortex.autolog import logdefault as logger
 from vortex import sessions
 
+
 class SMSGateway(object):
 
     def __init__(self, tag='void', system=None, env=None, path=None):

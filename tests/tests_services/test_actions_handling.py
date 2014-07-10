@@ -7,6 +7,7 @@ logging.basicConfig(level=logging.ERROR)
 from unittest import TestCase, TestLoader, TextTestRunner
 from iga.services import actions_handling as acth
 
+
 class Utactions_handling(TestCase):
 
     def setUp(self):
@@ -25,7 +26,6 @@ class Utactions_handling(TestCase):
         self.assertTrue(self.al.sendbdap_status())
         self.assertTrue(self.al.routing_status())
         print "test_on_status Ok"
-
 
     def test_off_and_status(self):
         self.al.alarm_off()

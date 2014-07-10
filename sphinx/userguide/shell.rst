@@ -29,7 +29,7 @@ A specific message warns you that the coprocess has been started:
 
 The first invocation will launch in the backgroud a python/vortex interpreter
 through the :command:`vortexshcmd.py` application also located in the same :file:`bin` directory.
-  
+
 Note that the first vortex invocation could be a full command as well:
 
 .. code-block:: console
@@ -162,7 +162,7 @@ Review of subcommands
 =====================
 
 :command:`apply`
-  
+
   Get ``attr`` or apply ``method`` on the ``with`` object.
   Return this value.
 
@@ -177,7 +177,7 @@ Review of subcommands
 
 
 :command:`attributes`
-  
+
   Print the attributes contents of the specified elements.
         Return ``None``.
 
@@ -280,7 +280,7 @@ Review of subcommands
     <class 'vortex.data.containers.File'>
     <class 'vortex.data.containers.InCore'>
     <class 'vortex.data.containers.MayFly'>
-    
+
 :command:`daemons`
 
   Display the list of current active vortex dispatchers.
@@ -323,10 +323,10 @@ Review of subcommands
 
     % vortex foo=2
     {'foo': '2'}
-    
+
 
 :command:`echo`
-  
+
   Print a string version of the specified elements.
   Return ``None``.
 
@@ -358,7 +358,7 @@ Review of subcommands
     <vortex.tools.env.Environment object at 0x1a52390>
 
 :command:`envfp`
-  
+
   Set and print the current default footprint values.
   Result current ``fpenv`` object.
 
@@ -371,7 +371,7 @@ Review of subcommands
 
 
 :command:`get`
-  
+
   Perform a :func:`vortex.toolbox.rget` call with current attributes.
   Return the resource handler.
 
@@ -390,7 +390,7 @@ Review of subcommands
     loc: [<vortex.data.handlers.Handler object at 0x1f480d0>]
 
 :command:`glove`
-  
+
   Display current glove id.
   Return the glove itself.
 
@@ -407,7 +407,7 @@ Review of subcommands
 
 
 :command:`grid`
-  
+
   Instanciate a :class:`~vortex.data.geometries.GridGeometry` with specified attributes.
   Return the new object.
 
@@ -418,10 +418,10 @@ Review of subcommands
     % vortex attributes g
     g: ['area', 'id', 'nlat', 'nlon', 'resolution']
 
-    
+
 
 :command:`handler`
-  
+
   Perform a :func:`vortex.toolbox.rh` call with current attributes.
   Return the resource handler.
 
@@ -450,7 +450,7 @@ Review of subcommands
 	Attributes : {'file': 'analysis.last'}
 
 :command:`help`
-  
+
   Print documentation for all or specified methods of the current shell dispatcher.
 
   .. code-block:: console
@@ -459,10 +459,10 @@ Review of subcommands
 
       mload: 
         Print / Return the results of the import on the specified modules.
-    
+
 
 :command:`id`
-  
+
   Print current session identification card.
   Return the id number of the session.
 
@@ -479,8 +479,8 @@ Review of subcommands
 
 
 :command:`item`
-  
   Extract from an object either a key/idx entry.
+
   Return this entry.
 
   .. code-block:: console
@@ -491,7 +491,7 @@ Review of subcommands
     systemsls -
 
 :command:`locate`
-  
+
   Load a resource handler and apply the ``locate`` method.
   Return this information.
 
@@ -507,17 +507,17 @@ Review of subcommands
     mrpm631@cougar.meteo.fr:/home/m/mxpt/mxpt001/arpege/oper/assim/2012/07/22/r18/analyse
 
 :command:`mload`
-  
+
   Print / Return the results of the import on the specified modules.
 
   .. code-block:: console
 
     % vortex mload common.data
     [<module 'common' from '/home/droopy/dev/eclipse/vortex/src/common/__init__.py'>]
-    
+
 
 :command:`mpitool`
-  
+
   Load a mpitool object according to description.
   Return the object itself.
   See also :mod:`vortex.algo.mpitools`.
@@ -531,7 +531,7 @@ Review of subcommands
 
 
 :command:`mpitools`
-  
+
   Display mpitools catalog contents.
   Return the catalog itself.
 
@@ -540,10 +540,10 @@ Review of subcommands
     % vortex mpitools
     <class 'common.algo.mpitools.NecMpiRun'>
     <class 'vortex.algo.mpitools.MpiRun'>
-    
+
 
 :command:`namespaces`
-  
+
   Display the range of names defined as values for ``namespace`` or ``netloc`` attributes.
   Optional arguments are ``only`` and ``match``.
   Return the associated dictionary.
@@ -563,7 +563,7 @@ Review of subcommands
   As both some :mod:`~vortex.data.providers` and :mod:`~vortex.data.stores`
   define namespaces (more precisely ``netloc`` for stores), one can select to display
   only one kind of these objects:
-  
+
   .. code-block:: console
 
     % vortex namespaces only=stores
@@ -576,7 +576,7 @@ Review of subcommands
 
   It is also possible to give a regular expression to match the namespaces themselves,
   for example:
-  
+
   .. code-block:: console
 
     % vortex namespaces match=cache
@@ -587,7 +587,7 @@ Review of subcommands
 
 
 :command:`nice`
-  
+
   Data dumper on any key/value.
   Nothing to return.
 
@@ -601,7 +601,7 @@ Review of subcommands
 
 
 :command:`provider`
-  
+
   Load a provider object according to description.
   Return the object itself.
   See also :mod:`vortex.data.providers`.
@@ -616,7 +616,7 @@ Review of subcommands
     file
 
 :command:`providers`
-  
+
   Display providers catalog contents.
   Return the catalog itself.
 
@@ -625,10 +625,10 @@ Review of subcommands
     % vortex  providers
     <class 'vortex.data.providers.Remote'>
     <class 'vortex.data.providers.Vortex'>
-    
+
 
 :command:`put`
-  
+
   Perform a :func:`vortex.toolbox.rput` call with current attributes.
   Return the resource handler.
 
@@ -638,12 +638,12 @@ Review of subcommands
     put: 1
     % vortex echo last
     last: [<vortex.data.handlers.Handler object at 0x1a8c0d0>]
-  
+
   (Assuming the same defaults as the :command:`get` command).
 
 :command:`refill`
-  
   Refill the specified catalogs already in the calatogs table. 
+
   Return the actual number of items.
 
   .. code-block:: console
@@ -686,7 +686,7 @@ Review of subcommands
 
 
 :command:`resource`
-  
+
   Load a resource object according to description.
   Return the object itself.
   See also :mod:`vortex.data.resources`.
@@ -704,7 +704,7 @@ Review of subcommands
 
 
 :command:`resources`
-  
+
   Display resources catalog contents.
   Return the catalog itself.
 
@@ -716,7 +716,7 @@ Review of subcommands
 
 
 :command:`rmfp`
-  
+
   Remove from current default footprint the specified keys.
   Return the list of removed keys.
 
@@ -731,7 +731,7 @@ Review of subcommands
 
 
 :command:`session`
-  
+
   Print current session tag.
   Return current session.
 
@@ -742,9 +742,9 @@ Review of subcommands
     % vortex last
     <vortex.sessions.Ticket object at 0x29e5710>
 
- 
+
 :command:`spectral`
-  
+
   Instanciate a :class:`~vortex.data.geometries.SpectralGeometry` with specified attributes.
   Return the new object.
 
@@ -756,10 +756,10 @@ Review of subcommands
     geo: ['area', 'id', 'resolution', 'stretching', 'truncation']
     % vortex apply with=geo attr=truncation
     1199
-    
-    
+
+
 :command:`store`
-  
+
   Load a store object according to description.
   Return the object itself.
   See also :mod:`vortex.data.stores`.
@@ -773,7 +773,7 @@ Review of subcommands
 
 
 :command:`stores`
-  
+
   Display stores catalog contents.
   Return the catalog itself.
 
@@ -789,7 +789,7 @@ Review of subcommands
 
 
 :command:`system`
-  
+
   Load a system object according to description.
   Return the object itself.
   See also :mod:`vortex.tools.systems`.
@@ -798,9 +798,9 @@ Review of subcommands
 
     % vortex system sysname=Linux
     <vortex.tools.systems.LinuxBase object at 0x2880150>
- 
+
 :command:`systems`
-  
+
   Display systems catalog contents.
   Return the catalog itself.
 
@@ -813,7 +813,7 @@ Review of subcommands
 
 
 :command:`trackers`
-  
+
   Display the tagged references to internal footprint resolution trackers.
   Return the table itself.
 
@@ -824,7 +824,7 @@ Review of subcommands
 
 
 :command:`trackfp`
-  
+
   Display a complete dump of the footprint resolution tracker.
   Return nothing.
 
@@ -851,7 +851,7 @@ Review of subcommands
 
 
 :command:`user`
-  
+
   Shortcut to glove's username.
 
   .. code-block:: console
@@ -860,29 +860,29 @@ Review of subcommands
     droopy
 
 :command:`vapp`
-  
+
   Print or set current ``vapp`` value.
   Return actual vapp.
-  
+
   .. code-block:: console
 
     % vortex vapp
     play
     % vortex vapp value=arome
     arome
-      
+
 :command:`vconf`
-  
+
   Print or set current ``vconf`` value according to ``value`` argument.
   Return actual vconf.
-        
+
   .. code-block:: console
 
     % vortex vconf
     sandbox
     % vortex vconf value=ensemble
     ensemble
-    
+
 
 ================
 Beyond the scene

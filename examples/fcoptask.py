@@ -8,8 +8,10 @@ from vortex import toolbox
 
 from iga.tools import app
 
+
 def setup(t, **kw):
     return [ Forecast(t, **kw) ]
+
 
 class Forecast(app.Application):
 
@@ -87,7 +89,6 @@ class Forecast(app.Application):
         )
 
         print 'Provider const :', self.conf.p_const
-
 
     def process(self):
         """Core processing of a forecast experiment."""

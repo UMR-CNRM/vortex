@@ -14,8 +14,9 @@ cr = footprints.proxy.resources
 cr.track = True
 t.warning()
 
+
 class UtBackgroundErrStd(TestCase):
-    
+
     def setUp(self):
         self.std = SpectralGeometry(id='Current op', truncation=224)
         self.fp_prov = dict(
@@ -184,6 +185,7 @@ if __name__ == '__main__':
         if x.errors or x.failures:
             print "Something went wrong !"
             break 
-        
+
+
 def get_test_class():
     return [ UtBackgroundErrStd ]

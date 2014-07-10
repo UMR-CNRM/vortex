@@ -69,6 +69,7 @@ def setup(**kw):
 
     return t
 
+
 def setenv(t, **kw):
     """Set up common environment for all oper execs"""
 
@@ -119,13 +120,16 @@ def setenv(t, **kw):
 
     return t.env.clone()
 
+
 def complete(t, **kw):
     """Exit from OP session."""
     t.close()
 
+
 def rescue(**kw):
     """Something goes wrong... so, do your best to save current state."""
     print 'Bad luck...'
+
 
 def fulltraceback(localsd=None):
     """Produce some nice traceback at the point of failure."""

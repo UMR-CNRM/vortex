@@ -5,8 +5,10 @@ __all__ = []
 
 from iga.tools.app import Application
 
+
 def setup(t, verbose=False):
     return [ Application(t, tag='void') ]
+
 
 def broadcast(t, **kw):
     """Fake function... just not to forget."""

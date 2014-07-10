@@ -485,6 +485,7 @@ class NamelistBlock(object):
         for dk in filter(lambda x: x in self, delta.rmkeys()):
             self.delvar(dk)
 
+
 class NamelistSet(object):
 
     def __init__(self, namdict):
@@ -680,10 +681,12 @@ class NamelistParser(object):
         else:
             raise ValueError("Argument %s cannot be parsed." % str(obj))
 
+
 def namparse(obj):
     """Raw parsing with an default anonymous fortran parser."""
     np = NamelistParser()
     return np.parse(obj)
+
 
 def _test_literal(lp):
     """
@@ -748,6 +751,7 @@ def _test_literal(lp):
 
     return
 
+
 def _test_incore(np):
     from StringIO import StringIO
     ori = StringIO()
@@ -763,6 +767,7 @@ def _test_incore(np):
     for namelist in np.parse(ori.getvalue()).values():
         print namelist.dumps()
     return
+
 
 def _test_namparser(np):
     import sys

@@ -25,17 +25,21 @@ REPORT_WHY_SUBCLASS = 'Not a subclass'
 REPORT_ONLY_NOTFOUND = 'No value found'
 REPORT_ONLY_NOTMATCH = 'Do not match'
 
+
 def report_map(_reportmap=dict()):
     """Default reporting table."""
     return _reportmap
+
 
 def report_keys():
     """Default reporting table."""
     return sorted(report_map().keys())
 
+
 def report_copy():
     """Return a copy of the table of reports."""
     return reportmap().copy()
+
 
 def report(tag='default', weak=True):
     """Factory to retrieve a information report document, according to the ``tag`` provided."""
@@ -44,8 +48,10 @@ def report(tag='default', weak=True):
         rtab[tag] = FootprintLog(tag)
     return rtab[tag]
 
+
 class FootprintBadLogEntry(Exception):
     pass
+
 
 class NullReport(object):
     """Fake reporting: accept any log report command but do nothing."""
@@ -70,6 +76,7 @@ class NullReport(object):
             self._blindlog.append(args)
         if kw:
             self._blindlog.append(kw)
+
 
 class FootprintLogEntry(object):
     """
@@ -100,6 +107,7 @@ class FootprintLogEntry(object):
     def add(self, item):
         """Push the specified ``item`` at the end of the internal log list."""
         self._items.append(item)
+
 
 class FootprintLogCollector(FootprintLogEntry):
     """Dedicated entry to :class:`footprints.Collector` items."""
@@ -147,6 +155,7 @@ class FootprintLogCollector(FootprintLogEntry):
         for kid in self:
             kid.lightdump(**kw)
 
+
 class FootprintLogClass(FootprintLogEntry):
     """Dedicated entry to :class:`footprints.FootprintBase` items."""
 
@@ -186,6 +195,7 @@ class FootprintLogClass(FootprintLogEntry):
         else:
             print '=>'.rjust(len(indent)), self.name
         print
+
 
 class FootprintLog(object):
     """Collect log informations to produce footprints reports."""
@@ -324,6 +334,7 @@ class FootprintLog(object):
     def fulldump(self, stamp=False):
         """Shortcut to :mod:``dump`` facilities."""
         print dump.fulldump(self.as_dict(force=True, stamp=stamp))
+
 
 class StandardReport(object):
 
@@ -506,7 +517,6 @@ class FactorizedReport(object):
             for v in order:
                 print currentIndent, self.keys()[depth], '=', v
                 self.printer(dic[v],currentIndent+self._indent, depth+1, ordered)
-
 
     def softprint(self):
         self.printer(self._tree, self._indent, 0)

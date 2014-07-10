@@ -8,6 +8,7 @@ from unittest import TestCase, TestLoader, TextTestRunner
 
 from vortex import toolbox, sessions
 from vortex.data.geometries import SpectralGeometry
+
 from olive.data import fields
 
 
@@ -100,4 +101,3 @@ if __name__ == '__main__':
         if x.errors or x.failures:
             print "Something went wrong !"
             break
-

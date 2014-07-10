@@ -10,6 +10,7 @@ from copy import copy
 
 genvcmd, genvpath = (None, None)
 
+
 def actualgenv():
     """Nice try to return a valid full path of the genv command."""
     global genvpath
@@ -22,9 +23,11 @@ def actualgenv():
             genvcmd = tg.get('gco:genvcmd', 'genv')
     return vortex.sh().path.join(genvpath, genvcmd)
 
+
 def handler():
     """Return default environment object storing genv items"""
     return vortex.tools.env.param(tag='genvitems')
+
 
 def register(**kw):
     """Set key - values for a given ``cycle`` recorded as an ``entry`` (parameters)."""
@@ -45,6 +48,7 @@ def register(**kw):
     if kw: regcycle.update(kw)
     return regcycle
 
+
 def contents(**kw):
     """Return definition of a given ``cycle``."""
     p = handler()
@@ -57,6 +61,7 @@ def contents(**kw):
     else:
         return None
 
+
 def nicedump(**kw):
     """Return a nice sequence of string, ready to print."""
     ldump = list()
@@ -65,21 +70,25 @@ def nicedump(**kw):
         ldump = [ '{0:s}="{1:s}"'.format(k, ' '.join(v if type(v) is list else [v])) for k, v in sorted(c.items()) ]
     return ldump
 
+
 def as_rawstr(cycle):
     """Return a raw string of the cycle contents."""
     thisdump = nicedump(cycle=cycle)
     thisdump[0:0] = [ 'CYCLE_NAME="' + cycle  + '"' ]
     return "\n".join(thisdump)
 
+
 def cycles():
     """Return curretnly defined cycles."""
     p = handler()
     return [ p[x]['CYCLE'] for x in p.keys() ]
 
+
 def clearall():
     """Flush the current environment object storing cycles."""
     p = handler()
     p.clear()
+
 
 def autofill(cycle):
     """Use the ``genv`` external tool to fill the specified cycle."""

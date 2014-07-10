@@ -372,7 +372,6 @@ if npass == 3:
         term        = fc_terms
     )
 
-
     o_fullpos = toolbox.output(
         # section
         role        = 'Gridpoint',

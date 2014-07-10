@@ -11,6 +11,7 @@ except ImportError, e:
 
 #t.debug()
 
+
 class UtGridPoint(TestCase):
 
     def setUp(self):
@@ -71,7 +72,7 @@ class UtGridPoint(TestCase):
             date = today() + 'PT6H',
             term = 6
         )
-        
+
         self.fp_gridpoint5 = dict(
             kind = 'gridpoint',
             geometry = self.glob15,
@@ -109,7 +110,7 @@ class UtGridPoint(TestCase):
         gridpoint = self.fp_gridpoint3
         res = ctlg.find_best(gridpoint)
         self.assertEqual(res.kind, 'gridpoint')
- 
+
         gridpoint = self.fp_gridpoint4
         res = ctlg.find_best(gridpoint)
         self.assertEqual(res.kind, 'gridpoint')
@@ -262,7 +263,7 @@ class UtHistoric(TestCase):
             suite = 'oper',
             igakey = 'caledonie',
         )
-        
+
         self.fp_cont = dict(
             local='ICMSH[geometry::area]+[term::fmth].rDH'
         )
@@ -373,7 +374,7 @@ class UtHistoric(TestCase):
         )
         self.assertTrue(os.stat(rl[0].locate()))
 
-              
+
 class UtAnalysis(TestCase):
 
     def setUp(self):

@@ -10,6 +10,7 @@ __all__ = []
 
 from vortex.autolog import logdefault as logger
 
+
 class DataConst(object):
     """Constants stored as raw attributes."""
 

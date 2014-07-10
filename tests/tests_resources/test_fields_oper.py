@@ -11,6 +11,7 @@ except ImportError, e:
 
 #t.debug()
 
+
 class UtRawFields(TestCase):
 
     def setUp(self):
@@ -61,7 +62,6 @@ class UtRawFields(TestCase):
             date = today(),
             cutoff='production',
         )
-
 
     def tearDown(self):
         del self.fp_prov
@@ -150,7 +150,6 @@ class UtRawFields(TestCase):
         if t.env['HOSTNAME'] == 'kumo':
             self.assertTrue(os.stat(rl[0].locate()))
 
-
         rl = toolbox.rload(
             self.fp_seaice,
             self.fp_prov2,
@@ -202,7 +201,6 @@ class UtGeoFields(TestCase):
             cutoff='assim',
             geometry = self.std,
         )
-
 
     def tearDown(self):
         """docstring for tearDown"""
@@ -271,6 +269,7 @@ if __name__ == '__main__':
         if x.errors or x.failures:
             print "Something went wrong !"
             break 
+
 
 def get_test_class():
         return [ UtRawFields, UtGeoFields ]

@@ -3,7 +3,7 @@ Glossary
 %%%%%%%%
 
 Dictionary of notions in the VORTEX framework :
-    
+
 ==============================  ==============================  ==============================
 ..                              Terms                           ..                          
 ==============================  ==============================  ==============================
@@ -28,18 +28,18 @@ Spaces
    Physical space
       This is the *real* space where the entities defined in the logical space take place.
       Very often related to information systems.
-   
+
       Example::
 
          The specific scheduling of tasks to build the analysis.
-	 
+
       Some descriptors from the logical space could have a second life in the physical one.
 
       Example::
-      
           The logical description of a meteorological resource could lead to the physical
 	  localisation of a data resource playing that role.
-	  
+
+
 
 Logical space
 -------------
@@ -49,7 +49,7 @@ Logical space
    Session
       In the :term:`logical space` the session refers to the most abstract level of the general context
       the user operates.
-        
+
       DevGuide: :ref:`env-interface`
 
       Modules: :mod:`vortex.sessions`

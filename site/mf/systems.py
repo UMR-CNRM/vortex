@@ -105,6 +105,7 @@ class Beaufix(MeteoBull):
         )
     )
 
+
 class Prolix(MeteoBull):
     """Prolix Computer at Meteo-France."""
 

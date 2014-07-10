@@ -54,7 +54,6 @@ class UtMatFilter(TestCase):
         res = ctlg.find_best(mat_filter)
         self.assertTrue(res.kind, 'matfilter')
 
-
     def test_rl(self):
         rl = toolbox.rload(
             self.fp_prov,
@@ -63,7 +62,7 @@ class UtMatFilter(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            
+
         self.assertEqual(rl[0].resource.kind, 'matfilter')
         self.assertEqual(rl[0].provider.realkind, 'iga')
         self.assertEqual(rl[0].container.realkind, 'file')
@@ -98,13 +97,13 @@ class UtMatFilter(TestCase):
         )
 
 
-
 if __name__ == '__main__':
     for test in [ UtMatFilter ]:
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
             break 
+
 
 def get_test_class():
     return [ UtMatFilter ]

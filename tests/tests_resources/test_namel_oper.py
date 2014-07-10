@@ -11,6 +11,7 @@ except ImportError, e:
 
 #t.debug()
 
+
 class UtNamelist(TestCase):
 
     def setUp(self):
@@ -75,7 +76,6 @@ class UtNamelist(TestCase):
             local = '[helper::xxt]',
             helper = IgaHelperSelect()
         )
-
 
     def test_ctlg1(self):
         ctlg = footprints.proxy.resources
@@ -176,6 +176,7 @@ if __name__ == '__main__':
         if x.errors or x.failures:
             print "Something went wrong !"
             break 
+
 
 def get_test_class():
     return [ UtNamelist, ]

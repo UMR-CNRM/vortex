@@ -55,7 +55,6 @@ while ( listen ):
         args = [ 'default' ]
     cmd = args.pop(0).lower()
 
-
     if ( cmd == 'exit' ):
 
         # The only magic command is 'exit'

@@ -60,6 +60,7 @@ class UtRtCoef(TestCase):
         if t.env['HOSTNAME'] == 'kumo':
             self.assertTrue(os.stat(rl[0].locate()))
 
+
 class UtBcor(TestCase):
 
     def setUp(self):
@@ -136,6 +137,7 @@ if __name__ == '__main__':
         if x.errors or x.failures:
             print "Something went wrong !"
             break
+
 
 def get_test_class():
         return [ UtRtCoef, UtBcor ]

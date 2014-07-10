@@ -30,20 +30,26 @@ replattr = re.compile(r'\[(\w+)(?::+(\w+))?(?:#(\w+))?\]')
 
 # Footprint exceptions
 
+
 class FootprintException(Exception):
     pass
+
 
 class FootprintMaxIter(FootprintException):
     pass
 
+
 class FootprintUnreachableAttr(FootprintException):
     pass
+
 
 class FootprintFatalError(FootprintException):
     pass
 
+
 class FootprintInvalidDefinition(FootprintException):
     pass
+
 
 # Special derivated builtins to be used as attributes in footprints descriptions
 
@@ -51,6 +57,7 @@ class FPDict(dict):
     """A dict type for FootPrints arguments (without expansion)."""
     def __hash__(self):
         return hash(tuple(self.items()))
+
 
 class FPList(list):
     """A list type for FootPrints arguments (without expansion)."""
@@ -64,6 +71,7 @@ class FPList(list):
     def items(self):
         return self[:]
 
+
 class FPSet(set):
     """A set type for FootPrints arguments (without expansion)."""
 
@@ -75,6 +83,7 @@ class FPSet(set):
 
     def items(self):
         return list(self)
+
 
 class FPTuple(tuple):
     """A tuple type for FootPrints arguments (without expansion)."""
@@ -93,10 +102,12 @@ def set_before(priorityref, *args):
     for newpriority in args:
         priorities.top.insert(tag=newpriority, before=priorityref)
 
+
 def set_after(priorityref, *args):
     """Set `args` priority after specified `priorityref'."""
     for newpriority in reversed(args):
         priorities.top.insert(tag=newpriority, after=priorityref)
+
 
 class FootprintSetup(object):
     """Defines some defaults and external tools."""
@@ -421,9 +432,11 @@ def collectorsmap(_collectorsmap=dict()):
     """Cached table of collectors currently activated."""
     return _collectorsmap
 
+
 def collected_footprints():
     """List of current entries collected."""
     return collectorsmap().keys()
+
 
 def collector(tag='garbage'):
     """Main entry point to get a footprinted classes collector."""
@@ -433,9 +446,11 @@ def collector(tag='garbage'):
         cmap[tag] = Collector(entry=tag)
     return cmap[tag]
 
+
 def pickup(rd):
     """Find in current description the attributes that are collected under the ``tag`` name."""
     return collector(rd.pop('tag', 'garbage')).pickup(rd)
+
 
 def load(**kw):
     """
@@ -444,6 +459,7 @@ def load(**kw):
     """
     return collector(kw.pop('tag', 'garbage')).load(**kw)
 
+
 def default(**kw):
     """
     Try to find in existing instances tracked by the ``tag`` collector 
@@ -451,12 +467,14 @@ def default(**kw):
     """
     return collector(kw.pop('tag', 'garbage')).default(**kw)
 
+
 def grep(**kw):
     """Try to find any instance in all collectors that could match given attributes."""
     allgrep = list()
     for c in collectorsmap().values():
         allgrep.extend(c.grep(**kw))
     return allgrep
+
 
 class FootprintProxy(object):
     """Access to alive footprint items."""
@@ -936,6 +954,7 @@ class FootprintAttrDescriptor(object):
         if thisattr is UNKNOWN: thisattr = None
         return thisattr
 
+
 class FootprintAttrDescriptorRWD(FootprintAttrDescriptor):
     """Read-write-del accessor class to footprint attributes."""
     access_mode = 'rwd'
@@ -966,12 +985,14 @@ class FootprintAttrDescriptorRWD(FootprintAttrDescriptor):
         del instance._attributes[self._attr]
         del self._attr
 
+
 class FootprintAttrDescriptorRWX(FootprintAttrDescriptorRWD):
     """Read-write accessor class to footprint attributes."""
     access_mode = 'rwx'
 
     def __delete__(self, instance):
         raise AttributeError, 'Read-only attribute [' + self._attr + '] (delete)'
+
 
 class FootprintAttrDescriptorRXX(FootprintAttrDescriptor):
     """Read-only accessor class to footprint attributes."""

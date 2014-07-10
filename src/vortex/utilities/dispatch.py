@@ -18,6 +18,7 @@ from vortex import data, algo, tools
 #: No automatic export
 __all__ = []
 
+
 class Dispatcher(object):
 
     def __init__(self, **kw):
@@ -231,7 +232,6 @@ class Dispatcher(object):
                 removed.append(item)
         return (0, str(removed), removed)
 
-
     # Explicit action on objects
 
     def apply(self, t, kw):
@@ -303,7 +303,6 @@ class Dispatcher(object):
             strdumps.append('  ' + k + ':')
             strdumps.append(footprints.dump.fulldump(v))
         return (0, "\n".join(strdumps), None)
-
 
     # Entries to collectors
 
@@ -390,7 +389,6 @@ class Dispatcher(object):
         cat = footprints.proxy.services
         return (0, self._objectslist(cat()), cat)
 
-
     # shortcuts to load commands
 
     def container(self, t, kw):
@@ -456,7 +454,6 @@ class Dispatcher(object):
         """
         info = footprints.proxy.service(**kw)
         return (0, str(info), info)
-
 
     # Direct resources access
 

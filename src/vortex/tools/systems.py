@@ -45,9 +45,11 @@ def fmtshcmd(func):
             return fmtcall(self, *args, **kw)
     return formatted_method
 
+
 class ExecutionError(StandardError):
     """Go through exception for internal :meth:`spawn` errors."""
     pass
+
 
 class System(footprints.FootprintBase):
     """

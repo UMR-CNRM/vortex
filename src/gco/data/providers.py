@@ -9,6 +9,7 @@ from vortex.autolog import logdefault as logger
 from vortex.data.providers import Provider
 from gco.tools import genv
 
+
 class GcoProvider(Provider):
     """Abstract GCO base class for GGet and GEnv providers."""
 
@@ -102,7 +103,6 @@ class GEnv(GcoProvider):
         """Proxy init method. Logging only for the time being."""
         logger.debug('GEnv provider init %s', self)
         super(GEnv, self).__init__(*args, **kw)
-
 
     @property
     def realkind(self):

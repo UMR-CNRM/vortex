@@ -16,6 +16,7 @@ def geoset(inifile=None, _gc=dict()):
         _gc[inifile] = GenericConfigParser(inifile + '.ini')
     return _gc
 
+
 def defaultnames(fromset='geometries'):
     """Pre-defined geometries names in configuration file."""
     gs = geoset()
@@ -24,6 +25,7 @@ def defaultnames(fromset='geometries'):
     if fromset not in gs:
         geoset(fromset)
     return gs[fromset].sections()
+
 
 def getbyname(geoname, fromset='geometries'):
     """Return a geometry object according to default initialisation set."""
@@ -114,7 +116,6 @@ class HGeometry(object):
             return '{0:s}({1:s})'.format(self.__class__.__name__, self.anonymous_info())
         else:
             return self.id
-
 
     def idcard(self, indent=2):
         """

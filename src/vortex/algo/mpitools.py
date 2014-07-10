@@ -20,6 +20,7 @@ class MpiException(Exception):
     """Raise an exception in the parallel execution mode."""
     pass
 
+
 class MpiTool(footprints.FootprintBase):
     """Root class for any :class:`MpiTool` subclasses."""
 

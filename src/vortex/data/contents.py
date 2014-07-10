@@ -6,6 +6,7 @@ __all__ = []
 
 import collections
 
+
 class DataContent(object):
     """Root class for data contents used by resources."""
 

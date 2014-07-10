@@ -16,6 +16,7 @@ logger = logging.getLogger('footprints.observers')
 
 import util
 
+
 def getbyname(tag=None, _obstable=dict()):
     """Return an observer for the specified tag name (a class name for example)."""
     if tag is None:

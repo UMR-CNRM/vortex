@@ -12,6 +12,7 @@ from types import *  # @UnusedWildImport
 
 _dumpcache = dict()
 
+
 def DEBUG(msg, obj=None, level=None):
     """Fake method for debug purpose (then should provide a print statement)."""
     #print msg, str(obj)
@@ -54,8 +55,10 @@ break_after_dict_end = False
 
 DICT_TYPES = {DictionaryType:1}
 
+
 def atomic_type(t):
     return t in (NoneType, StringType, IntType, LongType, FloatType, ComplexType)
+
 
 def is_instance(val):
     if type(val) is InstanceType:
@@ -68,8 +71,10 @@ def is_instance(val):
     else:
         return False
 
+
 def is_class(val):
     return hasattr(val, '__bases__')
+
 
 def simple_value(val):
     t = type(val)
@@ -92,11 +97,13 @@ def simple_value(val):
     else:
         return False
 
+
 def indent(level=0, nextline=True):
     if nextline:
         return "\n" + indent_space * ( indent_first + indent_size * level )
     else:
         return ""
+
 
 class Dumper():
     """

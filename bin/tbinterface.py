@@ -5,6 +5,7 @@ import footprints
 
 import vortex, common, gco, olive
 
+
 def catdump(thiscollector):
     for c in thiscollector.items():
         attrx = list()

@@ -171,7 +171,6 @@ class utdate(TestCase):
         self.assertEquals(al.get_cmd_line(), [nom_exec + ' ' + ref_cmd_line])
         print "test Routing services ok"
 
-
     def test_mail_serv_via_ctlg(self):
         dico1 = {
             'action_type': 'mail',

@@ -8,6 +8,7 @@ import vortex
 from vortex.tools.actions import actiond as ad
 from vortex.tools.actions import SendMail
 
+
 class TagSubject(SendMail):
 
     def __init__(self, tag='DEBUG'):

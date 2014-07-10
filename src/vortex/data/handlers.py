@@ -18,10 +18,12 @@ from vortex.data import stores
 
 OBSERVER_TAG = 'Resources-Handlers'
 
+
 def observer_board(obsname=None):
     if obsname is None:
         obsname = OBSERVER_TAG
     return footprints.observers.getbyname(obsname)
+
 
 class Handler(object):
     """
@@ -170,7 +172,6 @@ class Handler(object):
             obj = getattr(self, subobj, None)
             if obj:
                 print '{0}  {1:10s}: {2:s}'.format(tab, subobj.capitalize(), str(obj))
-
 
     def locate(self, **extras):
         """Try to figure out what would be the physical location of the resource."""

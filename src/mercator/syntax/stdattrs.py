@@ -8,7 +8,7 @@ class which follow the :class:`vortex.syntax.Footprint` syntax.
 """
 
 import footprints
- 
+
 #: Export a set of attributes :data:`grids`, :data:`bogus`, etc..
 __all__ = [ 'grids', 'bogus', 'experiences' ]
 

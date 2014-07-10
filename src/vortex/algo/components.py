@@ -13,6 +13,7 @@ import vortex
 from vortex.autolog import logdefault as logger
 from vortex.algo import mpitools
 
+
 class AlgoComponent(footprints.FootprintBase):
     """Component in charge of running executable resources."""
 
@@ -155,6 +156,7 @@ class AlgoComponent(footprints.FootprintBase):
             if obj:
                 print '{0}  {1:s}: {2:s}'.format(tab, subobj, str(obj))
         print
+
 
 class Expresso(AlgoComponent):
     """

@@ -14,6 +14,7 @@ from vortex.autolog import logdefault as logger
 
 from vortex import sessions
 
+
 def load_template(t, tplfile):
     """
     Load a template according to filename provided, either absolute or relative path.
@@ -128,7 +129,6 @@ class GenericConfigParser(object):
 
 class DelayedConfigParser(GenericConfigParser):
     """Configuration file parser with possible delayed loading."""
-
 
     def __init__(self, inifile=None):
         GenericConfigParser.__init__(self)

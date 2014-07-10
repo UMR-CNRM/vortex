@@ -16,13 +16,16 @@ from footprints import \
     FootprintAttrDescriptorRXX, \
     FPDict, FPList, FPSet, FPTuple
 
+
 # Classes to be used in module scope
 
 class Foo(object):
     def __init__(self, *args, **kw):
         self.__dict__.update(kw)
+
     def justdoit(self, guess, extras):
         return 'done_' + str(len(guess))
+
 
 class FootprintTestOne(FootprintBase):
     _footprint = dict(
@@ -49,6 +52,7 @@ class FootprintTestOne(FootprintBase):
     def realkind(self):
         return 'bigone'
 
+
 class FootprintTestTwo(FootprintTestOne):
     _footprint = dict(
         info = 'Another test class',
@@ -61,6 +65,7 @@ class FootprintTestTwo(FootprintTestOne):
             )
         )
     )
+
 
 class FootprintTestRWD(FootprintBase):
     _footprint = dict(
@@ -82,6 +87,7 @@ class FootprintTestRWD(FootprintBase):
         )
     )
 
+
 class FootprintTestBuiltins(FootprintBase):
     _footprint = dict(
         info = 'Test builtins wrappers as attributes',
@@ -100,6 +106,7 @@ class FootprintTestBuiltins(FootprintBase):
             )
         )
     )
+
 
 # Tests for miscellaneous dumps
 
@@ -137,6 +144,7 @@ class utDump(TestCase):
         self.assertEqual(dump.indent(), '\n      ')
         self.assertEqual(dump.indent(level=1), '\n          ')
 
+
 # Tests for footprints util
 
 class utDictMerge(TestCase):
@@ -169,6 +177,7 @@ class utDictMerge(TestCase):
         )
         self.assertDictEqual(rv, dict(a=2, b=7, c=dict(val='updatedfoo', other=dict(arg='hip', foo=False))))
 
+
 # A pure internal usage
 
 class utList2Dict(TestCase):
@@ -193,6 +202,7 @@ class utList2Dict(TestCase):
             ('attr', 'only'),
         )
         self.assertEqual(rv, dict(attr=dict(foo=2, more='hip'), only=dict(k1='v1', k2='v2')))
+
 
 # Pseudo-int expand mechanism
 
@@ -254,6 +264,7 @@ class utRangex(TestCase):
         rv = util.rangex(1, 7, 3, prefix='value no.', fmt='{1:d} is {0:d}')
         self.assertListEqual(rv, ['value no.1 is 1', 'value no.2 is 4', 'value no.3 is 7'])
 
+
 # In-place substitution in lists
 
 class utInPlace(TestCase):
@@ -294,6 +305,7 @@ class utInPlace(TestCase):
             globs = dict(z='bar')
         )
         self.assertDictEqual(rv, dict(a=True, c='foo_bar'))
+
 
 # Generic expand mechanism
 
@@ -442,6 +454,7 @@ class utExpand(TestCase):
             {'atuple': 'one', 'alist': 'b', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
             {'atuple': 'two', 'alist': 'b', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'}
         ])
+
 
 # Base class for catalogs like objects
 
@@ -786,6 +799,7 @@ class utPriorities(TestCase):
         rv.reset()
         self.assertTupleEqual(rv.levels, ('NONE', 'DEFAULT', 'TOOLBOX', 'DEBUG'))
 
+
 # Tests for footprints observers
 
 class utObservers(TestCase):
@@ -799,6 +813,7 @@ class utObservers(TestCase):
             '__main__.FootprintTestBuiltins',
             '__main__.FootprintTestMeta',
         ])
+
 
 # Tests for footprints reporting
 
@@ -856,6 +871,7 @@ class utReporting(TestCase):
         self.assertIsNone(rv.current())
         self.assertEqual(rv.info(), 'Report Void:')
         self.assertEqual(len(rv), 0)
+
 
 # Tests for footprints top module methods and objects
 
@@ -926,6 +942,7 @@ class utFootprintSetup(TestCase):
         rv = setup.extras()
         self.assertIsInstance(rv, dict)
         self.assertDictEqual(rv, dict(bottomvalue=2, hello='foo'))
+
 
 # Everything (hopefuly) for the basic footprint mechanisms
 
@@ -1819,6 +1836,7 @@ class utFootprintBuiltins(TestCase):
         self.assertIsInstance(rv.thetuple, tuple)
         self.assertTupleEqual(rv.thetuple, ('one', 'two', 3))
         self.assertListEqual(rv.thetuple.items(), ['one', 'two', 3])
+
 
 class utCollector(TestCase):
 

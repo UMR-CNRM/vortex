@@ -8,7 +8,7 @@ class which follow the :class:`footprints.Footprint` syntax.
 """
 
 import re
- 
+
 #: Export some new class for attributes in footprint objects, eg : GenvKey
 __all__ = [ 'GenvKey', 'GenvDomain' ]
 
@@ -16,9 +16,11 @@ domain_remap = dict(
     caledonie = 'NCAL'
 )
 
+
 def _lowerattr(matchobj):
     """Internal and technical function returning lower case value of the complete match item."""
     return matchobj.group(0).lower()
+
 
 class GenvKey(str):
     """
@@ -30,6 +32,7 @@ class GenvKey(str):
     def __new__(cls, value):
         """Proxy to ``str.__new___`` with attributes inside brackets translated to lower case."""
         return str.__new__(cls, re.sub('\[\w+\]', _lowerattr, value.upper()))
+
 
 class GenvDomain(str):
     """

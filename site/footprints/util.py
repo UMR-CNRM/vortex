@@ -292,6 +292,7 @@ class Catalog(object):
         """Completly clear the list of items previously recorded in this catalog."""
         self._items = WeakSet() if self._weak else set()
 
+
 class SpecialDict(dict):
     """Add some special features to std dict for dealing to dedicated case dictionaries."""
 

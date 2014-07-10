@@ -7,9 +7,11 @@ logging.basicConfig(level=logging.ERROR)
 from unittest import TestCase, TestLoader, TextTestRunner
 
 from vortex import toolbox, sessions
+
 import gco.data
 import olive.data
 import common.data
+
 
 class UtRtCoef(TestCase):
 
@@ -45,7 +47,6 @@ class UtBcor(TestCase):
             self.assertTrue(rh.complete)
 
         self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/OPER/20120214T0600P/observation/bcor.noaa.txt')
-
 
     def test_b1(self):
         rl = toolbox.rload(

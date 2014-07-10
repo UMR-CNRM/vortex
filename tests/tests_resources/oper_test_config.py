@@ -7,11 +7,9 @@ __all__ = [ 'os', 'logging', 'TestCase', 'TestLoader', 'TextTestRunner',
             'today', 'Date', 'Period', 'vortex', 't', 'get_default_provider',
             'get_spec_provider', 'IgaHelperSelect', 'datadir', 'homedir'
         ]
-
 import os
 import logging
 from unittest import TestCase, TestLoader, TextTestRunner
-
 
 import vortex
 from vortex import toolbox, sessions
@@ -19,6 +17,7 @@ from vortex.tools import env
 from vortex.data import resources
 from vortex.data.geometries import SpectralGeometry, GridGeometry
 from vortex.tools.date import today, Date, Period
+
 
 import common.data
 import iga.data
@@ -42,12 +41,14 @@ homedir = tg.get('op:homedir')
 toolbox.defaults(namespace='[suite].inline.fr')
 sessions.switch('oper')
 
+
 def get_default_provider():
     return dict(
         username = 'mxpt001',
         suite = 'oper',
         igakey = 'france'
     )
+
 
 def get_spec_provider(**kw):
     tmp_dict = get_default_provider()

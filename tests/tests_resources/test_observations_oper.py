@@ -11,6 +11,7 @@ except ImportError, e:
 
 #t.debug()
 
+
 class UtObsmap(TestCase):
 
     def setUp(self):
@@ -174,7 +175,6 @@ class UtBlackListLoc(TestCase):
         res = ctlg.find_best(bckll)
         self.assertTrue(res.kind, 'blacklist')
 
-
     def test_r1(self):
         rl = toolbox.rload(
             self.fp_prov,
@@ -209,6 +209,7 @@ class UtBlackListLoc(TestCase):
             rh.locate(),
             datadir + '/arome/france/oper/const/autres/LISTE_LOC'
         )
+
 
 class UtBlackListDiap(TestCase):
 

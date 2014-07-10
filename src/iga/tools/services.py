@@ -22,6 +22,7 @@ from vortex.autolog import logdefault as logger
 from vortex.tools.date import Date
 from vortex.tools.services import Service
 
+
 class LogFacility(int):
     """
     Attribute for SysLogHandler facility value, could be either a valid ``int``

@@ -10,6 +10,7 @@ from vortex.data.flow import GeoFlowResource
 from vortex.syntax.stdattrs import term
 from iga.syntax.stdattrs import archivesuffix
 
+
 class Analysis(GeoFlowResource):
 
     """
@@ -105,7 +106,6 @@ class Analysis(GeoFlowResource):
             model     = self.model,
             nativefmt = self.nativefmt,
         )
-
 
 
 class Historic(GeoFlowResource):

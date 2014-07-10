@@ -4,6 +4,7 @@
 #: No automatic export
 __all__ = []
 
+
 def setresprev(e, res, prev_zero='AM'):
     """
     Defines actual HH values for previous and next run.

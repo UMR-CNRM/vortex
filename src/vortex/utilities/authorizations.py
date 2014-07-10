@@ -18,6 +18,7 @@ from vortex.autolog import logdefault as logger
 from vortex import sessions
 from vortex.tools.config import GenericConfigParser
 
+
 class GroupHandler(namedtuple('PermsUsersHandler', ('perms', 'users'))):
 
     def __new__(cls):

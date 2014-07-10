@@ -35,6 +35,7 @@ rundate = date.Date('2011092200')
 geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
 geoBDAP = GridGeometry(area='GLOB15',resolution=1.5, runit='dg')
 
+
 fpenv = vortex.toolbox.defaults(
     geometry=geo,
     namespace='olive.cache.fr',

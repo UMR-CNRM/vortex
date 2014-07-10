@@ -48,6 +48,7 @@ import re
 import datetime
 import calendar
 
+
 def mkisodate(datestr):
     """A crude attempt to reshape the iso8601 format."""
     l = list(datestr)
@@ -67,10 +68,12 @@ def mkisodate(datestr):
         l.append('Z')
     return ''.join(l)
 
+
 def today():
     """Return date of the day, at 0 hour, 0 minute."""
     td = datetime.datetime.today()
     return Date(td.year, td.month, td.day, 0, 0)
+
 
 def yesterday(base=None):
     """Return date of yesterday (relative to today or specified ``base`` date)."""
@@ -78,26 +81,31 @@ def yesterday(base=None):
         base = today()
     return base - Period(days=1)
 
+
 def tomorrow(base=None):
     """Return date of tomorrow (relative to today or specified ``base`` date)."""
     if not base:
         base = today()
     return base + Period(days=1)
 
+
 def now():
     """Return date just now, with hours, minutes, seconds and microseconds."""
     td = datetime.datetime.now()
     return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
+
 
 def at_second():
     """Return date just now, with only hours, minutes and seconds."""
     td = datetime.datetime.now()
     return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, 0)
 
+
 def at_hour():
     """Return date just now, with only hours."""
     td = datetime.datetime.now()
     return Date(td.year, td.month, td.day, td.hour, 0, 0, 0)
+
 
 def lastround(rh=1, delta=0, base=None):
     """Return date just before ``base`` with a plain hour multiple of ``rh``."""
@@ -106,6 +114,7 @@ def lastround(rh=1, delta=0, base=None):
     if delta:
         base += Period(delta)
     return Date(base.year, base.month, base.day, base.hour - base.hour % rh, 0)
+
 
 def synop(delta=0, base=None, time=None):
     """Return date associated to the last synoptic hour."""
@@ -144,10 +153,12 @@ local_date_functions = dict([
             if hasattr(x, 'func_name') and x.__doc__.startswith('Return date')
 ])
 
+
 def stardates():
     """Nice dump of predefined dates functions."""
     for k, v in sorted(local_date_functions.items()):
         print k.ljust(12), v()
+
 
 def guess(*args):
     for isoclass in (Date, Period):
@@ -157,6 +168,7 @@ def guess(*args):
             continue
     else:
         raise ValueError, "Cannot guess what Period or Date could be %s" % str(args)
+
 
 def daterange(start, end=None, step='P1D'):
     """Date generator."""
@@ -195,7 +207,6 @@ class Period(datetime.timedelta):
     @staticmethod
     def period_regex(s):
         return Period._my_re.match(s)
-
 
     _const_times = [
         # in a [0], there are [1] [2]
@@ -470,7 +481,6 @@ class Date(datetime.datetime):
         for datekey in ('year', 'month', 'day', 'hour', 'minute'):
             kw.setdefault(datekey, getattr(self, datekey))
         return Date(datetime.datetime(**kw))
-
 
     @property
     def cnes_origin(self):

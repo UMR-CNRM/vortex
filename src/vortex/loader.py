@@ -10,6 +10,7 @@ import sys, imp
 import autolog
 logger = autolog.logdefault
 
+
 class VortexImporter(object):
     """Import hook for modules from the install package of VORTEX."""
 

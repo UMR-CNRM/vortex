@@ -8,8 +8,8 @@ import vortex.algo
 
 from vortex.data.geometries import SpectralGeometry, GridGeometry
 from vortex.tools import env, date
-from gco.tools import genv 
- 
+from gco.tools import genv
+
 import common.data
 import olive.data
 import gco.data

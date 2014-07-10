@@ -13,10 +13,12 @@ import datetime
 
 from vortex.autolog import logdefault as logger
 
+
 def idtree(tag, _tableroots=dict()):
     if tag not in _tableroots:
         _tableroots[tag] = Tree(name=tag)
     return _tableroots[tag]
+
 
 class Tree(object):
     """A Miscelaneous hierarchical structure which is also able to track and change active node."""
@@ -118,6 +120,7 @@ class Tree(object):
             self.rdump(id(node), 1)
         else:
             logger.critical('Object %s does not belong this tree', node)
+
 
 class History(object):
     """Multi-purpose history like object."""

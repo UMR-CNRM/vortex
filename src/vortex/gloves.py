@@ -6,7 +6,6 @@ __all__ = []
 
 
 import re
-
 import footprints
 
 from vortex.autolog import logdefault as logger

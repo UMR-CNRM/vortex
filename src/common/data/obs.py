@@ -163,7 +163,6 @@ class Varbc(FlowResource):
             suffix  = self.stage if self.stage != 'void' else None
         )
 
-
     def olive_basename(self):
         """OLIVE specific naming convention."""
         return 'varbc'

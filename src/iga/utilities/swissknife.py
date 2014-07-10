@@ -136,6 +136,7 @@ def slurm_parameters(t, **kw):
 
     return slurm, kw
 
+
 def gget_resource_exists(t, ggetfile):
     """Check either a gget resource exists in the current path or not."""
 
@@ -152,6 +153,7 @@ def gget_resource_exists(t, ggetfile):
         print 'missing :', missing
         return False
     return True
+
 
 def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='gco', logpath=None):
     """

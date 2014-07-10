@@ -31,6 +31,7 @@ history = History(tag='rload')
 
 # Most commonly used functions
 
+
 def quickview(args, nb=0, indent=0):
     """Recursive call to any quick view of objects specified as arguments."""
     if not isinstance(args, list) and not isinstance(args, tuple):
@@ -43,6 +44,7 @@ def quickview(args, nb=0, indent=0):
             quickview(nb, indent)
         else:
             print '{0:02d}. {1:s}'.format(nb, x)
+
 
 def rload(*args, **kw):
     """
@@ -82,6 +84,7 @@ def rload(*args, **kw):
     logger.debug('Resource desc %s', rx)
     return [ data.handlers.Handler(x) for x in rx ]
 
+
 def rh(*args, **kw):
     """
     This function selects the first complete resource handler as returned
@@ -93,6 +96,7 @@ def rh(*args, **kw):
     else:
         return None
 
+
 def rget(*args, **kw):
     """
     This function calls the :meth:`get` method on any resource handler returned
@@ -103,6 +107,7 @@ def rget(*args, **kw):
         rh.get()
     return rl
 
+
 def rput(*args, **kw):
     """
     This function calls the :meth:`put` method on any resource handler returned
@@ -112,6 +117,7 @@ def rput(*args, **kw):
     for rh in rl:
         rh.put()
     return rl
+
 
 def pushsection(section, args, kw):
     """Add a ``section`` type to the current sequence."""
@@ -148,10 +154,12 @@ def pushsection(section, args, kw):
     ctx.record_on()
     return rlok
 
+
 def input(*args, **kw):
     """Add an input section to the current sequence."""
     kw.setdefault('insitu', getinsitu)
     return pushsection('input', args, kw)
+
 
 def inputs(ticket=None, context=None):
     """Return effective inputs in specified context."""
@@ -161,6 +169,7 @@ def inputs(ticket=None, context=None):
         context = ticket.context
     return context.sequence.effective_inputs()
 
+
 def show_inputs(context=None):
     """Dump a summary of inputs sections."""
     t = sessions.ticket()
@@ -169,9 +178,11 @@ def show_inputs(context=None):
         csi.show(ticket=t, context=context)
         print
 
+
 def output(*args, **kw):
     """Add an output section to the current sequence."""
     return pushsection('output', args, kw)
+
 
 def outputs(ticket=None, context=None):
     """Return effective outputs in specified context."""
@@ -181,6 +192,7 @@ def outputs(ticket=None, context=None):
         context = ticket.context
     return context.sequence.effective_outputs()
 
+
 def show_outputs(context=None):
     """Dump a summary of outputs sections."""
     t = sessions.ticket()
@@ -189,10 +201,12 @@ def show_outputs(context=None):
         cso.show(ticket=t, context=context)
         print
 
+
 def executable(*args, **kw):
     """Add an executable section to the current sequence."""
     kw.setdefault('insitu', getinsitu)
     return pushsection('executable', args, kw)
+
 
 def algo(*args, **kw):
     """Load an algo component and display the description provided."""
@@ -204,6 +218,7 @@ def algo(*args, **kw):
     ctx.record_on()
     return ok
 
+
 def magic(url, localpath):
     """
     Return a minimal resource handler build with an unknown resource,
@@ -212,6 +227,7 @@ def magic(url, localpath):
     rhmagic = rh(unknown=True, magic=url, filename=localpath)
     rhmagic.get()
     return rhmagic
+
 
 def namespaces(**kw):
     """
@@ -236,6 +252,7 @@ def namespaces(**kw):
                         nameseen[netname] = list()
                     nameseen[netname].append(cls.fullname())
     return nameseen
+
 
 def print_namespaces(**kw):
     """Formatted print of current namespaces."""

@@ -8,6 +8,7 @@ from unittest import TestCase, TestLoader, TextTestRunner
 
 from vortex import toolbox, sessions
 from vortex.data.geometries import SpectralGeometry, GridGeometry
+
 import common.data
 import gco.data
 import gco.syntax
@@ -32,7 +33,6 @@ class UtClimGlobal(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            
         self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/clim/clim.arpege.tl798-c24.fa.m10')
 
 
@@ -47,16 +47,16 @@ class UtClimGlobal(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            
+
         self.assertEqual(rl[0].resource.gvar, 'CLIM_ARPEGE_T798')
- 
- 
+
+
 class UtClimLAM(TestCase):
 
     def setUp(self):
         self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution=8.0)
         #sessions.current().debug()
-    
+
     def test_v1(self):
         rl = toolbox.rload(
             kind='clim_model',
@@ -70,9 +70,9 @@ class UtClimLAM(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            
         self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/clim/clim.aladin.caledonie-08km00.fa.m10')
-    
+
+
     def test_c1(self):
         rl = toolbox.rload(
             kind='clim_model',
@@ -84,17 +84,17 @@ class UtClimLAM(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            
+
         self.assertEqual(rl[0].resource.gvar, 'CLIM_NCAL_08KM00')
-        
-    
+
+
 class UtClimBDAP(TestCase):
 
     def setUp(self):
         self.frangp0025 = GridGeometry(id='Current op', area='FRANGP0025', resolution=0.025, nlat=601, nlon=801)
         self.glob15 = GridGeometry(id='Current op', area='GLOB15', resolution=1.5)
         #sessions.current().debug()
-        
+
     def test_v1(self):
         rl = toolbox.rload(
             kind='clim_bdap',
@@ -108,9 +108,9 @@ class UtClimBDAP(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            
+
         self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/clim/clim.arpege.glob15.fa.m10')
-        
+
     def test_v2(self):
         rl = toolbox.rload(
             kind='clim_bdap',
@@ -124,10 +124,9 @@ class UtClimBDAP(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            
+
         self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/clim/clim.arome.frangp0025.fa.m10')
-    
-    
+
     def test_c1(self):
         rl = toolbox.rload(
             kind='clim_bdap',
@@ -139,9 +138,9 @@ class UtClimBDAP(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            
+
         self.assertEqual(rl[0].resource.gvar, 'CLIM_DAP_GLOB15')
-    
+
     def test_c2(self):
         rl = toolbox.rload(
             kind='clim_bdap',
@@ -153,7 +152,7 @@ class UtClimBDAP(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            
+
         self.assertEqual(rl[0].resource.gvar, 'CLIM_DAP_FRANGP0025')
 
 
@@ -163,4 +162,3 @@ if __name__ == '__main__':
         if x.errors or x.failures:
             print "Something went wrong !"
             break 
-        

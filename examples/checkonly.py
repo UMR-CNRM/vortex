@@ -48,4 +48,3 @@ x = rl(kind='onlyselect', model='arpege', date=date.Date(2011,12,24,18))
 print t.prompt, x
 
 print t.line
-

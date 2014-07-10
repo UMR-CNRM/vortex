@@ -8,7 +8,7 @@ __all__ = []
 from resources import Resource
 from geometries import SpectralGeometry
 from vortex.syntax.stdattrs import model, date, cutoff
- 
+
 
 class FlowResource(Resource):
     """Abstract resource binded to a model, a date and a cutoff."""

@@ -11,6 +11,7 @@ except ImportError, e:
 
 #t.debug()
 
+
 class UtClimGlobal(TestCase):
 
     def setUp(self):
@@ -65,6 +66,7 @@ class UtClimGlobal(TestCase):
         )
         self.assertTrue(os.stat(rl[0].locate()))
 
+
 class UtClimLAM(TestCase):
 
     def setUp(self):
@@ -90,7 +92,7 @@ class UtClimLAM(TestCase):
         res = ctlg.find_best(climbdap)
 
         self.assertTrue(res.kind, 'clim_bdap')
-    
+
     def test_r1(self):
         rl = toolbox.rload(
             self.fp_climmodel,
@@ -101,13 +103,13 @@ class UtClimLAM(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
- 
+
         month = "{0:02d}".format(today().month)
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/caledonie/oper/const/clim/mens/clim_caledonie_isba'+month
         )
-    
+
         self.assertEqual(
             rl[0].locate(), 
             homedir + '/aladin/caledonie/oper/const/clim/mens/clim_caledonie_isba'+month
@@ -140,7 +142,7 @@ class UtClimBDAPLAM(TestCase):
         res = ctlg.find_best(climbdap)
 
         self.assertTrue(res.kind, 'clim_bdap')
-    
+
     def test_r1(self):
         rl = toolbox.rload(
             self.fp_climmodel,
@@ -151,20 +153,20 @@ class UtClimBDAPLAM(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
- 
+
         month = "{0:02d}".format(today().month)
         self.assertEqual(
             rl[0].location(), 
             'file://oper.inline.fr/aladin/caledonie/oper/const/clim/domaine/clim_dap.caled01.m'+month
         )
-    
+
         self.assertEqual(
             rl[0].locate(), 
             homedir + '/aladin/caledonie/oper/const/clim/domaine/clim_dap.caled01.m'+month
         )
         self.assertTrue(os.stat(rl[0].locate()))
 
-    
+
 class UtClimBDAP(TestCase):
 
     def setUp(self):
@@ -190,6 +192,7 @@ class UtClimBDAP(TestCase):
             geometry = self.frangp0025,
             model = 'arome'
         )
+
     def test_ctlg(self):
         climbdap = self.fp_climbdap_1
         ctlg = footprints.proxy.resources
@@ -201,7 +204,6 @@ class UtClimBDAP(TestCase):
         res = ctlg.find_best(climbdap)
 
         self.assertTrue(res.kind, 'clim_bdap')
- 
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -248,13 +250,13 @@ class UtClimBDAP(TestCase):
         self.assertTrue(os.stat(rl[0].locate()))
 
 
-
 if __name__ == '__main__':
     for test in [ UtClimGlobal, UtClimLAM, UtClimBDAPLAM, UtClimBDAP ]:
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
             break 
+
 
 def get_test_class():
         return [ UtClimGlobal, UtClimBDAP, UtClimGlobal, UtClimLAM ]

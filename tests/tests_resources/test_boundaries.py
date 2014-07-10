@@ -8,8 +8,10 @@ from unittest import TestCase, TestLoader, TextTestRunner
 
 from vortex import toolbox, sessions
 from vortex.data.geometries import SpectralGeometry
+
 import common.data
 import olive.data
+
 
 class UtElscf(TestCase):
 
@@ -53,7 +55,7 @@ class UtElscf(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r0/COUPL0012.rCM')
- 
+
     def test_e2(self):
         rl = toolbox.rload(
             self.attrset,
@@ -70,7 +72,7 @@ class UtElscf(TestCase):
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/COUPL0006.r00')
         self.assertEqual(rl[1].location(), 'op://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/COUPL0006.rAM')
-        
+
     def test_e3(self):
         rl = toolbox.rload(
             self.attrset,
@@ -87,7 +89,7 @@ class UtElscf(TestCase):
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/COUPLIFS0006.r00')
         self.assertEqual(rl[1].location(), 'op://oper.archive.fr/caledonie/oper/production/2012/02/14/r0/COUPLIFS0006.rAM')
-        
+
     def test_e4(self):
         rl = toolbox.rload(
             self.attrset,
@@ -102,7 +104,7 @@ class UtElscf(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/testmp1/14/r0/COUPL0006.rAM')
- 
+
     def test_e5(self):
         rl = toolbox.rload(
             self.attrset,
@@ -117,7 +119,7 @@ class UtElscf(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/testmp2/oper/production/2012/02/14/r0/COUPL0006.rAM')
- 
+
     def test_e6(self):
         rh = toolbox.rload(
             self.attrset,
@@ -133,7 +135,7 @@ class UtElscf(TestCase):
         ).pop()
         self.assertTrue(rh.complete)
         self.assertEqual(rh.location(), 'olive://olive.archive.fr/99A2/20110922H00P/coupling/ELSCFALAD_france+0006')
-   
+
     def test_e7(self):
         rh = toolbox.rload(
             self.attrset,
@@ -149,8 +151,7 @@ class UtElscf(TestCase):
         ).pop()
         self.assertTrue(rh.complete)
         self.assertEqual(rh.location(), 'olive://olive.archive.fr/99Q7/20120208H00P/coupling/ELSCFAROM_frangp+0006')
-              
-              
+
 
 if __name__ == '__main__':
     for test in [ UtElscf ]:
@@ -158,4 +159,3 @@ if __name__ == '__main__':
         if x.errors or x.failures:
             print "Something went wrong !"
             break 
-        

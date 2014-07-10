@@ -12,6 +12,7 @@ from vortex.autolog import logdefault as logger
 
 from types import *
 
+
 class VNameBuilder(object):
     """Baseames factory for resources handled by some Vortex like provider."""
     def __init__(self, *args, **kw):
@@ -51,7 +52,6 @@ class VNameBuilder(object):
 
         packstyle = getattr(self, 'pack_' + components.get('style', 'std'), self.pack_std)
         return packstyle(components)
-
 
     def pack_void(self, value):
         """The most trivial conversion mechanism: the ``value`` as string."""

@@ -48,6 +48,7 @@ def olive_logname(sh, env, output, localout=None):
 
     return sh.path.join(env.HOME, localout)
 
+
 def olive_jobout(sh, env, output, localout=None):
     """Connect to OLIVE daemon in charge of SMS outputs."""
 
@@ -95,6 +96,7 @@ def olive_jobout(sh, env, output, localout=None):
         logger.warning('Could not connect to remote jobout server %s', (swapp_host, swapp_port))
 
     return rc
+
 
 def olive_rescue(sh, env, *files):
     """Action to be undertaken when things really went bad."""

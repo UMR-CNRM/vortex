@@ -42,6 +42,7 @@ def ticket(**kw):
     """
     return Desk().getticket(**kw)
 
+
 def glove(**kw):
     """
     Ask the :class:`Desk` to return a glove according to actual arguments.
@@ -49,29 +50,36 @@ def glove(**kw):
     """
     return Desk().getglove(**kw)
 
+
 def system(**kw):
     """Returns the system associated to the current ticket."""
     return ticket().system(**kw)
+
 
 def glovestags():
     """Ask the :class:`Desk` to return the list of opened gloves tags."""
     return Desk().glovestags()
 
+
 def sessionstags():
     """Ask the :class:`Desk` to return the list of opened sessions tags."""
     return Desk().sessionstags()
+
 
 def current():
     """Ask the :class:`Desk` to return the current active session."""
     return Desk().current
 
+
 def switch(tag):
     """Set the session associated to the actual tag as active."""
     return Desk().switch(tag)
 
+
 def prompt():
     """Returns a built string that could be used as a prompt for reporting."""
     return Desk().current.prompt
+
 
 def exit():
     """Ask all inactive sessions to close, then close the active one."""
@@ -84,6 +92,7 @@ def exit():
     for s in [ thedesk.getticket(tag=x) for x in tags ]:
         ok = s.exit() and ok
     return ok
+
 
 class Ticket(object):
 
@@ -129,7 +138,6 @@ class Ticket(object):
                 context.env.active(True)
 
         tree.addnode(context, parent=self, token=True)
-
 
     @property
     def active(self):

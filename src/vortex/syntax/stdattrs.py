@@ -34,6 +34,7 @@ knownfmt = set([
     'bullx', 'sx'
 ])
 
+
 class FmtInt(int):
     """Formated integer."""
 
@@ -155,6 +156,7 @@ a_suite = dict(
         dbl = 'dble'
     )
 )
+
 
 def show():
     """Returns available items and their type."""

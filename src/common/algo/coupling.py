@@ -50,6 +50,7 @@ class Coupling(IFSParallel):
 
             # Find out actual monthly climatological resource
             actualmonth = date.Month(r.resource.date + r.resource.term)
+
             def checkmonth(actualrh):
                 return bool(actualrh.resource.month == actualmonth)
             self.system.remove('Const.Clim')

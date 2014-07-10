@@ -9,6 +9,7 @@ import footprints
 from vortex.autolog import logdefault as logger
 from vortex.data.stores import Store, Finder
 
+
 class IgaFinder(Finder):
     """
     Inline disk store for operational data resources produced outside

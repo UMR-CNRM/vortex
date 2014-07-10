@@ -72,7 +72,7 @@ class utDate(TestCase):
                  2017: 20170416, 2018: 20180401, 2019: 20190421 }
         for y, d in check.iteritems():
             self.assertEqual(date.Date(str(d)), date.easter(y))
-   
+
     def test_date_julian(self):
         rv = date.Date("20110726121314")
         self.assertEqual(rv.julian, '207')
@@ -176,6 +176,7 @@ class utSpecial(TestCase):
 
         rv = date.lastround(12, base=basedate, delta='-PT15H')
         self.assertEqual(rv.iso8601(), '2013-04-10T12:00:00Z')
+
 
 class utJeffrey(TestCase):
 
@@ -284,6 +285,7 @@ class utTime(TestCase):
         self.assertFalse(t < (6, 30))
         self.assertTrue(t < (6, 31))
         self.assertTrue(t > [6, 29])
+
 
 class utMonth(TestCase):
 

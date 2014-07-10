@@ -20,6 +20,7 @@ ATM_LIST_ONE = ['antiguy', 'arome', 'arpege', 'caledonie', 'polynesie',
 ATM_LIST_TWO = ['perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim',
                 'mocvolc']
 
+
 class IgaCfgParser(GenericConfigParser):
 
     def resolvedpath(self, resname):

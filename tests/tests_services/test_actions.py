@@ -11,6 +11,7 @@ from iga.services import actions as ac
 from vortex.tools.services import MailService
 from iga.services.services import AlarmService, BdapService, RoutingService
 
+
 class Utactions(TestCase):
 
     def setUp(self):

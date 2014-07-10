@@ -8,6 +8,7 @@ __all__ = []
 from vortex.data.flow import FlowResource
 from vortex.syntax.stdattrs import FmtInt
 
+
 class Listing(FlowResource):
     """Miscelanous application output from a task processing."""
     _footprint = [
@@ -35,6 +36,7 @@ class Listing(FlowResource):
             radical = 'listing',
             src     = [ self.model, self.task.split('/').pop() ],
         )
+
 
 class ParallelListing(Listing):
     """Multi output for parallel MPI and/or OpenMP processing."""

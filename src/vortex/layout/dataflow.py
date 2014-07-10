@@ -13,6 +13,7 @@ from vortex.utilities import mktuple
 
 from collections import namedtuple
 
+
 class SectionFatalError(Exception):
     pass
 
@@ -30,6 +31,7 @@ ixo = IXOTuple(INPUT=1, OUTPUT=2, EXEC=3)
 
 #: Arguments specific to a section (to be striped away from a resource handler description)
 section_args = [ 'role', 'alternate', 'intent', 'fatal', 'expected' ]
+
 
 def stripargs_section(**kw):
     """

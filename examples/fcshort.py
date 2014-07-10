@@ -23,6 +23,7 @@ g = t.glove
 # TODO AttributeError: 'ResearchGlove' object has no attribute 'system'
 mysys = g.system
 myenv = mysys.env
+
 mysys.cd(myenv.tmpdir)
 print t.prompt, mysys.pwd()
 
@@ -32,6 +33,7 @@ arpege_cycle = 'cy36t1_op2.16'
 
 rundate = date.Date('2012041300')
 geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
+
 
 fpenv = vortex.toolbox.defaults(
     geometry=geo,

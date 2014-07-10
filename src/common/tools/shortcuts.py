@@ -28,6 +28,7 @@ def fastload(**kw):
     else:
         return al[0]
 
+
 def analysis(**kw):
     """
     Return a analysis according to a standard description and/or some additional information.
@@ -45,6 +46,7 @@ def analysis(**kw):
     )
     adesc.update(kw)
     return fastload(**adesc)
+
 
 def modelstate(**kw):
     """

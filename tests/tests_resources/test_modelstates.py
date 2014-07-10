@@ -12,6 +12,7 @@ from vortex.data.geometries import SpectralGeometry, GridGeometry
 import common.data
 import olive.data
 
+
 class UtGridPoint(TestCase):
 
     def setUp(self):
@@ -19,7 +20,6 @@ class UtGridPoint(TestCase):
         self.franx01 = GridGeometry(id='Current op', area='FRANX01', resolution=0.1, nlat=221, nlon=281)
         self.frangp0025 = GridGeometry(id='Current op', area='FRANGP0025', resolution=0.025, nlat=601, nlon=801)
         self.glob15 = GridGeometry(id='Current op', area='GLOB15', resolution=1.5)
-
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -40,7 +40,6 @@ class UtGridPoint(TestCase):
         self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600A/forecast/grid.aladin-forecast.franx01+0006:00.grib')
         self.assertEqual(rl[1].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600A/forecast/grid.aladin-forecast.franx01+0006:00.fa')
 
-
     def test_g1(self):
         rl = toolbox.rload(
             self.attrset,
@@ -59,7 +58,6 @@ class UtGridPoint(TestCase):
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/france/oper/assim/2012/02/14/r6/GRIDFRANX01r6_0006')
         self.assertEqual(rl[1].location(), 'op://oper.archive.fr/france/oper/production/2012/02/14/r6/GRIDFRANX01r6_0006')
 
-
     def test_g2(self):
         rl = toolbox.rload(
             self.attrset,
@@ -76,7 +74,6 @@ class UtGridPoint(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r6/GRIDFRANGP0025r6_0006')
-
 
     def test_g3(self):
         rl = toolbox.rload(
@@ -96,7 +93,6 @@ class UtGridPoint(TestCase):
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/assim/2012/02/14/r6/PE06006GLOB15')
         self.assertEqual(rl[1].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/PESX006GLOB15')
 
-
     def test_g4(self):
         rl = toolbox.rload(
             self.attrset,
@@ -114,7 +110,6 @@ class UtGridPoint(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/pearp/oper/14/r6/fc_SX_4_GLOB15_0006')
-
 
     def test_g5(self):
         rl = toolbox.rload(
@@ -136,7 +131,6 @@ class UtGridPoint(TestCase):
         self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A0/20120214H06P/fc_004/GRIDHSTGLOB15+0006')
         self.assertEqual(rl[1].location(), 'olive://olive.archive.fr/99A0/20120214H06P/fc_004/PFFPOSHSTGLOB15+0006')
 
-
     def test_g6(self):
         rl = toolbox.rload(
             self.attrset,
@@ -155,7 +149,6 @@ class UtGridPoint(TestCase):
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A0/20120214H06P/forecast/HMGLOB15+0006')
 
-
     def test_g7(self):
         rl = toolbox.rload(
             self.attrset,
@@ -172,7 +165,6 @@ class UtGridPoint(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/mocage/14/HMGLOB15+2012021510')
-
 
     def test_v7(self):
         rl = toolbox.rload(
@@ -211,7 +203,6 @@ class UtGridPoint(TestCase):
         self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A0/20120214H06P/cplsurf/SMGLOB15_void+20120215')
         self.assertEqual(rl[1].location(), 'olive://olive.archive.fr/99A0/20120214H06P/cplsurf/SMGLOB15_interp+20120215')
 
-
     def test_g9(self):
         rl = toolbox.rload(
             self.attrset,
@@ -228,7 +219,6 @@ class UtGridPoint(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/mocage/14/SMGLOB15+20120215')
-
 
     def test_v9(self):
         rl = toolbox.rload(
@@ -250,7 +240,6 @@ class UtGridPoint(TestCase):
         self.assertEqual(rl[1].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600P/coupling/grid.mocage-sumo.glob15+0024:00.fa')
 
 
-
 class UtHistoric(TestCase):
 
     def setUp(self):
@@ -259,7 +248,6 @@ class UtHistoric(TestCase):
         self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution=8.0)
         self.arome = SpectralGeometry(id='Current op', area='frangp')
         self.mnh = SpectralGeometry(id='Current op', area='france', resolution=1.5)
-
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -277,7 +265,6 @@ class UtHistoric(TestCase):
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000A/forecast/historic.arpege.tl798-c24+0006:00.fa')
 
-
     def test_v2(self):
         rl = toolbox.rload(
             self.attrset,
@@ -293,7 +280,6 @@ class UtHistoric(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000A/forecast/historic.aladin.caledonie-08km00+0006:00.fa')
-
 
     def test_v3(self):
         rl = toolbox.rload(
@@ -311,7 +297,6 @@ class UtHistoric(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/A000/20120214T0000A/forecast/historic.mesonh.france-01km50+0006:00.lfi')
-
 
     def test_h1(self):
         rl = toolbox.rload(
@@ -331,7 +316,6 @@ class UtHistoric(TestCase):
         self.assertEqual(rl[2].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r0/icmsharpe+0000')
         self.assertEqual(rl[3].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r0/icmsharpe+0006')
 
-
     def test_h2(self):
         rl = toolbox.rload(
            self.attrset,
@@ -346,7 +330,6 @@ class UtHistoric(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/caledonie/oper/assim/2012/02/14/r0/ICMSHALAD+0006')
-
 
     def test_h3(self):
         rl = toolbox.rload(
@@ -409,7 +392,6 @@ class UtHistoric(TestCase):
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A0/20120214H00P/forecast/ICMSHARPE+0006')
 
-
     def test_h7(self):
         #sessions.current().debug()
         rl = toolbox.rload(
@@ -428,8 +410,6 @@ class UtHistoric(TestCase):
         self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A0/20120214H00P/forecast/MESONH.FRAN+0006.lfi')
 
 
-
-
 class UtAnalysis(TestCase):
 
     def setUp(self):
@@ -437,7 +417,6 @@ class UtAnalysis(TestCase):
         self.std = SpectralGeometry(id='Current op', area='france', truncation=798, stretching=2.4, lam=False)
         self.caledonie = SpectralGeometry(id='Current op', area='caledonie', resolution=8.0)
         self.arome = SpectralGeometry(id='Current op', area='frangp', resolution=2.5)
-
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -562,7 +541,6 @@ class UtHistsurf(TestCase):
         self.attrset = dict(kind='historic', date='2012021400', cutoff='production', namespace='[suite].archive.fr')
         self.arome = SpectralGeometry(id='Current op', area='frangp', resolution=2.5)
 
-
     def test_v1(self):
         rl = toolbox.rload(
             self.attrset,
@@ -613,7 +591,6 @@ class UtHistsurf(TestCase):
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r0/PREP.lfi')
         self.assertEqual(rl[1].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r0/AROMOUT_.0006.lfi')
 
-
     def test_h2(self):
         rl = toolbox.rload(
             self.attrset,
@@ -639,4 +616,3 @@ if __name__ == '__main__':
         if x.errors or x.failures:
             print "Something went wrong !"
             break
-

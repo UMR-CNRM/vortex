@@ -22,6 +22,7 @@ def nicedeco(decorator):
         return g
     return new_decorator
 
+
 @nicedeco
 def disabled(func):
     """This decorator disables the provided function, and does nothing."""
@@ -29,17 +30,20 @@ def disabled(func):
         pass
     return empty_func
 
+
 @nicedeco
 def printargs(func):
     """This decorator prints out the arguments passed to a function before calling it."""
     argnames = func.func_code.co_varnames[:func.func_code.co_argcount]
     fname = func.func_name
+
     def echo_func_args(*args, **kw):
         print '> > >', fname, '(', ', '.join(
             '%s=%r' % entry
             for entry in zip(argnames, args) + kw.items()), ')'
         return func(*args, **kw)
     return echo_func_args
+
 
 def timelimit(nbsec):
     """This decorator warn if the function is more than ``nbsec`` seconds long."""

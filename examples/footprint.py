@@ -11,8 +11,9 @@ t.warning()
 from vortex.data.resources import Resource
 from vortex.syntax.stdattrs import a_model
 
+
 class R01(Resource):
-    
+
     _footprint = dict(
         info = 'test resource',
         attr = dict(
@@ -32,6 +33,7 @@ class R01(Resource):
     @property
     def realkind(self):
         return 'R01'
+
 
 class R02(R01):
 

@@ -10,5 +10,6 @@ import logging
 
 logdefault = logging.getLogger()
 
+
 def logmodule(modname):
     return logging.getLogger(modname)

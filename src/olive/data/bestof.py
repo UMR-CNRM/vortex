@@ -13,7 +13,7 @@ from vortex.data.flow import FlowResource
 
 
 class InflFactor(FlowResource):
-    
+
     _footprint = dict(
         info = 'Inflation factor file',
         attr = dict(
@@ -22,16 +22,16 @@ class InflFactor(FlowResource):
             ),
         )
     )
-    
+
     @property
     def realkind(self):
         return 'inflfactor'
 
     def basename_info(self):
         return dict(radical='inflfactor', src=self.model)
-      
+
     def olive_basename(self):
         return ('inflation_factor')
-    
+
     def archive_basename(self):
         return ('inflation_factor')

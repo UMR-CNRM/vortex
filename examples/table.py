@@ -21,6 +21,7 @@ print t.prompt, 'Playing with table and callable attributes'
 
 print t.line
 
+
 class TablePerso(IndexedTable):
     def xxtpos(self, n, g, x):
         t = g.get('term', x.get('term', None))
@@ -36,10 +37,10 @@ class TablePerso(IndexedTable):
                 return value
             else:
                 return None
-    
+
     def xxtnam(self, g, x):
         return self.xxtpos(0, g, x)
-    
+
     def xxtsrc(self, g, x):
         return self.xxtpos(1, g, x)
 

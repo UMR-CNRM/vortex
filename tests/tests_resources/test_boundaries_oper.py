@@ -9,6 +9,7 @@ except ImportError, e:
     print e
     raise
 
+
 class UtElscf(TestCase):
 
     def setUp(self):
@@ -64,11 +65,9 @@ class UtElscf(TestCase):
             date = today().ymd
         )
 
-
         self.fp_cont1 = dict(
             local='ELSCFAROMALBC[term::fmth].rPM'
         )
-
 
     def test_ctlg1(self):
         ctlg = footprints.proxy.resources
@@ -84,7 +83,7 @@ class UtElscf(TestCase):
         elscf = self.fp_elscf3
         res = ctlg.find_best(elscf)
         self.assertEqual(res.kind, 'boundary')
- 
+
     def test_v1(self):
         rl = toolbox.rload(
             self.fp_prov,
@@ -155,6 +154,7 @@ if __name__ == '__main__':
         if x.errors or x.failures:
             print "Something went wrong !"
             break 
+
 
 def get_test_class():
     return [ UtElscf ]

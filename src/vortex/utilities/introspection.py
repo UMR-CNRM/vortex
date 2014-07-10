@@ -14,6 +14,7 @@ import inspect
 from vortex import sessions
 from vortex.autolog import logdefault as logger
 
+
 class Sherlock(object):
     """Centrelized interface to introspection functions."""
 

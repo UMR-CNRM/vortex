@@ -8,12 +8,14 @@ from unittest import TestCase, TestLoader, TextTestRunner
 
 from vortex import toolbox
 from vortex.data.geometries import SpectralGeometry, GridGeometry
+
 import common.data
 import olive.data
 import gco.data
 
+
 class UtListing(TestCase):
-    
+
     def test_v1(self):
         rl = toolbox.rload(
             kind='listing',

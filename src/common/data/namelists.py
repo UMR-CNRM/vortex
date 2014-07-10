@@ -280,7 +280,6 @@ class NamTerm(Namelist):
                         if ext is None:
                             ext = ''
 
-
         if fixed:
             return dirpath + base + p + ext
         else:

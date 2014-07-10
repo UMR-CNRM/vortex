@@ -17,6 +17,7 @@ from vortex.autolog import logdefault as logger
 #: No automatic export
 __all__ = []
 
+
 def uriparse(uristring):
     """Parse the specified ``uristring`` as a dictionary including keys:
 
@@ -51,6 +52,7 @@ def uriparse(uristring):
     uridict['scheme'] = realscheme
     uridict['query'] = urlparse.parse_qs(uridict['query'])
     return uridict
+
 
 def uriunparse(uridesc):
     """Delegates to :mod:`urlparse` the job to unparse the given description (as a dictionary)."""

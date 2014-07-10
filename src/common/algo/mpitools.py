@@ -68,6 +68,7 @@ class MpiAuto(mpitools.MpiRun):
         )
     )
 
+
 class MpiNWPIO(mpitools.MpiServerIO):
     """Standard IFS NWP IO server."""
 

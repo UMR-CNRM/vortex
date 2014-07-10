@@ -7,6 +7,7 @@ __all__ = []
 from vortex.tools.config import GenericConfigParser
 from vortex.data.contents import IndexedTable
 
+
 class IgaHelperSelect(IndexedTable):
 
     def __init__(self, data=None, filled=False):
@@ -44,7 +45,6 @@ class IgaHelperSelect(IndexedTable):
 
 class IgaHelperParser(GenericConfigParser):
     """docstring for IgaHelperParser"""
-
 
     def get_info(self, current):
         """docstring for get_info"""

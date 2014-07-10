@@ -64,6 +64,8 @@ import loader
 # Insert a dynamic callback so that any footprint resolution could check the current Glove
 
 import tools
+
+
 def getglove():
     return dict(glove = tools.env.current().glove)
 
@@ -90,6 +92,7 @@ sh = sessions.system
 import toolbox, algo, data
 
 # Register proper vortex exit before the end of interpreter session
+
 
 def complete():
     sessions.exit()

@@ -5,7 +5,6 @@
 __all__ = [ 'Resource' ]
 
 import re
-
 import footprints
 
 from vortex.autolog import logdefault as logger

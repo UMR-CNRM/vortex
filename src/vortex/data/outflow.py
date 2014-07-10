@@ -14,7 +14,7 @@ class NoDateResource(Resource):
 
 
 class ModelResource(NoDateResource):
-    
+
     _footprint = [ model ]
     _abstract = True
 
@@ -25,8 +25,9 @@ class ModelResource(NoDateResource):
             nativefmt = self.nativefmt
         )
 
+
 class StaticResource(ModelResource):
-    
+
     _footprint = dict(
         attr = dict(
             geometry = dict(

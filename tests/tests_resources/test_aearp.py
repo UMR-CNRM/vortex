@@ -12,6 +12,8 @@ from vortex.data.geometries import SpectralGeometry
 from olive.data import errgrib, bestof
 #from iga.data import errgrib
 
+
+
 class UtBackgroundErrStd(TestCase):
 
     def setUp(self):
@@ -35,7 +37,6 @@ class UtBackgroundErrStd(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000P/analysis/bgerrstd.arpege.tl224+0003:00.grib')
-
 
     def test_e1(self):
         rl = toolbox.rload(
@@ -103,7 +104,6 @@ class UtBackgroundErrStd(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(rl[0].location(), 'op://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production_dsbscr.out')
-
 
 
 class UtInflFactor(TestCase):

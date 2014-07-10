@@ -20,13 +20,16 @@ vartrue  = re.compile(r'^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$', flags=re.IGNOREC
 #: Precompiled evaluation mostly used by :class:`Environment` method (false).
 varfalse = re.compile(r'^\s*(?:0|ko|off|false|no|n)\s*$', flags=re.IGNORECASE)
 
+
 def paramsmap(_paramsmap=dict()):
     """Cached table of parameters sets currently available."""
     return _paramsmap
 
+
 def paramstags():
     """List of current tags defined as set of parameters."""
     return paramsmap().keys()
+
 
 def param(tag='default', pmap=None):
     """
@@ -39,15 +42,18 @@ def param(tag='default', pmap=None):
         pmap[tag] = Environment(active=False, clear=True)
     return pmap[tag]
 
+
 def share(**kw):
     """Populate a special shared environment parameters set."""
     shared = param(tag='shared')
     shared.update(kw)
     return shared
 
+
 def current():
     """Return current binded :class:`Environment` object."""
     return Environment.current()
+
 
 class ShellEncoder(json.JSONEncoder):
     """Encoder for :mod:`json` dumps method."""

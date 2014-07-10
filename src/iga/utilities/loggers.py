@@ -6,6 +6,7 @@ __all__ = []
 
 import logging
 
+
 class MyLogger(object):
     """docstring for MyLogger"""
     def __init__(self):
@@ -18,6 +19,7 @@ class MyLogger(object):
     def notify(self, message):
         print "MyLogger::notify %s" % message
         self.logger.info(message)
+
 
 def create_logger():
     """docstring for create_logger"""
@@ -34,6 +36,7 @@ def create_logger():
     # add the handlers to the logger
     logger.addHandler(fh)
     return logger
+
 
 def iga_logger():
     """docstring for create_logger"""

@@ -9,6 +9,7 @@ from vortex.data.geometries import SpectralGeometry
 from gco.syntax.stdattrs import GenvKey
 from modelstates import Historic
 
+
 class SurfexHistoric(Historic):
 
     _footprint = dict(
@@ -99,6 +100,7 @@ class PGDFA(PGDRaw):
             )
         )
     )
+
 
 class CoverParams(StaticResource):
     """

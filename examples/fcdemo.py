@@ -93,14 +93,14 @@ input = (
         kind = 'analysis',
         local = 'ICMSHFCSTINIT',
     ),
-    
+
     rl(
         provider = prvcst,
         role = 'RtCoef',
         kind = 'rtcoef',
         local = 'rtcoef.tgz'
     ),
-    
+
     rl(
         provider = prvcst,
         role = 'ClimatologicalModelFile',
@@ -108,7 +108,7 @@ input = (
         month = rundate.month,
         local = 'Const.Clim',
     ),
-    
+
     rl(
         provider = prvcst,
         role = 'ClimatologicalBDAPFile',
@@ -117,15 +117,15 @@ input = (
         geometry = geoBDAP,
         local = 'const.clim.[geometry::area]',
     ),
-    
+
     rl(
         provider = prvcst,
-        role = 'MatFilter', 
+        role = 'MatFilter',
         kind = 'matfilter',
         scopedomain = geoBDAP,
         local = 'matrix.fil.[scopedomain::area]',
     ),
-    
+
     rl(
         provider = prvcst,
         role = 'DrivingNamelist',
@@ -133,7 +133,7 @@ input = (
         source = 'namelistfcp',
         local = 'fort.4'
     ),
-    
+
     rl(
         provider = prvcst,
         role = 'SelectionNamelist',

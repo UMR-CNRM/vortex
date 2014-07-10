@@ -7,7 +7,7 @@ import vortex.data
 from vortex.data.geometries import SpectralGeometry, GridGeometry
 from vortex.algo import components
 from vortex.tools import env, date
- 
+
 import common.data
 import olive.data
 import gco.data

@@ -65,6 +65,7 @@ def hliteral2int(hliteral):
     )
     return l2i[hliteral]
 
+
 def archivesuffix(model, cutoff, date):
     """Returns the suffix for iga filenames according to specified ``model``, ``cutoff`` and ``date`` hour."""
 

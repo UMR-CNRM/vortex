@@ -97,4 +97,3 @@ class MatFilter(StaticResource):
     def olive_basename(self):
         """OLIVE specific naming convention."""
         return 'matrix.fil.' + self.scope.area + '.t' + str(self.geometry.truncation) + '.c' + str(self.geometry.stretching)
-

@@ -12,8 +12,10 @@ options = [{'noms': ('-r', '--repertoire'), 'dest': 'rep',
             'help': ('Spécifie le repértoire à utiliser, si non fourni,'
                      'le chemin courant est utilisé')}]
 
+
 def _print_line():
     print '-'*100
+
 
 def main(options, arguments, parser):
     if options.rep is not None:
