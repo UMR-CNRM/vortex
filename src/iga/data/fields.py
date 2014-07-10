@@ -39,7 +39,7 @@ class RawFields(Resource):
         return self.fields + self.origin
 
     def archive_basename(self):
-        if (self.origin == 'nesdis' and self.fields == 'sst'):
+        if self.origin == 'nesdis' and self.fields == 'sst':
             bname = '.'.join((self.fields, self.origin, 'bdap'))
         elif self.fields == 'seaice':
             bname = 'ice_concent'

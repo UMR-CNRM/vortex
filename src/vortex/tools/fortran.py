@@ -181,7 +181,7 @@ class LiteralParser(object):
 
     def parse_integer(self, string):
         """If the argument looks like a FORTRAN integer, returns the matching python integer."""
-        if ( self.integer.match(string) ):
+        if self.integer.match(string):
             # Removes the kind parameter.
             cleaned_string = re.sub("_"+_KIND_PARAM, "", string, self._re_flags)
             return int(cleaned_string)
@@ -200,7 +200,7 @@ class LiteralParser(object):
 
     def parse_real(self, string):
         """If the argument looks like a FORTRAN real, returns the matching python float."""
-        if ( self.real.match(string) ):
+        if self.real.match(string):
             # Removes the kind parameter.
             string = re.sub("_"+_KIND_PARAM, "", string, self._re_flags)
             # Changes the exponent d to e.
@@ -210,16 +210,16 @@ class LiteralParser(object):
 
     def parse_complex(self, string):
         """If the argument looks like a FORTRAN complex, returns the matching python complex."""
-        if ( self.complex.match(string) ):
+        if self.complex.match(string):
             # Splits real and imag parts.
             (real_string, imag_string) = string[1:-1].split(',')
             # Parse real part
-            if ( self.integer.match(real_string) ):
+            if self.integer.match(real_string):
                 real = self.parse_integer(real_string)
             else:
                 real = self.parse_real(real_string)
             # Parse imag part
-            if ( self.integer.match(imag_string) ):
+            if self.integer.match(imag_string):
                 imag = self.parse_integer(imag_string)
             else:
                 imag = self.parse_real(imag_string)
@@ -228,7 +228,7 @@ class LiteralParser(object):
 
     def parse_character(self, string):
         """If the argument looks like a FORTRAN character, returns the matching python string."""
-        if ( self.character.match(string) ):
+        if self.character.match(string):
             # Removes the kind parameter.
             cleaned_string = re.sub("^" + _KIND_PARAM + "_", "", string, self._re_flags)
             return cleaned_string[1:-1]
@@ -236,12 +236,12 @@ class LiteralParser(object):
 
     def parse_logical(self, string):
         """If the argument looks like a FORTRAN logical, returns the matching python boolean."""
-        if ( self.logical.match(string) ):
+        if self.logical.match(string):
             # Removes the kind parameter.
             cleaned_string = re.sub("_"+_KIND_PARAM, "", string, self._re_flags)
-            if ( self.true.match(cleaned_string) ):
+            if self.true.match(cleaned_string):
                 return True
-            elif ( self.false.match(cleaned_string) ):
+            elif self.false.match(cleaned_string):
                 return False
             else:
                 raise ValueError("Literal %s is a weirdFORTRAN logical" % cleaned_string)
@@ -285,18 +285,18 @@ class LiteralParser(object):
 
     def encode_character(self, value):
         """Returns the string form of the character string ``value``."""
-        if ( "'" in value and '"' in value ):
+        if "'" in value and '"' in value:
             return '"%s"' % value.replace('"', '""')
-        elif ( "'" in value ):
+        elif "'" in value:
             return '"%s"' % value
-        elif ( '"' in value ):
+        elif '"' in value:
             return "'%s'" % value
         else:
             return "'%s'" % value
 
     def encode_logical(self, value):
         """Returns the string form of the logical ``value``."""
-        if ( value ):
+        if value:
             return '.TRUE.'
         else:
             return '.FALSE.'
@@ -783,7 +783,7 @@ def _test_incore(np):
 def _test_namparser(np):
     import sys
 
-    if ( len(sys.argv ) == 1 ):
+    if len(sys.argv ) == 1:
         _test_incore(np)
     else:
         filename = sys.argv[1]

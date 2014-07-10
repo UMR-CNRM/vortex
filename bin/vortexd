@@ -35,7 +35,7 @@ dispatcher = dispatch.Dispatcher()
 # Listen until 'exit'
 listen = True
 
-while ( listen ):
+while listen:
 
     # Raw input from FIFO... could be something more sophisticated !
     rp = open(rfifo, 'r')
@@ -55,7 +55,7 @@ while ( listen ):
         args = [ 'default' ]
     cmd = args.pop(0).lower()
 
-    if ( cmd == 'exit' ):
+    if cmd == 'exit':
 
         # The only magic command is 'exit'
         listen = False
@@ -63,7 +63,7 @@ while ( listen ):
         (rc, rmsg, results) = ( 0, 'Bye ' + ppid + '...', vortex.exit() )
         log.append((rc, cmd))
 
-    elif ( cmd == 'vars' or cmd == 'sto' ):
+    elif cmd == 'vars' or cmd == 'sto':
 
         # Display internal storage
         if sto:
@@ -73,17 +73,17 @@ while ( listen ):
         results = sto['last']
         log.append((rc, cmd))
 
-    elif ( cmd == 'log' ):
+    elif cmd == 'log':
 
         # Display log history
         (rc, rmsg, results) = ( 0, "\n".join(map(lambda x: str(x), log)), sto['last'] )
 
-    elif ( cmd == 'last' ):
+    elif cmd == 'last':
 
         # Display last result
         (rc, rmsg, results) = ( 0, str(sto['last']), sto['last'] )
 
-    elif ( cmd == 'clear' ):
+    elif cmd == 'clear':
 
         # Clear data from internal storage
         if args:

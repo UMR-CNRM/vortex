@@ -58,7 +58,7 @@ class HGeometry(object):
     """Abstract horizontal geometry."""
 
     def __new__(cls, *args, **kw):
-        if ( args ):
+        if args:
             hg = getbyname(args[0].lower())
             hg.initialised = True
         else:

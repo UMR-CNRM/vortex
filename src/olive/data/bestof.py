@@ -31,7 +31,7 @@ class InflFactor(FlowResource):
         return dict(radical='inflfactor', src=self.model)
 
     def olive_basename(self):
-        return ('inflation_factor')
+        return 'inflation_factor'
 
     def archive_basename(self):
-        return ('inflation_factor')
+        return 'inflation_factor'

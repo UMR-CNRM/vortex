@@ -211,7 +211,7 @@ class LFI_Standard(LFI_Tool):
         rawout = self._spawn(cmd, **kw)
         fields = [ x.partition('!= ')[-1] for x in rawout if x.startswith(' !=') ]
 
-        return LFI_Status(rc=int(bool((fields))), stdout=rawout, result=fields)
+        return LFI_Status(rc=int(bool(fields)), stdout=rawout, result=fields)
 
     def lfi_ftput(self, source, destination, hostname=None, logname=None):
         """On the fly packing and ftp."""

@@ -82,7 +82,7 @@ def simple_value(val):
     if atomic_type(val):
         return True
 
-    if (t not in DICT_TYPES and t not in (ListType, TupleType) and not is_instance(val)):
+    if t not in DICT_TYPES and t not in (ListType, TupleType) and not is_instance(val):
         return True
     elif t in (ListType, TupleType) and len(val) <= 10:
         for x in val:
