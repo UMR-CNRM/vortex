@@ -415,7 +415,7 @@ class Collector(util.Catalog):
         """
         return self.lastreport.as_tree(**kw)
 
-    def dump_lastreport(self, stamp=False):
+    def dump_lastreport(self):
         """Print a nicelly formatted dump report as a dict."""
         print dump.fulldump(self.lastreport.as_dict())
 
