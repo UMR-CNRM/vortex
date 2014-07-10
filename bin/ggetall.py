@@ -6,9 +6,10 @@ import argparse
 description = "Creates a frozen copy of gco resources (in gco/ and genv/)."
 
 parser = argparse.ArgumentParser(description=description)
-parser.add_argument('-c', '--cycle',   required=True, help='cycle name (e.g. cy38t1_op2.13)')
-parser.add_argument('-f', '--force',                  help='ignore errors', action='store_true')
-parser.add_argument('-v', '--verbose',                help='verbose mode',  action='store_true', default=True)
+parser.add_argument('-c', '--cycle',     required=True,  help='cycle name (e.g. cy38t1_op2.13)')
+parser.add_argument('-f', '--force',                     help='ignore errors',    action='store_true')
+parser.add_argument(      '--noverbose', dest='verbose', help='non-verbose mode', action='store_false')
+parser.add_argument('-v', '--verbose',   dest='verbose', help='verbose mode',     action='store_true')
 
 args = parser.parse_args()
 
