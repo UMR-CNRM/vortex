@@ -113,12 +113,12 @@ def olive_rescue(sh, env, *files):
         items = sh.glob('*')
 
     if 'VORTEX_RESCUE_FILTER' in env:
-        select = '|'.join(re.split('[,;:]+', env.VORTEX_RESCUE_FILTER))
+        select = '|'.join(re.split(r'[,;:]+', env.VORTEX_RESCUE_FILTER))
         items = [ x for x in items if re.search(select, x, re.IGNORECASE) ]
         logger.info('Rescue filter (%s)', select)
 
     if 'VORTEX_RESCUE_DISCARD' in env:
-        select = '|'.join(re.split('[,;:]+', env.VORTEX_RESCUE_DISCARD))
+        select = '|'.join(re.split(r'[,;:]+', env.VORTEX_RESCUE_DISCARD))
         items = [ x for x in items if not re.search(select, x, re.IGNORECASE) ]
         logger.info('Rescue discard (%s)', select)
 

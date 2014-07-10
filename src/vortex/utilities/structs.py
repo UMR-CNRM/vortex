@@ -108,7 +108,7 @@ class Tree(object):
             self._tokens = filter(lambda x: x != idn, self._tokens)
 
     def rdump(self, idn, indent):
-        print '{0:s}\_[{1}] {2}'.format('   ' * indent, idn, self.node(idn))
+        print r'{0:s}\_[{1}] {2}'.format('   ' * indent, idn, self.node(idn))
         for kid in self._nodes[idn]['kids']:
             self.rdump(kid, indent+1)
 
