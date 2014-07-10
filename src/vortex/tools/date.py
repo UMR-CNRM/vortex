@@ -58,7 +58,7 @@ def mkisodate(datestr):
         l[7:7] = [ '-' ]
     if len(l) > 10 and l[10] != 'T':
         l[10:10] = [ 'T' ]
-    if len(l) > 10 and len(l) <= 13:
+    if 10 < len(l) <= 13:
         l.extend(['0', '0'])
     if len(l) > 13 and l[13] != ':':
         l[13:13] = [ ':' ]
@@ -634,8 +634,8 @@ class Time(object):
         delta = Time(delta)
         hour, minute = self.hour - delta.hour, self.minute - delta.minute
         if minute < 0:
-            minute = minute + 60
-            hour = hour - 1
+            minute += 60
+            hour   -= 1
         return Time(hour, minute)
 
     @property
@@ -683,7 +683,7 @@ class Month(object):
         self._year = max(0, int(kw.pop('year', today().year)))
         if isinstance(top, datetime.datetime) or isinstance(top, Month):
             self._month, self._year = top.month, top.year
-        elif isinstance(top, int) and top > 0 and top < 13:
+        elif isinstance(top, int) and 0 < top < 13:
             self._month = top
             if len(args) == 2:
                 self._year = int(args[1])

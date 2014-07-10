@@ -369,7 +369,7 @@ class Desk(Singleton):
         Allows the user to switch to an other session, as long that the actual tag
         provided is already known.
         """
-        if self._tickets.has_key(tag):
+        if tag in self._tickets:
             if tag != self._current_ticket:
                 self._tickets[self._current_ticket]._active = False
                 self._tickets[self._current_ticket].env.active(False)

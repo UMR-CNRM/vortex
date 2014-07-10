@@ -100,13 +100,13 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
         realstep = int(realstep)
 
         if realstep < 0:
-            realend = realend - 1
+            realend -= 1
         else:
-            realend = realend + 1
-        if shift != None:
+            realend += 1
+        if shift is not None:
             realshift = int(shift)
-            realstart = realstart + realshift
-            realend = realend + realshift
+            realstart += realshift
+            realend   += realshift
 
         pvalues = range(realstart, realend, realstep)
         if fmt is not None:
@@ -160,7 +160,7 @@ def expand(desc):
 
     while todo:
         todo = False
-        nbpass = nbpass + 1
+        nbpass += 1
         if nbpass > 25:
             logger.error('Expansion is getting messy... (%d) ?', nbpass)
             raise MemoryError('Expand depth too high')

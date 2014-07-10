@@ -120,7 +120,7 @@ class Dispatcher(object):
         Print environment associated to current session.
         Return current tied environment.
         """
-        if 'dump' in kw and kw['dump'] == True:
+        if 'dump' in kw and kw['dump'] is True:
             info = t.env.mydump()
         else:
             info = [ str(t.env) ]

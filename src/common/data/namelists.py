@@ -89,13 +89,13 @@ class NamelistContent(AlmostDictContent):
                 self[namblock.name] = newblock
         if rmblocks is None and hasattr(delta, 'rmblocks'):
             rmblocks = delta.rmblocks()
-        if rmblocks != None:
+        if rmblocks is not None:
             for item in [ x for x in rmblocks if x in self ]:
                 del self[item]
-        if clblocks != None:
+        if clblocks is not None:
             for item in [ x for x in clblocks if x in self ]:
                 self[item].clear()
-        if rmkeys != None:
+        if rmkeys is not None:
             for item in self:
                 self[item].clear(rmkeys)
 
@@ -360,7 +360,7 @@ class XXTContent(IndexedTable):
         else:
             value = None
             tkey = self.get(t.fmthm, self.get(str(t.hour), None))
-            if tkey != None:
+            if tkey is not None:
                 try:
                     value = tkey[n]
                 except IndexError:

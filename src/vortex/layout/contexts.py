@@ -46,7 +46,7 @@ class Context(object):
         if rundir:
             self._rundir = rundir
         else:
-            self.__class__._count = self.__class__._count + 1
+            self.__class__._count += 1
             self._rundir = '{0:s}/ctx{1:04d}_{2:s}'.format(self._rootrd, self.__class__._count, self._tag)
 
         self._rundir = csys.path.abspath(self._rundir)

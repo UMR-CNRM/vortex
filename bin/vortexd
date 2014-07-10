@@ -112,7 +112,7 @@ while listen:
                 value = kv[1]
 
             # Avoid undefined values
-            if value == None:
+            if value is None:
                 if key in sto:
                     value = sto[key]
                 else:

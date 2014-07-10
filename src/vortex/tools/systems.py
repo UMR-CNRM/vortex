@@ -960,7 +960,7 @@ class Python26(object):
             path = [ mpath ]
             buildname = buildname + mod
             imp.load_module(buildname, mfile, mpath, minfo)
-            buildname = buildname + '.'
+            buildname += '.'
 
 
 class Python27(object):

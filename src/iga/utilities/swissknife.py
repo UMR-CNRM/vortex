@@ -114,7 +114,7 @@ def slurm_parameters(t, **kw):
     try:
         slurm['nnp'] = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
         if slurm['nnp'] > 1:
-            slurm['nnp'] = slurm['nnp'] / 2
+            slurm['nnp'] /= 2
     except Exception as pb:
         print '[WARNING] SLURM_TASKS_PER_NODE:', pb
         slurm['nnp'] = 1

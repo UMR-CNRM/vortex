@@ -800,7 +800,7 @@ class Footprint(object):
 
             k = todo.pop(0)
             kdef = attrs[k]
-            nbpass = nbpass + 1
+            nbpass += 1
             if not self._replacement(nbpass, k, guess, extras, todo) or guess[k] is None:
                 continue
 

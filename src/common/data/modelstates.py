@@ -56,7 +56,7 @@ class Analysis(GeoFlowResource):
             else:
                 return 'analyse_surface1'
 
-        if self.filtering != None:
+        if self.filtering is not None:
             if 'aladin' in self.model:
                 return 'ANALYSE_DFI'
             else:

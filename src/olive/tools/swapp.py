@@ -124,12 +124,12 @@ def olive_rescue(sh, env, *files):
 
     if items:
 
-        bkupdir = None;
+        bkupdir = None
 
-        if env.VORTEX_RESCUE_DIR != None:
+        if env.VORTEX_RESCUE_DIR is not None:
             bkupdir = env.VORTEX_RESCUE_DIR
             logger.info('Rescue user defined backup directory is %s', bkupdir)
-        elif env.MTOOL_STEP_ABORT != None:
+        elif env.MTOOL_STEP_ABORT is not None:
             bkupdir = sh.path.join(env.MTOOL_STEP_ABORT, env.MTOOL_STEP_ID)
             logger.info('Rescue mtool defined backup directory is %s', bkupdir)
 
@@ -137,9 +137,9 @@ def olive_rescue(sh, env, *files):
             logger.error('No rescue directory defined.')
         else:
             sh.mkdir(bkupdir)
-            mkmove = False;
+            mkmove = False
 
-            if env.MTOOL_STEP_SPOOL != None:
+            if env.MTOOL_STEP_SPOOL is not None:
                 st1 = sh.stat(env.MTOOL_STEP_SPOOL)
                 st2 = sh.stat(bkupdir)
                 if st1 and st2 and st1.st_dev == st2.st_dev:

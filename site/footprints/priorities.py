@@ -186,12 +186,12 @@ class PrioritySet(object):
         else:
             tag = str(tag).upper()
         self.extend(tag)
-        if after != None:
+        if after is not None:
             self._levels.remove(tag)
             if isinstance(after, PriorityLevel):
                 after = after.tag
             self._levels.insert(self._levels.index(after.upper()) + 1, tag)
-        elif before != None:
+        elif before is not None:
             self._levels.remove(tag)
             if isinstance(before, PriorityLevel):
                 before = before.tag

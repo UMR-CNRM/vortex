@@ -79,11 +79,11 @@ class HGeometry(object):
             self.lam = True
             self.__dict__.update(kw)
             for k, v in self.__dict__.items():
-                if type(v) is types.StringType and re.match('none', v, re.IGNORECASE):
+                if isinstance(v, basestring) and re.match('none', v, re.IGNORECASE):
                     self.__dict__[k] = None
-                if type(v) is types.StringType and re.match('true', v, re.IGNORECASE):
+                if isinstance(v, basestring) and re.match('true', v, re.IGNORECASE):
                     self.__dict__[k] = True
-                if type(v) is types.StringType and re.match('false', v, re.IGNORECASE):
+                if isinstance(v, basestring) and re.match('false', v, re.IGNORECASE):
                     self.__dict__[k] = False
             for item in ('nlon', 'nlat', 'truncation'):
                 cv = getattr(self, item)

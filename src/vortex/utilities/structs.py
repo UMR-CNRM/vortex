@@ -199,7 +199,7 @@ class History(object):
         """
         if end is None:
             end = self._count
-        return [ (c, t, i) for c, t, i in self._history if c>=start and c<=end ]
+        return [ (c, t, i) for c, t, i in self._history if start <= c <= end]
 
     def show(self, start=1, end=None):
         """

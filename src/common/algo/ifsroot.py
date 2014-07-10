@@ -102,9 +102,9 @@ class IFSParallel(Parallel):
                 initrole, initkind
             )
         if len(initrh) > 1:
-        if initname != None:
             logger.warning('More than one role %s with kind %s %s',
                            initrole, initkind, initrh)
+        if initname is not None:
             for l in [ x.container.localpath() for x in initrh ]:
                 if not self.system.path.exists(initname):
                     self.system.symlink(l, initname)

@@ -120,7 +120,7 @@ class Container(footprints.FootprintBase):
         """Read in one jump all the data as long as the data is not too big."""
         iod = self.iodesc()
         if iod:
-            if self.totalsize < self.maxreadsize or (n > 0 and n < self.maxreadsize):
+            if self.totalsize < self.maxreadsize or (0 < n < self.maxreadsize):
                 return iod.read(n)
             else:
                 raise DataSizeTooBig('Input is more than {0:d} bytes.'.format(self.maxreadsize))
