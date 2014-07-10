@@ -398,10 +398,12 @@ class StandardReport(object):
 class FlatReport(object):
     """Store entries as simple dictionaries that could be hierarchically reshuffled afterward."""
 
-    def __init__(self, sortlist=[]):
+    def __init__(self, sortlist=None):
         """By default the report is empty."""
         self._items = list()
         self._tree  = dict()
+        if sortlist is None:
+            sortlist = list()
         self._sort  = list(sortlist)
 
     def add(self, **kw):
