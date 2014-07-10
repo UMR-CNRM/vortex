@@ -58,8 +58,8 @@ class Fa2Grib(BlindRun):
         """Loop on the various initial conditions provided."""
         gprh = [ x.rh for x in self.context.sequence.effective_inputs(role='Gridpoint', kind='gridpoint') ]
         gprh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
-        compact    = self.env.get('VORTEX_GRIB_COMPACT', 'L')
-        timeshift  = self.env.get('VORTEX_GRIB_SHIFT', False)
+        self.compact    = self.env.get('VORTEX_GRIB_COMPACT', 'L')
+        self.timeshift  = self.env.get('VORTEX_GRIB_SHIFT', False)
         thisoutput = 'GRIDOUTPUT'
         for r in gprh:
             self.system.title('Loop on domain {0:s} and term {1:s}'.format(
