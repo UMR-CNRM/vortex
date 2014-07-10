@@ -479,8 +479,8 @@ Review of subcommands
 
 
 :command:`item`
-  Extract from an object either a key/idx entry.
 
+  Extract from an object either a key or an idx entry.
   Return this entry.
 
   .. code-block:: console

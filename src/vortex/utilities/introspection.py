@@ -16,7 +16,7 @@ from vortex.autolog import logdefault as logger
 
 
 class Sherlock(object):
-    """Centrelized interface to introspection functions."""
+    """Centralized interface to introspection functions."""
 
     def __init__(self, **kw):
         self.verbose = False

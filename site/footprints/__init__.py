@@ -619,7 +619,8 @@ class Footprint(object):
         return [ a for a in desc if a in attrs or a in aliases ]
 
     def optional(self, a):
-        """Returns either the given attribute ``a`` is optional or not in the current footprint."""
+        """Returns whether the given attribute ``a`` is optional or not in the current
+        footprint."""
         return self._fp['attr'][a]['optional']
 
     def mandatory(self):
@@ -1112,7 +1113,7 @@ class FootprintBase(object):
 
     @classmethod
     def is_abstract(cls):
-        """Returns either the current class could be instanciated or not."""
+        """Returns whether the current class could be instanciated or not."""
         return cls._abstract
 
     @classmethod
@@ -1125,7 +1126,7 @@ class FootprintBase(object):
         return str(self)
 
     def make_alive(self):
-        """Thnigs to do after new or init construction."""
+        """Things to do after new or init construction."""
         self._observer.notify_new(self, dict())
 
     def __deepcopy__(self, memo):
@@ -1204,7 +1205,7 @@ class FootprintBase(object):
 
     @classmethod
     def optional(cls, a):
-        """Returns either the specified attribute ``a`` is optional or not."""
+        """Returns whether the specified attribute ``a`` is optional or not."""
         return cls._footprint.optional(a)
 
     @classmethod

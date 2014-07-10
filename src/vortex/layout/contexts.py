@@ -77,7 +77,7 @@ class Context(object):
     def delobsitem(self, item, info):
         """
         Resources-Handlers observing facility.
-        Should removed the associated section. Yet to coded.
+        Should removed the associated section. Yet to be coded.
         """
         if self.hasfocus():
             logger.debug('Notified %s del item %s', self, item)
@@ -130,7 +130,7 @@ class Context(object):
     @property
     def void(self):
         """
-        Return either the current context is a void context, and therefore not binded to a task.
+        Return whether the current context is a void context, and therefore not binded to a task.
         One may be aware that this value could be temporarly overwritten through the record on/off mechanism.
         """
         return self._void
@@ -165,7 +165,7 @@ class Context(object):
 
     @property
     def binded(self):
-        """Boolean property to check either the current context is binded to a task or not."""
+        """Boolean property to check whether the current context is binded to a task or not."""
         return bool(self._task)
 
     def bind(self, task, **kw):
@@ -193,7 +193,7 @@ class Context(object):
         return self.tree.kids(self)
 
     def hasfocus(self):
-        """Return either the current context has the active focus in the tree it belongs."""
+        """Return whether the current context has the active focus in the tree it belongs."""
         return self.tree.token == self
 
     def stamp(self, tag='default'):

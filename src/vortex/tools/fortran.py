@@ -400,7 +400,7 @@ class NamelistBlock(object):
 
     def has_key(self, item):
         """
-        Returns either ``varname`` value is defined as a namelist key or not.
+        Returns whether ``varname`` value is defined as a namelist key or not.
         Also used as internal for dictionary access.
         """
         return item.upper() in self._pool

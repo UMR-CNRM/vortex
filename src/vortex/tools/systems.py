@@ -279,7 +279,7 @@ class System(footprints.FootprintBase):
                 print tchar * nbc
 
     def xperm(self, filename):
-        """Return either a file exists and is executable or not."""
+        """Return whether a file exists and is executable or not."""
         if os.path.exists(filename):
             return bool(os.stat(filename).st_mode & 1)
         else:
@@ -567,7 +567,7 @@ class OSExtended(System):
 
     @property
     def cls(self):
-        """Property chortcut to clear screen."""
+        """Property shortcut to clear screen."""
         self.clear()
 
     def rawopts(self, cmdline=None, defaults=None, isnone=isnonedef, istrue=istruedef, isfalse=isfalsedef):
@@ -697,7 +697,7 @@ class OSExtended(System):
         return rc
 
     def is_samefs(self, path1, path2):
-        """Check either two paths are on the same filesystem."""
+        """Check whether two paths are on the same filesystem."""
         st1 = self.stat(path1)
         st2 = self.stat(self.path.dirname(self.path.realpath(path2)))
         return st1.st_dev == st2.st_dev and not self.path.islink(path1)

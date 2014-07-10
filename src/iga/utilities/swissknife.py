@@ -138,7 +138,7 @@ def slurm_parameters(t, **kw):
 
 
 def gget_resource_exists(t, ggetfile):
-    """Check either a gget resource exists in the current path or not."""
+    """Check whether a gget resource exists in the current path or not."""
 
     if t.sh.path.exists(ggetfile):
         return True

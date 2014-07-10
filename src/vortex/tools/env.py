@@ -223,7 +223,7 @@ class Environment(object):
 
     def has_key(self, item):
         """
-        Returns either ``varname`` value is defined or not.
+        Returns whether ``varname`` value is defined or not.
         Also used as internal for dictionary access.
         """
         return item in self._pool or item.upper() in self._pool
@@ -324,7 +324,7 @@ class Environment(object):
         return self._mods
 
     def osbound(self):
-        """Returns either this current environment is bound to the os.environ."""
+        """Returns whether this current environment is bound to the os.environ."""
         return self._active and self.__class__._os and self is self.__class__._os[-1]
 
     def tracebacks(self):

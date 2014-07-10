@@ -514,7 +514,7 @@ class Date(datetime.datetime):
         return Date(self.fromordinal(jdays + self.cnes_origin))
 
     def isleap(self, year=None):
-        """Return either the current of specified year is a leap year."""
+        """Return whether the current of specified year is a leap year."""
         if year is None:
             year = self.year
         return calendar.isleap(year)

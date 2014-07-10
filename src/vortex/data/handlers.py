@@ -27,7 +27,7 @@ def observer_board(obsname=None):
 
 class Handler(object):
     """
-    The resource object gathers a provider, a resource and a container
+    The resource handler object gathers a provider, a resource and a container
     for any specific resource. Other parameters given at construct time
     are stored as options.
     """
@@ -85,7 +85,7 @@ class Handler(object):
 
     @property
     def complete(self):
-        """Returns either all the internal components are defined."""
+        """Returns whether all the internal components are defined."""
         return bool(self.resource and self.provider and self.container)
 
     @property

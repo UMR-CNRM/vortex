@@ -174,7 +174,7 @@ class Store(footprints.FootprintBase):
         return bool(options.get('insitu', False) and self.system.path.exists(local))
 
     def in_place(self, localio):
-        """Return true when the current io resource is defined (either io descriptor or file."""
+        """Return true when the current io resource is defined (either io descriptor or file)."""
         return bool(localio is not None and (type(localio) is not str or self.system.path.exists(localio)))
 
     def notyet(self, *args):

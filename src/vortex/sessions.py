@@ -142,7 +142,7 @@ class Ticket(object):
 
     @property
     def active(self):
-        """Return either this session is active or not."""
+        """Return whether this session is active or not."""
         return self._active
 
     @property
