@@ -50,9 +50,9 @@ lh8 = vortex.toolbox.rload(
     local = 'GRID+[term::fmth]',
 )
 
-lrh=(lh8,)
+lrh = (lh8,)
 for rh in lrh:
-    for r in rh :
+    for r in rh:
         print t.line, r.idcard(), t.line
         print 'GET', r.location(), '...', r.get()
 

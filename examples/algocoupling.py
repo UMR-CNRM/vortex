@@ -97,7 +97,7 @@ inputs = (
         geometry=geometries.getbyname('globalsp'),
         local='ICMSHARPE+[term::fmth]',
         suite='oper',
-        term=(0,3),
+        term=(0, 3),
         model='arpege',
         igakey='arpege',
         role='Couplingfile'
@@ -113,7 +113,8 @@ for rh in inputs:
         print r.get(insitu=False)
 
 
-rx = vortex.toolbox.rh(remote=g.siteroot + '/examples/tmp/test.sh', file='testcpl.sh', language='bash', kind='script')
+rx = vortex.toolbox.rh(remote=g.siteroot + '/examples/tmp/test.sh',
+                       file='testcpl.sh', language='bash', kind='script')
 
 print t.line
 

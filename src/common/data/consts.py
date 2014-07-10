@@ -59,8 +59,8 @@ class RRTM(ModelResource):
 class MatFilter(StaticResource):
     """
     Class of a filtering matrix. A SpectralGeometry object is needed,
-	as well as the GridGeometry of the scope domain (countaining the filtering used).
-	A GenvKey can be given.
+    as well as the GridGeometry of the scope domain (countaining the filtering used).
+    A GenvKey can be given.
     """
     _footprint = dict(
         info = 'Filtering matrix',
@@ -89,11 +89,14 @@ class MatFilter(StaticResource):
     def basename_info(self):
         """Generic information, radical = ``matfil``."""
         return dict(
-            geo     = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}, self.scope.area, {'filtering':self.scope.filtering}],
+            geo     = [{'truncation': self.geometry.truncation},
+                       {'stretching': self.geometry.stretching},
+                       self.scope.area, {'filtering': self.scope.filtering}],
             radical = 'matfil',
             src     = self.model,
         )
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'matrix.fil.' + self.scope.area + '.t' + str(self.geometry.truncation) + '.c' + str(self.geometry.stretching)
+        return 'matrix.fil.' + self.scope.area + '.t' + str(self.geometry.truncation) + \
+               '.c' + str(self.geometry.stretching)

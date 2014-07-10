@@ -5,7 +5,7 @@ Glossary
 Dictionary of notions in the VORTEX framework :
 
 ==============================  ==============================  ==============================
-..                              Terms                           ..                          
+..                              Terms                           ..
 ==============================  ==============================  ==============================
 :term:`Environment`             :term:`Physical Space`          :term:`Ticket`
 :term:`Logical Space`           :term:`Session`                 ..
@@ -36,9 +36,9 @@ Spaces
       Some descriptors from the logical space could have a second life in the physical one.
 
       Example::
-          The logical description of a meteorological resource could lead to the physical
-	  localisation of a data resource playing that role.
 
+         The logical description of a meteorological resource could lead to the physical
+         localisation of a data resource playing that role.
 
 
 Logical space

@@ -18,7 +18,7 @@ class Utactions(TestCase):
         self.data = os.path.join('./data', 'corps_message.txt')
         self.dico1 = {
             'action_type': 'mail',
-            'action' : 'simple_mail',
+            'action': 'simple_mail',
             'receiver': "stephane.mejias@meteo.fr",
             'sender': "stephane.mejias@meteo.fr",
             'message': 'tout est ok',
@@ -26,7 +26,7 @@ class Utactions(TestCase):
         }
         self.dico2 = {
             'action_type': 'mail',
-            'action' : 'file_mail',
+            'action': 'file_mail',
             'receiver': "stephane.mejias@meteo.fr",
             'sender': "stephane.mejias@meteo.fr",
             'subject': 'test mail vortex',
@@ -34,19 +34,19 @@ class Utactions(TestCase):
         }
         self.dico3 = {
             'action_type': 'alarm',
-            'action' : 'simple_alarm',
+            'action': 'simple_alarm',
             'message': 'Unknown problem',
             'level': 'critical'
         }
         self.dico4 = {
             'action_type': 'alarm',
-            'action' : 'simple_alarm',
+            'action': 'simple_alarm',
             'message': 'Error detected',
             'level': 'error'
         }
         self.dico5 = {
             'action_type': 'sendbdap',
-            'action' : 'send_bdap',
+            'action': 'send_bdap',
             'domain': 'GLOB25',
             'localname': 'PEPM000GLOB25',
             'extra': '0',
@@ -61,7 +61,7 @@ class Utactions(TestCase):
         self.dico6['scalar'] = False
         self.dico7 = {
             'action_type': 'route',
-            'action' : 'route',
+            'action': 'route',
             'producer': 'serv',
             'localname': 'tmp_kumo0512256',
             'quality': '0',

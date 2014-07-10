@@ -14,7 +14,8 @@ from iga.syntax.stdattrs import archivesuffix
 class Analysis(GeoFlowResource):
 
     """
-    Class for analysis resource. It can be an atmospheric or surface or full analysis (full = atmospheric + surface).
+    Class for analysis resource. It can be an atmospheric or surface or full
+    analysis (full = atmospheric + surface).
     The analysis can be filtered (filling attribute).
     """
     _footprint = dict(
@@ -75,7 +76,7 @@ class Analysis(GeoFlowResource):
         if self.geometry.lam:
             lgeo = [self.geometry.area, self.geometry.rnice]
         else:
-            lgeo = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}]
+            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
 
         return dict(
             fmt     = self.nativefmt,
@@ -162,7 +163,7 @@ class Historic(GeoFlowResource):
         if self.geometry.lam:
             lgeo = [self.geometry.area, self.geometry.rnice]
         else:
-            lgeo = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}]
+            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
 
         return dict(
             fmt     = self.nativefmt,

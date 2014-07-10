@@ -20,7 +20,7 @@ from vortex.utilities.structs import History
 #: Shortcut to footprint env defaults
 defaults = footprints.setup.defaults
 
-sectionmap = {'input':'get', 'output':'put', 'executable':'get'}
+sectionmap = {'input': 'get', 'output': 'put', 'executable': 'get'}
 justdoit = False
 getinsitu = False
 verbose = 0
@@ -37,7 +37,8 @@ def quickview(args, nb=0, indent=0):
     if not isinstance(args, list) and not isinstance(args, tuple):
         args = ( args, )
     for x in args:
-        if nb: print
+        if nb:
+            print
         nb += 1
         quickview = getattr(x, 'quickview', None)
         if quickview:
@@ -148,7 +149,8 @@ def pushsection(section, args, kw):
             if verbose and not ok:
                 logger.warning(' > Could not %s resource:', doitmethod)
                 rhandler.quickview(indent=4)
-            if t.sh.trace: print
+            if t.sh.trace:
+                print
         if ok:
             rlok.append(rhandler)
     ctx.record_on()

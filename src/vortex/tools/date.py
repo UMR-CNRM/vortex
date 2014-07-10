@@ -765,7 +765,8 @@ class Month(object):
                     year -= 1
                     month = 12
                 delta -= 1
-            if self._year == 0: year = 0
+            if self._year == 0:
+                year = 0
             return Month(month, year)
         elif not isinstance(delta, datetime.timedelta):
             delta = Period(delta)

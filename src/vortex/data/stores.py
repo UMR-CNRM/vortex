@@ -561,7 +561,7 @@ class VortexArchiveStore(ArchiveStore):
             netloc = dict(
                 values   = [ 'open.archive.fr', 'vortex.archive.fr' ],
                 remap    = {
-                    'vortex.archive.fr' : 'open.archive.fr'
+                    'vortex.archive.fr': 'open.archive.fr'
                 },
             ),
             headdir = dict(
@@ -599,7 +599,8 @@ class VortexArchiveStore(ArchiveStore):
 
     def vortexput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
-        if not 'root' in remote: remote['root'] = self.headdir
+        if not 'root' in remote:
+            remote['root'] = self.headdir
         return self.ftpput(local, remote, options)
 
 
@@ -710,7 +711,7 @@ class VortexCacheStore(CacheStore):
             netloc = dict(
                 values = [ 'open.cache.fr', 'vortex.cache.fr' ],
                 remap = {
-                    'vortex.cache.fr' : 'open.cache.fr'
+                    'vortex.cache.fr': 'open.cache.fr'
                 },
             ),
             strategy = dict(

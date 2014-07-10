@@ -142,7 +142,9 @@ class HGeometry(object):
 
     def strheader(self):
         """Return beginning of formatted print representation."""
-        return '{0:s}.{1:s} | id=\'{2:s}\' area=\'{3:s}\''.format(self.__module__, self.__class__.__name__, self.id, self.area)
+        return '{0:s}.{1:s} | id=\'{2:s}\' area=\'{3:s}\''.format(self.__module__,
+                                                                  self.__class__.__name__,
+                                                                  self.id, self.area)
 
 
 class SpectralGeometry(HGeometry):

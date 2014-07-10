@@ -28,7 +28,7 @@ class UtRawFields(TestCase):
             igakey = 'france',
             vapp = 'arpege',
             tube = 'ftp',
-        )       
+        )
         self.fp_cont_nesdis = dict(
             local='sst.nesdis.bdap'
         )
@@ -98,7 +98,7 @@ class UtRawFields(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/sst.nesdis.bdap'
         )
 
@@ -119,7 +119,7 @@ class UtRawFields(TestCase):
             self.assertTrue(rh.complete)
 
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/sst.ostia')
 
         self.assertEqual(
@@ -139,7 +139,7 @@ class UtRawFields(TestCase):
             self.assertTrue(rh.complete)
 
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'ftp://prod.inline.fr/modele/oper/arpege/RW/sst.ostia')
 
         #self.assertEqual(
@@ -233,11 +233,11 @@ class UtGeoFields(TestCase):
             self.assertTrue(rh.complete)
 
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHANALSST'
         )
         self.assertEqual(
-            rl[0].locate(), 
+            rl[0].locate(),
             datadir + '/arpege/france/oper/data/fic_day/ICMSHANALSST'
         )
         self.assertTrue(os.stat(rl[0].locate()))
@@ -253,11 +253,11 @@ class UtGeoFields(TestCase):
             self.assertTrue(rh.complete)
 
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHANALSEAICE'
         )
         self.assertEqual(
-            rl[0].locate(), 
+            rl[0].locate(),
             datadir + '/arpege/france/oper/data/fic_day/ICMSHANALSEAICE'
         )
         self.assertTrue(os.stat(rl[0].locate()))
@@ -268,7 +268,7 @@ if __name__ == '__main__':
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
-            break 
+            break
 
 
 def get_test_class():

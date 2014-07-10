@@ -133,7 +133,7 @@ class VNameBuilder(object):
 
         return name.lower()
 
-    def pack_obs(self,d):
+    def pack_obs(self, d):
         """
         Main entry point to convert a description into a file name
         according to the so-called observation style.
@@ -144,7 +144,7 @@ class VNameBuilder(object):
 
         return name.lower()
 
-    def pack_obsmap(self,d):
+    def pack_obsmap(self, d):
         """
         Main entry point to convert a description into a file name
         according to the so-called observation-map style.

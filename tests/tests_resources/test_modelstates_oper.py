@@ -26,8 +26,10 @@ class UtGridPoint(TestCase):
         self.fp_cont = dict(
             local='PFARPE[geometry::area]+[term::fmth].rSX'
         )
-        self.franx01 = GridGeometry(id='Current op', area='FRANX01', resolution=0.1, nlat=221, nlon=281)
-        self.frangp0025 = GridGeometry(id='Current op', area='FRANGP0025', resolution=0.025, nlat=601, nlon=801)
+        self.franx01 = GridGeometry(id='Current op', area='FRANX01',
+                                    resolution=0.1, nlat=221, nlon=281)
+        self.frangp0025 = GridGeometry(id='Current op', area='FRANGP0025',
+                                       resolution=0.025, nlat=601, nlon=801)
         self.glob15 = GridGeometry(id='Current op', area='GLOB15', resolution=1.5)
 
         self.fp_gridpoint1 = dict(
@@ -134,7 +136,7 @@ class UtGridPoint(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB15+0000.rSX'
         )
         self.assertEqual(
@@ -155,7 +157,7 @@ class UtGridPoint(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB15+0003.rSX'
         )
         self.assertEqual(
@@ -176,7 +178,7 @@ class UtGridPoint(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/france/oper/data/fic_day/PFALADFRANX01+0006.rSX'
         )
         self.assertEqual(
@@ -197,7 +199,7 @@ class UtGridPoint(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0006.rSX'
         )
         self.assertEqual(
@@ -218,7 +220,7 @@ class UtGridPoint(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/bdap/PE06000GLOB15'
         )
         self.assertEqual(
@@ -239,7 +241,7 @@ class UtGridPoint(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/pearp/oper/data/bdap/RUN4/fc_SX_4_GLOB15_0006'
         )
         self.assertEqual(
@@ -325,7 +327,7 @@ class UtHistoric(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rDH'
         )
         self.assertEqual(
@@ -344,7 +346,7 @@ class UtHistoric(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/caledonie/oper/data/fic_day/ICMSHALAD+0000.rPM'
         )
         self.assertEqual(
@@ -365,7 +367,7 @@ class UtHistoric(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rDH'
         )
         self.assertEqual(
@@ -462,7 +464,7 @@ class UtAnalysis(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rPM'
         )
         self.assertEqual(
@@ -483,7 +485,7 @@ class UtAnalysis(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.lfi.rPM'
         )
         self.assertEqual(
@@ -505,7 +507,7 @@ class UtAnalysis(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/caledonie/oper/data/workdir/analyse/ICMSHALADINIT.r18'
         )
         self.assertEqual(
@@ -526,7 +528,7 @@ class UtAnalysis(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.r06'
         )
         self.assertEqual(
@@ -579,11 +581,11 @@ class UtHistsurf(TestCase):
             print ' > ', rh.location()
 
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.lfi.rQZ'
         )
         self.assertEqual(
-            rl[0].locate(), 
+            rl[0].locate(),
             datadir + '/arome/france/oper/data/fic_day/PREP.lfi.rQZ'
         )
 
@@ -592,7 +594,7 @@ if __name__ == '__main__':
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
-            break 
+            break
 
 def get_test_class():
     return [ UtGridPoint, UtHistoric, UtAnalysis, UtHistsurf ]

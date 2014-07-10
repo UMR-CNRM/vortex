@@ -20,7 +20,7 @@ def faNames(cutoff, reseau, model, filling=None):
                      (cutoff,)*4,
                      (0, 6, 12, 18)
                  ),
-                 ('r00', 'r06', 'r12','r18')
+                 ('r00', 'r06', 'r12', 'r18')
              )
          )
     elif cutoff == 'production':
@@ -30,7 +30,7 @@ def faNames(cutoff, reseau, model, filling=None):
                     (cutoff,)*4,
                     (0, 6, 12, 18)
                 ),
-                ('rAM', 'rSX' , 'rPM', 'rDH')
+                ('rAM', 'rSX', 'rPM', 'rDH')
             )
         )
     elif cutoff == 'short':
@@ -41,7 +41,7 @@ def faNames(cutoff, reseau, model, filling=None):
             cutoff
         )
         return None
-    #suffix choice
+    # suffix choice
     # TODO: not safe in case the time is not defined
     suffix = map_suffix[(cutoff, reseau)]
     if model == 'arpege':
@@ -62,7 +62,7 @@ def gribNames(cutoff, reseau, model, run=None):
         map_suffix = dict(
             zip(
                 range(0, 24, 3),
-                map('r'.__add__, ('CM','TR','SX','NF','PM','QZ','DH','VU'))
+                map('r'.__add__, ('CM', 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU'))
             )
         )
         prefix = 'GRID'
@@ -85,7 +85,7 @@ def gribNames(cutoff, reseau, model, run=None):
                          (cutoff,)*4,
                          (0, 6, 12, 18)
                      ),
-                     ('00', '06', '12','18')
+                     ('00', '06', '12', '18')
                  )
              )
         elif cutoff == 'production':
@@ -95,7 +95,7 @@ def gribNames(cutoff, reseau, model, run=None):
                         (cutoff,)*4,
                         (0, 6, 12, 18)
                     ),
-                    ('rAM', 'rSX' , 'rPM', 'rDH')
+                    ('rAM', 'rSX', 'rPM', 'rDH')
                 )
             )
         elif cutoff == 'short':
@@ -206,7 +206,7 @@ def histsurf_bnames(resource):
     map_suffix = dict(
         zip(
             range(0, 24, 3),
-            map('r'.__add__, ('CM','TR','SX','NF','PM','QZ','DH','VU'))
+            map('r'.__add__, ('CM', 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU'))
         )
     )
     suffix = map_suffix[reseau]
@@ -217,7 +217,7 @@ def gridpoint_bnames(resource, member=None):
     """docstring for gridpoint_bnames"""
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
     logger.debug('gridpoint_bnames: cutoff %s reseau %s model %s',
-                  cutoff, reseau, model)
+                 cutoff, reseau, model)
     logger.debug('gridpoint_bnames: member %s', member)
     if resource.nativefmt == 'fa':
         model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model)
@@ -303,10 +303,9 @@ def observations_bnames(resource):
     day = str(resource.date.day)
     u_prefix, suffix = gribNames(cutoff, reseau, model)
     dico_names = {
-        'obsoul' : 'obsoul' + '.' + part + '.' + suffix,
-        'ecma' : {
-            'surf': 'ECMA.surf' + '.' + str(int(reseau)) + '.' + str(reseau) +
-'.tar',
+        'obsoul': 'obsoul' + '.' + part + '.' + suffix,
+        'ecma': {
+            'surf': 'ECMA.surf' + '.' + str(int(reseau)) + '.' + str(reseau) + '.tar',
             'conv': 'ECMA.conv' + '.' + day + '.' + str(reseau) + '.tar',
             'prof': 'ECMA.prof' + '.' + day + '.' + str(reseau) + '.tar',
         }
@@ -373,7 +372,7 @@ def global_snames(resource):
                     (cutoff,)*4,
                     (0, 6, 12, 18)
                 ),
-                ('00', '06', '12','18')
+                ('00', '06', '12', '18')
             )
         )
     elif cutoff == 'production':
@@ -383,7 +382,7 @@ def global_snames(resource):
                    (cutoff,)*4,
                    (0, 6, 12, 18)
                ),
-               ('AM', 'SX' , 'PM', 'DH')
+               ('AM', 'SX', 'PM', 'DH')
            )
        )
     elif cutoff == 'short':

@@ -23,7 +23,7 @@ class OliveArchiveStore(ArchiveStore):
             netloc = dict(
                 values = [ 'open.archive.fr', 'olive.archive.fr' ],
                 remap = {
-                    'olive.archive.fr' : 'open.archive.fr'
+                    'olive.archive.fr': 'open.archive.fr'
                 },
             ),
             headdir = dict(
@@ -56,7 +56,8 @@ class OliveArchiveStore(ArchiveStore):
 
     def oliveput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
-        if not 'root' in remote: remote['root'] = self.headdir
+        if not 'root' in remote:
+            remote['root'] = self.headdir
         return self.ftpput(local, remote, options)
 
 
@@ -71,7 +72,7 @@ class OliveCacheStore(CacheStore):
             netloc = dict(
                 values = [ 'open.cache.fr', 'olive.cache.fr' ],
                 remap = {
-                    'olive.cache.fr' : 'open.cache.fr'
+                    'olive.cache.fr': 'open.cache.fr'
                 },
             ),
             strategy = dict(
@@ -139,7 +140,7 @@ class OpArchiveStore(ArchiveStore):
             netloc = dict(
                 values = [ 'oper.archive.fr', 'dbl.archive.fr', 'dble.archive.fr' ],
                 default = 'oper.archive.fr',
-                remap = { 'dbl.archive.fr' : 'dble.archive.fr' }
+                remap = { 'dbl.archive.fr': 'dble.archive.fr' }
             ),
             rootdir = dict(
                 optional = True,

@@ -39,7 +39,7 @@ inputs = (
         namespace='[suite].archive.fr',
         local='ELSCFAROME+[term::fmth]',
         suite='oper',
-        term=(0,3),
+        term=(0, 3),
         igakey='arome',
         role='BoundaryCondition'
     ),
@@ -60,7 +60,8 @@ for rh in inputs:
         print 'Get', r.location(), '...',
         print r.get()
 
-rx = vortex.toolbox.rh(remote=g.siteroot + '/examples/tmp/test.sh', file='test.sh', model='arpege', kind='ifsmodel')
+rx = vortex.toolbox.rh(remote=g.siteroot + '/examples/tmp/test.sh',
+                       file='test.sh', model='arpege', kind='ifsmodel')
 
 print t.line
 

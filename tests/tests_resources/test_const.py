@@ -46,7 +46,10 @@ class UtBcor(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/OPER/20120214T0600P/observation/bcor.noaa.txt')
+        self.assertEqual(
+            rl[0].location(),
+            'vortex://vortex.cache.fr/play/sandbox/OPER/20120214T0600P/observation/bcor.noaa.txt'
+        )
 
     def test_b1(self):
         rl = toolbox.rload(
@@ -62,9 +65,18 @@ class UtBcor(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/bcor_noaa.dat')
-        self.assertEqual(rl[1].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/bcor_ssmi.dat')
-        self.assertEqual(rl[2].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/bcor_mtop.dat')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/bcor_noaa.dat'
+        )
+        self.assertEqual(
+            rl[1].location(),
+            'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/bcor_ssmi.dat'
+        )
+        self.assertEqual(
+            rl[2].location(),
+            'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/bcor_mtop.dat'
+        )
 
 
 if __name__ == '__main__':

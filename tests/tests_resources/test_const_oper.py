@@ -77,7 +77,7 @@ class UtBcor(TestCase):
             model='arpege',
             date=today(),
             cutoff='production',
-            satbias=['noaa','ssmi','mtop']
+            satbias=['noaa', 'ssmi', 'mtop']
         )
 
     def tearDown(self):
@@ -86,7 +86,7 @@ class UtBcor(TestCase):
 
     def test_ctlg(self):
         ctlg = footprints.proxy.resources
-        for cat in ['noaa','ssmi','mtop']:
+        for cat in ['noaa', 'ssmi', 'mtop']:
             bcor = self.fp_bcor
             bcor['satbias'] = cat
             res = ctlg.find_best(bcor)

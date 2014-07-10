@@ -19,12 +19,14 @@ from weakref import WeakSet
 
 def dictmerge(d1, d2):
     """
-    Merge two dictionaries d1 and d2 with a recursive function (d1 and d2 can be dictionaries of dictionaries).
-    The result is in d1.
+    Merge two dictionaries d1 and d2 with a recursive function (d1 and d2 can be
+    dictionaries of dictionaries). The result is in d1.
     If keys exist in d1 and d2, d1 keys are replaced by d2 keys.
 
-    >>> dictmerge({'name':'clim','attr':{'model':{'values':('arpege','arome')}}},{'name':'clim model','attr':{'truncation':{'type':'int','optional':'False'}}})
-    {'name': 'clim model', 'attr': {'model': {'values': ('arpege', 'arome')}, 'truncation': {'optional': 'False', 'type': 'int'}}}
+    >>> a = {'name':'clim','attr':{'model':{'values':('arpege','arome')}}}
+    >>> b = {'name':'clim model','attr':{'truncation':{'type':'int','optional':'False'}}}
+    >>> dictmerge(a, b)
+    {'name': 'clim model', 'attr': {'model': {'values': ('arpege', 'arome')}, 'truncation': {'type': 'int', 'optional': 'False'}}}
 
     >>> dictmerge({'a':'1'},{'b':'2'})
     {'a': '1', 'b': '2'}
@@ -37,7 +39,7 @@ def dictmerge(d1, d2):
         if type(value) is types.DictType:
             if key in d1 and type(d1[key])is types.DictType:
                 dictmerge(d1[key], d2[key])
-            else :
+            else:
                 d1[key] = copy.deepcopy(value)
         else:
             d1[key] = value
@@ -238,9 +240,9 @@ class Catalog(object):
         self.__dict__.update(kw)
 
     @classmethod
-    def fullname(self):
+    def fullname(cls):
         """Returns a nicely formated name of the current class (dump usage)."""
-        return '{0:s}.{1:s}'.format(self.__module__, self.__name__)
+        return '{0:s}.{1:s}'.format(cls.__module__, cls.__name__)
 
     @property
     def filled(self):

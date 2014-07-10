@@ -17,7 +17,12 @@ import olive.data
 class UtObservations(TestCase):
 
     def setUp(self):
-        self.attrset = dict(kind='observations', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
+        self.attrset = dict(
+            kind='observations',
+            date = '2012021406',
+            cutoff='production',
+            namespace='[suite].archive.fr'
+        )
         self.std = SpectralGeometry(id='Current op', area='france', truncation=798)
 
     def test_v1(self):
@@ -36,7 +41,10 @@ class UtObservations(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/OPER/20120214T0600P/observation/obsoul.std.conv')
+        self.assertEqual(
+            rl[0].location(),
+            'vortex://vortex.cache.fr/play/sandbox/OPER/20120214T0600P/observation/obsoul.std.conv'
+        )
 
     def test_v3(self):
         rl = toolbox.rload(
@@ -53,7 +61,10 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600P/observation/ecma.screen.full.tar')
+        self.assertEqual(
+            rl[0].location(),
+            'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600P/observation/ecma.screen.full.tar'
+        )
 
     def test_o1(self):
         rl = toolbox.rload(
@@ -69,7 +80,10 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/obsoul.conv')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/obsoul.conv'
+        )
 
     def test_o2(self):
         rl = toolbox.rload(
@@ -85,7 +99,10 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/bufr.iasi')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/bufr.iasi'
+        )
 
     def test_o3(self):
         rl = toolbox.rload(
@@ -101,7 +118,10 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/odb_screen.tar?extract=all')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/odb_screen.tar?extract=all'
+        )
 
     def test_o4(self):
         rl = toolbox.rload(
@@ -117,13 +137,17 @@ class UtObservations(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/odb_cpl.tar?extract=all')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/odb_cpl.tar?extract=all'
+        )
 
 
 class UtRefdata(TestCase):
 
     def setUp(self):
-        self.attrset = dict(kind='refdata', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
+        self.attrset = dict(kind='refdata', date = '2012021406',
+                            cutoff='production', namespace='[suite].archive.fr')
 
     def test_r1(self):
         rl = toolbox.rload(
@@ -136,7 +160,10 @@ class UtRefdata(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/refdata')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/refdata'
+        )
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -149,13 +176,17 @@ class UtRefdata(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600P/observation/refdata.all')
+        self.assertEqual(
+            rl[0].location(),
+            'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600P/observation/refdata.all'
+        )
 
 
 class UtVarbc(TestCase):
 
     def setUp(self):
-        self.attrset = dict(kind='varbc', date='2012021400', cutoff='production', namespace='[suite].archive.fr')
+        self.attrset = dict(kind='varbc', date='2012021400',
+                            cutoff='production', namespace='[suite].archive.fr')
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -168,7 +199,10 @@ class UtVarbc(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle'
+        )
 
     def test_v2(self):
         rl = toolbox.rload(
@@ -181,7 +215,10 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle_alad')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle_alad'
+        )
 
     def test_v3(self):
         rl = toolbox.rload(
@@ -194,7 +231,10 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle_arp')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/reunion/oper/production/2012/02/14/r0/VARBC.cycle_arp'
+        )
 
     def test_v4(self):
         rl = toolbox.rload(
@@ -207,7 +247,10 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arome/oper/production/2012/02/14/r0/VARBC.merge')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/arome/oper/production/2012/02/14/r0/VARBC.merge'
+        )
 
     def test_v5(self):
         rl = toolbox.rload(
@@ -220,7 +263,10 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/france/oper/production/2012/02/14/r0/VARBC.merge')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/france/oper/production/2012/02/14/r0/VARBC.merge'
+        )
 
     def test_v6(self):
         rl = toolbox.rload(
@@ -264,14 +310,21 @@ class UtVarbc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20110922T0000P/minim/varbc.aladin')
-        self.assertEqual(rl[1].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20110922T0000P/minim/varbc.aladin.merge')
+        self.assertEqual(
+            rl[0].location(),
+            'vortex://vortex.cache.fr/play/sandbox/oper/20110922T0000P/minim/varbc.aladin'
+        )
+        self.assertEqual(
+            rl[1].location(),
+            'vortex://vortex.cache.fr/play/sandbox/oper/20110922T0000P/minim/varbc.aladin.merge'
+        )
 
 
 class UtBlackListDiap(TestCase):
 
     def setUp(self):
-        self.attrset = dict(kind='blacklist', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
+        self.attrset = dict(kind='blacklist', date = '2012021406',
+                            cutoff='production', namespace='[suite].archive.fr')
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -286,7 +339,10 @@ class UtBlackListDiap(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/OPER/20120214T0600P/observation/blacklist.site.txt')
+        self.assertEqual(
+            rl[0].location(),
+            'vortex://vortex.cache.fr/play/sandbox/OPER/20120214T0600P/observation/blacklist.site.txt'
+        )
 
     def test_o1(self):
         rl = toolbox.rload(
@@ -299,13 +355,17 @@ class UtBlackListDiap(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/LISTE_NOIRE_DIAP')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/LISTE_NOIRE_DIAP'
+        )
 
 
 class UtBlackListLoc(TestCase):
 
     def setUp(self):
-        self.attrset = dict(kind='blacklist', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
+        self.attrset = dict(kind='blacklist', date = '2012021406',
+                            cutoff='production', namespace='[suite].archive.fr')
 
     def test_o1(self):
         rl = toolbox.rload(
@@ -318,13 +378,17 @@ class UtBlackListLoc(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/LISTE_LOC')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/LISTE_LOC'
+        )
 
 
 class UtObsmap(TestCase):
 
     def setUp(self):
-        self.attrset = dict(kind='obsmap', date = '2012021406', cutoff='production', namespace='[suite].archive.fr')
+        self.attrset = dict(kind='obsmap', date = '2012021406',
+                            cutoff='production', namespace='[suite].archive.fr')
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -339,7 +403,10 @@ class UtObsmap(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600P/observation/obsmap.std')
+        self.assertEqual(
+            rl[0].location(),
+            'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0600P/observation/obsmap.std'
+        )
 
     def test_o1(self):
         rl = toolbox.rload(
@@ -351,7 +418,10 @@ class UtObsmap(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/BATOR_MAP')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/arpege/oper/production/2012/02/14/r6/BATOR_MAP'
+        )
 
     def test_o2(self):
         rl = toolbox.rload(
@@ -366,7 +436,10 @@ class UtObsmap(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'olive://olive.archive.fr/99A0/20110922H00P/observations/OBSMAP_split')
+        self.assertEqual(
+            rl[0].location(),
+            'olive://olive.archive.fr/99A0/20110922H00P/observations/OBSMAP_split'
+        )
 
 
 if __name__ == '__main__':

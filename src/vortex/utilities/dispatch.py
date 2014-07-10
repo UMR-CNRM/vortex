@@ -134,7 +134,8 @@ class Dispatcher(object):
         info = list()
         for x in kw:
             if kw[x] is None:
-                if x in t.env: del t.env[x]
+                if x in t.env:
+                    del t.env[x]
             else:
                 t.env[x] = kw[x]
                 x = x.upper()
@@ -183,13 +184,13 @@ class Dispatcher(object):
         Display current glove id.
         Return the glove itself.
         """
-        return(0, t.glove.idcard(), t.glove)
+        return (0, t.glove.idcard(), t.glove)
 
     def user(self, t, kw):
         """
         Shortcut to glove's username.
         """
-        return(0, t.glove.user, t.glove.user)
+        return (0, t.glove.user, t.glove.user)
 
     def vapp(self, t, kw):
         """
@@ -311,7 +312,7 @@ class Dispatcher(object):
         Return current entries in collectors table.
         """
         tc = footprints.collected_footprints()
-        return(0, str(tc), tc)
+        return (0, str(tc), tc)
 
     def namespaces(self, t, kw):
         """
@@ -321,9 +322,9 @@ class Dispatcher(object):
         """
         ns = toolbox.namespaces(**kw)
         strns = list()
-        for k,v in ns.iteritems():
+        for k, v in ns.iteritems():
             strns.append('  {0:20s} {1:s}'.format(k, str(v)))
-        return(0, "\n".join(sorted(strns)), ns)
+        return (0, "\n".join(sorted(strns)), ns)
 
     def containers(self, t, kw):
         """

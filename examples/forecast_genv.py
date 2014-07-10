@@ -31,11 +31,11 @@ rundate = date.Date('2011092200')
 geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
 geo_bdap = GridGeometry(id='Current op', area='GLOB15')
 inputdir = myenv.HOME + '/tmp/inputs/'
-prvin = dict(experiment = '99A0') 
+prvin = dict(experiment = '99A0')
 prvout = dict(experiment = 'A000')
 
-arome_cycle='al36t1_arome-op2.22'
-arpege_cycle='cy36t1_op2.16'
+arome_cycle = 'al36t1_arome-op2.22'
+arpege_cycle = 'cy36t1_op2.16'
 
 print t.line
 
@@ -63,7 +63,7 @@ gconf = genv.register(cycle=arpege_cycle, entry='double', NAMELIST_ARPEGE='cy36t
 print t.prompt, ">>>>> GENV :", genv.cycles()
 print t.prompt, gconf
 
-analysis =  toolbox.rload(
+analysis = toolbox.rload(
     prvin,
     kind='analysis',
     block='canari',
@@ -120,7 +120,7 @@ xxtdef = toolbox.rload(
 namselect = toolbox.rload(
     kind='namselect',
     binary='arpege',
-    term=(0,3),
+    term=(0, 3),
     genv=arpege_cycle,
     source='select_p',
     local='selectfp[term::fmth]',
@@ -135,7 +135,7 @@ arpege = toolbox.rload(
 historic = toolbox.rload(
     prvout,
     kind='historic',
-    term=(0,3),
+    term=(0, 3),
     block='forecast',
     local='ICMSHFCST+[term::fmth]',
 )
@@ -146,7 +146,7 @@ gridpoint = toolbox.rload(
     origin='historic',
     geometry=geo_bdap,
     nativefmt='fa',
-    term=(0,3),
+    term=(0, 3),
     block='forecast',
     local='PFFPOS[geometry::area]+[term::fmth]'
 )
@@ -157,7 +157,7 @@ listing = toolbox.rload(
     task='forecast',
     block='listing',
     local='listing.forecast'
-)  
+)
 
 
 inputs = ( rtcoef, analysis, climmodel, climbdap, namfcp, xxtdef, namselect, matfilter, arpege )
@@ -169,7 +169,7 @@ myenv.update(
 )
 
 for rh in inputs:
-    for r in rh :
+    for r in rh:
         print r
         print 'Resource attr : ', r.resource._attributes
         print 'Provider attr: ', r.provider._attributes

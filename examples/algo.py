@@ -19,7 +19,12 @@ tb = vortex.toolbox
 
 print t.line
 
-script = tb.rh(remote=g.siteroot + '/examples/tmp/test.sh', file='test.sh', rawopts='coucou', language=e.trueshell())
+script = tb.rh(
+    remote=g.siteroot + '/examples/tmp/test.sh',
+    file='test.sh',
+    rawopts='coucou',
+    language=e.trueshell()
+)
 
 print script.idcard()
 

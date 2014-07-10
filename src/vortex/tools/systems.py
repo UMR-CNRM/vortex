@@ -289,11 +289,13 @@ class System(footprints.FootprintBase):
         """Clone of the unix command."""
         self.stderr('which', command)
         if command.startswith('/'):
-            if self.xperm(command): return command
+            if self.xperm(command):
+                return command
         else:
             for xpath in self.env.path.split(':'):
                 fullcmd = os.path.join(xpath, command)
-                if self.xperm(fullcmd): return fullcmd
+                if self.xperm(fullcmd):
+                    return fullcmd
 
     def touch(self, filename):
         """Clone of the unix command."""
@@ -451,7 +453,8 @@ class System(footprints.FootprintBase):
             p = subprocess.Popen(args, stdout=cmdout, stderr=cmderr, shell=shell)
             p_out, p_err = p.communicate()
         except ValueError as perr:
-            logger.critical('Weird arguments to Popen ( %s, stdout=%s, stderr=%s, shell=%s )' %args, cmdout, cmderr, shell)
+            logger.critical('Weird arguments to Popen ( %s, stdout=%s, stderr=%s, shell=%s )' % args,
+                            cmdout, cmderr, shell)
             raise
         except OSError as perr:
             logger.critical('Could not call %s', args)
@@ -641,7 +644,8 @@ class OSExtended(System):
                 self.makedirs(normdir)
                 return True
             except OSError:
-                if fatal: raise
+                if fatal:
+                    raise
                 return False
         else:
             return True
@@ -867,14 +871,16 @@ class OSExtended(System):
 
     def listdir(self, *args):
         """Proxy to standard :mod:`os` directory listing function."""
-        if not args: args = ('.',)
+        if not args:
+            args = ('.',)
         self.stderr('listdir', *args)
         return self._os.listdir(args[0])
 
     def l(self, *args):
         """Proxy to globbing after removing any option. A bit like :meth:`ls` method."""
         rl = [x for x in args if not x.startswith('-')]
-        if not rl: rl.append('*')
+        if not rl:
+            rl.append('*')
         self.stderr('l', *rl)
         return self.glob(*rl)
 
@@ -1045,7 +1051,7 @@ class Linux27(Linux, Python27):
         info = 'Linux base system with pretty new python version',
         attr = dict(
             python = dict(
-                values = [ '2.7.' + str(x) for x in range(3,9) ]
+                values = [ '2.7.' + str(x) for x in range(3, 9) ]
             )
         )
     )

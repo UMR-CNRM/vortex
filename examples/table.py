@@ -9,7 +9,7 @@ import olive.data
 import gco.data
 import gco.syntax
 
-from gco.tools import genv 
+from gco.tools import genv
 
 t = vortex.ticket()
 g = t.glove
@@ -77,13 +77,13 @@ nams = rl(
     role = 'SelectionNamelist',
     kind = 'namselect',
     source='[helper::xxtsrc]',
-    term = (0,3),
+    term = (0, 3),
     local = '[helper::xxtnam]',
     helper = ttab,
 )
 
-for n in nams:
-    print t.line, n.idcard()
+for nam in nams:
+    print t.line, nam.idcard()
 
 print t.line
 

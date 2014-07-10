@@ -57,7 +57,8 @@ for clim in cm:
 
 print t.line
 
-gconf = genv.register(cycle='cy37t1_op1.17', entry='double', MASTER_ARPEGE='cy37t1_master-op1.09.SX20r411.x.exe')
+gconf = genv.register(cycle='cy37t1_op1.17', entry='double',
+                      MASTER_ARPEGE='cy37t1_master-op1.09.SX20r411.x.exe')
 
 print t.prompt, genv.cycles()
 print t.prompt, gconf

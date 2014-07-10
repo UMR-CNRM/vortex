@@ -71,7 +71,8 @@ class ClimModel(Clim):
 
 class ClimGlobal(ClimModel):
     """
-    Class for a model climatology of a global model. A SpectralGeometry object is needed. A Genvkey can be given.
+    Class for a model climatology of a global model.
+    A SpectralGeometry object is needed. A Genvkey can be given.
     """
     _footprint = dict(
         info = 'Model climatology for Global Models',
@@ -89,10 +90,10 @@ class ClimGlobal(ClimModel):
         """Generic information, radical = ``clim``."""
         return dict(
             fmt     = self.nativefmt,
-            geo     = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}],
+            geo     = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}],
             radical = 'clim',
             src     = self.model,
-            suffix  = {'month':self.month},
+            suffix  = {'month': self.month},
         )
 
 
@@ -126,7 +127,7 @@ class ClimLAM(ClimModel):
             geo     = [self.geometry.area, self.geometry.rnice],
             radical = 'clim',
             src     = self.model,
-            suffix  = {'month':self.month},
+            suffix  = {'month': self.month},
         )
 
 

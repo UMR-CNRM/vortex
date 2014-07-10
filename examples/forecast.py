@@ -27,11 +27,11 @@ print t.prompt, mysys.pwd()
 domains = [ 'GLOB15' ]
 rundate = date.Date('2011092200')
 geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
-geoBDAP = GridGeometry(area='GLOB15',resolution=1.5, runit='dg')
+geoBDAP = GridGeometry(area='GLOB15', resolution=1.5, runit='dg')
 
 inputdir = myenv.HOME + '/tmp/inputs/'
 
-prvin  = dict(experiment = '99A0', block='canari') 
+prvin  = dict(experiment = '99A0', block='canari')
 prvout = dict(experiment = 'A001', block='forecast')
 
 print t.line
@@ -48,7 +48,7 @@ print t.prompt, fpenv()
 
 print t.line
 
-analysis =  toolbox.rload(
+analysis = toolbox.rload(
     prvin,
     kind='analysis',
     local='ICMSHFCSTINIT',
@@ -90,7 +90,7 @@ namfcp = toolbox.rload(
 
 namselect = toolbox.rload(
     kind='namselect',
-    term=(0,3),
+    term=(0, 3),
     remote=inputdir+'selectfp',
     local='selectfp+[term::fmth]',
 )
@@ -104,7 +104,7 @@ arpege = toolbox.rload(
 historic = toolbox.rload(
     prvout,
     kind='historic',
-    term=(0,3),
+    term=(0, 3),
     local='ICMSHFCST+[term::fmth]',
 )
 
@@ -114,7 +114,7 @@ gridpoint = toolbox.rload(
     origin='historic',
     geometry=geoBDAP,
     nativefmt='fa',
-    term=(0,3),
+    term=(0, 3),
     local='PFFPOS[geometry::area]+[term::fmth]'
 )
 
@@ -123,13 +123,13 @@ listing = toolbox.rload(
     kind='listing',
     task='forecast',
     local='listing.forecast'
-)  
+)
 
 inputs = ( rtcoef, analysis, climmodel, climbdap, namfcp, namselect, matfilter, arpege )
 outputs = ( historic, gridpoint, listing )
 
 for rh in inputs:
-    for r in rh :
+    for r in rh:
         print t.line, r.idcard()
         r.get()
 
@@ -143,7 +143,7 @@ print t.prompt, x.as_dict()
 x.run(arpege)
 
 for rh in outputs:
-    for r in rh :
+    for r in rh:
         print t.line, r.idcard()
         r.put()
 

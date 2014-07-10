@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
+__all__ = [
+    'os', 'logging', 'TestCase', 'TestLoader', 'TextTestRunner', 'common',
+    'iga', 'toolbox', 'sessions', 'resources', 'SpectralGeometry', 'GridGeometry',
+    'today', 'Date', 'Period', 'vortex', 't', 'get_default_provider',
+    'get_spec_provider', 'IgaHelperSelect', 'datadir', 'homedir'
+]
 
-__all__ = [ 'os', 'logging', 'TestCase', 'TestLoader', 'TextTestRunner',
-            'common', 'iga', 'toolbox', 'sessions',
-            'resources', 'SpectralGeometry', 'GridGeometry',
-            'today', 'Date', 'Period', 'vortex', 't', 'get_default_provider',
-            'get_spec_provider', 'IgaHelperSelect', 'datadir', 'homedir'
-        ]
 import os
 import logging
 from unittest import TestCase, TestLoader, TextTestRunner
@@ -23,7 +23,7 @@ import common.data
 import iga.data
 from iga.utilities.helpers import IgaHelperSelect
 
-#main variables definition for unittest
+# main variables definition for unittest
 fpg = dict(tag='oper', user='mxpt001', profile='oper')
 operenv = env.Environment(active=True)
 operenv.glove = sessions.glove(**fpg)

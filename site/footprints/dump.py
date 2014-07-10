@@ -53,7 +53,7 @@ break_after_dict_begin = False
 break_before_dict_end = True
 break_after_dict_end = False
 
-DICT_TYPES = {DictionaryType:1}
+DICT_TYPES = {DictionaryType: 1}
 
 
 def atomic_type(t):

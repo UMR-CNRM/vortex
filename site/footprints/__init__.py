@@ -112,11 +112,9 @@ def set_after(priorityref, *args):
 class FootprintSetup(object):
     """Defines some defaults and external tools."""
 
-    def __init__(self,
-        docstring=False, fatal=True, fastmode=False, fastkeys=('kind',),
-        callback=None, defaults=None, proxies=None,
-        extended=True, dumper=None, report=True, nullreport=reporting.NullReport()
-    ):
+    def __init__(self, docstring=False, fatal=True, fastmode=False, fastkeys=('kind',),
+                 callback=None, defaults=None, proxies=None, extended=True, dumper=None,
+                 report=True, nullreport=reporting.NullReport()):
         """Initialisation of a simple footprint setup driver."""
         if dumper is None:
             self.dumper = dump.Dumper()
@@ -150,7 +148,7 @@ class FootprintSetup(object):
 
     def as_dict(self):
         """Return a standalone dictionary or current setup attributes."""
-        return dict([ (k.lstrip('_'), v) for k,v in self.__dict__.items() ])
+        return dict([ (k.lstrip('_'), v) for k, v in self.__dict__.items() ])
 
     def info(self):
         """Summuray of actual settings."""
@@ -301,7 +299,8 @@ class Collector(util.Catalog):
             self.logreport.add(collector=self)
         for item in self._items:
             resolved, theinput = item.couldbe(desc, report=self.logreport)
-            if resolved: found.append((item, resolved, theinput))
+            if resolved:
+                found.append((item, resolved, theinput))
         return found
 
     def find_best(self, desc):
@@ -462,7 +461,7 @@ def load(**kw):
 
 def default(**kw):
     """
-    Try to find in existing instances tracked by the ``tag`` collector 
+    Try to find in existing instances tracked by the ``tag`` collector
     a suitable candidate according to description.
     """
     return collector(kw.pop('tag', 'garbage')).default(**kw)
@@ -829,7 +828,8 @@ class Footprint(object):
                         logger.debug(' > Attr %s reclassed = %s', k, guess[k])
                     except StandardError:
                         logger.debug(' > Attr %s badly reclassed as %s = %s', k, ktype, guess[k])
-                        report.add(attribute=k, why=reporting.REPORT_WHY_RECLASS, args=(ktype.__name__, str(guess[k])))
+                        report.add(attribute=k, why=reporting.REPORT_WHY_RECLASS,
+                                   args=(ktype.__name__, str(guess[k])))
                         diags[k] = True
                         guess[k] = None
                 if kdef['values'] and not self.in_values(guess[k], kdef['values']):
@@ -951,7 +951,8 @@ class FootprintAttrDescriptor(object):
 
     def __get__(self, instance, owner):
         thisattr = instance._attributes.get(self._attr, None)
-        if thisattr is UNKNOWN: thisattr = None
+        if thisattr is UNKNOWN:
+            thisattr = None
         return thisattr
 
 
@@ -1006,9 +1007,8 @@ class FootprintAttrDescriptorRXX(FootprintAttrDescriptor):
 
 
 local_attribute_accessors = dict([
-    (x.access_mode, x)
-        for x in locals().values()
-            if hasattr(x, 'access_mode') and x.access_mode is not None
+    (xobj.access_mode, xobj) for xobj in locals().values()
+    if hasattr(xobj, 'access_mode') and xobj.access_mode is not None
 ])
 
 
@@ -1037,7 +1037,8 @@ class FootprintBaseMeta(type):
                 try:
                     d[k] = local_attribute_accessors[thisfp.attr[k]['access']](k)
                 except AttributeError:
-                    logger.error('Could not find any local descriptor with acces mode %s', hisfp.attr['access'])
+                    logger.error('Could not find any local descriptor with acces mode %s',
+                                 thisfp.attr['access'])
                     raise
         realcls = super(FootprintBaseMeta, cls).__new__(cls, n, b, d)
         if not abstract:
@@ -1085,7 +1086,8 @@ class FootprintBase(object):
         self._attributes.update(kw)
         if not checked:
             logger.debug('Resolve attributes at footprint init %s', object.__repr__(self))
-            self._attributes, u_attr_input, u_attr_seen = self._footprint.resolve(self._attributes, fatal=True)
+            self._attributes, u_attr_input, u_attr_seen = \
+                self._footprint.resolve(self._attributes, fatal=True)
         self._observer = observers.getbyname(self.__class__.fullname())
         self.make_alive()
 

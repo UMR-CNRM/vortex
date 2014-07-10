@@ -48,5 +48,7 @@ class IgaHelperParser(GenericConfigParser):
 
     def get_info(self, current):
         """docstring for get_info"""
-        return [[int(option), xxt_select.split()[0], xxt_select.split()[1]] for
-                 option, xxt_select in self.items(current)]
+        return [
+            [ int(option), xxt_select.split()[0], xxt_select.split()[1] ]
+            for option, xxt_select in self.items(current)
+        ]

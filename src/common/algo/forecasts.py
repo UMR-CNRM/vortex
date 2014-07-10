@@ -34,8 +34,12 @@ class Forecast(IFSParallel):
     def prepare(self, rh, opts):
         """Default pre-link for the initial condition file"""
         super(Forecast, self).prepare(rh, opts)
-        self.setlink(initrole=('InitialCondition', 'Analysis'), initname='ICMSH{0:s}INIT'.format(self.xpname))
-        for namrh in [ x.rh for x in self.context.sequence.effective_inputs(role='Namelist', kind='namelist') ]:
+        self.setlink(
+            initrole=('InitialCondition', 'Analysis'),
+            initname='ICMSH{0:s}INIT'.format(self.xpname)
+        )
+        for namrh in [ x.rh for x in
+                       self.context.sequence.effective_inputs(role='Namelist', kind='namelist') ]:
             try:
                 namc = namrh.contents
                 namc['NAMCT0'].NFPOS = int(self.inline)
@@ -81,12 +85,13 @@ class LAMForecast(Forecast):
         if self.synctool:
             self.system.cp(self.synctool, 'atcp.alad')
             self.system.chmod('atcp.alad', 0755)
-        cplrh = [ x.rh for x in self.context.sequence.effective_inputs(role='BoundaryConditions', kind='boundary') ]
+        cplrh = [ x.rh for x in self.context.sequence.effective_inputs(role='BoundaryConditions',
+                                                                       kind='boundary') ]
         cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
         i = 0
         for l in [ x.container.localpath() for x in cplrh ]:
             self.system.softlink(l, 'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, i))
-            i=i+1
+            i += 1
 
 
 class DFIForecast(LAMForecast):

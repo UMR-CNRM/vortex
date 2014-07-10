@@ -132,10 +132,10 @@ class utDump(TestCase):
         for x in (Foo(),):
             self.assertFalse(dump.simple_value(x))
 
-        for x in (range(10), tuple(range(10)), {str(i):i for i in range(5)}):
+        for x in (range(10), tuple(range(10)), {str(i): i for i in range(5)}):
             self.assertTrue(dump.simple_value(x))
 
-        for x in (range(11), tuple(range(11)), {str(i):i for i in range(7)}, {'foo': Foo()}, [Foo(), Foo()]):
+        for x in (range(11), tuple(range(11)), {str(i): i for i in range(7)}, {'foo': Foo()}, [Foo(), Foo()]):
             self.assertFalse(dump.simple_value(x))
 
     def test_dump_indent(self):
@@ -212,13 +212,13 @@ class utRangex(TestCase):
         rv = util.rangex(2)
         self.assertListEqual(rv, [2])
 
-        rv = util.rangex(2,5)
+        rv = util.rangex(2, 5)
         self.assertListEqual(rv, [2, 3, 4, 5])
 
-        rv = util.rangex(7,4,-1)
+        rv = util.rangex(7, 4, -1)
         self.assertListEqual(rv, [4, 5, 6, 7])
 
-        rv = util.rangex(-9,-7, shift=2)
+        rv = util.rangex(-9, -7, shift=2)
         self.assertListEqual(rv, [-7, -6, -5])
 
         rv = util.rangex(0, 12, 3, 1)
@@ -240,13 +240,13 @@ class utRangex(TestCase):
 
     def test_rangex_fmt(self):
         rv = util.rangex('2-5', fmt='%03d')
-        self.assertListEqual(rv,['002', '003', '004', '005'])
+        self.assertListEqual(rv, ['002', '003', '004', '005'])
 
         rv = util.rangex('2-5', fmt='{0:03d}')
-        self.assertListEqual(rv,['002', '003', '004', '005'])
+        self.assertListEqual(rv, ['002', '003', '004', '005'])
 
         rv = util.rangex('2-5', fmt='{2:s}({0:02d})')
-        self.assertListEqual(rv,['int(02)', 'int(03)', 'int(04)', 'int(05)'])
+        self.assertListEqual(rv, ['int(02)', 'int(03)', 'int(04)', 'int(05)'])
 
     def test_rangex_prefix(self):
         rv = util.rangex('foo_0', 5, 2)
@@ -396,12 +396,12 @@ class utExpand(TestCase):
 
     def test_expand_mixed(self):
         rv = util.expand(dict(
-                arg='hop',
-                atuple=('one', 'two'),
-                alist=['a', 'b'],
-                aset=set(['banana', 'orange']),
-                astr='this,that',
-                arange='range(1,7,3)'
+            arg='hop',
+            atuple=('one', 'two'),
+            alist=['a', 'b'],
+            aset=set(['banana', 'orange']),
+            astr='this,that',
+            arange='range(1,7,3)'
         ))
         self.assertEqual(len(rv), 48)
         self.assertListEqual(sorted(rv), [

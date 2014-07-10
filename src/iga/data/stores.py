@@ -23,7 +23,7 @@ class IgaFinder(Finder):
                 outcast = list(),
                 values = [ 'oper.inline.fr', 'dbl.inline.fr', 'dble.inline.fr', 'test.inline.fr' ],
                 remap = {
-                    'dbl.inline.fr' : 'dble.inline.fr'
+                    'dbl.inline.fr': 'dble.inline.fr'
                 }
             ),
             rootdir = dict(
@@ -118,16 +118,16 @@ class SopranoStore(Store):
             ftp.close()
             extract = remote['query'].get('extract', None)
             if extract:
-                if extract == 'all' :
+                if extract == 'all':
                     rc = self.system.untar(local, output=False)
                 else:
-                    rc = self.system.untar(local , extract, output=False)
+                    rc = self.system.untar(local, extract, output=False)
                     if local != extract:
                         rc = self.system.mv(extract, local)
             return rc
 
     def ftpput(self, local, remote, options):
-         return self.system.ftput(
+        return self.system.ftput(
             local,
             self.fullpath(remote),
             # ftp control

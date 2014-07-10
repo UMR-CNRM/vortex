@@ -15,7 +15,8 @@ from vortex.tools.env import Environment
 class UtEnv(TestCase):
 
     def setUp(self):
-        self.res = Analysis(geometry=SpectralGeometry(stretching=2.4), model='arpege', date='201304231500', cutoff='prod', kind='analysis')
+        self.res = Analysis(geometry=SpectralGeometry(stretching=2.4), model='arpege',
+                            date='201304231500', cutoff='prod', kind='analysis')
 
     def test_basic(self):
         e = Environment()
@@ -61,16 +62,21 @@ class UtEnv(TestCase):
 
     def test_encoding(self):
         e = Environment(active=True)
-        e['toto'] = range(1,4)
+        e['toto'] = range(1, 4)
         self.assertEqual(os.environ['TOTO'], '[1, 2, 3]')
         e['toto'] = dict(toto = 2, fun = 'coucou')
         self.assertEqual(os.environ['TOTO'], '{"fun": "coucou", "toto": 2}')
         e['toto'] = self.res
-        self.assertEqual(os.environ['TOTO'], '{"cutoff": "production", "kind": "analysis", "nativefmt": "fa", "geometry": {"lam": true, "kind": "spectral", "initialised": false, "runit": "km", "area": null, "nlat": null, "stretching": 2.4, "id": "anonymous", "resolution": 0.0, "nlon": null, "truncation": null}, "filling": "full", "filtering": null, "date": "201304231500", "clscontents": "DataRaw", "model": "arpege"}')
+        self.assertEqual(
+            os.environ['TOTO'],
+            '{"cutoff": "production", "kind": "analysis", "nativefmt": "fa", "geometry": {"lam": true, '
+            '"kind": "spectral", "initialised": false, "runit": "km", "area": null, "nlat": null, '
+            '"stretching": 2.4, "id": "anonymous", "resolution": 0.0, "nlon": null, "truncation": null}, '
+            '"filling": "full", "filtering": null, "date": "201304231500", "clscontents": "DataRaw", '
+            '"model": "arpege"}')
 
 
 if __name__ == '__main__':
     main(verbosity=2)
-    vortex.exit()
 
 

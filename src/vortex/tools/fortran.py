@@ -46,7 +46,7 @@ _OTHER_CHARACTERS   = "[^A-Z0-9_ =+-*/(),.':!\"%&;<>?$]"
 _GRAPHIC_CHARACTERS = ".|\n"
 
 _ALPHANUMERIC_CHARACTER = "[A-Z0-9_]"
-_CHARACTER              =  "[A-Z0-9_ =+-*/(),.':!\"%&;<>?$]"
+_CHARACTER              = "[A-Z0-9_ =+-*/(),.':!\"%&;<>?$]"
 
 # Low-lever
 _NAME = _LETTER + _ALPHANUMERIC_CHARACTER + '*'
@@ -189,10 +189,13 @@ class LiteralParser(object):
 
     def parse_boz(self, string):
         """If the argument looks like a FORTRAN boz, returns the matching python integer."""
-        if ( self.boz.match(string) ):
-            if(  string[0]=="B"): return int(string[2:-1],  2)
-            elif(string[0]=="O"): return int(string[2:-1],  8)
-            elif(string[0]=="Z"): return int(string[2:-1], 16)
+        if self.boz.match(string):
+            if   string[0] == "B":
+                return int(string[2:-1],  2)
+            elif string[0] == "O":
+                return int(string[2:-1],  8)
+            elif string[0] == "Z":
+                return int(string[2:-1], 16)
         raise ValueError("Literal %s doesn't represent a FORTRAN boz" % string)
 
     def parse_real(self, string):
@@ -272,7 +275,8 @@ class LiteralParser(object):
         real = '{0:G}'.format(value).replace('E', 'D')
         if '.' not in real:
             real = re.sub('D', '.0D', real)
-            if '.' not in real: real += '.'
+            if '.' not in real:
+                real += '.'
         return real
 
     def encode_complex(self, value):
@@ -469,7 +473,7 @@ class NamelistBlock(object):
 
     def dumps(self, literal=None):
         """Returns a string of the namelist block, readable by fortran parsers."""
-        namout= " &{0:s}\n".format(self.name.upper())
+        namout = " &{0:s}\n".format(self.name.upper())
         if literal is None:
             if self._literal is None:
                 self.__dict__['_literal'] = LiteralParser()
@@ -559,7 +563,7 @@ class NamelistParser(object):
         while source:
             if self.block.search(source):
                 namblock, source = self._namelist_block_parse(source)
-                namelists.update({namblock.name : namblock})
+                namelists.update({namblock.name: namblock})
             else:
                 break
         return NamelistSet(namelists)
@@ -586,8 +590,8 @@ class NamelistParser(object):
 
             if self.entry.match(source):
                 # Got a new entry in the namelist block
-                if (current):
-                    namelist.update({current : values})
+                if current:
+                    namelist.update({current: values})
                 current = self.entry.match(source).group(0)
                 values = list()
                 source = self._namelist_clean(source[len(current):])
@@ -618,44 +622,51 @@ class NamelistParser(object):
                     namelist.addmacro(item, None)
                     values.append(item)
                     source = self._namelist_clean(source[len(item):])
-                    if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
+                    if self.comma.match(source):
+                        source = self._namelist_clean(self.comma.sub('', source, 1))
                     continue
 
             if re.match(_SIGNED_INT_LITERAL_CONSTANT + self._re_endol, source, self._re_flags):
                 item = re.match(_SIGNED_INT_LITERAL_CONSTANT + self._re_endol, source, self._re_flags).group(0)
                 values.append(self.literal.parse_integer(item))
                 source = self._namelist_clean(source[len(item):])
-                if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
+                if self.comma.match(source):
+                    source = self._namelist_clean(self.comma.sub('', source, 1))
 
             elif re.match(_BOZ_LITERAL_CONSTANT + self._re_endol, source, self._re_flags):
                 item = re.match(_BOZ_LITERAL_CONSTANT + self._re_endol, source, self._re_flags).group(0)
                 values.append(self.literal.parse_boz(item))
                 source = self._namelist_clean(source[len(item):])
-                if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
+                if self.comma.match(source):
+                    source = self._namelist_clean(self.comma.sub('', source, 1))
 
             elif re.match(_SIGNED_REAL_LITERAL_CONSTANT + self._re_endol, source, self._re_flags):
                 item = re.match(_SIGNED_REAL_LITERAL_CONSTANT + self._re_endol, source, self._re_flags).group(0)
                 values.append(self.literal.parse_real(item))
                 source = self._namelist_clean(source[len(item):])
-                if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
+                if self.comma.match(source):
+                    source = self._namelist_clean(self.comma.sub('', source, 1))
 
             elif re.match(_COMPLEX_LITERAL_CONSTANT + self._re_endol, source, self._re_flags):
                 item = re.match(_COMPLEX_LITERAL_CONSTANT + self._re_endol, source, self._re_flags).group(0)
                 values.append(self.literal.parse_complex(item))
                 source = self._namelist_clean(source[len(item):])
-                if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
+                if self.comma.match(source):
+                    source = self._namelist_clean(self.comma.sub('', source, 1))
 
             elif re.match(_CHAR_LITERAL_CONSTANT + self._re_endol, source, self._re_flags):
                 item = re.match(_CHAR_LITERAL_CONSTANT + self._re_endol, source, self._re_flags).group(0)
                 values.append(self.literal.parse_character(item))
                 source = self._namelist_clean(source[len(item):])
-                if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
+                if self.comma.match(source):
+                    source = self._namelist_clean(self.comma.sub('', source, 1))
 
             elif re.match(_LOGICAL_LITERAL_CONSTANT + self._re_endol, source, self._re_flags):
                 item = re.match(_LOGICAL_LITERAL_CONSTANT + self._re_endol, source, self._re_flags).group(0)
                 values.append(self.literal.parse_logical(item))
                 source = self._namelist_clean(source[len(item):])
-                if self.comma.match(source): source = self._namelist_clean(self.comma.sub('', source, 1))
+                if self.comma.match(source):
+                    source = self._namelist_clean(self.comma.sub('', source, 1))
 
             else:
                 raise ValueError("Badly formatted FORTRAN namelist: [[%s]]" % source[:32])
@@ -742,7 +753,7 @@ def _test_literal(lp):
     _encode_test(1.)
     _encode_test(1e-76)
     _encode_test(1e124)
-    _encode_test(complex(1,1))
+    _encode_test(complex(1, 1))
     _encode_test("machin")
     _encode_test("mach'in")
     _encode_test("mach\"in")
@@ -776,7 +787,7 @@ def _test_namparser(np):
         _test_incore(np)
     else:
         filename = sys.argv[1]
-        testIn = open(filename,"r")
+        testIn = open(filename, "r")
         try:
             namelists = np.parse(testIn)
             for namelist in namelists.values():
@@ -787,6 +798,6 @@ def _test_namparser(np):
             testIn.close()
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     _test_literal(LiteralParser())
     _test_namparser(NamelistParser())

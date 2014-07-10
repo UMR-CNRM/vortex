@@ -102,7 +102,7 @@ class Environment(object):
             self._pool.update(env)
         else:
             if clear:
-                active=False
+                active = False
             else:
                 if self.__class__._os:
                     self._pool.update(self.__class__._os[-1])
@@ -202,7 +202,8 @@ class Environment(object):
         if varname.upper() in self._pool:
             seen = 1
             del self._pool[varname.upper()]
-        if seen and self.osbound(): del os.environ[varname.upper()]
+        if seen and self.osbound():
+            del os.environ[varname.upper()]
 
     def __delitem__(self, varname):
         self.delvar(varname)

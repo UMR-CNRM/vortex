@@ -139,7 +139,7 @@ input = (
         role = 'SelectionNamelist',
         kind = 'namselect',
         source='select_p',
-        term = (0,3),
+        term = (0, 3),
         local = 'select_p[term::fmth]',
     )
 )
@@ -158,7 +158,7 @@ outputs = (
         provider = prvout,
         role = 'ModelStateOutput',
         kind = 'historic',
-        term = (0,3),
+        term = (0, 3),
         local = 'ICMSHFCST+[term::fmth]',
     ),
 
@@ -169,7 +169,7 @@ outputs = (
         origin='historic',
         geometry=geoBDAP,
         nativefmt='fa',
-        term=(0,3),
+        term=(0, 3),
         local='PFFPOS[geometry::area]+[term::fmth]'
     ),
 
@@ -184,7 +184,7 @@ outputs = (
 )
 
 for rh in input:
-    for r in rh :
+    for r in rh:
         print t.line, r.idcard()
         print 'GET:', r.get()
 
@@ -202,7 +202,7 @@ print t.prompt, x.as_dict()
 x.run(arpege, mpiopts = dict(nn=1, nnp=4))
 
 for rh in outputs:
-    for r in rh :
+    for r in rh:
         print t.line, r.idcard()
         print 'Locate:', r.locate()
         sh.touch(r.container.localpath())

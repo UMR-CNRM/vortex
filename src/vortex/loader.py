@@ -47,7 +47,8 @@ class VortexImporter(object):
             mod.logger = autolog.logmodule(fullname)
             return mod
         finally:
-            if info[0]: info[0].close()
+            if info[0]:
+                info[0].close()
         return None
 
     def find_module(self, fullname, path=None):

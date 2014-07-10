@@ -163,7 +163,8 @@ class PrioritySet(object):
         """Reranks the priority named ``tag`` according to ``upd`` shift. Eg: +1, -2, etc."""
         tag = tag.upper()
         ipos = self._levels.index(tag) + upd
-        if ipos < 0: ipos = 0
+        if ipos < 0:
+            ipos = 0
         self._levels.remove(tag)
         self._levels.insert(ipos, tag)
         return self.level(tag)

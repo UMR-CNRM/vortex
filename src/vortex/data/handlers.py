@@ -150,7 +150,7 @@ class Handler(object):
         for subobj in ( 'resource', 'provider', 'container' ):
             obj = getattr(self, subobj, None)
             if obj:
-                thisdoc ="\n".join((
+                thisdoc = "\n".join((
                     '{0}{1:s} {2!r}',
                     '{0}{0}Realkind   : {3:s}',
                     '{0}{0}Attributes : {4:s}'

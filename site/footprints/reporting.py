@@ -38,7 +38,7 @@ def report_keys():
 
 def report_copy():
     """Return a copy of the table of reports."""
-    return reportmap().copy()
+    return report_map().copy()
 
 
 def report(tag='default', weak=True):
@@ -119,7 +119,7 @@ class FootprintLogCollector(FootprintLogEntry):
 
     def __iter__(self):
         """Iterates on :class:`FootprintLogClass` items."""
-        for kid in sorted(self._items, lambda a,b: cmp(a.name, b.name)):
+        for kid in sorted(self._items, lambda a, b: cmp(a.name, b.name)):
             yield kid
 
     def feed_xml(self, xmlnode):
@@ -409,7 +409,8 @@ class FlatReport(object):
         self._items.append(kw)
 
     def reshuffle(self, sortlist=None, skip=True):
-        """Sort the entire set of items as a hierarchical tree driven by keys of the specified ``sortlist``."""
+        """Sort the entire set of items as a hierarchical tree
+        driven by keys of the specified ``sortlist``."""
         self._tree = dict()
         if sortlist is not None:
             self._sort = sortlist[:]
@@ -444,20 +445,18 @@ class FlatReport(object):
 
 class FactorizedReport(object):
 
-    def __init__(self,
-        focus='class',
-        indent='    ',
-        xordering=None,
-        ordering=(
-            ('name',
-                ('kind', 'date', 'geometry')),
-            ('why',
-                (REPORT_WHY_MISSING, REPORT_WHY_INVALID, REPORT_WHY_OUTSIDE, REPORT_WHY_OUTCAST,
-                REPORT_WHY_RECLASS, REPORT_WHY_SUBCLASS)),
-            ('only',
-                (REPORT_ONLY_NOTFOUND, REPORT_ONLY_NOTMATCH))
-        )
-    ):
+    def __init__(
+            self,
+            focus='class',
+            indent='    ',
+            xordering = None,
+            ordering = (
+                ('name', ('kind', 'date', 'geometry')),
+                ('why', (REPORT_WHY_MISSING, REPORT_WHY_INVALID, REPORT_WHY_OUTSIDE,
+                         REPORT_WHY_OUTCAST, REPORT_WHY_RECLASS, REPORT_WHY_SUBCLASS)
+                ),
+                ('only', (REPORT_ONLY_NOTFOUND, REPORT_ONLY_NOTMATCH)),
+            ) ):
         """
         Generates a report whose items are sorted using some parameters
 
@@ -504,10 +503,10 @@ class FactorizedReport(object):
     def printer(self, dic, currentIndent, depth, ordered=False):
         if depth == len(self.keys()):
             for tagValue in dic:
-                print currentIndent, self.focus , ':', tagValue,
+                print currentIndent, self.focus, ':', tagValue,
                 if dic[tagValue]:
                     print '(' + dic[tagValue]+')'
-                else :
+                else:
                     print
         else:
             if ordered:
@@ -516,7 +515,7 @@ class FactorizedReport(object):
                 order = dic
             for v in order:
                 print currentIndent, self.keys()[depth], '=', v
-                self.printer(dic[v],currentIndent+self._indent, depth+1, ordered)
+                self.printer(dic[v], currentIndent+self._indent, depth+1, ordered)
 
     def softprint(self):
         self.printer(self._tree, self._indent, 0)
@@ -524,15 +523,15 @@ class FactorizedReport(object):
     def orderedprint(self):
         self.printer(self._tree, self._indent, 0, ordered = True)
 
-    def simpleprinter(self,dic, depth, msg=None, space=True):
+    def simpleprinter(self, dic, depth, msg=None, space=True):
         if depth == len(self.keys()):
             if space:
                 print
             for tagValue in dic:
-                print self._indent, self.focus , ':', tagValue,
+                print self._indent, self.focus, ':', tagValue,
                 if dic[tagValue]:
                     print '(' + dic[tagValue]+')'
-                else :
+                else:
                     print
             if msg:
                 print self._indent*3, msg
@@ -546,24 +545,24 @@ class FactorizedReport(object):
 
     def niceprinter(self, dic, depth, maxdepth, group, msg=None, separator='+'):
         if depth == maxdepth:
-            self.simpleprinter(dic, depth, msg, depth%group!=0)
+            self.simpleprinter(dic, depth, msg, depth % group != 0)
         else:
-            toPrint=None
+            toPrint = None
             if depth % group == 0:
-                toPrint=msg
-                msg=None
+                toPrint = msg
+                msg = None
             if toPrint:
-                if separator=='+':
-                    separator='-'
-                elif separator =='-':
-                    separator='~'
+                if separator == '+':
+                    separator = '-'
+                elif separator == '-':
+                    separator = '~'
             for v in self.get_order(dic, depth):
                 if msg:
                     newmsg = msg + ' | ' + self.keys()[depth] + ' = ' + v
                 else:
                     newmsg = self.keys()[depth] + ' = ' + v
                 self.niceprinter(dic[v], depth+1, maxdepth, group, newmsg, separator)
-                if depth % group ==0:
+                if depth % group == 0:
                     print self._indent+(separator*(40+5*len(self._indent)))
             if toPrint:
                 print self._indent*((maxdepth-depth)/group + 4), toPrint
@@ -583,13 +582,13 @@ if __name__ == '__main__':
         indent = '   '
     )
 
-    fr.add(classname='toto',name='kind',why='Not Valid', info='blabla')
-    fr.add(classname='tata',name='kind',why='Invalid')
-    fr.add(classname='tata2',name='kind',why='Invalid', info = 'idem')
-    fr.add(classname='grosMinet',name='date',why='Not in values : test', info='values = [today, 20130807]')
+    fr.add(classname='toto', name='kind', why='Not Valid', info='blabla')
+    fr.add(classname='tata', name='kind', why='Invalid')
+    fr.add(classname='tata2', name='kind', why='Invalid', info = 'idem')
+    fr.add(classname='grosMinet', name='date', why='Not in values : test', info='values = [today, 20130807]')
     fr.add(classname='titi', name='date', why = 'Missing value')
-    fr.add(classname='tutu',name='bidon',why='Invalid')
-    fr.add(classname='tyty',name='aa',why='n\'importe quoi ' )
+    fr.add(classname='tutu', name='bidon', why='Invalid')
+    fr.add(classname='tyty', name='aa', why='n\'importe quoi ' )
 
     print
     print '=======================raw Version========================'

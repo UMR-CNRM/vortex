@@ -93,12 +93,18 @@ class IFSParallel(Parallel):
 
     def setlink(self, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
         """Set a symbolic link for actual resource playing defined role."""
-        initrh = [ x.rh for x in self.context.sequence.effective_inputs(role=initrole, kind=initkind) if inittest(x.rh) ]
+        initrh = [ x.rh for x in
+                   self.context.sequence.effective_inputs(role=initrole, kind=initkind)
+                   if inittest(x.rh) ]
         if not initrh:
-            logger.warning('Could not find logical role %s with kind %s - assuming already renamed', initrole, initkind)
+            logger.warning(
+                'Could not find logical role %s with kind %s - assuming already renamed',
+                initrole, initkind
+            )
         if len(initrh) > 1:
-            logger.warning('More than one role %s with kind %s %s', initrole, initkind, initrh)
         if initname != None:
+            logger.warning('More than one role %s with kind %s %s',
+                           initrole, initkind, initrh)
             for l in [ x.container.localpath() for x in initrh ]:
                 if not self.system.path.exists(initname):
                     self.system.symlink(l, initname)

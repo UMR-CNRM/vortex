@@ -5,4 +5,5 @@
 __all__ = []
 
 # Recursive inclusion of packages with potential FootprintBase classes
-import binaries, boundaries, climfiles, consts, diagnostics, gridfiles, logs, modelstates, namelists, obs, surfex
+import binaries, boundaries, climfiles, consts, diagnostics
+import gridfiles, logs, modelstates, namelists, obs, surfex

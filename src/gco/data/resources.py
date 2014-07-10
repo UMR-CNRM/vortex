@@ -23,17 +23,17 @@ class MiscGenv(NoDateResource):
         info = 'Miscellaneous genv constant',
         attr = dict(
             gvar = dict(
-              	type = GenvKey,
-              	optional = True,
+                type = GenvKey,
+                optional = True,
             ),
             kind = dict(
                 values = [ 'miscgenv' ]
             )
-      	)
+        )
     )
 
     @property
     def realkind(self):
         """Default realkind is ``miscgenv``."""
-        return 'miscgenv' 
+        return 'miscgenv'
 

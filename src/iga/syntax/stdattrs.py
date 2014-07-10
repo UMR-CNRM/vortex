@@ -69,10 +69,10 @@ def hliteral2int(hliteral):
 def archivesuffix(model, cutoff, date):
     """Returns the suffix for iga filenames according to specified ``model``, ``cutoff`` and ``date`` hour."""
 
-    hh = range(0,21,3)
+    hh = range(0, 21, 3)
     hrange = []
     for h in hh:
-        hrange.append("%02d" %h)
+        hrange.append("%02d" % h)
 
     if cutoff == 'assim':
 
@@ -103,9 +103,9 @@ def archivesuffix(model, cutoff, date):
                         (cutoff,)*len(hrange),
                         hh
                     ),
-                    ('AM', 'TR', 'SX' , 'NF', 'PM', 'QZ', 'DH', 'VU')
+                    ('AM', 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU')
                 )
-            )     
+            )
 
     return str(rr[(cutoff, date.hour)])
 

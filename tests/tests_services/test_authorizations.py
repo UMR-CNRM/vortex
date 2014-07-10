@@ -43,13 +43,13 @@ class UtConstants(TestCase):
         gphdl = authorizations.GroupHandler()
         #('root', 'low')
         self.assertEquals(
-            sorted(gphdl.get_grp_permis_fields()), 
+            sorted(gphdl.get_grp_permis_fields()),
             sorted(self.grpact.keys())
         )
 
         #('root', 'low')
         self.assertEquals(
-            sorted(gphdl.get_grp_users_fields()), 
+            sorted(gphdl.get_grp_users_fields()),
             sorted(self.grpusr.keys())
         )
         for grp in self.grpusr.keys():
@@ -61,7 +61,7 @@ class UtConstants(TestCase):
             )
             #root: {'mail': True, 'alarm': True, 'sendbdap': False, 'routing': False}
             #low:{'mail': True, 'alarm': False, 'sendbdap': False, 'routing': False}
-            dico_res =  gphdl.get_grp_permis(grp)
+            dico_res = gphdl.get_grp_permis(grp)
             for act in dico_res:
                 self.assertEquals(dico_res[act], self.grpact[grp][act])
         print "test_group_hdl ok"

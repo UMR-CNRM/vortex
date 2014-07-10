@@ -33,7 +33,7 @@ arpege_cycle = 'cy36t1_op2.16'
 domains = [ 'GLOB15' ]
 rundate = date.Date('2011092200')
 geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
-geoBDAP = GridGeometry(area='GLOB15',resolution=1.5, runit='dg')
+geoBDAP = GridGeometry(area='GLOB15', resolution=1.5, runit='dg')
 
 
 fpenv = vortex.toolbox.defaults(
@@ -52,8 +52,8 @@ if g.realkind == 'opuser':
     prvcst = dict()
 else:
     prvin  = dict(experiment='99A0', block='canari')
-    prvout = vortex.toolbox.provider(experiment='A001', block='forecast')
-    prvcst = vortex.toolbox.provider(genv=arpege_cycle)
+    prvout = vortex.proxy.provider(experiment='A001', block='forecast')
+    prvcst = vortex.proxy.provider(genv=arpege_cycle)
 
 print t.prompt, fpenv()
 print t.prompt, prvin

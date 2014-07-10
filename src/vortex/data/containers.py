@@ -37,7 +37,7 @@ class Container(footprints.FootprintBase):
                 optional = True,
                 default = 'rb',
                 values = ['a', 'ab', 'a+b', 'ab+', 'r', 'rb', 'rb+', 'r+b', 'w', 'wb', 'w+b', 'wb+'],
-                remap = {'a+b':'ab+', 'r+b':'rb+', 'w+b':'wb+'}
+                remap = {'a+b': 'ab+', 'r+b': 'rb+', 'w+b': 'wb+'}
             )
         )
     )

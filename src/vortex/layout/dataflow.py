@@ -58,8 +58,10 @@ class Section(object):
         self.stages    = [ kw.pop('stage', 'void') ]
         self.__dict__.update(kw)
         if self.rh:
-            if self.rh.role and not self.role: self.role = self.rh.role
-            if self.rh.alternate: self.alternate = self.rh.alternate
+            if self.rh.role and not self.role:
+                self.role = self.rh.role
+            if self.rh.alternate:
+                self.alternate = self.rh.alternate
             self.rh.role = self.role
             self.rh.alternate = self.alternate
 
@@ -167,7 +169,8 @@ class Sequence(object):
 
     def section(self, **kw):
         rhset = kw.get('rh', list())
-        if type(rhset) != list: rhset = [ rhset ]
+        if type(rhset) != list:
+            rhset = [ rhset ]
         ralter = kw.get('alternate', kw.get('role', 'anonymous'))
         newsections = list()
         for rh in rhset:
@@ -176,24 +179,28 @@ class Sequence(object):
             self.add(this_section)
             newsections.append(this_section)
             kw['alternate'] = ralter
-            if 'role' in kw: del kw['role']
+            if 'role' in kw:
+                del kw['role']
         return newsections
 
     def input(self, **kw):
         """Create a section with default kind equal to ``ixo.INPUT``."""
-        if 'kind' in kw: del kw['kind']
+        if 'kind' in kw:
+            del kw['kind']
         kw.setdefault('intent', intent.IN)
         return self.section(kind=ixo.INPUT, **kw)
 
     def output(self, **kw):
         """Create a section with default kind equal to ``ixo.OUTPUT`` and intent equal to ``intent.OUT``."""
-        if 'kind' in kw: del kw['kind']
+        if 'kind' in kw:
+            del kw['kind']
         kw.setdefault('intent', intent.OUT)
         return self.section(kind=ixo.OUTPUT, **kw)
 
     def executable(self, **kw):
         """Create a section with default kind equal to to ``ixo.EXEC``."""
-        if 'kind' in kw: del kw['kind']
+        if 'kind' in kw:
+            del kw['kind']
         kw.setdefault('intent', intent.IN)
         return self.section(kind=ixo.EXEC, **kw)
 
@@ -209,7 +216,8 @@ class Sequence(object):
         the ``role`` applies first, and then the ``kind`` in case of empty match.
         """
         inset = [ x for x in self.inputs() if x.stage == 'get' ]
-        if not kw: return inset
+        if not kw:
+            return inset
         inrole = list()
         inkind = list()
         if 'role' in kw and kw['role'] is not None:
@@ -236,10 +244,11 @@ class Sequence(object):
         the ``role`` applies first, and then the ``kind`` in case of empty match.
         """
         outset = self.outputs()
-        if not kw: return outset
+        if not kw:
+            return outset
         outrole = list()
         outkind = list()
-        if 'role' in kw  and kw['role'] is not None:
+        if 'role' in kw and kw['role'] is not None:
             outrole = [ x for x in outset if x.role == kw['role'] ]
         if not outrole and 'kind' in kw:
             outkind = [ x for x in outset if x.rh.resource.realkind == kw['kind'] ]

@@ -324,25 +324,25 @@ class UtRefData(TestCase):
                     self.liste_fp_bufr.append(fp_obs)
 
     def test_ctlg1(self):
-         ctlg = footprints.proxy.resources
+        ctlg = footprints.proxy.resources
 
-         obs = self.fp_rdconv
-         res = ctlg.find_best(obs)
-         self.assertTrue(res.kind, 'refdata')
+        obs = self.fp_rdconv
+        res = ctlg.find_best(obs)
+        self.assertTrue(res.kind, 'refdata')
 
-         obs = self.fp_rdprof
-         res = ctlg.find_best(obs)
-         self.assertTrue(res.kind, 'refdata')
+        obs = self.fp_rdprof
+        res = ctlg.find_best(obs)
+        self.assertTrue(res.kind, 'refdata')
 
-         obs = self.fp_rdsurf
-         res = ctlg.find_best(obs)
-         self.assertTrue(res.kind, 'refdata')
+        obs = self.fp_rdsurf
+        res = ctlg.find_best(obs)
+        self.assertTrue(res.kind, 'refdata')
 
     def test_ctlg_bufr(self):
         ctlg = footprints.proxy.resources
         for obs in self.liste_fp_bufr:
-           res = ctlg.find_best(obs)
-           self.assertTrue(res.kind, 'refdata')
+            res = ctlg.find_best(obs)
+            self.assertTrue(res.kind, 'refdata')
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -501,8 +501,8 @@ class UtObservations(TestCase):
     def test_ctlg_bufr(self):
         ctlg = footprints.proxy.resources
         for obs in self.liste_fp_bufr:
-           res = ctlg.find_best(obs)
-           self.assertTrue(res.kind, 'observations')
+            res = ctlg.find_best(obs)
+            self.assertTrue(res.kind, 'observations')
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -652,7 +652,7 @@ class UtRefdata(TestCase):
             rl[0].locate(),
             datadir + '/arpege/france/oper/data/workdir/obs/refdata.rSX'
         )
-        #uniquement sur machine oper (pas de phasage)
+        # uniquement sur machine oper (pas de phasage)
         if t.env['HOSTNAME'] == 'kumo':
             self.assertTrue(os.stat(rl[0].locate()))
 

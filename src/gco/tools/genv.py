@@ -45,7 +45,8 @@ def register(**kw):
         regcycle = p[nextcycle]
     else:
         regcycle = p[regcycle.pop()]
-    if kw: regcycle.update(kw)
+    if kw:
+        regcycle.update(kw)
     return regcycle
 
 
@@ -67,7 +68,8 @@ def nicedump(**kw):
     ldump = list()
     c = contents(**kw)
     if c:
-        ldump = [ '{0:s}="{1:s}"'.format(k, ' '.join(v if type(v) is list else [v])) for k, v in sorted(c.items()) ]
+        ldump = [ '{0:s}="{1:s}"'.format(k, ' '.join(v if type(v) is list else [v]))
+                  for k, v in sorted(c.items()) ]
     return ldump
 
 

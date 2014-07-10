@@ -79,7 +79,7 @@ class Family(Node):
 
     def __iter__(self):
         for node in self.contents:
-            yield node 
+            yield node
 
     def __call__(self):
         return self.contents[:]

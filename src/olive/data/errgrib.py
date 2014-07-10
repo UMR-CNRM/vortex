@@ -32,7 +32,7 @@ class BackgroundErrStd(GeoFlowResource):
         return dict(
             radical = 'bgerrstd',
             fmt     = self.nativefmt,
-            geo     = [{'truncation':self.geometry.truncation}],
+            geo     = [{'truncation': self.geometry.truncation}],
             src     = self.model,
             term    = self.term.fmthm
         )

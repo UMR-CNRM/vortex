@@ -36,15 +36,18 @@ class Namelist(Resource):
         return 'namelist'
 
     def mercator_basename(self):
-        if self.cexper in experiences: 
-            if self.nmtype == 'main': return 'namelist'
-            if self.nmtype == 'ice': return 'namelist_ice'
-            if self.nmtype == 'io': return 'namelistio'
+        if self.cexper in experiences:
+            if self.nmtype == 'main':
+                return 'namelist'
+            if self.nmtype == 'ice':
+                return 'namelist_ice'
+            if self.nmtype == 'io':
+                return 'namelistio'
 
     def mercator_pathinfo(self):
         return dict(
-                grid = self.grid,
-                path = 'paraminput/ocean/ana/',
+            grid = self.grid,
+            path = 'paraminput/ocean/ana/',
         )
 
 
@@ -57,7 +60,7 @@ class NamelistAssimilation(Namelist):
                 type = bool,
                 values = [ True, False ],
             ),
-            nmtype = dict(  
+            nmtype = dict(
                 optional = False,
                 values = [ 'kernel', 'palm' ],
             ),
@@ -76,8 +79,8 @@ class NamelistAssimilation(Namelist):
 
     def mercator_pathinfo(self):
         return dict(
-                grid = self.grid,
-                path = 'paraminput/assim/ana/',
+            grid = self.grid,
+            path = 'paraminput/assim/ana/',
         )
 
 
@@ -113,8 +116,8 @@ class NamelistBogus(NamelistAssimilation):
 
     def mercator_pathinfo(self):
         return dict(
-                grid = self.grid,
-                path = 'paraminput/assim/ana/',
+            grid = self.grid,
+            path = 'paraminput/assim/ana/',
         )
 
 
@@ -167,13 +170,13 @@ class Bathymetry(Resource):
                 return self.grid.upper()+'_bathy_etopo1_gebco1_smoothed_coast_corrected_sept09.nc'
 
     def mercator_pathinfo(self):
-        assim_ocean='ocean'
+        assim_ocean = 'ocean'
         if self.assim:
-            assim_ocean='assim'
+            assim_ocean = 'assim'
 
         return dict(
-                grid = self.grid,
-                path = 'staticinput/'+assim_ocean+'/',
+            grid = self.grid,
+            path = 'staticinput/'+assim_ocean+'/',
         )
 
 
@@ -199,12 +202,12 @@ class Runoff(Resource):
 
     def mercator_basename(self):
         if self.grid == 'orca025':
-            return 'runoff_obtaz_rhone_antar_1m_bathy_sept09_'+self.grid.upper()+'_10112009.nc' 
+            return 'runoff_obtaz_rhone_antar_1m_bathy_sept09_'+self.grid.upper()+'_10112009.nc'
 
     def mercator_pathinfo(self):
         return dict(
-                grid = self.grid,
-                path = 'staticinput/ocean',
+            grid = self.grid,
+            path = 'staticinput/ocean',
         )
 
 
@@ -237,8 +240,8 @@ class Moorings(Resource):
 
     def mercator_pathinfo(self):
         return dict(
-                grid = self.grid,
-                path = 'staticinput/ocean',
+            grid = self.grid,
+            path = 'staticinput/ocean',
         )
 
 
@@ -268,8 +271,8 @@ class MooringsPosition(Resource):
 
     def mercator_pathinfo(self):
         return dict(
-                grid = self.grid,
-                path = 'staticinput/ocean',
+            grid = self.grid,
+            path = 'staticinput/ocean',
         )
 
 
@@ -295,8 +298,8 @@ class Coordinates(Resource):
 
     def mercator_pathinfo(self):
         return dict(
-                grid = self.grid,
-                path = 'staticinput/ocean',
+            grid = self.grid,
+            path = 'staticinput/ocean',
         )
 
 
@@ -346,8 +349,8 @@ class ModelBinaries(Resource):
 
     def mercator_pathinfo(self):
         return dict(
-                grid = self.grid,
-                path = 'config/exe/',
+            grid = self.grid,
+            path = 'config/exe/',
         )
 
 
@@ -369,7 +372,7 @@ class ClimatologyLevitus(Resource):
             ),
             month = dict(
                 optional = True,
-                values = [ '{0:02d}'.format(x) for x in range(1,13) ],
+                values = [ '{0:02d}'.format(x) for x in range(1, 13) ],
                 default = None,
             ),
             grid = dict(
@@ -389,8 +392,8 @@ class ClimatologyLevitus(Resource):
 
     def mercator_pathinfo(self):
         return dict(
-                grid = self.grid,
-                path = 'staticinput/monthly_climato'
+            grid = self.grid,
+            path = 'staticinput/monthly_climato'
         )
 
 
@@ -435,7 +438,7 @@ class AtmosphericForcing(Resource):
         return 'atmospheric forcing'
 
     def mercator_basename(self):
-        return '_'.join( [ 
+        return '_'.join( [
             self.origin,
             self.field,
             self.grid.upper(),

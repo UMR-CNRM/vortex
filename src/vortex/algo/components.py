@@ -288,7 +288,7 @@ class Parallel(AlgoComponent):
         args = list()
         if io:
             io.import_basics(self)
-            io.options = { x.lstrip('io_'):opts[x] for x in opts.keys() if x.startswith('io_') }
+            io.options = { x.lstrip('io_'): opts[x] for x in opts.keys() if x.startswith('io_') }
             mpi.options['nn'] = mpi.options['nn'] - io.options['nn']
             io.master  = mpi.master
             args = io.mkcmdline(self.spawn_command_line(rh))

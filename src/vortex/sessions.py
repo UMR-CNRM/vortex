@@ -96,7 +96,8 @@ def exit():
 
 class Ticket(object):
 
-    def __init__(self, active=False, config=None, topenv=None, glove=None, context=None, tag='root', prompt='Vortex:'):
+    def __init__(self, active=False, config=None, topenv=None,
+                 glove=None, context=None, tag='root', prompt='Vortex:'):
         self.tag = tag
         self._active = active
         self.config = config

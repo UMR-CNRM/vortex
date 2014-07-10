@@ -44,7 +44,7 @@ class ISP(GeoFlowResource):
         if self.geometry.lam:
             lgeo = [self.geometry.area, self.geometry.rnice]
         else:
-            lgeo = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}]
+            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
 
         return dict(
             fmt     = self.nativefmt,
@@ -96,7 +96,7 @@ class DDH(GeoFlowResource):
         if self.geometry.lam:
             lgeo = [self.geometry.area, self.geometry.rnice]
         else:
-            lgeo = [{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}]
+            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
 
         return dict(
             fmt     = self.nativefmt,

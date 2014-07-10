@@ -268,8 +268,8 @@ class NamTerm(Namelist):
                         p = '6'
                     elif self.term.hour % 3 == 0:
                         p = '3'
-                    else :
-                        p ='1'
+                    else:
+                        p = '1'
                 else:
                     if self.term.hour == 0:
                         p = '0'

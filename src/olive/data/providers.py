@@ -26,7 +26,7 @@ class Olive(Provider):
                 values = [ 'olive.cache.fr', 'olive.archive.fr', 'olive.multi.fr', 'multi.olive.fr' ],
                 default = 'olive.cache.fr',
                 remap = {
-                    'multi.olive.fr' : 'olive.multi.fr',
+                    'multi.olive.fr': 'olive.multi.fr',
                 }
             )
         )
@@ -91,8 +91,8 @@ class OpArchive(Provider):
             inout = dict(
                 optional = True,
                 default = 'output',
-                values =  [ 'in', 'input', 'out', 'output' ],
-                remap = { 'in' : 'input', 'out' : 'output' }
+                values = [ 'in', 'input', 'out', 'output' ],
+                remap  = { 'in': 'input', 'out': 'output' }
             )
         )
     )
@@ -131,15 +131,18 @@ class OpArchive(Provider):
                 elif entry == 'gribfix':
                     rr = archivesuffix(resource.model, resource.cutoff, resource.date)
                     if getattr(self, keyattr) == 'pearp':
-                        fuzzy = '_'.join(('fc', rr, str(self.member) , resource.geometry.area, resource.term.fmthour))
+                        fuzzy = '_'.join(('fc', rr, str(self.member), resource.geometry.area, resource.term.fmthour))
                     else:
                         t = '{0:03d}'.format(resource.term.hour)
                         fuzzy = fuzzyname('prefix', 'gridpoint', self.suite) + rr + t + resource.geometry.area
                 elif entry == 'errgribfix':
                     fuzzy = 'errgribvor'
-                    if getattr(self, keyattr)== 'aearp':
+                    if getattr(self, keyattr) == 'aearp':
                         fuzzy = 'errgribvor' \
-                            + fuzzyname('term' + resource.term.fmthour,resource.realkind, self.inout) + '.' \
+                            + fuzzyname('term' + resource.term.fmthour,
+                                        resource.realkind,
+                                        self.inout) \
+                            + '.' \
                             + fuzzyname('suffix', resource.realkind, self.inout)
                 else:
                     fuzzy = fuzzyname(entry, resource.realkind, getattr(self, keyattr))
@@ -147,11 +150,11 @@ class OpArchive(Provider):
             else:
                 bname = bname.replace(i, str(getattr(self, s1)))
 
-        return bname  
+        return bname
 
     def pathname(self, resource):
         rinfo = self.pathinfo(resource)
-        rdate = rinfo.get('date','')
+        rdate = rinfo.get('date', '')
         yyyy = str(rdate.year)
         mm = '{0:02d}'.format(rdate.month)
         dd = '{0:02d}'.format(rdate.day)
@@ -162,7 +165,7 @@ class OpArchive(Provider):
             if re.match(r'pearp', self.igakey) and resource.realkind == 'gridpoint':
                     return '/'.join((self.igakey, self.suite, dd, rr))
             else:
-                return '/'.join((self.igakey, self.suite, rinfo['cutoff'], yyyy, mm, dd, rr, run )) 
+                return '/'.join((self.igakey, self.suite, rinfo['cutoff'], yyyy, mm, dd, rr, run ))
         else:
             if re.match(r'arpege|arome|aearp', self.igakey):
                 return '/'.join((self.igakey, self.suite, rinfo['cutoff'], yyyy, mm, dd, rr ))

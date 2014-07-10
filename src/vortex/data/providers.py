@@ -132,10 +132,10 @@ class Remote(Provider):
     _footprint = dict(
         info = 'Remote provider',
         attr = dict(
-	        remote = dict(
-		        alias = ( 'remfile', 'rempath' ),
+            remote = dict(
+                alias = ( 'remfile', 'rempath' ),
                 type = str
-	        ),
+            ),
             hostname = dict(
                 optional = True,
                 default = 'localhost'
@@ -150,7 +150,7 @@ class Remote(Provider):
                 default = None,
                 alias = ( 'user', 'logname' )
             )
-	    )
+        )
     )
 
     def __init__(self, *args, **kw):
@@ -205,11 +205,12 @@ class Vortex(Provider):
             ),
             namespace = dict(
                 optional = True,
-                values = [ 'vortex.cache.fr', 'vortex.archive.fr', 'vortex.multi.fr', 'open.cache.fr', 'open.archive.fr' ],
+                values = [ 'vortex.cache.fr', 'vortex.archive.fr', 'vortex.multi.fr',
+                           'open.cache.fr', 'open.archive.fr' ],
                 default = 'vortex.cache.fr',
                 remap = {
-                    'open.cache.fr' : 'vortex.cache.fr',
-                    'open.archive.fr' : 'vortex.archive.fr',
+                    'open.cache.fr': 'vortex.cache.fr',
+                    'open.archive.fr': 'vortex.archive.fr',
                 }
             ),
             namebuild = dict(

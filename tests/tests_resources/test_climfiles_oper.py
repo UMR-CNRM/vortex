@@ -4,21 +4,21 @@
 import footprints
 
 try:
-    from oper_test_config import *
+    from oper_test_config import *  # @UnusedWildImport
 except ImportError, e:
     print e
     raise
 
-#t.debug()
+# t.debug()
 
 
 class UtClimGlobal(TestCase):
 
     def setUp(self):
         self.std = SpectralGeometry(
-            id='Current op', 
-            area='france', 
-            truncation=798, 
+            id='Current op',
+            area='france',
+            truncation=798,
             stretching=2.4
         )
         self.fp_prov = dict(
@@ -57,11 +57,11 @@ class UtClimGlobal(TestCase):
 
         month = "{0:02d}".format(today().month)
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/const/clim/mens/clim_t798_isba'+month
         )
         self.assertEqual(
-            rl[0].locate(), 
+            rl[0].locate(),
             homedir + '/arpege/france/oper/const/clim/mens/clim_t798_isba'+month
         )
         self.assertTrue(os.stat(rl[0].locate()))
@@ -111,7 +111,7 @@ class UtClimLAM(TestCase):
         )
 
         self.assertEqual(
-            rl[0].locate(), 
+            rl[0].locate(),
             homedir + '/aladin/caledonie/oper/const/clim/mens/clim_caledonie_isba'+month
         )
         self.assertTrue(os.stat(rl[0].locate()))
@@ -156,12 +156,12 @@ class UtClimBDAPLAM(TestCase):
 
         month = "{0:02d}".format(today().month)
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/caledonie/oper/const/clim/domaine/clim_dap.caled01.m'+month
         )
 
         self.assertEqual(
-            rl[0].locate(), 
+            rl[0].locate(),
             homedir + '/aladin/caledonie/oper/const/clim/domaine/clim_dap.caled01.m'+month
         )
         self.assertTrue(os.stat(rl[0].locate()))

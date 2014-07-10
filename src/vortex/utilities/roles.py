@@ -29,7 +29,8 @@ def setfactoryrole(factory=None, tag=None):
     associated with ``tag``.
     """
     global _activetag
-    if not tag: tag = _activetag
+    if not tag:
+        tag = _activetag
     if factory and tag:
         _rolesgateway[tag] = factory
 
@@ -40,9 +41,11 @@ def setrole(role, tag=None):
     Returns the processed string according to the current active factory name
     or using the one associated with ``tag``.
     """
-    if not role: return None
+    if not role:
+        return None
     global _activetag
-    if not tag: tag = _activetag
+    if not tag:
+        tag = _activetag
     return _rolesgateway[tag](role)
 
 

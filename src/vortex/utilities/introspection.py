@@ -54,7 +54,8 @@ class Sherlock(object):
             if inspect.isclass(y) or inspect.isfunction(y) or inspect.ismethod(y):
                 try:
                     if topmodule.__file__ == inspect.getsourcefile(y):
-                        if self.verbose: print x, y
+                        if self.verbose:
+                            print x, y
                         objs[x] = y
                 except TypeError:
                     pass

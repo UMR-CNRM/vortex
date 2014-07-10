@@ -147,7 +147,7 @@ def gget_resource_exists(t, ggetfile):
         return False
 
     # all monthly clim files must be present
-    clims = [ ggetfile + '.m{0:02d}'.format(m) for m in range(1,13) ]
+    clims = [ ggetfile + '.m{0:02d}'.format(m) for m in range(1, 13) ]
     missing = [ clim for clim in clims if not t.sh.path.isfile(clim) ]
     if missing:
         print 'missing :', missing
@@ -188,7 +188,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     # Build a list of unique resource names
     ggetnames = set()
     for v in defs.values():
-        if isinstance (v, basestring):
+        if isinstance(v, basestring):
             ggetnames.add(v)
         else:
             ggetnames |= set(v)
@@ -197,9 +197,9 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
 
     # Perform gget on all resources to target directory
     t.sh.cd(gcopath, create=True)
-    gcmd  = tg.get ('gco:ggetcmd', 'gget')
-    gpath = tg.get ('gco:ggetpath', '')
-    gtool = t.sh.path.join (gpath, gcmd)
+    gcmd  = tg.get('gco:ggetcmd', 'gget')
+    gpath = tg.get('gco:ggetpath', '')
+    gtool = t.sh.path.join(gpath, gcmd)
 
     increase = 0
     details  = dict(retrieved=list(), inplace=list(), failed=list())
@@ -243,4 +243,4 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
 
     log.close()
 
-    return ( increase, details )
+    return (increase, details)

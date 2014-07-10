@@ -28,9 +28,7 @@ def bilan(hdls):
 liste_infos_res = (
     dict(kind='analysis', model='arpege', cutoff="assim", date="2011110906",
          file='/ch/mxpt/mxpt001/steph_perso/python/Vortex/SandBox/Essai/ICMSHARPEINIT',
-         geometry='france',
-         scheme='file', netloc='oper', user='mxpt001', profile='oper'
-        ),
+         geometry='france', scheme='file', netloc='oper', user='mxpt001', profile='oper'),
 #   dict(kind='matfilter', model='arpege', domain='GLOB15',
 #        file='/ch/mxpt/mxpt001/steph_perso/python/Vortex/SandBox/Essai/matrixfil.[domain]',
 #        geometry='france', scheme='file', netloc='oper',
@@ -48,12 +46,12 @@ liste_infos_res = (
 #         scheme='file', netloc='oper',user='mxpt001')
     dict(kind='clim_bdap', model='arpege', domain='GLOB15', month=11,
          file='/ch/mxpt/mxpt001/steph_perso/python/Vortex/SandBox/Essai/const.clim.[domain]',
-         geometry='france',mode='oper', scheme='file', netloc='oper',
+         geometry='france', mode='oper', scheme='file', netloc='oper',
          user='mxpt001', profile='oper'),
     dict(kind='clim_model', model='arpege', truncation=798, month=11,
          domain='GLOB15',
          file='/ch/mxpt/mxpt001/steph_perso/python/Vortex/SandBox/Essai/Const.Clim',
-         geometry='france',mode='oper', scheme='file', netloc='oper',
+         geometry='france', mode='oper', scheme='file', netloc='oper',
          user='mxpt001', profile='oper'),
 )
 

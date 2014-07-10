@@ -94,7 +94,7 @@ class UtElscf(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC012.rPM'
         )
         self.assertEqual(
@@ -115,7 +115,7 @@ class UtElscf(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/caledonie/oper/data/fic_day/ELSCFALADALBC002.r00'
         )
         self.assertEqual(
@@ -136,7 +136,7 @@ class UtElscf(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             'file://oper.inline.fr/aladin/testmp1/oper/data/fic_day/ELSCFALADALBC016.rAM'
         )
         self.assertEqual(
@@ -153,7 +153,7 @@ if __name__ == '__main__':
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
-            break 
+            break
 
 
 def get_test_class():

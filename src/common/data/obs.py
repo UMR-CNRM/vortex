@@ -23,7 +23,8 @@ class Observations(GeoFlowResource):
                 values = [ 'void', 'extract', 'screen', 'traj', 'min', 'complete', 'cans', 'raw', 'std' ]
             ),
             nativefmt = dict(
-                values = [ 'obsoul', 'grib', 'bufr', 'ascii','odb', 'odb/split', 'odb/compressed', 'ecma', 'ccma' ],
+                values = [ 'obsoul', 'grib', 'bufr', 'ascii', 'odb', 'odb/split',
+                           'odb/compressed', 'ecma', 'ccma' ],
             ),
         )
     )
@@ -272,7 +273,7 @@ class Bcor(FlowResource):
                 default = 'txt'
             ),
             satbias = dict(
-                values = [ 'mtop', 'metop', 'noaa','ssmi' ],
+                values = [ 'mtop', 'metop', 'noaa', 'ssmi' ],
                 remap = dict( metop = 'mtop' ),
             ),
             kind = dict(

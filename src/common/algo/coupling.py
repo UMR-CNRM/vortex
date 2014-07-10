@@ -39,7 +39,10 @@ class Coupling(IFSParallel):
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
-        cplrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('InitialCondition', 'CouplingSource'), kind='historic') ]
+        cplrh = [ x.rh for x in
+                  self.context.sequence.effective_inputs(
+                      role=('InitialCondition', 'CouplingSource'),
+                      kind='historic') ]
         cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
         for r in cplrh:
             self.system.title('Loop on {0:s}'.format(str(r.resource)))
@@ -54,9 +57,11 @@ class Coupling(IFSParallel):
             def checkmonth(actualrh):
                 return bool(actualrh.resource.month == actualmonth)
             self.system.remove('Const.Clim')
-            self.setlink(initrole='GlobalClim', initkind='clim_model', initname='Const.Clim', inittest=checkmonth)
+            self.setlink(initrole='GlobalClim', initkind='clim_model',
+                         initname='Const.Clim', inittest=checkmonth)
             self.system.remove('const.clim.AREA')
-            self.setlink(initrole='LocalClim', initkind='clim_model', initname='const.clim.AREA', inittest=checkmonth)
+            self.setlink(initrole='LocalClim', initkind='clim_model',
+                         initname='const.clim.AREA', inittest=checkmonth)
 
             # Finaly set the actual init file
             self.system.remove('ICMSHFPOSINIT')

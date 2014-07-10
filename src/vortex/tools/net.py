@@ -29,10 +29,10 @@ def uriparse(uristring):
      * password
     """
 
-    (realscheme, other) = uristring.split(':',1)
+    (realscheme, other) = uristring.split(':', 1)
     rp = urlparse.urlparse('http:' + other)
     uridict = rp._asdict()
-    netloc = uridict['netloc'].split('@',1)
+    netloc = uridict['netloc'].split('@', 1)
     hostport = netloc.pop().split(':')
     uridict['netloc'] = hostport.pop(0)
     if hostport:

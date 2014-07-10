@@ -46,7 +46,7 @@ class IgaProvider(Provider):
                 default = '[suite].inline.fr',
                 values = [ 'oper.inline.fr', 'dble.inline.fr', 'dbl.inline.fr', 'test.inline.fr' ],
                 remap = {
-                    'dbl.inline.fr' : 'dble.inline.fr'
+                    'dbl.inline.fr': 'dble.inline.fr'
                 },
             ),
             tube = dict(

@@ -101,7 +101,7 @@ class UtBackgroundErrStd(TestCase):
         name_ref = 'file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgribvor_production.'
         suffix_ref = today().compact()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             name_ref + suffix_ref
         )
 
@@ -123,7 +123,7 @@ class UtBackgroundErrStd(TestCase):
         name_ref = 'file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgribvor_assim.'
         suffix_ref = today().compact()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             name_ref + suffix_ref
         )
 
@@ -142,19 +142,16 @@ class UtBackgroundErrStd(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        name_ref ='file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgribvor_production_dsbscr.'
+        name_ref = 'file://oper.inline.fr' + \
+                   '/arpege/aearp/oper/data/fic_day/errgribvor_production_dsbscr.'
         suffix_ref = today().compact()
         self.assertEqual(
-            rl[0].location(), 
+            rl[0].location(),
             name_ref + suffix_ref
         )
 
-        name_ref =\
-datadir + '/arpege/aearp/oper/data/fic_day/errgribvor_production_dsbscr.'
-        self.assertEqual(
-            rl[0].locate(),
-            name_ref + suffix_ref
-        )
+        name_ref = datadir + '/arpege/aearp/oper/data/fic_day/errgribvor_production_dsbscr.'
+        self.assertEqual(rl[0].locate(), name_ref + suffix_ref)
 
     def test_r4(self):
         rl = toolbox.rload(
@@ -165,26 +162,19 @@ datadir + '/arpege/aearp/oper/data/fic_day/errgribvor_production_dsbscr.'
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
-        name_ref =\
-'file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0'
-        self.assertEqual(
-            rl[0].location(), 
-            name_ref
-        )
+        name_ref = 'file://oper.inline.fr' + \
+                   '/arpege/france/oper/data/fic_day/errgrib_scr.r0'
+        self.assertEqual(rl[0].location(), name_ref)
 
-        name_ref =\
-datadir + '/arpege/france/oper/data/fic_day/errgrib_scr.r0'
-        self.assertEqual(
-            rl[0].locate(),
-            name_ref
-        )
+        name_ref = datadir + '/arpege/france/oper/data/fic_day/errgrib_scr.r0'
+        self.assertEqual(rl[0].locate(), name_ref)
 
 if __name__ == '__main__':
     for test in [ UtBackgroundErrStd ]:
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
-            break 
+            break
 
 
 def get_test_class():

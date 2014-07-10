@@ -3,7 +3,7 @@
 
 __all__ = []
 
-import  re
+import re
 
 from vortex.autolog import logdefault as logger
 

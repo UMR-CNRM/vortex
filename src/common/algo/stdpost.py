@@ -62,7 +62,8 @@ class Fa2Grib(BlindRun):
         timeshift  = self.env.get('VORTEX_GRIB_SHIFT', False)
         thisoutput = 'GRIDOUTPUT'
         for r in gprh:
-            self.system.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area, r.resource.term.fmthm))
+            self.system.title('Loop on domain {0:s} and term {1:s}'.format(
+                r.resource.geometry.area, r.resource.term.fmthm))
 
             # Some preventive cleaning
             self.system.remove(thisoutput)
@@ -96,7 +97,8 @@ class Fa2Grib(BlindRun):
             if self.system.path.exists(thisoutput):
                 self.system.move(thisoutput, 'GRIB{0:s}+{1:s}'.format(r.resource.geometry.area, r.resource.term.fmthm))
             else:
-                logger.warning('Missing some grib output for domain %s term %s',r.resource.geometry.area, r.resource.term.fmthm)
+                logger.warning('Missing some grib output for domain %s term %s',
+                               r.resource.geometry.area, r.resource.term.fmthm)
 
             # Some cleaning
             self.system.rmall('DAPDIR', self.fortinput)
@@ -144,11 +146,13 @@ class AddField(BlindRun):
             logger.warning('Do not find any namelist for %s', self.kind)
 
         # Look for some sources files
-        srcrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'), kind='gridpoint') ]
+        srcrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
+                                                                       kind='gridpoint') ]
         srcrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
 
         for r in srcrh:
-            self.system.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area, r.resource.term.fmthm))
+            self.system.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
+                                                                           r.resource.term.fmthm))
 
             # Some cleaning
             self.system.remove(self.fortinput)

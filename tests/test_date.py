@@ -236,7 +236,7 @@ class utTime(TestCase):
         t = date.Time(16, 5)
         self.assertEqual(str(t), '16:05')
 
-        t = date.Time([7,45])
+        t = date.Time([7, 45])
         self.assertEqual(str(t), '07:45')
 
         t = date.Time((7, 45))

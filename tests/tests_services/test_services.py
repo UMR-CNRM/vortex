@@ -86,7 +86,7 @@ class utdate(TestCase):
         self.assertEquals(al.action_type, dico2['action_type'])
         self.assertEquals(al.message, dico2['message'])
         self.assertEquals(al.get_message(), dico2['message'])
-        self.assertEquals(al.get_loggerservice(),ref_logger.error)
+        self.assertEquals(al.get_loggerservice(), ref_logger.error)
         print "test alarm services ok"
 
     def test_bdapservices(self):
@@ -233,7 +233,7 @@ class utdate(TestCase):
         self.assertEquals(al.action_type, dico2['action_type'])
         self.assertEquals(al.message, dico2['message'])
         self.assertEquals(al.get_message(), dico2['message'])
-        self.assertEquals(al.get_loggerservice(),ref_logger.error)
+        self.assertEquals(al.get_loggerservice(), ref_logger.error)
         print "test alarm services via the collector ok"
 
     def test_bdapserv_via_ctlg(self):

@@ -15,7 +15,13 @@ from olive.data import fields
 class UtRawFields(TestCase):
 
     def setUp(self):
-        self.attrset = dict(kind='rawfields', suite='oper', date = '2012022800', cutoff='assim', namespace='[suite].archive.fr')
+        self.attrset = dict(
+            kind='rawfields',
+            suite='oper',
+            date = '2012022800',
+            cutoff='assim',
+            namespace='[suite].archive.fr'
+        )
         #sessions.current().debug()
 
     def test_v1(self):
@@ -31,7 +37,10 @@ class UtRawFields(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120228T0000A/observation/seaice.bdm')
+        self.assertEqual(
+            rl[0].location(),
+            'vortex://vortex.cache.fr/play/sandbox/oper/20120228T0000A/observation/seaice.bdm'
+        )
 
     def test_r1(self):
         #sessions.current().debug()
@@ -44,8 +53,14 @@ class UtRawFields(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/assim/2012/02/28/r0/sst.nesdis.bdap')
-        self.assertEqual(rl[1].location(), 'op://oper.archive.fr/arpege/oper/assim/2012/02/28/r0/sst.ostia')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/arpege/oper/assim/2012/02/28/r0/sst.nesdis.bdap'
+        )
+        self.assertEqual(
+            rl[1].location(),
+            'op://oper.archive.fr/arpege/oper/assim/2012/02/28/r0/sst.ostia'
+        )
 
     def test_r2(self):
         rl = toolbox.rload(
@@ -57,14 +72,19 @@ class UtRawFields(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/assim/2012/02/28/r0/ice_concent')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/arpege/oper/assim/2012/02/28/r0/ice_concent'
+        )
 
 
 class UtGeoFields(TestCase):
 
     def setUp(self):
-        self.std = SpectralGeometry(id='Current op', truncation=798, stretching=2.4, area='france', lam=False)
-        self.attrset = dict(kind='geofields', suite='oper', date = '2012022806', cutoff='production', namespace='[suite].archive.fr')
+        self.std = SpectralGeometry(id='Current op', truncation=798,
+                                    stretching=2.4, area='france', lam=False)
+        self.attrset = dict(kind='geofields', suite='oper', date = '2012022806',
+                            cutoff='production', namespace='[suite].archive.fr')
         #sessions.current().debug()
 
     def test_g1(self):
@@ -77,8 +97,14 @@ class UtGeoFields(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/28/r6/icmshanalsst')
-        self.assertEqual(rl[1].location(), 'op://oper.archive.fr/arpege/oper/production/2012/02/28/r6/icmshanalseaice')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/arpege/oper/production/2012/02/28/r6/icmshanalsst'
+        )
+        self.assertEqual(
+            rl[1].location(),
+            'op://oper.archive.fr/arpege/oper/production/2012/02/28/r6/icmshanalseaice'
+        )
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -92,7 +118,10 @@ class UtGeoFields(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120228T0600P/observation/sst.tl798-c24.fa')
+        self.assertEqual(
+            rl[0].location(),
+            'vortex://vortex.cache.fr/play/sandbox/oper/20120228T0600P/observation/sst.tl798-c24.fa'
+        )
 
 
 if __name__ == '__main__':

@@ -207,7 +207,7 @@ Review of subcommands
 :command:`catalogs`
 
   Return current entries in catalogs table.
-  At the very beginning only already internally used catalogs are available. 
+  At the very beginning only already internally used catalogs are available.
 
   .. code-block:: console
 
@@ -289,7 +289,7 @@ Review of subcommands
   .. code-block:: console
 
     % vortex daemons
-    USER             FIFOTAG          FIFODIR         
+    USER             FIFOTAG          FIFODIR
     droopy           26651            /home/droopy/.vortexrc
     droopy           foo              /home/droopy/.vortexrc
     % vortex last
@@ -385,7 +385,7 @@ Review of subcommands
     get: 1
     % ls -l
     total 1430020
-    -rw-r--r-- 1 droopy tex 1464336384 2012-07-23 13:35 analysis.last 
+    -rw-r--r-- 1 droopy tex 1464336384 2012-07-23 13:35 analysis.last
     % vortex echo loc
     loc: [<vortex.data.handlers.Handler object at 0x1f480d0>]
 
@@ -431,23 +431,23 @@ Review of subcommands
     <vortex.data.geometries.SpectralGeometry object at 0x150b390>
     % vortex handler date=2012072218 cutoff=assim model=arpege geometry=geo kind=analysis file=analysis.last igakey="[model]"
       Handler <vortex.data.handlers.Handler object at 0x1531b90>
-	Role      : Anonymous
-	Alternate : None
-	Complete  : True
-	Options   : {}
-	Location  : file://oper.inline.fr/arpege/arpege/oper/data/autres/ICMSHARPEINIT.r18
+    Role      : Anonymous
+    Alternate : None
+    Complete  : True
+    Options   : {}
+    Location  : file://oper.inline.fr/arpege/arpege/oper/data/autres/ICMSHARPEINIT.r18
 
       Resource <common.data.modelstates.Analysis object at 0x1531590>
-	Realkind   : analysis
-	Attributes : {'cutoff': 'assim', 'kind': 'analysis', 'nativefmt': 'fa', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x150b310>, 'filling': 'full', 'filtering': None, 'date': Date(2012, 7, 22, 18, 0), 'clscontents': <class 'vortex.data.contents.DataRaw'>, 'model': 'arpege'}
+    Realkind   : analysis
+    Attributes : {'cutoff': 'assim', 'kind': 'analysis', 'nativefmt': 'fa', 'geometry': <vortex.data.geometries.SpectralGeometry object at 0x150b310>, 'filling': 'full', 'filtering': None, 'date': Date(2012, 7, 22, 18, 0), 'clscontents': <class 'vortex.data.contents.DataRaw'>, 'model': 'arpege'}
 
       Provider <iga.data.providers.IgaProvider object at 0x1531850>
-	Realkind   : iga
-	Attributes : {'tube': 'file', 'namespace': 'oper.inline.fr', 'member': None, 'source': None, 'igakey': 'arpege', 'suite': 'oper', 'config': <iga.data.providers.IgaCfgParser instance at 0x151ec20>, 'vconf': 'sandbox', 'vapp': 'play'}
+    Realkind   : iga
+    Attributes : {'tube': 'file', 'namespace': 'oper.inline.fr', 'member': None, 'source': None, 'igakey': 'arpege', 'suite': 'oper', 'config': <iga.data.providers.IgaCfgParser instance at 0x151ec20>, 'vconf': 'sandbox', 'vapp': 'play'}
 
       Container <vortex.data.containers.File object at 0x1531ad0>
-	Realkind   : file
-	Attributes : {'file': 'analysis.last'}
+    Realkind   : file
+    Attributes : {'file': 'analysis.last'}
 
 :command:`help`
 
@@ -457,7 +457,7 @@ Review of subcommands
 
     % vortex help mload
 
-      mload: 
+      mload:
         Print / Return the results of the import on the specified modules.
 
 
@@ -595,9 +595,9 @@ Review of subcommands
 
     % vortex nice foo=2 default='direct'
       default:
-      	'direct'
+        'direct'
       foo:
-      	'2'
+        '2'
 
 
 :command:`provider`
@@ -642,8 +642,8 @@ Review of subcommands
   (Assuming the same defaults as the :command:`get` command).
 
 :command:`refill`
-  Refill the specified catalogs already in the calatogs table. 
 
+  Refill the specified catalogs already in the calatogs table.
   Return the actual number of items.
 
   .. code-block:: console
@@ -726,7 +726,7 @@ Review of subcommands
     {'DATE': '2012072018', 'CUTOFF': 'production', 'MODEL': 'arpege'}
     % vortex rmfp  date
     ['date']
-    % vortex envfp 
+    % vortex envfp
     {'CUTOFF': 'production', 'MODEL': 'arpege'}
 
 
@@ -833,20 +833,20 @@ Review of subcommands
     % vortex trackfp
     <?xml version="1.0" ?>
     <tracker tag="fpresolve">
-      	<catalog name="vortex.gloves.GlovesCatalog" stamp="2012-07-20 13:36:54.815228">
+        <catalog name="vortex.gloves.GlovesCatalog" stamp="2012-07-20 13:36:54.815228">
             <class name="vortex.gloves.OperGlove">
-              	<key name="profile" text="missing"/>
+                <key name="profile" text="missing"/>
             </class>
             <class name="vortex.gloves.ResearchGlove"/>
-      	</catalog>
-      	<catalog name="vortex.tools.systems.SystemsCatalog" stamp="2012-07-20 13:36:54.817239">
+        </catalog>
+        <catalog name="vortex.tools.systems.SystemsCatalog" stamp="2012-07-20 13:36:54.817239">
             <class name="vortex.tools.systems.LinuxBase"/>
-      	</catalog>
-      	<catalog name="vortex.algo.mpitools.MpiToolsCatalog" stamp="2012-07-20 13:37:16.818858">
+        </catalog>
+        <catalog name="vortex.algo.mpitools.MpiToolsCatalog" stamp="2012-07-20 13:37:16.818858">
             <class name="vortex.algo.mpitools.MpiRun">
-              	<key name="mpiname" text="missing"/>
+                <key name="mpiname" text="missing"/>
             </class>
-      	</catalog>
+        </catalog>
     </tracker>
 
 

@@ -86,7 +86,7 @@ class ParallelListing(Listing):
         """From base information of ``listing`` add mpi and openmp values."""
         info = super(ParallelListing, self).basename_info()
         if self.mpi and self.openmp:
-            info['compute'] = [{'mpi':self.mpi}, {'openmp':self.openmp}]
+            info['compute'] = [{'mpi': self.mpi}, {'openmp': self.openmp}]
         if self.seta and self.setb:
-            info['compute'] = [{'seta':self.seta}, {'setb':self.setb}]
+            info['compute'] = [{'seta': self.seta}, {'setb': self.setb}]
         return info

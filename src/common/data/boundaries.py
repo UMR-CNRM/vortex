@@ -14,7 +14,8 @@ from iga.syntax.stdattrs import archivesuffix
 
 class LAMBoundary(GeoFlowResource):
     """
-    Class of a coupling file for a Limited Area Model. A SpectralGeometry object is needed and the source model is given in the footprint.
+    Class of a coupling file for a Limited Area Model.
+    A SpectralGeometry object is needed and the source model is given in the footprint.
     """
     _footprint = [
         term,
@@ -75,7 +76,7 @@ class LAMBoundary(GeoFlowResource):
         else:
             directory = 'autres'
         return dict(
-            fmt       =  directory,
+            fmt       = directory,
             model     = self.model,
             nativefmt = self.nativefmt,
         )

@@ -26,7 +26,7 @@ print t.line
 nstep = 1
 getinsitu = True
 
-rundir = tg.get('rundir', e.HOME  +'/tmp/bidon')
+rundir = tg.get('rundir', e.HOME  + '/tmp/bidon')
 sh.cd(rundir)
 print t.prompt, sh.pwd(), 'pass:', nstep
 
@@ -142,7 +142,7 @@ toolbox.output(
     provider = prvout,
     role     = 'ModelState',
     kind     = 'historic',
-    term     = (0,1),
+    term     = (0, 1),
     local    = 'ICMSHFCST+[term::fmth]',
 )
 

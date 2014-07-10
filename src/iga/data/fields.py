@@ -43,7 +43,7 @@ class RawFields(Resource):
             bname = '.'.join((self.fields, self.origin, 'bdap'))
         elif self.fields == 'seaice':
             bname = 'ice_concent'
-        else :
+        else:
             bname = '.'.join((self.fields, self.origin))
 
         return bname
@@ -51,7 +51,7 @@ class RawFields(Resource):
     def basename_info(self):
         return dict(
             radical = self.fields,
-            src     = self.origin,  
+            src     = self.origin,
         )
 
     def vortex_pathinfo(self):
@@ -113,9 +113,9 @@ class GeoFields(Resource):
 
     def basename_info(self):
         if self.geometry.lam:
-            lgeo=[self.geometry.area, self.geometry.rnice]
+            lgeo = [self.geometry.area, self.geometry.rnice]
         else:
-            lgeo=[{'truncation':self.geometry.truncation}, {'stretching':self.geometry.stretching}]
+            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
         return dict(
             radical=self.fields,
             geo=lgeo,

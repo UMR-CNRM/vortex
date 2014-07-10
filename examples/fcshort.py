@@ -82,7 +82,7 @@ arpege.get()
 toolbox.output(
     role = 'ModelStateOutput',
     kind = 'historic',
-    term = (0,3),
+    term = (0, 3),
     remote = cache + 'out.model.[term::fmth]',
     local = 'ICMSHFCST+[term::fmth]',
 )
@@ -125,7 +125,7 @@ myenv.update(
 x.run(arpege, mpiopts = dict(nn=1, nnp=4))
 
 for rh in output:
-    for r in rh :
+    for r in rh:
         print t.line, r.idcard()
         r.put()
 

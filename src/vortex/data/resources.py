@@ -85,7 +85,7 @@ class Resource(footprints.FootprintBase):
     def urlquery(self, provider):
         """Proxy to the appropriate method prefixed by provider name."""
         actualurlquery = getattr(self, provider + '_urlquery', self.vortex_urlquery)
-        return actualurlquery()    
+        return actualurlquery()
 
     def gget_basename(self):
         return ''

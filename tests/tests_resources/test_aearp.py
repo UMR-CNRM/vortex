@@ -17,7 +17,12 @@ from olive.data import errgrib, bestof
 class UtBackgroundErrStd(TestCase):
 
     def setUp(self):
-        self.attrset = dict(kind='bgerrstd', date = '2012021400', cutoff='production', namespace='[suite].archive.fr')
+        self.attrset = dict(
+            kind='bgerrstd',
+            date = '2012021400',
+            cutoff='production',
+            namespace='[suite].archive.fr'
+        )
         self.std = SpectralGeometry(id='Current op', truncation=224)
         #sessions.current().debug()
 
@@ -36,7 +41,10 @@ class UtBackgroundErrStd(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000P/analysis/bgerrstd.arpege.tl224+0003:00.grib')
+        self.assertEqual(
+            rl[0].location(),
+            'vortex://vortex.cache.fr/play/sandbox/oper/20120214T0000P/analysis/bgerrstd.arpege.tl224+0003:00.grib'
+        )
 
     def test_e1(self):
         rl = toolbox.rload(
@@ -86,7 +94,10 @@ class UtBackgroundErrStd(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production.out')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production.out'
+        )
 
     def test_e4(self):
         rl = toolbox.rload(
@@ -103,13 +114,17 @@ class UtBackgroundErrStd(TestCase):
 
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production_dsbscr.out')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/errgribvor_production_dsbscr.out'
+        )
 
 
 class UtInflFactor(TestCase):
 
     def setUp(self):
-        self.attrset = dict(kind='inflfactor', date = '2012021400', cutoff='assim', namespace='[suite].archive.fr')
+        self.attrset = dict(kind='inflfactor', date = '2012021400',
+                            cutoff='assim', namespace='[suite].archive.fr')
 
     def test_a1(self):
         rl = toolbox.rload(
@@ -121,7 +136,10 @@ class UtInflFactor(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'op://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/inflation_factor')
+        self.assertEqual(
+            rl[0].location(),
+            'op://oper.archive.fr/aearp/oper/assim/2012/02/14/r0/inflation_factor'
+        )
 
 
 if __name__ == '__main__':

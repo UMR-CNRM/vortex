@@ -33,8 +33,11 @@ class UtClimGlobal(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/clim/clim.arpege.tl798-c24.fa.m10')
 
+        self.assertEqual(
+            rl[0].location(),
+            'vortex://vortex.cache.fr/play/sandbox/oper/clim/clim.arpege.tl798-c24.fa.m10'
+        )
 
     def test_c1(self):
         rl = toolbox.rload(
@@ -70,8 +73,11 @@ class UtClimLAM(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/clim/clim.aladin.caledonie-08km00.fa.m10')
 
+        self.assertEqual(
+            rl[0].location(),
+            'vortex://vortex.cache.fr/play/sandbox/oper/clim/clim.aladin.caledonie-08km00.fa.m10'
+        )
 
     def test_c1(self):
         rl = toolbox.rload(
@@ -161,4 +167,4 @@ if __name__ == '__main__':
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
-            break 
+            break

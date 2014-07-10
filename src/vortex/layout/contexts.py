@@ -22,7 +22,8 @@ class Context(object):
 
     _count = 0
 
-    def __init__(self, tag='foo', rundir=None, tagtree=None, topenv=None, sequence=None, task=None, mkrundir=False, rootrd=None, keeprd=False):
+    def __init__(self, tag='foo', rundir=None, tagtree=None, topenv=None, sequence=None,
+                 task=None, mkrundir=False, rootrd=None, keeprd=False):
         """Initate a new execution context."""
         logger.debug('Context initialisation %s', self)
         self._env = Environment(env=topenv, active=topenv.active)
@@ -101,7 +102,8 @@ class Context(object):
         Set the formal tag name of the current context to the provided value, if any.
         The current tag name is returned.
         """
-        if value: self._tag = value
+        if value:
+            self._tag = value
         return self._tag
 
     tag = property(_gettag, _settag, None)

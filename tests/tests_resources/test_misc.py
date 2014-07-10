@@ -31,14 +31,17 @@ class UtListing(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/20120420T0000P/forecast/listing.arpege-forecast')
+        self.assertEqual(
+            rl[0].location(),
+            'vortex://vortex.cache.fr/play/sandbox/oper/20120420T0000P/forecast/listing.arpege-forecast'
+        )
 
 
 class UtMatFilter(TestCase):
 
     def setUp(self):
         self.std = SpectralGeometry(id='Current op', area='france', truncation=798, stretching=2.4, lam=False)
-        self.glob15 = GridGeometry(id='Current op', area='GLOB15', resolution=1.5, filtering='106') 
+        self.glob15 = GridGeometry(id='Current op', area='GLOB15', resolution=1.5, filtering='106')
 
     def test_v1(self):
         rl = toolbox.rload(
@@ -54,7 +57,10 @@ class UtMatFilter(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
 
-        self.assertEqual(rl[0].location(), 'vortex://vortex.cache.fr/play/sandbox/oper/forecast/matfil.arpege.tl798-c24-glob15-f106')
+        self.assertEqual(
+            rl[0].location(),
+            'vortex://vortex.cache.fr/play/sandbox/oper/forecast/matfil.arpege.tl798-c24-glob15-f106'
+        )
 
     def test_m1(self):
         rl = toolbox.rload(
@@ -76,5 +82,5 @@ if __name__ == '__main__':
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
-            break 
+            break
 

@@ -21,7 +21,15 @@ print t.prompt, 'SimpleTest footprint', SimpleTest.retrieve_footprint().as_dict(
 
 print t.line
 
-gr = vortex.toolbox.rh(remote='databox', kind='simple', extra=2, cutoff='p', foo='treize', bigmodel='mocage', virtual=True)
+gr = vortex.toolbox.rh(
+    remote='databox',
+    kind='simple',
+    extra=2,
+    cutoff='p',
+    foo='treize',
+    bigmodel='mocage',
+    virtual=True
+)
 
 print t.line, gr.idcard()
 

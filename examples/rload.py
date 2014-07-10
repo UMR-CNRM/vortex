@@ -31,7 +31,8 @@ print t.line
 t.debug()
 print t.prompt, 'Load the test resource'
 print t.prompt, 'SimpleTest footprint', SimpleTest.retrieve_footprint()
-for gh in rl(bigmodel='arpege', remote='databox_[cutoff]', cutoff='p,a', kind='simple', extra=2, foo='treize', virtual=True):
+for gh in rl(bigmodel='arpege', remote='databox_[cutoff]', cutoff='p,a',
+             kind='simple', extra=2, foo='treize', virtual=True):
     print t.line, gh.idcard()
 
 print t.line

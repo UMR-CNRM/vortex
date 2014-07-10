@@ -53,7 +53,7 @@ class UtNamelist(TestCase):
         )
         self.fp_namsel = dict(
             kind = 'namselect',
-            term = (6,12,18),
+            term = (6, 12, 18),
             model = 'arpege',
             source = '[helper::xxtselect]',
             helper = IgaHelperSelect()
@@ -66,7 +66,7 @@ class UtNamelist(TestCase):
 
         self.fp_namsel3 = dict(
             kind = 'namselect',
-            term = (20,22,36),
+            term = (20, 22, 36),
             model = 'arome',
             source = '[helper::xxtselect]',
             helper = IgaHelperSelect()
@@ -95,7 +95,7 @@ class UtNamelist(TestCase):
                 self.assertTrue(rh.complete)
                 print ' > ', rh.location()
             self.assertEqual(
-                rl[0].location(), 
+                rl[0].location(),
                 'file://oper.inline.fr/arpege/france/oper/namel/' + self.namelistes[cpt]
             )
             self.assertEqual(
@@ -125,14 +125,12 @@ class UtNamelist(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
             self.assertEqual(
-                rh.location(), 
-                'file://oper.inline.fr/arpege/france/oper/namel/'\
-+ref_name[cpt]
+                rh.location(),
+                'file://oper.inline.fr/arpege/france/oper/namel/' + ref_name[cpt]
             )
             self.assertEqual(
                 rh.locate(),
-                datadir + '/arpege/france/oper/namel/'\
-+ref_name[cpt]
+                datadir + '/arpege/france/oper/namel/' + ref_name[cpt]
             )
             self.assertEqual(
                 rh.container.file,
@@ -154,14 +152,12 @@ class UtNamelist(TestCase):
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
             self.assertEqual(
-                rh.location(), 
-                'file://oper.inline.fr/arome/france/oper/namel/'\
-+ref_name[cpt]
+                rh.location(),
+                'file://oper.inline.fr/arome/france/oper/namel/' + ref_name[cpt]
             )
             self.assertEqual(
                 rh.locate(),
-                datadir + '/arome/france/oper/namel/'\
-+ref_name[cpt]
+                datadir + '/arome/france/oper/namel/' + ref_name[cpt]
             )
             self.assertEqual(
                 rh.container.file,
@@ -175,7 +171,7 @@ if __name__ == '__main__':
         x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
         if x.errors or x.failures:
             print "Something went wrong !"
-            break 
+            break
 
 
 def get_test_class():
