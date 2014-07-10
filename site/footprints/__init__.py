@@ -513,12 +513,12 @@ class FootprintProxy(object):
         for item in collectorsmap().values():
             yield item
 
-    def get(self, item, default=None):
+    def get(self, item, value=None):
         """Mimic the get access of a dictionary for defined collectors."""
         if item in self:
             return collector(item.rstrip('s'))
         else:
-            return default
+            return value
 
     def __getattr__(self, attr):
         """Gateway to collector (plural noun) or load method (singular)."""
