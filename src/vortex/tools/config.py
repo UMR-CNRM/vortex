@@ -20,7 +20,6 @@ def load_template(t, tplfile):
     Load a template according to filename provided, either absolute or relative path.
     The first argument ``t`` should be a valid ticket session.
     """
-    tpl = None
     if t.sh.path.exists(tplfile):
         tplfile = t.sh.path.abspath(tplfile)
     else:
