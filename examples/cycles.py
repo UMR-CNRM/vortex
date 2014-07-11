@@ -18,10 +18,12 @@ print 'Single cycle : ', cycles.cy36t1, cycles.cy36t1.__dict__
 dbcy36 = copy.deepcopy(cycles.cy36t1)
 print 'Double cycle : ', dbcy36, dbcy36.__dict__
 
-print t.prompt, cycles.cy33t1.findall('cy33t1')
-print t.prompt, cycles.cy33t1.findall('cy33')
-print t.prompt, cycles.cy33t1.findall('cy33t2')
-print t.prompt, cycles.cy33t1.findall('cy33t1_op')
+test_cycle = cycles.cy36t1
+test_str = 'cy36'
+print t.prompt, test_cycle.findall(test_str + 't1')
+print t.prompt, test_cycle.findall(test_str)
+print t.prompt, test_cycle.findall(test_str + 't2')
+print t.prompt, test_cycle.findall(test_str + 't1_op')
 
 cycles.maincycles = [ x for x in cycles.maincycles if x > 33 ]
 cycles.subcycles = [ x for x in cycles.subcycles if re.search(r'op', x) ]

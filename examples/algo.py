@@ -13,7 +13,7 @@ t.warning()
 g = t.glove
 e = t.env
 sh = t.system()
-sh.cd(e.HOME + '/tmp/rundir')
+sh.cd(e.HOME + '/tmp/rundir', create=True)
 
 tb = vortex.toolbox
 
@@ -34,7 +34,7 @@ print t.prompt, "Get resource... ", script.get()
 
 print t.line
 
-x = tb.component(engine='launch', interpreter=script.resource.language)
+x = tb.algo(engine='launch', interpreter=script.resource.language)
 
 print t.prompt, x
 print t.prompt, x.as_dict()
@@ -46,7 +46,7 @@ x.run(script)
 
 print t.line
 
-x = tb.component(engine='blind')
+x = tb.algo(engine='blind')
 
 print t.prompt, x
 print t.prompt, x.as_dict()
@@ -57,7 +57,7 @@ x.run(script)
 
 print t.line
 
-x = tb.component(engine='parallel')
+x = tb.algo(engine='parallel')
 
 print t.prompt, x
 print t.prompt, x.as_dict()
@@ -69,4 +69,3 @@ print t.line
 x.run(script, mpiopts=dict(n=2))
 
 print t.line
-

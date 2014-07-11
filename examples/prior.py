@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-import footprints
 from footprints.priorities import top
 
 import vortex
 from sandbox.data.resources import SimpleTest
+u_fill_fp_catalogs = SimpleTest
 
 t = vortex.ticket()
 t.warning()

@@ -69,7 +69,7 @@ rx.get()
 
 print t.line
 
-x = vortex.toolbox.component(kind='fclam', timestep=900, engine='parallel')
+x = vortex.toolbox.algo(kind='fclam', timestep=900, engine='parallel')
 
 print t.prompt, 'Engine is', x
 

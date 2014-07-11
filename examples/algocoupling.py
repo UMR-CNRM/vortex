@@ -9,7 +9,7 @@ import common.data
 import common.algo
 import olive.data
 import gco.data
-from vortex.tools import env, date
+from vortex.tools import date
 from vortex.data import geometries
 from gco.tools import genv
 
@@ -123,7 +123,8 @@ rx.get()
 print t.line
 
 
-x = vortex.toolbox.component(kind='coupling', timescheme='eul', model='arpifs', fcterm=0, timestep=415.385, engine='parallel')
+x = vortex.toolbox.algo(kind='coupling', timescheme='eul', model='arpifs',
+                        fcterm=0, timestep=415.385, engine='parallel')
 
 print t.prompt, 'Engine is', x
 

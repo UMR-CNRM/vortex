@@ -4,7 +4,8 @@
 # Status : Looks OK (v0.6.21)
 
 import vortex
-import olive, sandbox.data
+import olive
+import sandbox.data
 from vortex.data import geometries
 
 t = vortex.ticket()
@@ -19,7 +20,7 @@ print t.line
 
 e = t.env
 sh = t.system()
-sh.cd(e.HOME + '/tmp/rundir')
+sh.cd(e.HOME + '/tmp/rundir', create=True)
 
 thefile = 'titi'
 if sh.path.exists(thefile):
@@ -28,6 +29,8 @@ if sh.path.exists(thefile):
 
 rl = vortex.toolbox.rh
 
+with open('/tmp/toto', 'w') as fp:
+    fp.write('not empty')
 
 a = rl(ra, remote='/tmp/toto', file=thefile)
 
@@ -53,7 +56,9 @@ print t.prompt, 'GET', a.location(), '...', a.get()
 print t.prompt, a.history()
 sh.dir(output=False)
 
-sh.ftp('cougar.meteo.fr', 'mrpm631').put(thefile, 'tmp/titi')
+# user = 'mrpm631'
+user = 'mcdi004'
+sh.ftp('cougar.meteo.fr', user).put(thefile, 'tmp/titi')
 
 a = rl(ra, tube='ftp', hostname='cougar.meteo.fr', remote='tmp/titi', file='bidon/' + thefile)
 

@@ -17,7 +17,7 @@ e = t.env
 
 print t.line
 
-sh.cd(e.home + '/tmp/bidon')
+sh.cd(e.home + '/tmp/bidon', create=True)
 print sh.pwd()
 
 rx = vortex.toolbox.rh(remote=g.siteroot + '/examples/tmp/test.sh',
@@ -29,7 +29,7 @@ print rx.idcard()
 
 print t.line
 
-x = vortex.toolbox.component(kind='forecast', timestep=900, engine='parallel')
+x = vortex.toolbox.algo(kind='forecast', timestep=900, engine='parallel')
 print t.prompt, 'Engine is', x
 
 print t.line

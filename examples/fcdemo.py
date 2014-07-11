@@ -29,12 +29,7 @@ rl = vortex.toolbox.rload
 
 t.warning()
 
-# plpl AAARGH ! Ca tourne en plein au milieu du source
-if not sh.cd(e.TMPDIR + '/rundir'):
-    import sys
-    print "cannot chdir to",e.TMPDIR+'/rundir'
-    print "sorry."
-    sys.exit (1) 
+sh.cd(e.TMPDIR + '/rundir', create=True)
 print t.prompt, sh.pwd()
 
 arpege_cycle = 'cy37t1_op1.17'
