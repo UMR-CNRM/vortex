@@ -518,7 +518,7 @@ class NamelistParser(object):
                  re_block = r'&.*/',
                  re_bname = _NAME,
                  re_entry = _LETTER + r'[ A-Z0-9_,\%\(\):]*' + r"(?=\s*=)",
-                 re_macro = _LETTER + r'+',
+                 re_macro = _NAME,
                  re_endol = r"(?=\s*(,|/|\n))",
                  re_comma = r"\s*,"):
         self._literal = literal

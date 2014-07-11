@@ -854,7 +854,7 @@ class OSExtended(System):
         """Move the ``source`` file or directory."""
         try:
             self._sh.move(source, destination)
-        except Exception:
+        except StandardError:
             raise
         else:
             return True

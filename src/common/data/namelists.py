@@ -28,6 +28,7 @@ class NamelistContent(AlmostDictContent):
         """
         kw.setdefault('macros', dict(
             NBPROC    = None,
+            NBPROC_IO = None,
             NCPROC    = None,
             NDPROC    = None,
             NBPROCIN  = None,

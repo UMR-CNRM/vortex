@@ -1,8 +1,8 @@
-:mod:`vortex.utilities.introspection` --- TODO Module Header
-============================================================
+:mod:`vortex.utilities.introspection` --- Exploring source code and doc
+=======================================================================
 
 .. automodule:: vortex.utilities.introspection
-   :synopsis: TODO Module Synopsis
+   :synopsis: Exploring source code and doc
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -16,3 +16,7 @@ Package
 Classes
 -------
 
+.. autoclass:: Sherlock
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

@@ -18,7 +18,9 @@ DR_HOOK_NOT_MPI = 1
 
 def use_in_shell(sh, **kw):
     """Extend current shell with the LFI interface defined by optional arguments."""
-    kw.setdefault('lficmd', 'lfitools')
+    kw.setdefault('lficmd', 'LFITOOLS')
+    if '/' not in kw['lficmd']:
+        kw.setdefault('lfipath', sh.env.LFIPATH)
     lfi = footprints.proxy.addon(**kw)
     if lfi:
         sh.extend(lfi)

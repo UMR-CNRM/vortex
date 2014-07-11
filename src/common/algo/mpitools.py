@@ -79,15 +79,25 @@ class MpiNWPIO(mpitools.MpiServerIO):
         else:
             namio = namcontents.newblock('NAMIO_SERV')
 
-        namio.nproc_io             = self.nprocs
-        namio.nio_serv_method      = self.env.VORTEX_IOSERVER_METHOD   or 2
-        namio.nio_serv_buf_maxsize = self.env.VORTEX_IOSERVER_BUFMAX   or 20
-        namio.nmsg_level_server    = self.env.VORTEX_IOSERVER_MLSERVER or 3
-        namio.nmsg_level_client    = self.env.VORTEX_IOSERVER_MLCLIENT or 3
-        namio.nprocess_level       = self.env.VORTEX_IOSERVER_PROCESS  or 5
+        namio.nproc_io = self.nprocs
+
+        if 'VORTEX_IOSERVER_METHOD'   in self.env:
+            namio.nio_serv_method      = self.env.VORTEX_IOSERVER_METHOD
+
+        if 'VORTEX_IOSERVER_BUFMAX'   in self.env:
+            namio.nio_serv_buf_maxsize = self.env.VORTEX_IOSERVER_BUFMAX
+
+        if 'VORTEX_IOSERVER_MLSERVER' in self.env:
+            namio.nmsg_level_server    = self.env.VORTEX_IOSERVER_MLSERVER
+
+        if 'VORTEX_IOSERVER_MLCLIENT' in self.env:
+            namio.nmsg_level_client    = self.env.VORTEX_IOSERVER_MLCLIENT
+
+        if 'VORTEX_IOSERVER_PROCESS'  in self.env:
+            namio.nprocess_level       = self.env.VORTEX_IOSERVER_PROCESS
 
         if 'VORTEX_IOSERVER_PIOMODEL' in self.env:
-            namio.pioprocr_MDL = self.env.VORTEX_IOSERVER_PIOMODEL
+            namio.pioprocr_MDL         = self.env.VORTEX_IOSERVER_PIOMODEL
 
         self.system.subtitle('Parallel io namelist')
         print namio.dumps()

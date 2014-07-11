@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.8.16'
+__version__ = '0.8.17'
 
 import re
 import copy
