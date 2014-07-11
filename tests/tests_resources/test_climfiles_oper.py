@@ -41,7 +41,6 @@ class UtClimGlobal(TestCase):
         ctlg = footprints.proxy.resources
         res = ctlg.find_best(climmodel)
 
-        month = "{0:02d}".format(today().month)
         self.assertTrue(res.kind, 'clim_model')
 
     def test_v1(self):
