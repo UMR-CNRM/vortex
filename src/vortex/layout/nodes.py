@@ -54,7 +54,7 @@ class Task(Node):
 
     def retrieve(self):
         """Get all input data."""
-        for indata in self.sequence.inputs:
+        for indata in self.sequence.inputs():
             indata.get()
 
     def process(self, t, **kw):
