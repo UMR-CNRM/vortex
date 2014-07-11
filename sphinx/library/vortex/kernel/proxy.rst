@@ -1,8 +1,8 @@
-:mod:`vortex.proxy` --- Static references to footprints obbjects and functions
+:mod:`vortex.proxy` --- Static references to footprints objects and functions
 ==============================================================================
 
 .. automodule:: vortex.proxy
-   :synopsis: Static references to footprints obbjects and functions
+   :synopsis: Static references to footprints objects and functions
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
