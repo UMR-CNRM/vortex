@@ -1,5 +1,5 @@
-#!/bin/env python
-# -*- coding:Utf-8 -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """
 Hierarchical documents to store footprints information.
