@@ -6,12 +6,12 @@ logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, TestLoader, TextTestRunner
 
-import vortex
 from vortex import toolbox
 from vortex.data.geometries import SpectralGeometry
 
 import common.data
 import olive.data
+u_fill_fp_catalogs = common.data, olive.data
 
 
 class UtObservations(TestCase):

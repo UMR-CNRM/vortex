@@ -6,11 +6,11 @@ logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, TestLoader, TextTestRunner
 
-import vortex
 from vortex import toolbox
 from vortex.data.geometries import SpectralGeometry, GridGeometry
 import common.data
 import olive.data
+u_fill_fp_catalogs = olive.data, common.data
 
 
 class UtGridPoint(TestCase):

@@ -10,7 +10,6 @@ from vortex.autolog import logdefault as logger
 
 from vortex import sessions
 from vortex.tools import net
-from vortex.tools.date import Date
 from vortex.utilities import roles, structs
 from vortex.layout import dataflow
 

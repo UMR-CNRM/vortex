@@ -4,7 +4,6 @@
 #: No automatic export
 __all__ = []
 
-import re
 import shlex
 
 import footprints

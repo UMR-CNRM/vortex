@@ -6,7 +6,6 @@ logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, main
 
-import vortex
 from common.data.modelstates import Analysis
 from vortex.data.geometries import SpectralGeometry
 from vortex.tools.env import Environment

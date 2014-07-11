@@ -12,6 +12,7 @@ from vortex.data.geometries import SpectralGeometry, GridGeometry
 import common.data
 import olive.data
 import gco.data
+u_fill_fp_catalogs = common.data, olive.data, gco.data
 
 
 class UtListing(TestCase):

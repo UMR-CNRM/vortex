@@ -4,7 +4,8 @@
 #: No automatic export
 __all__ = []
 
-import re, socket
+import re
+import socket
 
 from vortex.autolog import logdefault as logger
 

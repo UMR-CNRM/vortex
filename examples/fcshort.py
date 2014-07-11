@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from vortex import sessions, toolbox
+from vortex import toolbox
 from vortex.tools import date
 
 import vortex.data

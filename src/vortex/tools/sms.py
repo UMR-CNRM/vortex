@@ -7,7 +7,7 @@ Interface to SMS commands.
 
 __all__ = []
 
-from types import *
+from types import *   # @UnusedWildImport
 
 from vortex.autolog import logdefault as logger
 from vortex import sessions

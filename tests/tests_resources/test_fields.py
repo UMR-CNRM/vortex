@@ -6,10 +6,11 @@ logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, TestLoader, TextTestRunner
 
-from vortex import toolbox, sessions
+from vortex import toolbox
 from vortex.data.geometries import SpectralGeometry
 
 from olive.data import fields
+u_fill_fp_catalogs = fields
 
 
 class UtRawFields(TestCase):

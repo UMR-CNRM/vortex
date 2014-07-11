@@ -4,7 +4,6 @@
 #: No automatic export
 __all__ = []
 
-import re
 from tempfile import mkdtemp
 
 from iga.utilities import swissknife

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-import vortex
 from calendar import IllegalMonthError
 from datetime import datetime, timedelta
 from vortex.tools import date

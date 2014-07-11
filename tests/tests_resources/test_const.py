@@ -6,11 +6,12 @@ logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, TestLoader, TextTestRunner
 
-from vortex import toolbox, sessions
+from vortex import toolbox
 
 import gco.data
 import olive.data
 import common.data
+u_fill_fp_catalogs = gco.data, olive.data, common.data
 
 
 class UtRtCoef(TestCase):

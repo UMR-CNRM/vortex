@@ -6,12 +6,12 @@ logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, TestLoader, TextTestRunner
 
-from vortex import toolbox, sessions
+from vortex import toolbox
 from vortex.data.geometries import SpectralGeometry, GridGeometry
 
 import common.data
 import gco.data
-import gco.syntax
+u_fill_fp_catalogs = common.data, gco.data
 
 
 class UtClimGlobal(TestCase):

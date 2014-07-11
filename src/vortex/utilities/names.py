@@ -10,7 +10,7 @@ __all__ = []
 
 from vortex.autolog import logdefault as logger
 
-from types import *
+from types import *   # @UnusedWildImport
 
 
 class VNameBuilder(object):

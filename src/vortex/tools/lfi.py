@@ -6,7 +6,6 @@ __all__ = []
 
 import io
 import weakref
-import types
 
 import footprints
 

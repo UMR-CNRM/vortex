@@ -28,7 +28,7 @@ from vortex.autolog import logdefault as logger
 
 from vortex.utilities.patterns import Singleton
 from vortex.utilities.structs import idtree
-from vortex.tools import systems, date
+from vortex.tools import date
 from vortex.tools.env import Environment
 from vortex.layout.contexts import Context
 from vortex import gloves

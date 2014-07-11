@@ -7,21 +7,22 @@ __all__ = [
     'get_spec_provider', 'IgaHelperSelect', 'datadir', 'homedir'
 ]
 
-import os
-import logging
-from unittest import TestCase, TestLoader, TextTestRunner
+import os  # @UnusedImport
+import logging  # @UnusedImport
+from unittest import TestCase, TestLoader, TextTestRunner  # @UnusedImport
 
 import vortex
 from vortex import toolbox, sessions
 from vortex.tools import env
-from vortex.data import resources
-from vortex.data.geometries import SpectralGeometry, GridGeometry
-from vortex.tools.date import today, Date, Period
+from vortex.data import resources  # @UnusedImport
+from vortex.data.geometries import SpectralGeometry, GridGeometry  # @UnusedImport
+from vortex.tools.date import today, Date, Period  # @UnusedImport
 
+from iga.utilities.helpers import IgaHelperSelect  # @UnusedImport
 
 import common.data
 import iga.data
-from iga.utilities.helpers import IgaHelperSelect
+u_fill_fp_catalogs = common.data, iga.data
 
 # main variables definition for unittest
 fpg = dict(tag='oper', user='mxpt001', profile='oper')

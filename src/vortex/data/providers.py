@@ -4,11 +4,10 @@
 #: No automatic export
 __all__ = [ 'Provider' ]
 
-import re, sys, os.path
+import os.path
 
 import footprints
 
-import vortex  # @UnusedImport
 from vortex.autolog import logdefault as logger
 from vortex.utilities.names import VNameBuilder
 from vortex.tools import net

@@ -16,7 +16,6 @@ import glob
 import tarfile
 import subprocess
 import pickle
-import datetime
 
 import footprints
 

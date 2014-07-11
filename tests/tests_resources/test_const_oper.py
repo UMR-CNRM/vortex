@@ -4,11 +4,7 @@
 
 import footprints
 
-try:
-    from oper_test_config import *
-except ImportError, e:
-    print e
-    raise
+from oper_test_config import *  # @UnusedWildImport
 
 #t.debug()
 

@@ -5,7 +5,6 @@
 __all__ = []
 
 import re
-import types
 
 from vortex.autolog import logdefault as logger
 from vortex.tools.config import GenericConfigParser

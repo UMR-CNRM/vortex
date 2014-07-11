@@ -6,12 +6,11 @@ logging.basicConfig(level=logging.ERROR)
 
 from unittest import TestCase, TestLoader, TextTestRunner
 
-import vortex
-from vortex import toolbox, sessions
+from vortex import toolbox
 from vortex.data.geometries import SpectralGeometry
-from olive.data import errgrib, bestof
-#from iga.data import errgrib
 
+import olive.data
+u_fill_fp_catalogs = olive.data
 
 
 class UtBackgroundErrStd(TestCase):

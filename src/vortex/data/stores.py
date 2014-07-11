@@ -16,7 +16,7 @@ import footprints
 from vortex import sessions
 from vortex.autolog import logdefault as logger
 from vortex.layout import dataflow
-from vortex.tools import config, caches
+from vortex.tools import config
 
 
 class StoreGlue(object):

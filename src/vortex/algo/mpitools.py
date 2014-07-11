@@ -9,10 +9,10 @@ MpiTool objects use the :mod:`footprints` mechanism.
 #: No automatic export
 __all__ = []
 
-import re, shlex
+import shlex
 
 import footprints
-from vortex.tools import env 
+from vortex.tools import env
 from vortex.autolog import logdefault as logger
 
 
