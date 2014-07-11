@@ -942,6 +942,7 @@ class Footprint(object):
         return self._fp['priority']
 
 
+# noinspection PyProtectedMember
 class FootprintAttrDescriptor(object):
     """Abstract accessor class to footprint attributes."""
     access_mode = None
@@ -1060,6 +1061,7 @@ class FootprintBaseMeta(type):
         return realcls
 
 
+# noinspection PyUnresolvedReferences
 class FootprintBase(object):
     """
     Base class for any other thematic class that would need to incorporate a :class:`Footprint`.

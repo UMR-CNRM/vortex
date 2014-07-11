@@ -81,6 +81,7 @@ def prompt():
     return Desk().current.prompt
 
 
+# noinspection PyShadowingBuiltins
 def exit():
     """Ask all inactive sessions to close, then close the active one."""
     thedesk = Desk()

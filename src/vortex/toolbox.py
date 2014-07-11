@@ -157,6 +157,7 @@ def pushsection(section, args, kw):
     return rlok
 
 
+# noinspection PyShadowingBuiltins
 def input(*args, **kw):
     """Add an input section to the current sequence."""
     kw.setdefault('insitu', getinsitu)

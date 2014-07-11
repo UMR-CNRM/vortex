@@ -20,7 +20,8 @@ from footprints import \
 # Classes to be used in module scope
 
 class Foo(object):
-    def __init__(self, *args, **kw):
+    # noinspection PyUnusedLocal
+    def __init__(self, *u_args, **kw):
         self.__dict__.update(kw)
 
     def justdoit(self, guess, extras):
@@ -366,7 +367,7 @@ class utExpand(TestCase):
 
     def test_expand_glob(self):
         tmpd = tempfile.mkdtemp()
-        ( tmpio,tmpf ) = tempfile.mkstemp(dir=tmpd)
+        ( u_tmpio, tmpf ) = tempfile.mkstemp(dir=tmpd)
         for a in ('hip', 'hop'):
             for b in range(3):
                 shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}'.format(tmpd, a, b))
@@ -458,6 +459,7 @@ class utExpand(TestCase):
 
 # Base class for catalogs like objects
 
+# noinspection PyPropertyAccess
 class utCatalog(TestCase):
 
     def setUp(self):
@@ -875,6 +877,7 @@ class utReporting(TestCase):
 
 # Tests for footprints top module methods and objects
 
+# noinspection PyPropertyAccess
 class utFootprintSetup(TestCase):
 
     def test_footprint_setup(self):
@@ -946,6 +949,7 @@ class utFootprintSetup(TestCase):
 
 # Everything (hopefuly) for the basic footprint mechanisms
 
+# noinspection PyPropertyAccess
 class utFootprint(TestCase):
 
     def setUp(self):
@@ -1174,10 +1178,10 @@ class utFootprint(TestCase):
 
         footprints.logger.setLevel(logging.CRITICAL)
         with self.assertRaises(footprints.FootprintUnreachableAttr):
-            rv = fp._replacement(nbpass, 'stuff1', guess, extras, guess.keys())
+            u_rv = fp._replacement(nbpass, 'stuff1', guess, extras, guess.keys())
         footprints.logger.setLevel(logging.WARNING)
 
-        guess, inputattr = fp._firstguess(dict(stuff1='misc_[stuff2]'))
+        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2]'))
         todo = guess.keys()
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2]', stuff2='foo'))
         self.assertListEqual(todo, ['stuff1', 'stuff2'])
@@ -1190,7 +1194,7 @@ class utFootprint(TestCase):
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_foo', stuff2='foo'))
 
-        guess, inputattr = fp._firstguess(dict(stuff1='misc_[stuff2]_and_[more]', more=2))
+        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2]_and_[more]', more=2))
         todo = guess.keys()
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2]_and_[more]', stuff2='foo'))
         self.assertListEqual(todo, ['stuff1', 'stuff2'])
@@ -1211,13 +1215,13 @@ class utFootprint(TestCase):
         nbpass = 0
         extras = dict()
 
-        guess, inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:value]'))
+        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:value]'))
         todo = guess.keys()
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:value]', stuff2='foo', somefoo=None))
         self.assertListEqual(todo, ['stuff1', 'stuff2', 'somefoo'])
 
         thisfoo = Foo(value=2)
-        guess, inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:value]', somefoo=thisfoo))
+        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:value]', somefoo=thisfoo))
         todo = guess.keys()
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:value]', stuff2='foo', somefoo=thisfoo))
         self.assertListEqual(todo, ['stuff1', 'stuff2', 'somefoo'])
@@ -1233,7 +1237,7 @@ class utFootprint(TestCase):
         thisfoo = Foo(value=2)
         extras = dict(somefoo=thisfoo)
 
-        guess, inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justdoit]', somefoo=thisfoo))
+        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justdoit]', somefoo=thisfoo))
         todo = guess.keys()
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justdoit]', stuff2='foo'))
         self.assertListEqual(todo, ['stuff1', 'stuff2'])
@@ -1254,7 +1258,7 @@ class utFootprint(TestCase):
             )
         ))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='misc_[stuff2]'))
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='misc_[stuff2]'))
         self.assertTrue(rv)
         self.assertIsNot(footprints.UNKNOWN, None)
         self.assertDictEqual(rv, dict(stuff1='misc_foo', stuff2='foo', someint=footprints.UNKNOWN))
@@ -1263,9 +1267,9 @@ class utFootprint(TestCase):
         fp = self.fpbis
 
         with self.assertRaises(footprints.FootprintFatalError):
-            rv, attr_input, attr_seen = fp.resolve(dict())
+            u_rv, u_attr_input, u_attr_seen = fp.resolve(dict())
 
-        rv, attr_input, attr_seen = fp.resolve(dict(), fatal=False)
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(), fatal=False)
         self.assertTrue(rv)
         self.assertDictEqual(rv, dict(stuff1=None, stuff2='foo'))
 
@@ -1315,10 +1319,10 @@ class utFootprint(TestCase):
     def test_resolve_reclass(self):
         fp = self.fpbis
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1=2))
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1=2))
         self.assertDictEqual(rv, dict(stuff1='2', stuff2='foo'))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1=True))
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1=True))
         self.assertDictEqual(rv, dict(stuff1='True', stuff2='foo'))
 
         fp = Footprint(self.fpbis, dict(
@@ -1327,7 +1331,7 @@ class utFootprint(TestCase):
             )
         ))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='misc', stuff3=2))
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='misc', stuff3=2))
         self.assertIsInstance(rv['stuff3'], Foo)
 
     def test_resolve_remap(self):
@@ -1339,10 +1343,10 @@ class utFootprint(TestCase):
             )
         ))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='one'))
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='one'))
         self.assertDictEqual(rv, dict(stuff1='one', stuff2='foo'))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='two'))
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='two'))
         self.assertDictEqual(rv, dict(stuff1='four', stuff2='foo'))
 
         fp = Footprint(self.fpbis, dict(
@@ -1353,10 +1357,10 @@ class utFootprint(TestCase):
             )
         ))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rv, dict(stuff1='six', stuff2='foo'))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='two'))
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='two'))
         self.assertDictEqual(rv, dict(stuff1='six', stuff2='foo'))
 
     def test_resolve_isclass(self):
@@ -1373,10 +1377,10 @@ class utFootprint(TestCase):
         class FakeFoo(object):
             pass
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='one', stuff3=FakeFoo), fatal=False)
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='one', stuff3=FakeFoo), fatal=False)
         self.assertDictEqual(rv, dict(stuff1='one', stuff2='foo', stuff3=None))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='one', stuff3=MoreFoo))
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='one', stuff3=MoreFoo))
         self.assertDictEqual(rv, dict(stuff1='one', stuff2='foo', stuff3=MoreFoo))
 
     def test_resolve_values(self):
@@ -1388,13 +1392,13 @@ class utFootprint(TestCase):
             )
         ))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='four'), fatal=False)
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'), fatal=False)
         self.assertDictEqual(rv, dict(stuff1=None, stuff2='foo'))
 
         fp.attr['stuff1']['values'].add('four')
         self.assertSetEqual(fp.attr['stuff1']['values'], set(['one', 'two', 'four']))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='four'), fatal=False)
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'), fatal=False)
         self.assertDictEqual(rv, dict(stuff1='four', stuff2='foo'))
 
     def test_resolve_outcast(self):
@@ -1406,10 +1410,10 @@ class utFootprint(TestCase):
             )
         ))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='four'), fatal=False)
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'), fatal=False)
         self.assertDictEqual(rv, dict(stuff1='four', stuff2='foo'))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='one'), fatal=False)
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='one'), fatal=False)
         self.assertDictEqual(rv, dict(stuff1=None, stuff2='foo'))
 
         fp = Footprint(self.fpbis, dict(
@@ -1424,16 +1428,16 @@ class utFootprint(TestCase):
         self.assertSetEqual(fp.attr['stuff1']['values'], set(['one', 'four']))
         self.assertSetEqual(fp.attr['stuff1']['outcast'], set(['one', 'two']))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='six'), fatal=False)
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='six'), fatal=False)
         self.assertDictEqual(rv, dict(stuff1=None, stuff2='foo'))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='two'), fatal=False)
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='two'), fatal=False)
         self.assertDictEqual(rv, dict(stuff1=None, stuff2='foo'))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='four'), fatal=False)
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'), fatal=False)
         self.assertDictEqual(rv, dict(stuff1='four', stuff2='foo'))
 
-        rv, attr_input, attr_seen = fp.resolve(dict(stuff1='one'), fatal=False)
+        rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='one'), fatal=False)
         self.assertDictEqual(rv, dict(stuff1=None, stuff2='foo'))
 
     def test_resolve_only(self):
@@ -1443,21 +1447,21 @@ class utFootprint(TestCase):
             )
         ))
 
-        rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
         footprints.setup.defaults.update(rdate=datetime.date(2013,11,01))
 
-        rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
         footprints.setup.defaults.update(rdate=datetime.date(2013,11,02))
 
-        rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
@@ -1470,21 +1474,21 @@ class utFootprint(TestCase):
 
         footprints.setup.defaults.update(rdate=datetime.date(2013,11,02))
 
-        rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
         footprints.setup.defaults.update(rdate=datetime.date(2013,11,05))
 
-        rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
         footprints.setup.defaults.update(rdate=datetime.date(2013,11,04))
 
-        rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
@@ -1497,14 +1501,14 @@ class utFootprint(TestCase):
 
         footprints.setup.defaults.update(rdate=datetime.date(2013,11,01))
 
-        rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
         footprints.setup.defaults.update(rdate=datetime.date(2013,12,03))
 
-        rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
@@ -1517,14 +1521,14 @@ class utFootprint(TestCase):
 
         footprints.setup.defaults.update(rdate=datetime.date(2013,11,01))
 
-        rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
         footprints.setup.defaults.update(rdate=datetime.date(2013,12,03))
 
-        rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
@@ -1538,21 +1542,21 @@ class utFootprint(TestCase):
 
         footprints.setup.defaults.update(rdate=datetime.date(2013,11,01))
 
-        rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
         footprints.setup.defaults.update(rdate=datetime.date(2013,11,29))
 
-        rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
         footprints.setup.defaults.update(rdate=datetime.date(2013,11,15))
 
-        rd, attr_input, attr_seen = fp.resolve(dict(stuff1='four'))
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
@@ -1590,7 +1594,7 @@ class utFootprintBase(TestCase):
             self.assertTrue(FootprintTestMeta.authvalues('foo'))
 
         with self.assertRaises(footprints.FootprintInvalidDefinition):
-            ftm = FootprintTestMeta()
+            u_ftm = FootprintTestMeta()
 
     def test_metaclass_empty(self):
         with self.assertRaises(footprints.FootprintInvalidDefinition):
@@ -1623,10 +1627,10 @@ class utFootprintBase(TestCase):
         )
 
         with self.assertRaises(footprints.FootprintFatalError):
-            fp1 = FootprintTestOne(kind='hip')
+            u_fp1 = FootprintTestOne(kind='hip')
 
         with self.assertRaises(footprints.FootprintFatalError):
-            fp1 = FootprintTestOne(kind='hip', someint=13)
+            u_fp1 = FootprintTestOne(kind='hip', someint=13)
 
         fp1 = FootprintTestOne(kind='hip', someint=7)
         self.assertIsInstance(fp1, FootprintTestOne)
@@ -1676,13 +1680,13 @@ class utFootprintBase(TestCase):
         thefoo = Foo(inside=2)
 
         with self.assertRaises(footprints.FootprintFatalError):
-            fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo)
+            u_fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo)
 
         with self.assertRaises(footprints.FootprintFatalError):
-            fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=13)
+            u_fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=13)
 
         with self.assertRaises(footprints.FootprintFatalError):
-            fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=7)
+            u_fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=7)
 
         fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
         self.assertIsInstance(fp2, FootprintTestTwo)

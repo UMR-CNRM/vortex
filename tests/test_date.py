@@ -286,6 +286,7 @@ class utTime(TestCase):
         self.assertTrue(t > [6, 29])
 
 
+# noinspection PyUnusedLocal
 class utMonth(TestCase):
 
     def test_month_basics(self):
