@@ -58,8 +58,9 @@ class Fa2Grib(BlindRun):
         """Loop on the various initial conditions provided."""
         gprh = [ x.rh for x in self.context.sequence.effective_inputs(role='Gridpoint', kind='gridpoint') ]
         gprh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
-        self.compact    = self.env.get('VORTEX_GRIB_COMPACT', 'L')
-        self.timeshift  = self.env.get('VORTEX_GRIB_SHIFT', False)
+        compact    = self.env.get('VORTEX_GRIB_COMPACT', self.compact)
+        numod      = self.env.get('VORTEX_GRIB_NUMOD', self.numod)
+        timeshift  = self.env.get('VORTEX_GRIB_SHIFT', self.timeshift)
         thisoutput = 'GRIDOUTPUT'
         for r in gprh:
             self.system.title('Loop on domain {0:s} and term {1:s}'.format(
@@ -73,12 +74,12 @@ class Fa2Grib(BlindRun):
             from vortex.tools.fortran import NamelistBlock
             nb = NamelistBlock(name='NAML')
             nb.NBDOM = 1
-            nb.CHOPER = self.compact
-            nb.INUMOD = self.numod
+            nb.CHOPER = compact
+            nb.INUMOD = numod
             if self.sciz:
                 nb.ISCIZ = self.sciz
-            if self.timeshift:
-                nb.IHCTPI = self.timeshift
+            if timeshift:
+                nb.IHCTPI = timeshift
             nb['CLFSORT(1)'] = thisoutput
             nb['CDNOMF(1)'] = self.fortinput
             with open(self.fortnam, 'w') as namfd:
