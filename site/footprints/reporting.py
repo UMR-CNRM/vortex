@@ -574,6 +574,7 @@ class FactorizedReport(object):
             maxdepth = len(self.keys())
         self.niceprinter(self._tree, 0, maxdepth, group)
 
+
 if __name__ == '__main__':
     fr = FactorizedReport(
         focus='classname',

@@ -10,11 +10,15 @@ from copy import deepcopy
 from weakref import WeakSet
 
 import footprints
+
 from footprints import \
     dump, observers, priorities, reporting, util, \
-    Footprint, FootprintBase, FootprintBaseMeta, FootprintSetup, \
-    FootprintAttrDescriptorRXX, \
+    Footprint, FootprintBase, FootprintBaseMeta, \
     FPDict, FPList, FPSet, FPTuple
+
+from footprints.access import FootprintAttrDescriptorRXX
+
+from footprints.config import FootprintSetup
 
 
 # Classes to be used in module scope
@@ -789,13 +793,13 @@ class utPriorities(TestCase):
         rv = priorities.top
         self.assertTupleEqual(rv.levels, ('NONE', 'DEFAULT', 'TOOLBOX', 'DEBUG'))
 
-        footprints.set_after('default', 'hip', 'hop')
+        priorities.set_after('default', 'hip', 'hop')
         self.assertTupleEqual(rv.levels, ('NONE', 'DEFAULT', 'HIP', 'HOP', 'TOOLBOX', 'DEBUG'))
 
         rv.reset()
         self.assertTupleEqual(rv.levels, ('NONE', 'DEFAULT', 'TOOLBOX', 'DEBUG'))
 
-        footprints.set_before('toolbox', 'hip', 'hop')
+        priorities.set_before('toolbox', 'hip', 'hop')
         self.assertTupleEqual(rv.levels, ('NONE', 'DEFAULT', 'HIP', 'HOP', 'TOOLBOX', 'DEBUG'))
 
         rv.reset()
@@ -881,9 +885,8 @@ class utReporting(TestCase):
 class utFootprintSetup(TestCase):
 
     def test_footprint_setup(self):
-        setup = footprints.FootprintSetup()
+        setup = FootprintSetup()
         self.assertIsInstance(setup, FootprintSetup)
-        self.assertIsInstance(setup.dumper, dump.Dumper)
         self.assertIsInstance(setup.nullreport, reporting.NullReport)
         self.assertIsInstance(setup.report, bool)
         self.assertIsInstance(setup.extended, bool)
@@ -928,7 +931,7 @@ class utFootprintSetup(TestCase):
         self.assertTrue(hasattr(foo, 'garbages'))
 
     def test_footprint_callback(self):
-        setup = footprints.FootprintSetup()
+        setup = FootprintSetup()
         self.assertIsInstance(setup, FootprintSetup)
         self.assertIs(setup.callback, None)
 

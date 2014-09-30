@@ -243,7 +243,7 @@ def namespaces(**kw):
     else:
         usedcat = ( 'provider', 'store' )
     nameseen = dict()
-    for cat in [ footprints.collector(x) for x in usedcat ]:
+    for cat in [ footprints.collectors.get(x) for x in usedcat ]:
         for cls in cat():
             fp = cls.retrieve_footprint().attr
             netattr = fp.get('namespace', None)

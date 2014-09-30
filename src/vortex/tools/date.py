@@ -153,6 +153,7 @@ local_date_functions = dict([
             if hasattr(x, 'func_name') and x.__doc__.startswith('Return date')
 ])
 
+del x
 
 def stardates():
     """Nice dump of predefined dates functions."""

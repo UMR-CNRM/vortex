@@ -5,11 +5,13 @@
 __all__ = []
 
 import io
+import re
 import weakref
 
 import footprints
 
 from vortex.autolog import logdefault as logger
+from vortex.utilities.structs import Tracker
 
 LFI_HNDL_SPEC   = ':1'
 DR_HOOK_SILENT  = 1
@@ -180,6 +182,28 @@ class LFI_Tool(footprints.FootprintBase):
 class LFI_Standard(LFI_Tool):
     """As long as cycling is not concerned..."""
 
+    def lfi_table(self, lfifile, **kw):
+        """
+        List of contents of a  lfi-file.
+
+        Mandatory args are:
+          * lfifile : lfi file name
+
+        """
+        cmd = [ 'lfilist', lfifile ]
+
+        kw['output'] = True
+
+        rawout = self._spawn(cmd, **kw)
+
+        return LFI_Status(
+            rc     = 0,
+            stdout = rawout,
+            result = [ tuple(eval(x)[0]) for x in rawout if x.startswith('[') ]
+        )
+
+    fa_table = lfi_table
+
     def lfi_diff(self, lfi1, lfi2, **kw):
         """
         Difference between two lfi-files.
@@ -203,16 +227,31 @@ class LFI_Standard(LFI_Tool):
         if skipfields:
             cmd.extend(['--lfi-skip-fields', str(skipfields)])
 
-        skiplength = kw.pop('skiplength', 7)
+        skiplength = kw.pop('skiplength', 0)
         if skiplength:
             cmd.extend(['--lfi-skip-length', str(skiplength)])
 
         kw['output'] = True
 
         rawout = self._spawn(cmd, **kw)
-        fields = [ x.partition('!= ')[-1] for x in rawout if x.startswith(' !=') ]
+        fields = [ tuple(x.split(' ', 2)[-2:]) for x in rawout if re.match(' (?:\!=|\+\+|\-\-)', x) ]
 
-        return LFI_Status(rc=int(bool(fields)), stdout=rawout, result=fields)
+        trfields = Tracker(
+            deleted = [ x[1] for x in fields if x[0] == '--' ],
+            created = [ x[1] for x in fields if x[0] == '++' ],
+            updated = [ x[1] for x in fields if x[0] == '!=' ],
+        )
+
+        stlist = self.lfi_table(lfi1, output=True)
+        trfields.unchanged = set([ x[0] for x in stlist.result ]) - set(trfields)
+
+        return LFI_Status(
+            rc     = int(bool(fields)),
+            stdout = rawout,
+            result = trfields
+        )
+
+    fa_diff = lfi_diff
 
     def lfi_ftput(self, source, destination, hostname=None, logname=None):
         """On the fly packing and ftp."""

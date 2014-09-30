@@ -311,7 +311,7 @@ class Dispatcher(object):
         """
         Return current entries in collectors table.
         """
-        tc = footprints.collected_footprints()
+        tc = footprints.collectors.keys()
         return (0, str(tc), tc)
 
     def namespaces(self, t, kw):

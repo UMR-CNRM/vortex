@@ -10,7 +10,7 @@ __all__ = []
 
 from types import *  # @UnusedWildImport
 
-_dumpcache = dict()
+from . import util
 
 
 def DEBUG(msg, obj=None, level=None):
@@ -105,13 +105,15 @@ def indent(level=0, nextline=True):
         return ""
 
 
-class Dumper():
-    """
-    Could dump almost anything.
-    """
+def get(**kw):
+    """Return actual dumper object matching description."""
+    return Dumper.get(**kw)
+
+class Dumper(util.GetByTag):
+    """Could dump almost anything."""
 
     def __init__(self):
-        self.seen = dict()
+        self.reset()
 
     def reset(self):
         self.seen = dict()
@@ -286,9 +288,11 @@ class Dumper():
         return indent_space * indent_first + self.dump(obj)
 
 
-def fulldump(obj, startpos=indent_first):
+def fulldump(obj, startpos=indent_first, reset=True):
     """Entry point. Return a string."""
     d = Dumper()
+    if reset:
+        d.reset()
     return indent_space * startpos + d.dump(obj)
 
 

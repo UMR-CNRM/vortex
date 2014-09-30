@@ -23,14 +23,22 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.8.17'
+__version__ = '0.8.18'
 __prompt__  = 'Vortex v-' + __version__ + ':'
 
 __all__ = []
 
 # Force stdout to be an unbuffered stream
 import os, sys
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+try:
+    # With a standard Unix file descriptor
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+except IOError:
+    try:
+        # With an IOStream without file number
+        sys.stdout.flush_interval = 0
+    except AttributeError:
+        sys.stderr.write('Unable to set an unbuffered stdout stream.')
 del os
 del sys
 
@@ -38,9 +46,9 @@ del sys
 
 import logging
 logging.basicConfig(
-    format='[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
-    datefmt='%Y/%d/%m-%H:%M:%S',
-    level=logging.WARNING
+    format  = '[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
+    datefmt = '%Y/%d/%m-%H:%M:%S',
+    level   = logging.WARNING
 )
 logger = logging.getLogger('vortex')
 del logging
@@ -48,12 +56,13 @@ del logging
 # Set vortex specific priorities for footprints usage
 
 import footprints
-footprints.set_before('debug', 'olive', 'oper')
+footprints.priorities.set_before('debug', 'olive', 'oper')
 
 # Populate a fake proxy module with footprints shortcuts
 
 import proxy
-footprints.setup.add_proxy(proxy)
+setup = footprints.config.get()
+setup.add_proxy(proxy)
 proxy.cat = footprints.proxy.cat
 proxy.objects = footprints.proxy.objects
 
@@ -64,7 +73,6 @@ import loader
 # Insert a dynamic callback so that any footprint resolution could check the current Glove
 
 import tools
-
 
 def getglove():
     return dict(glove = tools.env.current().glove)
@@ -92,7 +100,6 @@ sh = sessions.system
 import toolbox, algo, data
 
 # Register proper vortex exit before the end of interpreter session
-
 
 def complete():
     sessions.exit()

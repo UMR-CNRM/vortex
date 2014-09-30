@@ -221,6 +221,38 @@ def expand(desc):
     return ld
 
 
+class GetByTagMeta(type):
+    """
+    Meta class constructor for :class:`GetByTag`.
+    The purpose is quite simple : to set a dedicated shared table
+    in the new class to be build.
+    """
+
+    def __new__(cls, n, b, d):
+        logger.debug('Base class for getbytag usage "%s / %s", bc = ( %s ), internal = %s', cls, n, b, d)
+        d['_getbytag_table'] = dict()
+        return super(GetByTagMeta, cls).__new__(cls, n, b, d)
+
+class GetByTag(object):
+    """
+    Utility to retrieve a new object by a sppecial named argument ``tag``.
+    If an object had already been created with that tag, return this object.
+    """
+
+    __metaclass__ = GetByTagMeta
+
+    @classmethod
+    def get(cls, **kw):
+        """Check for an existing setup with same tag."""
+        tag = kw.pop('tag', 'default')
+        if tag in cls._getbytag_table:
+            return cls._getbytag_table[tag]
+        else:
+            newobj = cls(**kw)
+            cls._getbytag_table[tag] = newobj
+            return newobj
+
+
 class Catalog(object):
     """
     Abstract class for managing a collection of *items*.

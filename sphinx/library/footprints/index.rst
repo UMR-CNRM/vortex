@@ -13,10 +13,14 @@ List of modules.
    
    footprints
 
+   access
+   config
    dump
    observers
    priorities
+   proxies
    reporting
+   stdtypes
    util
 
 

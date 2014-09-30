@@ -12,7 +12,7 @@ from footprints import observers
 
 from vortex.autolog import logdefault as logger
 
-from vortex.utilities.structs import idtree
+from vortex.utilities.structs import idtree, Tracker
 from vortex.tools.env import Environment
 import dataflow
 
@@ -204,7 +204,7 @@ class Context(object):
         """Set a stamp to track changes on the filesystem."""
         stamp = self.stamp(tag)
         self.system.touch(stamp)
-        self._fstore[stamp] = self.system.ffind()
+        self._fstore[stamp] = set(self.system.ffind())
 
     def fstrack_check(self, tag='default'):
         """
@@ -216,14 +216,12 @@ class Context(object):
         if not self.system.path.exists(stamp):
             logger.warning('Missing stamp %s', stamp)
             return None
-        ffinded = self.system.ffind()
+        ffinded = set(self.system.ffind())
         bkuptrace = self.system.trace
         self.system.trace = False
-        fscheck = dict()
-        fscheck['deleted'] = filter(lambda f: f not in ffinded, self._fstore[stamp])
-        fscheck['created'] = filter(lambda f: f not in self._fstore[stamp], ffinded)
+        fscheck = Tracker(self._fstore[stamp], ffinded)
         stroot = self.system.stat(stamp)
-        fscheck['updated'] = filter(lambda f: self.system.stat(f).st_mtime > stroot.st_mtime and f not in fscheck['created'], ffinded)
+        fscheck.updated = [ f for f in fscheck.unchanged if self.system.stat(f).st_mtime > stroot.st_mtime ]
         self.system.trace = bkuptrace
         return fscheck
 

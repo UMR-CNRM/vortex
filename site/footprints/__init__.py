@@ -9,27 +9,54 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.8.17'
+__version__ = '0.8.18'
 
 import re
 import copy
 import types
 
+
+# Default logging
+
 import logging
 logging.basicConfig(
-    format='[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
-    datefmt='%Y/%d/%m-%H:%M:%S',
-    level=logging.WARNING
+    format  = '[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
+    datefmt = '%Y/%d/%m-%H:%M:%S',
+    level   = logging.WARNING
 )
 logger = logging.getLogger('footprints')
 
-import dump, observers, priorities, reporting, util
 
-UNKNOWN = '__unknown__'
+# Technical internal modules of the footprints package
+
+from . import util, reporting
+
+
+# Default setup
+
+from . import config
+setup = config.get(docstring=False)
+
+
+# Internal modules of the footprints package
+
+from . import access, collectors, dump, observers, priorities, util
+from .stdtypes import *
+
+
+# Default proxy
+
+from . import proxies
+proxy = proxies.get()
+
+
+# Predefined constants
+
+UNKNOWN  = '__unknown__'
 replattr = re.compile(r'\[(\w+)(?::+(\w+))?(?:#(\w+))?\]')
 
-# Footprint exceptions
 
+# Footprint exceptions
 
 class FootprintException(Exception):
     pass
@@ -51,404 +78,11 @@ class FootprintInvalidDefinition(FootprintException):
     pass
 
 
-# Special derivated builtins to be used as attributes in footprints descriptions
-
-class FPDict(dict):
-    """A dict type for FootPrints arguments (without expansion)."""
-    def __hash__(self):
-        return hash(tuple(self.items()))
-
-
-class FPList(list):
-    """A list type for FootPrints arguments (without expansion)."""
-
-    def __init__(self, *args):
-        list.__init__(self, args)
-
-    def __hash__(self):
-        return hash(tuple(self))
-
-    def items(self):
-        return self[:]
-
-
-class FPSet(set):
-    """A set type for FootPrints arguments (without expansion)."""
-
-    def __init__(self, *args):
-        set.__init__(self, args)
-
-    def __hash__(self):
-        return hash(tuple(self))
-
-    def items(self):
-        return list(self)
-
-
-class FPTuple(tuple):
-    """A tuple type for FootPrints arguments (without expansion)."""
-
-    def __new__(cls, *args):
-        return tuple.__new__(cls, args)
-
-    def items(self):
-        return list(self)
-
-
-# Shortcuts to priorities settings
-
-def set_before(priorityref, *args):
-    """Set `args` priority before specified `priorityref'."""
-    for newpriority in args:
-        priorities.top.insert(tag=newpriority, before=priorityref)
-
-
-def set_after(priorityref, *args):
-    """Set `args` priority after specified `priorityref'."""
-    for newpriority in reversed(args):
-        priorities.top.insert(tag=newpriority, after=priorityref)
-
-
-class FootprintSetup(object):
-    """Defines some defaults and external tools."""
-
-    def __init__(self, docstring=False, fatal=True, fastmode=False, fastkeys=('kind',),
-                 callback=None, defaults=None, proxies=None, extended=True, dumper=None,
-                 report=True, nullreport=reporting.NullReport()):
-        """Initialisation of a simple footprint setup driver."""
-        if dumper is None:
-            self.dumper = dump.Dumper()
-        else:
-            self.dumper = dumper
-        self._extended  = bool(extended)
-        self.docstring  = bool(docstring)
-        self.fatal      = bool(fatal)
-        self.report     = bool(report)
-        self.nullreport = nullreport
-        self.fastmode   = bool(fastmode)
-        self.fastkeys   = tuple(fastkeys)
-        self.callback   = callback
-        if proxies is None:
-            self.proxies = set()
-        else:
-            self.proxies = set(proxies)
-        self._defaults  = util.LowerCaseDict()
-        if defaults is not None:
-            self._defaults.update(defaults)
-
-    def __call__(self, **kw):
-        if kw:
-            initvalues = self.as_dict()
-            initvalues.update(kw)
-            thesetup = self.__class__(**initvalues)
-        else:
-            thesetup = self
-        thesetup.info()
-        return thesetup
-
-    def as_dict(self):
-        """Return a standalone dictionary or current setup attributes."""
-        return dict([ (k.lstrip('_'), v) for k, v in self.__dict__.items() ])
-
-    def info(self):
-        """Summuray of actual settings."""
-        for k, v in sorted(self.as_dict().items()):
-            print k.ljust(12), ':', v
-
-    def add_proxy(self, obj, clear=False):
-        """
-        Populate an ``obj`` with references to active collectors and load methods
-        so that it could behave like a static proxy.
-        """
-        if isinstance(obj, object):
-            self.proxies.add(obj)
-            for k, v in collectorsmap().items():
-                if clear or not hasattr(obj, k):
-                    setattr(obj, k, v.load)
-                if clear or not hasattr(obj, k+'s'):
-                    setattr(obj, k+'s', v)
-        else:
-            logger.error('Could not populate a non-module or non-instance object: %s', obj)
-            raise ValueError('Not a module nor an object instance: %s', obj)
-
-    def get_defaults(self):
-        """Property getter for footprints defaults."""
-        return self._defaults
-
-    def set_defaults(self, *args, **kw):
-        """Property setter for current defaults environnement of the footprint resolution."""
-        self._defaults = util.LowerCaseDict()
-        self._defaults.update(*args, **kw)
-
-    defaults = property(get_defaults, set_defaults)
-
-    def get_extended(self):
-        """Property getter to ``extended`` switch."""
-        return self._extended
-
-    def set_extended(self, switch):
-        """Property setter to ``extended`` mode for footprint defaults."""
-        if switch is not None:
-            self._extended = bool(switch)
-
-    extended = property(get_extended, set_extended)
-
-    def extras(self):
-        if self.callback:
-            cb = self.callback
-            return cb()
-        else:
-            return dict()
-
-
-setup = FootprintSetup(docstring=False)
-
-
-class Collector(util.Catalog):
-    """
-    A class collector is devoted to the gathering of class references that inherit
-    from a given class (here a class with a footprint), according to some other optional criteria.
-    """
-
-    def __init__(self, **kw):
-        logger.debug('Footprints collector init %s', self)
-        self.entry = 'garbage'
-        self.instances = util.Catalog(weak=True)
-        self.register = True
-        self.report = True
-        self.autoreport = True
-        self.tagreport = None
-        self.altreport = False
-        super(Collector, self).__init__(**kw)
-        if self.tagreport is None:
-            self.tagreport = 'footprint-' + self.entry
-        self.logreport = reporting.report(self.tagreport)
-        for obj in setup.proxies:
-            setattr(obj, self.entry, self.load)
-            setattr(obj, self.entry+'s', self)
-
-    def newobsitem(self, item, info):
-        """Register a new instance of some of the classes in the current collector."""
-        logger.debug('Notified %s new item %s', self, item)
-        self.instances.add(item)
-
-    def delobsitem(self, item, info):
-        """Unregister an existing object in the current collector of instances."""
-        logger.debug('Notified %s del item %s', self, item)
-        self.instances.discard(item)
-
-    def updobsitem(self, item, info):
-        """Not yet specialised..."""
-        logger.debug('Notified %s upd item %s', self, item)
-
-    def discard_kernel(self, rootname):
-        """Discard from current collector classes with name starting with ``rootname``."""
-        for x in [ cl for cl in self.items() if cl.fullname().startswith(rootname) ]:
-            print 'Bye...', x
-            self.discard(x)
-
-    def pickup(self, desc):
-        """Try to pickup inside the collector a item that could match the description."""
-        logger.debug('Pick up a "%s" in description %s with collector %s', self.entry, desc, self)
-        mkreport = desc.pop('_report', self.autoreport)
-        mkaltreport = desc.pop('_altreport', self.altreport)
-        for hidden in [ x for x in desc.keys() if x.startswith('_') ]:
-            logger.warning('Hidden argument "%s" ignored in pickup attributes', hidden)
-            del desc[hidden]
-        if self.entry in desc and desc[self.entry] is not None:
-            logger.debug('A %s is already defined %s', self.entry, desc[self.entry])
-        else:
-            desc[self.entry] = self.find_best(desc)
-        if desc[self.entry] is not None:
-            desc = desc[self.entry].cleanup(desc)
-        else:
-            logger.warning('No %s found in description %s', self.entry, "\n" + setup.dumper.cleandump(desc))
-            if mkreport and self.report:
-                print "\n", self.logreport.info(), "\n"
-                self.lastreport.lightdump()
-                if mkaltreport:
-                    altreport = self.lastreport.as_flat()
-                    altreport.reshuffle(['why', 'attribute'], skip=False)
-                    altreport.fulldump()
-                    altreport.reshuffle(['only', 'attribute'], skip=False)
-                    altreport.fulldump()
-        return desc
-
-    def find_any(self, desc):
-        """
-        Return the first item of the collector that :meth:`couldbe`
-        as described by argument ``desc``.
-        """
-        logger.debug('Search any %s in collector %s', desc, self._items)
-        if self.report:
-            self.logreport.add(collector=self)
-        for item in self._items:
-            resolved, u_input = item.couldbe(desc, report=self.logreport)
-            if resolved:
-                return item(resolved, checked=True)
-        return None
-
-    def find_all(self, desc):
-        """
-        Returns all the items of the collector that :meth:`couldbe`
-        as described by argument ``desc``.
-        """
-        logger.debug('Search all %s in collector %s', desc, self._items)
-        found = list()
-        if self.report:
-            self.logreport.add(collector=self)
-        for item in self._items:
-            resolved, theinput = item.couldbe(desc, report=self.logreport)
-            if resolved:
-                found.append((item, resolved, theinput))
-        return found
-
-    def find_best(self, desc):
-        """
-        Returns the best of the items returned byt the :meth:`find_all` method
-        according to potential priorities rules.
-        """
-        logger.debug('Search all %s in collector %s', desc, self._items)
-        candidates = self.find_all(desc)
-        if not candidates:
-            return None
-        if len(candidates) > 1:
-            logger.warning('Multiple %s candidates for %s', self.entry, "\n" + setup.dumper.cleandump(desc))
-            candidates.sort(key=lambda x: x[0].weightsort(x[2]), reverse=True)
-            for i, c in enumerate(candidates):
-                thisclass, u_resolved, theinput = c
-                logger.warning('  no.%d in.%d is %s', i+1, len(theinput), thisclass)
-        topcl, topr, u_topinput = candidates[0]
-        return topcl(topr, checked=True)
-
-    def load(self, **desc):
-        """Return the entry entry after pickup of attributes."""
-        return self.pickup(desc).get(self.entry, None)
-
-    def default(self, **kw):
-        """
-        Try to find in existing instances tracked by the ``tag`` collector
-        a suitable candidate according to description.
-        """
-        for inst in self.instances():
-            if inst.reusable() and inst.compatible(kw):
-                return inst
-        return self.load(**kw)
-
-    def grep(self, **kw):
-        """
-        Grep in the current instances of the collector items that match
-        the set of attributes given as named arguments.
-        """
-        okmatch = list()
-        for item in self.instances:
-            ok = True
-            for k, v in kw.items():
-                if not hasattr(item, k) or getattr(item, k) != v:
-                    ok = False
-                    break
-            if ok:
-                okmatch.append(item)
-        return okmatch
-
-    def build_attrmap(self, attrmap=None, only=None):
-        """Build a reversed attr-class map."""
-        if attrmap is None:
-            attrmap = dict()
-        if only is not None and not hasattr(only, '__contains__'):
-            only = (only,)
-        for c in self:
-            fp = c.retrieve_footprint()
-            for k in [ ka for ka in fp.attr.keys() if ( only is None or ka in only ) ]:
-                opt = ' (optional)' if fp.optional(k) else ''
-                alist = attrmap.setdefault(k+opt, list())
-                alist.append(dict(
-                    name=c.__name__,
-                    module=c.__module__,
-                    values=fp.get_values(k),
-                    outcast=fp.get_outcast(k)
-                ))
-        return attrmap
-
-    def show_map(self, only=None):
-        """
-        Show the complete set of attributes that could be found in classes
-        collected by the current collector, documented with ``values``
-        or ``outcast`` sets if present.
-        """
-        indent = ' ' * 3
-        attrmap = self.build_attrmap(only=only)
-        for a in sorted(attrmap.keys()):
-            print '*', a, ':'
-            for info in sorted(attrmap[a]):
-                print ' ' * 3, info['name'].ljust(24), '+', info['module']
-                for k in [ x for x in info.keys() if x not in ('name', 'module') and info[x] ]:
-                    print ' ' * 28, '|', k, '=', info[k]
-            print
-
-    def get_values(self, attrname):
-        """Complete set of values which are explicitly authorized for a given attribute."""
-        allvalues = set()
-        for c in self:
-            fp = c.retrieve_footprint()
-            if attrname in fp.attr:
-                for v in fp.get_values(attrname):
-                    allvalues.add(v)
-        return sorted(allvalues)
-
-    def dump_report(self, stamp=False):
-        """Print a nicelly formatted dump report as a dict."""
-        self.logreport.fulldump(stamp=stamp)
-
-    @property
-    def lastreport(self):
-        """
-        Return the subpart of the report related to the last sequence
-        of evaluation through the current collector.
-        """
-        return self.logreport.last
-
-    def sortedreport(self, **kw):
-        """
-        Return the subpart of the report related to the last sequence
-        of evaluation through the current collector ordered by args.
-        """
-        return self.lastreport.as_tree(**kw)
-
-    def dump_lastreport(self):
-        """Print a nicelly formatted dump report as a dict."""
-        print dump.fulldump(self.lastreport.as_dict())
-
-    def report_whynot(self, classname):
-        """
-        Report why any class mathching the ``classname`` pattern
-        had not been selected through the last evaluation.
-        """
-        return self.logreport.whynot(classname)
-
-
-def collectorsmap(_collectorsmap=dict()):
-    """Cached table of collectors currently activated."""
-    return _collectorsmap
-
-
-def collected_footprints():
-    """List of current entries collected."""
-    return collectorsmap().keys()
-
-
-def collector(tag='garbage'):
-    """Main entry point to get a footprinted classes collector."""
-    cmap = collectorsmap()
-    tag = tag.rstrip('s')
-    if tag not in cmap:
-        cmap[tag] = Collector(entry=tag)
-    return cmap[tag]
-
+# Module interface
 
 def pickup(rd):
     """Find in current description the attributes that are collected under the ``tag`` name."""
-    return collector(rd.pop('tag', 'garbage')).pickup(rd)
+    return collectors.get(rd.pop('tag', 'garbage')).pickup(rd)
 
 
 def load(**kw):
@@ -456,7 +90,7 @@ def load(**kw):
     Same as pickup but operates on an expanded dictionary.
     Return either ``None`` or an object compatible with the ``tag``.
     """
-    return collector(kw.pop('tag', 'garbage')).load(**kw)
+    return collectors.get(kw.pop('tag', 'garbage')).load(**kw)
 
 
 def default(**kw):
@@ -464,74 +98,18 @@ def default(**kw):
     Try to find in existing instances tracked by the ``tag`` collector
     a suitable candidate according to description.
     """
-    return collector(kw.pop('tag', 'garbage')).default(**kw)
+    return collectors.get(kw.pop('tag', 'garbage')).default(**kw)
 
 
 def grep(**kw):
     """Try to find any instance in all collectors that could match given attributes."""
     allgrep = list()
-    for c in collectorsmap().values():
+    for c in collectors.values():
         allgrep.extend(c.grep(**kw))
     return allgrep
 
 
-class FootprintProxy(object):
-    """Access to alive footprint items."""
-
-    def __call__(self):
-        self.cat()
-
-    def cat(self):
-        """Print a list of all existing collectors."""
-        for k, v in sorted(collectorsmap().items()):
-            print str(len(v)).rjust(4), (k+'s').ljust(16), v
-
-    def catlist(self):
-        """Return a list of tuples (len, name, collector) for all alive collectors."""
-        return [ (len(v), k+'s', v) for k, v in sorted(collectorsmap().items()) ]
-
-    def objects(self):
-        """Print the list of all existing objects tracked by the collectors."""
-        for k, c in sorted(collectorsmap().items()):
-            objs = c.instances()
-            print str(len(objs)).rjust(4), (k+'s').ljust(16), objs
-
-    def objectsmap(self):
-        """Return a dictionary of instances sorted by collectors entries."""
-        return dict([ (k+'s', c.instances()) for k, c in collectorsmap().items() ])
-
-    def exists(self, tag):
-        """Check if a given ``tag`` of objects is tracked or not."""
-        return tag.rstrip('s') in collected_footprints()
-
-    def __contains__(self, item):
-        """Similar as ``self.exists(item)``."""
-        return self.exists(item)
-
-    def __iter__(self):
-        """Iterates over collectors."""
-        for item in collectorsmap().values():
-            yield item
-
-    def get(self, item, value=None):
-        """Mimic the get access of a dictionary for defined collectors."""
-        if item in self:
-            return collector(item.rstrip('s'))
-        else:
-            return value
-
-    def __getattr__(self, attr):
-        """Gateway to collector (plural noun) or load method (singular)."""
-        if attr.startswith('_') or attr not in self:
-            return None
-        else:
-            if attr.endswith('s'):
-                return collector(attr.rstrip('s'))
-            else:
-                return collector(attr).load
-
-proxy = FootprintProxy()
-
+# Base classes
 
 class Footprint(object):
 
@@ -607,7 +185,7 @@ class Footprint(object):
 
     def nice(self):
         """Retruns a nice dump version of the actual footprint."""
-        return setup.dumper.cleandump(self._fp)
+        return dump.get().cleandump(self._fp)
 
     def track(self, desc):
         """Returns if the items of ``desc`` are found in the specified footstep ``fp``."""
@@ -864,7 +442,7 @@ class Footprint(object):
                 else:
                     logger.debug(' > No valid attribute %s', k)
 
-        return ( guess, attr_input, attr_seen )
+        return (guess, attr_input, attr_seen)
 
     def checkonly(self, rd, report=setup.nullreport):
         """Be sure that the resolved description also match at least one item per ``only`` feature."""
@@ -942,78 +520,6 @@ class Footprint(object):
         return self._fp['priority']
 
 
-# noinspection PyProtectedMember
-class FootprintAttrDescriptor(object):
-    """Abstract accessor class to footprint attributes."""
-    access_mode = None
-
-    def __init__(self, attr, doc='Undocumented footprint attribute'):
-        self._attr = attr
-        self.__doc__ = doc
-
-    def __get__(self, instance, owner):
-        thisattr = instance._attributes.get(self._attr, None)
-        if thisattr is UNKNOWN:
-            thisattr = None
-        return thisattr
-
-
-class FootprintAttrDescriptorRWD(FootprintAttrDescriptor):
-    """Read-write-del accessor class to footprint attributes."""
-    access_mode = 'rwd'
-
-    def __set__(self, instance, value):
-        fp = instance.footprint
-        if self._attr is not None:
-            fpdef = fp.attr[self._attr]
-            atype = fpdef.get('type', str)
-            if fpdef.get('isclass', False):
-                if not issubclass(value, atype):
-                    raise ValueError('Attempt to set {0:s} as a non compatible subclass {1:s}'.format(self._attr, str(value)))
-            elif not isinstance(value, atype):
-                logger.debug(' > Attr %s reclass(%s) as %s', self._attr, value, atype)
-                initargs = fpdef.get('args', dict())
-                try:
-                    value = atype(value, **initargs)
-                    logger.debug(' > Attr %s reclassed = %s', self._attr, value)
-                except Exception:
-                    raise ValueError('Unable to reclass {0:s} as {1:s}'.format(str(value), str(atype)))
-            if fpdef['values'] and not fp.in_values(value, fpdef['values']):
-                raise ValueError('Value {0:s} not in range {1:s}'.format(str(value), str(list(fpdef['values']))))
-            if fpdef['outcast'] and fp.in_values(value, fpdef['outcast']):
-                raise ValueError('Value {0:s} excluded from range {1:s}'.format(str(value), str(list(fpdef['outcast']))))
-            instance._attributes[self._attr] = value
-
-    def __delete__(self, instance):
-        del instance._attributes[self._attr]
-        del self._attr
-
-
-class FootprintAttrDescriptorRWX(FootprintAttrDescriptorRWD):
-    """Read-write accessor class to footprint attributes."""
-    access_mode = 'rwx'
-
-    def __delete__(self, instance):
-        raise AttributeError, 'Read-only attribute [' + self._attr + '] (delete)'
-
-
-class FootprintAttrDescriptorRXX(FootprintAttrDescriptor):
-    """Read-only accessor class to footprint attributes."""
-    access_mode = 'rxx'
-
-    def __set__(self, instance, value):
-        raise AttributeError, 'Read-only attribute [' + self._attr + '] (write)'
-
-    def __delete__(self, instance):
-        raise AttributeError, 'Read-only attribute [' + self._attr + '] (delete)'
-
-
-local_attribute_accessors = dict([
-    (xobj.access_mode, xobj) for xobj in locals().values()
-    if hasattr(xobj, 'access_mode') and xobj.access_mode is not None
-])
-
-
 class FootprintBaseMeta(type):
     """
     Meta class constructor for :class:`FootprintBase`.
@@ -1032,12 +538,13 @@ class FootprintBaseMeta(type):
         else:
             bcfp.append(fplocal)
         thisfp = d['_footprint'] = Footprint(*bcfp)
+        active_accessors = access.attr_descriptors()
         for k in thisfp.attr.keys():
-            if isinstance(thisfp.attr[k]['access'], FootprintAttrDescriptor):
+            if isinstance(thisfp.attr[k]['access'], access.FootprintAttrDescriptor):
                 d[k] = thisfp.attr[k]['access'](k)
             else:
                 try:
-                    d[k] = local_attribute_accessors[thisfp.attr[k]['access']](k)
+                    d[k] = active_accessors[thisfp.attr[k]['access']](k)
                 except AttributeError:
                     logger.error('Could not find any local descriptor with acces mode %s',
                                  thisfp.attr['access'])
@@ -1047,7 +554,7 @@ class FootprintBaseMeta(type):
             if realcls._explicit and not realcls.mandatory():
                 raise FootprintInvalidDefinition('Explicit class without any mandatory footprint attribute.')
             for cname in realcls._collector:
-                thiscollector = collector(cname)
+                thiscollector = collectors.get(cname)
                 thiscollector.add(realcls)
                 if thiscollector.register:
                     observers.getbyname(realcls.fullname()).register(thiscollector)
@@ -1143,6 +650,7 @@ class FootprintBase(object):
 
     def __setstate__(self, state):
         self._observer = observers.getbyname(self.__class__.fullname())
+        self.__dict__.update(state)
         self.make_alive()
 
     def __del__(self):
@@ -1150,6 +658,21 @@ class FootprintBase(object):
             self._observer.notify_del(self, dict())
         except (TypeError, AttributeError):
             logger.debug('Too late for notify_del')
+
+    def in_attributes_get(self, attr, auth=None):
+        """Return actual attribute value in internal storage. Protected method."""
+        thisattr = self._attributes.get(attr, None)
+        if thisattr is UNKNOWN:
+            thisattr = None
+        return thisattr
+
+    def in_attributes_set(self, attr, value, auth=None):
+        """Set actual attribute to the value specified. Protected method."""
+        self._attributes[attr] = value
+
+    def in_attributes_del(self, attr, auth=None):
+        """Delete actual attribute. Protected method."""
+        del self._attributes[attr]
 
     def clone(self, full=False):
         """
@@ -1274,6 +797,6 @@ class FootprintBase(object):
     def attraccess(cls, attrname):
         """Return the access mode of a footprint attribute."""
         rwd = cls._footprint.attr[attrname]['access']
-        if isinstance(rwd, FootprintAttrDescriptor):
+        if isinstance(rwd, access.FootprintAttrDescriptor):
             rwd = rwd.access_mode
         return rwd

@@ -11,6 +11,8 @@
 Interface
 ---------
 
+.. autofunction:: get
+
 .. autofunction:: fulldump
 
 .. autofunction:: lightdump

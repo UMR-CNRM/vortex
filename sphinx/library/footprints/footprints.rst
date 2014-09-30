@@ -12,10 +12,14 @@
 Modules
 -------
 
+* :mod:`footprints.access`
+* :mod:`footprints.config`
 * :mod:`footprints.dump`
 * :mod:`footprints.observers`
 * :mod:`footprints.priorities`
+* :mod:`footprints.proxies`
 * :mod:`footprints.reporting`
+* :mod:`footprints.stdtypes`
 * :mod:`footprints.util`
 
 Package
@@ -23,16 +27,13 @@ Package
 
 .. autodata:: __all__
 
+.. autodata:: proxy
+
 .. autodata:: setup
+
 
 Interface functions
 -------------------
-
-.. autofunction:: collectorsmap
-
-.. autofunction:: collector
-
-.. autofunction:: collected_footprints
 
 .. autofunction:: pickup
 
@@ -43,55 +44,30 @@ Interface functions
 Exceptions
 ----------
 
+.. autoclass:: FootprintException
+   :show-inheritance:
+
 .. autoclass:: FootprintMaxIter
    :show-inheritance:
 
 .. autoclass:: FootprintUnreachableAttr
    :show-inheritance:
 
+.. autoclass:: FootprintFatalError
+   :show-inheritance:
+
+.. autoclass:: FootprintInvalidDefinition
+   :show-inheritance:
+
 Footprint mechanism
 -------------------
 
-.. autoclass:: FootprintSetup
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: FootprintProxy
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Collector
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
 .. autoclass:: Footprint
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-
-.. autoclass:: FootprintAttrDescriptor
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: FootprintAttrDescriptorRWD
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: FootprintAttrDescriptorRWX
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: FootprintAttrDescriptorRXX
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
 .. autoclass:: FootprintBaseMeta
    :show-inheritance:

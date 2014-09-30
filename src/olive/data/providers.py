@@ -65,6 +65,9 @@ class OpArchive(Provider):
     _footprint = dict(
         info = 'Old archive provider',
         attr = dict(
+            vconf = dict(
+                outcast = [ 'frcourt' ]
+            ),
             tube = dict(
                 optional = True,
                 values = [ 'op', 'ftop' ],
@@ -78,7 +81,7 @@ class OpArchive(Provider):
             ),
             suite = dict(
                 values = suites,
-                remap = dict(dbl='dble')
+                remap = dict( dbl = 'dble' )
             ),
             igakey = dict(
                 optional = True,
@@ -176,3 +179,21 @@ class OpArchive(Provider):
                     return '/'.join((self.igakey, dd))
                 else:
                     return '/'.join((self.igakey, self.suite, rinfo['cutoff'], yyyy, mm, dd, rr ))
+
+class OpArchiveCourt(OpArchive):
+
+    _footprint = dict(
+        info = 'Old archive provider for very short cutoff',
+        attr = dict(
+            vconf = dict(
+                values = [ 'frcourt' ],
+                outcast = set(),
+            ),
+        )
+    )
+
+    def pathinfo(self, resource):
+        """Force cutoff to be ``court``."""
+        rinfo = super(OpArchiveCourt, self).pathinfo(resource)
+        rinfo['cutoff'] = 'court'
+        return rinfo

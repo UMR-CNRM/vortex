@@ -519,4 +519,4 @@ devant les Tribunaux compétents de Paris.
 
 
 Version 1.0 du 2006-09-05.
-# -*- coding:Utf-8 -*-
+

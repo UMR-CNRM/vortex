@@ -14,7 +14,7 @@ __all__ = []
 import logging
 logger = logging.getLogger('footprints.observers')
 
-import util
+from . import util
 
 
 def getbyname(tag=None, _obstable=dict()):

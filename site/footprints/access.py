@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+# -*- coding:Utf-8 -*-
+
+"""
+Footprint descriptors for attributes access.
+"""
+
+#: No automatic export
+__all__ = []
+
+import logging
+logger = logging.getLogger('footprints.access')
+
+
+# noinspection PyProtectedMember
+class FootprintAttrDescriptor(object):
+    """Abstract accessor class to footprint attributes."""
+    access_mode = None
+
+    def __init__(self, attr, doc='Undocumented footprint attribute', auth=None):
+        self._attr = attr
+        self._auth = auth
+        self.__doc__ = doc
+
+    def __get__(self, instance, owner):
+        return instance.in_attributes_get(self._attr, auth=self._auth)
+
+
+class FootprintAttrDescriptorRWD(FootprintAttrDescriptor):
+    """Read-write-del accessor class to footprint attributes."""
+    access_mode = 'rwd'
+
+    def __set__(self, instance, value):
+        fp = instance.footprint
+        if self._attr is not None:
+            fpdef = fp.attr[self._attr]
+            atype = fpdef.get('type', str)
+            if fpdef.get('isclass', False):
+                if not issubclass(value, atype):
+                    raise ValueError('Attempt to set {0:s} as a non compatible subclass {1:s}'.format(self._attr, str(value)))
+            elif not isinstance(value, atype):
+                logger.debug(' > Attr %s reclass(%s) as %s', self._attr, value, atype)
+                initargs = fpdef.get('args', dict())
+                try:
+                    value = atype(value, **initargs)
+                    logger.debug(' > Attr %s reclassed = %s', self._attr, value)
+                except Exception:
+                    raise ValueError('Unable to reclass {0:s} as {1:s}'.format(str(value), str(atype)))
+            if fpdef['values'] and not fp.in_values(value, fpdef['values']):
+                raise ValueError('Value {0:s} not in range {1:s}'.format(str(value), str(list(fpdef['values']))))
+            if fpdef['outcast'] and fp.in_values(value, fpdef['outcast']):
+                raise ValueError('Value {0:s} excluded from range {1:s}'.format(str(value), str(list(fpdef['outcast']))))
+            instance.in_attributes_set(self._attr, value, auth=self._auth)
+
+    def __delete__(self, instance):
+        instance.in_attributes_del(self._attr, auth=self._auth)
+        del self._attr
+
+
+class FootprintAttrDescriptorRWX(FootprintAttrDescriptorRWD):
+    """Read-write accessor class to footprint attributes."""
+    access_mode = 'rwx'
+
+    def __delete__(self, instance):
+        raise AttributeError, 'Read-only attribute [' + self._attr + '] (delete)'
+
+
+class FootprintAttrDescriptorRXX(FootprintAttrDescriptor):
+    """Read-only accessor class to footprint attributes."""
+    access_mode = 'rxx'
+
+    def __set__(self, instance, value):
+        raise AttributeError, 'Read-only attribute [' + self._attr + '] (write)'
+
+    def __delete__(self, instance):
+        raise AttributeError, 'Read-only attribute [' + self._attr + '] (delete)'
+
+
+def attr_descriptors(refresh=False, _cache=dict()):
+    """Return a dictionary of active descriptors accessible by their ``access_mode``."""
+    if refresh or not _cache:
+        _cache.clear()
+        _cache.update( dict([
+            (xobj.access_mode, xobj) for xobj in globals().values()
+                if hasattr(xobj, 'access_mode') and xobj.access_mode is not None
+        ]))
+    return _cache

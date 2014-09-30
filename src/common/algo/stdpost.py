@@ -75,7 +75,7 @@ class Fa2Grib(BlindRun):
             nb = NamelistBlock(name='NAML')
             nb.NBDOM = 1
             nb.CHOPER = compact
-            nb.INUMOD = numod
+            nb.INUMOD = int(numod)
             if self.sciz:
                 nb.ISCIZ = self.sciz
             if timeshift:

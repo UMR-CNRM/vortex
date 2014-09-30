@@ -204,6 +204,8 @@ class Environment(object):
             del self._pool[varname.upper()]
         if seen and self.osbound():
             del os.environ[varname.upper()]
+            if self.verbose() and self._sh:
+                self._sh.stderr('unset', '{0:s}'.format(varname.upper()))
 
     def __delitem__(self, varname):
         self.delvar(varname)
@@ -284,8 +286,8 @@ class Environment(object):
     def verbose(self, switch=None, sh=None):
         """Switch on or off the verbose mode. Returns actual value."""
         if switch is not None:
-            self.__dict__['_verbose'] = switch
-        if sh:
+            self.__dict__['_verbose'] = bool(switch)
+        if sh is not None:
             self.__dict__['_sh'] = sh
         return self.__dict__['_verbose']
 

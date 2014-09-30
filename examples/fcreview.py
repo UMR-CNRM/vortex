@@ -9,8 +9,7 @@
 #SBATCH --ntasks-per-node=4
 #SBATCH --partition=normal32
 #SBATCH --time=00:43:20
-##SBATCH --signal=USR2@2500
-#SBATCH --mail-user=dsiop_igasc@meteo.fr --mail-type=ALL
+
 
 """
 AVERTISSEMENT
@@ -339,7 +338,7 @@ if npass == 2:
         engine      = 'parallel',
         kind        = 'forecast',
         fcterm      = fc_term,
-        timestep=514.286
+        timestep    = 514.286
     )
 
     # L'exécution se fait en passant en premier argument le premier binaire récupéré auparavant.
