@@ -1,7 +1,7 @@
-:mod:`iga.utilities` --- TODO Module Header
-===========================================
+:mod:`iga.util.helpers` --- TODO Module Header
+==============================================
 
-.. automodule:: iga.utilities
+.. automodule:: iga.util.helpers
    :synopsis: TODO Module Synopsis
 
 .. moduleauthor:: The Vortex Team

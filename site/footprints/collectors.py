@@ -29,7 +29,7 @@ def keys():
 
 def values():
     """Return the list of current entries values collected."""
-    return table().keys()
+    return table().values()
 
 def items():
     """Return the items of the collectors table."""
@@ -205,10 +205,10 @@ class Collector(util.Catalog):
                 opt = ' (optional)' if fp.optional(k) else ''
                 alist = attrmap.setdefault(k+opt, list())
                 alist.append(dict(
-                    name=c.__name__,
-                    module=c.__module__,
-                    values=fp.get_values(k),
-                    outcast=fp.get_outcast(k)
+                    name    = c.__name__,
+                    module  = c.__module__,
+                    values  = fp.get_values(k),
+                    outcast = fp.get_outcast(k)
                 ))
         return attrmap
 

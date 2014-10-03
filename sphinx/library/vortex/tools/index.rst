@@ -7,6 +7,7 @@ Miscellaneous Tools
 
    tools
    actions
+   addons
    caches
    config
    date

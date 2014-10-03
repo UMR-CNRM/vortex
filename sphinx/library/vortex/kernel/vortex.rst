@@ -28,7 +28,7 @@ Included packages
 * :mod:`vortex.layout`
 * :mod:`vortex.syntax`
 * :mod:`vortex.tools`
-* :mod:`vortex.utilities`
+* :mod:`vortex.util`
 
 
 Session and system interface

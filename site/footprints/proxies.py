@@ -18,7 +18,7 @@ from . import collectors, util
 
 def get(**kw):
     """Return actual proxy object matching description."""
-    return FootprintProxy.get(**kw)
+    return FootprintProxy(**kw)
 
 
 # Base class

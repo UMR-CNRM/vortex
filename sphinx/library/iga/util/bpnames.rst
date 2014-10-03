@@ -1,7 +1,7 @@
-:mod:`iga.utilities.bpnames` --- Names factories for old fashion op cache
-=========================================================================
+:mod:`iga.util.bpnames` --- Names factories for old fashion op cache
+====================================================================
 
-.. automodule:: iga.utilities.bpnames
+.. automodule:: iga.util.bpnames
    :synopsis: Defines factories building op names
 
 .. moduleauthor:: The Vortex Team

@@ -7,7 +7,6 @@ __all__ = []
 from vortex.data.resources import Resource
 from vortex.syntax.stdattrs import date, cutoff
 from vortex.data.geometries import SpectralGeometry
-#from vortex.utilities import bpnames as bp
 
 
 class RawFields(Resource):

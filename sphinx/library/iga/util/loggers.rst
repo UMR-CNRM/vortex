@@ -1,7 +1,7 @@
-:mod:`iga.utilities.swissknife` --- TODO Module Header
-======================================================
+:mod:`iga.util.loggers` --- TODO Module Header
+==============================================
 
-.. automodule:: iga.utilities.swissknife
+.. automodule:: iga.util.loggers
    :synopsis: TODO Module Synopsis
 
 .. moduleauthor:: The Vortex Team

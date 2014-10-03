@@ -18,7 +18,7 @@ from vortex.data import resources  # @UnusedImport
 from vortex.data.geometries import SpectralGeometry, GridGeometry  # @UnusedImport
 from vortex.tools.date import today, Date, Period  # @UnusedImport
 
-from iga.utilities.helpers import IgaHelperSelect  # @UnusedImport
+from iga.util.helpers import IgaHelperSelect  # @UnusedImport
 
 import common.data
 import iga.data

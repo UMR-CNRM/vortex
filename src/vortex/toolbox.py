@@ -15,7 +15,7 @@ import footprints
 from vortex.autolog import logdefault as logger
 from vortex import sessions, data, proxy
 from vortex.layout.dataflow import stripargs_section
-from vortex.utilities.structs import History
+from vortex.util.structs import History
 
 #: Shortcut to footprint env defaults
 defaults = footprints.setup.defaults

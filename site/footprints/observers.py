@@ -17,13 +17,15 @@ logger = logging.getLogger('footprints.observers')
 from . import util
 
 
-def getbyname(tag=None, _obstable=dict()):
+def get(**kw):
     """Return an observer for the specified tag name (a class name for example)."""
-    if tag is None:
-        return _obstable.keys()
-    if tag not in _obstable:
-        _obstable[tag] = ObserverBoard(tag=tag)
-    return _obstable[tag]
+    return ObserverBoard(**kw)
+
+def keys():
+    return ObserverBoard.tagskeys()
+
+def values():
+    return ObserverBoard.tagsvalues()
 
 
 class Observer(object):
@@ -45,7 +47,7 @@ class Observer(object):
         logger.info('Notified %s upd item %s info %s', self, item, info)
 
 
-class ObserverBoard(object):
+class ObserverBoard(util.GetByTag):
     """
     A ObserverBoard provides an indirection for observing pattern.
     It holds two lists: the one of objects that are observed and
@@ -53,14 +55,9 @@ class ObserverBoard(object):
     or update of the observed objects.
     """
 
-    def __init__(self, tag='void'):
-        self._tag = tag
+    def __init__(self):
         self._listen = util.Catalog(weak=True)
-        self._items = util.Catalog(weak=True)
-
-    @property
-    def tag(self):
-        return self._tag
+        self._items  = util.Catalog(weak=True)
 
     def __deepcopy__(self, memo):
         """No deepcopy expected, so ``self`` is returned."""

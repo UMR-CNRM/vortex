@@ -5,9 +5,7 @@ __all__ = [ 'top' ]
 
 
 class PriorityLevel(object):
-    """
-    Single level to be used inside footprints.
-    """
+    """Single level to be used inside footprints."""
 
     def __init__(self, tagname, pset):
         self._tag  = tagname

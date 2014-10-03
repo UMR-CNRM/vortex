@@ -1,7 +1,7 @@
-:mod:`vortex.utilities.introspection` --- Exploring source code and doc
-=======================================================================
+:mod:`vortex.util.introspection` --- Exploring source code and doc
+==================================================================
 
-.. automodule:: vortex.utilities.introspection
+.. automodule:: vortex.util.introspection
    :synopsis: Exploring source code and doc
 
 .. moduleauthor:: The Vortex Team

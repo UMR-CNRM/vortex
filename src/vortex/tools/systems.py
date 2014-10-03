@@ -20,15 +20,20 @@ import pickle
 import footprints
 
 from vortex.autolog import logdefault as logger
-from vortex.utilities.decorators import nicedeco
 
-from vortex.tools.env import Environment
-from vortex.tools.net import StdFtp
-from vortex.utilities.structs import History
+from vortex.tools.env       import Environment
+from vortex.tools.net       import StdFtp
+from vortex.util.structs    import History
+from vortex.util.decorators import nicedeco
 
 
+#: Pre-compiled regex to check a none str value
 isnonedef  = re.compile(r'none',         re.IGNORECASE)
+
+#: Pre-compiled regex to check a boolean true str value
 istruedef  = re.compile(r'on|true|ok',   re.IGNORECASE)
+
+#: Pre-compiled regex to check a boolean false str value
 isfalsedef = re.compile(r'off|false|ko', re.IGNORECASE)
 
 
@@ -101,13 +106,13 @@ class System(footprints.FootprintBase):
           * output - as a default value for any external spawning command (default: True).
         """
         logger.debug('Abstract System init %s', self.__class__)
-        self.__dict__['_os'] = kw.pop('os', os)
-        self.__dict__['_rl'] = kw.pop('rlimit', resource)
-        self.__dict__['_sh'] = kw.pop('shutil', kw.pop('sh', shutil))
-        self.__dict__['_search'] = [ self.__dict__['_os'], self.__dict__['_sh'], self.__dict__['_rl'] ]
-        self.__dict__['_rclast'] = 0
-        self.__dict__['prompt'] = ''
+        self.__dict__['_os']      = kw.pop('os', os)
+        self.__dict__['_rl']      = kw.pop('rlimit', resource)
+        self.__dict__['_sh']      = kw.pop('shutil', kw.pop('sh', shutil))
+        self.__dict__['_search']  = [ self.__dict__['_os'], self.__dict__['_sh'], self.__dict__['_rl'] ]
         self.__dict__['_history'] = History(tag='shell')
+        self.__dict__['_rclast']  = 0
+        self.__dict__['prompt']   = ''
         for flag in ( 'trace', ):
             self.__dict__[flag] = kw.pop(flag, False)
         for flag in ( 'output', ):
@@ -133,7 +138,6 @@ class System(footprints.FootprintBase):
     def extend(self, obj=None):
         """Extend the current external attribute resolution to ``obj`` (module or object)."""
         if obj is not None:
-            obj.sh = self
             self.search.append(obj)
         return len(self.search)
 
@@ -205,6 +209,7 @@ class System(footprints.FootprintBase):
 
     def cd(self, pathtogo, create=False):
         """Change directory to ``pathtogo``."""
+        pathtogo = self.path.expanduser(pathtogo)
         self.stderr('cd', pathtogo, create)
         if create:
             self.mkdir(pathtogo)
@@ -216,7 +221,7 @@ class System(footprints.FootprintBase):
         if not args:
             args = ['*']
         else:
-            args = list(args)
+            args = [self.path.expanduser(x) for x in args]
         files = []
         self.stderr('ffind', *args)
         for pathtogo in self.glob(*args):
@@ -298,6 +303,7 @@ class System(footprints.FootprintBase):
 
     def touch(self, filename):
         """Clone of the unix command."""
+        filename = self.path.expanduser(filename)
         self.stderr('touch', filename)
         fh = file(filename, 'a')
         rc = True
@@ -312,6 +318,7 @@ class System(footprints.FootprintBase):
     @fmtshcmd
     def remove(self, objpath):
         """Unlink the specified object (file or directory)."""
+        objpath = self.path.expanduser(objpath)
         if os.path.exists(objpath):
             self.stderr('remove', objpath)
             if os.path.isdir(objpath):
@@ -344,6 +351,7 @@ class System(footprints.FootprintBase):
 
     def readonly(self, inodename):
         """Set permissions of the `filename` object to read-only."""
+        inodename = self.path.expanduser(inodename)
         self.stderr('readonly', inodename)
         rc = None
         if os.path.exists(inodename):
@@ -512,7 +520,9 @@ class System(footprints.FootprintBase):
     def setulimit(self, r_id):
         """Set an unlimited value to resource specified."""
         self.stderr('setulimit', r_id)
-        return self.setrlimit(r_id, (self._rl.RLIM_INFINITY, self._rl.RLIM_INFINITY))
+        soft, hard = self.getrlimit(r_id)
+        newsoft = min(hard, max(soft, self._rl.RLIM_INFINITY))
+        return self.setrlimit(r_id, (newsoft, self._rl.RLIM_INFINITY))
 
     def getrlimit(self, r_id):
         """Proxy to :mod:`resource` function of the same name."""
@@ -623,10 +633,11 @@ class OSExtended(System):
 
     def filecocoon(self, destination):
         """Normalizes path name of the ``destination`` and creates this directory."""
-        return self.mkdir(self.path.dirname(destination))
+        return self.mkdir(self.path.dirname(self.path.expanduser(destination)))
 
     def size(self, filepath):
         """Returns the actual size in bytes of the specified ``filepath``."""
+        filepath = self.path.expanduser(filepath)
         self.stderr('size', filepath)
         try:
             return self.stat(filepath).st_size
@@ -635,7 +646,7 @@ class OSExtended(System):
 
     def mkdir(self, dirpath, fatal=True):
         """Normalizes path name and recursively creates this directory."""
-        normdir = self.path.normpath(dirpath)
+        normdir = self.path.normpath(self.path.expanduser(dirpath))
         if normdir and not self.path.isdir(normdir):
             logger.debug('Cocooning directory %s', normdir)
             self.stderr('mkdir', normdir)
@@ -651,6 +662,8 @@ class OSExtended(System):
 
     def rawcp(self, source, destination):
         """Internal basic cp command used by :meth:`cp` or :meth:`smartcp`."""
+        source = self.path.expanduser(source)
+        destination = self.path.expanduser(destination)
         self.stderr('rawcp', source, destination)
         if self.path.isdir(source):
             self.copytree(source, destination)
@@ -667,15 +680,16 @@ class OSExtended(System):
         Copy the ``source`` file to a safe ``destination``.
         The return value is produced by a raw compare of the two files.
         """
+        self.stderr('hybridcp', source, destination)
         if type(source) is types.StringType:
-            source = io.open(source, 'rb')
+            source = io.open(self.path.expanduser(source), 'rb')
             xsource = True
         else:
             xsource = False
         if type(destination) is types.StringType:
             if self.filecocoon(destination):
                 if self.remove(destination):
-                    destination = io.open(destination, 'wb')
+                    destination = io.open(self.path.expanduser(destination), 'wb')
                     xdestination = True
                 else:
                     logger.error('Could not remove destination before copy %s', destination)
@@ -706,13 +720,15 @@ class OSExtended(System):
         Hard link the ``source`` file to a safe ``destination`` if possible.
         Otherwise, let the standard copy do the job.
         """
+        self.stderr('smartcp', source, destination)
         if type(source) is not types.StringType or type(destination) is not types.StringType:
             return self.hybridcp(source, destination)
-        self.stderr('smartcp', source, destination)
+        source = self.path.expanduser(source)
         if not self.path.exists(source):
             logger.error('Missing source %s', source)
             return False
         if self.filecocoon(destination):
+            destination = self.path.expanduser(destination)
             if self.remove(destination):
                 if self.is_samefs(source, destination):
                     self.link(source, destination)
@@ -738,10 +754,12 @@ class OSExtended(System):
             return self.hybridcp(source, destination)
         if smartcp and intent == 'in':
             return self.smartcp(source, destination)
+        source = self.path.expanduser(source)
         if not self.path.exists(source):
             logger.error('Missing source %s', source)
             return False
         if self.filecocoon(destination):
+            destination = self.path.expanduser(destination)
             if self.remove(destination):
                 return self.rawcp(source, destination)
             else:
@@ -758,7 +776,7 @@ class OSExtended(System):
             if entry.startswith(':'):
                 entries.append(entry[1:])
             else:
-                entries.extend(glob.glob(entry))
+                entries.extend(glob.glob(self.path.expanduser(entry)))
         return entries
 
     def rmall(self, *args):
@@ -802,7 +820,7 @@ class OSExtended(System):
         cmd.extend([opt for opt in args if opt.startswith('-')])
         cmdlen = len(cmd)
         cmdargs = False
-        globtries = [x for x in args if not x.startswith('-')]
+        globtries = [self.path.expanduser(x) for x in args if not x.startswith('-')]
         for pname in globtries:
             cmdargs = True
             cmd.extend(self.glob(pname))
@@ -873,7 +891,7 @@ class OSExtended(System):
         if not args:
             args = ('.',)
         self.stderr('listdir', *args)
-        return self._os.listdir(args[0])
+        return self._os.listdir(self.path.expand(args[0]))
 
     def l(self, *args):
         """Proxy to globbing after removing any option. A bit like :meth:`ls` method."""
@@ -885,7 +903,7 @@ class OSExtended(System):
 
     def is_tarfile(self, filename):
         """Return a boolean according to the tar status of the ``filename``."""
-        return tarfile.is_tarfile(filename)
+        return tarfile.is_tarfile(self.path.expand(filename))
 
     def _tarcx(self, *args, **kw):
         """Raw file archive command."""
@@ -925,7 +943,7 @@ class OSExtended(System):
             rc = pickle.dump(obj, destination)
         else:
             if self.filecocoon(destination):
-                with io.open(destination, 'ab') as fd:
+                with io.open(self.path.expand(destination), 'ab') as fd:
                     rc = pickle.dump(obj, fd)
         return rc
 
@@ -937,7 +955,7 @@ class OSExtended(System):
         if hasattr(source, 'read'):
             obj = pickle.load(source)
         else:
-            with io.open(source, 'rb') as fd:
+            with io.open(self.path.expand(source), 'rb') as fd:
                 obj = pickle.load(fd)
         return obj
 

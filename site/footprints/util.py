@@ -233,24 +233,42 @@ class GetByTagMeta(type):
         d['_getbytag_table'] = dict()
         return super(GetByTagMeta, cls).__new__(cls, n, b, d)
 
+    def __call__(cls, *args, **kw):
+        return cls.__new__(cls, *args, **kw)
+
+
 class GetByTag(object):
     """
-    Utility to retrieve a new object by a sppecial named argument ``tag``.
+    Utility to retrieve a new object by a special named argument ``tag``.
     If an object had already been created with that tag, return this object.
     """
 
     __metaclass__ = GetByTagMeta
 
-    @classmethod
-    def get(cls, **kw):
-        """Check for an existing setup with same tag."""
+    def __new__(cls, *args, **kw):
+        """Check for an existing object with same tag."""
         tag = kw.pop('tag', 'default')
-        if tag in cls._getbytag_table:
-            return cls._getbytag_table[tag]
+        new = kw.pop('new', False)
+        if not new and tag in cls._getbytag_table:
+            newobj = cls._getbytag_table[tag]
         else:
-            newobj = cls(**kw)
+            newobj = super(GetByTag, cls).__new__(cls)
+            newobj._tag = tag
+            newobj.__init__(*args, **kw)
             cls._getbytag_table[tag] = newobj
-            return newobj
+        return newobj
+
+    @property
+    def tag(self):
+        return self._tag
+
+    @classmethod
+    def tagskeys(cls):
+        return cls._getbytag_table.keys()
+
+    @classmethod
+    def tagsvalues(cls):
+        return cls._getbytag_table.values()
 
 
 class Catalog(object):

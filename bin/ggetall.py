@@ -14,7 +14,7 @@ parser.add_argument('-v', '--verbose',   dest='verbose', help='verbose mode',   
 args = parser.parse_args()
 
 import vortex
-from iga.utilities import swissknife
+from iga.util import swissknife
 
 increase, details = swissknife.freeze_cycle(
     vortex.ticket(),

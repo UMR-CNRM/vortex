@@ -10,8 +10,7 @@ from vortex.autolog import logdefault as logger
 from vortex.data.providers import Provider
 from vortex.tools.config import GenericConfigParser
 from vortex.syntax.stdattrs import a_suite
-#from iga.utilities.loggers import MyLogger
-from iga.utilities import bpnames as bp
+from iga.util import bpnames as bp
 
 
 ATM_LIST_ONE = ['antiguy', 'arome', 'arpege', 'caledonie', 'polynesie',

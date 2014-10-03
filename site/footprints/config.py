@@ -18,14 +18,14 @@ from . import dump, reporting, util
 
 def get(**kw):
     """Return actual setup object matching description."""
-    return FootprintSetup.get(**kw)
+    return FootprintSetup(**kw)
 
 def add2proxies(c, **kw):
     """
     Add to default or specified setup object (according to ``kw`` and its ``tag`` value)
     the current collector ``c`` as a reference to existing proxies.
     """
-    setup = FootprintSetup.get(**kw)
+    setup = FootprintSetup(**kw)
     for p in setup.proxies:
         setattr(p, c.entry, c.load)
         setattr(p, c.entry + 's', c)

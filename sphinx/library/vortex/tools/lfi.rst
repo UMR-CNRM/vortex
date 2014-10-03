@@ -25,8 +25,3 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-.. autoclass:: LFI_Standard
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-from vortex.utilities import authorizations
+from vortex.util import authorizations
 from unittest import TestCase, main
 
 

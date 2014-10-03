@@ -6,7 +6,7 @@ __all__ = []
 
 from tempfile import mkdtemp
 
-from iga.utilities import swissknife
+from iga.util import swissknife
 
 
 def setup(**kw):

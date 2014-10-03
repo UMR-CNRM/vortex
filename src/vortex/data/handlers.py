@@ -10,7 +10,7 @@ from vortex.autolog import logdefault as logger
 
 from vortex import sessions
 from vortex.tools import net
-from vortex.utilities import roles, structs
+from vortex.util import roles, structs
 from vortex.layout import dataflow
 
 from vortex.data import stores
@@ -21,7 +21,7 @@ OBSERVER_TAG = 'Resources-Handlers'
 def observer_board(obsname=None):
     if obsname is None:
         obsname = OBSERVER_TAG
-    return footprints.observers.getbyname(obsname)
+    return footprints.observers.get(tag=obsname)
 
 
 class Handler(object):

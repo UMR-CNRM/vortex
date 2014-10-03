@@ -1,7 +1,7 @@
-:mod:`vortex.utilities.dispatch` --- Dispatcher for shell command line 
-======================================================================
+:mod:`vortex.util.dispatch` --- Dispatcher for shell command line 
+=================================================================
 
-.. automodule:: vortex.utilities.dispatch
+.. automodule:: vortex.util.dispatch
    :synopsis: Objects for command line usage
 
 .. moduleauthor:: The Vortex Team

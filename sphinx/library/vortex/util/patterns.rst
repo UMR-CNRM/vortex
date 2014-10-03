@@ -1,7 +1,7 @@
-:mod:`vortex.utilities.patterns` --- Some Design Patterns
-=========================================================
+:mod:`vortex.util.patterns` --- Some Design Patterns
+====================================================
 
-.. automodule:: vortex.utilities.patterns
+.. automodule:: vortex.util.patterns
    :synopsis: Some design patterns in used
 
 .. moduleauthor:: The Vortex Team
@@ -15,10 +15,8 @@ Base Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: Singleton
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
-   

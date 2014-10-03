@@ -17,7 +17,7 @@ import footprints
 
 from vortex.autolog import logdefault as logger
 
-from vortex.utilities.authorizations import is_authorized_user
+from vortex.util.authorizations import is_authorized_user
 from vortex.tools import services
 
 

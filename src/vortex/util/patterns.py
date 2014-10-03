@@ -17,7 +17,7 @@ class Borg(object):
     """A base class for sharing a common state by differents objects."""
     __state = {}
 
-    def __new__(cls, *p, **k):
+    def __new__(cls, *args, **kw):
         logger.debug('Request a borg %s', cls)
         self = object.__new__(cls)
         self.__dict__ = cls.__state
@@ -28,7 +28,7 @@ class Borg(object):
 class Singleton(object):
     """Obviously a base class for any *real* singleton."""
 
-    def __new__(cls, *p, **k):
+    def __new__(cls, *args, **kw):
         logger.debug('Request a singleton %s', cls)
         if not '_instance' in cls.__dict__:
             cls._instance = object.__new__(cls)

@@ -7,7 +7,7 @@ Utilities
 .. toctree::
    :maxdepth: 1
 
-   utilities
+   util
 
    authorizations
    decorators

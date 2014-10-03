@@ -1,7 +1,7 @@
-:mod:`vortex.utilities.names` --- Handling names in various spaces
-==================================================================
+:mod:`vortex.util.names` --- Handling names in various spaces
+=============================================================
 
-.. automodule:: vortex.utilities.names
+.. automodule:: vortex.util.names
    :synopsis: Handling names in various spaces
 
 .. moduleauthor:: The Vortex Team

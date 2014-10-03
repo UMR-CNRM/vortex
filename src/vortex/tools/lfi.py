@@ -11,7 +11,9 @@ import weakref
 import footprints
 
 from vortex.autolog import logdefault as logger
-from vortex.utilities.structs import Tracker
+from vortex.util.structs import Tracker
+
+from . import addons
 
 LFI_HNDL_SPEC   = ':1'
 DR_HOOK_SILENT  = 1
@@ -21,13 +23,10 @@ DR_HOOK_NOT_MPI = 1
 def use_in_shell(sh, **kw):
     """Extend current shell with the LFI interface defined by optional arguments."""
     kw.setdefault('lficmd', 'LFITOOLS')
+    kw['shell'] = sh
     if '/' not in kw['lficmd']:
         kw.setdefault('lfipath', sh.env.LFIPATH)
-    lfi = footprints.proxy.addon(**kw)
-    if lfi:
-        sh.extend(lfi)
-    return lfi
-
+    return footprints.proxy.addon(**kw)
 
 class LFI_Status(object):
     """
@@ -98,18 +97,20 @@ class LFI_Status(object):
         return bool(self.rc in self.ok)
 
 
-class LFI_Tool(footprints.FootprintBase):
+class LFI_Tool(addons.Addon):
     """
-    Root class for any :class:`LFI_Tool` system subclasses.
+    Default interface to LFI_commands.
+    These commands are the one defined by the ``lfitools`` binary found in the IFS-ARPEGE framework.
     """
 
-    _abstract  = True
-    _collector = ('addon',)
     _footprint = dict(
         info = 'Default LFI system interface',
         attr = dict(
-            lficmd = dict(),
-            lfipath = dict(
+            lfi_cmd = dict(
+                alias = ('lficmd',)
+            ),
+            lfi_path = dict(
+                alias = ('lfipath',),
                 optional = True,
                 default = None,
                 access = 'rwx'
@@ -117,70 +118,12 @@ class LFI_Tool(footprints.FootprintBase):
         )
     )
 
-    def __init__(self, *args, **kw):
-        """Abstract LFI Tool initialisation."""
-        logger.debug('Abstract LFI Tool init %s', self.__class__)
-        super(LFI_Tool, self).__init__(*args, **kw)
-        self._sh = None
-        self._env = footprints.util.UpperCaseDict()
-
-    @property
-    def realkind(self):
-        return 'addon'
-
-    def get_sh(self):
-        return self._sh
-
-    def set_sh(self, value):
-        self._sh = weakref.proxy(value)
-
-    sh = property(get_sh, set_sh, None, None)
-
-    def setenv(self, **kw):
-        """Store some default environment values for execution."""
-        self._env.update(kw)
-        return self._env
-
     def is_xlfi(self, source):
         """Check if the given ``source`` is a multipart-lfi file."""
         rc = False
         with io.open(source, 'rb') as fd:
             rc = fd.read(8) == 'LFI_ALTM'
         return rc
-
-    def _spawn(self, cmd, **kw):
-        """Internal method setting local environment and calling standard shell spawn."""
-
-        # Insert the actual lfi tool command as first argument
-        cmd.insert(0, self.lficmd)
-        if self.lfipath is not None:
-            cmd[0] = self.lfipath + '/' + cmd[0]
-
-        # Set global module env variable to a local environement object
-        # activated temporarily for the curren spawned command.
-        g = globals()
-        localenv = self.sh.env.clone()
-        for k in [ x for x in g.keys() if x.isupper() ]:
-            localenv[k] = g[k]
-
-        # Overwrite global module env values with specific ones
-        localenv.update(self._env)
-
-        # Check if a pipe is requested
-        inpipe = kw.pop('pipe', False)
-
-        # Ask the attached shell to run the lfi tool command
-        localenv.active(True)
-        if inpipe:
-            rc = self.sh.popen(cmd, **kw)
-        else:
-            rc = self.sh.spawn(cmd, **kw)
-        localenv.active(False)
-        return rc
-
-
-class LFI_Standard(LFI_Tool):
-    """As long as cycling is not concerned..."""
 
     def lfi_table(self, lfifile, **kw):
         """
@@ -399,3 +342,25 @@ class LFI_Standard(LFI_Tool):
     lfi_mv  = lfi_move
     fa_mv   = lfi_move
     fa_move = lfi_move
+
+
+class IO_Poll(addons.Addon):
+    """
+    Default interface to ``io_poll`` utility.
+    This addon is in charge of multi-file reshaping after IFS-ARPEGE execution.
+    """
+
+    _footprint = dict(
+        info = 'Default io_poll system interface',
+        attr = dict(
+            iopoll_cmd = dict(
+                alias = ('iopollcmd', 'io_pollcmd', 'io_poll_cmd'),
+            ),
+            iopoll_path = dict(
+                alias = ('iopollpath', 'io_pollpath', 'io_poll_path'),
+                optional = True,
+                default = None,
+                access = 'rwx'
+            )
+        )
+    )

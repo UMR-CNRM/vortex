@@ -44,4 +44,18 @@ Descriptors classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: FootprintAttrDescriptorWeakRWD
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FootprintAttrDescriptorWeakRWX
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FootprintAttrDescriptorWeakRXX
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 

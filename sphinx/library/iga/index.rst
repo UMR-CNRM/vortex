@@ -19,4 +19,4 @@ List of modules.
    syntax/index
    tasks/index
    tools/index
-   utilities/index
+   util/index

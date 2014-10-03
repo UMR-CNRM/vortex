@@ -1,7 +1,7 @@
-:mod:`vortex.utilities.roles` --- Roles names factories
-=======================================================
+:mod:`vortex.util.roles` --- Roles names factories
+==================================================
 
-.. automodule:: vortex.utilities.roles
+.. automodule:: vortex.util.roles
    :synopsis: Reformating of roles names for resources sections
 
 .. moduleauthor:: The Vortex Team

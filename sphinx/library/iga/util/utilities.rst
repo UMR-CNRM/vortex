@@ -1,7 +1,7 @@
-:mod:`iga.utilities.oldcompat` --- TODO Module Header
-=====================================================
+:mod:`iga.utilities` --- TODO Module Header
+===========================================
 
-.. automodule:: iga.utilities.oldcompat
+.. automodule:: iga.util
    :synopsis: TODO Module Synopsis
 
 .. moduleauthor:: The Vortex Team

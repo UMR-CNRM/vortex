@@ -1,7 +1,7 @@
-:mod:`vortex.utilities.empty` --- Some blackholes
-=================================================
+:mod:`vortex.util.empty` --- Some blackholes
+============================================
 
-.. automodule:: vortex.utilities.empty
+.. automodule:: vortex.util.empty
    :synopsis: Some blackholes objects
 
 .. moduleauthor:: The Vortex Team

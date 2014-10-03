@@ -9,7 +9,7 @@ import os.path
 import footprints
 
 from vortex.autolog import logdefault as logger
-from vortex.utilities.names import VNameBuilder
+from vortex.util.names import VNameBuilder
 from vortex.tools import net
 
 

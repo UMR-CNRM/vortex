@@ -16,7 +16,7 @@ opts = sh.rawopts(
 sh.header('Checking vortex ' + vortex.__version__ + 'library documentation')
 print ' > Options:', opts
 
-from vortex.utilities.introspection import Sherlock
+from vortex.util.introspection import Sherlock
 intro = Sherlock()
 
 

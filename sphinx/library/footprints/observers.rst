@@ -11,7 +11,11 @@
 Interface functions
 -------------------
 
-.. autofunction:: getbyname
+.. autofunction:: get
+
+.. autofunction:: keys
+
+.. autofunction:: values
 
 Base Classes
 ------------

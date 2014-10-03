@@ -8,16 +8,16 @@ Advanced environment settings.
 import os, re, json, traceback
 
 from vortex.autolog import logdefault as logger
-from vortex.utilities.structs import History
+from vortex.util.structs import History
 
 
 #: No automatic export
 __all__ = []
 
-#: Precompiled evaluation mostly used by :class:`Environment` method (true).
+#: Pre-compiled evaluation mostly used by :class:`Environment` method (true).
 vartrue  = re.compile(r'^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$', flags=re.IGNORECASE)
 
-#: Precompiled evaluation mostly used by :class:`Environment` method (false).
+#: Pre-compiled evaluation mostly used by :class:`Environment` method (false).
 varfalse = re.compile(r'^\s*(?:0|ko|off|false|no|n)\s*$', flags=re.IGNORECASE)
 
 
@@ -94,11 +94,11 @@ class Environment(object):
 
     def __init__(self, env=None, active=False, clear=False, verbose=False, noexport=[]):
         self.__dict__['_history'] = History(tag='env')
-        self.__dict__['_active'] = False
+        self.__dict__['_active']  = False
         self.__dict__['_verbose'] = False
-        self.__dict__['_pool'] = dict()
-        self.__dict__['_mods'] = set()
-        if env and isinstance(env, Environment):
+        self.__dict__['_pool']    = dict()
+        self.__dict__['_mods']    = set()
+        if env is not None and isinstance(env, Environment):
             self._pool.update(env)
         else:
             if clear:
@@ -251,6 +251,10 @@ class Environment(object):
     def get(self, *args):
         """Simulates the dictionary ``get`` mechanism on the internal pool of variables."""
         return self._pool.get(args[0].upper(), *args[1:])
+
+    def items(self):
+        """Simulates the dictionary ``items`` method on the internal pool of variables."""
+        return self._pool.items()
 
     def iteritems(self):
         return self._pool.iteritems()

@@ -12,7 +12,7 @@ from footprints import observers
 
 from vortex.autolog import logdefault as logger
 
-from vortex.utilities.structs import idtree, Tracker
+from vortex.util.structs import idtree, Tracker
 from vortex.tools.env import Environment
 import dataflow
 
@@ -63,7 +63,7 @@ class Context(object):
             self._sequence = dataflow.Sequence()
 
         self.bind(self._task)
-        observers.getbyname('Resources-Handlers').register(self)
+        observers.get(tag='Resources-Handlers').register(self)
 
     def newobsitem(self, item, info):
         """

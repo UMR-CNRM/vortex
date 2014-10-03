@@ -820,7 +820,7 @@ Review of subcommands
   .. code-block:: console
 
     % vortex trackers
-    {'fpresolve': <vortex.utilities.trackers.Tracker instance at 0x17443f8>}
+    {'fpresolve': <vortex.util.trackers.Tracker instance at 0x17443f8>}
 
 
 :command:`trackfp`

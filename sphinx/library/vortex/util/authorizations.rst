@@ -1,7 +1,7 @@
-:mod:`vortex.utilities.authorizations` --- Group and user authorizations
-========================================================================
+:mod:`vortex.util.authorizations` --- Group and user authorizations
+===================================================================
 
-.. automodule:: vortex.utilities.authorizations
+.. automodule:: vortex.util.authorizations
    :synopsis: Group and user authorizations
 
 .. moduleauthor:: The Vortex Team

@@ -11,6 +11,8 @@ __all__ = []
 import logging
 logger = logging.getLogger('footprints.access')
 
+import weakref
+
 
 # noinspection PyProtectedMember
 class FootprintAttrDescriptor(object):
@@ -30,7 +32,7 @@ class FootprintAttrDescriptorRWD(FootprintAttrDescriptor):
     """Read-write-del accessor class to footprint attributes."""
     access_mode = 'rwd'
 
-    def __set__(self, instance, value):
+    def __set__(self, instance, value, weak=False):
         fp = instance.footprint
         if self._attr is not None:
             fpdef = fp.attr[self._attr]
@@ -50,11 +52,21 @@ class FootprintAttrDescriptorRWD(FootprintAttrDescriptor):
                 raise ValueError('Value {0:s} not in range {1:s}'.format(str(value), str(list(fpdef['values']))))
             if fpdef['outcast'] and fp.in_values(value, fpdef['outcast']):
                 raise ValueError('Value {0:s} excluded from range {1:s}'.format(str(value), str(list(fpdef['outcast']))))
+            if weak:
+                value = weakref.proxy(value)
             instance.in_attributes_set(self._attr, value, auth=self._auth)
 
     def __delete__(self, instance):
         instance.in_attributes_del(self._attr, auth=self._auth)
         del self._attr
+
+
+class FootprintAttrDescriptorWeakRWD(FootprintAttrDescriptorRWD):
+    """Read-write accessor class to footprint attributes through a weak proxy."""
+    access_mode = 'rwd-weak'
+
+    def __set__(self, instance, value):
+        super(FootprintAttrDescriptorWeakRWD, self).__set__(instance, value, weak=True)
 
 
 class FootprintAttrDescriptorRWX(FootprintAttrDescriptorRWD):
@@ -63,6 +75,14 @@ class FootprintAttrDescriptorRWX(FootprintAttrDescriptorRWD):
 
     def __delete__(self, instance):
         raise AttributeError, 'Read-only attribute [' + self._attr + '] (delete)'
+
+
+class FootprintAttrDescriptorWeakRWX(FootprintAttrDescriptorRWX):
+    """Read-write accessor class to footprint attributes through a weak proxy."""
+    access_mode = 'rwx-weak'
+
+    def __set__(self, instance, value):
+        super(FootprintAttrDescriptorWeakRWX, self).__set__(instance, value, weak=True)
 
 
 class FootprintAttrDescriptorRXX(FootprintAttrDescriptor):
@@ -74,6 +94,11 @@ class FootprintAttrDescriptorRXX(FootprintAttrDescriptor):
 
     def __delete__(self, instance):
         raise AttributeError, 'Read-only attribute [' + self._attr + '] (delete)'
+
+
+class FootprintAttrDescriptorWeakRXX(FootprintAttrDescriptorRXX):
+    """Read-only accessor class to footprint attributes through a weak proxy."""
+    access_mode = 'rxx-weak'
 
 
 def attr_descriptors(refresh=False, _cache=dict()):

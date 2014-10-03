@@ -811,7 +811,7 @@ class utPriorities(TestCase):
 class utObservers(TestCase):
 
     def test_observers_basics(self):
-        rv = observers.getbyname()
+        rv = observers.keys()
         self.assertListEqual(rv, [
             '__main__.FootprintTestOne',
             '__main__.FootprintTestRWD',
@@ -885,7 +885,7 @@ class utReporting(TestCase):
 class utFootprintSetup(TestCase):
 
     def test_footprint_setup(self):
-        setup = FootprintSetup()
+        setup = FootprintSetup(new=True)
         self.assertIsInstance(setup, FootprintSetup)
         self.assertIsInstance(setup.nullreport, reporting.NullReport)
         self.assertIsInstance(setup.report, bool)
@@ -931,7 +931,7 @@ class utFootprintSetup(TestCase):
         self.assertTrue(hasattr(foo, 'garbages'))
 
     def test_footprint_callback(self):
-        setup = FootprintSetup()
+        setup = FootprintSetup(new=True)
         self.assertIsInstance(setup, FootprintSetup)
         self.assertIs(setup.callback, None)
 

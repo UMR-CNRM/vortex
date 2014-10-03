@@ -17,6 +17,6 @@ List of modules.
    layout/index
    syntax/index
    tools/index
-   utilities/index
+   util/index
 
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import vortex
-from iga.utilities import swissknife
+from iga.util import swissknife
 
 t = vortex.ticket()
 

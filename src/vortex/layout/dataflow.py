@@ -9,7 +9,7 @@ This modules defines the low level physical layout for data handling.
 __all__ = []
 
 from vortex.autolog import logdefault as logger
-from vortex.utilities import mktuple
+from vortex.util import mktuple
 
 from collections import namedtuple
 

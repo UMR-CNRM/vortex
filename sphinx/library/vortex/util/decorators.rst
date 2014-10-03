@@ -1,7 +1,7 @@
-:mod:`vortex.utilities.decorators` --- Simple but usefull decorators
-====================================================================
+:mod:`vortex.util.decorators` --- Simple but usefull decorators
+===============================================================
 
-.. automodule:: vortex.utilities.decorators
+.. automodule:: vortex.util.decorators
    :synopsis: Few decorators for functions and classes
 
 .. moduleauthor:: The Vortex Team

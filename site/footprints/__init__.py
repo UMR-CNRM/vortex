@@ -9,12 +9,12 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.8.18'
+__version__ = '0.8.19'
 
 import re
 import copy
 import types
-
+import weakref
 
 # Default logging
 
@@ -35,12 +35,12 @@ from . import util, reporting
 # Default setup
 
 from . import config
-setup = config.get(docstring=False)
+setup = config.get(docstring=True)
 
 
 # Internal modules of the footprints package
 
-from . import access, collectors, dump, observers, priorities, util
+from . import access, collectors, dump, observers, priorities
 from .stdtypes import *
 
 
@@ -441,6 +441,9 @@ class Footprint(object):
                     raise FootprintFatalError('No attribute `' + k + '` is fatal')
                 else:
                     logger.debug(' > No valid attribute %s', k)
+            else:
+                if 'weak' in attrs[k]['access']:
+                    guess[k] = weakref.proxy(guess[k])
 
         return (guess, attr_input, attr_seen)
 
@@ -557,7 +560,7 @@ class FootprintBaseMeta(type):
                 thiscollector = collectors.get(cname)
                 thiscollector.add(realcls)
                 if thiscollector.register:
-                    observers.getbyname(realcls.fullname()).register(thiscollector)
+                    observers.get(tag=realcls.fullname()).register(thiscollector)
                     logger.debug('Register class %s in collector %s (%s)', realcls, thiscollector, cname)
         basedoc = realcls.__doc__
         if not basedoc:
@@ -599,7 +602,7 @@ class FootprintBase(object):
             logger.debug('Resolve attributes at footprint init %s', object.__repr__(self))
             self._attributes, u_attr_input, u_attr_seen = \
                 self._footprint.resolve(self._attributes, fatal=True)
-        self._observer = observers.getbyname(self.__class__.fullname())
+        self._observer = observers.get(tag=self.__class__.fullname())
         self.make_alive()
 
     @property
@@ -649,7 +652,7 @@ class FootprintBase(object):
         return d
 
     def __setstate__(self, state):
-        self._observer = observers.getbyname(self.__class__.fullname())
+        self._observer = observers.get(tag=self.__class__.fullname())
         self.__dict__.update(state)
         self.make_alive()
 

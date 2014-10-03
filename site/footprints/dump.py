@@ -107,7 +107,7 @@ def indent(level=0, nextline=True):
 
 def get(**kw):
     """Return actual dumper object matching description."""
-    return Dumper.get(**kw)
+    return Dumper(**kw)
 
 class Dumper(util.GetByTag):
     """Could dump almost anything."""
