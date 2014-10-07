@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.8.19'
+__version__ = '0.8.20'
 
 import re
 import copy
@@ -82,7 +82,7 @@ class FootprintInvalidDefinition(FootprintException):
 
 def pickup(rd):
     """Find in current description the attributes that are collected under the ``tag`` name."""
-    return collectors.get(rd.pop('tag', 'garbage')).pickup(rd)
+    return collectors.get(tag=rd.pop('tag', 'garbage')).pickup(rd)
 
 
 def load(**kw):
@@ -90,7 +90,7 @@ def load(**kw):
     Same as pickup but operates on an expanded dictionary.
     Return either ``None`` or an object compatible with the ``tag``.
     """
-    return collectors.get(kw.pop('tag', 'garbage')).load(**kw)
+    return collectors.get(tag=kw.pop('tag', 'garbage')).load(**kw)
 
 
 def default(**kw):
@@ -98,7 +98,7 @@ def default(**kw):
     Try to find in existing instances tracked by the ``tag`` collector
     a suitable candidate according to description.
     """
-    return collectors.get(kw.pop('tag', 'garbage')).default(**kw)
+    return collectors.get(tag=kw.pop('tag', 'garbage')).default(**kw)
 
 
 def grep(**kw):
@@ -160,6 +160,15 @@ class Footprint(object):
 
     def __str__(self):
         return str(self.attr)
+
+    def allkeys(self):
+        """Return a set of possible keys for the footprint's attributes."""
+        allk = set()
+        atfp = self.attr
+        for a in atfp:
+            allk.add(a)
+            allk |= atfp[a]['alias']
+        return allk
 
     def as_dict(self):
         """
@@ -557,7 +566,9 @@ class FootprintBaseMeta(type):
             if realcls._explicit and not realcls.mandatory():
                 raise FootprintInvalidDefinition('Explicit class without any mandatory footprint attribute.')
             for cname in realcls._collector:
-                thiscollector = collectors.get(cname)
+                if cname in thisfp.allkeys():
+                    raise FootprintInvalidDefinition('A attribute or alias name is equal to collector tag: ' + cname)
+                thiscollector = collectors.get(tag=cname)
                 thiscollector.add(realcls)
                 if thiscollector.register:
                     observers.get(tag=realcls.fullname()).register(thiscollector)
@@ -660,7 +671,7 @@ class FootprintBase(object):
         try:
             self._observer.notify_del(self, dict())
         except (TypeError, AttributeError):
-            logger.debug('Too late for notify_del')
+            logger.warning('Too late for notify_del')
 
     def in_attributes_get(self, attr, auth=None):
         """Return actual attribute value in internal storage. Protected method."""
@@ -692,9 +703,10 @@ class FootprintBase(object):
         """Returns the short name of the object's class."""
         return self.__class__.__name__
 
+    @property
     def attributes(self):
         """Returns the list of current attributes."""
-        return self._attributes.keys()
+        return sorted(self._attributes.keys())
 
     def as_dict(self, refresh=False):
         """Returns a shallow copy of the current attributes."""
@@ -710,7 +722,7 @@ class FootprintBase(object):
 
     def _str_more(self):
         """Additional information to be combined in repr output."""
-        return 'footprint=' + str(len(self.attributes()))
+        return 'footprint=' + str(len(self._attributes))
 
     def __str__(self):
         """

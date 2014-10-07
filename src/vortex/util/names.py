@@ -13,10 +13,10 @@ from vortex.autolog import logdefault as logger
 from types import *   # @UnusedWildImport
 
 
-class VNameBuilder(object):
+class VortexNameBuilder(object):
     """Baseames factory for resources handled by some Vortex like provider."""
     def __init__(self, *args, **kw):
-        logger.debug('New VNameBuilder %s', self.__class__)
+        logger.debug('Init VortexNameBuilder %s', self.__class__)
         self._default = dict(
             radical = 'vortexdata',
             src = None,

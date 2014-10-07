@@ -54,7 +54,7 @@ class NECSX9(Target):
         info = 'NEC vector computer SX9',
         attr = dict(
             hostname = dict(
-                values = [ 'unix' ] + [ x+'0'+str(y) for x in ('yuki', 'kumo') for y in range(10) ]
+                values = [ 'unix' ] + [ x + '0' + str(y) for x in ('yuki', 'kumo') for y in range(10) ]
             ),
             sysname = dict(
                 values = [ 'SUPER-UX' ]
@@ -91,9 +91,9 @@ class Beaufix(MeteoBull):
         attr = dict(
             hostname = dict(
                 values = \
-                    [ x+str(y) for x in ('beaufix',) for y in range(1080) ] + \
-                    [ x+str(y) for x in ('beaufixlogin',) for y in range(6) ] + \
-                    [ x+str(y) for x in ('beaufixtransfert',) for y in range(4) ]
+                    [ x + str(y) for x in ('beaufix',) for y in range(1080) ] + \
+                    [ x + str(y) for x in ('beaufixlogin',) for y in range(6) ] + \
+                    [ x + str(y) for x in ('beaufixtransfert',) for y in range(4) ]
             ),
             inetname = dict(
                 default = 'beaufix',
@@ -105,6 +105,9 @@ class Beaufix(MeteoBull):
         )
     )
 
+    del x
+    del y
+
 
 class Prolix(MeteoBull):
     """Prolix Computer at Meteo-France."""
@@ -114,9 +117,9 @@ class Prolix(MeteoBull):
         attr = dict(
             hostname = dict(
                 values = \
-                    [ x+str(y) for x in ('prolix',) for y in range(990) ] + \
-                    [ x+str(y) for x in ('prolixlogin',) for y in range(6) ] + \
-                    [ x+str(y) for x in ('prolixtransfert',) for y in range(4) ]
+                    [ x + str(y) for x in ('prolix',) for y in range(990) ] + \
+                    [ x + str(y) for x in ('prolixlogin',) for y in range(6) ] + \
+                    [ x + str(y) for x in ('prolixtransfert',) for y in range(4) ]
             ),
             inetname = dict(
                 default = 'prolix',
@@ -127,3 +130,6 @@ class Prolix(MeteoBull):
             )
         )
     )
+
+    del x
+    del y

@@ -9,12 +9,13 @@ hosting a specific execution.Target objects use the :mod:`footprints` mechanism.
 #: No automatic export
 __all__ = []
 
-import re, platform
+import platform
 
 import footprints
 
 from vortex.autolog import logdefault as logger
-from vortex.tools.config import GenericConfigParser
+
+from vortex.util.config import GenericConfigParser
 
 
 class Target(footprints.FootprintBase):
@@ -67,8 +68,8 @@ class Target(footprints.FootprintBase):
 
     def get(self, key, default=None):
         """Get the actual value of the specified ``key`` ( ``section:option`` )."""
-        if re.search(':', key):
-            section, option = key.split(':', 1)
+        if ':' in key:
+            section, option = [ x.strip() for x in key.split(':', 1) ]
             if self.config.has_option(section, option):
                 return self.config.get(section, option)
             else:

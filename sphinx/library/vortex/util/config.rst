@@ -1,7 +1,7 @@
-:mod:`vortex.tools.config` --- Handling of ini files
-====================================================
+:mod:`vortex.util.config` --- Handling of ini files
+===================================================
 
-.. automodule:: vortex.tools.config
+.. automodule:: vortex.util.config
    :synopsis: Advanced environment tool
 
 .. moduleauthor:: The Vortex Team

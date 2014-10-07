@@ -7,7 +7,7 @@ __all__ = []
 
 from resources import Resource
 from vortex.syntax.stdattrs import a_model
-from vortex.tools.config import JacketConfigParser
+from vortex.util.config import JacketConfigParser
 
 
 class Jacket(object):

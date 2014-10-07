@@ -14,7 +14,6 @@ Package
 .. autodata:: __all__
   
 * :mod:`vortex.tools.actions`
-* :mod:`vortex.tools.config`
 * :mod:`vortex.tools.date`
 * :mod:`vortex.tools.env`
 * :mod:`vortex.tools.net`

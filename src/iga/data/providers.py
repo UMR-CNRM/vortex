@@ -8,7 +8,7 @@ import os
 from vortex.autolog import logdefault as logger
 
 from vortex.data.providers import Provider
-from vortex.tools.config import GenericConfigParser
+from vortex.util.config import GenericConfigParser
 from vortex.syntax.stdattrs import a_suite
 from iga.util import bpnames as bp
 

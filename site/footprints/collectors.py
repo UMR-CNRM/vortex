@@ -18,54 +18,51 @@ from . import config, dump, reporting, util
 
 # Module Interface
 
-def table(_cache=dict()):
-    """Cached table of collectors currently activated."""
-    return _cache
-
+def get(**kw):
+    """Return actual collector object matching description."""
+    return Collector(**kw)
 
 def keys():
     """Return the list of current entries names collected."""
-    return table().keys()
+    return Collector.tag_keys()
 
 def values():
     """Return the list of current entries values collected."""
-    return table().values()
+    return Collector.tag_values()
 
 def items():
     """Return the items of the collectors table."""
-    return table().items()
-
-def get(tag='garbage'):
-    """Main entry point to get a footprinted classes collector."""
-    cmap = table()
-    tag = tag.rstrip('s')
-    if tag not in cmap:
-        cmap[tag] = Collector(entry=tag)
-    return cmap[tag]
+    return Collector.tag_items()
 
 
 # Base class
 
-class Collector(util.Catalog):
+class Collector(util.GetByTag, util.Catalog):
     """
     A class collector is devoted to the gathering of class references that inherit
     from a given class (here a class with a footprint), according to some other optional criteria.
     """
 
+    _tag_default = 'garbage'
+
     def __init__(self, **kw):
         logger.debug('Footprints collector init %s', self)
-        self.entry = 'garbage'
         self.instances = util.Catalog(weak=True)
         self.register = True
         self.report = True
-        self.autoreport = True
-        self.tagreport = None
+        self.report_auto = True
+        self.report_tag = None
         self.altreport = False
-        super(Collector, self).__init__(**kw)
-        if self.tagreport is None:
-            self.tagreport = 'footprint-' + self.entry
-        self.logreport = reporting.report(self.tagreport)
+        for bc in self.__class__.__bases__:
+            bc.__init__(self, **kw)
+        if self.report_tag is None:
+            self.report_tag = 'footprint-' + self.tag
+        self.report_log = reporting.report(self.report_tag)
         config.add2proxies(self)
+
+    @classmethod
+    def tag_clean(cls, tag):
+        return tag.rstrip('s')
 
     def newobsitem(self, item, info):
         """Register a new instance of some of the classes in the current collector."""
@@ -89,26 +86,26 @@ class Collector(util.Catalog):
 
     def pickup(self, desc):
         """Try to pickup inside the collector a item that could match the description."""
-        logger.debug('Pick up a "%s" in description %s with collector %s', self.entry, desc, self)
-        mkstdreport = desc.pop('_report', self.autoreport)
+        logger.debug('Pick up a "%s" in description %s with collector %s', self.tag, desc, self)
+        mkstdreport = desc.pop('_report', self.report_auto)
         mkaltreport = desc.pop('_altreport', self.altreport)
         for hidden in [ x for x in desc.keys() if x.startswith('_') ]:
             logger.warning('Hidden argument "%s" ignored in pickup attributes', hidden)
             del desc[hidden]
-        if self.entry in desc and desc[self.entry] is not None:
-            logger.debug('A %s is already defined %s', self.entry, desc[self.entry])
+        if self.tag in desc and desc[self.tag] is not None:
+            logger.debug('A %s is already defined %s', self.tag, desc[self.tag])
         else:
-            desc[self.entry] = self.find_best(desc)
-        if desc[self.entry] is not None:
-            desc = desc[self.entry].cleanup(desc)
+            desc[self.tag] = self.find_best(desc)
+        if desc[self.tag] is not None:
+            desc = desc[self.tag].cleanup(desc)
         else:
             dumper = dump.get()
-            logger.warning('No %s found in description %s', self.entry, "\n" + dumper.cleandump(desc))
+            logger.warning('No %s found in description %s', self.tag, "\n" + dumper.cleandump(desc))
             if mkstdreport and self.report:
-                print "\n", self.logreport.info(), "\n"
-                self.lastreport.lightdump()
+                print "\n", self.report_log.info(), "\n"
+                self.report_last.lightdump()
                 if mkaltreport:
-                    altreport = self.lastreport.as_flat()
+                    altreport = self.report_last.as_flat()
                     altreport.reshuffle(['why', 'attribute'], skip=False)
                     altreport.fulldump()
                     altreport.reshuffle(['only', 'attribute'], skip=False)
@@ -122,9 +119,9 @@ class Collector(util.Catalog):
         """
         logger.debug('Search any %s in collector %s', desc, self._items)
         if self.report:
-            self.logreport.add(collector=self)
+            self.report_log.add(collector=self)
         for item in self._items:
-            resolved, u_input = item.couldbe(desc, report=self.logreport)
+            resolved, u_input = item.couldbe(desc, report=self.report_log)
             if resolved:
                 return item(resolved, checked=True)
         return None
@@ -137,9 +134,9 @@ class Collector(util.Catalog):
         logger.debug('Search all %s in collector %s', desc, self._items)
         found = list()
         if self.report:
-            self.logreport.add(collector=self)
+            self.report_log.add(collector=self)
         for item in self._items:
-            resolved, theinput = item.couldbe(desc, report=self.logreport)
+            resolved, theinput = item.couldbe(desc, report=self.report_log)
             if resolved:
                 found.append((item, resolved, theinput))
         return found
@@ -155,7 +152,7 @@ class Collector(util.Catalog):
             return None
         if len(candidates) > 1:
             dumper = dump.get()
-            logger.warning('Multiple %s candidates for %s', self.entry, "\n" + dumper.cleandump(desc))
+            logger.warning('Multiple %s candidates for %s', self.tag, "\n" + dumper.cleandump(desc))
             candidates.sort(key=lambda x: x[0].weightsort(x[2]), reverse=True)
             for i, c in enumerate(candidates):
                 thisclass, u_resolved, theinput = c
@@ -164,8 +161,8 @@ class Collector(util.Catalog):
         return topcl(topr, checked=True)
 
     def load(self, **desc):
-        """Return the entry entry after pickup of attributes."""
-        return self.pickup(desc).get(self.entry, None)
+        """Return the value matching current collector's tag after pickup of attributes."""
+        return self.pickup(desc).get(self.tag, None)
 
     def default(self, **kw):
         """
@@ -222,7 +219,7 @@ class Collector(util.Catalog):
         attrmap = self.build_attrmap(only=only)
         for a in sorted(attrmap.keys()):
             print '*', a, ':'
-            for info in sorted(attrmap[a]):
+            for info in sorted(attrmap[a], key=lambda x: x['name']):
                 print ' ' * 3, info['name'].ljust(24), '+', info['module']
                 for k in [ x for x in info.keys() if x not in ('name', 'module') and info[x] ]:
                     print ' ' * 28, '|', k, '=', info[k]
@@ -238,32 +235,32 @@ class Collector(util.Catalog):
                     allvalues.add(v)
         return sorted(allvalues)
 
-    def dump_report(self, stamp=False):
+    def report_dump(self, stamp=False):
         """Print a nicelly formatted dump report as a dict."""
-        self.logreport.fulldump(stamp=stamp)
+        self.report_log.fulldump(stamp=stamp)
 
     @property
-    def lastreport(self):
+    def report_last(self):
         """
         Return the subpart of the report related to the last sequence
         of evaluation through the current collector.
         """
-        return self.logreport.last
+        return self.report_log.last
 
-    def sortedreport(self, **kw):
+    def report_sorted(self, **kw):
         """
         Return the subpart of the report related to the last sequence
         of evaluation through the current collector ordered by args.
         """
-        return self.lastreport.as_tree(**kw)
+        return self.report_last.as_tree(**kw)
 
-    def dump_lastreport(self):
+    def report_dumplast(self):
         """Print a nicelly formatted dump report as a dict."""
-        print dump.fulldump(self.lastreport.as_dict())
+        print dump.fulldump(self.report_last.as_dict())
 
     def report_whynot(self, classname):
         """
         Report why any class mathching the ``classname`` pattern
         had not been selected through the last evaluation.
         """
-        return self.logreport.whynot(classname)
+        return self.report_log.whynot(classname)

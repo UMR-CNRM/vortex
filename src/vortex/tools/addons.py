@@ -15,15 +15,14 @@ from vortex.tools.systems import System
 
 
 class Addon(footprints.FootprintBase):
-    """
-    Root class for any :class:`Addon` system subclasses.
-    """
+    """Root class for any :class:`Addon` system subclasses."""
 
     _abstract  = True
     _collector = ('addon',)
     _footprint = dict(
         info = 'Default add-on',
         attr = dict(
+            kind = dict(),
             sh = dict(
                 type = System,
                 alias = ('shell',),
@@ -31,6 +30,20 @@ class Addon(footprints.FootprintBase):
             ),
             env = dict(
                 type = Environment,
+                optional = True,
+                default = None,
+                access = 'rwx',
+            ),
+            cfginfo = dict(
+                optional = True,
+                default = '[kind]',
+            ),
+            cmd = dict(
+                optional = True,
+                default = None,
+                access = 'rwx',
+            ),
+            path = dict(
                 optional = True,
                 default = None,
                 access = 'rwx',
@@ -45,38 +58,32 @@ class Addon(footprints.FootprintBase):
         self.sh.extend(self)
         if self.env is None:
             self.env = Environment(active=False, clear=True)
+        clsenv = self.__class__.__dict__
+        for k in [ x for x in clsenv.keys() if x.isupper() ]:
+            self.env[k] = clsenv[k]
+        if self.path is None and self.cfginfo is not None:
+            kpath = self.kind + 'path'
+            if kpath in self.sh.env:
+                self.path = self.sh.env.get(kpath)
+            else:
+                tg = self.sh.target()
+                addon_rootdir = tg.get(self.cfginfo + ':rootdir', None)
+                addon_opcycle = self.sh.env.get(
+                    self.cfginfo + 'cycle',
+                    tg.get(self.cfginfo + ':' + self.cfginfo + 'cycle')
+                )
+                if addon_rootdir and addon_opcycle:
+                    self.path = addon_rootdir + '/' + addon_opcycle
 
     @property
     def realkind(self):
         return 'addon'
 
-    def _get_sh(self):
-        return self._sh
-
-    def _set_sh(self, value):
-        self._sh = weakref.proxy(value)
-
-    sh = property(_get_sh, _set_sh, None, None)
-
-    @property
-    def env(self):
-        return self._env
-
-    def _get_actual(self, item):
-        try:
-            actual_item = [a for a in self.attributes() if a.endswith('_' + item)][0]
-        except IndexError:
-            raise AttributeError('Could not find any ' + item + ' attribute in current addon')
-        else:
-            return getattr(self, actual_item)
-
-    @property
-    def cmd(self):
-        return self._get_actual('cmd')
-
-    @property
-    def path(self):
-        return self._get_actual('path')
+    @classmethod
+    def in_shell(cls, shell):
+        """Grep any active instance of that class in the specified shell."""
+        lx = [x for x in shell.search if isinstance(x, cls)]
+        return lx[0] if lx else None
 
     def _spawn(self, cmd, **kw):
         """Internal method setting local environment and calling standard shell spawn."""
@@ -86,21 +93,16 @@ class Addon(footprints.FootprintBase):
         if self.path is not None:
             cmd[0] = self.path + '/' + cmd[0]
 
-        # Set global module env variable to a local environement object
-        # activated temporarily for the curren spawned command.
-        g = globals()
-        localenv = self.sh.env.clone()
-        for k in [ x for x in g.keys() if x.isupper() ]:
-            localenv[k] = g[k]
-
         # Overwrite global module env values with specific ones
-        localenv.update(self._env)
+        localenv = self.sh.env.clone()
+        localenv.active(True)
+        localenv.verbose(True, self.sh)
+        localenv.update(self.env)
 
         # Check if a pipe is requested
         inpipe = kw.pop('pipe', False)
 
         # Ask the attached shell to run the addon command
-        localenv.active(True)
         if inpipe:
             rc = self.sh.popen(cmd, **kw)
         else:

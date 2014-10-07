@@ -22,10 +22,12 @@ def get(**kw):
     return ObserverBoard(**kw)
 
 def keys():
-    return ObserverBoard.tagskeys()
+    """Return actual tags names of the instanciated ObserverBoard objects."""
+    return ObserverBoard.tag_keys()
 
 def values():
-    return ObserverBoard.tagsvalues()
+    """Return actual values of instanciated ObserverBoard objects."""
+    return ObserverBoard.tag_values()
 
 
 class Observer(object):

@@ -4,7 +4,7 @@
 #: No automatic export
 __all__ = []
 
-from vortex.tools.config import GenericConfigParser
+from vortex.util.config   import GenericConfigParser
 from vortex.data.contents import IndexedTable
 
 

@@ -75,7 +75,7 @@ class MpiTool(footprints.FootprintBase):
         self._master = None
         self._options = None
         for k in self.basics:
-            self.__dict__['_'+k] = None
+            self.__dict__['_' + k] = None
 
     @property
     def realkind(self):
@@ -84,7 +84,7 @@ class MpiTool(footprints.FootprintBase):
     def __getattr__(self, key):
         """Have a look to basics values provided by some proxy."""
         if key in self.basics:
-            return getattr(self, '_'+key)
+            return getattr(self, '_' + key)
         else:
             raise AttributeError('Attribute [%s] is not a basic mpitool attribute' % key)
 
@@ -93,7 +93,7 @@ class MpiTool(footprints.FootprintBase):
         if attrs is None:
             attrs = self.basics
         for k in [ x for x in attrs if x in self.basics and hasattr(obj, x) ]:
-            setattr(self, '_'+k, getattr(obj, k))
+            setattr(self, '_' + k, getattr(obj, k))
 
     def _get_options(self):
         """Retrieve current set of mpitool command line options."""

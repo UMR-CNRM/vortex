@@ -11,7 +11,7 @@ from footprints.util import rangex
 
 def read_config(inifile):
     """read specified ``section`` (eg: job name) in ``inifile``."""
-    from vortex.tools.config import GenericConfigParser
+    from vortex.util.config import GenericConfigParser
     try:
         iniparser = GenericConfigParser(inifile)
         iniconf   = iniparser.as_dict()

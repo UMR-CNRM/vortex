@@ -9,7 +9,7 @@ import os.path
 import footprints
 
 from vortex.autolog import logdefault as logger
-from vortex.util.names import VNameBuilder
+from vortex.util.names import VortexNameBuilder
 from vortex.tools import net
 
 
@@ -214,8 +214,8 @@ class Vortex(Provider):
             ),
             namebuild = dict(
                 optional = True,
-                type = VNameBuilder,
-                default = VNameBuilder(),
+                type = VortexNameBuilder,
+                default = VortexNameBuilder(),
             )
         )
     )

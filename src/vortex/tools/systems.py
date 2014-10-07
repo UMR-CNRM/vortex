@@ -16,6 +16,7 @@ import glob
 import tarfile
 import subprocess
 import pickle
+import json
 
 import footprints
 
@@ -521,8 +522,8 @@ class System(footprints.FootprintBase):
         """Set an unlimited value to resource specified."""
         self.stderr('setulimit', r_id)
         soft, hard = self.getrlimit(r_id)
-        newsoft = min(hard, max(soft, self._rl.RLIM_INFINITY))
-        return self.setrlimit(r_id, (newsoft, self._rl.RLIM_INFINITY))
+        soft = min(hard, max(soft, self._rl.RLIM_INFINITY))
+        return self.setrlimit(r_id, (soft, hard))
 
     def getrlimit(self, r_id):
         """Proxy to :mod:`resource` function of the same name."""
@@ -891,7 +892,7 @@ class OSExtended(System):
         if not args:
             args = ('.',)
         self.stderr('listdir', *args)
-        return self._os.listdir(self.path.expand(args[0]))
+        return self._os.listdir(self.path.expanduser(args[0]))
 
     def l(self, *args):
         """Proxy to globbing after removing any option. A bit like :meth:`ls` method."""
@@ -903,7 +904,7 @@ class OSExtended(System):
 
     def is_tarfile(self, filename):
         """Return a boolean according to the tar status of the ``filename``."""
-        return tarfile.is_tarfile(self.path.expand(filename))
+        return tarfile.is_tarfile(self.path.expanduser(filename))
 
     def _tarcx(self, *args, **kw):
         """Raw file archive command."""
@@ -934,30 +935,58 @@ class OSExtended(System):
         kw['cx'] = 'x'
         return self._tarcx(*args, **kw)
 
+    def blind_dump(self, obj, destination, gateway=None):
+        """
+        Use ``gateway`` for a blind dump of the ``obj`` in file ``destination``,
+        (either a file descriptor or a filename).
+        """
+        if hasattr(destination, 'write'):
+            rc = gateway.dump(obj, destination)
+        else:
+            if self.filecocoon(destination):
+                with io.open(self.path.expanduser(destination), 'ab') as fd:
+                    rc = gateway.dump(obj, fd)
+        return rc
+
     def pickle_dump(self, obj, destination):
         """
         Dump a pickled representation of specified ``obj`` in file ``destination``,
         (either a file descriptor or a filename).
         """
-        if hasattr(destination, 'write'):
-            rc = pickle.dump(obj, destination)
-        else:
-            if self.filecocoon(destination):
-                with io.open(self.path.expand(destination), 'ab') as fd:
-                    rc = pickle.dump(obj, fd)
-        return rc
+        return self.blind_dump(obj, destination, gateway=pickle)
 
-    def pickle_load(self, source):
+    def json_dump(self, obj, destination):
         """
-        Load fron a pickled representation stored in file ``source``,
+        Dump a json representation of specified ``obj`` in file ``destination``,
+        (either a file descriptor or a filename).
+        """
+        return self.blind_dump(obj, destination, gateway=json)
+
+    def blind_load(self, source, dumper, gateway=None):
+        """
+        Use ``gateway`` for a blind load the representation stored in file ``source``,
         (either a file descriptor or a filename).
         """
         if hasattr(source, 'read'):
-            obj = pickle.load(source)
+            obj = gateway.load(source)
         else:
-            with io.open(self.path.expand(source), 'rb') as fd:
-                obj = pickle.load(fd)
+            with io.open(self.path.expanduser(source), 'rb') as fd:
+                obj = gateway.load(fd)
         return obj
+
+    def pickle_load(self, source):
+        """
+        Load from a pickled representation stored in file ``source``,
+        (either a file descriptor or a filename).
+        """
+        return self.blind_load(source, gateway=pickle)
+
+    def json_load(self, source):
+        """
+        Load from a json representation stored in file ``source``,
+        (either a file descriptor or a filename).
+        """
+        return self.blind_load(source, gateway=json)
 
     def pickle_clone(self, obj):
         """Clone an object through pickling / unpickling."""

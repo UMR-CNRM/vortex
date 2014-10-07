@@ -230,7 +230,7 @@ class GetByTagMeta(type):
 
     def __new__(cls, n, b, d):
         logger.debug('Base class for getbytag usage "%s / %s", bc = ( %s ), internal = %s', cls, n, b, d)
-        d['_getbytag_table'] = dict()
+        d['_tag_table'] = dict()
         return super(GetByTagMeta, cls).__new__(cls, n, b, d)
 
     def __call__(cls, *args, **kw):
@@ -245,17 +245,19 @@ class GetByTag(object):
 
     __metaclass__ = GetByTagMeta
 
+    _tag_default = 'default'
+
     def __new__(cls, *args, **kw):
         """Check for an existing object with same tag."""
-        tag = kw.pop('tag', 'default')
+        tag = cls.tag_clean(kw.pop('tag', cls._tag_default))
         new = kw.pop('new', False)
-        if not new and tag in cls._getbytag_table:
-            newobj = cls._getbytag_table[tag]
+        if not new and tag in cls._tag_table:
+            newobj = cls._tag_table[tag]
         else:
             newobj = super(GetByTag, cls).__new__(cls)
             newobj._tag = tag
             newobj.__init__(*args, **kw)
-            cls._getbytag_table[tag] = newobj
+            cls._tag_table[tag] = newobj
         return newobj
 
     @property
@@ -263,12 +265,20 @@ class GetByTag(object):
         return self._tag
 
     @classmethod
-    def tagskeys(cls):
-        return cls._getbytag_table.keys()
+    def tag_clean(cls, tag):
+        return tag
 
     @classmethod
-    def tagsvalues(cls):
-        return cls._getbytag_table.values()
+    def tag_keys(cls):
+        return cls._tag_table.keys()
+
+    @classmethod
+    def tag_values(cls):
+        return cls._tag_table.values()
+
+    @classmethod
+    def tag_items(cls):
+        return cls._tag_table.items()
 
 
 class Catalog(object):

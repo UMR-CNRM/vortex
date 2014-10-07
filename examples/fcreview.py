@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=6
 #SBATCH --job-name=fc_test_vtx
 #SBATCH --mem=30000
-#SBATCH --nodes=21
+#SBATCH --nodes=22
 #SBATCH --ntasks-per-node=4
 #SBATCH --partition=normal32
 #SBATCH --time=00:43:20
@@ -25,8 +25,8 @@ Il a une portée essentiellement pédagogique.
 # à l'interpréteur python de nouveaux points de départ pour la recherche de modules ;
 # c'est traditionnelement le module sys qui permet cette spécification.
 import sys
-sys.path.append('/home/gmap/mrpm/esevault/public/vortex/site')
-sys.path.append('/home/gmap/mrpm/esevault/public/vortex/src')
+sys.path.append('/home/gmap/mrpm/esevault/public/vortex-dev/site')
+sys.path.append('/home/gmap/mrpm/esevault/public/vortex-dev/src')
 
 # Il est souvent commode de disposer d'un raccourci vers le package footprints...
 # mais cela n'a rien d'obligatoire
@@ -36,7 +36,7 @@ import footprints as fp
 import vortex
 
 # Les commandes procédurales les plus importantes sont pilotées par un module dédié: toolbox.
-from vortex import toolbox
+from vortex import toolbox, tools
 
 toolbox.justdoit  = True    # En activant ce drapeau, toutes les sections qui seront définies
                             # par la suite essaieront de réaliser immédiatement leur action de base.
@@ -70,16 +70,19 @@ e.verbose(True, sh)
 # On s'affranchit des limites de taille de la pile sur ce système.
 sh.setulimit('stack')
 
+# On étend le shell aux opérations spéciales lfi/fa
+import vortex.tools.lfi
+sh_lfi = fp.proxy.addon(kind='lfi',    shell=sh)
+sh_iop = fp.proxy.addon(kind='iopoll', shell=sh)
+
 # Répertoire d'exécution dédié... c'est une sécurité pour sortir de HOME.
-rundir = e.get('RUNDIR', e.WORKDIR + '/rundir')
+rundir = e.get('RUNDIR', e.WORKDIR + '/rundir/' + tools.date.today().ymd)
 sh.cd(rundir, create=True)
 sh.subtitle('Rundir is ' + rundir)
 
 # Date de base récupérée comme date pivot dans l'environnement
 # ou comme la dernière heure synoptique d'il y a au moins 12 heures.
 # On utilisera pour cela le module tools.date
-from vortex import tools
-
 strdate = e.get('DMT_DATE_PIVOT', tools.date.synop(delta='-PT12H').compact())
 rundate = tools.date.Date(strdate)
 
@@ -155,7 +158,7 @@ sh.env.OPGENVROOT = genv.genvpath
 
 # Ainsi outillés, nous pouvons maintenant définir un cycle, par son nom gco,
 # et demander au module genv de "remplir" la définition de cycle avec tous les composants associés.
-cycle = 'cy38t1_op2.15'
+cycle = 'cy38t1_op3.10'
 genv.autofill(cycle)
 
 p_const = vortex.proxy.provider(
@@ -333,12 +336,16 @@ if npass == 2:
 
     sh.title('Algo Component')
 
+    mpio = fp.proxy.mpitool(sysname=sh.sysname, io=True, tasks=6, openmp=4)
+
     fcalgo = toolbox.algo(
-        # optional: conf, fcunit, inline, ioserver, mpiname, mpitool, timescheme, xpname
+        # optional: conf, fcunit, inline, mpiname, mpitool, timescheme, xpname
         engine      = 'parallel',
         kind        = 'forecast',
         fcterm      = fc_term,
-        timestep    = 514.286
+        timestep    = 514.286,
+        # server d'io pré-défini
+        ioserver    = mpio,
     )
 
     # L'exécution se fait en passant en premier argument le premier binaire récupéré auparavant.
@@ -347,12 +354,17 @@ if npass == 2:
 
     fcalgo.run(
         i_bin[0],                           # Le binaire arpege donc !
-        mpiopts = dict(nn=21, nnp=4)        # Les options à passer au lanceur mpi
+        mpiopts = dict(nn=22, nnp=4)        # Les options à passer au lanceur mpi
     )
 
 #--------------------------------------------------------------------------------------------------
 
 if npass == 3:
+
+    if sh.path.exists('io_poll.todo'):
+        sh.title('IO poll')
+        sh.io_poll('ICMSH')
+        sh.io_poll('PF')
 
     sh.title('Outputs')
 
@@ -464,7 +476,7 @@ if npass == 3:
             # implicit: cutoff, date, geometry, model
             # optional: clscontents, mpi, openmp, nativefmt
         kind        = 'plisting',
-        task        = e.get('SMSNAME', 'std-forecst'),
+        task        = e.get('SMSNAME', 'std-forecast'),
     )
 
 #--------------------------------------------------------------------------------------------------

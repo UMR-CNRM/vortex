@@ -27,8 +27,8 @@ def add2proxies(c, **kw):
     """
     setup = FootprintSetup(**kw)
     for p in setup.proxies:
-        setattr(p, c.entry, c.load)
-        setattr(p, c.entry + 's', c)
+        setattr(p, c.tag, c.load)
+        setattr(p, c.tag + 's', c)
 
 
 # Base class

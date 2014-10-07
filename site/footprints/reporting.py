@@ -115,7 +115,7 @@ class FootprintLogCollector(FootprintLogEntry):
     def __init__(self, node, **kw):
         """Default name is the ``node`` entry keypoint."""
         super(FootprintLogCollector, self).__init__(node, **kw)
-        self.name = self.node.entry
+        self.name = self.node.tag
 
     def __iter__(self):
         """Iterates on :class:`FootprintLogClass` items."""

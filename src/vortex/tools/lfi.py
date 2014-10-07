@@ -15,17 +15,10 @@ from vortex.util.structs import Tracker
 
 from . import addons
 
-LFI_HNDL_SPEC   = ':1'
-DR_HOOK_SILENT  = 1
-DR_HOOK_NOT_MPI = 1
-
 
 def use_in_shell(sh, **kw):
     """Extend current shell with the LFI interface defined by optional arguments."""
-    kw.setdefault('lficmd', 'LFITOOLS')
     kw['shell'] = sh
-    if '/' not in kw['lficmd']:
-        kw.setdefault('lfipath', sh.env.LFIPATH)
     return footprints.proxy.addon(**kw)
 
 class LFI_Status(object):
@@ -41,7 +34,7 @@ class LFI_Status(object):
         self._ok = ok or [ 0 ]
         self._stdout = stdout
         self._stderr = stderr
-        self._result = result
+        self._result = result or list()
 
     def __str__(self):
         return '{0:s} | rc={1:d} result={2:d}>'.format(repr(self).rstrip('>'), self.rc, len(self.result))
@@ -103,20 +96,30 @@ class LFI_Tool(addons.Addon):
     These commands are the one defined by the ``lfitools`` binary found in the IFS-ARPEGE framework.
     """
 
+    LFI_HNDL_SPEC   = ':1'
+    DR_HOOK_SILENT  = 1
+    DR_HOOK_NOT_MPI = 1
+
     _footprint = dict(
         info = 'Default LFI system interface',
         attr = dict(
-            lfi_cmd = dict(
-                alias = ('lficmd',)
+            kind = dict(
+                values = ['lfi'],
             ),
-            lfi_path = dict(
+            cmd = dict(
+                alias = ('lficmd',),
+                default = 'lfitools',
+            ),
+            path = dict(
                 alias = ('lfipath',),
-                optional = True,
-                default = None,
-                access = 'rwx'
             )
         )
     )
+
+    def _spawn(self, cmd, **kw):
+        """Tube to set LFITOOLS env variable."""
+        self.env.LFITOOLS = self.path + '/' + self.cmd
+        return super(LFI_Tool, self)._spawn(cmd, **kw)
 
     def is_xlfi(self, source):
         """Check if the given ``source`` is a multipart-lfi file."""
@@ -353,14 +356,40 @@ class IO_Poll(addons.Addon):
     _footprint = dict(
         info = 'Default io_poll system interface',
         attr = dict(
-            iopoll_cmd = dict(
-                alias = ('iopollcmd', 'io_pollcmd', 'io_poll_cmd'),
+            kind = dict(
+                values = ['iopoll', 'io_poll'],
+                remap = dict(
+                    io_poll = 'iopoll'
+                )
             ),
-            iopoll_path = dict(
+            cfginfo = dict(
+                default = 'lfi',
+            ),
+            cmd = dict(
+                alias = ('iopollcmd', 'io_pollcmd', 'io_poll_cmd'),
+                default = 'io_poll',
+            ),
+            path = dict(
                 alias = ('iopollpath', 'io_pollpath', 'io_poll_path'),
-                optional = True,
-                default = None,
-                access = 'rwx'
             )
         )
     )
+
+    def _spawn(self, cmd, **kw):
+        """Tube to set LFITOOLS env variable."""
+        activelfi = LFI_Tool.in_shell(self.sh)
+        if activelfi is None:
+            raise StandardError('Could not find any active LFI Tool')
+        self.env.LFITOOLS = activelfi.path + '/' + activelfi.cmd
+        return super(IO_Poll, self)._spawn(cmd, **kw)
+
+    def io_poll(self, prefix, nproc_io=None):
+        """Do the actual job of polling files prefixed by ``prefix``."""
+        st = LFI_Status()
+        cmd = ['--prefix', prefix]
+        if nproc_io is not None:
+            cmd.extend(['--nproc_io', str(nproc_io)])
+        rawout = self._spawn(cmd)
+        st.result = rawout
+        st.rc &= self.sh.rclast
+        return st

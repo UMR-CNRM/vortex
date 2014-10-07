@@ -64,7 +64,7 @@ class FootprintProxy(util.GetByTag):
     def getitem(self, item, value=None):
         """Mimic the get access of a dictionary for defined collectors."""
         if item in self:
-            return collectors.get(item.rstrip('s'))
+            return collectors.get(tag=item)
         else:
             return value
 
@@ -74,6 +74,6 @@ class FootprintProxy(util.GetByTag):
             return None
         else:
             if attr.endswith('s'):
-                return collectors.get(attr.rstrip('s'))
+                return collectors.get(tag=attr)
             else:
-                return collectors.get(attr).load
+                return collectors.get(tag=attr).load

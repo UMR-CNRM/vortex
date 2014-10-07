@@ -10,6 +10,7 @@ Utilities
    util
 
    authorizations
+   config
    decorators
    dispatch
    empty

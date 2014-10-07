@@ -11,7 +11,7 @@ import collections
 OpSetValues = collections.namedtuple('OpSetValues', ['suite', 'vapp', 'vconf'])
 
 from vortex.tools import date
-from vortex.tools.config import GenericConfigParser, load_template
+from vortex.util.config import GenericConfigParser, load_template
 from vortex.autolog import logdefault as logger
 
 from gco.tools import genv

@@ -11,10 +11,9 @@
 Base Classes
 ------------
 
-.. autoclass:: VNameBuilder
+.. autoclass:: VortexNameBuilder
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
 
-   

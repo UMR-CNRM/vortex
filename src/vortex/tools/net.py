@@ -75,10 +75,6 @@ class StdFtp(object):
         self._opened  = None
         self._deleted = None
 
-    def _str_more(self):
-        """Additional information to be combined in repr output."""
-        return 'footprint=' + str(len(self.attributes()))
-
     def __str__(self):
         """
         Nicely formatted print, built as the concatenation

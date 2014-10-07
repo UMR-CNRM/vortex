@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.ERROR)
 from ConfigParser import InterpolationMissingOptionError
 
 from unittest import TestCase, TestLoader, TextTestRunner
-from vortex.tools.config import GenericConfigParser
+from vortex.util.config import GenericConfigParser
 from iga.data.providers import IgaCfgParser
 
 DATAPATHTEST = './data'

@@ -1611,7 +1611,7 @@ class utFootprintBase(TestCase):
 
         ftm = FootprintTestMeta()
         self.assertIsInstance(ftm._footprint, Footprint)
-        self.assertListEqual(ftm.attributes(), list())
+        self.assertListEqual(ftm.attributes, list())
         self.assertDictEqual(ftm.as_dict(), dict())
         self.assertDictEqual(ftm.shellexport(), dict())
         self.assertEqual(ftm.shortname(), 'FootprintTestMeta')
@@ -1638,12 +1638,12 @@ class utFootprintBase(TestCase):
         fp1 = FootprintTestOne(kind='hip', someint=7)
         self.assertIsInstance(fp1, FootprintTestOne)
         self.assertEqual(fp1.realkind, 'bigone')
-        self.assertListEqual(fp1.attributes(), ['somestr', 'someint', 'kind'])
+        self.assertListEqual(fp1.attributes, ['kind', 'someint', 'somestr'])
         self.assertEqual(fp1.info, 'Test class')
 
         fp1 = FootprintTestOne(stuff='hip', someint=7)
         self.assertIsInstance(fp1, FootprintTestOne)
-        self.assertListEqual(fp1.attributes(), ['somestr', 'someint', 'kind'])
+        self.assertListEqual(fp1.attributes, ['kind', 'someint', 'somestr'])
         self.assertDictEqual(fp1.as_dict(), dict(
             kind = 'hip',
             someint = 7,
@@ -1693,7 +1693,7 @@ class utFootprintBase(TestCase):
 
         fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
         self.assertIsInstance(fp2, FootprintTestTwo)
-        self.assertListEqual(fp2.attributes(), ['somestr', 'someint', 'kind', 'somefoo'])
+        self.assertListEqual(fp2.attributes, ['kind', 'somefoo', 'someint', 'somestr'])
         self.assertEqual(fp2.info, 'Another test class')
         self.assertDictEqual(fp2.as_dict(), dict(
             kind = 'hip',

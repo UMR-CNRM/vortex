@@ -34,17 +34,18 @@ class Handler(object):
     def __init__(self, rd, **kw):
         if 'glove' in rd:
             del rd['glove']
-        self.role = roles.setrole(rd.pop('role', 'anonymous'))
+        self.role      = roles.setrole(rd.pop('role', 'anonymous'))
         self.alternate = roles.setrole(rd.get('alternate', None))
         if 'alternate' in rd:
             del rd['alternate']
-            self.role = None
-        self.resource = rd.pop('resource', None)
-        self.provider = rd.pop('provider', None)
+            self.role  = None
+        self.resource  = rd.pop('resource', None)
+        self.provider  = rd.pop('provider', None)
         self.container = rd.pop('container', None)
         self._contents = None
+        self._uridata  = None
+        self._options  = rd.copy()
         self._observer = observer_board(kw.pop('observer', None))
-        self._options = rd.copy()
         self._options.update(kw)
         self.ghost = self._options.pop('ghost', True)
         self._history = structs.History(tag='data-handler')
@@ -123,8 +124,10 @@ class Handler(object):
 
     def location(self):
         """Returns the URL as defined by the internal provider and resource."""
+        self._lasturl = None
         if self.provider and self.resource:
-            return self.provider.uri(self.resource)
+            self._lasturl = self.provider.uri(self.resource)
+            return self._lasturl
         else:
             logger.warning('Resource handler %s could not build location', self)
             return None
@@ -172,24 +175,41 @@ class Handler(object):
             if obj:
                 print '{0}  {1:10s}: {2:s}'.format(tab, subobj.capitalize(), str(obj))
 
+    @property
+    def lasturl(self):
+        """The last actual URL value evaluated."""
+        return self._lasturl
+
+    @property
+    def uridata(self):
+        """Actual extra URI values after store definition."""
+        return self._uridata
+
+    @property
+    def store(self):
+        if self.complete:
+            self._uridata = net.uriparse(self.location())
+            return footprints.proxy.store(
+                scheme = self._uridata.pop('scheme'),
+                netloc = self._uridata.pop('netloc')
+            )
+        else:
+            return None
+
     def locate(self, **extras):
         """Try to figure out what would be the physical location of the resource."""
         rst = None
         if self.complete:
-            remotelocation = self.location()
-            uridata = net.uriparse(remotelocation)
-            store = footprints.proxy.store(scheme=uridata['scheme'], netloc=uridata['netloc'])
+            store = self.store
             if store:
-                logger.debug('Locate resource %s at %s from %s', self, remotelocation, store)
-                del uridata['scheme']
-                del uridata['netloc']
+                logger.debug('Locate resource %s at %s from %s', self, self.lasturl, store)
                 rst = store.locate(
-                    uridata,
+                    self.uridata,
                     self.options(extras)
                 )
                 self.history.append(store.fullname(), 'locate', rst)
             else:
-                logger.error('Could not find any store to locate %s', remotelocation)
+                logger.error('Could not find any store to locate %s', self.lasturl)
         else:
             logger.error('Could not locate an incomplete rh %s', self)
         return rst
@@ -198,15 +218,11 @@ class Handler(object):
         """Method to retrieve through the provider the resource and feed the current container."""
         rst = False
         if self.complete:
-            remotelocation = self.location()
-            uridata = net.uriparse(remotelocation)
-            store = footprints.proxy.store(scheme=uridata['scheme'], netloc=uridata['netloc'])
+            store = self.store
             if store:
-                logger.debug('Get resource %s at %s from %s', self, remotelocation, store)
-                del uridata['scheme']
-                del uridata['netloc']
+                logger.debug('Get resource %s at %s from %s', self, self.lasturl, store)
                 rst = store.get(
-                    uridata,
+                    self.uridata,
                     self.container.iotarget(),
                     self.options(extras, fmt=self.container.actualfmt)
                 )
@@ -216,7 +232,7 @@ class Handler(object):
                     self.updstage('get')
                 return rst
             else:
-                logger.error('Could not find any store to get %s', remotelocation)
+                logger.error('Could not find any store to get %s', self.lasturl)
         else:
             logger.error('Could not get an incomplete rh %s', self)
         return rst
@@ -226,18 +242,14 @@ class Handler(object):
         rst = False
         if self.complete:
             logger.debug('Put resource %s', self)
-            remotelocation = self.location()
-            uridata = net.uriparse(remotelocation)
-            store = footprints.proxy.store(scheme=uridata['scheme'], netloc=uridata['netloc'])
+            store = self.store
             if store:
                 iotarget = self.container.iotarget()
                 if store.in_place(iotarget):
-                    logger.debug('Put resource %s at %s from %s', self, remotelocation, store)
-                    del uridata['scheme']
-                    del uridata['netloc']
+                    logger.debug('Put resource %s at %s from %s', self, self.lasturl, store)
                     rst = store.put(
                         iotarget,
-                        uridata,
+                        self.uridata,
                         self.options(extras, fmt=self.container.actualfmt)
                     )
                     self.history.append(store.fullname(), 'put', rst)
@@ -248,7 +260,7 @@ class Handler(object):
                 else:
                     logger.error('Could not find any source to put [%s]', iotarget)
             else:
-                logger.error('Could not find any store to put [%s]', remotelocation)
+                logger.error('Could not find any store to put [%s]', self.lasturl)
         else:
             logger.error('Could not put an incomplete rh [%s]', self)
         return rst
@@ -258,20 +270,16 @@ class Handler(object):
         rst = None
         if self.resource and self.provider:
             logger.debug('Check resource %s', self)
-            remotelocation = self.location()
-            uridata = net.uriparse(remotelocation)
-            store = footprints.proxy.store(scheme=uridata['scheme'], netloc=uridata['netloc'])
+            store = self.store
             if store:
-                logger.debug('Check resource %s at %s from %s', self, remotelocation, store)
-                del uridata['scheme']
-                del uridata['netloc']
+                logger.debug('Check resource %s at %s from %s', self, self.lasturl, store)
                 rst = store.check(
-                    uridata,
+                    self.uridata,
                     self.options(extras)
                 )
                 self.history.append(store.fullname(), 'check', rst)
             else:
-                logger.error('Could not find any store to check %s', remotelocation)
+                logger.error('Could not find any store to check %s', self.lasturl)
         else:
             logger.error('Could not check a rh without defined resource and provider %s', self)
         return rst

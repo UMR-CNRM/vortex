@@ -9,7 +9,6 @@ Miscellaneous Tools
    actions
    addons
    caches
-   config
    date
    env
    fortran
