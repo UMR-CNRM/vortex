@@ -76,6 +76,9 @@ class MeteoBull(Target):
             sysname = dict(
                 values = [ 'Linux' ]
             ),
+            inifile = dict(
+                default = 'target-[inetname].ini',
+            )
         ),
         priority = dict(
             level = footprints.priorities.top.TOOLBOX
@@ -99,9 +102,6 @@ class Beaufix(MeteoBull):
                 default = 'beaufix',
                 values  = ['beaufix']
             ),
-            inifile = dict(
-                default = 'target-beaufix.ini',
-            )
         )
     )
 
@@ -125,9 +125,6 @@ class Prolix(MeteoBull):
                 default = 'prolix',
                 values  = ['prolix']
             ),
-            inifile = dict(
-                default = 'target-prolix.ini',
-            )
         )
     )
 

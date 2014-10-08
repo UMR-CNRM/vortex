@@ -641,7 +641,7 @@ class utPriorities(TestCase):
         self.assertEqual(rv.TOOLBOX(), 1)
         self.assertEqual(rv.DEBUG(),   2)
         self.assertEqual(cmp(rv.DEBUG, 'bof'), -1)
-        self.assertEqual(rv.DEBUG.dumpshortcut(), "footprints.priorities.PriorityLevel('DEBUG')")
+        self.assertEqual(rv.DEBUG.as_dump(), "footprints.priorities.PriorityLevel('DEBUG')")
 
         rv.reset()
         self.assertEqual(len(rv), 2)
@@ -890,7 +890,8 @@ class utFootprintSetup(TestCase):
         self.assertIsInstance(setup.nullreport, reporting.NullReport)
         self.assertIsInstance(setup.report, bool)
         self.assertIsInstance(setup.extended, bool)
-        self.assertIsInstance(setup.docstring, bool)
+        self.assertIsInstance(setup.docstrings, bool)
+        self.assertIsInstance(setup.shortnames, bool)
         self.assertIsInstance(setup.fastmode, bool)
         self.assertIsInstance(setup.fastkeys, tuple)
         self.assertIsInstance(setup.defaults, dict)
@@ -1577,11 +1578,11 @@ class utFootprintBase(TestCase):
         self.assertIsInstance(FootprintTestMeta._footprint, Footprint)
         self.assertTrue(FootprintTestMeta._abstract)
         self.assertTrue(FootprintTestMeta._explicit)
-        self.assertTrue(FootprintTestMeta.is_abstract())
+        self.assertTrue(FootprintTestMeta.footprint_abstract())
         self.assertTupleEqual(FootprintTestMeta._collector, ('garbage',))
         self.assertEqual(FootprintTestMeta.fullname(), '__main__.FootprintTestMeta')
         self.assertEqual(FootprintTestMeta.__doc__, 'Not documented yet.')
-        self.assertListEqual(FootprintTestMeta.mandatory(), list())
+        self.assertListEqual(FootprintTestMeta.footprint_mandatory(), list())
         self.assertDictEqual(FootprintTestMeta._footprint.as_dict(), dict(
             attr = dict(),
             bind = list(),
@@ -1591,10 +1592,10 @@ class utFootprintBase(TestCase):
         ))
 
         with self.assertRaises(KeyError):
-            self.assertTrue(FootprintTestMeta.optional('foo'))
+            self.assertTrue(FootprintTestMeta.footprint_optional('foo'))
 
         with self.assertRaises(KeyError):
-            self.assertTrue(FootprintTestMeta.authvalues('foo'))
+            self.assertTrue(FootprintTestMeta.footprint_values('foo'))
 
         with self.assertRaises(footprints.FootprintInvalidDefinition):
             u_ftm = FootprintTestMeta()
@@ -1611,21 +1612,21 @@ class utFootprintBase(TestCase):
 
         ftm = FootprintTestMeta()
         self.assertIsInstance(ftm._footprint, Footprint)
-        self.assertListEqual(ftm.attributes, list())
-        self.assertDictEqual(ftm.as_dict(), dict())
-        self.assertDictEqual(ftm.shellexport(), dict())
-        self.assertEqual(ftm.shortname(), 'FootprintTestMeta')
-        self.assertEqual(ftm.info, 'Not documented')
+        self.assertListEqual(ftm.footprint_attributes, list())
+        self.assertDictEqual(ftm.footprint_as_dict(), dict())
+        self.assertDictEqual(ftm.footprint_export(), dict())
+        self.assertEqual(ftm.footprint_clsname(), 'FootprintTestMeta')
+        self.assertEqual(ftm.footprint_info, 'Not documented')
 
         del FootprintTestMeta
 
     def test_baseclass_fp1(self):
-        self.assertFalse(FootprintTestOne.is_abstract())
-        self.assertListEqual(FootprintTestOne.mandatory(), ['someint', 'kind'])
-        self.assertTrue(FootprintTestOne.optional('somestr'))
-        self.assertListEqual(FootprintTestOne.authvalues('kind'), ['hip', 'hop'])
+        self.assertFalse(FootprintTestOne.footprint_abstract())
+        self.assertListEqual(FootprintTestOne.footprint_mandatory(), ['someint', 'kind'])
+        self.assertTrue(FootprintTestOne.footprint_optional('somestr'))
+        self.assertListEqual(FootprintTestOne.footprint_values('kind'), ['hip', 'hop'])
         self.assertSetEqual(
-            FootprintTestOne.retrieve_footprint().as_opts(),
+            FootprintTestOne.footprint_retrieve().as_opts(),
             set(['someint', 'somestr', 'kind', 'stuff'])
         )
 
@@ -1638,20 +1639,20 @@ class utFootprintBase(TestCase):
         fp1 = FootprintTestOne(kind='hip', someint=7)
         self.assertIsInstance(fp1, FootprintTestOne)
         self.assertEqual(fp1.realkind, 'bigone')
-        self.assertListEqual(fp1.attributes, ['kind', 'someint', 'somestr'])
-        self.assertEqual(fp1.info, 'Test class')
+        self.assertListEqual(fp1.footprint_attributes, ['kind', 'someint', 'somestr'])
+        self.assertEqual(fp1.footprint_info, 'Test class')
 
         fp1 = FootprintTestOne(stuff='hip', someint=7)
         self.assertIsInstance(fp1, FootprintTestOne)
-        self.assertListEqual(fp1.attributes, ['kind', 'someint', 'somestr'])
-        self.assertDictEqual(fp1.as_dict(), dict(
+        self.assertListEqual(fp1.footprint_attributes, ['kind', 'someint', 'somestr'])
+        self.assertDictEqual(fp1.footprint_as_dict(), dict(
             kind = 'hip',
             someint = 7,
             somestr = 'this',
         ))
 
         fp1 = FootprintTestOne(stuff='foo', someint='7')
-        self.assertDictEqual(fp1.as_dict(), dict(
+        self.assertDictEqual(fp1.footprint_as_dict(), dict(
             kind = 'hop',
             someint = 7,
             somestr = 'this',
@@ -1659,24 +1660,24 @@ class utFootprintBase(TestCase):
 
         with self.assertRaises(AttributeError):
             fp1 = FootprintTestOne(stuff='foo', someint='7', checked=True)
-            self.assertDictEqual(fp1.as_dict(), dict(
+            self.assertDictEqual(fp1.footprint_as_dict(), dict(
                 stuff = 'foo',
                 someint = '7',
             ))
 
         fp1 = FootprintTestOne(kind='foo', someint='7', checked=True)
-        self.assertDictEqual(fp1.as_dict(), dict(
+        self.assertDictEqual(fp1.footprint_as_dict(), dict(
             kind = 'foo',
             someint = '7',
         ))
 
     def test_baseclass_fp2(self):
-        self.assertFalse(FootprintTestTwo.is_abstract())
-        self.assertListEqual(FootprintTestTwo.mandatory(), ['someint', 'kind', 'somefoo'])
-        self.assertTrue(FootprintTestTwo.optional('somestr'))
-        self.assertListEqual(FootprintTestTwo.authvalues('kind'), ['hip', 'hop'])
+        self.assertFalse(FootprintTestTwo.footprint_abstract())
+        self.assertListEqual(FootprintTestTwo.footprint_mandatory(), ['someint', 'kind', 'somefoo'])
+        self.assertTrue(FootprintTestTwo.footprint_optional('somestr'))
+        self.assertListEqual(FootprintTestTwo.footprint_values('kind'), ['hip', 'hop'])
         self.assertSetEqual(
-            FootprintTestTwo.retrieve_footprint().as_opts(),
+            FootprintTestTwo.footprint_retrieve().as_opts(),
             set(['someint', 'somestr', 'kind', 'stuff', 'somefoo'])
         )
 
@@ -1693,9 +1694,9 @@ class utFootprintBase(TestCase):
 
         fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
         self.assertIsInstance(fp2, FootprintTestTwo)
-        self.assertListEqual(fp2.attributes, ['kind', 'somefoo', 'someint', 'somestr'])
-        self.assertEqual(fp2.info, 'Another test class')
-        self.assertDictEqual(fp2.as_dict(), dict(
+        self.assertListEqual(fp2.footprint_attributes, ['kind', 'somefoo', 'someint', 'somestr'])
+        self.assertEqual(fp2.footprint_info, 'Another test class')
+        self.assertDictEqual(fp2.footprint_as_dict(), dict(
             kind = 'hip',
             someint = 5,
             somestr = 'this',
@@ -1712,9 +1713,9 @@ class utFootprintBase(TestCase):
         self.assertEqual(fprwd.attr['somefoo']['access'], 'rxx')
         self.assertEqual(fprwd.attr['somestr']['access'], 'rwd')
 
-        self.assertEqual(x.attraccess('someint'), 'rwx')
-        self.assertEqual(x.attraccess('somefoo'), 'rxx')
-        self.assertEqual(x.attraccess('somestr'), 'rwd')
+        self.assertEqual(x.footprint_access('someint'), 'rwx')
+        self.assertEqual(x.footprint_access('somefoo'), 'rxx')
+        self.assertEqual(x.footprint_access('somestr'), 'rwd')
 
         self.assertIsInstance(x.someint, int)
         self.assertIsInstance(x.somefoo, Foo)
@@ -1748,7 +1749,7 @@ class utFootprintBase(TestCase):
         self.assertFalse(hasattr(x, 'somestr'))
 
     def test_baseclass_couldbe(self):
-        rv, attr_input = FootprintTestOne.couldbe(dict(kind='hip'), mkreport=False)
+        rv, attr_input = FootprintTestOne.footprint_couldbe(dict(kind='hip'), mkreport=False)
         self.assertFalse(rv)
         self.assertSetEqual(attr_input, set(['kind']))
 
@@ -1757,21 +1758,21 @@ class utFootprintBase(TestCase):
         report.clear()
         self.assertDictEqual(report.as_dict(), dict())
 
-        rv, attr_input = FootprintTestOne.couldbe(dict(kind='hip'), mkreport=True)
+        rv, attr_input = FootprintTestOne.footprint_couldbe(dict(kind='hip'), mkreport=True)
         self.assertFalse(rv)
         self.assertSetEqual(attr_input, set(['kind']))
         self.assertDictEqual(report.last.as_dict(), {
             '__main__.FootprintTestOne': {'someint': {'why': 'Missing value'}}
         })
 
-        rv, attr_input = FootprintTestOne.couldbe(dict(kind='hip', someint=12), mkreport=True)
+        rv, attr_input = FootprintTestOne.footprint_couldbe(dict(kind='hip', someint=12), mkreport=True)
         self.assertFalse(rv)
         self.assertSetEqual(attr_input, set(['kind']))
         self.assertDictEqual(report.last.as_dict(), {
             '__main__.FootprintTestOne': {'someint': {'why': 'Not in values', 'args': 12}}
         })
 
-        rv, attr_input = FootprintTestOne.couldbe(dict(kind='hip', someint=2), mkreport=True)
+        rv, attr_input = FootprintTestOne.footprint_couldbe(dict(kind='hip', someint=2), mkreport=True)
         self.assertTrue(rv)
         self.assertSetEqual(attr_input, set(['kind', 'someint']))
         self.assertDictEqual(report.last.as_dict(), {

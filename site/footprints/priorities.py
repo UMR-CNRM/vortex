@@ -9,7 +9,10 @@ class PriorityLevel(object):
 
     def __init__(self, tagname, pset):
         self._tag  = tagname
-        self._pset = pset
+        if isinstance(pset, PrioritySet):
+            self._pset = pset
+        else:
+            raise TypeError, 'argument `pset` should be a PrioritySet, not ' + str(type(pset))
 
     def __call__(self):
         return self.rank
@@ -71,7 +74,7 @@ class PriorityLevel(object):
         """Return the previous priority level in the set... if any."""
         return self.inset.levelbyindex(self.rank-1)
 
-    def dumpshortcut(self):
+    def as_dump(self):
         """Return a nicely formated class name for dump in footprint."""
         return "{0:s}.{1:s}('{2:s}')".format(self.__module__, self.__class__.__name__, self.tag)
 
@@ -98,7 +101,11 @@ class PrioritySet(object):
         return len(self._levels)
 
     def __contains__(self, item):
-        return bool(self.level(item))
+        try:
+            item = item.tag
+        except AttributeError:
+            pass
+        return item.upper() in self.levels
 
     @property
     def levels(self):
@@ -106,6 +113,8 @@ class PrioritySet(object):
 
     def level(self, tag):
         """Return the :class:`PriorityLevel` object of this set associated to the specified ``tag`` name."""
+        if isinstance(tag, PriorityLevel):
+            return tag
         pl = None
         if tag and str(tag).upper() in self._levels:
             pl = self.__dict__[str(tag).upper()]

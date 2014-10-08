@@ -37,7 +37,7 @@ print t.line
 x = tb.algo(engine='launch', interpreter=script.resource.language)
 
 print t.prompt, x
-print t.prompt, x.as_dict()
+print t.prompt, x.footprint_as_dict()
 print t.prompt, script.container.localpath()
 
 print t.line
@@ -49,7 +49,7 @@ print t.line
 x = tb.algo(engine='blind')
 
 print t.prompt, x
-print t.prompt, x.as_dict()
+print t.prompt, x.footprint_as_dict()
 
 print t.line
 
@@ -60,7 +60,7 @@ print t.line
 x = tb.algo(engine='parallel')
 
 print t.prompt, x
-print t.prompt, x.as_dict()
+print t.prompt, x.footprint_as_dict()
 
 e.vortex_debug_env = True
 

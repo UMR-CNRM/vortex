@@ -51,15 +51,15 @@ class R02(R01):
 
 print t.line
 
-print R01.retrieve_footprint(), R01.retrieve_footprint().as_dict(), "\n"
+print R01.footprint_retrieve(), R01.footprint_retrieve().as_dict(), "\n"
 
 print t.line
 
-print R02.retrieve_footprint(), R02.retrieve_footprint().as_dict(), "\n"
+print R02.footprint_retrieve(), R02.footprint_retrieve().as_dict(), "\n"
 
 print t.line
 
-rfp = R02.retrieve_footprint()
+rfp = R02.footprint_retrieve()
 print rfp.info, rfp.only
 
 print t.line

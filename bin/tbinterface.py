@@ -10,7 +10,7 @@ def catdump(thiscollector):
     for c in thiscollector.items():
         attrx = list()
         attro = list()
-        attrs = c.retrieve_footprint().attr
+        attrs = c.footprint_retrieve().attr
         for a in attrs.keys():
             if 'values' in attrs[a]:
                 extra = a + '(' + ','.join([str(x) for x in attrs[a]['values']]) + ')'

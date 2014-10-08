@@ -25,7 +25,7 @@ class FootprintAttrDescriptor(object):
         self.__doc__ = doc
 
     def __get__(self, instance, owner):
-        return instance.in_attributes_get(self._attr, auth=self._auth)
+        return instance.footprint_getattr(self._attr, auth=self._auth)
 
 
 class FootprintAttrDescriptorRWD(FootprintAttrDescriptor):
@@ -54,10 +54,10 @@ class FootprintAttrDescriptorRWD(FootprintAttrDescriptor):
                 raise ValueError('Value {0:s} excluded from range {1:s}'.format(str(value), str(list(fpdef['outcast']))))
             if weak:
                 value = weakref.proxy(value)
-            instance.in_attributes_set(self._attr, value, auth=self._auth)
+            instance.footprint_setattr(self._attr, value, auth=self._auth)
 
     def __delete__(self, instance):
-        instance.in_attributes_del(self._attr, auth=self._auth)
+        instance.footprint_delattr(self._attr, auth=self._auth)
         del self._attr
 
 

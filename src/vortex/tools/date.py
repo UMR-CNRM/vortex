@@ -413,7 +413,7 @@ class Date(datetime.datetime):
         """Default string representation is iso8601."""
         return self.iso8601()
 
-    def dumpshortcut(self):
+    def as_dump(self):
         """Nicely formatted representation in dumper."""
         return self.__repr__()
 
@@ -446,7 +446,7 @@ class Date(datetime.datetime):
         """Nice and verbose string representation."""
         return self.strftime("%A %d. %B %Y, at %H:%M:%S")
 
-    def shellexport(self):
+    def export_sh(self):
         """String representation for shell variable."""
         return self.ymdhm
 
@@ -588,11 +588,11 @@ class Time(object):
         """Standard hour-minute representation."""
         return 'Time({0:d}, {1:d})'.format(self.hour, self.minute)
 
-    def dumpshortcut(self):
+    def as_dump(self):
         """Nicely formatted representation in dumper."""
         return self.__repr__()
 
-    def shellexport(self):
+    def export_sh(self):
         """String representation for shell variable."""
         return self.__str__()
 
@@ -741,7 +741,7 @@ class Month(object):
         """Return a formated id of the current month."""
         return '{0:s}({1:02d}, year={2:d})'.format(self.__class__.__name__, self._month, self._year)
 
-    def dumpshortcut(self):
+    def as_dump(self):
         """Nicely formatted representation in dumper."""
         return self.__repr__()
 

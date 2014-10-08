@@ -79,6 +79,12 @@ class Target(footprints.FootprintBase):
                 return self.config.get(section, key)
             return default
 
+    @classmethod
+    def is_anonymous(cls):
+        """Return a boolean either the current footprint define or not a mandatory set of hostname values."""
+        fp = cls.footprint_retrieve()
+        return not bool(fp.attr['hostname']['values'])
+
 
 class LocalTarget(Target):
 

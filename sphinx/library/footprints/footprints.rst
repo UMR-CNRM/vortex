@@ -13,6 +13,7 @@ Modules
 -------
 
 * :mod:`footprints.access`
+* :mod:`footprints.collectors` 
 * :mod:`footprints.config`
 * :mod:`footprints.dump`
 * :mod:`footprints.observers`
@@ -40,6 +41,10 @@ Interface functions
 .. autofunction:: load
 
 .. autofunction:: default
+
+.. autofunction:: collected_classes
+
+.. autofunction:: collected_priorities
 
 Exceptions
 ----------

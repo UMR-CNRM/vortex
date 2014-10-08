@@ -375,21 +375,42 @@ class IO_Poll(addons.Addon):
         )
     )
 
+    def __init__(self, *args, **kw):
+        """Abstract Addon initialisation."""
+        logger.debug('IO_Poll init %s', self.__class__)
+        super(IO_Poll, self).__init__(*args, **kw)
+        self._polled = set()
+
     def _spawn(self, cmd, **kw):
         """Tube to set LFITOOLS env variable."""
-        activelfi = LFI_Tool.in_shell(self.sh)
-        if activelfi is None:
-            raise StandardError('Could not find any active LFI Tool')
-        self.env.LFITOOLS = activelfi.path + '/' + activelfi.cmd
+        if 'LFITOOLS' not in self.env:
+            activelfi = LFI_Tool.in_shell(self.sh)
+            if activelfi is None:
+                raise StandardError('Could not find any active LFI Tool')
+            self.env.LFITOOLS = activelfi.path + '/' + activelfi.cmd
         return super(IO_Poll, self)._spawn(cmd, **kw)
 
     def io_poll(self, prefix, nproc_io=None):
         """Do the actual job of polling files prefixed by ``prefix``."""
-        st = LFI_Status()
         cmd = ['--prefix', prefix]
-        if nproc_io is not None:
+        if nproc_io is None:
+            if not self.sh.path.exists('fort.4'):
+                raise IOError('The `nproc_io` option or a `fort.4` file should be provided.')
+        else:
             cmd.extend(['--nproc_io', str(nproc_io)])
+
+        # Catch the file processed
         rawout = self._spawn(cmd)
+
+        # Cumulative results
+        st = LFI_Status()
         st.result = rawout
+        for polledfile in st.result:
+            self._polled.add(polledfile)
         st.rc &= self.sh.rclast
         return st
+
+    @property
+    def polled(self):
+        """List of files already polled."""
+        return sorted(self._polled)

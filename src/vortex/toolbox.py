@@ -245,7 +245,7 @@ def namespaces(**kw):
     nameseen = dict()
     for cat in [ footprints.collectors.get(x) for x in usedcat ]:
         for cls in cat():
-            fp = cls.retrieve_footprint().attr
+            fp = cls.footprint_retrieve().attr
             netattr = fp.get('namespace', None)
             if not netattr:
                 netattr = fp.get('netloc', None)

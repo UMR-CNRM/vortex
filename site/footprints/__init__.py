@@ -9,9 +9,11 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.8.20'
+__version__ = '0.9.0'
 
+import os
 import re
+import time
 import copy
 import types
 import weakref
@@ -35,7 +37,10 @@ from . import util, reporting
 # Default setup
 
 from . import config
-setup = config.get(docstring=True)
+setup = config.get(
+    docstrings = int(os.environ.get('FOOTPRINT_DOCSTRINGS', 0)),
+    shortnames = int(os.environ.get('FOOTPRINT_SHORTNAMES', 0))
+)
 
 
 # Internal modules of the footprints package
@@ -58,7 +63,7 @@ replattr = re.compile(r'\[(\w+)(?::+(\w+))?(?:#(\w+))?\]')
 
 # Footprint exceptions
 
-class FootprintException(Exception):
+class FootprintException(StandardError):
     pass
 
 
@@ -107,6 +112,21 @@ def grep(**kw):
     for c in collectors.values():
         allgrep.extend(c.grep(**kw))
     return allgrep
+
+
+def collected_classes():
+    """Return a set of all collected footprint-based classes."""
+    l = list()
+    for kv in collectors.values():
+        l.extend(kv.items())
+    return set(l)
+
+def collected_priorities(tag):
+    """Print a table of collected classes with a priority level higher or equal to ``tag``."""
+    plevel = priorities.top.level(tag)
+    for cl in sorted(set([c for cv in collectors.values() for c in cv.filter_higher_level(plevel)]), key=lambda z: z.fullname()):
+        pl = cl.footprint_level()
+        print pl.rjust(10), '-', cl.fullname()
 
 
 # Base classes
@@ -252,7 +272,7 @@ class Footprint(object):
         extras = setup.extras()
         for vdesc in desc.values():
             if isinstance(vdesc, FootprintBase):
-                extras.update(vdesc.as_dict())
+                extras.update(vdesc.footprint_as_dict())
         if extras:
             logger.debug(' > Extras : %s', extras)
         return extras
@@ -446,7 +466,7 @@ class Footprint(object):
                 if k not in diags:
                     report.add(attribute=k, why=reporting.REPORT_WHY_MISSING)
                 if opts['fatal']:
-                    logger.critical('No valid attribute %s', k)
+                    logger.info('No valid attribute "%s" is fatal', k)
                     raise FootprintFatalError('No attribute `' + k + '` is fatal')
                 else:
                     logger.debug(' > No valid attribute %s', k)
@@ -531,6 +551,11 @@ class Footprint(object):
         """Read-only property. Direct access to internal footprint priority rules."""
         return self._fp['priority']
 
+    @property
+    def level(self):
+        """Read-only property. Dorect access to internal footprtin priority level."""
+        return self.priority['level']
+
 
 class FootprintBaseMeta(type):
     """
@@ -541,29 +566,49 @@ class FootprintBaseMeta(type):
     """
 
     def __new__(cls, n, b, d):
+        """
+        This meta-constructor is in charge of the footprints merging,
+        class registering in footprint collectors and documentation setting.
+        """
         logger.debug('Base class for footprint usage "%s / %s", bc = ( %s ), internal = %s', cls, n, b, d)
-        fplocal  = d.get('_footprint', dict())
         abstract = d.setdefault('_abstract', False)
+        mkshort  = d.setdefault('_mkshort', setup.shortnames)
+
+        # Footprint merging
+        fplocal  = d.get('_footprint', dict())
         bcfp = [ c.__dict__.get('_footprint', dict()) for c in b ]
         if type(fplocal) is types.ListType:
             bcfp.extend(fplocal)
         else:
             bcfp.append(fplocal)
         thisfp = d['_footprint'] = Footprint(*bcfp)
+
+        # Setting descriptors for footprint attributes
+        d['_fp_auth'] = hash(d['__module__'] + '.' + n)
         active_accessors = access.attr_descriptors()
         for k in thisfp.attr.keys():
             if isinstance(thisfp.attr[k]['access'], access.FootprintAttrDescriptor):
-                d[k] = thisfp.attr[k]['access'](k)
+                d[k] = thisfp.attr[k]['access'](k, auth=d['_fp_auth'])
             else:
                 try:
-                    d[k] = active_accessors[thisfp.attr[k]['access']](k)
+                    d[k] = active_accessors[thisfp.attr[k]['access']](k, auth=d['_fp_auth'])
                 except AttributeError:
                     logger.error('Could not find any local descriptor with acces mode %s',
                                  thisfp.attr['access'])
                     raise
+
+        # Possibly use short method names
+        if mkshort:
+            for k in [x for x in d.keys() if x.startswith('footprint_')]:
+                kshort = k.replace('footprint_', '')
+                d[kshort] = d.get(k)
+
+        # At least build the class itself as a default type
         realcls = super(FootprintBaseMeta, cls).__new__(cls, n, b, d)
+
+        # A class that is not abstrat should register in dedicated collectors
         if not abstract:
-            if realcls._explicit and not realcls.mandatory():
+            if realcls._explicit and not realcls.footprint_mandatory():
                 raise FootprintInvalidDefinition('Explicit class without any mandatory footprint attribute.')
             for cname in realcls._collector:
                 if cname in thisfp.allkeys():
@@ -573,12 +618,15 @@ class FootprintBaseMeta(type):
                 if thiscollector.register:
                     observers.get(tag=realcls.fullname()).register(thiscollector)
                     logger.debug('Register class %s in collector %s (%s)', realcls, thiscollector, cname)
+
+        # Docstring building
         basedoc = realcls.__doc__
         if not basedoc:
             basedoc = 'Not documented yet.'
         realcls.__doc__ = basedoc
-        if setup.docstring:
+        if setup.docstrings:
             realcls.__doc__ += "\n\n    Footprint::\n\n" + realcls._footprint.nice()
+
         return realcls
 
 
@@ -614,7 +662,7 @@ class FootprintBase(object):
             self._attributes, u_attr_input, u_attr_seen = \
                 self._footprint.resolve(self._attributes, fatal=True)
         self._observer = observers.get(tag=self.__class__.fullname())
-        self.make_alive()
+        self.footprint_riseup()
 
     @property
     def realkind(self):
@@ -626,17 +674,21 @@ class FootprintBase(object):
         """Footprint associated to current object's class."""
         return self.__class__._footprint
 
+    def footprint_clsname(self):
+        """Returns the short name of the object's class."""
+        return self.__class__.__name__
+
     @classmethod
-    def retrieve_footprint(cls, **kw):
+    def footprint_retrieve(cls, **kw):
         """Returns the internal checked ``footprint`` of the current class object."""
         return cls._footprint
 
     @classmethod
-    def reusable(cls):
+    def footprint_reusable(cls):
         return cls._reusable
 
     @classmethod
-    def is_abstract(cls):
+    def footprint_abstract(cls):
         """Returns whether the current class could be instanciated or not."""
         return cls._abstract
 
@@ -645,11 +697,11 @@ class FootprintBase(object):
         """Returns a nicely formated name of the current class (dump usage)."""
         return '{0:s}.{1:s}'.format(cls.__module__, cls.__name__)
 
-    def dumpshortcut(self):
+    def footprint_as_dump(self):
         """Nicely formated view of the current class in dump context."""
         return str(self)
 
-    def make_alive(self):
+    def footprint_riseup(self):
         """Things to do after new or init construction."""
         self._observer.notify_new(self, dict())
 
@@ -665,7 +717,7 @@ class FootprintBase(object):
     def __setstate__(self, state):
         self._observer = observers.get(tag=self.__class__.fullname())
         self.__dict__.update(state)
-        self.make_alive()
+        self.footprint_riseup()
 
     def __del__(self):
         try:
@@ -673,22 +725,24 @@ class FootprintBase(object):
         except (TypeError, AttributeError):
             logger.warning('Too late for notify_del')
 
-    def in_attributes_get(self, attr, auth=None):
+    def footprint_getattr(self, attr, auth=None):
         """Return actual attribute value in internal storage. Protected method."""
         thisattr = self._attributes.get(attr, None)
         if thisattr is UNKNOWN:
             thisattr = None
         return thisattr
 
-    def in_attributes_set(self, attr, value, auth=None):
+    def footprint_setattr(self, attr, value, auth=None):
         """Set actual attribute to the value specified. Protected method."""
+        if auth != self._fp_auth:
+            raise AttributeError, "can't set attribute without valid authorization"
         self._attributes[attr] = value
 
-    def in_attributes_del(self, attr, auth=None):
+    def footprint_delattr(self, attr, auth=None):
         """Delete actual attribute. Protected method."""
         del self._attributes[attr]
 
-    def clone(self, full=False):
+    def footprint_clone(self, full=False):
         """
         Return a deep copy of the current object as a brand new one.
         Only footprint attributes are carried around.
@@ -699,16 +753,12 @@ class FootprintBase(object):
                 setattr(objcp, a, getattr(self, a))
         return objcp
 
-    def shortname(self):
-        """Returns the short name of the object's class."""
-        return self.__class__.__name__
-
     @property
-    def attributes(self):
+    def footprint_attributes(self):
         """Returns the list of current attributes."""
         return sorted(self._attributes.keys())
 
-    def as_dict(self, refresh=False):
+    def footprint_as_dict(self, refresh=False):
         """Returns a shallow copy of the current attributes."""
         if self._puredict is None or refresh:
             self._puredict = dict()
@@ -716,9 +766,9 @@ class FootprintBase(object):
                 self._puredict[k] = getattr(self, k)
         return self._puredict
 
-    def shellexport(self):
+    def footprint_export(self):
         """See the current footprint as a pure dictionary when exported."""
-        return self.as_dict(refresh=True)
+        return self.footprint_as_dict(refresh=True)
 
     def _str_more(self):
         """Additional information to be combined in repr output."""
@@ -732,12 +782,12 @@ class FootprintBase(object):
         return '{0:s} | {1:s}>'.format(repr(self).rstrip('>'), self._str_more())
 
     @property
-    def info(self):
+    def footprint_info(self):
         """Information from the current footprint."""
         return self._footprint.info
 
     @classmethod
-    def mandatory(cls):
+    def footprint_mandatory(cls):
         """
         Returns the attributes that should be present in a description
         in order to be able to match the current object.
@@ -745,12 +795,12 @@ class FootprintBase(object):
         return cls._footprint.mandatory()
 
     @classmethod
-    def optional(cls, a):
+    def footprint_optional(cls, a):
         """Returns whether the specified attribute ``a`` is optional or not."""
         return cls._footprint.optional(a)
 
     @classmethod
-    def couldbe(cls, rd, report=None, mkreport=False):
+    def footprint_couldbe(cls, rd, report=None, mkreport=False):
         """
         This is the heart of any selection purpose, particularly in relation
         with the :meth:`find_all` mechanism of :class:`footprints.Collector` classes.
@@ -773,7 +823,7 @@ class FootprintBase(object):
                 report.last.lightdump()
             return ( False, attr_input )
 
-    def compatible(self, rd):
+    def footprint_compatible(self, rd):
         """
         Resolve a subset of a description according to my footprint,
         and then compare to my actual values.
@@ -786,7 +836,7 @@ class FootprintBase(object):
                 rc = False
         return rc
 
-    def cleanup(self, rd):
+    def footprint_cleanup(self, rd):
         """
         Removes in the specified ``rd`` description the keys that are
         tracked as part of the footprint of the current object.
@@ -798,20 +848,28 @@ class FootprintBase(object):
         return rd
 
     @classmethod
-    def weightsort(cls, realinputs):
+    def footprint_weight(cls, realinputs):
         """Tuple with ordered weights to make a choice possible between various electible footprints."""
         fp = cls._footprint
         return ( fp.priority['level'].rank, realinputs )
 
     @classmethod
-    def authvalues(cls, attrname):
+    def footprint_values(cls, attrname):
         """Return the list of authorized values of a footprint attribute (if any)."""
         return list(cls._footprint.attr[attrname]['values'])
 
     @classmethod
-    def attraccess(cls, attrname):
+    def footprint_access(cls, attrname):
         """Return the access mode of a footprint attribute."""
         rwd = cls._footprint.attr[attrname]['access']
         if isinstance(rwd, access.FootprintAttrDescriptor):
             rwd = rwd.access_mode
         return rwd
+
+    @classmethod
+    def footprint_pl(cls):
+        return cls._footprint.level
+
+    @classmethod
+    def footprint_level(cls):
+        return cls._footprint.level.tag

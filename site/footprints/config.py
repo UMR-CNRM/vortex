@@ -36,12 +36,13 @@ def add2proxies(c, **kw):
 class FootprintSetup(util.GetByTag):
     """Defines some defaults and external tools."""
 
-    def __init__(self, docstring=True, fatal=True, fastmode=False, fastkeys=('kind',),
-                 callback=None, defaults=None, proxies=None, extended=True,
+    def __init__(self, docstrings=True, extended=True, fastmode=False, fatal=True, shortnames=False,
+                 fastkeys=('kind',), callback=None, defaults=None, proxies=None,
                  report=True, nullreport=reporting.NullReport()):
         """Initialisation of a simple footprint setup driver."""
         self._extended  = bool(extended)
-        self.docstring  = bool(docstring)
+        self.docstrings = bool(docstrings)
+        self.shortnames = bool(shortnames)
         self.fatal      = bool(fatal)
         self.report     = bool(report)
         self.nullreport = nullreport

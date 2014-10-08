@@ -30,13 +30,18 @@ class AlgoComponent(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         """Before parent initialization, preset the internal FS log to an empty list."""
         logger.debug('Algo component init %s', self)
-        self.fslog = list()
+        self._fslog = list()
         super(AlgoComponent, self).__init__(*args, **kw)
 
     @property
     def realkind(self):
         """Default kind is ``algo``."""
         return 'algo'
+
+    @property
+    def fslog(self):
+        """Changes on the filesystem during the execution."""
+        return self._fslog
 
     def fstag(self):
         """Defines a tag specific to the current algo component."""
@@ -48,7 +53,7 @@ class AlgoComponent(footprints.FootprintBase):
 
     def fscheck(self, opts):
         """Ask the current context to check changes on file system since last stamp."""
-        self.fslog.append(self.context.fstrack_check(tag=self.fstag()))
+        self._fslog.append(self.context.fstrack_check(tag=self.fstag()))
 
     def export(self, packenv):
         """Export environment variables in given pack."""
@@ -263,7 +268,7 @@ class Parallel(AlgoComponent):
             mpi = footprints.proxy.mpitool(**mpi_desc)
 
         if not mpi:
-            logger.critical('Component %s could not find any mpitool', self.shortname())
+            logger.critical('Component %s could not find any mpitool', self.footprint_clsname())
             raise AttributeError, 'No valid mpitool attr could be found.'
 
         mpi.import_basics(self)

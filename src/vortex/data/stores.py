@@ -16,7 +16,7 @@ import footprints
 from vortex import sessions
 from vortex.autolog import logdefault as logger
 from vortex.layout import dataflow
-from vortex.tools import config
+from vortex.util import config
 
 
 class StoreGlue(object):
@@ -28,7 +28,7 @@ class StoreGlue(object):
         self._asdict = None
         self._cross = dict()
 
-    def dumpshortcut(self):
+    def as_dump(self):
         """Return a nicely formated class name for dump in footprint."""
         return "{0:s}.{1:s}('{2:s}')".format(self.__module__, self.__class__.__name__, str(self.gluemap))
 
@@ -198,7 +198,7 @@ class Store(footprints.FootprintBase):
         """Proxy method to dedicated get method accordind to scheme."""
         logger.debug('Store get from %s to %s', remote, local)
         if self.in_situ(local, options):
-            logger.warning('Store %s in situ resource %s', self.shortname(), local)
+            logger.warning('Store %s in situ resource %s', self.footprint_clsname(), local)
             return True
         else:
             return getattr(self, self.scheme + 'get', self.notyet)(remote, local, options)

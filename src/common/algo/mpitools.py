@@ -72,6 +72,21 @@ class MpiAuto(mpitools.MpiRun):
 class MpiNWPIO(mpitools.MpiServerIO):
     """Standard IFS NWP IO server."""
 
+    _footprint = dict(
+        attr = dict(
+            pattern = dict(
+                optional = True,
+                default = 'io_serv.*.d',
+            ),
+            polling = dict(
+                optional = True,
+                type = bool,
+                default = False,
+                access = 'rwx',
+            )
+        )
+    )
+
     def setup_namelist_delta(self, namcontents, namlocal):
         """Applying IO Serveur profile on local namelist ``namlocal`` with contents namcontents."""
         if 'NAMIO_SERV' in namcontents:
@@ -104,10 +119,18 @@ class MpiNWPIO(mpitools.MpiServerIO):
 
         return True
 
+    def iodirs(self):
+        return sorted(self.system.glob(self.pattern))
+
     def clean(self, opts=None):
-        """Abstract method for post-execution cleaning."""
+        """Post-execution cleaning for io server."""
+        self.polling = True
+
+        # Old fashion way to make clear that some polling is needed.
         self.system.touch('io_poll.todo')
-        for iodir in sorted(self.system.glob('io_serv.*.d')):
+
+        # Get a look inside io server output directories according to its own pattern
+        for iodir in self.iodirs():
             self.system.subtitle('Parallel io directory {0:s}'.format(iodir))
             self.system.ls('-l', iodir, output=False)
             for iofile in self.system.ls(iodir):

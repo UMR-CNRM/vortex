@@ -40,7 +40,7 @@ class VortexNameBuilder(object):
         """List of currently declared defaults (defined or not)."""
         return self._default.keys()
 
-    def dumpshortcut(self):
+    def as_dump(self):
         """Nicely formated view of the current class in dump context."""
         return "{0:s}.{1:s}({2:s})".format(self.__module__, self.__class__.__name__, str(self._default))
 

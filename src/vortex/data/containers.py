@@ -16,7 +16,7 @@ CONTAINER_INCORELIMIT = 1048576 * 8
 CONTAINER_MAXREADSIZE = 1048576 * 64
 
 
-class DataSizeTooBig(Exception):
+class DataSizeTooBig(StandardError):
     pass
 
 
@@ -212,6 +212,10 @@ class Virtual(Container):
             )
         )
     )
+
+    def exists(self):
+        """In case of a virtual container, always true."""
+        return True
 
     def iotarget(self):
         """Virtual container's io target is an io descriptor."""
@@ -463,3 +467,7 @@ class File(Container):
     def iotarget(self):
         """File container's io target is a plain pathname."""
         return self.localpath()
+
+    def exists(self):
+        """Check the existence of the actual file."""
+        return os.path.exists(self.localpath())

@@ -14,6 +14,7 @@ List of modules.
    footprints
 
    access
+   collectors
    config
    dump
    observers

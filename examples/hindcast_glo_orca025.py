@@ -161,7 +161,7 @@ for r in resources_list:
         r.get()
     except TypeError:
         print dir(r.resource)
-        print r.resource.retrieve_footprint()
+        print r.resource.footprint_retrieve()
         raise
 
 print t.prompt, "Resources get duration=", t.duration()

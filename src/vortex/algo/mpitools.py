@@ -193,7 +193,9 @@ class MpiServerIO(MpiTool):
     _abstract = True
     _footprint = dict(
         attr = dict(
-            io = dict(type=bool)
+            io = dict(
+                type = bool
+            ),
         )
     )
 

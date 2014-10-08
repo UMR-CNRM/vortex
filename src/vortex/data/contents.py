@@ -19,7 +19,7 @@ class DataContent(object):
             self.__dict__['_'+k] = v
 
     @classmethod
-    def shellexport(cls):
+    def export_sh(cls):
         """Return current class name for shell export mechanism."""
         return str(cls.__name__)
 

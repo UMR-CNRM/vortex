@@ -261,22 +261,29 @@ class Dumper(util.GetByTag):
     def dump(self, obj, level=0, nextline=True):
         DEBUG('dump top', obj)
 
-        if self.seen.has_key(id(obj)):
-            return self.seen[id(obj)]
+        this_id = id(obj)
 
-        if is_instance(obj) and hasattr(obj, 'dumpshortcut'):
+        if self.seen.has_key(this_id):
+            return self.seen[this_id]
+
+        if is_instance(obj) and hasattr(obj, 'as_dump'):
             DEBUG('dump shortcut', obj)
-            self.seen[id(obj)] = obj.dumpshortcut()
-            return self.seen[id(obj)]
+            self.seen[this_id] = obj.as_dump()
+            return self.seen[this_id]
+
+        if this_id not in self.seen and is_instance(obj) and hasattr(obj, 'footprint_as_dump'):
+            DEBUG('dump shortcut', obj)
+            self.seen[this_id] = obj.footprint_as_dump()
+            return self.seen[this_id]
 
         if is_class(obj):
             if obj.__module__ == '__builtin__':
                 DEBUG('builtin')
-                self.seen[id(obj)] = obj.__name__
+                self.seen[this_id] = obj.__name__
             else:
                 DEBUG('class ' + str(obj))
-                self.seen[id(obj)] = '{0:s}.{1:s}'.format(obj.__module__, obj.__name__)
-            return self.seen[id(obj)]
+                self.seen[this_id] = '{0:s}.{1:s}'.format(obj.__module__, obj.__name__)
+            return self.seen[this_id]
 
         name = type(obj).__name__
         dump_func = getattr(self, "dump_%s" % name, self.dump_default)

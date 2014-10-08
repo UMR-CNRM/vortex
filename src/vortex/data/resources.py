@@ -42,7 +42,7 @@ class Resource(footprints.FootprintBase):
 
     def _str_more(self):
         """Return a string representation of meaningful attributes for formatted output."""
-        d = self.as_dict()
+        d = self.footprint_as_dict()
         for xdel in [ x for x in notinrepr if x in d ]:
             del d[xdel]
         return ' '.join([ '{0:s}=\'{1:s}\''.format(k, str(v)) for k, v in d.items() ])

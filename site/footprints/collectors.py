@@ -13,7 +13,7 @@ __all__ = []
 import logging
 logger = logging.getLogger('footprints.collectors')
 
-from . import config, dump, reporting, util
+from . import config, dump, priorities, reporting, util
 
 
 # Module Interface
@@ -78,10 +78,50 @@ class Collector(util.GetByTag, util.Catalog):
         """Not yet specialised..."""
         logger.debug('Notified %s upd item %s', self, item)
 
-    def discard_kernel(self, rootname):
+    def filter_kernel(self, rootname):
+        """Find in current collector classes with name starting with ``rootname``."""
+        return [ cl for cl in self.items() if cl.fullname().startswith(rootname) ]
+
+    def discard_kernel(self, rootname, verbose=True):
         """Discard from current collector classes with name starting with ``rootname``."""
-        for x in [ cl for cl in self.items() if cl.fullname().startswith(rootname) ]:
-            print 'Bye...', x
+        for x in self.filter_kernel(rootname):
+            if versbose:
+                print 'Bye...', x
+            self.discard(x)
+
+    def filter_onflag(self, flagmethod, default=True):
+        """Find in current collector classes with method ``flagmethod`` returning ``default``."""
+        return [ cl for cl in self.items() if hasattr(cl, flagmethod) and getattr(cl, flagmethod)() == default ]
+
+    def discard_onflag(self, flagmethod, default=True, verbose=True):
+        """Discard from current collecflagmethodtor classes with method ``flagmethod`` returning ``default``."""
+        for x in self.filter_onflag(flagmethod, default):
+            if verbose:
+                print 'Bye...', x
+            self.discard(x)
+
+    def filter_higher_level(self, tag):
+        """Find in current collector classes with priority level higher or equal to ``level``."""
+        plevel = priorities.top.level(tag)
+        return [ cl for cl in self.items() if cl.footprint_pl() >= plevel ]
+
+    def discard_higher_level(self, tag, verbose=True):
+        """Discard from current collector classes with priority level higher or equal to ``level``."""
+        for x in self.filter_level(tag):
+            if verbose:
+                print 'Bye...', x
+            self.discard(x)
+
+    def filter_lower_level(self, tag):
+        """Find in current collector classes with priority level lower than ``level``."""
+        plevel = priorities.top.level(tag)
+        return [ cl for cl in self.items() if cl.footprint_pl() < plevel ]
+
+    def discard_lower_level(self, tag, verbose=True):
+        """Discard from current collector classes with priority level lower than ``level``."""
+        for x in self.filter_lower_level(tag):
+            if verbose:
+                print 'Bye...', x
             self.discard(x)
 
     def pickup(self, desc):
@@ -97,7 +137,7 @@ class Collector(util.GetByTag, util.Catalog):
         else:
             desc[self.tag] = self.find_best(desc)
         if desc[self.tag] is not None:
-            desc = desc[self.tag].cleanup(desc)
+            desc = desc[self.tag].footprint_cleanup(desc)
         else:
             dumper = dump.get()
             logger.warning('No %s found in description %s', self.tag, "\n" + dumper.cleandump(desc))
@@ -114,21 +154,21 @@ class Collector(util.GetByTag, util.Catalog):
 
     def find_any(self, desc):
         """
-        Return the first item of the collector that :meth:`couldbe`
+        Return the first item of the collector that :meth:`footprint_couldbe`
         as described by argument ``desc``.
         """
         logger.debug('Search any %s in collector %s', desc, self._items)
         if self.report:
             self.report_log.add(collector=self)
         for item in self._items:
-            resolved, u_input = item.couldbe(desc, report=self.report_log)
+            resolved, u_input = item.footprint_couldbe(desc, report=self.report_log)
             if resolved:
                 return item(resolved, checked=True)
         return None
 
     def find_all(self, desc):
         """
-        Returns all the items of the collector that :meth:`couldbe`
+        Returns all the items of the collector that :meth:`footprint_couldbe`
         as described by argument ``desc``.
         """
         logger.debug('Search all %s in collector %s', desc, self._items)
@@ -136,7 +176,7 @@ class Collector(util.GetByTag, util.Catalog):
         if self.report:
             self.report_log.add(collector=self)
         for item in self._items:
-            resolved, theinput = item.couldbe(desc, report=self.report_log)
+            resolved, theinput = item.footprint_couldbe(desc, report=self.report_log)
             if resolved:
                 found.append((item, resolved, theinput))
         return found
@@ -153,10 +193,10 @@ class Collector(util.GetByTag, util.Catalog):
         if len(candidates) > 1:
             dumper = dump.get()
             logger.warning('Multiple %s candidates for %s', self.tag, "\n" + dumper.cleandump(desc))
-            candidates.sort(key=lambda x: x[0].weightsort(x[2]), reverse=True)
+            candidates.sort(key=lambda x: x[0].footprint_weight(x[2]), reverse=True)
             for i, c in enumerate(candidates):
                 thisclass, u_resolved, theinput = c
-                logger.warning('  no.%d in.%d is %s', i+1, len(theinput), thisclass)
+                logger.warning('no.%d in.%d is %s', i+1, len(theinput), thisclass)
         topcl, topr, u_topinput = candidates[0]
         return topcl(topr, checked=True)
 
@@ -170,7 +210,7 @@ class Collector(util.GetByTag, util.Catalog):
         a suitable candidate according to description.
         """
         for inst in self.instances():
-            if inst.reusable() and inst.compatible(kw):
+            if inst.footprint_reusable() and inst.footprint_compatible(kw):
                 return inst
         return self.load(**kw)
 
@@ -197,7 +237,7 @@ class Collector(util.GetByTag, util.Catalog):
         if only is not None and not hasattr(only, '__contains__'):
             only = (only,)
         for c in self:
-            fp = c.retrieve_footprint()
+            fp = c.footprint_retrieve()
             for k in [ ka for ka in fp.attr.keys() if ( only is None or ka in only ) ]:
                 opt = ' (optional)' if fp.optional(k) else ''
                 alist = attrmap.setdefault(k+opt, list())
@@ -229,7 +269,7 @@ class Collector(util.GetByTag, util.Catalog):
         """Complete set of values which are explicitly authorized for a given attribute."""
         allvalues = set()
         for c in self:
-            fp = c.retrieve_footprint()
+            fp = c.footprint_retrieve()
             if attrname in fp.attr:
                 for v in fp.get_values(attrname):
                     allvalues.add(v)
