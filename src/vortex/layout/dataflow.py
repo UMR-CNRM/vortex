@@ -51,7 +51,7 @@ class Section(object):
         logger.debug('Section initialisation %s', self)
         self.kind      = ixo.INPUT
         self.intent    = intent.INOUT
-        self.fatal     = False
+        self.fatal     = True
         self.role      = kw.get('role', None)
         self.alternate = None
         self.rh        = None
@@ -98,7 +98,12 @@ class Section(object):
         """Shortcut to resource handler :meth:`~vortex.data.handlers.get`."""
         if self.kind == ixo.INPUT or self.kind == ixo.EXEC:
             kw['intent'] = self.intent
-            rc = self.rh.get(**kw)
+            rc = False
+            try:
+                rc = self.rh.get(**kw)
+            except Exception as e:
+                logger.error('Something wrong (input section): %s', e)
+                logger.error('Resource %s', self.rh.locate())
             if not rc and self.fatal:
                 raise SectionFatalError('Could not get resource [%s]', str(rc))
             return rc
@@ -110,7 +115,12 @@ class Section(object):
         """Shortcut to resource handler :meth:`~vortex.data.handlers.put`."""
         if self.kind == ixo.OUTPUT:
             kw['intent'] = self.intent
-            rc = self.rh.put(**kw)
+            rc = False
+            try:
+                rc = self.rh.put(**kw)
+            except Exception as e:
+                logger.error('Something wrong (output section): %s', e)
+                logger.error('Resource %s', self.rh.locate())
             if not rc and self.fatal:
                 raise SectionFatalError('Could not put resource [%s]', str(rc))
             return rc

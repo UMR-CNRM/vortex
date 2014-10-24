@@ -27,7 +27,7 @@ class MiscGenv(NoDateResource):
                 optional = True,
             ),
             kind = dict(
-                values = [ 'miscgenv' ]
+                values = ['miscgenv']
             )
         )
     )

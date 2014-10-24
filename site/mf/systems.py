@@ -37,10 +37,6 @@ class SuperUX(OSExtended):
             if len(hl) > 0:
                 self._attributes['hostname'] = hl[0]
 
-    @property
-    def realkind(self):
-        return 'super-ux'
-
     def rawcp(self, source, destination):
         """NEC SX raw copy is a spawn of the shell cp."""
         self.spawn(['cp', source, destination], output=False)

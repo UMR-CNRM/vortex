@@ -22,11 +22,19 @@ from vortex.util import config
 class StoreGlue(object):
     """Defines a way to glue stored objects together."""
 
-    def __init__(self, gluemap=dict()):
+    def __init__(self, gluemap=None):
         logger.debug('Abstract glue init %s', self.__class__)
-        self.gluemap = gluemap
+        if gluemap is None:
+            self._gluemap = dict()
+        else:
+            self._gluemap = gluemap
         self._asdict = None
         self._cross = dict()
+
+    @property
+    def gluemap(self):
+        """Property that returns internal glue-map object."""
+        return self._gluemap
 
     def as_dump(self):
         """Return a nicely formated class name for dump in footprint."""
@@ -161,7 +169,6 @@ class Store(footprints.FootprintBase):
 
     @property
     def realkind(self):
-        """Defines the kind of this object, here ``store``."""
         return 'store'
 
     @property
@@ -236,6 +243,10 @@ class MultiStore(footprints.FootprintBase):
         super(MultiStore, self).__init__(*args, **kw)
         self.openedstores = self.loadstores()
 
+    @property
+    def realkind(self):
+        return 'multistore'
+
     def loadstores(self):
         """
         Load default stores during the initialisation of the current object.
@@ -249,7 +260,7 @@ class MultiStore(footprints.FootprintBase):
             xstore = footprints.proxy.store(**desc)
             if xstore:
                 activestores.append(xstore)
-        logger.info('Multi store %s includes active stores %s', self, activestores)
+        logger.info('Multistore %s includes active stores %s', self, activestores)
         return activestores
 
     def alternatefp(self):
@@ -284,7 +295,7 @@ class MultiStore(footprints.FootprintBase):
 
     def check(self, remote, options=None):
         """Go through internal opened stores and check for the resource."""
-        logger.debug('Multi Store check from %s', remote)
+        logger.debug('Multistore check from %s', remote)
         rc = False
         for sto in self.openedstores:
             rc = sto.check(remote.copy(), options)
@@ -294,38 +305,38 @@ class MultiStore(footprints.FootprintBase):
 
     def locate(self, remote, options=None):
         """Go through internal opened stores and locate the expected resource for each of them."""
-        logger.debug('Multi Store locate %s', remote)
+        logger.debug('Multistore locate %s', remote)
         if not self.openedstores:
             return False
         rloc = list()
         for sto in self.openedstores:
-            logger.info('Multi locate at %s', sto)
+            logger.debug('Multistore locate at %s', sto)
             rloc.append(sto.locate(remote.copy(), options))
         return ';'.join(rloc)
 
     def get(self, remote, local, options=None):
         """Go through internal opened stores for the first available resource."""
-        logger.info('Multi Store get from %s to %s', remote, local)
+        logger.debug('Multistore get from %s to %s', remote, local)
         rc = False
         for num, sto in enumerate(self.openedstores):
-            logger.info('Multi get at %s', sto)
+            logger.debug('Multistore get at %s', sto)
             rc = sto.get(remote.copy(), local, options)
             if rc:
                 if self.refillstore and num > 0:
                     restore = self.openedstores[num-1]
-                    logger.info('Refill back in previous store %s', restore)
+                    logger.info('Refill back in previous store [%s]', restore)
                     rc = restore.put(local, remote.copy(), options)
                 break
         return rc
 
     def put(self, local, remote, options=None):
         """Go through internal opened stores and put resource for each of them."""
-        logger.debug('Multi Store put from %s to %s', local, remote)
+        logger.debug('Multistore put from %s to %s', local, remote)
         if not self.openedstores:
             return False
         rc = True
         for sto in self.openedstores:
-            logger.info('Multi put at %s', sto)
+            logger.debug('Multistore put at %s', sto)
             rc = sto.put(local, remote.copy(), options) and rc
         return rc
 
@@ -337,13 +348,17 @@ class MagicPlace(Store):
         info = 'Evanescent physical store',
         attr = dict(
             scheme = dict(
-                values   = [ 'magic' ],
+                values   = ['magic'],
             ),
         ),
         priority = dict(
             level = footprints.priorities.top.DEFAULT
         )
     )
+
+    @property
+    def realkind(self):
+        return 'magicstore'
 
     def magiccheck(self, remote, options):
         """Void - Always False."""
@@ -443,11 +458,14 @@ class Finder(Store):
 
     def ftpget(self, remote, local, options):
         """Delegates to ``system`` the file transfert of ``remote`` to ``local``."""
-        ftp = self.system.ftp(self.hostname(), remote['username'])
-        if ftp:
-            rc = ftp.get(self.fullpath(remote), local)
-            ftp.close()
-            return rc
+        return self.system.ftget(
+            self.fullpath(remote),
+            local,
+            # ftp control
+            hostname = self.hostname(),
+            logname  = remote['username'],
+            fmt      = options.get('fmt'),
+        )
 
     def ftpput(self, local, remote, options):
         """Delegates to ``system`` the file transfert of ``local`` to ``remote``."""
@@ -457,7 +475,7 @@ class Finder(Store):
             # ftp control
             hostname = self.hostname(),
             logname  = remote['username'],
-            fmt      = options.get('fmt')
+            fmt      = options.get('fmt'),
         )
 
 
@@ -468,22 +486,22 @@ class ArchiveStore(Store):
         info = 'Generic archive store',
         attr = dict(
             scheme = dict(
-                values   = [ 'ftp', 'ftserv' ],
+                values   = ['ftp', 'ftserv'],
             ),
             netloc = dict(
-                values   = [ 'open.archive.fr' ],
+                values   = ['open.archive.fr'],
             ),
             rootdir = dict(
                 optional = True,
-                default  = '/home/m/marp/marp999'
+                default  = '/home/m/marp/marp999',
             ),
             headdir = dict(
                 optional = True,
-                default  = 'sto'
+                default  = 'sto',
             ),
             storage = dict(
                 optional = True,
-                default  = 'cougar.meteo.fr'
+                default  = 'cougar.meteo.fr',
             ),
         )
     )
@@ -525,14 +543,15 @@ class ArchiveStore(Store):
             return None
 
     def ftpget(self, remote, local, options):
-        """Delegates to ``system.ftp`` the put action."""
-        ftp = self.system.ftp(self.hostname(), remote['username'])
-        if ftp:
-            rc = ftp.get(self.rootdir + remote['path'], local)
-            ftp.close()
-            return rc
-        else:
-            return False
+        """Delegates to ``system.ftp`` the get action."""
+        return self.system.ftget(
+            self.rootdir + remote['path'],
+            local,
+            # ftp control
+            hostname = self.hostname(),
+            logname  = remote['username'],
+            fmt      = options.get('fmt'),
+        )
 
     def ftpput(self, local, remote, options):
         """Delegates to ``system.ftp`` the put action."""
@@ -545,7 +564,7 @@ class ArchiveStore(Store):
             # ftp control
             hostname = self.hostname(),
             logname  = remote['username'],
-            fmt      = options.get('fmt')
+            fmt      = options.get('fmt'),
         )
 
 
@@ -556,17 +575,17 @@ class VortexArchiveStore(ArchiveStore):
         info = 'VORTEX archive access',
         attr = dict(
             scheme = dict(
-                values   = [ 'vortex', 'ftp', 'ftserv' ],
+                values   = ['vortex', 'ftp', 'ftserv'],
             ),
             netloc = dict(
-                values   = [ 'open.archive.fr', 'vortex.archive.fr' ],
+                values   = ['open.archive.fr', 'vortex.archive.fr'],
                 remap    = {
                     'vortex.archive.fr': 'open.archive.fr'
                 },
             ),
             headdir = dict(
                 default  = 'vortex',
-                outcast  = [ 'xp' ]
+                outcast  = ['xp'],
             ),
         )
     )
@@ -611,10 +630,10 @@ class CacheStore(Store):
         info = 'Generic cache store',
         attr = dict(
             scheme = dict(
-                values   = [ 'incache' ],
+                values   = ['incache'],
             ),
             netloc = dict(
-                values   = [ 'open.cache.fr' ],
+                values   = ['open.cache.fr'],
             ),
             strategy = dict(
                 optional = True,
@@ -642,7 +661,7 @@ class CacheStore(Store):
 
     @property
     def realkind(self):
-        return 'storecache'
+        return 'cachestore'
 
     @property
     def hostname(self):
@@ -706,11 +725,11 @@ class VortexCacheStore(CacheStore):
         info = 'VORTEX cache access',
         attr = dict(
             scheme = dict(
-                values = [ 'vortex' ],
+                values  = ['vortex'],
             ),
             netloc = dict(
-                values = [ 'open.cache.fr', 'vortex.cache.fr' ],
-                remap = {
+                values  = ['open.cache.fr', 'vortex.cache.fr'],
+                remap   = {
                     'vortex.cache.fr': 'open.cache.fr'
                 },
             ),
@@ -756,10 +775,10 @@ class VortexStore(MultiStore):
         info = 'Vortex multi access',
         attr = dict(
             scheme = dict(
-                values = [ 'vortex' ],
+                values  = ['vortex'],
             ),
             netloc = dict(
-                values = [ 'vortex.multi.fr' ],
+                values  = ['vortex.multi.fr'],
             ),
             refillstore = dict(
                 default = True,
@@ -769,6 +788,5 @@ class VortexStore(MultiStore):
 
     def alternates_netloc(self):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
-        return ( 'vortex.cache.fr', 'vortex.archive.fr' )
-
+        return ('vortex.cache.fr', 'vortex.archive.fr')
 

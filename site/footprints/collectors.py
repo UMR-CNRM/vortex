@@ -57,7 +57,7 @@ class Collector(util.GetByTag, util.Catalog):
             bc.__init__(self, **kw)
         if self.report_tag is None:
             self.report_tag = 'footprint-' + self.tag
-        self.report_log = reporting.report(self.report_tag)
+        self.report_log = reporting.get(tag=self.report_tag)
         config.add2proxies(self)
 
     @classmethod
@@ -78,13 +78,13 @@ class Collector(util.GetByTag, util.Catalog):
         """Not yet specialised..."""
         logger.debug('Notified %s upd item %s', self, item)
 
-    def filter_kernel(self, rootname):
-        """Find in current collector classes with name starting with ``rootname``."""
-        return [ cl for cl in self.items() if cl.fullname().startswith(rootname) ]
+    def filter_package(self, packname):
+        """Find in current collector classes with name starting with ``packname``."""
+        return [ cl for cl in self.items() if cl.fullname().startswith(packname) ]
 
-    def discard_kernel(self, rootname, verbose=True):
-        """Discard from current collector classes with name starting with ``rootname``."""
-        for x in self.filter_kernel(rootname):
+    def discard_package(self, packname, verbose=True):
+        """Discard from current collector classes with name starting with ``packname``."""
+        for x in self.filter_package(packname):
             if versbose:
                 print 'Bye...', x
             self.discard(x)
@@ -123,6 +123,13 @@ class Collector(util.GetByTag, util.Catalog):
             if verbose:
                 print 'Bye...', x
             self.discard(x)
+
+    def reset_package_level(self, packname, tag):
+        """Reset priority level current collector classes with name starting with ``packname``."""
+        plevel = priorities.top.level(tag)
+        for cl in self.filter_package(packname):
+            fp = cl.footprint_retrieve()
+            fp.priority['level'] = plevel
 
     def pickup(self, desc):
         """Try to pickup inside the collector a item that could match the description."""

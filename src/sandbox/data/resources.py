@@ -13,7 +13,7 @@ from vortex.data.flow import FlowResource
 
 import common.data.modelstates
 from vortex.syntax.stdattrs import a_model, a_date, a_cutoff, cutoff
-from vortex.syntax.cycles import cy37t1_op1, cy37t1_op2, cy38t1
+from vortex.syntax.cycles import cy38t1_op1, cy38t1_op2, cy40_op1
 from vortex.tools.date import Date
 
 
@@ -59,10 +59,6 @@ class SimpleTest(Resource):
     def __init__(self, *args, **kw):
         logger.debug('SimpleTest resource init %s', self)
         super(SimpleTest, self).__init__(*args, **kw)
-
-    @property
-    def realkind(self):
-        return 'simpletest'
 
     def xtest(self):
         return 'Boooooooohhh'
@@ -127,11 +123,11 @@ class CheckOnlyBase(Resource):
         return 'Check Only Base'
 
 
-class CheckOnlyCycle37(CheckOnlyBase):
+class CheckOnlyCycle38(CheckOnlyBase):
 
     _footprint = dict(
         only = dict(
-            cycle = [ cy37t1_op1, cy37t1_op2 ]
+            cycle = [ cy38t1_op1, cy38t1_op2 ]
         )
     )
 
@@ -141,24 +137,24 @@ class CheckOnlyCycle37(CheckOnlyBase):
 
     @property
     def realkind(self):
-        return 'only37'
+        return 'only38'
 
     def xtest(self):
-        return 'Check Cycle 37'
+        return 'Check Cycle 38'
 
 
-class CheckOnlyCycle38(CheckOnlyBase):
+class CheckOnlyCycle40(CheckOnlyBase):
 
     _footprint = dict(
         only = dict(
-            cycle = cy38t1,
+            cycle = cy40_op1,
             after_date = Date(2012, 5, 1, 18)
         )
     )
 
     @property
     def realkind(self):
-        return 'only38'
+        return 'only40'
 
     def xtest(self):
-        return 'Check Cycle 38'
+        return 'Check Cycle 40'

@@ -15,19 +15,20 @@ class NoDateResource(Resource):
 
 class ModelResource(NoDateResource):
 
-    _footprint = [ model ]
     _abstract = True
+    _footprint = [ model ]
 
     def vortex_pathinfo(self):
         """Default path informations (used by :class:`vortex.data.providers.Vortex`)."""
         return dict(
             model = self.model,
-            nativefmt = self.nativefmt
+            fmt   = self.nativefmt,
         )
 
 
 class StaticResource(ModelResource):
 
+    _abstract = True
     _footprint = dict(
         attr = dict(
             geometry = dict(
@@ -35,12 +36,11 @@ class StaticResource(ModelResource):
             )
         )
     )
-    _abstract = True
 
     def vortex_pathinfo(self):
         """Default path informations (used by :class:`vortex.data.providers.Vortex`)."""
         return dict(
-            model = self.model,
-            nativefmt = self.nativefmt,
+            model    = self.model,
+            fmt      = self.nativefmt,
             geometry = self.geometry,
         )

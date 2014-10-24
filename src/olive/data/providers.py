@@ -32,13 +32,13 @@ class Olive(Provider):
         )
     )
 
-    def __init__(self, *args, **kw):
-        logger.debug('Olive experiment provider init %s', self)
-        super(Olive, self).__init__(*args, **kw)
-
     @property
     def realkind(self):
         return 'olive'
+
+    def __init__(self, *args, **kw):
+        logger.debug('Olive experiment provider init %s', self)
+        super(Olive, self).__init__(*args, **kw)
 
     def scheme(self):
         return 'olive'
@@ -118,8 +118,7 @@ class OpArchive(Provider):
 
     def basename(self, resource):
         bname = resource.basename(self.realkind)
-        sublist = re.findall(r'\(\w+\:\w+\)|\(\w+\)', bname)
-        for i in sublist:
+        for i in re.findall(r'\(\w+\:\w+\)|\(\w+\)', bname):
             s1 = re.sub(r'\(|\)', '', i)
             mobj = re.match(r'(\w+):(\w+)', s1)
             if mobj:
@@ -179,6 +178,7 @@ class OpArchive(Provider):
                     return '/'.join((self.igakey, dd))
                 else:
                     return '/'.join((self.igakey, self.suite, rinfo['cutoff'], yyyy, mm, dd, rr ))
+
 
 class OpArchiveCourt(OpArchive):
 

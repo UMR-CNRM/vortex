@@ -23,6 +23,3 @@ class Bidon(Container):
         logger.debug('Bidon container init %s', self)
         super(Bidon, self).__init__(*args, **kw)
 
-    @property
-    def realkind(self):
-        return 'bidon'

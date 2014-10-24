@@ -106,7 +106,7 @@ class GridPointFullPos(GridPoint):
         info = 'GridPoint fields as produced by Fullpos',
         attr = dict(
             nativefmt = dict(
-                values = [ 'fa' ],
+                values  = ['fa'],
                 default = 'fa',
             ),
         )
@@ -154,7 +154,7 @@ class GridPointExport(GridPoint):
         info = 'GridPoint fields as exported for dissemination',
         attr = dict(
             nativefmt = dict(
-                values = [ 'grib' ],
+                values  = ['grib'],
                 default = 'grib',
             ),
         )

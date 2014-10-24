@@ -21,14 +21,14 @@ class Provider(footprints.FootprintBase):
         info = 'Abstract root provider',
         attr = dict(
             vapp = dict(
-                alias = ( 'application', ),
+                alias    = ('application',),
                 optional = True,
-                default = '[glove::vapp]'
+                default  = '[glove::vapp]'
             ),
             vconf = dict(
-                alias = ( 'configuration', ),
+                alias    = ('configuration',),
                 optional = True,
-                default = '[glove::vconf]'
+                default  = '[glove::vconf]'
             ),
         )
     )
@@ -92,6 +92,7 @@ class Provider(footprints.FootprintBase):
             self.basename(resource)),
             self.urlquery(resource)
         )
+
         return net.uriunparse((
             self.scheme(),
             self.domain(),
@@ -105,13 +106,13 @@ class Provider(footprints.FootprintBase):
 class Magic(Provider):
 
     _footprint = dict(
-        info = 'Remote provider',
+        info = 'Magic provider',
         attr = dict(
             fake = dict(
-                alias = ( 'nowhere', 'noprovider' ),
-                type = bool,
-                default = True,
+                alias    = ('nowhere', 'noprovider'),
+                type     = bool,
                 optional = True,
+                default  = True,
             ),
             magic = dict()
         )
@@ -132,22 +133,21 @@ class Remote(Provider):
         info = 'Remote provider',
         attr = dict(
             remote = dict(
-                alias = ( 'remfile', 'rempath' ),
-                type = str
+                alias    = ('remfile', 'rempath'),
             ),
             hostname = dict(
                 optional = True,
-                default = 'localhost'
+                default  = 'localhost'
             ),
             tube = dict(
                 optional = True,
-                values = [ 'scp', 'ftp', 'rcp', 'file' ],
-                default = 'file'
+                values   = ['scp', 'ftp', 'rcp', 'file'],
+                default  = 'file',
             ),
             username = dict(
                 optional = True,
-                default = None,
-                alias = ( 'user', 'logname' )
+                default  = None,
+                alias    = ('user', 'logname')
             )
         )
     )
@@ -199,23 +199,23 @@ class Vortex(Provider):
             experiment = dict(),
             block = dict(),
             member = dict(
-                type = int,
+                type     = int,
                 optional = True,
             ),
             namespace = dict(
                 optional = True,
-                values = [ 'vortex.cache.fr', 'vortex.archive.fr', 'vortex.multi.fr',
-                           'open.cache.fr', 'open.archive.fr' ],
-                default = 'vortex.cache.fr',
-                remap = {
+                values   = ['vortex.cache.fr', 'vortex.archive.fr', 'vortex.multi.fr',
+                            'open.cache.fr', 'open.archive.fr'],
+                default  = 'vortex.cache.fr',
+                remap    = {
                     'open.cache.fr': 'vortex.cache.fr',
                     'open.archive.fr': 'vortex.archive.fr',
                 }
             ),
             namebuild = dict(
                 optional = True,
-                type = VortexNameBuilder,
-                default = VortexNameBuilder(),
+                type     = VortexNameBuilder,
+                default  = VortexNameBuilder(),
             )
         )
     )
@@ -237,7 +237,7 @@ class Vortex(Provider):
 
     def scheme(self):
         """Default: ``vortex``."""
-        return 'vortex'
+        return self.realkind
 
     def domain(self):
         """Returns the current ``namespace``."""

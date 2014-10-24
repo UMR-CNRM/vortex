@@ -31,10 +31,6 @@ class Namelist(Resource):
         ),
     )
 
-    @property
-    def realkind(self):
-        return 'namelist'
-
     def mercator_basename(self):
         if self.cexper in experiences:
             if self.nmtype == 'main':
@@ -131,10 +127,6 @@ class Bogus(Resource):
         ),
     )
 
-    @property
-    def realkind(self):
-        return 'bogus'
-
 
 class Bathymetry(Resource):
     _footprint = dict(
@@ -156,10 +148,6 @@ class Bathymetry(Resource):
             )
         ),
     )
-
-    @property
-    def realkind(self):
-        return 'bathymetry'
 
     def mercator_basename(self):
         if self.assim:
@@ -196,10 +184,6 @@ class Runoff(Resource):
         ),
     )
 
-    @property
-    def realkind(self):
-        return 'runoff'
-
     def mercator_basename(self):
         if self.grid == 'orca025':
             return 'runoff_obtaz_rhone_antar_1m_bathy_sept09_'+self.grid.upper()+'_10112009.nc'
@@ -230,10 +214,6 @@ class Moorings(Resource):
             ),
         )
     ]
-
-    @property
-    def realkind(self):
-        return 'moorings'
 
     def mercator_basename(self):
         return 'position.'+self.type+'.'+self.model
@@ -288,10 +268,6 @@ class Coordinates(Resource):
             )
         ),
     )
-
-    @property
-    def realkind(self):
-        return 'coordinates'
 
     def mercator_basename(self):
         return 'coordinates_'+self.grid.upper()+'_LIM.nc'
@@ -432,10 +408,6 @@ class AtmosphericForcing(Resource):
             )
         )
     )
-
-    @property
-    def realkind(self):
-        return 'atmospheric forcing'
 
     def mercator_basename(self):
         return '_'.join( [

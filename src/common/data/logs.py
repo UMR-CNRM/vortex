@@ -78,10 +78,6 @@ class ParallelListing(Listing):
         )
     ]
 
-    @property
-    def realkind(self):
-        return 'listing'
-
     def basename_info(self):
         """From base information of ``listing`` add mpi and openmp values."""
         info = super(ParallelListing, self).basename_info()

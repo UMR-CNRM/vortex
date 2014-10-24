@@ -94,7 +94,7 @@ class GEnv(GcoProvider):
         info = 'GEnv provider',
         attr = dict(
             genv = dict(
-                alias = ( 'gco_cycle', 'gcocycle', 'cyclegco', 'gcycle' )
+                alias = ('gco_cycle', 'gcocycle', 'cyclegco', 'gcycle')
             ),
         )
     )

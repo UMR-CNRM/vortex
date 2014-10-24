@@ -97,7 +97,7 @@ class Environment(object):
     def __init__(self, env=None, active=False, clear=False, verbose=False, noexport=[]):
         self.__dict__['_history'] = History(tag='env')
         self.__dict__['_active']  = False
-        self.__dict__['_verbose'] = False
+        self.__dict__['_verbose'] = verbose
         self.__dict__['_pool']    = dict()
         self.__dict__['_mods']    = set()
         if env is not None and isinstance(env, Environment):
@@ -165,7 +165,7 @@ class Environment(object):
             if self.verbose():
                 if self.osbound() and self._sh:
                     self._sh.stderr('export', '{0:s}={1:s}'.format(upvar, actualvalue))
-                logger.info('Env export %s="%s"', upvar, actualvalue)
+                logger.debug('Env export %s="%s"', upvar, actualvalue)
 
     def __setitem__(self, varname, value):
         return self.setvar(varname, value)
@@ -281,7 +281,12 @@ class Environment(object):
 
     def clone(self):
         """Return a non-active copy of the current env."""
-        return self.__class__(env=self, active=False)
+        eclone = self.__class__(env=self, active=False)
+        try:
+            eclone.verbose(self._verbose, self._sh)
+        except AttributeError:
+            logger.warning('Could not find verbose attributes while cloning env...')
+        return eclone
 
     def native(self, varname):
         """Returns the native form this variable could have in a shell environment."""

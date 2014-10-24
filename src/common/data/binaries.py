@@ -21,11 +21,11 @@ class IFSModel(NWPModel):
                 default = 'master_[model]'
             ),
             kind = dict(
-                values = [ 'ifsmodel', 'mfmodel' ],
+                values = ['ifsmodel', 'mfmodel'],
             ),
             model = dict(
-                outcast = [ 'aladin', 'arome' ],
-            )
+                outcast = ['aladin', 'arome'],
+            ),
         )
     )
 
@@ -64,9 +64,8 @@ class Aladin(IFSModel):
         info = 'ALADIN / AROME Local Area Model',
         attr = dict(
             model = dict(
-                values = [ 'aladin', 'arome' ],
-                outcast = list(),
-            )
+                values = ['aladin', 'arome'],
+            ),
         )
     )
 
@@ -83,16 +82,14 @@ class ProGrid(BlackBox):
          info = 'ProGrid utility for grib conversion',
         attr = dict(
             gvar = dict(
-                type = GenvKey,
+                type     = GenvKey,
                 optional = True,
-                default = 'master_progrid'
+                default  = 'master_progrid'
             ),
             kind = dict(
-                values = [ 'progrid', 'gribtool' ],
-                remap = dict(
-                    gribtool = 'progrid'
-                )
-            )
+                values   = ['progrid', 'gribtool'],
+                remap    = dict(gribtool = 'progrid'),
+            ),
         )
     )
 
@@ -108,19 +105,68 @@ class ProTool(BlackBox):
          info = 'ProTool utility for field manipulation',
         attr = dict(
             gvar = dict(
-                type = GenvKey,
+                type     = GenvKey,
                 optional = True,
-                default = 'master_addsurf'
+                default  = 'master_addsurf'
             ),
             kind = dict(
-                values = [ 'protool', 'addsurf' ],
-                remap = dict(
-                    gribtool = 'protool'
-                )
-            )
+                values   = [ 'protool', 'addsurf' ],
+                remap    = dict(addsurf = 'protool'),
+            ),
         )
     )
 
     @property
     def realkind(self):
         return 'protool'
+
+
+class IOAssign(BlackBox):
+    """A tool for ODB pools mapping."""
+
+    _footprint = dict(
+         info = 'ProTool utility for field manipulation',
+        attr = dict(
+            kind = dict(
+                values   = ['ioassign', 'odbioassign'],
+                remap    = dict(odbioassign = 'ioassign'),
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_ioassign'
+            ),
+            iotool = dict(
+                optional = True,
+                default  = 'create_ioassign',
+                access   = 'rwx',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'ioassign'
+
+
+class Batodb(BlackBox):
+    """A tool for conversion to ODB format."""
+
+    _footprint = dict(
+         info = 'Batodb conversion program',
+        attr = dict(
+            kind = dict(
+                values   = ['bator', 'batodb'],
+                remap    = dict(bator = 'batodb'),
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_batodb'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'batodb'

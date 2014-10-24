@@ -75,10 +75,6 @@ class Addon(footprints.FootprintBase):
                 if addon_rootdir and addon_opcycle:
                     self.path = addon_rootdir + '/' + addon_opcycle
 
-    @property
-    def realkind(self):
-        return 'addon'
-
     @classmethod
     def in_shell(cls, shell):
         """Grep any active instance of that class in the specified shell."""

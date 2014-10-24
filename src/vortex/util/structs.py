@@ -14,6 +14,18 @@ import datetime
 from vortex.autolog import logdefault as logger
 
 
+class Foo(object):
+    """Void C-struct like class... for gathering anything."""
+    def __init__(self, **kw):
+        self.__dict__.update(kw)
+
+    def __getattr__(self, attr):
+        return getattr(self.__dict__, attr)
+
+    def __str__(self):
+        return str(self.__dict__)
+
+
 def idtree(tag, _tableroots=dict()):
     if tag not in _tableroots:
         _tableroots[tag] = Tree(name=tag)

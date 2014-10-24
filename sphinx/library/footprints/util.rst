@@ -3,6 +3,7 @@
 
 .. automodule:: footprints.util
    :synopsis: Utilities for footprint mecanisms
+   :members:
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -21,12 +22,17 @@ Interface
 
 .. autofunction:: list2dict
 
-Base Catalog
+Base Classes
 ------------
+
+.. autoclass:: GetByTag
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 .. autoclass:: Catalog
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 

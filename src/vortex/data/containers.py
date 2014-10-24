@@ -42,6 +42,10 @@ class Container(footprints.FootprintBase):
         )
     )
 
+    @property
+    def realkind(self):
+        return 'container'
+
     def __init__(self, *args, **kw):
         logger.debug('Container %s init', self.__class__)
         self._iod = None
@@ -56,10 +60,6 @@ class Container(footprints.FootprintBase):
             return getattr(iod, key)
         else:
             raise AttributeError('Could not get an io descriptor')
-
-    @property
-    def realkind(self):
-        return 'container'
 
     def localpath(self):
         """Abstract method to be overwritten."""
@@ -109,8 +109,9 @@ class Container(footprints.FootprintBase):
 
     def dataread(self):
         """
-        Reads the next data line of the container. Returns a tuple with this line
-        and a boolean to tell whether the end of container is reached.
+        Reads the next data line or unit of the container.
+        Returns a tuple with this line and a boolean
+        to tell whether the end of container is reached.
         """
         iod = self.iodesc()
         line = iod.readline()
@@ -193,6 +194,10 @@ class Container(footprints.FootprintBase):
                 print xchunk.rstrip('\n')
             iod.seek(pos)
 
+    def is_virtual(self):
+        """Check if the current container has some physical reality or not."""
+        return False
+
     def __del__(self):
         self.close()
 
@@ -212,6 +217,9 @@ class Virtual(Container):
             )
         )
     )
+
+    def is_virtual(self):
+        return True
 
     def exists(self):
         """In case of a virtual container, always true."""
@@ -245,10 +253,6 @@ class InCore(Virtual):
         logger.debug('InCore container init %s', self)
         self._tempo = False
         super(InCore, self).__init__(*args, incore=True, **kw)
-
-    @property
-    def realkind(self):
-        return 'incore'
 
     def actualpath(self):
         """Returns path information, if any, of the spooled object."""
@@ -352,7 +356,7 @@ class MayFly(Virtual):
             mayfly = dict(
                 type = bool,
                 values = [ True ],
-                alias = ('tempo', 'virtual')
+                alias = ('tempo',)
             ),
             delete = dict(
                 type = bool,
@@ -365,10 +369,6 @@ class MayFly(Virtual):
     def __init__(self, *args, **kw):
         logger.debug('MayFly container init %s', self)
         super(MayFly, self).__init__(*args, mayfly=True, **kw)
-
-    @property
-    def realkind(self):
-        return 'mayfly'
 
     def actualpath(self):
         """Returns path information, if any, of the spooled object."""
@@ -435,10 +435,6 @@ class File(Container):
             self._actualpath = os.path.realpath(self.file)
         else:
             self._actualpath = self.file
-
-    @property
-    def realkind(self):
-        return 'file'
 
     def actualpath(self):
         """Returns the actual pathname of the file object."""

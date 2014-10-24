@@ -132,23 +132,36 @@ class AlgoComponent(footprints.FootprintBase):
     def run(self, rh, **kw):
         """Sequence for execution : prepare / execute / postfix."""
         self._status = True
+
+        # Before trying to do anything, check the executable
         if not self.valid_executable(rh):
             logger.warning('Resource %s is not a valid executable', rh.resource)
             return False
+
+        # Get instance shorcuts to context and system objects
         self.context = vortex.sessions.ticket().context
         self.system  = self.context.system
-        self.env     = self.context.env
         self.target  = kw.pop('target', None)
         if self.target is None:
             self.target = self.system.target()
-        self.prepare(rh, kw)
-        self.fsstamp(kw)
-        self.execute(rh, kw)
-        self.fscheck(kw)
-        self.postfix(rh, kw)
-        self.dumplog(kw)
+
+        # A cloned environment is now bound to OS
+        self.env = self.context.env.clone()
+        self.env.active(True)
+
+        # The actual "run" recipe
+        self.prepare(rh, kw)        #1
+        self.fsstamp(kw)            #2
+        self.execute(rh, kw)        #3
+        self.fscheck(kw)            #4
+        self.postfix(rh, kw)        #5
+        self.dumplog(kw)            #6
+
+        # Restore previous OS environement and free local references
+        self.env.active(False)
         self.env = None
         self.system = None
+
         return self._status
 
     def quickview(self, nb=0, indent=0):
@@ -172,7 +185,7 @@ class Expresso(AlgoComponent):
     _footprint = dict(
         attr = dict(
             interpreter = dict(
-                values = [ 'awk', 'ksh', 'bash', 'perl', 'python' ]
+                values = ['awk', 'ksh', 'bash', 'perl', 'python']
             ),
             engine = dict(
                 values = [ 'exec', 'launch' ]
@@ -200,7 +213,7 @@ class BlindRun(AlgoComponent):
     _footprint = dict(
         attr = dict(
             engine = dict(
-                values = [ 'blind' ]
+                values = ['blind']
             )
         )
     )
@@ -225,19 +238,19 @@ class Parallel(AlgoComponent):
     _footprint = dict(
         attr = dict(
             engine = dict(
-                values = [ 'parallel' ]
+                values   = ['parallel']
             ),
             mpitool = dict(
                 optional = True,
-                type = mpitools.MpiSubmit
+                type     = mpitools.MpiSubmit
             ),
             mpiname = dict(
                 optional = True,
-                alias = [ 'mpi' ],
+                alias    = ['mpi'],
             ),
             ioserver = dict(
                 optional = True,
-                type = mpitools.MpiServerIO
+                type     = mpitools.MpiServerIO
             ),
         )
     )

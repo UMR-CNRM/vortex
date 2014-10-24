@@ -74,10 +74,6 @@ class IgaProvider(Provider):
     def __init__(self, *args, **kw):
         logger.debug('IGA job provider init %s', self)
         super(IgaProvider, self).__init__(*args, **kw)
-        self._listOfLoggers = []
-        self._post = 'initialisation du provider iga'
-        #self.register(self.logger)
-        #self.notifyAll()
 
     @property
     def realkind(self):
@@ -103,14 +99,14 @@ class IgaProvider(Provider):
         info = bp.global_pnames(self, resource)
         #patch pour les couplages
         if (
-            "fmt" in info and
+            'fmt' in info and
             resource.realkind == 'boundary' and
             self.igakey != 'reunion'
         ):
             info['fmt'] = 'fic_day'
+        if resource.model =='surfex':
+            info['model'] = self.vapp
         self.config.setall(info)
-        self.writeNewPost('IgaProvider:pathname info %s' % info)
-        self.notifyAll()
         logger.debug('IgaProvider:pathname info %s', info)
         #patch for the pearp kind experiment
         if self.member:
@@ -122,25 +118,6 @@ class IgaProvider(Provider):
             return new_path
         else:
             return self.config.resolvedpath(resource.realkind)
-
-    def register(self, alogger):
-        """docstring for register"""
-        if alogger not in self._listOfLoggers:
-            self._listOfLoggers.append(alogger)
-
-    def unregister(self, alogger):
-        """docstring for unregister"""
-        self._listOfLoggers.remove(alogger)
-
-    def notifyAll(self):
-        """docstring for notifyAll"""
-        for obs in self._listOfLoggers:
-            obs.notify(self._post)
-
-    def writeNewPost(self, message):
-        """docstring for writeNewPost"""
-        self._post = message
-        self.notifyAll()
 
 
 class SopranoProvider(Provider):

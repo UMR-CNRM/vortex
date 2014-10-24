@@ -186,16 +186,15 @@ def analysis_bnames(resource):
         resource.cutoff, resource.date.hour, resource.model, resource.filling)
     #patch for the different kind of analysis (surface and atmospheric)
     if resource.filling == 'surf':
-        if resource.nativefmt != 'lfi':
-            return 'ICMSH' + model_info + 'INIT_SURF.' + suffix
-        else:
-            return 'INIT_SURF.lfi.' + suffix
+        return '.'.join(('INIT_SURF', resource.nativefmt, suffix))
     else:
         return 'ICMSH' + model_info + 'INIT.' + suffix
 
 
 def historic_bnames(resource):
     """docstring for historic_bnames"""
+    if resource.model == 'surfex':
+        return histsurf_bnames(resource)
     model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model)
     return 'ICMSH' + model_info + '+' + resource.term.fmthour + '.' + suffix
 
@@ -210,7 +209,7 @@ def histsurf_bnames(resource):
         )
     )
     suffix = map_suffix[reseau]
-    return 'PREP.lfi.' + suffix
+    return 'PREP.fa.' + suffix
 
 
 def gridpoint_bnames(resource, member=None):

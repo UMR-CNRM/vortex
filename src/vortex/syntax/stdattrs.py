@@ -19,10 +19,11 @@ __all__ = [
 
 #: Default values for atmospheric models.
 models = set(['arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro',
-              'aearp', 'pearp', 'mocage', 'mesonh'])
+              'aearp', 'pearp', 'mocage', 'mesonh', 'surfex'])
 
 #: Default values for the most common binaries.
-binaries = set(['arpege', 'aladin', 'arome', 'peace', 'mocage', 'mesonh'])
+binaries  = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'mesonh'])
+utilities = set(['batodb'])
 
 #: Default attributes excluded from `repr` display
 notinrepr = set(['kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'])

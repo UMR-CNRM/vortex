@@ -826,30 +826,18 @@ class utObservers(TestCase):
 class utReporting(TestCase):
 
     def test_reporting_methods(self):
-        rv = reporting.report_map()
-        self.assertIsInstance(rv, dict)
-        self.assertEqual(len(rv), 2)
-        self.assertItemsEqual(rv.keys(), ['void', 'footprint-garbage'])
-
-        rv = reporting.report_keys()
-        self.assertListEqual(rv, ['footprint-garbage', 'void'])
-
-        rv = reporting.report_map()
-        self.assertIsInstance(rv, dict)
-        self.assertItemsEqual(rv, reporting.report_map())
-
-        rv = reporting.report()
+        rv = reporting.get()
         self.assertIsInstance(rv, reporting.FootprintLog)
         self.assertEqual(rv.tag, 'default')
 
-        rv = reporting.report_keys()
+        rv = reporting.keys()
         self.assertListEqual(rv, ['default', 'footprint-garbage', 'void'])
 
-        rv = reporting.report('void')
+        rv = reporting.get(tag='void')
         self.assertIsInstance(rv, reporting.FootprintLog)
         self.assertEqual(rv.tag, 'void')
 
-        rv = reporting.report(tag='footprint-garbage')
+        rv = reporting.get(tag='footprint-garbage')
         self.assertIsInstance(rv, reporting.FootprintLog)
         self.assertEqual(rv.tag, 'footprint-garbage')
 
@@ -870,13 +858,10 @@ class utReporting(TestCase):
         self.assertEqual(len(rv), 4)
 
     def test_reporting_log(self):
-        rv = reporting.FootprintLog('void')
+        rv = reporting.FootprintLog(tag='void')
         self.assertEqual(rv.tag, 'void')
         self.assertTrue(rv.weak)
-        self.assertIsNone(rv.last)
-        self.assertIsNone(rv.current())
         self.assertEqual(rv.info(), 'Report Void:')
-        self.assertEqual(len(rv), 0)
 
 
 # Tests for footprints top module methods and objects
@@ -1753,7 +1738,7 @@ class utFootprintBase(TestCase):
         self.assertFalse(rv)
         self.assertSetEqual(attr_input, set(['kind']))
 
-        report = reporting.report('void')
+        report = reporting.get(tag='void')
         self.assertIsInstance(report, reporting.FootprintLog)
         report.clear()
         self.assertDictEqual(report.as_dict(), dict())

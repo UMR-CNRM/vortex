@@ -133,7 +133,7 @@ class MtoolCache(Cache):
         info = 'Default cache description',
         attr = dict(
             kind = dict(
-                values   = [ 'mtool', 'swapp' ],
+                values   = ['mtool', 'swapp'],
                 remap    = dict(swapp = 'mtool'),
             ),
             rootdir = dict(
@@ -153,13 +153,13 @@ class MtoolCache(Cache):
             e = system.env
             if e.MTOOL_STEP_CACHE and system.path.isdir(e.MTOOL_STEP_CACHE):
                 cache = e.MTOOL_STEP_CACHE
-                logger.info('Using %s mtool step cache %s', self, cache)
+                logger.debug('Using %s mtool step cache %s', self, cache)
             elif e.MTOOLDIR and system.path.isdir(e.MTOOLDIR):
                 cache = system.path.join(e.MTOOLDIR, 'cache')
-                logger.info('Using %s mtool dir cache %s', self, cache)
+                logger.debug('Using %s mtool dir cache %s', self, cache)
             else:
                 cache = system.path.join(e.FTDIR or e.WORKDIR or e.TMPDIR, self.kind, 'cache')
-                logger.info('Using %s default cache %s', self, cache)
+                logger.debug('Using %s default cache %s', self, cache)
         else:
             cache = self.actual_rootdir
         return system.path.join(cache, self.actual_headdir)

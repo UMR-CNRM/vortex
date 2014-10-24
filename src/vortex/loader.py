@@ -38,9 +38,9 @@ class VortexImporter(object):
         modname = fullname.rpartition('.')[-1]
         try:
             info = imp.find_module(modname, self.path)
-            logger.info('Vortex Module Import < name: %s %s >', fullname, str(info))
+            logger.debug('Vortex Module Import < name: %s %s >', fullname, str(info))
         except ImportError:
-            logger.info('Vortex Module Import < stop: %s %s>', modname, self.path)
+            logger.debug('Vortex Module Import < stop: %s %s>', modname, self.path)
             return None
         try:
             mod = imp.load_module(fullname, *info)
@@ -56,7 +56,7 @@ class VortexImporter(object):
         logger.debug('Vortex Module Finder <name: %s> <path: %s>', fullname, path)
         modparts = fullname.split('.')
         if modparts and modparts[0] in self._import_prefix:
-            logger.info('Vortex Module Finder < load: %s %s >', fullname, path)
+            logger.debug('Vortex Module Finder < load: %s %s >', fullname, path)
             self.path = path
             return self
         else:

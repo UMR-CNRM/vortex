@@ -8,7 +8,7 @@ import re
 
 from vortex.tools import date
 
-from ifsroot import IFSParallel
+from .ifsroot import IFSParallel
 
 
 class Coupling(IFSParallel):
@@ -28,6 +28,10 @@ class Coupling(IFSParallel):
         )
     )
 
+    @property
+    def realkind(self):
+        return 'coupling'
+
     def prepare(self, rh, opts):
         """Default pre-link for climatological files"""
         super(Coupling, self).prepare(rh, opts)
@@ -39,10 +43,10 @@ class Coupling(IFSParallel):
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
-        cplrh = [ x.rh for x in
-                  self.context.sequence.effective_inputs(
-                      role=('InitialCondition', 'CouplingSource'),
-                      kind='historic') ]
+        cplrh = [ x.rh for x in self.context.sequence.effective_inputs(
+            role = ('InitialCondition', 'CouplingSource'),
+            kind = 'historic'
+        ) ]
         cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
         for r in cplrh:
             self.system.title('Loop on {0:s}'.format(str(r.resource)))
@@ -73,8 +77,10 @@ class Coupling(IFSParallel):
             # Freeze the current output
             for posfile in [ x for x in self.system.glob('PFFPOSAREA+*')
                              if re.match(r'PFFPOSAREA\+\d+(?:\d+)$', x) ]:
-                self.system.move(posfile,
-                                 self.system.path.join(runstore, 'CPLOUT+' + r.resource.term.fmthm))
+                self.system.move(
+                    posfile,
+                    self.system.path.join(runstore, 'CPLOUT+' + r.resource.term.fmthm)
+                )
             for logfile in self.system.glob('NODE.*', 'std*'):
                 self.system.move(logfile, self.system.path.join(runstore, logfile))
 

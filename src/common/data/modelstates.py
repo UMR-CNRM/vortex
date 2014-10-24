@@ -25,15 +25,15 @@ class Analysis(GeoFlowResource):
                values = [ 'analysis', 'analyse', 'atm_analysis' ]
            ),
            nativefmt = dict(
-                values = [ 'fa', 'grib', 'lfi' ],
+                values = ['fa', 'grib', 'lfi'],
                 default = 'fa',
            ),
            filtering = dict(
-               values = [ 'dfi' ],
+               values = ['dfi'],
                optional = True,
            ),
            filling = dict(
-               values = [ 'surface', 'surf', 'atmospheric', 'atm', 'full' ],
+               values = ['surface', 'surf', 'atmospheric', 'atm', 'full'],
                remap = dict(
                    surface = 'surf',
                    atmospheric = 'atm'
@@ -119,13 +119,13 @@ class Historic(GeoFlowResource):
             info = 'Historic forecast file',
             attr = dict(
                 kind = dict(
-                    values = [ 'historic', 'modelstate' ],
+                    values = ['historic', 'modelstate'],
                     remap = dict(
                         modelstate = 'historic'
                     )
                 ),
                 nativefmt = dict(
-                    values = [ 'fa', 'grib', 'lfi' ],
+                    values = ['fa', 'grib', 'lfi'],
                     default = 'fa',
                 ),
             )
@@ -144,17 +144,21 @@ class Historic(GeoFlowResource):
         if self.geometry.lam and re.match('testms1|testmp1|testmp2', self.geometry.area):
             suffix = '.r' + archivesuffix(self.model, self.cutoff, self.date)
 
-        name = prefix + midfix + '+' + self.term.fmthour
+        if re.match('aladin|arome|surfex', self.model):
+            prefix = prefix.upper() 
 
-        if re.match('aladin|arome', self.model):
-            name = prefix.upper() + midfix + '+' + self.term.fmthour
-
-        return name + suffix
+        return prefix + midfix + '+' + self.term.fmthour + suffix
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
         if self.model == 'mesonh':
-            return self.model.upper() + '.' + self.geometry.area[:4].upper() + '+' + self.term.fmthour + '.' + self.nativefmt
+            return '.'.join(
+                (self.model.upper(), self.geometry.area[:4].upper() + '+' + self.term.fmthour, self.nativefmt)
+            )
+        elif self.model == 'surfex':
+            return '.'.join(
+                ('AROMOUT_SURF', self.geometry.area[:4], self.term.fmthour, self.nativefmt)
+            )
         else:
             return 'ICMSH' + self.model[:4].upper() + '+' + self.term.fmthour
 

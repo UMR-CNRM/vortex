@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
 
 __all__ = [
-    'os', 'logging', 'TestCase', 'TestLoader', 'TextTestRunner', 'common',
-    'iga', 'toolbox', 'sessions', 'resources', 'SpectralGeometry', 'GridGeometry',
-    'today', 'Date', 'Period', 'vortex', 't', 'get_default_provider',
-    'get_spec_provider', 'IgaHelperSelect', 'datadir', 'homedir'
+    # logging and std test
+    'logging', 'TestCase', 'TestLoader', 'TextTestRunner',
+    # vortex packages
+    'common', 'iga', 'toolbox', 'sessions', 'resources',
+    # vortex classes
+    'SpectralGeometry', 'GridGeometry', 'IgaHelperSelect',
+    # local test functions
+    'get_default_provider', 'get_spec_provider', 
+    # some default env values
+    'sh', 'datadir', 'homedir',
 ]
 
 import os  # @UnusedImport
@@ -16,13 +22,17 @@ from vortex import toolbox, sessions
 from vortex.tools import env
 from vortex.data import resources  # @UnusedImport
 from vortex.data.geometries import SpectralGeometry, GridGeometry  # @UnusedImport
-from vortex.tools.date import today, Date, Period  # @UnusedImport
+from vortex.tools import date
 
 from iga.util.helpers import IgaHelperSelect  # @UnusedImport
 
 import common.data
 import iga.data
 u_fill_fp_catalogs = common.data, iga.data
+
+# A nice synoptic time for date value
+rundate = date.yesterday()
+
 
 # main variables definition for unittest
 fpg = dict(tag='oper', user='mxpt001', profile='oper')
@@ -42,6 +52,7 @@ homedir = tg.get('op:homedir')
 toolbox.defaults(namespace='[suite].inline.fr')
 sessions.switch('oper')
 
+sh = t.sh
 
 def get_default_provider():
     return dict(
@@ -49,7 +60,6 @@ def get_default_provider():
         suite = 'oper',
         igakey = 'france'
     )
-
 
 def get_spec_provider(**kw):
     tmp_dict = get_default_provider()

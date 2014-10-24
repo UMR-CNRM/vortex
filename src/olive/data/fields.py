@@ -31,10 +31,6 @@ class RawFields(Resource):
         )
     ]
 
-    @property
-    def realkind(self):
-        return 'rawfields'
-
     def olive_basename(self):
         return self.fields + self.origin
 
@@ -56,8 +52,8 @@ class RawFields(Resource):
     def vortex_pathinfo(self):
         return dict(
             nativefmt = self.nativefmt,
-            date = self.date,
-            cutoff = self.cutoff
+            date      = self.date,
+            cutoff    = self.cutoff
         )
 
 
@@ -85,10 +81,6 @@ class GeoFields(Resource):
             )
         )
     ]
-
-    @property
-    def realkind(self):
-        return 'geofields'
 
     def olive_basename(self):
         bname = 'icmshanal' + self.fields

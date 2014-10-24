@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.9.0'
+__version__ = '0.9.1'
 
 import os
 import re
@@ -24,7 +24,7 @@ import logging
 logging.basicConfig(
     format  = '[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
     datefmt = '%Y/%d/%m-%H:%M:%S',
-    level   = logging.WARNING
+    level   = logging.INFO
 )
 logger = logging.getLogger('footprints')
 
@@ -127,6 +127,11 @@ def collected_priorities(tag):
     for cl in sorted(set([c for cv in collectors.values() for c in cv.filter_higher_level(plevel)]), key=lambda z: z.fullname()):
         pl = cl.footprint_level()
         print pl.rjust(10), '-', cl.fullname()
+
+def reset_package_priority(packname, tag):
+    """Reset priority level in all collectors for the specified ``package``."""
+    for c in collectors.values():
+        c.reset_package_level(packname, tag)
 
 
 # Base classes
@@ -414,7 +419,7 @@ class Footprint(object):
 
             attr_seen.add(k)
 
-            while kdef['remap'].has_key(guess[k]):
+            while guess[k].__hash__ is not None and kdef['remap'].has_key(guess[k]):
                 logger.debug(' > Attr %s remap(%s) = %s', k, guess[k], kdef['remap'][guess[k]])
                 guess[k] = kdef['remap'][guess[k]]
 
@@ -601,7 +606,10 @@ class FootprintBaseMeta(type):
         if mkshort:
             for k in [x for x in d.keys() if x.startswith('footprint_')]:
                 kshort = k.replace('footprint_', '')
-                d[kshort] = d.get(k)
+                if kshort in d:
+                    logger.warning('Shortcut to amready defined attribute [%s]', k)
+                else:
+                    d[kshort] = d.get(k)
 
         # At least build the class itself as a default type
         realcls = super(FootprintBaseMeta, cls).__new__(cls, n, b, d)
@@ -664,10 +672,18 @@ class FootprintBase(object):
         self._observer = observers.get(tag=self.__class__.fullname())
         self.footprint_riseup()
 
+    @classmethod
+    def footprint_clskind(cls):
+        return cls.__name__.lower()
+
+    @classmethod
+    def footprint_clsrealkind(cls):
+        return getattr(cls, 'realkind').fget(cls)
+
     @property
     def realkind(self):
-        """Must be implemented by subclasses."""
-        pass
+        """Actual footprint kind, by default the clskind."""
+        return 'footprintbase'
 
     @property
     def footprint(self):
@@ -810,7 +826,7 @@ class FootprintBase(object):
         logger.debug('-' * 180)
         logger.debug('Couldbe a %s ?', cls)
         if mkreport and not report:
-            report = reporting.report('void')
+            report = reporting.get(tag='void')
             report.add(collector=proxy.garbages)
         if report:
             report.add(candidate=cls)

@@ -126,7 +126,7 @@ class Ticket(object):
             else:
                 self._glove = Desk().getglove()
 
-        logger.info('Open session %s %s', self.tag, self)
+        logger.debug('Open session %s %s', self.tag, self)
 
         if context:
             context.tagtree = self.tagtree
@@ -216,14 +216,14 @@ class Ticket(object):
             logger.warning('Session %s already closed at %s', self.tag, self.closed)
         else:
             self.closed = date.now()
-            logger.info('Close session %s ( time = %s )', self.tag, self.duration())
+            logger.debug('Close session %s ( time = %s )', self.tag, self.duration())
 
     def exit(self):
         """Exit from the current session."""
         ok = True
-        logger.info('Exit session %s %s', self.tag, self)
+        logger.debug('Exit session %s %s', self.tag, self)
         for kid in self.tree.kids(self):
-            logger.info('Exit from context %s', kid)
+            logger.debug('Exit from context %s', kid)
             ok = ok and kid.exit()
         self.close()
         return ok

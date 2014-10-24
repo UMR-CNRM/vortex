@@ -279,7 +279,7 @@ class Period(datetime.timedelta):
             ld = [ top.days, top.seconds, top.microseconds ]
         elif isinstance(top, Time):
             ld = [ 0, top.hour * 3600 + top.minute * 60 ]
-        elif isinstance(top, int) and len(args) < 2:
+        elif len(args) < 2 and ( isinstance(top, int) or isinstance(top, float) ):
             ld = [ 0, top ]
         elif isinstance(top, int) and len(args) == 2:
             ld = list(args)
@@ -288,6 +288,10 @@ class Period(datetime.timedelta):
         if not ld:
             raise ValueError("Initial Period value unknown")
         return datetime.timedelta.__new__(cls, *ld)
+
+    def __deepcopy__(self, memo):
+        """No deepcopy expected, so ``self`` is returned."""
+        return self
 
     def __len__(self):
         return self.days * 86400 + self.seconds
@@ -334,6 +338,11 @@ class Period(datetime.timedelta):
     def isoformat(self):
         """Return default ISO representation."""
         return self.iso8601()
+
+    @property
+    def length(self):
+        """Absolute length in seconds."""
+        return abs(int(self.total_seconds()))
 
 
 class Date(datetime.datetime):
@@ -433,6 +442,14 @@ class Date(datetime.datetime):
     @property
     def ymdhm(self):
         return self.strftime('%Y%m%d%H%M')
+
+    @property
+    def hm(self):
+        return self.strftime('%H%M')
+
+    @property
+    def hh(self):
+        return self.strftime('%H')
 
     def compact(self):
         """Compact concatenation of date values, up to the second."""
@@ -650,6 +667,10 @@ class Time(object):
     @property
     def fmthm(self):
         return '{0:04d}:{1:02d}'.format(self.hour, self.minute)
+
+    @property
+    def fmthhmm(self):
+        return '{0:02d}{1:02d}'.format(self.hour, self.minute)
 
     @property
     def fmtraw(self):

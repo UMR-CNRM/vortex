@@ -46,6 +46,9 @@ Interface functions
 
 .. autofunction:: collected_priorities
 
+.. autofunction:: reset_package_priority
+
+
 Exceptions
 ----------
 

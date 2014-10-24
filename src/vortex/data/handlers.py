@@ -42,6 +42,7 @@ class Handler(object):
         self.resource  = rd.pop('resource', None)
         self.provider  = rd.pop('provider', None)
         self.container = rd.pop('container', None)
+        self._empty    = rd.pop('empty', False)
         self._contents = None
         self._uridata  = None
         self._options  = rd.copy()
@@ -104,18 +105,27 @@ class Handler(object):
         Returns an valid data layout object as long as the current handler
         is complete and the container filled.
         """
-        if self.complete and self.container.filled:
-            if not self._contents:
-                self._contents = self.resource.contents_handler()
-                self._contents.slurp(self.container)
-            return self._contents
+        if self._empty:
+            self.container.write('')
+            self._empty = False
+        if self.complete:
+            if self.container.filled or self.stage == 'put':
+                if self._contents is None:
+                    self._contents = self.resource.contents_handler()
+                    self._contents.slurp(self.container)
+                return self._contents
+            else:
+                logger.warning('Contents requested on an empty container [%s]', self.container)
         else:
-            logger.warning('Contents requested without container or empty container [%s]', self.container)
+            logger.warning('Contents requested for an uncomplete handler [%s]', self.container)
             return None
 
     def options(self, *dicos, **kw):
         """Returns options associated to that handler and a system reference."""
-        opts = dict( intent=dataflow.intent.IN )
+        opts = dict(
+            intent = dataflow.intent.IN,
+            fmt    = self.container.actualfmt,
+        )
         opts.update(self._options)
         for d in dicos:
             opts.update(d)
@@ -224,7 +234,7 @@ class Handler(object):
                 rst = store.get(
                     self.uridata,
                     self.container.iotarget(),
-                    self.options(extras, fmt=self.container.actualfmt)
+                    self.options(extras)
                 )
                 self.container.updfill(rst)
                 self.history.append(store.fullname(), 'get', rst)
@@ -250,7 +260,7 @@ class Handler(object):
                     rst = store.put(
                         iotarget,
                         self.uridata,
-                        self.options(extras, fmt=self.container.actualfmt)
+                        self.options(extras)
                     )
                     self.history.append(store.fullname(), 'put', rst)
                     self.updstage('put')
@@ -292,7 +302,7 @@ class Handler(object):
             sh = sessions.system()
             rst = sh.remove(
                 self.container.localpath(),
-                fmt=self.container.actualfmt
+                fmt = self.container.actualfmt
             )
             self.history.append(sh.fullname(), 'clear', rst)
         return rst
@@ -302,6 +312,8 @@ class Handler(object):
         rst = False
         if self.contents:
             rst = self.contents.rewrite(self.container)
+            if not self.container.is_virtual():
+                self.container.close()
         else:
             logger.warning('Try to save undefined contents %s', self)
         return rst

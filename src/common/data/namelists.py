@@ -126,29 +126,30 @@ class Namelist(ModelResource):
     _footprint = dict(
         info = 'Namelist from binary pack',
         attr = dict(
+            kind = dict(
+                values   = ['namelist']
+            ),
+            clscontents = dict(
+                default  = NamelistContent
+            ),
             gvar = dict(
                 type = GenvKey,
                 optional = True,
-                values = ['NAMELIST_' + x.upper() for x in binaries],
-                default = 'namelist_[binary]'
+                values   = ['NAMELIST_' + x.upper() for x in binaries],
+                default  = 'namelist_[binary]'
             ),
             source = dict(
                 optional = True,
+                default  = 'namel_[binary]',
             ),
             model = dict(
                 optional = True,
             ),
             binary = dict(
                 optional = True,
-                values = binaries,
-                default = 'arpege',
+                values   = binaries,
+                default  = 'arpege',
             ),
-            kind = dict(
-                values = [ 'namelist' ]
-            ),
-            clscontents = dict(
-                default = NamelistContent
-            )
         )
     )
 
@@ -161,37 +162,31 @@ class Namelist(ModelResource):
         return 'extract=' + self.source
 
 
-class NamUtil(Namelist):
+class NamelistUtil(Namelist):
     """
     Class for namelists utilities
     """
     _footprint = dict(
         info = 'Namelist from utilities pack',
         attr = dict(
+            kind = dict(
+                values   = ['namelist_util', 'namutil'],
+                remap    = dict(namelist_util = 'namutil'),
+            ),
             gvar = dict(
-                values = ['NAMELIST_UTILITIES'],
-                default = 'namelist_utilities'
+                values   = ['NAMELIST_UTILITIES'],
+                default  = 'namelist_utilities'
             ),
             binary = dict(
-                values = ['utilities', 'odbtools'],
-                default = 'utilities',
+                values   = ['batodb', 'utilities', 'odbtools'],
+                default  = 'utilities',
                 optional = True,
             ),
-            kind = dict(
-                values = [ 'namelist_util', 'namutil' ],
-                remap = dict(
-                    namelist_util = 'namutil'
-                )
-            )
         )
     )
 
-    @property
-    def realkind(self):
-        return 'namutil'
 
-
-class NamTerm(Namelist):
+class NamelistTerm(Namelist):
     """
     Class for all the terms dependent namelists
     """
@@ -206,10 +201,6 @@ class NamTerm(Namelist):
             )
         )
     ]
-
-    @property
-    def realkind(self):
-        return 'namterm'
 
     def incoming_xxt_fixup(self, attr, key=None, prefix=None):
         """Fix as best as possible the ``xxt.def`` file."""
@@ -287,7 +278,7 @@ class NamTerm(Namelist):
             return val
 
 
-class NamSelect(NamTerm):
+class NamelistSelect(NamelistTerm):
     """
     Class for the select namelists
     """
@@ -315,7 +306,7 @@ class NamSelect(NamTerm):
             return 'extract=' + self.incoming_namelist_fixup('source', 'select')
 
 
-class NamelistFullPos(NamTerm):
+class NamelistFullPos(NamelistTerm):
     """
     Class for the fullpos term dependent namelists
     """
@@ -329,10 +320,6 @@ class NamelistFullPos(NamTerm):
             )
         )
     ]
-
-    @property
-    def realkind(self):
-        return 'namelistfp'
 
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
@@ -349,9 +336,9 @@ class XXTContent(IndexedTable):
 
     def xxtpos(self, n, g, x):
         """
-        Return value in position ``n`` for the ``term`` occurence défined in ``g`` or ``x``.
+        Return value in position ``n`` for the ``term`` occurence defined in ``g`` or ``x``.
           * ``g`` stands for a guess dictionary.
-          * ``g`` stands for an extra dictionary.
+          * ``x`` stands for an extra dictionary.
 
         These naming convention refer to the footprints resolve mechanism.
         """
@@ -377,7 +364,7 @@ class XXTContent(IndexedTable):
         return self.xxtpos(1, g, x)
 
 
-class NamSelectDef(NoDateResource):
+class NamelistSelectDef(NoDateResource):
     """Utility, so-called xxt file."""
     _footprint = dict(
         info = 'xxt.def file from namelist pack',
@@ -414,4 +401,3 @@ class NamSelectDef(NoDateResource):
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
         return 'extract=' + self.source
-

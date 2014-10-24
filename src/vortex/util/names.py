@@ -138,7 +138,11 @@ class VortexNameBuilder(object):
         Main entry point to convert a description into a file name
         according to the so-called observation style.
         """
-        name = '.'.join([d['nativefmt'], d['stage'], d['part']])
+        name = '.'.join([
+            d['nativefmt'] + '-' + d.get('layout', 'std'),
+            d.get('stage', 'void'),
+            d.get('part', 'all')
+        ])
         if d['suffix'] is not None:
             name = name + '.' + d['suffix']
 
@@ -149,5 +153,5 @@ class VortexNameBuilder(object):
         Main entry point to convert a description into a file name
         according to the so-called observation-map style.
         """
-        name = '.'.join([d['radical'], d['stage']])
+        name = '.'.join((d['radical'], d['stage'], d.get('fmt', 'txt')))
         return name.lower()

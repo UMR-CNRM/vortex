@@ -160,9 +160,9 @@ class MpiTool(footprints.FootprintBase):
             ]
         else:
             logger.info('No loop option in current parallel execution.')
-        print 'Namelist candidates:'
+        self.system.subtitle('Namelist candidates')
         for nam in namcandidates:
-            print ' *', nam
+            nam.quickview()
         return namcandidates
 
     def setup_namelist_delta(self, namcontents, namlocal):
@@ -295,7 +295,7 @@ class MpiSubmit(MpiTool):
         """Fix some environmental or behavior according to target definition."""
         if self.target.config.has_section('mpienv'):
             for k, v in self.target.config.items('mpienv'):
-                logger.info('Setting MPI env %s = %s', k, v)
+                logger.debug('Setting MPI env %s = %s', k, v)
                 self.env[k] = str(v)
 
 

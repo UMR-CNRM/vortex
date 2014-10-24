@@ -85,9 +85,6 @@ class AlarmService(Service):
         Return the actual logging method.
         """
 
-        # create a logger object
-        logger = logging.getLogger()
-
         # create the syslog handler
         hand = self.get_syslog()
         hand.setFormatter(logging.Formatter(self.alarmfmt))
@@ -102,10 +99,10 @@ class AlarmService(Service):
     def __call__(self):
         """Main action: pack the message to the actual logger action."""
         logmethod = self.get_logger_action()
-        logmethod(self.get_message())
+        return logmethod(self.get_message())
 
 
-class AlarmLogService(Service):
+class AlarmLogService(AlarmService):
     """
     Class responsible for handling alarm data through domain socket.
     This class should not be called directly.
@@ -123,7 +120,7 @@ class AlarmLogService(Service):
         return SysLogHandler(self.address, self.facility, self.socktype)
 
 
-class AlarmRemoteService(Service):
+class AlarmRemoteService(AlarmService):
     """
     Class responsible for handling alarm data through domain socket.
     This class should not be called directly.

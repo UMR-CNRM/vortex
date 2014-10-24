@@ -92,7 +92,7 @@ class LFI_Status(object):
 
 class LFI_Tool(addons.Addon):
     """
-    Default interface to LFI_commands.
+    Default interface to LFI commands.
     These commands are the one defined by the ``lfitools`` binary found in the IFS-ARPEGE framework.
     """
 
@@ -104,14 +104,14 @@ class LFI_Tool(addons.Addon):
         info = 'Default LFI system interface',
         attr = dict(
             kind = dict(
-                values = ['lfi'],
+                values  = ['lfi'],
             ),
             cmd = dict(
-                alias = ('lficmd',),
+                alias   = ('lficmd',),
                 default = 'lfitools',
             ),
             path = dict(
-                alias = ('lfipath',),
+                alias   = ('lfipath',),
             )
         )
     )
@@ -128,7 +128,7 @@ class LFI_Tool(addons.Addon):
             rc = fd.read(8) == 'LFI_ALTM'
         return rc
 
-    def lfi_table(self, lfifile, **kw):
+    def _std_table(self, lfifile, **kw):
         """
         List of contents of a  lfi-file.
 
@@ -136,7 +136,7 @@ class LFI_Tool(addons.Addon):
           * lfifile : lfi file name
 
         """
-        cmd = [ 'lfilist', lfifile ]
+        cmd = ['lfilist', lfifile]
 
         kw['output'] = True
 
@@ -148,9 +148,9 @@ class LFI_Tool(addons.Addon):
             result = [ tuple(eval(x)[0]) for x in rawout if x.startswith('[') ]
         )
 
-    fa_table = lfi_table
+    fa_table = lfi_table = _std_table
 
-    def lfi_diff(self, lfi1, lfi2, **kw):
+    def _std_diff(self, lfi1, lfi2, **kw):
         """
         Difference between two lfi-files.
 
@@ -197,9 +197,9 @@ class LFI_Tool(addons.Addon):
             result = trfields
         )
 
-    fa_diff = lfi_diff
+    fa_diff = lfi_diff = _std_diff
 
-    def lfi_ftput(self, source, destination, hostname=None, logname=None):
+    def _std_ftput(self, source, destination, hostname=None, logname=None):
         """On the fly packing and ftp."""
         if self.is_xlfi(source):
             st = LFI_Status()
@@ -207,7 +207,7 @@ class LFI_Tool(addons.Addon):
                 hostname = self.sh.env.VORTEX_ARCHIVE_HOST
             if hostname is None:
                 st.rc = 1
-                st.result = [ 'No archive host provided.' ]
+                st.result = ['No archive host provided']
                 return st
 
             if logname is None:
@@ -223,7 +223,7 @@ class LFI_Tool(addons.Addon):
                 )
                 st.rc = ftp.put(p.stdout, destination)
                 self.sh.pclose(p)
-                st.result = [ destination ]
+                st.result = [destination]
                 st.stdout = [
                     'Connection time   : {0:f}'.format(ftp.length),
                     'Actual target size: {0:d}'.format(ftp.size(destination))
@@ -231,14 +231,14 @@ class LFI_Tool(addons.Addon):
                 ftp.close()
             else:
                 st.rc = 1
-                st.result = [ 'Could not connect to ' + hostname + ' as user ' + logname ]
+                st.result = ['Could not connect to ' + hostname + ' as user ' + logname]
             return st
         else:
             return self.sh.ftput(source, destination, hostname=hostname, logname=logname)
 
-    fa_ftput = lfi_ftput
+    fa_ftput = lfi_ftput = _std_ftput
 
-    def lfi_remove(self, *args):
+    def _std_remove(self, *args):
         """Remove (possibly) multi lfi files."""
         st = LFI_Status(result=list())
         for pname in args:
@@ -256,9 +256,7 @@ class LFI_Tool(addons.Addon):
                     st.rc = rc
         return st
 
-    lfi_rm    = lfi_remove
-    fa_rm     = lfi_remove
-    fa_remove = lfi_remove
+    lfi_rm = lfi_remove = fa_rm = fa_remove = _std_remove
 
     def _cp_pack_read(self, source, destination):
         rc = self._spawn(['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', destination], output=False)
@@ -297,7 +295,7 @@ class LFI_Tool(addons.Addon):
             'read' if intent == 'in' else 'write',
         )
 
-    def lfi_copy(self, source, destination, intent='in', pack=False):
+    def _std_copy(self, source, destination, intent='in', pack=False):
         """Extended copy for (possibly) multi lfi file."""
         st = LFI_Status()
         if not self.sh.path.exists(source):
@@ -323,11 +321,9 @@ class LFI_Tool(addons.Addon):
                 st.rc = self.sh.cp(source, destination)
         return st
 
-    lfi_cp  = lfi_copy
-    fa_cp   = lfi_copy
-    fa_copy = lfi_copy
+    lfi_cp = lfi_copy = fa_cp = fa_copy = _std_copy
 
-    def lfi_move(self, source, destination, intent='in', pack=False):
+    def _std_move(self, source, destination, intent='in', pack=False):
         """Extended mv for (possibly) multi lfi file."""
         if self.is_xlfi(source):
             st = self.lfi_cp(source, destination, intent=intent, pack=pack)
@@ -342,9 +338,7 @@ class LFI_Tool(addons.Addon):
                 self.sh.chmod(destination, 0644)
         return st
 
-    lfi_mv  = lfi_move
-    fa_mv   = lfi_move
-    fa_move = lfi_move
+    lfi_mv = lfi_move = fa_mv = fa_move = _std_move
 
 
 class IO_Poll(addons.Addon):

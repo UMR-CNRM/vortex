@@ -23,18 +23,18 @@ class LAMBoundary(GeoFlowResource):
             info = 'Coupling file for a limited area model',
             attr = dict(
                 kind = dict(
-                    values = [ 'boundary', 'elscf', 'coupled' ],
-                    remap = dict(
+                    values  = ['boundary', 'elscf', 'coupled'],
+                    remap   = dict(
                         elscf = 'boundary',
                         coupled = 'boundary'
                     )
                 ),
                 nativefmt = dict(
-                    values = [ 'fa', 'grib' ],
+                    values  = ['fa', 'grib'],
                     default = 'fa',
                 ),
                 source = dict(
-                    values = [ 'arpege', 'aladin', 'arome', 'ifs', 'ecmwf' ]
+                    values  = ['arpege', 'aladin', 'arome', 'ifs', 'ecmwf']
                 ),
             )
         )

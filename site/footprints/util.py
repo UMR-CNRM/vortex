@@ -280,6 +280,10 @@ class GetByTag(object):
     def tag_items(cls):
         return cls._tag_table.items()
 
+    @classmethod
+    def tag_clear(cls):
+        cls._tag_table = dict()
+
 
 class Catalog(object):
     """

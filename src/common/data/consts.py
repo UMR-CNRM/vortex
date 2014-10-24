@@ -4,9 +4,68 @@
 #: No automatic export
 __all__ = []
 
-from vortex.data.outflow import ModelResource, StaticResource
+from vortex.data.outflow    import ModelResource, StaticResource
 from vortex.data.geometries import GridGeometry
-from gco.syntax.stdattrs import GenvKey
+from vortex.data.contents   import TextContent
+
+from gco.syntax.stdattrs    import GenvKey
+
+
+class GPSList(ModelResource):
+    """
+    Class of a GPS satellite ground coefficients. A Genvkey can be given.
+    """
+    _footprint = dict(
+        info = 'Set of GPS coefficients',
+        attr = dict(
+            kind = dict(
+                values   = ['gpslist', 'listgpssol'],
+                remap    = dict(listgpssol = 'gpslist'),
+            ),
+            clscontents = dict(
+                default  = TextContent,
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'list_gpssol'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'gpslist'
+
+
+class BatodbConf(ModelResource):
+    """
+    Default parameters for BATOR execution. A Genvkey can be given.
+    """
+    _footprint = dict(
+        info = 'Batodb parametrization',
+        attr = dict(
+            kind = dict(
+                values   = ['batodbconf', 'batorconf', 'parambator'],
+                remap    = dict(
+                    parambator = 'batodbconf',
+                    batorconf  = 'batodbconf',
+                ),
+            ),
+            clscontents = dict(
+                default  = TextContent,
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'param_bator_cfg'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'batodbconf'
 
 
 class RtCoef(ModelResource):
@@ -17,12 +76,12 @@ class RtCoef(ModelResource):
         info = 'Set of satellite  coefficients',
         attr = dict(
             kind = dict(
-                values = [ 'rtcoef' ]
+                values   = [ 'rtcoef' ]
             ),
             gvar = dict(
-                type = GenvKey,
+                type     = GenvKey,
                 optional = True,
-                default = 'rtcoef_tgz'
+                default  = 'rtcoef_tgz'
             ),
         )
     )
@@ -41,12 +100,12 @@ class RRTM(ModelResource):
         info = 'Coefficients of RRTM scheme',
         attr = dict(
             kind = dict(
-                values = [ 'rrtm' ]
+                values   = [ 'rrtm' ]
             ),
             gvar = dict(
-                type = GenvKey,
+                type     = GenvKey,
                 optional = True,
-                default = 'rrtm_const'
+                default  = 'rrtm_const'
             ),
         )
     )
@@ -69,15 +128,15 @@ class MatFilter(StaticResource):
                 optional = True,
             ),
             kind = dict(
-                values = [ 'matfilter' ]
+                values   = ['matfilter']
             ),
             scope = dict(
-                type = GridGeometry,
+                type     = GridGeometry,
             ),
             gvar = dict(
-                type = GenvKey,
+                type     = GenvKey,
                 optional = True,
-                default = 'mat_filter_[scope::area]'
+                default  = 'mat_filter_[scope::area]'
             )
         )
     )

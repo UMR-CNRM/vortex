@@ -15,14 +15,15 @@ from vortex import sessions
 
 class SMSGateway(object):
 
-    def __init__(self, tag='void', system=None, env=None, path=None):
+    def __init__(self, tag='void', system=None, env=None, path=None, active=True):
         logger.debug('SMS gateway init %s', self)
-        self.tag = tag
+        self.tag     = tag
+        self.active  = active
         self._system = system
-        if not self._system:
+        if self._system is None:
             self._system = sessions.current().context.system
         self._env = env
-        if not self._env:
+        if self._env is None:
             self._env = sessions.current().context.env
         self.binpath(path)
         if not self._system.path.exists(self.cmdpath('init')):
@@ -67,7 +68,10 @@ class SMSGateway(object):
         else:
             args.append(options)
         self._env.SMSACTUALPATH = self.binpath()
-        rc = self._system.spawn(args, output=False)
+        if self.active:
+            rc = self._system.spawn(args, output=False)
+        else:
+            logger.warning('Void SMS command: %s', str(args))
         del self._env.SMSACTUALPATH
         return rc
 

@@ -29,4 +29,4 @@ print '= CONTEXT Research'
 for clname in ( 'container', 'provider', 'resource', 'component' ):
     print
     print '= CLASS', (clname+'s').upper()
-    catdump(footprints.collector(clname))
+    catdump(footprints.collectors.get(tag=clname))

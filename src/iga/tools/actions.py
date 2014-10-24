@@ -15,11 +15,6 @@ class SendAlarm(Action):
     def __init__(self, kind='alarm', service=None, active=True):
         super(SendAlarm, self).__init__(kind)
 
-    def service_info(self, **kw):
-        """Force usage of /dev/log syslog."""
-        kw.setdefault('address', '/dev/log')
-        return super(SendAlarm, self).service_info(**kw)
-
 
 class SendAgt(Action):
     """

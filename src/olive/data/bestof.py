@@ -18,17 +18,13 @@ class InflFactor(FlowResource):
         info = 'Inflation factor file',
         attr = dict(
             kind = dict(
-                values = [ 'inflfactor' ]
+                values = ['inflfactor']
             ),
         )
     )
 
-    @property
-    def realkind(self):
-        return 'inflfactor'
-
     def basename_info(self):
-        return dict(radical='inflfactor', src=self.model)
+        return dict(radical = 'inflfactor', src = self.model)
 
     def olive_basename(self):
         return 'inflation_factor'

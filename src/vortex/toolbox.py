@@ -138,17 +138,19 @@ def pushsection(section, args, kw):
     push = getattr(ctx.sequence, section)
     doitmethod = sectionmap[section]
     if verbose and now:
-        logger.info('Just Do It ... active for method [%s]', doitmethod)
+        logger.info('Command at once [%s]', doitmethod)
     for rhandler in rl:
         newsections = push(rh=rhandler, **opts)
         ok = bool(newsections)
         if ok and now:
             if verbose:
-                logger.info(' > %s %s ...', doitmethod, rhandler.location())
+                logger.info('%s %s ...', doitmethod.title(), rhandler.location())
             ok = getattr(newsections[0], doitmethod)()
             if verbose and not ok:
-                logger.warning(' > Could not %s resource:', doitmethod)
+                logger.error('Could not %s resource:', doitmethod)
+                print t.line
                 rhandler.quickview(indent=4)
+                print t.line
             if t.sh.trace:
                 print
         if ok:
@@ -243,7 +245,7 @@ def namespaces(**kw):
     else:
         usedcat = ( 'provider', 'store' )
     nameseen = dict()
-    for cat in [ footprints.collectors.get(x) for x in usedcat ]:
+    for cat in [ footprints.collectors.get(tag=x) for x in usedcat ]:
         for cls in cat():
             fp = cls.footprint_retrieve().attr
             netattr = fp.get('namespace', None)

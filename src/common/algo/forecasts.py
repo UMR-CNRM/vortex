@@ -8,7 +8,7 @@ import re
 
 from vortex.autolog import logdefault as logger
 
-from ifsroot import IFSParallel
+from .ifsroot import IFSParallel
 
 
 class Forecast(IFSParallel):
@@ -30,6 +30,10 @@ class Forecast(IFSParallel):
             )
         )
     )
+
+    @property
+    def realkind(self):
+        return 'forecast'
 
     def prepare(self, rh, opts):
         """Default pre-link for the initial condition file"""
@@ -126,6 +130,10 @@ class FullPos(IFSParallel):
             ),
         )
     )
+
+    @property
+    def realkind(self):
+        return 'fullpos'
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""

@@ -36,10 +36,6 @@ class Resource(footprints.FootprintBase):
     def realkind(self):
         return 'resource'
 
-    @classmethod
-    def classkind(cls):
-        return cls.realkind.fget(cls)
-
     def _str_more(self):
         """Return a string representation of meaningful attributes for formatted output."""
         d = self.footprint_as_dict()
@@ -98,10 +94,15 @@ class Resource(footprints.FootprintBase):
     def genv_urlquery(self):
         return self.gget_urlquery()
 
+    def contents_args(self):
+        """Returns default arguments value to class content constructor."""
+        return dict()
+
     def contents_handler(self, **kw):
         """Returns class content handler according to attribute ``clscontents``."""
-        cclass = self.clscontents
-        return cclass(**kw)
+        this_args = self.contents_args()
+        this_args.update(kw)
+        return self.clscontents(**this_args)
 
 
 class Unknown(Resource):
@@ -115,7 +116,4 @@ class Unknown(Resource):
         )
     )
 
-    @property
-    def realkind(self):
-        return 'unknown'
 

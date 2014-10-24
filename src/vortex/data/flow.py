@@ -20,9 +20,9 @@ class FlowResource(Resource):
         """Default path informations (used by :class:`vortex.data.providers.Vortex`)."""
         return dict(
             nativefmt = self.nativefmt,
-            model = self.model,
-            date = self.date,
-            cutoff = self.cutoff
+            model     = self.model,
+            date      = self.date,
+            cutoff    = self.cutoff
         )
 
 
@@ -42,8 +42,8 @@ class GeoFlowResource(FlowResource):
         """Default path informations (used by :class:`vortex.data.providers.Vortex`)."""
         return dict(
             nativefmt = self.nativefmt,
-            model = self.model,
-            date = self.date,
-            cutoff = self.cutoff,
-            geometry = self.geometry
+            model     = self.model,
+            date      = self.date,
+            cutoff    = self.cutoff,
+            geometry  = self.geometry
         )

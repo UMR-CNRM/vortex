@@ -48,7 +48,7 @@ class NecMpiRun(mpitools.MpiRun):
                 mpix = set(filter(lambda x: not re.match(mpidiscard, x), mpix))
 
             e.mpiexport = ','.join(mpix)
-            logger.info('MPI export environment %s', e.mpiexport)
+            logger.debug('MPI export environment %s', e.mpiexport)
 
 
 class MpiAuto(mpitools.MpiRun):

@@ -21,10 +21,10 @@ class Clim(StaticResource):
             info = 'Climatology file',
             attr = dict(
                 kind = dict(
-                    values = [ 'clim' ],
+                    values = ['clim'],
                 ),
                 nativefmt = dict(
-                    values = [ 'fa' ],
+                    values = ['fa'],
                     default = 'fa',
                 ),
             )
@@ -59,7 +59,7 @@ class ClimModel(Clim):
                 optional = True,
             ),
             kind = dict(
-                values = [ 'clim_model' ]
+                values = ['clim_model']
             )
         )
     )
@@ -78,7 +78,7 @@ class ClimGlobal(ClimModel):
         info = 'Model climatology for Global Models',
         attr = dict(
             model = dict(
-                values = [ 'arpege' ]
+                values = ['arpege']
             ),
             gvar = dict(
                 default = 'clim_[model]_t[geometry::truncation]'
@@ -107,7 +107,7 @@ class ClimLAM(ClimModel):
         info = 'Model climatology for Local Area Models',
         attr = dict(
             model = dict(
-                values = [ 'aladin', 'arome' ]
+                values = ['aladin', 'arome']
             ),
             gdomain = dict(
                 type = GenvDomain,
@@ -141,6 +141,9 @@ class ClimBDAP(Clim):
         dict(
             info = 'Bdap climatology',
             attr = dict(
+                kind = dict(
+                    values = ['clim_bdap']
+                ),
                 geometry= dict(
                     type = GridGeometry,
                 ),
@@ -154,9 +157,6 @@ class ClimBDAP(Clim):
                     optional = True,
                     default = 'clim_dap_[gdomain]'
                     ),
-                kind = dict(
-                    values = [ 'clim_bdap' ]
-                )
             )
           )
     ]

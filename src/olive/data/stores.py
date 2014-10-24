@@ -18,17 +18,17 @@ class OliveArchiveStore(ArchiveStore):
         info = 'Olive archive access',
         attr = dict(
             scheme = dict(
-                values = [ 'olive' ],
+                values  = ['olive'],
             ),
             netloc = dict(
-                values = [ 'open.archive.fr', 'olive.archive.fr' ],
-                remap = {
+                values  = [ 'open.archive.fr', 'olive.archive.fr' ],
+                remap   = {
                     'olive.archive.fr': 'open.archive.fr'
                 },
             ),
             headdir = dict(
                 default = 'xp',
-                outcast = [ 'vortex' ]
+                outcast = ['vortex']
             ),
         )
     )
@@ -67,11 +67,11 @@ class OliveCacheStore(CacheStore):
         info = 'Olive cache access',
         attr = dict(
             scheme = dict(
-                values = [ 'olive' ],
+                values  = ['olive'],
             ),
             netloc = dict(
-                values = [ 'open.cache.fr', 'olive.cache.fr' ],
-                remap = {
+                values  = ['open.cache.fr', 'olive.cache.fr'],
+                remap   = {
                     'olive.cache.fr': 'open.cache.fr'
                 },
             ),
@@ -83,7 +83,7 @@ class OliveCacheStore(CacheStore):
             ),
             headdir = dict(
                 default = 'xp',
-                outcast = [ 'vortex' ]
+                outcast = ['vortex']
             ),
         )
     )
@@ -115,10 +115,10 @@ class OliveStore(MultiStore):
         info = 'Olive multi access',
         attr = dict(
             scheme = dict(
-                values = [ 'olive' ],
+                values = ['olive'],
             ),
             netloc = dict(
-                values = [ 'olive.multi.fr' ],
+                values = ['olive.multi.fr'],
             ),
         )
     )
@@ -134,27 +134,27 @@ class OpArchiveStore(ArchiveStore):
         info = 'Archive access',
         attr = dict(
             scheme = dict(
-                values = [ 'op', 'ftop' ],
-                remap = dict( ftop = 'op' ),
+                values   = ['op', 'ftop'],
+                remap    = dict(ftop = 'op'),
             ),
             netloc = dict(
-                values = [ 'oper.archive.fr', 'dbl.archive.fr', 'dble.archive.fr' ],
-                default = 'oper.archive.fr',
-                remap = { 'dbl.archive.fr': 'dble.archive.fr' }
+                values   = ['oper.archive.fr', 'dbl.archive.fr', 'dble.archive.fr'],
+                default  = 'oper.archive.fr',
+                remap    = {'dbl.archive.fr': 'dble.archive.fr'},
             ),
             rootdir = dict(
                 optional = True,
-                alias = [ 'archivehome' ],
-                default = '/home/m/mxpt/mxpt001'
+                alias    = ['archivehome'],
+                default  = '/home/m/mxpt/mxpt001',
             ),
             storage = dict(
                 optional = True,
-                default = 'cougar.meteo.fr'
+                default  = 'cougar.meteo.fr',
             ),
             glue = dict(
+                type     = StoreGlue,
                 optional = True,
-                default = oparchivemap,
-                type = StoreGlue
+                default  = oparchivemap,
             ),
         )
     )
@@ -196,33 +196,34 @@ class OpArchiveStore(ArchiveStore):
 
     def opget(self, remote, local, options):
         """File transfert: get from store."""
-        ftp = self.system.ftp(self.hostname(), remote['username'])
-        if ftp:
-            targetpath = local
-            cleanpath = self.fullpath(remote)
-            extract = remote['query'].get('extract', None)
-            (dirname, basename) = self.system.path.split(cleanpath)
-            if not extract and self.glue.containsfile(basename):
-                extract = basename
-                cleanpath, targetpath = self.glue.filemap(self.system, dirname, basename)
-            if cleanpath is None:
-                rc = False
-            else:
-                rc = ftp.get(cleanpath, targetpath)
-                ftp.close()
-                if not rc:
-                    logger.error('FTP could not get file %s', cleanpath)
-                elif extract:
-                    if extract == 'all' :
-                        rc = self.system.untar(targetpath, output=False)
-                    else:
-                        rc = self.system.untar(targetpath, extract, output=False)
-                        if local != extract:
-                            rc = rc and self.system.mv(extract, local)
-            return rc
+        targetpath = local
+        cleanpath  = self.fullpath(remote)
+        extract    = remote['query'].get('extract', None)
+        (dirname, basename) = self.system.path.split(cleanpath)
+        if not extract and self.glue.containsfile(basename):
+            extract = basename
+            cleanpath, targetpath = self.glue.filemap(self.system, dirname, basename)
+        if cleanpath is None:
+            rc = False
         else:
-            logger.error('Could not get ftp connection to %s', self.hostname())
-            return False
+            rc = self.system.ftget(
+                cleanpath,
+                targetpath,
+                # ftp control
+                hostname = self.hostname(),
+                logname  = remote['username'],
+                fmt      = options.get('fmt'),
+            )
+            if not rc:
+                logger.error('FTP could not get file %s', cleanpath)
+            elif extract:
+                if extract == 'all' :
+                    rc = self.system.untar(targetpath, output=False)
+                else:
+                    rc = self.system.untar(targetpath, extract, output=False)
+                    if local != extract:
+                        rc = rc and self.system.mv(extract, local)
+        return rc
 
     def opput(self, local, remote, options):
         """File transfert: put to store."""
@@ -232,7 +233,7 @@ class OpArchiveStore(ArchiveStore):
             # ftp control
             hostname = self.hostname(),
             logname  = remote['username'],
-            fmt      = options.get('fmt')
+            fmt      = options.get('fmt'),
         )
 
 

@@ -15,6 +15,8 @@ import re
 import weakref
 import dump
 
+from . import util
+
 REPORT_WHY_MISSING  = 'Missing value'
 REPORT_WHY_INVALID  = 'Invalid value'
 REPORT_WHY_OUTSIDE  = 'Not in values'
@@ -25,28 +27,23 @@ REPORT_WHY_SUBCLASS = 'Not a subclass'
 REPORT_ONLY_NOTFOUND = 'No value found'
 REPORT_ONLY_NOTMATCH = 'Do not match'
 
+# Module Interface
 
-def report_map(_reportmap=dict()):
-    """Default reporting table."""
-    return _reportmap
+def get(**kw):
+    """Return actual footprint log object matching description."""
+    return FootprintLog(**kw)
 
+def keys():
+    """Return the list of current entries names collected."""
+    return FootprintLog.tag_keys()
 
-def report_keys():
-    """Default reporting table."""
-    return sorted(report_map().keys())
+def values():
+    """Return the list of current entries values collected."""
+    return FootprintLog.tag_values()
 
-
-def report_copy():
-    """Return a copy of the table of reports."""
-    return report_map().copy()
-
-
-def report(tag='default', weak=True):
-    """Factory to retrieve a information report document, according to the ``tag`` provided."""
-    rtab = report_map()
-    if tag not in rtab:
-        rtab[tag] = FootprintLog(tag)
-    return rtab[tag]
+def items():
+    """Return the items of the footprint logs table."""
+    return FootprintLog.tag_items()
 
 
 class FootprintBadLogEntry(Exception):
@@ -197,21 +194,16 @@ class FootprintLogClass(FootprintLogEntry):
         print
 
 
-class FootprintLog(object):
+class FootprintLog(util.GetByTag):
     """Collect log informations to produce footprints reports."""
 
-    def __init__(self, tag='default', weak=True):
-        self._tag  = tag
+    def __init__(self, weak=True):
         self._log = list()
         self._weak = weak
         self._current = None
         self._xml = None
         self._dict = dict()
         self._touch = False
-
-    @property
-    def tag(self):
-        return self._tag
 
     def info(self):
         """Return a simple description as a string."""

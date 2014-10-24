@@ -18,7 +18,7 @@ def DEBUG(msg, obj=None, level=None):
     #print msg, str(obj)
     pass
 
-max_depth = 99
+max_depth = 32
 
 indent_first = 6
 indent_size = 4
@@ -192,7 +192,6 @@ class Dumper(util.GetByTag):
     def dump_list(self, obj, level=0, nextline=True):
         DEBUG('dump_list', obj)
         if level + 1 > max_depth:
-            exit()
             return "%s[...]%s" % (
                 indent(level, break_before_list_begin),
                 indent(level, break_after_list_end)
@@ -213,7 +212,6 @@ class Dumper(util.GetByTag):
     def dump_set(self, obj, level=0, nextline=True):
         DEBUG('dump_set', obj)
         if level + 1 > max_depth:
-            exit()
             return "%sset([...])%s" % (
                 indent(level, break_before_set_begin),
                 indent(level, break_after_set_end)

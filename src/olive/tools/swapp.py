@@ -116,12 +116,12 @@ def olive_rescue(sh, env, *files):
     if 'VORTEX_RESCUE_FILTER' in env:
         select = '|'.join(re.split(r'[,;:]+', env.VORTEX_RESCUE_FILTER))
         items = [ x for x in items if re.search(select, x, re.IGNORECASE) ]
-        logger.info('Rescue filter (%s)', select)
+        logger.info('Rescue filter [%s]', select)
 
     if 'VORTEX_RESCUE_DISCARD' in env:
         select = '|'.join(re.split(r'[,;:]+', env.VORTEX_RESCUE_DISCARD))
         items = [ x for x in items if not re.search(select, x, re.IGNORECASE) ]
-        logger.info('Rescue discard (%s)', select)
+        logger.info('Rescue discard [%s]', select)
 
     if items:
 
@@ -132,7 +132,7 @@ def olive_rescue(sh, env, *files):
             logger.info('Rescue user defined backup directory is %s', bkupdir)
         elif env.MTOOL_STEP_ABORT is not None:
             bkupdir = sh.path.join(env.MTOOL_STEP_ABORT, env.MTOOL_STEP_ID)
-            logger.info('Rescue mtool defined backup directory is %s', bkupdir)
+            logger.info('Rescue mtool defined backup directory is [%s]', bkupdir)
 
         if bkupdir is None:
             logger.error('No rescue directory defined.')

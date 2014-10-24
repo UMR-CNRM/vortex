@@ -38,15 +38,15 @@ class Observer(object):
 
     def newobsitem(self, item, info):
         """A new ``item`` has been created. Some information is provided through the dict ``info``."""
-        logger.info('Notified %s new item %s info %s', self, item, info)
+        logger.debug('Notified %s new item %s info %s', self, item, info)
 
     def delobsitem(self, item, info):
         """The ``item`` has been deleted. Some information is provided through the dict ``info``."""
-        logger.info('Notified %s del item %s info %s', self, item, info)
+        logger.debug('Notified %s del item %s info %s', self, item, info)
 
     def updobsitem(self, item, info):
         """The ``item`` has been updated. Some information is provided through the dict ``info``."""
-        logger.info('Notified %s upd item %s info %s', self, item, info)
+        logger.debug('Notified %s upd item %s info %s', self, item, info)
 
 
 class ObserverBoard(util.GetByTag):
@@ -86,7 +86,7 @@ class ObserverBoard(util.GetByTag):
 
     def notify_new(self, item, info):
         """Notify the listening objects that a new observed object is born."""
-        logger.info('Notify new %s info %s', repr(item), info)
+        logger.debug('Notify new %s info %s', repr(item), info)
         self._items.add(item)
         for remote in list(self._listen):
             remote.newobsitem(item, info)
@@ -94,7 +94,7 @@ class ObserverBoard(util.GetByTag):
     def notify_del(self, item, info):
         """Notify the listening objects that an observed object does not exists anymore."""
         if item in self._items:
-            logger.info('Notify del %s info %s', repr(item), info)
+            logger.debug('Notify del %s info %s', repr(item), info)
             for remote in list(self._listen):
                 remote.delobsitem(item, info)
             self._items.discard(item)
@@ -102,7 +102,7 @@ class ObserverBoard(util.GetByTag):
     def notify_upd(self, item, info):
         """Notify the listening objects that an observed object has been updated."""
         if item in self._items:
-            logger.info('Notify upd %s info %s', repr(item), info)
+            logger.debug('Notify upd %s info %s', repr(item), info)
             for remote in list(self._listen):
                 remote.updobsitem(item, info)
 

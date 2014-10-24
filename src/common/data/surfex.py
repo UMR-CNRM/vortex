@@ -7,26 +7,6 @@ __all__ = []
 from vortex.data.outflow import ModelResource, StaticResource
 from vortex.data.geometries import SpectralGeometry
 from gco.syntax.stdattrs import GenvKey
-from modelstates import Historic
-
-
-class SurfexHistoric(Historic):
-
-    _footprint = dict(
-        attr = dict(
-            model = dict(
-                values = [ 'surfex' ]
-            )
-        )
-    )
-
-    def archive_basename(self):
-        """OP ARCHIVE specific naming convention."""
-        return '(surf' + self.term.fmthour + ':inout)' + '.' + self.nativefmt
-
-    def olive_basename(self):
-        """OLIVE specific naming convention."""
-        return '.'.join(('AROMOUT_SURF', self.geometry.area[:4], self.term.fmthour, self.nativefmt))
 
 
 class PGDRaw(StaticResource):
@@ -75,7 +55,7 @@ class PGDLFI(PGDRaw):
         info = 'Grid-point data consts',
         attr = dict(
             kind = dict(
-                values = [ 'pgdlfi' ]
+                values = ['pgdlfi']
             ),
             nativefmt = dict(
                 default = 'lfi'
@@ -93,7 +73,7 @@ class PGDFA(PGDRaw):
         info = 'Grid-point data consts',
         attr = dict(
             kind = dict(
-                values = [ 'pgdfa' ]
+                values = ['pgdfa']
             ),
             nativefmt = dict(
                 default = 'fa'
@@ -111,10 +91,10 @@ class CoverParams(StaticResource):
         info = 'Coefficients of RRTM scheme',
         attr = dict(
             kind = dict(
-                values = [ 'coverparams', 'surfexcover' ]
+                values = ['coverparams', 'surfexcover']
             ),
             source = dict(
-                values = [ 'ecoclimap', 'ecoclimap1', 'ecoclimap2' ],
+                values = ['ecoclimap', 'ecoclimap1', 'ecoclimap2'],
                 optional = True,
                 default = 'ecoclimap',
             ),

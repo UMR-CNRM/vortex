@@ -260,7 +260,7 @@ class System(footprints.FootprintBase):
             nbc = autolen
         else:
             nbc = len(text)
-        print tchar * ( nbc + 4 )
+        print "\n", tchar * ( nbc + 4 )
         if text:
             print '# {0:{size}s} #'.format(text, size=nbc)
             print tchar * ( nbc + 4 )
@@ -351,7 +351,7 @@ class System(footprints.FootprintBase):
         return [ x.strip() for x in psall ]
 
     def readonly(self, inodename):
-        """Set permissions of the `filename` object to read-only."""
+        """Set permissions of the ``filename`` object to read-only."""
         inodename = self.path.expanduser(inodename)
         self.stderr('readonly', inodename)
         rc = None
@@ -427,7 +427,7 @@ class System(footprints.FootprintBase):
             p.terminate
         except OSError as e:
             if e.errno == 3:
-                logger.info('Processus %s alreaded terminated.' % str(p))
+                logger.debug('Processus %s alreaded terminated.' % str(p))
             else:
                 raise
 
@@ -614,6 +614,18 @@ class OSExtended(System):
             return None
 
     @fmtshcmd
+    def ftget(self, source, destination, hostname=None, logname=None):
+        """Proceed direct ftp get on the specified target."""
+        self.rm(destination)
+        ftp = self.ftp(hostname, logname)
+        if ftp:
+            rc = ftp.get(source, destination)
+            ftp.close()
+            return rc
+        else:
+            return False
+
+    @fmtshcmd
     def ftput(self, source, destination, hostname=None, logname=None):
         """Proceed direct ftp put on the specified target."""
         ftp = self.ftp(hostname, logname)
@@ -687,6 +699,10 @@ class OSExtended(System):
             xsource = True
         else:
             xsource = False
+            try:
+                source.seek(0)
+            except AttributeError:
+                logger.warning('Could not rewind io source before cp: ' + str(source))
         if type(destination) is types.StringType:
             if self.filecocoon(destination):
                 if self.remove(destination):
@@ -732,9 +748,15 @@ class OSExtended(System):
             destination = self.path.expanduser(destination)
             if self.remove(destination):
                 if self.is_samefs(source, destination):
-                    self.link(source, destination)
-                    self.readonly(destination)
-                    return self.path.samefile(source, destination)
+                    if self.path.isdir(source):
+                        rc = self.spawn(['cp', '-al', source, destination], output=False)
+                        for linkedfile in self.ffind(destination):
+                            self.chmod(linkedfile, 0444)
+                        return rc
+                    else:
+                        self.link(source, destination)
+                        self.readonly(destination)
+                        return self.path.samefile(source, destination)
                 else:
                     rc = self.rawcp(source, destination)
                     if rc:
@@ -881,7 +903,13 @@ class OSExtended(System):
     @fmtshcmd
     def mv(self, source, destination):
         """Shortcut to :meth:`move` method (file or directory)."""
-        return self.move(source, destination)
+        self.stderr('mv', source, destination)
+        if type(source) is not types.StringType or type(destination) is not types.StringType:
+            self.hybridcp(source, destination)
+            if type(source) is types.StringType:
+                return self.remove(source)
+        else:
+            return self.move(source, destination)
 
     def mvglob(self, *args):
         """Wrapper of the ``mv`` command through the globcmd."""
@@ -934,6 +962,41 @@ class OSExtended(System):
         """Unpack a file archive (always x-something)'"""
         kw['cx'] = 'x'
         return self._tarcx(*args, **kw)
+
+    def is_tarname(self, objname):
+        """Check if a ``objname`` is a string with ``.tar`` suffix."""
+        return isinstance(objname, str) and objname.endswith('.tar')
+
+    def tarfix_in(self, source, destination):
+        """Untar the ``destination`` if ``source`` is a tarfile."""
+        ok = True
+        if self.is_tarname(source) and not self.is_tarname(destination):
+            logger.info('Untar from get <%s>', source)
+            thiscwd = self.getcwd()
+            desttar = self.path.abspath(destination + '.tar')
+            (destdir, destfile) = self.path.split(desttar)
+            ok = ok and self.move(destination, desttar)
+            ok = ok and self.cd(destdir)
+            ok = ok and self.untar(destfile, output=False)
+            ok = ok and self.remove(desttar)
+            self.cd(thiscwd)
+        return (ok, source, destination)
+
+    def tarfix_out(self, source, destination):
+        """Tar the ``source`` input."""
+        ok = True
+        if not self.is_tarname(source) and self.is_tarname(destination):
+            logger.info('Tar before put <%s>', source)
+            thiscwd   = self.getcwd()
+            sourcetar = self.path.abspath(source + '.tar')
+            (sourcedir, sourcefile) = self.path.split(sourcetar)
+            ok = ok and self.cd(sourcedir)
+            pk = ok and self.remove(sourcefile)
+            ok = ok and self.tar(sourcefile, source, output=False)
+            self.cd(thiscwd)
+            return (ok, sourcetar, destination)
+        else:
+            return (ok, source, destination)
 
     def blind_dump(self, obj, destination, gateway=None):
         """

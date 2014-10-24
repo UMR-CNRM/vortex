@@ -17,7 +17,7 @@ import footprints
 from vortex.autolog import logdefault as logger
 from vortex import sessions
 
-criticals = [ 'debug', 'info', 'error', 'warning', 'critical' ]
+criticals = ['debug', 'info', 'error', 'warning', 'critical']
 
 
 class Service(footprints.FootprintBase):
@@ -89,7 +89,7 @@ class MailService(Service):
                 type     = footprints.FPList,
                 optional = True,
                 default  = footprints.FPList(),
-                alias    = ( 'files', 'attach' ),
+                alias    = ('files', 'attach'),
             ),
             subject = dict(),
             server = dict(

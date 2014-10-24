@@ -7,12 +7,12 @@ import re
 __all__ = []
 
 #: Default values for suite ids.
-suites = [ 'oper', 'dbl', 'dble', 'test' ]
+suites = ['oper', 'dbl', 'dble', 'test']
 
 #: Specific tricks for base naming in iga fuzzy namespace.
 fuzzystr = dict(
     histfix = dict(
-        historic = dict( pearp = 'prev', arome = 'AROM', arpege = 'arpe', aladin = 'ALAD' ),
+        historic = dict( pearp = 'prev', arome = 'AROM', arpege = 'arpe', aladin = 'ALAD', surfex = 'SURF' ),
     ),
     prefix = dict(
         gridpoint = dict( oper = 'PE', dbl = 'PA' ),

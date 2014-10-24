@@ -9,28 +9,28 @@ from vortex.data.flow import GeoFlowResource
 from vortex.tools.date import Time
 
 
-class BackgroundErrStd(GeoFlowResource):
+class BackgroundStdErr(GeoFlowResource):
 
     _footprint = dict(
         info = 'Background error standard deviation file',
         attr = dict(
             kind = dict(
-                values = [ 'bgerrstd' ]
+                values = ['bgerrstd']
             ),
             term = dict(
-                type = Time,
-                values = [ 3, 6, 9, 12 ],
+                type   = Time,
+                values = [3, 6, 9, 12],
             ),
         )
     )
 
     @property
     def realkind(self):
-        return 'bgerrstd'
+        return 'bgstderr'
 
     def basename_info(self):
         return dict(
-            radical = 'bgerrstd',
+            radical = self.realkind,
             fmt     = self.nativefmt,
             geo     = [{'truncation': self.geometry.truncation}],
             src     = self.model,

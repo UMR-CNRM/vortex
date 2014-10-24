@@ -2,11 +2,11 @@
 # -*- coding:Utf-8 -*-
 
 import footprints
+import vortex
 
 from oper_test_config import *  # @UnusedWildImport
 
 #t.debug()
-
 
 class UtGridPoint(TestCase):
 
@@ -35,7 +35,7 @@ class UtGridPoint(TestCase):
             origin = 'historic',
             model = 'arpege',
             cutoff = 'production',
-            date = today() + 'PT6H',
+            date = rundate,
             term = 0
         )
         self.fp_gridpoint2 = dict(
@@ -45,7 +45,7 @@ class UtGridPoint(TestCase):
             origin = 'historic',
             model = 'arpege',
             cutoff = 'production',
-            date = today() + 'PT6H',
+            date = rundate,
             term = 3
         )
 
@@ -56,7 +56,7 @@ class UtGridPoint(TestCase):
             origin = 'historic',
             model = 'aladin',
             cutoff = 'production',
-            date = today() + 'PT6H',
+            date = rundate,
             term = 6
         )
 
@@ -67,7 +67,7 @@ class UtGridPoint(TestCase):
             origin = 'historic',
             model = 'arome',
             cutoff = 'production',
-            date = today() + 'PT6H',
+            date = rundate,
             term = 6
         )
 
@@ -78,7 +78,7 @@ class UtGridPoint(TestCase):
             origin = 'historic',
             model = 'arpege',
             cutoff = 'assim',
-            date = today() + 'PT6H',
+            date = rundate,
             term = 0
         )
 
@@ -90,7 +90,7 @@ class UtGridPoint(TestCase):
             model = 'arpege',
             igakey = 'pearp',
             cutoff = 'assim',
-            date = today() + 'PT6H',
+            date = rundate,
             term = 6,
             member = 4
         )
@@ -139,9 +139,6 @@ class UtGridPoint(TestCase):
             rl[0].locate(),
             datadir + '/arpege/france/oper/data/fic_day/PFARPEGLOB15+0000.rSX'
         )
-        #uniquement sur machine oper (pas de phasage)
-        if t.env['HOSTNAME'] == 'kumo':
-            self.assertTrue(os.stat(rl[0].locate()))
 
     def test_v2(self):
         rl = toolbox.rload(
@@ -160,9 +157,6 @@ class UtGridPoint(TestCase):
             rl[0].locate(),
             datadir + '/arpege/france/oper/data/fic_day/PFARPEGLOB15+0003.rSX'
         )
-        #uniquement sur machine oper (pas de phasage)
-        if t.env['HOSTNAME'] == 'kumo':
-            self.assertTrue(os.stat(rl[0].locate()))
 
     def test_v3(self):
         rl = toolbox.rload(
@@ -181,9 +175,6 @@ class UtGridPoint(TestCase):
             rl[0].locate(),
             datadir + '/aladin/france/oper/data/fic_day/PFALADFRANX01+0006.rSX'
         )
-        #uniquement sur machine oper (pas de phasage)
-        if t.env['HOSTNAME'] == 'kumo':
-            self.assertTrue(os.stat(rl[0].locate()))
 
     def test_v4(self):
         rl = toolbox.rload(
@@ -202,9 +193,6 @@ class UtGridPoint(TestCase):
             rl[0].locate(),
             datadir + '/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0006.rSX'
         )
-        #uniquement sur machine oper (pas de phasage)
-        if t.env['HOSTNAME'] == 'kumo':
-            self.assertTrue(os.stat(rl[0].locate()))
 
     def test_v5(self):
         rl = toolbox.rload(
@@ -223,9 +211,6 @@ class UtGridPoint(TestCase):
             rl[0].locate(),
             datadir + '/arpege/france/oper/data/bdap/PE06000GLOB15'
         )
-        #uniquement sur machine oper (pas de phasage)
-        if t.env['HOSTNAME'] == 'kumo':
-            self.assertTrue(os.stat(rl[0].locate()))
 
     def test_v6(self):
         rl = toolbox.rload(
@@ -244,9 +229,6 @@ class UtGridPoint(TestCase):
             rl[0].locate(),
             datadir + '/arpege/pearp/oper/data/bdap/RUN4/fc_SX_4_GLOB15_0006'
         )
-        #uniquement sur machine oper (pas de phasage)
-        if t.env['HOSTNAME'] == 'kumo':
-            self.assertTrue(os.stat(rl[0].locate()))
 
 class UtHistoric(TestCase):
 
@@ -276,7 +258,7 @@ class UtHistoric(TestCase):
             origin = 'historic',
             model = 'arome',
             cutoff = 'production',
-            date = today() + 'PT18H',
+            date = rundate,
             term = 0
         )
 
@@ -286,7 +268,7 @@ class UtHistoric(TestCase):
             origin = 'historic',
             model = 'aladin',
             cutoff = 'production',
-            date = today() + 'PT12H',
+            date = rundate,
             term = 0
         )
         self.fp_historic3 = dict(
@@ -295,7 +277,7 @@ class UtHistoric(TestCase):
             origin = 'historic',
             model = 'arpege',
             cutoff = 'production',
-            date = today() + 'PT18H',
+            date = rundate,
             term = 0
         )
 
@@ -330,7 +312,7 @@ class UtHistoric(TestCase):
             rl[0].locate(),
             datadir + '/arome/france/oper/data/fic_day/ICMSHAROM+0000.rDH'
         )
-        self.assertTrue(os.stat(rl[0].locate()))
+        self.assertTrue(sh.stat(rl[0].locate()))
 
     def test_v2(self):
         rl = toolbox.rload(
@@ -349,9 +331,6 @@ class UtHistoric(TestCase):
             rl[0].locate(),
             datadir + '/aladin/caledonie/oper/data/fic_day/ICMSHALAD+0000.rPM'
         )
-        #uniquement sur machine oper (pas de phasage)
-        if t.env['HOSTNAME'] == 'kumo':
-            self.assertTrue(os.stat(rl[0].locate()))
 
     def test_v3(self):
         rl = toolbox.rload(
@@ -370,7 +349,7 @@ class UtHistoric(TestCase):
             rl[0].locate(),
             datadir + '/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rDH'
         )
-        self.assertTrue(os.stat(rl[0].locate()))
+        self.assertTrue(sh.stat(rl[0].locate()))
 
 
 class UtAnalysis(TestCase):
@@ -397,7 +376,7 @@ class UtAnalysis(TestCase):
             cutoff = 'production',
             model = 'arome',
             geometry = self.frangp,
-            date = today() + 'PT12H',
+            date = rundate,
         )
 
         self.fp_analys1_b = dict(
@@ -407,7 +386,7 @@ class UtAnalysis(TestCase):
             geometry = self.frangp,
             nativefmt = 'lfi',
             filling = 'surf',
-            date = today() + 'PT12H',
+            date = rundate,
         )
 
         self.fp_analys2 = dict(
@@ -415,7 +394,7 @@ class UtAnalysis(TestCase):
             cutoff = 'assim',
             model = 'aladin',
             geometry = self.frangp,
-            date = today() + 'PT18H',
+            date = rundate,
         )
 
         self.fp_analys3 = dict(
@@ -424,7 +403,7 @@ class UtAnalysis(TestCase):
             model = 'arpege',
             geometry = self.std,
             filling = 'surf',
-            date = today() + 'PT6H',
+            date = rundate,
         )
 
         self.fp_cont1 = dict(
@@ -467,9 +446,6 @@ class UtAnalysis(TestCase):
             rl[0].locate(),
             datadir + '/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rPM'
         )
-        #uniquement sur Nec oper
-        if t.env['HOSTNAME'] == 'kumo':
-            self.assertTrue(os.stat(rl[0].locate()))
 
     def test_v1_b(self):
         rl = toolbox.rload(
@@ -488,10 +464,6 @@ class UtAnalysis(TestCase):
             rl[0].locate(),
             datadir + '/arome/france/oper/data/fic_day/INIT_SURF.lfi.rPM'
         )
-        #uniquement sur Nec oper
-        if t.env['HOSTNAME'] == 'kumo':
-            self.assertTrue(os.stat(rl[0].locate()))
-
 
     def test_v2(self):
         rl = toolbox.rload(
@@ -510,9 +482,6 @@ class UtAnalysis(TestCase):
             rl[0].locate(),
             datadir + '/aladin/caledonie/oper/data/workdir/analyse/ICMSHALADINIT.r18'
         )
-        #uniquement sur Nec oper
-        if t.env['HOSTNAME'] == 'kumo':
-            self.assertTrue(os.stat(rl[0].locate()))
 
     def test_v3(self):
         rl = toolbox.rload(
@@ -531,9 +500,6 @@ class UtAnalysis(TestCase):
             rl[0].locate(),
             datadir + '/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.r06'
         )
-        #uniquement sur Nec oper
-        if t.env['HOSTNAME'] == 'kumo':
-            self.assertTrue(os.stat(rl[0].locate()))
 
 class UtHistsurf(TestCase):
 
@@ -541,7 +507,7 @@ class UtHistsurf(TestCase):
         self.geom = SpectralGeometry(id='Current op', area='frangp', resolution=2.5)
         self.fp_histsurf = dict(
             kind = 'histsurf',
-            date = today() + 'PT15H',
+            date = rundate,
             cutoff = 'production',
             geometry = self.geom,
             nativefmt = 'lfi',

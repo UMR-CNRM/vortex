@@ -33,7 +33,14 @@ class Executable(Resource):
 
     _abstract = True
     _footprint = dict(
-        info = 'Miscellaneaous executable resource'
+        info = 'Miscellaneaous executable resource',
+        attr = dict(
+            cycle = dict(
+                optional = True,
+                default  = None,
+                access   = 'rwx',
+            )
+        )
     )
 
 
@@ -44,15 +51,15 @@ class Script(Executable):
         attr = dict(
             rawopts = dict(
                 optional = True,
-                default = ''
+                default  = '',
             ),
             language = dict(
-                values = [ 'perl', 'python', 'ksh', 'bash', 'sh' ],
+                values   = ['perl', 'python', 'ksh', 'bash', 'sh'],
             ),
             kind = dict(
                 optional = True,
-                default = 'script',
-                values = [ 'script' ]
+                default  = 'script',
+                values   = ['script'],
             )
         )
     )
@@ -78,17 +85,21 @@ class Binary(Executable):
                 optional = True,
             ),
             static = dict(
-                type = bool,
+                type     = bool,
                 optional = True,
-                default = True,
+                default  = True,
             ),
             jacket = dict(
                 type = Jacket,
                 optional = True,
-                default = Jacket()
+                default  = Jacket()
             )
         )
     )
+
+    @property
+    def realkind(self):
+        return 'binary'
 
 
 class BlackBox(Binary):
@@ -98,17 +109,14 @@ class BlackBox(Binary):
         attr = dict(
             binopts = dict(
                 optional = True,
-                default = ''
+                default  = '',
             ),
             kind = dict(
-                values = [ 'binbox', 'blackbox' ],
+                values   = ['binbox', 'blackbox'],
+                remap    = dict(binbox = 'blackbox'),
             ),
         )
     )
-
-    @property
-    def realkind(self):
-        return 'blackbox'
 
     def command_line(self, **opts):
         """Returns current attribute :attr:`binopts`."""
@@ -124,13 +132,13 @@ class NWPModel(Binary):
          attr = dict(
             model = a_model,
             kind = dict(
-                values = [ 'nwpmodel' ]
+                values = ['nwpmodel']
             )
         )
     )
 
-    @classmethod
-    def realkind(cls):
+    @property
+    def realkind(self):
         return 'nwpmodel'
 
     def command_line(self, **opts):

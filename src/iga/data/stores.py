@@ -41,10 +41,6 @@ class IgaFinder(Finder):
         logger.debug('IgaFinder store init %s', self.__class__)
         super(IgaFinder, self).__init__(*args, **kw)
 
-    @property
-    def realkind(self):
-        return 'igafinder'
-
     def hostname(self):
         return self.netloc
 

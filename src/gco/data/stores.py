@@ -22,10 +22,10 @@ class GCOCentralStore(Store):
         info = 'GCO Central Store',
         attr = dict(
             scheme = dict(
-                values   = [ 'gget' ],
+                values   = ['gget'],
             ),
             netloc = dict(
-                values   = [ 'gco.meteo.fr' ],
+                values   = ['gco.meteo.fr'],
             ),
             ggetcmd = dict(
                 optional = True,
@@ -108,13 +108,13 @@ class GCOCentralStore(Store):
                 rc = self.system.untar(gname, output=False)
             extract = remote['query'].get('extract', None)
             if extract:
-                logger.info('GCOCentralStore get %s', gname + '/' + extract[0])
+                logger.info('GCO Central Store get %s', gname + '/' + extract[0])
                 rc = self.system.cp(gname + '/' + extract[0], local)
             else:
-                logger.info( 'GCOCentralStore get %s', gname )
+                logger.info( 'GCO Central Store get %s', gname )
                 rc = self.system.mv(gname, local)
         else:
-            logger.warning('GCOCentralStore get %s was not successful (%s)', gname, rc)
+            logger.warning('GCO Central Store get %s was not successful (%s)', gname, rc)
         return rc
 
 
