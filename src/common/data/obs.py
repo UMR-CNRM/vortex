@@ -6,31 +6,31 @@ __all__ = [ 'Observations' ]
 
 import re
 from collections import namedtuple
-from footprints  import FPDict
+from footprints  import FPDict, FPSet
 
 from vortex.autolog       import logdefault as logger
 from vortex.data.flow     import GeoFlowResource, FlowResource
 from vortex.data.contents import TextContent
+from vortex.syntax        import stdattrs
 
 
 class Observations(GeoFlowResource):
+    """
+    Abstract observation resource.
+    """
 
     _abstract  = True
     _footprint = dict(
         info = 'Observations file',
         attr = dict(
             kind = dict(
-                values = ['observations', 'obs'],
-                remap  = dict(obs = 'observations'),
+                values   = ['observations', 'obs'],
+                remap    = dict(obs = 'observations'),
             ),
             part = dict(),
             nativefmt = dict(
-                alias  = ('format',),
+                alias    = ('format',),
             ),
-            olivefmt = dict(
-                type = FPDict,
-                optional = True,
-            )
         )
     )
 
@@ -49,6 +49,9 @@ class Observations(GeoFlowResource):
 
 
 class ObsODB(Observations):
+    """
+    TODO.
+    """
 
     _footprint = dict(
         info = 'Packed observations (ODB, CCMA, etc.)',
@@ -63,11 +66,32 @@ class ObsODB(Observations):
             layout = dict(
                 optional = True,
                 default  = 'ecma',
-                values   = ['ccma', 'ecma', 'ecmascr'],
+                values   = [
+                    'ccma', 'ecma', 'ecmascr',
+                    'CCMA', 'ECMA', 'ECMASCR',
+                    'rstbias', 'countryrstrhbias', 'sondetyperstrhbias',
+                    'RSTBIAS', 'COUNTRYRSTRHBIAS', 'SONDETYPERSTRHBIAS',
+                ],
+                remap    = dict(
+                    CCMA = 'ccma', ECMA = 'ecma', ECMASCR = 'ecmascr',
+                    RSTBIAS = 'rstbias',
+                    COUNTRYRSTRHBIAS = 'countryrstrhbias',
+                    SONDETYPERSTRHBIAS = 'sondetyperstrhbias',
+                )
             ),
             stage = dict(
-                values   = ['void', 'screen', 'split', 'build', 'traj', 'min', 'complete', 'cans'],
-                remap    = dict(split = 'build'),
+                values   = [
+                    'void', 'avg', 'average', 'screen', 'screening', 'split', 'build',
+                    'traj', 'min', 'minim', 'complete',
+                    'canari', 'cans'
+                ],
+                remap    = dict(
+                    avg    = 'average',
+                    min    = 'minim',
+                    cans   = 'canari',
+                    split  = 'build',
+                    screen = 'screening',
+                ),
             ),
         )
     )
@@ -88,15 +112,15 @@ class ObsODB(Observations):
         """OP ARCHIVE specific naming convention."""
         if self.part == 'full' and self.stage == 'void':
             return 'ecmascr.tar'
-        elif self.part == 'full' and self.stage == 'screen':
+        elif self.part == 'full' and self.stage == 'screening':
             return 'odb_screen.tar'
         elif re.match(r'^(?:altitude|mix|full)$', self.part) and self.stage == 'traj':
             return 'odb_traj.tar'
-        elif re.match(r'^(?:altitude|mix|full)$', self.part) and self.stage == 'min' and self.model == 'aladin':
+        elif re.match(r'^(?:altitude|mix|full)$', self.part) and self.stage == 'minim' and self.model == 'aladin':
             return 'odb_cpl.tar'
         elif re.match(r'^(?:altitude|mix|full)$', self.part) and self.stage == 'complete':
             return 'odb_cpl.tar'
-        elif self.part == 'ground' and self.stage == 'cans':
+        elif self.part == 'ground' and self.stage == 'canari':
             return 'odb_canari.tar'
         else:
             logger.error(
@@ -113,6 +137,9 @@ class ObsODB(Observations):
 
 
 class ObsRaw(Observations):
+    """
+    TODO.
+    """
 
     _footprint = dict(
         info = 'Raw observations set',
@@ -127,15 +154,17 @@ class ObsRaw(Observations):
                 )
             ),
             stage = dict(
-                values = ['void', 'extract', 'raw', 'std']
+                values  = ['void', 'extract', 'raw', 'std']
             ),
             olivefmt = dict(
+                type     = FPDict,
+                optional = True,
                 default = FPDict(
                     ascii  = 'ascii',
                     obsoul = 'obsoul',
                     grib   = 'obsgrib',
                     bufr   = 'obsbufr',
-                )
+                ),
             )
         )
     )
@@ -161,7 +190,10 @@ class ObsRaw(Observations):
             )
 
 
-class Varbc(FlowResource):
+class VarBC(FlowResource):
+    """
+    TODO.
+    """
 
     _footprint = dict(
         info = 'Varbc file',
@@ -172,12 +204,17 @@ class Varbc(FlowResource):
             nativefmt = dict(
                 values   = ['ascii', 'txt'],
                 default  = 'txt',
-                remap    = dict(ascii = 'txt')
+                remap    = dict(ascii = 'txt'),
            ),
             stage = dict(
                 optional = True,
                 values   = ['merge', 'void'],
                 default  = 'void'
+            ),
+            mixmodel = dict(
+                optional = True,
+                default  = None,
+                values   = stdattrs.models,
             ),
         )
     )
@@ -201,13 +238,22 @@ class Varbc(FlowResource):
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
         if self.stage == 'void':
-            bname = 'VARBC' + '(varbc' + self.model + ':inout)'
+            bname = 'VARBC.cycle'
+            if self.mixmodel is not None:
+                bname = bname + '_'
+                if self.mixmodel.startswith('alad'):
+                    bname = bname + self.mixmodel[:4]
+                else:
+                    bname = bname + self.mixmodel[:3]
         else:
             bname = 'VARBC.' + self.stage
         return bname
 
 
 class BlackList(FlowResource):
+    """
+    TODO.
+    """
 
     _footprint = dict(
         info = 'Blacklist file for observations',
@@ -289,6 +335,9 @@ class ObsRefContent(TextContent):
 
 
 class Refdata(FlowResource):
+    """
+    TODO.
+    """
 
     _footprint = dict(
         info = 'Refdata file',
@@ -336,14 +385,22 @@ ObsMapItem = namedtuple('ObsMapItem', ('odb', 'data', 'fmt', 'instr'))
 
 class ObsMapContent(TextContent):
 
+    @property
+    def discarded(self):
+        return self._discarded
+
     def append(self, item):
         """Append the specified ``item`` to internal data contents."""
-        self._data.append(ObsRefItem(*item))
+        self._data.append(ObsMapItem(*item))
 
     def slurp(self, container):
         """Get data from the ``container``."""
         container.rewind()
-        self.extend([ ObsMapItem(*x.split()) for x in container if not x.startswith('#') ])
+        self.extend([
+            obs for obs in
+                [ ObsMapItem(*x.split()) for x in container if not x.startswith('#') ]
+            if obs.odb not in self.discarded
+        ])
 
     @classmethod
     def formatted_data(self, item):
@@ -390,6 +447,11 @@ class ObsMapContent(TextContent):
 
 
 class ObsMap(FlowResource):
+    """
+    Simple ascii table for the description of the mapping of
+    observations set to ODB bases. The native format is :
+    odb / data / fmt / instr.
+    """
 
     _footprint = dict(
         info = 'Bator mapping file',
@@ -409,12 +471,21 @@ class ObsMap(FlowResource):
                 optional = True,
                 default  = 'void'
             ),
+            discard = dict(
+                type     = FPSet,
+                optional = True,
+                default  = FPSet(),
+            )
         )
     )
 
     @property
     def realkind(self):
         return 'obsmap'
+
+    def contents_args(self):
+        """Returns default arguments value to class content constructor."""
+        return dict(discarded=set(self.discard))
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
@@ -435,21 +506,22 @@ class ObsMap(FlowResource):
 
 
 class Bcor(FlowResource):
+    """Bias correction parameters."""
 
     _footprint = dict(
         info = 'Bias correction parameters',
         attr = dict(
             kind = dict(
-                values = ['bcor'],
+                values  = ['bcor'],
             ),
             nativefmt = dict(
-                values  = ['txt'],
+                values  = ['ascii', 'txt'],
                 default = 'txt',
                 remap   = dict(ascii = 'txt')
             ),
             satbias = dict(
-                values = ['mtop', 'metop', 'noaa', 'ssmi'],
-                remap  = dict(metop = 'mtop'),
+                values  = ['mtop', 'metop', 'noaa', 'ssmi'],
+                remap   = dict(metop = 'mtop'),
             ),
         )
     )
@@ -469,3 +541,43 @@ class Bcor(FlowResource):
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
         return 'bcor_' + self.satbias + '.dat'
+
+
+class BackgroundStdError(FlowResource):
+    """
+    TODO.
+    """
+
+    _footprint = dict(
+        info = 'Sigma B... could be more talkative ?',
+        attr = dict(
+            kind = dict(
+                values   = ['bgstderr', 'bg_stderr'],
+                remap    = dict(autoremap = 'first'),
+            ),
+            stage = dict(
+                optional = True,
+                default  = 'scr',
+                values   = ['scr', 'vor'],
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'bgstderr'
+
+    def basename_info(self):
+        """Generic information for names fabric, with radical = ``bcor``."""
+        return dict(
+            radical = self.realkind,
+            geo     = [{'truncation': self.geometry.truncation}],
+            fmt     = self.nativefmt,
+            src     = [self.model, self.stage],
+        )
+
+    def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
+        errgrib = 'errgrib' if self.stage in ('vor',) else 'errgrib_'
+        return errgrib + self.stage
+

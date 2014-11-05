@@ -18,16 +18,16 @@ class VortexNameBuilder(object):
     def __init__(self, *args, **kw):
         logger.debug('Init VortexNameBuilder %s', self.__class__)
         self._default = dict(
-            radical = 'vortexdata',
-            src = None,
-            fmt = None,
-            term = None,
-            geo = None,
-            suffix = None,
+            radical   = 'vortexdata',
+            src       = None,
+            fmt       = None,
+            term      = None,
+            geo       = None,
+            suffix    = None,
             nativefmt = None,
-            stage = None,
-            part = None,
-            compute = None,
+            stage     = None,
+            part      = None,
+            compute   = None,
         )
         self.setdefault(**kw)
 
@@ -95,7 +95,7 @@ class VortexNameBuilder(object):
         Result is always a list of string values.
         """
         if type(items) is not ListType:
-            items = [ items ]
+            items = [items]
         packed = list()
         for i in items:
             if type(i) is DictType:

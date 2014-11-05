@@ -37,7 +37,7 @@ class Olive(Provider):
         return 'olive'
 
     def __init__(self, *args, **kw):
-        logger.debug('Olive experiment provider init %s', self)
+        logger.debug('Olive experiment provider init %s', self.__class__)
         super(Olive, self).__init__(*args, **kw)
 
     def scheme(self):
@@ -66,42 +66,42 @@ class OpArchive(Provider):
         info = 'Old archive provider',
         attr = dict(
             vconf = dict(
-                outcast = [ 'frcourt' ]
+                outcast  = ['frcourt']
             ),
             tube = dict(
                 optional = True,
-                values = [ 'op', 'ftop' ],
-                remap = dict( ftop = 'op' ),
-                default = 'op'
+                default  = 'op',
+                values   = ['op', 'ftop'],
+                remap    = dict(ftop = 'op'),
             ),
             namespace = dict(
                 optional = True,
-                values= [ 'oper.archive.fr', 'dble.archive.fr', 'oper.multi.fr', 'dble.multi.fr' ],
-                default = '[suite].multi.fr'
+                default  = '[suite].multi.fr',
+                values   = ['oper.archive.fr', 'dble.archive.fr', 'oper.multi.fr', 'dble.multi.fr'],
             ),
             suite = dict(
-                values = suites,
-                remap = dict( dbl = 'dble' )
+                values   = suites,
+                remap    = dict(dbl = 'dble')
             ),
             igakey = dict(
                 optional = True,
-                default = '[vapp]'
+                default  = '[vapp]'
             ),
             member = dict(
-                type = int,
+                type     = int,
                 optional = True,
             ),
             inout = dict(
                 optional = True,
-                default = 'output',
-                values = [ 'in', 'input', 'out', 'output' ],
-                remap  = { 'in': 'input', 'out': 'output' }
+                default  = 'input',
+                values   = ['in', 'input', 'out', 'output'],
+                remap    = {'in': 'input', 'out': 'output'}
             )
         )
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Old archive provider init %s', self)
+        logger.debug('Old archive provider init %s', self.__class__)
         super(OpArchive, self).__init__(*args, **kw)
 
     @property

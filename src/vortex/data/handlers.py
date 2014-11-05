@@ -48,7 +48,7 @@ class Handler(object):
         self._options  = rd.copy()
         self._observer = observer_board(kw.pop('observer', None))
         self._options.update(kw)
-        self.ghost = self._options.pop('ghost', True)
+        self.ghost = self._options.pop('ghost', False)
         self._history = structs.History(tag='data-handler')
         self._history.append(self.__class__.__name__, 'init', True)
         self._stage = [ 'load' ]
@@ -120,13 +120,17 @@ class Handler(object):
             logger.warning('Contents requested for an uncomplete handler [%s]', self.container)
             return None
 
-    def options(self, *dicos, **kw):
+    @property
+    def options(self):
+        return self._options
+
+    def mkopts(self, *dicos, **kw):
         """Returns options associated to that handler and a system reference."""
         opts = dict(
             intent = dataflow.intent.IN,
             fmt    = self.container.actualfmt,
         )
-        opts.update(self._options)
+        opts.update(self.options)
         for d in dicos:
             opts.update(d)
         opts.update(kw)
@@ -157,7 +161,7 @@ class Handler(object):
             '{0}{0}Location  : {6}'
        )).format(
             tab,
-            self, self.role, self.alternate, self.complete, self._options, self.location()
+            self, self.role, self.alternate, self.complete, self.options, self.location()
         )
         for subobj in ( 'resource', 'provider', 'container' ):
             obj = getattr(self, subobj, None)
@@ -215,7 +219,7 @@ class Handler(object):
                 logger.debug('Locate resource %s at %s from %s', self, self.lasturl, store)
                 rst = store.locate(
                     self.uridata,
-                    self.options(extras)
+                    self.mkopts(extras)
                 )
                 self.history.append(store.fullname(), 'locate', rst)
             else:
@@ -229,12 +233,13 @@ class Handler(object):
         rst = False
         if self.complete:
             store = self.store
+            logger.debug('Get resource %s at store %s', self, store)
             if store:
                 logger.debug('Get resource %s at %s from %s', self, self.lasturl, store)
                 rst = store.get(
                     self.uridata,
                     self.container.iotarget(),
-                    self.options(extras)
+                    self.mkopts(extras)
                 )
                 self.container.updfill(rst)
                 self.history.append(store.fullname(), 'get', rst)
@@ -251,22 +256,23 @@ class Handler(object):
         """Method to store data from the current container through the provider."""
         rst = False
         if self.complete:
-            logger.debug('Put resource %s', self)
             store = self.store
             if store:
                 iotarget = self.container.iotarget()
-                if store.in_place(iotarget):
+                logger.debug('Put resource %s as io %s at store %s', self, iotarget, store)
+                if iotarget is not None and self.container.exists():
                     logger.debug('Put resource %s at %s from %s', self, self.lasturl, store)
                     rst = store.put(
                         iotarget,
                         self.uridata,
-                        self.options(extras)
+                        self.mkopts(extras)
                     )
                     self.history.append(store.fullname(), 'put', rst)
                     self.updstage('put')
                 elif self.ghost:
                     self.history.append(store.fullname(), 'put', False)
                     self.updstage('ghost')
+                    rst = True
                 else:
                     logger.error('Could not find any source to put [%s]', iotarget)
             else:
@@ -285,7 +291,7 @@ class Handler(object):
                 logger.debug('Check resource %s at %s from %s', self, self.lasturl, store)
                 rst = store.check(
                     self.uridata,
-                    self.options(extras)
+                    self.mkopts(extras)
                 )
                 self.history.append(store.fullname(), 'check', rst)
             else:

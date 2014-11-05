@@ -271,6 +271,7 @@ class Tracker(object):
 
     def __str__(self):
         return '{0:s} | deleted={1:d} created={2:d} updated={3:d} unchanged={4:d}>'.format(
+            repr(self).rstrip('>'),
             len(self.deleted), len(self.created), len(self.updated), len(self.unchanged)
         )
 

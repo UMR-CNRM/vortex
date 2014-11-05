@@ -17,11 +17,19 @@ class Listing(FlowResource):
              attr = dict(
                 task = dict(
                     optional = True,
-                    default = 'anonymous'
+                    default  = 'anonymous'
                 ),
                 kind = dict(
-                    values = [ 'listing' ]
-                )
+                    values   = ['listing']
+                ),
+                part = dict(
+                    optional = True,
+                    default  = 'void',
+                ),
+                binary = dict(
+                    optional = True,
+                    default  = '[model]',
+                ),
             )
         )
     ]
@@ -34,7 +42,8 @@ class Listing(FlowResource):
         """Generic information, radical = ``listing``."""
         return dict(
             radical = 'listing',
-            src     = [ self.model, self.task.split('/').pop() ],
+            src     = [self.binary, self.task.split('/').pop()],
+            compute = self.part,
         )
 
 
@@ -45,34 +54,34 @@ class ParallelListing(Listing):
              attr = dict(
                 kind = dict(
                     values = [ 'listing', 'plisting', 'mlisting' ],
-                    remap = dict(
-                        listing = 'plisting',
+                    remap  = dict(
+                        listing  = 'plisting',
                         mlisting = 'plisting',
                     )
                 ),
                 mpi = dict(
                     optional = True,
-                    default = None,
-                    type = FmtInt,
-                    args = dict( fmt = '03' ),
+                    default  = None,
+                    type     = FmtInt,
+                    args     = dict(fmt = '03'),
                 ),
                 openmp = dict(
                     optional = True,
-                    default = None,
-                    type = FmtInt,
-                    args = dict( fmt = '02' ),
+                    default  = None,
+                    type     = FmtInt,
+                    args     = dict(fmt = '02'),
                 ),
                 seta = dict(
                     optional = True,
-                    default = None,
-                    type = FmtInt,
-                    args = dict( fmt = '03' ),
+                    default  = None,
+                    type     = FmtInt,
+                    args     = dict(fmt = '03'),
                 ),
                 setb = dict(
                     optional = True,
-                    default = None,
-                    type = FmtInt,
-                    args = dict( fmt = '02' ),
+                    default  = None,
+                    type     = FmtInt,
+                    args     = dict(fmt = '02'),
                 ),
             )
         )

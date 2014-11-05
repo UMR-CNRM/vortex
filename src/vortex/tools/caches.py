@@ -39,7 +39,7 @@ class Cache(footprints.FootprintBase):
                 default  = True,
             ),
             kind = dict(
-                values   = [ 'std' ]
+                values   = ['std']
             ),
             rootdir = dict(
                 optional = True,

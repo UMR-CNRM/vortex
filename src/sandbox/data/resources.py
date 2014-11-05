@@ -57,7 +57,7 @@ class SimpleTest(Resource):
     ) ]
 
     def __init__(self, *args, **kw):
-        logger.debug('SimpleTest resource init %s', self)
+        logger.debug('SimpleTest resource init %s', self.__class__)
         super(SimpleTest, self).__init__(*args, **kw)
 
     def xtest(self):
@@ -86,7 +86,7 @@ class Parasite(Resource):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('SimpleTest resource init %s', self)
+        logger.debug('SimpleTest resource init %s', self.__class__)
         super(Parasite, self).__init__(*args, **kw)
 
     @property
@@ -112,7 +112,7 @@ class CheckOnlyBase(Resource):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('CheckOnlyBase resource init %s', self)
+        logger.debug('CheckOnlyBase resource init %s', self.__class__)
         super(CheckOnlyBase, self).__init__(*args, **kw)
 
     @property
@@ -132,7 +132,7 @@ class CheckOnlyCycle38(CheckOnlyBase):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('CheckOnlyBase resource init %s', self)
+        logger.debug('CheckOnlyBase resource init %s', self.__class__)
         super(CheckOnlyBase, self).__init__(*args, **kw)
 
     @property

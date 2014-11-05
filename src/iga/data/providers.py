@@ -42,37 +42,37 @@ class IgaProvider(Provider):
         attr = dict(
             namespace = dict(
                 optional = True,
-                default = '[suite].inline.fr',
-                values = [ 'oper.inline.fr', 'dble.inline.fr', 'dbl.inline.fr', 'test.inline.fr' ],
-                remap = {
+                default  = '[suite].inline.fr',
+                values   = ['oper.inline.fr', 'dble.inline.fr', 'dbl.inline.fr', 'test.inline.fr'],
+                remap    = {
                     'dbl.inline.fr': 'dble.inline.fr'
                 },
             ),
             tube = dict(
                 optional = True,
-                values = [ 'scp', 'rcp', 'file' ],
+                values  = ['scp', 'rcp', 'file'],
                 default = 'file'
             ),
             suite = a_suite,
             source = dict(
-                values = [ 'arpege', 'arome' ],
-                optional = True
+                optional = True,
+                values   = ['arpege', 'arome'],
             ),
             member = dict(
-                type = int,
+                type     = int,
                 optional = True,
             ),
             igakey = dict(),
             config = dict(
-                type = IgaCfgParser,
+                type     = IgaCfgParser,
                 optional = True,
-                default = IgaCfgParser('iga-map-resources.ini')
+                default  = IgaCfgParser('iga-map-resources.ini')
             ),
         )
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('IGA job provider init %s', self)
+        logger.debug('IGA job provider init %s', self.__class__)
         super(IgaProvider, self).__init__(*args, **kw)
 
     @property
@@ -148,7 +148,7 @@ class SopranoProvider(Provider):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('IGA job provider init %s', self)
+        logger.debug('IGA job provider init %s', self.__class__)
         super(SopranoProvider, self).__init__(*args, **kw)
 
     @property

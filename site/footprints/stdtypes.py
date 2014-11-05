@@ -12,6 +12,8 @@ __all__ = ['FPDict', 'FPList', 'FPSet', 'FPTuple']
 import logging
 logger = logging.getLogger('footprints.stdtypes')
 
+import copy
+
 
 class FPDict(dict):
     """A dict type for FootPrints arguments (without expansion)."""
@@ -28,6 +30,14 @@ class FPList(list):
     def __hash__(self):
         return hash(tuple(self))
 
+    def __copy__(self):
+        args = self.items()
+        return self.__class__(*args)
+
+    def __deepcopy__(self, memo):
+        args = copy.deepcopy(self.items())
+        return self.__class__(*args)
+
     def items(self):
         return self[:]
 
@@ -41,8 +51,16 @@ class FPSet(set):
     def __hash__(self):
         return hash(tuple(self))
 
+    def __copy__(self):
+        args = self.items()
+        return self.__class__(*args)
+
+    def __deepcopy__(self, memo):
+        args = copy.deepcopy(self.items())
+        return self.__class__(*args)
+
     def items(self):
-        return list(self)
+        return tuple(self)
 
 
 class FPTuple(tuple):

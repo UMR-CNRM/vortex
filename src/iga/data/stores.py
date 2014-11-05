@@ -50,6 +50,11 @@ class IgaFinder(Finder):
         else:
             return self.rootdir  + remote['path']
 
+    def fileget(self, remote, local, options):
+        """Delegates to ``system`` the copy of ``remote`` to ``local``."""
+        rpath = self.fullpath(remote)
+        return self.system.cp(rpath, local, fmt=options.get('fmt'))
+
 
 class SopranoStore(Store):
 

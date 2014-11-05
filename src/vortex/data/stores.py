@@ -180,10 +180,6 @@ class Store(footprints.FootprintBase):
         """Return true when insitu option is active and local file exists."""
         return bool(options.get('insitu', False) and self.system.path.exists(local))
 
-    def in_place(self, localio):
-        """Return true when the current io resource is defined (either io descriptor or file)."""
-        return bool(localio is not None and (type(localio) is not str or self.system.path.exists(localio)))
-
     def notyet(self, *args):
         """
         Internal method to be used as a critical backup method
@@ -260,7 +256,7 @@ class MultiStore(footprints.FootprintBase):
             xstore = footprints.proxy.store(**desc)
             if xstore:
                 activestores.append(xstore)
-        logger.info('Multistore %s includes active stores %s', self, activestores)
+        logger.debug('Multistore %s includes active stores %s', self, activestores)
         return activestores
 
     def alternatefp(self):
@@ -284,13 +280,6 @@ class MultiStore(footprints.FootprintBase):
         rc = True
         for sto in self.openedstores:
             rc = rc and sto.in_situ(local, options)
-        return rc
-
-    def in_place(self, localio):
-        """Return cumulative value for the same method of internal opened stores."""
-        rc = True
-        for sto in self.openedstores:
-            rc = rc and sto.in_place(localio)
         return rc
 
     def check(self, remote, options=None):
@@ -333,11 +322,14 @@ class MultiStore(footprints.FootprintBase):
         """Go through internal opened stores and put resource for each of them."""
         logger.debug('Multistore put from %s to %s', local, remote)
         if not self.openedstores:
+            logger.warning('Funny attemp to put on an emty multistore...')
             return False
         rc = True
         for sto in self.openedstores:
-            logger.debug('Multistore put at %s', sto)
-            rc = sto.put(local, remote.copy(), options) and rc
+            logger.info('Multistore put at %s', sto)
+            rcloc = sto.put(local, remote.copy(), options)
+            logger.info('Multistore out = %s', rcloc)
+            rc = rc and rcloc
         return rc
 
 
@@ -384,10 +376,10 @@ class Finder(Store):
         info = 'Miscellaneous file access',
         attr = dict(
             scheme = dict(
-                values   = [ 'file', 'ftp', 'rcp', 'scp' ],
+                values  = ['file', 'ftp', 'rcp', 'scp'],
             ),
             netloc = dict(
-                outcast  = [ 'oper.inline.fr' ],
+                outcast = ['oper.inline.fr'],
             )
         ),
         priority = dict(
@@ -429,7 +421,7 @@ class Finder(Store):
         """Delegates to ``system`` the copy of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
         if 'intent' in options and options['intent'] == dataflow.intent.IN:
-            logger.warning('Ignore intent <in> for remote input %s', rpath)
+            logger.info('Ignore intent <in> for remote input %s', rpath)
         return self.system.cp(rpath, local, fmt=options.get('fmt'))
 
     def fileput(self, local, remote, options):
@@ -741,7 +733,7 @@ class VortexCacheStore(CacheStore):
             ),
             headdir = dict(
                 default = 'vortex',
-                outcast = [ 'xp' ],
+                outcast = ['xp'],
             ),
         )
     )

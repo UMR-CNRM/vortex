@@ -6,6 +6,8 @@ __all__ = []
 
 import re
 
+from vortex.autolog import logdefault as logger
+
 from vortex.tools import date
 
 from .ifsroot import IFSParallel
@@ -17,13 +19,18 @@ class Coupling(IFSParallel):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = [ 'coupling' ],
+                values   = [ 'coupling' ],
             ),
             xpname = dict(
-                default = 'FPOS'
+                default  = 'FPOS'
             ),
             conf = dict(
-                default = 1,
+                default  = 1,
+            ),
+            basedate = dict(
+                type     = date.Date,
+                optional = True,
+                default  = None,
             )
         )
     )
@@ -37,60 +44,100 @@ class Coupling(IFSParallel):
         super(Coupling, self).prepare(rh, opts)
         namrh = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
         for nam in [ x for x in namrh if 'NAMFPC' in x.contents ]:
-            self.system.stderr(['Substitute "AREA" to CFPDOM namelist entry'])
+            logger.info('Substitute "AREA" to CFPDOM namelist entry')
             nam.contents['NAMFPC']['CFPDOM'] = 'AREA'
             nam.save()
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
+
+        sh = self.system
+
         cplrh = [ x.rh for x in self.context.sequence.effective_inputs(
             role = ('InitialCondition', 'CouplingSource'),
-            kind = 'historic'
+            kind = ('historic', 'analysis')
         ) ]
         cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
+
+        cplguess = [ x.rh for x in self.context.sequence.effective_inputs(role = 'Guess') ]
+        cplguess.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
+
+        guessing = bool(cplguess)
+
+        basedate = self.basedate or self.env.YYYYMMDDHH
+
         for r in cplrh:
-            self.system.title('Loop on {0:s}'.format(str(r.resource)))
+            sh.title('Loop on {0:s}'.format(str(r.resource)))
 
             # Set a local storage place
             runstore = 'RUNOUT' + r.resource.term.fmtraw
-            self.system.mkdir(runstore)
+            sh.mkdir(runstore)
 
             # Find out actual monthly climatological resource
-            actualmonth = date.Month(r.resource.date + r.resource.term)
+            actualdate  = r.resource.date + r.resource.term
+            actualmonth = date.Month(actualdate)
 
             def checkmonth(actualrh):
                 return bool(actualrh.resource.month == actualmonth)
-            self.system.remove('Const.Clim')
-            self.setlink(initrole='GlobalClim', initkind='clim_model',
-                         initname='Const.Clim', inittest=checkmonth)
-            self.system.remove('const.clim.AREA')
-            self.setlink(initrole='LocalClim', initkind='clim_model',
-                         initname='const.clim.AREA', inittest=checkmonth)
+
+            sh.remove('Const.Clim')
+            self.setlink(
+                initrole = 'GlobalClim',
+                initkind = 'clim_model',
+                initname = 'Const.Clim',
+                inittest = checkmonth
+            )
+
+            sh.remove('const.clim.AREA')
+            self.setlink(
+                initrole = 'LocalClim',
+                initkind = 'clim_model',
+                initname = 'const.clim.AREA',
+                inittest = checkmonth
+            )
 
             # Finaly set the actual init file
-            self.system.remove('ICMSHFPOSINIT')
-            self.system.softlink(r.container.localpath(), 'ICMSHFPOSINIT')
+            sh.remove('ICMSHFPOSINIT')
+            sh.softlink(r.container.localpath(), 'ICMSHFPOSINIT')
+
+            # Expected output
+            if cplguess:
+                cplout  = cplguess.pop(0)
+                cplpath = cplout.container.localpath()
+                actualdate = cplout.resource.date + cplout.resource.term
+                if sh.path.exists(cplpath):
+                    logger.info('Mix mode coupling with existing basis [%s]', cplpath)
+                    if cplpath != 'PFFPOSAREA+0000':
+                        sh.remove('PFFPOSAREA+0000')
+                        sh.softlink(cplpath, 'PFFPOSAREA+0000')
+                else:
+                    logger.warning('Missing guess input for coupling [%s]', cplpath)
+            elif guessing:
+                logger.error('No more guess to loop on for coupling')
 
             # Standard execution
             super(Coupling, self).execute(rh, opts)
 
             # Freeze the current output
-            for posfile in [ x for x in self.system.glob('PFFPOSAREA+*')
-                             if re.match(r'PFFPOSAREA\+\d+(?:\d+)$', x) ]:
-                self.system.move(
+            for posfile in [ x for x in sh.glob('PFFPOSAREA+*') if re.match(r'PFFPOSAREA\+\d+(?:\:\d+)?$', x) ]:
+                actualterm = (actualdate - basedate).time() 
+                sh.move(
                     posfile,
-                    self.system.path.join(runstore, 'CPLOUT+' + r.resource.term.fmthm)
+                    sh.path.join(runstore, 'CPLOUT+' + actualterm.fmthm)
                 )
-            for logfile in self.system.glob('NODE.*', 'std*'):
-                self.system.move(logfile, self.system.path.join(runstore, logfile))
+            for logfile in sh.glob('NODE.*', 'std*'):
+                sh.move(logfile, sh.path.join(runstore, logfile))
 
             # Some cleaning
-            self.system.rmall('PXFPOS*', 'ncf927', 'dirlst')
+            sh.rmall('PXFPOS*', 'ncf927', 'dirlst')
 
     def postfix(self, rh, opts):
         """Post coupling cleaning."""
         super(Coupling, self).postfix(rh, opts)
-        self.system.mvglob('RUNOUT*/CPLOUT*', '.')
-        self.system.cat('RUNOUT*/NODE.001_01', output='NODE.all')
-        self.system.dir(output=False)
+
+        sh = self.system
+
+        sh.mvglob('RUNOUT*/CPLOUT*', '.')
+        sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')
+        sh.dir(output=False)
 

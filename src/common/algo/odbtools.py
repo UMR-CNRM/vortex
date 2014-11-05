@@ -11,7 +11,6 @@ from vortex.autolog import logdefault as logger
 from vortex.tools import date, odb
 
 from vortex.algo.components import Parallel
-from vortex.data.handlers   import Handler
 from vortex.util.structs    import Foo
 from vortex.syntax.stdattrs import a_date
 
@@ -19,8 +18,54 @@ from common.data.obs import ObsMapContent, ObsMapItem, ObsRefItem
 
 from footprints import dump
 
-class Raw2ODB(Parallel):
-    """Coupling for IFS-like LAM Models."""
+
+class OdbProcess(Parallel, odb.OdbComponent):
+    """Base class for any ODB alog component."""
+
+    _abstract  = True
+    _footprint = dict(
+        attr = dict(
+            date = a_date,
+            npool = dict(
+                type     = int,
+            ),
+            iomethod = dict(
+                type     = int,
+                optional = True,
+                default  = 1,
+            ),
+            slots = dict(
+                type     = odb.TimeSlots,
+                optional = True,
+                default  = odb.TimeSlots(7, chunk='PT1H'),
+            ),
+            virtualdb = dict(
+                optional = True,
+                default  = 'ecma',
+                access   = 'rwx',
+            ),
+        )
+    )
+
+    def input_obs(self):
+        """Find any observations with the proper kind, without any regards to role."""
+        obsall = [ x.rh for x in self.context.sequence.effective_inputs(kind = 'observations') ]
+        obsall.sort(lambda a, b: cmp(a.resource.part, b.resource.part))
+        return obsall
+
+    def prepare(self, rh, opts):
+        """Mostly used for setting environment."""
+        super(OdbProcess, self).prepare(rh, opts)
+        self.odb.setup(
+            date     = self.date,
+            npool    = self.npool,
+            nslot    = self.slots.nslot,
+            iomethod = self.iomethod,
+        )
+
+
+class Raw2ODB(OdbProcess):
+    """Convert raw observations files to ODB."""
 
     _footprint = dict(
         attr = dict(
@@ -31,24 +76,11 @@ class Raw2ODB(Parallel):
                     obsoul2odb = 'raw2odb',
                 )
             ),
-            date = a_date,
-            npool = dict(
-                type = int,
-            ),
             ioassign = dict(),
-            slots = dict(
-                type     = odb.TimeSlots,
+            lamflag = dict(
+                type     = bool,
                 optional = True,
-                default  = odb.TimeSlots(7, chunk='PT1H'),
-            ),
-            virtualdb = dict(
-                optional = True,
-                default  = 'ecma',
-            ),
-            iomethod = dict(
-                type     = int,
-                optional = True,
-                default  = 1,
+                default  = False,
             ),
             ontime = dict(
                 type     = bool,
@@ -69,22 +101,18 @@ class Raw2ODB(Parallel):
     )
 
     def prepare(self, rh, opts):
-        """Default pre-link for climatological files"""
-        super(Raw2ODB, self).prepare(rh, opts)
+        """Get a look at raw observations input files."""
 
         sh = self.system
 
-        # Build IO-Assign table
-        iopath = self.target.get('odbtools:rootdir', self.env.TMPDIR)
-        iovers = self.target.get('odbtools:odbcycle', 'oper')
-        iomake = self.target.get('odbtools:iomake', 'create_ioassign')
-        iocmd  = self.env.get('VORTEX_ODB_IOMAKE', '/'.join((iopath, iovers, iomake)))
-        sh.chmod(self.ioassign, 0755)
-        sh.spawn([iocmd, '-l' + self.virtualdb.upper(), '-n' + str(self.npool)], output=False)
+        # First create the proper IO assign table
+        self.odb.ioassign_create(
+            npool    = self.npool,
+            ioassign = self.ioassign
+        )
 
         # Looking for input observations
-        obsall = [ x.rh for x in self.context.sequence.effective_inputs(kind = 'observations') ]
-        obsall.sort(lambda a, b: cmp(a.resource.part, b.resource.part))
+        obsall = self.input_obs()
 
         # Looking for valid raw observations
         sizemin = self.env.VORTEX_OBS_SIZEMIN or 80
@@ -168,6 +196,7 @@ class Raw2ODB(Parallel):
             thismap = self.obspack.get(imap.odb)
             thismap.setdefault('mapping', list())
             thismap.mapping.append(imap)
+            thismap.setdefault('standalone', False)
             thismap.setdefault('refdata', list())
             thismap.setdefault('obsfile', dict())
             thismap.obsfile[imap.fmt.upper() + '.' + imap.data] = candidates[-1]
@@ -189,36 +218,43 @@ class Raw2ODB(Parallel):
             logger.info('Inspect not mapped obs ' + thispart)
             if thispart not in self.obspack:
                 thisfmt = notmap.rh.container.actualfmt.upper()
-                thismsg = 'standalone obs entry [data:{0:s}/fmt:{1:s}]'.format(thispart, thisfmt)
+                thismsg = 'standalone obs entry [data:{0:s} / fmt:{1:s}]'.format(thispart, thisfmt)
                 if self.maponly:
-                    logger.warning('ignore ' + thismsg)
+                    logger.warning('Ignore ' + thismsg)
                 else:
-                    logger.warning('active ' + thismsg)
+                    logger.warning('Active ' + thismsg)
                     self.obspack.setdefault(thispart, Foo())
                     thismap = self.obspack.get(thispart)
                     thismap.setdefault('mapping', list())
+                    thismap.setdefault('standalone', thisfmt)
                     thismap.mapping.append(ObsMapItem(thispart, thispart, thisfmt, 'unknown'))
                     thismap.setdefault('refdata', notmap.refdata)
                     thismap.setdefault('obsfile', dict())
                     thismap.obsfile[thisfmt.upper() + '.' + thispart] = notmap
 
+        # Produces a file with time slots boundaries
         self.slots.as_file(self.date, 'ficdate')
 
-        odb.setup_env(
-            env      = self.env,
-            date     = self.date,
-            npool    = self.npool,
-            nslots   = self.slots.nslots,
-            iomethod = self.iomethod,
+        # Let ancesters handling most of the env setting
+        super(Raw2ODB, self).prepare(rh, opts)
+        self.env.default(
+            TIME_INIT_YYYYMMDD = self.date.ymd,
+            TIME_INIT_HHMMSS   = self.date.hm + '00',
         )
+        if self.lamflag:
+            self.env.update(
+                BATOR_LAMFLAG  = 1,
+                BATODB_LAMFLAG = 1,
+            )
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
 
         sh = self.system
 
-        batnam    = [ x.rh for x in self.context.sequence.effective_inputs(role = 'NamelistBatodb') ]
-        obsmapout = list()
+        batnam = [ x.rh for x in self.context.sequence.effective_inputs(role = 'NamelistBatodb') ]
+
+        self.obsmapout = list()
 
         for odbset, thispack in self.obspack.items():
             odbname = self.virtualdb.upper() + '.' + odbset
@@ -233,6 +269,8 @@ class Raw2ODB(Parallel):
                 if obsname != obsinfo.rh.container.localpath():
                     sh.softlink(obsinfo.rh.container.localpath(), obsname)
                     linked.append(obsname)
+                if thispack.standalone:
+                    sh.softlink(obsinfo.rh.container.localpath(), thispack.standalone)
 
             # Fill the actual refdata according to information gathered in prepare stage
             if thispack.refdata:
@@ -248,10 +286,13 @@ class Raw2ODB(Parallel):
                 batnam[0].container.cat()
 
             # Standard execution
-
             self.env.ODB_SRCPATH_ECMA  = sh.path.abspath(odbname)
             self.env.ODB_DATAPATH_ECMA = sh.path.abspath(odbname)
             super(Raw2ODB, self).execute(rh, opts)
+
+            # Save current stdout
+            if sh.path.exists('stdeo.0'):
+                sh.mv('stdeo.0', 'listing.' + odbset)
 
             # Some cleaning
             sh.header('Partial cleaning for ' + odbname)
@@ -262,14 +303,139 @@ class Raw2ODB(Parallel):
             # Save a copy of io assign map in the new database
             if sh.path.isdir(odbname):
                 sh.cp('IOASSIGN', odbname + '/' + 'IOASSIGN')
-                obsmapout.extend(thispack.mapping)
+                self.obsmapout.extend(thispack.mapping)
             else:
                 logger.warning('DataBase not created: ' + odbname)
 
+    def postfix(self, rh, opts):
+        """Post conversion cleaning."""
+        super(Raw2ODB, self).postfix(rh, opts)
         with io.open('batodb_map.out', 'w') as fd:
-            for x in sorted(obsmapout):
+            for x in sorted(self.obsmapout):
                 fd.write(unicode(ObsMapContent.formatted_data(x) + '\n'))
 
+
+class OdbAverage(OdbProcess):
+    """TODO the father of this component is very much welcome."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['average'],
+            ),
+            ioassign = dict(),
+            outdb = dict(
+                optional = True,
+                default  = 'ccma',
+                value    = ['ecma', 'ccma'],
+            ),
+            maskname = dict(
+                optional = True,
+                default  = 'mask4x4.txt',
+            ),
+        )
+    )
+
+    def prepare(self, rh, opts):
+        """Find any ODB candidate in input files."""
+
+        sh = self.system
+
+        # Looking for input observations
+        obsall = [ x for x in self.input_obs() if x.resource.layout == 'ecma' ]
+
+        # One database at a time
+        if not obsall:
+            raise ValueError('Could not find any ECMA input')
+        self.bingo = ecma = obsall[0]
+
+        # First create a fake CCMA
+        self.layout_new = self.outdb.upper()
+        sh.mkdir(self.layout_new)
+        ccma_path = sh.path.abspath(self.layout_new)
+        ccma_io   = sh.path.join(ccma_path, 'IOASSIGN')
+        self.layout_in = ecma.resource.layout.upper()
+        ecma_path = sh.path.abspath(ecma.container.localpath())
+        ecma_pool = sh.path.join(ecma_path, '1')
+
+        if not sh.path.isdir(ecma_pool):
+            logger.error('The input ECMA base is empty')
+            self.abort('No ECMA input')
+            return
+
+        ecma_io = sh.path.join(ecma_path, 'IOASSIGN')
+        self.env.ODB_SRCPATH_CCMA  = ccma_path
+        self.env.ODB_DATAPATH_CCMA = ccma_path
+        self.env.ODB_SRCPATH_ECMA  = ecma_path
+        self.env.ODB_DATAPATH_ECMA = ecma_path
+
+        # Some extra settings
+        self.env.update(
+            ODB_CCMA_CREATE_POOLMASK = 1,
+            ODB_CCMA_POOLMASK_FILE   = sh.path.join(ccma_path, self.layout_new + '.poolmask'),
+            TO_ODB_CANARI            = 0,
+            TO_ODB_REDUC             = self.env.TO_ODB_REDUC or 1,
+            TO_ODB_SETACTIVE         = 1,
+        )
+
+        # Then create the proper IO assign table
+        self.odb.ioassign_create(
+            layout   = self.layout_new,
+            npool    = self.npool,
+            ioassign = self.ioassign
+        )
+
+        sh.cat(ecma_io, 'IOASSIGN', output='IOASSIGN.full')
+        sh.mv('IOASSIGN.full', 'IOASSIGN')
+        sh.cp('IOASSIGN', ccma_io)
+        sh.cp('IOASSIGN', ecma_io)
+
+        # Let ancesters handling most of the env setting
+        super(OdbAverage, self).prepare(rh, opts)
+
+    def spawn_command_options(self):
+        """Prepare command line options to binary."""
+        return dict(
+            dbin     = self.layout_in,
+            dbout    = self.layout_new,
+            npool    = self.npool,
+            nslot    = self.slots.nslot,
+            date     = self.date,
+            masksize = 4,
+        )
+
+    def execute(self, rh, opts):
+        """ to mask input."""
+
+        sh = self.system
+
+        mask = [ x.rh for x in self.context.sequence.effective_inputs(kind = 'atmsmask') ]
+        if not mask:
+            raise ValueError('Could not find any MASK input')
+
+        # Have a look to mask file
+        if mask[0].container.localpath() != self.maskname:
+            sh.softlink(mask[0].container.localpath(), self.maskname)
+
+        sh.subtitle('Mask')
+        mask[0].container.cat()
+
+        # Standard execution
+        super(OdbAverage, self).execute(rh, opts)
+
     def postfix(self, rh, opts):
-        """Post coupling cleaning."""
-        super(Raw2ODB, self).postfix(rh, opts)
+        """Post shuffle / average cleaning."""
+        super(OdbAverage, self).postfix(rh, opts)
+
+        sh = self.system
+
+        oldpwd = sh.getcwd()
+        sh.cd(self.layout_new)
+        for ccma in sh.glob('{0:s}.*'.format(self.layout_new)):
+            slurp = sh.cat(ccma, outsplit=False).replace(self.layout_new, self.layout_in)
+            with io.open(ccma.replace(self.layout_new, self.layout_in), 'w') as fd:
+                fd.write(unicode(slurp))
+            sh.rm(ccma)
+
+        sh.cd(oldpwd)
+        sh.mv(self.layout_new, self.layout_in + '.' + self.bingo.resource.part)

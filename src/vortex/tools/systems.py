@@ -410,16 +410,21 @@ class System(footprints.FootprintBase):
     def popen(self, args, stdin=None, stdout=None, stderr=None, shell=False, output=False, bufsize=0):
         """Return an open pipe on output of args command."""
         self.stderr(*args)
-        if stdout is None:
+        if stdout is True:
             stdout = subprocess.PIPE
-        #if stderr is None:
-        #    stderr = subprocess.PIPE
+        if stdin is True:
+            stdin  = subprocess.PIPE
+        if stderr is True:
+            stderr = subprocess.PIPE
         return subprocess.Popen(args, bufsize=bufsize, stdin=stdin, stdout=stdout, stderr=stderr, shell=shell)
 
     def pclose(self, p, ok=None):
         """Do its best to nicely opened pipe command linked to arg ``p``."""
+        if p.stdin is not None:
+            p.stdin.close()
         p.wait()
-        p.stdout.close()
+        if p.stdout is not None:
+            p.stdout.close()
         if p.stderr is not None:
             p.stderr.close()
 
@@ -439,7 +444,7 @@ class System(footprints.FootprintBase):
         else:
             return False
 
-    def spawn(self, args, ok=None, shell=False, output=None, outmode='a'):
+    def spawn(self, args, ok=None, shell=False, output=None, outmode='a', outsplit=True):
         """Subprocess call of ``args``."""
         rc = False
         if ok is None:
@@ -473,7 +478,10 @@ class System(footprints.FootprintBase):
         else:
             if p.returncode in ok:
                 if isinstance(output, bool) and output:
-                    rc = p_out.rstrip('\n').split('\n')
+                    if outsplit:
+                        rc = p_out.rstrip('\n').split('\n')
+                    else:
+                        rc = p_out
                     p.stdout.close()
                 else:
                     rc = not bool(p.returncode)
@@ -750,8 +758,11 @@ class OSExtended(System):
                 if self.is_samefs(source, destination):
                     if self.path.isdir(source):
                         rc = self.spawn(['cp', '-al', source, destination], output=False)
+                        self.stderr('chmod', 0444, destination)
+                        oldtrace, self.trace = self.trace, False
                         for linkedfile in self.ffind(destination):
                             self.chmod(linkedfile, 0444)
+                        self.trace = oldtrace
                         return rc
                     else:
                         self.link(source, destination)
@@ -856,16 +867,16 @@ class OSExtended(System):
 
     def wc(self, *args, **kw):
         """Word count on globbed files."""
-        return self._globcmd([ 'wc' ], args, **kw)
+        return self._globcmd(['wc'], args, **kw)
 
     def ls(self, *args, **kw):
         """Globbing and optional files or directories listing."""
-        return self._globcmd([ 'ls' ], args, **kw)
+        return self._globcmd(['ls'], args, **kw)
 
     def ll(self, *args, **kw):
         """Globbing and optional files or directories listing."""
         kw['output'] = True
-        llresult = self._globcmd([ 'ls', '-l' ], args, **kw)
+        llresult = self._globcmd(['ls', '-l'], args, **kw)
         if llresult:
             for lline in [ x for x in llresult if not x.startswith('total') ]:
                 print lline
@@ -874,21 +885,21 @@ class OSExtended(System):
 
     def dir(self, *args, **kw):
         """Proxy to ``ls('-l')``."""
-        return self._globcmd([ 'ls', '-l' ], args, **kw)
+        return self._globcmd(['ls', '-l'], args, **kw)
 
     def cat(self, *args, **kw):
         """Globbing and optional files or directories listing."""
-        return self._globcmd([ 'cat' ], args, **kw)
+        return self._globcmd(['cat'], args, **kw)
 
     @fmtshcmd
     def diff(self, *args, **kw):
         """Globbing and optional files or directories listing."""
         kw.setdefault('ok', [0, 1])
-        return self._globcmd([ 'diff' ], args, **kw)
+        return self._globcmd(['diff'], args, **kw)
 
     def rmglob(self, *args, **kw):
         """Wrapper of the ``rm`` command through the globcmd."""
-        return self._globcmd([ 'rm' ], args, **kw)
+        return self._globcmd(['rm'], args, **kw)
 
     @fmtshcmd
     def move(self, source, destination):
@@ -937,7 +948,7 @@ class OSExtended(System):
     def _tarcx(self, *args, **kw):
         """Raw file archive command."""
         cmd = [ 'tar', kw.pop('cx', 'c') ]
-        cmd.extend(self.glob(args[0]))
+        cmd.append(args[0])
         optforce = 'opts' in kw
         zopt = set(cmd[1]) | set(kw.pop('opts', 'f'))
         if not optforce:
@@ -950,7 +961,7 @@ class OSExtended(System):
             else:
                 zopt.discard('z')
         cmd[1] = ''.join(zopt)
-        cmd.extend(args[1:])
+        cmd.extend(self.glob(*args[1:]))
         return self.spawn(cmd, **kw)
 
     def tar(self, *args, **kw):
@@ -965,7 +976,7 @@ class OSExtended(System):
 
     def is_tarname(self, objname):
         """Check if a ``objname`` is a string with ``.tar`` suffix."""
-        return isinstance(objname, str) and objname.endswith('.tar')
+        return isinstance(objname, str) and ( objname.endswith('.tar') or objname.endswith('.tgz') )
 
     def tarfix_in(self, source, destination):
         """Untar the ``destination`` if ``source`` is a tarfile."""

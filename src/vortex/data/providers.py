@@ -153,7 +153,7 @@ class Remote(Provider):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Remote provider init %s', self)
+        logger.debug('Remote provider init %s', self.__class__)
         super(Remote, self).__init__(*args, **kw)
 
     @property
@@ -221,7 +221,7 @@ class Vortex(Provider):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Vortex experiment provider init %s', self)
+        logger.debug('Vortex experiment provider init %s', self.__class__)
         super(Vortex, self).__init__(*args, **kw)
 
     @property

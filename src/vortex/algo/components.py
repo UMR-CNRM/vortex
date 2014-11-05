@@ -29,7 +29,7 @@ class AlgoComponent(footprints.FootprintBase):
 
     def __init__(self, *args, **kw):
         """Before parent initialization, preset the internal FS log to an empty list."""
-        logger.debug('Algo component init %s', self)
+        logger.debug('Algo component init %s', self.__class__)
         self._fslog = list()
         super(AlgoComponent, self).__init__(*args, **kw)
 
@@ -94,6 +94,8 @@ class AlgoComponent(footprints.FootprintBase):
             self.env.osdump()
 
         self.system.subtitle('{0:s} : directory listing (pre-execution)'.format(self.realkind))
+        self.system.remove('core')
+        self.system.softlink('/dev/null', 'core')
         self.system.dir(output=False)
         self.spawn_hook()
         self.system.subtitle('{0:s} : start execution'.format(self.realkind))
@@ -128,6 +130,12 @@ class AlgoComponent(footprints.FootprintBase):
         of the resource handler provided.
         """
         return True
+
+    def abort(self, msg='Abort occured'):
+        """A shortcut to avoid next steps of the run."""
+        def fastexit(self, *args, **kw):
+            logger.warning('Avoid this step [%s]', msg)
+        self.prepare = self.execute = self.postfix = fastexit
 
     def run(self, rh, **kw):
         """Sequence for execution : prepare / execute / postfix."""

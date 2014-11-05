@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.9.1'
+__version__ = '0.9.2'
 
 import os
 import re
@@ -277,7 +277,10 @@ class Footprint(object):
         extras = setup.extras()
         for vdesc in desc.values():
             if isinstance(vdesc, FootprintBase):
-                extras.update(vdesc.footprint_as_dict())
+                logger.debug('Extend extras with %s', vdesc)
+                additems = vdesc.footprint_as_dict()
+                logger.debug('Add items %s', additems)
+                extras.update(additems)
         if extras:
             logger.debug(' > Extras : %s', extras)
         return extras
@@ -349,7 +352,10 @@ class Footprint(object):
                         else:
                             if callable(subattr):
                                 try:
-                                    attrcall = subattr(guess, extras)
+                                    if type(subattr) is types.BuiltinFunctionType:
+                                        attrcall = subattr()
+                                    else:
+                                        attrcall = subattr(guess, extras)
                                 except StandardError as trouble:
                                     logger.critical(trouble)
                                     attrcall = '__SKIP__'
@@ -661,7 +667,7 @@ class FootprintBase(object):
         self._attributes = dict()
         self._puredict = None
         for a in args:
-            logger.debug('FootprintBase %s arg %s', self, a)
+            logger.debug('FootprintBase %s arg %s', object.__repr__(self), a)
             if isinstance(a, dict):
                 self._attributes.update(a)
         self._attributes.update(kw)
@@ -823,7 +829,7 @@ class FootprintBase(object):
         It returns the *resolved* form in which the current ``rd`` description
         could be recognized as a footprint of the current class, :data:`False` otherwise.
         """
-        logger.debug('-' * 180)
+        logger.debug('-' * 80)
         logger.debug('Couldbe a %s ?', cls)
         if mkreport and not report:
             report = reporting.get(tag='void')

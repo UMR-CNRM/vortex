@@ -1789,10 +1789,10 @@ class utFootprintBuiltins(TestCase):
         self.assertIsInstance(s, FPSet)
         self.assertIsInstance(s, set)
         self.assertSetEqual(s, set(['one', 'two', 3]))
-        self.assertListEqual(s.items(), [3, 'two', 'one'])
+        self.assertTupleEqual(s.items(), (3, 'two', 'one'))
         self.assertEqual(s.pop(), 3)
         s.add(4)
-        self.assertListEqual(s.items(), [4, 'two', 'one'])
+        self.assertTupleEqual(s.items(), (4, 'two', 'one'))
 
         t = FPTuple(3, 5, 7)
         self.assertIsInstance(t, FPTuple)
@@ -1823,7 +1823,7 @@ class utFootprintBuiltins(TestCase):
         self.assertIsInstance(rv.theset, FPSet)
         self.assertIsInstance(rv.theset, set)
         self.assertSetEqual(rv.theset, set([1, 2, 'three']))
-        self.assertListEqual(rv.theset.items(), [1, 2, 'three'])
+        self.assertTupleEqual(rv.theset.items(), (1, 2, 'three'))
 
         self.assertIsInstance(rv.thetuple, FPTuple)
         self.assertIsInstance(rv.thetuple, tuple)

@@ -6,9 +6,10 @@ __all__ = []
 
 import re
 
-from vortex.data.flow import GeoFlowResource
+from vortex.data.flow       import GeoFlowResource
 from vortex.syntax.stdattrs import term
-from iga.syntax.stdattrs import archivesuffix
+from vortex.tools.date      import Time
+from iga.syntax.stdattrs    import archivesuffix
 
 
 class Analysis(GeoFlowResource):
@@ -22,24 +23,24 @@ class Analysis(GeoFlowResource):
        info = 'Analysis',
        attr = dict(
            kind = dict(
-               values = [ 'analysis', 'analyse', 'atm_analysis' ]
+               values   = [ 'analysis', 'analyse', 'atm_analysis' ]
            ),
            nativefmt = dict(
-                values = ['fa', 'grib', 'lfi'],
-                default = 'fa',
+               values   = ['fa', 'grib', 'lfi'],
+               default  = 'fa',
            ),
            filtering = dict(
-               values = ['dfi'],
                optional = True,
+               values   = ['dfi'],
            ),
            filling = dict(
-               values = ['surface', 'surf', 'atmospheric', 'atm', 'full'],
-               remap = dict(
-                   surface = 'surf',
+               optional = True,
+               default  = 'full',
+               values   = ['surface', 'surf', 'atmospheric', 'atm', 'full'],
+               remap    = dict(
+                   surface     = 'surf',
                    atmospheric = 'atm'
                ),
-               default = 'full',
-               optional = True,
            )
         )
     )
@@ -47,6 +48,11 @@ class Analysis(GeoFlowResource):
     @property
     def realkind(self):
         return 'analysis'
+
+    @property
+    def term(self):
+        """Fake term for duck typing."""
+        return Time(0)
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""

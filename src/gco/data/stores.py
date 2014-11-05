@@ -4,6 +4,8 @@
 #: No automatic export
 __all__ = []
 
+import tempfile
+
 from vortex.autolog import logdefault as logger
 from vortex.data.stores import Store, MultiStore, CacheStore
 
@@ -91,9 +93,10 @@ class GCOCentralStore(Store):
     def ggetlocate(self, remote, options):
         """Get location in GCO's tampon using ``gget`` external tool."""
         (gtool, tampon, gname) = self.actualgget(remote['path'])
-        self.system.env.gget_tampon = tampon
-        gloc = self.system.spawn([gtool, '-path', gname], output=True)
-        if gloc and self.system.path.exists(gloc[0]):
+        sh = self.system
+        sh.env.GGET_TAMPON = tampon
+        gloc = sh.spawn([gtool, '-path', gname], output=True)
+        if gloc and sh.path.exists(gloc[0]):
             return gloc[0]
         else:
             return False
@@ -101,18 +104,38 @@ class GCOCentralStore(Store):
     def ggetget(self, remote, local, options):
         """System call to ``gget`` external tool."""
         (gtool, tampon, gname) = self.actualgget(remote['path'])
-        self.system.env.gget_tampon = tampon
-        rc = self.system.spawn([gtool, gname], output=False)
-        if rc and self.system.path.exists(gname):
-            if not self.system.path.isdir(gname) and self.system.is_tarfile(gname):
-                rc = self.system.untar(gname, output=False)
+        sh = self.system
+        sh.env.GGET_TAMPON = tampon
+        rc = sh.spawn([gtool, gname], output=False)
+        if rc and sh.path.exists(gname):
+            if not sh.path.isdir(gname) and sh.is_tarfile(gname):
+                loccwd = sh.getcwd()
+                loctmp = tempfile.mkdtemp(prefix='gget_', dir=loccwd)
+                sh.cd(loctmp)
+                rc = sh.untar('../' + gname, output=False)
+                unpacked = sh.glob('*')
+                for untaritem in unpacked:
+                    if sh.path.exists('../' + untaritem):
+                        logger.error('Some previous item exists before untar [%s]', untaritem)
+                    else:
+                        sh.mv(untaritem, '../' + untaritem)
+                sh.cd(loccwd)
+                sh.rm(loctmp)
+            else:
+                unpacked = None
             extract = remote['query'].get('extract', None)
             if extract:
                 logger.info('GCO Central Store get %s', gname + '/' + extract[0])
-                rc = self.system.cp(gname + '/' + extract[0], local)
+                rc = sh.cp(gname + '/' + extract[0], local)
             else:
                 logger.info( 'GCO Central Store get %s', gname )
-                rc = self.system.mv(gname, local)
+                if unpacked is None or len(unpacked) > 1:
+                    rc = sh.mv(gname, local)
+                else:
+                    if unpacked[0] == local:
+                        logger.warning('Do not rename to existing local name [%s]', local)
+                    else:
+                        rc = sh.mv(unpacked[0], local)
         else:
             logger.warning('GCO Central Store get %s was not successful (%s)', gname, rc)
         return rc
@@ -125,10 +148,10 @@ class GCOCacheStore(CacheStore):
         info = 'VORTEX cache access',
         attr = dict(
             scheme = dict(
-                values   = [ 'gget' ],
+                values   = ['gget'],
             ),
             netloc = dict(
-                values   = [ 'gco.cache.fr' ],
+                values   = ['gco.cache.fr'],
             ),
             strategy = dict(
                 default  = 'mtool',
@@ -138,7 +161,7 @@ class GCOCacheStore(CacheStore):
             ),
             headdir = dict(
                 default  = 'gco',
-                outcast  = [ 'xp', 'vortex' ],
+                outcast  = ['xp', 'vortex'],
             ),
         )
     )
@@ -186,10 +209,10 @@ class GCOStore(MultiStore):
         info = 'GCO multi access',
         attr = dict(
             scheme = dict(
-                values   = [ 'gget' ],
+                values   = ['gget'],
             ),
             netloc = dict(
-                values   = [ 'gco.multi.fr' ],
+                values   = ['gco.multi.fr'],
             ),
             refillstore = dict(
                 default  = True,

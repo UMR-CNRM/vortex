@@ -185,10 +185,13 @@ def analysis_bnames(resource):
     model_info, suffix = faNames(
         resource.cutoff, resource.date.hour, resource.model, resource.filling)
     #patch for the different kind of analysis (surface and atmospheric)
-    if resource.filling == 'surf':
-        return '.'.join(('INIT_SURF', resource.nativefmt, suffix))
+    if resource.model == 'arome' and resource.filling == 'surf':
+        return 'INIT_SURF.fa.' + suffix
     else:
-        return 'ICMSH' + model_info + 'INIT.' + suffix
+        anabase = 'ICMSH' + model_info + 'INIT'
+        if resource.filling == 'surf':
+            anabase = anabase + '_SURF'
+        return  anabase + '.' + suffix
 
 
 def historic_bnames(resource):

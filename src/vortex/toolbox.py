@@ -23,7 +23,7 @@ defaults = footprints.setup.defaults
 sectionmap = {'input': 'get', 'output': 'put', 'executable': 'get'}
 justdoit = False
 getinsitu = False
-verbose = 0
+verbose = True
 
 # History recording
 
@@ -122,39 +122,66 @@ def rput(*args, **kw):
 
 def pushsection(section, args, kw):
     """Add a ``section`` type to the current sequence."""
-    now = kw.pop('now', justdoit)
+
+    # First, retrieve arguments of the toolbox command itself
+    now       = kw.pop('now', justdoit)
+    loglevel  = kw.pop('loglevel', None)
+    talkative = kw.pop('verbose', verbose)
+
+    # Swich off autorecording of the current context
     t = sessions.ticket()
     ctx = t.context
     ctx.record_off()
+
+    # Possibily change the log level if necessary
+    if loglevel is not None:
+        oldlevel = t.loglevel
+        t.setloglevel(loglevel.upper())
+
+    # Distinguish between section arguments, and resource loader arguments
     opts, kwclean = stripargs_section(**kw)
-    if verbose > 1:
+
+    # Show the actual set of arguments
+    if talkative:
         print "New {0:s} section with options: {1:s}\n\nResource handler's description: {2:s}\n".format(
             section,
             footprints.dump.lightdump(opts),
             footprints.dump.lightdump(kwclean)
         )
+
+    # Let the magic of footprints resolution operates...
     rl = rload(*args, **kwclean)
     rlok = list()
+
+    # Prepare the references to the actual section method to perform
     push = getattr(ctx.sequence, section)
     doitmethod = sectionmap[section]
-    if verbose and now:
+    if talkative and now:
         logger.info('Command at once [%s]', doitmethod)
-    for rhandler in rl:
+
+    # Create a section for each resource handler, and perform action on demand
+    for ir, rhandler in enumerate(rl):
         newsections = push(rh=rhandler, **opts)
         ok = bool(newsections)
         if ok and now:
-            if verbose:
+            if talkative:
+                print t.line
+                rhandler.quickview(nb=ir+1, indent=0)
+                print t.line
                 logger.info('%s %s ...', doitmethod.title(), rhandler.location())
             ok = getattr(newsections[0], doitmethod)()
-            if verbose and not ok:
+            if talkative:
+                logger.info('Last %s action returns [%s]', doitmethod, ok)
+            if talkative and not ok:
                 logger.error('Could not %s resource:', doitmethod)
-                print t.line
-                rhandler.quickview(indent=4)
                 print t.line
             if t.sh.trace:
                 print
         if ok:
             rlok.append(rhandler)
+
+    if loglevel is not None:
+        t.setloglevel(oldlevel)
     ctx.record_on()
     return rlok
 
@@ -215,11 +242,32 @@ def executable(*args, **kw):
 
 def algo(*args, **kw):
     """Load an algo component and display the description provided."""
-    ctx = sessions.ticket().context
+
+    # First, retrieve arguments of the toolbox command itself
+    loglevel  = kw.pop('loglevel', None)
+    talkative = kw.pop('verbose', verbose)
+
+    # Swich off autorecording of the current context
+    t = sessions.ticket()
+    ctx = t.context
     ctx.record_off()
-    if verbose > 1:
+
+    # Possibily change the log level if necessary
+    if loglevel is not None:
+        oldlevel = t.loglevel
+        t.setloglevel(loglevel.upper())
+
+    if talkative:
         print 'Loading algo component with description:', footprints.dump.lightdump(kw), "\n"
+
     ok = proxy.component(**kw)
+    if ok and talkative:
+        print t.line
+        ok.quickview(nb=1, indent=0)
+
+    if loglevel is not None:
+        t.setloglevel(oldlevel)
+
     ctx.record_on()
     return ok
 
@@ -243,7 +291,7 @@ def namespaces(**kw):
     if 'only' in kw:
         usedcat = kw['only'].split(',')
     else:
-        usedcat = ( 'provider', 'store' )
+        usedcat = ('provider', 'store')
     nameseen = dict()
     for cat in [ footprints.collectors.get(tag=x) for x in usedcat ]:
         for cls in cat():
@@ -261,7 +309,7 @@ def namespaces(**kw):
 
 def print_namespaces(**kw):
     """Formatted print of current namespaces."""
-    prefix  = kw.pop('prefix', '+ ')
+    prefix = kw.pop('prefix', '+ ')
     nd = namespaces(**kw)
     justify = max([ len(x) for x in nd.keys() ])
     linesep = ",\n" + ' ' * (justify+len(prefix)+2)

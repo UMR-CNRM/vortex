@@ -20,6 +20,6 @@ class Bidon(Provider):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Bidon provider init %s', self)
+        logger.debug('Bidon provider init %s', self.__class__)
         super(Bidon, self).__init__(*args, **kw)
 

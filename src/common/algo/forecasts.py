@@ -17,16 +17,16 @@ class Forecast(IFSParallel):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = [ 'forecast', 'fc' ],
-                remap = dict( forecast = 'fc' )
+                values   = ['forecast', 'fc'],
+                remap    = dict(forecast = 'fc')
             ),
             xpname = dict(
-                default = 'FCST'
+                default  = 'FCST'
             ),
             inline = dict(
+                type     = bool,
                 optional = True,
-                type = bool,
-                default = True,
+                default  = True,
             )
         )
     )
@@ -60,14 +60,12 @@ class LAMForecast(Forecast):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = [ 'lamfc', 'lamforecast' ],
-                remap = dict(
-                    lamforecast = 'lamfc'
-                )
+                values   = ['lamfc', 'lamforecast'],
+                remap    = dict(lamforecast = 'lamfc'),
             ),
             synctool = dict(
                 optional = True,
-                default = None,
+                default  = None,
             )
         )
     )
@@ -103,7 +101,7 @@ class DFIForecast(LAMForecast):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = [ 'fcdfi' ],
+                values = ['fcdfi'],
             ),
         )
     )
@@ -122,8 +120,8 @@ class FullPos(IFSParallel):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = [ 'fullpos', 'fp' ],
-                remap = dict( fullpos = 'fp' )
+                values  = ['fullpos', 'fp'],
+                remap   = dict(fp= 'fullpos' )
             ),
             xpname = dict(
                 default = 'FPOS'

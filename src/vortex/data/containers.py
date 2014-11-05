@@ -229,7 +229,6 @@ class Virtual(Container):
         """Virtual container's io target is an io descriptor."""
         return self.iodesc()
 
-
 class InCore(Virtual):
 
     _footprint = dict(
@@ -250,7 +249,7 @@ class InCore(Virtual):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('InCore container init %s', self)
+        logger.debug('InCore container init %s', self.__class__)
         self._tempo = False
         super(InCore, self).__init__(*args, incore=True, **kw)
 
@@ -367,7 +366,7 @@ class MayFly(Virtual):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('MayFly container init %s', self)
+        logger.debug('MayFly container init %s', self.__class__)
         super(MayFly, self).__init__(*args, mayfly=True, **kw)
 
     def actualpath(self):
@@ -418,18 +417,18 @@ class File(Container):
         info = 'File container',
         attr = dict(
             file = dict(
-                alias = ('filepath', 'filename', 'filedir', 'local')
+                alias    = ('filepath', 'filename', 'filedir', 'local')
             ),
             cwdtied = dict(
-                type = bool,
+                type     = bool,
                 optional = True,
-                default = False,
+                default  = False,
             )
         )
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('File container init %s', self)
+        logger.debug('File container init %s', self.__class__)
         super(File, self).__init__(*args, **kw)
         if self.cwdtied:
             self._actualpath = os.path.realpath(self.file)
@@ -442,7 +441,7 @@ class File(Container):
 
     def _str_more(self):
         """Additional information to print representation."""
-        return 'path=\'{0:s}\''.format(self._actualpath)
+        return 'path=\'{0:s}\''.format(self.actualpath())
 
     def localpath(self):
         """Returns the actual name of the file object."""

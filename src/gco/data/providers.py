@@ -32,7 +32,7 @@ class GcoProvider(Provider):
 
     def __init__(self, *args, **kw):
         """Proxy init abstract method. Logging only for the time being."""
-        logger.debug('GcoProvider abstract init %s', self)
+        logger.debug('GcoProvider abstract init %s', self.__class__)
         super(GcoProvider, self).__init__(*args, **kw)
 
     def domain(self):
@@ -63,7 +63,7 @@ class GGet(GcoProvider):
 
     def __init__(self, *args, **kw):
         """Proxy init method. Logging only for the time being."""
-        logger.debug('GGet provider init %s', self)
+        logger.debug('GGet provider init %s', self.__class__)
         super(GGet, self).__init__(*args, **kw)
 
     @property
@@ -101,7 +101,7 @@ class GEnv(GcoProvider):
 
     def __init__(self, *args, **kw):
         """Proxy init method. Logging only for the time being."""
-        logger.debug('GEnv provider init %s', self)
+        logger.debug('GEnv provider init %s', self.__class__)
         super(GEnv, self).__init__(*args, **kw)
 
     @property

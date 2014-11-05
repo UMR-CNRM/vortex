@@ -8,7 +8,7 @@ __all__ = []
 import re
 
 from vortex.data.flow import GeoFlowResource
-from vortex.syntax.stdattrs import term
+from vortex.syntax.stdattrs import a_term
 from iga.syntax.stdattrs import archivesuffix
 
 
@@ -17,28 +17,27 @@ class LAMBoundary(GeoFlowResource):
     Class of a coupling file for a Limited Area Model.
     A SpectralGeometry object is needed and the source model is given in the footprint.
     """
-    _footprint = [
-        term,
-        dict(
-            info = 'Coupling file for a limited area model',
-            attr = dict(
-                kind = dict(
-                    values  = ['boundary', 'elscf', 'coupled'],
-                    remap   = dict(
-                        elscf = 'boundary',
-                        coupled = 'boundary'
-                    )
-                ),
-                nativefmt = dict(
-                    values  = ['fa', 'grib'],
-                    default = 'fa',
-                ),
-                source = dict(
-                    values  = ['arpege', 'aladin', 'arome', 'ifs', 'ecmwf']
-                ),
-            )
+
+    _footprint = dict(
+        info = 'Coupling file for a limited area model',
+        attr = dict(
+            kind = dict(
+                values  = ['boundary', 'elscf', 'coupled'],
+                remap   = dict(
+                    elscf   = 'boundary',
+                    coupled = 'boundary',
+                )
+            ),
+            term = a_term,
+            nativefmt = dict(
+                values  = ['fa', 'grib'],
+                default = 'fa',
+            ),
+            source = dict(
+                values  = ['arpege', 'aladin', 'arome', 'ifs', 'ecmwf']
+            ),
         )
-    ]
+    )
 
     @property
     def realkind(self):

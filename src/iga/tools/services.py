@@ -71,7 +71,7 @@ class AlarmService(Service):
             ),
             alarmfmt = dict(
                 optional = True,
-                default  = None
+                default  = None,
             )
         )
     )

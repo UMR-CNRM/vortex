@@ -16,15 +16,15 @@ class IFSModel(NWPModel):
         info = 'IFS Model',
         attr = dict(
             gvar = dict(
-                type = GenvKey,
+                type     = GenvKey,
                 optional = True,
-                default = 'master_[model]'
+                default  = 'master_[model]'
             ),
             kind = dict(
-                values = ['ifsmodel', 'mfmodel'],
+                values   = ['ifsmodel', 'mfmodel'],
             ),
             model = dict(
-                outcast = ['aladin', 'arome'],
+                outcast  = ['aladin', 'arome'],
             ),
         )
     )
@@ -43,36 +43,32 @@ class IFSModel(NWPModel):
         """Standard expected basename for IGA inline cache."""
         return 'ARPEGE'
 
-    def command_line(self, model=None, vmodel='meteo',
+    def command_line(self, model='arpifs', vmodel='meteo',
                      name='XRUN', conf=1, timescheme='sli',
                      timestep=600, fcterm=0, fcunit='h'):
         """Build command line for execution as a single string."""
-        if model:
-            return '-v{0:s} -e{1:s} -c{2:d} -a{3:s} -t{4:g} -f{5:s}{6:d} -m{7:s}'.format(
-                vmodel, name, conf, timescheme, timestep, fcunit, fcterm, model
-            )
-        else:
-            return '-v{0:s} -e{1:s} -c{2:d} -a{3:s} -t{4:g} -f{5:s}{6:d}'.format(
-                vmodel, name, conf, timescheme, timestep, fcunit, fcterm
-            )
+        return '-v{0:s} -e{1:s} -c{2:d} -a{3:s} -t{4:g} -f{5:s}{6:d} -m{7:s}'.format(
+            vmodel, name, conf, timescheme, timestep, fcunit, fcterm, model
+        )
 
 
-class Aladin(IFSModel):
+class Arome(IFSModel):
     """Dedicated to local area model."""
 
     _footprint = dict(
         info = 'ALADIN / AROME Local Area Model',
         attr = dict(
             model = dict(
-                values = ['aladin', 'arome'],
+                values  = ['aladin', 'arome'],
+                outcast = set(),
             ),
         )
     )
 
     def command_line(self, **kw):
         """Enforce aladin model option."""
-        kw['model'] = 'aladin'
-        return super(Aladin, self).command_line(**kw)
+        kw.setdefault('model', 'aladin')
+        return super(Arome, self).command_line(**kw)
 
 
 class ProGrid(BlackBox):
@@ -170,3 +166,78 @@ class Batodb(BlackBox):
     @property
     def realkind(self):
         return 'batodb'
+
+
+class Odbtools(BlackBox):
+    """A tool for shuffle operations in ODB format."""
+
+    _footprint = dict(
+         info = 'Odbtools shuffle program',
+        attr = dict(
+            kind = dict(
+                values   = ['odbtools'],
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_odbtools'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'odbtools'
+
+    def command_line(self, dbin='ECMA', dbout='CCMA', npool=1, nslot=1, masksize=None, date=None):
+        cmdline = '-i{0:s} -o{1:s} -b1 -a{2:d} -T{3:d}'.format(dbin, dbout, npool, nslot)
+        if masksize is not None:
+            cmdline = cmdline + ' -n{0:d}'.format(int(masksize))
+        if date is not None:
+            cmdline = cmdline + ' -B' + date.ymdh
+        return cmdline
+
+
+class VarBCTool(BlackBox):
+    """Well... a single minded binary for a quite explicite purpose."""
+
+    _footprint = dict(
+         info = 'VarBC merger program',
+        attr = dict(
+            kind = dict(
+                values   = ['varbctool'],
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_merge_varbc'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'varbctool'
+
+
+class LopezMix(BlackBox):
+    """Some mixture for surface fields during the 3DVar assimilation process."""
+
+    _footprint = dict(
+         info = 'Surface mix',
+        attr = dict(
+            kind = dict(
+                values   = ['lopezmix', 'lopez', 'mastsurf', 'surfmix'],
+                remap    = dict(autoremap = 'first'),
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_surfmix'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'lopezmix'

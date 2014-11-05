@@ -32,38 +32,38 @@ class MpiTool(footprints.FootprintBase):
             sysname = dict(),
             mpiopts = dict(
                 optional = True,
-                default = ''
+                default  = ''
             ),
             nodes = dict(
+                type     = int,
                 optional = True,
-                type = int,
-                default = 1,
-                access = 'rwx'
+                default  = 1,
+                access   = 'rwx'
             ),
             tasks = dict(
+                type     = int,
                 optional = True,
-                type = int,
-                default = 4,
-                access = 'rwx'
+                default  = 4,
+                access   = 'rwx'
             ),
             openmp = dict(
+                type     = int,
                 optional = True,
-                type = int,
-                default = 6,
-                access = 'rwx'
+                default  = 6,
+                access   = 'rwx'
             ),
             optsep = dict(
                 optional = True,
-                default = '--'
+                default  = '--'
             ),
             optprefix = dict(
                 optional = True,
-                default = '--'
+                default  = '--'
             ),
             basics = dict(
+                type     = footprints.FPList,
                 optional = True,
-                type = footprints.FPList,
-                default = footprints.FPList('system', 'env', 'target', 'context')
+                default  = footprints.FPList('system', 'env', 'target', 'context')
             )
         )
     )
@@ -305,11 +305,13 @@ class MpiRun(MpiSubmit):
     _footprint = dict(
         attr = dict(
             sysname = dict(
-                values = [ 'Linux' ]
+                values  = ['Linux']
             ),
             mpiname = dict(
-                values = [ 'mpirun', 'mpiperso', 'default' ],
-                remap = dict(default='mpirun')
+                values  = ['mpirun', 'mpiperso', 'default'],
+                remap   = dict(
+                    default = 'mpirun'
+                ),
             ),
             optprefix = dict(
                 default = '-'

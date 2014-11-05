@@ -271,6 +271,15 @@ class Environment(object):
             for var, value in dico.iteritems():
                 self.setvar(var, value)
 
+    def default(self, *args, **kw):
+        """Set a collection of non defined variables given as a list of iterable items or key-values pairs."""
+        argd = list(args)
+        argd.append(kw)
+        for dico in argd:
+            for var, value in dico.iteritems():
+                if not self.has_key(var):
+                    self.setvar(var, value)
+
     def merge(self, mergenv):
         """Incorporates key-values from ``mergenv`` into current environment."""
         self.update(mergenv.pool())
@@ -285,7 +294,7 @@ class Environment(object):
         try:
             eclone.verbose(self._verbose, self._sh)
         except AttributeError:
-            logger.warning('Could not find verbose attributes while cloning env...')
+            logger.debug('Could not find verbose attributes while cloning env...')
         return eclone
 
     def native(self, varname):

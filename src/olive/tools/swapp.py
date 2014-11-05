@@ -102,7 +102,7 @@ def olive_jobout(sh, env, output, localout=None):
 def olive_rescue(sh, env, *files):
     """Action to be undertaken when things really went bad."""
 
-    sh.stderr(['olive_rescue', files])
+    logger.critical('Emergency rescue %s', files)
 
     if 'VORTEX_RESCUE' in env and env.false('VORTEX_RESCUE'):
         logger.warning('Skip olive rescue (VORTEX_RESCUE=%s)', env.VORTEX_RESCUE)
@@ -129,10 +129,10 @@ def olive_rescue(sh, env, *files):
 
         if env.VORTEX_RESCUE_DIR is not None:
             bkupdir = env.VORTEX_RESCUE_DIR
-            logger.info('Rescue user defined backup directory is %s', bkupdir)
+            logger.info('Rescue backup directory defined by user [%s]', bkupdir)
         elif env.MTOOL_STEP_ABORT is not None:
             bkupdir = sh.path.join(env.MTOOL_STEP_ABORT, env.MTOOL_STEP_ID)
-            logger.info('Rescue mtool defined backup directory is [%s]', bkupdir)
+            logger.info('Rescue backup directory defined by mtool [%s]', bkupdir)
 
         if bkupdir is None:
             logger.error('No rescue directory defined.')

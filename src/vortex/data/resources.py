@@ -29,7 +29,7 @@ class Resource(footprints.FootprintBase):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Resource init %s', self)
+        logger.debug('Resource init %s', self.__class__)
         super(Resource, self).__init__(*args, **kw)
 
     @property

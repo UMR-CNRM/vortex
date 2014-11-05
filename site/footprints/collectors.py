@@ -66,17 +66,17 @@ class Collector(util.GetByTag, util.Catalog):
 
     def newobsitem(self, item, info):
         """Register a new instance of some of the classes in the current collector."""
-        logger.debug('Notified %s new item %s', self, item)
+        logger.debug('Notified %s new item %s', repr(self), repr(item))
         self.instances.add(item)
 
     def delobsitem(self, item, info):
         """Unregister an existing object in the current collector of instances."""
-        logger.debug('Notified %s del item %s', self, item)
+        logger.debug('Notified %s del item %s', repr(self), repr(item))
         self.instances.discard(item)
 
     def updobsitem(self, item, info):
         """Not yet specialised..."""
-        logger.debug('Notified %s upd item %s', self, item)
+        logger.debug('Notified %s upd item %s', repr(self), repr(item))
 
     def filter_package(self, packname):
         """Find in current collector classes with name starting with ``packname``."""
@@ -199,7 +199,7 @@ class Collector(util.GetByTag, util.Catalog):
             return None
         if len(candidates) > 1:
             dumper = dump.get()
-            logger.warning('Multiple %s candidates for %s', self.tag, "\n" + dumper.cleandump(desc))
+            logger.warning('Multiple %s candidates %s', self.tag, "\n" + dumper.cleandump(desc))
             candidates.sort(key=lambda x: x[0].footprint_weight(x[2]), reverse=True)
             for i, c in enumerate(candidates):
                 thisclass, u_resolved, theinput = c

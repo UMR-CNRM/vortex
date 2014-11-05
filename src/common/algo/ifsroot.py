@@ -17,34 +17,36 @@ class IFSParallel(Parallel):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                default = 'ifsrun',
+                default  = 'ifsrun',
             ),
             conf = dict(
+                type     = int,
                 optional = True,
+                default  = 1,
             ),
             timescheme = dict(
                 optional = True,
-                default = 'sli',
-                values = [ 'eul', 'eulerian', 'sli', 'semilag' ],
+                default  = 'sli',
+                values   = ['eul', 'eulerian', 'sli', 'semilag'],
                 remap = dict(
                     eulerian = 'eul',
-                    semilag = 'sli'
+                    semilag  = 'sli'
                 )
             ),
             timestep = dict(
+                type     = float,
                 optional = True,
-                default = 600.,
-                type = float
+                default  = 600.,
             ),
             fcterm = dict(
+                type = int,
                 optional = True,
                 default = 0,
-                type = int
             ),
             fcunit = dict(
                 optional = True,
-                default = 'h',
-                values = [ 'h', 'hour', 't', 'step' ],
+                default  = 'h',
+                values   = ['h', 'hour', 't', 'step'],
                 remap = dict(
                     hour = 'h',
                     step = 't'
@@ -52,7 +54,7 @@ class IFSParallel(Parallel):
             ),
             xpname = dict(
                 optional = True,
-                default = 'XPVT'
+                default  = 'XPVT'
             )
         )
     )
@@ -79,6 +81,7 @@ class IFSParallel(Parallel):
         """Dictionary provided for command line factory."""
         return dict(
             name       = (self.xpname + 'xxxx')[:4].upper(),
+            conf       = self.conf,
             timescheme = self.timescheme,
             timestep   = self.timestep,
             fcterm     = self.fcterm,
@@ -93,26 +96,28 @@ class IFSParallel(Parallel):
 
     def setlink(self, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
         """Set a symbolic link for actual resource playing defined role."""
-        initrh = [ x.rh for x in
-                   self.context.sequence.effective_inputs(role=initrole, kind=initkind)
-                   if inittest(x.rh) ]
+        initrh = [
+            x.rh for x in self.context.sequence.effective_inputs(role=initrole, kind=initkind)
+                if inittest(x.rh)
+        ]
+
         if not initrh:
             logger.warning(
                 'Could not find logical role %s with kind %s - assuming already renamed',
                 initrole, initkind
             )
         if len(initrh) > 1:
-            logger.warning('More than one role %s with kind %s %s',
-                           initrole, initkind, initrh)
+            logger.warning('More than one role %s with kind %s %s', initrole, initkind, initrh)
+
         if initname is not None:
             for l in [ x.container.localpath() for x in initrh ]:
                 if not self.system.path.exists(initname):
                     self.system.symlink(l, initname)
                     break
+
         return initrh
 
     def execute(self, rh, opts):
         """Standard IFS-Like execution parallel execution."""
         self.system.ls(output='dirlst')
         super(IFSParallel, self).execute(rh, opts)
-

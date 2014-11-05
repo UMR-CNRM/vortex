@@ -218,7 +218,7 @@ class LFI_Tool(addons.Addon):
                 p = self._spawn(
                     ['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', '-'],
                     output  = False,
-                    pipe    = True,
+                    inpipe  = True,
                     bufsize = 8192,
                 )
                 st.rc = ftp.put(p.stdout, destination)

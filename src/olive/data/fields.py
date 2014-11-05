@@ -19,13 +19,13 @@ class RawFields(Resource):
             info = 'File containing a limited list of observations fields',
             attr = dict(
                 kind = dict(
-                    values = [ 'rawfields' ]
+                    values = ['rawfields']
                 ),
                 origin = dict(
-                    values = [ 'nesdis', 'ostia', 'bdm' ]
+                    values = ['nesdis', 'ostia', 'bdm']
                 ),
                 fields = dict(
-                    values = [ 'sst', 'seaice' ]
+                    values = ['sst', 'seaice']
                 ),
             )
         )
@@ -66,16 +66,16 @@ class GeoFields(Resource):
             info = 'File containing a limited list of fields in a specific geometry',
             attr = dict(
                 kind = dict(
-                    values = [ 'geofields' ]
+                    values  = ['geofields']
                 ),
                 fields = dict(
-                    values = [ 'sst', 'seaice' ]
+                    values  = ['sst', 'seaice']
                 ),
                 geometry = dict(
-                    type = SpectralGeometry,
+                    type    = SpectralGeometry,
                 ),
                 nativefmt = dict(
-                    values = [ 'fa' ],
+                    values  = ['fa'],
                     default = 'fa'
                 )
             )
@@ -94,8 +94,8 @@ class GeoFields(Resource):
     def vortex_pathinfo(self):
         return dict(
             nativefmt = self.nativefmt,
-            date = self.date,
-            cutoff = self.cutoff
+            date      = self.date,
+            cutoff    = self.cutoff,
         )
 
     def basename_info(self):

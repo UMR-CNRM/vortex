@@ -344,6 +344,9 @@ class Period(datetime.timedelta):
         """Absolute length in seconds."""
         return abs(int(self.total_seconds()))
 
+    def time(self):
+        """Return a :class:`Time` object."""
+        return Time(0, self.length / 60) + 0
 
 class Date(datetime.datetime):
     """Standard date objects, extending :class:`datetime.datetime` features with iso8601 facilities."""
@@ -549,6 +552,32 @@ class Date(datetime.datetime):
         """Return a :class:`Time` object."""
         return Time(self.hour, self.minute)
 
+    def bounds(self):
+        """Return first and last day of the current month."""
+        return (
+            self.replace(day=1, hour=0, minute=0),
+            self.replace(day=self.monthrange(), hour=23, minute=59)
+        )
+
+    @property
+    def outbound(self):
+        """Return the closest day out of this month."""
+        a, b = self.bounds()
+        if self - a > b - self:
+            out = b + 'P1D'
+        else:
+            out = a - 'P1D'
+        return out.ymd
+
+    @property
+    def midcross(self):
+        """Return the closest day out of this month."""
+        a, b = self.bounds()
+        if self.day > 15:
+            out = b + 'P1D'
+        else:
+            out = a - 'P1D'
+        return out.ymd
 
 class Time(object):
 
@@ -598,8 +627,8 @@ class Time(object):
         return self._minute
 
     def __deepcopy__(self, memo):
-        """No deepcopy expected, so ``self`` is returned."""
-        return self
+        """Clone the current Time object."""
+        return Time(self.hour, self.minute)
 
     def __repr__(self):
         """Standard hour-minute representation."""

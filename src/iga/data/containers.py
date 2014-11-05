@@ -20,6 +20,6 @@ class Bidon(Container):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Bidon container init %s', self)
+        logger.debug('Bidon container init %s', self.__class__)
         super(Bidon, self).__init__(*args, **kw)
 

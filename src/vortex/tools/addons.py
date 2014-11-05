@@ -96,10 +96,11 @@ class Addon(footprints.FootprintBase):
         localenv.update(self.env)
 
         # Check if a pipe is requested
-        inpipe = kw.pop('pipe', False)
+        inpipe = kw.pop('inpipe', False)
 
         # Ask the attached shell to run the addon command
         if inpipe:
+            kw.setdefault('stdout', True)
             rc = self.sh.popen(cmd, **kw)
         else:
             rc = self.sh.spawn(cmd, **kw)

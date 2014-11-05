@@ -21,7 +21,7 @@ class PGDRaw(StaticResource):
             gvar = dict(
                 type = GenvKey,
                 optional = True,
-                default = 'pgd_[nativefmt]',
+                default  = 'pgd_[nativefmt]',
             ),
             geometry = dict(
                 type = SpectralGeometry,
@@ -55,10 +55,10 @@ class PGDLFI(PGDRaw):
         info = 'Grid-point data consts',
         attr = dict(
             kind = dict(
-                values = ['pgdlfi']
+                values  = ['pgdlfi'],
             ),
             nativefmt = dict(
-                default = 'lfi'
+                default = 'lfi',
             )
         )
     )
@@ -73,10 +73,10 @@ class PGDFA(PGDRaw):
         info = 'Grid-point data consts',
         attr = dict(
             kind = dict(
-                values = ['pgdfa']
+                values  = ['pgdfa'],
             ),
             nativefmt = dict(
-                default = 'fa'
+                default = 'fa',
             )
         )
     )
@@ -84,24 +84,25 @@ class PGDFA(PGDRaw):
 
 class CoverParams(StaticResource):
     """
-    Class of a tar-zip file of coefficients for radiative transferts computations.
+    Class of a tar-zip set of coefficients for radiative transferts computations.
     A Genvkey can be given.
     """
     _footprint = dict(
         info = 'Coefficients of RRTM scheme',
         attr = dict(
             kind = dict(
-                values = ['coverparams', 'surfexcover']
+                values   = ['coverparams', 'surfexcover'],
+                remap    = dict(surfexcover = 'coverparams'),
             ),
             source = dict(
-                values = ['ecoclimap', 'ecoclimap1', 'ecoclimap2'],
                 optional = True,
-                default = 'ecoclimap',
+                default  = 'ecoclimap',
+                values   = ['ecoclimap', 'ecoclimap1', 'ecoclimap2'],
             ),
             gvar = dict(
-                type = GenvKey,
+                type     = GenvKey,
                 optional = True,
-                default = '[source]_covers_param'
+                default  = '[source]_covers_param'
             ),
         )
     )
@@ -109,3 +110,81 @@ class CoverParams(StaticResource):
     @property
     def realkind(self):
         return 'coverparams'
+
+
+class IsbaParams(StaticResource):
+    """
+    Class of surface (vegetations, etc.) coefficients.
+    A Genvkey can be given.
+    """
+    _footprint = dict(
+        info = 'ISBA parameters',
+        attr = dict(
+            kind = dict(
+                values   = ['isba', 'isbaan'],
+                remap    = dict(isbaan = 'isba'),
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'analyse_isba'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'isba'
+
+
+class AmvError(StaticResource):
+    """
+    TODO.
+    A Genvkey can be given.
+    """
+    _footprint = dict(
+        info = 'AMV Tracking Error',
+        attr = dict(
+            kind = dict(
+                values   = ['amvtrackingerror', 'amvtr', 'amverror', 'amv_error'],
+                remap    = dict(
+                    amvtrackingerror = 'amv_error',
+                    amvtr            = 'amv_error',
+                    amverror         = 'amv_error',
+                ),
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'amv_tracking_error',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'amv_error'
+
+class AmvBias(StaticResource):
+    """
+    TODO.
+    A Genvkey can be given.
+    """
+    _footprint = dict(
+        info = 'AMV Tracking Error',
+        attr = dict(
+            kind = dict(
+                values   = ['amvbias', 'amv_bias'],
+                remap    = dict(amvbias = 'amv_bias'),
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'amv_bias_info'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'amv_bias'
