@@ -244,9 +244,10 @@ class LFI_Tool(addons.Addon):
         for pname in args:
             for objpath in self.sh.glob(pname):
                 xlfi = self.is_xlfi(objpath)
-                rc = self.sh.remove(objpath)
                 if xlfi:
-                    rc = self.sh.remove(objpath + '.d') and rc
+                    rc = self._spawn(['lfi_alt_remv', '--lfi-file', objpath], output=False)
+                else:
+                    rc = self.sh.remove(objpath)
                 st.result.append(dict(path=objpath, multi=xlfi, rc=rc))
                 st.rc = rc
             for dirpath in self.sh.glob(pname + '.d'):
@@ -351,8 +352,8 @@ class IO_Poll(addons.Addon):
         info = 'Default io_poll system interface',
         attr = dict(
             kind = dict(
-                values = ['iopoll', 'io_poll'],
-                remap = dict(
+                values  = ['iopoll', 'io_poll'],
+                remap   = dict(
                     io_poll = 'iopoll'
                 )
             ),
@@ -360,11 +361,11 @@ class IO_Poll(addons.Addon):
                 default = 'lfi',
             ),
             cmd = dict(
-                alias = ('iopollcmd', 'io_pollcmd', 'io_poll_cmd'),
+                alias   = ('iopollcmd', 'io_pollcmd', 'io_poll_cmd'),
                 default = 'io_poll',
             ),
             path = dict(
-                alias = ('iopollpath', 'io_pollpath', 'io_poll_path'),
+                alias   = ('iopollpath', 'io_pollpath', 'io_poll_path'),
             )
         )
     )

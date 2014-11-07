@@ -8,9 +8,6 @@ __all__ = []
 
 import logging
 
-#: A default root name... that could be overwritten
-defaultrootname = None
-
 #: The actual set of pseudo-root loggers created
 roots = set()
 
@@ -35,24 +32,22 @@ class LoggingFilter(logging.Filter):
         return True
 
 
-def getRootLogger(name, level=logging.INFO):
-    """Build a new top level logger."""
-    thislogger = logging.getLogger(name)
-    thislogger.setLevel(level)
-    thislogger.addHandler(console)
-    thislogger.addFilter(LoggingFilter(name=name))
-    roots.add(name)
-    return thislogger
+def setRootLogger(logger, level=logging.INFO):
+    """Set appropriate Handler and Console to a top level logger."""
+    logger.setLevel(level)
+    logger.addHandler(console)
+    logger.addFilter(LoggingFilter(name=logger.name))
+    roots.add(logger.name)
+    return logger
 
 
-def getLogger(modname, rootname=None):
-    """Return an adapter on a matching root logger previously defined."""
-    actualroot = rootname or defaultrootname or modname.split('.')[0]
-    if actualroot in roots:
-        rootlogger = logging.getLogger(actualroot)
-    else:
-        rootlogger = getRootLogger(actualroot)
-    if actualroot == modname:
+def getLogger(modname):
+    """Return a standard logger in the scope of an appropriate root logger."""
+    rootname = modname.split('.')[0]
+    rootlogger = logging.getLogger(rootname)
+    if rootname not in roots:
+        setRootLogger(rootlogger)
+    if rootname == modname:
         return rootlogger
     else:
         return logging.getLogger(modname)
