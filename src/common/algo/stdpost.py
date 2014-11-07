@@ -4,8 +4,8 @@
 #: No automatic export
 __all__ = []
 
-
-from vortex.autolog import logdefault as logger
+import footprints
+logger = footprints.loggers.getLogger(__name__)
 
 from vortex.algo.components import BlindRun
 

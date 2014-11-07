@@ -12,11 +12,12 @@ __all__ = [ 'Store' ]
 import re
 
 import footprints
+logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
-from vortex.autolog import logdefault as logger
 from vortex.layout import dataflow
 from vortex.util import config
+from vortex.tools import caches
 
 
 class StoreGlue(object):
@@ -641,7 +642,7 @@ class CacheStore(Store):
             ),
             storage = dict(
                 optional = True,
-                default  = 'localhost'
+                default  = None,
             ),
         )
     )
@@ -649,7 +650,7 @@ class CacheStore(Store):
     def __init__(self, *args, **kw):
         logger.debug('Generic cache store init %s', self.__class__)
         super(CacheStore, self).__init__(*args, **kw)
-        self.resetcache()
+        del self.cache
 
     @property
     def realkind(self):
@@ -658,26 +659,29 @@ class CacheStore(Store):
     @property
     def hostname(self):
         """Returns the current :attr:`storage`."""
-        return self.storage
+        tg = self.system.target()
+        return tg.inetname if self.storage is None else self.storage
 
-    def setcache(self, newcache):
-        """Set a new cache reference."""
-        self._cache = newcache
-
-    def resetcache(self):
-        """Invalidate internal cache reference."""
-        self._cache = None
-
-    @property
-    def cache(self):
+    def _get_cache(self):
         if not self._cache:
             self._cache = footprints.proxy.caches.default(
                 kind    = self.strategy,
-                storage = self.storage,
+                storage = self.hostname,
                 rootdir = self.rootdir,
-                headdir = self.headdir
+                headdir = self.headdir,
             )
         return self._cache
+
+    def _set_cache(self, newcache):
+        """Set a new cache reference."""
+        if isinstance(newcache, caches.Cache):
+            self._cache = newcache
+
+    def _del_cache(self):
+        """Invalidate internal cache reference."""
+        self._cache = None
+
+    cache = property(_get_cache, _set_cache, _del_cache)
 
     def incachecheck(self, remote, options):
         """Returns a stat-like object if the ``remote`` exists in the current cache."""
@@ -689,12 +693,12 @@ class CacheStore(Store):
 
     def incachelocate(self, remote, options):
         """Agregates cache to remore subpath."""
-        return self.cache.entry(self.system) + remote['path']
+        return self.cache.fullpath(remote['path'])
 
     def incacheget(self, remote, local, options):
         """Simple copy from current cache cache to ``local``."""
-        return self.system.cp(
-            self.cache.entry(self.system) + remote['path'],
+        return self.cache.retrieve(
+            remote['path'],
             local,
             intent = options.get('intent'),
             fmt    = options.get('fmt')
@@ -702,9 +706,9 @@ class CacheStore(Store):
 
     def incacheput(self, local, remote, options):
         """Simple copy from ``local`` to the current cache in readonly mode."""
-        return self.system.cp(
+        return self.cache.insert(
+            remote['path'],
             local,
-            self.cache.entry(self.system) + remote['path'],
             intent = 'in',
             fmt    = options.get('fmt')
         )
@@ -741,22 +745,22 @@ class VortexCacheStore(CacheStore):
     def __init__(self, *args, **kw):
         logger.debug('Vortex cache store init %s', self.__class__)
         super(VortexCacheStore, self).__init__(*args, **kw)
-        self.resetcache()
+        del self.cache
 
     def vortexcheck(self, remote, options):
-        """Gateway to :meth:`incachecheck`."""
+        """Proxy to :meth:`incachecheck`."""
         return self.incachecheck(remote, options)
 
     def vortexlocate(self, remote, options):
-        """Gateway to :meth:`incachelocate`."""
+        """Proxy to :meth:`incachelocate`."""
         return self.incachelocate(remote, options)
 
     def vortexget(self, remote, local, options):
-        """Gateway to :meth:`incacheget`."""
+        """Proxy to :meth:`incacheget`."""
         return self.incacheget(remote, local, options)
 
     def vortexput(self, local, remote, options):
-        """Gateway to :meth:`incacheputt`."""
+        """Proxy to :meth:`incacheputt`."""
         return self.incacheput(local, remote, options)
 
 

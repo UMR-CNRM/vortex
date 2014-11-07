@@ -8,8 +8,8 @@ Footprint dynamic configuration.
 #: No automatic export
 __all__ = []
 
-import logging
-logger = logging.getLogger('footprints.config')
+from . import loggers
+logger = loggers.getLogger(__name__)
 
 from . import dump, reporting, util
 

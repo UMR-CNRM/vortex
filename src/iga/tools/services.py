@@ -17,7 +17,8 @@ from logging.handlers import SysLogHandler
 
 import socket
 
-from vortex.autolog import logdefault as logger
+import footprints
+logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.date import Date
 from vortex.tools.services import Service

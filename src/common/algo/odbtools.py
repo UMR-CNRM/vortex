@@ -6,17 +6,15 @@ __all__ = []
 
 import re, io
 
-from vortex.autolog import logdefault as logger
+import footprints
+logger = footprints.loggers.getLogger(__name__)
 
-from vortex.tools import date, odb
-
+from vortex.tools           import date, odb
 from vortex.algo.components import Parallel
 from vortex.util.structs    import Foo
 from vortex.syntax.stdattrs import a_date
 
 from common.data.obs import ObsMapContent, ObsMapItem, ObsRefItem
-
-from footprints import dump
 
 
 class OdbProcess(Parallel, odb.OdbComponent):

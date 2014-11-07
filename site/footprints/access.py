@@ -8,10 +8,10 @@ Footprint descriptors for attributes access.
 #: No automatic export
 __all__ = []
 
-import logging
-logger = logging.getLogger('footprints.access')
-
 import weakref
+
+from . import loggers
+logger = loggers.getLogger(__name__)
 
 
 # noinspection PyProtectedMember

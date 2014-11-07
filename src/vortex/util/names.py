@@ -8,9 +8,10 @@ Functions and tools to handle resources names or other kind of names.
 #: No automatic export
 __all__ = []
 
-from vortex.autolog import logdefault as logger
-
 from types import *   # @UnusedWildImport
+
+import footprints
+logger = footprints.loggers.getLogger(__name__)
 
 
 class VortexNameBuilder(object):

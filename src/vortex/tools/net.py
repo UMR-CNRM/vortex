@@ -5,14 +5,15 @@
 Net tools.
 """
 
-
 import types
 import urlparse
 import io, ftplib
 from netrc import netrc
 from datetime import datetime
 
-from vortex.autolog import logdefault as logger
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
 
 #: No automatic export
 __all__ = []

@@ -5,7 +5,10 @@
 __all__ = []
 
 import re
-from vortex.autolog import logdefault as logger
+
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
 from vortex.data.stores import StoreGlue, IniStoreGlue, ArchiveStore, CacheStore, MultiStore
 
 rextract = re.compile('^extract=(.*)$')
@@ -265,7 +268,6 @@ class OpCacheStore(CacheStore):
     def __init__(self, *args, **kw):
         logger.debug('OP cache store init %s', self.__class__)
         super(OpCacheStore, self).__init__(*args, **kw)
-        self.resetcache()
 
     def opcheck(self, remote, options):
         """Gateway to :meth:`incachecheck`."""

@@ -7,7 +7,9 @@ Advanced environment settings.
 
 import os, re, json, traceback
 
-from vortex.autolog import logdefault as logger
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
 from vortex.util.structs import History
 
 

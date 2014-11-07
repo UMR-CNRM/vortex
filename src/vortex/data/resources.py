@@ -5,8 +5,8 @@
 __all__ = [ 'Resource' ]
 
 import footprints
+logger = footprints.loggers.getLogger(__name__)
 
-from vortex.autolog import logdefault as logger
 from vortex.syntax.stdattrs import a_nativefmt, notinrepr
 from contents import DataContent, DataRaw
 

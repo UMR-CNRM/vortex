@@ -6,15 +6,17 @@ __all__ = []
 
 import re
 import io
-
 import collections
-OpSetValues = collections.namedtuple('OpSetValues', ['suite', 'vapp', 'vconf'])
+
+import footprints
+logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools import date
 from vortex.util.config import GenericConfigParser, load_template
-from vortex.autolog import logdefault as logger
 
 from gco.tools import genv
+
+OpSetValues = collections.namedtuple('OpSetValues', ['suite', 'vapp', 'vconf'])
 
 
 def bestdate(day=None, hh=None):

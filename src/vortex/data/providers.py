@@ -7,8 +7,8 @@ __all__ = [ 'Provider' ]
 import os.path
 
 import footprints
+logger = footprints.loggers.getLogger(__name__)
 
-from vortex.autolog import logdefault as logger
 from vortex.util.names import VortexNameBuilder
 from vortex.tools import net
 

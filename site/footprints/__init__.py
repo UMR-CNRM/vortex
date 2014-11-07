@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.9.2'
+__version__ = '0.9.3'
 
 import os
 import re
@@ -20,13 +20,9 @@ import weakref
 
 # Default logging
 
-import logging
-logging.basicConfig(
-    format  = '[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
-    datefmt = '%Y/%d/%m-%H:%M:%S',
-    level   = logging.INFO
-)
-logger = logging.getLogger('footprints')
+from . import loggers
+
+logger = loggers.getLogger('footprints')
 
 
 # Technical internal modules of the footprints package
@@ -166,6 +162,13 @@ class Footprint(object):
             fp['attr'][a].setdefault('access', 'rxx')
             fp['attr'][a]['alias'] = set(fp['attr'][a].get('alias', set()))
             fp['attr'][a]['remap'] = dict(fp['attr'][a].get('remap', dict()))
+            autoremap = fp['attr'][a]['remap'].pop('autoremap', None)
+            if autoremap is not None:
+                autoremap = util.mktuple(autoremap)
+                if 'first' in autoremap:
+                    vfirst = fp['attr'][a]['values'][0]
+                    for x in fp['attr'][a]['values'][1:]:
+                        fp['attr'][a]['remap'][x] = vfirst
             fp['attr'][a]['values'] = set(fp['attr'][a].get('values', set()))
             fp['attr'][a]['outcast'] = set(fp['attr'][a].get('outcast', set()))
             ktype = fp['attr'][a].get('type', str)

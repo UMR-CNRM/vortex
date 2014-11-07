@@ -9,7 +9,9 @@ Some general pupose decorators.
 __all__ = ['disabled', 'printargs', 'timelimit']
 
 import time
-from vortex.autolog import logdefault as logger
+
+import footprints
+logger = footprints.loggers.getLogger(__name__)
 
 
 def nicedeco(decorator):

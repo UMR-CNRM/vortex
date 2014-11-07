@@ -23,8 +23,7 @@ __all__ = []
 import logging
 
 import footprints
-
-from vortex.autolog import logdefault as logger
+logger = footprints.loggers.getLogger(__name__)
 
 from vortex.util.patterns import Singleton
 from vortex.util.structs import idtree
@@ -253,15 +252,16 @@ class Ticket(object):
         Explicitly sets the logging level to the ``level`` value.
         Shortcuts such as :method::`debug' or :method:`error` should be used.
         """
-        logger = logging.getLogger()
-        logger.setLevel(level)
+        for logname in ('vortex', 'footprints'):
+            logger = logging.getLogger(logname)
+            logger.setLevel(level)
 
     @property
     def loglevel(self):
         """
         Returns the logging level.
         """
-        logger = logging.getLogger()
+        logger = logging.getLogger('vortex')
         return logging.getLevelName(logger.level)
 
     def idcard(self):

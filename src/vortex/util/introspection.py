@@ -11,8 +11,10 @@ __all__ = []
 import re
 import inspect
 
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
 from vortex import sessions
-from vortex.autolog import logdefault as logger
 
 
 class Sherlock(object):

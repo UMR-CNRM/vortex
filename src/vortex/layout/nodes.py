@@ -9,8 +9,10 @@ for any :mod:`vortex` experiment.
 #: Export real nodes.
 __all__ = [ 'Task', 'Family' ]
 
-from vortex.autolog import logdefault as logger
-import dataflow
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
+from . import dataflow
 
 
 class Node(object):

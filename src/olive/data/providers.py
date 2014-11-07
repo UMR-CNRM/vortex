@@ -5,7 +5,10 @@
 __all__ = ['Olive']
 
 import re
-from vortex.autolog import logdefault as logger
+
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
 from vortex.data.providers import Provider
 from iga.syntax.stdattrs import suites, fuzzyname, archivesuffix
 

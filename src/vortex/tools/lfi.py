@@ -9,8 +9,8 @@ import re
 import weakref
 
 import footprints
+logger = footprints.loggers.getLogger(__name__)
 
-from vortex.autolog import logdefault as logger
 from vortex.util.structs import Tracker
 
 from . import addons

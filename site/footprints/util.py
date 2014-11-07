@@ -9,12 +9,11 @@ Utility functions of the :mod:`footprints` package.
 __all__ = []
 
 import re, copy, glob
-
-import logging
-logger = logging.getLogger('footprints.util')
-
 import types
 from weakref import WeakSet
+
+from . import loggers
+logger = loggers.getLogger(__name__)
 
 
 def dictmerge(d1, d2):
@@ -60,6 +59,14 @@ def list2dict(a, klist):
                 ad.update(item)
             a[k] = ad
     return a
+
+
+def mktuple(obj):
+    """Make a tuple from any kind of object."""
+    if isinstance(obj, list) or isinstance(obj, set) or isinstance(obj, tuple):
+        return tuple(obj)
+    else:
+        return (obj,)
 
 
 def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):

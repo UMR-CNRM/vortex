@@ -4,9 +4,12 @@
 #: No automatic export
 __all__ = []
 
-import vortex
-from vortex.autolog import logdefault as logger
 from copy import copy
+
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
+import vortex
 
 genvcmd, genvpath = (None, None)
 

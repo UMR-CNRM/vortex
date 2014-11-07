@@ -4,9 +4,8 @@
 #: No automatic export
 __all__ = []
 
-from vortex.autolog import logdefault as logger
-
-from footprints.util import rangex
+import footprints
+logger = footprints.loggers.getLogger(__name__)
 
 
 def read_config(inifile):
@@ -61,7 +60,7 @@ class Application(object):
             self.steps = tuple(self.steps.split(','))
         self.conf.update(read_config(self.iniconf).get(self.tag))
         for kr in self.conf.as_list('as_range'):
-            setattr(self.conf, kr, rangex(getattr(self.conf, kr)))
+            setattr(self.conf, kr, footprints.util.rangex(getattr(self.conf, kr)))
 
     @property
     def sh(self):

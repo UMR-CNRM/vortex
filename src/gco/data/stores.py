@@ -6,7 +6,9 @@ __all__ = []
 
 import tempfile
 
-from vortex.autolog import logdefault as logger
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
 from vortex.data.stores import Store, MultiStore, CacheStore
 
 
@@ -170,7 +172,6 @@ class GCOCacheStore(CacheStore):
         """Proxy init method. Perform a cache reset after initialisation."""
         logger.debug('GCO cache store init %s', self.__class__)
         super(GCOCacheStore, self).__init__(*args, **kw)
-        self.resetcache()
 
     def ggetcheck(self, remote, options):
         """Gateway to :meth:`incachecheck`."""

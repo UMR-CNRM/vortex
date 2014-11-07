@@ -10,8 +10,8 @@ The footprints proxy could make some part of the interface visible as well.
 #: No automatic export
 __all__ = []
 
-import logging
-logger = logging.getLogger('footprints.collectors')
+from . import loggers
+logger = loggers.getLogger(__name__)
 
 from . import config, dump, priorities, reporting, util
 

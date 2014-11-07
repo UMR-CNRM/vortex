@@ -5,8 +5,8 @@
 __all__ = []
 
 import footprints
+logger = footprints.loggers.getLogger(__name__)
 
-from vortex.autolog import logdefault as logger
 from vortex.data.stores import Store, Finder
 
 

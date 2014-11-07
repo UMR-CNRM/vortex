@@ -10,9 +10,9 @@ hosting data resources. Cache objects use the :mod:`footprints` mechanism.
 __all__ = []
 
 import footprints
+logger = footprints.loggers.getLogger(__name__)
 
-from vortex.autolog import logdefault as logger
-
+from vortex import sessions
 from vortex.util.config import GenericConfigParser
 
 
@@ -39,11 +39,11 @@ class Cache(footprints.FootprintBase):
                 default  = True,
             ),
             kind = dict(
-                values   = ['std']
+                values   = ['std'],
             ),
             rootdir = dict(
                 optional = True,
-                default  = '/tmp'
+                default  = '/tmp',
             ),
             headdir = dict(
                 optional = True,
@@ -51,7 +51,7 @@ class Cache(footprints.FootprintBase):
             ),
             storage = dict(
                 optional = True,
-                default  = 'localhost'
+                default  = 'localhost',
             ),
             record = dict(
                 type     = bool,
@@ -64,6 +64,7 @@ class Cache(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         logger.debug('Abstract cache init %s', self.__class__)
         super(Cache, self).__init__(*args, **kw)
+        self._sh = sessions.system()
         self._logrecord = list()
         if not self.config:
             self._attributes['config'] = GenericConfigParser(inifile=self.inifile, mkforce=self.iniauto)
@@ -71,6 +72,10 @@ class Cache(footprints.FootprintBase):
     @property
     def realkind(self):
         return 'cache'
+
+    @property
+    def sh(self):
+        return self._sh
 
     @property
     def logrecord(self):
@@ -98,9 +103,13 @@ class Cache(footprints.FootprintBase):
     def actual_record(self):
         return self.actual('record')
 
-    def entry(self, system):
+    def entry(self):
         """Tries to figure out what could be the actual entry point for cache space."""
-        return system.path.join(self.actual_rootdir, self.kind, self.actual_headdir)
+        return self.sh.path.join(self.actual_rootdir, self.kind, self.actual_headdir)
+
+    def fullpath(self, subpath):
+        """Actual full path in the cache."""
+        return self.sh.path.join(self.entry(), subpath.lstrip('/'))
 
     def flushrecord(self):
         """Clear the log record."""
@@ -108,22 +117,27 @@ class Cache(footprints.FootprintBase):
         self._logrecord = list()
         return rlog
 
-    def addrecord(self, action, item, infos):
+    def addrecord(self, action, item, status=None, info=None):
         """Push a new record to the cache log."""
         if self.actual_record:
-            self._logrecord.append([item, action, infos])
+            self._logrecord.append([item, action, info])
 
-    def insert(self, item, infos=None):
+    def insert(self, item, local, intent='in', fmt='foo', info=None):
         """Insert an item in the current cache."""
-        self.addrecord('insert', item, infos)
+        rc = self.sh.cp(local, self.fullpath(item), intent=intent, fmt=fmt)
+        self.addrecord('insert', item, status=rc, info=info)
+        return rc
 
-    def retrieve(self, item, infos=None):
-        """Insert an item in the current cache."""
-        self.addrecord('retrieve', item, infos)
+    def retrieve(self, item, local, intent='in', fmt='foo', info=None):
+        """Retrieve an item from the current cache."""
+        rc = self.sh.cp(self.fullpath(item), local, intent=intent, fmt=fmt)
+        self.addrecord('retrieve', item, status=rc, info=info)
+        return rc
 
-    def delete(self, item, infos=None):
-        """Insert an item in the current cache."""
-        self.addrecord('delete', item, infos)
+    def delete(self, item, fmt='foo', info=None):
+        """Delete an item from the current cache."""
+        rc = self.sh.remove(self.fullpath(item), fmt=fmt)
+        self.addrecord('delete', item, status=rc, info=info)
 
 
 class MtoolCache(Cache):
@@ -147,20 +161,20 @@ class MtoolCache(Cache):
         )
     )
 
-    def entry(self, system):
+    def entry(self):
         """Tries to figure out what could be the actual entry point for cache space."""
         if self.rootdir == 'auto':
-            e = system.env
-            if e.MTOOL_STEP_CACHE and system.path.isdir(e.MTOOL_STEP_CACHE):
+            e = self.sh.env
+            if e.MTOOL_STEP_CACHE and self.sh.path.isdir(e.MTOOL_STEP_CACHE):
                 cache = e.MTOOL_STEP_CACHE
                 logger.debug('Using %s mtool step cache %s', self, cache)
-            elif e.MTOOLDIR and system.path.isdir(e.MTOOLDIR):
-                cache = system.path.join(e.MTOOLDIR, 'cache')
+            elif e.MTOOLDIR and self.sh.path.isdir(e.MTOOLDIR):
+                cache = self.sh.path.join(e.MTOOLDIR, 'cache')
                 logger.debug('Using %s mtool dir cache %s', self, cache)
             else:
-                cache = system.path.join(e.FTDIR or e.WORKDIR or e.TMPDIR, self.kind, 'cache')
+                cache = self.sh.path.join(e.FTDIR or e.WORKDIR or e.TMPDIR, self.kind, 'cache')
                 logger.debug('Using %s default cache %s', self, cache)
         else:
             cache = self.actual_rootdir
-        return system.path.join(cache, self.actual_headdir)
+        return self.sh.path.join(cache, self.actual_headdir)
 

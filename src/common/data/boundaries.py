@@ -7,6 +7,7 @@ __all__ = []
 
 import re
 
+from vortex.tools.date import synop
 from vortex.data.flow import GeoFlowResource
 from vortex.syntax.stdattrs import a_term
 from iga.syntax.stdattrs import archivesuffix
@@ -45,7 +46,9 @@ class LAMBoundary(GeoFlowResource):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'ELSCF' + self.model[:4].upper() + '_' + self.geometry.area + '+' + self.term.fmthour
+        lastsynop = synop(base=self.date)
+        hhreal = (self.date - lastsynop).time() + self.term
+        return 'ELSCFALAD_' + self.geometry.area + '+' + hhreal.fmthour
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""

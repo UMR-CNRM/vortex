@@ -9,10 +9,10 @@ in order to avoid autompatic value expansion (for example).
 #: Automatic export
 __all__ = ['FPDict', 'FPList', 'FPSet', 'FPTuple']
 
-import logging
-logger = logging.getLogger('footprints.stdtypes')
-
 import copy
+
+from . import loggers
+logger = loggers.getLogger(__name__)
 
 
 class FPDict(dict):

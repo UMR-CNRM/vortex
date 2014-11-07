@@ -9,7 +9,9 @@ __all__ = []
 
 from types import *   # @UnusedWildImport
 
-from vortex.autolog import logdefault as logger
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
 from vortex import sessions
 
 

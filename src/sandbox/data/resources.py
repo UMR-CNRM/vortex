@@ -5,8 +5,7 @@
 __all__ = []
 
 import footprints
-
-from vortex.autolog import logdefault as logger
+logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource

@@ -39,7 +39,7 @@ class Analysis(GeoFlowResource):
                values   = ['surface', 'surf', 'atmospheric', 'atm', 'full'],
                remap    = dict(
                    surface     = 'surf',
-                   atmospheric = 'atm'
+                   atmospheric = 'atm',
                ),
            )
         )
@@ -72,10 +72,10 @@ class Analysis(GeoFlowResource):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        if 'surf' in self.filling:
-            return 'surfanalyse'
-        else:
-            return 'analyse'
+        basename = 'analyse'
+        if self.model == 'surfex':
+            basename = basename + '.sfx'
+        return basename
 
     def basename_info(self):
         """Generic information, radical = ``analysis``."""
@@ -160,10 +160,6 @@ class Historic(GeoFlowResource):
         if self.model == 'mesonh':
             return '.'.join(
                 (self.model.upper(), self.geometry.area[:4].upper() + '+' + self.term.fmthour, self.nativefmt)
-            )
-        elif self.model == 'surfex':
-            return '.'.join(
-                ('AROMOUT_SURF', self.geometry.area[:4], self.term.fmthour, self.nativefmt)
             )
         else:
             return 'ICMSH' + self.model[:4].upper() + '+' + self.term.fmthour

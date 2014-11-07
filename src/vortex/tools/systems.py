@@ -19,8 +19,7 @@ import pickle
 import json
 
 import footprints
-
-from vortex.autolog import logdefault as logger
+logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.env       import Environment
 from vortex.tools.net       import StdFtp
@@ -895,7 +894,8 @@ class OSExtended(System):
     def diff(self, *args, **kw):
         """Globbing and optional files or directories listing."""
         kw.setdefault('ok', [0, 1])
-        return self._globcmd(['diff'], args, **kw)
+        kw.setdefault('output', False)
+        return self._globcmd(['cmp'], args, **kw)
 
     def rmglob(self, *args, **kw):
         """Wrapper of the ``rm`` command through the globcmd."""
@@ -1036,7 +1036,7 @@ class OSExtended(System):
         """
         return self.blind_dump(obj, destination, gateway=json)
 
-    def blind_load(self, source, dumper, gateway=None):
+    def blind_load(self, source, gateway=None):
         """
         Use ``gateway`` for a blind load the representation stored in file ``source``,
         (either a file descriptor or a filename).

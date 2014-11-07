@@ -8,10 +8,12 @@ This modules defines the low level physical layout for data handling.
 #: No automatic export.
 __all__ = []
 
-from vortex.autolog import logdefault as logger
-from vortex.util import mktuple
-
 from collections import namedtuple
+
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
+from footprints.util import mktuple
 
 
 class SectionFatalError(Exception):
@@ -261,7 +263,9 @@ class Sequence(object):
         outrole = list()
         outkind = list()
         if 'role' in kw and kw['role'] is not None:
-            outrole = [ x for x in outset if x.role == kw['role'] ]
+            selectrole = mktuple(kw['role'])
+            outrole = [ x for x in outset if x.role in selectrole ]
         if not outrole and 'kind' in kw:
-            outkind = [ x for x in outset if x.rh.resource.realkind == kw['kind'] ]
+            selectkind = mktuple(kw['kind'])
+            outkind = [ x for x in outset if x.rh.resource.realkind in selectkind ]
         return outrole or outkind or outset

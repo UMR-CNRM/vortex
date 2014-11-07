@@ -7,7 +7,8 @@ __all__ = []
 import re
 import socket
 
-from vortex.autolog import logdefault as logger
+import footprints
+logger = footprints.loggers.getLogger(__name__)
 
 
 def olive_label(sh, env, tag=None, target=None):

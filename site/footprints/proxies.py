@@ -8,8 +8,8 @@ Proxy objects to footprints catalogs.
 #: No automatic export
 __all__ = []
 
-import logging
-logger = logging.getLogger('footprints.proxies')
+from . import loggers
+logger = loggers.getLogger(__name__)
 
 from . import collectors, util
 

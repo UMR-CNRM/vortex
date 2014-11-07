@@ -9,7 +9,9 @@ Functions and tools to handle resources names or other kind of names.
 __all__ = []
 
 import sys
-from vortex.autolog import logdefault as logger
+
+import footprints
+logger = footprints.loggers.getLogger(__name__)
 
 
 def faNames(cutoff, reseau, model, filling=None):

@@ -8,8 +8,8 @@ import re, io, os
 import tempfile
 
 import footprints
+logger = footprints.loggers.getLogger(__name__)
 
-from vortex.autolog import logdefault as logger
 from vortex.syntax.stdattrs import a_actualfmt
 
 CONTAINER_INCORELIMIT = 1048576 * 8

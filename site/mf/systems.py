@@ -9,8 +9,7 @@ This package handles some common targets sused at Meteo France.
 __all__ = []
 
 import footprints
-
-from vortex.autolog import logdefault as logger
+logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.targets import Target
 from vortex.tools.systems import OSExtended

@@ -11,8 +11,8 @@ __all__ = [ 'rload', 'rget', 'rput' ]
 import re
 
 import footprints
+logger = footprints.loggers.getLogger(__name__)
 
-from vortex.autolog import logdefault as logger
 from vortex import sessions, data, proxy
 from vortex.layout.dataflow import stripargs_section
 from vortex.util.structs import History
@@ -205,7 +205,7 @@ def inputs(ticket=None, context=None):
 def show_inputs(context=None):
     """Dump a summary of inputs sections."""
     t = sessions.ticket()
-    for csi in inputs():
+    for csi in inputs(ticket=t):
         t.sh.header('Input ' + str(csi))
         csi.show(ticket=t, context=context)
         print
@@ -228,7 +228,7 @@ def outputs(ticket=None, context=None):
 def show_outputs(context=None):
     """Dump a summary of outputs sections."""
     t = sessions.ticket()
-    for cso in outputs():
+    for cso in outputs(ticket=t):
         t.sh.header('Output ' + str(cso))
         cso.show(ticket=t, context=context)
         print
@@ -270,6 +270,77 @@ def algo(*args, **kw):
 
     ctx.record_on()
     return ok
+
+
+def diff(*args, **kw):
+    """Perform a diff with a resource with the same local name."""
+
+    # First, retrieve arguments of the toolbox command itself
+    fatal     = kw.pop('loglevel', True)
+    loglevel  = kw.pop('loglevel', None)
+    talkative = kw.pop('verbose', verbose)
+
+    # Swich off autorecording of the current context
+    t = sessions.ticket()
+    ctx = t.context
+    ctx.record_off()
+
+    # Possibily change the log level if necessary
+    if loglevel is not None:
+        oldlevel = t.loglevel
+        t.setloglevel(loglevel.upper())
+
+    # Distinguish between section arguments, and resource loader arguments
+    opts, kwclean = stripargs_section(**kw)
+
+    # Show the actual set of arguments
+    if talkative:
+        print "Discard section options: {0:s}\n\nResource handler's description: {1:s}\n".format(
+            footprints.dump.lightdump(opts),
+            footprints.dump.lightdump(kwclean)
+        )
+
+    # Let the magic of footprints resolution operates...
+    rl = rload(*args, **kwclean)
+    rlok = list()
+
+    for ir, rhandler in enumerate(rl):
+        if talkative:
+            print t.line
+            rhandler.quickview(nb=ir+1, indent=0)
+            print t.line
+        if not rhandler.complete:
+            logger.error('Uncomplete Resource Handler for diff [%s]', rhandler)
+            if fatal:
+                raise ValueError('Uncomplete Resource Handler for diff')
+        rc = t.sh.diff(
+            rhandler.container.localpath(),
+            rhandler.locate(),
+            fmt = rhandler.container.actualfmt,
+        )
+        logger.info('Diff return %s', str(rc))
+        try:
+            logger.info('Diff result %s', str(rc.result))
+        except AttributeError:
+            pass
+        if not rc:
+            logger.warning('Some diff occured with %s', rhandler.locate())
+            try:
+                rc.result.differences()
+            except StandardError:
+                pass
+            if fatal:
+                logger.critical('Difference in resource comparaison is fatal')
+                raise ValueError('Fatal diff')
+        if t.sh.trace:
+            print
+        rlok.append(rhandler)
+
+    if loglevel is not None:
+        t.setloglevel(oldlevel)
+
+    ctx.record_on()
+    return rlok
 
 
 def magic(url, localpath):

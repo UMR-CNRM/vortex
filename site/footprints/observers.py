@@ -11,8 +11,8 @@ to an undetermined number of items hold by :class:`ObserverBoard` objects.
 #: No automatic export
 __all__ = []
 
-import logging
-logger = logging.getLogger('footprints.observers')
+from . import loggers
+logger = loggers.getLogger(__name__)
 
 from . import util
 

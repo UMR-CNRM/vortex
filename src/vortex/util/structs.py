@@ -11,7 +11,8 @@ __all__ = []
 import collections
 import datetime
 
-from vortex.autolog import logdefault as logger
+import footprints
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Foo(object):
@@ -134,31 +135,25 @@ class Tree(object):
             logger.critical('Object %s does not belong this tree', node)
 
 
-class History(object):
+class History(footprints.util.GetByTag):
     """Multi-purpose history like object."""
 
-    def __init__(self, tag='void', status=False, histsize=1024):
-        self._tag = tag
-        self._history = collections.deque(maxlen=histsize)
+    def __init__(self, status=False, maxlen=None):
+        self._history = collections.deque(maxlen=maxlen)
         self._status = status
         self._count = 0
-
-    @property
-    def tag(self):
-        return self._tag
 
     @property
     def count(self):
         return self._count
 
     @property
-    def histsize(self):
+    def size(self):
         return self._history.maxlen
 
-    def resize(self, histsize=None):
+    def resize(self, maxlen=None):
         """Resize the internal history log to the specified length."""
-        if histsize:
-            self._history = collections.deque(self._history, maxlen=int(histsize))
+        self._history = collections.deque(self._history, maxlen=maxlen)
         return self._history.maxlen
 
     def nice(self, item):
@@ -248,7 +243,7 @@ class History(object):
 
     @property
     def last(self):
-        return self._history[-1][-1]
+        return self._history[-1][-1] if self.count else None
 
 
 class Tracker(object):
@@ -336,3 +331,14 @@ class Tracker(object):
 
     def __len__(self):
         return len(self.deleted | self.created | self.updated)
+
+    def dump(self, *args):
+        """Produce a simple dump report."""
+        if not args:
+            args = ('deleted', 'created', 'updated', 'unchanged')
+        for section in args:
+            print 'Section {0:s}: {1:s}'.format(section, str(getattr(self, section)))
+
+    def differences(self):
+        """Dump only created, deleted and updated items."""
+        return self.dump('deleted', 'created', 'updated')

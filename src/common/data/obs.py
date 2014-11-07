@@ -6,9 +6,10 @@ __all__ = [ 'Observations' ]
 
 import re
 from collections import namedtuple
-from footprints  import FPDict, FPSet
 
-from vortex.autolog       import logdefault as logger
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
 from vortex.data.flow     import GeoFlowResource, FlowResource
 from vortex.data.contents import TextContent
 from vortex.syntax        import stdattrs
@@ -157,9 +158,9 @@ class ObsRaw(Observations):
                 values  = ['void', 'extract', 'raw', 'std']
             ),
             olivefmt = dict(
-                type     = FPDict,
+                type     = footprints.FPDict,
                 optional = True,
-                default = FPDict(
+                default = footprints.FPDict(
                     ascii  = 'ascii',
                     obsoul = 'obsoul',
                     grib   = 'obsgrib',
@@ -472,9 +473,9 @@ class ObsMap(FlowResource):
                 default  = 'void'
             ),
             discard = dict(
-                type     = FPSet,
+                type     = footprints.FPSet,
                 optional = True,
-                default  = FPSet(),
+                default  = footprints.FPSet(),
             )
         )
     )

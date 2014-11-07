@@ -23,7 +23,7 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.9.2'
+__version__ = '0.9.3'
 __prompt__  = 'Vortex v-' + __version__ + ':'
 
 __all__ = []
@@ -42,21 +42,15 @@ except IOError:
 del os
 del sys
 
-# Default logging mechanism
-
-import logging
-logging.basicConfig(
-    format  = '[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
-    datefmt = '%Y/%d/%m-%H:%M:%S',
-    level   = logging.INFO
-)
-logger = logging.getLogger('vortex')
-del logging
-
 # Set vortex specific priorities for footprints usage
 
 import footprints
 footprints.priorities.set_before('debug', 'olive', 'oper')
+
+# Set a root logging mechanism for vortex
+
+logger = footprints.loggers.getLogger('vortex')
+footprints.loggers.defaultrootname = 'vortex'
 
 # Populate a fake proxy module with footprints shortcuts
 
@@ -68,7 +62,7 @@ proxy.objects = footprints.proxy.objects
 
 # The module loader set the local logger to each module of the vortex packages
 
-import loader
+#import loader
 
 # Insert a dynamic callback so that any footprint resolution could check the current Glove
 

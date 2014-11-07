@@ -13,8 +13,8 @@ __all__ = []
 import os
 
 import footprints
+logger = footprints.loggers.getLogger(__name__)
 
-from vortex.autolog import logdefault as logger
 from vortex import sessions
 
 criticals = ['debug', 'info', 'error', 'warning', 'critical']

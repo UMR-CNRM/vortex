@@ -8,8 +8,8 @@ __all__ = []
 import weakref
 
 import footprints
+logger = footprints.loggers.getLogger(__name__)
 
-from vortex.autolog import logdefault as logger
 from vortex.tools.env import Environment
 from vortex.tools.systems import System
 

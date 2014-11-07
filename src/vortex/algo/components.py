@@ -7,9 +7,9 @@ __all__ = []
 import shlex
 
 import footprints
+logger = footprints.loggers.getLogger(__name__)
 
 import vortex
-from vortex.autolog import logdefault as logger
 from vortex.algo import mpitools
 
 
@@ -131,11 +131,16 @@ class AlgoComponent(footprints.FootprintBase):
         """
         return True
 
-    def abort(self, msg='Abort occured'):
+    def abortfabrik(self, step, msg):
         """A shortcut to avoid next steps of the run."""
         def fastexit(self, *args, **kw):
-            logger.warning('Avoid this step [%s]', msg)
-        self.prepare = self.execute = self.postfix = fastexit
+            logger.warning('Run <%s> skipped because abort occured [%s]', step, msg)
+        return fastexit
+
+    def abort(self, msg='Not documented'):
+        """A shortcut to avoid next steps of the run."""
+        for step in ('prepare', 'execute', 'postfix'):
+            setattr(self, step, self.abortfabrik(step, msg))
 
     def run(self, rh, **kw):
         """Sequence for execution : prepare / execute / postfix."""

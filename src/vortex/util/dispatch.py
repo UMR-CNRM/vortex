@@ -9,8 +9,8 @@ Mainly for demonstration purpose ?
 import re
 
 import footprints
+logger = footprints.loggers.getLogger(__name__)
 
-from vortex.autolog import logdefault as logger
 from vortex import toolbox
 from vortex.data.geometries import SpectralGeometry, GridGeometry
 from vortex import data, algo, tools

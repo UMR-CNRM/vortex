@@ -14,8 +14,7 @@ to be processed: e.g. mail, sendbdap, routing, alarm.
 __all__ = []
 
 import footprints
-
-from vortex.autolog import logdefault as logger
+logger = footprints.loggers.getLogger(__name__)
 
 from vortex.util.authorizations import is_authorized_user
 from vortex.tools import services

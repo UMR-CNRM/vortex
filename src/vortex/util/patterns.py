@@ -8,7 +8,8 @@ thread-safe proof ones, but still, for the time being,
 it is enough to satisfy our small needs.
 """
 
-from vortex.autolog import logdefault as logger
+import footprints
+logger = footprints.loggers.getLogger(__name__)
 
 __all__ = [ 'Borg', 'Singleton' ]
 

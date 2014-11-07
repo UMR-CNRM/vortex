@@ -5,7 +5,8 @@ __all__ = []
 
 import re
 
-from vortex.autolog import logdefault as logger
+import footprints
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Cycle(object):

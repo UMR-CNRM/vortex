@@ -14,7 +14,9 @@ __all__ = []
 import re
 from collections import namedtuple
 
-from vortex.autolog import logdefault as logger
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
 from vortex import sessions
 from vortex.util.config import GenericConfigParser
 
