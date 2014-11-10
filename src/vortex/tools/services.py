@@ -17,6 +17,8 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 
+
+# See logging.handlers.SysLogHandler.priority_map
 criticals = ['debug', 'info', 'error', 'warning', 'critical']
 
 

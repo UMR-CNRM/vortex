@@ -23,7 +23,7 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.9.4'
+__version__ = '0.9.5'
 __prompt__  = 'Vortex v-' + __version__ + ':'
 
 __all__ = []

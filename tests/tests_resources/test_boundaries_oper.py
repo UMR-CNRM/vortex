@@ -38,7 +38,7 @@ class UtElscf(TestCase):
             source = 'arpege',
             term = 12,
             geometry = self.frangp,
-            date = today() + Period('PT12H')
+            date = rundate
         )
 
         self.fp_elscf2 = dict(
@@ -48,7 +48,7 @@ class UtElscf(TestCase):
             source = 'ifs',
             term = 2,
             geometry = self.caledonie,
-            date = today().ymd
+            date = rundate
         )
 
         self.fp_elscf3 = dict(
@@ -58,7 +58,7 @@ class UtElscf(TestCase):
             source = 'arpege',
             term = 16,
             geometry = self.mp1,
-            date = today().ymd
+            date = rundate_bis
         )
 
         self.fp_cont1 = dict(
@@ -91,15 +91,14 @@ class UtElscf(TestCase):
             print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(),
-            'file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC012.rPM'
+            'file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC012.rDH'
         )
         self.assertEqual(
             rl[0].locate(),
-            datadir + '/arome/france/oper/data/fic_day/ELSCFAROMALBC012.rPM'
+            datadir + '/arome/france/oper/data/fic_day/ELSCFAROMALBC012.rDH'
         )
-        #uniquement sur Nec oper
-        if t.env['HOSTNAME'] == 'kumo':
-            self.assertTrue(os.stat(rl[0].locate()))
+        self.assertTrue(rl[0].get())
+
 
     def test_v2(self):
         rl = toolbox.rload(
@@ -112,15 +111,14 @@ class UtElscf(TestCase):
             print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(),
-            'file://oper.inline.fr/aladin/caledonie/oper/data/fic_day/ELSCFALADALBC002.r00'
+            'file://oper.inline.fr/aladin/caledonie/oper/data/fic_day/ELSCFALADALBC002.r18'
         )
         self.assertEqual(
             rl[0].locate(),
-            datadir + '/aladin/caledonie/oper/data/fic_day/ELSCFALADALBC002.r00'
+            datadir + '/aladin/caledonie/oper/data/fic_day/ELSCFALADALBC002.r18'
         )
-        #uniquement sur Nec oper
-        if t.env['HOSTNAME'] == 'kumo':
-            self.assertTrue(os.stat(rl[0].locate()))
+        self.assertTrue(rl[0].get())
+
 
     def test_v3(self):
         rl = toolbox.rload(
@@ -139,9 +137,8 @@ class UtElscf(TestCase):
             rl[0].locate(),
             datadir + '/aladin/testmp1/oper/data/fic_day/ELSCFALADALBC016.rAM'
         )
-        #uniquement sur Nec oper
-        if t.env['HOSTNAME'] == 'kumo':
-            self.assertTrue(os.stat(rl[0].locate()))
+        self.assertTrue(rl[0].get())
+
 
 
 if __name__ == '__main__':

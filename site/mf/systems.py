@@ -12,7 +12,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.targets import Target
-from vortex.tools.systems import OSExtended
+from vortex.tools.systems import OSExtended, Linux27
 
 
 class SuperUX(OSExtended):
@@ -80,6 +80,11 @@ class MeteoBull(Target):
         )
     )
 
+    def spawn_hook(self, sh):
+        """Specific target hook before any serious execution."""
+        sh.header('Flush Lustre Locks')
+        sh.spawn(['/opt/softs/bin/flush-lustre-locks'], output=False)
+
 
 class Beaufix(MeteoBull):
     """Beaufix Computer at Meteo-France."""
@@ -125,3 +130,25 @@ class Prolix(MeteoBull):
 
     del x
     del y
+
+
+class Macintosh(Linux27):
+    """Mac under MacOSX."""
+
+    _footprint = dict(
+        info = 'Apple Mac computer under Macosx',
+        attr = dict(
+            sysname = dict(
+                values = ['Darwin']
+            ),
+        ),
+        priority = dict(
+            level = footprints.priorities.top.TOOLBOX
+        )
+    )
+
+    @property
+    def default_syslog(self):
+        """address to use in logging.handler.SysLogHandler()"""
+        return '/var/run/syslog'
+

@@ -10,7 +10,7 @@ __all__ = [
     # local test functions
     'get_default_provider', 'get_spec_provider', 
     # some default env values
-    'sh', 'datadir', 'homedir',
+    'sh', 'datadir', 'homedir', 'rundate', 'rundate_bis'
 ]
 
 import os  # @UnusedImport
@@ -31,7 +31,9 @@ import iga.data
 u_fill_fp_catalogs = common.data, iga.data
 
 # A nice synoptic time for date value
-rundate = date.yesterday()
+rundate = date.yesterday() + date.Period('PT18H')
+rundate_bis = date.today()
+
 
 
 # main variables definition for unittest

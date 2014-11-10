@@ -24,29 +24,29 @@ class Addon(footprints.FootprintBase):
         attr = dict(
             kind = dict(),
             sh = dict(
-                type = System,
-                alias = ('shell',),
-                access = 'rwx-weak',
+                type     = System,
+                alias    = ('shell',),
+                access   = 'rwx-weak',
             ),
             env = dict(
-                type = Environment,
+                type     = Environment,
                 optional = True,
-                default = None,
-                access = 'rwx',
+                default  = None,
+                access   = 'rwx',
             ),
             cfginfo = dict(
                 optional = True,
-                default = '[kind]',
+                default  = '[kind]',
             ),
             cmd = dict(
                 optional = True,
-                default = None,
-                access = 'rwx',
+                default  = None,
+                access   = 'rwx',
             ),
             path = dict(
                 optional = True,
-                default = None,
-                access = 'rwx',
+                default  = None,
+                access   = 'rwx',
             )
         )
     )
@@ -61,11 +61,13 @@ class Addon(footprints.FootprintBase):
         clsenv = self.__class__.__dict__
         for k in [ x for x in clsenv.keys() if x.isupper() ]:
             self.env[k] = clsenv[k]
-        if self.path is None and self.cfginfo is not None:
-            kpath = self.kind + 'path'
-            if kpath in self.sh.env:
-                self.path = self.sh.env.get(kpath)
-            else:
+        if self.path is None:
+            for prefix in [ x for x in (self.kind, self.cfginfo) if x is not None ]:
+                kpath = prefix + 'path'
+                if kpath in self.sh.env:
+                    self.path = self.sh.env.get(kpath)
+                    break
+            if self.path is None and self.cfginfo is not None:
                 tg = self.sh.target()
                 addon_rootdir = tg.get(self.cfginfo + ':rootdir', None)
                 addon_opcycle = self.sh.env.get(
@@ -105,4 +107,5 @@ class Addon(footprints.FootprintBase):
         else:
             rc = self.sh.spawn(cmd, **kw)
         localenv.active(False)
+
         return rc

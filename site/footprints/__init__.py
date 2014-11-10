@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.9.4'
+__version__ = '0.9.5'
 
 import os
 import re
@@ -616,7 +616,7 @@ class FootprintBaseMeta(type):
             for k in [x for x in d.keys() if x.startswith('footprint_')]:
                 kshort = k.replace('footprint_', '')
                 if kshort in d:
-                    logger.warning('Shortcut to amready defined attribute [%s]', k)
+                    logger.warning('Shortcut to already defined attribute [%s]', k)
                 else:
                     d[kshort] = d.get(k)
 

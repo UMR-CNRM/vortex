@@ -157,7 +157,7 @@ def pushsection(section, args, kw):
     push = getattr(ctx.sequence, section)
     doitmethod = sectionmap[section]
     if talkative and now:
-        logger.info('Command at once [%s]', doitmethod)
+        logger.info('Command <%s> now', doitmethod)
 
     # Create a section for each resource handler, and perform action on demand
     for ir, rhandler in enumerate(rl):

@@ -84,16 +84,20 @@ class LAMForecast(Forecast):
 
     def prepare(self, rh, opts):
         """Default pre-link for boundary conditions files."""
+
+        sh = self.system
+
         super(LAMForecast, self).prepare(rh, opts)
+
         if self.synctool:
-            self.system.cp(self.synctool, 'atcp.alad')
-            self.system.chmod('atcp.alad', 0755)
+            sh.cp(self.synctool, 'atcp.alad')
+            sh.chmod('atcp.alad', 0755)
         cplrh = [ x.rh for x in self.context.sequence.effective_inputs(role='BoundaryConditions',
                                                                        kind='boundary') ]
         cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
         i = 0
         for l in [ x.container.localpath() for x in cplrh ]:
-            self.system.softlink(l, 'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, i))
+            sh.softlink(l, 'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, i))
             i += 1
 
 
@@ -136,22 +140,26 @@ class FullPos(IFSParallel):
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
+
+        sh = self.system
+
         namrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('Namelist'), kind='namelistfp') ]
         namxx = [ x.rh for x in self.context.sequence.effective_inputs(role=('FullPosSelection'), kind='namselect') ]
         initrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('InitialCondition', 'ModelState'), kind='historic') ]
         initrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
+
         for r in initrh:
-            self.system.title('Loop on {0:s}'.format(r.resource.term.fmthm))
+            sh.title('Loop on {0:s}'.format(r.resource.term.fmthm))
 
             # Set a local storage place
             runstore = 'RUNOUT' + r.resource.term.fmtraw
-            self.system.mkdir(runstore)
+            sh.mkdir(runstore)
 
             # Define an input namelist
             try:
                 namfp = [ x for x in namrh if x.resource.term == r.resource.term ].pop()
-                self.system.remove('fort.4')
-                self.system.symlink(namfp.container.localpath(), 'fort.4')
+                sh.remove('fort.4')
+                sh.symlink(namfp.container.localpath(), 'fort.4')
             except Exception:
                 logger.critical('Could not get a fullpos namelist for term %s', r.resource.term)
                 raise
@@ -159,32 +167,39 @@ class FullPos(IFSParallel):
             # Define an selection namelist
             try:
                 namxt = [ x for x in namxx if x.resource.term == r.resource.term ].pop()
-                self.system.remove('xxt00000000')
-                self.system.symlink(namxt.container.localpath(), 'xxt00000000')
+                sh.remove('xxt00000000')
+                sh.symlink(namxt.container.localpath(), 'xxt00000000')
             except Exception:
                 logger.critical('Could not get a selection namelist for term %s', r.resource.term)
                 raise
 
             # Finaly set the actual init file
-            self.system.remove('ICMSHFPOSINIT')
-            self.system.softlink(r.container.localpath(), 'ICMSHFPOSINIT')
+            sh.remove('ICMSHFPOSINIT')
+            sh.softlink(r.container.localpath(), 'ICMSHFPOSINIT')
 
             # Standard execution
             super(FullPos, self).execute(rh, opts)
 
             # Freeze the current output
-            for posfile in [ x for x in self.system.glob('PFFPOS*+*') ]:
+            for posfile in [ x for x in sh.glob('PFFPOS*+*') ]:
                 rootpos = re.sub('0+$', '', posfile)
-                self.system.move(posfile, self.system.path.join(runstore, rootpos + r.resource.term.fmthm))
-            for logfile in self.system.glob('NODE.*', 'std*'):
-                self.system.move(logfile, self.system.path.join(runstore, logfile))
+                sh.move(
+                    posfile,
+                    sh.path.join(runstore, rootpos + r.resource.term.fmthm),
+                    fmt = 'lfi',
+                )
+            for logfile in sh.glob('NODE.*', 'std*'):
+                sh.move(logfile, sh.path.join(runstore, logfile))
 
             # Some cleaning
-            self.system.rmall('PXFPOS*', 'ncf927', 'dirlst')
+            sh.rmall('PXFPOS*', fmt='lfi')
+            sh.ramall('ncf927', 'dirlst')
 
     def postfix(self, rh, opts):
         """Post processing cleaning."""
+        sh = self.system
         super(FullPos, self).postfix(rh, opts)
-        self.system.mvglob('RUNOUT*/PFFPOS*', '.')
-        self.system.cat('RUNOUT*/NODE.001_01', output='NODE.all')
-        self.system.dir(output=False)
+        for fpfile in [ x for x in sh.glob('RUNOUT*/PFFPOS*') if sh.path.isfile(x) ]:
+            sh.move(fpfile, sh.path.basename(fpfile), fmt='lfi')
+        sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')
+        sh.dir(output=False)

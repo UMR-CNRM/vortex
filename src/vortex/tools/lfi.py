@@ -104,15 +104,20 @@ class LFI_Tool(addons.Addon):
         info = 'Default LFI system interface',
         attr = dict(
             kind = dict(
-                values  = ['lfi'],
+                values   = ['lfi'],
             ),
             cmd = dict(
-                alias   = ('lficmd',),
-                default = 'lfitools',
+                alias    = ('lficmd',),
+                default  = 'lfitools',
             ),
             path = dict(
-                alias   = ('lfipath',),
-            )
+                alias    = ('lfipath',),
+            ),
+            warnpack = dict(
+                type     = bool,
+                optional = True,
+                default  = False,
+            ),
         )
     )
 
@@ -260,11 +265,15 @@ class LFI_Tool(addons.Addon):
     lfi_rm = lfi_remove = fa_rm = fa_remove = _std_remove
 
     def _cp_pack_read(self, source, destination):
+        if self.warnpack:
+            logger.warning('Suspicious packing <%s>', source)
         rc = self._spawn(['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', destination], output=False)
         self.sh.chmod(destination, 0444)
         return rc
 
     def _cp_pack_write(self, source, destination):
+        if self.warnpack:
+            logger.warning('Suspicious packing <%s>', source)
         rc = self._spawn(['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', destination], output=False)
         self.sh.chmod(destination, 0644)
         return rc
@@ -348,6 +357,10 @@ class IO_Poll(addons.Addon):
     This addon is in charge of multi-file reshaping after IFS-ARPEGE execution.
     """
 
+    LFI_HNDL_SPEC   = ':1'
+    DR_HOOK_SILENT  = 1
+    DR_HOOK_NOT_MPI = 1
+
     _footprint = dict(
         info = 'Default io_poll system interface',
         attr = dict(
@@ -390,7 +403,7 @@ class IO_Poll(addons.Addon):
         cmd = ['--prefix', prefix]
         if nproc_io is None:
             if not self.sh.path.exists('fort.4'):
-                raise IOError('The `nproc_io` option or a `fort.4` file should be provided.')
+                raise IOError('The proc_io option or a fort.4 file should be provided.')
         else:
             cmd.extend(['--nproc_io', str(nproc_io)])
 

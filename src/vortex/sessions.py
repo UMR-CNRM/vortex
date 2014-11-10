@@ -252,7 +252,7 @@ class Ticket(object):
         Explicitly sets the logging level to the ``level`` value.
         Shortcuts such as :method::`debug' or :method:`error` should be used.
         """
-        for logname in ('vortex', 'footprints'):
+        for logname in footprints.loggers.roots:
             logger = logging.getLogger(logname)
             logger.setLevel(level)
 

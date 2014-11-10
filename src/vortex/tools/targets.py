@@ -84,6 +84,10 @@ class Target(footprints.FootprintBase):
         fp = cls.footprint_retrieve()
         return not bool(fp.attr['hostname']['values'])
 
+    def spawn_hook(self):
+        """Specific target hook before any serious execution."""
+        pass
+
 
 class LocalTarget(Target):
 

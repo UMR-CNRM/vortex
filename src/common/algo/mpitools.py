@@ -79,13 +79,13 @@ class MpiNWPIO(mpitools.MpiServerIO):
         attr = dict(
             pattern = dict(
                 optional = True,
-                default = 'io_serv.*.d',
+                default  = 'io_serv.*.d',
             ),
             polling = dict(
+                type     = bool,
                 optional = True,
-                type = bool,
-                default = False,
-                access = 'rwx',
+                default  = False,
+                access   = 'rwx',
             )
         )
     )

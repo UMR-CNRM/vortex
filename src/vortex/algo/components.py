@@ -98,6 +98,7 @@ class AlgoComponent(footprints.FootprintBase):
         self.system.softlink('/dev/null', 'core')
         self.system.dir(output=False)
         self.spawn_hook()
+        self.target.spawn_hook(self.system)
         self.system.subtitle('{0:s} : start execution'.format(self.realkind))
         self.system.spawn(args, output=False)
         self.system.subtitle('{0:s} : directory listing (post-execution)'.format(self.realkind))

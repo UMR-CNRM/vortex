@@ -16,12 +16,21 @@ import logging
 from logging.handlers import SysLogHandler
 
 import socket
+from StringIO import StringIO
 
+import vortex
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.date import Date
 from vortex.tools.services import Service
+
+#TODO devrait dépendre d'un objet TARGET
+LOGIN_NODES = [
+    x + str(y)
+    for x in ('prolixlogin', 'beaufixlogin', )
+    for y in range(6)
+]
 
 
 class LogFacility(int):
@@ -36,12 +45,55 @@ class LogFacility(int):
                 value = value[4:]
             try:
                 value = SysLogHandler.facility_names[value]
-            except AttributeError:
+            except KeyError:
                 logger.error('Could not get a SysLog value for name ' + value)
                 raise
         if value not in SysLogHandler.facility_names.values():
             raise ValueError('Not a SysLog facility value: ' + str(value))
         return int.__new__(cls, value)
+
+    def name(self):
+        for s, n in SysLogHandler.facility_names.iteritems():
+            if self == n:
+                return s
+        raise ValueError('Not a SysLog facility value: ' + str(self))
+
+
+class RemoteCommandProxy(footprints.FootprintBase):
+    """
+    Remote execution via ssh
+    """
+    _collector = ('miscellaneous',)
+    _footprint = dict(
+        info = 'Remote command proxy',
+        attr = dict(
+            kind = dict(
+                values = ['ssh_proxy'],
+                alias  = ('remotecommand',),
+            ),
+            remote = dict(
+                values = ['login', 'transfert'],
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('Remote command proxy init %s', self.__class__)
+        super(RemoteCommandProxy, self).__init__(*args, **kw)
+        self._sh = sessions.system()
+
+    def node(self):
+        """node name for this kind of remote execution"""
+        t = self._sh.target()
+        inikey = 'services:' + self.remote + 'node'
+        return t.get(inikey, 'localhost')
+
+    def execute(self, command):
+        rc = self._sh.spawn(
+            ('/usr/bin/ssh', '-x', self.node(), command),
+            shell=False,
+            output=False)
+        return rc
 
 
 class AlarmService(Service):
@@ -63,17 +115,12 @@ class AlarmService(Service):
             facility = dict(
                 type     = LogFacility,
                 optional = True,
-                default  = SysLogHandler.LOG_LOCAL2,
-            ),
-            socktype = dict(
-                type     = int,
-                optional = True,
-                default  = socket.SOCK_DGRAM,
+                default  = SysLogHandler.LOG_LOCAL3,
             ),
             alarmfmt = dict(
                 optional = True,
                 default  = None,
-            )
+            ),
         )
     )
 
@@ -103,6 +150,51 @@ class AlarmService(Service):
         return logmethod(self.get_message())
 
 
+class AlarmProxyService(AlarmService):
+    """
+    Class responsible for handling alarm data through the remote
+    unix "logger" command invocation (mandatory on non-login nodes)
+    This class should not be called directly.
+    """
+    _footprint = dict(
+        info = 'Alarm Proxy Service',
+        attr = dict(
+            hostname = dict(
+                outcast = LOGIN_NODES,
+            ),
+        )
+    )
+
+    def get_syslog(self):
+        """Return an in-memory handler"""
+        self.buffer = StringIO()
+        self.handler = logging.StreamHandler(self.buffer)
+        return self.handler
+
+    def __call__(self):
+        """Main action: pack the message to the actual logger action."""
+
+        # send to the logger as usual
+        super(AlarmProxyService, self).__call__()
+
+        # get the formatted message from the logger
+        self.handler.flush()
+        self.buffer.flush()
+        message = self.buffer.getvalue().rstrip('\n')
+        self.buffer.truncate(0)
+
+        # send it to the unix 'logger' command on a login node
+        command = "logger -p {}.{} '{}'".format(
+            self.facility.name(),
+            self.level,
+            message)
+        rcp = RemoteCommandProxy(kind='ssh_proxy', remote='login')
+        rc = rcp.execute(command)
+        if not rc:
+            logger.warning("Remote execution returns" + rc)
+        return rc
+
+
 class AlarmLogService(AlarmService):
     """
     Class responsible for handling alarm data through domain socket.
@@ -112,13 +204,23 @@ class AlarmLogService(AlarmService):
     _footprint = dict(
         info = 'Alarm Log Service',
         attr = dict(
-            address = dict(),
+            address = dict(
+                optional = True,
+                default  = None,
+                access   = 'rwx',
+            ),
+            hostname = dict(
+                values = LOGIN_NODES,
+            ),
         )
     )
 
     def get_syslog(self):
         """Return a SysLog on domain socket given by ``address`` attribute."""
-        return SysLogHandler(self.address, self.facility, self.socktype)
+		# TODO les objets services ne pourraient -ils pas avoir un accès sh
+        if self.address is None:
+            self.address = vortex.ticket().system().default_syslog
+        return SysLogHandler(self.address, self.facility, None)
 
 
 class AlarmRemoteService(AlarmService):
@@ -130,11 +232,22 @@ class AlarmRemoteService(AlarmService):
     _footprint = dict(
         info = 'Alarm services class',
         attr = dict(
-            syshost = dict(),
+            syshost = dict(
+                optional = True,
+                default = 'localhost',
+            ),
             sysport = dict(
                 type     = int,
                 optional = True,
                 default  = 514,
+            ),
+            socktype = dict(
+                type     = int,
+                optional = True,
+                default  = socket.SOCK_DGRAM,
+            ),
+            hostname = dict(
+                values = LOGIN_NODES,
             ),
         )
     )
@@ -181,7 +294,7 @@ class BdapService(Service):
         Build and return the command line which will be executed by the current
         system object available associated with the service.
         """
-        return [ str(x) for x in (
+        return [ str(k) for k in (
             self.sendbdap,
             self.domain,
             self.extra,
@@ -246,7 +359,7 @@ class RoutingService(Service):
         )
     )
 
-    def get_cmd_line(self):
+    def get_cmdline(self):
         """
         Build and return the command line which will be executed by the current
         system object available associated with the service.

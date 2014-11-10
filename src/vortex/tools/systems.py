@@ -113,9 +113,9 @@ class System(footprints.FootprintBase):
         self.__dict__['_history'] = History(tag='shell')
         self.__dict__['_rclast']  = 0
         self.__dict__['prompt']   = ''
-        for flag in ( 'trace', ):
+        for flag in ('trace', 'timer'):
             self.__dict__[flag] = kw.pop(flag, False)
-        for flag in ( 'output', ):
+        for flag in ('output',):
             self.__dict__[flag] = kw.pop(flag, True)
         super(System, self).__init__(*args, **kw)
 
@@ -134,6 +134,11 @@ class System(footprints.FootprintBase):
     @property
     def search(self):
         return self._search
+
+    @property
+    def default_syslog(self):
+        """address to use in logging.handler.SysLogHandler()"""
+        return '/dev/log'
 
     def extend(self, obj=None):
         """Extend the current external attribute resolution to ``obj`` (module or object)."""
@@ -450,6 +455,8 @@ class System(footprints.FootprintBase):
             ok = [ 0 ]
         if output is None:
             output = self.output
+        if self.timer:
+            args[:0] = ['time']
         self.stderr(*args)
         p = None
         try:
@@ -812,12 +819,12 @@ class OSExtended(System):
                 entries.extend(glob.glob(self.path.expanduser(entry)))
         return entries
 
-    def rmall(self, *args):
+    def rmall(self, *args, **kw):
         """Unlink the specified `args` objects with globbing."""
         rc = True
         for pname in args:
             for objpath in self.glob(pname):
-                rc = self.remove(objpath) and rc
+                rc = self.remove(objpath, **kw) and rc
 
     def safepath(self, thispath, safedirs):
         """
@@ -904,9 +911,11 @@ class OSExtended(System):
     @fmtshcmd
     def move(self, source, destination):
         """Move the ``source`` file or directory."""
+        self.stderr('move', source, destination)
         try:
             self._sh.move(source, destination)
         except StandardError:
+            logger.critical('Could not move <%s> to <%s>', source, destination)
             raise
         else:
             return True
@@ -1132,7 +1141,7 @@ class Linux(OSExtended):
         info = 'Linux base system',
         attr = dict(
             sysname = dict(
-                values = ['Linux', 'Darwin']
+                values = ['Linux'],
             )
         )
     )

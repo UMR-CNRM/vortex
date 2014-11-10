@@ -2,7 +2,6 @@
 # -*- coding:Utf-8 -*-
 
 import footprints
-import vortex
 
 from oper_test_config import *  # @UnusedWildImport
 
@@ -20,7 +19,7 @@ class UtGridPoint(TestCase):
             netloc = 'oper.inline.fr',
         )
         self.fp_cont = dict(
-            local='PFARPE[geometry::area]+[term::fmth].rSX'
+            local='PFARPE[geometry::area]+[term::fmth].rDH'
         )
         self.franx01 = GridGeometry(id='Current op', area='FRANX01',
                                     resolution=0.1, nlat=221, nlon=281)
@@ -130,15 +129,16 @@ class UtGridPoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
+            #print ' > ', rh.location()            
         self.assertEqual(
             rl[0].location(),
-            'file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB15+0000.rSX'
+            'file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB15+0000.rDH'
         )
         self.assertEqual(
             rl[0].locate(),
-            datadir + '/arpege/france/oper/data/fic_day/PFARPEGLOB15+0000.rSX'
+            datadir + '/arpege/france/oper/data/fic_day/PFARPEGLOB15+0000.rDH'
         )
+        self.assertTrue(rl[0].get())
 
     def test_v2(self):
         rl = toolbox.rload(
@@ -148,35 +148,18 @@ class UtGridPoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
+            # print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(),
-            'file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB15+0003.rSX'
+            'file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB15+0003.rDH'
         )
         self.assertEqual(
             rl[0].locate(),
-            datadir + '/arpege/france/oper/data/fic_day/PFARPEGLOB15+0003.rSX'
+            datadir + '/arpege/france/oper/data/fic_day/PFARPEGLOB15+0003.rDH'
         )
+        self.assertTrue(rl[0].get())
 
     def test_v3(self):
-        rl = toolbox.rload(
-            self.fp_prov,
-            self.fp_cont,
-            self.fp_gridpoint3
-        )
-        for rh in rl:
-            self.assertTrue(rh.complete)
-            print ' > ', rh.location()
-        self.assertEqual(
-            rl[0].location(),
-            'file://oper.inline.fr/aladin/france/oper/data/fic_day/PFALADFRANX01+0006.rSX'
-        )
-        self.assertEqual(
-            rl[0].locate(),
-            datadir + '/aladin/france/oper/data/fic_day/PFALADFRANX01+0006.rSX'
-        )
-
-    def test_v4(self):
         rl = toolbox.rload(
             self.fp_prov,
             self.fp_cont,
@@ -187,12 +170,32 @@ class UtGridPoint(TestCase):
             print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(),
-            'file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0006.rSX'
+            'file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0006.rDH'
         )
         self.assertEqual(
             rl[0].locate(),
-            datadir + '/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0006.rSX'
+            datadir + '/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0006.rDH'
         )
+        self.assertTrue(rl[0].get())
+
+    def test_v4(self):
+        rl = toolbox.rload(
+            self.fp_prov,
+            self.fp_cont,
+            self.fp_gridpoint4
+        )
+        for rh in rl:
+            self.assertTrue(rh.complete)
+            # print ' > ', rh.location()
+        self.assertEqual(
+            rl[0].location(),
+            'file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0006.rDH'
+        )
+        self.assertEqual(
+            rl[0].locate(),
+            datadir + '/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0006.rDH'
+        )
+	self.assertTrue(rl[0].get())
 
     def test_v5(self):
         rl = toolbox.rload(
@@ -202,15 +205,18 @@ class UtGridPoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
+            # print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(),
-            'file://oper.inline.fr/arpege/france/oper/data/bdap/PE06000GLOB15'
+            'file://oper.inline.fr/arpege/france/oper/data/bdap/PE18000GLOB15'
         )
         self.assertEqual(
             rl[0].locate(),
-            datadir + '/arpege/france/oper/data/bdap/PE06000GLOB15'
+            datadir + '/arpege/france/oper/data/bdap/PE18000GLOB15'
         )
+        self.assertTrue(rl[0].get())
+
+
 
     def test_v6(self):
         rl = toolbox.rload(
@@ -220,15 +226,17 @@ class UtGridPoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
+            # print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(),
-            'file://oper.inline.fr/arpege/pearp/oper/data/bdap/RUN4/fc_SX_4_GLOB15_0006'
+            'file://oper.inline.fr/arpege/pearp/oper/data/bdap/RUN4/fc_DH_4_GLOB15_0006'
         )
         self.assertEqual(
             rl[0].locate(),
-            datadir + '/arpege/pearp/oper/data/bdap/RUN4/fc_SX_4_GLOB15_0006'
+            datadir + '/arpege/pearp/oper/data/bdap/RUN4/fc_DH_4_GLOB15_0006'
         )
+        self.assertTrue(rl[0].get())
+
 
 class UtHistoric(TestCase):
 
@@ -268,6 +276,16 @@ class UtHistoric(TestCase):
             origin = 'historic',
             model = 'aladin',
             cutoff = 'production',
+            date = rundate_bis,
+            term = 0
+        )
+        
+        self.fp_historic2_bis = dict(
+            kind = 'historic',
+            geometry = self.caledonie,
+            origin = 'historic',
+            model = 'aladin',
+            cutoff = 'assimilation',
             date = rundate,
             term = 0
         )
@@ -303,7 +321,7 @@ class UtHistoric(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
+            # print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(),
             'file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rDH'
@@ -313,6 +331,7 @@ class UtHistoric(TestCase):
             datadir + '/arome/france/oper/data/fic_day/ICMSHAROM+0000.rDH'
         )
         self.assertTrue(sh.stat(rl[0].locate()))
+        self.assertTrue(rl[0].get())
 
     def test_v2(self):
         rl = toolbox.rload(
@@ -322,15 +341,36 @@ class UtHistoric(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
+            # print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(),
-            'file://oper.inline.fr/aladin/caledonie/oper/data/fic_day/ICMSHALAD+0000.rPM'
+            'file://oper.inline.fr/aladin/caledonie/oper/data/fic_day/ICMSHALAD+0000.rAM'
         )
         self.assertEqual(
             rl[0].locate(),
-            datadir + '/aladin/caledonie/oper/data/fic_day/ICMSHALAD+0000.rPM'
+            datadir + '/aladin/caledonie/oper/data/fic_day/ICMSHALAD+0000.rAM'
         )
+        self.assertTrue(rl[0].get())
+        
+    def test_v2_bis(self):
+        rl = toolbox.rload(
+            self.fp_prov2,
+            self.fp_cont,
+            self.fp_historic2_bis
+        )
+        for rh in rl:
+            self.assertTrue(rh.complete)
+            # print ' > ', rh.location()
+        self.assertEqual(
+            rl[0].location(),
+            'file://oper.inline.fr/aladin/caledonie/oper/data/fic_day/ICMSHALAD+0000.r18'
+        )
+        self.assertEqual(
+            rl[0].locate(),
+            datadir + '/aladin/caledonie/oper/data/fic_day/ICMSHALAD+0000.r18'
+        )
+        self.assertTrue(rl[0].get())
+
 
     def test_v3(self):
         rl = toolbox.rload(
@@ -340,7 +380,7 @@ class UtHistoric(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
+            # print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rDH'
@@ -350,6 +390,7 @@ class UtHistoric(TestCase):
             datadir + '/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rDH'
         )
         self.assertTrue(sh.stat(rl[0].locate()))
+        self.assertTrue(rl[0].get())
 
 
 class UtAnalysis(TestCase):
@@ -384,17 +425,25 @@ class UtAnalysis(TestCase):
             cutoff = 'production',
             model = 'arome',
             geometry = self.frangp,
-            nativefmt = 'lfi',
+            nativefmt = 'fa',
             filling = 'surf',
             date = rundate,
         )
 
         self.fp_analys2 = dict(
             kind = 'analysis',
-            cutoff = 'assim',
+            cutoff = 'assimilation',
             model = 'aladin',
             geometry = self.frangp,
             date = rundate,
+        )
+        
+        self.fp_analys2_bis = dict(
+            kind = 'analysis',
+            cutoff = 'production',
+            model = 'aladin',
+            geometry = self.frangp,
+            date = rundate_bis,
         )
 
         self.fp_analys3 = dict(
@@ -437,15 +486,16 @@ class UtAnalysis(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
+            # print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(),
-            'file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rPM'
+            'file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rDH'
         )
         self.assertEqual(
             rl[0].locate(),
-            datadir + '/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rPM'
+            datadir + '/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rDH'
         )
+        self.assertTrue(rl[0].get())
 
     def test_v1_b(self):
         rl = toolbox.rload(
@@ -455,15 +505,17 @@ class UtAnalysis(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
+            # print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(),
-            'file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.lfi.rPM'
+            'file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rDH'
         )
         self.assertEqual(
             rl[0].locate(),
-            datadir + '/arome/france/oper/data/fic_day/INIT_SURF.lfi.rPM'
+            datadir + '/arome/france/oper/data/fic_day/INIT_SURF.fa.rDH'
         )
+        self.assertTrue(rl[0].get())
+        
 
     def test_v2(self):
         rl = toolbox.rload(
@@ -473,7 +525,7 @@ class UtAnalysis(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
+            # print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(),
             'file://oper.inline.fr/aladin/caledonie/oper/data/workdir/analyse/ICMSHALADINIT.r18'
@@ -482,6 +534,27 @@ class UtAnalysis(TestCase):
             rl[0].locate(),
             datadir + '/aladin/caledonie/oper/data/workdir/analyse/ICMSHALADINIT.r18'
         )
+        self.assertTrue(rl[0].get())
+    
+    def test_v2_bis(self):
+        rl = toolbox.rload(
+            self.fp_prov2,
+            self.fp_cont1,
+            self.fp_analys2_bis
+        )
+        for rh in rl:
+            self.assertTrue(rh.complete)
+            # print ' > ', rh.location()
+        self.assertEqual(
+            rl[0].location(),
+            'file://oper.inline.fr/aladin/caledonie/oper/data/workdir/analyse/ICMSHALADINIT.rAM'
+        )
+        self.assertEqual(
+            rl[0].locate(),
+            datadir + '/aladin/caledonie/oper/data/workdir/analyse/ICMSHALADINIT.rAM'
+        )
+        self.assertTrue(rl[0].get())
+
 
     def test_v3(self):
         rl = toolbox.rload(
@@ -491,37 +564,40 @@ class UtAnalysis(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
+            # print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(),
-            'file://oper.inline.fr/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.r06'
+            'file://oper.inline.fr/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.r18'
         )
         self.assertEqual(
             rl[0].locate(),
-            datadir + '/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.r06'
+            datadir + '/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.r18'
         )
+        self.assertTrue(rl[0].get())
+
 
 class UtHistsurf(TestCase):
 
     def setUp(self):
         self.geom = SpectralGeometry(id='Current op', area='frangp', resolution=2.5)
         self.fp_histsurf = dict(
-            kind = 'histsurf',
+            kind = 'historic',
             date = rundate,
             cutoff = 'production',
             geometry = self.geom,
-            nativefmt = 'lfi',
-            model = 'arome',
-            term = '6'
+            nativefmt = 'fa',
+            model = 'surfex',
+            term = 6
         )
 
         self.fp_cont = dict(
-            file = 'PREP.lfi'
+            file = 'PREP.fa'
         )
 
         self.fp_prov = dict(
             username = 'mxpt001',
             suite = 'oper',
+            vapp = 'arome',
             igakey = 'france',
         )
 
@@ -529,7 +605,7 @@ class UtHistsurf(TestCase):
         histsurf = self.fp_histsurf
         ctlg = footprints.proxy.resources
         res = ctlg.find_best(histsurf)
-        self.assertEqual(res.kind, 'histsurf')
+        self.assertEqual(res.kind, 'historic')
 
 
     def test_h1(self):
@@ -540,16 +616,18 @@ class UtHistsurf(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            print ' > ', rh.location()
+            # print ' > ', rh.location()
 
         self.assertEqual(
             rl[0].location(),
-            'file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.lfi.rQZ'
+            'file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa.rDH'
         )
         self.assertEqual(
             rl[0].locate(),
-            datadir + '/arome/france/oper/data/fic_day/PREP.lfi.rQZ'
+            datadir + '/arome/france/oper/data/fic_day/PREP.fa.rDH'
         )
+        self.assertTrue(rl[0].get())
+        
 
 if __name__ == '__main__':
     for test in [ UtGridPoint, UtHistoric, UtAnalysis, UtHistsurf ]:

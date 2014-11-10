@@ -97,7 +97,7 @@ class Coupling(IFSParallel):
             )
 
             # Finaly set the actual init file
-            sh.remove('ICMSHFPOSINIT')
+            sh.rm('ICMSHFPOSINIT')
             sh.softlink(r.container.localpath(), 'ICMSHFPOSINIT')
 
             # Expected output
@@ -106,12 +106,12 @@ class Coupling(IFSParallel):
                 cplpath = cplout.container.localpath()
                 actualdate = cplout.resource.date + cplout.resource.term
                 if sh.path.exists(cplpath):
-                    logger.info('Mix mode coupling with existing basis [%s]', cplpath)
+                    logger.info('Coupling with existing guess <%s>', cplpath)
                     if cplpath != 'PFFPOSAREA+0000':
-                        sh.remove('PFFPOSAREA+0000')
+                        sh.remove('PFFPOSAREA+0000', fmt='lfi')
                         sh.softlink(cplpath, 'PFFPOSAREA+0000')
                 else:
-                    logger.warning('Missing guess input for coupling [%s]', cplpath)
+                    logger.warning('Missing guess input for coupling <%s>', cplpath)
             elif guessing:
                 logger.error('No more guess to loop on for coupling')
 
@@ -121,15 +121,19 @@ class Coupling(IFSParallel):
             # Freeze the current output
             for posfile in [ x for x in sh.glob('PFFPOSAREA+*') if re.match(r'PFFPOSAREA\+\d+(?:\:\d+)?$', x) ]:
                 actualterm = (actualdate - basedate).time() 
-                sh.move(
-                    posfile,
-                    sh.path.join(runstore, 'CPLOUT+' + actualterm.fmthm)
+                sh.mv(
+                    sh.path.realpath(posfile),
+                    sh.path.join(runstore, 'CPLOUT+' + actualterm.fmthm),
+                    fmt='lfi',
                 )
+                if sh.path.exists(posfile):
+                    sh.rm(posfile)
             for logfile in sh.glob('NODE.*', 'std*'):
                 sh.move(logfile, sh.path.join(runstore, logfile))
 
             # Some cleaning
-            sh.rmall('PXFPOS*', 'ncf927', 'dirlst')
+            sh.rmall('PXFPOS*', fmt='lfi')
+            sh.rmall('ncf927', 'dirlst')
 
     def postfix(self, rh, opts):
         """Post coupling cleaning."""
@@ -137,7 +141,8 @@ class Coupling(IFSParallel):
 
         sh = self.system
 
-        sh.mvglob('RUNOUT*/CPLOUT*', '.')
+        for cplfile in sh.glob('RUNOUT*/CPLOUT+*:[0-9][0-9]'):
+            sh.move(cplfile, sh.path.basename(cplfile), fmt='lfi')
         sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')
         sh.dir(output=False)
 
