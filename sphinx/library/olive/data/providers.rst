@@ -21,8 +21,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: OpArchive
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OpArchiveCourt
    :show-inheritance:
    :members:
    :member-order: alphabetical

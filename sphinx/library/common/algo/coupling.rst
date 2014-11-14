@@ -1,8 +1,8 @@
-:mod:`common.algo.coupling` --- TODO Module Header
-==================================================
+:mod:`common.algo.coupling` --- Generic coupling algo component
+===============================================================
 
 .. automodule:: common.algo.coupling
-   :synopsis: TODO Module Synopsis
+   :synopsis: Generic coupling algo component
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -15,4 +15,9 @@ Package
 
 Classes
 -------
+
+.. autoclass:: Coupling
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 

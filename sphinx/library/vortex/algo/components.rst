@@ -27,6 +27,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: BlindRun
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Expresso
    :show-inheritance:
    :members:

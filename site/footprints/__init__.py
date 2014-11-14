@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.9.5'
+__version__ = '0.9.6'
 
 import os
 import re
@@ -253,7 +253,10 @@ class Footprint(object):
                 if kdef['default'] is None:
                     guess[k] = UNKNOWN
                 else:
-                    guess[k] = kdef['default']
+                    try:
+                        guess[k] = kdef['default'].footprint_value()
+                    except AttributeError:
+                        guess[k] = kdef['default']
             else:
                 guess[k] = None
             if k in param:
@@ -721,6 +724,9 @@ class FootprintBase(object):
     def fullname(cls):
         """Returns a nicely formated name of the current class (dump usage)."""
         return '{0:s}.{1:s}'.format(cls.__module__, cls.__name__)
+
+    def SUPER(self):
+        return super(self.__class__, self)
 
     def footprint_as_dump(self):
         """Nicely formated view of the current class in dump context."""

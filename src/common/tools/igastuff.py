@@ -12,7 +12,10 @@ suites = ['oper', 'dbl', 'dble', 'test']
 #: Specific tricks for base naming in iga fuzzy namespace.
 fuzzystr = dict(
     histfix = dict(
-        historic = dict( pearp = 'prev', arome = 'AROM', arpege = 'arpe', aladin = 'ALAD', surfex = 'SURF' ),
+        historic = dict(
+            pearp = 'prev', arome = 'AROM', arpege = 'arpe', arp_court = 'arpe',
+            aladin = 'ALAD', surfex = 'SURF'
+        ),
     ),
     prefix = dict(
         gridpoint = dict( oper = 'PE', dbl = 'PA' ),
@@ -52,21 +55,12 @@ fuzzystr = dict(
     ),
 )
 
-
 def fuzzyname(entry, realkind, key):
     """Returns any non-standard naming convention in the operational namespace."""
     return fuzzystr[entry][realkind][key]
 
 
-def hliteral2int(hliteral):
-    l2i = dict(
-        AM = 0, CM = 0,
-        TR = 3, SX = 6, NF = 9, PM = 12, QZ = 15, DH = 18, VU = 21
-    )
-    return l2i[hliteral]
-
-
-def archivesuffix(model, cutoff, date):
+def archive_suffix(model, cutoff, date):
     """Returns the suffix for iga filenames according to specified ``model``, ``cutoff`` and ``date`` hour."""
 
     hh = range(0, 21, 3)
@@ -75,7 +69,6 @@ def archivesuffix(model, cutoff, date):
         hrange.append("%02d" % h)
 
     if cutoff == 'assim':
-
         rr = dict(
             zip(
                 zip(
@@ -108,4 +101,3 @@ def archivesuffix(model, cutoff, date):
             )
 
     return str(rr[(cutoff, date.hour)])
-

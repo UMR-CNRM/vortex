@@ -9,7 +9,8 @@ import re
 from vortex.data.flow       import GeoFlowResource
 from vortex.syntax.stdattrs import term
 from vortex.tools.date      import Time
-from iga.syntax.stdattrs    import archivesuffix
+
+from common.tools.igastuff  import archive_suffix
 
 
 class Analysis(GeoFlowResource):
@@ -148,7 +149,7 @@ class Historic(GeoFlowResource):
         midfix = '(histfix:igakey)'
         suffix = ''
         if self.geometry.lam and re.match('testms1|testmp1|testmp2', self.geometry.area):
-            suffix = '.r' + archivesuffix(self.model, self.cutoff, self.date)
+            suffix = '.r' + archive_suffix(self.model, self.cutoff, self.date)
 
         if re.match('aladin|arome|surfex', self.model):
             prefix = prefix.upper() 

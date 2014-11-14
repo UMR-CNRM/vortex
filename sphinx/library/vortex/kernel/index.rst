@@ -9,9 +9,7 @@ List of modules.
    
    vortex
 
-   autolog
    gloves
-   loader
    proxy
    sessions
    toolbox

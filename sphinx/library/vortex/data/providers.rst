@@ -26,7 +26,12 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
+.. autoclass:: Magic
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Remote
    :show-inheritance:
    :members:

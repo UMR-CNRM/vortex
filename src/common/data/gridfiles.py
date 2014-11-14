@@ -9,8 +9,9 @@ import re
 from vortex.data.flow import GeoFlowResource
 from vortex.data.geometries import GridGeometry
 from vortex.syntax.stdattrs import term
-from iga.syntax.stdattrs import archivesuffix
 from vortex.tools import env
+
+from common.tools.igastuff import archive_suffix
 
 
 class GridPoint(GeoFlowResource):
@@ -175,7 +176,7 @@ class GridPointExport(GridPoint):
         if re.match('aladin|arome', self.model):
             name = 'GRID' + self.geometry.area + 'r' + str(self.date.hour) + '_' + self.term.fmthour
 
-        u_rr = archivesuffix(self.model, self.cutoff, self.date)
+        u_rr = archive_suffix(self.model, self.cutoff, self.date)
 
         if re.match('arp', self.model):
             name = '(gribfix:igakey)'

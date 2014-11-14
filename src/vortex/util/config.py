@@ -75,7 +75,7 @@ class GenericConfigParser(object):
         if local.path.exists(inifile):
             self.file = local.path.abspath(inifile)
         else:
-            glove = sessions.glove()
+            glove = sessions.getglove()
             persofile = glove.configrc + '/' + local.path.basename(inifile)
             if local.path.exists(persofile):
                 self.file = persofile

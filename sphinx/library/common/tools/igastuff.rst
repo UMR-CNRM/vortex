@@ -1,7 +1,7 @@
-:mod:`vortex.autolog` --- TODO Module Header
-============================================
+:mod:`common.tools.igastuff` --- TODO Module Header
+===================================================
 
-.. automodule:: vortex.autolog
+.. automodule:: common.tools.igastuff
    :synopsis: TODO Module Synopsis
 
 .. moduleauthor:: The Vortex Team

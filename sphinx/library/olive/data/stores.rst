@@ -26,4 +26,24 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
+.. autoclass:: OpCacheStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OpStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OliveCacheStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OliveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+

@@ -132,7 +132,7 @@ class CheckOnlyCycle38(CheckOnlyBase):
 
     def __init__(self, *args, **kw):
         logger.debug('CheckOnlyBase resource init %s', self.__class__)
-        super(CheckOnlyBase, self).__init__(*args, **kw)
+        super(CheckOnlyCycle38, self).__init__(*args, **kw)
 
     @property
     def realkind(self):

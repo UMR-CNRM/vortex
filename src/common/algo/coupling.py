@@ -40,7 +40,7 @@ class Coupling(IFSParallel):
         return 'coupling'
 
     def prepare(self, rh, opts):
-        """Default pre-link for climatological files"""
+        """Default pre-link for namelist file and domain change."""
         super(Coupling, self).prepare(rh, opts)
         namrh = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
         for nam in [ x for x in namrh if 'NAMFPC' in x.contents ]:

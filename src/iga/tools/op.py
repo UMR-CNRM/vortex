@@ -18,12 +18,12 @@ def setup(**kw):
     opd = kw.get('actual', dict())
 
     import vortex
-    gl = vortex.sessions.glove(
+    gl = vortex.sessions.getglove(
         tag     = 'opid',
         profile = opd.get('op_suite', 'oper')
     )
 
-    t  = vortex.sessions.ticket(
+    t  = vortex.sessions.get(
         tag     = 'opview',
         active  = True,
         glove   = gl,

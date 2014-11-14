@@ -39,12 +39,39 @@ class Forecast(IFSParallel):
     def prepare(self, rh, opts):
         """Default pre-link for the initial condition file"""
         super(Forecast, self).prepare(rh, opts)
-        self.setlink(
-            initrole=('InitialCondition', 'Analysis'),
-            initname='ICMSH{0:s}INIT'.format(self.xpname)
+
+        analysis = self.setlink(
+            initrole = ('InitialCondition', 'Analysis'),
+            initname = 'ICMSH{0:s}INIT'.format(self.xpname)
         )
-        for namrh in [ x.rh for x in
-                       self.context.sequence.effective_inputs(role='Namelist', kind='namelist') ]:
+
+        if analysis:
+            analysis  = analysis.pop()
+            thismonth = analysis.resource.date.month
+
+            def checkmonth(actualrh):
+                return bool(actualrh.resource.month == thismonth)
+
+            self.setlink(
+                initrole = 'GlobalClim',
+                initkind = 'clim_model',
+                initname = 'Const.Clim',
+                inittest = checkmonth,
+            )
+
+            for bdaprh in [ x.rh for x in self.context.sequence.effective_inputs(
+                role = 'LocalClim',
+                kind = 'clim_bdap',
+            ) if x.rh.resource.month == thismonth ]:
+                thisclim = bdaprh.container.localpath()
+                thisname = 'const.clim.' + bdaprh.resource.geometry.area
+                if thisclim != thisname:
+                    self.system.symlink(thisclim, thisname)
+
+        for namrh in [ x.rh for x in self.context.sequence.effective_inputs(
+            role = 'Namelist',
+            kind = 'namelist',
+        ) ]:
             try:
                 namc = namrh.contents
                 namc['NAMCT0'].NFPOS = int(self.inline)
@@ -84,10 +111,9 @@ class LAMForecast(Forecast):
 
     def prepare(self, rh, opts):
         """Default pre-link for boundary conditions files."""
+        super(LAMForecast, self).prepare(rh, opts)
 
         sh = self.system
-
-        super(LAMForecast, self).prepare(rh, opts)
 
         if self.synctool:
             sh.cp(self.synctool, 'atcp.alad')
@@ -143,9 +169,20 @@ class FullPos(IFSParallel):
 
         sh = self.system
 
-        namrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('Namelist'), kind='namelistfp') ]
-        namxx = [ x.rh for x in self.context.sequence.effective_inputs(role=('FullPosSelection'), kind='namselect') ]
-        initrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('InitialCondition', 'ModelState'), kind='historic') ]
+        namrh = [ x.rh for x in self.context.sequence.effective_inputs(
+            role = 'Namelist',
+            kind = 'namelistfp'
+        ) ]
+
+        namxx = [ x.rh for x in self.context.sequence.effective_inputs(
+            role = 'FullPosSelection',
+            kind = 'namselect',
+        ) ]
+
+        initrh = [ x.rh for x in self.context.sequence.effective_inputs(
+            role = ('InitialCondition', 'ModelState'),
+            kind = 'historic',
+        ) ]
         initrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
 
         for r in initrh:

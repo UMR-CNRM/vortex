@@ -13,11 +13,6 @@ This package
 
 .. autodata:: __all__
 
-Pure Functions
---------------
-
-.. autofunction:: mktuple
-
 
 Modules
 -------

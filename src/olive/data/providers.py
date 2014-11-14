@@ -10,7 +10,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.providers import Provider
-from iga.syntax.stdattrs import suites, fuzzyname, archivesuffix
+from common.tools.igastuff import archive_suffix, fuzzyname, suites
 
 
 class Olive(Provider):
@@ -21,14 +21,14 @@ class Olive(Provider):
             experiment = dict(),
             block = dict(),
             member = dict(
-                type = int,
+                type     = int,
                 optional = True,
             ),
             namespace = dict(
                 optional = True,
-                values = [ 'olive.cache.fr', 'olive.archive.fr', 'olive.multi.fr', 'multi.olive.fr' ],
-                default = 'olive.cache.fr',
-                remap = {
+                values   = ['olive.cache.fr', 'olive.archive.fr', 'olive.multi.fr', 'multi.olive.fr'],
+                default  = 'olive.cache.fr',
+                remap    = {
                     'multi.olive.fr': 'olive.multi.fr',
                 }
             )
@@ -134,7 +134,7 @@ class OpArchive(Provider):
                         keyattr = getattr(self, keyattr)
                     fuzzy = fuzzyname(entry, resource.realkind, keyattr)
                 elif entry == 'gribfix':
-                    rr = archivesuffix(resource.model, resource.cutoff, resource.date)
+                    rr = archive_suffix(resource.model, resource.cutoff, resource.date)
                     if getattr(self, keyattr) == 'pearp':
                         fuzzy = '_'.join(('fc', rr, str(self.member), resource.geometry.area, resource.term.fmthour))
                     else:
@@ -189,8 +189,12 @@ class OpArchiveCourt(OpArchive):
         info = 'Old archive provider for very short cutoff',
         attr = dict(
             vconf = dict(
-                values = [ 'frcourt' ],
+                values  = ['frcourt'],
                 outcast = set(),
+            ),
+            igakey = dict(
+                values  = ['arpege', 'arp_court'],
+                remap   = dict(arp_court = 'arpege'),
             ),
         )
     )

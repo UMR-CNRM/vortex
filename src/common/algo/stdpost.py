@@ -172,4 +172,5 @@ class AddField(BlindRun):
 
     def postfix(self, rh, opts):
         """Post add cleaning."""
+        super(AddField, self).postfix(rh, opts)
         self.system.remove(self.fortnam)

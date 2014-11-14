@@ -59,6 +59,7 @@ report = dict(
     todo = list(),
     quid = list(),
     nope = list(),
+    dstr = list(),
     miss = list(),
 )
 
@@ -84,26 +85,32 @@ for modulename, loaded in sh.vortex_loaded_modules():
             report['mkrst'].append(rstloc)
             okdoc = rstcreate(rst, modulename)
 
+    rstnames = set()
     if okdoc:
         rstinfo = list()
         with open(rst, 'r') as fdrst:
             rstinfo = fdrst.readlines()
         if rstfind('TODO', rstinfo):
             report['todo'].append(rstloc)
+        for rstauto in [ x for x in rstinfo if x.startswith('.. auto') ]:
+            autokind, sep, rstentry = rstauto.partition(':: ')
+            rstnames.add(rstentry.strip())
     else:
         report['nope'].append(rstloc)
 
     for objname, objptr1 in intro.getlocalmembers(m).iteritems():
+        if objname not in rstnames:
+            report['miss'].append(rstloc + ': ' + objname)
         thedoc = inspect.getdoc(objptr1)
         if not thedoc:
-            report['miss'].append(modulename + ': ' + objname)
+            report['dstr'].append(modulename + ': ' + objname)
         elif re.search('docstring|todo', thedoc, re.IGNORECASE):
             report['quid'].append(modulename + ': ' + objname)
         if inspect.isclass(objptr1):
             for objmeth, objptr2 in intro.getlocalmembers(objptr1, m).iteritems():
                 thedoc = inspect.getdoc(objptr2)
                 if not thedoc:
-                    report['miss'].append(modulename + ': ' + objname + '.' + objmeth)
+                    report['dstr'].append(modulename + ': ' + objname + '.' + objmeth)
                 elif re.search('docstring|todo', thedoc, re.IGNORECASE):
                     report['quid'].append(modulename + ': ' + objname + '.' + objmeth)
 

@@ -11,13 +11,13 @@
 Interface functions
 -------------------
 
-.. autofunction:: report
+.. autofunction:: get
 
-.. autofunction:: report_map
+.. autofunction:: keys
 
-.. autofunction:: report_keys
+.. autofunction:: values
 
-.. autofunction:: report_copy
+.. autofunction:: items
 
 
 Base Classes

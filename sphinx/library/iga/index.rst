@@ -16,7 +16,6 @@ List of modules.
    iga
 
    data/index
-   syntax/index
    tasks/index
    tools/index
    util/index

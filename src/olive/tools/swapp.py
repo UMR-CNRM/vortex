@@ -156,7 +156,7 @@ def olive_rescue(sh, env, *files):
                 thisrescue = sh.cp
             for ritem in items:
                 rtarget = sh.path.join(bkupdir, ritem)
-                if sh.path.exists(ritem):
+                if sh.path.exists(ritem) and not sh.path.islink(ritem) :
                     if sh.path.isfile(ritem):
                         sh.rm(rtarget, fmt=rescuefmt)
                         thisrescue(ritem, rtarget, fmt=rescuefmt)

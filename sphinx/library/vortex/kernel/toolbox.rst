@@ -32,9 +32,23 @@ Standard Get and Put
 Sections handling
 -----------------
 
+.. autofunction:: add_section
+
+.. autofunction:: algo
+
+.. autofunction:: diff
+
+.. autofunction:: executable
+
 .. autofunction:: input
 
+.. autofunction:: inputs
+
+.. autofunction:: magic
+
 .. autofunction:: output
+
+.. autofunction:: outputs
 
 
 Informations
@@ -42,4 +56,11 @@ Informations
 
 .. autofunction:: namespaces
 
+.. autofunction:: print_namespaces
+
+.. autofunction:: quickview
+
+.. autofunction:: show_inputs
+
+.. autofunction:: show_outputs
 

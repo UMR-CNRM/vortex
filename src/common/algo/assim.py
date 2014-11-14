@@ -14,7 +14,7 @@ from vortex.algo.components import BlindRun, Parallel
 from .ifsroot import IFSParallel
 
 
-class MargeVarBC(Parallel):
+class MergeVarBC(Parallel):
     """Nothing really specific."""
 
     _footprint = dict(
@@ -37,7 +37,7 @@ class MargeVarBC(Parallel):
         sh.touch(self.varbcout)
 
         # Let ancesters doing real stuff
-        super(MargeVarBC, self).prepare(rh, opts)
+        super(MergeVarBC, self).prepare(rh, opts)
 
 
 class IFSODB(IFSParallel, odb.OdbComponent):

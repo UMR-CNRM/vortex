@@ -42,12 +42,32 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: VortexArchiveStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
+.. autoclass:: CacheStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: VortexCacheStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VortexStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MagicPlace
    :show-inheritance:
    :members:
    :member-order: alphabetical

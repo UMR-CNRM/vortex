@@ -21,7 +21,12 @@ Package
 
 Classes
 -------
-   
+
+.. autoclass:: GcoProvider
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: GGet
    :show-inheritance:
    :members:

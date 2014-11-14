@@ -1,8 +1,8 @@
-:mod:`vortex.tools.caches` --- TODO Module Header
-=================================================
+:mod:`vortex.tools.caches` --- Cache management
+===============================================
 
 .. automodule:: vortex.tools.caches
-   :synopsis: TODO Module Synopsis
+   :synopsis: Cache management
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -16,3 +16,12 @@ Package
 Classes
 -------
 
+.. autoclass:: Cache
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MtoolCache
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

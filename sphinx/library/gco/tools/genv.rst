@@ -17,10 +17,21 @@ Package
 Interface
 ---------
  
-.. autofunction:: handler
+.. autofunction:: actualgenv
 
-.. autofunction:: register
+.. autofunction:: as_rawstr
+
+.. autofunction:: autofill
+
+.. autofunction:: clearall
 
 .. autofunction:: contents
 
 .. autofunction:: cycles
+
+.. autofunction:: handler
+
+.. autofunction:: nicedump
+    
+.. autofunction:: register
+

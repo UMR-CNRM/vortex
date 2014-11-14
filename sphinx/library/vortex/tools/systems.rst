@@ -32,12 +32,37 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Garbage
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Linux
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Linux26
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Linux27
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: LinuxDebug
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Python26
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Python27
    :show-inheritance:
    :members:
    :member-order: alphabetical

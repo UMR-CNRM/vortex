@@ -12,9 +12,7 @@
 Modules
 -------
 
-* :mod:`vortex.autolog`
 * :mod:`vortex.gloves`
-* :mod:`vortex.loader`
 * :mod:`vortex.proxy`
 * :mod:`vortex.sessions`
 * :mod:`vortex.toolbox`

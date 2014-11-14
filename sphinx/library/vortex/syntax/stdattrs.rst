@@ -56,6 +56,11 @@ Interface
 Class attributes
 ----------------
 
+.. autoclass:: DelayedEnvValue
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: FmtInt
    :show-inheritance:
    :members:

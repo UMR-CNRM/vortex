@@ -23,6 +23,16 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: SpooledActions
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Report
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: SendMail
    :show-inheritance:
    :members:

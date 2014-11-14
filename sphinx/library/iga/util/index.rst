@@ -14,3 +14,4 @@ Miscellaneous utilities for Op
    loggers
    oldcompat
    swissknife
+   util

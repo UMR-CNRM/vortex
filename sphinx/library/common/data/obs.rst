@@ -22,12 +22,17 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Refdata
+.. autoclass:: ObsODB
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Varbc
+.. autoclass:: ObsRaw
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VarBC
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -37,12 +42,32 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Obsmap
+.. autoclass:: ObsRefContent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Refdata
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ObsMapContent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ObsMap
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
 .. autoclass:: Bcor
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: BackgroundStdError
    :show-inheritance:
    :members:
    :member-order: alphabetical

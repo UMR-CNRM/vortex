@@ -27,17 +27,17 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: NamUtil
+.. autoclass:: NamelistUtil
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: NamTerm
+.. autoclass:: NamelistTerm
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: NamSelect
+.. autoclass:: NamelistSelect
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -47,7 +47,12 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: NamSelectDef
+.. autoclass:: XXTContent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: NamelistSelectDef
    :show-inheritance:
    :members:
    :member-order: alphabetical

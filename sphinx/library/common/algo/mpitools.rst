@@ -21,3 +21,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: MpiAuto
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MpiNWPIO
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

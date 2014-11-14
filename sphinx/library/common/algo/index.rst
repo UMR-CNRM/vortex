@@ -9,8 +9,10 @@ Algo components
 
    algo
 
+   assim
    coupling
    ifsroot
    forecasts
    mpitools
+   odbtools
    stdpost

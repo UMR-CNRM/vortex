@@ -17,7 +17,7 @@ Package
 Classes
 -------
  
-.. autoclass:: BackgroundErrStd
+.. autoclass:: BackgroundStdErr
    :show-inheritance:
    :members:
    :member-order: alphabetical

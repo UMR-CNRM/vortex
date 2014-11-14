@@ -1,52 +1,55 @@
-:mod:`vortex.data.contents` --- Internal data layout
-====================================================
+:mod:`mf.systems` --- Features specific to Meteo-France
+=======================================================
 
-.. automodule:: vortex.data.contents
-   :synopsis: Internal data layout
+.. automodule:: mf.systems
+   :synopsis: Features specific to Meteo-France
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.3.6
-
-.. warning::
-
-   Documentation in progress?
+.. versionadded:: 0.7
 
 Package
 -------
 
 .. autodata:: __all__
 
-Classes
--------
+Bull Targets
+-------------
 
-.. autoclass:: AlmostDictContent
+.. autoclass:: MeteoBull
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: AlmostListContent
+.. autoclass:: Beaufix
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: DataContent
+.. autoclass:: Prolix
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: DataRaw
+
+Old NEC system and targets
+--------------------------
+
+.. autoclass:: SuperUX
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: IndexedTable
+.. autoclass:: NECSX9
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: TextContent
+
+Local systems
+-------------
+
+.. autoclass:: Macintosh
    :show-inheritance:
    :members:
    :member-order: alphabetical
-

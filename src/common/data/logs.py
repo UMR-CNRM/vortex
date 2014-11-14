@@ -24,7 +24,7 @@ class Listing(FlowResource):
                 ),
                 part = dict(
                     optional = True,
-                    default  = 'void',
+                    default  = 'all',
                 ),
                 binary = dict(
                     optional = True,
@@ -53,7 +53,7 @@ class ParallelListing(Listing):
         dict(
              attr = dict(
                 kind = dict(
-                    values = [ 'listing', 'plisting', 'mlisting' ],
+                    values = ['listing', 'plisting', 'mlisting'],
                     remap  = dict(
                         listing  = 'plisting',
                         mlisting = 'plisting',

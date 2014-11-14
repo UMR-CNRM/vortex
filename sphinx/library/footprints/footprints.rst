@@ -16,6 +16,7 @@ Modules
 * :mod:`footprints.collectors` 
 * :mod:`footprints.config`
 * :mod:`footprints.dump`
+* :mod:`footprints.loggers`
 * :mod:`footprints.observers`
 * :mod:`footprints.priorities`
 * :mod:`footprints.proxies`

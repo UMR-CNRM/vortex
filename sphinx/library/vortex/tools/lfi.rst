@@ -25,3 +25,9 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: IO_Poll
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+

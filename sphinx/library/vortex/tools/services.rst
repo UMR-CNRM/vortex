@@ -32,3 +32,13 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ReportService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FileReportService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+

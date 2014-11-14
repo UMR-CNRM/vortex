@@ -95,7 +95,10 @@ class Glove(footprints.FootprintBase):
     def sitesrc(self):
         """Returns the path of the default directory where ``.ini`` files are stored."""
         if not self._sitesrc:
-            self._sitesrc = '/'.join((self.siteroot, 'src'))
+            self._sitesrc = (
+                '/'.join((self.siteroot, 'site')),
+                '/'.join((self.siteroot, 'src'))
+            )
         return self._sitesrc
 
     def setenv(self, app=None, conf=None):

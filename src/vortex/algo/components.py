@@ -153,7 +153,7 @@ class AlgoComponent(footprints.FootprintBase):
             return False
 
         # Get instance shorcuts to context and system objects
-        self.context = vortex.sessions.ticket().context
+        self.context = vortex.sessions.current().context
         self.system  = self.context.system
         self.target  = kw.pop('target', None)
         if self.target is None:

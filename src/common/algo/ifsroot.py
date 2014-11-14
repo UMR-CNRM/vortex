@@ -106,6 +106,7 @@ class IFSParallel(Parallel):
                 'Could not find logical role %s with kind %s - assuming already renamed',
                 initrole, initkind
             )
+
         if len(initrh) > 1:
             logger.warning('More than one role %s with kind %s %s', initrole, initkind, initrh)
 

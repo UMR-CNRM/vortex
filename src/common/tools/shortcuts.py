@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-__all__ = [ 'analysis' ]
+__all__ = ['analysis']
 
 import re
 
@@ -14,7 +14,7 @@ from vortex.syntax import stdattrs
 
 def tbdef(refresh=False):
     """Crude heuristic to setup some defaults footprints values."""
-    t = sessions.ticket()
+    t = sessions.current()
     d = toolbox.defaults
     p = t.sh.getcwd()
     pl = p.lower()

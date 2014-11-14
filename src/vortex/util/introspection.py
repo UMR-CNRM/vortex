@@ -22,8 +22,8 @@ class Sherlock(object):
 
     def __init__(self, **kw):
         self.verbose = False
-        kw.setdefault('ticket', sessions.ticket())
-        kw.setdefault('glove', sessions.glove())
+        kw.setdefault('ticket', sessions.current())
+        kw.setdefault('glove', sessions.getglove())
         self.__dict__.update(kw)
         logger.debug('Sherlock init %s', self)
 
@@ -31,8 +31,10 @@ class Sherlock(object):
         """Return the sphinx documentation associated to module reference or module path given."""
         if type(modpath) != str:
             modpath = modpath.__file__
-        subpath = re.sub(self.glove.sitesrc, '', modpath)
-        subpath = re.sub('.py', '', subpath)
+        subpath = modpath
+        for installpath in self.glove.sitesrc:
+            subpath = re.sub(installpath, '', subpath)
+        subpath = re.sub('.pyc?', '', subpath)
         subpath = subpath.split('/')
         if subpath[-1] == '__init__':
             subpath[-1] = subpath[-2]
@@ -48,14 +50,15 @@ class Sherlock(object):
         return re.sub(self.glove.siteroot, '', filename)[1:]
 
     def getlocalmembers(self, obj, topmodule=None):
-        """Return members of the module ``m`` which are defined in the source file of the module."""
+        """Return members of the module ``obj`` which are defined in the source file of the module."""
         objs = dict()
         if topmodule is None:
             topmodule = obj
+        modfile = topmodule.__file__.rstrip('c')
         for x, y in inspect.getmembers(obj):
             if inspect.isclass(y) or inspect.isfunction(y) or inspect.ismethod(y):
                 try:
-                    if topmodule.__file__ == inspect.getsourcefile(y):
+                    if modfile == inspect.getsourcefile(y):
                         if self.verbose:
                             print x, y
                         objs[x] = y

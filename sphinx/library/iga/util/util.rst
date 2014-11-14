@@ -1,7 +1,7 @@
-:mod:`iga.syntax` --- TODO Module Header
-========================================
+:mod:`iga.util` --- TODO Module Header
+======================================
 
-.. automodule:: iga.syntax
+.. automodule:: iga.util
    :synopsis: TODO Module Synopsis
 
 .. moduleauthor:: The Vortex Team

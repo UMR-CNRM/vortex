@@ -9,6 +9,7 @@ Common tools
 
    tools
 
+   igastuff
    shortcuts
 
 

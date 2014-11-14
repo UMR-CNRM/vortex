@@ -1,8 +1,8 @@
-:mod:`vortex.tools.sms` --- TODO Module Header
-==============================================
+:mod:`vortex.tools.sms` --- Interface to SMS
+============================================
 
 .. automodule:: vortex.tools.sms
-   :synopsis: TODO Module Synopsis
+   :synopsis: Interface to SMS
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -16,3 +16,7 @@ Package
 Classes
 -------
 
+.. autoclass:: SMSGateway
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

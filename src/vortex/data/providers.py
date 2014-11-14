@@ -233,7 +233,7 @@ class Vortex(Provider):
         try:
             return 'namespace=\'{0:s}\' block=\'{1:s}\''.format(self.namespace, self.block)
         except AttributeError:
-            return super(Provider, self)._str_more()
+            return super(Vortex, self)._str_more()
 
     def scheme(self):
         """Default: ``vortex``."""

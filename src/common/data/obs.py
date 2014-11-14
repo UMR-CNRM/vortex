@@ -83,7 +83,7 @@ class ObsODB(Observations):
             stage = dict(
                 values   = [
                     'void', 'avg', 'average', 'screen', 'screening', 'split', 'build',
-                    'traj', 'min', 'minim', 'complete',
+                    'traj', 'min', 'minim', 'complete', 'matchup',
                     'canari', 'cans'
                 ],
                 remap    = dict(
@@ -316,6 +316,7 @@ class BlackList(FlowResource):
 ObsRefItem = namedtuple('ObsRefItem', ('data', 'fmt', 'instr', 'date', 'time'))
 
 class ObsRefContent(TextContent):
+    """Content class for refdata resources."""
 
     def append(self, item):
         """Append the specified ``item`` to internal data contents."""
@@ -385,6 +386,7 @@ class Refdata(FlowResource):
 ObsMapItem = namedtuple('ObsMapItem', ('odb', 'data', 'fmt', 'instr'))
 
 class ObsMapContent(TextContent):
+    """Content class for obsmap resources."""
 
     @property
     def discarded(self):

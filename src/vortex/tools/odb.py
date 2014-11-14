@@ -239,24 +239,34 @@ class OdbShell(addons.Addon):
             loccwd = self.sh.getcwd()
             loctmp = tempfile.mkdtemp(prefix='odb_', dir=loccwd)
             self.sh.cd(loctmp)
-            if self.pipeget:
-                p = self.sh.popen(
-                    ['tar', 'xvfz', '-'],
-                    stdin   = True,
-                    output  = False,
-                    bufsize = 8192,
-                )
-                rc = ftp.get(source, p.stdin)
-                self.sh.pclose(p)
-            else:
-                rc = ftp.get(source, self.tmpname)
-                self.sh.untar(self.tmpname)
-                self.sh.rm(self.tmpname)
-            ftp.close()
-            unpacked = self.sh.glob('*')
-            self.sh.mv(unpacked[-1], destination)
-            self.sh.cd(loccwd)
-            self.sh.rm(loctmp)
+            try:
+                if self.pipeget:
+                    p = self.sh.popen(
+                        ['tar', 'xvfz', '-'],
+                        stdin   = True,
+                        output  = False,
+                        bufsize = 8192,
+                    )
+                    rc = ftp.get(source, p.stdin)
+                    self.sh.pclose(p)
+                else:
+                    rc = ftp.get(source, self.tmpname)
+                    self.sh.untar(self.tmpname)
+                    self.sh.rm(self.tmpname)
+            finally:
+                ftp.close()
+                try:
+                    unpacked = self.sh.glob('*')
+                    if unpacked:
+                        self.sh.mv(unpacked[-1], destination)
+                    else:
+                        logger.error('Nothing to unpack')
+                except StandardError as trouble:
+                    logger.critical('Unable to proceed odb post-ftget step')
+                    raise trouble
+                finally:
+                    self.sh.cd(loccwd)
+                    self.sh.rm(loctmp)
             return rc
         else:
             return False

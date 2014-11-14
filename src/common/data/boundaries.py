@@ -10,7 +10,8 @@ import re
 from vortex.tools.date import synop
 from vortex.data.flow import GeoFlowResource
 from vortex.syntax.stdattrs import a_term
-from iga.syntax.stdattrs import archivesuffix
+
+from common.tools.igastuff import archive_suffix
 
 
 class LAMBoundary(GeoFlowResource):
@@ -52,7 +53,7 @@ class LAMBoundary(GeoFlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        suffix = archivesuffix(self.model, self.cutoff, self.date)
+        suffix = archive_suffix(self.model, self.cutoff, self.date)
         prefix = 'COUPL'
         if re.match('assist1bis|testms1', self.geometry.area):
             prefix = 'COUPL1'

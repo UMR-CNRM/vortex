@@ -22,3 +22,5 @@ List of modules.
    mercator/index
    olive/index
    sandbox/index
+
+   mf/index

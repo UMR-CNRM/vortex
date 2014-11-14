@@ -17,6 +17,7 @@ List of modules.
    collectors
    config
    dump
+   loggers
    observers
    priorities
    proxies

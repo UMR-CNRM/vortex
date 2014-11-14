@@ -1,16 +1,12 @@
-:mod:`vortex.data.contents` --- Internal data layout
-====================================================
+:mod:`common.algo.assim` --- TODO Module Header
+===============================================
 
-.. automodule:: vortex.data.contents
-   :synopsis: Internal data layout
+.. automodule:: common.algo.assim
+   :synopsis: TODO Module Synopsis
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.3.6
-
-.. warning::
-
-   Documentation in progress?
+.. versionadded:: 0.9
 
 Package
 -------
@@ -20,33 +16,32 @@ Package
 Classes
 -------
 
-.. autoclass:: AlmostDictContent
+.. autoclass:: MergeVarBC
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: AlmostListContent
+.. autoclass:: IFSODB
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: DataContent
+.. autoclass:: Canari
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: DataRaw
+.. autoclass:: Screening
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: IndexedTable
+.. autoclass:: Minim
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: TextContent
+.. autoclass:: PseudoTrajectory
    :show-inheritance:
    :members:
    :member-order: alphabetical
-

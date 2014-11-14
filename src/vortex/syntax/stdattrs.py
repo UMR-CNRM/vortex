@@ -9,7 +9,9 @@ class which follow the :class:`footprints.Footprint` syntax.
 
 import footprints
 
+from vortex.tools import env
 from vortex.tools.date import Date, Time, Month
+
 
 #: Export a set of attributes :data:`a_model`, :data:`a_date`, etc..
 __all__ = [
@@ -38,6 +40,25 @@ knownfmt = set([
     'bullx', 'sx'
 ])
 
+class DelayedEnvValue(object):
+    """
+    Store a environment variable and restitue value when needed,
+    eg. in a footprint evaluation.
+    """
+
+    def __init__(self, varname, default=None, refresh=False):
+        self.varname = varname
+        self.default = default
+        self.refresh = refresh
+        self._value  = None
+        self._frozen = False
+
+    def footprint_value(self):
+        if not self._frozen:
+            self._value = env.current().get(self.varname, self.default)
+            if not self.refresh:
+                self._frozen = True
+        return self._value
 
 class FmtInt(int):
     """Formated integer."""

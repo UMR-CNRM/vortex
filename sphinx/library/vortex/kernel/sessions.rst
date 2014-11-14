@@ -12,34 +12,29 @@
 Interface to sessions tickets
 -----------------------------
 
+.. autofunction:: get
+
+.. autofunction:: keys
+
+.. autofunction:: values
+
+.. autofunction:: items
+
 .. autofunction:: current
 
-.. autofunction:: exit
-
 .. autofunction:: prompt
-
-.. autofunction:: sessionstags
 
 .. autofunction:: switch
 
 .. autofunction:: system
 
-.. autofunction:: ticket
+.. autofunction:: exit
+
 
 Interface to gloves
 -------------------
 
-.. autofunction:: glove
-
-.. autofunction:: glovestags
-
-The office in charge of ticket distribution ::class:`Desk`
-----------------------------------------------------------
-
-.. autoclass:: Desk
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
+.. autofunction:: getglove
 
 
 Tickets

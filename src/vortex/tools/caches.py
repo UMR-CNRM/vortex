@@ -13,7 +13,8 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
-from vortex.util.config import GenericConfigParser
+from vortex.util.config  import GenericConfigParser
+from vortex.util.structs import History
 
 
 class Cache(footprints.FootprintBase):
@@ -65,9 +66,9 @@ class Cache(footprints.FootprintBase):
         logger.debug('Abstract cache init %s', self.__class__)
         super(Cache, self).__init__(*args, **kw)
         self._sh = sessions.system()
-        self._logrecord = list()
         if not self.config:
             self._attributes['config'] = GenericConfigParser(inifile=self.inifile, mkforce=self.iniauto)
+        self._history = History(tag=self.entry())
 
     @property
     def realkind(self):
@@ -78,8 +79,8 @@ class Cache(footprints.FootprintBase):
         return self._sh
 
     @property
-    def logrecord(self):
-        return self._logrecord[:]
+    def history(self):
+        return self._history
 
     def actual(self, attr):
         """Return the actual attribute, either defined in config or plain attribute."""
@@ -111,33 +112,27 @@ class Cache(footprints.FootprintBase):
         """Actual full path in the cache."""
         return self.sh.path.join(self.entry(), subpath.lstrip('/'))
 
-    def flushrecord(self):
-        """Clear the log record."""
-        rlog = self._logrecord[:]
-        self._logrecord = list()
-        return rlog
-
     def addrecord(self, action, item, status=None, info=None):
         """Push a new record to the cache log."""
         if self.actual_record:
-            self._logrecord.append([item, action, info])
+            self.history.append(item, action, status, info)
 
     def insert(self, item, local, intent='in', fmt='foo', info=None):
         """Insert an item in the current cache."""
         rc = self.sh.cp(local, self.fullpath(item), intent=intent, fmt=fmt)
-        self.addrecord('insert', item, status=rc, info=info)
+        self.addrecord('INSERT', item, status=rc, info=info)
         return rc
 
     def retrieve(self, item, local, intent='in', fmt='foo', info=None):
         """Retrieve an item from the current cache."""
         rc = self.sh.cp(self.fullpath(item), local, intent=intent, fmt=fmt)
-        self.addrecord('retrieve', item, status=rc, info=info)
+        self.addrecord('RETRIEVE', item, status=rc, info=info)
         return rc
 
     def delete(self, item, fmt='foo', info=None):
         """Delete an item from the current cache."""
         rc = self.sh.remove(self.fullpath(item), fmt=fmt)
-        self.addrecord('delete', item, status=rc, info=info)
+        self.addrecord('DELETE', item, status=rc, info=info)
 
 
 class MtoolCache(Cache):

@@ -23,7 +23,7 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.9.5'
+__version__ = '0.9.6'
 __prompt__  = 'Vortex v-' + __version__ + ':'
 
 __all__ = []
@@ -77,17 +77,22 @@ footprints.setup.callback = getglove
 
 import sessions
 rootenv = tools.env.Environment(active=True)
-rootenv.glove = sessions.glove()
+rootenv.glove = sessions.getglove()
 
-rs = sessions.ticket(active=True, topenv=rootenv, glove=rootenv.glove, prompt=__prompt__)
+rs = sessions.get(active=True, topenv=rootenv, glove=rootenv.glove, prompt=__prompt__)
 if rs.system().systems_reload():
     rs.system(refill=True)
 del rs
 
 # Shorthands to sessions components
 
-ticket = sessions.ticket
+ticket = sessions.get
 sh = sessions.system
+
+# Specific toolbox exceptions
+
+class VortexForceComplete(StandardError):
+    pass
 
 # Load some superstars sub-packages
 
@@ -101,7 +106,7 @@ def complete():
 
 import atexit
 atexit.register(complete)
-del atexit
+del atexit, complete
 
 print 'Vortex', __version__, 'loaded', '(', tools.date.at_second().reallynice(), ')'
 if __version__ != footprints.__version__:

@@ -238,6 +238,7 @@ class GetByTagMeta(type):
     def __new__(cls, n, b, d):
         logger.debug('Base class for getbytag usage "%s / %s", bc = ( %s ), internal = %s', cls, n, b, d)
         d['_tag_table'] = dict()
+        d['_tag_focus'] = None
         return super(GetByTagMeta, cls).__new__(cls, n, b, d)
 
     def __call__(cls, *args, **kw):
@@ -288,8 +289,17 @@ class GetByTag(object):
         return cls._tag_table.items()
 
     @classmethod
+    def tag_focus(cls):
+        return cls._tag_focus
+
+    @classmethod
+    def set_focus(cls, obj):
+        cls._tag_focus = obj.tag
+
+    @classmethod
     def tag_clear(cls):
         cls._tag_table = dict()
+        cls._tag_focus = None
 
 
 class Catalog(object):

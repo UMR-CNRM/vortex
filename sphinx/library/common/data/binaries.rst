@@ -22,7 +22,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Aladin
+.. autoclass:: Arome
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -33,6 +33,31 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: ProTool
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IOAssign
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Batodb
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Odbtools
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VarBCTool
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: LopezMix
    :show-inheritance:
    :members:
    :member-order: alphabetical

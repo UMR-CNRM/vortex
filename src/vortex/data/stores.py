@@ -202,7 +202,7 @@ class Store(footprints.FootprintBase):
         """Proxy method to dedicated get method accordind to scheme."""
         logger.debug('Store get from %s to %s', remote, local)
         if self.in_situ(local, options):
-            logger.warning('Store %s in situ resource %s', self.footprint_clsname(), local)
+            logger.info('Store %s in situ resource %s', self.footprint_clsname(), local)
             return True
         else:
             return getattr(self, self.scheme + 'get', self.notyet)(remote, local, options)

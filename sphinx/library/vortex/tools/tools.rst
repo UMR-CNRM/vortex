@@ -14,10 +14,16 @@ Package
 .. autodata:: __all__
   
 * :mod:`vortex.tools.actions`
+* :mod:`vortex.tools.addons`
+* :mod:`vortex.tools.caches`
 * :mod:`vortex.tools.date`
 * :mod:`vortex.tools.env`
+* :mod:`vortex.tools.fortran`
+* :mod:`vortex.tools.lfi`
 * :mod:`vortex.tools.net`
+* :mod:`vortex.tools.odb`
 * :mod:`vortex.tools.services`
+* :mod:`vortex.tools.sms`
 * :mod:`vortex.tools.systems`
 * :mod:`vortex.tools.targets`
 

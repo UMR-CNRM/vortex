@@ -8,13 +8,6 @@ A :mod:`vortex` session is a virtual identifier gathering information on the cur
 #usage of the toolbox. A session has a starting time, and possibly a closing
 time. A session also defines the level of the internal logging used in all
 the vortex modules.
-
-This module also defines the GLOVE, ie: GLObal Versatile Environment
-which is a kind of user profile able to carry on some basic information,
-preferences and default behavior definition.
-
-Sessions and Gloves are retrieved from interface methods of the session module.
-A special internal object, the :class:`Desk`, is specifically in charge of handling sessions.
 """
 
 #: No automatic export
@@ -33,78 +26,75 @@ from vortex.layout.contexts import Context
 from vortex import gloves
 
 
-def ticket(**kw):
-    """
-    Ask the :class:`Desk` to return a session ticket according to actual arguments.
-    It could be a new one if the specified ``tag`` argument does not
-    actually exists in the :class:`Desk` table.
-    """
-    return Desk().getticket(**kw)
+# Module Interface
 
+def get(**kw):
+    """Return actual session ticket object matching description."""
+    return Ticket(**kw)
 
-def glove(**kw):
-    """
-    Ask the :class:`Desk` to return a glove according to actual arguments.
-    It could be a new one.
-    """
-    return Desk().getglove(**kw)
+def keys():
+    """Return the list of current session tickets names collected."""
+    return Ticket.tag_keys()
 
+def values():
+    """Return the list of current session ticket values collected."""
+    return Ticket.tag_values()
 
-def system(**kw):
-    """Returns the system associated to the current ticket."""
-    return ticket().system(**kw)
-
-
-def glovestags():
-    """Ask the :class:`Desk` to return the list of opened gloves tags."""
-    return Desk().glovestags()
-
-
-def sessionstags():
-    """Ask the :class:`Desk` to return the list of opened sessions tags."""
-    return Desk().sessionstags()
-
+def items():
+    """Return the items of the session tickets table."""
+    return Ticket.tag_items()
 
 def current():
-    """Ask the :class:`Desk` to return the current active session."""
-    return Desk().current
-
-
-def switch(tag):
-    """Set the session associated to the actual tag as active."""
-    return Desk().switch(tag)
-
+    """Return the current active session."""
+    return get(tag = Ticket.tag_focus())
 
 def prompt():
     """Returns a built string that could be used as a prompt for reporting."""
-    return Desk().current.prompt
+    return current().prompt
 
+def switch(tag):
+    """Set the session associated to the actual tag as active."""
+    return Ticket.switch(tag)
+
+def getglove(**kw):
+    """Proxy to :mod:`gloves` collector."""
+    return footprints.proxy.gloves.default(**kw)
+
+def system(**kw):
+    """Returns the system associated to the current ticket."""
+    return get(tag = kw.pop('tag', Ticket.tag_focus())).system(**kw)
 
 # noinspection PyShadowingBuiltins
 def exit():
     """Ask all inactive sessions to close, then close the active one."""
-    thedesk = Desk()
-    tags = thedesk.sessionstags()
-    xtag = thedesk.current_tag
+    tags = keys()
+    xtag = Ticket.tag_focus()
     tags.remove(xtag)
     tags.append(xtag)
     ok = True
-    for s in [ thedesk.getticket(tag=x) for x in tags ]:
+    for s in [ get(tag=x) for x in tags ]:
         ok = s.exit() and ok
     return ok
 
 
-class Ticket(object):
+class Ticket(footprints.util.GetByTag):
 
-    def __init__(self, active=False, config=None, topenv=None,
-                 glove=None, context=None, tag='root', prompt='Vortex:'):
-        self.tag = tag
+    _tag_default = 'root'
+
+    def __init__(self,
+                 active  = False,
+                 config  = None,
+                 topenv  = None,
+                 glove   = None,
+                 context = None,
+                 prompt  = 'Vortex:'
+    ):
         self._active = active
         self.config = config
         self.prompt = prompt
         self.line = "\n" + '-' * 100 + "\n"
-        self.started = date.now()
-        self.closed = 0
+        self._started = date.now()
+        self._closed = 0
         self.fake = 0
         self._system = None
 
@@ -123,7 +113,7 @@ class Ticket(object):
             if self._topenv.glove:
                 self._glove = self._topenv.glove
             else:
-                self._glove = Desk().getglove()
+                self._glove = getglove()
 
         logger.debug('Open session %s %s', self.tag, self)
 
@@ -136,7 +126,8 @@ class Ticket(object):
 
         context.env.glove = self._glove
         if self._active:
-                context.env.active(True)
+            Ticket.set_focus(self)
+            context.env.active(True)
 
         tree.addnode(context, parent=self, token=True)
 
@@ -144,6 +135,21 @@ class Ticket(object):
     def active(self):
         """Return whether this session is active or not."""
         return self._active
+
+    @property
+    def started(self):
+        """Return opening time stamp."""
+        return self._started
+
+    @property
+    def closed(self):
+        """Return closing time stamp if any."""
+        return self._closed
+
+    @property
+    def opened(self):
+        """Boolean. True if the session is not closed."""
+        return not bool(self.closed)
 
     @property
     def topenv(self):
@@ -197,15 +203,11 @@ class Ticket(object):
         else:
             return date.now() - self.started
 
-    @property
-    def opened(self):
-        """Boolean. <True> if the session is not closed."""
-        return not self.closed
 
     def activate(self):
         """Force the current session as active."""
         if self.opened:
-            return Desk().switch(self.tag)
+            return Ticket.switch(self.tag)
         else:
             return False
 
@@ -214,7 +216,7 @@ class Ticket(object):
         if self.closed:
             logger.warning('Session %s already closed at %s', self.tag, self.closed)
         else:
-            self.closed = date.now()
+            self._closed = date.now()
             logger.debug('Close session %s ( time = %s )', self.tag, self.duration())
 
     def exit(self):
@@ -279,114 +281,24 @@ class Ticket(object):
         )
         return card
 
-    def __del__(self):
-        self.close()
-
-
-class Desk(Singleton):
-    """
-    The Desk class is a singleton in charge of handling all the defined sessions.
-    It encapsulates the class Ticket which is really supposed to be the so-called
-    session.
-    """
-
-    def __init__(self):
-        if '_tickets' not in self.__dict__:
-            self._tickets = dict()
-            self._gloves  = dict()
-            self._current_ticket = 'root'
-            self._current_glove  = 'default'
-        logger.debug('Tickets desk init %s', self._tickets)
-
-    def getglove(self, **kw):
+    def switch(cls, tag):
         """
-        This method is the priviledged entry point to obtain a Glove.
-        If the default tag 'current' is provided as an argument, the tag
-        of the current glove is used.
-        A new glove is created if the actual tag value is unknown.
+        Allows the user to switch to an other session,
+        assuming that the provided tag is already known.
         """
-        tag = kw.get('tag', 'current')
-
-        if tag == 'current':
-            tag = self._current_glove
-
-        if not self._gloves.has_key(tag):
-            self._gloves[tag] = footprints.proxy.glove(**kw)
-
-        return self._gloves[tag]
-
-    def getticket(self, active=False, tag='current', prompt='Vortex:', topenv=None, glove=None, context=None):
-        """
-        This method is the only entry point to obtain a :class:`Ticket` session.
-        If the default tag 'current' is provided as an argument, the tag
-        of the current active session is used.
-        A new ticket session is created if the actual tag value is unknown.
-        """
-        if tag == 'current':
-            tag = self._current_ticket
-
-        if not self._tickets.has_key(tag):
-            self._tickets[tag] = Ticket(
-                active  = active,
-                tag     = tag,
-                prompt  = prompt,
-                topenv  = topenv,
-                glove   = glove,
-                context = context
-            )
-
-        if active:
-            self.switch(tag)
-
-        return self._tickets[tag]
-
-    def __iter__(self):
-        """
-        Desk is iterable.
-        Rolling over tickets values (not tags).
-        """
-        for t in self._tickets.values():
-            yield t
-
-    def __call__(self):
-        """
-        Desk is callable.
-        It returns the list of actual tickets values.
-        """
-        return self._tickets.values()
-
-    @property
-    def current(self):
-        """Shortcut to get the ticket value matching the current tag name."""
-        return self.getticket(tag=self._current_ticket)
-
-    @property
-    def current_tag(self):
-        """Shortcut to get the tag name of the current active session."""
-        return self._current_ticket
-
-    def switch(self, tag):
-        """
-        Allows the user to switch to an other session, as long that the actual tag
-        provided is already known.
-        """
-        if tag in self._tickets:
-            if tag != self._current_ticket:
-                self._tickets[self._current_ticket]._active = False
-                self._tickets[self._current_ticket].env.active(False)
-                self._tickets[tag]._active = True
-                self._tickets[tag].env.active(True)
-                self._current_glove = self._tickets[tag].glove.tag
-                self._current_ticket = tag
-            return self._tickets[tag]
+        if tag in cls.tag_keys():
+            focus = cls.tag_focus()
+            if tag != focus:
+                table = dict(cls.tag_items())
+                table[focus]._active = False
+                table[focus].env.active(False)
+                table[tag]._active = True
+                table[tag].env.active(True)
+                cls.set_focus(table[tag])
+            return table[tag]
         else:
-            logger.warning('Try to switch to an undefined session: %s', tag)
+            logger.error('Try to switch to an undefined session: %s', tag)
             return None
 
-    def sessionstags(self):
-        """Returns an alphabeticaly sorted list of sessions tag names."""
-        return sorted(self._tickets.keys())
-
-    def glovestags(self):
-        """Returns an alphabeticaly sorted list of gloves tag names."""
-        return sorted(self._gloves.keys())
+    def __del__(self):
+        self.close()

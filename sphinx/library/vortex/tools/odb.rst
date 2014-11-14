@@ -1,38 +1,37 @@
-:mod:`vortex.algo.mpitools` --- MPI launcher interface
-======================================================
+:mod:`vortex.tools.odb` --- Some ODB facilities
+===============================================
 
-.. automodule:: vortex.algo.mpitools
-   :synopsis: MPI launcher interface
+.. automodule:: vortex.tools.odb
+   :synopsis: ODB facilities
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.2
+.. versionadded:: 0.7
 
 Package
 -------
 
 .. autodata:: __all__
 
-
 Classes
 -------
 
-.. autoclass:: MpiTool
+.. autoclass:: OdbComponent
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MpiRun
+.. autoclass:: OdbDriver
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MpiServerIO
+.. autoclass:: OdbShell
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MpiSubmit
+.. autoclass:: TimeSlots
    :show-inheritance:
    :members:
    :member-order: alphabetical

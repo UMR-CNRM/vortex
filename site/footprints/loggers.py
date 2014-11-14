@@ -11,7 +11,7 @@ import logging
 #: The actual set of pseudo-root loggers created
 roots = set()
 
-# Console handler
+#: Console handler
 console = logging.StreamHandler()
 console.setLevel(logging.DEBUG)
 console.setFormatter(
@@ -26,7 +26,6 @@ class LoggingFilter(logging.Filter):
     """Add module name to record."""
 
     def filter(self, record):
-        print 'FILTER', record.msg
         if record.funcName == '<module>':
             record.funcName = 'prompt'
         return True

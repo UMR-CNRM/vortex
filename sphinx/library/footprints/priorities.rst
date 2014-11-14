@@ -14,6 +14,11 @@ Data definition
 
 .. autodata:: top
 
+.. autodata:: set_after
+
+.. autodata:: set_before
+
+
 Handling priorities
 -------------------
 

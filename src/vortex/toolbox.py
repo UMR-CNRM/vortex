@@ -13,7 +13,7 @@ import re
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex import sessions, data, proxy
+from vortex import sessions, data, proxy, VortexForceComplete
 from vortex.layout.dataflow import stripargs_section
 from vortex.util.structs import History
 
@@ -25,7 +25,7 @@ justdoit = False
 getinsitu = False
 verbose = True
 
-# History recording
+#: History recording
 
 history = History(tag='rload')
 
@@ -120,16 +120,20 @@ def rput(*args, **kw):
     return rl
 
 
-def pushsection(section, args, kw):
+def add_section(section, args, kw):
     """Add a ``section`` type to the current sequence."""
 
     # First, retrieve arguments of the toolbox command itself
     now       = kw.pop('now', justdoit)
     loglevel  = kw.pop('loglevel', None)
     talkative = kw.pop('verbose', verbose)
+    complete  = kw.pop('complete', False)
+
+    if complete:
+        kw['fatal'] = False
 
     # Swich off autorecording of the current context
-    t = sessions.ticket()
+    t = sessions.current()
     ctx = t.context
     ctx.record_off()
 
@@ -157,7 +161,7 @@ def pushsection(section, args, kw):
     push = getattr(ctx.sequence, section)
     doitmethod = sectionmap[section]
     if talkative and now:
-        logger.info('Command <%s> now', doitmethod)
+        logger.info('%s now=%s', doitmethod.upper(), str(now))
 
     # Create a section for each resource handler, and perform action on demand
     for ir, rhandler in enumerate(rl):
@@ -168,13 +172,20 @@ def pushsection(section, args, kw):
                 print t.line
                 rhandler.quickview(nb=ir+1, indent=0)
                 print t.line
-                logger.info('%s %s ...', doitmethod.title(), rhandler.location())
+                logger.info('%s %s ...', doitmethod.upper(), rhandler.location())
             ok = getattr(newsections[0], doitmethod)()
             if talkative:
-                logger.info('Last %s action returns [%s]', doitmethod, ok)
+                logger.info('%s returns [%s]', doitmethod.upper(), ok)
             if talkative and not ok:
-                logger.error('Could not %s resource:', doitmethod)
+                logger.error('Could not %s resource %s', doitmethod, rhandler.container.localpath())
                 print t.line
+            if not ok:
+                if complete:
+                    logger.warning('Force complete for %s', rhandler.location())
+                    raise VortexForceComplete('Force task complete on resource error')
+                if not opts['fatal']:
+                    logger.warning('Make a fake resource %s', rhandler.container.localpath())
+                    t.sh.touch(rhandler.container.localpath())
             if t.sh.trace:
                 print
         if ok:
@@ -190,21 +201,21 @@ def pushsection(section, args, kw):
 def input(*args, **kw):
     """Add an input section to the current sequence."""
     kw.setdefault('insitu', getinsitu)
-    return pushsection('input', args, kw)
+    return add_section('input', args, kw)
 
 
 def inputs(ticket=None, context=None):
     """Return effective inputs in specified context."""
     if context is None:
         if ticket is None:
-            ticket = sessions.ticket()
+            ticket = sessions.current()
         context = ticket.context
     return context.sequence.effective_inputs()
 
 
 def show_inputs(context=None):
     """Dump a summary of inputs sections."""
-    t = sessions.ticket()
+    t = sessions.current()
     for csi in inputs(ticket=t):
         t.sh.header('Input ' + str(csi))
         csi.show(ticket=t, context=context)
@@ -213,21 +224,21 @@ def show_inputs(context=None):
 
 def output(*args, **kw):
     """Add an output section to the current sequence."""
-    return pushsection('output', args, kw)
+    return add_section('output', args, kw)
 
 
 def outputs(ticket=None, context=None):
     """Return effective outputs in specified context."""
     if context is None:
         if ticket is None:
-            ticket = sessions.ticket()
+            ticket = sessions.current()
         context = ticket.context
     return context.sequence.effective_outputs()
 
 
 def show_outputs(context=None):
     """Dump a summary of outputs sections."""
-    t = sessions.ticket()
+    t = sessions.current()
     for cso in outputs(ticket=t):
         t.sh.header('Output ' + str(cso))
         cso.show(ticket=t, context=context)
@@ -237,7 +248,7 @@ def show_outputs(context=None):
 def executable(*args, **kw):
     """Add an executable section to the current sequence."""
     kw.setdefault('insitu', getinsitu)
-    return pushsection('executable', args, kw)
+    return add_section('executable', args, kw)
 
 
 def algo(*args, **kw):
@@ -248,7 +259,7 @@ def algo(*args, **kw):
     talkative = kw.pop('verbose', verbose)
 
     # Swich off autorecording of the current context
-    t = sessions.ticket()
+    t = sessions.current()
     ctx = t.context
     ctx.record_off()
 
@@ -276,19 +287,9 @@ def diff(*args, **kw):
     """Perform a diff with a resource with the same local name."""
 
     # First, retrieve arguments of the toolbox command itself
-    fatal     = kw.pop('loglevel', True)
+    fatal     = kw.pop('fatal', True)
     loglevel  = kw.pop('loglevel', None)
     talkative = kw.pop('verbose', verbose)
-
-    # Swich off autorecording of the current context
-    t = sessions.ticket()
-    ctx = t.context
-    ctx.record_off()
-
-    # Possibily change the log level if necessary
-    if loglevel is not None:
-        oldlevel = t.loglevel
-        t.setloglevel(loglevel.upper())
 
     # Distinguish between section arguments, and resource loader arguments
     opts, kwclean = stripargs_section(**kw)
@@ -300,11 +301,24 @@ def diff(*args, **kw):
             footprints.dump.lightdump(kwclean)
         )
 
-    # Let the magic of footprints resolution operates...
-    rl = rload(*args, **kwclean)
+    # Fast exit in case of undefined value
     rlok = list()
+    if None in kwclean.values():
+        logger.warning('Skip diff because of undefined argument(s)')
+        return rlok
 
-    for ir, rhandler in enumerate(rl):
+    # Swich off autorecording of the current context
+    t = sessions.current()
+    ctx = t.context
+    ctx.record_off()
+
+    # Possibily change the log level if necessary
+    if loglevel is not None:
+        oldlevel = t.loglevel
+        t.setloglevel(loglevel.upper())
+
+    # Let the magic of footprints resolution operates...
+    for ir, rhandler in enumerate(rload(*args, **kwclean)):
         if talkative:
             print t.line
             rhandler.quickview(nb=ir+1, indent=0)
