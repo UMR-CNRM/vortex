@@ -518,7 +518,7 @@ class System(footprints.FootprintBase):
             r_id = r_id.upper()
             if not r_id.startswith('RLIMIT_'):
                 r_id = 'RLIMIT_' + r_id
-            r_id = getattr(resource, r_id, None)
+            r_id = getattr(self._rl, r_id, None)
         if r_id is None:
             raise ValueError('Invalid resource specified')
         return r_id

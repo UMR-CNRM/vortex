@@ -11,15 +11,22 @@ import logging
 #: The actual set of pseudo-root loggers created
 roots = set()
 
+#: Default formatters
+formats = dict(
+    default = logging.Formatter(
+        fmt = '# [%(asctime)s][%(name)s][%(funcName)s:%(lineno)d][%(levelname)s]: %(message)s',
+        datefmt = '%Y/%d/%m-%H:%M:%S',
+    ),
+    fixsize = logging.Formatter(
+        fmt = '# [%(asctime)s][%(name)-24s][%(funcName)-16s:%(lineno)03d][%(levelname)9s]: %(message)s',
+        datefmt = '%Y/%d/%m-%H:%M:%S',
+    ),
+)
+
 #: Console handler
 console = logging.StreamHandler()
 console.setLevel(logging.DEBUG)
-console.setFormatter(
-    logging.Formatter(
-        fmt = '# [%(asctime)s][%(name)s][%(funcName)s:%(lineno)d][%(levelname)s]: %(message)s',
-        datefmt = '%Y/%d/%m-%H:%M:%S',
-    )
-)
+console.setFormatter(formats['fixsize'])
 
 # A hook filter (optional)
 class LoggingFilter(logging.Filter):
@@ -36,6 +43,7 @@ def setRootLogger(logger, level=logging.INFO):
     logger.setLevel(level)
     logger.addHandler(console)
     logger.addFilter(LoggingFilter(name=logger.name))
+    logger.propagate = False
     roots.add(logger.name)
     return logger
 

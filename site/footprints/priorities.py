@@ -211,12 +211,12 @@ top = PrioritySet(levels=['none', 'default', 'toolbox', 'debug'])
 
 
 def set_before(priorityref, *args):
-    """Set `args` priority before specified `priorityref'."""
+    """Set ``args`` priority before specified ``priorityref``."""
     for newpriority in args:
         top.insert(tag=newpriority, before=priorityref)
 
 
 def set_after(priorityref, *args):
-    """Set `args` priority after specified `priorityref'."""
+    """Set ``args`` priority after specified ``priorityref``."""
     for newpriority in reversed(args):
         top.insert(tag=newpriority, after=priorityref)

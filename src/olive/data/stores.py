@@ -63,6 +63,11 @@ class OliveArchiveStore(ArchiveStore):
             remote['root'] = self.headdir
         return self.ftpput(local, remote, options)
 
+    def olivedelete(self, remote, options):
+        """Remap and ftpdelete sequence."""
+        self.remapget(remote, options)
+        return self.ftpdelete(remote, options)
+
 
 class OliveCacheStore(CacheStore):
 
@@ -110,6 +115,10 @@ class OliveCacheStore(CacheStore):
     def oliveput(self, local, remote, options):
         """Gateway to :meth:`incacheputt`."""
         return self.incacheput(local, remote, options)
+
+    def olivedelete(self, remote, options):
+        """Gateway to :meth:`incachedelete`."""
+        return self.incachedelete(remote, options)
 
 
 class OliveStore(MultiStore):
@@ -239,6 +248,11 @@ class OpArchiveStore(ArchiveStore):
             fmt      = options.get('fmt'),
         )
 
+    def opdelete(self, remote, options):
+        """This operation is not supported."""
+        logger.warning('Removing from OP Archive Store is not supported')
+        return False
+
 
 class OpCacheStore(CacheStore):
     """User cache for Op resources."""
@@ -284,6 +298,10 @@ class OpCacheStore(CacheStore):
     def opput(self, local, remote, options):
         """Gateway to :meth:`incacheputt`."""
         return self.incacheput(local, remote, options)
+
+    def opdelete(self, remote, options):
+        """Gateway to :meth:`incachedelete`."""
+        return self.incachedelete(remote, options)
 
 
 class OpStore(MultiStore):

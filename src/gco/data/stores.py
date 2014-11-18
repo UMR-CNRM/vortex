@@ -142,6 +142,11 @@ class GCOCentralStore(Store):
             logger.warning('GCO Central Store get %s was not successful (%s)', gname, rc)
         return rc
 
+    def ggetdelete(self, remote, options):
+        """This operation is not supported."""
+        logger.waring('Removing from GCO Store is not supported')
+        return False
+
 
 class GCOCacheStore(CacheStore):
     """Some kind of cache for VORTEX experiments."""
@@ -201,6 +206,10 @@ class GCOCacheStore(CacheStore):
             return True
         else:
             return self.incacheput(local, remote, options)
+
+    def ggetdelete(self, remote, options):
+        """Gateway to :meth:`incachedelete`."""
+        return self.incachedelete(remote, options)
 
 
 class GCOStore(MultiStore):

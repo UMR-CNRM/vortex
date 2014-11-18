@@ -10,8 +10,6 @@ import socket
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-rescuefmt = 'lfi'
-
 
 def olive_label(sh, env, tag=None, target=None):
     """Return a nice label string for sms monitoring."""
@@ -100,70 +98,3 @@ def olive_jobout(sh, env, output, localout=None):
         logger.warning('Could not connect to remote jobout server %s', (swapp_host, swapp_port))
 
     return rc
-
-
-def olive_rescue(sh, env, *files):
-    """Action to be undertaken when things really went bad."""
-
-    logger.info('Rescue files %s', files)
-
-    if 'VORTEX_RESCUE' in env and env.false('VORTEX_RESCUE'):
-        logger.warning('Skip olive rescue (VORTEX_RESCUE=%s)', env.VORTEX_RESCUE)
-        return False
-
-    if files:
-        items = list(files)
-    else:
-        items = sh.glob('*')
-
-    if 'VORTEX_RESCUE_FILTER' in env:
-        logger.warning('Rescue filter <%s>', env.VORTEX_RESCUE_FILTER)
-        select = '|'.join(re.split(r'[,;:]+', env.VORTEX_RESCUE_FILTER))
-        items = [ x for x in items if re.search(select, x, re.IGNORECASE) ]
-        logger.info('Rescue filter [%s]', select)
-
-    if 'VORTEX_RESCUE_DISCARD' in env:
-        logger.warning('Rescue discard <%s>', env.VORTEX_RESCUE_DISCARD)
-        select = '|'.join(re.split(r'[,;:]+', env.VORTEX_RESCUE_DISCARD))
-        items = [ x for x in items if not re.search(select, x, re.IGNORECASE) ]
-        logger.info('Rescue discard [%s]', select)
-
-    if items:
-
-        bkupdir = None
-        if env.VORTEX_RESCUE_DIR is not None:
-            bkupdir = env.VORTEX_RESCUE_DIR
-            logger.info('Rescue backup directory defined by user <%s>', bkupdir)
-        elif env.MTOOL_STEP_ABORT is not None:
-            bkupdir = sh.path.join(env.MTOOL_STEP_ABORT, env.MTOOL_STEP_ID)
-            logger.info('Rescue backup directory defined by mtool <%s>', bkupdir)
-
-        if bkupdir is None:
-            logger.error('No rescue directory defined.')
-        else:
-            items.sort()
-            logger.info('Rescue items %s', str(items))
-            sh.mkdir(bkupdir)
-            mkmove = False
-            if env.MTOOL_STEP_SPOOL is not None:
-                st1 = sh.stat(env.MTOOL_STEP_SPOOL)
-                st2 = sh.stat(bkupdir)
-                if st1 and st2 and st1.st_dev == st2.st_dev:
-                    mkmove = True
-            if mkmove:
-                thisrescue = sh.mv
-            else:
-                thisrescue = sh.cp
-            for ritem in items:
-                rtarget = sh.path.join(bkupdir, ritem)
-                if sh.path.exists(ritem) and not sh.path.islink(ritem) :
-                    if sh.path.isfile(ritem):
-                        sh.rm(rtarget, fmt=rescuefmt)
-                        thisrescue(ritem, rtarget, fmt=rescuefmt)
-                    else:
-                        thisrescue(ritem, rtarget)
-
-    else:
-        logger.warning('No item to rescue.')
-
-    return bool(items)

@@ -112,27 +112,27 @@ class Cache(footprints.FootprintBase):
         """Actual full path in the cache."""
         return self.sh.path.join(self.entry(), subpath.lstrip('/'))
 
-    def addrecord(self, action, item, status=None, info=None):
+    def addrecord(self, action, item, **infos):
         """Push a new record to the cache log."""
         if self.actual_record:
-            self.history.append(item, action, status, info)
+            self.history.append(item, action, infos)
 
     def insert(self, item, local, intent='in', fmt='foo', info=None):
         """Insert an item in the current cache."""
         rc = self.sh.cp(local, self.fullpath(item), intent=intent, fmt=fmt)
-        self.addrecord('INSERT', item, status=rc, info=info)
+        self.addrecord('INSERT', item, status=rc, info=info, fmt=fmt, intent=intent)
         return rc
 
     def retrieve(self, item, local, intent='in', fmt='foo', info=None):
         """Retrieve an item from the current cache."""
         rc = self.sh.cp(self.fullpath(item), local, intent=intent, fmt=fmt)
-        self.addrecord('RETRIEVE', item, status=rc, info=info)
+        self.addrecord('RETRIEVE', item, status=rc, info=info, fmt=fmt, intent=intent)
         return rc
 
     def delete(self, item, fmt='foo', info=None):
         """Delete an item from the current cache."""
         rc = self.sh.remove(self.fullpath(item), fmt=fmt)
-        self.addrecord('DELETE', item, status=rc, info=info)
+        self.addrecord('DELETE', item, status=rc, info=info, fmt=fmt)
 
 
 class MtoolCache(Cache):

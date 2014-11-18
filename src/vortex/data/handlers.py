@@ -13,7 +13,7 @@ from vortex.tools import net
 from vortex.util import roles, structs
 from vortex.layout import dataflow
 
-from vortex.data import stores
+from vortex.data import stores, containers, resources, providers
 
 OBSERVER_TAG = 'Resources-Handlers'
 
@@ -39,9 +39,9 @@ class Handler(object):
         if 'alternate' in rd:
             del rd['alternate']
             self.role  = None
-        self.resource  = rd.pop('resource', None)
-        self.provider  = rd.pop('provider', None)
-        self.container = rd.pop('container', None)
+        self._resource  = rd.pop('resource', None)
+        self._provider  = rd.pop('provider', None)
+        self._container = rd.pop('container', None)
         self._empty    = rd.pop('empty', False)
         self._contents = None
         self._uridata  = None
@@ -66,6 +66,45 @@ class Handler(object):
 
     def __str__(self):
         return str(self.__dict__)
+
+    def _get_resource(self):
+        """Getter for ``resource`` property."""
+        return self._resource
+
+    def _set_resource(self, value):
+        """Setter for ``resource`` property."""
+        if isinstance(value, resources.Resource):
+            self._resource = value
+        else:
+            raise ValueError('This value is not a plain Resource <%s>', value)
+
+    resource = property(_get_resource, _set_resource)
+
+    def _get_provider(self):
+        """Getter for ``provider`` property."""
+        return self._provider
+
+    def _set_provider(self, value):
+        """Setter for ``provider`` property."""
+        if isinstance(value, providers.Provider):
+            self._provider = value
+        else:
+            raise ValueError('This value is not a plain Provider <%s>', value)
+
+    provider = property(_get_provider, _set_provider)
+
+    def _get_container(self):
+        """Getter for ``container`` property."""
+        return self._container
+
+    def _set_container(self, value):
+        """Setter for ``container`` property."""
+        if isinstance(value, containers.Container):
+            self._container = value
+        else:
+            raise ValueError('This value is not a plain Container <%s>', value)
+
+    container = property(_get_container, _set_container)
 
     @property
     def history(self):
@@ -201,7 +240,7 @@ class Handler(object):
 
     @property
     def store(self):
-        if self.complete:
+        if self.resource and self.provider:
             self._uridata = net.uriparse(self.location())
             return footprints.proxy.store(
                 scheme = self._uridata.pop('scheme'),
@@ -213,7 +252,7 @@ class Handler(object):
     def locate(self, **extras):
         """Try to figure out what would be the physical location of the resource."""
         rst = None
-        if self.complete:
+        if self.resource and self.provider:
             store = self.store
             if store:
                 logger.debug('Locate resource %s at %s from %s', self, self.lasturl, store)
@@ -233,7 +272,6 @@ class Handler(object):
         rst = False
         if self.complete:
             store = self.store
-            logger.debug('Get resource %s at store %s', self, store)
             if store:
                 logger.debug('Get resource %s at %s from %s', self, self.lasturl, store)
                 rst = store.get(
@@ -285,7 +323,6 @@ class Handler(object):
         """Returns a stat-like information to the remote resource."""
         rst = None
         if self.resource and self.provider:
-            logger.debug('Check resource %s', self)
             store = self.store
             if store:
                 logger.debug('Check resource %s at %s from %s', self, self.lasturl, store)
@@ -298,6 +335,24 @@ class Handler(object):
                 logger.error('Could not find any store to check %s', self.lasturl)
         else:
             logger.error('Could not check a rh without defined resource and provider %s', self)
+        return rst
+
+    def delete(self, **extras):
+        """Delete the remote resource from store."""
+        rst = None
+        if self.resource and self.provider:
+            store = self.store
+            if store:
+                logger.debug('Delete resource %s at %s from %s', self, self.lasturl, store)
+                rst = store.delete(
+                    self.uridata,
+                    self.mkopts(extras)
+                )
+                self.history.append(store.fullname(), 'delete', rst)
+            else:
+                logger.error('Could not find any store to delete %s', self.lasturl)
+        else:
+            logger.error('Could not delete a rh without defined resource and provider %s', self)
         return rst
 
     def clear(self):

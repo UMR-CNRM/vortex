@@ -206,7 +206,7 @@ class History(footprints.util.GetByTag):
         """
         if end is None:
             end = self._count
-        return [ (c, t, i) for c, t, i in self._history if start <= c <= end]
+        return [ (c, t, i) for c, t, i in self._history if start <= c <= end ]
 
     def show(self, start=1, end=None):
         """

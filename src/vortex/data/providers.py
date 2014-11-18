@@ -87,9 +87,9 @@ class Provider(footprints.FootprintBase):
         """
         logger.debug(
             'scheme %s domain %s normpath %s urlquery %s',
-            self.scheme(), self.domain(),
-            os.path.normpath(self.pathname(resource) + '/' +
-            self.basename(resource)),
+            self.scheme(),
+            self.domain(),
+            os.path.normpath(self.pathname(resource) + '/' + self.basename(resource)),
             self.urlquery(resource)
         )
 

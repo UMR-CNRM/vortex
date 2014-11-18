@@ -402,3 +402,70 @@ def print_namespaces(**kw):
         nice_v = linesep.join(v) if len(v) > 1 else v[0]
         print prefix + k.ljust(justify), '[' + nice_v + ']'
 
+
+def rescue(*files, **opts):
+    """Action to be undertaken when things really went bad."""
+
+    t   = sessions.current()
+    sh  = t.sh
+    env = t.env
+
+    logger.info('Rescue files %s', files)
+
+    if 'VORTEX_RESCUE' in env and env.false('VORTEX_RESCUE'):
+        logger.warning('Skip rescue <VORTEX_RESCUE=%s>', env.VORTEX_RESCUE)
+        return False
+
+    if files:
+        items = list(files)
+    else:
+        items = sh.glob('*')
+
+    rfilter = opts.get('filter', env.VORTEX_RESCUE_FILTER)
+    if rfilter is not None:
+        logger.warning('Rescue filter <%s>', rfilter)
+        select = '|'.join(re.split(r'[,;:]+', rfilter))
+        items = [ x for x in items if re.search(select, x, re.IGNORECASE) ]
+        logger.info('Rescue filter [%s]', select)
+
+    rdiscard = opts.get('discard', env.VORTEX_RESCUE_DISCARD)
+    if rdiscard is not None:
+        logger.warning('Rescue discard <%s>', rdiscard)
+        select = '|'.join(re.split(r'[,;:]+', rdiscard))
+        items = [ x for x in items if not re.search(select, x, re.IGNORECASE) ]
+        logger.info('Rescue discard [%s]', select)
+
+    if items:
+
+        bkupdir = opts.get('bkupdir', env.VORTEX_RESCUE_PATH)
+
+        if bkupdir is None:
+            logger.error('No rescue directory defined.')
+        else:
+            logger.info('Backup directory defined by user <%s>', bkupdir)
+            items.sort()
+            logger.info('Rescue items %s', str(items))
+            sh.mkdir(bkupdir)
+            mkmove = False
+            st1 = sh.stat(sh.getcwd())
+            st2 = sh.stat(bkupdir)
+            if st1 and st2 and st1.st_dev == st2.st_dev:
+                mkmove = True
+            if mkmove:
+                thisrescue = sh.mv
+            else:
+                thisrescue = sh.cp
+            rescuefmt = opts.get('fmt', 'lfi')
+            for ritem in items:
+                rtarget = sh.path.join(bkupdir, ritem)
+                if sh.path.exists(ritem) and not sh.path.islink(ritem) :
+                    if sh.path.isfile(ritem):
+                        sh.rm(rtarget, fmt=rescuefmt)
+                        thisrescue(ritem, rtarget, fmt=rescuefmt)
+                    else:
+                        thisrescue(ritem, rtarget)
+
+    else:
+        logger.warning('No item to rescue.')
+
+    return bool(items)

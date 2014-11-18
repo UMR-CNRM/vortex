@@ -212,6 +212,11 @@ class Store(footprints.FootprintBase):
         logger.debug('Store put from %s to %s', local, remote)
         return getattr(self, self.scheme + 'put', self.notyet)(local, remote, options)
 
+    def delete(self, remote, options=None):
+        """Proxy method to dedicated delete method accordind to scheme."""
+        logger.debug('Store delete from %s', remote)
+        return getattr(self, self.scheme + 'delete', self.notyet)(remote, options)
+
 
 class MultiStore(footprints.FootprintBase):
     """Agregate various :class:`Store` items."""
@@ -333,6 +338,17 @@ class MultiStore(footprints.FootprintBase):
             rc = rc and rcloc
         return rc
 
+    def delete(self, remote, options=None):
+        """Go through internal opened stores and delete the resource."""
+        logger.debug('Multistore delete from %s', remote)
+        rc = False
+        for sto in self.openedstores:
+            logger.info('Multistore delete at %s', sto)
+            rc = sto.delete(remote.copy(), options)
+            if not rc:
+                break
+        return rc
+
 
 class MagicPlace(Store):
     """Somewher, over the rainbow!"""
@@ -368,6 +384,10 @@ class MagicPlace(Store):
     def magicput(self, local, remote, options):
         """Void - Always True."""
         return True
+
+    def magicdelete(self, remote, options):
+        """Void - Always False."""
+        return False
 
 
 class Finder(Store):
@@ -429,15 +449,23 @@ class Finder(Store):
         """Delegates to ``system`` the copy of ``local`` to ``remote``."""
         return self.system.cp(local, self.fullpath(remote), fmt=options.get('fmt'))
 
+    def filedelete(self, remote, options):
+        """Delegates to ``system`` the removing of ``remote``."""
+        rc = None
+        if self.filecheck(remote, options):
+            rc = self.system.remove(self.fullpath(remote), fmt=options.get('fmt'))
+        else:
+            logger.error('Try to remove a non-existing resource <%s>', self.fullpath(remote))
+        return rc
+
     def ftpcheck(self, remote, options):
-        """Delegates to ``system`` a distant check."""
+        """Delegates to ``system.ftp`` a distant check."""
+        rc = None
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rc = ftp.size(self.fullpath(remote))
+            rc = ftp.size(self.rootdir + remote['path'])
             ftp.close()
-            return rc
-        else:
-            return None
+        return rc
 
     def ftplocate(self, remote, options):
         """Delegates to ``system`` qualified name creation."""
@@ -470,6 +498,19 @@ class Finder(Store):
             logname  = remote['username'],
             fmt      = options.get('fmt'),
         )
+
+    def ftpdelete(self, remote, options):
+        """Delegates to ``system`` a distant remove."""
+        rc = None
+        ftp = self.system.ftp(self.hostname(), remote['username'])
+        if ftp:
+            actualpath = self.fullpath(remote)
+            if self.ftpcheck(actualpath):
+                rc = ftp.delete(actualpath)
+                ftp.close()
+            else:
+                logger.error('Try to remove a non-existing resource <%s>', actualpath)
+        return rc
 
 
 class ArchiveStore(Store):
@@ -517,23 +558,21 @@ class ArchiveStore(Store):
 
     def ftpcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
+        rc = None
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             rc = ftp.size(self.rootdir + remote['path'])
             ftp.close()
-            return rc
-        else:
-            return None
+        return rc
 
     def ftplocate(self, remote, options):
         """Delegates to ``system.ftp`` the path evaluation."""
+        rc = None
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rloc = ftp.netpath(self.rootdir + remote['path'])
+            rc = ftp.netpath(self.rootdir + remote['path'])
             ftp.close()
-            return rloc
-        else:
-            return None
+        return rc
 
     def ftpget(self, remote, local, options):
         """Delegates to ``system.ftp`` the get action."""
@@ -559,6 +598,19 @@ class ArchiveStore(Store):
             logname  = remote['username'],
             fmt      = options.get('fmt'),
         )
+
+    def ftpdelete(self, remote, options):
+        """Delegates to ``system`` a distant remove."""
+        rc = None
+        ftp = self.system.ftp(self.hostname(), remote['username'])
+        if ftp:
+            actualpath = self.fullpath(remote)
+            if self.ftpcheck(actualpath):
+                rc = ftp.delete(actualpath)
+                ftp.close()
+            else:
+                logger.error('Try to remove a non-existing resource <%s>', actualpath)
+        return rc
 
 
 class VortexArchiveStore(ArchiveStore):
@@ -614,6 +666,11 @@ class VortexArchiveStore(ArchiveStore):
         if not 'root' in remote:
             remote['root'] = self.headdir
         return self.ftpput(local, remote, options)
+
+    def vortexdelete(self, remote, options):
+        """Remap and ftpdelete sequence."""
+        self.remapget(remote, options)
+        return self.ftpdelete(remote, options)
 
 
 class CacheStore(Store):
@@ -692,7 +749,7 @@ class CacheStore(Store):
         return st
 
     def incachelocate(self, remote, options):
-        """Agregates cache to remore subpath."""
+        """Agregates cache to remote subpath."""
         return self.cache.fullpath(remote['path'])
 
     def incacheget(self, remote, local, options):
@@ -711,6 +768,13 @@ class CacheStore(Store):
             local,
             intent = 'in',
             fmt    = options.get('fmt')
+        )
+
+    def incachedelete(self, remote, options):
+        """Simple removing of the remote resource in cache."""
+        return self.cache.delete(
+            remote['path'],
+            fmt = options.get('fmt')
         )
 
 
@@ -762,6 +826,10 @@ class VortexCacheStore(CacheStore):
     def vortexput(self, local, remote, options):
         """Proxy to :meth:`incacheputt`."""
         return self.incacheput(local, remote, options)
+
+    def vortexdelete(self, remote, options):
+        """Proxy to :meth:`incachedelete`."""
+        return self.incachedelete(remote, options)
 
 
 class VortexStore(MultiStore):
