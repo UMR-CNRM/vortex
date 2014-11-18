@@ -298,7 +298,7 @@ class Handler(object):
             if store:
                 iotarget = self.container.iotarget()
                 logger.debug('Put resource %s as io %s at store %s', self, iotarget, store)
-                if iotarget is not None and self.container.exists():
+                if iotarget is not None and ( self.container.exists() or self.provider.expected ):
                     logger.debug('Put resource %s at %s from %s', self, self.lasturl, store)
                     rst = store.put(
                         iotarget,

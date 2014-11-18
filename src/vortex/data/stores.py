@@ -10,6 +10,7 @@ Store objects use the :mod:`footprints` mechanism.
 __all__ = [ 'Store' ]
 
 import re
+import json
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -17,7 +18,7 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex import sessions
 from vortex.layout import dataflow
 from vortex.util import config
-from vortex.tools import caches
+from vortex.tools import caches, date
 
 
 class StoreGlue(object):
@@ -64,7 +65,7 @@ class StoreGlue(object):
     def gluelist(self, section):
         """returns the list of options in the specified ``section``."""
         if self.gluemap.has_section(section):
-            return filter(lambda x: not x.startswith('obj'), self.gluemap.options(section))
+            return [ x for x in self.gluemap.options(section) if not x.startswith('obj') ]
         else:
             logger.warning('No such section <%s> in %s', section, self)
             return []
@@ -255,31 +256,34 @@ class MultiStore(footprints.FootprintBase):
         Stores could be relaoded at any time. The current method provides
         a default loading mechanism through the actual module :func:`load` function
         and an alternate list of footprint descriptors as returned by method
-        :func:`alternatefp`.
+        :func:`alternates_fp`.
         """
         activestores = list()
-        for desc in self.alternatefp():
+        for desc in self.alternates_fp():
             xstore = footprints.proxy.store(**desc)
             if xstore:
                 activestores.append(xstore)
         logger.debug('Multistore %s includes active stores %s', self, activestores)
         return activestores
 
-    def alternatefp(self):
-        """
-        Returns a list of anonymous descriptions to be used as footprint entries
-        while loading alternates stores."""
-        fplist = list()
-        for domain in self.alternates_netloc():
-            fplist.append(dict(
-                scheme=self.scheme,
-                netloc=domain,
-            ))
-        return fplist
+    def alternates_scheme(self):
+        """Default method returns actual scheme in a tuple."""
+        return (self.scheme,)
 
     def alternates_netloc(self):
         """Abstract method."""
         pass
+
+    def alternates_fp(self):
+        """
+        Returns a list of anonymous descriptions to be used as footprint entries
+        while loading alternates stores.
+        """
+        return [
+            dict(scheme=x, netloc=y)
+                for x in self.alternates_scheme()
+                for y in self.alternates_netloc()
+        ]
 
     def in_situ(self, local, options):
         """Return cumulative value for the same method of internal opened stores."""
@@ -853,4 +857,159 @@ class VortexStore(MultiStore):
     def alternates_netloc(self):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
         return ('vortex.cache.fr', 'vortex.archive.fr')
+
+
+class PromiseCacheStore(VortexCacheStore):
+    """Some kind of vortex cache for EXPECTED resources."""
+
+    _footprint = dict(
+        info = 'EXPECTED cache access',
+        attr = dict(
+            netloc = dict(
+                values  = ['promise.cache.fr'],
+            ),
+            headdir = dict(
+                default = 'promise',
+                outcast = ['xp', 'vortex'],
+            ),
+        )
+    )
+
+
+class PromiseStore(footprints.FootprintBase):
+    """Combined a Promise Store for expected resources and any other matching Store."""
+
+    _abstract  = True
+    _collector = ('store',)
+    _footprint = dict(
+        info = 'Promise store',
+        attr = dict(
+            scheme = dict(
+                alias    = ('protocol',)
+            ),
+            netloc = dict(
+                alias    = ('domain', 'namespace')
+            ),
+            pstorename = dict(
+                optional = True,
+                default  = 'promise.cache.fr',
+            )
+        ),
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('Abstract promise store init %s', self.__class__)
+        sh = kw.pop('system', sessions.system())
+        super(PromiseStore, self).__init__(*args, **kw)
+        self._sh = sh
+
+        # Assume that the actual scheme is the current scheme without "x" prefix
+        self.proxyscheme = self.scheme.lstrip('x')
+
+        # Find a store for the promised resources
+        self.promise = footprints.proxy.store(
+            scheme = self.proxyscheme,
+            netloc = self.pstorename,
+        )
+        if self.promise is None:
+            logger.critical('Could not find store scheme <%s> netloc <%s>', self.proxyscheme, self.pstorename)
+            raise ValueError('Could not get a Promise Store')
+
+        # Find the other "real" store (could be a multi-store)
+        self.other = footprints.proxy.store(
+            scheme = self.proxyscheme,
+            netloc = self.netloc,
+        )
+        if self.other is None:
+            logger.critical('Could not find store scheme <%s> netloc <%s>', self.proxyscheme, self.netloc)
+            raise ValueError('Could not get an Other Store')
+
+        self.openedstores = (self.promise, self.other)
+
+    @property
+    def realkind(self):
+        return 'promisestore'
+
+    @property
+    def system(self):
+        """Shortcut to current system interface."""
+        return self._sh
+
+    def in_situ(self, local, options):
+        """Return cumulative value for the same method of internal opened stores."""
+        rc = True
+        for sto in self.openedstores:
+            rc = rc and sto.in_situ(local, options)
+        return rc
+
+    def mkpromise(self, local, remote, options):
+        """Build a virtual container with expected informations."""
+        pfile = local + '.pr'
+        self.system.json_dump(
+            dict(
+                promise = True,
+                stamp   = date.stamp(),
+                locate  = self.other.locate(remote, options),
+                datafmt = options.get('fmt', None),
+            ),
+            pfile
+        )
+        if options is not None:
+            options['fmt'] = 'ascii'
+        return pfile
+
+    def check(self, remote, options=None):
+        """Go through internal opened stores and check for the resource."""
+        logger.debug('Promise check from %s', remote)
+        return self.other.check(remote.copy(), options) or self.promise.check(remote.copy(), options)
+
+    def locate(self, remote, options=None):
+        """Go through internal opened stores and locate the expected resource for each of them."""
+        logger.debug('Promise locate %s', remote)
+        return self.promise.locate(remote.copy(), options) + ';' + self.other.locate(remote.copy(), options)
+
+    def get(self, remote, local, options=None):
+        """Go through internal opened stores for the first available resource."""
+        logger.debug('Promise get from %s to %s', remote, local)
+        rc = False
+        for sto in self.openedstores:
+            logger.debug('Promise get at %s', sto)
+            rc = sto.get(remote.copy(), local, options)
+            if rc:
+                break
+        return rc
+
+    def put(self, local, remote, options=None):
+        """Put a promise or the actual resource if available."""
+        logger.debug('Multistore put from %s to %s', local, remote)
+        rc = False
+        if self.system.path.exists(local):
+            logger.info('Actual promise does exists <%s>', local)
+            rc = self.other.put(local, remote.copy(), options)
+            if rc:
+                self.promise.delete(remote.copy(), options)
+        else:
+            logger.warning('Log a promise instead of missing resource <%s>', local)
+            pfile = self.mkpromise(local, remote, options)
+            rc = self.promise.put(pfile, remote.copy(), options)
+            self.system.remove(pfile)
+        return rc
+
+    def delete(self, remote, options=None):
+        """Go through internal opened stores and delete the resource."""
+        logger.debug('Promise delete from %s', remote)
+        return self.promise.delete(remote.copy(), options) and self.other.delete(remote.copy(), options)
+
+
+class VortexPromiseStore(PromiseStore):
+    """Combined a Promise Store for expected resources and any VORTEX Store."""
+
+    _footprint = dict(
+        info = 'Vortex promise store',
+        attr = dict(
+            scheme = dict(
+                values = ['xvortex'],
+            ),
+        )
+    )
 

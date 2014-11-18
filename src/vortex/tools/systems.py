@@ -954,34 +954,30 @@ class OSExtended(System):
         """Return a boolean according to the tar status of the ``filename``."""
         return tarfile.is_tarfile(self.path.expanduser(filename))
 
-    def _tarcx(self, *args, **kw):
-        """Raw file archive command."""
-        cmd = [ 'tar', kw.pop('cx', 'c') ]
-        cmd.append(args[0])
-        optforce = 'opts' in kw
-        zopt = set(cmd[1]) | set(kw.pop('opts', 'f'))
-        if not optforce:
-            if kw.pop('verbose', True):
-                zopt.add('v')
-            else:
-                zopt.discard('v')
-            if cmd[-1].endswith('gz'):
-                zopt.add('z')
-            else:
-                zopt.discard('z')
-        cmd[1] = ''.join(zopt)
-        cmd.extend(self.glob(*args[1:]))
-        return self.spawn(cmd, **kw)
+    def taropts(self, tarfile, opts, verbose=True):
+        """Build a proper string sequence of tar options."""
+        zopt = set(opts)
+        if verbose:
+            zopt.add('v')
+        else:
+            zopt.discard('v')
+        if tarfile.endswith('gz'):
+            zopt.add('z')
+        else:
+            zopt.discard('z')
+        return ''.join(zopt)
 
     def tar(self, *args, **kw):
         """Create a file archive (always c-something)'"""
-        kw['cx'] = 'c'
-        return self._tarcx(*args, **kw)
+        cmd = ['tar', self.taropts(args[0], 'cf', kw.pop('verbose', True)), args[0]]
+        cmd.extend(self.glob(*args[1:]))
+        return self.spawn(cmd, **kw)
 
     def untar(self, *args, **kw):
         """Unpack a file archive (always x-something)'"""
-        kw['cx'] = 'x'
-        return self._tarcx(*args, **kw)
+        cmd = ['tar', self.taropts(args[0], 'xf', kw.pop('verbose', True)), args[0]]
+        cmd.extend(args[1:])
+        return self.spawn(cmd, **kw)
 
     def is_tarname(self, objname):
         """Check if a ``objname`` is a string with ``.tar`` suffix."""

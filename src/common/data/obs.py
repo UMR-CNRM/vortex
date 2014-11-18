@@ -474,6 +474,12 @@ class ObsMap(FlowResource):
                 optional = True,
                 default  = 'void'
             ),
+            scope = dict(
+                optional = True,
+                default  = 'full',
+                values   = ['surface', 'surf', 'full'],
+                remap = dict(surf = 'surface'),
+            ),
             discard = dict(
                 type     = footprints.FPSet,
                 optional = True,
@@ -496,7 +502,10 @@ class ObsMap(FlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'BATOR_MAP'
+        if  self.scope.startswith('surf'):
+            return 'BATOR_MAP_' + self.scope[:4].lower()
+        else :
+            return 'BATOR_MAP'
 
     def basename_info(self):
         """Generic information for names fabric, with radical = ``obsmap``."""
@@ -504,7 +513,7 @@ class ObsMap(FlowResource):
             style   = 'obsmap',
             radical = self.kind,
             fmt     = self.nativefmt,
-            stage   = self.stage,
+            stage   = [self.scope, self.stage]
         )
 
 

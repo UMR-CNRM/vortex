@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.9.7'
+__version__ = '0.9.8'
 
 import os
 import re

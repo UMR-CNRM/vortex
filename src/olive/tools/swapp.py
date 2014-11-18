@@ -54,7 +54,7 @@ def olive_logname(sh, env, output, localout=None):
 def olive_jobout(sh, env, output, localout=None):
     """Connect to OLIVE daemon in charge of SMS outputs."""
 
-    sh.stderr(['olive_jobout', output, localout])
+    logger.info('Prepare output <%s> at localout <%s>', output, str(localout))
 
     if localout is None:
         localout = guesslocout(sh, env, output)
@@ -71,7 +71,7 @@ def olive_jobout(sh, env, output, localout=None):
             ) ]
         )
 
-    localhost = env.VORTEX_TARGET or env.VORTEX_TARGET_HOST or env.TARGET_HOST or sh.hostname
+    localhost = sh.target().inetname
     swapp_user, swapp_host, swapp_port = env.VORTEX_OUTPUT_ID.split(':')
     user = env.VORTEX_TARGET_LOGNAME or env.TARGET_LOGNAME or env.SWAPP_USER or sh.getlogin()
 

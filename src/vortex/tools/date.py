@@ -128,6 +128,10 @@ def synop(delta=0, base=None, time=None):
             raise ValueError('Not a synoptic hour: ' + str(time))
     return synopdate
 
+def stamp():
+    """Return date up to microseconds as a tuple."""
+    td = datetime.datetime.now()
+    return (td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
 
 def easter(year=None):
     """Return date for easter of the given year

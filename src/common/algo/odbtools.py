@@ -14,7 +14,7 @@ from vortex.algo.components import Parallel
 from vortex.util.structs    import Foo
 from vortex.syntax.stdattrs import a_date
 
-from common.data.obs import ObsMapContent, ObsMapItem, ObsRefItem
+from common.data.obs import ObsMapContent, ObsMapItem, ObsRefContent, ObsRefItem
 
 
 class OdbProcess(Parallel, odb.OdbComponent):
@@ -208,8 +208,8 @@ class Raw2ODB(OdbProcess):
                 if refall:
                     thismap.refdata.append(refall[0].contents.formatted_data(item))
                 else:
-                    logger.critical('No way to format data %s', item)
-                    raise ValueError('No default refdata contents to produced formatted data')
+                    logger.error('No default for formatting data %s', item)
+                    thismap.refdata.append(ObsRefContent.formatted_data(item))
 
         for notmap in [ obs for obs in obsok if not obs.mapped ]:
             thispart = notmap.rh.resource.part

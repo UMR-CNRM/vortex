@@ -216,7 +216,13 @@ class Vortex(Provider):
                 optional = True,
                 type     = VortexNameBuilder,
                 default  = VortexNameBuilder(),
-            )
+            ),
+            expected = dict(
+                alias    = ('promise',),
+                type     = bool,
+                optional = True,
+                default  = False,
+            ),
         )
     )
 
@@ -237,7 +243,7 @@ class Vortex(Provider):
 
     def scheme(self):
         """Default: ``vortex``."""
-        return self.realkind
+        return 'x' + self.realkind if self.expected else self.realkind
 
     def domain(self):
         """Returns the current ``namespace``."""
@@ -263,4 +269,3 @@ class Vortex(Provider):
         and resource :func:`basname_info`.
         """
         return self.namebuild.pack(resource.basename_info())
-

@@ -18,7 +18,7 @@ formats = dict(
         datefmt = '%Y/%d/%m-%H:%M:%S',
     ),
     fixsize = logging.Formatter(
-        fmt = '# [%(asctime)s][%(name)-24s][%(funcName)-16s:%(lineno)03d][%(levelname)9s]: %(message)s',
+        fmt = '# [%(asctime)s][%(name)-24s][%(funcName)16s:%(lineno)04d][%(levelname)9s]: %(message)s',
         datefmt = '%Y/%d/%m-%H:%M:%S',
     ),
 )
