@@ -32,7 +32,7 @@ def load_template(t, tplfile):
             if t.sh.path.exists(sitefile):
                 tplfile = sitefile
             else:
-                raise Exception('Template file ' + tplfile + ' not found')
+                raise ValueError('Template file ' + tplfile + ' not found')
     try:
         import string
         with open(tplfile, 'r') as tplfd:

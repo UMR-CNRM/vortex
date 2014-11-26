@@ -121,7 +121,7 @@ class Application(object):
             elif int(self.env.get('SLURM_NPROCS', 1)) > 1:
                 self.steps = (self.fetch, self.compute)
             else:
-                self.steps = tuple(kw.pop('args', [ self.fetch ]))
+                self.steps = tuple(kw.pop('args', [self.fetch]))
         self.header('Active Steps: ' + ' '.join(self.steps))
 
     def refill(self, **kw):

@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.9.8'
+__version__ = '0.9.9'
 
 import os
 import re
@@ -272,7 +272,7 @@ class Footprint(object):
                         guess[k] = desc[a]
                         inputattr.add(k)
                         break
-        return ( guess, inputattr )
+        return (guess, inputattr)
 
     def _findextras(self, desc):
         """
@@ -499,7 +499,7 @@ class Footprint(object):
         params = setup.defaults
         for k, v in self.only.items():
             if not hasattr(v, '__iter__'):
-                v = (v, )
+                v = (v,)
 
             actualattr = k
             after, before = False, False
@@ -587,7 +587,7 @@ class FootprintBaseMeta(type):
         This meta-constructor is in charge of the footprints merging,
         class registering in footprint collectors and documentation setting.
         """
-        logger.debug('Base class for footprint usage "%s / %s", bc = ( %s ), internal = %s', cls, n, b, d)
+        logger.debug('Base class for footprint usage "%s / %s", bc = (%s), internal = %s', cls, n, b, d)
         abstract = d.setdefault('_abstract', False)
         mkshort  = d.setdefault('_mkshort', setup.shortnames)
 
@@ -799,7 +799,20 @@ class FootprintBase(object):
 
     def footprint_export(self):
         """See the current footprint as a pure dictionary when exported."""
-        return self.footprint_as_dict(refresh=True)
+        exd = dict()
+        for k in self._attributes.keys():
+            exportmethod = 'footprint_export_' + k
+            if hasattr(self, exportmethod):
+                exd[k] = getattr(self, exportmethod)()
+            else:
+                thisattr = getattr(self, k)
+                if hasattr(thisattr, 'footprint_export'):
+                    exd[k] = thisattr.footprint_export()
+                elif hasattr(thisattr, 'export_dict'):
+                    exd[k] = thisattr.export_dict()
+                else:
+                    exd[k] = thisattr
+        return exd
 
     def _str_more(self):
         """Additional information to be combined in repr output."""
@@ -848,11 +861,11 @@ class FootprintBase(object):
         fp = cls._footprint
         resolved, attr_input, u_attr_seen = fp.resolve(rd, fatal=False, report=report)
         if resolved and None not in resolved.values():
-            return ( fp.checkonly(resolved, report), attr_input )
+            return (fp.checkonly(resolved, report), attr_input)
         else:
             if mkreport:
                 report.last.lightdump()
-            return ( False, attr_input )
+            return (False, attr_input)
 
     def footprint_compatible(self, rd):
         """
@@ -882,7 +895,7 @@ class FootprintBase(object):
     def footprint_weight(cls, realinputs):
         """Tuple with ordered weights to make a choice possible between various electible footprints."""
         fp = cls._footprint
-        return ( fp.priority['level'].rank, realinputs )
+        return (fp.priority['level'].rank, realinputs)
 
     @classmethod
     def footprint_values(cls, attrname):

@@ -23,7 +23,7 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.9.8'
+__version__ = '0.9.9'
 __prompt__  = 'Vortex v-' + __version__ + ':'
 
 __all__ = []
@@ -102,6 +102,10 @@ import toolbox, algo, data
 
 def complete():
     sessions.exit()
+    import multiprocessing
+    for kid in multiprocessing.active_children():
+        logger.warning('Terminate active kid %s', str(kid))
+        kid.terminate()
     print 'Vortex', __version__, 'completed', '(', tools.date.at_second().reallynice(), ')'
 
 import atexit

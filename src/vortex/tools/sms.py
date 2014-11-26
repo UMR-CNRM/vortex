@@ -64,7 +64,7 @@ class SMSGateway(object):
 
     def child(self, command, options):
         """Miscellaneous smschild subcommand."""
-        args = [ self.cmdpath(command) ]
+        args = [self.cmdpath(command)]
         if type(options) is ListType or type(options) is TupleType:
             args.extend(options)
         else:

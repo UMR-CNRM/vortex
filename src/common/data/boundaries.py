@@ -25,10 +25,7 @@ class LAMBoundary(GeoFlowResource):
         attr = dict(
             kind = dict(
                 values  = ['boundary', 'elscf', 'coupled'],
-                remap   = dict(
-                    elscf   = 'boundary',
-                    coupled = 'boundary',
-                )
+                remap   = dict(autoremap = 'first'),
             ),
             term = a_term,
             nativefmt = dict(
@@ -47,8 +44,11 @@ class LAMBoundary(GeoFlowResource):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        lastsynop = synop(base=self.date)
-        hhreal = (self.date - lastsynop).time() + self.term
+        if self.mailbox.get('block', '-') == 'surfan':
+            hhreal = self.term
+        else:
+            lastsynop = synop(base=self.date)
+            hhreal = (self.date - lastsynop).time() + self.term
         return 'ELSCFALAD_' + self.geometry.area + '+' + hhreal.fmthour
 
     def archive_basename(self):

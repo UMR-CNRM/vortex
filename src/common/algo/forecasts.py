@@ -40,6 +40,8 @@ class Forecast(IFSParallel):
         """Default pre-link for the initial condition file"""
         super(Forecast, self).prepare(rh, opts)
 
+        sh = self.system
+
         analysis = self.setlink(
             initrole = ('InitialCondition', 'Analysis'),
             initname = 'ICMSH{0:s}INIT'.format(self.xpname)
@@ -66,7 +68,10 @@ class Forecast(IFSParallel):
                 thisclim = bdaprh.container.localpath()
                 thisname = 'const.clim.' + bdaprh.resource.geometry.area
                 if thisclim != thisname:
-                    self.system.symlink(thisclim, thisname)
+                    sh.symlink(thisclim, thisname)
+
+            # At least, expect the analysis to be there...
+            self.wait_and_get(analysis, comment='analysis')
 
         for namrh in [ x.rh for x in self.context.sequence.effective_inputs(
             role = 'Namelist',
@@ -75,11 +80,16 @@ class Forecast(IFSParallel):
             try:
                 namc = namrh.contents
                 namc['NAMCT0'].NFPOS = int(self.inline)
-                self.system.header('FullPos InLine '  + str(self.inline))
+                sh.header('FullPos InLine '  + str(self.inline))
                 namc.rewrite(namrh.container)
             except Exception:
                 logger.critical('Could not fix NAMCT0 in %s', namrh.container.actualpath())
                 raise
+
+        # Promises should be nicely managed by a co-proccess
+        if self.promises:
+            self.flyput = True
+            self.io_poll_args = ('ICMSH', 'PF')
 
 
 class LAMForecast(Forecast):
@@ -93,8 +103,12 @@ class LAMForecast(Forecast):
             ),
             synctool = dict(
                 optional = True,
-                default  = None,
-            )
+                default  = 'atcp.alad',
+            ),
+            synctpl = dict(
+                optional = True,
+                default  = 'sync.fetch.tpl',
+            ),
         )
     )
 
@@ -115,16 +129,45 @@ class LAMForecast(Forecast):
 
         sh = self.system
 
-        if self.synctool:
-            sh.cp(self.synctool, 'atcp.alad')
-            sh.chmod('atcp.alad', 0755)
-        cplrh = [ x.rh for x in self.context.sequence.effective_inputs(role='BoundaryConditions',
-                                                                       kind='boundary') ]
+        # Check boundaries conditions
+        cplrh = [ x.rh for x in self.context.sequence.effective_inputs(
+            role = 'BoundaryConditions',
+            kind = 'boundary'
+        ) ]
         cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
-        i = 0
-        for l in [ x.container.localpath() for x in cplrh ]:
-            sh.softlink(l, 'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, i))
-            i += 1
+
+        # Ordered pre-linking of boundaring and building ot the synchronization tools
+        firstsync = None
+        sh.header('Check boundaries...')
+        if any([ x.is_expected() for x in cplrh ]):
+            logger.info('Some boundaries conditions are still expected')
+            self.mksync = True
+        else:
+            logger.info('All boundaries conditions available')
+            self.mksync = False
+
+        for i, bound in enumerate(cplrh):
+            thisbound = bound.container.localpath()
+            sh.softlink(thisbound, 'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, i))
+            if self.mksync:
+                thistool = self.synctool + '.{0:03d}'.format(i)
+                bound.mkgetpr(prgetter=thistool, tplfetch=self.synctpl)
+                if firstsync is None:
+                    firstsync = thistool
+
+        # Set up the first synchronization step
+        if firstsync is not None:
+            sh.symlink(firstsync, self.synctool)
+
+    def postfix(self, rh, opts):
+        """Post forecast information and cleaning."""
+        sh = self.system
+        super(LAMForecast, self).postfix(rh, opts)
+        if self.mksync:
+            synclog = self.synctool + '.log'
+            if sh.path.exists(synclog):
+                sh.subtitle(synclog)
+                sh.cat(synclog, output=False)
 
 
 class DFIForecast(LAMForecast):
@@ -186,7 +229,7 @@ class FullPos(IFSParallel):
         initrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
 
         for r in initrh:
-            sh.title('Loop on {0:s}'.format(r.resource.term.fmthm))
+            sh.subtitle('Loop on {0:s}'.format(r.resource.term.fmthm))
 
             # Set a local storage place
             runstore = 'RUNOUT' + r.resource.term.fmtraw

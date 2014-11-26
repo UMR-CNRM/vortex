@@ -9,7 +9,7 @@ system interaction. Systems objects use the :mod:`footprints` mechanism.
 #: No automatic export
 __all__ = []
 
-import os, resource, shutil, socket
+import os, stat, resource, shutil, socket
 import re, platform, sys, io, filecmp, time
 import types
 import glob
@@ -287,10 +287,14 @@ class System(footprints.FootprintBase):
             if xline:
                 print tchar * nbc
 
-    def xperm(self, filename):
+    def xperm(self, filename, force=False):
         """Return whether a file exists and is executable or not."""
         if os.path.exists(filename):
-            return bool(os.stat(filename).st_mode & 1)
+            is_x = bool(os.stat(filename).st_mode & 1)
+            if not is_x and force:
+                self.chmod(filename, os.stat(filename).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+                is_x = True
+            return is_x
         else:
             return False
 
@@ -363,7 +367,11 @@ class System(footprints.FootprintBase):
             if os.path.isdir(inodename):
                 rc = self.chmod(inodename, 0555)
             else:
-                rc = self.chmod(inodename, 0444)
+                st = self.stat(inodename).st_mode
+                if ( st & stat.S_IWUSR or st & stat.S_IWGRP or st & stat.S_IWOTH):
+                    rc = self.chmod(inodename, st & ~( stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH ))
+                else:
+                    rc = True
         return rc
 
     def sleep(self, nbsecs):
@@ -688,15 +696,18 @@ class OSExtended(System):
             return True
 
     def rawcp(self, source, destination):
-        """Internal basic cp command used by :meth:`cp` or :meth:`smartcp`."""
+        """Perform a simple ``copyfile`` or ``copytree`` command."""
         source = self.path.expanduser(source)
         destination = self.path.expanduser(destination)
         self.stderr('rawcp', source, destination)
+        tmp = destination  + '.sh.tmp'
         if self.path.isdir(source):
-            self.copytree(source, destination)
+            self.copytree(source, tmp)
+            self.move(tmp, destination)
             return self.path.isdir(destination)
         else:
-            self.copyfile(source, destination)
+            self.copyfile(source, tmp)
+            self.move(tmp, destination)
             if self._cmpaftercp:
                 return filecmp.cmp(source, destination)
             else:

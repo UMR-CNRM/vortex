@@ -60,6 +60,11 @@ class DelayedEnvValue(object):
                 self._frozen = True
         return self._value
 
+    def export_dict(self):
+        """The pure dict/json value is the actual value."""
+        return self.footprint_value()
+
+
 class FmtInt(int):
     """Formated integer."""
 
@@ -79,9 +84,9 @@ class FmtInt(int):
 #: Usual definition of the ``nativefmt`` attribute.
 a_nativefmt = dict(
     optional = True,
-    default = 'foo',
-    values = knownfmt,
-    remap = dict(auto = 'foo'),
+    default  = 'foo',
+    values   = knownfmt,
+    remap    = dict(auto = 'foo'),
 )
 
 nativefmt = footprints.Footprint( info = 'Native format', attr = dict( nativefmt = a_nativefmt ) )
@@ -89,10 +94,10 @@ nativefmt = footprints.Footprint( info = 'Native format', attr = dict( nativefmt
 #: Usual definition of the ``actualfmt`` attribute.
 a_actualfmt = dict(
     optional = True,
-    default = '[nativefmt#unknown]',
-    alias = ('format',),
-    values = knownfmt,
-    remap = dict(auto = 'foo'),
+    default  = '[nativefmt#unknown]',
+    alias    = ('format',),
+    values   = knownfmt,
+    remap    = dict(auto = 'foo'),
 )
 
 actualfmt = footprints.Footprint( info = 'Actual data format', attr = dict( actualfmt = a_actualfmt ) )
@@ -101,12 +106,12 @@ actualfmt = footprints.Footprint( info = 'Actual data format', attr = dict( actu
 a_cutoff = dict(
     type = str,
     optional = False,
-    alias = ('cut',),
-    values = [
+    alias    = ('cut',),
+    values   = [
         'a', 'assim', 'assimilation', 'long',
         'p', 'prod', 'production', 'short'
     ],
-    remap = dict(
+    remap    = dict(
         a = 'assim',
         p = 'production',
         prod = 'production',
@@ -120,14 +125,14 @@ cutoff = footprints.Footprint( info = 'Abstract cutoff', attr = dict( cutoff = a
 #: Usual definition of the ``model`` attribute.
 a_model = dict(
     type = str,
+    alias    = ('engine', 'turtle'),
     optional = False,
-    values = models,
-    remap = dict(
+    values   = models,
+    remap    = dict(
         arp = 'arpege',
         ald = 'aladin',
         aro = 'arome'
     ),
-    alias = ( 'engine', 'turtle' )
 )
 
 model = footprints.Footprint( info = 'Abstract model', attr = dict( model = a_model ) )
@@ -142,17 +147,17 @@ date = footprints.Footprint( info = 'Abstract date', attr = dict( date = a_date 
 
 #: Usual definition of the ``month`` attribute.
 a_month = dict(
-    type = Month,
-    args = dict(year=0),
+    type     = Month,
+    args     = dict(year=0),
     optional = False,
-    values = range(1, 13)
+    values   = range(1, 13)
 )
 
 month = footprints.Footprint( info = 'Abstract month', attr = dict( month = a_month ) )
 
 #: Usual definition of the ``truncation`` attribute.
 a_truncation = dict(
-    type = int,
+    type     = int,
     optional = False,
 )
 
@@ -160,7 +165,7 @@ truncation = footprints.Footprint( info = 'Abstract truncation', attr = dict( tr
 
 #: Usual definition of the ``domain`` attribute.
 a_domain = dict(
-    type = str,
+    type     = str,
     optional = False,
 )
 
@@ -168,7 +173,7 @@ domain = footprints.Footprint( info = 'Abstract domain', attr = dict( domain = a
 
 #: Usual definition of the ``term`` attribute.
 a_term = dict(
-    type = Time,
+    type     = Time,
     optional = False,
 )
 
@@ -177,7 +182,7 @@ term = footprints.Footprint( info = 'Abstract term', attr = dict( term = a_term 
 #: Usual definition of operational suite
 a_suite = dict(
     values = [ 'oper', 'dble', 'dbl', 'test' ],
-    remap = dict(
+    remap  = dict(
         dbl = 'dble'
     )
 )

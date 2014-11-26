@@ -19,9 +19,9 @@ class DataContent(object):
             self.__dict__['_' + k] = v
 
     @classmethod
-    def export_sh(cls):
-        """Return current class name for shell export mechanism."""
-        return str(cls.__name__)
+    def export_dict(cls):
+        """Return current class name for shell or pure dict export mechanism."""
+        return (cls.__module__, cls.__name__)
 
     @property
     def updated(self):

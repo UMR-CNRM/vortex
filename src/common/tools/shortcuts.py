@@ -95,10 +95,10 @@ def analysis(**kw):
       * tempo = True
     """
     adesc = dict(
-        suite = 'oper',
-        kind = 'analysis',
+        suite  = 'oper',
+        kind   = 'analysis',
         igakey = '[model]',
-        tempo = True
+        local  = '[kind].toy'
     )
     adesc.update(kw)
     return fastload(**adesc)
@@ -116,12 +116,12 @@ def modelstate(**kw):
       * tempo = True
     """
     adesc = dict(
-        suite = 'oper',
-        block = 'forecast',
-        kind = 'historic',
+        suite  = 'oper',
+        block  = 'forecast',
+        kind   = 'historic',
         igakey = '[model]',
-        term = 0,
-        tempo=True
+        term   = 0,
+        local  = '[kind].toy'
     )
     adesc.update(kw)
     return fastload(**adesc)

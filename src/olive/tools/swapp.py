@@ -11,12 +11,12 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 
-def olive_label(sh, env, tag=None, target=None):
+def olive_label(sh, env, target=None):
     """Return a nice label string for sms monitoring."""
 
     label = env.PBS_JOBID or env.SLURM_JOB_ID
 
-    if env.MTOOL_STEP and env.MTOOL_STEP_ID:
+    if env.MTOOL_STEP:
         depot = env.MTOOL_STEP_DEPOT or env.MTOOL_STEP_STORE
         renum = re.search(r'\/mstep_(\d+)', depot)
         num = renum.group(1)
@@ -27,9 +27,7 @@ def olive_label(sh, env, tag=None, target=None):
             label = re.sub(r'\D+', '', label)
             label = label + '.' + target
         label = ':'.join(reversed(label.split('.')))
-        label = '_'.join((label, 'mtool:' + num, env.MTOOL_STEP_ID))
-        if tag:
-            label = label + ':' + tag
+        label = '--'.join((label, 'mtool:' + num))
 
     return label
 

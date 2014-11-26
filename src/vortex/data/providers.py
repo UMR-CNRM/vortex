@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #: No automatic export
-__all__ = [ 'Provider' ]
+__all__ = ['Provider']
 
 import os.path
 
@@ -192,6 +192,7 @@ class Remote(Provider):
 
 
 class Vortex(Provider):
+    """Main provider of the toolbox, using a fix-size path and a dedicated name factory."""
 
     _footprint = dict(
         info = 'Vortex provider',
@@ -233,6 +234,10 @@ class Vortex(Provider):
     @property
     def realkind(self):
         return 'vortex'
+
+    def footprint_export_namebuild(self):
+        """Return the ``namebuild`` (class content type) attribute as a (module, name) tuple."""
+        return (self.namebuild.__module__, self.namebuild.__class__.__name__)
 
     def _str_more(self):
         """Additional information to print representation."""

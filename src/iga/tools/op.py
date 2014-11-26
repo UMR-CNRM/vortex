@@ -6,6 +6,9 @@ __all__ = []
 
 from tempfile import mkdtemp
 
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
 from iga.util import swissknife
 
 
@@ -57,9 +60,9 @@ def setup(**kw):
     t.sh.pwd(output=False)
 
     # Set toolbox verbosity and default behavior
-    vortex.toolbox.verbose   = 2
-    vortex.toolbox.justdoit  = True
-    vortex.toolbox.getinsitu = True
+    vortex.toolbox.active_verbose = True
+    vortex.toolbox.active_now     = True
+    vortex.toolbox.active_insitu  = True
 
     #some usefull import for footprint resolution
     import common
@@ -83,7 +86,7 @@ def setenv(t, **kw):
     for envslurm in sorted([ x for x in t.env.keys() if x.startswith('SLURM') ]):
         print '{0:s}="{1:s}"'.format(envslurm, t.env[envslurm])
         nb_slurm += 1
-    print 'Looking for automatic batch variables:', nb_slurm, 'found.'
+    logger.info('Looking for automatic batch variables: %d found', nb_slurm)
 
     # Set top levels OP variables from the job itself
     t.sh.header('TOP OP Env')
@@ -92,7 +95,7 @@ def setenv(t, **kw):
     for opvar in sorted([x for x in opd.keys() if x.startswith('op_') ]):
         t.env.setvar(opvar, opd[opvar])
         nb_op += 1
-    print 'Looking for global op variables:', nb_op, 'found.'
+    logger.info('Looking for global op variables: %d found', nb_op)
 
     # Get default MPI options from current SLURM env
     t.sh.header('MPI Env')

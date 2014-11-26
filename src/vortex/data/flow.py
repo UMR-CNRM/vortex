@@ -47,3 +47,7 @@ class GeoFlowResource(FlowResource):
             cutoff    = self.cutoff,
             geometry  = self.geometry
         )
+
+    def footprint_export_geometry(self):
+        """Return the ``geometry`` attribute as its ``id``."""
+        return self.geometry.id

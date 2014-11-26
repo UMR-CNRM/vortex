@@ -14,7 +14,7 @@ roots = set()
 #: Default formatters
 formats = dict(
     default = logging.Formatter(
-        fmt = '# [%(asctime)s][%(name)s][%(funcName)s:%(lineno)d][%(levelname)s]: %(message)s',
+        fmt = '# [%(asctime)s][%(name)s][%(funcName)s:%(lineno)04d][%(levelname)s]: %(message)s',
         datefmt = '%Y/%d/%m-%H:%M:%S',
     ),
     fixsize = logging.Formatter(
@@ -26,7 +26,7 @@ formats = dict(
 #: Console handler
 console = logging.StreamHandler()
 console.setLevel(logging.DEBUG)
-console.setFormatter(formats['fixsize'])
+console.setFormatter(formats['default'])
 
 # A hook filter (optional)
 class LoggingFilter(logging.Filter):

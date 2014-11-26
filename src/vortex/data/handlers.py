@@ -4,18 +4,24 @@
 #: No automatic export
 __all__ = []
 
+import sys, io
+
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 
 from vortex import sessions
 from vortex.tools import net
-from vortex.util import roles, structs
+from vortex.util import config, roles, structs
 from vortex.layout import dataflow
 
 from vortex.data import stores, containers, resources, providers
 
 OBSERVER_TAG = 'Resources-Handlers'
+
+
+class HandlerError(StandardError):
+    pass
 
 
 def observer_board(obsname=None):
@@ -138,6 +144,10 @@ class Handler(object):
         self._stage.append(newstage)
         self._observer.notify_upd(self, dict(stage = newstage))
 
+    def is_expected(self):
+        """Return a boolean value according to the last stage value (expected or not)."""
+        return self.stage.startswith('expect')
+
     @property
     def contents(self):
         """
@@ -202,7 +212,7 @@ class Handler(object):
             tab,
             self, self.role, self.alternate, self.complete, self.options, self.location()
         )
-        for subobj in ( 'resource', 'provider', 'container' ):
+        for subobj in ('resource', 'provider', 'container'):
             obj = getattr(self, subobj, None)
             if obj:
                 thisdoc = "\n".join((
@@ -228,6 +238,14 @@ class Handler(object):
             if obj:
                 print '{0}  {1:10s}: {2:s}'.format(tab, subobj.capitalize(), str(obj))
 
+    def as_dict(self):
+        """Produce a raw json-compatible dictionnay."""
+        rhd = dict(options = self.options.copy())
+        for subobj in ('resource', 'provider', 'container'):
+            obj = getattr(self, subobj, None)
+            rhd[subobj] = obj.footprint_export()
+        return rhd
+
     @property
     def lasturl(self):
         """The last actual URL value evaluated."""
@@ -248,6 +266,24 @@ class Handler(object):
             )
         else:
             return None
+
+    def check(self, **extras):
+        """Returns a stat-like information to the remote resource."""
+        rst = None
+        if self.resource and self.provider:
+            store = self.store
+            if store:
+                logger.debug('Check resource %s at %s from %s', self, self.lasturl, store)
+                rst = store.check(
+                    self.uridata,
+                    self.mkopts(extras)
+                )
+                self.history.append(store.fullname(), 'check', rst)
+            else:
+                logger.error('Could not find any store to check %s', self.lasturl)
+        else:
+            logger.error('Could not check a rh without defined resource and provider %s', self)
+        return rst
 
     def locate(self, **extras):
         """Try to figure out what would be the physical location of the resource."""
@@ -282,7 +318,11 @@ class Handler(object):
                 self.container.updfill(rst)
                 self.history.append(store.fullname(), 'get', rst)
                 if rst:
-                    self.updstage('get')
+                    if store.delayed:
+                        self.updstage('expected')
+                        logger.info('Resource <%s> is expected', self.container.iotarget())
+                    else:
+                        self.updstage('get')
                 return rst
             else:
                 logger.error('Could not find any store to get %s', self.lasturl)
@@ -303,7 +343,7 @@ class Handler(object):
                     rst = store.put(
                         iotarget,
                         self.uridata,
-                        self.mkopts(extras)
+                        self.mkopts(dict(rhandler = self.as_dict()), extras)
                     )
                     self.history.append(store.fullname(), 'put', rst)
                     self.updstage('put')
@@ -317,24 +357,6 @@ class Handler(object):
                 logger.error('Could not find any store to put [%s]', self.lasturl)
         else:
             logger.error('Could not put an incomplete rh [%s]', self)
-        return rst
-
-    def check(self, **extras):
-        """Returns a stat-like information to the remote resource."""
-        rst = None
-        if self.resource and self.provider:
-            store = self.store
-            if store:
-                logger.debug('Check resource %s at %s from %s', self, self.lasturl, store)
-                rst = store.check(
-                    self.uridata,
-                    self.mkopts(extras)
-                )
-                self.history.append(store.fullname(), 'check', rst)
-            else:
-                logger.error('Could not find any store to check %s', self.lasturl)
-        else:
-            logger.error('Could not check a rh without defined resource and provider %s', self)
         return rst
 
     def delete(self, **extras):
@@ -367,6 +389,54 @@ class Handler(object):
             )
             self.history.append(sh.fullname(), 'clear', rst)
         return rst
+
+    def mkgetpr(self, prgetter=None, tplfile=None, tplskip='sync.skip.tpl', tplfetch='sync.fetch.tpl', py_exec=sys.executable, py_opts=''):
+        """Build a getter for the expected resource."""
+        if tplfile is None:
+            tplfile = tplfetch if self.is_expected() else tplskip
+        if prgetter is None:
+            prgetter = self.container.localpath() + '.getpr'
+        tpl = config.load_template(sessions.current(), tplfile)
+        with io.open(prgetter, 'wb') as fd:
+            fd.write(tpl.substitute(
+                python  = py_exec,
+                pyopts  = py_opts,
+                promise = self.container.localpath(),
+            ))
+        sh = sessions.system()
+        sh.chmod(prgetter, 0555)
+        return prgetter
+
+    def wait(self, sleep=10, nbtries=30, fatal=False):
+        """Wait for an expected resource or return immediatly."""
+        rc = True
+        local = self.container.localpath()
+        if self.is_expected():
+            sh = sessions.system()
+            pr = sh.json_load(local)
+            itself = pr.get('itself')
+            nb = 0
+            logger.info('Waiting %d x %d s. for expected resource <%s>', nbtries, sleep, local)
+            while sh.path.exists(itself):
+                sh.sleep(sleep)
+                nb += 1
+                if nb > nbtries:
+                    logger.error('Could not wait anymore <%d>', nb)
+                    rc = False
+                    if fatal:
+                        logger.critical('Missing expected resource is fatal <%s>', local)
+                        raise HandlerError('Expected resource missing')
+                    break
+            else:
+                remote = pr.get('locate').split(';')[0]
+                if sh.path.exists(remote):
+                    logger.info('Keeping promise for remote resource <%s>', remote)
+                else:
+                    logger.warning('Empty promise for remote resource <%s>', remote)
+                    rc = False
+        else:
+            logger.info('Resource <%s> not expected', local)
+        return rc
 
     def save(self):
         """Rewrite data if contents have been updated."""

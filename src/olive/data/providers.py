@@ -14,6 +14,10 @@ from common.tools.igastuff import archive_suffix, fuzzyname, suites
 
 
 class Olive(Provider):
+    """
+    This provider offers accessibility to resources created in the OLIVE framekork
+    using the old perl toolbox.
+    """
 
     _footprint = dict(
         info = 'Olive experiment provider',
@@ -44,12 +48,22 @@ class Olive(Provider):
         super(Olive, self).__init__(*args, **kw)
 
     def scheme(self):
+        """Default scheme is ``olive``."""
         return 'olive'
 
     def domain(self):
+        """Proxy to actual ``namespace`` value."""
         return self.namespace
 
+    def basename(self, resource):
+        """Add block information to resource mailbox... just in case..."""
+        resource.mailbox.update(block=self.block)
+        bname = super(Olive, self).basename(resource)
+        resource.mailbox.clear()
+        return bname
+
     def pathname(self, resource):
+        """Build a path according to the existence of a valid date value."""
         rinfo = self.pathinfo(resource)
         rdate = rinfo.get('date', '')
         if rdate:
@@ -116,7 +130,7 @@ class OpArchive(Provider):
         return self.tube
 
     def domain(self):
-        """Return the actual namespace as domain."""
+        """Proxy to actual ``namespace`` value."""
         return self.namespace
 
     def basename(self, resource):

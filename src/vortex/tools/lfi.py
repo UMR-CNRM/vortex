@@ -367,7 +367,7 @@ class IO_Poll(addons.Addon):
             kind = dict(
                 values  = ['iopoll', 'io_poll'],
                 remap   = dict(
-                    io_poll = 'iopoll'
+                    io_poll = 'iopoll',
                 )
             ),
             cfginfo = dict(

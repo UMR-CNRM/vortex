@@ -61,9 +61,9 @@ class ShellEncoder(json.JSONEncoder):
     """Encoder for :mod:`json` dumps method."""
 
     def default(self, obj):
-        """Overwrite the default encoding if the current object has a ``export_sh`` method."""
-        if hasattr(obj, 'export_sh'):
-            return obj.export_sh()
+        """Overwrite the default encoding if the current object has a ``export_dict`` method."""
+        if hasattr(obj, 'export_dict'):
+            return obj.export_dict()
         elif hasattr(obj, 'footprint_export'):
             return obj.footprint_export()
         elif hasattr(obj, '__dict__'):
@@ -139,8 +139,8 @@ class Environment(object):
         """Dump the specified ``value`` as a string."""
         if isinstance(value, str):
             obj = value
-        elif hasattr(value, 'export_sh'):
-            obj = value.export_sh()
+        elif hasattr(value, 'export_dict'):
+            obj = value.export_dict()
         elif hasattr(value, 'footprint_export'):
             obj = value.footprint_export()
         elif hasattr(value, '__dict__'):

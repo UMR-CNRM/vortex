@@ -470,8 +470,8 @@ class Date(datetime.datetime):
         """Nice and verbose string representation."""
         return self.strftime("%A %d. %B %Y, at %H:%M:%S")
 
-    def export_sh(self):
-        """String representation for shell variable."""
+    def export_dict(self):
+        """String representation for dict or shell variable."""
         return self.ymdhm
 
     def __add__(self, delta):
@@ -642,8 +642,8 @@ class Time(object):
         """Nicely formatted representation in dumper."""
         return self.__repr__()
 
-    def export_sh(self):
-        """String representation for shell variable."""
+    def export_dict(self):
+        """String representation for dict or shell variable."""
         return self.__str__()
 
     def __str__(self):
@@ -778,6 +778,10 @@ class Month(object):
     @property
     def fmtraw(self):
         return '{0:04d}{1:02d}'.format(self._year, self._month)
+
+    def export_dict(self):
+        """Return the month and year as a tuple."""
+        return (self.month, self.year)
 
     def nextmonth(self):
         """Return the month after the current one."""

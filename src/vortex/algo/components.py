@@ -5,12 +5,14 @@
 __all__ = []
 
 import shlex
+import multiprocessing
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 import vortex
-from vortex.algo import mpitools
+from vortex.algo  import mpitools
+from vortex.tools import date
 
 
 class AlgoComponent(footprints.FootprintBase):
@@ -22,8 +24,18 @@ class AlgoComponent(footprints.FootprintBase):
         info = 'Abstract algo component',
         attr = dict(
             engine = dict(
-                values = [ 'algo' ]
-            )
+                values   = [ 'algo' ]
+            ),
+            flyput = dict(
+                optional = True,
+                default  = False,
+                access   = 'rwx',
+            ),
+            flypoll = dict(
+                optional = True,
+                default  = 'io_poll',
+                access   = 'rwx',
+            ),
         )
     )
 
@@ -31,6 +43,8 @@ class AlgoComponent(footprints.FootprintBase):
         """Before parent initialization, preset the internal FS log to an empty list."""
         logger.debug('Algo component init %s', self.__class__)
         self._fslog = list()
+        self._promises = None
+        self._expected = None
         super(AlgoComponent, self).__init__(*args, **kw)
 
     @property
@@ -55,6 +69,39 @@ class AlgoComponent(footprints.FootprintBase):
         """Ask the current context to check changes on file system since last stamp."""
         self._fslog.append(self.context.fstrack_check(tag=self.fstag()))
 
+    @property
+    def promises(self):
+        """Build and return list of actual promises of the current component."""
+        if self._promises is None:
+            self._promises = [
+                x.rh for x in self.context.sequence.outputs()
+                    if x.rh.provider.expected == True
+            ]
+        return self._promises
+
+    @property
+    def expected_resources(self):
+        """Return the list of really expected inputs."""
+        if self._expected is None:
+            self._expected = [
+                x.rh for x in self.context.sequence.effective_inputs()
+                    if x.rh.is_expected()
+            ]
+        return self._expected
+
+    def wait_and_get(self, rh, comment='resource', fatal=True, nbtries=12, sleep=10):
+        """Wait for a given resource and get it if expected."""
+        local = rh.container.localpath()
+        self.system.header('Wait for ' + comment + ' ... [' + local + ']')
+        if rh.wait(nbtries=nbtries, sleep=sleep):
+            if rh.is_expected():
+                rh.get(incache=True, insitu=False, fatal=fatal)
+        elif fatal:
+            logger.critical('Missing expected resource <%s>', local)
+            raise ValueError('Could not get ' + local)
+        else:
+            logger.eroor('Missing expected resource <%s>', local)
+
     def export(self, packenv):
         """Export environment variables in given pack."""
         if self.target.config.has_section(packenv):
@@ -70,9 +117,131 @@ class AlgoComponent(footprints.FootprintBase):
 
     def absexcutable(self, xfile):
         """Retuns the absolute pathname of the ``xfile`` executable."""
-        absx = self.system.path.abspath(xfile)
-        self.system.chmod(absx, 0755)
+        sh = self.system
+        absx = sh.path.abspath(xfile)
+        sh.xperm(absx, force=True)
         return absx
+
+    def flyput_method(self):
+        """Check out what could be a valid io_poll command."""
+        return getattr(self, 'io_poll_method', getattr(self.system, self.flypoll, None))
+
+    def flyput_check(self):
+        """Check default args for io_poll command."""
+        io_poll_args = getattr(self, 'io_poll_args', tuple())
+        actual_args = list()
+        for arg in io_poll_args:
+            logger.info('Check arg <%s>', arg)
+            if any([ x.container.localpath().startswith(arg) for x in self.promises ]):
+                logger.info('Match some promise %s', str([ x.container.localpath() for x in self.promises ]))
+                actual_args.append(arg)
+            else:
+                logger.info('Do not match any promise %s', str([ x.container.localpath() for x in self.promises ]))
+        return actual_args
+
+    def flyput_sleep(self):
+        """Return a sleeping time in seconds between io_poll commands."""
+        return getattr(self, 'io_poll_sleep', self.env.get('IO_POLL_SLEEP', 20))
+
+    def flyput_job(self, io_poll_method, io_poll_args, event_complete, event_free):
+        """Poll new data resources."""
+        logger.info('Polling with method %s', str(io_poll_method))
+        logger.info('Polling with args %s', str(io_poll_args))
+
+        time_sleep = self.flyput_sleep()
+        redo = True
+
+        while redo and not event_complete.is_set():
+            data = list()
+            event_free.clear()
+            try:
+                for arg in io_poll_args:
+                    logger.info('Polling check arg %s', arg)
+                    rc = io_poll_method(arg)
+                    try:
+                        data.extend(rc.result)
+                    except AttributeError:
+                        data.extend(rc)
+                data = [ x for x in data if x ]
+                logger.info('Polling retrieved data %s', str(data))
+                for thisdata in data:
+                    candidates = [ x for x in self.promises if x.container.localpath() == thisdata ]
+                    if candidates:
+                        logger.info('Polled data is promised <%s>', thisdata)
+                        bingo = candidates.pop()
+                        bingo.put(incache=True)
+                    else:
+                        logger.warning('Polled data not promised <%s>', thisdata)
+            except Exception as trouble:
+                logger.error('Polling trouble: %s', str(trouble))
+                redo = False
+            finally:
+                event_free.set()
+            if redo and not data:
+                logger.info('Get asleep for %d seconds...', time_sleep)
+                self.system.sleep(time_sleep)
+
+        if redo:
+            logger.info('Polling exit on complete event')
+        else:
+            logger.warning('Polling exit on abort')
+
+    def flyput_begin(self):
+        """Launch a co-process to handle promises."""
+
+        nope = (None, None, None)
+        if not self.flyput:
+            return nope
+
+        sh = self.system
+        sh.subtitle('On the fly - Begin')
+
+        if not self.promises:
+            logger.info('No promise, no co-process')
+            return nope
+
+        # Find out a polling method
+        io_poll_method = self.flyput_method()
+        if not io_poll_method:
+            logger.error('No method or shell function defined for polling data')
+            return nope
+
+        # Be sure that some default args could match local promises names
+        io_poll_args = self.flyput_check()
+        if not io_poll_args:
+            logger.error('Could not check default arguments for polling data')
+            return nope
+
+        # Define events for a nice termination
+        event_stop = multiprocessing.Event()
+        event_free = multiprocessing.Event()
+
+        p_io = multiprocessing.Process(
+            name   = self.footprint_clsname(),
+            target = self.flyput_job,
+            args   = (io_poll_method, io_poll_args, event_stop, event_free),
+        )
+
+        # The co-process is started
+        p_io.start()
+
+        return (p_io, event_stop, event_free)
+
+    def flyput_end(self, p_io, e_complete, e_free):
+        """Wait for the co-process in charge of promises."""
+        e_complete.set()
+        logger.info('Waiting for polling process... <%s>', p_io.pid)
+        t0 = date.now()
+        e_free.wait(60)
+        p_io.join(30)
+        t1 = date.now()
+        waiting = t1 - t0
+        logger.info('Waiting for polling process took %f seconds', waiting.total_seconds())
+        if p_io.is_alive():
+            logger.warning('Force termination of polling process')
+            p_io.terminate()
+        logger.info('Polling still alive ? %s', str(p_io.is_alive()))
+        return not p_io.is_alive()
 
     def spawn_hook(self):
         """Last chance to say something before execution."""
@@ -86,23 +255,32 @@ class AlgoComponent(footprints.FootprintBase):
 
           * VORTEX_DEBUG_ENV : dump current environment before spawn
         """
+        sh = self.system
+
         if self.env.true('vortex_debug_env'):
-            self.system.subtitle('{0:s} : dump environment (os bound: {1:s})'.format(
+            sh.subtitle('{0:s} : dump environment (os bound: {1:s})'.format(
                 self.realkind,
                 str(self.env.osbound())
             ))
             self.env.osdump()
 
-        self.system.subtitle('{0:s} : directory listing (pre-execution)'.format(self.realkind))
-        self.system.remove('core')
-        self.system.softlink('/dev/null', 'core')
-        self.system.dir(output=False)
+        # On-the-fly coprocessing initialisation
+        p_io, e_complete, e_free = self.flyput_begin()
+
+        sh.subtitle('{0:s} : directory listing (pre-execution)'.format(self.realkind))
+        sh.remove('core')
+        sh.softlink('/dev/null', 'core')
+        sh.dir(output=False)
         self.spawn_hook()
-        self.target.spawn_hook(self.system)
-        self.system.subtitle('{0:s} : start execution'.format(self.realkind))
-        self.system.spawn(args, output=False)
-        self.system.subtitle('{0:s} : directory listing (post-execution)'.format(self.realkind))
-        self.system.dir(output=False)
+        self.target.spawn_hook(sh)
+        sh.subtitle('{0:s} : start execution'.format(self.realkind))
+        sh.spawn(args, output=False)
+        sh.subtitle('{0:s} : directory listing (post-execution)'.format(self.realkind))
+        sh.dir(output=False)
+
+        # On-the-fly coprocessing cleaning
+        if p_io:
+            self.flyput_end(p_io, e_complete, e_free)
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
@@ -153,7 +331,8 @@ class AlgoComponent(footprints.FootprintBase):
             return False
 
         # Get instance shorcuts to context and system objects
-        self.context = vortex.sessions.current().context
+        self.ticket  = vortex.sessions.current()
+        self.context = self.ticket.context
         self.system  = self.context.system
         self.target  = kw.pop('target', None)
         if self.target is None:

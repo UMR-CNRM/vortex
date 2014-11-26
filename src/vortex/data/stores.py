@@ -130,12 +130,12 @@ class StoreGlue(object):
         gluedesc = self.getfile(basename)
         if len(gluedesc) > 1:
             logger.error('Multiple glue entries %s', gluedesc)
-            cleanpath, targetpath = ( None, None )
+            cleanpath, targetpath = (None, None)
         else:
             gluedesc = gluedesc[0]
             targetpath = self.gluename(gluedesc['section']) + '.' + self.gluetype(gluedesc['section'])
             cleanpath = system.path.join(dirname, targetpath)
-        return ( cleanpath, targetpath )
+        return (cleanpath, targetpath)
 
 
 class IniStoreGlue(StoreGlue):
@@ -168,6 +168,7 @@ class Store(footprints.FootprintBase):
         sh = kw.pop('system', sessions.system())
         super(Store, self).__init__(*args, **kw)
         self._sh = sh
+        self.delayed = False
 
     @property
     def realkind(self):
@@ -177,6 +178,10 @@ class Store(footprints.FootprintBase):
     def system(self):
         """Shortcut to current system interface."""
         return self._sh
+
+    def use_cache(self):
+        """Boolean fonction to check if the current store use a local cache."""
+        return False
 
     def in_situ(self, local, options):
         """Return true when insitu option is active and local file exists."""
@@ -202,16 +207,24 @@ class Store(footprints.FootprintBase):
     def get(self, remote, local, options=None):
         """Proxy method to dedicated get method accordind to scheme."""
         logger.debug('Store get from %s to %s', remote, local)
-        if self.in_situ(local, options):
-            logger.info('Store %s in situ resource %s', self.footprint_clsname(), local)
+        if options is not None and options.get('incache', False) and not self.use_cache():
+            logger.warning('Skip this store because a cache is requested')
             return True
         else:
-            return getattr(self, self.scheme + 'get', self.notyet)(remote, local, options)
+            if self.in_situ(local, options):
+                logger.info('Store %s in situ resource <%s>', self.footprint_clsname(), local)
+                return True
+            else:
+                return getattr(self, self.scheme + 'get', self.notyet)(remote, local, options)
 
     def put(self, local, remote, options=None):
         """Proxy method to dedicated put method accordind to scheme."""
         logger.debug('Store put from %s to %s', local, remote)
-        return getattr(self, self.scheme + 'put', self.notyet)(local, remote, options)
+        if options is not None and options.get('incache', False) and not self.use_cache():
+            logger.warning('Skip this store because a cache is requested')
+            return True
+        else:
+            return getattr(self, self.scheme + 'put', self.notyet)(local, remote, options)
 
     def delete(self, remote, options=None):
         """Proxy method to dedicated delete method accordind to scheme."""
@@ -245,6 +258,7 @@ class MultiStore(footprints.FootprintBase):
         logger.debug('Abstract multi store init %s', self.__class__)
         super(MultiStore, self).__init__(*args, **kw)
         self.openedstores = self.loadstores()
+        self.delayed = False
 
     @property
     def realkind(self):
@@ -284,6 +298,10 @@ class MultiStore(footprints.FootprintBase):
                 for x in self.alternates_scheme()
                 for y in self.alternates_netloc()
         ]
+
+    def use_cache(self):
+        """Boolean fonction to check if any included store use a local cache."""
+        return any([ x.use_cache() for x in self.openedstores ])
 
     def in_situ(self, local, options):
         """Return cumulative value for the same method of internal opened stores."""
@@ -723,6 +741,10 @@ class CacheStore(Store):
         tg = self.system.target()
         return tg.inetname if self.storage is None else self.storage
 
+    def use_cache(self):
+        """Boolean value to insure that this store is using a cache."""
+        return True
+
     def _get_cache(self):
         if not self._cache:
             self._cache = footprints.proxy.caches.default(
@@ -893,7 +915,7 @@ class PromiseStore(footprints.FootprintBase):
             pstorename = dict(
                 optional = True,
                 default  = 'promise.cache.fr',
-            )
+            ),
         ),
     )
 
@@ -925,6 +947,7 @@ class PromiseStore(footprints.FootprintBase):
             raise ValueError('Could not get an Other Store')
 
         self.openedstores = (self.promise, self.other)
+        self.delayed = False
 
     @property
     def realkind(self):
@@ -947,15 +970,15 @@ class PromiseStore(footprints.FootprintBase):
         pfile = local + '.pr'
         self.system.json_dump(
             dict(
-                promise = True,
-                stamp   = date.stamp(),
-                locate  = self.other.locate(remote, options),
-                datafmt = options.get('fmt', None),
+                promise  = True,
+                stamp    = date.stamp(),
+                itself   = self.promise.locate(remote, options),
+                locate   = self.other.locate(remote, options),
+                datafmt  = options.get('fmt', None),
+                rhandler = options.get('rhandler', None),
             ),
             pfile
         )
-        if options is not None:
-            options['fmt'] = 'ascii'
         return pfile
 
     def check(self, remote, options=None):
@@ -970,29 +993,63 @@ class PromiseStore(footprints.FootprintBase):
 
     def get(self, remote, local, options=None):
         """Go through internal opened stores for the first available resource."""
-        logger.debug('Promise get from %s to %s', remote, local)
-        rc = False
-        for sto in self.openedstores:
-            logger.debug('Promise get at %s', sto)
-            rc = sto.get(remote.copy(), local, options)
+        logger.debug('Promise get %s', remote)
+        if options is None:
+            options = dict()
+        self.delayed = False
+        if self.in_situ(local, options):
+            logger.info('Store %s in situ resource <%s>', self.footprint_clsname(), local)
+            if self.system.size(local) < 4096:
+                pr = dict()
+                try:
+                    pr = self.system.json_load(local)
+                except ValueError:
+                    logger.warning('Small expected in situ resource not json friendly <%s>', local)
+                self.delayed = pr.get('promise', False)
+            return True
+        else:
+            logger.info('Try promise from store %s', self.promise)
+            oldfmt = options.pop('fmt', None)
+            options['fmt'] = 'ascii'
+            rc = self.promise.get(remote.copy(), local, options)
             if rc:
-                break
+                self.delayed = True
+            else:
+                logger.info('Try promise from store %s', self.other)
+                options['fmt'] = oldfmt
+                rc = self.other.get(remote.copy(), local, options)
+            if not rc and options.get('pretend', False):
+                logger.warning('Pretending to get a promise for <%s>', local)
+                pfile = self.mkpromise(local, remote, options)
+                self.system.move(pfile, local)
+                rc = self.delayed = True
         return rc
 
     def put(self, local, remote, options=None):
         """Put a promise or the actual resource if available."""
         logger.debug('Multistore put from %s to %s', local, remote)
         rc = False
-        if self.system.path.exists(local):
+        if options is None:
+            options = dict()
+        if options.get('force', False) or not self.system.path.exists(local):
+            if not self.other.use_cache():
+                logger.critical('Could not promise resource without other cache <%s>', self.other)
+                raise ValueError('Could not promise: other store does not use cache')
+            logger.warning('Log a promise instead of missing resource <%s>', local)
+            pfile = self.mkpromise(local, remote, options)
+            oldfmt = options.pop('fmt', None)
+            options['fmt'] = 'ascii'
+            rc = self.promise.put(pfile, remote.copy(), options)
+            self.system.remove(pfile)
+            if rc:
+                options['fmt'] = oldfmt
+                self.other.delete(remote.copy(), options)
+        else:
             logger.info('Actual promise does exists <%s>', local)
             rc = self.other.put(local, remote.copy(), options)
             if rc:
+                options['fmt'] = 'ascii'
                 self.promise.delete(remote.copy(), options)
-        else:
-            logger.warning('Log a promise instead of missing resource <%s>', local)
-            pfile = self.mkpromise(local, remote, options)
-            rc = self.promise.put(pfile, remote.copy(), options)
-            self.system.remove(pfile)
         return rc
 
     def delete(self, remote, options=None):

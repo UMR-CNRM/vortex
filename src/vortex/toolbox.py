@@ -21,9 +21,11 @@ from vortex.util.structs import History
 defaults = footprints.setup.defaults
 
 sectionmap = {'input': 'get', 'output': 'put', 'executable': 'get'}
-justdoit = False
-getinsitu = False
-verbose = True
+
+active_now     = False
+active_insitu  = False
+active_verbose = True
+active_promise = True
 
 #: History recording
 
@@ -124,13 +126,18 @@ def add_section(section, args, kw):
     """Add a ``section`` type to the current sequence."""
 
     # First, retrieve arguments of the toolbox command itself
-    now       = kw.pop('now', justdoit)
+    now       = kw.pop('now', active_now)
     loglevel  = kw.pop('loglevel', None)
-    talkative = kw.pop('verbose', verbose)
+    talkative = kw.pop('verbose', active_verbose)
     complete  = kw.pop('complete', False)
 
     if complete:
         kw['fatal'] = False
+
+    # Second, retrieve arguments that could be used by the now command
+    cmdopts = dict(
+        force = kw.pop('force', False)
+    )
 
     # Swich off autorecording of the current context
     t = sessions.current()
@@ -152,6 +159,11 @@ def add_section(section, args, kw):
             footprints.dump.lightdump(opts),
             footprints.dump.lightdump(kwclean)
         )
+        print 'This command options:'
+        print '    complete =', complete
+        print '    loglevel =', loglevel
+        print '    now      =', now
+        print '    verbose  =', talkative
 
     # Let the magic of footprints resolution operates...
     rl = rload(*args, **kwclean)
@@ -160,8 +172,6 @@ def add_section(section, args, kw):
     # Prepare the references to the actual section method to perform
     push = getattr(ctx.sequence, section)
     doitmethod = sectionmap[section]
-    if talkative and now:
-        logger.info('%s now=%s', doitmethod.upper(), str(now))
 
     # Create a section for each resource handler, and perform action on demand
     for ir, rhandler in enumerate(rl):
@@ -169,12 +179,13 @@ def add_section(section, args, kw):
         ok = bool(newsections)
         if ok and now:
             if talkative:
-                print t.line
+                t.sh.subtitle('Resource no {0:02d}/{1:02d}'.format(ir+1, len(rl)))
                 rhandler.quickview(nb=ir+1, indent=0)
-                print t.line
+                t.sh.header('Action ' + doitmethod)
                 logger.info('%s %s ...', doitmethod.upper(), rhandler.location())
-            ok = getattr(newsections[0], doitmethod)()
+            ok = getattr(newsections[0], doitmethod)(**cmdopts)
             if talkative:
+                t.sh.header('Result from ' + doitmethod)
                 logger.info('%s returns [%s]', doitmethod.upper(), ok)
             if talkative and not ok:
                 logger.error('Could not %s resource %s', doitmethod, rhandler.container.localpath())
@@ -200,7 +211,7 @@ def add_section(section, args, kw):
 # noinspection PyShadowingBuiltins
 def input(*args, **kw):
     """Add an input section to the current sequence."""
-    kw.setdefault('insitu', getinsitu)
+    kw.setdefault('insitu', active_insitu)
     return add_section('input', args, kw)
 
 
@@ -245,9 +256,22 @@ def show_outputs(context=None):
         print
 
 
+def promise(*args, **kw):
+    """Log a promise before execution."""
+    kw.update(
+        promise = True,
+        force   = True,
+        now     = active_promise,
+    )
+    if not active_promise:
+        logger.warning('Promise flag is <%s> in that context', active_promise)
+    return add_section('output', args, kw)
+
+
+
 def executable(*args, **kw):
     """Add an executable section to the current sequence."""
-    kw.setdefault('insitu', getinsitu)
+    kw.setdefault('insitu', active_insitu)
     return add_section('executable', args, kw)
 
 
@@ -256,7 +280,7 @@ def algo(*args, **kw):
 
     # First, retrieve arguments of the toolbox command itself
     loglevel  = kw.pop('loglevel', None)
-    talkative = kw.pop('verbose', verbose)
+    talkative = kw.pop('verbose', active_verbose)
 
     # Swich off autorecording of the current context
     t = sessions.current()
@@ -289,7 +313,7 @@ def diff(*args, **kw):
     # First, retrieve arguments of the toolbox command itself
     fatal     = kw.pop('fatal', True)
     loglevel  = kw.pop('loglevel', None)
-    talkative = kw.pop('verbose', verbose)
+    talkative = kw.pop('verbose', active_verbose)
 
     # Distinguish between section arguments, and resource loader arguments
     opts, kwclean = stripargs_section(**kw)
@@ -409,6 +433,9 @@ def rescue(*files, **opts):
     t   = sessions.current()
     sh  = t.sh
     env = t.env
+
+    sh.subtitle('Rescue current dir')
+    sh.dir(output=False)
 
     logger.info('Rescue files %s', files)
 

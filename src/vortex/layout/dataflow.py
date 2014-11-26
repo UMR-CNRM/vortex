@@ -16,7 +16,7 @@ logger = footprints.loggers.getLogger(__name__)
 from footprints.util import mktuple
 
 
-class SectionFatalError(Exception):
+class SectionFatalError(StandardError):
     pass
 
 #: Definition of a named tuple INTENT
@@ -32,7 +32,7 @@ IXOTuple = namedtuple('IXOTuple', ['INPUT', 'OUTPUT', 'EXEC'], verbose=False)
 ixo = IXOTuple(INPUT=1, OUTPUT=2, EXEC=3)
 
 #: Arguments specific to a section (to be striped away from a resource handler description)
-section_args = [ 'role', 'alternate', 'intent', 'fatal', 'expected' ]
+section_args = [ 'role', 'alternate', 'intent', 'fatal' ]
 
 
 def stripargs_section(**kw):
@@ -80,6 +80,11 @@ class Section(object):
         """Upgrade current section to 'get' level."""
         if info.get('stage') == 'get' and self.kind == ixo.INPUT:
             self.stages.append('get')
+
+    def updstage_expected(self, info):
+        """Upgrade current section to 'expected' level."""
+        if info.get('stage') == 'expected' and self.kind == ixo.INPUT:
+            self.stages.append('expected')
 
     def updstage_put(self, info):
         """Upgrade current section to 'put' level."""
@@ -229,7 +234,7 @@ class Sequence(object):
         it operates as a filter on the inputs list. If both keys are available
         the ``role`` applies first, and then the ``kind`` in case of empty match.
         """
-        inset = [ x for x in self.inputs() if x.stage == 'get' ]
+        inset = [ x for x in self.inputs() if x.stage == 'get' or x.stage == 'expected' ]
         if not kw:
             return inset
         inrole = list()

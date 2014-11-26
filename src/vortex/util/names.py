@@ -156,7 +156,7 @@ class VortexNameBuilder(object):
         """
         name = '.'.join((
             d['radical'],
-            self.pack_std_items(d['stage']),
+            '-'.join(self.pack_std_items(d['stage'])),
             d.get('fmt', 'txt')
         ))
         return name.lower()

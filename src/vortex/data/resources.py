@@ -31,6 +31,7 @@ class Resource(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         logger.debug('Resource init %s', self.__class__)
         super(Resource, self).__init__(*args, **kw)
+        self._mailbox = footprints.util.LowerCaseDict()
 
     @property
     def realkind(self):
@@ -42,6 +43,11 @@ class Resource(footprints.FootprintBase):
         for xdel in [ x for x in notinrepr if x in d ]:
             del d[xdel]
         return ' '.join([ '{0:s}=\'{1:s}\''.format(k, str(v)) for k, v in d.items() ])
+
+    @property
+    def mailbox(self):
+        """A nice cocoon to store miscelaneous information."""
+        return self._mailbox
 
     def vortex_pathinfo(self):
         """
