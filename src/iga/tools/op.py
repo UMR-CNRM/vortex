@@ -21,10 +21,24 @@ def setup(**kw):
     opd = kw.get('actual', dict())
 
     import vortex
+    footprints.proxy.targets.discard_onflag('is_anonymous', verbose=False)
+
+    t = vortex.sessions.get()
+    t.sh.subtitle('OP setup')
+
+    t.sh.prompt = t.prompt
+    t.info()
+
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('Set a new glove')
+
     gl = vortex.sessions.getglove(
         tag     = 'opid',
         profile = opd.get('op_suite', 'oper')
     )
+
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('Activate a new session with previous glove')
 
     t  = vortex.sessions.get(
         tag     = 'opview',
@@ -34,37 +48,73 @@ def setup(**kw):
         prompt  = vortex.__prompt__
     )
 
-    t.warning()
+    t.sh.prompt = t.prompt
 
     gl.vapp  = kw.get('vapp',  opd.get('op_vapp',  None))
     gl.vconf = kw.get('vconf', opd.get('op_vconf', None))
 
-    # A nice summary of active session components
-    t.sh.title('Op session')
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('Toolbox description')
+
+    print t.prompt, 'Root directory =', t.glove.siteroot
+    print t.prompt, 'Path directory =', t.glove.sitesrc
+    print t.prompt, 'Conf directory =', t.glove.siteconf
+
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('Op session')
+
     print t.prompt, 'Session Ticket =', t
     print t.prompt, 'Session Glove  =', t.glove
     print t.prompt, 'Session System =', t.sh
     print t.prompt, 'Session Env    =', t.env
 
-    # Activate trace verbosity for os interface
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('This target')
+
+    tg = vortex.proxy.target(hostname = t.sh.hostname)
+    print t.prompt, 'Target name    =', tg.hostname
+    print t.prompt, 'Target system  =', tg.sysname
+    print t.prompt, 'Target inifile =', tg.inifile
+
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('Verbosity settings')
+
     t.sh.trace = True
     t.env.verbose(True, t.sh)
 
-    # Unlimited stack
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('Stack settings')
+
     t.sh.setulimit('stack')
 
-    # Define the actual running directory
-    t.sh.subtitle('Switch to rundir')
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('Add-ons to the shell')
+
+    import vortex.tools.lfi
+    shlfi = footprints.proxy.addon(kind='lfi', shell=t.sh)
+    print t.prompt, shlfi
+
+    import vortex.tools.odb
+    shodb = footprints.proxy.addon(kind='odb', shell=t.sh)
+    print t.prompt, shodb
+
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('Actual running directory')
+
     t.env.RUNDIR = kw.get('rundir', mkdtemp(prefix=t.glove.tag + '-'))
     t.sh.cd(t.env.RUNDIR, create=True)
     t.sh.pwd(output=False)
 
-    # Set toolbox verbosity and default behavior
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('Toolbox module settings')
+
     vortex.toolbox.active_verbose = True
     vortex.toolbox.active_now     = True
     vortex.toolbox.active_insitu  = True
 
-    #some usefull import for footprint resolution
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('External imports')
+
     import common
     import olive.data.providers
     from iga.data import containers, providers, stores
@@ -75,35 +125,40 @@ def setup(**kw):
 def setenv(t, **kw):
     """Set up common environment for all oper execs"""
 
-    t.sh.title('Op setenv')
+    t.sh.subtitle('OP setenv')
 
     import vortex
     t.env.OP_VORTEX = vortex.__version__
 
-    # Nice display of current batch environment
+    #--------------------------------------------------------------------------------------------------
     t.sh.header('SLURM Env')
+
     nb_slurm = 0
     for envslurm in sorted([ x for x in t.env.keys() if x.startswith('SLURM') ]):
         print '{0:s}="{1:s}"'.format(envslurm, t.env[envslurm])
         nb_slurm += 1
+
     logger.info('Looking for automatic batch variables: %d found', nb_slurm)
 
-    # Set top levels OP variables from the job itself
-    t.sh.header('TOP OP Env')
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('Look up OP Environment')
     opd = kw.get('actual', dict())
     nb_op = 0
     for opvar in sorted([x for x in opd.keys() if x.startswith('op_') ]):
         t.env.setvar(opvar, opd[opvar])
         nb_op += 1
+
     logger.info('Looking for global op variables: %d found', nb_op)
 
-    # Get default MPI options from current SLURM env
-    t.sh.header('MPI Env')
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('Look up MPI Environment')
+
     mpi, rkw = swissknife.slurm_parameters(t, **kw)
     t.env.OP_MPIOPTS = mpi
 
-    # Set a default date according to DATE_PIVOT or last synoptic hour
-    t.sh.header('DATE Env')
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('Find out what could be the current rundate')
+
     if t.env.OP_RUNDATE:
         if not isinstance(t.env.OP_RUNDATE, vortex.tools.date.Date):
             t.env.OP_RUNDATE = vortex.tools.date.Date(t.env.OP_RUNDATE)
@@ -127,6 +182,25 @@ def complete(t, **kw):
     """Exit from OP session."""
     t.close()
 
+def register(t, cycle, dump=True):
+    """Load and register a GCO cycle contents."""
+    from gco.tools import genv
+    if cycle in genv.cycles():
+        logger.warning('Cycle %s already registred', cycle)
+    else:
+        if t.env.OP_ROOTAPP:
+            genvdef = t.sh.path.join(t.env.OP_ROOTAPP, 'genv', cycle + '.genv')
+            if t.sh.path.exists(genvdef):
+                logger.info('Fill GCO cycle with file <%s>', genvdef)
+                genv.autofill(cycle, t.sh.cat(genvdef, output=True))
+            else:
+                logger.error('No contents defined for cycle %s', cycle)
+                raise ValueError('Bad cycle value')
+        else:
+            logger.warning('OP context without OP_ROOTAPP variable')
+            genv.autofill(cycle)
+        if dump:
+            print genv.nicedump(cycle=cycle)
 
 def rescue(**kw):
     """Something goes wrong... so, do your best to save current state."""

@@ -95,10 +95,11 @@ def clearall():
     p.clear()
 
 
-def autofill(cycle):
+def autofill(cycle, gcout=None):
     """Use the ``genv`` external tool to fill the specified cycle."""
     actualcycle = None
-    gcout = vortex.sh().spawn([actualgenv(), cycle], output=True)
+    if gcout is None:
+        gcout = vortex.sh().spawn([actualgenv(), cycle], output=True)
     if gcout:
         gcdict = dict()
         for item in gcout:

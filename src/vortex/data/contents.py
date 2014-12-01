@@ -6,17 +6,47 @@ __all__ = []
 
 import collections
 
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
+from vortex import sessions
 
 class DataContent(object):
     """Root class for data contents used by resources."""
 
     def __init__(self, **kw):
-        self._data = None
-        self._io = None
-        self._size = 0
-        self._filled = False
+        self._datafmt = None
+        self._data    = None
+        self._size    = 0
         for k, v in kw.iteritems():
             self.__dict__['_' + k] = v
+
+    def __getattr__(self, attr):
+        """Forward get attribute request to internal data object."""
+        return getattr(self.data, attr)
+
+    def __enter__(self):
+        """Enter a :keyword:`with` context."""
+        pass
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Exit from :keyword:`with` context."""
+        pass
+
+    @property
+    def data(self):
+        """The internal data encapsulated."""
+        return self._data
+
+    @property
+    def size(self):
+        """The actual size of the contents."""
+        return self._size
+
+    @property
+    def datafmt(self):
+        """The initial format of the contents."""
+        return self._datafmt
 
     @classmethod
     def export_dict(cls):
@@ -28,12 +58,17 @@ class DataContent(object):
         return False
 
     def slurp(self, container):
-        """Abstract method."""
-        pass
+        """Should be overwritten. Basically get the totalsize of the actual container."""
+        self._size = container.totalsize
 
     def rewrite(self, container):
         """Abstract method."""
         pass
+
+
+class UnknownContent(DataContent):
+    """Fake DataContent subclass."""
+    pass
 
 
 class AlmostDictContent(DataContent):
@@ -69,21 +104,6 @@ class AlmostDictContent(DataContent):
 
     def has_key(self, item):
         return self.fmtkey(item) in self._data
-
-    def keys(self):
-        return self._data.keys()
-
-    def values(self):
-        return self._data.values()
-
-    def get(self, *args):
-        return self._data.get(*args)
-
-    def items(self):
-        return self._data.items()
-
-    def iteritems(self):
-        return self._data.iteritems()
 
 
 class IndexedTable(AlmostDictContent):
@@ -166,14 +186,6 @@ class AlmostListContent(DataContent):
 
     maxprint = property(_get_maxprint, _set_maxprint, None)
 
-    def append(self, item):
-        """Append the specified ``item`` to internal data contents."""
-        self._data.append(item)
-
-    def extend(self, addlist):
-        """Extend internal data contents with items of the ``addlist``."""
-        self._data.extend(addlist)
-
     def clear(self):
         """Clear all internal data contents."""
         self._data[:] = []
@@ -232,10 +244,10 @@ class DataRaw(AlmostListContent):
     Behaves mostly as a list.
     """
 
-    def __init__(self, data=None, window=0, filled=False):
+    def __init__(self, data=None, window=0, fmt=None):
         if not data and window:
             data = collections.deque(maxlen=window)
-        super(DataRaw, self).__init__(data=data, window=window)
+        super(DataRaw, self).__init__(data=data, window=window, fmt=fmt)
 
     def slurp(self, container):
         """Get data from the ``container``."""
@@ -246,3 +258,40 @@ class DataRaw(AlmostListContent):
             self._data.append(data)
             if self._window and len(self._data) >= self._window:
                 end = True
+
+
+class FormatAdapter(DataContent):
+    """Adapter to objects that could manage a dedicated format."""
+    def __init__(self, **kw):
+        super(FormatAdapter, self).__init__(**kw)
+        if self._data is None and footprints.proxy.dataformats is None:
+            logger.warning('No collector for data formats')
+            self._datafmt = None
+
+    def __enter__(self):
+        """Enter a :keyword:`with` context."""
+        t = sessions.current()
+        t.env.delta(
+            LFI_HNDL_SPEC   = ':1',
+            DR_HOOK_SILENT  = 1,
+            DR_HOOK_NOT_MPI = 1,
+            OMP_NUM_THREADS = 1,
+        )
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Exit from :keyword:`with` context."""
+        t = sessions.current()
+        t.env.rewind()
+
+    def slurp(self, container):
+        """Load a dataformat object."""
+        super(FormatAdapter, self).slurp(container)
+        if self.datafmt:
+            with self as c:
+                self._data = footprints.proxy.dataformat(
+                    filename       = container.abspath,
+                    openmode       = 'r',
+                    fmtdelayedopen = True,
+                    format         = container.actualfmt.upper(),
+                )

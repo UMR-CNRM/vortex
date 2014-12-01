@@ -1034,7 +1034,7 @@ class OSExtended(System):
             rc = gateway.dump(obj, destination)
         else:
             if self.filecocoon(destination):
-                with io.open(self.path.expanduser(destination), 'ab') as fd:
+                with io.open(self.path.expanduser(destination), 'wb') as fd:
                     rc = gateway.dump(obj, fd)
         return rc
 
@@ -1148,7 +1148,7 @@ class Linux(OSExtended):
         info = 'Linux base system',
         attr = dict(
             sysname = dict(
-                values = ['Linux'],
+                values = ['Linux', 'Darwin']
             )
         )
     )

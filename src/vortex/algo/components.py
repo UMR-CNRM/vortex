@@ -36,6 +36,11 @@ class AlgoComponent(footprints.FootprintBase):
                 default  = 'io_poll',
                 access   = 'rwx',
             ),
+            timeout = dict(
+                type     = int,
+                optional = True,
+                default  = 120,
+            ),
         )
     )
 
@@ -89,18 +94,20 @@ class AlgoComponent(footprints.FootprintBase):
             ]
         return self._expected
 
-    def wait_and_get(self, rh, comment='resource', fatal=True, nbtries=12, sleep=10):
+    def grab(self, rh, comment='resource', fatal=True, sleep=10, timeout=None):
         """Wait for a given resource and get it if expected."""
         local = rh.container.localpath()
         self.system.header('Wait for ' + comment + ' ... [' + local + ']')
-        if rh.wait(nbtries=nbtries, sleep=sleep):
+        if timeout is None:
+            timeout = self.timeout
+        if rh.wait(timeout=timeout, sleep=sleep):
             if rh.is_expected():
                 rh.get(incache=True, insitu=False, fatal=fatal)
         elif fatal:
             logger.critical('Missing expected resource <%s>', local)
             raise ValueError('Could not get ' + local)
         else:
-            logger.eroor('Missing expected resource <%s>', local)
+            logger.error('Missing expected resource <%s>', local)
 
     def export(self, packenv):
         """Export environment variables in given pack."""

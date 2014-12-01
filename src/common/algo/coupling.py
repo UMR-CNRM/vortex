@@ -85,7 +85,7 @@ class Coupling(IFSParallel):
             sh.softlink(r.container.localpath(), 'ICMSHFPOSINIT')
 
             # Expect the coupling source to be there...
-            self.wait_and_get(r, comment='coupling source', nbtries=16)
+            self.grab(r, comment='coupling source', timeout=180)
 
             # The output could be an input as well
             if cplguess:

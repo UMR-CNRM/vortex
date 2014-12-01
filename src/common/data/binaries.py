@@ -192,7 +192,7 @@ class Odbtools(BlackBox):
     def command_line(self, dbin='ECMA', dbout='CCMA', npool=1, nslot=1, fcma=None, masksize=None, date=None):
         cmdline = '-i{0:s} -o{1:s} -b1 -a{2:d} -T{3:d}'.format(dbin.upper(), dbout.upper(), npool, nslot)
         if fcma is not None :
-             cmdline = cmdline + ' -F{0:s}'.format(fcma.upper())
+            cmdline = cmdline + ' -F{0:s}'.format(fcma.upper())
         if masksize is not None:
             cmdline = cmdline + ' -n{0:d}'.format(int(masksize))
         if date is not None:

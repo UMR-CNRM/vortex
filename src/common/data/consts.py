@@ -140,7 +140,7 @@ class RtCoef(GenvModelResource):
 
 class RRTM(GenvModelResource):
     """
-    Class of a tar-zip file of coefficients for radiative transferts computations.
+    Class of a tar-zip file of coefficients for radiative transfers computations.
     A Genvkey can be given.
     """
     _footprint = dict(

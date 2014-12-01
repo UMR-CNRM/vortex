@@ -17,17 +17,17 @@ Package
 Classes
 -------
  
-.. autoclass:: GCOCentralStore
+.. autoclass:: GcoCentralStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: GCOCacheStore
+.. autoclass:: GcoCacheStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: GCOStore
+.. autoclass:: GcoStore
    :show-inheritance:
    :members:
    :member-order: alphabetical

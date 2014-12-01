@@ -12,7 +12,7 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex.data.stores import Store, MultiStore, CacheStore
 
 
-class GCOCentralStore(Store):
+class GcoCentralStore(Store):
     """
     GCO central storage class.
 
@@ -49,7 +49,7 @@ class GCOCentralStore(Store):
     def __init__(self, *args, **kw):
         """Proxy init abstract method. Logging only for the time being."""
         logger.debug('Gco store init %s', self.__class__)
-        super(GCOCentralStore, self).__init__(*args, **kw)
+        super(GcoCentralStore, self).__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -144,31 +144,31 @@ class GCOCentralStore(Store):
 
     def ggetdelete(self, remote, options):
         """This operation is not supported."""
-        logger.waring('Removing from GCO Store is not supported')
+        logger.warning('Removing from GCO Store is not supported')
         return False
 
 
-class GCOCacheStore(CacheStore):
-    """Some kind of cache for VORTEX experiments."""
+class GcoCacheStore(CacheStore):
+    """Some kind of cache for GCO components."""
 
     _footprint = dict(
-        info = 'VORTEX cache access',
+        info = 'GCO cache access',
         attr = dict(
             scheme = dict(
-                values   = ['gget'],
+                values  = ['gget'],
             ),
             netloc = dict(
-                values   = ['gco.cache.fr'],
+                values  = ['gco.cache.fr'],
             ),
             strategy = dict(
-                default  = 'mtool',
+                default = 'mtool',
             ),
             rootdir = dict(
-                default  = 'auto'
+                default = 'auto'
             ),
             headdir = dict(
-                default  = 'gco',
-                outcast  = ['xp', 'vortex'],
+                default = 'gco',
+                outcast = ['xp', 'vortex'],
             ),
         )
     )
@@ -176,7 +176,7 @@ class GCOCacheStore(CacheStore):
     def __init__(self, *args, **kw):
         """Proxy init method. Perform a cache reset after initialisation."""
         logger.debug('GCO cache store init %s', self.__class__)
-        super(GCOCacheStore, self).__init__(*args, **kw)
+        super(GcoCacheStore, self).__init__(*args, **kw)
 
     def ggetcheck(self, remote, options):
         """Gateway to :meth:`incachecheck`."""
@@ -212,7 +212,7 @@ class GCOCacheStore(CacheStore):
         return self.incachedelete(remote, options)
 
 
-class GCOStore(MultiStore):
+class GcoStore(MultiStore):
     """Combined cache and central GCO stores."""
 
     _footprint = dict(

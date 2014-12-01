@@ -11,11 +11,11 @@ logger = footprints.loggers.getLogger(__name__)
 
 
 from vortex import sessions
-from vortex.tools import net
-from vortex.util import config, roles, structs
-from vortex.layout import dataflow
 
-from vortex.data import stores, containers, resources, providers
+from vortex.tools  import net
+from vortex.util   import config, roles, structs
+from vortex.layout import dataflow
+from vortex.data   import stores, containers, resources, providers
 
 OBSERVER_TAG = 'Resources-Handlers'
 
@@ -160,7 +160,7 @@ class Handler(object):
         if self.complete:
             if self.container.filled or self.stage == 'put':
                 if self._contents is None:
-                    self._contents = self.resource.contents_handler()
+                    self._contents = self.resource.contents_handler(datafmt=self.container.actualfmt)
                     self._contents.slurp(self.container)
                 return self._contents
             else:
@@ -262,7 +262,7 @@ class Handler(object):
             self._uridata = net.uriparse(self.location())
             return footprints.proxy.store(
                 scheme = self._uridata.pop('scheme'),
-                netloc = self._uridata.pop('netloc')
+                netloc = self._uridata.pop('netloc'),
             )
         else:
             return None
@@ -390,32 +390,33 @@ class Handler(object):
             self.history.append(sh.fullname(), 'clear', rst)
         return rst
 
-    def mkgetpr(self, prgetter=None, tplfile=None, tplskip='sync.skip.tpl', tplfetch='sync.fetch.tpl', py_exec=sys.executable, py_opts=''):
+    def mkgetpr(self, pr_getter=None, tplfile=None, tplskip='sync.skip.tpl', tplfetch='sync.fetch.tpl', py_exec=sys.executable, py_opts=''):
         """Build a getter for the expected resource."""
         if tplfile is None:
             tplfile = tplfetch if self.is_expected() else tplskip
-        if prgetter is None:
-            prgetter = self.container.localpath() + '.getpr'
+        if pr_getter is None:
+            pr_getter = self.container.localpath() + '.getpr'
         tpl = config.load_template(sessions.current(), tplfile)
-        with io.open(prgetter, 'wb') as fd:
+        with io.open(pr_getter, 'wb') as fd:
             fd.write(tpl.substitute(
                 python  = py_exec,
                 pyopts  = py_opts,
                 promise = self.container.localpath(),
             ))
         sh = sessions.system()
-        sh.chmod(prgetter, 0555)
-        return prgetter
+        sh.chmod(pr_getter, 0555)
+        return pr_getter
 
-    def wait(self, sleep=10, nbtries=30, fatal=False):
+    def wait(self, sleep=10, timeout=300, fatal=False):
         """Wait for an expected resource or return immediatly."""
         rc = True
         local = self.container.localpath()
         if self.is_expected():
+            nb = 0
             sh = sessions.system()
             pr = sh.json_load(local)
-            itself = pr.get('itself')
-            nb = 0
+            itself  = pr.get('itself')
+            nbtries = int(timeout / sleep)
             logger.info('Waiting %d x %d s. for expected resource <%s>', nbtries, sleep, local)
             while sh.path.exists(itself):
                 sh.sleep(sleep)

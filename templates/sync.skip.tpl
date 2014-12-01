@@ -10,7 +10,7 @@ sync_name = sys.argv[0].lstrip('./')
 with io.open(sync_name + '.log', 'a') as flog:
 
     def logging(*msg):
-        flog.write(unicode(' '.join(msg) + '\n'))
+        flog.write(unicode(' '.join([str(m) for m in msg]) + '\n'))
 
     logging('-' * 80)
     logging('Sync tool:', sync_name)

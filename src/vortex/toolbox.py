@@ -165,7 +165,7 @@ def add_section(section, args, kw):
         print '    now      =', now
         print '    verbose  =', talkative
 
-    # Let the magic of footprints resolution operates...
+    # Let the magic of footprints resolution operate...
     rl = rload(*args, **kwclean)
     rlok = list()
 
@@ -266,7 +266,6 @@ def promise(*args, **kw):
     if not active_promise:
         logger.warning('Promise flag is <%s> in that context', active_promise)
     return add_section('output', args, kw)
-
 
 
 def executable(*args, **kw):

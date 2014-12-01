@@ -71,7 +71,7 @@ class OdbDriver(object):
         iocreate = self.target.get('odbtools:iocreate', 'create_ioassign')
         iocmd    = self.env.get('ODB_IOCREATE_COMMAND', self.sh.path.join(iopath, iovers, iocreate))
         ioassign = self.sh.path.abspath(ioassign)
-        self.sh.chmod(ioassign, 0555)
+        self.sh.xperm(ioassign, force=True)
         self.env.ODB_IOASSIGN_BINARY = ioassign
         self.sh.spawn([iocmd, '-l' + layout.upper(), '-n' + str(npool)], output=False)
 
@@ -83,7 +83,7 @@ class OdbDriver(object):
         iocreate = self.target.get('odbtools:iocreate', 'create_ioassign')
         iomerge  = self.target.get('odbtools:iomerge', 'create_ioassign')
         iocmd    = [self.env.get('ODB_IOMERGE_COMMAND', self.sh.path.join(iopath, iovers, iomerge))]
-        self.sh.chmod(ioassign, 0555)
+        self.sh.xperm(ioassign, force=True)
         self.env.default(
             ODB_IOASSIGN_BINARY  = self.sh.path.abspath(ioassign),
             ODB_IOCREATE_COMMAND = self.sh.path.join(iopath, iovers, iocreate),

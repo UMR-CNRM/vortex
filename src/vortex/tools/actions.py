@@ -6,7 +6,7 @@ Module managing the sending of messages.
 Default action classes must provide four methods: on, off, status, execute.
 The on, off and status functions must return a boolean value reflecting the
 status of the action. As far as the execute function is concerned,
-it must deals with the data (given to realize the action) and the action
+it must deal with the data (given to realize the action) and the action
 to be processed: e.g. mail, sendbdap, routing, alarm.
 """
 

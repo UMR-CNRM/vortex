@@ -98,7 +98,7 @@ def analysis(**kw):
         suite  = 'oper',
         kind   = 'analysis',
         igakey = '[model]',
-        local  = '[kind].toy'
+        local  = 'toto.toy'
     )
     adesc.update(kw)
     return fastload(**adesc)
@@ -121,7 +121,7 @@ def modelstate(**kw):
         kind   = 'historic',
         igakey = '[model]',
         term   = 0,
-        local  = '[kind].toy'
+        local  = 'toto.toy'
     )
     adesc.update(kw)
     return fastload(**adesc)

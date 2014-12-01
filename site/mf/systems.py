@@ -132,7 +132,7 @@ class Prolix(MeteoBull):
     del y
 
 
-class Macintosh(Linux27):
+class Macosx(Linux27):
     """Mac under MacOSX."""
 
     _footprint = dict(

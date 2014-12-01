@@ -110,7 +110,7 @@ def slurm_parameters(t, **kw):
     try:
         slurm['nn'] = int(e.SLURM_NNODES)
     except Exception as pb:
-        print '[WARNING] SLURM_NNODES:', pb
+        logger.warning('SLURM_NNODES: %s', str(pb))
         slurm['nn'] = 1
 
     try:
@@ -118,7 +118,7 @@ def slurm_parameters(t, **kw):
         if slurm['nnp'] > 1:
             slurm['nnp'] /= 2
     except Exception as pb:
-        print '[WARNING] SLURM_TASKS_PER_NODE:', pb
+        logger.warning('SLURM_TASKS_PER_NODE: %s', str(pb))
         slurm['nnp'] = 1
 
     if 'OMP_NUM_THREADS' in e:
@@ -129,7 +129,7 @@ def slurm_parameters(t, **kw):
             guess_tasks = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
             slurm['openmp'] = guess_cpus / guess_tasks
         except Exception as pb:
-            print '[WARNING] SLURM_JOB_CPUS_PER_NODE:', pb
+            logger.warning('SLURM_JOB_CPUS_PER_NODE: %s', str(pb))
 
     for x in ('nn', 'nnp', 'openmp'):
         if x in kw:

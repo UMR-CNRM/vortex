@@ -100,6 +100,7 @@ class Environment(object):
         self.__dict__['_history'] = History(tag='env')
         self.__dict__['_active']  = False
         self.__dict__['_verbose'] = verbose
+        self.__dict__['_freezed'] = (dict(), list())
         self.__dict__['_pool']    = dict()
         self.__dict__['_mods']    = set()
         if env is not None and isinstance(env, Environment):
@@ -272,6 +273,26 @@ class Environment(object):
         for dico in argd:
             for var, value in dico.iteritems():
                 self.setvar(var, value)
+
+    def delta(self, **kw):
+        """Temporarily set a collection of variables that could be reversed."""
+        upditems, newitems = self._freezed
+        for var, value in kw.iteritems():
+            if var in self:
+                upditems[var] = self.get(var)
+            else:
+                newitems.append(var)
+            self.setvar(var, value)
+
+    def rewind(self):
+        """Comme back on last environment delta changes."""
+        upditems, newitems = self._freezed
+        for item in newitems:
+            self.delvar(item)
+        for var, value in upditems.iteritems():
+            self.setvar(var, value)
+        upditems.clear()
+        newitems[:] = []
 
     def default(self, *args, **kw):
         """Set a collection of non defined variables given as a list of iterable items or key-values pairs."""

@@ -4,6 +4,7 @@
 #: No automatic export
 __all__ = []
 
+
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class Application(object):
         self.__dict__.update(kw)
         self.ticket = t
         if type(self.steps) is str:
-            self.steps = tuple(self.steps.split(','))
+            self.steps = tuple(self.steps.replace(' ', '').split(','))
         self.conf.update(read_config(self.iniconf).get(self.tag))
         for kr in self.conf.as_list('as_range'):
             setattr(self.conf, kr, footprints.util.rangex(getattr(self.conf, kr)))

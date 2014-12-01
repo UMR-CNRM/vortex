@@ -8,7 +8,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.syntax.stdattrs import a_nativefmt, notinrepr
-from contents import DataContent, DataRaw
+from contents import DataContent, UnknownContent
 
 
 class Resource(footprints.FootprintBase):
@@ -20,10 +20,10 @@ class Resource(footprints.FootprintBase):
         attr = dict(
             nativefmt = a_nativefmt,
             clscontents = dict(
-                type = DataContent,
-                isclass = True,
+                type     = DataContent,
+                isclass  = True,
                 optional = True,
-                default = DataRaw
+                default  = UnknownContent,
             )
         )
     )
@@ -46,7 +46,7 @@ class Resource(footprints.FootprintBase):
 
     @property
     def mailbox(self):
-        """A nice cocoon to store miscelaneous information."""
+        """A nice cocoon to store miscellaneous information."""
         return self._mailbox
 
     def vortex_pathinfo(self):

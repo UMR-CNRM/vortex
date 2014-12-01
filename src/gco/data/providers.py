@@ -19,14 +19,14 @@ class GcoProvider(Provider):
         info = 'GCO abstract provider',
         attr = dict(
             gspool = dict(
-                alias = ( 'gtmp', 'gcotmp', 'gcospool', 'tampon' ),
+                alias    = ('gtmp', 'gcotmp', 'gcospool', 'tampon'),
                 optional = True,
-                default = 'tampon'
+                default  = 'tampon'
             ),
             gnamespace = dict(
                 optional = True,
-                values = [ 'gco.cache.fr', 'gco.meteo.fr', 'gco.multi.fr' ],
-                default = 'gco.meteo.fr',
+                values   = ['gco.cache.fr', 'gco.meteo.fr', 'gco.multi.fr'],
+                default  = 'gco.meteo.fr',
             ),
         )
     )
@@ -119,14 +119,16 @@ class GEnv(GcoProvider):
         return 'gget'
 
     def basename(self, resource):
-        """Relies on :mod:`gco.tools.genv` contents for current ``genv`` attribute value
-        in relation to current resource ``gvar`` attribute."""
+        """
+        Relies on :mod:`gco.tools.genv` contents for current ``genv`` attribute value
+        in relation to current resource ``gvar`` attribute.
+        """
         gconf = genv.contents(cycle=self.genv)
         if not gconf:
-            logger.error('No such registered cycle %s', self.genv)
+            logger.error('Cycle not registred <%s>', self.genv)
             raise Exception('Unknow cycle ' + self.genv)
         gkey = resource.gvar
         if gkey not in gconf:
-            logger.error('Key %s unknown in cycle %s', gkey, self.genv)
+            logger.error('Key <%s> unknown in cycle <%s>', gkey, self.genv)
             raise Exception('Unknow gvar ' + gkey)
         return gconf[gkey] + resource.basename(self.realkind)

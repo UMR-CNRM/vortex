@@ -23,10 +23,11 @@ op_vconf    = '$vconf'
 op_cutoff   = '$cutoff'
 op_rundate  = $rundate
 op_runtime  = $runtime
-op_rootdir  = '$rootdir/{0:s}/{1:s}/{2:s}'.format(op_suite, op_vapp, op_vconf)
+op_rootapp  = '$rootapp/{0:s}/{1:s}/{2:s}'.format(op_suite, op_vapp, op_vconf)
+op_gcocache = '$rootdir/{0:s}'.format(op_suite, op_vapp, op_vconf)
 op_jobfile  = '$file'
-op_thisjob  = '{0:s}/jobs/{1:s}.py'.format(op_rootdir, op_jobfile)
-op_iniconf  = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(op_rootdir, op_vapp, op_vconf, '$task')
+op_thisjob  = '{0:s}/jobs/{1:s}.py'.format(op_rootapp, op_jobfile)
+op_iniconf  = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(op_rootapp, op_vapp, op_vconf, '$task')
 op_alarm    = $alarm
 op_archive  = $archive
 op_public   = $public
@@ -40,7 +41,7 @@ oplocals = locals()
 import os, sys
 sys.stderr = sys.stdout
 
-pathdirs = [ os.path.join(op_rootdir, xpath) for xpath in ('', 'src', 'vortex/site', 'vortex/src') ]
+pathdirs = [ os.path.join(op_rootapp, xpath) for xpath in ('', 'src', 'vortex/site', 'vortex/src') ]
 sys.path.extend(
     [ os.path.realpath(d) for d in pathdirs if os.path.isdir(d) ]
 )
@@ -56,9 +57,9 @@ try:
         app.title(name=op_jobname)
         app.run()
     op.complete(t)
-except Exception:
+except Exception as trouble:
+    print trouble
     op.fulltraceback(locals())
     op.rescue(actual=locals())
-    raise
 finally:
     print 'Bye bye Op...'

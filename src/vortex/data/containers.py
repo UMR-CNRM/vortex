@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #: No automatic export
-__all__ = [ 'Container' ]
+__all__ = ['Container']
 
 import re, io, os
 import tempfile
@@ -29,15 +29,15 @@ class Container(footprints.FootprintBase):
         attr = dict(
             actualfmt = a_actualfmt,
             maxreadsize = dict(
-                type = int,
+                type     = int,
                 optional = True,
-                default = CONTAINER_MAXREADSIZE
+                default  = CONTAINER_MAXREADSIZE
             ),
             mode = dict(
                 optional = True,
-                default = 'rb',
-                values = ['a', 'ab', 'a+b', 'ab+', 'r', 'rb', 'rb+', 'r+b', 'w', 'wb', 'w+b', 'wb+'],
-                remap = {'a+b': 'ab+', 'r+b': 'rb+', 'w+b': 'wb+'}
+                default  = 'rb',
+                values   = ['a', 'ab', 'a+b', 'ab+', 'r', 'rb', 'rb+', 'r+b', 'w', 'wb', 'w+b', 'wb+'],
+                remap    = {'a+b': 'ab+', 'r+b': 'rb+', 'w+b': 'wb+'}
             )
         )
     )
@@ -47,6 +47,7 @@ class Container(footprints.FootprintBase):
         return 'container'
 
     def __init__(self, *args, **kw):
+        """Preset to None or False hidden attributes ``iod``, ``iomode`` and ``filled``."""
         logger.debug('Container %s init', self.__class__)
         self._iod = None
         self._iomode = None
@@ -353,14 +354,14 @@ class MayFly(Virtual):
         info = 'Virtual container',
         attr = dict(
             mayfly = dict(
-                type = bool,
+                type   = bool,
                 values = [ True ],
-                alias = ('tempo',)
+                alias  = ('tempo',)
             ),
             delete = dict(
-                type = bool,
+                type     = bool,
                 optional = True,
-                default = True,
+                default  = True,
             ),
         )
     )
@@ -417,17 +418,18 @@ class File(Container):
         info = 'File container',
         attr = dict(
             file = dict(
-                alias    = ('filepath', 'filename', 'filedir', 'local')
+                alias    = ('filepath', 'filename', 'filedir', 'local'),
             ),
             cwdtied = dict(
                 type     = bool,
                 optional = True,
                 default  = False,
-            )
+            ),
         )
     )
 
     def __init__(self, *args, **kw):
+        """Business as usual... but define actualpath according to ``cwdtied`` attribute."""
         logger.debug('File container init %s', self.__class__)
         super(File, self).__init__(*args, **kw)
         if self.cwdtied:
@@ -438,6 +440,26 @@ class File(Container):
     def actualpath(self):
         """Returns the actual pathname of the file object."""
         return self._actualpath
+
+    @property
+    def abspath(self):
+        """Shortcut to realpath of the actualpath."""
+        return os.path.realpath(self.actualpath())
+
+    @property
+    def absdir(self):
+        """Shortcut to dirname of the abspath."""
+        return os.path.dirname(self.abspath)
+
+    @property
+    def dirname(self):
+        """Shortcut to dirname of the actualpath."""
+        return os.path.dirname(self.actualpath())
+
+    @property
+    def basename(self):
+        """Shortcut to basename of the abspath."""
+        return os.path.basename(self.abspath)
 
     def _str_more(self):
         """Additional information to print representation."""

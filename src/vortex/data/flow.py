@@ -5,16 +5,19 @@
 __all__ = []
 
 
-from resources import Resource
-from geometries import SpectralGeometry
+from .resources  import Resource
+from .geometries import SpectralGeometry
+from .contents   import FormatAdapter
+
 from vortex.syntax.stdattrs import model, date, cutoff
+
 
 
 class FlowResource(Resource):
     """Abstract resource binded to a model, a date and a cutoff."""
 
     _abstract = True
-    _footprint = [ model, date, cutoff ]
+    _footprint = [model, date, cutoff]
 
     def vortex_pathinfo(self):
         """Default path informations (used by :class:`vortex.data.providers.Vortex`)."""
@@ -22,7 +25,7 @@ class FlowResource(Resource):
             nativefmt = self.nativefmt,
             model     = self.model,
             date      = self.date,
-            cutoff    = self.cutoff
+            cutoff    = self.cutoff,
         )
 
 
@@ -34,7 +37,10 @@ class GeoFlowResource(FlowResource):
         attr = dict(
             geometry = dict(
                 type = SpectralGeometry,
-            )
+            ),
+            clscontents = dict(
+                default = FormatAdapter,
+            ),
         )
     )
 
@@ -51,3 +57,4 @@ class GeoFlowResource(FlowResource):
     def footprint_export_geometry(self):
         """Return the ``geometry`` attribute as its ``id``."""
         return self.geometry.id
+

@@ -7,7 +7,26 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.data.stores import Store, Finder
+from vortex.data.stores     import Store, Finder
+from vortex.syntax.stdattrs import DelayedEnvValue
+
+from gco.data.stores import GcoCacheStore
+
+
+class IgaGcoCacheStore(GcoCacheStore):
+    """Some kind of cache for GCO components in OP context."""
+
+    _footprint = dict(
+        info = 'OPGCO cache access',
+        attr = dict(
+            netloc = dict(
+                values  = ['opgco.cache.fr'],
+            ),
+            rootdir = dict(
+                default = DelayedEnvValue('op_gcocache'),
+            ),
+        )
+    )
 
 
 class IgaFinder(Finder):

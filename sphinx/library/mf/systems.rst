@@ -14,7 +14,7 @@ Package
 .. autodata:: __all__
 
 Bull Targets
--------------
+------------
 
 .. autoclass:: MeteoBull
    :show-inheritance:
@@ -49,7 +49,7 @@ Old NEC system and targets
 Local systems
 -------------
 
-.. autoclass:: Macintosh
+.. autoclass:: Macosx
    :show-inheritance:
    :members:
    :member-order: alphabetical

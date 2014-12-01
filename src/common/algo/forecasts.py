@@ -71,7 +71,7 @@ class Forecast(IFSParallel):
                     sh.symlink(thisclim, thisname)
 
             # At least, expect the analysis to be there...
-            self.wait_and_get(analysis, comment='analysis')
+            self.grab(analysis, comment='analysis')
 
         for namrh in [ x.rh for x in self.context.sequence.effective_inputs(
             role = 'Namelist',
@@ -151,7 +151,7 @@ class LAMForecast(Forecast):
             sh.softlink(thisbound, 'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, i))
             if self.mksync:
                 thistool = self.synctool + '.{0:03d}'.format(i)
-                bound.mkgetpr(prgetter=thistool, tplfetch=self.synctpl)
+                bound.mkgetpr(pr_getter=thistool, tplfetch=self.synctpl)
                 if firstsync is None:
                     firstsync = thistool
 

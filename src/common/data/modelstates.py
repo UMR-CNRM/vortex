@@ -24,7 +24,7 @@ class Analysis(GeoFlowResource):
        info = 'Analysis',
        attr = dict(
            kind = dict(
-               values   = [ 'analysis', 'analyse', 'atm_analysis' ]
+               values   = ['analysis', 'analyse', 'atm_analysis']
            ),
            nativefmt = dict(
                values   = ['fa', 'grib', 'lfi'],

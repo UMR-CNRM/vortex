@@ -500,7 +500,7 @@ class Finder(Store):
             return None
 
     def ftpget(self, remote, local, options):
-        """Delegates to ``system`` the file transfert of ``remote`` to ``local``."""
+        """Delegates to ``system`` the file transfer of ``remote`` to ``local``."""
         return self.system.ftget(
             self.fullpath(remote),
             local,
@@ -511,7 +511,7 @@ class Finder(Store):
         )
 
     def ftpput(self, local, remote, options):
-        """Delegates to ``system`` the file transfert of ``local`` to ``remote``."""
+        """Delegates to ``system`` the file transfer of ``local`` to ``remote``."""
         return self.system.ftput(
             local,
             self.fullpath(remote),
@@ -912,9 +912,13 @@ class PromiseStore(footprints.FootprintBase):
             netloc = dict(
                 alias    = ('domain', 'namespace')
             ),
-            pstorename = dict(
+            prstorename = dict(
                 optional = True,
                 default  = 'promise.cache.fr',
+            ),
+            prlogfile = dict(
+                optional = True,
+                default  = 'promises.log',
             ),
         ),
     )
@@ -931,10 +935,10 @@ class PromiseStore(footprints.FootprintBase):
         # Find a store for the promised resources
         self.promise = footprints.proxy.store(
             scheme = self.proxyscheme,
-            netloc = self.pstorename,
+            netloc = self.prstorename,
         )
         if self.promise is None:
-            logger.critical('Could not find store scheme <%s> netloc <%s>', self.proxyscheme, self.pstorename)
+            logger.critical('Could not find store scheme <%s> netloc <%s>', self.proxyscheme, self.prstorename)
             raise ValueError('Could not get a Promise Store')
 
         # Find the other "real" store (could be a multi-store)
@@ -965,21 +969,31 @@ class PromiseStore(footprints.FootprintBase):
             rc = rc and sto.in_situ(local, options)
         return rc
 
-    def mkpromise(self, local, remote, options):
-        """Build a virtual container with expected informations."""
-        pfile = local + '.pr'
-        self.system.json_dump(
-            dict(
-                promise  = True,
-                stamp    = date.stamp(),
-                itself   = self.promise.locate(remote, options),
-                locate   = self.other.locate(remote, options),
-                datafmt  = options.get('fmt', None),
-                rhandler = options.get('rhandler', None),
-            ),
-            pfile
+    def mkpromise_info(self, remote, options):
+        """Build a dictionary with relevant informations for the promise."""
+        return dict(
+            promise  = True,
+            stamp    = date.stamp(),
+            itself   = self.promise.locate(remote, options),
+            locate   = self.other.locate(remote, options),
+            datafmt  = options.get('fmt', None),
+            rhandler = options.get('rhandler', None),
         )
+
+    def mkpromise_file(self, info, local):
+        """Build a virtual container with specified informations."""
+        pfile = local + '.pr'
+        self.system.json_dump(info, pfile)
         return pfile
+
+    def mkpromise_log(self, info):
+        """Insert current promise information to promises logfile."""
+        sh = self.system
+        loglist = list()
+        if self.prlogfile and sh.path.exists(self.prlogfile):
+            loglist = sh.json_load(self.prlogfile)
+        loglist.append(info)
+        sh.json_dump(loglist, self.prlogfile)
 
     def check(self, remote, options=None):
         """Go through internal opened stores and check for the resource."""
@@ -1020,8 +1034,9 @@ class PromiseStore(footprints.FootprintBase):
                 rc = self.other.get(remote.copy(), local, options)
             if not rc and options.get('pretend', False):
                 logger.warning('Pretending to get a promise for <%s>', local)
-                pfile = self.mkpromise(local, remote, options)
-                self.system.move(pfile, local)
+                pr_info = self.mkpromise_info(remote, options)
+                pr_file = self.mkpromise_file(pr_info, local)
+                self.system.move(pr_file, local)
                 rc = self.delayed = True
         return rc
 
@@ -1036,11 +1051,13 @@ class PromiseStore(footprints.FootprintBase):
                 logger.critical('Could not promise resource without other cache <%s>', self.other)
                 raise ValueError('Could not promise: other store does not use cache')
             logger.warning('Log a promise instead of missing resource <%s>', local)
-            pfile = self.mkpromise(local, remote, options)
+            pr_info = self.mkpromise_info(remote, options)
+            pr_file = self.mkpromise_file(pr_info, local)
             oldfmt = options.pop('fmt', None)
             options['fmt'] = 'ascii'
-            rc = self.promise.put(pfile, remote.copy(), options)
-            self.system.remove(pfile)
+            rc = self.promise.put(pr_file, remote.copy(), options)
+            self.mkpromise_log(pr_info)
+            self.system.remove(pr_file)
             if rc:
                 options['fmt'] = oldfmt
                 self.other.delete(remote.copy(), options)

@@ -195,7 +195,7 @@ class UtGridPoint(TestCase):
             rl[0].locate(),
             datadir + '/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0006.rDH'
         )
-	self.assertTrue(rl[0].get())
+        self.assertTrue(rl[0].get())
 
     def test_v5(self):
         rl = toolbox.rload(

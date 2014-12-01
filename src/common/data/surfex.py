@@ -84,7 +84,7 @@ class PGDFA(PGDRaw):
 
 class CoverParams(StaticResource):
     """
-    Class of a tar-zip set of coefficients for radiative transferts computations.
+    Class of a tar-zip set of coefficients for radiative transfers computations.
     A Genvkey can be given.
     """
     _footprint = dict(

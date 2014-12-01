@@ -9,9 +9,12 @@ import os
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.data.providers import Provider
-from vortex.util.config import GenericConfigParser
+from vortex.data.providers  import Provider
+from vortex.util.config     import GenericConfigParser
 from vortex.syntax.stdattrs import a_suite
+
+from gco.data.providers import GEnv
+
 from iga.util import bpnames as bp
 
 
@@ -20,6 +23,20 @@ ATM_LIST_ONE = ['antiguy', 'arome', 'arpege', 'caledonie', 'polynesie',
 
 ATM_LIST_TWO = ['perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim',
                 'mocvolc']
+
+
+class IgaGEnvProvider(GEnv):
+    """Almost identical to base, except for the specific netloc value."""
+
+    _footprint = dict(
+        info = 'GCO provider in OP context',
+        attr = dict(
+            gnamespace = dict(
+                values = ['opgco.cache.fr'],
+                default = 'opgco.cache.fr',
+            ),
+        )
+    )
 
 
 class IgaCfgParser(GenericConfigParser):

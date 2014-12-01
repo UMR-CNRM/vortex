@@ -207,7 +207,7 @@ class OpArchiveStore(ArchiveStore):
             return rc
 
     def opget(self, remote, local, options):
-        """File transfert: get from store."""
+        """File transfer: get from store."""
         targetpath = local
         cleanpath  = self.fullpath(remote)
         extract    = remote['query'].get('extract', None)

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import vortex
+
 from iga.util import swissknife
 
 t = vortex.ticket()
@@ -35,4 +36,3 @@ with open(tplconf['file'], 'w') as job:
     job.write(corejob)
 
 t.sh.header('Job creation completed')
-
