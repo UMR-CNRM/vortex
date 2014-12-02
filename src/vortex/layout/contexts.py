@@ -11,50 +11,57 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
+from vortex.util.structs import Tracker
+from vortex.tools.env    import Environment
 
-from vortex.util.structs import idtree, Tracker
-from vortex.tools.env import Environment
-import dataflow
+from . import dataflow
 
 
-class Context(object):
+# Module Interface
+
+def get(**kw):
+    """Return actual context object matching description."""
+    return Context(**kw)
+
+def keys():
+    """Return the list of current context tags."""
+    return Context.tag_keys()
+
+def values():
+    """Return the list of current context values."""
+    return Context.tag_values()
+
+def items():
+    """Return the items of the contexts table."""
+    return Context.tag_items()
+
+def focus():
+    """Return the context with the focus on, if any."""
+    tf = Context.tag_focus()
+    if tf is not None:
+        tf = Context(tag=tf)
+    return tf
+
+
+class Context(footprints.util.GetByTag):
     """Physical layout of a session or task, etc."""
 
-    _count = 0
+    _tag_default = 'ctx'
 
-    def __init__(self, tag='foo', rundir=None, tagtree=None, topenv=None, sequence=None,
-                 task=None, mkrundir=False, rootrd=None, keeprd=False):
+    def __init__(self, rundir=None, path=None, topenv=None, sequence=None, task=None):
         """Initate a new execution context."""
         logger.debug('Context initialisation %s', self)
-        self._env = Environment(env=topenv, active=topenv.active)
-        self._tag = tag
-        self.tagtree = tagtree
-        self._keeprd = keeprd
-        self._task = task
-        self._void = True
-        self._fstore = dict()
-        self._stampradical = '.'.join(('.ctx', str(id(self))))
-
-        tree = idtree(self.tagtree)
-        csys = tree.root.system()
-
-        if rootrd:
-            self._rootrd = rootrd
-        else:
-            self._rootrd = tree.root.glove.configrc
-
-        if rundir:
-            self._rundir = rundir
-        else:
-            self.__class__._count += 1
-            self._rundir = '{0:s}/ctx{1:04d}_{2:s}'.format(self._rootrd, self.__class__._count, self._tag)
-
-        self._rundir = csys.path.abspath(self._rundir)
-        if mkrundir:
-            logger.info('Make context rundir %s', self._rundir)
-            csys.filecocoon(self.system.path.join(self._rundir, 'ctx'))
-        else:
-            logger.debug('Do not create any context rundir %s', self._rundir)
+        if path is None:
+            logger.critical('Try to define a new context without virtual path')
+            raise ValueError('No virtual path given to new context.')
+        self._env     = Environment(env=topenv, active=topenv.active)
+        self._path    = path + '/' + self.tag
+        self._session = None
+        self._rundir  = rundir
+        self._task    = task
+        self._void    = True
+        self._stamp   = '.'.join(('.ctx', self.tag, str(id(self))))
+        self._fstore  = dict()
 
         if sequence:
             self._sequence = sequence
@@ -71,7 +78,7 @@ class Context(object):
         Register a new section in void active context with the resource handler ``item``.
         """
         logger.debug('Notified %s new item %s', self, item)
-        if self._void and self.hasfocus():
+        if self._void and self.has_focus():
             self._sequence.section(rh=item, stage='load')
 
     def delobsitem(self, item, info):
@@ -79,7 +86,7 @@ class Context(object):
         Resources-Handlers observing facility.
         Should removed the associated section. Yet to be coded.
         """
-        if self.hasfocus():
+        if self.has_focus():
             logger.debug('Notified %s del item %s', self, item)
 
     def updobsitem(self, item, info):
@@ -87,45 +94,47 @@ class Context(object):
         Resources-Handlers observing facility.
         Track the new stage of the section containing the resource handler ``item``.
         """
-        if self.hasfocus():
+        if self.has_focus():
             logger.debug('Notified %s upd item %s', self, item)
             for section in self._sequence:
                 if section.rh == item:
                     section.updstage(info)
 
-    def _gettag(self):
-        """Return the current tag name."""
-        return self._tag
-
-    def _settag(self, value):
-        """
-        Set the formal tag name of the current context to the provided value, if any.
-        The current tag name is returned.
-        """
-        if value:
-            self._tag = value
-        return self._tag
-
-    tag = property(_gettag, _settag, None)
+    @property
+    def path(self):
+        """Return the virtual path of the current context."""
+        return self._path
 
     @property
-    def tree(self):
-        """Returns the associated tree."""
-        return idtree(self.tagtree)
+    def session(self):
+        """Return the session binded to the current virtual context path."""
+        if self._session is None:
+            from vortex import sessions
+            self._session = sessions.get(tag = [ x for x in self.path.split('/') if x ][0])
+        return self._session
 
-    @property
-    def rundir(self):
+    def _get_rundir(self):
         """Return the path of the directory associated to that context."""
         return self._rundir
 
-    @property
-    def keeprundir(self):
-        """Return permanent status of the directory associated to that context."""
-        return self._keeprd
+    def _set_rundir(self, path):
+        """Set a new rundir."""
+        if self._rundir:
+            logger.warning('Context <%s> is changing its workding directory <%s>', self.tag, self._rundir)
+        if self.system.path.isdir(path):
+            self._rundir = path
+            logger.info('Context <%s> set rundir <%s>', self.tag, self._rundir)
+        else:
+            logger.error('Try to change context <%s> to invalid path <%s>', self.tag, path)
+
+    rundir = property(_get_rundir, _set_rundir)
 
     def cocoon(self):
         """Change directory to the one associated to that context."""
-        self.system.cd(self._rundir)
+        if self._rundir is None:
+            subpath = self.path.replace(self.session.path, '', 1)
+            self._rundir = self.session.rundir + subpath
+        self.system.cd(self._rundir, create=True)
 
     @property
     def void(self):
@@ -142,21 +151,13 @@ class Context(object):
 
     @property
     def system(self):
-        """
-        Return the :class:`~vortex.tools.env.System` object associated to the root node
-        of the tree holding that context.
-        """
-        return self.tree.root.system()
+        """Return the :class:`~vortex.tools.env.System` object associated to the root session."""
+        return self.session.system()
 
     @property
     def task(self):
         """Return the possibly binded task."""
         return self._task
-
-    @property
-    def active(self):
-        """Return the context who has the focus in the same tree as the current context."""
-        return self.tree.token
 
     @property
     def sequence(self):
@@ -179,26 +180,26 @@ class Context(object):
             self._task = task
             self._void = False
 
+    @property
+    def subcontexts(self):
+        """The current contexts virtually included in the current one."""
+        rootpath = self.path + '/'
+        return [ x for x in self.__class__.tag_values() if x.path.startswith(rootpath) ]
+
     def newcontext(self, name, focus=False):
         """
         Create a new child context, attached to the current one.
         The tagname of the new kid is given through the mandatory ``name`` arugument,
         as well as the default ``focus``.
         """
-        context = Context(tag=name, topenv=self._env, tree=self.tree)
-        self.tree.addnode(context, parent=self, token=focus)
-
-    def subcontexts(self):
-        """Return the list of contexts attached to the current one."""
-        return self.tree.kids(self)
-
-    def hasfocus(self):
-        """Return whether the current context has the active focus in the tree it belongs."""
-        return self.tree.token == self
+        newctx = self.__class__(tag=name, topenv=self.env, path=self.path)
+        if focus:
+            self.__class__.set_focus(newctx)
+        return newctx
 
     def stamp(self, tag='default'):
         """Return a stamp name that could be used for any generic purpose."""
-        return self._stampradical + '.' + str(tag)
+        return self._stamp + '.' + str(tag)
 
     def fstrack_stamp(self, tag='default'):
         """Set a stamp to track changes on the filesystem."""
@@ -241,8 +242,6 @@ class Context(object):
             actualsys = self.system
         except TypeError:
             pass
-        except:
-            raise
         if not actualsys:
             try:
                 from vortex import sessions
@@ -256,11 +255,3 @@ class Context(object):
             fstamps = self._fstore.keys()
             actualsys.rmall(*fstamps)
             logger.info('Removing context stamps %s', fstamps)
-        if self._keeprd:
-            logger.warning('Preserving context rundir %s', self._rundir)
-            return True
-        else:
-            if actualsys.path.isdir(self._rundir):
-                logger.info('Removing context rundir %s', self._rundir)
-                return actualsys.rmsafe(self._rundir, self.tree.root.glove.safedirs())
-

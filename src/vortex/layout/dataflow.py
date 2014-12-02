@@ -111,6 +111,7 @@ class Section(object):
             except Exception as e:
                 logger.error('Something wrong (input section): %s', e)
                 logger.error('Resource %s', self.rh.locate())
+                raise
             if not rc and self.fatal:
                 logger.critical('Fatal error with action get %s', self.rh.locate())
                 raise SectionFatalError('Could not get resource [%s]', str(rc))
@@ -129,6 +130,7 @@ class Section(object):
             except Exception as e:
                 logger.error('Something wrong (output section): %s', e)
                 logger.error('Resource %s', self.rh.locate())
+                raise
             if not rc and self.fatal:
                 logger.critical('Fatal error with action put %s', self.rh.locate())
                 raise SectionFatalError('Could not put resource [%s]', str(rc))

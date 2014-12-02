@@ -296,6 +296,10 @@ class GetByTag(object):
     def set_focus(cls, obj):
         cls._tag_focus = obj.tag
 
+    def has_focus(self):
+        """Return a boolean value on equality of current tag and focus tag."""
+        return self.tag == self._tag_focus
+
     @classmethod
     def tag_clear(cls):
         cls._tag_table = dict()

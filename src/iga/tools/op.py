@@ -37,6 +37,8 @@ def setup(**kw):
         profile = opd.get('op_suite', 'oper')
     )
 
+    print gl.idcard()
+
     #--------------------------------------------------------------------------------------------------
     t.sh.header('Activate a new session with previous glove')
 
@@ -48,6 +50,8 @@ def setup(**kw):
         prompt  = vortex.__prompt__
     )
 
+    print t.idcard()
+
     t.sh.prompt = t.prompt
 
     gl.vapp  = kw.get('vapp',  opd.get('op_vapp',  None))
@@ -56,25 +60,25 @@ def setup(**kw):
     #--------------------------------------------------------------------------------------------------
     t.sh.header('Toolbox description')
 
-    print t.prompt, 'Root directory =', t.glove.siteroot
-    print t.prompt, 'Path directory =', t.glove.sitesrc
-    print t.prompt, 'Conf directory =', t.glove.siteconf
+    print '+ Root directory =', t.glove.siteroot
+    print '+ Path directory =', t.glove.sitesrc
+    print '+ Conf directory =', t.glove.siteconf
 
     #--------------------------------------------------------------------------------------------------
     t.sh.header('Op session')
 
-    print t.prompt, 'Session Ticket =', t
-    print t.prompt, 'Session Glove  =', t.glove
-    print t.prompt, 'Session System =', t.sh
-    print t.prompt, 'Session Env    =', t.env
+    print '+ Session Ticket =', t
+    print '+ Session Glove  =', t.glove
+    print '+ Session System =', t.sh
+    print '+ Session Env    =', t.env
 
     #--------------------------------------------------------------------------------------------------
     t.sh.header('This target')
 
     tg = vortex.proxy.target(hostname = t.sh.hostname)
-    print t.prompt, 'Target name    =', tg.hostname
-    print t.prompt, 'Target system  =', tg.sysname
-    print t.prompt, 'Target inifile =', tg.inifile
+    print '+ Target name    =', tg.hostname
+    print '+ Target system  =', tg.sysname
+    print '+ Target inifile =', tg.inifile
 
     #--------------------------------------------------------------------------------------------------
     t.sh.header('Verbosity settings')
@@ -92,18 +96,19 @@ def setup(**kw):
 
     import vortex.tools.lfi
     shlfi = footprints.proxy.addon(kind='lfi', shell=t.sh)
-    print t.prompt, shlfi
+    print '+', shlfi
 
     import vortex.tools.odb
     shodb = footprints.proxy.addon(kind='odb', shell=t.sh)
-    print t.prompt, shodb
+    print '+', shodb
 
     #--------------------------------------------------------------------------------------------------
     t.sh.header('Actual running directory')
 
     t.env.RUNDIR = kw.get('rundir', mkdtemp(prefix=t.glove.tag + '-'))
     t.sh.cd(t.env.RUNDIR, create=True)
-    t.sh.pwd(output=False)
+
+    logger.info('Current rundir <%s>', t.sh.getcwd())
 
     #--------------------------------------------------------------------------------------------------
     t.sh.header('Toolbox module settings')
@@ -112,12 +117,21 @@ def setup(**kw):
     vortex.toolbox.active_now     = True
     vortex.toolbox.active_insitu  = True
 
+    for activeattr in [ x for x in dir(vortex.toolbox) if x.startswith('active_') ]:
+        print '+', activeattr.ljust(16), '=', getattr(vortex.toolbox, activeattr)
+
     #--------------------------------------------------------------------------------------------------
     t.sh.header('External imports')
 
     import common
     import olive.data.providers
     from iga.data import containers, providers, stores
+
+    print '+ common               =', common.__file__
+    print '+ olive.data.providers =', olive.data.providers.__file__
+    print '+ iga.data.containers  =', containers.__file__
+    print '+ iga.data.providers   =', providers.__file__
+    print '+ iga.data.stores      =', stores.__file__
 
     return t
 
@@ -131,17 +145,17 @@ def setenv(t, **kw):
     t.env.OP_VORTEX = vortex.__version__
 
     #--------------------------------------------------------------------------------------------------
-    t.sh.header('SLURM Env')
+    t.sh.header('SLURM Environment')
 
     nb_slurm = 0
     for envslurm in sorted([ x for x in t.env.keys() if x.startswith('SLURM') ]):
         print '{0:s}="{1:s}"'.format(envslurm, t.env[envslurm])
         nb_slurm += 1
 
-    logger.info('Looking for automatic batch variables: %d found', nb_slurm)
+    logger.info('Batch variables found: %d', nb_slurm)
 
     #--------------------------------------------------------------------------------------------------
-    t.sh.header('Look up OP Environment')
+    t.sh.header('OP Environment')
     opd = kw.get('actual', dict())
     nb_op = 0
     for opvar in sorted([x for x in opd.keys() if x.startswith('op_') ]):
@@ -151,13 +165,13 @@ def setenv(t, **kw):
     logger.info('Looking for global op variables: %d found', nb_op)
 
     #--------------------------------------------------------------------------------------------------
-    t.sh.header('Look up MPI Environment')
+    t.sh.header('MPI Environment')
 
     mpi, rkw = swissknife.slurm_parameters(t, **kw)
     t.env.OP_MPIOPTS = mpi
 
     #--------------------------------------------------------------------------------------------------
-    t.sh.header('Find out what could be the current rundate')
+    t.sh.header('Setting rundate')
 
     if t.env.OP_RUNDATE:
         if not isinstance(t.env.OP_RUNDATE, vortex.tools.date.Date):
@@ -200,7 +214,7 @@ def register(t, cycle, dump=True):
             logger.warning('OP context without OP_ROOTAPP variable')
             genv.autofill(cycle)
         if dump:
-            print genv.nicedump(cycle=cycle)
+            print genv.as_rawstr(cycle=cycle)
 
 def rescue(**kw):
     """Something goes wrong... so, do your best to save current state."""

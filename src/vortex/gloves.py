@@ -127,15 +127,14 @@ class Glove(footprints.FootprintBase):
         e = Environment(active=False)
         return [ (e.HOME, 2), (e.TMPDIR, 1) ]
 
-    def idcard(self):
+    def idcard(self, indent='+ '):
         """Returns a printable description of the current glove."""
-        indent = ''
         card = "\n".join((
-            '{0}User     : {1:s}',
-            '{0}Profile  : {2:s}',
-            '{0}Vapp     : {3:s}',
-            '{0}Vconf    : {4:s}',
-            '{0}Configrc : {5:s}'
+            '{0}User     = {1:s}',
+            '{0}Profile  = {2:s}',
+            '{0}Vapp     = {3:s}',
+            '{0}Vconf    = {4:s}',
+            '{0}Configrc = {5:s}'
         )).format(
             indent,
             self.user, str(self.profile), self.vapp, self.vconf, self.configrc

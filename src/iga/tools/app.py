@@ -130,7 +130,7 @@ class Application(object):
         pass
 
     def setup(self, **kw):
-        """Abstract method: defines the interaction with vortex env."""
+        """Switch to a new context."""
         pass
 
     def process(self):

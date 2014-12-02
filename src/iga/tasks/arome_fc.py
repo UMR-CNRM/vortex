@@ -20,6 +20,7 @@ class Forecast(Application):
 
     def setup(self, **kw):
         """Default arome forecast experiment settings."""
+        super(Forecast, self).setup(**kw)
 
         t = self.ticket
 

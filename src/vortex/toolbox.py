@@ -122,6 +122,13 @@ def rput(*args, **kw):
     return rl
 
 
+def nicedump(msg, **kw):
+    """Simple dump of the dict contents with ``msg`` as header."""
+    print '#', msg, ':'
+    for k, v in kw.iteritems():
+        print ' +', k.ljust(12), '=', str(v)
+    print
+
 def add_section(section, args, kw):
     """Add a ``section`` type to the current sequence."""
 
@@ -154,16 +161,15 @@ def add_section(section, args, kw):
 
     # Show the actual set of arguments
     if talkative:
-        print "New {0:s} section with options: {1:s}\n\nResource handler's description: {2:s}\n".format(
-            section,
-            footprints.dump.lightdump(opts),
-            footprints.dump.lightdump(kwclean)
+        nicedump('New {0:s} section with options'.format(section), **opts)
+        nicedump('Resource handler description', **kwclean)
+        nicedump(
+            'This command options',
+            complete = complete,
+            loglevel = loglevel,
+            now = now,
+            verbose  = talkative,
         )
-        print 'This command options:'
-        print '    complete =', complete
-        print '    loglevel =', loglevel
-        print '    now      =', now
-        print '    verbose  =', talkative
 
     # Let the magic of footprints resolution operate...
     rl = rload(*args, **kwclean)
@@ -292,7 +298,7 @@ def algo(*args, **kw):
         t.setloglevel(loglevel.upper())
 
     if talkative:
-        print 'Loading algo component with description:', footprints.dump.lightdump(kw), "\n"
+        nicedump('Loading algo component with description:', **kw)
 
     ok = proxy.component(**kw)
     if ok and talkative:
@@ -319,10 +325,8 @@ def diff(*args, **kw):
 
     # Show the actual set of arguments
     if talkative:
-        print "Discard section options: {0:s}\n\nResource handler's description: {1:s}\n".format(
-            footprints.dump.lightdump(opts),
-            footprints.dump.lightdump(kwclean)
-        )
+        nicedump('Discard section options', **opts)
+        nicedump('Resource handler description', **kwclean)
 
     # Fast exit in case of undefined value
     rlok = list()

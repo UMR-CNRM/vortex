@@ -222,6 +222,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
                 if verbose:
                     print 'ok'
                     t.sh.ll(name)
+                    t.sh.readonly(name)
                 details['retrieved'].append(name)
             except StandardError:
                 if verbose:

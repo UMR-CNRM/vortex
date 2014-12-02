@@ -18,12 +18,11 @@ import logging
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.util.patterns import Singleton
-from vortex.util.structs import idtree
-from vortex.tools import date
 from vortex.tools.env import Environment
-from vortex.layout.contexts import Context
-from vortex import gloves
+
+from vortex        import gloves
+from vortex.tools  import date
+from vortex.layout import contexts
 
 
 # Module Interface
@@ -83,24 +82,22 @@ class Ticket(footprints.util.GetByTag):
 
     def __init__(self,
                  active  = False,
-                 config  = None,
                  topenv  = None,
                  glove   = None,
                  context = None,
                  prompt  = 'Vortex:'
     ):
-        self._active = active
-        self.config = config
         self.prompt = prompt
-        self.line = "\n" + '-' * 100 + "\n"
-        self._started = date.now()
-        self._closed = 0
-        self.fake = 0
-        self._system = None
+        self.line   = "\n" + '-' * 100 + "\n"
 
-        self.tagtree = '-'.join(('session', self.tag))
-        tree = idtree(self.tagtree)
-        tree.setroot(self)
+        self._active  = active
+        self._started = date.now()
+        self._closed  = 0
+        self._system  = None
+
+        logger.debug('New session system is %s', self.system())
+
+        self._rundir  = self.sh.getcwd()
 
         if topenv:
             self._topenv = topenv
@@ -117,19 +114,32 @@ class Ticket(footprints.util.GetByTag):
 
         logger.debug('Open session %s %s', self.tag, self)
 
-        if context:
-            context.tagtree = self.tagtree
-        else:
-            context = Context(topenv=self._topenv, tagtree=self.tagtree)
+        if context is None:
+            context = contexts.Context(tag=self.tag, topenv=self._topenv, path=self.path)
             if context.env.active() and not self._active:
                 context.env.active(False)
 
         context.env.glove = self._glove
         if self._active:
             Ticket.set_focus(self)
+            contexts.Context.set_focus(context)
             context.env.active(True)
 
-        tree.addnode(context, parent=self, token=True)
+    def _get_rundir(self):
+        """Return the path of the directory associated to current session."""
+        return self._rundir
+
+    def _set_rundir(self, path):
+        """Set a new default rundir for this session."""
+        if self._rundir:
+            logger.warning('Session <%s> is changing its workding directory <%s>', self.tag, self._rundir)
+        if self.sh.path.isdir(path):
+            self._rundir = path
+            logger.info('Session <%s> set rundir <%s>', self.tag, self._rundir)
+        else:
+            logger.error('Try to change session <%s> to invalid path <%s>', self.tag, path)
+
+    rundir = property(_get_rundir, _set_rundir)
 
     @property
     def active(self):
@@ -172,14 +182,9 @@ class Ticket(footprints.util.GetByTag):
         return self._glove
 
     @property
-    def tree(self):
-        """Returns the associated tree."""
-        return idtree(self.tagtree)
-
-    @property
     def context(self):
         """Returns the active context binded to this section."""
-        return self.tree.token
+        return contexts.focus()
 
     def system(self, **kw):
         """
@@ -219,11 +224,21 @@ class Ticket(footprints.util.GetByTag):
             self._closed = date.now()
             logger.debug('Close session %s ( time = %s )', self.tag, self.duration())
 
+    @property
+    def path(self):
+        return '/'  + self.tag
+
+    @property
+    def subcontexts(self):
+        """The current contexts binded to this session."""
+        rootpath = self.path + '/'
+        return [ x for x in contexts.values() if x.path.startswith(rootpath) ]
+
     def exit(self):
         """Exit from the current session."""
         ok = True
         logger.debug('Exit session %s %s', self.tag, self)
-        for kid in self.tree.kids(self):
+        for kid in self.subcontexts:
             logger.debug('Exit from context %s', kid)
             ok = ok and kid.exit()
         self.close()
@@ -266,15 +281,14 @@ class Ticket(footprints.util.GetByTag):
         logger = logging.getLogger('vortex')
         return logging.getLevelName(logger.level)
 
-    def idcard(self):
+    def idcard(self, indent='+ '):
         """Returns a printable description of the current session."""
-        indent = ''
         card = "\n".join((
-            '{0}Name     : {1:s}',
-            '{0}Started  : {2:s}',
-            '{0}Opened   : {3:s}',
-            '{0}Duration : {4:s}',
-            '{0}Loglevel : {5:s}'
+            '{0}Name     = {1:s}',
+            '{0}Started  = {2:s}',
+            '{0}Opened   = {3:s}',
+            '{0}Duration = {4:s}',
+            '{0}Loglevel = {5:s}'
         )).format(
             indent,
             self.tag, str(self.started), str(self.opened), self.duration(), self.loglevel
@@ -295,6 +309,7 @@ class Ticket(footprints.util.GetByTag):
                 table[tag]._active = True
                 table[tag].env.active(True)
                 cls.set_focus(table[tag])
+                contexts.Context.set_focus(table[focus].context)
             return table[tag]
         else:
             logger.error('Try to switch to an undefined session: %s', tag)

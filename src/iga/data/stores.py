@@ -28,6 +28,20 @@ class IgaGcoCacheStore(GcoCacheStore):
         )
     )
 
+    def ggetget(self, remote, local, options):
+        """
+        Gateway to :meth:`incacheget`.
+        Resources should be already extracted from in-cache archives files.
+        """
+        extract = remote['query'].get('extract', None)
+        if extract:
+            remote['path'] = self.system.path.join(remote['path'], extract[0])
+            logger.warning('Extend remote path with extract value <%s>', remote['path'])
+        rc = self.incacheget(remote, local, options)
+        if rc and not self.system.path.isdir(local) and self.system.is_tarfile(local):
+            rc = self.system.untar(local, output=False)
+        return rc
+
 
 class IgaFinder(Finder):
     """
