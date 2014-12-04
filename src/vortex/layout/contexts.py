@@ -48,20 +48,21 @@ class Context(footprints.util.GetByTag):
 
     _tag_default = 'ctx'
 
-    def __init__(self, rundir=None, path=None, topenv=None, sequence=None, task=None):
+    def __init__(self, path=None, topenv=None, sequence=None, task=None):
         """Initate a new execution context."""
         logger.debug('Context initialisation %s', self)
         if path is None:
             logger.critical('Try to define a new context without virtual path')
             raise ValueError('No virtual path given to new context.')
-        self._env     = Environment(env=topenv, active=topenv.active)
-        self._path    = path + '/' + self.tag
-        self._session = None
-        self._rundir  = rundir
-        self._task    = task
-        self._void    = True
-        self._stamp   = '.'.join(('.ctx', self.tag, str(id(self))))
-        self._fstore  = dict()
+        self._env      = Environment(env=topenv, active=topenv.active)
+        self._path     = path + '/' + self.tag
+        self._session  = None
+        self._rundir   = None
+        self._task     = task
+        self._void     = True
+        self._stamp    = '-'.join(('vortex', 'stamp', self.tag, str(id(self))))
+        self._fstore   = dict()
+        self._cocooned = False
 
         if sequence:
             self._sequence = sequence
@@ -107,7 +108,7 @@ class Context(footprints.util.GetByTag):
 
     @property
     def session(self):
-        """Return the session binded to the current virtual context path."""
+        """Return the session bound to the current virtual context path."""
         if self._session is None:
             from vortex import sessions
             self._session = sessions.get(tag = [ x for x in self.path.split('/') if x ][0])
@@ -135,11 +136,17 @@ class Context(footprints.util.GetByTag):
             subpath = self.path.replace(self.session.path, '', 1)
             self._rundir = self.session.rundir + subpath
         self.system.cd(self._rundir, create=True)
+        self._cocooned = True
+
+    @property
+    def cocooned(self):
+        """Check if the current context had cocooned."""
+        return self._cocooned
 
     @property
     def void(self):
         """
-        Return whether the current context is a void context, and therefore not binded to a task.
+        Return whether the current context is a void context, and therefore not bound to a task.
         One may be aware that this value could be temporarly overwritten through the record on/off mechanism.
         """
         return self._void
@@ -156,7 +163,7 @@ class Context(footprints.util.GetByTag):
 
     @property
     def task(self):
-        """Return the possibly binded task."""
+        """Return the possibly bound task."""
         return self._task
 
     @property
@@ -165,8 +172,8 @@ class Context(footprints.util.GetByTag):
         return self._sequence
 
     @property
-    def binded(self):
-        """Boolean property to check whether the current context is binded to a task or not."""
+    def bound(self):
+        """Boolean property to check whether the current context is bound to a task or not."""
         return bool(self._task)
 
     def bind(self, task, **kw):
@@ -235,23 +242,20 @@ class Context(footprints.util.GetByTag):
         """Restaure default value to void context as it was before any :func:`record_off` call."""
         self._void = self._record
 
-    def exit(self):
-        """Clean exit from the current context."""
-        actualsys = None
-        try:
-            actualsys = self.system
-        except TypeError:
-            pass
-        if not actualsys:
-            try:
-                from vortex import sessions
-                actualsys = sessions.system()
-            except:
-                logger.critical('Could not get a ticket session while exiting context %s', self.tag)
-                raise
-        if not actualsys:
-            return False
+    def clear_stamps(self):
+        """Remove local context stamps."""
         if self._fstore:
             fstamps = self._fstore.keys()
-            actualsys.rmall(*fstamps)
+            self.system.rmall(*fstamps)
             logger.info('Removing context stamps %s', fstamps)
+
+    def clear(self):
+        """Make a clear place of local cocoon directory."""
+        self.clear_stamps()
+
+    def exit(self):
+        """Clean exit from the current context."""
+        try:
+            self.clear()
+        except TypeError:
+            logger.error('Could not clear local context <%s>', self.tag)

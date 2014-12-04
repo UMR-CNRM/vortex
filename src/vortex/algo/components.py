@@ -36,6 +36,11 @@ class AlgoComponent(footprints.FootprintBase):
                 default  = 'io_poll',
                 access   = 'rwx',
             ),
+            flyargs = dict(
+                type     = footprints.FPTuple,
+                optional = True,
+                default  = footprints.FPTuple(),
+            ),
             timeout = dict(
                 type     = int,
                 optional = True,
@@ -64,7 +69,7 @@ class AlgoComponent(footprints.FootprintBase):
 
     def fstag(self):
         """Defines a tag specific to the current algo component."""
-        return '.'.join((self.realkind, self.engine))
+        return '-'.join((self.realkind, self.engine))
 
     def fsstamp(self, opts):
         """Ask the current context to put a stamp on file system."""
@@ -133,11 +138,14 @@ class AlgoComponent(footprints.FootprintBase):
         """Check out what could be a valid io_poll command."""
         return getattr(self, 'io_poll_method', getattr(self.system, self.flypoll, None))
 
+    def flyput_args(self):
+        """Return actual io_poll prefixes."""
+        return getattr(self, 'io_poll_args', tuple(self.flyargs))
+
     def flyput_check(self):
         """Check default args for io_poll command."""
-        io_poll_args = getattr(self, 'io_poll_args', tuple())
         actual_args = list()
-        for arg in io_poll_args:
+        for arg in self.flyput_args():
             logger.info('Check arg <%s>', arg)
             if any([ x.container.localpath().startswith(arg) for x in self.promises ]):
                 logger.info('Match some promise %s', str([ x.container.localpath() for x in self.promises ]))
@@ -507,7 +515,7 @@ class Parallel(AlgoComponent):
             io.import_basics(self)
             io.options = { x.lstrip('io_'): opts[x] for x in opts.keys() if x.startswith('io_') }
             mpi.options['nn'] = mpi.options['nn'] - io.options['nn']
-            io.master  = mpi.master
+            io.master = mpi.master
             args = io.mkcmdline(self.spawn_command_line(rh))
 
         args[:0] = mpi.mkcmdline(self.spawn_command_line(rh))

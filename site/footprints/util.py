@@ -386,7 +386,7 @@ class SpecialDict(dict):
     def show(self, ljust=24):
         """Print the actual values of the dictionary."""
         for k in sorted(self.keys()):
-            print ' +', k.ljust(ljust), '=', self.get(k)
+            print '+', k.ljust(ljust), '=', self.get(k)
 
     def update(self, *args, **kw):
         """Extended dictionary update with args as dict and extra keywords."""

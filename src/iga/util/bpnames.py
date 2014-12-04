@@ -14,7 +14,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 
-def faNames(cutoff, reseau, model, filling=None):
+def faNames(cutoff, reseau, model, filling=None, vapp=None):
     if cutoff == 'assim':
         map_suffix = dict(
              zip(
@@ -55,6 +55,11 @@ def faNames(cutoff, reseau, model, filling=None):
         model_info = 'AROM'
     elif model == 'aladin':
         model_info = 'ALAD'
+    elif model == 'surfex':
+        model_info = vapp[:4].upper()
+    else:
+        logger.critical('Unknown model <%s> for op names fabrik', model)
+        raise ValueError('Unknown model')
     return model_info, suffix
 
 
@@ -128,12 +133,12 @@ def global_pnames(provider, resource):
     """
     info = getattr(resource, provider.realkind + '_pathinfo',
                    resource.vortex_pathinfo)()
-    for mnd in ("suite", "igakey", "fmt"):
+    for mnd in ('suite', 'igakey', 'fmt'):
         if mnd not in info:
             info[mnd] = getattr(provider, mnd, None)
     #patch: if model is not in info we must provide it through the
     #provider's attributes: model or vapp
-    if "model" not in info:
+    if 'model' not in info:
         info['model'] = getattr(provider, 'model', getattr(provider, 'vapp'))
     return info
 
@@ -182,10 +187,11 @@ def geofields_bnames(resource):
     return 'ICMSHANAL' + resource.fields.upper()
 
 
-def analysis_bnames(resource):
+def analysis_bnames(resource, vapp=None):
     """docstring for analysis_bnames"""
     model_info, suffix = faNames(
-        resource.cutoff, resource.date.hour, resource.model, resource.filling)
+        resource.cutoff, resource.date.hour, resource.model, resource.filling, vapp=vapp
+    )
     #patch for the different kind of analysis (surface and atmospheric)
     if resource.model == 'arome' and resource.filling == 'surf':
         return 'INIT_SURF.fa.' + suffix
@@ -345,7 +351,10 @@ def global_bnames(resource, provider):
         if 'bgerrstd' in searched_func:
             return getattr(itself, searched_func)(resource, ens=provider.igakey)
         else:
-            return getattr(itself, searched_func)(resource)
+            if getattr(resource, 'model', 'none') == 'surfex':
+                return getattr(itself, searched_func)(resource, vapp=provider.vapp)
+            else:
+                return getattr(itself, searched_func)(resource)
     else:
         if resource.realkind == 'rtcoef':
             return resource.realkind + '.tar'

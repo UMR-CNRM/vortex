@@ -199,11 +199,12 @@ class StdFtp(object):
         else:
             target = destination
             xdestination = False
-        logger.info('FTP get %s', source)
+        logger.info('FTP get <%s>', source)
         rc = True
         try:
             self.retrbinary('RETR ' + source, target.write)
-        except StandardError:
+        except Exception as e:
+            logger.error('FTP could not get <%s>: %s', source, str(e))
             rc = False
         if xdestination:
             target.close()

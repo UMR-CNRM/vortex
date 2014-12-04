@@ -125,7 +125,13 @@ class Cache(footprints.FootprintBase):
 
     def retrieve(self, item, local, intent='in', fmt='foo', info=None):
         """Retrieve an item from the current cache."""
-        rc = self.sh.cp(self.fullpath(item), local, intent=intent, fmt=fmt)
+        source = self.fullpath(item)
+        if self.sh.path.isdir(source) and local is None:
+            rc = True
+            for subpath in self.sh.glob(source + '/*'):
+                rc = rc and self.sh.cp(subpath, self.sh.path.basename(subpath), intent=intent, fmt=fmt)
+        else:
+            rc = self.sh.cp(source, local, intent=intent, fmt=fmt)
         self.addrecord('RETRIEVE', item, status=rc, info=info, fmt=fmt, intent=intent)
         return rc
 

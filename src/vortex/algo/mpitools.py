@@ -64,7 +64,7 @@ class MpiTool(footprints.FootprintBase):
             basics = dict(
                 type     = footprints.FPList,
                 optional = True,
-                default  = footprints.FPList('system', 'env', 'target', 'context')
+                default  = footprints.FPList(['system', 'env', 'target', 'context'])
             )
         )
     )

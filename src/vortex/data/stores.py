@@ -918,7 +918,7 @@ class PromiseStore(footprints.FootprintBase):
             ),
             prlogfile = dict(
                 optional = True,
-                default  = 'promises.log',
+                default  = 'vortex-promises.log',
             ),
         ),
     )

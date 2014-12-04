@@ -57,19 +57,21 @@ class Analysis(GeoFlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
+        ananame = 'analyse'
         if 'surf' in self.filling:
             if re.match('aladin|arome', self.model):
-                return 'analyse_surf'
+                ananame = 'analyse_surf'
             else:
-                return 'analyse_surface1'
+                ananame = 'analyse_surface1'
 
         if self.filtering is not None:
             if 'aladin' in self.model:
-                return 'ANALYSE_DFI'
-            else:
-                return 'analyse'
-        else:
-            return 'analyse'
+                ananame = 'ANALYSE_DFI'
+
+        if self.model == 'surfex':
+            ananame = ananame + '.sfx'
+
+        return ananame
 
     def olive_basename(self):
         """OLIVE specific naming convention."""

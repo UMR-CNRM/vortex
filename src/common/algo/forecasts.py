@@ -21,6 +21,9 @@ class Forecast(IFSParallel):
                 values   = ['forecast', 'fc'],
                 remap    = dict(forecast = 'fc')
             ),
+            flyargs = dict(
+                default = ('ICMSH', 'PF'),
+            ),
             xpname = dict(
                 default  = 'FCST'
             ),
@@ -28,7 +31,7 @@ class Forecast(IFSParallel):
                 type     = bool,
                 optional = True,
                 default  = True,
-            )
+            ),
         )
     )
 
@@ -88,8 +91,8 @@ class Forecast(IFSParallel):
 
         # Promises should be nicely managed by a co-proccess
         if self.promises:
-            self.flyput = True
             self.io_poll_args = ('ICMSH', 'PF')
+            self.flyput = True
 
 
 class LAMForecast(Forecast):

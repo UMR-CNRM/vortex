@@ -24,7 +24,7 @@ op_cutoff   = '$cutoff'
 op_rundate  = $rundate
 op_runtime  = $runtime
 op_rootapp  = '$rootapp/{0:s}/{1:s}/{2:s}'.format(op_suite, op_vapp, op_vconf)
-op_gcocache = '$rootdir/{0:s}'.format(op_suite, op_vapp, op_vconf)
+op_gcocache = '$rootdir/{0:s}'.format(op_suite)
 op_jobfile  = '$file'
 op_thisjob  = '{0:s}/jobs/{1:s}.py'.format(op_rootapp, op_jobfile)
 op_iniconf  = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(op_rootapp, op_vapp, op_vconf, '$task')
@@ -46,8 +46,8 @@ sys.path.extend(
     [ os.path.realpath(d) for d in pathdirs if os.path.isdir(d) ]
 )
 
-from iga.tools import op
-from $package import $task as todo
+import iga.tools.op as op
+import $package.$task as todo
 
 try:
     t = op.setup(actual=oplocals)

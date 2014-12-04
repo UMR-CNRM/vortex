@@ -125,8 +125,8 @@ def rput(*args, **kw):
 def nicedump(msg, **kw):
     """Simple dump of the dict contents with ``msg`` as header."""
     print '#', msg, ':'
-    for k, v in kw.iteritems():
-        print ' +', k.ljust(12), '=', str(v)
+    for k, v in sorted(kw.iteritems()):
+        print '+', k.ljust(12), '=', str(v)
     print
 
 def add_section(section, args, kw):
@@ -428,6 +428,20 @@ def print_namespaces(**kw):
     for k, v in sorted(nd.iteritems()):
         nice_v = linesep.join(v) if len(v) > 1 else v[0]
         print prefix + k.ljust(justify), '[' + nice_v + ']'
+
+
+def clear_promises(search=None):
+    """Remove promises that have been made in the current session."""
+    t = sessions.current()
+    if search is None:
+        search = set([t.sh.getcwd()])
+        search.add(t.rundir)
+        for ctxdir in [ x.rundir for x in t.subcontexts if x.rundir ]:
+            search.add(ctxdir)
+    search = footprints.util.mktuple(search)
+    t.sh.subtitle('Clear promises')
+    for path in search:
+        t.sh.header('Path ' + path)
 
 
 def rescue(*files, **opts):

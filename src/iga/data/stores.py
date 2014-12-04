@@ -37,8 +37,11 @@ class IgaGcoCacheStore(GcoCacheStore):
         if extract:
             remote['path'] = self.system.path.join(remote['path'], extract[0])
             logger.warning('Extend remote path with extract value <%s>', remote['path'])
+        if remote['path'].endswith('.tgz'):
+            remote['path'] = remote['path'].rstrip('.tgz')
+            local = None
         rc = self.incacheget(remote, local, options)
-        if rc and not self.system.path.isdir(local) and self.system.is_tarfile(local):
+        if rc and local and not self.system.path.isdir(local) and self.system.is_tarfile(local):
             rc = self.system.untar(local, output=False)
         return rc
 

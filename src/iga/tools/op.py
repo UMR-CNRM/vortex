@@ -96,19 +96,22 @@ def setup(**kw):
 
     import vortex.tools.lfi
     shlfi = footprints.proxy.addon(kind='lfi', shell=t.sh)
-    print '+', shlfi
+    print '+', 'Add-on LFI', shlfi
+    shio = footprints.proxy.addon(kind='iopoll', shell=t.sh)
+    print '+', 'Add-on IO POLL', shio
 
     import vortex.tools.odb
     shodb = footprints.proxy.addon(kind='odb', shell=t.sh)
-    print '+', shodb
+    print '+', 'Add-on ODB', shodb
 
     #--------------------------------------------------------------------------------------------------
     t.sh.header('Actual running directory')
 
     t.env.RUNDIR = kw.get('rundir', mkdtemp(prefix=t.glove.tag + '-'))
     t.sh.cd(t.env.RUNDIR, create=True)
+    t.rundir = t.sh.getcwd()
 
-    logger.info('Current rundir <%s>', t.sh.getcwd())
+    logger.info('Current rundir <%s>', t.rundir)
 
     #--------------------------------------------------------------------------------------------------
     t.sh.header('Toolbox module settings')
@@ -158,11 +161,11 @@ def setenv(t, **kw):
     t.sh.header('OP Environment')
     opd = kw.get('actual', dict())
     nb_op = 0
-    for opvar in sorted([x for x in opd.keys() if x.startswith('op_') ]):
+    for opvar in sorted([ x for x in opd.keys() if x.startswith('op_') ]):
         t.env.setvar(opvar, opd[opvar])
         nb_op += 1
 
-    logger.info('Looking for global op variables: %d found', nb_op)
+    logger.info('Global op variables found: %d', nb_op)
 
     #--------------------------------------------------------------------------------------------------
     t.sh.header('MPI Environment')
