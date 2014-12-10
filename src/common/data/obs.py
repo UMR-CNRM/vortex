@@ -14,6 +14,8 @@ from vortex.data.flow     import GeoFlowResource, FlowResource
 from vortex.data.contents import TextContent
 from vortex.syntax        import stdattrs
 
+from gco.syntax.stdattrs  import GenvKey
+
 
 class Observations(GeoFlowResource):
     """
@@ -262,6 +264,18 @@ class BlackList(FlowResource):
             kind = dict(
                 values  = ['blacklist'],
             ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'blacklist_[scope]',
+                values   = ['BLACKLIST_LOC', 'BLACKLIST_DIAP', 'BLACKLIST_LOCAL', 'BLACKLIST_GLOBAL'],
+                remap    = dict(
+                    BLACKLIST_LOCAL  = 'BLACKLIST_LOC',
+                    BLACKLIST_GLOBAL = 'BLACKLIST_DIAP',
+                    blacklist_local  = 'BLACKLIST_LOC',
+                    blacklist_global = 'BLACKLIST_DIAP',
+                )
+            ),
             clscontents = dict(
                 default  = TextContent,
             ),
@@ -461,6 +475,11 @@ class ObsMap(FlowResource):
         attr = dict(
             kind = dict(
                 values   = ['obsmap'],
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'bator_map',
             ),
             clscontents = dict(
                 default  = ObsMapContent,

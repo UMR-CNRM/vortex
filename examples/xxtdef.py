@@ -32,7 +32,7 @@ rundate = date.today()
 prvcst  = toolbox.provider(genv='cy37t1_op1.20', gspool=e.HOME + '/gco-tampon')
 
 fp = toolbox.defaults(
-    geometry=geometries.getbyname('globalsp'),
+    geometry=geometries.get(tag='globalsp'),
     namespace='open.archive.fr',
     date=rundate,
     cutoff='production',

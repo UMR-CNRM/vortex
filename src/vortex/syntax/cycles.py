@@ -9,22 +9,36 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 
-class Cycle(object):
+# Module Interface
+
+def get(**kw):
+    """Return actual cycle object matching description."""
+    return Cycle(**kw)
+
+def keys():
+    """Return the list of current cycle names collected."""
+    return Cycle.tag_keys()
+
+def values():
+    """Return the list of current cycle values collected."""
+    return Cycle.tag_values()
+
+def items():
+    """Return the items of the cycles table."""
+    return Cycle.tag_items()
+
+
+class Cycle(footprints.util.GetByTag):
     """
     Generic match of a defined regular expression.
     Could be optimised in order to compile the re only when requested.
     """
 
-    def __init__(self, regexp=None, option=re.IGNORECASE, tag='default'):
-        self._tag = str(tag)
+    def __init__(self, regexp=None, option=re.IGNORECASE):
         if regexp is None:
-            regexp = self._tag
+            regexp = self.tag
         self._cstate = (regexp, option)
         self._recomp = None
-
-    @property
-    def tag(self):
-        return self._tag
 
     @property
     def short(self):
@@ -42,6 +56,10 @@ class Cycle(object):
         if not self._recomp:
             self._recomp = re.compile(*self._cstate)
         return self._recomp
+
+    @property
+    def pattern(self):
+        return self._cstate[0]
 
     def findall(self, *args):
         return self.regexp.findall(*args)
@@ -62,12 +80,6 @@ class Cycle(object):
     def __str__(self):
         """Return the current tag."""
         return self.tag
-
-    def __repr__(self):
-        """Return a nice view of the current cycle."""
-        sr = object.__repr__(self).rstrip('>')
-        regexp, option = self._cstate
-        return '{0:s} | cycle={1:s} re="{2:s}" options={3:d}>'.format(sr, self.tag, regexp, option)
 
     def __cmp__(self, other):
         """Compare current object and other as strings."""

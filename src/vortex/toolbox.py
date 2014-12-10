@@ -26,6 +26,7 @@ active_now     = False
 active_insitu  = False
 active_verbose = True
 active_promise = True
+active_clear   = False
 
 #: History recording
 
@@ -430,18 +431,17 @@ def print_namespaces(**kw):
         print prefix + k.ljust(justify), '[' + nice_v + ']'
 
 
-def clear_promises(search=None):
-    """Remove promises that have been made in the current session."""
+def clear_promises(clear=None):
+    """Remove all promises that have been made in the current python session."""
+    if clear is None:
+        clear = active_clear
     t = sessions.current()
-    if search is None:
-        search = set([t.sh.getcwd()])
-        search.add(t.rundir)
-        for ctxdir in [ x.rundir for x in t.subcontexts if x.rundir ]:
-            search.add(ctxdir)
-    search = footprints.util.mktuple(search)
-    t.sh.subtitle('Clear promises')
-    for path in search:
-        t.sh.header('Path ' + path)
+    if clear:
+        t.sh.header('Clear promises')
+        for obs in footprints.observers.get(tag='Promises-Log').observers():
+            logger.info('Promises observer <%s>', obs.tag)
+            for k, v in obs.logs.items():
+                logger.info('Clear <%d> promises from <%s>', v, k)
 
 
 def rescue(*files, **opts):
@@ -450,6 +450,9 @@ def rescue(*files, **opts):
     t   = sessions.current()
     sh  = t.sh
     env = t.env
+
+    # Force clearing of all promises
+    clear_promises(clear=True)
 
     sh.subtitle('Rescue current dir')
     sh.dir(output=False)

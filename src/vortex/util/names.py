@@ -15,7 +15,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 
 class VortexNameBuilder(object):
-    """Baseames factory for resources handled by some Vortex like provider."""
+    """Basenames factory for resources handled by some Vortex like provider."""
     def __init__(self, *args, **kw):
         logger.debug('Init VortexNameBuilder %s', self.__class__)
         self._default = dict(

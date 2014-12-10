@@ -105,7 +105,7 @@ print 'FC term =', fc_term, '/ FP terms =', fp_terms
 
 # On fixe la géométrie par défaut du model, usuellement une information de configuration,
 # comme celle des domaines BDAP, mais ici, on fixe tout "à la main".
-geomodel = vortex.data.geometries.getbyname(e.get('GEOMETRY', 'globalsp'))
+geomodel = vortex.data.geometries.get(tag=e.get('GEOMETRY', 'globalsp'))
 bdap_domains = ['euroc25', 'eurat01', 'glob05', 'glob15', 'glob25']
 
 print 'GEOMETRY OBJ =', geomodel

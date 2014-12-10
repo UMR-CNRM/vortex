@@ -30,7 +30,7 @@ prvout = vortex.toolbox.provider(experiment='A001', block='canari', namespace='m
 
 fpenv = vortex.toolbox.defaults(
     model='arpege',
-    geometry = geometries.getbyname('globalsp'),
+    geometry = geometries.get(tag='globalsp'),
     date=Date('2013050100'),
     cutoff='production',
 )

@@ -190,7 +190,10 @@ def setenv(t, **kw):
         )
         rundate = vortex.tools.date.Date(anydate)
         t.env.OP_RUNDATE = rundate
-        t.env.OP_RUNTIME = rundate.time()
+
+    t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
+    logger.info('Effective rundate = %s', t.env.OP_RUNDATE.ymdhm)
+    logger.info('Effective time    = %s', t.env.OP_RUNTIME)
 
     return t.env.clone()
 

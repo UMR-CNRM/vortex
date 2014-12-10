@@ -23,6 +23,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
+from vortex.syntax.stdattrs import a_term
 from vortex.tools import date
 from vortex.tools.services import Service
 from vortex.tools.actions import actiond as ad
@@ -41,6 +42,7 @@ class LogFacility(int):
     Attribute for SysLogHandler facility value, could be either a valid ``int``
     or a logging name such as ``log_local7`` or ``local7``.
     """
+
     def __new__(cls, value):
         if type(value) is str:
             value = value.lower()
@@ -56,7 +58,7 @@ class LogFacility(int):
         return int.__new__(cls, value)
 
     def name(self):
-        """Reverse access: deduce the name from the integer value"""
+        """Reverse access: deduce the name from the integer value."""
         for s, n in SysLogHandler.facility_names.iteritems():
             if self == n:
                 return s
@@ -64,11 +66,13 @@ class LogFacility(int):
 
 
 def tunable_value(sh, value, env_key=None, ini_key=None, default=None):
-    """Try to get a value from several sources in turn:
+    """
+    Try to get a value from several sources in turn:
        - a real value (e.g. from the footprint)
-       - the environment
+       - a shell environment variable
        - the ini files
-       - a default value in last resort"""
+       - a default value in last resort.
+    """
     if value:
         return value
     if env_key and env_key in sh.env:
@@ -79,9 +83,7 @@ def tunable_value(sh, value, env_key=None, ini_key=None, default=None):
 
 
 class RemoteCommandProxy(footprints.FootprintBase):
-    """
-    Remote execution via ssh on a special node
-    """
+    """Remote execution via ssh on a special node."""
     _collector = ('miscellaneous',)
     _footprint = dict(
         info = 'Remote command proxy',
@@ -116,7 +118,7 @@ class RemoteCommandProxy(footprints.FootprintBase):
         return self._sh
 
     def nodename(self):
-        """Node name to use for this kind of remote execution"""
+        """Node name to use for this kind of remote execution."""
         key = self.nodekind + 'node'
         return tunable_value(self.sh,
                              getattr(self, key, None),
@@ -125,7 +127,7 @@ class RemoteCommandProxy(footprints.FootprintBase):
                              default='localhost')
 
     def execute(self, command):
-        """Remote execution"""
+        """Remote execution."""
         try:
             rc = self.sh.spawn(
                 ('/usr/bin/ssh', '-x', self.nodename(), command),
@@ -202,6 +204,7 @@ class AlarmProxyService(AlarmService):
     unix 'logger' command invocation (mandatory on non-login nodes)
     This class should not be called directly.
     """
+
     _footprint = dict(
         info = 'Alarm Proxy Service',
         attr = dict(
@@ -212,7 +215,7 @@ class AlarmProxyService(AlarmService):
     )
 
     def get_syslog(self):
-        """Return an in-memory handler"""
+        """Return an in-memory handler."""
         self.buffer = StringIO()
         self.handler = logging.StreamHandler(self.buffer)
         return self.handler
@@ -323,6 +326,7 @@ class RoutingService(Service):
             BdpeIntegrationService
     This class should not be called directly.
     """
+
     _abstract = True
     _footprint = dict(
         info = 'Routing services abstract class',
@@ -349,11 +353,11 @@ class RoutingService(Service):
         super(RoutingService, self).__init__(*args, **kw)
 
     def get_cmdline(self):
-        """Build the command line that runs the Transfer Agent."""
+        """Complete command line that runs the Transfer Agent."""
         raise NotImplementedError()
 
     def get_logline(self):
-        """Build the line to send to the IGA log file."""
+        """Build the line to send to IGA main routing log file."""
         raise NotImplementedError()
 
     @property
@@ -361,28 +365,28 @@ class RoutingService(Service):
         return 'routing'
 
     def mandatory_ini(self, key):
-        """Retrieve a key from the ini files, or raise"""
+        """Retrieve a key from the ini files, or raise."""
         value = self.sh.target().get(key)
         if not value:
             raise KeyError('missing key ' + key + ' in ini files')
         return value
 
     def mandatory_env(self, key):
-        """Retrieve a key from the environment, or raise"""
+        """Retrieve a key from the environment, or raise."""
         value = self.sh.env[key]
         if not value:
             raise KeyError('missing ' + key + ' in the environment')
         return value
 
     def actual_agt_path(self):
-        """Path to use for the agt routing binaries"""
+        """Path to use for the agt routing binaries."""
         return tunable_value(self.sh,
                              self.agt_path,
                              'AGT_PATH',
                              'services:agt_path')
 
     def agt_env(self):
-        """Environment for the agt routing binaries (case counts)"""
+        """Environment for the agt routing binaries (case counts)."""
         keys = ['HOME_SOPRA', 'LD_LIBRARY_PATH',
                 'base_transfert_agent', 'DIAP_AGENT_NUMPROG_AGENT']
         vals = ["export " + key + "="
@@ -391,7 +395,7 @@ class RoutingService(Service):
 
     @property
     def taskname(self):
-        """IGA task name (TACHE)"""
+        """IGA task name (TACHE)."""
         return self.sh.env.get('SLURM_JOB_NAME', 'interactif')
 
     @property
@@ -400,15 +404,24 @@ class RoutingService(Service):
 
     @property
     def aammjj(self):
-        """date from DMT_DATE_PIVOT or from the 'date' command (from mxpt001 scr/debut)"""
+        """Date from DMT_DATE_PIVOT or from the 'date' command (from mxpt001 scr/debut)."""
         envkey  = 'DMT_DATE_PIVOT'
         default = date.now().compact(),
         stamp   = self.sh.env.get(envkey, default)
         return stamp[:8]
 
+    @property
+    def term3d(self):
+        """Hours only, with leading 0s, on 3 digits (4 if necessary)."""
+        return '{:03d}'.format(self.term.hour)
+
+    @property
+    def term6d(self):
+        """HHHHmm format suitable for BDPE descriptions."""
+        return self.term.fmtraw
+
     def file_ok(self):
-        """check that the file exists, send an alarm if not"""
-        self.filename = self.sh.path.abspath(self.filename)
+        """Check that the file exists, send an alarm if not."""
         if not self.sh.path.exists(self.filename):
             msg = "{0.taskname} routage {0.realkind} du numero {0.productid}" \
                   " impossible - fichier {0.filename} inexistant".format(self)
@@ -417,7 +430,7 @@ class RoutingService(Service):
         return True
 
     def actual_resuldir(self):
-        """The directory where to write IGA log files"""
+        """The directory where to write IGA log files."""
         return tunable_value(self.sh,
                              self.resuldir,
                              'AGT_RESULDIR',
@@ -425,7 +438,7 @@ class RoutingService(Service):
                              '.')
 
     def iga_log(self, logline, logfile=None):
-        """Append a line to IGA routage log file"""
+        """Append a line to a log file."""
         if not logline:
             return
 
@@ -438,7 +451,9 @@ class RoutingService(Service):
             fp.write(logline+'\n')
 
     def __call__(self):
-        """Actual service execution"""
+        """Actual service execution."""
+
+        self.filename = self.sh.path.abspath(self.filename)
 
         cmdline = self.get_cmdline()
         if cmdline is None:
@@ -471,6 +486,7 @@ class RoutingUpstreamService(RoutingService):
     Abstract class for upstream database feeding (router_pa: BDAP, BDM).
     This class should not be called directly.
     """
+
     _abstract = True
     _footprint = dict(
         info = 'Abstract class for upstream routing services',
@@ -487,10 +503,11 @@ class RoutingUpstreamService(RoutingService):
         super(RoutingUpstreamService, self).__init__(*args, **kw)
 
     def get_logline(self):
-        """build the line to send to the IGA log file."""
+        """Build the line to send to the IGA log file."""
         raise NotImplementedError()
 
     def actual_agt_pa_cmd(self):
+        """Actual routing command, without options."""
         pa_cmd = tunable_value(self.sh,
                                self.agt_pa_cmd,
                                None,
@@ -500,10 +517,9 @@ class RoutingUpstreamService(RoutingService):
         return self.agt_env() + ' ; ' + binary
 
     def get_cmdline(self):
-        # seul le mode "utiliser les tables" semble servir
-        #     "productid -R"
-        # le mode "adresses" ferait:
-        #     "-L client [client...]"
+        """Complete command line that runs the Transfer Agent."""
+        # The only mode implemented is "tables usage": "productid -R"
+        # The "addresses" mode is unused: "-L client [client...]"
         options = "{0.filename} {0.productid} {mode}".format(self, mode="-R")
         return self.actual_agt_pa_cmd() + ' ' + options
 
@@ -513,6 +529,7 @@ class BdmService(RoutingUpstreamService):
     Class responsible for handling bdm data.
     This class should not be called directly.
     """
+
     _footprint = dict(
         info = 'Bdm service class',
         attr = dict(
@@ -523,7 +540,7 @@ class BdmService(RoutingUpstreamService):
     )
 
     def __init__(self, *args, **kw):
-        # logger.debug('BdmService init %s', self.__class__)
+        logger.debug('BdmService init %s', self.__class__)
         super(BdmService, self).__init__(*args, **kw)
 
     @property
@@ -531,7 +548,7 @@ class BdmService(RoutingUpstreamService):
         return 'BDM'
 
     def get_logline(self):
-        """no log for bdm"""
+        """No log for bdm."""
         return None
 
 
@@ -540,6 +557,7 @@ class BdapService(RoutingUpstreamService):
     Class responsible for handling bdap data.
     This class should not be called directly.
     """
+
     _footprint = dict(
         info = 'Bdap service class',
         attr = dict(
@@ -549,10 +567,7 @@ class BdapService(RoutingUpstreamService):
             domain = dict(
                 type     = str,
             ),
-            term = dict(
-                type     = int,
-                alias    = ('term_hhh',),
-            ),
+            term = a_term,
         )
     )
 
@@ -565,8 +580,9 @@ class BdapService(RoutingUpstreamService):
         return 'BDAP'
 
     def get_logline(self):
-        return "{now}@{0.taskname}@{0.domain}@{0.term:03d}@${0.productid}@{0.filename}" \
-               "@{0.realkind}".format(self, now=date.now().compact())
+        """Build the line to send to IGA main routing log file."""
+        return "{now}@{0.taskname}@{0.domain}@{0.term3d}@${0.productid}@{0.filename}" \
+               "@{0.realkind}".format(self,now=date.now().compact())
 
 
 class BdpeService(RoutingService):
@@ -574,6 +590,7 @@ class BdpeService(RoutingService):
     Abstract class for handling bdpe data.
     This class should not be called directly.
     """
+
     _abstract = True
     _footprint = dict(
         info = 'Bdpe abstract service class',
@@ -585,12 +602,8 @@ class BdpeService(RoutingService):
                 optional = True,
                 default  = 'fpe',
             ),
-            cleroutage = dict(
+            routingkey = dict(
                 type     = str,
-            ),
-            term = dict(
-                type     = int,
-                alias    = ('term_hhhhmm',),
             ),
             quality = dict(
                 values = range(10),
@@ -601,6 +614,7 @@ class BdpeService(RoutingService):
                 optional = True,
                 default  = None
             ),
+            term = a_term,
         )
     )
 
@@ -609,8 +623,8 @@ class BdpeService(RoutingService):
         super(BdpeService, self).__init__(*args, **kw)
 
     @property
-    def agt_cleroutage(self):
-        """return the actual routing key to use for the 'router_pe' call"""
+    def actual_routingkey(self):
+        """Return the actual routing key to use for the 'router_pe' call."""
         raise NotImplementedError()
 
     def __call__(self):
@@ -624,30 +638,32 @@ class BdpeService(RoutingService):
         return 'BDPE'
 
     def bdpe_log(self):
-        """BDPE has an additional log file"""
+        """Additionnal log file specific to BDPE calls."""
         text = "envoi_bdpe.{0.producer} {0.productid} {0.taskname} {mode} " \
-               "{0.cleroutage}".format(self, mode='routage par cle')
+               "{0.routingkey}".format(self, mode='routage par cle')
         resuldir = self.actual_resuldir()
         logfile = self.sh.path.join(resuldir, 'log_envoi_bdpe.') + self.aammjj
         self.iga_log(text, logfile)
         return True
 
     def get_logline(self):
-        s = "{now}@{0.taskname}@missing@{0.term:03d}@{0.agt_cleroutage}" \
+        """Build the line to send to IGA main routing log file."""
+        s = "{now}@{0.taskname}@missing@{0.term3d}@{0.actual_routingkey}" \
             "@{0.filename}@{0.realkind}_{0.producer}"
         return s.format(self, now=date.now().compact())
 
     def actual_agt_pe_cmd(self):
+        """Actual routing command, without options."""
         pe_cmd = tunable_value(self.sh, self.agt_pe_cmd, None, 'services:agt_pe_cmd', 'router_pe.bin')
         binary = self.sh.path.join(self.actual_agt_path(), pe_cmd)
         return self.agt_env() + ' ; ' + binary
 
     def get_cmdline(self):
-        """Router_pe command line to run on the transfer node"""
-        if self.agt_cleroutage is None:
+        """Complete command line that runs the Transfer Agent."""
+        if self.actual_routingkey is None:
             return None
-        options = "{0.filename} {0.agt_cleroutage} -p {0.producer}" \
-                  " -n {0.productid} -e {0.term:06d} -d {0.dmt_date_pivot}" \
+        options = "{0.filename} {0.actual_routingkey} -p {0.producer}" \
+                  " -n {0.productid} -e {0.term6d} -d {0.dmt_date_pivot}" \
                   " -q {0.quality} -r {0.soprano_target}".format(self)
         return self.actual_agt_pe_cmd() + ' ' + options
 
@@ -657,6 +673,7 @@ class BdpeOperationsService(BdpeService):
     Class handling BDPE routing for operations
     This class should not be called directly.
     """
+
     _footprint = dict(
         info = 'Bdpe service class for operations',
         attr = dict(
@@ -671,16 +688,16 @@ class BdpeOperationsService(BdpeService):
         super(BdpeOperationsService, self).__init__(*args, **kw)
 
     @property
-    def agt_cleroutage(self):
-        """agt_cleroutage for operations"""
+    def actual_routingkey(self):
+        """Actual route key to use for operations."""
         rules = {
             'bdpe':                10001,
             'bdpe.gironde':        10130,
             'e_transmet_fac':      10212,
             'bdpe.e_transmet_fac': 10116,
         }
-        default = '{0.productid}{0.term:06d}'.format(self)
-        return rules.get(self.cleroutage.lower(), default)
+        default = '{0.productid}{0.term6d}'.format(self)
+        return rules.get(self.routingkey.lower(), default)
 
 
 class BdpeIntegrationService(BdpeService):
@@ -703,9 +720,9 @@ class BdpeIntegrationService(BdpeService):
         super(BdpeIntegrationService, self).__init__(*args, **kw)
 
     @property
-    def agt_cleroutage(self):
-        """agt_cleroutage for integration"""
-        if self.cleroutage.lower() == 'bdpe':
+    def actual_routingkey(self):
+        """Actuel route key to use for integration."""
+        if self.routingkey.lower() == 'bdpe':
             return 10001
 
         rule = r'.*8124.*|.*8123.*|.*8119.*|.*7148.*|11161.*|11162.*|11163.*|10413.*|10414.*|10415.*'

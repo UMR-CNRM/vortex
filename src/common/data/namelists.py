@@ -151,7 +151,7 @@ class Namelist(ModelResource):
             binary = dict(
                 optional = True,
                 values   = binaries,
-                default  = 'arpege',
+                default  = '[model]',
             ),
         )
     )
@@ -385,7 +385,7 @@ class NamelistSelectDef(NoDateResource):
             binary = dict(
                 optional = True,
                 values = binaries,
-                default = 'arpege',
+                default = '[model]',
             ),
             kind = dict(
                 values = [ 'xxtdef', 'namselectdef' ]
@@ -394,7 +394,7 @@ class NamelistSelectDef(NoDateResource):
                 default = XXTContent
             )
         ),
-        bind = [ 'gvar', 'source' ]
+        bind = ['gvar', 'source']
     )
 
     @property

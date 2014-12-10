@@ -11,6 +11,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 
+
 class DataContent(object):
     """Root class for data contents used by resources."""
 

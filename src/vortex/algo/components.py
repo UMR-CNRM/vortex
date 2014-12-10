@@ -457,8 +457,9 @@ class Parallel(AlgoComponent):
                 alias    = ['mpi'],
             ),
             ioserver = dict(
+                type     = mpitools.MpiServerIO,
                 optional = True,
-                type     = mpitools.MpiServerIO
+                default  = None,
             ),
         )
     )
@@ -500,7 +501,7 @@ class Parallel(AlgoComponent):
         print mpi
 
         io = self.ioserver
-        if not io and self.env.VORTEX_IOSERVER_NODES:
+        if not io and int(self.env.get('VORTEX_IOSERVER_NODES', 0)) > 0:
             io = footprints.proxy.mpitool(
                 io      = True,
                 sysname = self.system.sysname,

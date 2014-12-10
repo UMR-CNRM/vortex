@@ -246,16 +246,19 @@ class System(footprints.FootprintBase):
         """Joined args are echoed."""
         print '>>>', ' '.join(args)
 
-    def title(self, text='', tchar='=', autolen=96):
+    def title(self, textlist, tchar='=', autolen=96):
         """Formated title output."""
+        if type(textlist) is str:
+            textlist = (textlist,)
         if autolen:
             nbc = autolen
         else:
-            nbc = len(text)
-        print "\n", tchar * ( nbc + 4 )
-        if text:
+            nbc = max([ len(text) for text in textlist ])
+        print
+        print tchar * ( nbc + 4 )
+        for text in textlist:
             print '{0:s} {1:^{size}s} {0:s}'.format(tchar, text.upper(), size=nbc)
-            print tchar * ( nbc + 4 )
+        print tchar * ( nbc + 4 )
         print ''
 
     def subtitle(self, text='', tchar='-', autolen=96):

@@ -4,7 +4,7 @@
 """
 Observing systems to be used in footprints package.
 
-Using the factory :func:`getbyname` should provide a convenient way to register
+Using the factory :func:`get` should provide a convenient way to register
 to an undetermined number of items hold by :class:`ObserverBoard` objects.
 """
 
@@ -28,6 +28,10 @@ def keys():
 def values():
     """Return actual values of instanciated ObserverBoard objects."""
     return ObserverBoard.tag_values()
+
+def items():
+    """Return the items of the ObserverBoard table."""
+    return Collector.tag_items()
 
 
 class Observer(object):

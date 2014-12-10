@@ -222,11 +222,9 @@ class FileReportService(ReportService):
         info = 'File Report services class',
         attr = dict(
             kind = dict(
-                values   = ['sendfilereport']
+                values = ['sendfilereport'],
             ),
-            file = dict(
-                default  = 'info'
-            )
+            filename = dict(),
         )
     )
 

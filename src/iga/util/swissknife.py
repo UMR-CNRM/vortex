@@ -40,17 +40,18 @@ def getopsetfrompath(t, path=None):
 def mkjob(t, **kw):
     """Build a complete job file according to a template and some parameters."""
     opts = dict(
-        python   = '/usr/bin/python',
-        pyopts   = '-u',
-        template = 'job.default.tpl',
-        inifile  = 'job.default.ini',
-        create   = date.at_second().iso8601(),
-        mkuser   = t.glove.user,
-        mkhost   = t.sh.hostname,
-        name     = 'autojob',
-        rundate  = None,
-        runtime  = None,
-        wrap     = True,
+        python    = '/usr/bin/python',
+        pyopts    = '-u',
+        template  = 'job.default.tpl',
+        inifile   = 'job.default.ini',
+        exclusive = 'exclusive',
+        create    = date.at_second().iso8601(),
+        mkuser    = t.glove.user,
+        mkhost    = t.sh.hostname,
+        name      = 'autojob',
+        rundate   = None,
+        runtime   = None,
+        wrap      = True,
     )
     opts.update(kw)
 
@@ -61,7 +62,7 @@ def mkjob(t, **kw):
             jtime = re.sub('[:-hH]', '', jtime.group(1))
             if len(jtime) > 2:
                 jtime = jtime[0:-2] + ':' + jtime[-2:]
-            opts['runtime'] = repr(str(date.Time(jtime)))
+            opts['runtime'] = str(date.Time(jtime))
 
     corejob = load_template(t, opts['template'])
     opts['tplfile'] = corejob.srcfile

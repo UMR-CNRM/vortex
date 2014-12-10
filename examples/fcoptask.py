@@ -27,7 +27,7 @@ class Forecast(app.Application):
         print 'FC terms =', self.conf.fc_terms
         print 'FP terms =', self.conf.fp_terms
 
-        geomodel = vortex.data.geometries.getbyname(self.conf.fc_geometry)
+        geomodel = vortex.data.geometries.get(tag=self.conf.fc_geometry)
 
         print 'FC MODEL GEOMETRY =', geomodel
         print 'FC BDAP DOMAINS   =', self.conf.fp_domains

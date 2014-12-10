@@ -55,6 +55,6 @@ class GeoFlowResource(FlowResource):
         )
 
     def footprint_export_geometry(self):
-        """Return the ``geometry`` attribute as its ``id``."""
-        return self.geometry.id
+        """Return the ``geometry`` attribute as its id tag."""
+        return self.geometry.tag
 

@@ -13,7 +13,7 @@ t.warning()
 
 ra = dict(
     model='arpege', kind='analysis', date='2011112800', cutoff='long',
-    geometry=geometries.getbyname('globalsp')
+    geometry=geometries.get(tag='globalsp')
 )
 
 print t.line

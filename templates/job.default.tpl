@@ -8,7 +8,7 @@
 #SBATCH --ntasks-per-node=$ntasks
 #SBATCH --partition=$partition
 #SBATCH --time=$time
-#SBATCH --exclusive
+#SBATCH --$exclusive
 #SBATCH --verbose
 
 # Build time: $create
@@ -22,9 +22,9 @@ op_vapp     = '$vapp'
 op_vconf    = '$vconf'
 op_cutoff   = '$cutoff'
 op_rundate  = $rundate
-op_runtime  = $runtime
+op_runtime  = '$runtime'
 op_rootapp  = '$rootapp/{0:s}/{1:s}/{2:s}'.format(op_suite, op_vapp, op_vconf)
-op_gcocache = '$rootdir/{0:s}'.format(op_suite)
+op_gcocache = '$rootdir/opgco/{0:s}'.format(op_suite)
 op_jobfile  = '$file'
 op_thisjob  = '{0:s}/jobs/{1:s}.py'.format(op_rootapp, op_jobfile)
 op_iniconf  = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(op_rootapp, op_vapp, op_vconf, '$task')
@@ -53,9 +53,9 @@ try:
     t = op.setup(actual=oplocals)
     e = op.setenv(t, actual=oplocals)
     opts = t.sh.rawopts(defaults=dict(play=op_fullplay))
-    for app in todo.setup(t, **opts):
-        app.title(name=op_jobname)
-        app.run()
+    driver = todo.setup(t, **opts)
+    driver.setup()
+    driver.run()
     op.complete(t)
 except Exception as trouble:
     print trouble

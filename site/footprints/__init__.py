@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.9.12'
+__version__ = '0.9.13'
 
 import os
 import re
@@ -447,9 +447,9 @@ class Footprint(object):
                         guess[k] = None
                 elif not isinstance(guess[k], ktype):
                     logger.debug(' > Attr %s reclass(%s) as %s', k, guess[k], ktype)
-                    kargs = kdef.get('args', dict())
+                    kwargs = kdef.get('args', dict())
                     try:
-                        guess[k] = ktype(guess[k], **kargs)
+                        guess[k] = ktype(guess[k], **kwargs)
                         logger.debug(' > Attr %s reclassed = %s', k, guess[k])
                     except StandardError:
                         logger.debug(' > Attr %s badly reclassed as %s = %s', k, ktype, guess[k])

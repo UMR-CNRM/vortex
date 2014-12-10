@@ -4,7 +4,6 @@
 import sys
 sys.stdout = sys.stderr
 
-import logging
 import footprints
 import vortex
 from vortex import toolbox, tools
@@ -15,80 +14,50 @@ sh = t.sh
 
 sh.trace = True
 e.verbose(True, sh)
-fpx = footprints.proxy
 
-# Répertoire d'exécution dédié
+# run in a dedicated directory
 rundir = e.get('RUNDIR', e.WORKDIR + '/rundir/' + tools.date.today().ymd)
 sh.cd(rundir, create=True)
 sh.subtitle('Rundir is ' + rundir)
 
-# la date du jour
-strdate = e.get('DMT_DATE_PIVOT', tools.date.synop(delta='-PT12H').compact())
-rundate = tools.date.Date(strdate)
-
-# maintenant, à la seconde
+# get the current hour, to the second
 dtime = tools.date.now().compact()
 stime = dtime[:8] + '_' + dtime[8:]
-
-
-# Attributs par défaut pour toutes les résolutions d'empreintes à suivre.
-t.glove.setenv(app='arpege', conf='france')
-toolbox.defaults(
-    model     = t.glove.vapp,           # Comment souvent, le model est l'application
-    date      = rundate,                # C'est un véritable "objet" de type Date
-    server   = 'smtp.meteo.fr',         # Pour le mail
-)
-
 
 from vortex.tools.actions import actiond as ad
 from iga.tools import actions
 from iga.tools import services
-from vortex.tools import date
-
-ad.alarm_on()
-ad.agt_on()
 
 
-do_infos = False
-if do_infos:
-
-    sh.title ('Listes des services et actions')
-
+def list_services():
+    """List services, actions, and their relation."""
     import pprint
-    print 'available actions:\n', pprint.pformat(ad.actions())
-    print 'existing handlers:\n', pprint.pformat(ad.items())
-    print 'action/handlers:'
+    sh.title('List of services and actions')
+    sh.subtitle('available actions')
+    print pprint.pformat(ad.actions())
+    sh.subtitle('existing handlers')
+    print pprint.pformat(ad.items())
+    sh.subtitle('action -> handlers')
     for act in ad.actions():
         handlers = ad.candidates(act)
         status   = ad.__getattr__(act + '_status')()
         print act,':', pprint.pformat(zip(status, handlers))
+    print
 
+ad.mail_off()
+ad.alarm_off()
+ad.route_on()
 
-### verbosity
-def logger_level(level, names):
-    """sets the level of a logger (use None for all)
-        e.g. ['footprints', 'mf', 'vortex', 'iga']"""
-    if names is None:
-        names = footprints.loggers.roots
-    for name in names:
-        footprints.loggers.getLogger(name).setLevel(level)
+list_services()
 
-# logger = footprints.loggers.getLogger(__name__)
-# logger.setLevel(logging.DEBUG)
-logger_level(logging.DEBUG, ['mf', 'vortex', 'iga'])
-logging.basicConfig(level=logging.DEBUG)
-
-
-### Agent de transfert
-
-sh.title ('Services de routage')
+sh.title('Routing services')
 
 resuldir = rundir
 toolbox.defaults(
     resuldir       = resuldir,
     agt_pe_cmd     = 'router_fake.sh',
     agt_pa_cmd     = 'router_fake.sh',
-    soprano_target = 'piccolo',
+    soprano_target = 'piccolo-int',
 )
 
 if sh.sysname == 'Darwin':
@@ -103,18 +72,16 @@ with open('tempo.dta','w') as fp:
     fp.write(contents)
     print "contents:", contents
 
-sh.subtitle ('BDAP')
-ad.agt(kind='bdap', filename='tempo.dta', productid='147',
-       domain='ATOUR10', term=84)
+sh.subtitle('BDAP')
+ad.route(kind='bdap', filename='tempo.dta', productid=147,
+         domain='ATOUR10', term=84)
 
-sh.subtitle ('BDPE')
-ad.agt(kind='bdpe', filename='tempo.dta', productid=43,
-       cleroutage=10001, term='03600', )
-ad.agt(kind='bdpe', filename='tempo.dta', productid=43,
-       cleroutage=10001, term=3600, )
+sh.subtitle('BDPE')
+ad.route(kind='bdpe', filename='tempo.dta', productid=43,
+         routingkey=10001, term=36, )
 
-sh.subtitle ('BDM')
-ad.agt(kind='bdm', filename='tempo.dta', productid=4242)
+sh.subtitle('BDM')
+ad.route(kind='bdm', filename='tempo.dta', productid=4242)
 
-sh.subtitle ('results')
+sh.subtitle('results')
 print "log files were created in", resuldir

@@ -3,7 +3,7 @@
 
 __all__ = []
 
-from iga.tools.app import Application
+from iga.tools.apps import OpTask
 
 
 def setup(t, verbose=False):

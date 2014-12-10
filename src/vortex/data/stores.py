@@ -665,7 +665,7 @@ class VortexArchiveStore(ArchiveStore):
         """Reformulates the remote path to compatible vortex namespace."""
         xpath = remote['path'].split('/')
         xpath[3:4] = list(xpath[3])
-        xpath[:0] = [ self.system.path.sep, self.headdir ]
+        xpath[:0] = [self.system.path.sep, self.headdir]
         remote['path'] = self.system.path.join(*xpath)
 
     def vortexcheck(self, remote, options):
@@ -990,10 +990,19 @@ class PromiseStore(footprints.FootprintBase):
         """Insert current promise information to promises logfile."""
         sh = self.system
         loglist = list()
+        logboard = footprints.observers.get(tag='Promises-Log')
         if self.prlogfile and sh.path.exists(self.prlogfile):
             loglist = sh.json_load(self.prlogfile)
+        else:
+            logboard.notify_new(self, dict(logfile=sh.path.realpath(self.prlogfile)))
         loglist.append(info)
         sh.json_dump(loglist, self.prlogfile)
+        logboard.notify_upd(
+            self, dict(
+                logfile = sh.path.realpath(self.prlogfile),
+                logsize = len(loglist),
+            )
+        )
 
     def check(self, remote, options=None):
         """Go through internal opened stores and check for the resource."""
@@ -1087,3 +1096,29 @@ class VortexPromiseStore(PromiseStore):
         )
     )
 
+class PromisesObserver(footprints.util.GetByTag, footprints.observers.Observer):
+    """Track promises logfiles."""
+
+    def __init__(self):
+        """Instanciate a set of lognames."""
+        self._logs = dict()
+        footprints.observers.get(tag='Promises-Log').register(self)
+
+    @property
+    def logs(self):
+        return self._logs
+
+    def newobsitem(self, item, info):
+        """A new ``item`` has been created. Some information is provided through the dict ``info``."""
+        super(PromisesObserver, self).newobsitem(item, info)
+        self.logs[info.get('logfile')] = 0
+
+    def updobsitem(self, item, info):
+        """A new ``item`` has been created. Some information is provided through the dict ``info``."""
+        super(PromisesObserver, self).updobsitem(item, info)
+        self.logs[info.get('logfile')] = info.get('logsize')
+
+    def clear_promises(self):
+        """Remove promises registred in current logfiles."""
+        for thislog in self.logs:
+            logger.info('Clear promises from <%s>', thislog)

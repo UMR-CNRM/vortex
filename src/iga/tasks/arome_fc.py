@@ -8,40 +8,17 @@ logger = footprints.loggers.getLogger(__name__)
 
 import vortex
 from vortex import toolbox
+from vortex.layout.nodes import Driver
 
-from iga.tools.op  import register
-from iga.tools.app import Application
+from iga.tools.apps import OpTask
 
 
 def setup(t, **kw):
-    return [ Forecast(t, tag='forecast', **kw) ]
+    return Driver(tag='aromefc', ticket=t, nodes=[Forecast(tag='arome.forecast', ticket=t, **kw)])
 
-class Forecast(Application):
+class Forecast(OpTask):
 
-    def setup(self, **kw):
-        """Default arome forecast experiment settings."""
-        super(Forecast, self).setup(**kw)
-
-        t = self.ticket
-
-        #--------------------------------------------------------------------------------------------------
-        self.header('Experiment Setup')
-
-        self.conf.geometry = vortex.data.geometries.getbyname(self.conf.fc_geometry)
-
-        logger.info('FC term     = %s', str(self.conf.fc_term))
-        logger.info('FC terms    = %s', str(self.conf.fc_terms))
-        logger.info('FP terms    = %s', str(self.conf.fp_terms))
-        logger.info('FC geometry = %s', str(self.conf.geometry))
-        logger.info('FC domains  = %s', str(self.conf.fp_domains))
-
-        #--------------------------------------------------------------------------------------------------
-        self.header('Toolbox defaults')
-        self.defaults(kw.get('defaults', dict()))
-
-        #--------------------------------------------------------------------------------------------------
-        self.header('Add arpege cycle')
-        self.register(self.conf.arpege_cycle)
+    _tag_topcls = False
 
     def refill(self):
         """Cold start for AROME forecast: AROME Analysis and ARPEGE boundaries"""
@@ -56,10 +33,9 @@ class Forecast(Application):
                 role         = 'Analysis',
                 block        = 'pseudotraj',
                 format       = 'fa',
-                igakey       = '[vconf]',
                 kind         = 'analysis',
                 local        = 'ICMSHFCSTINIT',
-                namespace    = '[suite].inline.fr',
+                namespace    = '[suite].archive.fr',
                 suite        = self.conf.suitebg,
             )
             print t.prompt, 'tb01 =', tb01
@@ -104,18 +80,18 @@ class Forecast(Application):
             print
 
         if 'boundaries' in self.starter:
+            cpl0 = list(sorted(set([ 0 ] + self.conf.cpl_terms)))
             self.sh.title('Refill Boundaries')
             tb03 = toolbox.input(
                 role         = 'BoundaryConditions',
                 block        = self.conf.cpl_block,
                 format       = 'fa',
-                igakey       = '[vconf]',
                 kind         = 'boundary',
                 local        = 'CPLIN+[term:fmthm]',
                 source       = self.conf.cpl_model,
-                namespace    = '[suite].inline.fr',
+                namespace    = '[suite].archive.fr',
                 suite        = self.conf.suitebg,
-                term         = self.conf.cpl_terms,
+                term         = cpl0,
             )
             print t.prompt, 'tb03 =', tb03
             print
@@ -128,7 +104,7 @@ class Forecast(Application):
                 kind         = 'boundary',
                 local        = 'CPLIN+[term:fmthm]',
                 source       = self.conf.cpl_model,
-                term         = self.conf.cpl_terms,
+                term         = cpl0,
             )
             print t.prompt, 'tb03 =', tb03
             print

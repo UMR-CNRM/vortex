@@ -70,7 +70,7 @@ inputs = (
         genv=arpege_cycle,
         local='climarpege',
         model='arpege',
-        geometry=geometries.getbyname('globalsp'),
+        geometry=geometries.get(tag='globalsp'),
         role='Fatherclim'
     ),
     rl(
@@ -79,7 +79,7 @@ inputs = (
         local='climaladin',
         role='Sonclim',
         model='aladin',
-        geometry=geometries.getbyname('reunionsp'),
+        geometry=geometries.get(tag='reunionsp'),
     ),
     rl(
         kind='namelist',
@@ -94,7 +94,7 @@ inputs = (
         kind='historic',
         cutoff='production',
         namespace='[suite].archive.fr',
-        geometry=geometries.getbyname('globalsp'),
+        geometry=geometries.get(tag='globalsp'),
         local='ICMSHARPE+[term::fmth]',
         suite='oper',
         term=(0, 3),

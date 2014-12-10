@@ -40,7 +40,7 @@ print t.prompt, 'CYCLES', genv.cycles()
 rundate = date.today()
 
 fp = toolbox.defaults(
-    geometry=geometries.getbyname('globalsp'),
+    geometry=geometries.get(tag='globalsp'),
     namespace='open.archive.fr',
     date=rundate,
     cutoff='production',
@@ -50,7 +50,7 @@ fp = toolbox.defaults(
 
 print t.line, fp(), t.line
 
-geofp = [ geometries.getbyname(x) for x in ('glob15', 'glob25', 'euroc25', 'glob05', 'eurat01') ]
+geofp = [ geometries.get(tag=x) for x in ('glob15', 'glob25', 'euroc25', 'glob05', 'eurat01') ]
 
 prvin  = vortex.proxy.provider(suite='oper', namespace='oper.archive.fr', vapp='arpege')
 prvout = vortex.proxy.provider(experiment='A001', block='forecast', namespace='vortex.multi.fr')

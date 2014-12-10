@@ -237,9 +237,13 @@ class GetByTagMeta(type):
 
     def __new__(cls, n, b, d):
         logger.debug('Base class for getbytag usage "%s / %s", bc = ( %s ), internal = %s', cls, n, b, d)
-        d['_tag_table'] = dict()
-        d['_tag_focus'] = None
-        return super(GetByTagMeta, cls).__new__(cls, n, b, d)
+        if d.setdefault('_tag_topcls', True):
+            d['_tag_table'] = dict()
+            d['_tag_focus'] = dict(default=None)
+            d['_tag_class'] = WeakSet()
+        realnew = super(GetByTagMeta, cls).__new__(cls, n, b, d)
+        realnew._tag_class.add(realnew)
+        return realnew
 
     def __call__(cls, *args, **kw):
         return cls.__new__(cls, *args, **kw)
@@ -257,7 +261,14 @@ class GetByTag(object):
 
     def __new__(cls, *args, **kw):
         """Check for an existing object with same tag."""
-        tag = cls.tag_clean(kw.pop('tag', cls._tag_default))
+        tag = kw.pop('tag', None)
+        if tag is None:
+            if args:
+                args = list(args)
+                tag  = args.pop(0)
+            else:
+                tag = cls._tag_default
+        tag = cls.tag_clean(tag)
         new = kw.pop('new', False)
         if not new and tag in cls._tag_table:
             newobj = cls._tag_table[tag]
@@ -278,7 +289,7 @@ class GetByTag(object):
 
     @classmethod
     def tag_keys(cls):
-        return cls._tag_table.keys()
+        return sorted(cls._tag_table.keys())
 
     @classmethod
     def tag_values(cls):
@@ -289,21 +300,25 @@ class GetByTag(object):
         return cls._tag_table.items()
 
     @classmethod
-    def tag_focus(cls):
-        return cls._tag_focus
+    def tag_focus(cls, select='default'):
+        return cls._tag_focus[select]
 
     @classmethod
-    def set_focus(cls, obj):
-        cls._tag_focus = obj.tag
+    def set_focus(cls, obj, select='default'):
+        cls._tag_focus[select] = obj.tag
 
-    def has_focus(self):
+    def has_focus(self, select='default'):
         """Return a boolean value on equality of current tag and focus tag."""
-        return self.tag == self._tag_focus
+        return self.tag == self._tag_focus[select]
 
     @classmethod
     def tag_clear(cls):
         cls._tag_table = dict()
-        cls._tag_focus = None
+        cls._tag_focus = dict(default=None)
+
+    @classmethod
+    def tag_classes(cls):
+        return list(cls._tag_class)
 
 
 class Catalog(object):

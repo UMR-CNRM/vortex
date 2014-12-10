@@ -174,6 +174,7 @@ class OpArchive(Provider):
     def pathname(self, resource):
         rinfo = self.pathinfo(resource)
         rdate = rinfo.get('date', '')
+        suite = self.suite.rstrip('e')
         yyyy = str(rdate.year)
         mm = '{0:02d}'.format(rdate.month)
         dd = '{0:02d}'.format(rdate.day)
@@ -182,19 +183,19 @@ class OpArchive(Provider):
         if self.member is not None:
             run = 'RUN' + "%d" % self.member
             if re.match(r'pearp', self.igakey) and resource.realkind == 'gridpoint':
-                    return '/'.join((self.igakey, self.suite, dd, rr))
+                    return '/'.join((self.igakey, suite, dd, rr))
             else:
-                return '/'.join((self.igakey, self.suite, rinfo['cutoff'], yyyy, mm, dd, rr, run ))
+                return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr, run ))
         else:
             if re.match(r'arpege|arome|aearp', self.igakey):
-                return '/'.join((self.igakey, self.suite, rinfo['cutoff'], yyyy, mm, dd, rr ))
+                return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr ))
             else:
                 if re.match(r'testms1|testmp1', self.igakey):
                     return '/'.join((self.igakey, dd, rr ))
                 elif re.match(r'mocage', self.igakey):
                     return '/'.join((self.igakey, dd))
                 else:
-                    return '/'.join((self.igakey, self.suite, rinfo['cutoff'], yyyy, mm, dd, rr ))
+                    return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr ))
 
 
 class OpArchiveCourt(OpArchive):

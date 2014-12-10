@@ -13,26 +13,26 @@ logger = footprints.loggers.getLogger(__name__)
 
 class SendAlarm(Action):
     """
-    Class responsible for sending alarm
+    Class responsible for sending alarms.
     """
 
-    def __init__(self, kind='alarm', service=None, active=True):
-        super(SendAlarm, self).__init__(kind)
+    def __init__(self, kind='alarm', service=None, active=False):
+        super(SendAlarm, self).__init__(kind=kind, active=active, service=service)
 
     def service_info(self, **kw):
-        """Avoid forcing the user to tell it's hostname"""
+        """Avoid forcing the user to tell it's hostname."""
         sh = sessions.system()
         kw.setdefault('hostname', sh.hostname)
         return super(SendAlarm, self).service_info(**kw)
 
 
-class SendAgt(Action):
+class Route(Action):
     """
-    Class responsible for sending data to the Transfer Agent (BDAP, BDPE, BDM).
+    Class responsible for routing data to the Transfer Agent (BDAP, BDPE, BDM).
     """
 
-    def __init__(self, kind='agt', service='routing', active=True):
-        super(SendAgt, self).__init__(kind)
+    def __init__(self, kind='route', service=None, active=False):
+        super(Route, self).__init__(kind=kind, active=active, service=service)
 
 
-actiond.add(SendAlarm(), SendAgt())
+actiond.add(SendAlarm(), Route())

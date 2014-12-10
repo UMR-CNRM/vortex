@@ -46,7 +46,7 @@ lh8 = vortex.toolbox.rload(
     kind='gridpoint', model='arpege', vapp='arpege', vconf='france',
     date=date.today(), cutoff='production', term=3, origin='historic',
     nativefmt='grib', suite='oper',
-    geometry = geometries.getbyname('glob15'),
+    geometry = geometries.get(tag='glob15'),
     local = 'GRID+[term::fmth]',
 )
 

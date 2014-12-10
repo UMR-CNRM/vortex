@@ -79,7 +79,7 @@ class Context(footprints.util.GetByTag):
         Register a new section in void active context with the resource handler ``item``.
         """
         logger.debug('Notified %s new item %s', self, item)
-        if self._void and self.has_focus():
+        if self.void and self.has_focus():
             self._sequence.section(rh=item, stage='load')
 
     def delobsitem(self, item, info):
@@ -182,7 +182,7 @@ class Context(footprints.util.GetByTag):
         The task sequence becomes the current context sequence.
         """
         if task and hasattr(task, 'sequence'):
-            logger.info('Binding context <%s> to task %s', self.tag(), task)
+            logger.info('Binding context <%s> to task <%s>', self.tag, task.tag)
             self._sequence = task.sequence
             self._task = task
             self._void = False
