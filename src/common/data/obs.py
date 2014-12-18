@@ -415,7 +415,7 @@ class ObsMapContent(TextContent):
         container.rewind()
         self.extend([
             obs for obs in
-                [ ObsMapItem(*x.split()) for x in container if not x.startswith('#') ]
+                [ ObsMapItem(*x.split()) for x in [ line.strip() for line in container ] if x and not x.startswith('#') ]
             if obs.odb not in self.discarded
         ])
 

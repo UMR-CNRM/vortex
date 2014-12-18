@@ -7,7 +7,7 @@ __all__ = []
 
 import re
 
-from vortex.tools.date import synop
+from vortex.tools import date, env
 from vortex.data.flow import GeoFlowResource
 from vortex.syntax.stdattrs import a_term
 
@@ -47,8 +47,12 @@ class LAMBoundary(GeoFlowResource):
         if self.mailbox.get('block', '-') == 'surfan':
             hhreal = self.term
         else:
-            lastsynop = synop(base=self.date)
-            hhreal = (self.date - lastsynop).time() + self.term
+            e = env.current()
+            if 'HHDELTA_CPL' in e:
+                actualbase = self.date - date.Time(e.HHDELTA_CPL + 'H')
+            else:
+                actualbase = date.synop(base=self.date)
+            hhreal = (self.date - actualbase).time() + self.term
         return 'ELSCFALAD_' + self.geometry.area + '+' + hhreal.fmthour
 
     def archive_basename(self):

@@ -76,6 +76,10 @@ class Node(footprints.util.GetByTag):
         self._conf     = None
         self._contents = list()
 
+    @classmethod
+    def tag_clean(cls, tag):
+        return tag.lower().replace(' ', '').replace('_', '')
+
     @property
     def ticket(self):
         return self._ticket
@@ -335,7 +339,7 @@ class Task(Node, NiceLayout):
         """Broadcast IO SERVER configuration values to environment."""
         t = self.ticket
         t.sh.header('IOSERVER Environment')
-        t.env.default(VORTEX_IOSERVER_NODES  = self.conf.get('io_contents', 0))
+        t.env.default(VORTEX_IOSERVER_NODES  = self.conf.get('io_nodes', 0))
         t.env.default(VORTEX_IOSERVER_TASKS  = self.conf.get('io_tasks', 6))
         t.env.default(VORTEX_IOSERVER_OPENMP = self.conf.get('io_openmp', 4))
 

@@ -862,7 +862,7 @@ class VortexStore(MultiStore):
     """Combined cache and archive VORTEX stores."""
 
     _footprint = dict(
-        info = 'Vortex multi access',
+        info = 'VORTEX multi access',
         attr = dict(
             scheme = dict(
                 values  = ['vortex'],
@@ -1088,7 +1088,7 @@ class VortexPromiseStore(PromiseStore):
     """Combined a Promise Store for expected resources and any VORTEX Store."""
 
     _footprint = dict(
-        info = 'Vortex promise store',
+        info = 'VORTEX promise store',
         attr = dict(
             scheme = dict(
                 values = ['xvortex'],

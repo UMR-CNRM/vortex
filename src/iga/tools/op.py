@@ -119,6 +119,7 @@ def setup(**kw):
     vortex.toolbox.active_verbose = True
     vortex.toolbox.active_now     = True
     vortex.toolbox.active_insitu  = True
+    vortex.toolbox.active_clear   = True
 
     for activeattr in [ x for x in dir(vortex.toolbox) if x.startswith('active_') ]:
         print '+', activeattr.ljust(16), '=', getattr(vortex.toolbox, activeattr)
@@ -247,7 +248,7 @@ def fulltraceback(localsd=None):
     (exc_type, exc_value, exc_traceback) = sys.exc_info()
 
     print 'Exception type: ' + str(exc_type)
-    print 'Exception info: ' + str(localsd.get('last_error', None))
+    print 'Exception info: ' + str(localsd.get('trouble', None))
     if sh:
         sh.header('Traceback Error / BEGIN')
     else:

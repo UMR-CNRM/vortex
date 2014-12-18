@@ -1190,7 +1190,7 @@ class Linux27(Linux, Python27):
         info = 'Linux base system with pretty new python version',
         attr = dict(
             python = dict(
-                values = [ '2.7.' + str(x) for x in range(3, 9) ]
+                values = [ '2.7.' + str(x) for x in range(3, 10) ]
             )
         )
     )

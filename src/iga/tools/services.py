@@ -2,11 +2,29 @@
 # -*- coding: utf-8 -*-
 
 """
-The module contains the service adapted to the actions present in the actions
-module. We have an abstract class Services (inheritating from FootprintBase)
-and 3 more classes inheritating from it: AlarmService, BdapService, RoutingService.
-These classes are adpated to handle the data dedicated to the action to be
-performed.
+This module contains the services specifically needed by the operational suite.
+  * Alarm sends messages to the syslog system for monitoring.
+    Alarms with ``critical`` level are also forwarded to the dayfile system, hence
+    the optional ``spooldir`` attribute.
+    Depending on the OP_ALARM environment variable, all alarms are sent to a
+    log file instead of being really emitted.
+
+    * :class:`AlarmLogService` uses the local SysLog system
+    * :class:`AlarmRemoteService` handles remote SysLog usage
+    * both are available only on login nodes: a :class:`AlarmProxyService` is
+      selected by the footprints elsewhere. This one delegates the service to
+      the unix ``logger`` command, executed on a login node.
+
+  * database routing, specifically
+
+    * :class:`BdapService`
+    * :class:`BdmService`
+    * :class:`BdpeService` (through :class:`BdpeOperationsService` or :class:`BdpeIntegrationService`)
+
+  * formatted dayfile logging with :class:`DayfileReportService`
+
+  * :class:`RemoteCommandProxy` is a helper class able to execute a command
+    on a specific node type, e.g. a login or a transfer node.
 """
 
 #: No automatic export
@@ -17,6 +35,7 @@ from logging.handlers import SysLogHandler
 
 import re
 import socket
+import random
 from StringIO import StringIO
 
 import footprints
@@ -25,7 +44,7 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex import sessions
 from vortex.syntax.stdattrs import a_term
 from vortex.tools import date
-from vortex.tools.services import Service
+from vortex.tools.services import Service, FileReportService
 from vortex.tools.actions import actiond as ad
 from vortex.tools.systems import ExecutionError
 
@@ -35,6 +54,23 @@ LOGIN_NODES = [
     for x in ('prolixlogin', 'beaufixlogin', )
     for y in range(6)
 ]
+
+# default Formatter for alarm logfile output
+DEFAULT_ALARMLOG_FORMATTER = logging.Formatter(
+    fmt     = '[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
+    datefmt = '%Y/%d/%m-%H:%M:%S',
+)
+
+# Syslog formatting *must* be compatible with RFC 5424., e.g.
+# SYSLOG_FORMATTER = logging.Formatter(
+#    fmt     = '%(asctime)s %(name)s: %(levelname)s %(message)s',
+#    datefmt = '%b %e %H:%M:%S',
+# )
+# or this one:
+SYSLOG_FORMATTER = logging.Formatter(
+    fmt     = '%(asctime)s [%(name)s][%(levelname)s]: %(message)s',
+    datefmt = '%Y/%m/%d T %H:%M:%S',
+)
 
 
 class LogFacility(int):
@@ -143,9 +179,11 @@ class AlarmService(Service):
     """
     Class responsible for handling alarm data.
     Children:
-       - AlarmProxyService (external 'logger' command for non-login nodes)
-       - AlarmLogService   (syslog based on 'address')
-       - AlarmRemoteService(syslog based on 'syshost', 'sysport' and 'socktype')
+
+      * :class:`AlarmProxyService`  (external ``logger`` command for non-login nodes)
+      * :class:`AlarmLogService`    (syslog based on ``address``)
+      * :class:`AlarmRemoteService` (syslog based on ``syshost``, ``sysport`` and ``socktype``)
+
     This class should not be called directly.
     """
 
@@ -164,12 +202,25 @@ class AlarmService(Service):
                 optional = True,
                 default  = SysLogHandler.LOG_LOCAL3,
             ),
-            alarmfmt = dict(
+            alarmlogfile = dict(
+                optional = True,
+                default  = 'alarms.log',
+            ),
+            alarmlogfmt = dict(
+                optional = True,
+                type     = logging.Formatter,
+                default  = DEFAULT_ALARMLOG_FORMATTER,
+            ),
+            spooldir = dict(
                 optional = True,
                 default  = None,
             ),
         )
     )
+
+    def deactivated(self):
+        """Tells if alarms are deactivated : OP_ALARM set to 0"""
+        return not bool(self.sh.env.get('OP_ALARM', 1))
 
     def get_syslog(self):
         """Define and return the SyslogHandler to use."""
@@ -177,31 +228,43 @@ class AlarmService(Service):
 
     def get_logger_action(self):
         """
-        Define a SysLogHandler to broadcast the alarm.
+        Define a logging handler to broadcast the alarm.
         Return the actual logging method.
         """
-
-        # create the syslog handler
-        hand = self.get_syslog()
-        hand.setFormatter(logging.Formatter(self.alarmfmt))
-        logger.addHandler(hand)
-
+        if self.deactivated():
+            self.handler = logging.FileHandler(self.alarmlogfile, delay=True)
+            self.handler.setFormatter(self.alarmlogfmt)
+        else:
+            self.handler = self.get_syslog()
+            self.handler.setFormatter(SYSLOG_FORMATTER)
+        logger.addHandler(self.handler)
         return getattr(logger, self.level, logger.warning)
 
     def get_message(self):
         """Return the actual message to log."""
         return self.message
 
+    def after_broadcast(self, rc):
+        """What to do after the logger was called (and returned rc)."""
+        return rc
+
     def __call__(self):
         """Main action: pack the message to the actual logger action."""
         logmethod = self.get_logger_action()
-        return logmethod(self.get_message())
+        message = self.get_message()
+        if self.level == 'critical':
+            ad.report(kind='dayfile', message='!!! {} !!!'.format(message),
+                      mode='TEXTE', spooldir=self.spooldir)
+        rc = logmethod(message)
+        rc = self.after_broadcast(rc)
+        logger.removeHandler(self.handler)
+        return rc
 
 
 class AlarmProxyService(AlarmService):
     """
     Class responsible for handling alarm data through the remote
-    unix 'logger' command invocation (mandatory on non-login nodes)
+    unix ``logger`` command invocation (mandatory on non-login nodes)
     This class should not be called directly.
     """
 
@@ -214,32 +277,45 @@ class AlarmProxyService(AlarmService):
         )
     )
 
-    def get_syslog(self):
-        """Return an in-memory handler."""
+    def memory_handler(self):
+        """Create an in-memory handler."""
         self.buffer = StringIO()
         self.handler = logging.StreamHandler(self.buffer)
         return self.handler
 
-    def priority(self, level):
+    def memory_message(self):
+        """Retrieve the formatted message from an in-memory handler."""
+        self.handler.flush()
+        self.buffer.flush()
+        message = self.buffer.getvalue().rstrip('\n')
+        self.buffer.truncate(0)
+        return message
+
+    def get_syslog(self):
+        """Return an in-memory handler."""
+        self.handler = self.memory_handler()
+        return self.handler
+
+    @staticmethod
+    def priority(level):
         """
         Map a logging level to a SysLogHandler priority
-        for the unix 'logger' command.
+        for the unix ``logger`` command.
         """
         if level == 'critical':
             return 'crit'
         return level
 
-    def __call__(self):
-        """Main action: pack the message to the actual logger command."""
-
-        # send to the logger as usual
-        super(AlarmProxyService, self).__call__()
+    def after_broadcast(self, rc):
+        """
+        Calling the logger has filled the in-memory buffer with the formatted
+        record. Get this string and transmit it to the remote unix command.
+        """
+        if self.deactivated():
+            return
 
         # get the formatted message from the logger
-        self.handler.flush()
-        self.buffer.flush()
-        message = self.buffer.getvalue().rstrip('\n')
-        self.buffer.truncate(0)
+        message = self.memory_message()
 
         # send it to the unix 'logger' command on a login node
         command = "logger -p {}.{} '{}'".format(
@@ -290,8 +366,7 @@ class AlarmRemoteService(AlarmService):
         info = 'Alarm services class',
         attr = dict(
             syshost = dict(
-                optional = True,
-                default = 'localhost',
+                optional = False,
             ),
             sysport = dict(
                 type     = int,
@@ -318,12 +393,17 @@ class RoutingService(Service):
     """
     Abstract class for routing services (BDAP, BDM, BDPE).
     Inheritance graph below this class:
-        RoutingUpstreamService
-            BdmService
-            BdapService
-        BdpeService
-            BdpeOperationsService
-            BdpeIntegrationService
+
+      * :class:`RoutingUpstreamService`
+
+        * :class:`BdmService`
+        * :class:`BdapService`
+
+      * :class:`BdpeService`
+
+        * :class:`BdpeOperationsService`
+        * :class:`BdpeIntegrationService`
+
     This class should not be called directly.
     """
 
@@ -364,13 +444,6 @@ class RoutingService(Service):
     def realkind(self):
         return 'routing'
 
-    def mandatory_ini(self, key):
-        """Retrieve a key from the ini files, or raise."""
-        value = self.sh.target().get(key)
-        if not value:
-            raise KeyError('missing key ' + key + ' in ini files')
-        return value
-
     def mandatory_env(self, key):
         """Retrieve a key from the environment, or raise."""
         value = self.sh.env[key]
@@ -410,16 +483,6 @@ class RoutingService(Service):
         stamp   = self.sh.env.get(envkey, default)
         return stamp[:8]
 
-    @property
-    def term3d(self):
-        """Hours only, with leading 0s, on 3 digits (4 if necessary)."""
-        return '{:03d}'.format(self.term.hour)
-
-    @property
-    def term6d(self):
-        """HHHHmm format suitable for BDPE descriptions."""
-        return self.term.fmtraw
-
     def file_ok(self):
         """Check that the file exists, send an alarm if not."""
         if not self.sh.path.exists(self.filename):
@@ -428,27 +491,6 @@ class RoutingService(Service):
             ad.alarm(level='critical', message=msg)
             return False
         return True
-
-    def actual_resuldir(self):
-        """The directory where to write IGA log files."""
-        return tunable_value(self.sh,
-                             self.resuldir,
-                             'AGT_RESULDIR',
-                             'services:resuldir',
-                             '.')
-
-    def iga_log(self, logline, logfile=None):
-        """Append a line to a log file."""
-        if not logline:
-            return
-
-        if not logfile:
-            resuldir = self.actual_resuldir()
-            self.sh.mkdir(resuldir)
-            logfile = self.sh.path.join(resuldir, 'routage.') + date.today().ymd
-
-        with open(logfile, 'a') as fp:
-            fp.write(logline+'\n')
 
     def __call__(self):
         """Actual service execution."""
@@ -465,8 +507,9 @@ class RoutingService(Service):
         rcp = RemoteCommandProxy(nodekind='transfer')
         rc = rcp.execute(cmdline)
 
-        logline = self.get_logline()
-        self.iga_log(logline)
+        logfile = 'routage.' + date.today().ymd
+        ad.report(kind='dayfile', mode='RAW', message=self.get_logline(),
+                  resuldir=self.resuldir, filename=logfile)
 
         if not rc:
             # BDM call has no term
@@ -581,8 +624,8 @@ class BdapService(RoutingUpstreamService):
 
     def get_logline(self):
         """Build the line to send to IGA main routing log file."""
-        return "{now}@{0.taskname}@{0.domain}@{0.term3d}@${0.productid}@{0.filename}" \
-               "@{0.realkind}".format(self,now=date.now().compact())
+        return "{now}@{0.taskname}@{0.domain}@{0.term.hour:03d}@${0.productid}@{0.filename}" \
+               "@{0.realkind}".format(self, now=date.now().compact())
 
 
 class BdpeService(RoutingService):
@@ -641,14 +684,13 @@ class BdpeService(RoutingService):
         """Additionnal log file specific to BDPE calls."""
         text = "envoi_bdpe.{0.producer} {0.productid} {0.taskname} {mode} " \
                "{0.routingkey}".format(self, mode='routage par cle')
-        resuldir = self.actual_resuldir()
-        logfile = self.sh.path.join(resuldir, 'log_envoi_bdpe.') + self.aammjj
-        self.iga_log(text, logfile)
-        return True
+        logfile = 'log_envoi_bdpe.' + self.aammjj
+        ad.report(kind='dayfile', message=text, resuldir=self.resuldir,
+                  filename=logfile, mode='RAW')
 
     def get_logline(self):
         """Build the line to send to IGA main routing log file."""
-        s = "{now}@{0.taskname}@missing@{0.term3d}@{0.actual_routingkey}" \
+        s = "{now}@{0.taskname}@missing@{0.term.hour:03d}@{0.actual_routingkey}" \
             "@{0.filename}@{0.realkind}_{0.producer}"
         return s.format(self, now=date.now().compact())
 
@@ -663,7 +705,7 @@ class BdpeService(RoutingService):
         if self.actual_routingkey is None:
             return None
         options = "{0.filename} {0.actual_routingkey} -p {0.producer}" \
-                  " -n {0.productid} -e {0.term6d} -d {0.dmt_date_pivot}" \
+                  " -n {0.productid} -e {0.term.fmtraw} -d {0.dmt_date_pivot}" \
                   " -q {0.quality} -r {0.soprano_target}".format(self)
         return self.actual_agt_pe_cmd() + ' ' + options
 
@@ -696,7 +738,7 @@ class BdpeOperationsService(BdpeService):
             'e_transmet_fac':      10212,
             'bdpe.e_transmet_fac': 10116,
         }
-        default = '{0.productid}{0.term6d}'.format(self)
+        default = '{0.productid}{0.term.fmtraw}'.format(self)
         return rules.get(self.routingkey.lower(), default)
 
 
@@ -739,3 +781,132 @@ class BdpeIntegrationService(BdpeService):
         )
         logger.info(msg)
         return None
+
+
+class DayfileReportService(FileReportService):
+    """
+    Historical dayfile reporting for IGA usage.
+
+      * to a known filename
+      * to a temporary spool (see demon_messday.pl).
+
+    This class should not be called directly.
+    """
+
+    _footprint = dict(
+        info = 'Historical dayfile reporting service',
+        attr = dict(
+            kind = dict(
+                values = ['dayfile'],
+            ),
+            message = dict(
+                optional = True,
+                default  = '',
+            ),
+            mode = dict(
+                optional = True,
+                default  = 'TEXTE',
+                values   = ('TEXTE', 'ECHEANCE', 'DEBUT', 'FIN', 'ERREUR', 'RAW'),
+            ),
+            filename = dict(
+                optional = True,
+                default  = None,
+            ),
+            resuldir  = dict(
+                optional = True,
+                default  = None
+            ),
+            spooldir  = dict(
+                optional = True,
+                default  = None
+            ),
+            task = dict(
+                optional = True,
+                default  = None,
+            ),
+        )
+    )
+
+    @property
+    def taskname(self):
+        """IGA task name (TACHE)."""
+        if self.task is None:
+            return self.sh.env.get('SLURM_JOB_NAME', 'interactif')
+        return self.task
+
+    @property
+    def timestamp(self):
+        """Formatted hour used as standard prefix in log files."""
+        return '{0.hour:02d}-{0.minute:02d}-{0.second:02d}'.format(date.now())
+
+    def actual_resuldir(self):
+        """The directory where to write named log files."""
+        return tunable_value(self.sh,
+                             self.resuldir,
+                             'OP_RESULDIR',
+                             'services:resuldir',
+                             '.')
+
+    def actual_spooldir(self):
+        """The directory where to write spooled log files."""
+        default = self.sh.path.join(self.sh.env.HOME, 'spool_messdayf')
+        return tunable_value(self.sh,
+                             self.spooldir,
+                             'OP_SPOOLDIR',
+                             'services:spooldir',
+                             default)
+
+    def direct_target(self):
+        """
+        Absolute name of the file to write to, when filename is known.
+        The path defaults to resuldir for named log files.
+        """
+        if self.sh.path.isabs(self.filename):
+            return self.filename
+        name = self.sh.path.join(self.actual_resuldir(), self.filename)
+        return self.sh.path.abspath(name)
+
+    def spooled_target(self):
+        """
+        Absolute name of the spooled file to write to. The path
+        defaults to spooldir for these parts of centralized log files.
+        """
+        name = ''.join([
+            str(date.now().epoch),
+            '_',
+            self.sh.env.get('NQSID', ''),
+            '1' if 'DEBUT' in self.mode else '0',
+            str(random.random()),
+        ])
+        final = self.sh.path.join(self.actual_spooldir(), name)
+        return self.sh.path.abspath(final)
+
+    def __call__(self):
+        """Main action: format, open, write, close, clean."""
+
+        if self.message is None:
+            return
+
+        fmt = dict(
+            RAW        = '{0.message}',
+            TEXTE      = '{0.timestamp} -> {0.message}',
+            ECHEANCE   = '{0.timestamp} == {0.message}',
+            DEBUT      = '{0.timestamp} == {0.mode}    {0.taskname} === noeuds {0.message}',
+            FIN        = '{0.timestamp} == {0.mode} OK {0.taskname} ===',
+            ERREUR     = '{0.timestamp} == {0.mode} {0.taskname} *****'
+        )
+        infos = fmt[self.mode].format(self) + '\n'
+
+        if self.filename:
+            final = None
+            destination = self.direct_target()
+        else:
+            final = self.spooled_target()
+            destination = final + '.tmp'
+
+        self.sh.filecocoon(destination)
+        with open(destination, 'a') as fp:
+            fp.write(infos)
+
+        if not self.filename:
+            self.sh.mv(destination, final)

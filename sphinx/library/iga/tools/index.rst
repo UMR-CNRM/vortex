@@ -10,6 +10,6 @@ Services utilities for Op
    tools
 
    actions
-   app
+   apps
    op
    services

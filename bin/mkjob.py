@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+
 import vortex
 
 from iga.util import swissknife
@@ -25,6 +27,8 @@ if not opts['name']:
     exit(1)
 
 opts['wrap'] = False
+opts['mkopts'] = ' '.join(sys.argv[1:])
+
 corejob, tplconf = swissknife.mkjob(t, **opts)
 
 t.sh.header('Template configuration')

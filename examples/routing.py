@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Routing example.
+The BDPE call should succeed (to piccolo, not to piccolo-int).
+"""
+
 import sys
 sys.stdout = sys.stderr
 
@@ -40,7 +45,7 @@ def list_services():
     sh.subtitle('action -> handlers')
     for act in ad.actions():
         handlers = ad.candidates(act)
-        status   = ad.__getattr__(act + '_status')()
+        status   = [ h.status() for h in handlers ]
         print act,':', pprint.pformat(zip(status, handlers))
     print
 
@@ -55,30 +60,27 @@ sh.title('Routing services')
 resuldir = rundir
 toolbox.defaults(
     resuldir       = resuldir,
-    agt_pe_cmd     = 'router_fake.sh',
     agt_pa_cmd     = 'router_fake.sh',
-    soprano_target = 'piccolo-int',
+    soprano_target = 'piccolo',
 )
 
 if sh.sysname == 'Darwin':
     toolbox.defaults(
         agt_path       = '/Users/pascal/tmp/vortex',
-        loginnode      = 'localhost',
-        transfernode   = 'localhost',
-)
+        loginnode      = sh.hostname,
+        transfernode   = sh.hostname,
+    )
 
 with open('tempo.dta','w') as fp:
-    contents = "Test VORTEX - " + stime
+    contents = "Test VORTEX - " + stime + '\n'
     fp.write(contents)
     print "contents:", contents
 
 sh.subtitle('BDAP')
-ad.route(kind='bdap', filename='tempo.dta', productid=147,
-         domain='ATOUR10', term=84)
+ad.route(kind='bdap', filename='tempo.dta', productid=147, domain='ATOUR10', term=84)
 
 sh.subtitle('BDPE')
-ad.route(kind='bdpe', filename='tempo.dta', productid=43,
-         routingkey=10001, term=36, )
+ad.route(kind='bdpe', filename='tempo.dta', productid=43, routingkey='bdpe', term=36)
 
 sh.subtitle('BDM')
 ad.route(kind='bdm', filename='tempo.dta', productid=4242)

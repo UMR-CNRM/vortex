@@ -17,7 +17,47 @@ Package
 Classes
 -------
 
+.. autoclass:: LogFacility
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: RemoteCommandProxy
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: AlarmService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: AlarmProxyService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: AlarmLogService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: AlarmRemoteService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: RoutingService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: RoutingUpstreamService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: BdmService
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -27,7 +67,22 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: RoutingService
+.. autoclass:: BdpeService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: BdpeOperationsService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: BdpeIntegrationService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: DayfileReportService
    :show-inheritance:
    :members:
    :member-order: alphabetical

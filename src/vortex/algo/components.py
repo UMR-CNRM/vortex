@@ -147,11 +147,11 @@ class AlgoComponent(footprints.FootprintBase):
         actual_args = list()
         for arg in self.flyput_args():
             logger.info('Check arg <%s>', arg)
-            if any([ x.container.localpath().startswith(arg) for x in self.promises ]):
-                logger.info('Match some promise %s', str([ x.container.localpath() for x in self.promises ]))
+            if any([ x.container.basename.startswith(arg) for x in self.promises ]):
+                logger.info('Match some promise %s', str([ x.container.basename for x in self.promises ]))
                 actual_args.append(arg)
             else:
-                logger.info('Do not match any promise %s', str([ x.container.localpath() for x in self.promises ]))
+                logger.info('Do not match any promise %s', str([ x.container.basename for x in self.promises ]))
         return actual_args
 
     def flyput_sleep(self):
@@ -180,7 +180,7 @@ class AlgoComponent(footprints.FootprintBase):
                 data = [ x for x in data if x ]
                 logger.info('Polling retrieved data %s', str(data))
                 for thisdata in data:
-                    candidates = [ x for x in self.promises if x.container.localpath() == thisdata ]
+                    candidates = [ x for x in self.promises if x.container.basename == thisdata ]
                     if candidates:
                         logger.info('Polled data is promised <%s>', thisdata)
                         bingo = candidates.pop()

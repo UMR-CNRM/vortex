@@ -9,11 +9,12 @@
 #SBATCH --partition=$partition
 #SBATCH --time=$time
 #SBATCH --$exclusive
-#SBATCH --verbose
+#SBATCH --$verbose
 
 # Build time: $create
 # Build user: $mkuser
 # Build host: $mkhost
+# Build opts: $mkopts
 
 op_jobname  = '$name'
 op_suite    = '$suite'
@@ -22,12 +23,12 @@ op_vapp     = '$vapp'
 op_vconf    = '$vconf'
 op_cutoff   = '$cutoff'
 op_rundate  = $rundate
-op_runtime  = '$runtime'
+op_runtime  = $runtime
 op_rootapp  = '$rootapp/{0:s}/{1:s}/{2:s}'.format(op_suite, op_vapp, op_vconf)
 op_gcocache = '$rootdir/opgco/{0:s}'.format(op_suite)
 op_jobfile  = '$file'
 op_thisjob  = '{0:s}/jobs/{1:s}.py'.format(op_rootapp, op_jobfile)
-op_iniconf  = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(op_rootapp, op_vapp, op_vconf, '$task')
+op_iniconf  = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(op_rootapp, op_vapp, op_vconf, '$taskconf')
 op_alarm    = $alarm
 op_archive  = $archive
 op_public   = $public
@@ -58,7 +59,6 @@ try:
     driver.run()
     op.complete(t)
 except Exception as trouble:
-    print trouble
     op.fulltraceback(locals())
     op.rescue(actual=locals())
 finally:

@@ -14,7 +14,7 @@ from iga.tools.apps import OpTask
 
 
 def setup(t, **kw):
-    return Driver(tag='aromefc', ticket=t, nodes=[Forecast(tag='arome.forecast', ticket=t, **kw)])
+    return Driver(tag='aromefc', ticket=t, nodes=[Forecast(tag='forecast', ticket=t, **kw)])
 
 class Forecast(OpTask):
 

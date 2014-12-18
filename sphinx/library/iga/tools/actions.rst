@@ -21,7 +21,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: SendAgt
+.. autoclass:: Route
    :show-inheritance:
    :members:
    :member-order: alphabetical

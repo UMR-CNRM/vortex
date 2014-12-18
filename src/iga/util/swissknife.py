@@ -7,6 +7,7 @@ __all__ = []
 import re
 import io
 import collections
+import string
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -42,6 +43,7 @@ def mkjob(t, **kw):
     opts = dict(
         python    = '/usr/bin/python',
         pyopts    = '-u',
+        profile   = 'research',
         template  = 'job.default.tpl',
         inifile   = 'job.default.ini',
         exclusive = 'exclusive',
@@ -49,20 +51,41 @@ def mkjob(t, **kw):
         mkuser    = t.glove.user,
         mkhost    = t.sh.hostname,
         name      = 'autojob',
+        home      = t.env.HOME,
         rundate   = None,
         runtime   = None,
+        taskconf  = None,
         wrap      = True,
+        verbose   = True,
     )
     opts.update(kw)
 
+    # Fix actual options of the create process
+    opts.setdefault('mkopts', str(kw))
+
+    # Switch verbosity from boolean to plain string
+    if type(opts['verbose']) is bool:
+        if opts['verbose']:
+            opts['verbose'] = 'verbose'
+        else:
+            opts['verbose'] = 'noverbose'
+
+    # Fix taskconf as task by default
+    if opts['taskconf'] is None:
+        opts['taskconf'] = opts['task']
+
     # Try to find default runtime according to jobname
-    if opts['runtime'] is None:
+    if opts['runtime'] is None and opts['rundate'] is None:
         jtime = re.search('_t?(\d+(?:[:-h]?\d+)?)', opts['name'], re.IGNORECASE)
         if jtime:
             jtime = re.sub('[:-hH]', '', jtime.group(1))
             if len(jtime) > 2:
                 jtime = jtime[0:-2] + ':' + jtime[-2:]
             opts['runtime'] = str(date.Time(jtime))
+
+    for xopt in ('rundate', 'runtime'):
+        if type(opts[xopt]) is str:
+            opts[xopt] = "'" + opts[xopt] + "'"
 
     corejob = load_template(t, opts['template'])
     opts['tplfile'] = corejob.srcfile
@@ -77,9 +100,10 @@ def mkjob(t, **kw):
 
     opts['name'] = re.sub('\.py$', '', opts['name'])
 
-    tplconf = tplconf.get(opts['name'], tplconf.get('void'))
+    tplconf = tplconf.get(opts['profile'], tplconf.get('void'))
 
     opset = getopsetfrompath(t)
+
     tplconf.setdefault('suite',   opset.suite)
     tplconf.setdefault('suitebg', opset.suite)
     tplconf.setdefault('vapp',    opset.vapp)
@@ -89,14 +113,20 @@ def mkjob(t, **kw):
 
     tplconf.setdefault('file', opts['name'] + '.py')
 
-    corejob = corejob.substitute(tplconf)
+    jobconf = '../conf/{0:s}_{1:s}_{2:s}.ini'.format(tplconf['vapp'], tplconf['vconf'], tplconf['taskconf'])
+    if t.sh.path.exists(jobconf):
+        t.sh.header('Add ' + jobconf)
+        jobparser = GenericConfigParser(inifile=jobconf)
+        tplconf.update(jobparser.as_dict().get(opts['name'], dict()))
+
+    pycode = string.Template(corejob.substitute(tplconf)).substitute(tplconf)
 
     if opts['wrap']:
         def autojob():
-            eval(compile(corejob, 'compile.mkjob.log', 'exec'))
+            eval(compile(pycode, 'compile.mkjob.log', 'exec'))
         objcode = autojob
     else:
-        objcode = corejob
+        objcode = pycode
 
     return objcode, tplconf
 
@@ -116,8 +146,6 @@ def slurm_parameters(t, **kw):
 
     try:
         slurm['nnp'] = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
-        if slurm['nnp'] > 1:
-            slurm['nnp'] /= 2
     except Exception as pb:
         logger.warning('SLURM_TASKS_PER_NODE: %s', str(pb))
         slurm['nnp'] = 1
@@ -126,7 +154,7 @@ def slurm_parameters(t, **kw):
         slurm['openmp'] = e.OMP_NUM_THREADS
     else:
         try:
-            guess_cpus  = int(re.sub('\(.*$', '', e.SLURM_JOB_CPUS_PER_NODE))
+            guess_cpus  = int(re.sub('\(.*$', '', e.SLURM_JOB_CPUS_PER_NODE)) / 2
             guess_tasks = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
             slurm['openmp'] = guess_cpus / guess_tasks
         except Exception as pb:

@@ -230,6 +230,7 @@ class Virtual(Container):
         """Virtual container's io target is an io descriptor."""
         return self.iodesc()
 
+
 class InCore(Virtual):
 
     _footprint = dict(

@@ -438,6 +438,7 @@ def clear_promises(clear=None):
     t = sessions.current()
     if clear:
         t.sh.header('Clear promises')
+        print 'OBSERVERS', footprints.observers.keys()
         for obs in footprints.observers.get(tag='Promises-Log').observers():
             logger.info('Promises observer <%s>', obs.tag)
             for k, v in obs.logs.items():

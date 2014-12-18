@@ -24,10 +24,11 @@ def setup(t, **kw):
         ]
     )
 
+
 class Batodb(OpTask):
 
     def refill(self):
-        """Cold start for AROME forecast: AROME Analysis and ARPEGE boundaries"""
+        """Cold start for AROME obsprocessing: get RAW observations files."""
 
         t = self.ticket
 
@@ -46,7 +47,6 @@ class Batodb(OpTask):
                 suite        = self.conf.suitebg,
             )
             print t.prompt, 'tb01 =', tb01
-            print
 
             tb01 = toolbox.output(
                 role         = 'RefdataGlobal',
@@ -58,7 +58,6 @@ class Batodb(OpTask):
                 part         = 'all',
             )
             print t.prompt, 'tb01 =', tb01
-            print
 
         if 'obs' in self.starter:
 
@@ -71,7 +70,6 @@ class Batodb(OpTask):
                 local        = 'batodb_map',
             )
             print t.prompt, 'tb02 =', tb02
-            print
 
             tb03 = toolbox.input(
                 role         = 'Observations',
@@ -87,7 +85,6 @@ class Batodb(OpTask):
                 suite        = self.conf.suitebg,
             )
             print t.prompt, 'tb03 =', tb03
-            print
 
             tb03 = toolbox.output(
                 role         = 'Observations',
@@ -103,7 +100,6 @@ class Batodb(OpTask):
                 stage        = 'void',
             )
             print t.prompt, 'tb03 =', tb03
-            print
 
     def process(self):
         """Loop over raw observations for conversion in ODB sets."""
@@ -124,7 +120,6 @@ class Batodb(OpTask):
                 part         = 'all',
             )
             print t.prompt, 'tb01 =', tb01
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -137,7 +132,6 @@ class Batodb(OpTask):
                 local        = 'batodb_map',
             )
             print t.prompt, 'tb02 =', tb02
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -156,7 +150,6 @@ class Batodb(OpTask):
                 stage        = 'void',
             )
             print t.prompt, 'tb03 =', tb03
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -170,7 +163,6 @@ class Batodb(OpTask):
                 model        = 'arpege',
             )
             print t.prompt, 'tb04 =', tb04
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -183,7 +175,6 @@ class Batodb(OpTask):
                 local        = 'list_gpssol',
             )
             print t.prompt, 'tb05 =', tb05
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -199,7 +190,6 @@ class Batodb(OpTask):
                 source       = 'namel_bator',
             )
             print t.prompt, 'tb06 =', tb06
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -215,7 +205,6 @@ class Batodb(OpTask):
                 source       = 'namel_lamflag_odb.[geometry:area]',
             )
             print t.prompt, 'tb07 =', tb07
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -231,7 +220,6 @@ class Batodb(OpTask):
                 source       = 'namel_rgb',
             )
             print t.prompt, 'tb08 =', tb08
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -246,7 +234,6 @@ class Batodb(OpTask):
                 part         = 'sev',
             )
             print t.prompt, 'tb09 =', tb09
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -268,7 +255,6 @@ class Batodb(OpTask):
                 scope        = 'global',
             )
             print t.prompt, 'tb11 =', tb11
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -282,7 +268,6 @@ class Batodb(OpTask):
                 scope        = 'local',
             )
             print t.prompt, 'tb12 =', tb12
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -295,7 +280,6 @@ class Batodb(OpTask):
                 local        = 'ioassign.x',
             )
             print t.prompt, 'tb13 =', tb13
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -308,7 +292,6 @@ class Batodb(OpTask):
                 local        = 'BATODB.EX',
             )
             print t.prompt, 'tb14 =', tb14
-            print
 
         #===================================================================================
 
@@ -326,7 +309,6 @@ class Batodb(OpTask):
                 slots        = self.conf.slots,
             )
             print t.prompt, 'tb15 =', tb15
-            print
 
             for bin in tbx:
                 tbalgo.run(bin, mpiopts=self.conf.mpiopts)
@@ -349,7 +331,6 @@ class Batodb(OpTask):
                 stage        = self.conf.mapstages,
             )
             print t.prompt, 'tb16 =', tb16
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -366,7 +347,6 @@ class Batodb(OpTask):
                 stage        = 'split',
             )
             print t.prompt, 'tb17 =', tb17
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -383,7 +363,6 @@ class Batodb(OpTask):
                 task         = self.tag,
             )
             print t.prompt, 'tb18 =', tb18
-            print
 
 
 class AvgATMS(OpTask):
@@ -409,7 +388,6 @@ class AvgATMS(OpTask):
                 stage        = 'split',
             )
             print t.prompt, 'tb01 =', tb01
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -422,7 +400,6 @@ class AvgATMS(OpTask):
                 local        = 'mask.atms',
             )
             print t.prompt, 'tb02 =', tb02
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -435,7 +412,6 @@ class AvgATMS(OpTask):
                 local        = 'ioassign.x',
             )
             print t.prompt, 'tb03 =', tb03
-            print
 
             #-------------------------------------------------------------------------------
 
@@ -448,7 +424,6 @@ class AvgATMS(OpTask):
                 local        = 'shuffle',
             )
             print t.prompt, 'tb04 =', tb04
-            print
 
         #===================================================================================
 
@@ -466,7 +441,6 @@ class AvgATMS(OpTask):
                 slots        = '7',
             )
             print t.prompt, 'tb05 =', tb05
-            print
 
             for bin in tbx:
                 tbalgo.run(bin)
@@ -490,4 +464,126 @@ class AvgATMS(OpTask):
                 stage        = 'average',
             )
             print t.prompt, 'tb06 =', tb06
+
+
+class MergeVarBC(OpTask):
+
+    def refill(self):
+        """Cold start for AROME forecast: AROME Analysis and ARPEGE boundaries"""
+
+        t = self.ticket
+
+        self.reshape_starter(full=('varbc',))
+
+        if 'varbc' in self.starter:
+            self.sh.title('Refill ARPEGE VarBC')
+            tb01 = toolbox.input(
+                role         = 'VarbcOP',
+                format       = 'ascii',
+                intent       = 'in',
+                kind         = 'varbc',
+                local        = 'VARBC.cycle',
+                mixmodel     = 'arpege',
+                namespace    = '[suite].archive.fr',
+                suite        = self.conf.suitebg,
+            )
+            print t.prompt, 'tb01 =', tb01
+
+            tb01 = toolbox.output(
+                role         = 'VarbcOP',
+                block        = '4dupd2',
+                format       = 'ascii',
+                intent       = 'in',
+                kind         = 'varbc',
+                local        = 'VARBC.cycle',
+                model        = 'arpege',
+                vapp         = '[model]',
+                vconf        = 'france',
+                experiment   = self.conf.suitebg,
+            )
+            print t.prompt, 'tb01 =', tb01
+
+    def process(self):
+        """Merge VarBC files."""
+
+        t = self.ticket
+
+        if self.fetch in self.steps:
+
+            self.sh.title('Toolbox input tb01')
+            tb01 = toolbox.input(
+                role         = 'VarbcOP',
+                block        = '4dupd2',
+                format       = 'ascii',
+                intent       = 'in',
+                kind         = 'varbc',
+                local        = 'VARBC.cycle',
+                model        = 'arpege',
+                vapp         = '[model]',
+                vconf        = 'france',
+                experiment   = self.conf.suitebg,
+            )
+            print t.prompt, 'tb01 =', tb01
+
+            #-------------------------------------------------------------------------------
+
+            self.sh.title('Toolbox input tb02')
+            tb02 = toolbox.input(
+                role         = 'VarbcPT3H',
+                block        = 'minim',
+                date         = '{0:s}/-PT{1:s}H'.format(self.conf.date.ymdh, self.conf.assim_step),
+                experiment   = self.conf.xpid,
+                format       = 'ascii',
+                intent       = 'in',
+                kind         = 'varbc',
+                local        = 'VARBC.cycle2',
+            )
+            print t.prompt, 'tb02 =', tb02
+
+            #-------------------------------------------------------------------------------
+
+            self.sh.title('Toolbox executable tb03 = tbx')
+            tb03 = tbx = toolbox.executable(
+                role         = 'Binary',
+                format       = 'bullx',
+                genv         = self.conf.arpege_cycle,
+                kind         = 'varbctool',
+                local        = 'MERGE_VARBC.EX',
+            )
+            print t.prompt, 'tb03 =', tb03
             print
+
+        #===================================================================================
+
+        if self.compute in self.steps:
+
+
+            #-------------------------------------------------------------------------------
+
+            self.sh.title('Toolbox algo tb04 = tbalgo')
+            tb04 = tbalgo = toolbox.algo(
+                engine       = 'parallel',
+                kind         = 'mergevarbc',
+            )
+            print t.prompt, 'tb04 =', tb04
+
+            for bin in tbx:
+                tbalgo.run(bin)
+
+        #===================================================================================
+
+        if self.backup in self.steps:
+
+            #-------------------------------------------------------------------------------
+
+            self.sh.title('Toolbox output tb05')
+            tb05 = toolbox.output(
+                role         = 'VarbcMerged',
+                block        = self.conf.block,
+                experiment   = self.conf.xpid,
+                format       = 'ascii',
+                kind         = 'varbc',
+                local        = 'VARBC.cycle_out',
+                stage        = 'merge',
+            )
+            print t.prompt, 'tb05 =', tb05
