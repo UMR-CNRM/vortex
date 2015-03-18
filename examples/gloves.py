@@ -17,14 +17,14 @@ print t.prompt, 'dict =', g.as_dict()
 
 print t.line
 
-g = vortex.sessions.glove(user='mxpt001', tag='test')
+g = vortex.sessions.getglove(user='mxpt001', tag='test')
 
 print t.prompt, 'Glove =', g
 print t.prompt, 'dict =', g.as_dict()
 
 print t.line
 
-g = vortex.sessions.glove(user='mxpt001', kind='oper', tag='default')
+g = vortex.sessions.getglove(user='mxpt001', kind='oper', tag='default')
 
 print t.prompt, 'Glove =', g
 print t.prompt, 'dict =', g.as_dict()

@@ -118,6 +118,10 @@ class FootprintSetup(util.GetByTag):
     extended = property(_get_extended, _set_extended)
 
     def extras(self):
+        """
+        Return a dictionary of extra keys-values pair
+        according to a callback function given as an attribute.
+        """
         if self.callback:
             cb = self.callback
             return cb()

@@ -33,6 +33,7 @@ class LoggingFilter(logging.Filter):
     """Add module name to record."""
 
     def filter(self, record):
+        """Remap top interactive module to ``prompt``."""
         if record.funcName == '<module>':
             record.funcName = 'prompt'
         return True

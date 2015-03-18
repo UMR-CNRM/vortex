@@ -256,14 +256,15 @@ class Environment(object):
         return self._pool
 
     def get(self, *args):
-        """Simulates the dictionary ``get`` mechanism on the internal pool of variables."""
+        """Proxy to the dictionary ``get`` mechanism on the internal pool of variables."""
         return self._pool.get(args[0].upper(), *args[1:])
 
     def items(self):
-        """Simulates the dictionary ``items`` method on the internal pool of variables."""
+        """Proxy to the dictionary ``items`` method on the internal pool of variables."""
         return self._pool.items()
 
     def iteritems(self):
+        """Proxy to the dictionary ``iteritems`` method on the internal pool of variables."""
         return self._pool.iteritems()
 
     def update(self, *args, **kw):
@@ -393,6 +394,7 @@ class Environment(object):
             print '{0:s}="{1:s}"'.format(k, str(self._pool[k]))
 
     def trueshell(self):
+        """Extract the actual shell name according to env variable SHELL."""
         return re.sub('^.*/', '', self.getvar('shell'))
 
     def true(self, varname):

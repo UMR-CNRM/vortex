@@ -21,10 +21,12 @@ OBSERVER_TAG = 'Resources-Handlers'
 
 
 class HandlerError(StandardError):
+    """Exception in case of missing resource during the wait mecanism."""
     pass
 
 
 def observer_board(obsname=None):
+    """Proxy to :func:`footprints.observers.get`."""
     if obsname is None:
         obsname = OBSERVER_TAG
     return footprints.observers.get(tag=obsname)
@@ -168,6 +170,10 @@ class Handler(object):
         else:
             logger.warning('Contents requested for an uncomplete handler [%s]', self.container)
             return None
+
+    def reset_contents(self):
+        """Delete actual internal reference to data contents manager."""
+        self._contents = None
 
     @property
     def options(self):

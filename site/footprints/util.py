@@ -285,26 +285,32 @@ class GetByTag(object):
 
     @classmethod
     def tag_clean(cls, tag):
+        """By default, return the actual tag."""
         return tag
 
     @classmethod
     def tag_keys(cls):
+        """Return an alphabetic ordered list of actual keys of the objects instanciated."""
         return sorted(cls._tag_table.keys())
 
     @classmethod
     def tag_values(cls):
+        """Return a non-ordered list of actual values of the objects instanciated."""
         return cls._tag_table.values()
 
     @classmethod
     def tag_items(cls):
+        """Proxy to the ``items`` method of the internal dictionary table of objects."""
         return cls._tag_table.items()
 
     @classmethod
     def tag_focus(cls, select='default'):
+        """Return the tag value of the actual object with focus according to the ``select`` value."""
         return cls._tag_focus[select]
 
     @classmethod
     def set_focus(cls, obj, select='default'):
+        """Define a new tag value for the focus in the scope of the ``select`` value."""
         cls._tag_focus[select] = obj.tag
 
     def has_focus(self, select='default'):
@@ -313,11 +319,13 @@ class GetByTag(object):
 
     @classmethod
     def tag_clear(cls):
+        """Clear all internal information about objects and focus for that class."""
         cls._tag_table = dict()
         cls._tag_focus = dict(default=None)
 
     @classmethod
     def tag_classes(cls):
+        """Return a list of current classes that have been registred with the same GetByTag root."""
         return list(cls._tag_class)
 
 

@@ -62,7 +62,8 @@ class Collector(util.GetByTag, util.Catalog):
 
     @classmethod
     def tag_clean(cls, tag):
-        return tag.rstrip('s')
+        """Return a lower-case string without any "s" at the end."""
+        return tag.lower().rstrip('s')
 
     def newobsitem(self, item, info):
         """Register a new instance of some of the classes in the current collector."""

@@ -89,15 +89,19 @@ class Resource(footprints.FootprintBase):
         return actualurlquery()
 
     def gget_basename(self):
+        """Duck typing: return an empty string by default."""
         return ''
 
     def genv_basename(self):
+        """Proxy to :meth:`gget_basename`."""
         return self.gget_basename()
 
     def gget_urlquery(self):
+        """Duck typing: return an empty string by default."""
         return ''
 
     def genv_urlquery(self):
+        """Proxy to :meth:`gget_urlquery`."""
         return self.gget_urlquery()
 
     def contents_args(self):

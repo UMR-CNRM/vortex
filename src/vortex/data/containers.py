@@ -17,6 +17,7 @@ CONTAINER_MAXREADSIZE = 1048576 * 64
 
 
 class DataSizeTooBig(StandardError):
+    """Exception raised when totasize is over the container MaxReadSize limit."""
     pass
 
 
@@ -220,6 +221,10 @@ class Virtual(Container):
     )
 
     def is_virtual(self):
+        """
+        Check if the current container has some physical reality or not.
+        In that case, the answer is ``True``!
+        """
         return True
 
     def exists(self):

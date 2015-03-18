@@ -21,7 +21,7 @@ t.info()
 operenv = env.Environment(active=True)
 operenv.setvar('DEFAULT_ACTIONS', 'iga.services.actions')
 
-current_glv = sessions.glove(user='mxpt001', kind='oper', tag='oper')
+current_glv = sessions.getglove(user='mxpt001', kind='oper', tag='oper')
 
 dico1 = {
     'receiver': "stephane.mejias@meteo.fr",

@@ -17,10 +17,40 @@ Package
 
 .. autodata:: __all__
 
+Module interface
+----------------
+
+.. autofunction:: get
+
+.. autofunction:: keys
+
+.. autofunction:: values
+
+.. autofunction:: items
+
+.. autofunction:: load
+
+.. autofunction:: grep
+
 Classes
 -------
 
 .. autoclass:: Geometry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CombinedGeometry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: HorizontalGeometry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VerticalGeometry
    :show-inheritance:
    :members:
    :member-order: alphabetical

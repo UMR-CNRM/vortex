@@ -202,11 +202,11 @@ def analysis_bnames(resource, vapp=None):
         return  anabase + '.' + suffix
 
 
-def historic_bnames(resource):
+def historic_bnames(resource, vapp=None):
     """docstring for historic_bnames"""
     if resource.model == 'surfex':
         return histsurf_bnames(resource)
-    model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model)
+    model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model, vapp=vapp)
     return 'ICMSH' + model_info + '+' + resource.term.fmthour + '.' + suffix
 
 

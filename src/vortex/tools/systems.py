@@ -964,6 +964,14 @@ class OSExtended(System):
         self.stderr('l', *rl)
         return self.glob(*rl)
 
+    def ldirs(self, *args):
+        """Proxy to diretories globbing after removing any option. A bit like :meth:`ls` method."""
+        rl = [x for x in args if not x.startswith('-')]
+        if not rl:
+            rl.append('*')
+        self.stderr('ldirs', *rl)
+        return [ x for x in self.glob(*rl) if self.path.isdir(x) ]
+
     def is_tarfile(self, filename):
         """Return a boolean according to the tar status of the ``filename``."""
         return tarfile.is_tarfile(self.path.expanduser(filename))
@@ -1084,6 +1092,17 @@ class OSExtended(System):
     def pickle_clone(self, obj):
         """Clone an object through pickling / unpickling."""
         return pickle.loads(pickle.dumps(obj))
+
+    def utlines(self, *args):
+        """Return number of significant code or configuration lines in specified directories."""
+        lookfiles = [
+            x for x in self.ffind(*args)
+                if x.endswith('.py') or x.endswith('.ini') or x.endswith('.tpl') or x.endswith('.rst')
+        ]
+        return len([
+            x for x in self.cat(*lookfiles)
+                if re.search('\S', x) and re.search('[^\'\"\)\],\s]', x)
+        ])
 
 
 class Python26(object):

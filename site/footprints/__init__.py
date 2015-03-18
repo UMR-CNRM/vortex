@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.9.14'
+__version__ = '0.9.15'
 
 import os
 import re
@@ -133,6 +133,10 @@ def reset_package_priority(packname, tag):
 # Base classes
 
 class Footprint(object):
+    """
+    This class defines the objects in charge of handling the footprint definition itself
+    and the resolution mecanism through keys-values description matching.
+    """
 
     def __init__(self, *args, **kw):
         """Initialisation and checking of a given set of footprint."""
@@ -686,10 +690,12 @@ class FootprintBase(object):
 
     @classmethod
     def footprint_clskind(cls):
+        """Return a lower-case string of the name of the current footprint class."""
         return cls.__name__.lower()
 
     @classmethod
     def footprint_clsrealkind(cls):
+        """Return the ``realkind`` property value of the current class."""
         return getattr(cls, 'realkind').fget(cls)
 
     @property
@@ -713,6 +719,7 @@ class FootprintBase(object):
 
     @classmethod
     def footprint_reusable(cls):
+        """Return a boolean if the current class could be used for default loading."""
         return cls._reusable
 
     @classmethod
@@ -726,6 +733,7 @@ class FootprintBase(object):
         return '{0:s}.{1:s}'.format(cls.__module__, cls.__name__)
 
     def SUPER(self):
+        """A kind of shortcut to parent class. Warning: use with care."""
         return super(self.__class__, self)
 
     def footprint_as_dump(self):
@@ -912,8 +920,10 @@ class FootprintBase(object):
 
     @classmethod
     def footprint_pl(cls):
+        """Return the priority level of the current class footprint object."""
         return cls._footprint.level
 
     @classmethod
     def footprint_level(cls):
+        """Return the tag name of the priority level of the current class footprint object."""
         return cls._footprint.level.tag

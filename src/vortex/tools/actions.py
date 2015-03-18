@@ -21,7 +21,11 @@ from vortex.tools import services
 
 
 class Action(object):
-
+    """
+    An ``Action`` object if intend to produce a dedicated service through a simple command
+    with internally refer to the :meth:`execute` method.
+    Such an action could be activated or not, and is basically driven by permissions settings.
+    """
     def __init__(self, kind='foo', service=None, active=False):
         self.kind = kind
         if service is None:
@@ -145,7 +149,9 @@ class Dispatcher(footprints.util.Catalog):
         logger.debug('Action dispatcher init %s', self)
         super(Dispatcher, self).__init__(**kw)
 
+    @property
     def actions(self):
+        """A set of kind names of actual actions registred in that Dispatcher."""
         return set([x.kind for x in self.items()])
 
     def candidates(self, kind):

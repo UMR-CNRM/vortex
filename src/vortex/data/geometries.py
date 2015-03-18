@@ -31,7 +31,6 @@ def items():
 
 def load(inifile='geometries.ini', refresh=False, verbose=True):
     """Load a set of pre-defined geometries from a configuration file."""
-    geoconf = inifile.rstrip('.ini')
     iniconf = GenericConfigParser(inifile)
     for item in iniconf.sections():
         gdesc = dict(iniconf.items(item))
@@ -161,7 +160,7 @@ class HorizontalGeometry(Geometry):
         indent = ' ' * indent
         card = "\n".join((
             '{0}Geometry {1!r}',
-            '{0}{0}Id         : {2:s}',
+            '{0}{0}Info       : {2:s}',
             '{0}{0}Resolution : {3:s}',
             '{0}{0}Truncation : {4:s}',
             '{0}{0}Stretching : {5:s}',

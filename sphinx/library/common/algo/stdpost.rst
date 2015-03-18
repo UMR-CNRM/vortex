@@ -1,8 +1,8 @@
-:mod:`common.algo.stdpost` --- TODO Module Header
-=================================================
+:mod:`common.algo.stdpost` --- Algo components for post-processing
+==================================================================
 
 .. automodule:: common.algo.stdpost
-   :synopsis: TODO Module Synopsis
+   :synopsis: Algo components for post-processing
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

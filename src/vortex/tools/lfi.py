@@ -298,7 +298,7 @@ class LFI_Tool(addons.Addon):
     _cp_nopack_fsko_read  = _cp_pack_read
     _cp_nopack_fsko_write = _cp_pack_write
 
-    def multicpmethod(self, pack=False, intent='in', samefs=False):
+    def _multicpmethod(self, pack=False, intent='in', samefs=False):
         return '_cp_{0:s}_{1:s}_{2:s}'.format(
             'aspack' if pack else 'nopack',
             'fsok' if samefs else 'fsko',
@@ -318,7 +318,7 @@ class LFI_Tool(addons.Addon):
                 raise OSError('Could not cocoon [' + destination + ']')
             if not self.lfi_rm(destination):
                 raise OSError('Could not clean destination [' + destination + ']')
-            xcp = self.multicpmethod(pack, intent, self.sh.is_samefs(source, destination))
+            xcp = self._multicpmethod(pack, intent, self.sh.is_samefs(source, destination))
             actualcp = getattr(self, xcp, None)
             if actualcp is None:
                 raise AttributeError('No actual LFI cp command ' + xcp)

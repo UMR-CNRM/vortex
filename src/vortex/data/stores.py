@@ -443,6 +443,7 @@ class Finder(Store):
         return self.netloc
 
     def fullpath(self, remote):
+        """Return actual path unless explicitly defined as relative path."""
         if remote['query'].get('relative', False):
             return remote['path'].lstrip('/')
         else:
@@ -557,7 +558,7 @@ class ArchiveStore(Store):
             ),
             storage = dict(
                 optional = True,
-                default  = 'cougar.meteo.fr',
+                default  = 'hendrix.meteo.fr',
             ),
         )
     )

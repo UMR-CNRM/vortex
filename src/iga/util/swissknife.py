@@ -186,7 +186,7 @@ def gget_resource_exists(t, ggetfile):
     return True
 
 
-def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='gco', logpath=None):
+def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='gco/tampon', logpath=None):
     """
     Retrieve a copy of all relevant gco resources for a cycle.
     The genv reference is kept in ./genv/cycle.genv
@@ -233,7 +233,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     gtool = t.sh.path.join(gpath, gcmd)
 
     increase = 0
-    details  = dict(retrieved=list(), inplace=list(), failed=list())
+    details  = dict(retrieved=list(), inplace=list(), failed=list(), expanded=list())
 
     for name in sorted(list(ggetnames)):
         if verbose:
@@ -250,9 +250,19 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
                 increase += t.sh.size(name)
                 if verbose:
                     print 'ok'
-                    t.sh.ll(name)
                     t.sh.readonly(name)
+                    t.sh.ll(name)
                 details['retrieved'].append(name)
+                if name.endswith('.tgz'):
+                    subpath = name.rstrip('.tgz')
+                    locpath = t.sh.getcwd()
+                    t.sh.cd(subpath, create=True)
+                    t.sh.untar('../' + name, output=False)
+                    for subfile in t.sh.glob('*'):
+                        details['expanded'].append(t.sh.path.join(subpath, subfile))
+                        t.sh.readonly(subfile)
+                    t.sh.cd(locpath)
+                    t.sh.remove(name)
             except StandardError:
                 if verbose:
                     print 'failed &',

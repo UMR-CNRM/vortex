@@ -116,7 +116,7 @@ _LITERAL_CONSTANT = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + _BOZ_LITERAL_CO
 
 
 class LiteralParser(object):
-
+    """Object in charge of parsing litteral fortran expressions that could be found in a namelist."""
     def __init__(self,
             re_flags     = _RE_FLAGS,
             re_integer   = '^' + _SIGNED_INT_LITERAL_CONSTANT + '$',
@@ -377,6 +377,7 @@ class NamelistBlock(object):
         return self.getvar(varname)
 
     def delvar(self, varname):
+        """Delete the specified ``varname`` from this block."""
         varname = varname.upper()
         if varname in self._pool:
             del self._pool[varname]
@@ -421,7 +422,7 @@ class NamelistBlock(object):
         return self._pool
 
     def get(self, *args):
-        """Simulates the dictionary ``get`` mechanism on the internal pool of variables."""
+        """Proxy to the dictionary ``get`` mechanism on the internal pool of variables."""
         return self._pool.get(*args)
 
     def iteritems(self):
@@ -499,13 +500,16 @@ class NamelistSet(object):
         return getattr(self._namset, attr)
 
     def keys(self):
+        """Return the name of each namelist block stored in this set."""
         return sorted(self._namset.keys())
 
     def dumps(self):
+        """Join the fortran-strings dumped by each namelist block."""
         return ''.join([ self._namset[x].dumps() for x in self.keys() ])
 
     def as_dict(self):
-        return self._namset
+        """Return the actual namelist set as a dictionary."""
+        return dict(self._namset)
 
 
 class NamelistParser(object):

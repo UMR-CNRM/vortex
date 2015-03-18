@@ -1,8 +1,8 @@
-:mod:`common.algo.coupling` --- Generic coupling algo component
-===============================================================
+:mod:`common.algo.coupling` --- Algo components for generic coupling
+====================================================================
 
 .. automodule:: common.algo.coupling
-   :synopsis: Generic coupling algo component
+   :synopsis: Generic coupling algo components
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

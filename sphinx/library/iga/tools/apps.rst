@@ -1,8 +1,8 @@
-:mod:`common.algo.ifsroot` --- IFS parallel behavior
-====================================================
+:mod:`iga.tools.apps` --- Special OP tasks classes
+==================================================
 
-.. automodule:: common.algo.ifsroot
-   :synopsis: IFS base parallel algo component
+.. automodule:: iga.tools.apps
+   :synopsis: OP tasks classes
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -16,7 +16,7 @@ Package
 Classes
 -------
 
-.. autoclass:: IFSParallel
+.. autoclass:: OpTask
    :show-inheritance:
    :members:
    :member-order: alphabetical

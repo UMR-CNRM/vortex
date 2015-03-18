@@ -104,6 +104,7 @@ class AlmostDictContent(DataContent):
         return self.has_key(self.fmtkey(item))
 
     def has_key(self, item):
+        """Dict-like behavior looking for the formatted ``item`` in internal data."""
         return self.fmtkey(item) in self._data
 
 
@@ -270,7 +271,10 @@ class FormatAdapter(DataContent):
             self._datafmt = None
 
     def __enter__(self):
-        """Enter a :keyword:`with` context."""
+        """
+        Enter a :keyword:`with` context, setting some FORTRAN variables
+        in order to switch off parallelism (in case of execution).
+        """
         t = sessions.current()
         t.env.delta(
             LFI_HNDL_SPEC   = ':1',

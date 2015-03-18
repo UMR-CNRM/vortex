@@ -11,7 +11,7 @@ from vortex.util.config import JacketConfigParser
 
 
 class Jacket(object):
-
+    """The class definition of in and out resources from a given executable."""
     def __init__(self, afile=None):
         if afile:
             self.config = JacketConfigParser(afile)

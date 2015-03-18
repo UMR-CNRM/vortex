@@ -1,5 +1,5 @@
-:mod:`common.algo.forecasts` --- Common forecasts executions
-============================================================
+:mod:`common.algo.forecasts` --- Algo components for global or LAM  forecasts
+=============================================================================
 
 .. automodule:: common.algo.forecasts
    :synopsis: Forecasts behavior for usual applications

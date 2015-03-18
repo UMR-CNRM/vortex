@@ -26,6 +26,7 @@ class FPList(list):
         return hash(tuple(self))
 
     def items(self):
+        """Return a list copy of internal components of the FPList."""
         return self[:]
 
 
@@ -36,6 +37,7 @@ class FPSet(set):
         return hash(tuple(self))
 
     def items(self):
+        """Return a tuple copy of internal components of the FPSet."""
         return tuple(self)
 
 
@@ -43,4 +45,5 @@ class FPTuple(tuple):
     """A tuple type for FootPrints arguments (without expansion)."""
 
     def items(self):
+        """Return a list copy of internal components of the FPTuple."""
         return list(self)

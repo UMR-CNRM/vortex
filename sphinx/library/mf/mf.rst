@@ -1,8 +1,8 @@
-:mod:`mf` --- TODO Module Header
-================================
+:mod:`mf` --- Meteo-France site install
+=======================================
 
 .. automodule:: mf
-   :synopsis: TODO Module Synopsis
+   :synopsis: Meteo-France site install
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -13,6 +13,4 @@ Package
 
 .. autodata:: __all__
 
-Classes
--------
 

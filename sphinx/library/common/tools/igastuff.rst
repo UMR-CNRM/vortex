@@ -13,6 +13,14 @@ Package
 
 .. autodata:: __all__
 
-Classes
--------
+.. autodata:: suites
 
+.. autodata:: fuzzystr
+
+
+Functions
+---------
+
+.. autofunction:: fuzzyname
+
+.. autofunction:: archive_suffix

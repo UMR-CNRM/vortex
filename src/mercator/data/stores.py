@@ -28,7 +28,7 @@ class MercatorArchiveStore(Store):
             ),
             storage = dict(
                 optional = True,
-                default = 'cougar.meteo.fr'
+                default = 'hendrix.meteo.fr'
             ),
         )
     )

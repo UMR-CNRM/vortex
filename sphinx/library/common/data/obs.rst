@@ -13,6 +13,12 @@ Package
 
 .. autodata:: __all__
 
+Data
+----
+
+.. autodata:: ObsMapItem
+
+.. autodata:: ObsRefItem
 
 Classes
 -------

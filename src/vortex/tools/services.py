@@ -120,6 +120,7 @@ class MailService(Service):
         return mimetext(body)
 
     def get_mimemap(self):
+        """Construct and return a map of MIME types."""
         try:
             md = self._mimemap
         except AttributeError:

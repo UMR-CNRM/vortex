@@ -39,11 +39,11 @@ def list_services():
     import pprint
     sh.title('List of services and actions')
     sh.subtitle('available actions')
-    print pprint.pformat(ad.actions())
+    print pprint.pformat(ad.actions)
     sh.subtitle('existing handlers')
     print pprint.pformat(ad.items())
     sh.subtitle('action -> handlers')
-    for act in ad.actions():
+    for act in ad.actions:
         handlers = ad.candidates(act)
         status   = [ h.status() for h in handlers ]
         print act,':', pprint.pformat(zip(status, handlers))

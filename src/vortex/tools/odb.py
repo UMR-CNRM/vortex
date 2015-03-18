@@ -113,6 +113,8 @@ class OdbComponent(object):
 
 
 class TimeSlots(object):
+    """Handling of assimilation time slots."""
+
     def __init__(self, nslot=7, start='-PT3H', window='PT6H', chunk='PT1H', center=True):
         if isinstance(nslot, str):
             info = [ x.strip() for x in nslot.split('/') ]

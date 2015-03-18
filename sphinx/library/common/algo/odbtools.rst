@@ -1,8 +1,8 @@
-:mod:`common.algo.odbtools` --- TODO Module Header
-==================================================
+:mod:`common.algo.odbtools` --- Algo components for observations processing
+===========================================================================
 
 .. automodule:: common.algo.odbtools
-   :synopsis: TODO Module Synopsis
+   :synopsis: Algo components for observations processing
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

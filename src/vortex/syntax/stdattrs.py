@@ -54,6 +54,10 @@ class DelayedEnvValue(object):
         self._frozen = False
 
     def footprint_value(self):
+        """
+        Return the actual env value of the ``varname`` variable.
+        Optional argument ``refresh`` set to ``True`` do not store this value.
+        """
         if not self._frozen:
             self._value = env.current().get(self.varname, self.default)
             if not self.refresh:

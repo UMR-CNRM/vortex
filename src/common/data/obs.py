@@ -327,6 +327,7 @@ class BlackList(FlowResource):
         return mapd.get(self.scope, 'LISTE_NOIRE_X')
 
 
+#: A namedtuple of the internal fields of an ObsRef file
 ObsRefItem = namedtuple('ObsRefItem', ('data', 'fmt', 'instr', 'date', 'time'))
 
 class ObsRefContent(TextContent):
@@ -397,6 +398,7 @@ class Refdata(FlowResource):
         return self.realkind
 
 
+#: A namedtuple of the internal fields of an ObsMap file
 ObsMapItem = namedtuple('ObsMapItem', ('odb', 'data', 'fmt', 'instr'))
 
 class ObsMapContent(TextContent):
@@ -574,7 +576,7 @@ class Bcor(FlowResource):
         return 'bcor_' + self.satbias + '.dat'
 
 
-class BackgroundStdError(FlowResource):
+class BackgroundStdError(GeoFlowResource):
     """
     TODO.
     """

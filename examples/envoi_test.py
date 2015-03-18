@@ -14,7 +14,7 @@ PATH_DATA = 'data'
 FILE_TEST = 'services.txt'
 DATA = os.path.join(PATH_DATA, FILE_TEST)
 
-current_glv = sessions.glove(user='mxpt001', kind='oper', tag='oper')
+current_glv = sessions.getglove(user='mxpt001', kind='oper', tag='oper')
 
 dico1 = {
     'action_type': 'mail',

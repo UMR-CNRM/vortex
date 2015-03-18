@@ -280,8 +280,8 @@ class MpiSubmit(MpiTool):
         if 'NBPROC' in namcontents.macros():
             logger.info('Setup NBPROC=%s in %s', self.nprocs, namlocal)
             namcontents.setmacro('NBPROC', self.nprocs)
-            namcontents.setmacro('NCPROC', self.nprocs)
-            namcontents.setmacro('NDPROC', 1)
+            namcontents.setmacro('NCPROC', int(self.env.VORTEX_NPRGPNS or self.nprocs))
+            namcontents.setmacro('NDPROC', int(self.env.VORTEX_NPRGPEW or 1))
             namw = True
         if 'NAMPAR1' in namcontents:
             np1 = namcontents['NAMPAR1']

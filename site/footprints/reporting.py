@@ -329,6 +329,7 @@ class FootprintLog(util.GetByTag):
 
 
 class StandardReport(object):
+    """XML structured report."""
 
     def __init__(self, doc=None, tag=None):
         if doc is None:

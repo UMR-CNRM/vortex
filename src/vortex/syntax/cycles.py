@@ -45,6 +45,7 @@ class Cycle(footprints.util.GetByTag):
         return self.tag[:4]
 
     def compact(self, cyclename=None):
+        """Return a compact and cmp-coherent form of the cycle string or tag."""
         if cyclename is None:
             cyclename = self.tag
         c = re.sub(r'^[a-z]{2}', '', cyclename)
@@ -62,12 +63,15 @@ class Cycle(footprints.util.GetByTag):
         return self._cstate[0]
 
     def findall(self, *args):
+        """Proxy to the internal ``regexp`` attribute findall method."""
         return self.regexp.findall(*args)
 
     def match(self, *args):
+        """Proxy to the internal ``regexp`` attribute match method."""
         return self.regexp.match(*args)
 
     def search(self, *args):
+        """Proxy to the internal ``regexp`` attribute search method."""
         return self.regexp.search(*args)
 
     def __getstate__(self):

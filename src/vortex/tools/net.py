@@ -269,3 +269,15 @@ class StdFtp(object):
     def rm(self, source):
         """Proxy to ftp delete command."""
         return self.delete(source)
+
+    def size(self, filename):
+        """Retrieve the size of a file."""
+        # The SIZE command is defined in RFC-3659
+        resp = self.sendcmd('SIZE ' + filename)
+        if resp[:3] == '213':
+            s = resp[3:].strip().split()[-1]
+            try:
+                return int(s)
+            except (OverflowError, ValueError):
+                return long(s)
+

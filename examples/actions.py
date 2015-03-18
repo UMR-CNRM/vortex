@@ -21,10 +21,10 @@ class TagSubject(SendMail):
 
 ad.add(TagSubject())
 
-print ad.actions()
+print ad.actions
 print ad.candidates('mail')
 
-g = vortex.sessions.glove()
+g = vortex.sessions.getglove()
 g.email = 'eric.sevault@meteo.fr'
 
 ad.mail(to='eric.sevault@meteo.fr', subject='hello', body='hello world mail')

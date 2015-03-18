@@ -1,8 +1,8 @@
-:mod:`common.algo.assim` --- TODO Module Header
-===============================================
+:mod:`common.algo.assim` --- Algo components for assimilation process
+=====================================================================
 
 .. automodule:: common.algo.assim
-   :synopsis: TODO Module Synopsis
+   :synopsis: Algo components for assimilation process
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

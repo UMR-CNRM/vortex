@@ -166,6 +166,7 @@ def stardates():
 
 
 def guess(*args):
+    """Do our best to find a :class:`Date` or :class:`Period` object compatible with ``args``."""
     for isoclass in (Date, Period):
         try:
             return isoclass(*args)
@@ -236,6 +237,7 @@ class Period(datetime.timedelta):
 
     @staticmethod
     def parse(string):
+        """Find out time duration that could be extracted from string argument."""
         if not isinstance(string, basestring):
             raise TypeError, "Expected string input"
         if len(string) < 2:
@@ -351,6 +353,7 @@ class Period(datetime.timedelta):
     def time(self):
         """Return a :class:`Time` object."""
         return Time(0, self.length / 60) + 0
+
 
 class Date(datetime.datetime):
     """Standard date objects, extending :class:`datetime.datetime` features with iso8601 facilities."""
@@ -584,6 +587,10 @@ class Date(datetime.datetime):
         return out.ymd
 
 class Time(object):
+    """
+    Basic object to handle hh:mm information.
+    Extended arithmetic is supported.
+    """
 
     def __init__(self, *args, **kw):
         """
@@ -723,6 +730,7 @@ class Time(object):
 
 
 class Month(object):
+    """Basic class for handling a month number, according to an explicit or implicit year."""
 
     def __init__(self, *args, **kw):
         delta = kw.pop('delta', 0)

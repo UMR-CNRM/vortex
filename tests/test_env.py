@@ -7,15 +7,20 @@ logging.basicConfig(level=logging.ERROR)
 from unittest import TestCase, main
 
 from common.data.modelstates import Analysis
-from vortex.data.geometries import SpectralGeometry
+from vortex.data import geometries
 from vortex.tools.env import Environment
 
 
 class UtEnv(TestCase):
 
     def setUp(self):
-        self.res = Analysis(geometry=SpectralGeometry(stretching=2.4), model='arpege',
-                            date='201304231500', cutoff='prod', kind='analysis')
+        self.res = Analysis(
+            geometry = geometries.get(tag='globalsp'),
+            model    = 'arpege',
+            date     = '201304231500',
+            cutoff   = 'prod',
+            kind     = 'analysis',
+        )
 
     def test_basic(self):
         e = Environment()
@@ -68,11 +73,11 @@ class UtEnv(TestCase):
         e['toto'] = self.res
         self.assertEqual(
             os.environ['TOTO'],
-            '{"cutoff": "production", "kind": "analysis", "nativefmt": "fa", "geometry": {"lam": true, '
-            '"kind": "spectral", "initialised": false, "runit": "km", "area": null, "nlat": null, '
-            '"stretching": 2.4, "id": "anonymous", "resolution": 0.0, "nlon": null, "truncation": null}, '
-            '"filling": "full", "filtering": null, "date": "201304231500", "clscontents": "DataRaw", '
-            '"model": "arpege"}')
+            '{"cutoff": "production", "kind": "analysis", "nativefmt": "fa", "geometry": "globalsp", '
+            '"filling": "full", "filtering": null, "date": "201304231500", '
+            '"clscontents": ["vortex.data.contents", "FormatAdapter"], '
+            '"model": "arpege"}'
+        )
 
 
 if __name__ == '__main__':

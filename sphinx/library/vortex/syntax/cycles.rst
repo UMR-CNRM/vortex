@@ -23,6 +23,14 @@ Data definition
 Interface
 ---------
 
+.. autofunction:: get
+
+.. autofunction:: keys
+
+.. autofunction:: values
+
+.. autofunction:: items
+
 .. autofunction:: monocycles
 
 .. autofunction:: defined

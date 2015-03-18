@@ -65,14 +65,15 @@ def tbdef(refresh=False):
             print 'Update default', k.ljust(16), '=', v
             d[k] = v
 
+
 def fastload(**kw):
     """
     Generic load of some resource handler according to current description.
     If not provided, these parameters are set:
-      * cutoff = production
-      * model = arpege
-      * date = last synoptic hour
-      * geometry = global spectral default geometry
+        * cutoff = production
+        * model = arpege
+        * date = last synoptic hour
+        * geometry = global spectral default geometry
     """
     kw.setdefault('cutoff', 'production')
     kw.setdefault('model', 'arpege')
@@ -89,10 +90,10 @@ def analysis(**kw):
     """
     Return a analysis according to a standard description and/or some additional information.
     Defaults are:
-      * kind = analysis
-      * suite = oper
-      * igakey = same as model
-      * tempo = True
+        * kind = analysis
+        * suite = oper
+        * igakey = same as model
+        * tempo = True
     """
     adesc = dict(
         suite  = 'oper',
@@ -108,12 +109,12 @@ def modelstate(**kw):
     """
     Return a model state according to a standard description and/or some additional information.
     Defaults are:
-      * kind = historic
-      * suite = oper
-      * block = forecast
-      * igakey = same as model
-      * term = 0
-      * tempo = True
+        * kind = historic
+        * suite = oper
+        * block = forecast
+        * igakey = same as model
+        * term = 0
+        * tempo = True
     """
     adesc = dict(
         suite  = 'oper',

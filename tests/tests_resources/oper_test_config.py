@@ -39,7 +39,7 @@ rundate_bis = date.today()
 # main variables definition for unittest
 fpg = dict(tag='oper', user='mxpt001', profile='oper')
 operenv = env.Environment(active=True)
-operenv.glove = sessions.glove(**fpg)
+operenv.glove = sessions.getglove(**fpg)
 t = sessions.ticket(
     tag=fpg['tag'],
     glove=operenv.glove,

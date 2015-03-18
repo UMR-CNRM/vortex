@@ -13,6 +13,7 @@ List of modules.
    :maxdepth: 3
 
    footprints/index
+   mf/index
 
    vortex/index
 

@@ -23,7 +23,7 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '0.9.14'
+__version__ = '0.9.15'
 __prompt__  = 'Vortex v-' + __version__ + ':'
 
 __all__ = []
@@ -69,6 +69,7 @@ proxy.objects = footprints.proxy.objects
 import tools
 
 def getglove():
+    """Return actual glove, according to current environment."""
     return dict(glove = tools.env.current().glove)
 
 footprints.setup.callback = getglove
@@ -92,6 +93,7 @@ sh = sessions.system
 # Specific toolbox exceptions
 
 class VortexForceComplete(StandardError):
+    """Exception for handling fast exit mecanisms."""
     pass
 
 # Load some superstars sub-packages

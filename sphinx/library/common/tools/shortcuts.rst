@@ -1,8 +1,8 @@
-:mod:`common.tools.shortcuts` --- TODO Module Header
-====================================================
+:mod:`common.tools.shortcuts` --- Shortcuts for interactive usage
+=================================================================
 
 .. automodule:: common.tools.shortcuts
-   :synopsis: TODO Module Synopsis
+   :synopsis: Shortcuts (mostly) for interactive usage
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -13,6 +13,13 @@ Package
 
 .. autodata:: __all__
 
-Classes
--------
+Functions
+---------
 
+.. autofunction:: tbdef
+
+.. autofunction:: fastload
+
+.. autofunction:: analysis
+
+.. autofunction:: modelstate

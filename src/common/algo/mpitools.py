@@ -123,6 +123,7 @@ class MpiNWPIO(mpitools.MpiServerIO):
         return True
 
     def iodirs(self):
+        """Return an ordered list of directories matching the ``pattern`` attribute."""
         return sorted(self.system.glob(self.pattern))
 
     def clean(self, opts=None):

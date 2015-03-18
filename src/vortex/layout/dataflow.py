@@ -17,6 +17,7 @@ from footprints.util import mktuple
 
 
 class SectionFatalError(StandardError):
+    """Exception when fatal mode is activated."""
     pass
 
 #: Definition of a named tuple INTENT
@@ -189,6 +190,7 @@ class Sequence(object):
             logger.warning('Try to remove a non-section object %s in sequence %s', candidate, self)
 
     def section(self, **kw):
+        """Section factory wrapping a given ``rh`` (Resource Handler)."""
         rhset = kw.get('rh', list())
         if type(rhset) != list:
             rhset = [ rhset ]

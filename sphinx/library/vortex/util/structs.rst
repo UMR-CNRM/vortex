@@ -8,13 +8,18 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.1
 
-Module interface
-----------------
+This package
+------------
 
-.. autofunction:: idtree
+.. autodata:: __all__
 
 Classes
 -------
+
+.. autoclass:: Foo
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 .. autoclass:: History
    :show-inheritance:
@@ -26,7 +31,3 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Tree
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical

@@ -78,6 +78,7 @@ class Node(footprints.util.GetByTag):
 
     @classmethod
     def tag_clean(cls, tag):
+        """Lower case, space-free and underscore-free tag."""
         return tag.lower().replace(' ', '').replace('_', '')
 
     @property

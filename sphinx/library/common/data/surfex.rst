@@ -1,8 +1,8 @@
-:mod:`common.data.surfex` --- TODO Module Header
-================================================
+:mod:`common.data.surfex` --- Common surfex related resources
+=============================================================
 
 .. automodule:: common.data.surfex
-   :synopsis: TODO Module Synopsis
+   :synopsis: Common surfex related resources
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

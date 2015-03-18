@@ -813,11 +813,11 @@ class utObservers(TestCase):
     def test_observers_basics(self):
         rv = observers.keys()
         self.assertListEqual(rv, [
+            '__main__.FootprintTestBuiltins',
+            '__main__.FootprintTestMeta',
             '__main__.FootprintTestOne',
             '__main__.FootprintTestRWD',
             '__main__.FootprintTestTwo',
-            '__main__.FootprintTestBuiltins',
-            '__main__.FootprintTestMeta',
         ])
 
 
@@ -1776,7 +1776,7 @@ class utFootprintBuiltins(TestCase):
         self.assertEqual(d['foo'], 2)
         self.assertListEqual(d.keys(), ['foo'])
 
-        l = FPList('one', 'two', 3)
+        l = FPList(['one', 'two', 3])
         self.assertIsInstance(l, FPList)
         self.assertIsInstance(l, list)
         self.assertListEqual(l, ['one', 'two', 3])
@@ -1785,7 +1785,7 @@ class utFootprintBuiltins(TestCase):
         l.append(4)
         self.assertListEqual(l[:], ['one', 'two', 3, 4])
 
-        s = FPSet('one', 'two', 3)
+        s = FPSet(['one', 'two', 3])
         self.assertIsInstance(s, FPSet)
         self.assertIsInstance(s, set)
         self.assertSetEqual(s, set(['one', 'two', 3]))
@@ -1794,7 +1794,7 @@ class utFootprintBuiltins(TestCase):
         s.add(4)
         self.assertTupleEqual(s.items(), (4, 'two', 'one'))
 
-        t = FPTuple(3, 5, 7)
+        t = FPTuple((3, 5, 7))
         self.assertIsInstance(t, FPTuple)
         self.assertIsInstance(t, tuple)
         self.assertTupleEqual(t, (3, 5, 7))
@@ -1803,9 +1803,9 @@ class utFootprintBuiltins(TestCase):
     def test_builtins_usage(self):
         rv = footprints.proxy.garbage(
             thedict  = FPDict(foo=2),
-            thelist  = FPList('one', 'two', 3),
-            theset   = FPSet(1, 2, 'three'),
-            thetuple = FPTuple('one', 'two', 3)
+            thelist  = FPList(['one', 'two', 3]),
+            theset   = FPSet([1, 2, 'three']),
+            thetuple = FPTuple(('one', 'two', 3))
         )
 
         self.assertIsInstance(rv, FootprintTestBuiltins)

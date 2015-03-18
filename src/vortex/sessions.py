@@ -51,9 +51,9 @@ def prompt():
     """Returns a built string that could be used as a prompt for reporting."""
     return current().prompt
 
-def switch(tag):
-    """Set the session associated to the actual tag as active."""
-    return Ticket.switch(tag)
+def switch(tag=None):
+    """Set the session associated to the actual ``tag`` as active."""
+    return current().switch(tag=tag)
 
 def getglove(**kw):
     """Proxy to :mod:`gloves` collector."""
@@ -77,6 +77,9 @@ def exit():
 
 
 class Ticket(footprints.util.GetByTag):
+    """
+    Default session ticket class, defined by tag.
+    """
 
     _tag_default = 'root'
 
@@ -295,20 +298,20 @@ class Ticket(footprints.util.GetByTag):
         )
         return card
 
-    def switch(cls, tag):
+    def switch(self, tag=None):
         """
         Allows the user to switch to an other session,
         assuming that the provided tag is already known.
         """
-        if tag in cls.tag_keys():
-            focus = cls.tag_focus()
+        if tag in self.tag_keys():
+            focus = self.tag_focus()
+            table = dict(self.tag_items())
             if tag != focus:
-                table = dict(cls.tag_items())
                 table[focus]._active = False
                 table[focus].env.active(False)
                 table[tag]._active = True
                 table[tag].env.active(True)
-                cls.set_focus(table[tag])
+                self.set_focus(table[tag])
                 contexts.Context.set_focus(table[focus].context)
             return table[tag]
         else:
