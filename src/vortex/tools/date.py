@@ -436,6 +436,10 @@ class Date(datetime.datetime):
         """Nicely formatted representation in dumper."""
         return self.__repr__()
 
+    def is_synoptic(self):
+        """True if the current hour is a synoptic one."""
+        return self.hour in (0, 6, 12, 18)
+
     @property
     def julian(self):
         """Returns Julian day."""
@@ -454,6 +458,10 @@ class Date(datetime.datetime):
         return self.strftime('%Y%m%d%H%M')
 
     @property
+    def ymdhms(self):
+        return self.strftime('%Y%m%d%H%M%S')
+
+    @property
     def hm(self):
         return self.strftime('%H%M')
 
@@ -463,7 +471,7 @@ class Date(datetime.datetime):
 
     def compact(self):
         """Compact concatenation of date values, up to the second."""
-        return self.strftime('%Y%m%d%H%M%S')
+        return self.ymdhms
 
     def vortex(self, cutoff='P'):
         """Semi-compact representation for vortex paths."""

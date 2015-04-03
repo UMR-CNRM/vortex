@@ -17,29 +17,54 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.util.authorizations import is_authorized_user
-from vortex.tools import services
+
+import vortex.tools.services
 
 
 class Action(object):
     """
-    An ``Action`` object if intend to produce a dedicated service through a simple command
+    An ``Action`` object is intend to produce a dedicated service through a simple command
     with internally refer to the :meth:`execute` method.
     Such an action could be activated or not, and is basically driven by permissions settings.
     """
-    def __init__(self, kind='foo', service=None, active=False):
-        self.kind = kind
+    def __init__(self, kind='foo', service=None, active=False, permanent=False):
+        self._service   = service
+        self._kind      = kind
+        self._active    = active
+        self._permanent = permanent
+        self._frozen    = None
         if service is None:
             service = 'send' + self.kind
-        self.service = service
-        self._active = active
+
+    @property
+    def kind(self):
+        """Kind name of this action."""
+        return self._kind
+
+    @property
+    def service(self):
+        """Standard service associated to this action."""
+        return self._service
 
     @property
     def active(self):
         """Current status of the action as a boolean property."""
         return self._active
 
+    def permanent(self, update=None):
+        """Return or update the permanent status of this action."""
+        if update is not None:
+            self._permanent = bool(update)
+            if not self._permanent:
+                self._frozen = None
+        return self._permanent
+
+    def clear_service(self):
+        """Clear the possibly defined permanent service."""
+        self._frozen = None
+
     def status(self, update=None):
-        """Return current active status."""
+        """Return or update current active status."""
         if update is not None:
             self._active = bool(update)
         return self._active
@@ -66,24 +91,37 @@ class Action(object):
         return info
 
     def get_actual_service(self, **kw):
-        """Build the service instance determined by the actual description."""
+        """Return the service instance determined by the actual description."""
         info = self.service_info(**kw)
-        return footprints.proxy.service(**info)
+        a_service = None
+        if self.permanent:
+            if self._frozen is None:
+                self._frozen = footprints.proxy.services.default(**info)
+            a_service = self._frozen
+        else:
+            a_service = footprints.proxy.service(**info)
+        return a_service
 
-    def execute(self, *args, **kw):
-        """Generic method to perform the action through a service."""
-        rc = None
+    def get_active_service(self, **kw):
+        """Return the actual service according to active status and user authorizations."""
+        a_service = None
         if is_authorized_user(self.kind):
             if self.active:
-                service = self.get_actual_service(**kw)
-                if service:
-                    rc = service()
-                else:
+                a_service = self.get_actual_service(**kw)
+                if a_service is None:
                     logger.warning('Could not find any service for action %s', self.kind)
             else:
                 logger.warning('Non active action %s', self.kind)
         else:
             logger.warning('User not authorized to perform %s', self.kind)
+        return a_service
+
+    def execute(self, *args, **kw):
+        """Generic method to perform the action through a service."""
+        rc = None
+        service = self.get_active_service(**kw)
+        if service:
+            rc = service(*args)
         return rc
 
 
@@ -101,6 +139,54 @@ class Report(Action):
     """
     def __init__(self, kind='report', service='sendreport', active=True):
         super(Report, self).__init__(kind=kind, active=active, service=service)
+
+
+class Prompt(Action):
+    """
+    Fake action that could be used for any real action.
+    """
+    def __init__(self, kind='prompt', service='prompt', active=False):
+        super(Prompt, self).__init__(kind=kind, active=active, service=service)
+
+    def execute(self, *args, **kw):
+        """Do nothing but prompt the actual arguments."""
+        print '#ACTION', self.kind, '/ args:', args, '/ kw:', kw
+        return True
+
+    def foo(self, *args, **kw):
+        """Yet an other foo method."""
+        print '#FOO', self.kind, '/ args:', args, '/ kw:', kw
+        return True
+
+
+class SmsGateway(Action):
+    """
+    Child command to SMS server.
+    """
+    def __init__(self, kind='sms', service='sms', active=True, permanent=True):
+        super(SmsGateway, self).__init__(kind=kind, active=active, service=service, permanent=permanent)
+
+    def gateway(self, *args, **kw):
+        """Ask SMS to run any miscellaneous (but known) command."""
+        rc = None
+        service = self.get_active_service(**kw)
+        if service and self._smscmd is not None:
+            rc = getattr(service, self._smscmd)(*args)
+        self._smscmd = None
+        return rc
+
+    def __getattr__(self, attr):
+        if attr.startswith('_'):
+            raise AttributeError
+        if attr in (
+            'clear', 'conf', 'info', 'mute', 'path', 'play',
+            'abort', 'complete', 'event', 'init', 'label', 'meter', 'msg', 'variable'
+        ):
+            self._smscmd = attr
+            return self.gateway
+        else:
+            self._smscmd = None
+            return None
 
 
 class SpooledActions(object):
@@ -133,7 +219,7 @@ class SpooledActions(object):
         rc = list()
         for item in self.actions:
             xx = getattr(item, self.method, None)
-            if xx:
+            if xx is not None:
                 rc.append(xx(*args, **kw))
             else:
                 rc.append(None)

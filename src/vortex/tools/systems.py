@@ -632,10 +632,11 @@ class OSExtended(System):
         ftpbox = StdFtp(self, hostname)
         if logname is None:
             logname = self.env.glove.user
-        if ftpbox.fastlogin(logname):
+        rc = ftpbox.fastlogin(logname)
+        if rc:
             return ftpbox
         else:
-            logger.warning('Could not login on %s as %s', hostname, logname)
+            logger.warning('Could not login on %s as %s [%s]', hostname, logname, str(rc))
             return None
 
     @fmtshcmd
@@ -1129,7 +1130,7 @@ class Python27(object):
         try:
             import importlib
         except ImportError:
-            logger.critical('No way to get importlib in python 2.7 ... something really weird !')
+            logger.critical('Could not load importlib')
             raise
         except:
             logger.critical('Unexpected error: %s', sys.exc_info()[0])

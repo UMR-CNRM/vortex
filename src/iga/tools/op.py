@@ -9,8 +9,10 @@ from tempfile import mkdtemp
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from iga.util import swissknife
+import vortex.tools.actions
+import iga.tools.services
 
+from iga.util import swissknife
 
 def setup(**kw):
     """
@@ -96,13 +98,13 @@ def setup(**kw):
 
     import vortex.tools.lfi
     shlfi = footprints.proxy.addon(kind='lfi', shell=t.sh)
-    print '+', 'Add-on LFI', shlfi
+    print '+ Add-on LFI', shlfi
     shio = footprints.proxy.addon(kind='iopoll', shell=t.sh)
-    print '+', 'Add-on IO POLL', shio
+    print '+ Add-on IO POLL', shio
 
     import vortex.tools.odb
     shodb = footprints.proxy.addon(kind='odb', shell=t.sh)
-    print '+', 'Add-on ODB', shodb
+    print '+ Add-on ODB', shodb
 
     #--------------------------------------------------------------------------------------------------
     t.sh.header('Actual running directory')
@@ -136,6 +138,22 @@ def setup(**kw):
     print '+ iga.data.containers  =', containers.__file__
     print '+ iga.data.providers   =', providers.__file__
     print '+ iga.data.stores      =', stores.__file__
+
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('Op Actions')
+    ad = vortex.tools.actions.actiond
+    ad.add(vortex.tools.actions.SmsGateway())
+
+    print '+ SMS candidates =', ad.candidates('sms')
+
+    #--------------------------------------------------------------------------------------------------
+    t.sh.header('SMS Settings')
+    ad.sms_info()
+
+    if t.env.SMSPASS is None:
+        ad.sms_off()
+
+    ad.sms_init(t.env.SLURM_JOBID)
 
     return t
 
@@ -201,6 +219,8 @@ def setenv(t, **kw):
 
 def complete(t, **kw):
     """Exit from OP session."""
+    ad = vortex.tools.actions.actiond
+    ad.sms_complete()
     t.close()
 
 def register(t, cycle, dump=True):
@@ -225,8 +245,9 @@ def register(t, cycle, dump=True):
 
 def rescue(**kw):
     """Something goes wrong... so, do your best to save current state."""
+    ad = vortex.tools.actions.actiond
+    ad.sms_abort()
     print 'Bad luck...'
-
 
 def fulltraceback(localsd=None):
     """Produce some nice traceback at the point of failure."""

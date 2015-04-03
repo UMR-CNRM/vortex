@@ -106,7 +106,7 @@ def autofill(cycle, gcout=None):
             k, v = item.split('=', 1)
             v = v.strip('"')
             if k == 'CYCLE_NAME':
-                actualcycle = v.rstrip('.gco')
+                actualcycle = v.partition('.gco')[0]
                 k, v = 'cycle', actualcycle
             if ' ' in v:
                 vlist = v.split(' ')

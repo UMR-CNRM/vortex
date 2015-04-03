@@ -38,7 +38,7 @@ class IgaGcoCacheStore(GcoCacheStore):
             remote['path'] = self.system.path.join(remote['path'], extract[0])
             logger.warning('Extend remote path with extract value <%s>', remote['path'])
         if remote['path'].endswith('.tgz'):
-            remote['path'] = remote['path'].rstrip('.tgz')
+            remote['path'] = remote['path'][:-4]
             local = None
         rc = self.incacheget(remote, local, options)
         if rc and local and not self.system.path.isdir(local) and self.system.is_tarfile(local):
@@ -98,20 +98,20 @@ class SopranoStore(Store):
         info = 'Soprano access',
         attr = dict(
             scheme = dict(
-                values = [ 'ftp', 'ftserv' ],
+                values   = ['ftp', 'ftserv'],
             ),
             netloc = dict(
-                values = [ 'prod.inline.fr', 'intgr.inline.fr' ],
-                default = 'prod.inline.fr'
+                values   = ['prod.soprano.fr', 'intgr.soprano.fr'],
+                default  = 'prod.soprano.fr'
             ),
             rootdir = dict(
-                alias = [ 'sopranohome' ],
-                default = '/SOPRANO'
+                alias    = [ 'sopranohome' ],
+                default  = '/SOPRANO'
             ),
             storage = dict(
                 optional = True,
-                values = [ 'piccolo.meteo.fr, piccolo-int.meteo.fr' ],
-                default = 'piccolo.meteo.fr'
+                values   = ['piccolo.meteo.fr, piccolo-int.meteo.fr'],
+                default  = 'piccolo.meteo.fr'
             ),
         )
     )
@@ -122,7 +122,7 @@ class SopranoStore(Store):
 
     @property
     def realkind(self):
-        return 'prodsoprano'
+        return 'soprano'
 
     def hostname(self):
         return self.storage

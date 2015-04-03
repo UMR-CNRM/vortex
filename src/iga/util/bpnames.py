@@ -29,10 +29,10 @@ def faNames(cutoff, reseau, model, filling=None, vapp=None):
         map_suffix = dict(
             zip(
                 zip(
-                    (cutoff,)*4,
-                    (0, 6, 12, 18)
+                    (cutoff,)*8,
+                    range(0, 24, 3)
                 ),
-                ('rAM', 'rSX', 'rPM', 'rDH')
+                ('rAM', 'rTR', 'rSX', 'rNF', 'rPM', 'rQZ', 'rDH', 'rVU')
             )
         )
     elif cutoff == 'short':
@@ -415,14 +415,21 @@ def global_snames(resource):
             bname = 'SSMI.AM'
     if resource.realkind == 'observations':
         suff = map_suffix[(cutoff, resource.date.hour)]
-        if resource.nativefmt == 'obsoul' and resource.part == 'conv':
-            bname = 'OBSOUL1F.' + suff
-        if resource.nativefmt == 'obsoul' and resource.part == 'prof':
-            bname = 'OBSOUL2F.' + suff
-        if resource.nativefmt == 'obsoul' and resource.part == 'surf':
-            bname = 'OBSOUL_SURFAN.' + suff
-        if resource.nativefmt == 'bufr':
-            bname = 'BUFR.' + resource.part + '.' + suff
+        if resource.nativefmt == 'grib':
+            if resource.part == 'sev':
+                bname = 'SEVIRI_AROME.' + suff + '.grb'
+        elif resource.nativefmt == 'obsoul':
+            if resource.part == 'conv':
+                bname = 'OBSOUL1F.' + suff
+            elif resource.part == 'prof':
+                bname = 'OBSOUL2F.' + suff
+            elif resource.part == 'surf':
+                bname = 'OBSOUL_SURFAN.' + suff
+        elif resource.nativefmt == 'bufr':
+            if 'arome' in resource.model:
+                bname = 'BUFR.' + resource.part + '_AROME.' + suff
+            else:
+                bname = 'BUFR.' + resource.part + '.' + suff
         logger.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
     if resource.realkind == 'refdata':
         suff = map_suffix[(cutoff, resource.date.hour)]

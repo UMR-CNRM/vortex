@@ -65,6 +65,10 @@ class Target(footprints.FootprintBase):
     def realkind(self):
         return 'target'
 
+    def generic(self):
+        """Generic name is inetname by default."""
+        return self.inetname
+
     def get(self, key, default=None):
         """Get the actual value of the specified ``key`` ( ``section:option`` )."""
         if ':' in key:

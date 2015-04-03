@@ -114,11 +114,16 @@ class GenericConfigParser(object):
         """Return a list of the description for each update performed."""
         return self.updates[:]
 
-    def as_dict(self):
-        dico = dict()
+    def as_dict(self, merged=True):
+        if merged:
+            dico = dict()
+        else:
+            dico = dict(defaults = dict(self.defaults()))
         for section in self.sections():
-            dico[section] = dict(self.defaults())
-            dico[section].update(dict(self.items(section)))
+            if merged:
+                dico[section] = dict(self.items(section))
+            else:
+                dico[section] = { k : v for k, v in self.items(section) if k in self.parser._sections[section] }
         return dico
 
     def __getattr__(self, attr):

@@ -254,7 +254,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
                     t.sh.ll(name)
                 details['retrieved'].append(name)
                 if name.endswith('.tgz'):
-                    subpath = name.rstrip('.tgz')
+                    subpath = name[:-4]
                     locpath = t.sh.getcwd()
                     t.sh.cd(subpath, create=True)
                     t.sh.untar('../' + name, output=False)

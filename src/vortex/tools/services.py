@@ -55,7 +55,7 @@ class Service(footprints.FootprintBase):
     def sh(self):
         return self._sh
 
-    def __call__(self):
+    def __call__(self, *args):
         pass
 
 
@@ -211,7 +211,7 @@ class ReportService(Service):
         )
     )
 
-    def __call__(self):
+    def __call__(self, *args):
         """Main action: ..."""
         pass
 
@@ -223,7 +223,8 @@ class FileReportService(ReportService):
         info = 'File Report services class',
         attr = dict(
             kind = dict(
-                values = ['sendfilereport'],
+                values = ['sendreport', 'sendfilereport'],
+                remap  = dict(sendfilereport = 'sendreport'),
             ),
             filename = dict(),
         )

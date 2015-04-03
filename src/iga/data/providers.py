@@ -17,12 +17,20 @@ from gco.data.providers import GEnv
 
 from iga.util import bpnames as bp
 
+#: TODO move in config file
+ATM_LIST_ONE = set([
+    'antiguy', 'arome', 'arpege', 'caledonie', 'polynesie',
+    'restart_cep', 'reunion', 'ssmice', 'varpack'
+])
 
-ATM_LIST_ONE = ['antiguy', 'arome', 'arpege', 'caledonie', 'polynesie',
-                'restart_cep', 'reunion', 'ssmice', 'varpack']
+#: TODO move in config file
+ATM_LIST_TWO = set([
+    'perle_arp', 'perle_ifs', 'perle_arom',
+    'ctbto', 'mocchim', 'mocvolc'
+])
 
-ATM_LIST_TWO = ['perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim',
-                'mocvolc']
+class SopranoModelError(StandardError):
+    pass
 
 
 class IgaGEnvProvider(GEnv):
@@ -140,28 +148,29 @@ class IgaProvider(Provider):
 
 
 class SopranoProvider(Provider):
+
     _footprint = dict(
         info = 'Soprano provider',
         attr = dict(
             namespace = dict(
                 optional = True,
-                values = [ 'prod.inline.fr', 'intgr.inline.fr' ],
-                default = 'prod.inline.fr'
+                values   = ['prod.soprano.fr', 'intgr.soprano.fr'],
+                default  = 'prod.soprano.fr'
             ),
             tube = dict(
                 optional = True,
-                values = [ 'scp', 'rcp', 'ftp' ],
-                default = 'ftp'
+                values   = ['scp', 'rcp', 'ftp'],
+                default  = 'ftp'
             ),
             suite = a_suite,
             source = dict(
-                values = ATM_LIST_ONE + ATM_LIST_TWO,
+                values   = list(ATM_LIST_ONE | ATM_LIST_TWO),
                 optional = True
             ),
             config = dict(
-                type = IgaCfgParser,
+                type     = IgaCfgParser,
                 optional = True,
-                default = IgaCfgParser('iga-map-resources.ini')
+                default  = IgaCfgParser('iga-map-resources.ini')
             )
         )
     )
@@ -193,12 +202,15 @@ class SopranoProvider(Provider):
         info = self.pathinfo(resource)
         info['model'] = self.vapp
         if info['model'] in ATM_LIST_ONE:
+            info['level_one']   = 'modele'
+            info['level_two']   = self.suite
             info['level_three'] = info['model']
-            info['level_two'] = self.suite
         elif info['model'] in ATM_LIST_TWO:
-            info['level_one'] = 'serv'
-            info['level_two'] = 'env'
+            info['level_one']   = 'serv'
+            info['level_two']   = 'env'
             info['level_three'] = info['sys_prod']
+        else:
+            raise SopranoModelError('No such model: %s' % info['model'])
         logger.debug('sopranoprovider::pathname info %s', info)
         self.config.setall(info)
         return self.config.resolvedpath('soprano')

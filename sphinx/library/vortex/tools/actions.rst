@@ -28,12 +28,22 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Prompt
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Report
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
 .. autoclass:: SendMail
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SmsGateway
    :show-inheritance:
    :members:
    :member-order: alphabetical

@@ -41,12 +41,15 @@ from StringIO import StringIO
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex import sessions
-from vortex.syntax.stdattrs import a_term
-from vortex.tools import date
-from vortex.tools.services import Service, FileReportService
-from vortex.tools.actions import actiond as ad
-from vortex.tools.systems import ExecutionError
+from vortex                  import sessions
+from vortex.tools            import date
+from vortex.syntax.stdattrs  import a_term
+
+from vortex.tools.services   import Service, FileReportService
+from vortex.tools.schedulers import SMS
+from vortex.tools.actions    import actiond as ad
+from vortex.tools.systems    import ExecutionError
+
 
 # TODO devrait dépendre d'un objet TARGET
 LOGIN_NODES = [
@@ -910,3 +913,42 @@ class DayfileReportService(FileReportService):
 
         if not self.filename:
             self.sh.mv(destination, final)
+
+
+class SMSOpService(SMS):
+    """
+    Default SMS service with some extra colorful features.
+    """
+
+    _footprint = dict(
+        info = 'SMS client service in operational context',
+        priority = dict(
+            level = footprints.priorities.top.OPER
+        )
+    )
+
+    def logdate(self, tz='GMT', varname=None, status='unknown', comment=''):
+        """Set a logging message for the dedicated XCDP variable."""
+        if varname is None:
+            logger.error('SMS service could log date message with variable [%s]', str(status))
+        else:
+            stamp = date.now().compact()
+            self.variable(varname, stamp)
+            self.label('etat', str(status) + ': ' + stamp + ' ' + str(comment))
+
+    def close_init(self, *args):
+        """Set starting date as a XCDP variable."""
+        self.logdate(varname='date_execute', status='active')
+
+    def setup_complete(self, *args):
+        """Set completing date as a XCDP variable."""
+        rc = args[0] if args else 0
+        if rc:
+            self.logdate(varname='date_end', status='aborted', comment=rc)
+        else:
+            self.logdate(varname='date_end', status='complete', comment=rc)
+        if rc in (0, 98, 99):
+            return True
+        else:
+            self.abort()
+            return False

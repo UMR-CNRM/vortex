@@ -10,6 +10,7 @@ import logging
 
 #: The actual set of pseudo-root loggers created
 roots = set()
+lognames = set()
 
 #: Default formatters
 formats = dict(
@@ -55,7 +56,15 @@ def getLogger(modname):
     rootlogger = logging.getLogger(rootname)
     if rootname not in roots:
         setRootLogger(rootlogger)
+    lognames.add(modname)
     if rootname == modname:
         return rootlogger
     else:
         return logging.getLogger(modname)
+
+def setRootMethods(logger, methods=('debug', 'info', 'warning', 'error', 'critical')):
+    """Reset some root loggers methods with methods from an external logger."""
+    for modname in lognames:
+        thislog = logging.getLogger(modname)
+        for logmethod in methods:
+            setattr(thislog, logmethod, getattr(logger, logmethod))

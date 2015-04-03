@@ -57,7 +57,7 @@ class ConfigSet(footprints.util.LowerCaseDict):
     def __setitem__(self, key, value):
         if value is not None and type(value) is str:
             if key.endswith('_range'):
-                key = key.rstrip('_range')
+                key = key[:-6]
                 value = footprints.util.rangex(value.replace(' ', ''))
             elif key.endswith('geometry'):
                 value = data.geometries.get(tag=value)
@@ -432,7 +432,7 @@ class Driver(footprints.util.GetByTag, NiceLayout):
             inifile = self.iniconf
         try:
             iniparser = GenericConfigParser(inifile)
-            thisconf  = iniparser.as_dict()
+            thisconf  = iniparser.as_dict(merged=False)
         except StandardError:
             logger.critical('Could not read config %s', inifile)
             raise
@@ -460,7 +460,8 @@ class Driver(footprints.util.GetByTag, NiceLayout):
             self._jobconf = self.read_config(self.iniconf)
 
         self._conf = ConfigSet()
-        updconf = self.jobconf.get(self.jobname, dict())
+        updconf = self.jobconf.get('defaults', dict())
+        updconf.update(self.jobconf.get(self.jobname, dict()))
         self.nicedump('Configuration for job ' + self.jobname, **updconf)
         self.conf.update(updconf)
 

@@ -19,12 +19,12 @@ class IgaHelperSelect(IndexedTable):
         #x for extras coming from _replacement function
         #obtain the name of the model
         model = g.get('model', x.get('model', None))
-        self.add(self.parser.get_info(model))
+        self.extend(self.parser.get_info(model))
         t = g.get('term', x.get('term', None))
         if t is None:
             return None
         else:
-            t = int(t)
+            t = int(t)/60
             if t in self:
                 try:
                     value = self[t][n]

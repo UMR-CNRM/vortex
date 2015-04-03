@@ -162,10 +162,17 @@ class StdFtp(object):
             self._logname = logname
             rc = self.login(logname, password)
         else:
-            auth = netrc().authenticators(self.host)
-            if auth:
-                self._logname = auth[0]
-                rc = self.login(self._logname, auth[2])
+            nrc = netrc()
+            if nrc:
+                auth = nrc.authenticators(self.host)
+                if auth:
+                    self._logname = auth[0]
+                    self.stderr('netrc', self._logname)
+                    rc = self.login(self._logname, auth[2])
+                else:
+                    self.stderr('fastlogin auth failed', str(auth))
+            else:
+                self.stderr('fastlogin netrc failed')
         return bool(rc)
 
     def netpath(self, remote):

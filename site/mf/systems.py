@@ -85,6 +85,12 @@ class MeteoBull(Target):
         sh.header('Flush Lustre Locks')
         sh.spawn(['/opt/softs/bin/flush-lustre-locks'], output=False)
 
+    def generic(self):
+        """Generic name is inetname suffixed with ``fe`` or ``cn``."""
+        if 'login' in self.hostname or 'transfert' in self.hostname:
+            return self.inetname + 'fe'
+        else:
+            return self.inetname + 'cn'
 
 class Beaufix(MeteoBull):
     """Beaufix Computer at Meteo-France."""
