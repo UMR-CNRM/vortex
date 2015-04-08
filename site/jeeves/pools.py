@@ -12,6 +12,9 @@ from datetime import datetime
 
 import footprints
 
+#: No automatic export
+__all__ = []
+
 
 # Module Interface
 
@@ -87,7 +90,7 @@ class Request(object):
         return { k : v for k, v in self.__dict__.items() if not k.startswith('_') }
 
     @property
-    def lastdump(self):
+    def last(self):
         return self._dumpfiles[-1] if self._dumpfiles else None
 
     @property
@@ -104,8 +107,8 @@ class Request(object):
     def show(self, *args):
         """Display specified attributes values or all of them."""
         if not args:
-            args = self.__dict__.keys()
-        for attr in sorted(args):
+            args = self.__dict__.keys() + ['last']
+        for attr in sorted([ x for x in args if not x.startswith('_')]):
             print ' *', attr, '=', getattr(self, attr)
 
 
@@ -118,7 +121,7 @@ class Deposit(footprints.util.GetByTag):
         self._logger   = logger
         self._cleaning = cleaning
         self._target   = target
-        self.path      = self.tag if path is None else path
+        self._path     = self.tag if path is None else path
         self.active    = active
         self.maxtime   = maxtime
         self.maxitems  = maxitems

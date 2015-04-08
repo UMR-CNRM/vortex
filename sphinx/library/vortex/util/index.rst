@@ -19,3 +19,4 @@ Utilities
    patterns
    roles
    structs
+   worker

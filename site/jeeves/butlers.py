@@ -20,6 +20,9 @@ import footprints
 
 from . import pools
 
+#: No automatic export
+__all__ = []
+
 
 class GentleTalk(object):
     """An alternative to logging interface that could be exchange between processes."""
@@ -636,29 +639,36 @@ class Jeeves(BaseDaemon, HouseKeeping):
 
     def multi_stop(self, timeout=1):
         """Join all active coprocesses."""
-        self.info('Terminate', procs=self.procs, remaining=len(self.async))
+        if self.procs:
+            # at least, some multiproccessing setup had occured
+            self.info('Terminate', procs=self.procs, remaining=len(self.async))
 
-        # look at the remaining tasks
-        for (pnum, asyncr) in self.async.items():
-            self.warning('Task not complete', pnum=pnum)
+            # look at the remaining tasks
+            for (pnum, syncinfo) in self.async.items():
+                self.warning('Task not complete', pnum=pnum)
+                try:
+                    jpool, jfile, asyncr = syncinfo
+                    pnum, prc, pvalue = asyncr.get(timeout=timeout)
+                except multiprocessing.TimeoutError:
+                    self.error('Timeout for task', pnum=pnum)
+                except StandardError as trouble:
+                    self.critical('Trouble in pool', pnum=pnum, error=trouble)
+                else:
+                    self.info('Return', pnum=pnum, rc=prc, result=pvalue)
+                    self.migrate(pools.get(tag=jpool), jfile)
+                finally:
+                    del self.async[pnum]
+
+            # try to clean the current active pool of processes
             try:
-                pnum, prc, pvalue = asyncr.get(timeout=timeout)
-            except multiprocessing.TimeoutError:
-                self.error('Timeout for task', pnum=pnum)
+                self.ppool.close()
+                self.ppool.terminate()
+                self.ppool.join()
             except StandardError as trouble:
-                self.critical('Trouble in pool', pnum=pnum, error=trouble)
-            else:
-                self.info('Return', pnum=pnum, rc=prc, result=pvalue)
-            finally:
-                del self.async[pnum]
+                self.critical('Multiprocessing stop', error=trouble)
 
-        # try to clean the current active pool of processes
-        try:
-            self.ppool.close()
-            self.ppool.terminate()
-            self.ppool.join()
-        except StandardError as trouble:
-            self.critical('Multiprocessing stop', error=trouble)
+        else:
+            self.warning('Multi stop without start ?')
 
         return True
 
@@ -708,6 +718,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
     def async_callback(self, result):
         """Get result from async pool processing."""
         if result:
+            pnum = None
             try:
                 pnum, prc, pvalue = result
                 if prc:
@@ -717,24 +728,34 @@ class Jeeves(BaseDaemon, HouseKeeping):
             except StandardError as trouble:
                 self.critical('Callback', error=trouble, result=result)
             finally:
-                if pnum in self.async:
+                if pnum is not None and pnum in self.async:
+                    jpool, jfile, asyncr = self.async[pnum]
+                    poolbase = pools.get(tag=jpool)
+                    if prc:
+                        self.migrate(poolbase, jfile)
+                    else:
+                        self.migrate(poolbase, jfile, target='error')
                     del self.async[pnum]
                 else:
                     self.error('Unknown async process', pnum=pnum)
         else:
             self.error('Undefined result from async processing')
 
-    def dispatch(self, func, ask):
+    def dispatch(self, func, ask, jpool, jfile):
         """Multiprocessing dispatching."""
         rc = False
         self.ptask += 1
         pnum = '{0:06d}'.format(self.ptask)
         try:
-            self.async[pnum] = self.ppool.apply_async(
-                func,
-                (pnum, ask, self.config.copy(), self.logger.clone(pnum)),
-                ask.opts,
-                self.async_callback
+            self.async[pnum] = (
+                jpool,
+                jfile,
+                self.ppool.apply_async(
+                    func,
+                    (pnum, ask, self.config.copy(), self.logger.clone(pnum)),
+                    ask.opts,
+                    self.async_callback
+                )
             )
         except StandardError as trouble:
             self.critical('Dispatch', error=trouble, action=ask.todo)
@@ -746,6 +767,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
     def process_request(self, pool, jfile):
         """Process a standard request."""
         rc = False
+        dispatched = False
         ask = self.json_load(pool, jfile)
         if ask is not None:
             tp = self.migrate(pool, jfile)
@@ -785,7 +807,8 @@ class Jeeves(BaseDaemon, HouseKeeping):
                         rc = False
                     else:
                         if acfg.get('dispatch', False):
-                            rc = self.dispatch(thisfunc, ask)
+                            rc = self.dispatch(thisfunc, ask, tp.tag, jfile)
+                            dispatched = True
                         else:
                             try:
                                 rc = apply(thisfunc, (ask,), ask.opts)
@@ -797,7 +820,8 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     rc = False
                     rctarget = 'ignore'
                 if rc:
-                    self.migrate(tp, jfile)
+                    if not dispatched:
+                        self.migrate(tp, jfile)
                 else:
                     self.migrate(tp, jfile, target=rctarget)
         return rc
@@ -812,6 +836,14 @@ class Jeeves(BaseDaemon, HouseKeeping):
         self.info('Just ask Jeeves...')
 
         self.multi_start()
+
+        # migrate existing requests forgotten in processing directory
+        thispool = pools.get(tag='process')
+        todorun = thispool.contents
+        if todorun:
+            self.warning('Remaining requests', num=len(todorun))
+            for bad in todorun:
+                self.migrate(thispool, bad, target='retry')
 
         tprev = datetime.now()
         tbusy = False

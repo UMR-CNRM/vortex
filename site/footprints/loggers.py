@@ -62,8 +62,8 @@ def getLogger(modname):
     else:
         return logging.getLogger(modname)
 
-def setRootMethods(logger, methods=('debug', 'info', 'warning', 'error', 'critical')):
-    """Reset some root loggers methods with methods from an external logger."""
+def setLogMethods(logger, methods=('debug', 'info', 'warning', 'error', 'critical')):
+    """Reset some loggers methods with methods from an external logger."""
     for modname in lognames:
         thislog = logging.getLogger(modname)
         for logmethod in methods:

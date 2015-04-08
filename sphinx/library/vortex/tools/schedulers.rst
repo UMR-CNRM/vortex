@@ -6,7 +6,7 @@
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.7
+.. versionadded:: 0.9
 
 Package
 -------

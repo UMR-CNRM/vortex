@@ -26,3 +26,4 @@ Modules
 * :mod:`vortex.util.patterns`
 * :mod:`vortex.util.roles`
 * :mod:`vortex.util.structs`
+* :mod:`vortex.util.worker`
