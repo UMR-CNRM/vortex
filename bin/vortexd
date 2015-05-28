@@ -4,7 +4,7 @@
 import os, sys, re, traceback
 import vortex
 import common.data, iga.data, common.tools
-from vortex.utilities import dispatch
+from vortex.util import dispatch
 
 
 t = vortex.ticket()
@@ -136,6 +136,7 @@ while listen:
         print 'Vortex Dispatch[{0:s}]: {1:s} {2:s}'.format(pid, cmd, opts)
         realcmd = getattr(dispatcher, cmd, None)
         if realcmd and callable(realcmd):
+            rc = -2
             try:
                 (rc, rmsg, results) = realcmd(t, opts)
             except Exception as e:

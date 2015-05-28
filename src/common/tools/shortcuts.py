@@ -19,57 +19,57 @@ def tbdef(refresh=False):
     p = t.sh.getcwd()
     pl = p.lower()
 
-    if refresh:
-        thismodel = None
-    else:
-        thismodel = d.get('model', t.env.get('VORTEX_TBDEF_MODEL', None))
+    thisdef = dict()
+    for attr in ('model', 'date', 'cutoff', 'geometry'):
+        if refresh:
+            thisdef[attr] = None
+        else:
+            thisdef[attr] = d.get(attr, t.env.get('VORTEX_TBDEF_' + attr.upper(), None))
 
-    if thismodel is None:
+    if thisdef['model'] is None:
         for x in stdattrs.models:
             if '/' + x in pl:
-                thismodel = x
+                thisdef['model'] = x
                 break
         else:
-            thismodel = 'arpege'
+            thisdef['model'] = 'arpege'
 
-    if refresh:
-        thisgeometry = None
-    else:
-        thisgeometry = d.get('geometry', t.env.get('VORTEX_TBDEF_GEOMETRY', None))
-
-    if thisgeometry is None:
-        if thismodel.startswith('aro'):
-            thisgeometry = 'frangpsp'
+    if thisdef['geometry'] is None:
+        if thisdef['model'].startswith('aro'):
+            thisdef['geometry'] = 'frangpsp'
         else:
-            thisgeometry = 'globalsp'
-    thisgeometry = geometries.get(tag=thisgeometry)
+            thisdef['geometry'] = 'globalsp'
+    if not hasattr(thisdef['geometry'], 'tag'):
+        thisdef['geometry'] = geometries.get(tag=thisdef['geometry'])
 
-    thisdate = None
     if refresh:
         zcache = re.search('/(\w+)/(\w+)/([A-Z0-9]{4})/(\d{8}T\d{4})([AP])(?:/(\w+))?', p)
         if zcache:
-            thisvapp = zcache.group(1)
-            thisvconf = zcache.group(2)
-            thisexperiment = zcache.group(3)
-            thisdate = Date(zcache.group(4))
-            thiscutoff = 'production' if zcache.group(5) == 'P' else 'assim'
+            thisdef['vapp']       = zcache.group(1)
+            thisdef['vconf']      = zcache.group(2)
+            thisdef['experiment'] = zcache.group(3)
+            thisdef['date']       = Date(zcache.group(4))
+            thisdef['cutoff']     = 'production' if zcache.group(5) == 'P' else 'assim'
             if zcache.group(6) is not None:
-                thisblock = zcache.group(6)
+                thisdef['block'] = zcache.group(6)
 
-    if thisdate is None:
-        thisdate = synop()
 
-    for k, v in locals().iteritems():
-        if k.startswith('this'):
-            k = k.replace('this', '')
-            print 'Update default', k.ljust(16), '=', v
-            d[k] = v
+    if thisdef['cutoff'] is None:
+        thisdef['cutoff'] = 'production'
+
+    if thisdef['date'] is None:
+        thisdef['date'] = synop()
+
+    for k, v in { a:b for a, b in thisdef.items() if b is not None }.items():
+        print 'Update default', k.ljust(16), '=', v
+        d[k] = v
 
 
 def fastload(**kw):
     """
     Generic load of some resource handler according to current description.
     If not provided, these parameters are set:
+
         * cutoff = production
         * model = arpege
         * date = last synoptic hour
@@ -90,6 +90,7 @@ def analysis(**kw):
     """
     Return a analysis according to a standard description and/or some additional information.
     Defaults are:
+
         * kind = analysis
         * suite = oper
         * igakey = same as model
@@ -109,6 +110,7 @@ def modelstate(**kw):
     """
     Return a model state according to a standard description and/or some additional information.
     Defaults are:
+
         * kind = historic
         * suite = oper
         * block = forecast

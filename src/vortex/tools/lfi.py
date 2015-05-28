@@ -7,6 +7,7 @@ __all__ = []
 import io
 import re
 import weakref
+import types
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -129,8 +130,9 @@ class LFI_Tool(addons.Addon):
     def is_xlfi(self, source):
         """Check if the given ``source`` is a multipart-lfi file."""
         rc = False
-        with io.open(source, 'rb') as fd:
-            rc = fd.read(8) == 'LFI_ALTM'
+        if source and isinstance(source, basestring) and self.sh.path.exists(source):
+            with io.open(source, 'rb') as fd:
+                rc = fd.read(8) == 'LFI_ALTM'
         return rc
 
     def _std_table(self, lfifile, **kw):
@@ -378,7 +380,7 @@ class IO_Poll(addons.Addon):
                 default = 'io_poll',
             ),
             path = dict(
-                alias   = ('iopollpath', 'io_pollpath', 'io_poll_path'),
+                alias   = ('iopollpath', 'io_pollpath', 'io_poll_path', 'iopath'),
             )
         )
     )

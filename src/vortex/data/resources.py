@@ -8,7 +8,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.syntax.stdattrs import a_nativefmt, notinrepr
-from contents import DataContent, UnknownContent
+from contents import DataContent, UnknownContent, FormatAdapter
 
 
 class Resource(footprints.FootprintBase):
@@ -122,7 +122,10 @@ class Unknown(Resource):
         attr = dict(
             unknown = dict(
                 type = bool
-            )
+            ),
+            clscontents = dict(
+                default = FormatAdapter,
+            ),
         )
     )
 

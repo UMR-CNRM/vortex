@@ -89,7 +89,9 @@ class SMS(Scheduler):
                     logger.warning('SMS service could not guess target name [%s]', generictarget)
                 else:
                     self.rootdir = guesspath + '/' + generictarget
-        if not self.sh.path.exists(self.cmdpath('init')):
+        if self.sh.path.exists(self.cmdpath('init')):
+            self.env.setbinpath(self.rootdir)
+        else:
             logger.warning('No SMS client found at init time [rootdir:%s]>', self.rootdir)
 
     def cmd_rename(self, cmd):

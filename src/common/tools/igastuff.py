@@ -21,16 +21,16 @@ fuzzystr = dict(
         gridpoint = dict( oper = 'PE', dbl = 'PA' ),
     ),
     suffix = dict(
-        bgerrstd = dict( input = 'in', output = 'out' )
+        bgstderr = dict( input = 'in', output = 'out' )
     ),
     term0003 = dict(
-        bgerrstd = dict( input = '', output = '_assim' ),
+        bgstderr = dict( input = '', output = '_assim' ),
     ),
     term0009 = dict(
-        bgerrstd = dict( input = '_production', output = '_production' ),
+        bgstderr = dict( input = '_production', output = '_production' ),
     ),
     term0012 = dict(
-        bgerrstd = dict( input = '_production_dsbscr', output = '_production_dsbscr' ),
+        bgstderr = dict( input = '_production_dsbscr', output = '_production_dsbscr' ),
     ),
     varbcarpege = dict(
         varbc = dict( input = '.cycle_arp', output = '.cycle' ),

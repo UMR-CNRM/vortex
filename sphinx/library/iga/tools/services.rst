@@ -22,11 +22,6 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: RemoteCommandProxy
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: AlarmService
    :show-inheritance:
    :members:
@@ -83,6 +78,16 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: DayfileReportService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SMSOpService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: DMTEventService
    :show-inheritance:
    :members:
    :member-order: alphabetical

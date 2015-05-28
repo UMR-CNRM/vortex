@@ -11,12 +11,12 @@ __all__ = []
 
 import os, stat, resource, shutil, socket
 import re, platform, sys, io, filecmp, time
-import types
 import glob
 import tarfile
 import subprocess
 import pickle
 import json
+import pwd as passwd
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -110,6 +110,7 @@ class System(footprints.FootprintBase):
         self.__dict__['_rl']      = kw.pop('rlimit', resource)
         self.__dict__['_sh']      = kw.pop('shutil', kw.pop('sh', shutil))
         self.__dict__['_search']  = [ self.__dict__['_os'], self.__dict__['_sh'], self.__dict__['_rl'] ]
+        self.__dict__['_xtrack']  = dict()
         self.__dict__['_history'] = History(tag='shell')
         self.__dict__['_rclast']  = 0
         self.__dict__['prompt']   = ''
@@ -143,8 +144,24 @@ class System(footprints.FootprintBase):
     def extend(self, obj=None):
         """Extend the current external attribute resolution to ``obj`` (module or object)."""
         if obj is not None:
+            if hasattr(obj, 'kind'):
+                for k, v in self._xtrack.iteritems():
+                    if hasattr(v, 'kind'):
+                        if hasattr(self, k):
+                            delattr(self, k)
+                for addon in self.search:
+                    if hasattr(addon, 'kind') and addon.kind == obj.kind:
+                        self.search.remove(addon)
             self.search.append(obj)
         return len(self.search)
+
+    def external(self, key):
+        """Return effective module object reference if any, or None."""
+        try:
+            z = getattr(self, key)
+        except AttributeError:
+            pass
+        return self._xtrack.get(key, None)
 
     def __getattr__(self, key):
         """Gateway to undefined method or attributes if present in ``_os`` or ``_sh`` internals."""
@@ -152,6 +169,7 @@ class System(footprints.FootprintBase):
         for shxobj in self.search:
             if hasattr(shxobj, key):
                 actualattr = getattr(shxobj, key)
+                self._xtrack[key] = shxobj
                 break
         else:
             raise AttributeError('Method or attribute ' + key + ' not found')
@@ -248,7 +266,7 @@ class System(footprints.FootprintBase):
 
     def title(self, textlist, tchar='=', autolen=96):
         """Formated title output."""
-        if type(textlist) is str:
+        if isinstance(textlist, basestring):
             textlist = (textlist,)
         if autolen:
             nbc = autolen
@@ -444,7 +462,7 @@ class System(footprints.FootprintBase):
             p.stderr.close()
 
         try:
-            p.terminate
+            p.terminate()
         except OSError as e:
             if e.errno == 3:
                 logger.debug('Processus %s alreaded terminated.' % str(p))
@@ -459,32 +477,34 @@ class System(footprints.FootprintBase):
         else:
             return False
 
-    def spawn(self, args, ok=None, shell=False, output=None, outmode='a', outsplit=True):
+    def spawn(self, args, ok=None, shell=False, stdin=None, output=None, outmode='a', outsplit=True, silent=False):
         """Subprocess call of ``args``."""
         rc = False
         if ok is None:
             ok = [ 0 ]
         if output is None:
             output = self.output
+        if stdin is True:
+            stdin  = subprocess.PIPE
         if self.timer:
             args[:0] = ['time']
         self.stderr(*args)
+        if isinstance(output, bool):
+            if output:
+                cmdout, cmderr = subprocess.PIPE, subprocess.PIPE
+            else:
+                cmdout, cmderr = None, None
+        else:
+            if isinstance(output, basestring):
+                output = open(output, outmode)
+            cmdout, cmderr = output, output
         p = None
         try:
-            if isinstance(output, bool):
-                if output:
-                    cmdout, cmderr = subprocess.PIPE, subprocess.PIPE
-                else:
-                    cmdout, cmderr = None, None
-            else:
-                if isinstance(output, str):
-                    output = open(output, outmode)
-                cmdout, cmderr = output, output
-            p = subprocess.Popen(args, stdout=cmdout, stderr=cmderr, shell=shell)
+            p = subprocess.Popen(args, stdin=stdin, stdout=cmdout, stderr=cmderr, shell=shell)
             p_out, p_err = p.communicate()
         except ValueError as perr:
-            logger.critical('Weird arguments to Popen ( %s, stdout=%s, stderr=%s, shell=%s )' % args,
-                            cmdout, cmderr, shell)
+            logger.critical('Weird arguments to Popen ( %s, stdout=%s, stderr=%s, shell=%s )' %
+                            (args, cmdout, cmderr, shell))
             raise
         except OSError as perr:
             logger.critical('Could not call %s', args)
@@ -503,10 +523,11 @@ class System(footprints.FootprintBase):
                 else:
                     rc = not bool(p.returncode)
             else:
-                logger.warning('Bad return code [%d] for %s', p.returncode, args)
-                if isinstance(output, bool) and output:
-                    for xerr in p_err:
-                        sys.stderr.write(xerr)
+                if not silent:
+                    logger.warning('Bad return code [%d] for %s', p.returncode, args)
+                    if isinstance(output, bool) and output:
+                        for xerr in p_err:
+                            sys.stderr.write(xerr)
                 raise ExecutionError
         finally:
             self._rclast = p.returncode if p else 1
@@ -567,6 +588,9 @@ class System(footprints.FootprintBase):
         for limit in [ r for r in dir(self._rl) if r.startswith('RLIMIT_') ]:
             print ' ', limit.ljust(16), ':', self._rl.getrlimit(getattr(self._rl, limit))
 
+    def getlogname(self):
+        """Be sure to get actual login name."""
+        return passwd.getpwuid(self._os.getuid())[0]
 
 class OSExtended(System):
 
@@ -604,6 +628,7 @@ class OSExtended(System):
     def cls(self):
         """Property shortcut to clear screen."""
         self.clear()
+        return None
 
     def rawopts(self, cmdline=None, defaults=None, isnone=isnonedef, istrue=istruedef, isfalse=isfalsedef):
         """Parse a simple options command line as key=value."""
@@ -626,6 +651,13 @@ class OSExtended(System):
                 if isnone.match(v):
                     opts[k] = None
         return opts
+
+    def is_iofile(self, iocandidate):
+        """Check if actual candidate is a valid filename or io stream."""
+        return iocandidate is not None and (
+            ( isinstance(iocandidate, basestring) and self.path.exists(iocandidate) ) or
+            ( isinstance(iocandidate, io.IOBase) )
+        )
 
     def ftp(self, hostname, logname=None):
         """Returns an open ftp session on the specified target."""
@@ -654,13 +686,15 @@ class OSExtended(System):
     @fmtshcmd
     def ftput(self, source, destination, hostname=None, logname=None):
         """Proceed direct ftp put on the specified target."""
-        ftp = self.ftp(hostname, logname)
-        if ftp:
-            rc = ftp.put(source, destination)
-            ftp.close()
-            return rc
+        rc = False
+        if self.is_iofile(source):
+            ftp = self.ftp(hostname, logname)
+            if ftp:
+                rc = ftp.put(source, destination)
+                ftp.close()
         else:
-            return False
+            raise IOError('No such file or directory: {!r}'.format(source))
+        return rc
 
     def softlink(self, source, destination):
         """Set a symbolic link if source is not destination."""
@@ -723,7 +757,7 @@ class OSExtended(System):
         The return value is produced by a raw compare of the two files.
         """
         self.stderr('hybridcp', source, destination)
-        if type(source) is types.StringType:
+        if isinstance(source, basestring):
             source = io.open(self.path.expanduser(source), 'rb')
             xsource = True
         else:
@@ -732,7 +766,7 @@ class OSExtended(System):
                 source.seek(0)
             except AttributeError:
                 logger.warning('Could not rewind io source before cp: ' + str(source))
-        if type(destination) is types.StringType:
+        if isinstance(destination, basestring):
             if self.filecocoon(destination):
                 if self.remove(destination):
                     destination = io.open(self.path.expanduser(destination), 'wb')
@@ -767,7 +801,7 @@ class OSExtended(System):
         Otherwise, let the standard copy do the job.
         """
         self.stderr('smartcp', source, destination)
-        if type(source) is not types.StringType or type(destination) is not types.StringType:
+        if not isinstance(source, basestring) or not isinstance(destination, basestring):
             return self.hybridcp(source, destination)
         source = self.path.expanduser(source)
         if not self.path.exists(source):
@@ -805,7 +839,7 @@ class OSExtended(System):
     def cp(self, source, destination, intent='inout', smartcp=True):
         """Copy the ``source`` file to a safe ``destination``."""
         self.stderr('cp', source, destination)
-        if type(source) is not types.StringType or type(destination) is not types.StringType:
+        if not isinstance(source, basestring) or not isinstance(destination, basestring):
             return self.hybridcp(source, destination)
         if smartcp and intent == 'in':
             return self.smartcp(source, destination)
@@ -863,7 +897,7 @@ class OSExtended(System):
     def rmsafe(self, pathlist, safedirs):
         """Recursive unlinks the specified `args` objects if safe."""
         ok = True
-        if type(pathlist) is types.StringType:
+        if isinstance(pathlist, basestring):
             pathlist = [ pathlist ]
         for pname in pathlist:
             for entry in filter(lambda x: self.safepath(x, safedirs), self.glob(pname)):
@@ -939,9 +973,9 @@ class OSExtended(System):
     def mv(self, source, destination):
         """Shortcut to :meth:`move` method (file or directory)."""
         self.stderr('mv', source, destination)
-        if type(source) is not types.StringType or type(destination) is not types.StringType:
+        if not isinstance(source, basestring) or not isinstance(destination, basestring):
             self.hybridcp(source, destination)
-            if type(source) is types.StringType:
+            if isinstance(source, basestring):
                 return self.remove(source)
         else:
             return self.move(source, destination)
@@ -1030,39 +1064,40 @@ class OSExtended(System):
             sourcetar = self.path.abspath(source + '.tar')
             (sourcedir, sourcefile) = self.path.split(sourcetar)
             ok = ok and self.cd(sourcedir)
-            pk = ok and self.remove(sourcefile)
+            ok = ok and self.remove(sourcefile)
             ok = ok and self.tar(sourcefile, source, output=False)
             self.cd(thiscwd)
             return (ok, sourcetar, destination)
         else:
             return (ok, source, destination)
 
-    def blind_dump(self, obj, destination, gateway=None):
+    def blind_dump(self, gateway, obj, destination, **opts):
         """
         Use ``gateway`` for a blind dump of the ``obj`` in file ``destination``,
         (either a file descriptor or a filename).
         """
+        rc = None
         if hasattr(destination, 'write'):
-            rc = gateway.dump(obj, destination)
+            rc = gateway.dump(obj, destination, **opts)
         else:
             if self.filecocoon(destination):
                 with io.open(self.path.expanduser(destination), 'wb') as fd:
-                    rc = gateway.dump(obj, fd)
+                    rc = gateway.dump(obj, fd, **opts)
         return rc
 
-    def pickle_dump(self, obj, destination):
+    def pickle_dump(self, obj, destination, **opts):
         """
         Dump a pickled representation of specified ``obj`` in file ``destination``,
         (either a file descriptor or a filename).
         """
-        return self.blind_dump(obj, destination, gateway=pickle)
+        return self.blind_dump(pickle, obj, destination, **opts)
 
-    def json_dump(self, obj, destination):
+    def json_dump(self, obj, destination, **opts):
         """
         Dump a json representation of specified ``obj`` in file ``destination``,
         (either a file descriptor or a filename).
         """
-        return self.blind_dump(obj, destination, gateway=json)
+        return self.blind_dump(json, obj, destination, **opts)
 
     def blind_load(self, source, gateway=None):
         """
@@ -1132,11 +1167,23 @@ class Python27(object):
         except ImportError:
             logger.critical('Could not load importlib')
             raise
-        except:
+        except Exception:
             logger.critical('Unexpected error: %s', sys.exc_info()[0])
             raise
         else:
             importlib.import_module(modname)
+        return sys.modules.get(modname)
+
+    def import_function(self, funcname):
+        """Import the function named ``funcname`` qualified by a proper module name package."""
+        thisfunc = None
+        if '.' in funcname:
+            thismod = self.import_module('.'.join(funcname.split('.')[:-1]))
+            if thismod:
+                thisfunc = getattr(thismod, funcname.split('.')[-1], None)
+        else:
+            logger.error('Bad function path name <%s>' % funcname)
+        return thisfunc
 
 
 class Garbage(OSExtended, Python26):
@@ -1210,7 +1257,7 @@ class Linux27(Linux, Python27):
         info = 'Linux base system with pretty new python version',
         attr = dict(
             python = dict(
-                values = [ '2.7.' + str(x) for x in range(3, 10) ]
+                values = [ '2.7.' + str(x) for x in range(3, 15) ]
             )
         )
     )

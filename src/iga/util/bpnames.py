@@ -155,6 +155,8 @@ def clim_bdap_bnames(resource):
             resolution = "025"
         if "caled" in resource.geometry.area:
             igadomain = "caled"
+        else:
+            raise ValueError('Could not evaluate <igadomain> in {!r}'.format(resource.geometry))
         localname = 'clim_dap' + "." + igadomain + resolution + '.m' + str(resource.month)
     else:
         localname = 'const.clim.' + resource.geometry.area + '_m' + str(resource.month)
@@ -167,6 +169,8 @@ def clim_model_bnames(resource):
         localname = 'clim_' + resource.geometry.area + '_isba' + str(resource.month)
     elif resource.model == 'arpege':
         localname = 'clim_t' + str(resource.truncation) + '_isba' + str(resource.month)
+    else:
+        raise ValueError('Unknown model {:s} in clim_model_bnames'.format(resource.model))
     return localname
 
 
@@ -247,6 +251,8 @@ def gridpoint_bnames(resource, member=None):
             localname = prefix + resource.geometry.area + suffix + resource.term.fmthour
         else:
             return None
+    else:
+        return None
     return localname
 
 
@@ -259,6 +265,8 @@ def varbc_bnames(resource):
         suffix = ''
     elif model == "arome":
         suffix = '_aro'
+    else:
+        raise ValueError ('Unknown model {:s} in varbc_bnames'.format(model))
     localname = 'VARBC.cycle' + suffix + '.r' + str(reseau)
     return localname
 
@@ -286,7 +294,7 @@ def refdata_bnames(resource):
     return localname
 
 
-def bgerrstd_bnames(resource, ens=None):
+def bgstderr_bnames(resource, ens=None):
     if ens == 'france':
         #errgrib_scr type
         delta = 'PT' + str(resource.term.hour) + 'H'
@@ -294,7 +302,7 @@ def bgerrstd_bnames(resource, ens=None):
         return 'errgrib_scr.r' + str(target_date.hour)
     else:
         #I have to calculate a new date so as to get the correct run
-        prefix = 'errgribvor'
+        prefix = 'errgrib'
         if resource.term.hour in [3, 9]:
             delta = 'PT' + str(resource.term.hour + 3) + 'H'
             suffix = resource.date + delta
@@ -348,7 +356,7 @@ def global_bnames(resource, provider):
     if member and attr:
         return getattr(itself, searched_func)(resource, member)
     elif attr:
-        if 'bgerrstd' in searched_func:
+        if 'bgstderr' in searched_func:
             return getattr(itself, searched_func)(resource, ens=provider.igakey)
         else:
             if getattr(resource, 'model', 'none') == 'surfex':

@@ -14,7 +14,7 @@ print t.line
 finder = stores.Finder(scheme='ftp', domain='open.meteo.fr')
 
 print t.prompt, 'Finder', finder
-print t.prompt, 'dict =', finder.as_dict()
+print t.prompt, 'dict =', finder.footprint_as_dict()
 
 print t.line
 

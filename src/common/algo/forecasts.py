@@ -230,10 +230,25 @@ class FullPos(IFSParallel):
             kind = 'historic',
         ) ]
         initrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
+        
+        thesenames = list()
 
         for r in initrh:
             sh.subtitle('Loop on {0:s}'.format(r.resource.term.fmthm))
-
+            
+            thisdate = r.resource.date + r.resource.term
+            thismonth = thisdate.month
+            logger.info('Fullpos <month:%s>' % thismonth )
+            for bdaprh in [ x.rh for x in self.context.sequence.effective_inputs(
+                role = 'LocalClim',
+                kind = 'clim_bdap',
+            ) if x.rh.resource.month == thismonth ]:
+                thisclim = bdaprh.container.localpath()
+                thisname = 'const.clim.' + bdaprh.resource.geometry.area
+                thesenames.append(thisname)
+                if thisclim != thisname:
+                    sh.symlink(thisclim, thisname)
+               
             # Set a local storage place
             runstore = 'RUNOUT' + r.resource.term.fmtraw
             sh.mkdir(runstore)
@@ -276,7 +291,9 @@ class FullPos(IFSParallel):
 
             # Some cleaning
             sh.rmall('PXFPOS*', fmt='lfi')
-            sh.ramall('ncf927', 'dirlst')
+            sh.rmall('ncf927', 'dirlst')
+            for clim in thesenames:
+                sh.rm(clim)
 
     def postfix(self, rh, opts):
         """Post processing cleaning."""

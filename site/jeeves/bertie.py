@@ -31,13 +31,13 @@ def ask(**kw):
     return jr
 
 def ask_active(*args):
-    """Swith on the specified pools."""
+    """Switch on the specified pools."""
     return ask(todo='active', data=args)
 
 def ask_any(**kw):
-    """Ask for some miscelaneous action..."""
+    """Ask for some miscellaneous action..."""
     kw.setdefault('todo', 'foo')
-    kw.setdefault('jtag', 'depot/' + kw['todo'])
+    kw.setdefault('jtag', kw.pop('jfile', 'depot/' + kw['todo']))
     return ask(**kw)
 
 def ask_conf():
@@ -53,8 +53,16 @@ def ask_level(value):
     return ask(todo='level', data=str(value))
 
 def ask_mute(*args):
-    """Swith off the specified pools."""
+    """Switch off the specified pools."""
     return ask(todo='mute', data=args)
+
+def ask_on(*args):
+    """Swith on the specified actions."""
+    return ask(todo='seton', data=args)
+
+def ask_off(*args):
+    """Swith off the specified actions."""
+    return ask(todo='setoff', data=args)
 
 def ask_reload(*args):
     """Force reload of the ini file and pool creation."""

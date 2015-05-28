@@ -9,7 +9,7 @@ that attributes (possibly optionals) could cover.
 #: No automatic export
 __all__ = []
 
-__version__ = '0.9.17'
+__version__ = '0.9.18'
 
 import os
 import re
@@ -33,6 +33,7 @@ from . import util, reporting
 # Default setup
 
 from . import config
+
 setup = config.get(
     docstrings = int(os.environ.get('FOOTPRINT_DOCSTRINGS', 0)),
     shortnames = int(os.environ.get('FOOTPRINT_SHORTNAMES', 0))
@@ -225,7 +226,7 @@ class Footprint(object):
         return set(opts)
 
     def nice(self):
-        """Retruns a nice dump version of the actual footprint."""
+        """Returns a nice dump version of the actual footprint."""
         return dump.get().cleandump(self._fp)
 
     def track(self, desc):

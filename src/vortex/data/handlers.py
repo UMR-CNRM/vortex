@@ -50,16 +50,17 @@ class Handler(object):
         self._resource  = rd.pop('resource', None)
         self._provider  = rd.pop('provider', None)
         self._container = rd.pop('container', None)
-        self._empty    = rd.pop('empty', False)
-        self._contents = None
-        self._uridata  = None
-        self._options  = rd.copy()
-        self._observer = observer_board(kw.pop('observer', None))
+        self._empty     = rd.pop('empty', False)
+        self._contents  = None
+        self._uridata   = None
+        self._options   = rd.copy()
+        self._observer  = observer_board(kw.pop('observer', None))
         self._options.update(kw)
-        self.ghost = self._options.pop('ghost', False)
+        self._ghost   = self._options.pop('ghost', False)
+        self._hooks   = { x[5:]:self._options.pop(x) for x in self._options.keys() if x.startswith('hook_') }
         self._history = structs.History(tag='data-handler')
         self._history.append(self.__class__.__name__, 'init', True)
-        self._stage = [ 'load' ]
+        self._stage = ['load']
         self._observer.notify_new(self, dict(stage = 'load'))
         logger.debug('New resource handler %s', self.__dict__)
 
@@ -174,6 +175,14 @@ class Handler(object):
     def reset_contents(self):
         """Delete actual internal reference to data contents manager."""
         self._contents = None
+
+    @property
+    def ghost(self):
+        return self._ghost
+
+    @property
+    def hooks(self):
+        return self._hooks
 
     @property
     def options(self):
@@ -329,7 +338,10 @@ class Handler(object):
                         logger.info('Resource <%s> is expected', self.container.iotarget())
                     else:
                         self.updstage('get')
-                return rst
+                        for hook_name in sorted(self.hooks.keys()):
+                            hook_func, hook_args = self.hooks[hook_name]
+                            #logger.info('HOOK after get <%s(%s)>' % (hook_func, hook_args))
+                            hook_func(sessions.current(), self, *hook_args)
             else:
                 logger.error('Could not find any store to get %s', self.lasturl)
         else:
@@ -345,6 +357,10 @@ class Handler(object):
                 iotarget = self.container.iotarget()
                 logger.debug('Put resource %s as io %s at store %s', self, iotarget, store)
                 if iotarget is not None and ( self.container.exists() or self.provider.expected ):
+                    for hook_name in sorted(self.hooks.keys()):
+                        hook_func, hook_args = self.hooks[hook_name]
+                        logger.info('HOOK before put <%s(%s)>' % (hook_func, hook_args))
+                        hook_func(sessions.current(), self, *hook_args)
                     logger.debug('Put resource %s at %s from %s', self, self.lasturl, store)
                     rst = store.put(
                         iotarget,

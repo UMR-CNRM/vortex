@@ -52,13 +52,13 @@ class Section(object):
 
     def __init__(self, **kw):
         logger.debug('Section initialisation %s', self)
-        self.kind      = ixo.INPUT
-        self.intent    = intent.INOUT
-        self.fatal     = True
-        self.role      = kw.get('role', None)
-        self.alternate = None
-        self.rh        = None
-        self.stages    = [ kw.pop('stage', 'void') ]
+        self.kind       = ixo.INPUT
+        self.intent     = intent.INOUT
+        self.fatal      = True
+        self.role       = kw.get('role', None)
+        self.alternate  = None
+        self.rh         = None
+        self.stages     = [ kw.pop('stage', 'void') ]
         self.__dict__.update(kw)
         if self.rh:
             if self.rh.role and not self.role:
@@ -104,9 +104,9 @@ class Section(object):
 
     def get(self, **kw):
         """Shortcut to resource handler :meth:`~vortex.data.handlers.get`."""
+        rc = False
         if self.kind == ixo.INPUT or self.kind == ixo.EXEC:
             kw['intent'] = self.intent
-            rc = False
             try:
                 rc = self.rh.get(**kw)
             except Exception as e:
@@ -116,16 +116,15 @@ class Section(object):
             if not rc and self.fatal:
                 logger.critical('Fatal error with action get %s', self.rh.locate())
                 raise SectionFatalError('Could not get resource [%s]', str(rc))
-            return rc
         else:
-            logger.error('Try to get from an output section.')
-            return False
+            logger.error('Try to get from an output section')
+        return rc
 
     def put(self, **kw):
         """Shortcut to resource handler :meth:`~vortex.data.handlers.put`."""
+        rc = False
         if self.kind == ixo.OUTPUT:
             kw['intent'] = self.intent
-            rc = False
             try:
                 rc = self.rh.put(**kw)
             except Exception as e:
@@ -135,10 +134,9 @@ class Section(object):
             if not rc and self.fatal:
                 logger.critical('Fatal error with action put %s', self.rh.locate())
                 raise SectionFatalError('Could not put resource [%s]', str(rc))
-            return rc
         else:
             logger.error('Try to put from an input section.')
-            return False
+        return rc
 
     def show(self, **kw):
         """Nice dump of the section attributs and contents."""
@@ -238,7 +236,7 @@ class Sequence(object):
         it operates as a filter on the inputs list. If both keys are available
         the ``role`` applies first, and then the ``kind`` in case of empty match.
         """
-        inset = [ x for x in self.inputs() if x.stage == 'get' or x.stage == 'expected' ]
+        inset = [ x for x in self.inputs() if ( x.stage == 'get' or x.stage == 'expected' ) and x.rh.container.exists() ]
         if not kw:
             return inset
         inrole = list()

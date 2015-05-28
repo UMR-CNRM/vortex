@@ -156,6 +156,7 @@ class ResearchGlove(Glove):
         attr = dict(
             profile = dict(
                 optional = True,
+                values   = ['research', 'tourist'],
                 default  = 'research',
             )
         )
@@ -183,6 +184,7 @@ class OperGlove(Glove):
             ),
             profile = dict(
                 optional = False,
+                values   = ['oper', 'dble', 'test'],
             )
         )
     )

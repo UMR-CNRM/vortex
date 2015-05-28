@@ -140,7 +140,7 @@ def inplace(desc, key, value, globs=None):
     newd = copy.deepcopy(desc)
     newd[key] = value
     if globs:
-        for k in [ x for x in newd.keys() if (x != key and type(newd[x]) is types.StringType) ]:
+        for k in [ x for x in newd.keys() if (x != key and isinstance(newd[x], basestring) ) ]:
             for g in globs.keys():
                 newd[k] = re.sub(r'\[glob:' + g + r'\]', globs[g], newd[k])
     return newd
@@ -173,6 +173,8 @@ def expand(desc):
             raise MemoryError('Expand depth too high')
         for i, d in enumerate(ld):
             for k, v in d.iteritems():
+                if v.__class__.__name__.startswith('FP'):
+                    continue
                 if isinstance(v, list) or isinstance(v, tuple) or isinstance(v, set):
                     logger.debug(' > List expansion %s', v)
                     ld[i:i+1] = [ inplace(d, k, x) for x in v ]
@@ -223,6 +225,15 @@ def expand(desc):
                     ld[i:i+1] = repld
                     todo = True
                     break
+                if isinstance(v, dict):
+                    for dk in [ x for x in v.keys() if x in d ]:
+                        dv = d[dk]
+                        if not(isinstance(dv, list) or isinstance(dv, tuple) or isinstance(dv, set)):
+                            ld[i] = inplace(d, k, v[dk][str(dv)])
+                            todo = True
+                            break
+                    if todo:
+                        break
 
     logger.debug('Expand in %d loops', nbpass)
     return ld
@@ -315,7 +326,11 @@ class GetByTag(object):
 
     def has_focus(self, select='default'):
         """Return a boolean value on equality of current tag and focus tag."""
-        return self.tag == self._tag_focus[select]
+        return self.tag == self.__class__._tag_focus[select]
+
+    def catch_focus(self, select='default'):
+        """The current object decides to be on focus !"""
+        self.__class__._tag_focus[select] = self.tag
 
     @classmethod
     def tag_clear(cls):
@@ -423,45 +438,42 @@ class SpecialDict(dict):
         """Calling a special dict is equivalent to updating."""
         self.update(**kw)
 
+    def remap(self, key):
+        """Return a new value for the actual ``key``. Default is identity."""
+        return key
+
+    def __getitem__(self, key):
+        """Force remapped key retrieve."""
+        return dict.__getitem__(self, self.remap(key))
+
+    def __setitem__(self, key, value):
+        """Force remapped key setting."""
+        dict.__setitem__(self, self.remap(key), value)
+
+    def __delitem__(self, key):
+        """Force remapped key deletion."""
+        dict.__delitem__(self, self.remap(key))
+
+    def __contains__(self, key):
+        """Force remapped key ``in`` check."""
+        return dict.__contains__(self, self.remap(key))
+
 
 class LowerCaseDict(SpecialDict):
     """A dictionary with only lower case keys."""
 
-    def __getitem__(self, key):
-        """Force lower case key retrieve."""
-        return dict.__getitem__(self, key.lower())
-
-    def __setitem__(self, key, value):
-        """Force lower case key setting."""
-        dict.__setitem__(self, key.lower(), value)
-
-    def __delitem__(self, key):
-        """Force lower case key deletion."""
-        dict.__delitem__(self, key.lower())
-
-    def __contains__(self, key):
-        """Force lower case ``in`` check."""
-        return dict.__contains__(self, key.lower())
+    def remap(self, key):
+        """Return a lower case value of the actual key."""
+        return key.lower()
 
 
 class UpperCaseDict(SpecialDict):
     """A dictionary with only upper case keys."""
 
-    def __getitem__(self, key):
-        """Force upper case key retrieve."""
-        return dict.__getitem__(self, key.upper())
+    def remap(self, key):
+        """Return a upper case value of the actual key."""
+        return key.upper()
 
-    def __setitem__(self, key, value):
-        """Force upper case key setting."""
-        dict.__setitem__(self, key.upper(), value)
-
-    def __delitem__(self, key):
-        """Force upper case key deletion."""
-        dict.__delitem__(self, key.upper())
-
-    def __contains__(self, key):
-        """Force upper case ``in`` check."""
-        return dict.__contains__(self, key.upper())
 
 
 if __name__ == '__main__':

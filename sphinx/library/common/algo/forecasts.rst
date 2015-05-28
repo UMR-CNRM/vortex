@@ -16,7 +16,7 @@ Package
 
 Classes
 -------
- 
+
 .. autoclass:: Forecast
    :show-inheritance:
    :members:

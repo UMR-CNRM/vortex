@@ -10,9 +10,9 @@
 
 .. warning::
 
-   Guess what? The documentation of this module is at a point of complemention
-   comparable to its parent package. 
-   
+   Guess what? The documentation of this module is at a point of completion
+   comparable to its parent package.
+
 Package
 -------
 
@@ -38,6 +38,21 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: FileReportService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SSHProxy
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: JeevesService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: HideService
    :show-inheritance:
    :members:
    :member-order: alphabetical

@@ -13,7 +13,7 @@ Data definition
 ---------------
 
 .. autodata:: maincycles
-   
+
 .. autodata:: subcycles
 
 .. autodata:: oper

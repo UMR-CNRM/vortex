@@ -121,6 +121,7 @@ class GridPointFullPos(GridPoint):
         if 'VORTEX_ANA_TERMSHIFT' not in e and self.origin == 'ana':
             t = 0
 
+        name = None
         if self.model == 'mocage':
             if self.origin == 'hst':
                 name = 'HM' + self.geometry.area + '+' + self.term.fmthour
@@ -135,6 +136,9 @@ class GridPointFullPos(GridPoint):
         else:
             name = 'PFFPOS' + self.origin.upper() + self.geometry.area + '+' + self.term.nice(t)
 
+        if name is None:
+            raise ValueError('Could not build a proper olive name: {!s}'.format(self))
+
         return name
 
     def archive_basename(self):
@@ -142,10 +146,16 @@ class GridPointFullPos(GridPoint):
 
         deltastr = 'PT' + str(self.term.hour) + 'H'
         deltadate = self.date + deltastr
+
+        name = None
         if self.origin == 'hst':
             name = 'HM' + self.geometry.area + '+' + deltadate.ymdh
         elif self.origin == 'interp':
             name = 'SM' + self.geometry.area + '+' + deltadate.ymd
+
+        if name is None:
+            raise ValueError('Could not build a proper archive name: {!s}'.format(self))
+
         return name
 
 
@@ -173,11 +183,13 @@ class GridPointExport(GridPoint):
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
 
+        name = None
         if re.match('aladin|arome', self.model):
             name = 'GRID' + self.geometry.area + 'r' + str(self.date.hour) + '_' + self.term.fmthour
-
-        u_rr = archive_suffix(self.model, self.cutoff, self.date)
-
-        if re.match('arp', self.model):
+        elif re.match('arp', self.model):
             name = '(gribfix:igakey)'
+
+        if name is None:
+            raise ValueError('Could not build a proper archive name: {!s}'.format(self))
+
         return name

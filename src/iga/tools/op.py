@@ -199,15 +199,13 @@ def setenv(t, **kw):
         if not isinstance(t.env.OP_RUNDATE, vortex.tools.date.Date):
             t.env.OP_RUNDATE = vortex.tools.date.Date(t.env.OP_RUNDATE)
     else:
-        anytime = kw.get('runtime', t.env.get('OP_RUNTIME', None))
-        anydate = kw.get(
-            'rundate',
-            t.env.get(
-                'DMT_DATE_PIVOT',
-                vortex.tools.date.synop(delta=kw.get('delta', '-PT2H'), time=anytime)
-            )
-        )
-        rundate = vortex.tools.date.Date(anydate)
+        anydate = kw.get('rundate', t.env.get('DMT_DATE_PIVOT', None))
+        if anydate is None:
+            anytime = kw.get('runtime', t.env.get('OP_RUNTIME', None))
+            anystep = kw.get('runstep', t.env.get('OP_RUNSTEP', 6))
+            rundate = vortex.tools.date.synop(delta=kw.get('delta', '-PT2H'), time=anytime, step=anystep)
+        else:
+            rundate = vortex.tools.date.Date(anydate)
         t.env.OP_RUNDATE = rundate
 
     t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
@@ -222,6 +220,7 @@ def complete(t, **kw):
     ad = vortex.tools.actions.actiond
     ad.sms_complete()
     t.close()
+
 
 def register(t, cycle, dump=True):
     """Load and register a GCO cycle contents."""
@@ -243,11 +242,13 @@ def register(t, cycle, dump=True):
         if dump:
             print genv.as_rawstr(cycle=cycle)
 
+
 def rescue(**kw):
     """Something goes wrong... so, do your best to save current state."""
     ad = vortex.tools.actions.actiond
     ad.sms_abort()
     print 'Bad luck...'
+
 
 def fulltraceback(localsd=None):
     """Produce some nice traceback at the point of failure."""

@@ -9,5 +9,3 @@ Some tasks examples for Op
 
    tasks
 
-   void
-

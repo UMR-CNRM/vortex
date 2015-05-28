@@ -148,7 +148,10 @@ class AlgoComponent(footprints.FootprintBase):
         for arg in self.flyput_args():
             logger.info('Check arg <%s>', arg)
             if any([ x.container.basename.startswith(arg) for x in self.promises ]):
-                logger.info('Match some promise %s', str([ x.container.basename for x in self.promises ]))
+                logger.info(
+                    'Match some promise %s',
+                    str([ x.container.basename for x in self.promises if x.container.basename.startswith(arg) ])
+                )
                 actual_args.append(arg)
             else:
                 logger.info('Do not match any promise %s', str([ x.container.basename for x in self.promises ]))
@@ -386,7 +389,7 @@ class AlgoComponent(footprints.FootprintBase):
 class Expresso(AlgoComponent):
     """
     Run a script resource in the good environment. Mandatory arguments are:
-     * interpreter (values = ksh, bash, perl, python)
+     * interpreter (values = awk, ksh, bash, perl, python)
      * engine ( values =  exec, launch )
     """
 
@@ -396,7 +399,7 @@ class Expresso(AlgoComponent):
                 values = ['awk', 'ksh', 'bash', 'perl', 'python']
             ),
             engine = dict(
-                values = [ 'exec', 'launch' ]
+                values = ['exec', 'launch']
             )
         )
     )

@@ -40,7 +40,7 @@ class FootprintAttrDescriptorRWD(FootprintAttrDescriptor):
             if fpdef.get('isclass', False):
                 if not issubclass(value, atype):
                     raise ValueError('Attempt to set {0:s} as a non compatible subclass {1:s}'.format(self._attr, str(value)))
-            elif not isinstance(value, atype):
+            elif not isinstance(value, atype) and value is not None:
                 logger.debug(' > Attr %s reclass(%s) as %s', self._attr, value, atype)
                 initargs = fpdef.get('args', dict())
                 try:

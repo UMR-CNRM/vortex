@@ -15,7 +15,7 @@ from vortex.syntax.stdattrs import a_suite
 
 from gco.data.providers import GEnv
 
-from iga.util import bpnames as bp
+import iga.util.bpnames as bp
 
 #: TODO move in config file
 ATM_LIST_ONE = set([
@@ -131,7 +131,7 @@ class IgaProvider(Provider):
             self.igakey != 'reunion'
         ):
             info['fmt'] = 'fic_day'
-        if resource.model =='surfex':
+        if not hasattr(resource, 'model') or resource.model =='surfex':
             info['model'] = self.vapp
         self.config.setall(info)
         logger.debug('IgaProvider:pathname info %s', info)

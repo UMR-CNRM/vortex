@@ -44,7 +44,7 @@ Functions
 
 .. autofunction:: refdata_bnames
 
-.. autofunction:: bgerrstd_bnames
+.. autofunction:: bgstderr_bnames
 
 .. autofunction:: observations_bnames
 

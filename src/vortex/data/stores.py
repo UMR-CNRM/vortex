@@ -19,6 +19,7 @@ from vortex import sessions
 from vortex.layout import dataflow
 from vortex.util import config
 from vortex.tools import caches, date
+from vortex.tools.actions import actiond as ad
 
 
 class StoreGlue(object):
@@ -185,7 +186,7 @@ class Store(footprints.FootprintBase):
 
     def in_situ(self, local, options):
         """Return true when insitu option is active and local file exists."""
-        return bool(options.get('insitu', False) and self.system.path.exists(local))
+        return bool(options.get('insitu', False) and (self.system.path.exists(local) or self.system.path.exists(local + '.fake')))
 
     def notyet(self, *args):
         """
@@ -528,7 +529,7 @@ class Finder(Store):
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             actualpath = self.fullpath(remote)
-            if self.ftpcheck(actualpath):
+            if self.ftpcheck(actualpath, options=options):
                 rc = ftp.delete(actualpath)
                 ftp.close()
             else:
@@ -559,6 +560,12 @@ class ArchiveStore(Store):
             storage = dict(
                 optional = True,
                 default  = 'hendrix.meteo.fr',
+            ),
+            storasync = dict(
+                alias    = ('archasync', 'archdelayed'),
+                type     = bool,
+                optional = True,
+                default  = False,
             ),
         )
     )
@@ -610,17 +617,27 @@ class ArchiveStore(Store):
 
     def ftpput(self, local, remote, options):
         """Delegates to ``system.ftp`` the put action."""
-        return self.system.ftput(
-            local,
-            self.system.path.join(
-                remote.get('root', self.rootdir),
-                remote['path'].lstrip(self.system.path.sep)
-            ),
-            # ftp control
+        put_async = options.get('async', options.get('delayed', self.storasync))
+        destination = self.system.path.join(
+            remote.get('root', self.rootdir),
+            remote['path'].lstrip(self.system.path.sep)
+        )
+        put_opts = dict(
             hostname = self.hostname(),
             logname  = remote['username'],
             fmt      = options.get('fmt'),
         )
+        if put_async:
+            tempo = footprints.proxy.service(kind='hiddencache', asfmt=put_opts['fmt'])
+            put_opts.update(
+                todo        = 'ftput',
+                rhandler    = options.get('rhandler', None),
+                source      = tempo(local),
+                destination = destination,
+            )
+            return ad.jeeves(**put_opts)
+        else:
+            return self.system.ftput(local, destination, **put_opts)
 
     def ftpdelete(self, remote, options):
         """Delegates to ``system`` a distant remove."""
@@ -628,7 +645,7 @@ class ArchiveStore(Store):
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             actualpath = self.fullpath(remote)
-            if self.ftpcheck(actualpath):
+            if self.ftpcheck(actualpath, options=options):
                 rc = ftp.delete(actualpath)
                 ftp.close()
             else:
@@ -785,7 +802,8 @@ class CacheStore(Store):
             remote['path'],
             local,
             intent = options.get('intent'),
-            fmt    = options.get('fmt')
+            fmt    = options.get('fmt'),
+            info   = options.get('rhandler', None),
         )
 
     def incacheput(self, local, remote, options):
@@ -794,14 +812,16 @@ class CacheStore(Store):
             remote['path'],
             local,
             intent = 'in',
-            fmt    = options.get('fmt')
+            fmt    = options.get('fmt'),
+            info   = options.get('rhandler', None),
         )
 
     def incachedelete(self, remote, options):
         """Simple removing of the remote resource in cache."""
         return self.cache.delete(
             remote['path'],
-            fmt = options.get('fmt')
+            fmt  = options.get('fmt'),
+            info = options.get('rhandler', None),
         )
 
 
@@ -984,7 +1004,7 @@ class PromiseStore(footprints.FootprintBase):
     def mkpromise_file(self, info, local):
         """Build a virtual container with specified informations."""
         pfile = local + '.pr'
-        self.system.json_dump(info, pfile)
+        self.system.json_dump(info, pfile, sort_keys=True, indent=4)
         return pfile
 
     def mkpromise_log(self, info):
@@ -997,7 +1017,7 @@ class PromiseStore(footprints.FootprintBase):
         else:
             logboard.notify_new(self, dict(logfile=sh.path.realpath(self.prlogfile)))
         loglist.append(info)
-        sh.json_dump(loglist, self.prlogfile)
+        sh.json_dump(loglist, self.prlogfile, sort_keys=True, indent=4)
         logboard.notify_upd(
             self, dict(
                 logfile = sh.path.realpath(self.prlogfile),
@@ -1023,12 +1043,12 @@ class PromiseStore(footprints.FootprintBase):
         self.delayed = False
         if self.in_situ(local, options):
             logger.info('Store %s in situ resource <%s>', self.footprint_clsname(), local)
-            if self.system.size(local) < 4096:
+            if not self.system.path.exists(local + '.fake') and self.system.size(local) < 4096:
                 pr = dict()
                 try:
                     pr = self.system.json_load(local)
                 except ValueError:
-                    logger.warning('Small expected in situ resource not json friendly <%s>', local)
+                    logger.warning('Information expected in situ resource not json friendly <%s>', local)
                 self.delayed = pr.get('promise', False)
             return True
         else:

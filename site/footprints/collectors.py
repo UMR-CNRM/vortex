@@ -46,7 +46,7 @@ class Collector(util.GetByTag, util.Catalog):
     _tag_default = 'garbage'
 
     def __init__(self, **kw):
-        logger.debug('Footprints collector init %s', self)
+        logger.debug('Footprints collector init {!s}'.format(self))
         self.instances = util.Catalog(weak=True)
         self.register = True
         self.report = True
@@ -67,17 +67,17 @@ class Collector(util.GetByTag, util.Catalog):
 
     def newobsitem(self, item, info):
         """Register a new instance of some of the classes in the current collector."""
-        logger.debug('Notified %s new item %s', repr(self), repr(item))
+        logger.debug('Notified {!r} new item {!r}'.format(self, item))
         self.instances.add(item)
 
     def delobsitem(self, item, info):
         """Unregister an existing object in the current collector of instances."""
-        logger.debug('Notified %s del item %s', repr(self), repr(item))
+        logger.debug('Notified {!r} del item {!r}'.format(self, item))
         self.instances.discard(item)
 
     def updobsitem(self, item, info):
         """Not yet specialised..."""
-        logger.debug('Notified %s upd item %s', repr(self), repr(item))
+        logger.debug('Notified {!r} upd item {!r}'.format(self, item))
 
     def filter_package(self, packname):
         """Find in current collector classes with name starting with ``packname``."""
@@ -86,7 +86,7 @@ class Collector(util.GetByTag, util.Catalog):
     def discard_package(self, packname, verbose=True):
         """Discard from current collector classes with name starting with ``packname``."""
         for x in self.filter_package(packname):
-            if versbose:
+            if verbose:
                 print 'Bye...', x
             self.discard(x)
 
@@ -134,21 +134,21 @@ class Collector(util.GetByTag, util.Catalog):
 
     def pickup(self, desc):
         """Try to pickup inside the collector a item that could match the description."""
-        logger.debug('Pick up a "%s" in description %s with collector %s', self.tag, desc, self)
+        logger.debug('Pick up a "{:s}" in description {!s} with collector {!r}'.format(self.tag, desc, self))
         mkstdreport = desc.pop('_report', self.report_auto)
         mkaltreport = desc.pop('_altreport', self.altreport)
         for hidden in [ x for x in desc.keys() if x.startswith('_') ]:
-            logger.warning('Hidden argument "%s" ignored in pickup attributes', hidden)
+            logger.warning('Hidden argument "{:s}" ignored in pickup attributes'.format(hidden))
             del desc[hidden]
         if self.tag in desc and desc[self.tag] is not None:
-            logger.debug('A %s is already defined %s', self.tag, desc[self.tag])
+            logger.debug('A {:s} is already defined {!s}'.format(self.tag, desc[self.tag]))
         else:
             desc[self.tag] = self.find_best(desc)
         if desc[self.tag] is not None:
             desc = desc[self.tag].footprint_cleanup(desc)
         else:
             dumper = dump.get()
-            logger.warning('No %s found in description %s', self.tag, "\n" + dumper.cleandump(desc))
+            logger.warning('No {!r} found in description {:s}'.format(self.tag, "\n" + dumper.cleandump(desc)))
             if mkstdreport and self.report:
                 print "\n", self.report_log.info(), "\n"
                 self.report_last.lightdump()
@@ -165,7 +165,7 @@ class Collector(util.GetByTag, util.Catalog):
         Return the first item of the collector that :meth:`footprint_couldbe`
         as described by argument ``desc``.
         """
-        logger.debug('Search any %s in collector %s', desc, self._items)
+        logger.debug('Search any {!s} in collector {!s}'.format(desc, self._items))
         if self.report:
             self.report_log.add(collector=self)
         for item in self._items:
@@ -179,7 +179,7 @@ class Collector(util.GetByTag, util.Catalog):
         Returns all the items of the collector that :meth:`footprint_couldbe`
         as described by argument ``desc``.
         """
-        logger.debug('Search all %s in collector %s', desc, self._items)
+        logger.debug('Search all {!s} in collector {!s}'.format(desc, self._items))
         found = list()
         if self.report:
             self.report_log.add(collector=self)
@@ -194,17 +194,17 @@ class Collector(util.GetByTag, util.Catalog):
         Returns the best of the items returned byt the :meth:`find_all` method
         according to potential priorities rules.
         """
-        logger.debug('Search all %s in collector %s', desc, self._items)
+        logger.debug('Search best {!s} in collector {!s}'.format(desc, self._items))
         candidates = self.find_all(desc)
         if not candidates:
             return None
         if len(candidates) > 1:
             dumper = dump.get()
-            logger.warning('Multiple %s candidates %s', self.tag, "\n" + dumper.cleandump(desc))
+            logger.warning('Multiple {:s} candidates {:s}'.format(self.tag, "\n" + dumper.cleandump(desc)))
             candidates.sort(key=lambda x: x[0].footprint_weight(x[2]), reverse=True)
             for i, c in enumerate(candidates):
                 thisclass, u_resolved, theinput = c
-                logger.warning('no.%d in.%d is %s', i+1, len(theinput), thisclass)
+                logger.warning('no.{:d} in.{:d} is {!r}'.format(i+1, len(theinput), thisclass))
         topcl, topr, u_topinput = candidates[0]
         return topcl(topr, checked=True)
 
@@ -247,7 +247,7 @@ class Collector(util.GetByTag, util.Catalog):
         for c in self:
             fp = c.footprint_retrieve()
             for k in [ ka for ka in fp.attr.keys() if ( only is None or ka in only ) ]:
-                opt = ' (optional)' if fp.optional(k) else ''
+                opt = ' [optional]' if fp.optional(k) else ''
                 alist = attrmap.setdefault(k+opt, list())
                 alist.append(dict(
                     name    = c.__name__,
@@ -257,21 +257,29 @@ class Collector(util.GetByTag, util.Catalog):
                 ))
         return attrmap
 
-    def show_map(self, only=None):
+    def show_attrmap(self, only=None):
         """
         Show the complete set of attributes that could be found in classes
         collected by the current collector, documented with ``values``
         or ``outcast`` sets if present.
         """
-        indent = ' ' * 3
         attrmap = self.build_attrmap(only=only)
         for a in sorted(attrmap.keys()):
-            print '*', a, ':'
+            print ' *', a + ':'
             for info in sorted(attrmap[a], key=lambda x: x['name']):
-                print ' ' * 3, info['name'].ljust(24), '+', info['module']
+                print ' ' * 4, info['name'].ljust(22), '+', info['module']
                 for k in [ x for x in info.keys() if x not in ('name', 'module') and info[x] ]:
-                    print ' ' * 28, '|', k, '=', info[k]
+                    print ' ' * 29, '|', k, '=', str(info[k]).replace("'", '').replace('(', '').replace(')', '').strip(',')
             print
+
+    def show_attrkeys(self, only=None):
+        """
+        Show the list of attributes names that could be found in classes
+        collected by the current collector.
+        """
+        attrmap = self.build_attrmap(only=only)
+        for a in [ x.split() + [''] for x in sorted(attrmap.keys()) ]:
+            print ' *', a[0].ljust(24), a[1]
 
     def get_values(self, attrname):
         """Complete set of values which are explicitly authorized for a given attribute."""

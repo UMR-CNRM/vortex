@@ -138,14 +138,14 @@ class Environment(object):
 
     def dumps(self, value):
         """Dump the specified ``value`` as a string."""
-        if isinstance(value, str):
+        if isinstance(value, basestring):
             obj = value
         elif hasattr(value, 'export_dict'):
             obj = value.export_dict()
         elif hasattr(value, 'footprint_export'):
             obj = value.footprint_export()
         elif hasattr(value, '__dict__'):
-            obj = vars(obj)
+            obj = vars(value)
         else:
             obj = value
         return str(obj)
@@ -392,6 +392,10 @@ class Environment(object):
         """Dump the actual values of the current environment."""
         for k in sorted(self._pool.keys()):
             print '{0:s}="{1:s}"'.format(k, str(self._pool[k]))
+
+    def mkautolist(self, prefix):
+        """Return a list of variable settings for actual env values."""
+        return [ var + '="' + self.get(var, '') + '"' for var in self.keys() if var.startswith(prefix) ]
 
     def trueshell(self):
         """Extract the actual shell name according to env variable SHELL."""

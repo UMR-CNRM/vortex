@@ -9,6 +9,7 @@ import re
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
+from vortex import sessions
 from vortex.tools import env
 from vortex.tools.date import Time
 from vortex.data.outflow import ModelResource, NoDateResource
@@ -199,7 +200,7 @@ class NamelistTerm(Namelist):
              info = 'Terms dependent namelist',
              attr = dict(
                 kind = dict(
-                    values = [ 'namterm' ]
+                    values = ['namterm']
                 )
             )
         )
@@ -221,6 +222,7 @@ class NamelistTerm(Namelist):
                 lines = f.readlines()
         except IOError:
             logger.error('Could not open file xxt.def')
+            raise
 
         select = lines[self.term.hour].split()[2]
 
@@ -365,6 +367,36 @@ class XXTContent(IndexedTable):
     def xxtsrc(self, g, x):
         """Return local namelist source in gco set according to second column."""
         return self.xxtpos(1, g, x)
+
+    def mapdomains(self, maxterm=None):
+        """Return a map of domains associated for each term in selection namelists."""
+        mapdom = dict()
+        allterms = sorted([ Time(x) for x in self.keys() ])
+        if maxterm is None:
+            if allterms:
+                maxterm = allterms[-1]
+            else:
+                maxterm = -1
+        maxterm = Time(maxterm)
+
+        import vortex.tools.fortran
+
+        for term in [ x for x in allterms if x <= maxterm ]:
+            tvalue = self.get(term.fmthm, self.get(str(term.hour), None))
+            sh = sessions.system()
+            if tvalue[0] is not None and sh.path.exists(tvalue[0]):
+                fortp = vortex.tools.fortran.NamelistParser()
+                with open(tvalue[0], 'r') as fd:
+                    xx = fortp.parse(fd.read())
+                domains = set()
+                for nb in xx.values():
+                    for domlist in [ y for x, y in nb.iteritems() if x.startswith('CLD') ]:
+                        domains = domains | set(domlist.pop().split(':'))
+                mapdom[term.fmthm] = list(domains)
+                if term.minute == 0:
+                    mapdom[str(term.hour)] = list(domains)
+
+        return dict(term=mapdom)
 
 
 class NamelistSelectDef(NoDateResource):

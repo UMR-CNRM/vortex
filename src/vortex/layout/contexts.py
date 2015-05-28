@@ -132,10 +132,10 @@ class Context(footprints.util.GetByTag):
 
     def cocoon(self):
         """Change directory to the one associated to that context."""
-        if self._rundir is None:
+        if self.rundir is None:
             subpath = self.path.replace(self.session.path, '', 1)
             self._rundir = self.session.rundir + subpath
-        self.system.cd(self._rundir, create=True)
+        self.system.cd(self.rundir, create=True)
         self._cocooned = True
 
     @property

@@ -22,9 +22,6 @@ This module contains the services specifically needed by the operational suite.
     * :class:`BdpeService` (through :class:`BdpeOperationsService` or :class:`BdpeIntegrationService`)
 
   * formatted dayfile logging with :class:`DayfileReportService`
-
-  * :class:`RemoteCommandProxy` is a helper class able to execute a command
-    on a specific node type, e.g. a login or a transfer node.
 """
 
 #: No automatic export
@@ -43,7 +40,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex                  import sessions
 from vortex.tools            import date
-from vortex.syntax.stdattrs  import a_term
+from vortex.syntax.stdattrs  import a_term, a_domain
 
 from vortex.tools.services   import Service, FileReportService
 from vortex.tools.schedulers import SMS
@@ -83,7 +80,7 @@ class LogFacility(int):
     """
 
     def __new__(cls, value):
-        if type(value) is str:
+        if isinstance(value, basestring):
             value = value.lower()
             if value.startswith('log_'):
                 value = value[4:]
@@ -102,80 +99,6 @@ class LogFacility(int):
             if self == n:
                 return s
         raise ValueError('Not a SysLog facility value: ' + str(self))
-
-
-def tunable_value(sh, value, env_key=None, ini_key=None, default=None):
-    """
-    Try to get a value from several sources in turn:
-       - a real value (e.g. from the footprint)
-       - a shell environment variable
-       - the ini files
-       - a default value in last resort.
-    """
-    if value:
-        return value
-    if env_key and env_key in sh.env:
-        return sh.env[env_key]
-    if ini_key:
-        return sh.target().get(ini_key, default)
-    return default
-
-
-class RemoteCommandProxy(footprints.FootprintBase):
-    """Remote execution via ssh on a special node."""
-    _collector = ('miscellaneous',)
-    _footprint = dict(
-        info = 'Remote command proxy',
-        attr = dict(
-            kind = dict(
-                optional = True,
-                values   = ['ssh_proxy'],
-                alias    = ('remotecommand',),
-            ),
-            nodekind = dict(
-                values = ['login', 'transfer'],
-            ),
-            loginnode = dict(
-                optional = True,
-                default  = None,
-            ),
-            transfernode = dict(
-                optional = True,
-                default  = None,
-            ),
-        )
-    )
-
-    def __init__(self, *args, **kw):
-        logger.debug('Remote command proxy init %s', self.__class__)
-        sh = kw.pop('sh', sessions.system())
-        super(RemoteCommandProxy, self).__init__(*args, **kw)
-        self._sh = sh
-
-    @property
-    def sh(self):
-        return self._sh
-
-    def nodename(self):
-        """Node name to use for this kind of remote execution."""
-        key = self.nodekind + 'node'
-        return tunable_value(self.sh,
-                             getattr(self, key, None),
-                             ini_key='services:' + key,
-                             env_key=key.upper(),
-                             default='localhost')
-
-    def execute(self, command):
-        """Remote execution."""
-        try:
-            rc = self.sh.spawn(
-                ('/usr/bin/ssh', '-x', self.nodename(), command),
-                shell=False,
-                output=False,
-            )
-        except ExecutionError:
-            rc = False
-        return rc
 
 
 class AlarmService(Service):
@@ -218,12 +141,16 @@ class AlarmService(Service):
                 optional = True,
                 default  = None,
             ),
+            sshhost=dict(
+                optional = True,
+                default  = 'node',
+            ),
         )
     )
 
     def deactivated(self):
         """Tells if alarms are deactivated : OP_ALARM set to 0"""
-        return not bool(self.sh.env.get('OP_ALARM', 1))
+        return not bool(self.env.get('OP_ALARM', 1))
 
     def get_syslog(self):
         """Define and return the SyslogHandler to use."""
@@ -325,8 +252,7 @@ class AlarmProxyService(AlarmService):
             self.facility.name(),
             self.priority(self.level),
             message)
-        rcp = RemoteCommandProxy(nodekind='login')
-        rc = rcp.execute(command)
+        rc = ad.ssh(command, hostname=self.sshhost, nodetype='login')
         if not rc:
             logger.warning("Remote execution failed: " + command)
         return rc
@@ -428,6 +354,10 @@ class RoutingService(Service):
                 optional = True,
                 default  = None
             ),
+            sshhost   = dict(
+                optional = True,
+                default  = 'node',
+            ),
         )
     )
 
@@ -449,17 +379,10 @@ class RoutingService(Service):
 
     def mandatory_env(self, key):
         """Retrieve a key from the environment, or raise."""
-        value = self.sh.env[key]
+        value = self.env[key]
         if not value:
             raise KeyError('missing ' + key + ' in the environment')
         return value
-
-    def actual_agt_path(self):
-        """Path to use for the agt routing binaries."""
-        return tunable_value(self.sh,
-                             self.agt_path,
-                             'AGT_PATH',
-                             'services:agt_path')
 
     def agt_env(self):
         """Environment for the agt routing binaries (case counts)."""
@@ -472,7 +395,7 @@ class RoutingService(Service):
     @property
     def taskname(self):
         """IGA task name (TACHE)."""
-        return self.sh.env.get('SLURM_JOB_NAME', 'interactif')
+        return self.env.get('SLURM_JOB_NAME') or self.env.get('SMSNAME', 'interactif')
 
     @property
     def dmt_date_pivot(self):
@@ -483,7 +406,7 @@ class RoutingService(Service):
         """Date from DMT_DATE_PIVOT or from the 'date' command (from mxpt001 scr/debut)."""
         envkey  = 'DMT_DATE_PIVOT'
         default = date.now().compact(),
-        stamp   = self.sh.env.get(envkey, default)
+        stamp   = self.env.get(envkey, default)
         return stamp[:8]
 
     def file_ok(self):
@@ -491,7 +414,7 @@ class RoutingService(Service):
         if not self.sh.path.exists(self.filename):
             msg = "{0.taskname} routage {0.realkind} du numero {0.productid}" \
                   " impossible - fichier {0.filename} inexistant".format(self)
-            ad.alarm(level='critical', message=msg)
+            ad.alarm(level='critical', message=msg, sshhost=self.sshhost)
             return False
         return True
 
@@ -507,8 +430,7 @@ class RoutingService(Service):
         if not self.file_ok():
             return False
 
-        rcp = RemoteCommandProxy(nodekind='transfer')
-        rc = rcp.execute(cmdline)
+        rc = ad.ssh(cmdline, hostname=self.sshhost, nodetype='transfert')
 
         logfile = 'routage.' + date.today().ymd
         ad.report(kind='dayfile', mode='RAW', message=self.get_logline(),
@@ -521,7 +443,7 @@ class RoutingService(Service):
             else:
                 term = ''
             text = "{0.taskname} Pb envoi {0.realkind} id {0.productid}{term}".format(self, term=term)
-            ad.alarm(level='critical', message=text)
+            ad.alarm(level='critical', message=text, sshhost=self.sshhost)
             return False
 
         return True
@@ -554,12 +476,8 @@ class RoutingUpstreamService(RoutingService):
 
     def actual_agt_pa_cmd(self):
         """Actual routing command, without options."""
-        pa_cmd = tunable_value(self.sh,
-                               self.agt_pa_cmd,
-                               None,
-                               'services:agt_pa_cmd',
-                               'router_pa.bin')
-        binary = self.sh.path.join(self.actual_agt_path(), pa_cmd)
+        pa_cmd = self.actual_value('agt_pa_cmd', default='router_pa.bin')
+        binary = self.sh.path.join(self.actual_value('agt_path'), pa_cmd)
         return self.agt_env() + ' ; ' + binary
 
     def get_cmdline(self):
@@ -610,10 +528,8 @@ class BdapService(RoutingUpstreamService):
             kind = dict(
                 values   = ['bdap'],
             ),
-            domain = dict(
-                type     = str,
-            ),
-            term = a_term,
+            domain = a_domain,
+            term   = a_term,
         )
     )
 
@@ -699,8 +615,8 @@ class BdpeService(RoutingService):
 
     def actual_agt_pe_cmd(self):
         """Actual routing command, without options."""
-        pe_cmd = tunable_value(self.sh, self.agt_pe_cmd, None, 'services:agt_pe_cmd', 'router_pe.bin')
-        binary = self.sh.path.join(self.actual_agt_path(), pe_cmd)
+        pe_cmd = self.actual_value('agt_pe_cmd', default='router_pe.bin')
+        binary = self.sh.path.join(self.actual_value('agt_path'), pe_cmd)
         return self.agt_env() + ' ; ' + binary
 
     def get_cmdline(self):
@@ -790,8 +706,9 @@ class DayfileReportService(FileReportService):
     """
     Historical dayfile reporting for IGA usage.
 
-      * to a known filename
-      * to a temporary spool (see demon_messday.pl).
+      * to a known file named filename
+      * or to a temporary spool (see demon_messday.pl).
+      * in async mode, requests are sent to the jeeves daemon.
 
     This class should not be called directly.
     """
@@ -814,6 +731,7 @@ class DayfileReportService(FileReportService):
             filename = dict(
                 optional = True,
                 default  = None,
+                access   = 'rwx',
             ),
             resuldir  = dict(
                 optional = True,
@@ -827,6 +745,15 @@ class DayfileReportService(FileReportService):
                 optional = True,
                 default  = None,
             ),
+            async = dict(
+                optional = True,
+                type     = bool,
+                default  = False,
+            ),
+            jname=dict(
+                optional=True,
+                default='test',
+            ),
         )
     )
 
@@ -834,30 +761,13 @@ class DayfileReportService(FileReportService):
     def taskname(self):
         """IGA task name (TACHE)."""
         if self.task is None:
-            return self.sh.env.get('SLURM_JOB_NAME', 'interactif')
+            return self.env.get('SLURM_JOB_NAME') or self.env.get('SMSNAME', 'interactif')
         return self.task
 
     @property
     def timestamp(self):
         """Formatted hour used as standard prefix in log files."""
         return '{0.hour:02d}-{0.minute:02d}-{0.second:02d}'.format(date.now())
-
-    def actual_resuldir(self):
-        """The directory where to write named log files."""
-        return tunable_value(self.sh,
-                             self.resuldir,
-                             'OP_RESULDIR',
-                             'services:resuldir',
-                             '.')
-
-    def actual_spooldir(self):
-        """The directory where to write spooled log files."""
-        default = self.sh.path.join(self.sh.env.HOME, 'spool_messdayf')
-        return tunable_value(self.sh,
-                             self.spooldir,
-                             'OP_SPOOLDIR',
-                             'services:spooldir',
-                             default)
 
     def direct_target(self):
         """
@@ -866,7 +776,7 @@ class DayfileReportService(FileReportService):
         """
         if self.sh.path.isabs(self.filename):
             return self.filename
-        name = self.sh.path.join(self.actual_resuldir(), self.filename)
+        name = self.sh.path.join(self.actual_value('resuldir', as_var='OP_RESULDIR', default='.'), self.filename)
         return self.sh.path.abspath(name)
 
     def spooled_target(self):
@@ -877,42 +787,59 @@ class DayfileReportService(FileReportService):
         name = ''.join([
             str(date.now().epoch),
             '_',
-            self.sh.env.get('NQSID', ''),
+            self.env.get('NQSID', ''),
             '1' if 'DEBUT' in self.mode else '0',
             str(random.random()),
         ])
-        final = self.sh.path.join(self.actual_spooldir(), name)
+        final = self.sh.path.join(
+            self.actual_value(
+                'spooldir',
+                as_var  = 'OP_SPOOLDIR',
+                default = self.sh.path.join(self.env.HOME, 'spool_messdayf')
+            ),
+            name
+        )
         return self.sh.path.abspath(final)
 
+    @property
+    def infos(self):
+        fmt = dict(
+            RAW='{0.message}',
+            TEXTE='{0.timestamp} -> {0.message}',
+            ECHEANCE='{0.timestamp} == {0.message}',
+            DEBUT='{0.timestamp} == {0.mode}    {0.taskname} === noeuds {0.message}',
+            FIN='{0.timestamp} == {0.mode} OK {0.taskname} ===',
+            ERREUR='{0.timestamp} == {0.mode} {0.taskname} *****'
+        )
+        return fmt[self.mode].format(self) + '\n'
+
     def __call__(self):
-        """Main action: format, open, write, close, clean."""
+        """Main action: format, write or send depending on async."""
 
         if self.message is None:
-            return
+            return True
 
-        fmt = dict(
-            RAW        = '{0.message}',
-            TEXTE      = '{0.timestamp} -> {0.message}',
-            ECHEANCE   = '{0.timestamp} == {0.message}',
-            DEBUT      = '{0.timestamp} == {0.mode}    {0.taskname} === noeuds {0.message}',
-            FIN        = '{0.timestamp} == {0.mode} OK {0.taskname} ===',
-            ERREUR     = '{0.timestamp} == {0.mode} {0.taskname} *****'
-        )
-        infos = fmt[self.mode].format(self) + '\n'
+        if self.async:
+            if self.filename is None:
+                self.filename = 'DAYFMSG.' + date.now().ymd
+            target = self.direct_target()
+            ad.jeeves(todo='dayfile', infos=self.infos, target=target, jname=self.jname)
+            return True
 
         if self.filename:
             final = None
-            destination = self.direct_target()
+            target = self.direct_target()
         else:
             final = self.spooled_target()
-            destination = final + '.tmp'
+            target = final + '.tmp'
 
-        self.sh.filecocoon(destination)
-        with open(destination, 'a') as fp:
-            fp.write(infos)
+        self.sh.filecocoon(target)
+        with open(target, 'a') as fp:
+            fp.write(self.infos)
+            if not self.filename:
+                self.sh.mv(target, final)
 
-        if not self.filename:
-            self.sh.mv(destination, final)
+        return True
 
 
 class SMSOpService(SMS):
@@ -952,3 +879,78 @@ class SMSOpService(SMS):
         else:
             self.abort()
             return False
+
+
+class DMTEventService(Service):
+    """
+    Class responsible for handling DMT events through the SOPRANO library.
+    Mostly used for resources availability.
+    """
+
+    _footprint = dict(
+        info = 'Send an event to the main monitoring system.',
+        attr = dict(
+            kind = dict(
+                values   = ['dmtevent'],
+            ),
+            resource_name = dict(
+                alias    = ('name',)
+            ),
+            resource_flag = dict(
+                type     = int,
+                optional = True,
+                alias    = ('description', 'flag'),
+                default  = 0,
+            ),
+            soprano_lib = dict(
+                optional = True,
+                alias    = ('sopralib', 'lib'),
+                default  = '/opt/softs/sopra/lib',
+            ),
+            soprano_cmd = dict(
+                optional = True,
+                alias    = ('sopracmd', 'cmd'),
+                default  = '/opt/softs/sopra/bin/dmtdisp.bin',
+            ),
+            soprano_host = dict(
+                optional = True,
+                alias    = ('soprahost', 'host'),
+                default  = 'piccolo',
+            ),
+            expectedvars = dict(
+                type     = footprints.FPTuple,
+                optional = True,
+                default  = footprints.FPTuple((
+                    'SMS_PROG', 'SMSNODE', 'SMSNAME', 'SMSPASS', 'SMSTRYNO', 'SMSTIMEOUT',
+                    'DMT_DATE_PIVOT', 'DMT_ECHEANCE', 'DMT_PATH_EXEC', 'DMT_TRAVAIL_ID', 'DMT_SOUS_SYSTEME'
+                )),
+            ),
+        )
+    )
+
+    def get_dmtinfo(self):
+        """The pair of usefull information to forward to monitor."""
+        return [ self.resource_name, str(self.resource_flag) ]
+
+    def get_cmdline(self):
+        """Complete command line that runs the soprano command."""
+        for var in [ x for x in self.expectedvars if x not in self.env ]:
+            logger.warning('DMT missing variable %s', var)
+        return ' '.join(
+            self.env.mkautolist('SMS') + self.env.mkautolist('DMT_') + [
+                'JOB_ID=' + self.env.get('SLURM_JOB_ID', 'NoJobId'),
+                'DMT_SERVER_HOST=' + self.soprano_host,
+                'LD_LIBRARY_PATH=' + self.soprano_lib,
+                self.soprano_cmd,
+            ] + self.get_dmtinfo()
+        )
+
+    def __call__(self):
+        """Set some global variables, then launch the soprano command."""
+        cmdline = self.get_cmdline()
+        logger.info('DMT Event <%s>', cmdline)
+        if self.sh.target().generic().endswith('cn'):
+            rc = ad.ssh(cmdline, hostname='node', nodetype='login')
+        else:
+            rc = self.sh.spawn(cmdline, shell=True, output=True)
+        return rc

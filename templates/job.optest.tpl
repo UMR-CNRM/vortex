@@ -42,6 +42,7 @@ oplocals = locals()
 
 import os, sys
 sys.stderr = sys.stdout
+os.environ["MTOOLDIR"] = "/chaine/mxpt001/vortex/mtool"
 
 pathdirs = [ os.path.join(op_rootapp, xpath) for xpath in ('', 'src', 'vortex/site', 'vortex/src') ]
 sys.path.extend(
@@ -50,10 +51,12 @@ sys.path.extend(
 
 import iga.tools.op as op
 import $package.$task as todo
+import vortex
 
 try:
     t = op.setup(actual=oplocals)
     e = op.setenv(t, actual=oplocals)
+    t.env.OP_RUNDATE = vortex.tools.date.Date('{0:s}/-P17W'.format(t.env.OP_RUNDATE.ymdhm))
     opts = t.sh.rawopts(defaults=dict(play=op_fullplay))
     driver = todo.setup(t, **opts)
     driver.setup()

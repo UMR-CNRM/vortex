@@ -18,23 +18,21 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.util.authorizations import is_authorized_user
 
-import vortex.tools.services
-
 
 class Action(object):
     """
-    An ``Action`` object is intend to produce a dedicated service through a simple command
-    with internally refer to the :meth:`execute` method.
+    An ``Action`` object is intended to produce a dedicated service through a simple command
+    which internally refers to the :meth:`execute` method.
     Such an action could be activated or not, and is basically driven by permissions settings.
     """
     def __init__(self, kind='foo', service=None, active=False, permanent=False):
+        if service is None:
+            service = 'send' + kind
         self._service   = service
         self._kind      = kind
         self._active    = active
         self._permanent = permanent
         self._frozen    = None
-        if service is None:
-            service = 'send' + self.kind
 
     @property
     def kind(self):
@@ -85,8 +83,7 @@ class Action(object):
 
     def service_info(self, **kw):
         """On the fly remapping of the expected footprint."""
-        info = dict()
-        info.update(kw)
+        info = dict(kw)
         info.setdefault('kind', self.service_kind(**kw))
         return info
 
@@ -94,7 +91,7 @@ class Action(object):
         """Return the service instance determined by the actual description."""
         info = self.service_info(**kw)
         a_service = None
-        if self.permanent:
+        if self.permanent():
             if self._frozen is None:
                 self._frozen = footprints.proxy.services.default(**info)
             a_service = self._frozen
@@ -139,6 +136,33 @@ class Report(Action):
     """
     def __init__(self, kind='report', service='sendreport', active=True):
         super(Report, self).__init__(kind=kind, active=active, service=service)
+
+
+class SSH(Action):
+    """
+    Class responsible for sending commands to an SSH proxy.
+    """
+    def __init__(self, kind='ssh', service='ssh', active=True):
+        super(SSH, self).__init__(kind=kind, active=active, service=service)
+
+
+class AskJeeves(Action):
+    """
+    Class responsible for posting requests to Jeeves daemon.
+    """
+    def __init__(self, kind='jeeves', service='askjeeves', active=True):
+        super(AskJeeves, self).__init__(kind=kind, active=active, service=service)
+
+    def execute(self, *args, **kw):
+        """Generic method to perform the action through a service."""
+        rc = None
+        if 'kind' in kw:
+            kw['fwd_kind'] = kw.pop('kind')
+        service = self.get_active_service(**kw)
+        if service:
+            talk = { k:v for k,v in kw.items() if k not in service.footprint_attributes }
+            rc = service(talk)
+        return rc
 
 
 class Prompt(Action):
@@ -261,5 +285,5 @@ class Dispatcher(footprints.util.Catalog):
 
 #: Default action dispatcher... containing an anonymous SendMail action
 actiond = Dispatcher()
-actiond.add(SendMail(), Report())
+actiond.add(SendMail(), Report(), AskJeeves(), SSH())
 

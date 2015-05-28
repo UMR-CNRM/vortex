@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import os
-import io
 import pwd
+import shutil
+import io
 import zipfile
 import json
 
@@ -42,19 +43,22 @@ def timestamp():
     """Time stamp with raw precision of a second."""
     return datetime.now().strftime('%Y%m%d%H%M%S')
 
+def logname():
+    """Technical wrapper to overcome some strange results of the native os.getlogin function."""
+    return pwd.getpwuid(os.getuid())[0]
 
 class Request(object):
     """
-    The basic meta structuire of any `ask` to Jeeves.
+    The basic meta structure of any `ask` to Jeeves.
     """
 
     def __init__(self, todo='show', user=None, task=None, date=None,
                  opts=None, data=None, jtag=None,
                  mail=tuple(), conf=tuple(), apps=tuple(), info='Nope'):
         self.todo = todo
-        self.user = pwd.getpwuid(os.getuid())[0] if user is None else user
-        self.task = task
-        self.date = timestamp() if date is None else date
+        self.user = user or logname()
+        self.task = task or os.environ.get('JOBNAME') or os.environ.get('SMSNAME')
+        self.date = date or timestamp()
         self.opts = dict() if opts is None else dict(opts)
         self.data = data
         self.jtag = jtag
@@ -79,7 +83,7 @@ class Request(object):
                 'ask',
                 datetime.now().strftime('%Y%m%d%H%M%S.%f'),
                 'P{0:06d}'.format(os.getpid()),
-                pwd.getpwuid(os.getuid())[0],
+                logname(),
                 radical,
                 'json'
             ))
@@ -100,8 +104,9 @@ class Request(object):
     def dump(self):
         """Dump request as a json file."""
         self._dumpfiles.append(self.filename())
-        with io.open(self._dumpfiles[-1], 'wb') as fd:
-            json.dump(self.as_dict(), fd)
+        with io.open(self._dumpfiles[-1] + '.tmp', 'wb') as fd:
+            json.dump(self.as_dict(), fd, sort_keys=True, indent=4)
+        shutil.move(self._dumpfiles[-1] + '.tmp', self._dumpfiles[-1])
         return True
 
     def show(self, *args):
@@ -200,7 +205,7 @@ class Deposit(footprints.util.GetByTag):
         """Try to clean up the current pool."""
         items = self.contents
         psize = len(items)
-        if self.maxitems > 0 and psize > self.maxitems:
+        if 0 < self.maxitems < psize:
             justnow = datetime.now()
             oldfiles = list()
             for askfile in items:

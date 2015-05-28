@@ -56,12 +56,15 @@ class Fa2Grib(BlindRun):
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
+
         gprh = [ x.rh for x in self.context.sequence.effective_inputs(role='Gridpoint', kind='gridpoint') ]
         gprh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
+
         compact    = self.env.get('VORTEX_GRIB_COMPACT', self.compact)
         numod      = self.env.get('VORTEX_GRIB_NUMOD', self.numod)
         timeshift  = self.env.get('VORTEX_GRIB_SHIFT', self.timeshift)
         thisoutput = 'GRIDOUTPUT'
+
         for r in gprh:
             self.system.title('Loop on domain {0:s} and term {1:s}'.format(
                 r.resource.geometry.area, r.resource.term.fmthm))
@@ -86,6 +89,9 @@ class Fa2Grib(BlindRun):
                 namfd.write(nb.dumps())
             self.system.header('{0:s} : local namelist {1:s} dump'.format(self.realkind, self.fortnam))
             self.system.cat(self.fortnam, output=False)
+
+            # Expect the input FP file source to be there...
+            self.grab(r, comment='fullpos source', timeout=180)
 
             # Finaly set the actual init file
             self.system.softlink(r.container.localpath(), self.fortinput)
@@ -135,6 +141,7 @@ class AddField(BlindRun):
         """Set some variables according to target definition."""
         super(AddField, self).prepare(rh, opts)
         self.system.remove(self.fortinput)
+        self.env.DR_HOOK_NOT_MPI = 1
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""

@@ -254,7 +254,7 @@ class MpiSubmit(MpiTool):
 
     def _set_launcher(self, value):
         """Set current launcher mpi name. Should be some special trick, so issue a warning."""
-        logger.warning('Setting a new value [%s] to mpi launcher [%s].' % value, self)
+        logger.warning('Setting a new value [%s] to mpi launcher [%s].' % (value, self))
         self._launcher = value
 
     launcher = property(_get_launcher, _set_launcher)

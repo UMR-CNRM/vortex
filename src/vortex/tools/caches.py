@@ -9,6 +9,8 @@ hosting data resources. Cache objects use the :mod:`footprints` mechanism.
 #: No automatic export
 __all__ = []
 
+from datetime import datetime
+
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -58,6 +60,7 @@ class Cache(footprints.FootprintBase):
                 type     = bool,
                 optional = True,
                 default  = False,
+                access   = 'rwx',
             )
         )
     )
@@ -68,7 +71,7 @@ class Cache(footprints.FootprintBase):
         self._sh = sessions.system()
         if not self.config:
             self._attributes['config'] = GenericConfigParser(inifile=self.inifile, mkforce=self.iniauto)
-        self._history = History(tag=self.entry())
+        self._history = History(tag=self.entry)
 
     @property
     def realkind(self):
@@ -104,18 +107,19 @@ class Cache(footprints.FootprintBase):
     def actual_record(self):
         return self.actual('record')
 
+    @property
     def entry(self):
         """Tries to figure out what could be the actual entry point for cache space."""
         return self.sh.path.join(self.actual_rootdir, self.kind, self.actual_headdir)
 
     def fullpath(self, subpath):
         """Actual full path in the cache."""
-        return self.sh.path.join(self.entry(), subpath.lstrip('/'))
+        return self.sh.path.join(self.entry, subpath.lstrip('/'))
 
     def addrecord(self, action, item, **infos):
         """Push a new record to the cache log."""
         if self.actual_record:
-            self.history.append(item, action, infos)
+            self.history.append(action, item, infos)
 
     def insert(self, item, local, intent='in', fmt='foo', info=None):
         """Insert an item in the current cache."""
@@ -140,6 +144,19 @@ class Cache(footprints.FootprintBase):
         rc = self.sh.remove(self.fullpath(item), fmt=fmt)
         self.addrecord('DELETE', item, status=rc, info=info, fmt=fmt)
 
+    def flush(self, dumpfile=None):
+        """Flush actual history to the specified ``dumpfile`` if record is on."""
+        if dumpfile is None:
+            logfile = '.'.join((
+                'HISTORY',
+                datetime.now().strftime('%Y%m%d%H%M%S.%f'),
+                'P{0:06d}'.format(self.sh.getpid()),
+                self.sh.getlogname()
+            ))
+            dumpfile = self.sh.path.join(self.entry, '.history', logfile)
+        if self.actual_record:
+            self.sh.pickle_dump(self.history, dumpfile)
+
 
 class MtoolCache(Cache):
     """Cache items for the MTOOL jobs."""
@@ -162,6 +179,7 @@ class MtoolCache(Cache):
         )
     )
 
+    @property
     def entry(self):
         """Tries to figure out what could be the actual entry point for cache space."""
         if self.rootdir == 'auto':

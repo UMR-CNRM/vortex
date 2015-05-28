@@ -17,6 +17,9 @@ class RawFields(Resource):
         dict(
             info = 'File containing a limited list of observations fields',
             attr = dict(
+                model = dict(
+                    values = [ 'arpege' ]
+                ),
                 kind = dict(
                     values = [ 'rawfields' ]
                 ),
@@ -29,6 +32,10 @@ class RawFields(Resource):
             )
         )
     ]
+
+    @property
+    def realkind(self):
+        return 'rawfields'
 
     def olive_basename(self):
         return self.fields + self.origin

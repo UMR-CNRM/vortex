@@ -82,8 +82,9 @@ class MeteoBull(Target):
 
     def spawn_hook(self, sh):
         """Specific target hook before any serious execution."""
-        sh.header('Flush Lustre Locks')
-        sh.spawn(['/opt/softs/bin/flush-lustre-locks'], output=False)
+        if not sh.env.VORTEX_NOFLUSH_LUSTRE:
+            sh.header('Flush Lustre Locks')
+            sh.spawn(['/opt/softs/bin/flush-lustre-locks'], output=False)
 
     def generic(self):
         """Generic name is inetname suffixed with ``fe`` or ``cn``."""
@@ -91,6 +92,7 @@ class MeteoBull(Target):
             return self.inetname + 'fe'
         else:
             return self.inetname + 'cn'
+
 
 class Beaufix(MeteoBull):
     """Beaufix Computer at Meteo-France."""

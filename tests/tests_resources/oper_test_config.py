@@ -8,7 +8,7 @@ __all__ = [
     # vortex classes
     'SpectralGeometry', 'GridGeometry', 'IgaHelperSelect',
     # local test functions
-    'get_default_provider', 'get_spec_provider', 
+    'get_default_provider', 'get_spec_provider',
     # some default env values
     'sh', 'datadir', 'homedir', 'rundate', 'rundate_bis'
 ]

@@ -25,7 +25,7 @@ __all__ = []
 
 
 class GentleTalk(object):
-    """An alternative to logging interface that could be exchange between processes."""
+    """An alternative to the logging interface that can be exchanged between processes."""
 
     _levels = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
 
@@ -72,7 +72,7 @@ class GentleTalk(object):
                 value = self.levels.index(value.upper())
             except StandardError:
                 value = -1
-        if value >= 0 and value <= len(self.levels):
+        if 0 <= value <= len(self.levels):
             self._loglevel = value
         return self._loglevel
 
@@ -189,14 +189,17 @@ class PidFile(object):
         if filename is None:
             filename = '/tmp/daemon-' + os.getlogin() + '-' + tag
         if not filename.endswith('.pid'):
-            filename = filename + '.pid'
+            filename += '.pid'
+        self._filename = os.path.realpath(filename)
+        self._procname = procname
+        self.reset()
+
+    def reset(self):
         try:
-            self._fd = os.open(filename, os.O_CREAT | os.O_RDWR)
+            self._fd = os.open(self._filename, os.O_CREAT | os.O_RDWR)
         except IOError as iotrouble:
             sys.exit('Failed to open pidfile: %s' % str(iotrouble))
         assert not fcntl.flock(self._fd, fcntl.LOCK_EX)
-        self._filename = os.path.realpath(filename)
-        self._procname = procname
 
     @property
     def fd(self):
@@ -214,10 +217,10 @@ class PidFile(object):
         assert not fcntl.flock(self.fd, fcntl.LOCK_UN)
 
     def write(self, pid=None):
-        if pid == None:
+        if pid is None:
             pid = os.getpid()
         os.ftruncate(self.fd, 0)
-        os.write(self.fd, "%d" % int(pid))
+        os.write(self.fd, "%d\n" % int(pid))
         os.fsync(self.fd)
 
     def delfile(self):
@@ -286,7 +289,7 @@ class BaseDaemon(object):
         self._daemonized = False
         self._inifile    = self._tag if inifile is None else inifile
         if not self._inifile.endswith('.ini'):
-            self._inifile = self._inifile + '.ini'
+            self._inifile += '.ini'
 
     @property
     def tag(self):
@@ -351,33 +354,33 @@ class BaseDaemon(object):
 
     def daemonize(self):
         """
-        Do the UNIX double-fork magic, see Stevens' "Advanced 
+        Do the UNIX double-fork magic, see Stevens' "Advanced
         Programming in the UNIX Environment" for details (ISBN 0201563177)
         http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
         """
-        try: 
+        try:
             pid = os.fork()
             if pid > 0:
                 # exit first parent
-                sys.exit(0) 
-        except OSError, e: 
+                sys.exit(0)
+        except OSError, e:
             sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
             sys.exit(1)
 
         # decouple from parent environment
         os.chdir('/')
-        os.setsid() 
-        os.umask(0) 
+        os.setsid()
+        os.umask(0)
 
         # do second fork
-        try: 
+        try:
             pid = os.fork()
             if pid > 0:
                 # exit from second parent
                 sys.exit(0)
-        except OSError, e: 
+        except OSError, e:
             sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
-            sys.exit(1) 
+            sys.exit(1)
 
         self._daemonized = True
 
@@ -479,6 +482,7 @@ class BaseDaemon(object):
     def restart(self):
         """Restart the daemon."""
         self.stop()
+        self.pidfile.reset()
         self.start()
 
     def setup(self):
@@ -516,7 +520,7 @@ class HouseKeeping(object):
             return True
 
     def internal_level(self, ask):
-        """Set a specific log level)."""
+        """Set a specific log level."""
         self.logger.loglevel = ask.data
         self.warning('Switch log', level=self.logger.levelname)
         return True
@@ -551,24 +555,42 @@ class HouseKeeping(object):
             self.error('Not a valid update', data=type(ask.data))
             return False
 
-    def internal_switch(self, ask, status=False):
+    def internal_switch_pool(self, ask, status=False):
         """Update active parameters for pools."""
         for pool in [ x.lower() for x in footprints.util.mktuple(ask.data) ]:
             poolcfg = 'pool_' + pool
             if poolcfg in self.config:
                 self.warning('Switch pool', active=status)
-                self.config[poolcfg] = status
+                self.config[poolcfg]['active'] = status
                 thispool = pools.get(tag=pool)
                 thispool.active = status
         return True
 
     def internal_active(self, ask):
         """Proxy to pool switch on."""
-        return self.internal_switch(ask, status=True)
+        return self.internal_switch_pool(ask, status=True)
 
     def internal_mute(self, ask):
         """Proxy to pool switch off."""
-        return self.internal_switch(ask, status=False)
+        return self.internal_switch_pool(ask, status=False)
+
+    def internal_switch_action(self, ask, status=False):
+        """Update active parameters for an action."""
+        for action in [ x.lower() for x in footprints.util.mktuple(ask.data) ]:
+            actioncfg = 'action_' + action
+            if actioncfg not in self.config:
+                self.config[actioncfg] = dict()
+            self.warning('Switch action', active=status)
+            self.config[actioncfg]['active'] = status
+        return True
+
+    def internal_seton(self, ask):
+        """Proxy to action switch on."""
+        return self.internal_switch_action(ask, status=True)
+
+    def internal_setoff(self, ask):
+        """Proxy to action switch off."""
+        return self.internal_switch_action(ask, status=False)
 
 
 class Jeeves(BaseDaemon, HouseKeeping):
@@ -590,7 +612,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     try:
                         v = literal_eval(v)
                     except (SyntaxError, ValueError):
-                        if ',' in v:
+                        if k.startswith('options') or ',' in v:
                             v = [ x for x in v.replace(' ', '').split(',') ]
                     config[section][k.lower()] = v
         else:
@@ -719,6 +741,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         """Get result from async pool processing."""
         if result:
             pnum = None
+            prc = None
             try:
                 pnum, prc, pvalue = result
                 if prc:
@@ -731,21 +754,29 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 if pnum is not None and pnum in self.async:
                     jpool, jfile, asyncr = self.async[pnum]
                     poolbase = pools.get(tag=jpool)
+                    pooltarget = None
                     if prc:
-                        self.migrate(poolbase, jfile)
+                        try:
+                            pooltarget = pvalue.get('rpool', None)
+                        except StandardError:
+                            pass
                     else:
-                        self.migrate(poolbase, jfile, target='error')
+                        pooltarget = 'error'
+                    self.migrate(poolbase, jfile, target=pooltarget)
                     del self.async[pnum]
                 else:
                     self.error('Unknown async process', pnum=pnum)
         else:
             self.error('Undefined result from async processing')
 
-    def dispatch(self, func, ask, jpool, jfile):
+    def dispatch(self, func, ask, acfg, jpool, jfile):
         """Multiprocessing dispatching."""
         rc = False
         self.ptask += 1
         pnum = '{0:06d}'.format(self.ptask)
+        opts = ask.opts.copy()
+        for extra in [ x for x in acfg.get('options', tuple()) if x not in opts ]:
+            opts[extra] = acfg.get(extra, None)
         try:
             self.async[pnum] = (
                 jpool,
@@ -753,7 +784,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 self.ppool.apply_async(
                     func,
                     (pnum, ask, self.config.copy(), self.logger.clone(pnum)),
-                    ask.opts,
+                    opts,
                     self.async_callback
                 )
             )
@@ -785,38 +816,42 @@ class Jeeves(BaseDaemon, HouseKeeping):
                             module   = 'internal',
                             entry    = ask.todo,
                         )
-                    thismod  = acfg.get('module', 'internal')
-                    thisname = acfg.get('entry', ask.todo)
-                    self.info('Processing',
-                        action   = ask.todo,
-                        function = thisname,
-                        module   = thismod,
-                    )
-                    if thismod == 'internal':
-                        thisfunc = getattr(self, 'internal_' + thisname, None)
-                    else:
-                        thismobj = self.import_module(thismod)
-                        if thismobj:
-                            thisfunc = getattr(thismobj, thisname, None)
+                    if acfg.get('active', True):
+                        thismod  = acfg.get('module', 'internal')
+                        thisname = acfg.get('entry', ask.todo)
+                        self.info('Processing',
+                            action   = ask.todo,
+                            function = thisname,
+                            module   = thismod,
+                        )
+                        if thismod == 'internal':
+                            thisfunc = getattr(self, 'internal_' + thisname, None)
                         else:
-                            self.error('Import failed', module=acfg.get('module'))
-                            thisfunc = None
-                            rc = False
-                    if thisfunc is None or not callable(thisfunc):
-                        self.error('Not a function', entry=thisname)
-                        rc = False
-                    else:
-                        if acfg.get('dispatch', False):
-                            rc = self.dispatch(thisfunc, ask, tp.tag, jfile)
-                            dispatched = True
-                        else:
-                            try:
-                                rc = apply(thisfunc, (ask,), ask.opts)
-                            except StandardError as trouble:
-                                self.error('Trouble', action=ask.todo, error=trouble)
+                            thismobj = self.import_module(thismod)
+                            if thismobj:
+                                thisfunc = getattr(thismobj, thisname, None)
+                            else:
+                                self.error('Import failed', module=acfg.get('module'))
+                                thisfunc = None
                                 rc = False
+                        if thisfunc is None or not callable(thisfunc):
+                            self.error('Not a function', entry=thisname)
+                            rc = False
+                        else:
+                            if acfg.get('dispatch', False):
+                                rc = self.dispatch(thisfunc, ask, acfg, tp.tag, jfile)
+                                dispatched = True
+                            else:
+                                try:
+                                    rc = apply(thisfunc, (ask,), ask.opts)
+                                except StandardError as trouble:
+                                    self.error('Trouble', action=ask.todo, error=trouble)
+                                    rc = False
+                    else:
+                        self.warning('Inactive', action=ask.todo)
+                        rctarget = 'ignore'
                 else:
-                    self.warning('Unregistered', action=ask.todo)
+                    self.error('Unregistered', action=ask.todo)
                     rc = False
                     rctarget = 'ignore'
                 if rc:
@@ -866,28 +901,36 @@ class Jeeves(BaseDaemon, HouseKeeping):
             thispool = pools.get(tag='in')
             if thispool.active:
                 self.debug('Processing', pool=thispool.tag, path=thispool.path)
-
                 while thispool.contents:
-
                     tbusy = True
                     todo = sorted(thispool.contents)
-
                     # ignore some files with an explicit name
                     for bad in [ x for x in todo if 'ignore' in x ]:
                         tp = self.migrate(thispool, bad, target='ignore')
                         if tp is not None:
                             todo.remove(bad)
-
                     # look for config requests
                     for cfg in [ x for x in todo if x.endswith('.config.json') ]:
                         self.process_request(thispool, cfg)
                         todo.remove(cfg)
-
                     # look for other input requests
                     for req in todo[:]:
                         self.process_request(thispool, req)
                         todo.remove(req)
+            else:
+                self.warning('Inactive', pool=thispool.tag, path=thispool.path)
 
+            # then process the retry pool
+            thispool = pools.get(tag='retry')
+            if thispool.active:
+                self.debug('Processing', pool=thispool.tag, path=thispool.path)
+                while thispool.contents:
+                    tbusy = True
+                    todo = sorted(thispool.contents)
+                    # look for previous retry requests
+                    for req in todo[:]:
+                        self.process_request(thispool, req)
+                        todo.remove(req)
             else:
                 self.warning('Inactive', pool=thispool.tag, path=thispool.path)
 

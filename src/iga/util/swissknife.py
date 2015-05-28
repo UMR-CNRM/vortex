@@ -54,6 +54,7 @@ def mkjob(t, **kw):
         home      = t.env.HOME,
         rundate   = None,
         runtime   = None,
+        runstep   = None,
         taskconf  = None,
         wrap      = True,
         verbose   = True,
@@ -84,7 +85,7 @@ def mkjob(t, **kw):
             opts['runtime'] = str(date.Time(jtime))
 
     for xopt in ('rundate', 'runtime'):
-        if type(opts[xopt]) is str:
+        if isinstance(opts[xopt], basestring):
             opts[xopt] = "'" + opts[xopt] + "'"
 
     corejob = load_template(t, opts['template'])
@@ -168,18 +169,18 @@ def slurm_parameters(t, **kw):
     return slurm, kw
 
 
-def gget_resource_exists(t, ggetfile):
+def gget_resource_exists(t, ggetfile, monthly=False):
     """Check whether a gget resource exists in the current path or not."""
 
     if t.sh.path.exists(ggetfile):
         return True
 
-    if not ggetfile.startswith('clim'):
+    if not monthly:
         return False
 
-    # all monthly clim files must be present
-    clims = [ ggetfile + '.m{0:02d}'.format(m) for m in range(1, 13) ]
-    missing = [ clim for clim in clims if not t.sh.path.isfile(clim) ]
+    # all monthly files must be present
+    months = [ ggetfile + '.m{0:02d}'.format(m) for m in range(1, 13) ]
+    missing = [ month for month in months if not t.sh.path.isfile(month) ]
     if missing:
         print 'missing :', missing
         return False
@@ -218,7 +219,13 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
 
     # Build a list of unique resource names
     ggetnames = set()
-    for v in defs.values():
+    monthly = set()
+    for (k, v) in defs.iteritems():
+        if k.startswith('CLIM_') or k.endswith('_MONTHLY'):
+            if isinstance(v, basestring):
+                monthly.add(v)
+            else:
+                monthly |= set(v)
         if isinstance(v, basestring):
             ggetnames.add(v)
         else:
@@ -239,7 +246,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
         if verbose:
             print t.line
             print name, '...',
-        if gget_resource_exists(t, name):
+        if gget_resource_exists(t, name, name in monthly):
             if verbose:
                 print 'already there'
                 t.sh.ll(name)
@@ -248,9 +255,9 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
             try:
                 t.sh.spawn([gtool, name], output=False)
                 increase += t.sh.size(name)
+                t.sh.readonly(name)
                 if verbose:
                     print 'ok'
-                    t.sh.readonly(name)
                     t.sh.ll(name)
                 details['retrieved'].append(name)
                 if name.endswith('.tgz'):

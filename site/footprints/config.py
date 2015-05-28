@@ -20,6 +20,18 @@ def get(**kw):
     """Return actual setup object matching description."""
     return FootprintSetup(**kw)
 
+def keys():
+    """Return the list of current setup names."""
+    return FootprintSetup.tag_keys()
+
+def values():
+    """Return the list of current setup values."""
+    return FootprintSetup.tag_values()
+
+def items():
+    """Return the items for all the setups available."""
+    return FootprintSetup.tag_items()
+
 def add2proxies(c, **kw):
     """
     Add to default or specified setup object (according to ``kw`` and its ``tag`` value)
@@ -59,7 +71,6 @@ class FootprintSetup(util.GetByTag):
         if defaults is not None:
             self._defaults.update(defaults)
             logger.warning('New FootprintSetup')
-            print 'DEBUG', kw
 
     def __call__(self, **kw):
         if kw:

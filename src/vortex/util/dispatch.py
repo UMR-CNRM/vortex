@@ -547,7 +547,7 @@ class Dispatcher(object):
                         display.extend([actualstorage, '  -> ' + doublestorage])
                 else:
                     logger.warning('DBLPUT could not store main resource %s', rh)
-                    display.extend('Could not put ' + str(rh), rh.idcard())
+                    display.extend(['Could not put ' + str(rh), rh.idcard()])
                     rc = 1
         else:
             display.append('No resource handler matching the description')

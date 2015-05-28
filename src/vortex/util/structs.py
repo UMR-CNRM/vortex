@@ -137,6 +137,10 @@ class History(footprints.util.GetByTag):
     def last(self):
         return self._history[-1][-1] if self.count else None
 
+    def merge(self, *others):
+        """Merge current history with other history objects."""
+        pass
+
 
 class Tracker(object):
     """Handling of simple state status through ``deleted``, ``created`` or ``updated`` items."""

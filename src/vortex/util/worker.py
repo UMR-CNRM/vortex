@@ -10,6 +10,12 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 
+class AttrDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
+
+
 class VortexWorker(object):
     """Context for a vortex session handled by an asynchronous process such as Jeeves."""
 
@@ -41,6 +47,10 @@ class VortexWorker(object):
     def modules(self):
         return self._modules
 
+    def get_dataset(self, ask):
+        """Struct friendly access to data request."""
+        return AttrDict(ask.data)
+
     def reset_loggers(self, logger):
         import footprints as fp
         fp.loggers.setLogMethods(logger, methods=self.logmap)
@@ -58,20 +68,26 @@ class VortexWorker(object):
             self._logger = vortex.logger
         else:
             self.reset_loggers(self.logger)
-        self.logger.warning('VORTEX enter ' + str(self.modules))
         sh = vortex.sh()
+        import vortex.tools.lfi
+        import vortex.tools.odb
+        import footprints as fp
+        self.shlfi = fp.proxy.addon(kind='lfi', shell=sh)
+        self.shodb = fp.proxy.addon(kind='odb', shell=sh)
+        self.logger.warning('VORTEX enter ' + str(self.modules))
         for modname in self.modules:
             sh.import_module(modname)
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         """Well... nothing much to do..."""
-        if exc_value is not None and exc_value.message:
+        if exc_value is not None:
             self.logger.critical('VORTEX exit', error=exc_value)
             import traceback
             print "\n", '-' * 80
-            print exc_value.message
-            print '-' * 80, "\n"
+            if exc_value.message:
+                print exc_value.message
+                print '-' * 80, "\n"
             print "\n".join(traceback.format_tb(exc_traceback))
             print '-' * 80, "\n"
             self.rc = False

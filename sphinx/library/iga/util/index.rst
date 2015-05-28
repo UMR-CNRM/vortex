@@ -1,4 +1,4 @@
-.. utilities-index:
+.. util-index:
 
 ##############################
 Miscellaneous utilities for Op
@@ -7,7 +7,7 @@ Miscellaneous utilities for Op
 .. toctree::
    :maxdepth: 1
 
-   utilities
+   util
 
    bpnames
    helpers

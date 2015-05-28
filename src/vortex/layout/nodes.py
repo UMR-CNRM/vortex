@@ -55,7 +55,7 @@ class ConfigSet(footprints.util.LowerCaseDict):
         self[attr] = value
 
     def __setitem__(self, key, value):
-        if value is not None and type(value) is str:
+        if value is not None and isinstance(value, basestring):
             if key.endswith('_range'):
                 key = key[:-6]
                 value = footprints.util.rangex(value.replace(' ', ''))
@@ -75,6 +75,7 @@ class Node(footprints.util.GetByTag):
         self._ticket   = kw.pop('ticket', None)
         self._conf     = None
         self._contents = list()
+        self._aborted  = False
 
     @classmethod
     def tag_clean(cls, tag):
@@ -84,6 +85,10 @@ class Node(footprints.util.GetByTag):
     @property
     def ticket(self):
         return self._ticket
+
+    @property
+    def aborted(self):
+        return self._aborted
 
     @property
     def conf(self):
@@ -108,6 +113,23 @@ class Node(footprints.util.GetByTag):
     def __iter__(self):
         for node in self.contents:
             yield node
+
+    def __enter__(self):
+        """
+        Enter a :keyword:`with` context, freezing the current env
+        and joining a cocoon directory.
+        """
+        self._oldctx = self.ticket.context
+        ctx = self.ticket.context.newcontext(self.tag, focus=True)
+        ctx.cocoon()
+        logger.debug('Node context directory <%s>', self.sh.getcwd())
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Exit from :keyword:`with` context."""
+        logger.debug('Exit context directory <%s>', self.sh.getcwd())
+        self._oldctx.catch_focus()
+        self.ticket.context.cocoon()
 
     def setconf(self, conf_local, conf_global):
         """Build a new conf object for the actual node."""
@@ -145,9 +167,11 @@ class Node(footprints.util.GetByTag):
         pass
 
     def xp2conf(self):
-        """Set the actual experiment value -- Could be the name of the op suite."""
+        """Set the actual experiment value -- Could be the name of the op suite if any."""
         if 'experiment' not in self.conf:
-            self.conf.xpid = self.conf.experiment = self.conf.suite
+            self.conf.xpid = self.conf.experiment = self.conf.get('suite', self.env.VORTEX_XPID)
+        if self.conf.experiment is None:
+            raise ValueError('Could not set a proper experiment id.')
         logger.info('Experiment name is <%s>', self.conf.experiment)
 
     def register_cycle(self, cyclename):
@@ -173,6 +197,22 @@ class Node(footprints.util.GetByTag):
         if 'geometry' not in self.conf:
             logger.error('No default geometry defined -- Probably a big mistake !')
 
+    def defaults(self, extras):
+        """Set toolbox defaults, extended with actual arguments ``extras``."""
+        t = self.ticket
+        toolbox.defaults(
+            model     = t.glove.vapp,
+            date      = self.conf.rundate,
+            namespace = self.conf.get('namespace', 'vortex.cache.fr'),
+        )
+
+        for optk in ('cutoff', 'geometry'):
+            if optk in self.conf:
+                toolbox.defaults[optk] = self.conf.get(optk)
+
+        toolbox.defaults(**extras)
+        toolbox.defaults.show()
+
     def setup(self, **kw):
         """A methodic way to build the conf of the node."""
         self.subtitle(self.realkind.upper() + ' setup')
@@ -196,8 +236,8 @@ class Node(footprints.util.GetByTag):
         self.header('Reshape starter <' + str(self.starter) + '>')
         if self.starter:
             if type(self.starter) is bool:
-                self.starter = 'full'
-            if type(self.starter) is str:
+                self.starter = ('full',)
+            elif isinstance(self.starter, basestring):
                 self.starter = self.starter.replace(' ', '').split(',')
             while any([ x for x in self.starter if x in kw ]):
                 for item in [ x for x in self.starter if x in kw ]:
@@ -218,11 +258,11 @@ class Node(footprints.util.GetByTag):
         """Abstract method: perform the taks to do."""
         pass
 
-    def complete(self):
-        """Abstract method: post processing before completion."""
-        pass
+    def complete(self, aborted=False):
+        """Some cleaning and completetion status."""
+        self._aborted = aborted
 
-    def run(self):
+    def run(self, nbpass=0):
         """Abstract method: the actual job to do."""
         pass
 
@@ -245,10 +285,10 @@ class Family(Node, NiceLayout):
                 fcount = fcount + 1
                 self._contents.append(
                     Family(
-                        tag     = '{0:s}.f{1:02d}'.format(self.tag, fcount),
-                        ticket  = self.ticket,
-                        nodes   = x,
-                        options = options
+                        tag    = '{0:s}.f{1:02d}'.format(self.tag, fcount),
+                        ticket = self.ticket,
+                        nodes  = x,
+                        **kw
                     )
                 )
 
@@ -256,12 +296,13 @@ class Family(Node, NiceLayout):
     def realkind(self):
         return 'family'
 
-    def run(self):
+    def run(self, nbpass=0):
         """Execution driver: setup, run kids, complete."""
         self.setup(**self.options)
         self.summary()
         for node in self.contents:
-            node.run()
+            with node:
+                node.run()
         self.complete()
 
 
@@ -280,7 +321,7 @@ class Task(Node, NiceLayout):
         )
         self._sequence = dataflow.Sequence()
         self.options = kw.copy()
-        if type(self.steps) is str:
+        if isinstance(self.steps, basestring):
             self.steps = tuple(self.steps.replace(' ', '').split(','))
 
     @property
@@ -308,12 +349,7 @@ class Task(Node, NiceLayout):
             t.sh.cd(rundir, create=True)
             t.rundir = t.sh.getcwd()
 
-        # Find a nice place for cocooning
-        ctx = self.ticket.context.newcontext(self.tag, focus=True)
-        ctx.cocoon()
-        logger.info('Task context directory <%s>', self.sh.getcwd())
-
-        # Tentative de détermination plus ou moins hasardeuse de l'étape en cours
+        # Some attempt to find the current active steps
         if not self.steps:
             if self.play:
                 self.steps = (self.fetch, self.compute, self.backup)
@@ -322,19 +358,6 @@ class Task(Node, NiceLayout):
             else:
                 self.steps = (self.fetch,)
         self.header('Active steps: ' + ' '.join(self.steps))
-
-    def defaults(self, extras):
-        """Set toolbox defaults, extended with actual arguments ``extras``."""
-        t = self.ticket
-        toolbox.defaults(
-            model      = t.glove.vapp,
-            date       = self.conf.rundate,
-            cutoff     = self.conf.cutoff,
-            geometry   = self.conf.geometry,
-            namespace  = self.conf.get('namespace', 'vortex.cache.fr'),
-        )
-        toolbox.defaults(**extras)
-        toolbox.defaults.show()
 
     def conf2io(self):
         """Broadcast IO SERVER configuration values to environment."""
@@ -356,14 +379,18 @@ class Task(Node, NiceLayout):
             sh.header('Post-IO Poll directory listing')
             sh.ll(output=False)
 
-    def run(self):
+    def run(self, nbpass=0):
         """Execution driver: build, setup, refill, process, complete."""
-        self.build(**self.options)
-        self.setup(**self.options)
-        self.summary()
-        self.refill()
-        self.process()
-        self.complete()
+        try:
+            self.build(**self.options)
+            self.setup(**self.options)
+            self.summary()
+            self.refill()
+            self.process()
+        except VortexForceComplete:
+            self.sh.title('Force complete')
+        finally:
+            self.complete()
 
 
 class Driver(footprints.util.GetByTag, NiceLayout):
@@ -373,13 +400,15 @@ class Driver(footprints.util.GetByTag, NiceLayout):
 
     def __init__(self, ticket=None, nodes=(), rundate=None, iniconf=None, jobname=None, options=None):
         """Setup default args value and read config file job."""
-        t = self.ticket  = ticket
+        self._ticket = t = ticket
+        self._conf = None
 
         # Set default parameters for the actual job
         self._iniconf = iniconf or t.env.OP_INICONF
         self._jobname = jobname or t.env.OP_JOBNAME or 'void'
         self._rundate = rundate or t.env.OP_RUNDATE
         self._options = options
+        self._nbpass  = 0
 
         # Build the tree to schedule
         self._contents = list()
@@ -399,12 +428,20 @@ class Driver(footprints.util.GetByTag, NiceLayout):
                 )
 
     @property
+    def ticket(self):
+        return self._ticket
+
+    @property
     def conf(self):
         return self._conf
 
     @property
     def sh(self):
         return self.ticket.sh
+
+    @property
+    def env(self):
+        return self.ticket.env
 
     @property
     def iniconf(self):
@@ -425,6 +462,10 @@ class Driver(footprints.util.GetByTag, NiceLayout):
     @property
     def rundate(self):
         return self._rundate
+
+    @property
+    def nbpass(self):
+        return self._nbpass
 
     def read_config(self, inifile=None):
         """Read specified ``inifile`` initialisation file."""
@@ -472,10 +513,7 @@ class Driver(footprints.util.GetByTag, NiceLayout):
 
     def run(self):
         """Assume recursivity of nodes `run` methods."""
-        t = self.ticket
+        self._nbpass += 1
         for node in self.contents:
-            try:
-                node.run()
-            except VortexForceComplete:
-                t.sh.title('Force complete')
-                node.complete()
+            with node:
+                node.run(nbpass=self.nbpass)

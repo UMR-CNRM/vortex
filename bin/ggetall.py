@@ -16,6 +16,9 @@ args = parser.parse_args()
 import vortex
 from iga.util import swissknife
 
+if args.cycle.endswith('.genv'):
+    args.cycle = args.cycle[:-5]
+
 increase, details = swissknife.freeze_cycle(
     vortex.ticket(),
     cycle   = args.cycle,

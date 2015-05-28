@@ -47,7 +47,12 @@ class Addon(footprints.FootprintBase):
                 optional = True,
                 default  = None,
                 access   = 'rwx',
-            )
+            ),
+            cycle = dict(
+                optional = True,
+                default  = None,
+                access   = 'rwx',
+            ),
         )
     )
 
@@ -69,13 +74,17 @@ class Addon(footprints.FootprintBase):
                     break
             if self.path is None and self.cfginfo is not None:
                 tg = self.sh.target()
-                addon_rootdir = tg.get(self.cfginfo + ':rootdir', None)
-                addon_opcycle = self.sh.env.get(
-                    self.cfginfo + 'cycle',
-                    tg.get(self.cfginfo + ':' + self.cfginfo + 'cycle')
+                addon_rootdir = self.sh.env.get(
+                    self.cfginfo + 'root',
+                    tg.get(self.cfginfo + ':rootdir', None)
                 )
-                if addon_rootdir and addon_opcycle:
-                    self.path = addon_rootdir + '/' + addon_opcycle
+                if self.cycle is None:
+                    self.cycle = self.sh.env.get(
+                        self.cfginfo + 'cycle',
+                        tg.get(self.cfginfo + ':' + self.cfginfo + 'cycle')
+                    )
+                if addon_rootdir is not None and self.cycle is not None:
+                    self.path = addon_rootdir + '/' + self.cycle
 
     @classmethod
     def in_shell(cls, shell):

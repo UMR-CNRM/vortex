@@ -116,14 +116,15 @@ def lastround(rh=1, delta=0, base=None):
     return Date(base.year, base.month, base.day, base.hour - base.hour % rh, 0)
 
 
-def synop(delta=0, base=None, time=None):
+def synop(delta=0, base=None, time=None, step=6):
     """Return date associated to the last synoptic hour."""
-    synopdate = lastround(6, delta, base)
+    synopdate = lastround(step, delta, base)
     if time is not None:
         time = Time(time)
-        if time in [ Time(x) for x in (0, 6, 12, 18) ]:
+        if time in [ Time(x) for x in range(0, 24, step) ]:
+            dt = Period('PT' + str(step) + 'H')
             while synopdate.time() != time:
-                synopdate = synopdate - Period('PT6H')
+                synopdate = synopdate - dt
         else:
             raise ValueError('Not a synoptic hour: ' + str(time))
     return synopdate
@@ -868,6 +869,7 @@ class Month(object):
 
     def __cmp__(self, other):
         """Compare two month values."""
+        rc = 1
         try:
             if isinstance(other, int) or ( isinstance(other, str) and len(other.lstrip('0')) < 3 ):
                 rc = cmp(self.month, Month(int(other), self.year).month)

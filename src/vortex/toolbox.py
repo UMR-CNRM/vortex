@@ -29,7 +29,6 @@ active_promise = True
 active_clear   = False
 
 #: History recording
-
 history = History(tag='rload')
 
 # Most commonly used functions
@@ -133,6 +132,8 @@ def nicedump(msg, **kw):
 def add_section(section, args, kw):
     """Add a ``section`` type to the current sequence."""
 
+    t = sessions.current()
+
     # First, retrieve arguments of the toolbox command itself
     now       = kw.pop('now', active_now)
     loglevel  = kw.pop('loglevel', None)
@@ -147,8 +148,16 @@ def add_section(section, args, kw):
         force = kw.pop('force', False)
     )
 
+    # Third, collect arguments for triggering some hook
+    hooks = dict()
+    for ahook in [ x for x in kw.keys() if x.startswith('hook_') ]:
+         cbhook = footprints.util.mktuple(kw.pop(ahook))
+         cbfunc = cbhook[0]
+         if not callable(cbfunc):
+             cbfunc = t.sh.import_function(cbfunc)
+         hooks[ahook] = footprints.FPTuple((cbfunc, cbhook[1:]))
+
     # Swich off autorecording of the current context
-    t = sessions.current()
     ctx = t.context
     ctx.record_off()
 
@@ -171,8 +180,11 @@ def add_section(section, args, kw):
             now = now,
             verbose  = talkative,
         )
+        if hooks:
+            nicedump('Hooks triggered', **hooks)
 
     # Let the magic of footprints resolution operate...
+    kwclean.update(hooks)
     rl = rload(*args, **kwclean)
     rlok = list()
 
@@ -203,7 +215,7 @@ def add_section(section, args, kw):
                     raise VortexForceComplete('Force task complete on resource error')
                 if not opts['fatal']:
                     logger.warning('Make a fake resource %s', rhandler.container.localpath())
-                    t.sh.touch(rhandler.container.localpath())
+                    t.sh.touch(rhandler.container.localpath() + '.fake')
             if t.sh.trace:
                 print
         if ok:
@@ -376,7 +388,7 @@ def diff(*args, **kw):
                 raise ValueError('Fatal diff')
         if t.sh.trace:
             print
-        rlok.append(rhandler)
+        rlok.append(rc)
 
     if loglevel is not None:
         t.setloglevel(oldlevel)
@@ -385,12 +397,17 @@ def diff(*args, **kw):
     return rlok
 
 
-def magic(url, localpath):
+def magic(localpath, **kw):
     """
     Return a minimal resource handler build with an unknown resource,
     a file container and an anonymous provider described with its url.
     """
-    rhmagic = rh(unknown=True, magic=url, filename=localpath)
+    kw.update(
+        unknown  = True,
+        magic    = 'magic:' + localpath,
+        filename = localpath,
+    )
+    rhmagic = rh(**kw)
     rhmagic.get()
     return rhmagic
 

@@ -159,13 +159,13 @@ class Container(footprints.FootprintBase):
     def actualmode(self):
         return self._iomode or self.mode
 
-    def amode(self, actualmode):
-        """Upgrade the ``actualmode`` to a write-compatible mode."""
+    def set_amode(self, actualmode):
+        """Upgrade the ``actualmode`` to a append-compatible mode."""
         am = re.sub('[rw]', 'a', actualmode)
         am = am.replace('+', '')
         return am + '+'
 
-    def wmode(self, actualmode):
+    def set_wmode(self, actualmode):
         """Upgrade the ``actualmode`` to a write-compatible mode."""
         wm = re.sub('r', 'w', actualmode)
         wm = wm.replace('+', '')
@@ -174,14 +174,14 @@ class Container(footprints.FootprintBase):
     def write(self, data, mode=None):
         """Write the data content in container."""
         if mode is None:
-            mode = self.wmode(self.mode)
+            mode = self.set_wmode(self.mode)
         iod = self.iodesc(mode)
         iod.write(data)
         self._filled = True
 
     def append(self, data):
         """Write the data content at the end of the container."""
-        iod = self.iodesc(self.amode(self.mode))
+        iod = self.iodesc(self.set_amode(self.mode))
         self.endoc()
         iod.write(data)
         self._filled = True

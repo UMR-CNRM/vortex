@@ -16,7 +16,7 @@ class SendAlarm(Action):
     Class responsible for sending alarms.
     """
 
-    def __init__(self, kind='alarm', service=None, active=False):
+    def __init__(self, kind='alarm', service='sendalarm', active=False):
         super(SendAlarm, self).__init__(kind=kind, active=active, service=service)
 
     def service_info(self, **kw):
@@ -35,4 +35,13 @@ class Route(Action):
         super(Route, self).__init__(kind=kind, active=active, service=service)
 
 
-actiond.add(SendAlarm(), Route())
+class DMTEvent(Action):
+    """
+    Class responsible for routing data to the Transfer Agent (BDAP, BDPE, BDM).
+    """
+
+    def __init__(self, kind='dmt', service='dmtevent', active=False):
+        super(DMTEvent, self).__init__(kind=kind, active=active, service=service)
+
+
+actiond.add(SendAlarm(), Route(), DMTEvent())

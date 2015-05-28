@@ -67,7 +67,7 @@ class StdFtp(object):
     """
 
     def __init__(self, system, hostname):
-        logger.debug('FTP init host %s', hostname)
+        logger.debug('FTP init <host:{:s}>'.format(hostname))
         self._system  = system
         self._closed  = True
         self._ftplib  = ftplib.FTP(hostname)
@@ -127,13 +127,13 @@ class StdFtp(object):
     @property
     def length(self):
         """Length in seconds of the current opened connection."""
+        timelength = 0
         try:
             topnow = datetime.now() if self._deleted is None else self._deleted
             timelength = ( topnow - self._opened ).total_seconds()
         except TypeError:
-            timelength = 0
-        finally:
-            return timelength
+            logger.warning('Could not evaluate connexion length {!r}'.format(self))
+        return timelength
 
     def close(self):
         """Proxy to ftplib :meth:`ftplib.FTP.close`."""
@@ -145,13 +145,13 @@ class StdFtp(object):
     def login(self, *args):
         """Proxy to ftplib :meth:`ftplib.FTP.login`."""
         self.stderr('login', args[0])
-        logger.debug('FTP login %s', str(args))
+        logger.debug('FTP login <args:{!s}>'.format(args))
         rc = self._ftplib.login(*args)
         if rc:
             self._closed = False
             self._opened = datetime.now()
         else:
-            logger.warning('FTP could not login with args %s', str(args))
+            logger.warning('FTP could not login <args:{!s}>'.format(args))
         return rc
 
     def fastlogin(self, logname, password=None):
@@ -199,28 +199,37 @@ class StdFtp(object):
     def get(self, source, destination):
         """Retrieve a remote `destination` file to a local `source` file object."""
         self.stderr('get', source, destination)
-        if type(destination) is types.StringType:
+        if isinstance(destination, basestring):
             self.system.filecocoon(destination)
             target = io.open(destination, 'wb')
             xdestination = True
         else:
             target = destination
             xdestination = False
-        logger.info('FTP get <%s>', source)
-        rc = True
+        logger.info('FTP <get:{:s}>'.format(source))
+        rc = False
         try:
             self.retrbinary('RETR ' + source, target.write)
-        except Exception as e:
-            logger.error('FTP could not get <%s>: %s', source, str(e))
-            rc = False
-        if xdestination:
-            target.close()
+        except StandardError as e:
+            logger.error('FTP could not get {!r}: {!s}'.format(source, e))
+        else:
+            if xdestination:
+                target.seek(0, 2)
+                if self.size(source) == target.tell():
+                    rc = True
+                else:
+                    logger.error('FTP incomplete get {!r}'.format(source))
+            else:
+                rc = True
+        finally:
+            if xdestination:
+                target.close()
         return rc
 
     def put(self, source, destination):
         """Store a local `source` file object to a remote `destination`."""
         self.stderr('put', source, destination)
-        if type(source) is types.StringType:
+        if isinstance(source, basestring):
             inputsrc = io.open(source, 'rb')
             xsource = True
         else:
@@ -228,24 +237,36 @@ class StdFtp(object):
             try:
                 inputsrc.seek(0)
             except AttributeError as seek_error:
-                logger.warning('No rewind on source %s' % str(source))
+                logger.warning('Could not rewind <source:{!s}>'.format(source))
             except IOError as seek_error:
-                logger.debug('Seek trouble on source %s' % str(source))
+                logger.debug('Seek trouble <source:{!s}>'.format(source))
             xsource = False
         self.rmkdir(destination)
         try:
             self.delete(destination)
-            logger.warning('File %s will be replaced.', destination)
+            logger.warning('Replacing <file:{!s}>'.format(destination))
         except ftplib.error_perm:
-            logger.warning('File %s will be created.', destination)
-        logger.info('FTP put %s', destination)
-        rc = True
+            logger.warning('Creating <file:{!s}>'.format(destination))
+        except StandardError as e:
+            logger.critical('Serious delete trouble <file:{!s}> <error:{!s}>'.format(destination, e))
+        logger.info('FTP <put:{!s}>'.format(destination))
+        rc = False
         try:
             self.storbinary('STOR ' + destination, inputsrc)
-        except StandardError:
-            rc = False
-        if xsource:
-            inputsrc.close()
+        except StandardError as e:
+            logger.error('FTP could not put {!r}: {!s}'.format(source, e))
+        else:
+            if xsource:
+                inputsrc.seek(0, 2)
+                if self.size(destination) == inputsrc.tell():
+                    rc = True
+                else:
+                    logger.error('FTP incomplete put {!r}'.format(source))
+            else:
+                rc = True
+        finally:
+            if xsource:
+                inputsrc.close()
         return rc
 
     def rmkdir(self, destination):
