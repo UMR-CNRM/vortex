@@ -8,11 +8,17 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.7
 
+
 Package
 -------
 
 .. autodata:: __all__
 
+
 Classes
 -------
 
+.. autoclass:: BackgroundStdErr
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

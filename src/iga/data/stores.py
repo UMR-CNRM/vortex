@@ -56,16 +56,16 @@ class IgaFinder(Finder):
         info = 'Iga file access',
         attr = dict(
             netloc = dict(
-                outcast = list(),
-                values = [ 'oper.inline.fr', 'dbl.inline.fr', 'dble.inline.fr', 'test.inline.fr' ],
-                remap = {
+                outcast  = list(),
+                values   = ['oper.inline.fr', 'dbl.inline.fr', 'dble.inline.fr', 'test.inline.fr'],
+                remap    = {
                     'dbl.inline.fr': 'dble.inline.fr'
                 }
             ),
             rootdir = dict(
-                alias = [ 'opdata', 'datadir' ],
+                alias    = [ 'opdata', 'datadir' ],
                 optional = True,
-                default = '/chaine/mxpt001'
+                default  = '/chaine/mxpt001'
             )
         ),
         priority = dict(
@@ -104,15 +104,19 @@ class SopranoStore(Store):
                 values   = ['prod.soprano.fr', 'intgr.soprano.fr'],
                 default  = 'prod.soprano.fr'
             ),
-            rootdir = dict(
-                alias    = [ 'sopranohome' ],
-                default  = '/SOPRANO'
-            ),
             storage = dict(
                 optional = True,
-                values   = ['piccolo.meteo.fr, piccolo-int.meteo.fr'],
-                default  = 'piccolo.meteo.fr'
+                values   = ['piccolo.meteo.fr', 'piccolo-int.meteo.fr'],
+                default  = 'piccolo.meteo.fr',
             ),
+            storeroot = dict(
+                alias    = ['sopranohome'],
+                default  = '/SOPRANO',
+                optional = True,
+            ),
+        ),
+        priority = dict(
+            level = footprints.priorities.top.OPER
         )
     )
 

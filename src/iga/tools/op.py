@@ -97,12 +97,15 @@ def setup(**kw):
     t.sh.header('Add-ons to the shell')
 
     import vortex.tools.lfi
+
     shlfi = footprints.proxy.addon(kind='lfi', shell=t.sh)
     print '+ Add-on LFI', shlfi
+
     shio = footprints.proxy.addon(kind='iopoll', shell=t.sh)
     print '+ Add-on IO POLL', shio
 
     import vortex.tools.odb
+
     shodb = footprints.proxy.addon(kind='odb', shell=t.sh)
     print '+ Add-on ODB', shodb
 

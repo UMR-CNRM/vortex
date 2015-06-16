@@ -129,7 +129,7 @@ class UtGridPoint(TestCase):
         )
         for rh in rl:
             self.assertTrue(rh.complete)
-            #print ' > ', rh.location()            
+            #print ' > ', rh.location()
         self.assertEqual(
             rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB15+0000.rDH'
@@ -279,7 +279,7 @@ class UtHistoric(TestCase):
             date = rundate_bis,
             term = 0
         )
-        
+
         self.fp_historic2_bis = dict(
             kind = 'historic',
             geometry = self.caledonie,
@@ -351,7 +351,7 @@ class UtHistoric(TestCase):
             datadir + '/aladin/caledonie/oper/data/fic_day/ICMSHALAD+0000.rAM'
         )
         self.assertTrue(rl[0].get())
-        
+
     def test_v2_bis(self):
         rl = toolbox.rload(
             self.fp_prov2,
@@ -437,7 +437,7 @@ class UtAnalysis(TestCase):
             geometry = self.frangp,
             date = rundate,
         )
-        
+
         self.fp_analys2_bis = dict(
             kind = 'analysis',
             cutoff = 'production',
@@ -515,7 +515,7 @@ class UtAnalysis(TestCase):
             datadir + '/arome/france/oper/data/fic_day/INIT_SURF.fa.rDH'
         )
         self.assertTrue(rl[0].get())
-        
+
 
     def test_v2(self):
         rl = toolbox.rload(
@@ -535,7 +535,7 @@ class UtAnalysis(TestCase):
             datadir + '/aladin/caledonie/oper/data/workdir/analyse/ICMSHALADINIT.r18'
         )
         self.assertTrue(rl[0].get())
-    
+
     def test_v2_bis(self):
         rl = toolbox.rload(
             self.fp_prov2,
@@ -591,7 +591,7 @@ class UtHistsurf(TestCase):
         )
 
         self.fp_cont = dict(
-            file = 'PREP.fa'
+            filename = 'PREP.fa'
         )
 
         self.fp_prov = dict(
@@ -627,7 +627,7 @@ class UtHistsurf(TestCase):
             datadir + '/arome/france/oper/data/fic_day/PREP.fa.rDH'
         )
         self.assertTrue(rl[0].get())
-        
+
 
 if __name__ == '__main__':
     for test in [ UtGridPoint, UtHistoric, UtAnalysis, UtHistsurf ]:

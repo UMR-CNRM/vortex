@@ -25,3 +25,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: DMTEvent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OpMail
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

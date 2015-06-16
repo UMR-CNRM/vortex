@@ -13,8 +13,8 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex import toolbox, data, VortexForceComplete
-
 from vortex.util.config import GenericConfigParser
+from vortex.syntax.stdattrs import Namespace
 
 from . import dataflow
 
@@ -203,7 +203,7 @@ class Node(footprints.util.GetByTag):
         toolbox.defaults(
             model     = t.glove.vapp,
             date      = self.conf.rundate,
-            namespace = self.conf.get('namespace', 'vortex.cache.fr'),
+            namespace = self.conf.get('namespace', Namespace('vortex.cache.fr')),
         )
 
         for optk in ('cutoff', 'geometry'):

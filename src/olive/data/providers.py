@@ -11,6 +11,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.providers import Provider
 from common.tools.igastuff import archive_suffix, fuzzyname, suites
+from vortex.syntax.stdattrs import Namespace
 
 
 class Olive(Provider):
@@ -29,9 +30,10 @@ class Olive(Provider):
                 optional = True,
             ),
             namespace = dict(
+                type     = Namespace,
                 optional = True,
                 values   = ['olive.cache.fr', 'olive.archive.fr', 'olive.multi.fr', 'multi.olive.fr'],
-                default  = 'olive.cache.fr',
+                default  = Namespace('olive.cache.fr'),
                 remap    = {
                     'multi.olive.fr': 'olive.multi.fr',
                 }
@@ -51,9 +53,9 @@ class Olive(Provider):
         """Default scheme is ``olive``."""
         return 'olive'
 
-    def domain(self):
+    def netloc(self):
         """Proxy to actual ``namespace`` value."""
-        return self.namespace
+        return self.namespace.netloc
 
     def basename(self, resource):
         """Add block information to resource mailbox... just in case..."""
@@ -92,6 +94,7 @@ class OpArchive(Provider):
                 remap    = dict(ftop = 'op'),
             ),
             namespace = dict(
+                type     = Namespace,
                 optional = True,
                 default  = '[suite].multi.fr',
                 values   = ['oper.archive.fr', 'dble.archive.fr', 'oper.multi.fr', 'dble.multi.fr'],
@@ -129,9 +132,9 @@ class OpArchive(Provider):
         """Return the actual tube as scheme."""
         return self.tube
 
-    def domain(self):
+    def netloc(self):
         """Proxy to actual ``namespace`` value."""
-        return self.namespace
+        return self.namespace.netloc
 
     def basename(self, resource):
         bname = resource.basename(self.realkind)

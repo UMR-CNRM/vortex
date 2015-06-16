@@ -14,6 +14,13 @@ Package
 .. autodata:: __all__
 
 
+Exceptions
+----------
+
+.. autoclass:: MpiException
+   :show-inheritance:
+
+
 Classes
 -------
 

@@ -13,6 +13,20 @@ Package
 
 .. autodata:: __all__
 
+
+Functions
+---------
+
+.. autofunction:: observer_board
+
+
+Exceptions
+----------
+
+.. autoclass:: HandlerError
+   :show-inheritance:
+
+
 Classes
 -------
 

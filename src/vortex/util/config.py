@@ -24,22 +24,22 @@ def load_template(t, tplfile):
     if t.sh.path.exists(tplfile):
         tplfile = t.sh.path.abspath(tplfile)
     else:
-        persofile = t.glove.configrc + '/templates/' + t.sh.path.basename(tplfile)
+        persofile = t.sh.path.join(t.glove.configrc, 'templates', t.sh.path.basename(tplfile))
         if t.sh.path.exists(persofile):
             tplfile = persofile
         else:
-            sitefile = t.glove.siteroot + '/templates/' + t.sh.path.basename(tplfile)
+            sitefile = t.sh.path.join(t.glove.siteroot, 'templates', t.sh.path.basename(tplfile))
             if t.sh.path.exists(sitefile):
                 tplfile = sitefile
             else:
-                raise ValueError('Template file ' + tplfile + ' not found')
+                raise ValueError('Template file not found: <{}>'.format(tplfile))
     try:
         import string
         with open(tplfile, 'r') as tplfd:
             tpl = string.Template(tplfd.read())
         tpl.srcfile = tplfile
     except Exception as pb:
-        logger.error('Could not read template %s', str(pb))
+        logger.error('Could not read template <{!s}>'.format(pb))
         raise
     return tpl
 
@@ -94,7 +94,7 @@ class GenericConfigParser(object):
             self.parser.read(self.file)
 
     def setall(self, kw):
-        """Define in all section the couples of ( key, values ) given as dictionary argument."""
+        """Define in all sections the couples of ( key, values ) given as dictionary argument."""
         self.updates.append(kw)
         for section in self.sections():
             for key, value in kw.iteritems():

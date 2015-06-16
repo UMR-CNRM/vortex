@@ -91,3 +91,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: OpMailService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

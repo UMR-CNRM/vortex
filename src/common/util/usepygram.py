@@ -3,6 +3,9 @@
 
 """
 Usage of EPyGrAM package.
+
+When loaded, this module discards any FootprintBase resource collected as a container
+in EPyGrAM package.
 """
 
 import footprints

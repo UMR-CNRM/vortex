@@ -13,6 +13,8 @@ __all__ = []
 import os
 import random
 import base64
+from string import Template
+from ConfigParser import NoOptionError, NoSectionError
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -21,6 +23,8 @@ from vortex import sessions
 from vortex.tools import date
 
 from vortex.tools.actions import actiond as ad
+from vortex.util.config import GenericConfigParser, load_template
+from vortex.util.structs import Utf8PrettyPrinter
 
 
 # See logging.handlers.SysLogHandler.priority_map
@@ -152,6 +156,7 @@ class MailService(Service):
 
     @staticmethod
     def is_not_plain_ascii(string):
+        """Return True if any character in string is not ascii-7."""
         return not all(ord(c) < 128 for c in string)
 
     def get_message_body(self):
@@ -291,6 +296,7 @@ class FileReportService(ReportService):
             filename = dict(),
         )
     )
+
 
 class SSHProxy(Service):
     """
@@ -528,3 +534,303 @@ class HideService(Service):
             )
             self.sh.cp(filename, destination, intent='in', fmt=self.asfmt)
             return destination
+
+
+class Directory(object):
+    """
+    A class to represent and use mail aliases.
+
+    Directory (en) means Annuaire (fr).
+    """
+
+    def __init__(self, inifile, domain='meteo.fr'):
+        """Keep aliases in memory, as a dict of sets."""
+        config = GenericConfigParser(inifile)
+        try:
+            self.domain = config.get('general', 'default_domain')
+        except NoOptionError:
+            self.domain = domain
+        self.aliases = {
+            k.lower(): set(v.lower().replace(',', ' ').split())
+            for (k, v) in config.items('aliases')
+        }
+        count = self._flatten()
+        logger.debug('opmail aliases flattened in {} iterations:\n{}'.format(count, self))
+
+    def get_addresses(self, definition, add_domain=True):
+        """Build a space separated list of unique mail addresses
+           from a string that may reference aliases."""
+        addresses = set()
+        for item in definition.replace(',', ' ').split():
+            if item in self.aliases:
+                addresses |= self.aliases[item]
+            else:
+                addresses |= {item}
+        if add_domain:
+            return ' '.join(self._add_domain(addresses))
+        return ' '.join(addresses)
+
+    def __str__(self):
+        return '\n'.join(sorted(
+            ['{}: {}'.format(k, ' '.join(sorted(v)))
+             for (k, v) in self.aliases.iteritems()]
+        ))
+
+    def _flatten(self):
+        """Resolve recursive definitions from the dict of sets."""
+        changed = True
+        count = 0
+        while changed:
+            changed = False
+            count += 1
+            for kref, vref in self.aliases.iteritems():
+                if kref in vref:
+                    logger.error('Cycle detected in the aliases directory.\n'
+                                 'offending key: {}.\n'
+                                 'directory being flattened:\n{}'.format(kref,self))
+                    raise ValueError('Cycle for key <{}> in directory definition'.format(kref))
+                for k, v in self.aliases.iteritems():
+                    if kref in v:
+                        v -= {kref}
+                        v |= vref
+                        self.aliases[k] = v
+                        changed = True
+        return count
+
+    def _add_domain(self, aset):
+        """Add domain where missing in a set of addresses."""
+        return {
+            v if '@' in v
+            else v + '@' + self.domain
+            for v in aset
+        }
+
+
+class PromptService(Service):
+    """
+    Class used to simulate a real Service: logs the argument it receives.
+    This class should not be called directly.
+    """
+
+    _footprint = dict(
+        info = 'Simulate a call to a Service.',
+        attr = dict(
+            kind = dict(
+                values   = ('prompt',),
+            ),
+            comment = dict(
+                optional = True,
+                default  = None,
+            ),
+        )
+    )
+
+    def __call__(self, options):
+        """Prints what arguments the action was called with."""
+        pf = Utf8PrettyPrinter().pformat
+        logger_action = getattr(logger, self.level, logger.warning)
+        msg = (self.comment or 'PromptService was called.') + '\noptions = {}'
+        logger_action (msg.format(pf(options)).replace('\n', '\n<prompt> '))
+        return True
+
+
+class TemplatedMailService(MailService):
+    """
+    Class responsible for sending templated mails.
+    This class should not be called directly.
+    """
+
+    _footprint = dict(
+        info = 'Templated mail services class',
+        attr = dict(
+            kind = dict(
+                values   = ['templatedmail'],
+            ),
+            id = dict(
+                alias    = ('template',),
+            ),
+            subject = dict(
+                optional = True,
+                default  = None,
+                access   = 'rwx',
+            ),
+            to = dict(
+                optional = True,
+                default  = None,
+                access   = 'rwx',
+            ),
+            message = dict(
+                access   = 'rwx',
+            ),
+            directory = dict(
+                type     = Directory,
+                optional = True,
+                default  = None,
+            ),
+            catalog = dict(
+                type     = GenericConfigParser,
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        ticket = kw.pop('ticket', sessions.get())
+        super(TemplatedMailService, self).__init__(*args, **kw)
+        self._ticket = ticket
+        logger.debug('TemplatedMail init for id <{}>'.format(self.id))
+
+    @property
+    def ticket(self):
+        return self._ticket
+
+    def header(self):
+        """String prepended to the message body."""
+        return ''
+
+    def trailer(self):
+        """String appended to the message body."""
+        return ''
+
+    def deactivated(self):
+        """Return True to eventually prevent the mail from being sent."""
+        return False
+
+    def get_catalog_section(self):
+        """Read section <id> (a dict-like) from the catalog."""
+        try:
+            section = dict(self.catalog.items(self.id))
+        except NoSectionError:
+            logger.error('Section <{}> is missing in catalog <{}>'.format(self.id, self.catalog.file))
+            section = None
+        return section
+
+    def substitution_dictionary(self, add_ons=None):
+        """Dictionary used for template substitutions: env + add_ons."""
+        dico = footprints.util.UpperCaseDict(self.env)
+        if add_ons is not None:
+            dico.update(add_ons)
+        return dico
+
+    @staticmethod
+    def substitute(tpl, tpldict, depth=1):
+        """Safely apply template substitution.
+
+          * Syntactic and missing keys errors are detected and logged.
+          * on error, a safe substitution is applied.
+          * The substitution is iterated ``depth`` times.
+        """
+        if not isinstance (tpl, Template):
+            tpl = Template(tpl)
+        result = ''
+        for level in range(depth):
+            try:
+                result = tpl.substitute(tpldict)
+            except KeyError as exc:
+                logger.error('Undefined key <{}> in template substitution level {}'.format(exc.message, level+1))
+                result = tpl.safe_substitute(tpldict)
+            except ValueError as exc:
+                logger.error('Illegal syntax in template: {}'.format(exc.message))
+                result = tpl.safe_substitute(tpldict)
+            tpl = Template(result)
+        return result
+
+    def get_message(self, tpldict):
+        """Contents:
+
+          * from the fp if given, else the catalog gives the template file name.
+          * template-substituted.
+          * header and trailer are added.
+        """
+        tpl = self.message
+        if tpl == '':
+            tplfile = self.section.get('template', self.id)
+            if not tplfile.startswith('opmail-'):
+                tplfile = 'opmail-' + tplfile
+            if not tplfile.endswith('.tpl'):
+                tplfile += '.tpl'
+            try:
+                tpl = load_template(self.ticket, tplfile)
+            except ValueError as exc:
+                logger.error('{}'.format(exc.message))
+                return None
+        message = self.substitute(tpl, tpldict)
+        return self.header() + message + self.trailer()
+
+    def get_subject(self, tpldict):
+        """Subject:
+
+          * from the fp if given, else from the catalog.
+          * template-substituted.
+        """
+        tpl = self.subject
+        if tpl is None:
+            tpl = self.section.get('subject', None)
+            if tpl is None:
+                logger.error('Missing <subject> definition for id <{}>.'.format(self.id))
+                return None
+        subject = self.substitute(tpl, tpldict)
+        return subject
+
+    def get_to(self, tpldict):
+        """Recipients:
+
+          * from the fp if given, else from the catalog.
+          * template-substituted.
+          * expanded by the directory (if any).
+          * substituted again, to allow for $vars in the directory.
+          * directory-expanded again for domain completion and unicity.
+        """
+        tpl = self.to
+        if tpl is None:
+            tpl = self.section.get('to', None)
+            if tpl is None:
+                logger.error('Missing <to> definition for id <{}>.'.format(self.id))
+                return None
+        to = self.substitute(tpl, tpldict)
+        if self.directory:
+            to = self.directory.get_addresses(to, add_domain=False)
+        # substitute again for directory definitions
+        to = self.substitute(to, tpldict)
+        # last resolution, plus add domain and remove duplicates
+        if self.directory:
+            to = self.directory.get_addresses(to)
+        return to
+
+    def prepare(self, add_ons=None):
+        """Prepare elements in turn, return True iff all succeeded."""
+        self.section = self.get_catalog_section()
+        if self.section is None:
+            return False
+
+        tpldict = self.substitution_dictionary(add_ons)
+
+        self.message = self.get_message(tpldict)
+        if self.message is None:
+            return False
+
+        self.subject = self.get_subject(tpldict)
+        if self.subject is None:
+            return False
+
+        self.to = self.get_to(tpldict)
+        if self.to is None:
+            return False
+
+        return True
+
+    def __call__(self, *args):
+        """Main action:
+
+          * substitute templates where needed.
+          * apply directory definitions to recipients.
+          * activation is checked before sending via the Mail Service.
+
+        Arguments are passed as add_ons to the substitution dictionary.
+        """
+        add_ons =dict()
+        for arg in args:
+            add_ons.update(arg)
+        rc = False
+        if self.prepare(add_ons) and not self.deactivated():
+            rc = super(TemplatedMailService, self).__call__()
+        return rc

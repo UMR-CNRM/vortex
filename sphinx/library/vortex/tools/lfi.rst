@@ -13,6 +13,11 @@ Package
 
 .. autodata:: __all__
 
+Interface functions
+-------------------
+
+.. autofunction:: use_in_shell
+
 Classes
 -------
 

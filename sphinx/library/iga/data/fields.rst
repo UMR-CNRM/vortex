@@ -16,3 +16,12 @@ Package
 Classes
 -------
 
+.. autoclass:: RawFields
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GeoFields
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

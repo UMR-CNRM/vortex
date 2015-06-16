@@ -9,3 +9,6 @@ Some tasks examples for Op
 
    tasks
 
+   arome_fc
+   arome_obs
+   arpege_fc

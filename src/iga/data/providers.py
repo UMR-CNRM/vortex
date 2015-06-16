@@ -11,7 +11,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.providers  import Provider
 from vortex.util.config     import GenericConfigParser
-from vortex.syntax.stdattrs import a_suite
+from vortex.syntax.stdattrs import a_suite, Namespace
 
 from gco.data.providers import GEnv
 
@@ -110,8 +110,8 @@ class IgaProvider(Provider):
         """The actual scheme is the ``tube`` attribute of the current provider."""
         return self.tube
 
-    def domain(self):
-        """The actual domain is the ``namespace`` attribute of the current provider."""
+    def netloc(self):
+        """The actual netloc is the ``namespace`` attribute of the current provider."""
         return self.namespace
 
     def basename(self, resource):
@@ -153,6 +153,7 @@ class SopranoProvider(Provider):
         info = 'Soprano provider',
         attr = dict(
             namespace = dict(
+                type     = Namespace,
                 optional = True,
                 values   = ['prod.soprano.fr', 'intgr.soprano.fr'],
                 default  = 'prod.soprano.fr'
@@ -187,9 +188,9 @@ class SopranoProvider(Provider):
         """The actual scheme is the ``tube`` attribute of the current provider."""
         return self.tube
 
-    def domain(self):
-        """The actual domain is the ``namespace`` attribute of the current provider."""
-        return self.namespace
+    def netloc(self):
+        """The actual netloc is the ``namespace`` attribute of the current provider."""
+        return self.namespace.netloc
 
     def basename(self, resource):
         return bp.global_snames(resource)

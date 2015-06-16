@@ -1,4 +1,4 @@
-.. data-index:
+.. algo-index:
 
 ###############
 Algo components

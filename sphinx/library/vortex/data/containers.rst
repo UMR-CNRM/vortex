@@ -11,12 +11,19 @@
 .. warning::
 
    Guess what? The documentation of this module is at a point of complemention
-   comparable to its parent package. 
-   
+   comparable to its parent package.
+
 Package
 -------
 
 .. autodata:: __all__
+
+
+Exceptions
+----------
+
+.. autoclass:: DataSizeTooBig
+   :show-inheritance:
 
 
 Classes
@@ -36,13 +43,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: MayFly
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: File
+.. autoclass:: SingleFile
    :show-inheritance:
    :members:
    :member-order: alphabetical

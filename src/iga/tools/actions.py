@@ -6,6 +6,8 @@ __all__ = []
 
 from vortex.toolbox import sessions
 from vortex.tools.actions import Action, actiond
+from vortex.tools.services import Directory
+from vortex.util.config import GenericConfigParser
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -44,4 +46,31 @@ class DMTEvent(Action):
         super(DMTEvent, self).__init__(kind=kind, active=active, service=service)
 
 
-actiond.add(SendAlarm(), Route(), DMTEvent())
+class OpMail(Action):
+    """
+    Class responsible for sending pre-defined mails.
+    """
+
+    def __init__(self, kind='opmail', service='opmail', active=True, directory = None, catalog=None):
+        super(OpMail, self).__init__(kind=kind, active=active, service=service)
+        self.directory = directory or Directory('opmail-directory.ini')
+        self.catalog = catalog or GenericConfigParser('opmail-catalog.ini')
+
+    def service_info(self, **kw):
+        """Kindly propose the permanent directory and catalog to the final service"""
+        kw.setdefault('directory', self.directory)
+        kw.setdefault('catalog', self.catalog)
+        return super(OpMail, self).service_info(**kw)
+
+    def execute(self, *args, **kw):
+        """Perform the action through a service. Extraneous arguments (not included in the footprint)
+        are collected and explicitely transmitted to the service in a dictionary."""
+        rc = None
+        service = self.get_active_service(**kw)
+        if service:
+            options = { k:v for k,v in kw.items() if k not in service.footprint_attributes }
+            rc = service(options)
+        return rc
+
+
+actiond.add(SendAlarm(), Route(), DMTEvent(), OpMail())

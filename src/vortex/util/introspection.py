@@ -34,7 +34,7 @@ class Sherlock(object):
         subpath = modpath
         for installpath in self.glove.sitesrc:
             subpath = re.sub(installpath, '', subpath)
-        subpath = re.sub('.pyc?', '', subpath)
+        subpath = re.sub('\.pyc?', '', subpath)
         subpath = subpath.split('/')
         if subpath[-1] == '__init__':
             subpath[-1] = subpath[-2]

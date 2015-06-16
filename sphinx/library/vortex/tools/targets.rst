@@ -21,3 +21,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: LocalTarget
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

@@ -13,6 +13,19 @@ Package
 
 .. autodata:: __all__
 
+
+Functions
+---------
+
+.. autofunction:: create_logger
+
+.. autofunction:: iga_logger
+
+
 Classes
 -------
 
+.. autoclass:: MyLogger
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

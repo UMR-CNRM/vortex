@@ -9,6 +9,7 @@ Miscellaneous utilities for Op
 
    util
 
+   async
    bpnames
    helpers
    loggers

@@ -37,6 +37,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MagicPlace
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Finder
    :show-inheritance:
    :members:
@@ -67,7 +72,22 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MagicPlace
+.. autoclass:: PromiseCacheStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: PromiseStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VortexPromiseStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: PromisesObserver
    :show-inheritance:
    :members:
    :member-order: alphabetical

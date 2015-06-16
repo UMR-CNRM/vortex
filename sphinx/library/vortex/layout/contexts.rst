@@ -9,6 +9,20 @@
 .. versionadded:: 0.4.0
 
 
+Interface functions
+-------------------
+
+.. autofunction:: get
+
+.. autofunction:: keys
+
+.. autofunction:: values
+
+.. autofunction:: items
+
+.. autofunction:: focus
+
+
 Classes
 -------
 

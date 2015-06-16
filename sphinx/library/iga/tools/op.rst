@@ -13,6 +13,23 @@ Package
 
 .. autodata:: __all__
 
+
+Functions
+---------
+
+.. autofunction:: setup
+
+.. autofunction:: setenv
+
+.. autofunction:: complete
+
+.. autofunction:: register
+
+.. autofunction:: rescue
+
+.. autofunction:: fulltraceback
+
+
 Classes
 -------
 

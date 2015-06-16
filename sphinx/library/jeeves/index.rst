@@ -9,4 +9,5 @@ Jeeves : a multipurpose daemon for handling miscellaneous requests
 
    bertie
    butlers
+   jeeves
    pools

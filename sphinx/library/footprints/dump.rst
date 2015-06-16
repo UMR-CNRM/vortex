@@ -17,6 +17,19 @@ Interface
 
 .. autofunction:: lightdump
 
+.. autofunction:: atomic_type
+
+.. autofunction:: is_instance
+
+.. autofunction:: is_class
+
+.. autofunction:: simple_value
+
+.. autofunction:: indent
+
+.. autofunction:: DEBUG
+
+
 Dumper class
 ------------
 

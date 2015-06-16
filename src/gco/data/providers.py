@@ -8,6 +8,8 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.providers import Provider
+from vortex.syntax.stdattrs import Namespace
+
 from gco.tools import genv
 
 
@@ -24,9 +26,10 @@ class GcoProvider(Provider):
                 default  = 'tampon'
             ),
             gnamespace = dict(
+                type     = Namespace,
                 optional = True,
                 values   = ['gco.cache.fr', 'gco.meteo.fr', 'gco.multi.fr'],
-                default  = 'gco.meteo.fr',
+                default  = Namespace('gco.meteo.fr'),
             ),
         )
     )
@@ -36,8 +39,8 @@ class GcoProvider(Provider):
         logger.debug('GcoProvider abstract init %s', self.__class__)
         super(GcoProvider, self).__init__(*args, **kw)
 
-    def domain(self):
-        """Default domain is ``gco.meteo.fr``."""
+    def netloc(self):
+        """Default network location is ``gco.meteo.fr``."""
         return self.gnamespace
 
     def pathname(self, resource):

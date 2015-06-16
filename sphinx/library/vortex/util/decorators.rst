@@ -20,4 +20,4 @@ Function decorators
 
 .. autofunction:: printargs
 
-
+.. autofunction:: timelimit

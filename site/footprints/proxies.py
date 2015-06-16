@@ -20,6 +20,18 @@ def get(**kw):
     """Return actual proxy object matching description."""
     return FootprintProxy(**kw)
 
+def keys():
+    """Return the list of current proxies tags."""
+    return FootprintProxy.tag_keys()
+
+def values():
+    """Return the list of proxies values."""
+    return FootprintProxy.tag_values()
+
+def items():
+    """Return the items of the proxies table."""
+    return FootprintProxy.tag_items()
+
 
 # Base class
 

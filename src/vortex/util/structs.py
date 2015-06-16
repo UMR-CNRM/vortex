@@ -10,6 +10,7 @@ __all__ = []
 
 import collections
 import datetime
+import pprint
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -25,6 +26,26 @@ class Foo(object):
 
     def __str__(self):
         return str(self.__dict__)
+
+
+class Utf8PrettyPrinter(pprint.PrettyPrinter, object):
+    """
+    An utf-8 friendly version of the standard pprint.
+
+    This class may be used like the original, e.g.:
+       pf = Utf8PrettyPrinter().pformat
+       print 'an_object:', pf(vars(an_object))
+    """
+    def __init__(self, *args, **kw):
+        super(Utf8PrettyPrinter, self).__init__(*args, **kw)
+
+    def format(self, obj, context, maxlevels, level):
+        """Use readable representations for str and unicode, instead of repr."""
+        if isinstance(obj, str):
+            return obj, True, False
+        if isinstance(obj, unicode):
+            return obj.encode('utf8'), True, False
+        return pprint.PrettyPrinter.format(self, obj, context, maxlevels, level)
 
 
 class History(footprints.util.GetByTag):

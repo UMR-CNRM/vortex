@@ -21,6 +21,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Utf8PrettyPrinter
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: History
    :show-inheritance:
    :members:

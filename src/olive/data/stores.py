@@ -24,12 +24,10 @@ class OliveArchiveStore(ArchiveStore):
                 values  = ['olive'],
             ),
             netloc = dict(
-                values  = [ 'open.archive.fr', 'olive.archive.fr' ],
-                remap   = {
-                    'olive.archive.fr': 'open.archive.fr'
-                },
+                values  = ['open.archive.fr', 'olive.archive.fr'],
+                remap   = {'olive.archive.fr': 'open.archive.fr'},
             ),
-            headdir = dict(
+            storehead = dict(
                 default = 'xp',
                 outcast = ['vortex']
             ),
@@ -40,32 +38,41 @@ class OliveArchiveStore(ArchiveStore):
         logger.debug('Olive archive store init %s', self.__class__)
         super(OliveArchiveStore, self).__init__(*args, **kw)
 
-    def remapget(self, remote, options):
-        """Remap actual remote path to distant store path."""
+    def remap_read(self, remote, options):
+        """Remap actual remote path to distant store path for read-only actions."""
         xpath = remote['path'].split('/')
         xpath[1:2] = list(xpath[1])
-        xpath[:0] = [ self.system.path.sep, self.headdir ]
+        xpath[:0] = [ self.system.path.sep, self.storehead ]
         remote['path'] = self.system.path.join(*xpath)
+
+    def remap_write(self, remote, options):
+        """Remap actual remote path to distant store path for intrusive actions."""
+        if not 'root' in remote:
+            remote['root'] = self.storehead
+
+    def olivecheck(self, remote, options):
+        """Remap and ftpcheck sequence."""
+        self.remap_read(remote, options)
+        return self.ftpcheck(remote, options)
 
     def olivelocate(self, remote, options):
         """Remap and ftplocate sequence."""
-        self.remapget(remote, options)
+        self.remap_read(remote, options)
         return self.ftplocate(remote, options)
 
     def oliveget(self, remote, local, options):
         """Remap and ftpget sequence."""
-        self.remapget(remote, options)
+        self.remap_read(remote, options)
         return self.ftpget(remote, local, options)
 
     def oliveput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
-        if not 'root' in remote:
-            remote['root'] = self.headdir
+        self.remap_write(remote, options)
         return self.ftpput(local, remote, options)
 
     def olivedelete(self, remote, options):
         """Remap and ftpdelete sequence."""
-        self.remapget(remote, options)
+        self.remap_write(remote, options)
         return self.ftpdelete(remote, options)
 
 
@@ -79,9 +86,7 @@ class OliveCacheStore(CacheStore):
             ),
             netloc = dict(
                 values  = ['open.cache.fr', 'olive.cache.fr'],
-                remap   = {
-                    'olive.cache.fr': 'open.cache.fr'
-                },
+                remap   = {'olive.cache.fr': 'open.cache.fr'},
             ),
             strategy = dict(
                 default = 'mtool',
@@ -137,7 +142,7 @@ class OliveStore(MultiStore):
 
     def alternates_netloc(self):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
-        return ( 'olive.cache.fr', 'olive.archive.fr' )
+        return ('olive.cache.fr', 'olive.archive.fr')
 
 
 class OpArchiveStore(ArchiveStore):
@@ -154,14 +159,14 @@ class OpArchiveStore(ArchiveStore):
                 default  = 'oper.archive.fr',
                 remap    = {'dbl.archive.fr': 'dble.archive.fr'},
             ),
-            rootdir = dict(
-                optional = True,
-                alias    = ['archivehome'],
-                default  = '/home/m/mxpt/mxpt001',
-            ),
             storage = dict(
                 optional = True,
                 default  = 'hendrix.meteo.fr',
+            ),
+            storeroot = dict(
+                optional = True,
+                alias    = ['archivehome'],
+                default  = '/home/m/mxpt/mxpt001',
             ),
             glue = dict(
                 type     = StoreGlue,
@@ -176,7 +181,7 @@ class OpArchiveStore(ArchiveStore):
         super(OpArchiveStore, self).__init__(*args, **kw)
 
     def fullpath(self, remote):
-        return self.rootdir + remote['path']
+        return self.storeroot + remote['path']
 
     def oplocate(self, remote, options):
         """Delegates to ``system`` a distant check."""
@@ -261,10 +266,10 @@ class OpCacheStore(CacheStore):
         info = 'OP cache access',
         attr = dict(
             scheme = dict(
-                values = [ 'op' ],
+                values = ['op'],
             ),
             netloc = dict(
-                values = [ 'oper.cache.fr', 'dble.cache.fr' ],
+                values = ['oper.cache.fr', 'dble.cache.fr'],
             ),
             strategy = dict(
                 default = 'mtool',
@@ -274,7 +279,7 @@ class OpCacheStore(CacheStore):
             ),
             headdir = dict(
                 default = 'op',
-                outcast = [ 'xp', 'vortex', 'gco' ],
+                outcast = ['xp', 'vortex', 'gco'],
             ),
         )
     )
@@ -311,10 +316,10 @@ class OpStore(MultiStore):
         info = 'Op multi access',
         attr = dict(
             scheme = dict(
-                values = [ 'op' ],
+                values = ['op'],
             ),
             netloc = dict(
-                values = [ 'oper.multi.fr', 'dble.multi.fr' ],
+                values = ['oper.multi.fr', 'dble.multi.fr'],
             ),
             refillstore = dict(
                 default = True,

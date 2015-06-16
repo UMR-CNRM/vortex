@@ -27,6 +27,8 @@ Functions
 
 .. autofunction:: now
 
+.. autofunction:: stamp
+
 .. autofunction:: stardates
 
 .. autofunction:: synop

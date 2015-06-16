@@ -9,7 +9,7 @@
 .. versionadded:: 0.1
 
 .. todo::
-   
+
       Nothing written for :mod:`vortex.tools.env` handling yet !
 
 Module data
@@ -25,11 +25,17 @@ Module data
 Interface functions
 -------------------
 
-.. autofunction:: current
+.. autofunction:: paramsmap
+
+.. autofunction:: paramstags
 
 .. autofunction:: param
-   
-   
+
+.. autofunction:: share
+
+.. autofunction:: current
+
+
 Classes
 -------
 
@@ -37,7 +43,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: Environment
    :show-inheritance:
    :members:

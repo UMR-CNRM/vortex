@@ -9,6 +9,7 @@ import os.path
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
+from vortex.syntax.stdattrs import a_xpid, opsuites, Namespace
 from vortex.util.names import VortexNameBuilder
 from vortex.tools import net
 
@@ -52,7 +53,7 @@ class Provider(footprints.FootprintBase):
         """Abstract method."""
         pass
 
-    def domain(self):
+    def netloc(self):
         """Abstract method."""
         pass
 
@@ -79,23 +80,23 @@ class Provider(footprints.FootprintBase):
         retreive it. The method used to achieve this action:
 
         * obtain the proto information,
-        * ask for the domain,
+        * ask for the netloc,
         * get the pathname,
         * get the basename.
 
         The different operations of the algorithm can be redefined by subclasses.
         """
         logger.debug(
-            'scheme %s domain %s normpath %s urlquery %s',
+            'scheme %s netloc %s normpath %s urlquery %s',
             self.scheme(),
-            self.domain(),
+            self.netloc(),
             os.path.normpath(self.pathname(resource) + '/' + self.basename(resource)),
             self.urlquery(resource)
         )
 
         return net.uriunparse((
             self.scheme(),
-            self.domain(),
+            self.netloc(),
             os.path.normpath(self.pathname(resource) + '/' + self.basename(resource)),
             None,
             self.urlquery(resource),
@@ -168,8 +169,8 @@ class Remote(Provider):
         """The Remote scheme is its tube."""
         return self.tube
 
-    def domain(self):
-        """Fully qualified network domain."""
+    def netloc(self):
+        """Fully qualified network location."""
         if self.username:
             return self.username + '@' + self.hostname
         else:
@@ -194,23 +195,28 @@ class Remote(Provider):
 class Vortex(Provider):
     """Main provider of the toolbox, using a fix-size path and a dedicated name factory."""
 
+    _abstract = True
     _footprint = dict(
         info = 'Vortex provider',
         attr = dict(
-            experiment = dict(),
+            experiment = a_xpid,
             block = dict(),
             member = dict(
                 type     = int,
                 optional = True,
             ),
             namespace = dict(
+                type     = Namespace,
                 optional = True,
-                values   = ['vortex.cache.fr', 'vortex.archive.fr', 'vortex.multi.fr',
-                            'open.cache.fr', 'open.archive.fr'],
-                default  = 'vortex.cache.fr',
+                values   = [
+                    'vortex.cache.fr', 'vortex.archive.fr', 'vortex.multi.fr',
+                    'open.cache.fr',   'open.archive.fr',   'open.multi.fr',
+                ],
+                default  = Namespace('vortex.cache.fr'),
                 remap    = {
-                    'open.cache.fr': 'vortex.cache.fr',
-                    'open.archive.fr': 'vortex.archive.fr',
+                    'open.cache.fr'   : 'vortex.cache.fr',
+                    'open.archive.fr' : 'vortex.archive.fr',
+                    'open.multi.fr'   : 'vortex.multi.fr',
                 }
             ),
             namebuild = dict(
@@ -219,7 +225,7 @@ class Vortex(Provider):
                 default  = VortexNameBuilder(),
             ),
             expected = dict(
-                alias    = ('promise',),
+                alias    = ('promised',),
                 type     = bool,
                 optional = True,
                 default  = False,
@@ -250,23 +256,23 @@ class Vortex(Provider):
         """Default: ``vortex``."""
         return 'x' + self.realkind if self.expected else self.realkind
 
-    def domain(self):
+    def netloc(self):
         """Returns the current ``namespace``."""
-        return self.namespace
+        return self.namespace.netloc
 
     def pathname(self, resource):
         """Constructs pathname of the ``resource`` according to :func:`pathinfo`."""
         rinfo = self.pathinfo(resource)
         rdate = rinfo.get('date', '')
         if rdate:
-            rdate = rdate.vortex(rinfo.get('cutoff', 'n'))
-        return '/'.join((
+            rdate = rdate.vortex(rinfo.get('cutoff', 'X'))
+        return os.path.join(
             self.vapp,
             self.vconf,
             self.experiment,
             rdate,
             self.block
-        ))
+        )
 
     def basename(self, resource):
         """
@@ -274,3 +280,34 @@ class Vortex(Provider):
         and resource :func:`basname_info`.
         """
         return self.namebuild.pack(resource.basename_info())
+
+
+class VortexStd(Vortex):
+    """Standard Vortex provider (any experiment without an op id)."""
+
+    _footprint = dict(
+        info = 'Vortex provider for casual experiments',
+        attr = dict(
+            experiment = dict(
+                outcast = opsuites,
+            ),
+        )
+    )
+
+
+class VortexOp(Vortex):
+    """Standard Vortex provider (any experiment without an op id)."""
+
+    _footprint = dict(
+        info = 'Vortex provider for op experiments',
+        attr = dict(
+            experiment = dict(
+                alias  = ('suite',),
+                values = opsuites,
+            ),
+        )
+    )
+
+    def netloc(self):
+        """Vortex Special OP scheme, aka VSOP !"""
+        return 'vsop.' + self.namespace.domain

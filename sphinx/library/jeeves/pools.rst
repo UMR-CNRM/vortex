@@ -30,6 +30,8 @@ Interface functions
 
 .. autofunction:: timestamp
 
+.. autofunction:: logname
+
 
 Classes
 -------

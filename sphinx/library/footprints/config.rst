@@ -20,6 +20,12 @@ Interface functions
 
 .. autofunction:: get
 
+.. autofunction:: keys
+
+.. autofunction:: items
+
+.. autofunction:: values
+
 .. autofunction:: add2proxies
 
 

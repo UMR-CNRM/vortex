@@ -275,9 +275,11 @@ class Handler(object):
     def store(self):
         if self.resource and self.provider:
             self._uridata = net.uriparse(self.location())
+            stopts = { k:v for k, v in self.options.items() if k.startswith('stor') }
             return footprints.proxy.store(
                 scheme = self._uridata.pop('scheme'),
                 netloc = self._uridata.pop('netloc'),
+                **stopts
             )
         else:
             return None
@@ -412,7 +414,7 @@ class Handler(object):
             self.history.append(sh.fullname(), 'clear', rst)
         return rst
 
-    def mkgetpr(self, pr_getter=None, tplfile=None, tplskip='sync.skip.tpl', tplfetch='sync.fetch.tpl', py_exec=sys.executable, py_opts=''):
+    def mkgetpr(self, pr_getter=None, tplfile=None, tplskip='sync-skip.tpl', tplfetch='sync-fetch.tpl', py_exec=sys.executable, py_opts=''):
         """Build a getter for the expected resource."""
         if tplfile is None:
             tplfile = tplfetch if self.is_expected() else tplskip

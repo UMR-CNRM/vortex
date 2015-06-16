@@ -8,6 +8,14 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.4
 
+
+Exceptions
+----------
+
+.. autoclass:: FootprintBadLogEntry
+   :show-inheritance:
+
+
 Interface functions
 -------------------
 
@@ -51,7 +59,7 @@ Base Classes
 .. autoclass:: StandardReport
    :show-inheritance:
    :members:
-   :member-order: alphabetical 
+   :member-order: alphabetical
 
 .. autoclass:: FlatReport
    :show-inheritance:

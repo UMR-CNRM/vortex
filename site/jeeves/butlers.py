@@ -715,7 +715,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 obj = json.load(fd)
             obj = pools.Request(**obj)
         except StandardError:
-            self.error('Could not load', path=jsonfile)
+            self.error('Could not load', path=jsonfile, retry=self.redo.pop(item, 0))
             self.migrate(pool, item, target='error')
         return obj
 
@@ -869,6 +869,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         """Infinite work loop."""
 
         self.info('Just ask Jeeves...')
+        self.redo = dict()
 
         self.multi_start()
 
@@ -929,7 +930,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     todo = sorted(thispool.contents)
                     # look for previous retry requests
                     for req in todo[:]:
-                        self.process_request(thispool, req)
+                        self.migrate(thispool, req)
                         todo.remove(req)
             else:
                 self.warning('Inactive', pool=thispool.tag, path=thispool.path)

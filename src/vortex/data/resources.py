@@ -129,4 +129,6 @@ class Unknown(Resource):
         )
     )
 
-
+    def vortex_basename(self):
+        """Keep the Unknown resource unknown."""
+        return 'unknown'

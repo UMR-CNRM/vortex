@@ -57,3 +57,17 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Directory
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: PromptService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: TemplatedMailService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

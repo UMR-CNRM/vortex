@@ -13,6 +13,8 @@ Interface functions
 
 .. autofunction:: get
 
+.. autofunction:: items
+
 .. autofunction:: keys
 
 .. autofunction:: values
@@ -23,10 +25,10 @@ Base Classes
 .. autoclass:: Observer
    :show-inheritance:
    :members:
-   :member-order: alphabetical 
+   :member-order: alphabetical
 
 .. autoclass:: ObserverBoard
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+

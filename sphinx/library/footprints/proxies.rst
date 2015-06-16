@@ -20,6 +20,12 @@ Interface functions
 
 .. autofunction:: get
 
+.. autofunction:: keys
+
+.. autofunction:: values
+
+.. autofunction:: items
+
 
 Descriptors classes
 -------------------

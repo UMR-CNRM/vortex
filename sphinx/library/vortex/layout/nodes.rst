@@ -16,7 +16,22 @@
 Classes
 -------
 
+.. autoclass:: NiceLayout
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ConfigSet
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Node
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Family
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -26,7 +41,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Family
+.. autoclass:: Driver
    :show-inheritance:
    :members:
    :member-order: alphabetical

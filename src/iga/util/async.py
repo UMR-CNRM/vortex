@@ -9,6 +9,7 @@ from vortex.util.worker import VortexWorker
 
 
 class LockedOpen(object):
+    """Context class for locking a file while it is open."""
     def __init__(self, filename, mode):
         self.fp = open(filename, mode)
 
@@ -17,10 +18,12 @@ class LockedOpen(object):
         return self.fp.fileno()
 
     def __enter__(self):
+        """Called when entering the context: lock the file."""
         fcntl.flock(self.fid, fcntl.LOCK_EX)
         return self.fp
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
+        """Called when leaving the context: unlock and close the file"""
         fcntl.flock(self.fid, fcntl.LOCK_UN)
         self.fp.close()
 

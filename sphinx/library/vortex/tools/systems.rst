@@ -11,13 +11,19 @@
 .. warning::
 
    Guess what? The documentation of this module is at a point of complemention
-   comparable to its parent package. 
-   
+   comparable to its parent package.
+
 Package
 -------
 
 .. autodata:: __all__
 
+
+Exceptions
+----------
+
+.. autoclass:: ExecutionError
+   :show-inheritance:
 
 Classes
 -------

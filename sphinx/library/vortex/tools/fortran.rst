@@ -18,6 +18,11 @@ Package
 
 .. autodata:: __all__
 
+Functions
+---------
+
+.. autofunction:: namparse
+
 Classes
 -------
 
@@ -27,6 +32,11 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: NamelistBlock
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: NamelistSet
    :show-inheritance:
    :members:
    :member-order: alphabetical

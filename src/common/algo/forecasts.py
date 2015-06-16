@@ -110,7 +110,7 @@ class LAMForecast(Forecast):
             ),
             synctpl = dict(
                 optional = True,
-                default  = 'sync.fetch.tpl',
+                default  = 'sync-fetch.tpl',
             ),
         )
     )
@@ -230,12 +230,12 @@ class FullPos(IFSParallel):
             kind = 'historic',
         ) ]
         initrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
-        
+
         thesenames = list()
 
         for r in initrh:
             sh.subtitle('Loop on {0:s}'.format(r.resource.term.fmthm))
-            
+
             thisdate = r.resource.date + r.resource.term
             thismonth = thisdate.month
             logger.info('Fullpos <month:%s>' % thismonth )
@@ -248,7 +248,7 @@ class FullPos(IFSParallel):
                 thesenames.append(thisname)
                 if thisclim != thisname:
                     sh.symlink(thisclim, thisname)
-               
+
             # Set a local storage place
             runstore = 'RUNOUT' + r.resource.term.fmtraw
             sh.mkdir(runstore)

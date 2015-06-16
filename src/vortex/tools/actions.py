@@ -90,7 +90,6 @@ class Action(object):
     def get_actual_service(self, **kw):
         """Return the service instance determined by the actual description."""
         info = self.service_info(**kw)
-        a_service = None
         if self.permanent():
             if self._frozen is None:
                 self._frozen = footprints.proxy.services.default(**info)
@@ -169,13 +168,19 @@ class Prompt(Action):
     """
     Fake action that could be used for any real action.
     """
-    def __init__(self, kind='prompt', service='prompt', active=False):
+    def __init__(self, kind='prompt', service='prompt', active=True):
         super(Prompt, self).__init__(kind=kind, active=active, service=service)
 
     def execute(self, *args, **kw):
         """Do nothing but prompt the actual arguments."""
-        print '#ACTION', self.kind, '/ args:', args, '/ kw:', kw
-        return True
+        # kind could be unintentionally given, force it back
+        kw['kind'] = self.kind
+        service = self.get_active_service(**kw)
+        rc = False
+        if service:
+            options = { k:v for k,v in kw.items() if k not in service.footprint_attributes }
+            rc = service(options)
+        return rc
 
     def foo(self, *args, **kw):
         """Yet an other foo method."""
@@ -285,5 +290,4 @@ class Dispatcher(footprints.util.Catalog):
 
 #: Default action dispatcher... containing an anonymous SendMail action
 actiond = Dispatcher()
-actiond.add(SendMail(), Report(), AskJeeves(), SSH())
-
+actiond.add(SendMail(), Report(), AskJeeves(), SSH(), Prompt())

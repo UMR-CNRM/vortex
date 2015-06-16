@@ -50,10 +50,10 @@ class Container(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         """Preset to None or False hidden attributes ``iod``, ``iomode`` and ``filled``."""
         logger.debug('Container %s init', self.__class__)
-        self._iod = None
+        super(Container, self).__init__(*args, **kw)
+        self._iod    = None
         self._iomode = None
         self._filled = False
-        super(Container, self).__init__(*args, **kw)
 
     def __getattr__(self, key):
         """Gateway to undefined method or attributes if present in internal io descriptor."""
@@ -93,10 +93,10 @@ class Container(footprints.FootprintBase):
         """Returns the complete size of the container."""
         iod = self.iodesc()
         if iod:
-            pos = self._iod.tell()
-            self._iod.seek(0, 2)
+            pos = iod.tell()
+            iod.seek(0, 2)
             ts = iod.tell()
-            self._iod.seek(pos)
+            iod.seek(pos)
             return ts
         else:
             return None
@@ -257,8 +257,8 @@ class InCore(Virtual):
 
     def __init__(self, *args, **kw):
         logger.debug('InCore container init %s', self.__class__)
-        self._tempo = False
         super(InCore, self).__init__(*args, incore=True, **kw)
+        self._tempo = False
 
     def actualpath(self):
         """Returns path information, if any, of the spooled object."""
@@ -416,15 +416,15 @@ class MayFly(Virtual):
             raise
 
 
-class File(Container):
+class SingleFile(Container):
     """
     Default file container. Data is stored as a file object.
     """
     _footprint = dict(
         info = 'File container',
         attr = dict(
-            file = dict(
-                alias    = ('filepath', 'filename', 'filedir', 'local'),
+            filename = dict(
+                alias    = ('filepath', 'local'),
             ),
             cwdtied = dict(
                 type     = bool,
@@ -436,12 +436,12 @@ class File(Container):
 
     def __init__(self, *args, **kw):
         """Business as usual... but define actualpath according to ``cwdtied`` attribute."""
-        logger.debug('File container init %s', self.__class__)
-        super(File, self).__init__(*args, **kw)
+        logger.debug('SingleFile container init %s', self.__class__)
+        super(SingleFile, self).__init__(*args, **kw)
         if self.cwdtied:
-            self._actualpath = os.path.realpath(self.file)
+            self._actualpath = os.path.realpath(self.filename)
         else:
-            self._actualpath = self.file
+            self._actualpath = self.filename
 
     def actualpath(self):
         """Returns the actual pathname of the file object."""
@@ -481,10 +481,9 @@ class File(Container):
             mode = self.actualmode
         if not self._iod or self._iod.closed or mode != self.actualmode:
             self.close()
-            if not self.cwdtied:
-                self._actualpath = os.path.realpath(self.file)
+            currentpath = self._actualpath if self.cwdtied else os.path.realpath(self.filename)
             self._iomode = mode
-            self._iod = io.open(self._actualpath, self._iomode)
+            self._iod = io.open(currentpath, self._iomode)
         return self._iod
 
     def iotarget(self):

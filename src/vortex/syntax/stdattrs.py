@@ -40,6 +40,8 @@ knownfmt = set([
     'bullx', 'sx'
 ])
 
+# Special classes
+
 class DelayedEnvValue(object):
     """
     Store a environment variable and restitue value when needed,
@@ -85,6 +87,83 @@ class FmtInt(int):
         return '{0:{fmt}d}'.format(value, fmt=self._fmt)
 
 
+class XPid(str):
+    """Basestring wrapper for experiment ids."""
+    def __new__(cls, value):
+        if len(value) != 4:
+            raise ValueError('XPid should be a 4 digits string')
+        return str.__new__(cls, value.upper())
+
+    def isoper(self):
+        """Return true if current value looks like an op id."""
+        return str(self) in opsuites
+
+#: Default values for operational experiment names.
+opsuites = set([ XPid(x) for x in ['OPER', 'DBLE', 'TEST'] + [ 'OP{0:02d}'.format(i) for i in range(100) ] ])
+
+
+class Namespace(str):
+    """Basestring wrapper for namespaces (as net domains)."""
+    def __new__(cls, value):
+        value = value.lower()
+        full = value
+        if '@' in value:
+            netuser, value = value.split('@')
+            if ':' in netuser:
+                netuser, netpass = netuser.split(':')
+            else:
+                netpass = None
+        else:
+            netuser, netpass = None, None
+        if ':' in value:
+            value, port = value.split(':')
+        else:
+            port = None
+        if value.count('.') < 2:
+            raise ValueError('Namespace should contain at least 3 fields')
+        thisns = str.__new__(cls, value)
+        thisns._port = int(port) if port else None
+        thisns._user = netuser
+        thisns._pass = netpass
+        thisns._full = full
+        return thisns
+
+    @property
+    def firstname(self):
+        return self.split('.', 1)[0]
+
+    @property
+    def domain(self):
+        return self.split('.', 1)[1]
+
+    @property
+    def netuser(self):
+        return self._user
+
+    @property
+    def netpass(self):
+        return self._pass
+
+    @property
+    def netport(self):
+        return self._port
+
+    @property
+    def netloc(self):
+        return self._full
+
+
+# predefined attributes
+
+#: Usal definition fo the ``xpid`` or experiment name.
+
+a_xpid = dict(
+    type     = XPid,
+    optional = False,
+)
+
+xpid = footprints.Footprint(info = 'Abstract experiment id', attr = dict(experiment = a_xpid))
+
 #: Usual definition of the ``nativefmt`` attribute.
 a_nativefmt = dict(
     optional = True,
@@ -93,7 +172,7 @@ a_nativefmt = dict(
     remap    = dict(auto = 'foo'),
 )
 
-nativefmt = footprints.Footprint( info = 'Native format', attr = dict( nativefmt = a_nativefmt ) )
+nativefmt = footprints.Footprint(info = 'Native format', attr = dict(nativefmt = a_nativefmt))
 
 #: Usual definition of the ``actualfmt`` attribute.
 a_actualfmt = dict(
@@ -104,7 +183,7 @@ a_actualfmt = dict(
     remap    = dict(auto = 'foo'),
 )
 
-actualfmt = footprints.Footprint( info = 'Actual data format', attr = dict( actualfmt = a_actualfmt ) )
+actualfmt = footprints.Footprint(info = 'Actual data format', attr = dict(actualfmt = a_actualfmt))
 
 #: Usual definition of the ``cutoff`` attribute.
 a_cutoff = dict(
@@ -124,7 +203,7 @@ a_cutoff = dict(
     )
 )
 
-cutoff = footprints.Footprint( info = 'Abstract cutoff', attr = dict( cutoff = a_cutoff ) )
+cutoff = footprints.Footprint(info = 'Abstract cutoff', attr = dict(cutoff = a_cutoff))
 
 #: Usual definition of the ``model`` attribute.
 a_model = dict(
@@ -139,7 +218,7 @@ a_model = dict(
     ),
 )
 
-model = footprints.Footprint( info = 'Abstract model', attr = dict( model = a_model ) )
+model = footprints.Footprint(info = 'Abstract model', attr = dict(model = a_model))
 
 #: Usual definition of the ``date`` attribute.
 a_date = dict(
@@ -147,7 +226,7 @@ a_date = dict(
     optional = False,
 )
 
-date = footprints.Footprint( info = 'Abstract date', attr = dict( date = a_date ) )
+date = footprints.Footprint(info = 'Abstract date', attr = dict(date = a_date))
 
 #: Usual definition of the ``month`` attribute.
 a_month = dict(
@@ -157,7 +236,7 @@ a_month = dict(
     values   = range(1, 13)
 )
 
-month = footprints.Footprint( info = 'Abstract month', attr = dict( month = a_month ) )
+month = footprints.Footprint(info = 'Abstract month', attr = dict(month = a_month))
 
 #: Usual definition of the ``truncation`` attribute.
 a_truncation = dict(
@@ -165,7 +244,7 @@ a_truncation = dict(
     optional = False,
 )
 
-truncation = footprints.Footprint( info = 'Abstract truncation', attr = dict( truncation = a_truncation ) )
+truncation = footprints.Footprint(info = 'Abstract truncation', attr = dict(truncation = a_truncation))
 
 #: Usual definition of the ``domain`` attribute.
 a_domain = dict(
@@ -173,7 +252,7 @@ a_domain = dict(
     optional = False,
 )
 
-domain = footprints.Footprint( info = 'Abstract domain', attr = dict( domain = a_domain ) )
+domain = footprints.Footprint(info = 'Abstract domain', attr = dict(domain = a_domain ))
 
 #: Usual definition of the ``term`` attribute.
 a_term = dict(
@@ -181,7 +260,7 @@ a_term = dict(
     optional = False,
 )
 
-term = footprints.Footprint( info = 'Abstract term', attr = dict( term = a_term ) )
+term = footprints.Footprint(info = 'Abstract term', attr = dict(term = a_term))
 
 #: Usual definition of operational suite
 a_suite = dict(

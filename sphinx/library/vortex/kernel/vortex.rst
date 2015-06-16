@@ -34,7 +34,13 @@ Session and system interface
 
 .. autofunction:: ticket
 .. autofunction:: sh
+.. autofunction:: getglove
 
 
+Classes
+-------
 
-
+.. autoclass:: VortexForceComplete
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

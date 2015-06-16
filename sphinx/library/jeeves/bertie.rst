@@ -32,6 +32,10 @@ Interface functions
 
 .. autofunction:: ask_mute
 
+.. autofunction:: ask_on
+
+.. autofunction:: ask_off
+
 .. autofunction:: ask_reload
 
 .. autofunction:: ask_sleep

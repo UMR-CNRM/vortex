@@ -20,6 +20,7 @@ from vortex.layout import dataflow
 from vortex.util import config
 from vortex.tools import caches, date
 from vortex.tools.actions import actiond as ad
+from vortex.syntax.stdattrs import Namespace
 
 
 class StoreGlue(object):
@@ -159,6 +160,7 @@ class Store(footprints.FootprintBase):
                 alias = ('protocol',)
             ),
             netloc = dict(
+                type  = Namespace,
                 alias = ('domain', 'namespace')
             ),
         ),
@@ -245,6 +247,7 @@ class MultiStore(footprints.FootprintBase):
                 alias    = ('protocol',)
             ),
             netloc = dict(
+                type     = Namespace,
                 alias    = ('domain', 'namespace')
             ),
             refillstore = dict(
@@ -424,7 +427,7 @@ class Finder(Store):
             ),
             netloc = dict(
                 outcast = ['oper.inline.fr'],
-            )
+            ),
         ),
         priority = dict(
             level = footprints.priorities.top.DEFAULT
@@ -487,8 +490,12 @@ class Finder(Store):
         rc = None
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rc = ftp.size(self.rootdir + remote['path'])
-            ftp.close()
+            try:
+                rc = ftp.size(self.rootdir + remote['path'])
+            except Exception:
+                pass
+            finally:
+                ftp.close()
         return rc
 
     def ftplocate(self, remote, options):
@@ -540,6 +547,7 @@ class Finder(Store):
 class ArchiveStore(Store):
     """Generic Archive Store."""
 
+    _abstract = True
     _footprint = dict(
         info = 'Generic archive store',
         attr = dict(
@@ -549,20 +557,20 @@ class ArchiveStore(Store):
             netloc = dict(
                 values   = ['open.archive.fr'],
             ),
-            rootdir = dict(
-                optional = True,
-                default  = '/home/m/marp/marp999',
-            ),
-            headdir = dict(
-                optional = True,
-                default  = 'sto',
-            ),
             storage = dict(
                 optional = True,
                 default  = 'hendrix.meteo.fr',
             ),
-            storasync = dict(
-                alias    = ('archasync', 'archdelayed'),
+            storeroot = dict(
+                optional = True,
+                default  = '/tmp',
+            ),
+            storehead = dict(
+                optional = True,
+                default  = 'sto',
+            ),
+            storesync = dict(
+                alias    = ('archsync', 'synchro'),
                 type     = bool,
                 optional = True,
                 default  = False,
@@ -582,17 +590,17 @@ class ArchiveStore(Store):
         """Returns the current :attr:`storage`."""
         return self.storage
 
-    def remapget(self, remote, options):
-        """Reformulates the remote path to compatible vortex namespace."""
-        pass
-
     def ftpcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
         rc = None
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rc = ftp.size(self.rootdir + remote['path'])
-            ftp.close()
+            try:
+                rc = ftp.size(self.storeroot + remote['path'])
+            except Exception:
+                pass
+            finally:
+                ftp.close()
         return rc
 
     def ftplocate(self, remote, options):
@@ -600,14 +608,14 @@ class ArchiveStore(Store):
         rc = None
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rc = ftp.netpath(self.rootdir + remote['path'])
+            rc = ftp.netpath(self.storeroot + remote['path'])
             ftp.close()
         return rc
 
     def ftpget(self, remote, local, options):
         """Delegates to ``system.ftp`` the get action."""
         return self.system.ftget(
-            self.rootdir + remote['path'],
+            self.storeroot + remote['path'],
             local,
             # ftp control
             hostname = self.hostname(),
@@ -617,9 +625,9 @@ class ArchiveStore(Store):
 
     def ftpput(self, local, remote, options):
         """Delegates to ``system.ftp`` the put action."""
-        put_async = options.get('async', options.get('delayed', self.storasync))
+        put_sync = options.get('synchro', not options.get('delayed', not self.storesync))
         destination = self.system.path.join(
-            remote.get('root', self.rootdir),
+            remote.get('root', self.storeroot),
             remote['path'].lstrip(self.system.path.sep)
         )
         put_opts = dict(
@@ -627,7 +635,9 @@ class ArchiveStore(Store):
             logname  = remote['username'],
             fmt      = options.get('fmt'),
         )
-        if put_async:
+        if put_sync:
+            return self.system.ftput(local, destination, **put_opts)
+        else:
             tempo = footprints.proxy.service(kind='hiddencache', asfmt=put_opts['fmt'])
             put_opts.update(
                 todo        = 'ftput',
@@ -636,26 +646,28 @@ class ArchiveStore(Store):
                 destination = destination,
             )
             return ad.jeeves(**put_opts)
-        else:
-            return self.system.ftput(local, destination, **put_opts)
 
     def ftpdelete(self, remote, options):
         """Delegates to ``system`` a distant remove."""
         rc = None
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
-            actualpath = self.fullpath(remote)
-            if self.ftpcheck(actualpath, options=options):
-                rc = ftp.delete(actualpath)
+            targetpath = self.system.path.join(
+                remote.get('root', self.storeroot),
+                remote['path'].lstrip(self.system.path.sep)
+            )
+            if self.ftpcheck(targetpath, options=options):
+                rc = ftp.delete(targetpath)
                 ftp.close()
             else:
-                logger.error('Try to remove a non-existing resource <%s>', actualpath)
+                logger.error('Try to remove a non-existing resource <%s>', targetpath)
         return rc
 
 
 class VortexArchiveStore(ArchiveStore):
     """Some kind of archive for VORTEX experiments."""
 
+    _abstract = True
     _footprint = dict(
         info = 'VORTEX archive access',
         attr = dict(
@@ -663,12 +675,9 @@ class VortexArchiveStore(ArchiveStore):
                 values   = ['vortex', 'ftp', 'ftserv'],
             ),
             netloc = dict(
-                values   = ['open.archive.fr', 'vortex.archive.fr'],
-                remap    = {
-                    'vortex.archive.fr': 'open.archive.fr'
-                },
+                values   = ['vortex.archive.fr'],
             ),
-            headdir = dict(
+            storehead = dict(
                 default  = 'vortex',
                 outcast  = ['xp'],
             ),
@@ -679,38 +688,89 @@ class VortexArchiveStore(ArchiveStore):
         logger.debug('Vortex archive store init %s', self.__class__)
         super(VortexArchiveStore, self).__init__(*args, **kw)
 
-    def remapget(self, remote, options):
+    def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
-        xpath = remote['path'].split('/')
-        xpath[3:4] = list(xpath[3])
-        xpath[:0] = [self.system.path.sep, self.headdir]
-        remote['path'] = self.system.path.join(*xpath)
+        pass
+
+    def remap_write(self, remote, options):
+        """Remap actual remote path to distant store path for intrusive actions."""
+        if not 'root' in remote:
+            remote['root'] = self.storehead
 
     def vortexcheck(self, remote, options):
         """Remap and ftpcheck sequence."""
-        self.remapget(remote, options)
+        self.remap_read(remote, options)
         return self.ftpcheck(remote, options)
 
     def vortexlocate(self, remote, options):
         """Remap and ftplocate sequence."""
-        self.remapget(remote, options)
+        self.remap_read(remote, options)
         return self.ftplocate(remote, options)
 
     def vortexget(self, remote, local, options):
         """Remap and ftpget sequence."""
-        self.remapget(remote, options)
+        self.remap_read(remote, options)
         return self.ftpget(remote, local, options)
 
     def vortexput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
-        if not 'root' in remote:
-            remote['root'] = self.headdir
+        self.remap_write(remote, options)
         return self.ftpput(local, remote, options)
 
     def vortexdelete(self, remote, options):
-        """Remap and ftpdelete sequence."""
-        self.remapget(remote, options)
+        """Remap root dir and ftpdelete sequence."""
+        self.remap_write(remote, options)
         return self.ftpdelete(remote, options)
+
+
+class VortexStdArchiveStore(VortexArchiveStore):
+    """Archive for casual VORTEX experiments."""
+
+    _footprint = dict(
+        info = 'VORTEX archive access for casual experiments',
+        attr = dict(
+            netloc = dict(
+                values   = ['vortex.archive.fr'],
+            ),
+            storeroot = dict(
+                default  = '/home/m/marp/marp999',
+            ),
+        )
+    )
+
+    def remap_read(self, remote, options):
+        """Reformulates the remote path to compatible vortex namespace."""
+        xpath = remote['path'].split('/')
+        xpath[3:4] = list(xpath[3])
+        xpath[:0] = [self.system.path.sep, self.storehead]
+        remote['path'] = self.system.path.join(*xpath)
+
+
+class VortexOpArchiveStore(VortexArchiveStore):
+    """Archive for op VORTEX experiments."""
+
+    _footprint = dict(
+        info = 'VORTEX archive access for op experiments',
+        attr = dict(
+            netloc = dict(
+                values   = ['vsop.archive.fr'],
+            ),
+            storeroot = dict(
+                default  = '/home/m/mxpt/mxpt001',
+            ),
+        )
+    )
+
+    def remap_read(self, remote, options):
+        """Reformulates the remote path to compatible vortex namespace."""
+        xpath = remote['path'].split('/')
+        vxdate = list(xpath[4])
+        vxdate.insert(4, '/')
+        vxdate.insert(7, '/')
+        vxdate.insert(10, '/')
+        xpath[4] = ''.join(vxdate)
+        xpath[:0] = [self.system.path.sep, self.storehead]
+        remote['path'] = self.system.path.join(*xpath)
 
 
 class CacheStore(Store):
@@ -835,10 +895,7 @@ class VortexCacheStore(CacheStore):
                 values  = ['vortex'],
             ),
             netloc = dict(
-                values  = ['open.cache.fr', 'vortex.cache.fr'],
-                remap   = {
-                    'vortex.cache.fr': 'open.cache.fr'
-                },
+                values  = ['vortex.cache.fr', 'vsop.cache.fr'],
             ),
             strategy = dict(
                 default = 'mtool',
@@ -889,7 +946,7 @@ class VortexStore(MultiStore):
                 values  = ['vortex'],
             ),
             netloc = dict(
-                values  = ['vortex.multi.fr'],
+                values  = ['vortex.multi.fr', 'vsop.multi.fr'],
             ),
             refillstore = dict(
                 default = True,
@@ -899,7 +956,7 @@ class VortexStore(MultiStore):
 
     def alternates_netloc(self):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
-        return ('vortex.cache.fr', 'vortex.archive.fr')
+        return [ self.netloc.firstname + d for d in ('.cache.fr', '.archive.fr') ]
 
 
 class PromiseCacheStore(VortexCacheStore):

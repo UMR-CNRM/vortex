@@ -47,6 +47,7 @@ def items():
 
 
 class FootprintBadLogEntry(Exception):
+    """Exception raised when inappropriate log entries are met."""
     pass
 
 

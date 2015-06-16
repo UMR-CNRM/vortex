@@ -51,6 +51,14 @@ Sections handling
 .. autofunction:: outputs
 
 
+Promises
+--------
+
+.. autofunction:: promise
+
+.. autofunction:: clear_promises
+
+
 Informations
 ------------
 
@@ -64,3 +72,10 @@ Informations
 
 .. autofunction:: show_outputs
 
+.. autofunction:: nicedump
+
+
+Misc
+----
+
+.. autofunction:: rescue

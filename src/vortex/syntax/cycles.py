@@ -97,7 +97,7 @@ oper = Cycle(regexp=r'^(?:cy)?\d{2}t\d_.*op\d+(?:\.\d+)?', tag='oper')
 bugfix = Cycle(regexp=r'^(?:cy)?\d{2}(?:t\d+)?_.*bf(?:\.\d+)?\b', tag='bugfix')
 
 #: Ordered and formatted list of cycles numbers.
-maincycles = [ '{0:02d}'.format(x) for x in range(38, 42) ]
+maincycles = [ '{0:02d}'.format(x) for x in range(38, 43) ]
 
 #: List of subcycles extensions, such as ``_bf`` or ``t1_op``.
 subcycles = ['', '_bf', '_op1', '_op2', 't1', 't1_bf', 't1_op1', 't1_op2', 't1_op3', 't2', 't2_bf', 't2_op1', 't2_op2', 't2_op3']

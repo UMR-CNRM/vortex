@@ -33,19 +33,17 @@ from logging.handlers import SysLogHandler
 import re
 import socket
 import random
+import locale
 from StringIO import StringIO
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex                  import sessions
 from vortex.tools            import date
 from vortex.syntax.stdattrs  import a_term, a_domain
-
-from vortex.tools.services   import Service, FileReportService
+from vortex.tools.services   import Service, FileReportService, TemplatedMailService
 from vortex.tools.schedulers import SMS
 from vortex.tools.actions    import actiond as ad
-from vortex.tools.systems    import ExecutionError
 
 
 # TODO devrait dépendre d'un objet TARGET
@@ -590,6 +588,7 @@ class BdpeService(RoutingService):
         raise NotImplementedError()
 
     def __call__(self):
+        """The actual call to the service."""
         rc = super(BdpeService, self).__call__()
         if rc:
             self.bdpe_log()
@@ -953,4 +952,49 @@ class DMTEventService(Service):
             rc = ad.ssh(cmdline, hostname='node', nodetype='login')
         else:
             rc = self.sh.spawn(cmdline, shell=True, output=True)
+        return rc
+
+
+class OpMailService(TemplatedMailService):
+    """
+    Class responsible for sending predefined mails.
+    This class should not be called directly.
+    """
+
+    _footprint = dict(
+        info = 'OP predefined mail services class',
+        attr = dict(
+            kind = dict(
+                values   = ['opmail'],
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        super(OpMailService, self).__init__(*args, **kw)
+
+    def deactivated(self):
+        """Tells if opmail is deactivated : OP_MAIL set to 0"""
+        return not bool(self.env.get('OP_MAIL', 1))
+
+    def header(self):
+        """String prepended to the message body."""
+        locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
+        stamp = date.now().strftime('%A %d %B %Y à %X locales')
+        return 'Mail envoyé le {}\n--\n\n'.format(stamp)
+
+    def trailer(self):
+        """String appended to the message body."""
+        return '\n--\nEnvoi automatique par Vortex ' \
+               'pour <{}@{}>\n'.format(self.env.user, self.env.host)
+
+    def __call__(self, *args):
+        """Main action as inherited, and prompts.
+        """
+        rc = super(OpMailService, self).__call__(*args)
+        if not rc:
+            ad.prompt(
+                comment = 'OpMailService: mail was not sent.',
+                **self._attributes
+            )
         return rc

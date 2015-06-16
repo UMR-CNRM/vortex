@@ -12,6 +12,11 @@
 Base Class
 -----------
 
+.. autoclass:: AttrDict
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: VortexWorker
    :show-inheritance:
    :members:

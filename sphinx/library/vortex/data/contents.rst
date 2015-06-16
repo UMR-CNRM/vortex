@@ -12,30 +12,27 @@
 
    Documentation in progress?
 
+
 Package
 -------
 
 .. autodata:: __all__
 
+
 Classes
 -------
-
-.. autoclass:: AlmostDictContent
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: AlmostListContent
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
 .. autoclass:: DataContent
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: DataRaw
+.. autoclass:: UnknownContent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: AlmostDictContent
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -45,8 +42,22 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: AlmostListContent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: TextContent
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
+.. autoclass:: DataRaw
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FormatAdapter
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

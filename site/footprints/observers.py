@@ -31,7 +31,7 @@ def values():
 
 def items():
     """Return the items of the ObserverBoard table."""
-    return Collector.tag_items()
+    return ObserverBoard.tag_items()
 
 
 class Observer(object):

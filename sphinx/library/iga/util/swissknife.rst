@@ -13,6 +13,24 @@ Package
 
 .. autodata:: __all__
 
-Classes
--------
 
+Data definition
+---------------
+
+.. autodata:: OpSetValues
+
+
+Functions
+---------
+
+.. autofunction:: bestdate
+
+.. autofunction:: getopsetfrompath
+
+.. autofunction:: mkjob
+
+.. autofunction:: slurm_parameters
+
+.. autofunction:: gget_resource_exists
+
+.. autofunction:: freeze_cycle

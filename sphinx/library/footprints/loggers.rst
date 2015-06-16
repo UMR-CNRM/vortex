@@ -26,6 +26,8 @@ Interface functions
 
 .. autofunction:: setRootLogger
 
+.. autofunction:: setLogMethods
+
 
 Descriptors classes
 -------------------
@@ -34,6 +36,4 @@ Descriptors classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-
 

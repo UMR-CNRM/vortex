@@ -8,8 +8,8 @@ sh = vortex.sh()
 
 opts = sh.rawopts(
     defaults = dict(
-        verbose = 'on',
-        mkrst = 'off',
+        verbose = 'off',
+        mkrst = 'on',
     )
 )
 
@@ -67,16 +67,16 @@ print '=' * 80
 print 'MODULES REVIEW'
 
 for modulename, loaded in sh.vortex_loaded_modules():
-    print '---'
+    if opts['verbose']:
+        print '---'
     if not loaded:
         sh.import_module(modulename)
     m = sys.modules[modulename]
     rst = intro.rstfile(m)
     rstloc = intro.rstshort(rst)
     okdoc = sh.path.exists(rst)
-    print modulename, '(', 'loaded:', loaded, '/', 'doc:', okdoc, ')'
-
     if opts['verbose']:
+        print modulename, '(', 'loaded:', loaded, '/', 'doc:', okdoc, ')'
         print ' >', m.__file__
         print ' >', rst
 
@@ -115,6 +115,8 @@ for modulename, loaded in sh.vortex_loaded_modules():
                     report['quid'].append(modulename + ': ' + objname + '.' + objmeth)
 
 for k, v in sorted(report.iteritems()):
+    if k != 'miss':
+        continue
     print '=' * 80
     print 'REPORT /', k, '(', len(v), ')'
     for reportrst in v:

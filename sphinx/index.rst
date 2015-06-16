@@ -22,6 +22,8 @@ Contents
    Standard Library <library/index>
    Glossary <dico>
 
+   french/index
+
 Extras
 ------
 

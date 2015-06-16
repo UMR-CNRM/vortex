@@ -27,7 +27,7 @@ class MercatorArchive(Provider):
     def scheme(self):
         return 'mercator'
 
-    def domain(self):
+    def netloc(self):
         return self.namespace
 
     def pathname(self, resource):

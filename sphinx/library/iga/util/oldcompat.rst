@@ -8,10 +8,18 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.7
 
+
 Package
 -------
 
 .. autodata:: __all__
+
+
+Functions
+---------
+
+.. autofunction:: setresprev
+
 
 Classes
 -------

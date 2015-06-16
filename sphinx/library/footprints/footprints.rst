@@ -13,7 +13,7 @@ Modules
 -------
 
 * :mod:`footprints.access`
-* :mod:`footprints.collectors` 
+* :mod:`footprints.collectors`
 * :mod:`footprints.config`
 * :mod:`footprints.dump`
 * :mod:`footprints.loggers`
@@ -40,6 +40,8 @@ Interface functions
 .. autofunction:: pickup
 
 .. autofunction:: load
+
+.. autofunction:: grep
 
 .. autofunction:: default
 
@@ -68,15 +70,14 @@ Exceptions
 .. autoclass:: FootprintInvalidDefinition
    :show-inheritance:
 
+
 Footprint mechanism
 -------------------
-
 
 .. autoclass:: Footprint
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
 
 .. autoclass:: FootprintBaseMeta
    :show-inheritance:
@@ -87,4 +88,3 @@ Footprint mechanism
    :show-inheritance:
    :members:
    :member-order: alphabetical
-

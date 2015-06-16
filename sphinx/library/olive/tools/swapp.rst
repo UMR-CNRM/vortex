@@ -13,6 +13,19 @@ Package
 
 .. autodata:: __all__
 
+
+Interface functions
+-------------------
+
+.. autofunction:: olive_label
+
+.. autofunction:: guesslocout
+
+.. autofunction:: olive_logname
+
+.. autofunction:: olive_jobout
+
+
 Classes
 -------
 

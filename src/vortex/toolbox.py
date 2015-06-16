@@ -129,6 +129,7 @@ def nicedump(msg, **kw):
         print '+', k.ljust(12), '=', str(v)
     print
 
+
 def add_section(section, args, kw):
     """Add a ``section`` type to the current sequence."""
 
@@ -278,9 +279,9 @@ def show_outputs(context=None):
 def promise(*args, **kw):
     """Log a promise before execution."""
     kw.update(
-        promise = True,
-        force   = True,
-        now     = active_promise,
+        promised = True,
+        force    = True,
+        now      = active_promise,
     )
     if not active_promise:
         logger.warning('Promise flag is <%s> in that context', active_promise)

@@ -23,12 +23,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: SpooledActions
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Prompt
+.. autoclass:: SendMail
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -38,12 +33,27 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: SendMail
+.. autoclass:: SSH
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: AskJeeves
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Prompt
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
 .. autoclass:: SmsGateway
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SpooledActions
    :show-inheritance:
    :members:
    :member-order: alphabetical

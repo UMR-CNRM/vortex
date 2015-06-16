@@ -12,18 +12,31 @@
 Global descriptors
 ------------------
 
+.. autodata:: IntentTuple
+
 .. data:: intent
 
   Predefined INTENT values IN, OUT and INOUT.
-  
+
+.. autodata:: IXOTuple
+
 .. data:: ixo
 
   Predefined IXO sequence values INPUT, OUTPUT and EXEC.
+
 
 Interface
 ---------
 
 .. autofunction:: stripargs_section
+
+
+Exceptions
+----------
+
+.. autoclass:: SectionFatalError
+   :show-inheritance:
+
 
 Classes
 -------

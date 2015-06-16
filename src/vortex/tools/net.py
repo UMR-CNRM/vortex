@@ -212,6 +212,10 @@ class StdFtp(object):
             self.retrbinary('RETR ' + source, target.write)
         except StandardError as e:
             logger.error('FTP could not get {!r}: {!s}'.format(source, e))
+            raise
+        except Exception as e:
+            logger.error('FTP internal exception {!r}: {!s}'.format(source, e))
+            raise IOError('FTP could not get {!r}: {!s}'.format(source, e))
         else:
             if xdestination:
                 target.seek(0, 2)
