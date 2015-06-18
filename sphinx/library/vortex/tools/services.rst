@@ -8,10 +8,6 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.6.0
 
-.. warning::
-
-   Guess what? The documentation of this module is at a point of completion
-   comparable to its parent package.
 
 Package
 -------

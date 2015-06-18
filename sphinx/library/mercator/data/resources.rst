@@ -8,15 +8,12 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.2
 
-.. warning::
-
-   Please Matthieu, write a piece of doc.
 
 Package
 -------
 
 .. autodata:: __all__
-   
+
 
 Classes
 -------
@@ -25,7 +22,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: NamelistAssimilation
    :show-inheritance:
    :members:

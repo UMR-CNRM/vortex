@@ -8,10 +8,6 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.1
 
-.. warning::
-
-   I'm terribly sorry, but I have to confess
-   that no documentation has been written for this increadibly important package.
 
 Package
 -------
@@ -31,4 +27,3 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   

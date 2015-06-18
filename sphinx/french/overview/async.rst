@@ -1,4 +1,4 @@
-.. _async:
+.. _overview-async:
 
 ***********************
 Traitements asynchrones

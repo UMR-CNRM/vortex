@@ -8,9 +8,6 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.2.2
 
-.. warning::
-
-   Documentation in progress?
 
 Package
 -------

@@ -243,7 +243,7 @@ class GetByTagMeta(type):
     """
     Meta class constructor for :class:`GetByTag`.
     The purpose is quite simple : to set a dedicated shared table
-    in the new class to be build.
+    in the new class in construction.
     """
 
     def __new__(cls, n, b, d):

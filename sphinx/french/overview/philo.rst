@@ -1,4 +1,4 @@
-.. _philo:
+.. _overview-philo:
 
 ******************
 Quelques principes
@@ -265,7 +265,7 @@ Ce que peut résoudre VORTEX
 Dans la mesure où il s'appuie abondamment sur un modèle descriptif,
 découplé de la récupération effective de telle ou telle ressource,
 ou de l'activation de tel ou tel mode d'exécution,
-l'usage commun d'une boîte à outils comme VORTEX va permettre de « rédiger » ou « décrire »
+l'usage commun d'une boîte à outils comme VORTEX va permettre de « rédiger » ou de « décrire »
 une tâche en mode opérationnelle de façon extrêmement proche de sa version recherche,
 facilitant considérablement les opérations de transfert.
 Notamment, le flux de données devient **explicite** et **partagé**.
@@ -288,3 +288,25 @@ En vrac... mais la liste est probablement bien bien plus longue !
 * l'agencement des tâches et jobs au sein d'une configuration ; 
 * l'optimisation sur un système donné ; 
 * etc.
+
+===================
+Où en sommes-nous ?
+===================
+
+Plusieurs niveaux de réponse possible. Si l'on prend un calendrier et que l'on regarde en arrière,
+il y a de quoi être saisi de vertige devant l'incroyable durée, et de ce projet (effectif en 2010),
+et de la réflexion sur le sujet, ou même les premières tentatives avortées (1995).
+
+La dimension technique n'est évidemment pas spécialement en cause. Je serai tenté de dire que l'on
+trouve toujours une solution technique, plus ou moins bonne, pour résoudre ce genre de problème. 
+
+Alors ? Alors, rien de décisif pour expliquer cet état de fait.
+Il faut bien reconnaître que la tentation de ne rien bousculer est grande,
+et souvent même légitime dans le système d'organisation du travail qui est le nôtre.
+Reconnaître que les dissensions et divers savonnages entre directions ont aussi pu avoir un impact.
+Que l'on n'arrive pas toujours à faire prendre la mayonnaise du travail collaboratif.
+Que l'on gère la pénurie au mieux...
+
+Aussi faut-il essayer de prendre le problème par le bon bout : prendre la mesure des développements réalisés,
+jeter un œil bienveillant aux premières réalisations pratiques,
+et, sur la base cette évaluation des fondements logiciels du VORTEX, voir si un usage commun peut tout de même voir le jour.

@@ -8,10 +8,6 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.1
 
-.. warning::
-
-   Guess what? The documentation of this module is at a point of complemention
-   comparable to its parent package.
 
 Package
 -------

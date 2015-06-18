@@ -1,4 +1,4 @@
-.. _tools:
+.. _overview-tools:
 
 ***********************************
 Boîte à outils de la boîte à outils

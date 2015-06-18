@@ -6,6 +6,7 @@ Présentation générale
 #####################
 
 :Release: |version|
+:Autor: Eric Sevault
 :Date: |today|
 
 Comment plonger (en douceur) dans le VORTEX ?
@@ -20,12 +21,15 @@ essaiera de montrer que l'on peut envisager d'autres parcours, d'autres dévelop
 et que la caractéristique fondamentale du VORTEX est d'être un système « ouvert », ou même une sorte de « non-système ».
 
 .. toctree::
+   :numbered:
    :maxdepth: 2
 
    philo
    carto
    footprints
+   inter
    data
+   epygram
    algo
    tools
    olive

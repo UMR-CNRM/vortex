@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 """
-Fabric for objects with parametrable footprints, i.e. the set of keys/values
-that attributes (possibly optionals) could cover.
+A generic multi-purpose fabric for objects with parametrable footprints,
+i.e. some set of keys/values pairs that attributes (possibly optionals) could cover.
 """
 
 #: No automatic export
 __all__ = []
 
-__version__ = '0.9.19'
+__version__ = '0.9.20'
 
 import os
 import re
@@ -780,6 +780,8 @@ class FootprintBase(object):
 
     def footprint_delattr(self, attr, auth=None):
         """Delete actual attribute. Protected method."""
+        if auth != self._fp_auth:
+            raise AttributeError, "can't set attribute without valid authorization"
         del self._attributes[attr]
 
     def footprint_clone(self, full=False):

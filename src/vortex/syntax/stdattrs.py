@@ -119,8 +119,8 @@ class Namespace(str):
             value, port = value.split(':')
         else:
             port = None
-        if value.count('.') < 2:
-            raise ValueError('Namespace should contain at least 3 fields')
+        if 0 < value.count('.') < 2:
+            raise ValueError('Namespace should contain one or at least 3 fields')
         thisns = str.__new__(cls, value)
         thisns._port = int(port) if port else None
         thisns._user = netuser

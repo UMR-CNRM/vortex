@@ -405,7 +405,7 @@ def magic(localpath, **kw):
     """
     kw.update(
         unknown  = True,
-        magic    = 'magic:' + localpath,
+        magic    = 'magic://localhost/' + localpath,
         filename = localpath,
     )
     rhmagic = rh(**kw)
