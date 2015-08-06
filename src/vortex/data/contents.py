@@ -131,6 +131,24 @@ class IndexedTable(AlmostDictContent):
         self.extend([ x.split() for x in container.readlines() if not x.startswith('#') ])
 
 
+class JsonDictContent(AlmostDictContent):
+    """
+    The internal data is supposed to be read from a json file.
+    """
+
+    def slurp(self, container):
+        """Get data from the ``container``."""
+        t = sessions.current()
+        container.rewind()
+        self._data = t.sh.json_load(container.localpath())
+
+    def rewrite(self, container):
+        """Write the list contents in the specified container."""
+        t = sessions.current()
+        container.close()
+        t.sh.json_dump(self.data, self.container.localpath())
+
+
 class AlmostListContent(DataContent):
     """
     Implement some list-like functions.

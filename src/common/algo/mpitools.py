@@ -138,7 +138,7 @@ class MpiNWPIO(mpitools.MpiServerIO):
             self.system.subtitle('Parallel io directory {0:s}'.format(iodir))
             self.system.ls('-l', iodir, output=False)
             for iofile in self.system.ls(iodir):
-                zf = re.match('((?:ICMSH|PF).*\+\d+)(?:\..*)?$', iofile)
+                zf = re.match('((?:ICMSH|PF).*\+\d+(?:\:\d+)?)(?:\..*)?$', iofile)
                 if zf:
                     tgfile = zf.group(1)
                     if not self.system.path.exists(tgfile):

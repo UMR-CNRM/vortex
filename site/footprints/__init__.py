@@ -9,7 +9,7 @@ i.e. some set of keys/values pairs that attributes (possibly optionals) could co
 #: No automatic export
 __all__ = []
 
-__version__ = '0.9.20'
+__version__ = '0.9.21'
 
 import os
 import re
@@ -246,7 +246,7 @@ class Footprint(object):
     def mandatory(self):
         """Returns the list of mandatory attributes in the current footprint."""
         fpa = self._fp['attr']
-        return [ x for x in fpa.keys() if not fpa[x]['optional'] or fpa[x]['default'] is None ]
+        return [ x for x in fpa.keys() if not fpa[x]['optional'] ]
 
     def _firstguess(self, desc):
         """Produces a complete guess of the actual footprint according to actual description ``desc``."""

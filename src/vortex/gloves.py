@@ -151,6 +151,7 @@ class ResearchGlove(Glove):
     * profile (default is research)
     """
 
+    _explicit = False
     _footprint = dict(
         info = 'Research glove',
         attr = dict(

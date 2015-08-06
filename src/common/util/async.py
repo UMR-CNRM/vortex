@@ -13,7 +13,8 @@ def system_ftput(pnum, ask, config, logger, **opts):
     logger.info('System', todo=ask.todo, pnum=pnum, opts=opts)
     value = dict(rpool='retry')
 
-    nbtries = opts.get('attempts', 1)
+    nbtries  = opts.get('attempts', 1)
+    rawftput = opts.get('rawftput', False)
     trynum  = 0
 
     with VortexWorker(logger=logger) as vwork:
@@ -26,7 +27,15 @@ def system_ftput(pnum, ask, config, logger, **opts):
             trynum += 1
             if nbtries > 1:
                 logger.info('FTPut loop', attempt=trynum)
-            if sh.ftput(data.source, data.destination, hostname=data.hostname, logname=data.logname, fmt=data.fmt):
+            try:
+                if rawftput:
+                    putrc = sh.rawftput(data.source, data.destination, hostname=data.hostname, logname=data.logname, fmt=data.fmt)
+                else:
+                    putrc = sh.ftput(data.source, data.destination, hostname=data.hostname, logname=data.logname, fmt=data.fmt)
+            except StandardError as e:
+                logger.warning('FTPut failed', attempt=trynum, error=e)
+                putrc = False
+            if putrc:
                 value = dict(clear = sh.rm(data.source, fmt=data.fmt))
                 break
 

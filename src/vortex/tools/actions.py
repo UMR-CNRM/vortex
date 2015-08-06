@@ -101,7 +101,7 @@ class Action(object):
     def get_active_service(self, **kw):
         """Return the actual service according to active status and user authorizations."""
         a_service = None
-        if is_authorized_user(self.kind):
+        if is_authorized_user(action=self.kind):
             if self.active:
                 a_service = self.get_actual_service(**kw)
                 if a_service is None:

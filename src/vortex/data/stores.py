@@ -573,7 +573,7 @@ class ArchiveStore(Store):
                 alias    = ('archsync', 'synchro'),
                 type     = bool,
                 optional = True,
-                default  = False,
+                default  = True,
             ),
         )
     )
@@ -771,6 +771,8 @@ class VortexOpArchiveStore(VortexArchiveStore):
         xpath[4] = ''.join(vxdate)
         xpath[:0] = [self.system.path.sep, self.storehead]
         remote['path'] = self.system.path.join(*xpath)
+
+    remap_write = remap_read
 
 
 class CacheStore(Store):

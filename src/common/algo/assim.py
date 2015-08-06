@@ -163,8 +163,8 @@ class Canari(IFSODB):
 
         self.env.default(
             ODB_MERGEODB_DIRECT      = 1,
-            ODB_CCMA_LEFT_MARGIN     = self.slots.leftmargin(self.date),
-            ODB_CCMA_RIGHT_MARGIN    = self.slots.rightmargin(self.date),
+            ODB_CCMA_LEFT_MARGIN     = self.slots.leftmargin,
+            ODB_CCMA_RIGHT_MARGIN    = self.slots.rightmargin,
         )
 
 
@@ -240,8 +240,8 @@ class Screening(IFSODB):
 
         self.env.default(
             ODB_MERGEODB_DIRECT      = 1,
-            ODB_CCMA_LEFT_MARGIN     = self.slots.leftmargin(self.date),
-            ODB_CCMA_RIGHT_MARGIN    = self.slots.rightmargin(self.date),
+            ODB_CCMA_LEFT_MARGIN     = self.slots.leftmargin,
+            ODB_CCMA_RIGHT_MARGIN    = self.slots.rightmargin,
         )
 
         # Look for extras ODB raw
@@ -268,7 +268,7 @@ class Screening(IFSODB):
 
 
 class Minim(IFSODB):
-    """Observation screening."""
+    """Observation minimisation."""
 
     _footprint = dict(
         info = 'Minimisation in the assimilation process.',
@@ -318,6 +318,19 @@ class Minim(IFSODB):
         self.date = ccma.resource.date
         super(Minim, self).prepare(rh, opts)
 
+    def postfix(self, rh, opts):
+        """Find out if any special resources have been produced."""
+        super(Minim, self).postfix(rh, opts)
+
+        sh = self.system
+
+        # Look up for PREConditionning Eigen Vectors
+        prec = sh.ls('MEMINI*')
+        if prec:
+            prec_info = dict(evlen=len(prec))
+            prec_info['evnum'] = [ int(x[6:])  for x in prec ]
+            sh.json_dump(prec_info, 'precev_map.out')
+
 
 class PseudoTrajectory(BlindRun):
     """Some kind of mysterious Lopez Mix..."""
@@ -329,3 +342,8 @@ class PseudoTrajectory(BlindRun):
             ),
         )
     )
+
+    def prepare(self, rh, opts):
+        """Add some defaults env values for mpitool itself."""
+        super(PseudoTrajectory, self).prepare(rh, opts)
+        self.export('drhook_not_mpi')

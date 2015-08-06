@@ -100,11 +100,16 @@ class Environment(object):
         self.__dict__['_history'] = History(tag='env')
         self.__dict__['_active']  = False
         self.__dict__['_verbose'] = verbose
-        self.__dict__['_freezed'] = (dict(), list())
+        self.__dict__['_frozen']  = (dict(), list())
         self.__dict__['_pool']    = dict()
         self.__dict__['_mods']    = set()
         if env is not None and isinstance(env, Environment):
             self._pool.update(env)
+            if verbose:
+                try:
+                    self.__dict__['_sh'] = env._sh
+                except AttributeError:
+                    pass
         else:
             if clear:
                 active = False
@@ -277,7 +282,7 @@ class Environment(object):
 
     def delta(self, **kw):
         """Temporarily set a collection of variables that could be reversed."""
-        upditems, newitems = self._freezed
+        upditems, newitems = self._frozen
         for var, value in kw.iteritems():
             if var in self:
                 upditems[var] = self.get(var)
@@ -287,7 +292,7 @@ class Environment(object):
 
     def rewind(self):
         """Comme back on last environment delta changes."""
-        upditems, newitems = self._freezed
+        upditems, newitems = self._frozen
         for item in newitems:
             self.delvar(item)
         for var, value in upditems.iteritems():
@@ -329,7 +334,7 @@ class Environment(object):
         else:
             return json.dumps(value, cls=ShellEncoder)
 
-    def verbose(self, switch=None, sh=None):
+    def verbose(self, switch=None, sh=None, fromenv=None):
         """Switch on or off the verbose mode. Returns actual value."""
         if switch is not None:
             self.__dict__['_verbose'] = bool(switch)
@@ -359,7 +364,7 @@ class Environment(object):
                 os.environ[k] = osrewind.native(k)
         return self._active
 
-    def nacked(self):
+    def naked(self):
         """Return ``True`` when the pool of variables is empty."""
         return not bool(self._pool)
 

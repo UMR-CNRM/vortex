@@ -8,6 +8,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.algo.components import BlindRun
+from vortex.syntax.stdattrs import DelayedEnvValue
 
 
 class Fa2Grib(BlindRun):
@@ -20,30 +21,35 @@ class Fa2Grib(BlindRun):
             ),
             fortnam = dict(
                 optional = True,
-                default = 'fort.4',
+                default  = 'fort.4',
             ),
             fortinput = dict(
                 optional = True,
-                default = 'fort.11',
+                default  = 'fort.11',
             ),
             compact = dict(
                 optional = True,
-                default = 'L'
+                default  = DelayedEnvValue('VORTEX_GRIB_COMPACT', 'L'),
             ),
             timeshift = dict(
+                type     = int,
                 optional = True,
-                type = int,
-                default = 0,
+                default  = DelayedEnvValue('VORTEX_GRIB_SHIFT', 0),
+            ),
+            timeunit = dict(
+                type     = int,
+                optional = True,
+                default  = DelayedEnvValue('VORTEX_GRIB_TUNIT', 1),
             ),
             numod = dict(
+                type     = int,
                 optional = True,
-                type = int,
-                default = 221,
+                default  = DelayedEnvValue('VORTEX_GRIB_NUMOD', 221),
             ),
             sciz = dict(
+                type     = int,
                 optional = True,
-                type = int,
-                default = 0,
+                default  = DelayedEnvValue('VORTEX_GRIB_SCIZ', 0),
             ),
         )
     )
@@ -60,9 +66,6 @@ class Fa2Grib(BlindRun):
         gprh = [ x.rh for x in self.context.sequence.effective_inputs(role='Gridpoint', kind='gridpoint') ]
         gprh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
 
-        compact    = self.env.get('VORTEX_GRIB_COMPACT', self.compact)
-        numod      = self.env.get('VORTEX_GRIB_NUMOD', self.numod)
-        timeshift  = self.env.get('VORTEX_GRIB_SHIFT', self.timeshift)
         thisoutput = 'GRIDOUTPUT'
 
         for r in gprh:
@@ -77,16 +80,23 @@ class Fa2Grib(BlindRun):
             from vortex.tools.fortran import NamelistBlock
             nb = NamelistBlock(name='NAML')
             nb.NBDOM = 1
-            nb.CHOPER = compact
-            nb.INUMOD = int(numod)
+            nb.CHOPER = self.compact
+            nb.INUMOD = self.numod
+
             if self.sciz:
                 nb.ISCIZ = self.sciz
-            if timeshift:
-                nb.IHCTPI = timeshift
+
+            if self.timeshift:
+                nb.IHCTPI = self.timeshift
+
+            if self.timeunit:
+                nb.ITUNIT = self.timeunit
+
             nb['CLFSORT(1)'] = thisoutput
             nb['CDNOMF(1)'] = self.fortinput
             with open(self.fortnam, 'w') as namfd:
                 namfd.write(nb.dumps())
+
             self.system.header('{0:s} : local namelist {1:s} dump'.format(self.realkind, self.fortnam))
             self.system.cat(self.fortnam, output=False)
 

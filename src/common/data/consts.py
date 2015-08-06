@@ -415,7 +415,7 @@ class SigmaB(GenvModelResource):
         info = 'Coefficients for some purpose... but which one ?',
         attr = dict(
             kind = dict(
-                values  = ['sigmab', 'sigma', 'sigma_b' ],
+                values  = ['sigmab', 'sigma', 'sigma_b'],
                 remap   = dict(autoremap = 'first'),
             ),
             gvar = dict(
@@ -593,3 +593,27 @@ class Stabal(GenvStaticResource):
     @property
     def realkind(self):
         return 'stabal'
+
+
+class WaveletTable(GenvStaticResource):
+    """
+    TODO.
+    A GenvKey can be given.
+    """
+
+    _footprint = dict(
+        info = 'Yeap... some info required for wavelet table coefs.',
+        attr = dict(
+            kind = dict(
+                values = ['wtable', 'wavelettable', 'wavelet_table', 'rtable', 'rtabwavelet'],
+                remap  = dict(autoremap = 'first'),
+            ),
+            gvar = dict(
+                default  = 'RTABLE_WAVELET'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'wtable'

@@ -513,6 +513,42 @@ class Date(datetime.datetime):
         else:
             return Date(substract)
 
+    def __eq__(self, other):
+        """Compare two Date values or a Date and a datetime or string value."""
+        try:
+            other = self.__class__(other).compact()
+        except StandardError:
+            pass
+        finally:
+            return self.compact() == '{0:<08s}'.format(str(other))
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __lt__(self, other):
+        """Compare two Date values or a Date and a datetime or string value."""
+        try:
+            other = self.__class__(other).compact()
+        except StandardError:
+            pass
+        finally:
+            return self.compact() < '{0:<08s}'.format(str(other))
+
+    def __le__(self, other):
+        return self == other or self < other
+
+    def __gt__(self, other):
+        """Compare two Date values or a Date and a datetime or string value."""
+        try:
+            other = self.__class__(other).compact()
+        except StandardError:
+            pass
+        finally:
+            return self.compact() > '{0:<08s}'.format(str(other))
+
+    def __ge__(self, other):
+        return self == other or self > other
+
     def replace(self, **kw):
         """Possible arguments: year, month, day, hour, minute."""
         for datekey in ('year', 'month', 'day', 'hour', 'minute'):
@@ -594,6 +630,7 @@ class Date(datetime.datetime):
         else:
             out = a - 'P1D'
         return out.ymd
+
 
 class Time(object):
     """

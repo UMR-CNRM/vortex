@@ -54,6 +54,7 @@ class OdbProcess(Parallel, odb.OdbComponent):
     def prepare(self, rh, opts):
         """Mostly used for setting environment."""
         super(OdbProcess, self).prepare(rh, opts)
+        self.export('drhook')
         self.odb.setup(
             date     = self.date,
             npool    = self.npool,
@@ -308,9 +309,28 @@ class Raw2ODB(OdbProcess):
     def postfix(self, rh, opts):
         """Post conversion cleaning."""
         super(Raw2ODB, self).postfix(rh, opts)
+
+        # Remove empty ECMA databases from the output obsmap
+        self.obsmapout = [ x for x in self.obsmapout if self.system.path.isdir('ECMA.' + x.odb + '/1') ]
+
+        # Generate the output bator_map
         with io.open('batodb_map.out', 'w') as fd:
             for x in sorted(self.obsmapout):
                 fd.write(unicode(ObsMapContent.formatted_data(x) + '\n'))
+
+        # Generate a global refdata (if possible)
+        rdrh_dict = { y.rh.resource.part: y.rh for y in self.context.sequence.effective_inputs(kind = 'refdata')
+                                               if y.rh.resource.part != 'all' }
+        with io.open('refdata_global', 'w') as rdg:
+            for x in sorted(self.obsmapout):
+                if x.data in rdrh_dict and self.system.path.getsize(rdrh_dict[x.data].container.localpath()) > 0:
+                    with io.open(rdrh_dict[x.data].container.localpath(), 'r') as rdl:
+                        rdg.write(rdl.readline())
+                elif self.system.path.exists('refdata.' + x.data) and self.system.path.getsize('refdata.' + x.data) > 0:
+                    with io.open('refdata.' + x.data, 'r') as rdl:
+                        rdg.write(rdl.readline())
+                else:
+                    logger.info("Unable to create a global refdata entry for data=" + x.data)
 
 
 class OdbAverage(OdbProcess):

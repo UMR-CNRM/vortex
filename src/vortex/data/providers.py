@@ -260,19 +260,26 @@ class Vortex(Provider):
         """Returns the current ``namespace``."""
         return self.namespace.netloc
 
+    def nice_member(self):
+        """Nice formatting view of the member number, if any."""
+        return 'm{0:04d}'.format(self.member) if self.member is not None else ''
+
     def pathname(self, resource):
         """Constructs pathname of the ``resource`` according to :func:`pathinfo`."""
         rinfo = self.pathinfo(resource)
         rdate = rinfo.get('date', '')
         if rdate:
             rdate = rdate.vortex(rinfo.get('cutoff', 'X'))
-        return os.path.join(
+        rpath = [
             self.vapp,
             self.vconf,
             self.experiment,
-            rdate,
-            self.block
-        )
+            rdate
+        ]
+        if self.member is not None:
+            rpath.append(self.nice_member())
+        rpath.append(self.block)
+        return os.path.join(*rpath)
 
     def basename(self, resource):
         """

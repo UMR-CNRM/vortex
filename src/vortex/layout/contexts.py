@@ -54,7 +54,7 @@ class Context(footprints.util.GetByTag):
         if path is None:
             logger.critical('Try to define a new context without virtual path')
             raise ValueError('No virtual path given to new context.')
-        self._env      = Environment(env=topenv, active=topenv.active)
+        self._env      = Environment(env=topenv, active=topenv.active, verbose=topenv.verbose())
         self._path     = path + '/' + self.tag
         self._session  = None
         self._rundir   = None

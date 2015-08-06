@@ -255,10 +255,17 @@ class Handler(object):
 
     def as_dict(self):
         """Produce a raw json-compatible dictionnay."""
-        rhd = dict(options = self.options.copy())
+        rhd = dict(options=dict())
+        for k, v in self.options.iteritems():
+            try:
+                v = v.export_dict()
+            except AttributeError:
+                pass
+            rhd['options'][k] = v
         for subobj in ('resource', 'provider', 'container'):
             obj = getattr(self, subobj, None)
-            rhd[subobj] = obj.footprint_export()
+            if obj is not None:
+                rhd[subobj] = obj.footprint_export()
         return rhd
 
     @property
@@ -330,7 +337,7 @@ class Handler(object):
                 rst = store.get(
                     self.uridata,
                     self.container.iotarget(),
-                    self.mkopts(extras)
+                    self.mkopts(dict(rhandler = self.as_dict()), extras)
                 )
                 self.container.updfill(rst)
                 self.history.append(store.fullname(), 'get', rst)
@@ -392,7 +399,7 @@ class Handler(object):
                 logger.debug('Delete resource %s at %s from %s', self, self.lasturl, store)
                 rst = store.delete(
                     self.uridata,
-                    self.mkopts(extras)
+                    self.mkopts(dict(rhandler = self.as_dict()), extras)
                 )
                 self.history.append(store.fullname(), 'delete', rst)
             else:

@@ -68,6 +68,87 @@ def mktuple(obj):
     else:
         return (obj,)
 
+class TimeInt(int):
+    """
+    Extended integer able to handle simple integers or integer plus minutes.
+    In the later case, the first integer is not limitated to 24.
+    """
+
+    def __new__(cls, ti, tm=None):
+        ti = str(ti)
+        if ':' in ti:
+            ti, tm = [ int(x) for x in ti.split(':') ]
+        obj = int.__new__(cls, ti)
+        if tm is None:
+            obj._int = True
+            tm = 0
+        else:
+            obj._int = False
+        obj._ti, obj._tm = int(ti), int(tm)
+        return obj
+
+    @property
+    def ti(self):
+        return self._ti
+
+    @property
+    def tm(self):
+        return self._tm
+
+    def is_int(self):
+        return self._int
+
+    def __str__(self):
+        if self.is_int():
+            return str(self.ti)
+        else:
+            return '{0:d}:{1:02d}'.format(self.ti, self.tm)
+
+    def __cmp__(self, other):
+        try:
+            other = self.__class__(other)
+        except ValueError:
+            return cmp(str(self), str(other))
+        else:
+            return cmp('{0:08d}:{1:02d}'.format(self.ti, self.tm), '{0:08d}:{1:02d}'.format(other.ti, other.tm))
+
+    def __add__(self, other):
+        try:
+            other = self.__class__(other)
+        except ValueError:
+            pass
+        ti, tm = self.ti + other.ti, self.tm + other.tm
+        ti, tm = ti + tm / 60, tm % 60
+        if tm:
+            return self.__class__('{!s}:{!s}'.format(ti, tm))
+        else:
+            return self.__class__(ti)
+
+    def __radd__(self, other):
+        """Commutative add."""
+        return self.__add__(other)
+
+    def __sub__(self, other):
+        try:
+            other = self.__class__(other)
+        except ValueError:
+            pass
+        ti, tm = self.ti - other.ti, self.tm - other.tm
+        if tm < 0:
+            tm += 60
+            ti   -= 1
+        if tm:
+            return self.__class__('{!s}:{!s}'.format(ti, tm))
+        else:
+            return self.__class__(ti)
+
+    @property
+    def realtype(self):
+        return 'int' if self.is_int() else 'time'
+
+    @property
+    def value(self):
+        return self.ti if self.is_int() else str(self)
 
 def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     """
@@ -88,7 +169,7 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
             actualrange = [ realstart ]
         else:
             actualrange = realstart.split('-')
-        realstart = int(actualrange[0])
+        realstart = TimeInt(actualrange[0])
 
         if len(actualrange) > 1:
             realend = actualrange[1]
@@ -96,7 +177,7 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
             realend = realstart
         else:
             realend = end
-        realend = int(realend)
+        realend = TimeInt(realend)
 
         if len(actualrange) > 2:
             realstep = actualrange[2]
@@ -104,22 +185,27 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
             realstep = 1
         else:
             realstep = step
-        realstep = int(realstep)
+        realstep = TimeInt(realstep)
 
-        if realstep < 0:
-            realend -= 1
-        else:
-            realend += 1
         if shift is not None:
-            realshift = int(shift)
+            realshift = TimeInt(shift)
             realstart += realshift
             realend   += realshift
 
-        pvalues = range(realstart, realend, realstep)
+        pvalues = [ realstart ]
+        while pvalues[-1] < realend:
+            pvalues.append(pvalues[-1] + realstep)
+
+        if all([ x.is_int() for x in pvalues ]):
+            pvalues = [ x.value for x in pvalues ]
+        else:
+            pvalues = [ '{0:04d}:{1:02d}'.format(x.ti, x.tm) for x in sorted(pvalues) ]
+
         if fmt is not None:
             if fmt.startswith('%'):
                 fmt = '{0:' + fmt[1:] + '}'
-            pvalues = [ fmt.format(x, i+1, type(x).__name__) for i, x in enumerate(pvalues) ]
+            pvalues = [ fmt.format(x, i+1, x.realtype) for i, x in enumerate(pvalues) ]
+
         if prefix is not None:
             pvalues = [ prefix + str(x) for x in pvalues ]
         rangevalues.extend(pvalues)

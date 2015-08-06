@@ -21,6 +21,7 @@ class Target(footprints.FootprintBase):
     """Root class for any :class:`Target` subclasses."""
 
     _abstract  = True
+    _explicit  = False
     _collector = ('target',)
     _footprint = dict(
         info = 'Default target description',

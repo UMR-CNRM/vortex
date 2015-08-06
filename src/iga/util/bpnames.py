@@ -209,13 +209,14 @@ def analysis_bnames(resource, vapp=None):
 def historic_bnames(resource, vapp=None):
     """docstring for historic_bnames"""
     if resource.model == 'surfex':
-        return histsurf_bnames(resource)
+        return histsurf_bnames(resource, vapp)
     model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model, vapp=vapp)
     return 'ICMSH' + model_info + '+' + resource.term.fmthour + '.' + suffix
 
 
-def histsurf_bnames(resource):
+def histsurf_bnames(resource, vapp=None):
     """docstring for histsurf"""
+    model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model, vapp=vapp)
     reseau = resource.date.hour
     map_suffix = dict(
         zip(
@@ -224,7 +225,7 @@ def histsurf_bnames(resource):
         )
     )
     suffix = map_suffix[reseau]
-    return 'PREP.fa.' + suffix
+    return 'ICMSH' + model_info + '+' + resource.term.fmthour + '.sfx.' + suffix
 
 
 def gridpoint_bnames(resource, member=None):
@@ -258,7 +259,7 @@ def gridpoint_bnames(resource, member=None):
 
 def varbc_bnames(resource):
     """docstring for varbc_bnames"""
-    reseau, model = resource.date.hour, resource.model
+    reseau, model, stage  = resource.date.hour, resource.model, resource.stage
     if model in ['reunion', 'aladin', 'caledonie', 'antiguy', 'polynesie']:
         suffix = '_alad'
     elif model == "arpege":
@@ -267,7 +268,10 @@ def varbc_bnames(resource):
         suffix = '_aro'
     else:
         raise ValueError ('Unknown model {:s} in varbc_bnames'.format(model))
-    localname = 'VARBC.cycle' + suffix + '.r' + str(reseau)
+    if stage == 'merge':
+        localname = 'VARBC.merge.' + str(reseau)
+    else:
+        localname = 'VARBC.cycle' + suffix + '.r' + str(reseau)
     return localname
 
 
@@ -297,9 +301,7 @@ def refdata_bnames(resource):
 def bgstderr_bnames(resource, ens=None):
     if ens == 'france':
         #errgrib_scr type
-        delta = 'PT' + str(resource.term.hour) + 'H'
-        target_date = resource.date + delta
-        return 'errgrib_scr.r' + str(target_date.hour)
+        return 'errgrib_scr.r' + str(resource.date.hour)
     else:
         #I have to calculate a new date so as to get the correct run
         prefix = 'errgrib'
@@ -383,7 +385,7 @@ def global_bnames(resource, provider):
             return 'BATOR_MAP_' + resource.cutoff
 
 
-def global_snames(resource):
+def global_snames(resource, provider):
     """global names for soprano provider"""
     cutoff = resource.cutoff
     if cutoff == 'assim':
@@ -400,10 +402,10 @@ def global_snames(resource):
         map_suffix = dict(
            zip(
                zip(
-                   (cutoff,)*4,
-                   (0, 6, 12, 18)
+                   (cutoff,)*24,
+                   (0, 1, 2, 3, 4, 5,6 ,7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23)
                ),
-               ('AM', 'SX', 'PM', 'DH')
+               ('00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23')
            )
        )
     elif cutoff == 'short':
@@ -416,6 +418,7 @@ def global_snames(resource):
         return None
 
     bname = None
+    vapp = getattr(provider, 'vapp', None)
     if resource.realkind == 'rawfields':
         if resource.origin == 'ostia' and resource.fields == 'sst':
             bname = 'sst.ostia'
@@ -423,32 +426,40 @@ def global_snames(resource):
             bname = 'SSMI.AM'
     if resource.realkind == 'observations':
         suff = map_suffix[(cutoff, resource.date.hour)]
+        if vapp == 'arpege':
+            modsuff = ''
+        else:
+            modsuff = '_' + vapp.upper()
         if resource.nativefmt == 'grib':
             if resource.part == 'sev':
-                bname = 'SEVIRI_AROME.' + suff + '.grb'
+                bname = 'SEVIRI' + modsuff + '.' + suff + '.grb'
         elif resource.nativefmt == 'obsoul':
             if resource.part == 'conv':
-                bname = 'OBSOUL1F.' + suff
+                bname = 'OBSOUL1F' + modsuff + '.' + suff
             elif resource.part == 'prof':
-                bname = 'OBSOUL2F.' + suff
+                bname = 'OBSOUL2F' + modsuff + '.'+ suff
             elif resource.part == 'surf':
-                bname = 'OBSOUL_SURFAN.' + suff
+                bname = 'OBSOUL_SURFAN' + modsuff + '.' + suff
         elif resource.nativefmt == 'bufr':
-            if 'arome' in resource.model:
-                bname = 'BUFR.' + resource.part + '_AROME.' + suff
-            else:
-                bname = 'BUFR.' + resource.part + '.' + suff
+            bname = 'BUFR.' + resource.part + modsuff + '.' + suff
         logger.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
     if resource.realkind == 'refdata':
         suff = map_suffix[(cutoff, resource.date.hour)]
-        if resource.nativefmt == 'obsoul' and resource.part == 'conv':
-            bname = 'RD_1.' + suff
-        if resource.nativefmt == 'obsoul' and resource.part == 'prof':
-            bname = 'RD_2.' + suff
-        if resource.nativefmt == 'bufr':
-            bname = 'rd_' + resource.part + '.' + suff
-        if resource.part == 'surf':
-            bname = 'RD_SURFAN' + '.' + suff
+        if vapp == 'arpege':
+            modsuff = ''
+        else:
+            modsuff = '_' + vapp.upper()
+        if resource.part == 'prof':
+            bname = 'RD_2' + modsuff + '.' + suff
+        elif resource.part == 'conv':
+            bname = 'RD_1' + modsuff + '.' + suff
+        elif resource.part == 'surf':
+            bname = 'RD_SURFAN' + modsuff + '.' + suff
+        else:
+            bname = 'rd_' + resource.part + modsuff + '.' + suff
+        print 'bname = ', bname
         logger.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
+    if resource.realkind == 'historic':
+        bname = 'toto'
     return bname
 

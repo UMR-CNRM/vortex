@@ -149,6 +149,13 @@ def setup(**kw):
 
     print '+ SMS candidates =', ad.candidates('sms')
 
+    vortex.toolbox.defaults(
+        jname = opd.get('op_jeeves', None)
+    )
+
+    print '+ JEEVES candidates =', ad.candidates('jeeves')
+    print '+ JEEVES default =', vortex.toolbox.defaults.get('jname')
+
     #--------------------------------------------------------------------------------------------------
     t.sh.header('SMS Settings')
     ad.sms_info()

@@ -4,13 +4,13 @@
 Gestion de ressources
 *********************
 
-Nous avons beaucoup insisté dans l'exposé des principes philosophiques sur les différents niveaux du flux de données. 
+Nous avons beaucoup insisté dans l'exposé des principes philosophiques sur les différents niveaux du flux de données.
 Nous allons maintenant voir comment VORTEX propose de se dépatouiller avec la gestion des ressources qui participent
 de ce flux.
 
-===================================
-Récupérer et utiliser une ressource
-===================================
+=====================
+Décrire une ressource
+=====================
 
 D'une façon ou d'une autre, tout se résume à être capable de nommer une ressource *source*, à en disposer localement
 au contexte d'exécution du modèle de PNT, ou de la mettre à disposition après exécution (sauvegarde, partage, etc.).
@@ -37,8 +37,8 @@ dans un an quand il faudra vérifier un bout de l'expérience, etc.
 
 Et puis que se passe-t-il si le fichier source est éclaté car c'est une sortie du serveur d'IO par exemple ?
 Et si je me sers de cette ressource comme d'un état analysé (ce que nous intuitons péremptoirement de la ligne
-de commande), à quoi bon la copier, puisqu'elle sera en lecture seule, donc autant faire un *hard link*. Est-on sure
-que la ressource est à la bonne date ? La bonne géométrie ? Que faire si avant le traitement l'on souhaite modifier
+de commande), à quoi bon la copier, puisqu'elle sera en lecture seule, donc autant faire un *hard link*. Est-on certain
+que la ressource est à la bonne date ? Sur la bonne géométrie ? Que faire si avant le traitement l'on souhaite modifier
 un champ, en éliminer un autre ? Etc.
 
 Considérons aussi une opération "inverse", de sauvegarde d'un résultat d'exécution.
@@ -47,17 +47,17 @@ Considérons aussi une opération "inverse", de sauvegarde d'un résultat d'exé
 
     % cp ICMSHFCST+0006 /home/toto/data/forecast.06
 
-Même question que précédemment : quid si fichier LFI éclaté ? Et ai-je besoin de le copier ou de faire un *hard-link* ?
+Même question que précédemment : *quid* si fichier LFI éclaté ? Et ai-je besoin de le copier ou de faire un *hard-link* ?
 Sommes-nous sur le même *filesystem* ? Et si l'on veut sauvegarder cette ressource en ligne, sur le disque, mais aussi
 sur la machine d'archivage. Ou sur un autre système distant. Ou sur le disque en ligne ET la machine d'archivage ?
 Ou sur le disque en ligne ET la machine d'archivage ET un autre système distant ? Et si dans le transfert vers l'archivage
-il faut d'abord "compacter" la ressource ? 
+il faut d'abord "compacter" la ressource ?
 
-Et puis, comment savoir que la ressource est vraiment dans /home/toto/data ? Est-ce que cela peut changer ?
-Que faire si la ressource n'est pas disponible ?
+Et puis, comment savoir que la ressource est vraiment dans :file:`/home/toto/data` ?
+Est-ce que cela peut changer ? Que faire si la ressource n'est pas disponible ?
 
 Pour simple que soit la commande shell elle mélange complètement plusieurs niveaux conceptuels.
-Le plus contraignant et le plus inextricable à tout point de vue est quelle fusionne la *ressource logique*
+Le plus contraignant et le plus inextricable à tous points de vue est quelle fusionne la *ressource logique*
 (quelle est le type de la ressource et sa description) et la *ressource physique* (ici, quelle fichier contient
 ladite ressource logique).
 
@@ -79,15 +79,15 @@ deux entités : la resource logique (ou resource métier proprement dite, c'est 
 physique ou *conteneur* (elle contient, dans un certain format, la ressource logique).
 
 Mais ce n'est pas tout: nous avons bien dit que la resource logique était un état analysé d'un modèle, et nous
-avons caractérisé sans date, son cutoff, sa géométrie, etc. Mais de quelle occurrence du modèle s'agit-il exactement ?
-Celle tournée sur votre quoi de table ce week-end, celle en opération, celle en évaluation, celle en test ?
-Pour le dire autrement : qui vous *fournit* un moyen de savoir quelle la ressource que vous pouvez utiliser dans
+avons caractérisé sa date, son cutoff, sa géométrie, etc. Mais de quelle occurrence du modèle s'agit-il exactement ?
+Celle tournée sur votre coin de table ce week-end, celle en opérations, celle en évaluation, celle en test ?
+Pour le dire autrement : qui vous *fournit* un moyen de savoir quelle est la ressource que vous pouvez utiliser dans
 l'immensité des ressources logiques de caractéristiques identiques (ou presque) ? Car il doit y en avoir plusieurs,
 dans des espaces de noms éventuellement totalement différents...
 
 Et une fois que vous avez ce *fournisseur* d'informations permettant de localiser une ressource, qui est en charge
-de physiquement stocker cette ressource ? Il doit bien y avoir un espace de stockage (votre disque / répertoire,
-la machine d'archivage, etc.) qui fait ce boulot. 
+de stocker physiquement cette ressource ? Il doit bien y avoir un espace de stockage (votre disque / répertoire,
+la machine d'archivage, etc.) qui fait ce boulot.
 
 Nous venons de faire l'analyse minimaliste qui va permettre, sur la base d'un peu modèle descriptif compatible
 avec l'utilisation des footprints, de définir une première topologie d'objets en charge de ces aspects.
@@ -101,7 +101,7 @@ Nous appellerons *resource* ce qui correspond à une ressource logique. La class
 
 Nous appellerons *container* ce qui correspond à une ressource physique. La classe de base sera :class:`~vortex.data.containers.Container`.
 
-Nous appellerons *provider* ce qui correspond à un fournisseur d'accès. La classe de base sera :class:`~vortex.data.providers.Providers`.
+Nous appellerons *provider* ce qui correspond à un fournisseur d'accès. La classe de base sera :class:`~vortex.data.providers.Provider`.
 
 Nous appellerons *store* ce qui correspond à espace de stockage. La classe de base sera :class:`~vortex.data.stores.Store`.
 
@@ -136,12 +136,12 @@ Deux resources exécutables et une resource de type *Unknown* dont on devine con
 notre vocabulaire descriptif d'analyse::
 
     >>> fpx.resource()
-    # [2015/18/06-12:36:55][footprints.collectors][pickup:0151][WARNING]: No 'resource' found in description 
+    # [2015/18/06-12:36:55][footprints.collectors][pickup:0151][WARNING]: No 'resource' found in description
         dict(
             resource = None,
         )
 
-    Report Footprint-Resource: 
+    Report Footprint-Resource:
 
         vortex.data.executables.BlackBox
             kind       : {'why': 'Missing value'}
@@ -257,7 +257,7 @@ d'une expérience OLIVE quelconque *X001*::
     'X001'
 
 Nous voyons surgir, explicitement maintenant, un espace de nom ou *namespace*. Il sera en effet possible
-de distingueur (ou pas, selon les mystères de la résolution des footprints), des fournisseurs de localisation
+de distinguer (ou pas, selon les mystères de la résolution des footprints), des fournisseurs de localisation
 de ressources pour tel ou tel espace de nom. Nous aurions aussi pu demander explicitement l'archive::
 
     >>> p = fpx.provider(experiment='X001', block='canari', namespace='vortex.archive.fr')
@@ -265,7 +265,7 @@ de ressources pour tel ou tel espace de nom. Nous aurions aussi pu demander expl
     'vortex.archive.fr'
 
 Ce qui devient intéressant, c'est que nous pouvons faire travailler maintenant ce *provider* sur notre *resource*
-en lui demandant la seule et unique chose qu'il sache faire (ou presque): produire une URI::
+en lui demandant la seule et unique chose qu'il sache faire (ou presque), à savoir produire une URI::
 
     >>> p.uri(a)
     'vortex://vortex.archive.fr/play/sandbox/X001/20150618T0600P/canari/analysis.full-arpege.tl798-c24.fa'
@@ -276,7 +276,7 @@ Ce sont respectivement les noms d'application et de configuration VORTEX::
     >>> p.vapp, p.vconf
     ('play', 'sandbox')
 
-Ces valeurs sont données par défaut par votre *glove*, le *GLObal Versatile Environment* (on y reviendra, ou pas),
+Ces valeurs sont données par défaut par votre *glove*, le *GLObal Versatile Environment* (on y reviendra),
 mais il est bien entendu possible de les modifier à la volée::
 
     >>> p = fpx.provider(experiment='X001', block='canari', vapp='arpege', vconf='france')
@@ -412,9 +412,9 @@ et celle des *providers*::
 
 Il y a comme un air de famille. En fait le *store* du *ressource handler* est produit dynamiquement
 (c'est une *property*) sur la base d'une résolution de footprint dont les deux principaux attributs
-sont le *scheme* et le *netloc* issus du parsage de l'URL produite par le provider. Il y a donc un 
+sont le *scheme* et le *netloc* issus du parsage de l'URL produite par le provider. Il y a donc un
 rapport entre les deux, mais totalement indirect puisque que médiatisé par la résolution des footprints
-des *stores*. 
+des *stores*.
 
 Un des arguments les plus décisif devient donc dans ce contexte l'espace de nom (ou domaine du *netloc*).
 Le module :mod:`~vortex.toolbox` nous fournit une commande pour visualiser ceux définis par défaut
@@ -481,3 +481,8 @@ dans les footprints de classes *Store* ou *Provider*::
     + vsop.archive.fr   [vortex.data.stores.VortexOpArchiveStore]
     + vsop.cache.fr     [vortex.data.stores.VortexCacheStore]
     + vsop.multi.fr     [vortex.data.stores.VortexStore]
+
+
+===================================
+Récupérer et utiliser une ressource
+===================================

@@ -89,7 +89,7 @@ class IgaFinder(Finder):
     def fileget(self, remote, local, options):
         """Delegates to ``system`` the copy of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
-        return self.system.cp(rpath, local, fmt=options.get('fmt'))
+        return self.system.cp(rpath, local, intent=options.get('intent'), fmt=options.get('fmt'))
 
 
 class SopranoStore(Store):
@@ -132,7 +132,7 @@ class SopranoStore(Store):
         return self.storage
 
     def fullpath(self, remote):
-        return self.rootdir + remote['path']
+        return self.storeroot + remote['path']
 
     def ftplocate(self, remote, options):
         """Delegates to ``system`` a distant check."""

@@ -27,6 +27,9 @@ class OliveArchiveStore(ArchiveStore):
                 values  = ['open.archive.fr', 'olive.archive.fr'],
                 remap   = {'olive.archive.fr': 'open.archive.fr'},
             ),
+            storeroot = dict(
+                default  = '/home/m/marp/marp999',
+            ),
             storehead = dict(
                 default = 'xp',
                 outcast = ['vortex']

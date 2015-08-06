@@ -48,7 +48,7 @@ def is_authorized_user(action='void', user=None):
     if not user:
         user = sessions.getglove().user
     gh = GroupHandler()
-    group = gh.users.users.get(user, 'default')
+    group = gh.users.users.get(user, gh.users.users.get('default'))
     level = gh.users.groups.get(group, 'low')
     auth = getattr(gh.perms, level, dict()).get(action, False)
 
