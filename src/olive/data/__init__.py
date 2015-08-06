@@ -5,5 +5,5 @@
 __all__ = []
 
 # Recursive inclusion of packages with potential FootprintBase classes
-import bestof, errgrib, fields
+import bestof
 import providers, stores

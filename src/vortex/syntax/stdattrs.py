@@ -42,16 +42,6 @@ knownfmt = set([
 
 # Special classes
 
-class AnyType(object):
-    """
-    A very special class intended to be used as footprint attribut type
-    for heterogeneous values. The constructeur returns the actual value... unchanged !
-    """
-
-    def __new__(cls, obj):
-        return obj
-
-
 class DelayedEnvValue(object):
     """
     Store a environment variable and restitue value when needed,

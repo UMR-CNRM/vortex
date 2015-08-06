@@ -460,17 +460,12 @@ class OdbAverage(OdbProcess):
 
 
 class OdbMatchup(OdbProcess):
-    """Report some information from pot-minim CCMA to post-screening ECMA base."""
+    """Report some information from post-minim CCMA to post-screening ECMA base."""
 
     _footprint = dict(
         attr = dict(
             kind = dict(
                 values = ['matchup'],
-            ),
-            outdb = dict(
-                optional = True,
-                default  = 'ccma',
-                value    = ['ecma', 'ccma'],
             ),
         )
     )
@@ -483,21 +478,24 @@ class OdbMatchup(OdbProcess):
         # Looking for input observations
         obsscr = [
             x for x in self.input_obs()
-                if x.resource.stage.startswith('screen') and x.resource.part == 'virtual'
+            if x.resource.stage.startswith('screen') and x.resource.part == 'virtual'
         ]
-        obsmin = [ x for x in self.input_obs() if x.resource.stage.startswith('min') ]
+        obscompressed = [
+            x for x in self.input_obs()
+            if x.resource.stage.startswith('min') or x.resource.stage.startswith('traj')
+        ]
 
         # One database at a time
         if not obsscr:
             raise ValueError('Could not find any ODB screening input')
-        if not obsmin:
+        if not obscompressed:
             raise ValueError('Could not find any ODB minim input')
 
         # Set actual layout and path
         ecma = obsscr.pop(0)
-        ccma = obsmin.pop(0)
-        self.layout_screening = ecma.resource.layout
-        self.layout_minim     = ccma.resource.layout
+        ccma = obscompressed.pop(0)
+        self.layout_screening  = ecma.resource.layout
+        self.layout_compressed = ccma.resource.layout
         ecma_path = sh.path.abspath(ecma.container.localpath())
         ccma_path = sh.path.abspath(ccma.container.localpath())
         self.env.ODB_SRCPATH_CCMA  = ccma_path
@@ -518,11 +516,10 @@ class OdbMatchup(OdbProcess):
     def spawn_command_options(self):
         """Prepare command line options to binary."""
         return dict(
-            dbin     = self.layout_screening,
-            dbout    = self.layout_minim,
+            dbin     = self.layout_compressed,
+            dbout    = self.layout_screening,
             npool    = self.npool,
             nslot    = self.slots.nslot,
             date     = self.date,
-            fcma     = self.outdb,
+            fcma     = self.layout_compressed,
         )
-

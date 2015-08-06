@@ -617,3 +617,57 @@ class WaveletTable(GenvStaticResource):
     @property
     def realkind(self):
         return 'wtable'
+
+
+class AmvError(StaticResource):
+    """
+    TODO.
+    A Genvkey can be given.
+    """
+    _footprint = dict(
+        info='AMV Tracking Error',
+        attr=dict(
+            kind=dict(
+                values=['amvtrackingerror', 'amvtr', 'amverror', 'amv_error'],
+                remap=dict(
+                    amvtrackingerror='amv_error',
+                    amvtr='amv_error',
+                    amverror='amv_error',
+                ),
+            ),
+            gvar=dict(
+                type=GenvKey,
+                optional=True,
+                default='amv_tracking_error',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'amv_error'
+
+
+class AmvBias(StaticResource):
+    """
+    TODO.
+    A Genvkey can be given.
+    """
+    _footprint = dict(
+        info='AMV Tracking Error',
+        attr=dict(
+            kind=dict(
+                values=['amvbias', 'amv_bias'],
+                remap=dict(amvbias='amv_bias'),
+            ),
+            gvar=dict(
+                type=GenvKey,
+                optional=True,
+                default='amv_bias_info'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'amv_bias'

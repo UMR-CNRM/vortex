@@ -74,10 +74,14 @@ class Analysis(GeoFlowResource):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        basename = 'analyse'
-        if self.model == 'surfex':
-            basename = basename + '.sfx'
-        return basename
+        olivename_map = { 'atm':  'TRAJ' + self.model[:4].upper() + '+0000',
+                          'surf': 'surfanalyse',
+                          'full': 'analyse'}
+        if self.model != 'arpege':
+            olivename_map['surf'] = 'analyse'
+            if self.model == 'surfex':
+                olivename_map = { k: x + '.sfx' for k, x in olivename_map.items() }
+        return olivename_map[self.filling]
 
     def basename_info(self):
         """Generic information, radical = ``analysis``."""

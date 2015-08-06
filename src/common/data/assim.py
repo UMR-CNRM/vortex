@@ -12,32 +12,40 @@ from vortex.tools.date      import Time
 
 from vortex.data.flow       import FlowResource, GeoFlowResource
 from vortex.data.contents   import JsonDictContent
-from vortex.syntax.stdattrs import FmtInt
+from vortex.syntax.stdattrs import FmtInt, term
 from gco.syntax.stdattrs    import GenvKey
 
 
 class BackgroundStdError(GeoFlowResource):
     """
-    TODO.
+    Background error standard deviation.
     """
 
-    _footprint = dict(
-        info = 'Sigma B... could be more talkative ?',
-        attr = dict(
-            kind = dict(
-                values   = ['bgstderr', 'bg_stderr'],
-                remap    = dict(autoremap = 'first'),
-            ),
-            stage = dict(
-                optional = True,
-                default  = 'scr',
-                values   = ['scr', 'vor'],
-            ),
-            nativefmt = dict(
-                default  = 'grib',
-            ),
+    _footprint = [
+        term,
+        dict(
+             info='Background error standard deviation',
+             attr=dict(
+                kind=dict(
+                    values=['bgstderr', 'bg_stderr'],
+                    remap=dict(autoremap='first'),
+                ),
+                stage=dict(
+                    optional=True,
+                    default='vor',
+                    values=['scr', 'vor'],
+                ),
+                term=dict(
+                    optional=True,
+                    values=[3, 6, 9, 12],
+                    default=6
+                ),
+                nativefmt=dict(
+                    default='grib',
+                ),
+             ),
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -50,12 +58,22 @@ class BackgroundStdError(GeoFlowResource):
             geo     = [{'truncation': self.geometry.truncation}],
             fmt     = self.nativefmt,
             src     = [self.model, self.stage],
+            term    = self.term.fmthm,
         )
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        errgrib = 'errgrib' if self.stage in ('vor',) else 'errgrib_'
-        return errgrib + self.stage
+        if self.stage in ('vor',):
+            return '(errgribfix:igakey)'
+        else:
+            return 'errgrib_' + self.stage
+
+    def olive_basename(self):
+        """OLIVE specific naming convention."""
+        if self.stage in ('vor',):
+            return 'errgribvor'
+        else:
+            return 'sigma_b'
 
 
 class Wavelet(GeoFlowResource):
@@ -163,7 +181,7 @@ class InternalMinim(GeoFlowResource):
 
     def olive_suffixtr(self):
         """Return BR or HR specific OLIVE suffix according to geo streching."""
-        return 'HR' if self.geometry.streching > 1 else 'BR'
+        return 'HR' if self.geometry.stretching > 1 else 'BR'
 
 
 class StartingPointMinim(InternalMinim):

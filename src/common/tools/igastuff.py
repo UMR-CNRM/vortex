@@ -27,7 +27,7 @@ fuzzystr = dict(
         bgstderr = dict( input = '', output = '_assim' ),
     ),
     term0009 = dict(
-        bgstderr = dict( input = '_production', output = '_production' ),
+        bgstderr = dict( input = '', output = '_production' ),
     ),
     term0012 = dict(
         bgstderr = dict( input = '_production_dsbscr', output = '_production_dsbscr' ),
@@ -55,6 +55,7 @@ fuzzystr = dict(
     ),
 )
 
+
 def fuzzyname(entry, realkind, key):
     """Returns any non-standard naming convention in the operational namespace."""
     return fuzzystr[entry][realkind][key]
@@ -72,7 +73,7 @@ def archive_suffix(model, cutoff, date):
         rr = dict(
             zip(
                 zip(
-                    (cutoff,)*len(hrange),
+                    (cutoff,) * len(hrange),
                     hh
                 ),
                 hrange
@@ -83,7 +84,7 @@ def archive_suffix(model, cutoff, date):
             rr = dict(
                 zip(
                     zip(
-                        (cutoff,)*len(hrange),
+                        (cutoff,) * len(hrange),
                         hh
                     ),
                     ('CM', 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU')
@@ -93,7 +94,7 @@ def archive_suffix(model, cutoff, date):
             rr = dict(
                 zip(
                     zip(
-                        (cutoff,)*len(hrange),
+                        (cutoff,) * len(hrange),
                         hh
                     ),
                     ('AM', 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU')
@@ -101,3 +102,38 @@ def archive_suffix(model, cutoff, date):
             )
 
     return str(rr[(cutoff, date.hour)])
+
+
+class IgakeyFactory(str):
+    """
+    Given the vapp/vconf, returns a default value for the igakey attribute
+    """
+
+    _re_appconf = re.compile('^(\w+)/(\w+)$')
+
+    _keymap = {'arpege': {'4dvar': 'arpege',
+                          'pearp': 'pearp',
+                          'aearp': 'aearp',
+                          'court': 'arpege',
+                          'frcourt': 'arpege', },
+               'arome': {'france': 'arome',
+                         'pegase': 'pegase', },
+               'aladin': {'antiguy': 'antiguy',
+                          'caledonie': 'caledonie',
+                          'nc': 'caledonie',
+                          'polynesie': 'polynesie',
+                          'reunion': 'reunion', },
+               }
+
+    def __new__(cls, value):
+        """
+        If the input string is something like "vapp/vconf", use a mapping
+        between vapp/vconf pairs and the igakey (see _keymap).
+        If no mapping is found, it returns vapp.
+        """
+        val_split = cls._re_appconf.match(value)
+        if val_split:
+            value = cls._keymap.get(val_split.group(1),
+                                    {}).get(val_split.group(2),
+                                            val_split.group(1))
+        return str.__new__(cls, value)

@@ -797,22 +797,33 @@ class Month(object):
             if len(args) == 2:
                 self._year = int(args[1])
         else:
+            # Try to generate a Date object
+            mmod = None
             if isinstance(top, str):
-                mmod = re.search(':(next|prev)$', top)
+                mmod = re.search(':(next|prev|closest)$', top)
                 if mmod:
-                    args[0] = re.sub(':(?:next|prev)$', '', top)
-                    if mmod.group(1) == 'next':
-                        delta = 1
-                    else:
-                        delta = -1
-            if len(args) == 2:
-                delta = args.pop()
+                    args[0] = re.sub(':(?:next|prev|closest)$', '', top)
             try:
                 tmpdate = Date(*args)
             except (ValueError, TypeError):
                 raise ValueError('Could not create a Month from values provided %s', str(args))
             else:
                 self._month, self._year = tmpdate.month, tmpdate.year
+            # Process the modifiers
+            if mmod:
+                if mmod.group(1) == 'next':
+                    delta = 1
+                elif mmod.group(1) == 'prev':
+                    delta = -1
+                elif mmod.group(1) == 'closest':
+                    if tmpdate.day > 15:
+                        delta = 1
+                    else:
+                        delta = -1
+            # If present, the second argument is the delta (it overrides the modifiers)
+            if len(args) == 2:
+                delta = args.pop()
+
         if delta:
             mtmp = self + delta
             self._month, self._year = mtmp.month, mtmp.year
