@@ -21,7 +21,7 @@ from vortex.util import config
 from vortex.tools import caches, date
 from vortex.tools.actions import actiond as ad
 from vortex.syntax.stdattrs import Namespace
-
+from vortex.syntax.stdattrs import DelayedEnvValue
 
 class StoreGlue(object):
     """Defines a way to glue stored objects together."""
@@ -575,6 +575,11 @@ class ArchiveStore(Store):
                 optional = True,
                 default  = True,
             ),
+            storetrue = dict(
+                type     = bool,
+                optional = True,
+                default  = True,
+            ),
         )
     )
 
@@ -714,6 +719,9 @@ class VortexArchiveStore(ArchiveStore):
 
     def vortexput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
+        if not self.storetrue:
+            logger.info("put deactivated for {}".format(local))
+            return True
         self.remap_write(remote, options)
         return self.ftpput(local, remote, options)
 
@@ -757,6 +765,9 @@ class VortexOpArchiveStore(VortexArchiveStore):
             ),
             storeroot = dict(
                 default  = '/home/m/mxpt/mxpt001',
+            ),
+            storetrue = dict(
+                default = DelayedEnvValue('op_archive', True),
             ),
         )
     )
