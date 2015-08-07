@@ -138,7 +138,7 @@ class System(footprints.FootprintBase):
 
     @property
     def default_syslog(self):
-        """address to use in logging.handler.SysLogHandler()"""
+        """Address to use in logging.handler.SysLogHandler()."""
         return '/dev/log'
 
     def extend(self, obj=None):
@@ -608,6 +608,7 @@ class System(footprints.FootprintBase):
         """Be sure to get actual login name."""
         return passwd.getpwuid(self._os.getuid())[0]
 
+
 class OSExtended(System):
 
     _abstract = True
@@ -618,8 +619,9 @@ class OSExtended(System):
     def __init__(self, *args, **kw):
         """
         Before going through parent initialisation, pickle this attributes:
+
           * rmtreemin - as the minimal depth needed for a :meth:`rmsafe`.
-          * cmpaftercp - as a boolean for activating full comparison after pain cp (default: True).
+          * cmpaftercp - as a boolean for activating full comparison after plain cp (default: True).
         """
         logger.debug('Abstract System init %s', self.__class__)
         self._rmtreemin = kw.pop('rmtreemin', 3)

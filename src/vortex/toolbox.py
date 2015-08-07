@@ -358,7 +358,7 @@ def diff(*args, **kw):
         oldlevel = t.loglevel
         t.setloglevel(loglevel.upper())
 
-    # Let the magic of footprints resolution operates...
+    # Let the magic of footprints resolution operate...
     for ir, rhandler in enumerate(rload(*args, **kwclean)):
         if talkative:
             print t.line
