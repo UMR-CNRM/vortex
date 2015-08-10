@@ -147,6 +147,33 @@ class utDate(TestCase):
         for j, d in test_dates:
             self.assertEqual(rv.from_cnesjulian(j).compact(), d)
 
+    def test_date_compare(self):
+        d = date.Date('201507091233')
+        e = date.now()
+        self.assertTrue(d == d)
+        self.assertTrue(d < e)
+        self.assertTrue(d <= e)
+        self.assertFalse(d > e)
+        self.assertTrue(d == d.compact())
+        self.assertTrue(d > '2015')
+        self.assertTrue(d > 2015)
+        self.assertTrue(d > 201507)
+        self.assertTrue(d > 20150709)
+        self.assertTrue(d >= '2015')
+        self.assertTrue(d >= 2015)
+        self.assertTrue(d >= 201507)
+        self.assertTrue(d >= 20150709)
+        self.assertTrue(d < '2016')
+        self.assertTrue(d < 2016)
+        self.assertTrue(d < 201601)
+        self.assertTrue(d < 20160101)
+        self.assertTrue(d < 201507091234)
+        self.assertTrue(d <= '2016')
+        self.assertTrue(d <= 2016)
+        self.assertTrue(d <= 201601)
+        self.assertTrue(d <= 20160101)
+        self.assertTrue(d <= 201507091234)
+
 
 class utSpecial(TestCase):
 
@@ -253,6 +280,10 @@ class utTime(TestCase):
         self.assertEqual(t.fmth, '0018')
         self.assertEqual(t.fmthm, '0018:30')
         self.assertEqual(t.fmtraw, '001830')
+
+        a = date.Time(48,       0)
+        b = date.Time( 0, 48 * 60)
+        self.assertEqual(a, b)
 
     def test_time_compute(self):
         t = date.Time('07:45')

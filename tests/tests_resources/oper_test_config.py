@@ -40,7 +40,7 @@ rundate_bis = date.today()
 fpg = dict(tag='oper', user='mxpt001', profile='oper')
 operenv = env.Environment(active=True)
 operenv.glove = sessions.getglove(**fpg)
-t = sessions.ticket(
+t = vortex.ticket(
     tag=fpg['tag'],
     glove=operenv.glove,
     topenv=operenv,

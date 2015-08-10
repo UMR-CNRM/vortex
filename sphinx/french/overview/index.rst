@@ -6,7 +6,7 @@ Présentation générale
 #####################
 
 :Release: |version|
-:Autor: Eric Sevault
+:Author: Eric Sevault
 :Date: |today|
 
 Comment plonger (en douceur) dans le VORTEX ?

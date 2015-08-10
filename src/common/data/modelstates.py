@@ -14,7 +14,6 @@ from common.tools.igastuff  import archive_suffix
 
 
 class Analysis(GeoFlowResource):
-
     """
     Class for analysis resource. It can be an atmospheric or surface or full
     analysis (full = atmospheric + surface).
@@ -69,16 +68,20 @@ class Analysis(GeoFlowResource):
                 ananame = 'ANALYSE_DFI'
 
         if self.model == 'surfex':
-            ananame = ananame + '.sfx'
+            ananame += '.sfx'
 
         return ananame
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        basename = 'analyse'
-        if self.model == 'surfex':
-            basename = basename + '.sfx'
-        return basename
+        olivename_map = { 'atm':  'TRAJ' + self.model[:4].upper() + '+0000',
+                          'surf': 'surfanalyse',
+                          'full': 'analyse'}
+        if self.model != 'arpege':
+            olivename_map['surf'] = 'analyse'
+            if self.model == 'surfex':
+                olivename_map = { k: x + '.sfx' for k, x in olivename_map.items() }
+        return olivename_map[self.filling]
 
     def basename_info(self):
         """Generic information, radical = ``analysis``."""
@@ -154,7 +157,7 @@ class Historic(GeoFlowResource):
             suffix = '.r' + archive_suffix(self.model, self.cutoff, self.date)
 
         if re.match('aladin|arome|surfex', self.model):
-            prefix = prefix.upper() 
+            prefix = prefix.upper()
 
         return prefix + midfix + '+' + self.term.fmthour + suffix
 
@@ -183,3 +186,52 @@ class Historic(GeoFlowResource):
         )
 
 
+class BiasDFI(GeoFlowResource):
+    """
+    Class for some kind of DFI bias (please add proper documentation).
+    """
+    _footprint = [
+        term,
+        dict(
+            info = 'DFI bias file',
+            attr = dict(
+                kind = dict(
+                    values = ['biasdfi', 'dfibias'],
+                    remap = dict(
+                        dfibias = 'biasdfi'
+                    )
+                ),
+                nativefmt = dict(
+                    values = ['fa'],
+                    default = 'fa',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'biasdfi'
+
+    def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
+        return 'BIASDFI+{1:04d}'.format(self.term)
+
+    def olive_basename(self):
+        """OLIVE specific naming convention."""
+        return 'BIASDFI{0:s}+{1:04d}'.format(self.model[:4].upper(), self.term)
+
+    def basename_info(self):
+        """Generic information, radical = ``historic``."""
+        if self.geometry.lam:
+            lgeo = [self.geometry.area, self.geometry.rnice]
+        else:
+            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
+
+        return dict(
+            fmt     = self.nativefmt,
+            geo     = lgeo,
+            radical = 'biasdfi',
+            src     = self.model,
+            term    = self.term.fmthm,
+        )

@@ -251,8 +251,8 @@ class Forecast(OpTask):
             print
 
         if self.compute in self.steps:
-            for bin in tbx:
-                tbalgo.run(bin, mpiopts=self.conf.mpiopts)
+            for binary in tbx:
+                tbalgo.run(binary, mpiopts=self.conf.mpiopts)
 
         #===================================================================================
 

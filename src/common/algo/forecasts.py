@@ -118,7 +118,7 @@ class LAMForecast(Forecast):
     def spawn_command_options(self):
         """Dictionary provided for command line factory."""
         return dict(
-            name       = (self.xpname+'xxxx')[:4].upper(),
+            name       = (self.xpname + 'xxxx')[:4].upper(),
             timescheme = self.timescheme,
             timestep   = self.timestep,
             fcterm     = self.fcterm,
@@ -192,14 +192,11 @@ class DFIForecast(LAMForecast):
 
 
 class FullPos(IFSParallel):
-    """Post-processing for IFS-like Models."""
+    """FUllpos for geometries transforms in IFS-like Models."""
 
+    _abstract = True
     _footprint = dict(
         attr = dict(
-            kind = dict(
-                values  = ['fullpos', 'fp'],
-                remap   = dict(fp= 'fullpos' )
-            ),
             xpname = dict(
                 default = 'FPOS'
             ),
@@ -209,6 +206,32 @@ class FullPos(IFSParallel):
     @property
     def realkind(self):
         return 'fullpos'
+
+
+class FullPosGeo(FullPos):
+    """FUllpos for geometries transforms in IFS-like Models."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values  = ['l2h', 'h2l'],
+            ),
+        )
+    )
+
+
+class FullPosBDAP(FullPos):
+    """Post-processing for IFS-like Models."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values  = ['fullpos', 'fp'],
+                remap   = dict(fp= 'fullpos' )
+            ),
+        )
+    )
+
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
@@ -272,14 +295,14 @@ class FullPos(IFSParallel):
                 raise
 
             # Finaly set the actual init file
-            sh.remove('ICMSHFPOSINIT')
-            sh.softlink(r.container.localpath(), 'ICMSHFPOSINIT')
+            sh.remove('ICMSH{0:s}INIT'.format(self.xpname))
+            sh.softlink(r.container.localpath(), 'ICMSH{0:s}INIT'.format(self.xpname))
 
             # Standard execution
-            super(FullPos, self).execute(rh, opts)
+            super(FullPosBDAP, self).execute(rh, opts)
 
             # Freeze the current output
-            for posfile in [ x for x in sh.glob('PFFPOS*+*') ]:
+            for posfile in [ x for x in sh.glob('PF{0:s}*+*'.format(self.xpname)) ]:
                 rootpos = re.sub('0+$', '', posfile)
                 sh.move(
                     posfile,
@@ -290,7 +313,7 @@ class FullPos(IFSParallel):
                 sh.move(logfile, sh.path.join(runstore, logfile))
 
             # Some cleaning
-            sh.rmall('PXFPOS*', fmt='lfi')
+            sh.rmall('PX{0:s}*'.format(self.xpname), fmt='lfi')
             sh.rmall('ncf927', 'dirlst')
             for clim in thesenames:
                 sh.rm(clim)
@@ -298,8 +321,8 @@ class FullPos(IFSParallel):
     def postfix(self, rh, opts):
         """Post processing cleaning."""
         sh = self.system
-        super(FullPos, self).postfix(rh, opts)
-        for fpfile in [ x for x in sh.glob('RUNOUT*/PFFPOS*') if sh.path.isfile(x) ]:
+        super(FullPosBDAP, self).postfix(rh, opts)
+        for fpfile in [ x for x in sh.glob('RUNOUT*/PF{0:s}*'.format(self.xpname)) if sh.path.isfile(x) ]:
             sh.move(fpfile, sh.path.basename(fpfile), fmt='lfi')
         sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')
         sh.dir(output=False)

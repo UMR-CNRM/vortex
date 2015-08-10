@@ -36,7 +36,8 @@ class NamelistContent(AlmostDictContent):
             NCPROC    = None,
             NDPROC    = None,
             NBPROCIN  = None,
-            NBPROCOUT = None
+            NBPROCOUT = None,
+            IDAT      = None,
         ))
         kw.setdefault('remove', set())
         kw.setdefault('parser', None)

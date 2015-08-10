@@ -4,34 +4,39 @@
 #: No automatic export
 __all__ = []
 
-from vortex.data.resources import Resource
+from vortex.data.resources  import Resource
+from vortex.data.flow import GeoFlowResource
+
 from vortex.syntax.stdattrs import date, cutoff
-from vortex.data.geometries import SpectralGeometry
 
 
 class RawFields(Resource):
 
     _footprint = [
-        date,
-        cutoff,
+        date, cutoff,
         dict(
             info = 'File containing a limited list of observations fields',
             attr = dict(
-                model = dict(
-                    values = [ 'arpege' ]
-                ),
                 kind = dict(
-                    values = [ 'rawfields' ]
+                    values = ['rawfields']
                 ),
                 origin = dict(
-                    values = [ 'nesdis', 'ostia', 'bdm' ]
+                    values = ['nesdis', 'ostia', 'bdm']
                 ),
                 fields = dict(
-                    values = [ 'sst', 'seaice' ]
-                )
+                    values = ['sst', 'seaice']
+                ),
             )
         )
     ]
+
+    def vortex_pathinfo(self):
+        """Default path informations (used by :class:`vortex.data.providers.Vortex`)."""
+        return dict(
+            nativefmt = self.nativefmt,
+            date      = self.date,
+            cutoff    = self.cutoff,
+        )
 
     @property
     def realkind(self):
@@ -47,48 +52,31 @@ class RawFields(Resource):
             bname = 'ice_concent'
         else:
             bname = '.'.join((self.fields, self.origin))
-
         return bname
 
     def basename_info(self):
         return dict(
             radical = self.fields,
-            src     = self.origin,
-        )
-
-    def vortex_pathinfo(self):
-        return dict(
-            nativefmt = self.nativefmt,
-            date      = self.date,
-            cutoff    = self.cutoff
+            src     = [self.origin, self.model],
         )
 
 
-class GeoFields(Resource):
+class GeoFields(GeoFlowResource):
 
     _footprint = [
-        date,
-        cutoff,
         dict(
             info = 'File containing a limited list of fields in a specific geometry',
             attr = dict(
                 kind = dict(
-                    values = [ 'geofields' ]
+                    values  = ['geofields']
                 ),
                 fields = dict(
-                    values = [ 'sst', 'seaice' ]
-                ),
-                geometry = dict(
-                    type = SpectralGeometry,
+                    values  = ['sst', 'seaice']
                 ),
                 nativefmt = dict(
-                    values = [ 'fa' ],
+                    values  = ['fa'],
                     default = 'fa'
                 ),
-                model = dict(
-                    optional = True
-                )
-
             )
         )
     ]
@@ -102,21 +90,14 @@ class GeoFields(Resource):
     def archive_basename(self):
         return 'icmshanal' + self.fields
 
-    def vortex_pathinfo(self):
-        return dict(
-            nativefmt = self.nativefmt,
-            date = self.date,
-            cutoff = self.cutoff
-        )
-
     def basename_info(self):
         if self.geometry.lam:
             lgeo = [self.geometry.area, self.geometry.rnice]
         else:
             lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
         return dict(
-            radical=self.fields,
-            geo=lgeo,
-            fmt=self.nativefmt
+            radical = self.fields,
+            geo     = lgeo,
+            fmt     = self.nativefmt,
+            src     = [self.origin, self.model],
         )
-

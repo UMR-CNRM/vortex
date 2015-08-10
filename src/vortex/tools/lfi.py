@@ -243,7 +243,8 @@ class LFI_Tool(addons.Addon):
         else:
             return self.sh.ftput(source, destination, hostname=hostname, logname=logname)
 
-    fa_ftput = lfi_ftput = _std_ftput
+    fa_ftput = lfi_ftput =_std_ftput
+    fa_rawftput = lfi_rawftput =_std_ftput
 
     def _std_remove(self, *args):
         """Remove (possibly) multi lfi files."""
@@ -320,7 +321,7 @@ class LFI_Tool(addons.Addon):
                 raise OSError('Could not cocoon [' + destination + ']')
             if not self.lfi_rm(destination):
                 raise OSError('Could not clean destination [' + destination + ']')
-            xcp = self._multicpmethod(pack, intent, self.sh.is_samefs(source, destination))
+            xcp = self._multicpmethod(pack=pack, intent=intent, samefs=self.sh.is_samefs(source, destination))
             actualcp = getattr(self, xcp, None)
             if actualcp is None:
                 raise AttributeError('No actual LFI cp command ' + xcp)
@@ -394,10 +395,10 @@ class IO_Poll(addons.Addon):
     def _spawn(self, cmd, **kw):
         """Tube to set LFITOOLS env variable."""
         if 'LFITOOLS' not in self.env:
-            activelfi = LFI_Tool.in_shell(self.sh)
-            if activelfi is None:
+            active_lfi = LFI_Tool.in_shell(self.sh)
+            if active_lfi is None:
                 raise StandardError('Could not find any active LFI Tool')
-            self.env.LFITOOLS = activelfi.path + '/' + activelfi.cmd
+            self.env.LFITOOLS = active_lfi.path + '/' + active_lfi.cmd
         return super(IO_Poll, self)._spawn(cmd, **kw)
 
     def io_poll(self, prefix, nproc_io=None):

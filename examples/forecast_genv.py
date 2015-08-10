@@ -52,11 +52,11 @@ print t.prompt, fpenv()
 
 print t.line
 
-gconf = genv.register(cycle=arpege_cycle, entry='double', MASTER_ARPEGE='cy36t1_masterodb-op2.12.SX20r411.x.exe')
-gconf = genv.register(cycle=arpege_cycle, entry='double', RTCOEF_TGZ='var.sat.misc_rtcoef.12.tgz')
-gconf = genv.register(cycle=arpege_cycle, entry='double', CLIM_ARPEGE_T798='clim_arpege.tl798.02')
-gconf = genv.register(cycle=arpege_cycle, entry='double', CLIM_DAP_GLOB15='clim_dap.glob15.07')
-gconf = genv.register(cycle=arpege_cycle, entry='double', MAT_FILTER_GLOB15='mat.filter.glob15.07')
+genv.register(cycle=arpege_cycle, entry='double', MASTER_ARPEGE='cy36t1_masterodb-op2.12.SX20r411.x.exe')
+genv.register(cycle=arpege_cycle, entry='double', RTCOEF_TGZ='var.sat.misc_rtcoef.12.tgz')
+genv.register(cycle=arpege_cycle, entry='double', CLIM_ARPEGE_T798='clim_arpege.tl798.02')
+genv.register(cycle=arpege_cycle, entry='double', CLIM_DAP_GLOB15='clim_dap.glob15.07')
+genv.register(cycle=arpege_cycle, entry='double', MAT_FILTER_GLOB15='mat.filter.glob15.07')
 gconf = genv.register(cycle=arpege_cycle, entry='double', NAMELIST_ARPEGE='cy36t1_op2.11.nam')
 #gconf = genv.register(cycle=arome_cycle, entry='double', NAMELIST_AROME='al36t1_arome-op2.13.nam')
 

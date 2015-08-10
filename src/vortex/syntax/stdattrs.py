@@ -35,7 +35,7 @@ notinrepr = set(['kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'])
 #: Known formats
 knownfmt = set([
     'auto', 'autoconfig', 'unknown', 'foo',
-    'ascii', 'txt', 'fa', 'lfi', 'lfa', 'netcdf', 'grib',
+    'ascii', 'txt', 'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib',
     'bufr', 'obsoul', 'odb', 'ecma', 'ccma',
     'bullx', 'sx'
 ])
@@ -134,7 +134,10 @@ class Namespace(str):
 
     @property
     def domain(self):
-        return self.split('.', 1)[1]
+        if '.' in self.netloc:
+            return self.split('.', 1)[1]
+        else:
+            return self.netloc
 
     @property
     def netuser(self):

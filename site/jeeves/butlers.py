@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys, os, time
+import sys, os, platform
+import time
 import fcntl
 import io
 import json
@@ -74,7 +75,6 @@ class GentleTalk(object):
                 value = -1
         if 0 <= value <= len(self.levels):
             self._loglevel = value
-        return self._loglevel
 
     loglevel = property(_get_loglevel, _set_loglevel)
 
@@ -187,7 +187,7 @@ class PidFile(object):
 
     def __init__(self, tag='default', filename=None, procname='python'):
         if filename is None:
-            filename = '/tmp/daemon-' + os.getlogin() + '-' + tag
+            filename = os.path.join(os.getcwd(), tag + '-' + platform.node())
         if not filename.endswith('.pid'):
             filename += '.pid'
         self._filename = os.path.realpath(filename)
@@ -279,13 +279,13 @@ class BaseDaemon(object):
     """
     def __init__(self, tag='test', pidfile=None, loglevel=1, inifile=None, redirect=None):
         self._tag        = tag
-        self._pidfile    = PidFile(tag=tag, filename=pidfile or tag)
+        self._pidfile    = PidFile(tag=tag, filename=pidfile)
         self._tmpdir     = os.path.join(os.environ['HOME'], 'tmp')
         self._rundir     = os.getcwd()
         self._logger     = None
         self._loglevel   = loglevel
         self._stdin      = os.devnull
-        self._redirect   = os.path.realpath(redirect or tag + '.log')
+        self._redirect   = os.path.realpath(redirect or tag + '-' + platform.node() + '.log')
         self._daemonized = False
         self._inifile    = self._tag if inifile is None else inifile
         if not self._inifile.endswith('.ini'):
@@ -884,14 +884,16 @@ class Jeeves(BaseDaemon, HouseKeeping):
         tprev = datetime.now()
         tbusy = False
         nbsleep = 0
+        silent  = False
 
         while True:
 
             tnext = datetime.now()
             ttime = ( tnext - tprev ).total_seconds()
-            self.info('Loop', previous=ttime, busy=tbusy)
             tprev = tnext
             tbusy = False
+            if not silent:
+                self.info('Loop', previous=ttime, busy=tbusy)
 
             # do some cleaning to clear the place before real work
             for pool in pools.values():
@@ -937,7 +939,13 @@ class Jeeves(BaseDaemon, HouseKeeping):
 
             if not tbusy:
                 nbsleep += 1
-                time.sleep(min(nbsleep, self.config['driver'].get('maxsleep', 10)))
+                maxsleep = self.config['driver'].get('maxsleep', 10)
+                time.sleep(min(nbsleep, maxsleep))
+                if not silent:
+                    silent_delay = self.config['driver'].get('silent', 10)
+                    if nbsleep - maxsleep >= silent_delay:
+                        self.warning('Enter silent mode', after=silent_delay)
+                        silent = True
             else:
                 nbsleep = 0
-
+                silent = False

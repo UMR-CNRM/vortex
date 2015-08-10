@@ -10,7 +10,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.providers import Provider
-from common.tools.igastuff import archive_suffix, fuzzyname, suites
+from common.tools.igastuff import archive_suffix, fuzzyname, suites, IgakeyFactory
 from vortex.syntax.stdattrs import Namespace
 
 
@@ -104,8 +104,9 @@ class OpArchive(Provider):
                 remap    = dict(dbl = 'dble')
             ),
             igakey = dict(
+                type     = IgakeyFactory,
                 optional = True,
-                default  = '[vapp]'
+                default  = '[vapp]/[vconf]'
             ),
             member = dict(
                 type     = int,
@@ -159,13 +160,12 @@ class OpArchive(Provider):
                         fuzzy = fuzzyname('prefix', 'gridpoint', self.suite) + rr + t + resource.geometry.area
                 elif entry == 'errgribfix':
                     fuzzy = 'errgribvor'
+                    if getattr(self, keyattr) in ('aearp', 'arpege'):
+                        fuzzy += fuzzyname('term' + resource.term.fmthour,
+                                           resource.realkind,
+                                           self.inout)
                     if getattr(self, keyattr) == 'aearp':
-                        fuzzy = 'errgribvor' \
-                            + fuzzyname('term' + resource.term.fmthour,
-                                        resource.realkind,
-                                        self.inout) \
-                            + '.' \
-                            + fuzzyname('suffix', resource.realkind, self.inout)
+                        fuzzy += '.' + fuzzyname('suffix', resource.realkind, self.inout)
                 else:
                     fuzzy = fuzzyname(entry, resource.realkind, getattr(self, keyattr))
                 bname = bname.replace(i, fuzzy)
@@ -209,10 +209,6 @@ class OpArchiveCourt(OpArchive):
             vconf = dict(
                 values  = ['frcourt'],
                 outcast = set(),
-            ),
-            igakey = dict(
-                values  = ['arpege', 'arp_court'],
-                remap   = dict(arp_court = 'arpege'),
             ),
         )
     )

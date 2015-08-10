@@ -310,8 +310,8 @@ class Batodb(OpTask):
             )
             print t.prompt, 'tb15 =', tb15
 
-            for bin in tbx:
-                tbalgo.run(bin, mpiopts=self.conf.mpiopts)
+            for binary in tbx:
+                tbalgo.run(binary, mpiopts=self.conf.mpiopts)
 
         #===================================================================================
 
@@ -442,8 +442,8 @@ class AvgATMS(OpTask):
             )
             print t.prompt, 'tb05 =', tb05
 
-            for bin in tbx:
-                tbalgo.run(bin)
+            for binary in tbx:
+                tbalgo.run(binary)
 
         #===================================================================================
 
@@ -567,8 +567,8 @@ class MergeVarBC(OpTask):
             )
             print t.prompt, 'tb04 =', tb04
 
-            for bin in tbx:
-                tbalgo.run(bin)
+            for binary in tbx:
+                tbalgo.run(binary)
 
         #===================================================================================
 

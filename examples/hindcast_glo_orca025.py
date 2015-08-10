@@ -59,10 +59,10 @@ for i in range(1, 16):
     )
 
 ## mooring:
-for type in [ 'moor', 'sect' ]:
+for atype in [ 'moor', 'sect' ]:
     resources_list.append( toolbox.rload(
-        rd, kind='moorings', model='psy3', grid=grid, type=type,
-        local=local_dir+'position.'+type+'.PSY3V2R2').pop()
+        rd, kind='moorings', model='psy3', grid=grid, type=atype,
+        local=local_dir+'position.'+atype+'.PSY3V2R2').pop()
     )
 
 ## coordinates
@@ -169,12 +169,12 @@ print t.prompt, "Resources get duration=", t.duration()
 # cleanup
 total_size = 0
 for r in resources_list:
-    file = r.container.localpath()
-    file_size = mysys.path.getsize(file)
+    file_name = r.container.localpath()
+    file_size = mysys.path.getsize(file_name)
     total_size += file_size
-    print t.prompt, file_size, ' -> ' + mysys.path.dirname(file) + \
-                                  '/' + mysys.path.basename(file)
-    mysys.unlink(file)
+    print t.prompt, file_size, ' -> ' + mysys.path.dirname(file_name) + \
+                                  '/' + mysys.path.basename(file_name)
+    mysys.unlink(file_name)
 
 print t.prompt, "Total size fetched = ", float(total_size)/1024/1024, "MO"
 print t.prompt, "Total duration=", t.duration()

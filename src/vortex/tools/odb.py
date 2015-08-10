@@ -59,6 +59,12 @@ class OdbDriver(object):
                 ODB_IO_FILESIZE = 128,
         )
 
+        if self.env.NPROC:
+            self.env.default(
+                NPROCA = self.env.NPROC,
+                NPROCB = 1,
+            )
+
         if self.sh.path.exists('IOASSIGN'):
             self.env.default(
                 IOASSIGN = self.sh.path.abspath('IOASSIGN'),
@@ -115,7 +121,7 @@ class OdbComponent(object):
 class TimeSlots(object):
     """Handling of assimilation time slots."""
 
-    def __init__(self, nslot=7, start='-PT3H', window='PT6H', chunk='PT1H', center=True):
+    def __init__(self, nslot=7, start='-PT3H', window='PT6H', chunk=None, center=True):
         if isinstance(nslot, str):
             info = [ x.strip() for x in nslot.split('/') ]
             nslot = info[0]
@@ -125,11 +131,14 @@ class TimeSlots(object):
                 window = info[2]
             if len(info) > 3:
                 chunk = info[3]
+        self.center = center
         self.nslot  = int(nslot)
         self.start  = tools.date.Period(start)
         self.window = tools.date.Period(window)
+        if chunk is None:
+            cslot = self.nslot - 1 if self.center else self.nslot
+            chunk = 'PT' + str((self.window.length / max(1, cslot)) / 60) + 'M'
         self.chunk  = self.window if self.nslot < 2 else tools.date.Period(chunk)
-        self.center = center
 
     def as_slots(self):
         """Return a list of slots in seconds."""
@@ -153,20 +162,18 @@ class TimeSlots(object):
 
         return boundlist
 
-    def leftmargin(self, date):
+    @property
+    def leftmargin(self):
         """Return length in minutes from left margin of the window."""
         return int(self.start.total_seconds() / 60)
 
-    def rightmargin(self, date):
+    @property
+    def rightmargin(self):
         """Return length in minutes from rigth margin of the window."""
-        date = tools.date.Date(date)
-        end = date + self.start + self.window
-        delta = end - date
-        return int(delta.total_seconds() / 60)
+        return int((self.start + self.window).total_seconds() / 60)
 
     def as_file(self, date, filename):
         """Fill the specified ``filename`` wih the current list of time slots at this ``date``."""
-        nbx = 0
         with io.open(filename, 'w') as fd:
             for x in self.as_bounds(date):
                 fd.write(unicode(x + '\n'))
@@ -230,7 +237,7 @@ class OdbShell(addons.Addon):
             return False
 
         if not source.endswith('.tgz'):
-            source = source + '.tgz'
+            source += '.tgz'
 
         self.sh.rm(destination)
 
@@ -281,7 +288,7 @@ class OdbShell(addons.Addon):
             return False
 
         if not destination.endswith('.tgz'):
-            destination = destination + '.tgz'
+            destination += '.tgz'
 
         ftp = self.sh.ftp(hostname, logname)
         if ftp:
@@ -297,3 +304,6 @@ class OdbShell(addons.Addon):
             return rc
         else:
             return False
+
+    odb_rawftput = odb_ftput
+    odb_rawftget = odb_ftget

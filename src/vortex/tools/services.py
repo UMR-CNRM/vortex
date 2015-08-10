@@ -221,9 +221,14 @@ class MailService(Service):
 
     def set_headers(self, msg):
         """Put on the current message the header items associated to footprint attributes."""
-        msg['From']     = self.sender
-        msg['To']       = self.commaspace.join(self.to.split())
-        msg['Subject']  = self.subject
+        msg['From'] = self.sender
+        msg['To']   = self.commaspace.join(self.to.split())
+        if self.is_not_plain_ascii(self.subject):
+            from email.header import Header
+            msg['Subject'] = Header(self.subject, self.charset)
+        else:
+            msg['Subject'] = self.subject
+
         if self.replyto is not None:
             msg['Reply-To'] = self.commaspace.join(self.replyto.split())
 

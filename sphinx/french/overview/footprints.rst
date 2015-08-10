@@ -25,7 +25,7 @@ et surtout l'extensibilité de tout ensemble logiciel qui prendrait le package �
 de son développement. Cerise sur le gâteau, nous verrons qu'il assure même l’interopérabilité
 entre différents ensembles logiciels pourvus qu'ils respectent des conventions purement formelles.
 
-L'idée en est très simple. C'est une variante un tantinet élaborée du *Patern* de la fabrique.
+L'idée en est très simple. C'est une variante un tantinet élaborée du *Pattern* de la fabrique.
 Au lieu de décrire précisément un objet dans toutes ses caractéristiques (et notamment en fournissant sa classe),
 on va prendre le problème à l'envers et tenter de répondre à la question : quelle classe serait suceptible
 de s'instancier dans un objet qui aurait des caractéristiques compatibles avec celles dont j'ai connaissance a priori ?
@@ -74,7 +74,7 @@ Histoire de gagner du temps par la suite, nous adopterons la convention suivante
 
 Notre exemple fil rouge consistera à manipuler quelques fruits. Il sera toujours temps
 de faire de la prévision numérique plus tard. Deux variables de classe suffiront à caractériser
-des classes de type footprint (caractéristiques qui se transmettront bien entendu par héritage): 
+des classes de type footprint (caractéristiques qui se transmettront bien entendu par héritage):
 le ou les noms des collecteurs auxquelles elles souhaitent contribuer, et leur empreinte.
 Pour illustrer la chose, définissons une classe de base de type ``Fruit`` dans un module ``fruits``.
 
@@ -162,12 +162,15 @@ les pommes et les fraises, et pas de scoubidoubidouwouah::
 Plutôt que de continuer à demander un collecteur explicitement comme nous l'avons fait précédemment,
 ce qui est quelque peu laborieux, nous allons utiliser un autre raccourci du package :mod:`footprints`,
 donné par un proxy permettant d'accéder dynamiquement à tous les collecteurs qui ont été créés
-à un moment ou à un autre au gré des chargements de modules (nous reviendrons sur ces aspect capital)::
+à un moment ou à un autre au gré des chargements de modules (nous reviendrons sur cet aspect capital)::
 
     >>> print fp.proxy
     <footprints.proxies.FootprintProxy object at 0x7f142c28b590>
     >>> fp.proxy.fruits
     <footprints.collectors.Collector object at 0x7f142c28bad0>
+
+Les collectors sont des objets appelables, qui renvoient la liste des classes susceptibles de s'instancier dans cette catégorie::
+
     >>> fp.proxy.fruits()
     [<class 'fruits.Pomme'>, <class 'fruits.Fraise'>]
 
@@ -187,13 +190,13 @@ Eh oui ! C'est une pomme ! Et si je demande un fruit de couleur jaune ? Résulta
 Et pour un fruit de couleur bleue::
 
     >>> b = fp.proxy.fruit(couleur='bleue')
-    # [2015/16/06-16:12:21][footprints.collectors][pickup:0151][WARNING]: No 'fruit' found in description 
+    # [2015/16/06-16:12:21][footprints.collectors][pickup:0151][WARNING]: No 'fruit' found in description
         dict(
-            couleur = 'bleue', 
+            couleur = 'bleue',
             fruit = None,
         )
 
-    Report Footprint-Fruit: 
+    Report Footprint-Fruit:
 
         fruits.Fraise
             couleur    : {'args': 'bleue', 'why': 'Not in values'}
@@ -205,10 +208,10 @@ Nous obtenons un rapport d'instanciation qui nous indique clairement pourquoi au
 candidates ne peut être sélectionnée, et pour une bonne raison visiblement (sauf si vous raffolez des fraises bleues).
 
 À ce stade très rudimentaire de l'exposition du mécanisme d'instanciation par « footprints »,
-nous pouvons déjà faire quelques remarques : 
+nous pouvons déjà faire quelques remarques :
 
   * à aucun moment il n'est nécessaire de faire d'hypothèse sur le nombres de classes éligibles ;
-  * la connaissance a priori des attributs qui correspondent (ou pas) à telle ou telle classe est facultative, le mécanisme de résolution des valuers acceptables, fera le tri naturellement ;
+  * la connaissance *a priori* des attributs qui correspondent (ou pas) à telle ou telle classe est facultative, le mécanisme de résolution des valuers acceptables, fera le tri naturellement ;
   * il a suffit qu'une classe définisse une valeur à sa variable de classe :envvar:`_collector` pour qu'un tel collecteur existe ;
   * les classes peuvent être définies n'importe où dans l'arborescence de votre package, ou dans un package extérieur que vous importeriez pour qu'automatiquement les classes héritant de footprints.FootprintBase soient collectées.
 
@@ -221,21 +224,21 @@ En cas de conflit
 Tout ceci est bel et bon, me direz-vous, mais que se passe-t-il si l'on demande un fruit rouge ? Eh bien, voici::
 
     >>> r = fp.proxy.fruit(couleur='rouge')
-    # [2015/16/06-16:35:48][footprints.collectors][find_best:0203][WARNING]: Multiple fruit candidates 
+    # [2015/16/06-16:35:48][footprints.collectors][find_best:0203][WARNING]: Multiple fruit candidates
         dict(
             couleur = 'rouge',
         )
     # [2015/16/06-16:35:48][footprints.collectors][find_best:0207][WARNING]: no.1 in.1 is <class 'fruits.Pomme'>
     # [2015/16/06-16:35:48][footprints.collectors][find_best:0207][WARNING]: no.2 in.1 is <class 'fruits.Fraise'>
 
-Vous récoltez un magnifique avertissement car plusieurs choix sont possibles. Ce n'est pas forcément un souci. 
+Vous récoltez un magnifique avertissement car plusieurs choix sont possibles. Ce n'est pas forcément un souci.
 Dans la vie courante, si vous demandez une chaise, c'est probablement pour vous assoir,
-peu importe qu'elle soit en plastique ou en bois. Ici, la confusion entre couleur extérieur du fruit et de sa
-chair est plus délicate. Mais nous ferons avec. La question est: que faire si il faut pouvoir distinguer. Ou
+peu importe qu'elle soit en plastique ou en bois. Ici dans notre exemple-jeu, la confusion entre couleur extérieur du fruit et de sa
+chair est plus délicate. Mais nous ferons avec. La question est : que faire si il faut pouvoir distinguer. Ou
 plus exactement et plus généralement : selon quels critères des empreintes compatibles seront distinguées ?
 
 Les empreintes usent dans ce cas d'une heuristique assez intuitive : le tri s'opère en fonction du niveau
-de priorité et du nombre d'attributs reconnus dans l'empreinte. 
+de priorité et du nombre d'attributs reconnus dans l'empreinte.
 
 Dans le cas de nos pommes et fraises, telles que les classes ont été définies, il n'y a pas de distinguo
 en terme de priorité et elles ont toutes deux un seul attribut. Ce serait bien d'étoffer un peu tout cela.
@@ -243,7 +246,7 @@ en terme de priorité et elles ont toutes deux un seul attribut. Ce serait bien 
 Niveaux de priorité
 -------------------
 
-Le package :mod:`footprints` définit par défaut un niveau de priorité pour chaque objet à empreinte. 
+Le package :mod:`footprints` définit par défaut un niveau de priorité pour chaque objet à empreinte.
 
 Regardons notre pomme par exemple::
 
@@ -294,7 +297,7 @@ conservent moins longtemps. La déclaration du footprint de la classe serait alo
 Retournons à notre sélection de départ::
 
     >>> r = fp.proxy.fruit(couleur='rouge')
-    # [2015/16/06-17:05:01][footprints.collectors][find_best:0203][WARNING]: Multiple fruit candidates 
+    # [2015/16/06-17:05:01][footprints.collectors][find_best:0203][WARNING]: Multiple fruit candidates
       dict(
           couleur = 'rouge',
       )
@@ -305,7 +308,7 @@ Il y a toujours un message d'avertissement car, de fait, il y a plusieurs fruits
 immanquablement la compétition !
 
 Mais nous avions dit également que le nombre d'attributs correspondant à une empreinte donnée serait pris en compte.
-Ceci n'est possible que si l'on peut ou non renseigner un attribut. Autrement, si une classe dispose d'attributs 
+Ceci n'est possible que si l'on peut ou non renseigner un attribut. Autrement, si une classe dispose d'attributs
 optionnels dans son footprint.
 
 Attributs optionnels
@@ -331,9 +334,9 @@ a donc maintenant cette allure::
 Que se passe-t-il au moment de choisir un fruit de couleur rouge ? Ceci::
 
     >>> r = fp.proxy.fruit(couleur='rouge', producteur='marcel')
-    # [2015/16/06-17:14:34][footprints.collectors][find_best:0203][WARNING]: Multiple fruit candidates 
+    # [2015/16/06-17:14:34][footprints.collectors][find_best:0203][WARNING]: Multiple fruit candidates
         dict(
-            couleur = 'rouge', 
+            couleur = 'rouge',
             producteur = 'marcel',
         )
     # [2015/16/06-17:14:34][footprints.collectors][find_best:0207][WARNING]: no.1 in.1 is <class 'fruits.Fraise'>
@@ -345,9 +348,9 @@ Si nous revenions à deux catégories de fruits de priorité identique (hypothè
 mention contraire), nous aurions alors::
 
     >>> r = fp.proxy.fruit(couleur='rouge', producteur='Marcel')
-    # [2015/16/06-17:21:10][footprints.collectors][find_best:0203][WARNING]: Multiple fruit candidates 
+    # [2015/16/06-17:21:10][footprints.collectors][find_best:0203][WARNING]: Multiple fruit candidates
         dict(
-            couleur = 'rouge', 
+            couleur = 'rouge',
             producteur = 'Marcel',
         )
     # [2015/16/06-17:21:10][footprints.collectors][find_best:0207][WARNING]: no.1 in.2 is <class 'fruits.Pomme'>
@@ -361,7 +364,7 @@ On constate bien entendu que l'on dispose maintenant de l'attribut "producteur" 
 
 Dans la mesure où il est optionnel, le "producteur" ne se retrouve pas forcément dans l'empreinte. La valeur
 par défaut est dans ce cas affectée à l'attribut::
-    
+
     >>> p = fp.proxy.fruit(couleur='verte')
     >>> print p.producteur
     Jacques
@@ -453,7 +456,7 @@ la carte des attributs possibles::
                                  | values = 3, 4, 5, 6, 7
          Pomme                  + fruits
                                  | values = 1, 2, 3, 4, 5, 6
- 
+
      * couleur:
          Fraise                 + fruits
                                  | values = rouge
@@ -461,7 +464,7 @@ la carte des attributs possibles::
                                  | values = verte
          Pomme                  + fruits
                                  | values = jaune, verte, rouge
- 
+
      * producteur [optional]:
          GrannySmith            + verger
          Pomme                  + fruits
@@ -535,7 +538,7 @@ On considère qu'un attribut est par défaut une chaîne de caractères, mais ce
 quelle autre classe, que ce soit un type de base de python ou classe utilisateur.
 
 Imaginons que nous voulions maintenant, pour chaque fruit, lui attribuer un calibre, représenté par un entier
-compris en 1 et 6, valant par défaut 2. Il suffit rétroactivement de modifier la classe de base de la façon 
+compris en 1 et 6, valant par défaut 2. Il suffit rétroactivement de modifier la classe de base de la façon
 suivante::
 
     class Fruit(fp.FootprintBase):
@@ -570,14 +573,14 @@ La conversion de type (ou *cast*), du moment qu'elle est valide (au sens de ce q
 spécifiée comme type d'attribut), se fait automatiquement. Sinon, on échoue::
 
     >>> x = fp.proxy.fruit(couleur='verte', calibre='rectangle')
-    # [2015/16/06-19:36:39][footprints.collectors][pickup:0151][WARNING]: No 'fruit' found in description 
+    # [2015/16/06-19:36:39][footprints.collectors][pickup:0151][WARNING]: No 'fruit' found in description
         dict(
-            calibre = 'rectangle', 
-            couleur = 'verte', 
+            calibre = 'rectangle',
+            couleur = 'verte',
             fruit = None,
         )
 
-    Report Footprint-Fruit: 
+    Report Footprint-Fruit:
 
         fruits.Fraise
             couleur    : {'args': 'verte', 'why': 'Not in values'}
@@ -595,7 +598,7 @@ Nous avons déjà eu de multiples occasions de préciser les valeurs acceptables
 avec l'élément **values**. C'est particulièrement commode pour distinguer entre familles d'objets, puisque
 toute valeur proposée qui ne correspondra pas à la plage de valeurs autorisées ne permettra pas d'instancier
 cette classe. Cela peut aussi permettre
-de coder des méthodes spécifiques pour telles ou telles classes, sans truffer son code de "if". 
+de coder des méthodes spécifiques pour telles ou telles classes, sans truffer son code de "if".
 
 Mais cela peut permettre aussi de particulariser temporairement un traitement (à des fins de mise au point
 ou de déverminage par exemple).
@@ -626,14 +629,14 @@ Voici un exemple avec un fruit qui ne pourrait raisonablement pas pousser sous c
 Et vérifions::
 
     >>> a = fp.proxy.fruit(couleur='orange', origine='Ecosse')
-    # [2015/17/06-15:25:17][footprints.collectors][pickup:0151][WARNING]: No 'fruit' found in description 
+    # [2015/17/06-15:25:17][footprints.collectors][pickup:0151][WARNING]: No 'fruit' found in description
         dict(
-            couleur = 'orange', 
-            fruit = None, 
+            couleur = 'orange',
+            fruit = None,
             origine = 'Ecosse',
         )
 
-    Report Footprint-Fruit: 
+    Report Footprint-Fruit:
 
         fruits.Ananas
             origine    : {'args': 'Ecosse', 'why': 'Outcast value'}
@@ -877,13 +880,13 @@ dans les vergers de nos campagnes des pommes bleues. Mais ces années seulement:
 Si l'on ne change rien à nos tentatives précédentes, peu de chance de récupérer une pomme bleue::
 
     >>> fp.proxy.fruit(couleur='bleue')
-    # [2015/17/06-20:02:00][footprints.collectors][pickup:0151][WARNING]: No 'fruit' found in description 
+    # [2015/17/06-20:02:00][footprints.collectors][pickup:0151][WARNING]: No 'fruit' found in description
         dict(
-            couleur = 'bleue', 
+            couleur = 'bleue',
             fruit = None,
         )
 
-    Report Footprint-Fruit: 
+    Report Footprint-Fruit:
 
         fruits.Ananas
             origine    : {'why': 'Missing value'}
@@ -907,13 +910,13 @@ mais qui ne corresponde pas à notre filtre *only*::
 
     >>> fp.setup.defaults(recolte=2014)
     >>> fp.proxy.fruit(couleur='bleue')
-    # [2015/17/06-20:10:16][footprints.collectors][pickup:0151][WARNING]: No 'fruit' found in description 
+    # [2015/17/06-20:10:16][footprints.collectors][pickup:0151][WARNING]: No 'fruit' found in description
         dict(
-            couleur = 'bleue', 
+            couleur = 'bleue',
             fruit = None,
         )
 
-    Report Footprint-Fruit: 
+    Report Footprint-Fruit:
 
         fruits.Ananas
             origine    : {'why': 'Missing value'}
@@ -1078,7 +1081,7 @@ parce que tous les attributs seraient optionnels et qu'aucune valeur ne serait s
 
 Par défaut une classe qui hérite de :class:`footprints.FootprintBase` se doit d'avoir au moins *un* attribut
 obligatoire. Si ce n'est pas le cas, une exception est levée dès la création de la classe par l'interpréteur
-python. C'est une assurance qu'une classe ne parasitera pas les résolutions de footprints. 
+python. C'est une assurance qu'une classe ne parasitera pas les résolutions de footprints.
 
 Mais encore une fois, il n'y a pas de règle absolue en la matière. Et il est possible dans la déclaration d'une
 classe de préciser qu'elle n'a pas besoin d'être explicite.
@@ -1146,71 +1149,71 @@ la doc généraliste...
 
     class GrannySmith(fruits.Pomme)
      |  Not documented yet.
-     |  
+     |
      |  Footprint::
-     |  
+     |
      |    dict(
      |        attr = dict(
      |            calibre = dict(
-     |                access = 'rxx', 
-     |                alias = set([]), 
-     |                default = 2, 
-     |                optional = True, 
-     |                outcast = set([]), 
-     |                remap = dict(), 
-     |                type = int, 
+     |                access = 'rxx',
+     |                alias = set([]),
+     |                default = 2,
+     |                optional = True,
+     |                outcast = set([]),
+     |                remap = dict(),
+     |                type = int,
      |                values = set([3, 4, 5, 6, 7]),
-     |            ), 
+     |            ),
      |            couleur = dict(
-     |                access = 'rxx', 
-     |                alias = set([]), 
-     |                default = None, 
-     |                optional = False, 
-     |                outcast = set([]), 
+     |                access = 'rxx',
+     |                alias = set([]),
+     |                default = None,
+     |                optional = False,
+     |                outcast = set([]),
      |                remap = dict(
      |                    vert = 'verte',
-     |                ), 
+     |                ),
      |                values = set(['verte', 'vert']),
-     |            ), 
+     |            ),
      |            producteur = dict(
-     |                access = 'rxx', 
-     |                alias = set([]), 
-     |                default = 'Jacques', 
-     |                optional = True, 
-     |                outcast = set([]), 
-     |                remap = dict(), 
+     |                access = 'rxx',
+     |                alias = set([]),
+     |                default = 'Jacques',
+     |                optional = True,
+     |                outcast = set([]),
+     |                remap = dict(),
      |                values = set([]),
      |            ),
-     |        ), 
-     |        bind = [], 
-     |        info = 'Fruit defendu', 
-     |        only = dict(), 
+     |        ),
+     |        bind = [],
+     |        info = 'Fruit defendu',
+     |        only = dict(),
      |        priority = dict(
      |            level = footprints.priorities.PriorityLevel('DEFAULT'),
      |        ),
      |    )
-     |  
+     |
      |  Method resolution order:
      |      GrannySmith
      |      fruits.Pomme
      |      fruits.Fruit
      |      footprints.FootprintBase
      |      __builtin__.object
-     |  
+     |
      |  Data descriptors defined here:
-     |  
+     |
      |  calibre
      |      Undocumented footprint attribute
-     |  
+     |
      |  couleur
      |      Undocumented footprint attribute
-     |  
+     |
      |  producteur
      |      Undocumented footprint attribute
-     |  
+     |
      |  ----------------------------------------------------------------------
      |  Methods inherited from footprints.FootprintBase:
-     |  
+     |
      | ...
 
 De nombreuses méthodes de classe ou méthodes objets renvoient des informations partielles, sur le footprint,
@@ -1224,7 +1227,7 @@ pour définir les empreintes. On a vu aussi qu'il est possible d'utiliser en tou
 des objets :class:`~footprints.Footprint` prédéfinis.
 
 Mais il sera également possible de spécifier une ressource extérieure sous la forme
-d'un fichier :file:`.ini` ou :file:`.json`., rendant le code encore plus indépendant des formes 
+d'un fichier :file:`.ini` ou :file:`.json`., rendant le code encore plus indépendant des formes
 effectives que peuvent prendre les définitions d'empreintes ou leurs valeurs d'attributs.
 
 Methodes des collecteurs
@@ -1255,7 +1258,7 @@ Une indirection est créée via un ou plusieurs :class:`~footprints.observers.Ob
 Classes par *tag*
 -----------------
 
-Un *pattern* usuel est qu'une classe puisse être à elle-même sa propre fabrique en quelque sorte. 
+Un *pattern* usuel est qu'une classe puisse être à elle-même sa propre fabrique en quelque sorte.
 Autrement dit que l'on demande au mécanisme d'instanciation de la classe de fournir tel ou tel objet
 en fonction de certains critères. Une variante incroyable puissante et pratique consiste à récupérer
 un objet en fonction d'un *tag*, étiquette quelconque dont l'utilisateur fournit le champ des valeurs
@@ -1265,7 +1268,7 @@ La classe :class:`~footprints.util.GetByTag` implémente ce mécanisme avec beau
 (que nous n'avons pas le temps de détailler ici). Qu'il suffise de dire que c'est de cette classe
 que dérivent par exemple les :class:`~footprints.collectors.Collector`, les :class:`~footprints.observers.ObserverBoard`,
 le ou les :class:`~footprints.setup.FootprintSetup`, le ou les :class:`~footprints.proxies.FootprintProxy` et
-les :class:`~footprints.loggers.FootprintLog` pour ne s'en tenir package footprints. 
+les :class:`~footprints.loggers.FootprintLog` pour ne s'en tenir package footprints.
 Mais il se trouve qu'il en est fait aussi un usage relativement important dans VORTEX, et dans la construction
 des tâche opérationnelles par exemple.
 

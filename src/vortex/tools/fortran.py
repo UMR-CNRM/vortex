@@ -791,15 +791,15 @@ def _test_namparser(np):
         _test_incore(np)
     else:
         filename = sys.argv[1]
-        testIn = open(filename, "r")
+        testin = open(filename, "r")
         try:
-            namelists = np.parse(testIn)
+            namelists = np.parse(testin)
             for namelist in namelists.values():
                 sys.stdout.write( "\nContent of %s\n" % namelist.name )
                 for ( name, values ) in namelist.items():
                     sys.stdout.write( "%s: %s\n" % (name, values) )
         finally:
-            testIn.close()
+            testin.close()
 
 
 if __name__ == "__main__":

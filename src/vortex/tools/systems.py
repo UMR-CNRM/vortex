@@ -138,7 +138,7 @@ class System(footprints.FootprintBase):
 
     @property
     def default_syslog(self):
-        """address to use in logging.handler.SysLogHandler()"""
+        """Address to use in logging.handler.SysLogHandler()."""
         return '/dev/log'
 
     def extend(self, obj=None):
@@ -477,7 +477,7 @@ class System(footprints.FootprintBase):
         else:
             return False
 
-    def spawn(self, args, ok=None, shell=False, stdin=None, output=None, outmode='a', outsplit=True, silent=False):
+    def spawn(self, args, ok=None, shell=False, stdin=None, output=None, outmode='a', outsplit=True, silent=False, fatal=True):
         """Subprocess call of ``args``."""
         rc = False
         if ok is None:
@@ -503,15 +503,27 @@ class System(footprints.FootprintBase):
             p = subprocess.Popen(args, stdin=stdin, stdout=cmdout, stderr=cmderr, shell=shell)
             p_out, p_err = p.communicate()
         except ValueError as perr:
-            logger.critical('Weird arguments to Popen ( %s, stdout=%s, stderr=%s, shell=%s )' %
-                            (args, cmdout, cmderr, shell))
-            raise
+            logger.critical(
+                'Weird arguments to Popen ({!s}, stdout={!s}, stderr={!s}, shell={!s})'.format(
+                    args, cmdout, cmderr, shell
+                )
+            )
+            if fatal:
+                raise
+            else:
+                logger.warning('Carry on because fatal is off')
         except OSError as perr:
-            logger.critical('Could not call %s', args)
-            raise
+            logger.critical('Could not call {!s}'.format(args))
+            if fatal:
+                raise
+            else:
+                logger.warning('Carry on because fatal is off')
         except Exception as perr:
-            logger.critical('System returns %s', str(perr))
-            raise RuntimeError, "System %s spawned %s got [%s]: %s" % (self, args, perr.returncode, perr)
+            logger.critical('System returns {!s}'.format(perr))
+            if fatal:
+                raise RuntimeError('System {!s} spawned {!s} got [{!s}]: {!s}'.format(self, args, perr.returncode, perr))
+            else:
+                logger.warning('Carry on because fatal is off')
         else:
             if p.returncode in ok:
                 if isinstance(output, bool) and output:
@@ -524,11 +536,14 @@ class System(footprints.FootprintBase):
                     rc = not bool(p.returncode)
             else:
                 if not silent:
-                    logger.warning('Bad return code [%d] for %s', p.returncode, args)
+                    logger.warning('Bad return code [{0:d}] for {1:s}'.format(p.returncode, args))
                     if isinstance(output, bool) and output:
                         for xerr in p_err:
                             sys.stderr.write(xerr)
-                raise ExecutionError
+                if fatal:
+                    raise ExecutionError
+                else:
+                    logger.warning('Carry on because fatal is off')
         finally:
             self._rclast = p.returncode if p else 1
             if isinstance(output, bool) and p:
@@ -539,7 +554,8 @@ class System(footprints.FootprintBase):
                         p.stderr.close()
             elif not isinstance(output, bool):
                 output.close()
-            p.wait()
+            if p:
+                p.wait()
             del p
 
         return rc
@@ -592,6 +608,7 @@ class System(footprints.FootprintBase):
         """Be sure to get actual login name."""
         return passwd.getpwuid(self._os.getuid())[0]
 
+
 class OSExtended(System):
 
     _abstract = True
@@ -602,12 +619,15 @@ class OSExtended(System):
     def __init__(self, *args, **kw):
         """
         Before going through parent initialisation, pickle this attributes:
+
           * rmtreemin - as the minimal depth needed for a :meth:`rmsafe`.
-          * cmpaftercp - as a boolean for activating full comparison after pain cp (default: True).
+          * cmpaftercp - as a boolean for activating full comparison after plain cp (default: True).
         """
         logger.debug('Abstract System init %s', self.__class__)
         self._rmtreemin = kw.pop('rmtreemin', 3)
         self._cmpaftercp = kw.pop('cmpaftercp', True)
+        self.ftputcmd = kw.pop('ftputcmd', None)
+        self.ftgetcmd = kw.pop('ftgetcmd', None)
         super(OSExtended, self).__init__(*args, **kw)
 
     def target(self, **kw):
@@ -694,6 +714,35 @@ class OSExtended(System):
                 ftp.close()
         else:
             raise IOError('No such file or directory: {!r}'.format(source))
+        return rc
+
+    @fmtshcmd
+    def rawftput(self, source, destination, hostname=None, logname=None):
+        """Proceed some external ftput command on the specified target."""
+        rc = False
+        if isinstance(source, basestring):
+            if self.path.exists(source):
+                ftcmd = self.ftputcmd or 'ftput'
+                rc = self.spawn([ftcmd, source, destination], output=False)
+            else:
+                raise IOError('No such file or directory: {!s}'.format(source))
+        else:
+            raise IOError('Source is not a plain file path: {!r}'.format(source))
+        return rc
+
+    @fmtshcmd
+    def rawftget(self, source, destination, hostname=None, logname=None):
+        """Proceed some external ftget command on the specified target."""
+        rc = False
+        if isinstance(source, basestring) and isinstance(destination, basestring):
+            if self.filecocoon(destination):
+                destination = self.path.expanduser(destination)
+                ftcmd = self.ftgetcmd or 'ftget'
+                rc = self.spawn([ftcmd, source, destination], output=False)
+            else:
+                raise IOError('No such file or directory: {!s}'.format(source))
+        else:
+            raise IOError('Source or destination is not a plain file path: {!r}'.format(source))
         return rc
 
     def softlink(self, source, destination):
@@ -1218,7 +1267,7 @@ class Linux(OSExtended):
         info = 'Linux base system',
         attr = dict(
             sysname = dict(
-                values = ['Linux', 'Darwin']
+                values = ['Linux']
             )
         )
     )
@@ -1288,3 +1337,26 @@ class LinuxDebug(Linux27):
     def realkind(self):
         return 'linuxdebug'
 
+
+class Macosx(Linux, Python27):
+    """Mac under MacOSX."""
+
+    _footprint = dict(
+        info = 'Apple Mac computer under Macosx',
+        attr = dict(
+            sysname = dict(
+                values = ['Darwin']
+            ),
+        ),
+        priority = dict(
+            level = footprints.priorities.top.TOOLBOX
+        )
+    )
+
+    @property
+    def default_syslog(self):
+        """address to use in logging.handler.SysLogHandler()"""
+        return '/var/run/syslog'
+
+    def ftp(self, hostname, logname=None):
+        return super(Macosx, self).ftp(hostname, logname='lamboleyp')

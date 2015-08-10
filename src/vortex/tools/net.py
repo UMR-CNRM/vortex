@@ -196,6 +196,8 @@ class StdFtp(object):
         self.stderr('ls', *args)
         return self.dir(*args)
 
+    ll = ls
+
     def get(self, source, destination):
         """Retrieve a remote `destination` file to a local `source` file object."""
         self.stderr('get', source, destination)
@@ -289,7 +291,11 @@ class StdFtp(object):
                 path = current
             except ftplib.error_perm:
                 self.stderr('mkdir', current)
-                self.mkd(current)
+                try:
+                    self.mkd(current)
+                except ftplib.error_perm as errmkd:
+                    if 'File exists' not in str(errmkd):
+                        raise
                 self.cwd(current)
             path = current
         self.cwd(origin)

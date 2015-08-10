@@ -9,7 +9,8 @@ import re
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.tools import date, odb
+from vortex.tools import odb
+from vortex.tools.date import Date
 from vortex.algo.components import BlindRun, Parallel
 from .ifsroot import IFSParallel
 
@@ -38,6 +39,96 @@ class MergeVarBC(Parallel):
 
         # Let ancesters doing real stuff
         super(MergeVarBC, self).prepare(rh, opts)
+
+
+class Anamix(IFSParallel):
+    """Merge the surface and atmospheric analyses into a single file"""
+
+    _footprint = dict(
+        info='Merge surface and atmospheric analyses',
+        attr=dict(
+            kind=dict(
+                values=['anamix'],
+            ),
+            conf=dict(
+                default=701,
+            ),
+            xpname=dict(
+                default='CANS',
+            ),
+            timestep=dict(
+                default=1,
+            )
+        )
+    )
+
+
+class SstAnalysis(IFSParallel):
+    """SST Analysis"""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values  = ['sstana', 'sst_ana', 'sst_analysis', 'c931'],
+                remap   = dict(autoremap = 'first'),
+            ),
+            conf = dict(
+                default = 931,
+            ),
+            xpname = dict(
+                default = 'ANAL',
+            ),
+            timestep = dict(
+                default  = '1.',
+            ),
+        )
+    )
+
+
+class SeaIceAnalysis(IFSParallel):
+    """Sea Ice Analysis"""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values  = ['seaiceana', 'seaice_ana', 'seaice_analysis', 'c932'],
+                remap   = dict(autoremap = 'first'),
+            ),
+            conf = dict(
+                default = 932,
+            ),
+            xpname = dict(
+                default = 'ANAL',
+            ),
+            timestep = dict(
+                default  = '1.',
+            ),
+            date = dict(
+                type     = Date,
+            )
+        )
+    )
+
+    def prepare(self, rh, opts):
+        """Update the date in the namelist."""
+
+        super(SeaIceAnalysis, self).prepare(rh, opts)
+
+        namrh_list = [x.rh  for x in self.context.sequence.effective_inputs(role='Namelist',
+                                                                            kind='namelist',)]
+
+        if not namrh_list:
+            logger.critical('No namelist was found.')
+            raise ValueError('No namelist was found for seaice analysis')
+
+        for namrh in namrh_list:
+            logger.info('Setup IDAT=%s in %s', self.date.ymd, namrh.container.actualpath())
+            try:
+                namrh.contents.setmacro('IDAT', int(self.date.ymd))
+            except:
+                logger.critical('Could not fix NAMICE in %s', namrh.container.actualpath())
+                raise
+            namrh.contents.rewrite(namrh.container)
 
 
 class IFSODB(IFSParallel, odb.OdbComponent):
@@ -163,8 +254,8 @@ class Canari(IFSODB):
 
         self.env.default(
             ODB_MERGEODB_DIRECT      = 1,
-            ODB_CCMA_LEFT_MARGIN     = self.slots.leftmargin(self.date),
-            ODB_CCMA_RIGHT_MARGIN    = self.slots.rightmargin(self.date),
+            ODB_CCMA_LEFT_MARGIN     = self.slots.leftmargin,
+            ODB_CCMA_RIGHT_MARGIN    = self.slots.rightmargin,
         )
 
 
@@ -240,8 +331,8 @@ class Screening(IFSODB):
 
         self.env.default(
             ODB_MERGEODB_DIRECT      = 1,
-            ODB_CCMA_LEFT_MARGIN     = self.slots.leftmargin(self.date),
-            ODB_CCMA_RIGHT_MARGIN    = self.slots.rightmargin(self.date),
+            ODB_CCMA_LEFT_MARGIN     = self.slots.leftmargin,
+            ODB_CCMA_RIGHT_MARGIN    = self.slots.rightmargin,
         )
 
         # Look for extras ODB raw
@@ -267,24 +358,14 @@ class Screening(IFSODB):
         self.setchannels(opts)
 
 
-class Minim(IFSODB):
-    """Observation screening."""
+class IFSODBCCMA(IFSODB):
+    """Specialised IFSODB for CCMA processing"""
 
+    _abstract = True
     _footprint = dict(
-        info = 'Minimisation in the assimilation process.',
-        attr = dict(
-            kind = dict(
-                values  = ['minim', 'min', 'minimisation'],
-                remap   = dict(autoremap = 'first'),
-            ),
-            conf = dict(
-                default = 131,
-            ),
-            xpname = dict(
-                default = 'MINI',
-            ),
-            virtualdb = dict(
-                default = 'ccma',
+        attr=dict(
+            virtualdb=dict(
+                default='ccma',
             ),
         )
     )
@@ -299,7 +380,7 @@ class Minim(IFSODB):
         allccma = [ x for x in allodb if x.resource.layout.lower() == 'ccma' ]
 
         if not allccma:
-            logger.critical('Missing CCMA input data for minimisation')
+            logger.critical('Missing CCMA input data for ' + self.kind)
             raise ValueError('Missing CCMA input data')
 
         # Set env and IOASSIGN
@@ -316,7 +397,90 @@ class Minim(IFSODB):
 
         # Defaults settings
         self.date = ccma.resource.date
+        super(IFSODBCCMA, self).prepare(rh, opts)
+
+
+class Minim(IFSODBCCMA):
+    """Observation minimisation."""
+
+    _footprint = dict(
+        info='Minimisation in the assimilation process.',
+        attr=dict(
+            kind=dict(
+                values=['minim', 'min', 'minimisation'],
+                remap=dict(autoremap='first'),
+            ),
+            conf=dict(
+                default=131,
+            ),
+            xpname=dict(
+                default='MINI',
+            ),
+        )
+    )
+
+    def prepare(self, rh, opts):
+        """Find out if preconditionning eigen vectors are here."""
+
+        # Check if a preconditioning EV map is here
+        evmaprh = self.context.sequence.effective_inputs(role=('PreconEVMap',
+                                                               'PreconditionningEVMap'),
+                                                         kind='precevmap')
+        if evmaprh:
+            if len(evmaprh) > 1:
+                logger.warning("Several preconditionning EV maps provided. Using the first one.")
+            nprec_ev = evmaprh[0].rh.contents.data['evlen']
+            # If there are preconditionning EV: update the namelist
+            if nprec_ev > 0:
+                for namrh in [x.rh  for x in self.context.sequence.effective_inputs(role='Namelist',
+                                                                                    kind='namelist',)]:
+                    namc = namrh.contents
+                    try:
+                        namc['NAMVAR'].NPCVECS = nprec_ev
+                        namc.rewrite(namrh.container)
+                    except Exception:
+                        logger.critical('Could not fix NAMVAR in %s', namrh.container.actualpath())
+                        raise
+                logger.info("%d preconditionning EV will by used (NPCVECS=%d).", nprec_ev, nprec_ev)
+            else:
+                logger.warning("A preconditionning EV map was found, but no preconditionning EV are availlable.")
+        else:
+            logger.info("No preconditionning EV were found.")
+
         super(Minim, self).prepare(rh, opts)
+
+    def postfix(self, rh, opts):
+        """Find out if any special resources have been produced."""
+        super(Minim, self).postfix(rh, opts)
+
+        sh = self.system
+
+        # Look up for PREConditionning Eigen Vectors
+        prec = sh.ls('MEMINI*')
+        if prec:
+            prec_info = dict(evlen=len(prec))
+            prec_info['evnum'] = [ int(x[6:])  for x in prec ]
+            sh.json_dump(prec_info, 'precev_map.out')
+
+
+class Trajectory(IFSODBCCMA):
+    """Observation trajectory."""
+
+    _footprint = dict(
+        info='Trajectory in the assimilation process.',
+        attr=dict(
+            kind=dict(
+                values=['traj', 'trajectory'],
+                remap=dict(autoremap='first'),
+            ),
+            conf=dict(
+                default=2,
+            ),
+            xpname=dict(
+                default='TRAJ',
+            ),
+        )
+    )
 
 
 class PseudoTrajectory(BlindRun):
@@ -329,3 +493,8 @@ class PseudoTrajectory(BlindRun):
             ),
         )
     )
+
+    def prepare(self, rh, opts):
+        """Add some defaults env values for mpitool itself."""
+        super(PseudoTrajectory, self).prepare(rh, opts)
+        self.export('drhook_not_mpi')

@@ -138,25 +138,3 @@ class Prolix(MeteoBull):
 
     del x
     del y
-
-
-class Macosx(Linux27):
-    """Mac under MacOSX."""
-
-    _footprint = dict(
-        info = 'Apple Mac computer under Macosx',
-        attr = dict(
-            sysname = dict(
-                values = ['Darwin']
-            ),
-        ),
-        priority = dict(
-            level = footprints.priorities.top.TOOLBOX
-        )
-    )
-
-    @property
-    def default_syslog(self):
-        """address to use in logging.handler.SysLogHandler()"""
-        return '/var/run/syslog'
-

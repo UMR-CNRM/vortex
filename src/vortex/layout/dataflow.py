@@ -114,7 +114,7 @@ class Section(object):
                 logger.error('Resource %s', self.rh.locate())
             if not rc and self.fatal:
                 logger.critical('Fatal error with action get %s', self.rh.locate())
-                raise SectionFatalError('Could not get resource [%s]', str(rc))
+                raise SectionFatalError('Could not get resource [%s]' % str(rc))
         else:
             logger.error('Try to get from an output section')
         return rc

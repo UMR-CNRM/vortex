@@ -177,11 +177,12 @@ class HorizontalGeometry(Geometry):
 
     def strheader(self):
         """Return beginning of formatted print representation."""
-        return '{0:s}.{1:s} | id=\'{2:s}\' area=\'{3:s}\''.format(
+        return '{0:s}.{1:s} | tag=\'{2}\' id=\'{3:s}\' area=\'{4:s}\''.format(
             self.__module__,
             self.__class__.__name__,
+            self.tag,
             self.info,
-            self.area
+            self.area,
         )
 
 

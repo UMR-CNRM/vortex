@@ -211,7 +211,8 @@ class VarBC(FlowResource):
            ),
             stage = dict(
                 optional = True,
-                values   = ['merge', 'void'],
+                values   = ['void', 'merge', 'screen', 'screening', 'minim', 'traj'],
+                remap    = dict(screen = 'screening'),
                 default  = 'void'
             ),
             mixmodel = dict(
@@ -236,14 +237,15 @@ class VarBC(FlowResource):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return self.realkind
+        olivestage_map = {'screening': 'screen',}
+        return self.realkind.upper() + "." + olivestage_map.get(self.stage, self.stage)
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
         if self.stage == 'void':
             bname = 'VARBC.cycle'
             if self.mixmodel is not None:
-                bname = bname + '_'
+                bname += '_'
                 if self.mixmodel.startswith('alad'):
                     bname = bname + self.mixmodel[:4]
                 else:
@@ -574,43 +576,4 @@ class Bcor(FlowResource):
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
         return 'bcor_' + self.satbias + '.dat'
-
-
-class BackgroundStdError(GeoFlowResource):
-    """
-    TODO.
-    """
-
-    _footprint = dict(
-        info = 'Sigma B... could be more talkative ?',
-        attr = dict(
-            kind = dict(
-                values   = ['bgstderr', 'bg_stderr'],
-                remap    = dict(autoremap = 'first'),
-            ),
-            stage = dict(
-                optional = True,
-                default  = 'scr',
-                values   = ['scr', 'vor'],
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'bgstderr'
-
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``bcor``."""
-        return dict(
-            radical = self.realkind,
-            geo     = [{'truncation': self.geometry.truncation}],
-            fmt     = self.nativefmt,
-            src     = [self.model, self.stage],
-        )
-
-    def archive_basename(self):
-        """OP ARCHIVE specific naming convention."""
-        errgrib = 'errgrib' if self.stage in ('vor',) else 'errgrib_'
-        return errgrib + self.stage
 

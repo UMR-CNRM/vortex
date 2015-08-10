@@ -1157,7 +1157,7 @@ class utFootprint(TestCase):
         extras = dict()
 
         with self.assertRaises(KeyError):
-            rv = fp._replacement(nbpass, 'hip', guess, extras, guess.keys())
+            u_rv = fp._replacement(nbpass, 'hip', guess, extras, guess.keys())
 
         rv = fp._replacement(nbpass, 'nothing', guess, extras, guess.keys())
         self.assertTrue(rv)

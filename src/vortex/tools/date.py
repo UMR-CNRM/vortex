@@ -142,14 +142,14 @@ def easter(year=None):
     """
     if not year:
         year = today().year
-    G = year % 19
-    C = year / 100
-    H = (C - C / 4 - (8 * C + 13) / 25 + 19 * G + 15) % 30
-    I = H - (H / 28) * (1 - (29 / (H + 1)) * ((21 - G) / 11))
-    J = (year + year / 4 + I + 2 - C + C / 4) % 7
-    L = I - J
-    month = 3 + (L + 40) / 44
-    day = L + 28 - 31 * (month / 4)
+    g = year % 19
+    c = year / 100
+    h = (c - c / 4 - (8 * c + 13) / 25 + 19 * g + 15) % 30
+    i = h - (h / 28) * (1 - (29 / (h + 1)) * ((21 - g) / 11))
+    j = (year + year / 4 + i + 2 - c + c / 4) % 7
+    l = i - j
+    month = 3 + (l + 40) / 44
+    day = l + 28 - 31 * (month / 4)
     return Date(year, month, day)
 
 local_date_functions = dict([
@@ -158,6 +158,7 @@ local_date_functions = dict([
             if hasattr(x, 'func_name') and x.__doc__.startswith('Return date')
 ])
 
+# noinspection PyUnboundLocalVariable
 del x
 
 def stardates():
@@ -513,6 +514,42 @@ class Date(datetime.datetime):
         else:
             return Date(substract)
 
+    def __eq__(self, other):
+        """Compare two Date values or a Date and a datetime or string value."""
+        try:
+            other = self.__class__(other).compact()
+        except StandardError:
+            pass
+        finally:
+            return self.compact() == '{0:<08s}'.format(str(other))
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __lt__(self, other):
+        """Compare two Date values or a Date and a datetime or string value."""
+        try:
+            other = self.__class__(other).compact()
+        except StandardError:
+            pass
+        finally:
+            return self.compact() < '{0:<08s}'.format(str(other))
+
+    def __le__(self, other):
+        return self == other or self < other
+
+    def __gt__(self, other):
+        """Compare two Date values or a Date and a datetime or string value."""
+        try:
+            other = self.__class__(other).compact()
+        except StandardError:
+            pass
+        finally:
+            return self.compact() > '{0:<08s}'.format(str(other))
+
+    def __ge__(self, other):
+        return self == other or self > other
+
     def replace(self, **kw):
         """Possible arguments: year, month, day, hour, minute."""
         for datekey in ('year', 'month', 'day', 'hour', 'minute'):
@@ -594,6 +631,7 @@ class Date(datetime.datetime):
         else:
             out = a - 'P1D'
         return out.ymd
+
 
 class Time(object):
     """
@@ -677,7 +715,7 @@ class Time(object):
         except StandardError:
             pass
         finally:
-            return cmp(str(self), str(other))
+            return cmp(int(self), int(other))
 
     def __add__(self, delta):
         """
@@ -760,22 +798,33 @@ class Month(object):
             if len(args) == 2:
                 self._year = int(args[1])
         else:
+            # Try to generate a Date object
+            mmod = None
             if isinstance(top, str):
-                mmod = re.search(':(next|prev)$', top)
+                mmod = re.search(':(next|prev|closest)$', top)
                 if mmod:
-                    args[0] = re.sub(':(?:next|prev)$', '', top)
-                    if mmod.group(1) == 'next':
-                        delta = 1
-                    else:
-                        delta = -1
-            if len(args) == 2:
-                delta = args.pop()
+                    args[0] = re.sub(':(?:next|prev|closest)$', '', top)
             try:
                 tmpdate = Date(*args)
             except (ValueError, TypeError):
                 raise ValueError('Could not create a Month from values provided %s', str(args))
             else:
                 self._month, self._year = tmpdate.month, tmpdate.year
+            # Process the modifiers
+            if mmod:
+                if mmod.group(1) == 'next':
+                    delta = 1
+                elif mmod.group(1) == 'prev':
+                    delta = -1
+                elif mmod.group(1) == 'closest':
+                    if tmpdate.day > 15:
+                        delta = 1
+                    else:
+                        delta = -1
+            # If present, the second argument is the delta (it overrides the modifiers)
+            if len(args) == 2:
+                delta = args.pop()
+
         if delta:
             mtmp = self + delta
             self._month, self._year = mtmp.month, mtmp.year

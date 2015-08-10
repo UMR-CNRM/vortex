@@ -9,6 +9,8 @@ for any :mod:`vortex` experiment.
 #: Export real nodes.
 __all__ = ['Driver', 'Task', 'Family']
 
+import re
+
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -45,6 +47,23 @@ class NiceLayout(object):
 class ConfigSet(footprints.util.LowerCaseDict):
     """Simple struct-like object wich is also a lower case dictionnary."""
 
+    def remap_int(self, value):
+        try:
+            value = int(value)
+        except ValueError:
+            pass
+        return value
+
+    def remap_float(self, value):
+        try:
+            value = float(value)
+        except ValueError:
+            pass
+        return value
+
+    def remap_default(self, value):
+        return value
+
     def __getattr__(self, attr):
         if attr in self:
             return self.get(attr)
@@ -56,13 +75,24 @@ class ConfigSet(footprints.util.LowerCaseDict):
 
     def __setitem__(self, key, value):
         if value is not None and isinstance(value, basestring):
+            rmap = 'default'
+            if re.match('\w+\(.*\)', value):
+                ipos = value.index('(')
+                rmap = value[:ipos]
+                value = value[ipos+1:-1]
+            remap = getattr(self, 'remap_' + rmap)
             if key.endswith('_range'):
                 key = key[:-6]
                 value = footprints.util.rangex(value.replace(' ', ''))
+            elif key.endswith('_map'):
+                key = key[:-4]
+                value = { k:remap(v) for k, v in [ x.split(':') for x in value.split() ] }
             elif key.endswith('geometry'):
                 value = data.geometries.get(tag=value)
             elif ',' in value:
-                value = value.replace(' ', '').split(',')
+                value = [ remap(v) for v in value.replace(' ', '').split(',') ]
+            else:
+                value = remap(value)
         super(ConfigSet, self).__setitem__(key, value)
 
 
@@ -282,7 +312,7 @@ class Family(Node, NiceLayout):
             if isinstance(x, Node):
                 self._contents.append(x)
             else:
-                fcount = fcount + 1
+                fcount += 1
                 self._contents.append(
                     Family(
                         tag    = '{0:s}.f{1:02d}'.format(self.tag, fcount),
@@ -417,7 +447,7 @@ class Driver(footprints.util.GetByTag, NiceLayout):
             if isinstance(x, Node):
                 self._contents.append(x)
             else:
-                fcount = fcount + 1
+                fcount += 1
                 self._contents.append(
                     Family(
                         tag     = '{0:s}.f{1:02d}'.format(self.tag, fcount),

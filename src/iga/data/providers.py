@@ -19,7 +19,7 @@ import iga.util.bpnames as bp
 
 #: TODO move in config file
 ATM_LIST_ONE = set([
-    'antiguy', 'arome', 'arpege', 'caledonie', 'polynesie',
+    'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie', 'polynesie',
     'restart_cep', 'reunion', 'ssmice', 'varpack'
 ])
 
@@ -193,7 +193,7 @@ class SopranoProvider(Provider):
         return self.namespace.netloc
 
     def basename(self, resource):
-        return bp.global_snames(resource)
+        return bp.global_snames(resource, self)
 
     def pathname(self, resource):
         """
@@ -201,7 +201,10 @@ class SopranoProvider(Provider):
         provided through the ``config`` footprint attribute.
         """
         info = self.pathinfo(resource)
-        info['model'] = self.vapp
+        if self.vapp == 'arome' and self.vconf == 'pifrance':
+            info['model'] = 'aromepi'
+        else:
+            info['model'] = self.vapp
         if info['model'] in ATM_LIST_ONE:
             info['level_one']   = 'modele'
             info['level_two']   = self.suite

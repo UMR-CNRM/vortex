@@ -265,7 +265,7 @@ class AlgoComponent(footprints.FootprintBase):
         """Last chance to say something before execution."""
         pass
 
-    def spawn(self, args):
+    def spawn(self, args, opts):
         """
         Spawn in the current system the command as defined in raw ``args``.
 
@@ -292,7 +292,7 @@ class AlgoComponent(footprints.FootprintBase):
         self.spawn_hook()
         self.target.spawn_hook(sh)
         sh.subtitle('{0:s} : start execution'.format(self.realkind))
-        sh.spawn(args, output=False)
+        sh.spawn(args, output=False, fatal=opts.get('fatal', True))
         sh.subtitle('{0:s} : directory listing (post-execution)'.format(self.realkind))
         sh.dir(output=False)
 
@@ -412,7 +412,7 @@ class Expresso(AlgoComponent):
         args = [ self.interpreter, rh.container.localpath() ]
         args.extend(self.spawn_command_line(rh))
         logger.debug('Run script %s', args)
-        self.spawn(args)
+        self.spawn(args, opts)
 
 
 class BlindRun(AlgoComponent):
@@ -438,7 +438,7 @@ class BlindRun(AlgoComponent):
         args = [ self.absexcutable(rh.container.localpath()) ]
         args.extend(self.spawn_command_line(rh))
         logger.debug('BlindRun executable resource %s', args)
-        self.spawn(args)
+        self.spawn(args, opts)
 
 
 class Parallel(AlgoComponent):
@@ -531,7 +531,7 @@ class Parallel(AlgoComponent):
             io.setup(opts)
 
         # This is actual running command
-        self.spawn(args)
+        self.spawn(args, opts)
 
         # Specific parallel cleaning
         if io:

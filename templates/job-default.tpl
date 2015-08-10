@@ -37,6 +37,8 @@ op_fullplay = $fullplay
 op_retry    = $retry
 op_tplfile  = '$tplfile'
 op_tplinit  = '$tplinit'
+op_mail     = $mail
+op_jeeves   = '$jeeves'
 
 oplocals = locals()
 

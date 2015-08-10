@@ -14,7 +14,7 @@ de façon plus élégante que la simple accumulation de lignes de shell.
 
 Cela signifie aussi qu'il sera toujours possible de faire évoluer cette boîte à outils.
 Si un outil manque, on l'ajoute. Si un autre est usé, on le remplace.
-Si un autre encore est obsolète, on s'en débarrasse. 
+Si un autre encore est obsolète, on s'en débarrasse.
 
 Pour tout de suite bien prendre de cette dimension « boîte à outils », le mieux est donc d'en faire une cartographie,
 sous l'angle de son organisation comme ensemble logiciel, et sous celui de ses principales modalités d'utilisation.
@@ -52,7 +52,7 @@ par exemple de pointer :envvar:`PYTHONPATH` uniquement sur ce répertoire.
 
     % export PYTHONPATH=/home/sevault/git-dev/vortex/site
 
-pour disposer des deux packages suivants:
+On dispose dans ce cas des deux packages suivants:
 
     * footprints
     * jeeves
@@ -61,29 +61,29 @@ pour disposer des deux packages suivants:
 Le package vortex proprement dit
 --------------------------------
 
-Sous le répertoire principal :file:`src` se trouveront les principaux packages proposés par défaut dans le VORTEX.
+Sous le répertoire principal :file:`src` se trouvent les principaux packages proposés par défaut dans le VORTEX.
 Le seul qui soit absolument indispensable est celui nommé :mod:`vortex`. Les autres sont des extensions.
-Après positionnement de :envvar:`PYTHONPATH`... as usual.
+Il faut pour les utiliser étendre :envvar:`PYTHONPATH`.
 
 .. code-block:: bash
 
     % export PYTHONPATH=/home/sevault/git-dev/vortex/site:/home/sevault/git-dev/vortex/src
 
-L'on peut réaliser les importations suivantes::
+Les importations suivantes sont alors possibles::
 
     >>> import vortex
     Vortex 0.9.20 loaded ( Thursday 18. June 2015, at 10:42:59 )
     >>> import common, olive, iga, gco
 
-L'extension :mod:`common` est tout hautement recommandable puisqu'elle contiendra toutes les classes de bases
-utilisées conjointement par l'équipe d'intégration des applications opérationnelles
+L'extension (ou package) :mod:`common` est tout spécialement recommandable puisqu'elle contient
+toutes les classes de bases utilisées conjointement par l'équipe d'intégration des applications opérationnelles
 et l'équipe de gestion des cycles opérationnels (GCO).
 
 Répertoire bin
 --------------
 
 Le répertoire :file:`bin`, sans surprise, contient quelques exécutables, des utilitaires d'une importance relativement
-marginale par rapport au design d'expériences de prévision numérique, ce qui ne veut pas dire que l'on pourrait
+marginale par rapport à la conception d'expériences de prévision numérique, ce qui ne veut pas dire que l'on pourrait
 sans passer facilement:
 
   * ggetall.py : récupération d'un jeu complet de composants versionnés par GCO ;
@@ -96,7 +96,8 @@ c'est-à-dire *Leave It To Jeeves* dont l'usage sera détaillé dans la section 
 Répertoire conf
 ---------------
 
-Il contient tous les fichiers au format *ini* de python qui pourraient éventuellement servir en cours d'exécution.
+Il contient tous les fichiers au format *ini* de python qui pourraient éventuellement servir en cours d'exécution
+et dont l'usage sera détaillé par après en fonction de la mise en oeuvre de tel ou tel composant de la toolbox.
 
 .. code-block:: bash
 
@@ -137,7 +138,7 @@ Répertoire examples
 
 Les exemples sont le plus souvent pris dans le sens de bac à sable. Il sont maintenus avec plus ou moins
 de régularité en phase avec les développements. La plus grande prudence est donc de mise sur ce que l'on
-peut déduire (ou pas) de l'exécution d'un des exemples. 
+peut déduire (ou pas) de l'exécution d'un des exemples.
 
 La rationalisation des exemples et leur phasage sur la dernière *release* est une proposition toujours
 renouvellée, et pour laquelle il manque toujours un-e volontaire ;-)
@@ -153,7 +154,7 @@ de nom "recherche" ou "oper".
 Les modes d'utilisation
 =======================
 
-Ils sont à lheure actuelle au nombre de quatre: l'interactif, l'usage indiférencié de l'API dans un
+Ils sont au nombre de quatre: l'interactif, l'usage indiférencié de l'API dans un
 développement quelconque, le scriptage automatique OLIVE, le layout de jobs/tasks de l'OPER.
 
 Mode interactif
@@ -161,7 +162,7 @@ Mode interactif
 
 C'est un mode d'utilisation fondamental et qui n'est pas sans influence sur ce qu'il est possible
 de concevoir en terme de boîte à outils: tout ce qu'il est possible de faire avec l'API complète
-doit être accessible en interactif. 
+doit être accessible en interactif.
 
 
 .. seealso:: les pages dédiées au mode d'utilisation olive et oper...
