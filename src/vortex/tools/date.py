@@ -715,7 +715,7 @@ class Time(object):
         except StandardError:
             pass
         finally:
-            return cmp(str(self), str(other))
+            return cmp(int(self), int(other))
 
     def __add__(self, delta):
         """

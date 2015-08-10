@@ -281,6 +281,10 @@ class utTime(TestCase):
         self.assertEqual(t.fmthm, '0018:30')
         self.assertEqual(t.fmtraw, '001830')
 
+        a = date.Time(48,       0)
+        b = date.Time( 0, 48 * 60)
+        self.assertEqual(a, b)
+
     def test_time_compute(self):
         t = date.Time('07:45')
         t = t + date.Time(1, 22)
