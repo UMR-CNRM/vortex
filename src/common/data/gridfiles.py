@@ -6,6 +6,7 @@ __all__ = []
 
 import re
 
+from vortex.data.contents import JsonDictContent
 from vortex.data.flow import GeoFlowResource
 from vortex.data.geometries import GridGeometry
 from vortex.syntax.stdattrs import term
@@ -98,6 +99,41 @@ class GridPoint(GeoFlowResource):
             fmt       = directory[self.nativefmt],
             nativefmt = self.nativefmt,
             model     = self.model,
+        )
+
+
+class GridPointMap(FlowResource):
+    """
+    Map of the gridpoint files as produced by fullpos
+    """
+
+    _footprint = dict(
+        info = 'Gridpoint Files Map',
+        attr = dict(
+            kind = dict(
+                values   = ['gridpointmap', 'gribfilemap', 'fullposmap'],
+                remap = dict(fullposmap = 'gridpointmap', )
+            ),
+            clscontents = dict(
+                default = JsonDictContent,
+            ),
+            nativefmt   = dict(
+                values  = ['json'],
+                default = 'json',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'gridpointmap'
+
+    def basename_info(self):
+        """Generic information for names fabric, with radical = ``bcor``."""
+        return dict(
+            radical = self.realkind,
+            fmt     = self.nativefmt,
+            src     = [self.model],
         )
 
 
