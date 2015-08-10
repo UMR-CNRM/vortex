@@ -245,7 +245,7 @@ class VarBC(FlowResource):
         if self.stage == 'void':
             bname = 'VARBC.cycle'
             if self.mixmodel is not None:
-                bname = bname + '_'
+                bname += '_'
                 if self.mixmodel.startswith('alad'):
                     bname = bname + self.mixmodel[:4]
                 else:

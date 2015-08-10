@@ -163,8 +163,8 @@ def add_section(section, args, kw):
     ctx.record_off()
 
     # Possibily change the log level if necessary
+    oldlevel = t.loglevel
     if loglevel is not None:
-        oldlevel = t.loglevel
         t.setloglevel(loglevel.upper())
 
     # Distinguish between section arguments, and resource loader arguments
@@ -307,8 +307,8 @@ def algo(*args, **kw):
     ctx.record_off()
 
     # Possibily change the log level if necessary
+    oldlevel = t.loglevel
     if loglevel is not None:
-        oldlevel = t.loglevel
         t.setloglevel(loglevel.upper())
 
     if talkative:
@@ -354,8 +354,8 @@ def diff(*args, **kw):
     ctx.record_off()
 
     # Possibily change the log level if necessary
+    oldlevel = t.loglevel
     if loglevel is not None:
-        oldlevel = t.loglevel
         t.setloglevel(loglevel.upper())
 
     # Let the magic of footprints resolution operate...

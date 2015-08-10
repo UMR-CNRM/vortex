@@ -86,6 +86,7 @@ class UtObsmap(TestCase):
             rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/const/autres/BATOR_MAP_production'
         )
+        rh=rl[-1]
         self.assertEqual(
             rh.locate(),
             datadir + '/arpege/france/oper/const/autres/BATOR_MAP_production'
@@ -99,6 +100,7 @@ class UtObsmap(TestCase):
         for rh in rl:
             self.assertTrue(rh.complete)
             print ' > ', rh.location()
+        rh=rl[-1]
         self.assertEqual(
             rl[0].location(),
             'file://oper.inline.fr/arome/france/oper/const/autres/BATOR_MAP_production'
@@ -184,6 +186,7 @@ class UtBlackListLoc(TestCase):
             rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/const/autres/LISTE_LOC'
         )
+        rh=rl[-1]
         self.assertEqual(
             rh.locate(),
             datadir + '/arpege/france/oper/const/autres/LISTE_LOC'
@@ -253,6 +256,7 @@ class UtBlackListDiap(TestCase):
             rl[0].location(),
             'file://oper.inline.fr/arpege/france/oper/const/autres/LISTE_NOIRE_LOC'
         )
+        rh=rl[-1]
         self.assertEqual(
             rh.locate(),
             datadir + '/arpege/france/oper/const/autres/LISTE_NOIRE_LOC'

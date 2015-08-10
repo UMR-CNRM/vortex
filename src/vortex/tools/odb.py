@@ -174,7 +174,6 @@ class TimeSlots(object):
 
     def as_file(self, date, filename):
         """Fill the specified ``filename`` wih the current list of time slots at this ``date``."""
-        nbx = 0
         with io.open(filename, 'w') as fd:
             for x in self.as_bounds(date):
                 fd.write(unicode(x + '\n'))
@@ -238,7 +237,7 @@ class OdbShell(addons.Addon):
             return False
 
         if not source.endswith('.tgz'):
-            source = source + '.tgz'
+            source += '.tgz'
 
         self.sh.rm(destination)
 
@@ -289,7 +288,7 @@ class OdbShell(addons.Addon):
             return False
 
         if not destination.endswith('.tgz'):
-            destination = destination + '.tgz'
+            destination += '.tgz'
 
         ftp = self.sh.ftp(hostname, logname)
         if ftp:

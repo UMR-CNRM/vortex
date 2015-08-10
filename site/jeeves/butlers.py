@@ -75,7 +75,6 @@ class GentleTalk(object):
                 value = -1
         if 0 <= value <= len(self.levels):
             self._loglevel = value
-        return self._loglevel
 
     loglevel = property(_get_loglevel, _set_loglevel)
 

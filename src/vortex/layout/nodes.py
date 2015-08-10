@@ -50,14 +50,14 @@ class ConfigSet(footprints.util.LowerCaseDict):
     def remap_int(self, value):
         try:
             value = int(value)
-        except Exception:
+        except ValueError:
             pass
         return value
 
     def remap_float(self, value):
         try:
             value = float(value)
-        except Exception:
+        except ValueError:
             pass
         return value
 
@@ -312,7 +312,7 @@ class Family(Node, NiceLayout):
             if isinstance(x, Node):
                 self._contents.append(x)
             else:
-                fcount = fcount + 1
+                fcount += 1
                 self._contents.append(
                     Family(
                         tag    = '{0:s}.f{1:02d}'.format(self.tag, fcount),
@@ -447,7 +447,7 @@ class Driver(footprints.util.GetByTag, NiceLayout):
             if isinstance(x, Node):
                 self._contents.append(x)
             else:
-                fcount = fcount + 1
+                fcount += 1
                 self._contents.append(
                     Family(
                         tag     = '{0:s}.f{1:02d}'.format(self.tag, fcount),

@@ -68,7 +68,7 @@ class Analysis(GeoFlowResource):
                 ananame = 'ANALYSE_DFI'
 
         if self.model == 'surfex':
-            ananame = ananame + '.sfx'
+            ananame += '.sfx'
 
         return ananame
 

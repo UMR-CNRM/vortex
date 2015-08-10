@@ -142,14 +142,14 @@ def easter(year=None):
     """
     if not year:
         year = today().year
-    G = year % 19
-    C = year / 100
-    H = (C - C / 4 - (8 * C + 13) / 25 + 19 * G + 15) % 30
-    I = H - (H / 28) * (1 - (29 / (H + 1)) * ((21 - G) / 11))
-    J = (year + year / 4 + I + 2 - C + C / 4) % 7
-    L = I - J
-    month = 3 + (L + 40) / 44
-    day = L + 28 - 31 * (month / 4)
+    g = year % 19
+    c = year / 100
+    h = (c - c / 4 - (8 * c + 13) / 25 + 19 * g + 15) % 30
+    i = h - (h / 28) * (1 - (29 / (h + 1)) * ((21 - g) / 11))
+    j = (year + year / 4 + i + 2 - c + c / 4) % 7
+    l = i - j
+    month = 3 + (l + 40) / 44
+    day = l + 28 - 31 * (month / 4)
     return Date(year, month, day)
 
 local_date_functions = dict([
@@ -158,6 +158,7 @@ local_date_functions = dict([
             if hasattr(x, 'func_name') and x.__doc__.startswith('Return date')
 ])
 
+# noinspection PyUnboundLocalVariable
 del x
 
 def stardates():

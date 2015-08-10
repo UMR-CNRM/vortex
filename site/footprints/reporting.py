@@ -486,7 +486,7 @@ class FactorizedReport(object):
         return self._define[key]
 
     def add(self, **kw):
-        tagValue = kw[self.focus]
+        tagvalue = kw[self.focus]
         dic = self._tree
         for k in self.keys():
             v = kw.get(k)
@@ -494,12 +494,12 @@ class FactorizedReport(object):
                 dic[v] = dict()
             dic = dic[v]
         info = kw.get('info', None)
-        dic[tagValue] = info
+        dic[tagvalue] = info
 
-    def printer(self, dic, currentIndent, depth, ordered=False):
+    def printer(self, dic, currentindent, depth, ordered=False):
         if depth == len(self.keys()):
             for tagValue in dic:
-                print currentIndent, self.focus, ':', tagValue,
+                print currentindent, self.focus, ':', tagValue,
                 if dic[tagValue]:
                     print '(' + dic[tagValue]+')'
                 else:
@@ -510,8 +510,8 @@ class FactorizedReport(object):
             else:
                 order = dic
             for v in order:
-                print currentIndent, self.keys()[depth], '=', v
-                self.printer(dic[v], currentIndent+self._indent, depth+1, ordered)
+                print currentindent, self.keys()[depth], '=', v
+                self.printer(dic[v], currentindent+self._indent, depth+1, ordered)
 
     def softprint(self):
         self.printer(self._tree, self._indent, 0)
@@ -543,11 +543,11 @@ class FactorizedReport(object):
         if depth == maxdepth:
             self.simpleprinter(dic, depth, msg, depth % group != 0)
         else:
-            toPrint = None
+            toprint = None
             if depth % group == 0:
-                toPrint = msg
+                toprint = msg
                 msg = None
-            if toPrint:
+            if toprint:
                 if separator == '+':
                     separator = '-'
                 elif separator == '-':
@@ -560,8 +560,8 @@ class FactorizedReport(object):
                 self.niceprinter(dic[v], depth+1, maxdepth, group, newmsg, separator)
                 if depth % group == 0:
                     print self._indent+(separator*(40+5*len(self._indent)))
-            if toPrint:
-                print self._indent*((maxdepth-depth)/group + 4), toPrint
+            if toprint:
+                print self._indent*((maxdepth-depth)/group + 4), toprint
 
     def dumper(self, maxdepth=1, group=1):
         if maxdepth > len(self.keys()):

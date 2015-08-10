@@ -202,7 +202,7 @@ def analysis_bnames(resource, vapp=None):
     else:
         anabase = 'ICMSH' + model_info + 'INIT'
         if resource.filling == 'surf':
-            anabase = anabase + '_SURF'
+            anabase += '_SURF'
         return  anabase + '.' + suffix
 
 
