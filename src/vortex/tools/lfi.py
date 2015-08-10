@@ -100,6 +100,9 @@ class LFI_Tool(addons.Addon):
     LFI_HNDL_SPEC   = ':1'
     DR_HOOK_SILENT  = 1
     DR_HOOK_NOT_MPI = 1
+    OMP_STACKSIZE         = '32M'
+    KMP_STACKSIZE         = '32M'
+    KMP_MONITOR_STACKSIZE = '32M'
 
     _footprint = dict(
         info = 'Default LFI system interface',
@@ -363,6 +366,9 @@ class IO_Poll(addons.Addon):
     LFI_HNDL_SPEC   = ':1'
     DR_HOOK_SILENT  = 1
     DR_HOOK_NOT_MPI = 1
+    OMP_STACKSIZE         = '32M'
+    KMP_STACKSIZE         = '32M'
+    KMP_MONITOR_STACKSIZE = '32M'
 
     _footprint = dict(
         info = 'Default io_poll system interface',
