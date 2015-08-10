@@ -284,21 +284,19 @@ def expand(desc):
                     logger.debug(' > Globbing from string %s', v)
                     vglob = v
                     globitems = list()
-
                     def getglob(matchobj):
                         globitems.append([matchobj.group(1), matchobj.group(2)])
                         return '*'
-                    while re.search(r'{glob:', vglob):
-                        vglob = re.sub(r'{glob:(\w+):([^\}]+)}', getglob, vglob)
+                    vglob = re.sub(r'{glob:(\w+):([^\}]+)}', getglob, vglob)
                     ngrp = 0
                     while re.search(r'{glob:', v):
-                        v = re.sub(r'{glob:\w+:([^\}]+)}', '{' + str(ngrp) + '}', v)
+                        v = re.sub(r'{glob:\w+:([^\}]+)}', '{' + str(ngrp) + '}', v, count=1)
                         ngrp += 1
                     v = v.replace('+', r'\+')
                     v = v.replace('.', r'\.')
                     ngrp = 0
                     while re.search(r'{\d+}', v):
-                        v = re.sub(r'{\d+}', '(' + globitems[ngrp][1] + ')', v)
+                        v = re.sub(r'{\d+}', '(' + globitems[ngrp][1] + ')', v, count=1)
                         ngrp += 1
                     repld = list()
                     for filename in glob.glob(vglob):
