@@ -7,7 +7,7 @@ __all__ = []
 import re
 
 from vortex.data.contents import JsonDictContent
-from vortex.data.flow import GeoFlowResource
+from vortex.data.flow import GeoFlowResource, FlowResource
 from vortex.data.geometries import GridGeometry
 from vortex.syntax.stdattrs import term
 from vortex.tools import env

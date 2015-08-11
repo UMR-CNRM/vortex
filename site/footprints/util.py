@@ -68,6 +68,7 @@ def mktuple(obj):
     else:
         return (obj,)
 
+
 class TimeInt(int):
     """
     Extended integer able to handle simple integers or integer plus minutes.
@@ -76,15 +77,24 @@ class TimeInt(int):
 
     def __new__(cls, ti, tm=None):
         ti = str(ti)
+        if not re.match(r'-?\d*(?::\d\d+)?$', ti):
+            return ValueError("{} is not a valid TimeInt".format(ti))
+        if ti.startswith('-'):
+            thesign = -1
+            ti = ti[1:]
+        else:
+            thesign = 1
         if ':' in ti:
-            ti, tm = [ int(x) for x in ti.split(':') ]
-        obj = int.__new__(cls, ti)
+            ti, tm = ti.split(':')
+            ti = 0 if ti == '' else int(ti)
+            tm = int(tm)
+        obj = int.__new__(cls, thesign * int(ti))
         if tm is None:
             obj._int = True
             tm = 0
         else:
             obj._int = False
-        obj._ti, obj._tm = int(ti), int(tm)
+        obj._ti, obj._tm = thesign * int(ti), thesign * int(tm)
         return obj
 
     @property
@@ -98,29 +108,49 @@ class TimeInt(int):
     def is_int(self):
         return self._int
 
+    @property
+    def str_time(self):
+        signstr = '-' if self.ti * 60 + self.tm < 0 else ''
+        return '{0:}{1:04d}:{2:02d}'.format(signstr, 
+                                            abs(self.ti), abs(self.tm))
+
     def __str__(self):
         if self.is_int():
             return str(self.ti)
         else:
-            return '{0:d}:{1:02d}'.format(self.ti, self.tm)
+            return self.str_time
+
+    def __eq__(self, other):
+        try:
+            other = self.__class__(other)
+        except StandardError:
+            return False
+        return self.ti * 60 + self.tm == other.ti * 60 + other.tm
 
     def __cmp__(self, other):
-        try:
-            other = self.__class__(other)
-        except ValueError:
-            return cmp(str(self), str(other))
-        else:
-            return cmp('{0:08d}:{1:02d}'.format(self.ti, self.tm), '{0:08d}:{1:02d}'.format(other.ti, other.tm))
+        # This may fail if other is malformed, but maybe it's for the best...
+        other = self.__class__(other)
+        return cmp(self.ti * 60 + self.tm, other.ti * 60 + other.tm)
+
+    @staticmethod
+    def __split_timedelta(dt):
+        """Format a timedelta expressed in minutes, in a valid hhhh:mm expression"""
+        thesign = int(dt > 0) * 2 - 1
+        ti = 0
+        while abs(dt) >= 60:
+            ti += thesign
+            dt -= thesign * 60
+        return ti, dt
 
     def __add__(self, other):
-        try:
-            other = self.__class__(other)
-        except ValueError:
-            pass
-        ti, tm = self.ti + other.ti, self.tm + other.tm
-        ti, tm = ti + tm / 60, tm % 60
+        # This may fail if other is malformed, but maybe it's for the best...
+        other = self.__class__(other)
+        timedelay = (self.ti + other.ti) * 60 + (self.tm + other.tm)
+        ti, tm = self.__split_timedelta(timedelay)
         if tm:
-            return self.__class__('{!s}:{!s}'.format(ti, tm))
+            signstr = '-' if timedelay < 0 else ''
+            return self.__class__('{}{:d}:{:02d}'.format(signstr,
+                                                         abs(ti), abs(tm)))
         else:
             return self.__class__(ti)
 
@@ -129,16 +159,14 @@ class TimeInt(int):
         return self.__add__(other)
 
     def __sub__(self, other):
-        try:
-            other = self.__class__(other)
-        except ValueError:
-            pass
-        ti, tm = self.ti - other.ti, self.tm - other.tm
-        if tm < 0:
-            tm += 60
-            ti   -= 1
+        # This may fail if other is malformed, but maybe it's for the best...
+        other = self.__class__(other)
+        timedelay = (self.ti - other.ti) * 60 + (self.tm - other.tm)
+        ti, tm = self.__split_timedelta(timedelay)
         if tm:
-            return self.__class__('{!s}:{!s}'.format(ti, tm))
+            signstr = '-' if timedelay < 0 else ''
+            return self.__class__('{}{:d}:{:02d}'.format(signstr,
+                                                         abs(ti), abs(tm)))
         else:
             return self.__class__(ti)
 
@@ -149,6 +177,7 @@ class TimeInt(int):
     @property
     def value(self):
         return self.ti if self.is_int() else str(self)
+
 
 def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     """
@@ -192,19 +221,23 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
             realstart += realshift
             realend   += realshift
 
+        signstep = int(realstep > 0) * 2 - 1
         pvalues = [ realstart ]
-        while pvalues[-1] < realend:
+        while cmp(pvalues[-1], realend) == - signstep:
             pvalues.append(pvalues[-1] + realstep)
+        if cmp(pvalues[-1], realend) == signstep:
+            pvalues.pop()
 
         if all([ x.is_int() for x in pvalues ]):
             pvalues = [ x.value for x in pvalues ]
         else:
-            pvalues = [ '{0:04d}:{1:02d}'.format(x.ti, x.tm) for x in sorted(pvalues) ]
+            pvalues = [ x.str_time for x in sorted(pvalues) ]
 
         if fmt is not None:
             if fmt.startswith('%'):
                 fmt = '{0:' + fmt[1:] + '}'
-            pvalues = [ fmt.format(x, i+1, x.realtype) for i, x in enumerate(pvalues) ]
+            pvalues = [fmt.format(x, i + 1, type(x).__name__)
+                       for i, x in enumerate(pvalues)]
 
         if prefix is not None:
             pvalues = [ prefix + str(x) for x in pvalues ]

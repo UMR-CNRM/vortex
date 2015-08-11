@@ -708,14 +708,23 @@ class Time(object):
         """Convert to `int`, ie: returns hours * 60 + minutes."""
         return self._hour * 60 + self._minute
 
+    def __eq__(self, other):
+        try:
+            other = self.__class__(other)
+        except StandardError:
+            pass
+        try:
+            return int(self) == int(other)
+        except StandardError:
+            return False
+
     def __cmp__(self, other):
         """Compare two Time values or a Time and an int value."""
         try:
             other = self.__class__(other)
         except StandardError:
             pass
-        finally:
-            return cmp(int(self), int(other))
+        return cmp(int(self), int(other))
 
     def __add__(self, delta):
         """

@@ -247,6 +247,7 @@ class utJeffrey(TestCase):
             result = obj1 - obj2
             self.assertEqual(result, expect)
 
+
 class utTime(TestCase):
 
     def test_time_basics(self):
@@ -294,12 +295,11 @@ class utTime(TestCase):
         t = date.Time(18, 45)
         self.assertEqual(int(t), 1125)
         t = date.Time(2, 45)
-        d = date.Date(2013,4,23,15,30)
+        d = date.Date(2013, 4, 23, 15, 30)
         r = d + t
         self.assertEqual(str(r), '2013-04-23T18:15:00Z')
         r = d - t
         self.assertEqual(str(r), '2013-04-23T12:45:00Z')
-
 
     def test_time_compare(self):
         t = date.Time(6)
@@ -328,11 +328,11 @@ class utMonth(TestCase):
             self.assertEqual(rv.month, m)
             self.assertEqual(rv.year, thisyear)
             if m > 1:
-                self.assertEqual(rv.prevmonth().month, m-1)
+                self.assertEqual(rv.prevmonth().month, m - 1)
             else:
                 self.assertEqual(rv.prevmonth().month, 12)
             if m < 12:
-                self.assertEqual(rv.nextmonth().month, m+1)
+                self.assertEqual(rv.nextmonth().month, m + 1)
             else:
                 self.assertEqual(rv.nextmonth().month, 1)
             self.assertEqual(rv.fmtraw, '{0:04d}{1:02d}'.format(thisyear, m))
@@ -365,11 +365,11 @@ class utMonth(TestCase):
 
         rv = date.Month(2, delta=12)
         self.assertEqual(rv.month, 2)
-        self.assertEqual(rv.year, thisyear+1)
+        self.assertEqual(rv.year, thisyear + 1)
 
         rv = date.Month(2, delta=-3)
         self.assertEqual(rv.month, 11)
-        self.assertEqual(rv.year, thisyear-1)
+        self.assertEqual(rv.year, thisyear - 1)
 
         with self.assertRaises(ValueError):
             rv = date.Month()
@@ -408,6 +408,17 @@ class utMonth(TestCase):
         rv = date.Month('20130301:prev')
         self.assertEqual(rv.fmtraw, '201302')
 
+        rv = date.Month('20130301:closest')
+        self.assertEqual(rv.fmtraw, '201302')
+
+        rv = date.Month('20130315:closest')
+        self.assertEqual(rv.fmtraw, '201302')
+
+        rv = date.Month('20130316:closest')
+        self.assertEqual(rv.fmtraw, '201304')
+
+        rv = date.Month('20130327:closest')
+        self.assertEqual(rv.fmtraw, '201304')
 
     def test_month_compute(self):
         m1 = date.Month(7)
@@ -421,4 +432,3 @@ class utMonth(TestCase):
 if __name__ == '__main__':
     main(verbosity=2)
     vortex.exit()
-

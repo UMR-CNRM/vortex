@@ -7,9 +7,11 @@ logging.basicConfig(level=logging.ERROR)
 from unittest import TestCase, TestLoader, TextTestRunner
 
 from vortex import toolbox
+#from vortex import sessions
 from vortex.data.geometries import SpectralGeometry
 
-from olive.data import fields
+from olive.data import providers
+from common.data import fields
 u_fill_fp_catalogs = fields
 
 
@@ -85,7 +87,8 @@ class UtGeoFields(TestCase):
         self.std = SpectralGeometry(id='Current op', truncation=798,
                                     stretching=2.4, area='france', lam=False)
         self.attrset = dict(kind='geofields', suite='oper', date = '2012022806',
-                            cutoff='production', namespace='[suite].archive.fr')
+                            cutoff='production', namespace='[suite].archive.fr',
+                            model='arpege')
         #sessions.current().debug()
 
     def test_g1(self):
@@ -121,7 +124,7 @@ class UtGeoFields(TestCase):
             self.assertTrue(rh.complete)
         self.assertEqual(
             rl[0].location(),
-            'vortex://vortex.cache.fr/play/sandbox/oper/20120228T0600P/observation/sst.tl798-c24.fa'
+            'vortex://vortex.cache.fr/play/sandbox/oper/20120228T0600P/observation/sst.arpege.tl798-c24.fa'
         )
 
 
