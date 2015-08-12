@@ -11,6 +11,7 @@ __all__ = []
 import collections
 import datetime
 import pprint
+import json
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -259,3 +260,17 @@ class Tracker(object):
     def differences(self):
         """Dump only created, deleted and updated items."""
         return self.dump('deleted', 'created', 'updated')
+
+
+class ShellEncoder(json.JSONEncoder):
+    """Encoder for :mod:`json` dumps method."""
+
+    def default(self, obj):
+        """Overwrite the default encoding if the current object has a ``export_dict`` method."""
+        if hasattr(obj, 'export_dict'):
+            return obj.export_dict()
+        elif hasattr(obj, 'footprint_export'):
+            return obj.footprint_export()
+        elif hasattr(obj, '__dict__'):
+            return vars(obj)
+        return json.JSONEncoder.default(self, obj)

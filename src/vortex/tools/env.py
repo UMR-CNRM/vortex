@@ -10,7 +10,7 @@ import os, re, json, traceback
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.util.structs import History
+from vortex.util.structs import History, ShellEncoder
 
 
 #: No automatic export
@@ -55,20 +55,6 @@ def share(**kw):
 def current():
     """Return current binded :class:`Environment` object."""
     return Environment.current()
-
-
-class ShellEncoder(json.JSONEncoder):
-    """Encoder for :mod:`json` dumps method."""
-
-    def default(self, obj):
-        """Overwrite the default encoding if the current object has a ``export_dict`` method."""
-        if hasattr(obj, 'export_dict'):
-            return obj.export_dict()
-        elif hasattr(obj, 'footprint_export'):
-            return obj.footprint_export()
-        elif hasattr(obj, '__dict__'):
-            return vars(obj)
-        return json.JSONEncoder.default(self, obj)
 
 
 class Environment(object):

@@ -460,7 +460,7 @@ class Minim(IFSODBCCMA):
         if prec:
             prec_info = dict(evlen=len(prec))
             prec_info['evnum'] = [ int(x[6:])  for x in prec ]
-            sh.json_dump(prec_info, 'precev_map.out')
+            sh.json_dump(prec_info, 'precev_map.out', indent=4)
 
 
 class Trajectory(IFSODBCCMA):

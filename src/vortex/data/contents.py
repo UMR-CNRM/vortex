@@ -136,11 +136,28 @@ class JsonDictContent(AlmostDictContent):
     The internal data is supposed to be read from a json file.
     """
 
+    @classmethod
+    def _unicode2str(cls, jsdecode):
+        """Try to convert Unicode string into *regular* strings"""
+        if isinstance(jsdecode, dict):
+            return {cls._unicode2str(key): cls._unicode2str(value)
+                    for key, value in jsdecode.iteritems()}
+        elif isinstance(jsdecode, list):
+            return [cls._unicode2str(value) for value in jsdecode]
+        elif isinstance(jsdecode, unicode):
+            try:
+              return jsdecode.encode()
+            except UnicodeEncodeError:
+              return jsdecode
+        else:
+            return jsdecode
+
     def slurp(self, container):
         """Get data from the ``container``."""
         t = sessions.current()
         container.rewind()
         self._data = t.sh.json_load(container.localpath())
+        self._data = self._unicode2str(self._data)
 
     def rewrite(self, container):
         """Write the list contents in the specified container."""

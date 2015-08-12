@@ -209,6 +209,67 @@ class utList2Dict(TestCase):
         self.assertEqual(rv, dict(attr=dict(foo=2, more='hip'), only=dict(k1='v1', k2='v2')))
 
 
+# A pure internal usage
+
+class utTime(TestCase):
+
+    def test_time_basics(self):
+        t = util.TimeInt(0)
+        self.assertEqual(str(t), '0')
+        self.assertEqual(t.str_time, '0000:00')
+
+        t = util.TimeInt(128)
+        self.assertEqual(str(t), '128')
+        self.assertEqual(t.str_time, '0128:00')
+
+        t = util.TimeInt('16:30')
+        self.assertEqual(str(t), '0016:30')
+
+        t = util.TimeInt('0007:45')
+        self.assertEqual(str(t), '0007:45')
+
+        a = util.TimeInt(48)
+        b = util.TimeInt(':2880')
+        self.assertEqual(a, b)
+
+    def test_time_compute(self):
+        t = util.TimeInt('07:45')
+        t = t + util.TimeInt('1:22')
+        self.assertEqual(str(t), '0009:07')
+        t = t - util.TimeInt('9:05')
+        self.assertEqual(str(t), '0000:02')
+        t = t - util.TimeInt('0:04')
+        self.assertEqual(str(t), '-0000:02')
+        t = t + util.TimeInt('0:04')
+        self.assertEqual(str(t), '0000:02')
+        t = t + util.TimeInt('1:04')
+        self.assertEqual(str(t), '0001:06')
+
+    def test_time_compare(self):
+        t = util.TimeInt(6)
+        self.assertFalse(t is None)
+        self.assertTrue(t == 6)
+        self.assertFalse(t > 6)
+        self.assertFalse(t < 6)
+        self.assertTrue(t == '06')
+        self.assertTrue(t == '6:00')
+        t = util.TimeInt('6:30')
+        self.assertFalse(t == 6)
+        self.assertTrue(t > 6)
+        self.assertFalse(t < 6)
+        self.assertFalse(t < '6:30')
+        self.assertTrue(t < '6:31')
+        self.assertTrue(t > '6:29')
+        t = util.TimeInt('-6:30')
+        self.assertFalse(t == -6)
+        self.assertFalse(t > -6)
+        self.assertTrue(t < -6)
+        self.assertFalse(t < '-6:30')
+        self.assertFalse(t < '-6:31')
+        self.assertTrue(t < '-6:29')
+        self.assertTrue(t < '6:30')
+
+
 # Pseudo-int expand mechanism
 
 class utRangex(TestCase):
@@ -229,6 +290,25 @@ class utRangex(TestCase):
         rv = util.rangex(0, 12, 3, 1)
         self.assertListEqual(rv, [1, 4, 7, 10, 13])
 
+    def test_rangex_basics_times(self):
+        rv = util.rangex('2:15')
+        self.assertListEqual(rv, ['0002:15'])
+
+        rv = util.rangex('2:15,3:45')
+        self.assertListEqual(rv, ['0002:15', '0003:45'])
+
+        rv = util.rangex('10:00', '3:10', '-:15')
+        self.assertListEqual(rv, ['0003:15', '0003:30', '0003:45', '0004:00', '0004:15', '0004:30', '0004:45', '0005:00', '0005:15', '0005:30', '0005:45', '0006:00', '0006:15', '0006:30', '0006:45', '0007:00', '0007:15', '0007:30', '0007:45', '0008:00', '0008:15', '0008:30', '0008:45', '0009:00', '0009:15', '0009:30', '0009:45', '0010:00'])
+
+        rv = util.rangex('-9:00', '-7:00', shift=2)
+        self.assertListEqual(rv, [-7, -6, -5])
+
+        rv = util.rangex('-9:10', '-7:00', shift=2)
+        self.assertListEqual(rv, ['-0005:10', '-0006:10', '-0007:10'])
+
+        rv = util.rangex('-1:10', '2:10')
+        self.assertListEqual(rv, ['-0000:10', '-0001:10', '0000:50', '0001:50'])
+
     def test_rangex_minus(self):
         rv = util.rangex('0-30-6,36-72-12')
         self.assertListEqual(rv, [0, 6, 12, 18, 24, 30, 36, 48, 60, 72])
@@ -238,6 +318,16 @@ class utRangex(TestCase):
 
         rv = util.rangex('0-12', step=3, shift=1)
         self.assertListEqual(rv, [1, 4, 7, 10, 13])
+
+    def test_rangex_minus_times(self):
+        rv = util.rangex('0-3-:15,3:30-6-:30')
+        self.assertListEqual(rv, ['0000:00', '0000:15', '0000:30', '0000:45', '0001:00', '0001:15', '0001:30', '0001:45', '0002:00', '0002:15', '0002:30', '0002:45', '0003:00', '0003:30', '0004:00', '0004:30', '0005:00', '0005:30', '0006:00'])
+
+        rv = util.rangex('0-3-:30,0:15', 6, '00:45')
+        self.assertListEqual(rv, ['0000:00', '0000:15', '0000:30', '0001:00', '0001:30', '0001:45', '0002:00', '0002:30', '0003:00', '0003:15', '0004:00', '0004:45', '0005:30'])
+
+        rv = util.rangex('0:30-12', step='1:00', shift=1)
+        self.assertListEqual(rv, ['0001:30', '0002:30', '0003:30', '0004:30', '0005:30', '0006:30', '0007:30', '0008:30', '0009:30', '0010:30', '0011:30', '0012:30'])
 
     def test_rangex_comma(self):
         rv = util.rangex('0,4', 12, 3, 0)
@@ -253,21 +343,44 @@ class utRangex(TestCase):
         rv = util.rangex('2-5', fmt='{2:s}({0:02d})')
         self.assertListEqual(rv, ['int(02)', 'int(03)', 'int(04)', 'int(05)'])
 
+    def test_rangex_fmt_times(self):
+        rv = util.rangex('2-3-:30', fmt='%10s')
+        self.assertListEqual(rv, ['0002:00   ', '0002:30   ', '0003:00   '])
+
     def test_rangex_prefix(self):
         rv = util.rangex('foo_0', 5, 2)
-        self.assertListEqual(rv, ['foo_0', 'foo_2', 'foo_4',])
+        self.assertListEqual(rv, ['foo_0', 'foo_2', 'foo_4', ])
 
         rv = util.rangex('foo_0-5-2', fmt='%02d')
-        self.assertListEqual(rv, ['foo_00', 'foo_02', 'foo_04',])
+        self.assertListEqual(rv, ['foo_00', 'foo_02', 'foo_04', ])
 
         rv = util.rangex(1, 7, 3, prefix='hello-')
-        self.assertListEqual(rv, ['hello-1', 'hello-4', 'hello-7',])
+        self.assertListEqual(rv, ['hello-1', 'hello-4', 'hello-7', ])
 
         rv = util.rangex(1, 7, 3, prefix='hello-', shift=2, fmt='%02d')
         self.assertListEqual(rv, ['hello-03', 'hello-06', 'hello-09'])
 
         rv = util.rangex(1, 7, 3, prefix='value no.', fmt='{1:d} is {0:d}')
         self.assertListEqual(rv, ['value no.1 is 1', 'value no.2 is 4', 'value no.3 is 7'])
+
+    def test_rangex_prefix_times(self):
+        rv = util.rangex('foo_0:15', 2, ':15')
+        self.assertListEqual(rv, ['foo_0000:15', 'foo_0000:30', 'foo_0000:45', 'foo_0001:00', 'foo_0001:15', 'foo_0001:30', 'foo_0001:45', 'foo_0002:00'])
+
+        rv = util.rangex('foo_0', -2, ':15')
+        self.assertListEqual(rv, [])
+
+        rv = util.rangex('foo_0', -1, '-:15')
+        self.assertListEqual(rv, ['foo_-0000:15', 'foo_-0000:30', 'foo_-0000:45', 'foo_-0001:00', 'foo_0000:00'])
+
+        rv = util.rangex('10:00', '8:10', '-:15', prefix='toto-')
+        self.assertListEqual(rv, ['toto-0008:15', 'toto-0008:30', 'toto-0008:45', 'toto-0009:00', 'toto-0009:15', 'toto-0009:30', 'toto-0009:45', 'toto-0010:00'])
+
+        rv = util.rangex('10:00', '9:10', '-:15', prefix='toto-', shift='0:01')
+        self.assertListEqual(rv, ['toto-0009:16', 'toto-0009:31', 'toto-0009:46', 'toto-0010:01'])
+
+        rv = util.rangex('10:00', '9:10', '-:15', prefix='value no.', fmt='{1:d} is {0:s}')
+        self.assertListEqual(rv, ['value no.1 is 0009:15', 'value no.2 is 0009:30', 'value no.3 is 0009:45', 'value no.4 is 0010:00'])
 
 
 # In-place substitution in lists
@@ -371,10 +484,13 @@ class utExpand(TestCase):
 
     def test_expand_glob(self):
         tmpd = tempfile.mkdtemp()
-        ( u_tmpio, tmpf ) = tempfile.mkstemp(dir=tmpd)
+        (u_tmpio, tmpf) = tempfile.mkstemp(dir=tmpd)
         for a in ('hip', 'hop'):
             for b in range(3):
                 shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}'.format(tmpd, a, b))
+                shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:{3:02d}'.format(tmpd, a, b, b * 9))
+                shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:0'.format(tmpd, a, b))
+                shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:tr'.format(tmpd, a, b))
         rv = util.expand(dict(
             arg='multi',
             look='xx_{glob:a:\w+}_{glob:b:\d+}',
@@ -389,7 +505,6 @@ class utExpand(TestCase):
             seta='[glob:a]',
             setb='[glob:b]'
         ))
-        shutil.rmtree(tmpd)
         self.assertListEqual(sorted(rv), [
             {'arg': 'multi', 'look': 'xx_hip_0000', 'seta': 'hip', 'setb': '0000'},
             {'arg': 'multi', 'look': 'xx_hip_0001', 'seta': 'hip', 'setb': '0001'},
@@ -398,6 +513,27 @@ class utExpand(TestCase):
             {'arg': 'multi', 'look': 'xx_hop_0001', 'seta': 'hop', 'setb': '0001'},
             {'arg': 'multi', 'look': 'xx_hop_0002', 'seta': 'hop', 'setb': '0002'}
         ])
+        rv = util.expand(dict(
+            arg='multi',
+            look='xx_{glob:a:\w+}_{glob:b:\d+(?::\d\d)?}',
+            seta='[glob:a]',
+            setb='[glob:b]'
+        ))
+        self.assertListEqual(sorted(rv), [
+            {'arg': 'multi', 'look': 'xx_hip_0000', 'seta': 'hip', 'setb': '0000'},
+            {'arg': 'multi', 'look': 'xx_hip_0000:00', 'seta': 'hip', 'setb': '0000:00'},
+            {'arg': 'multi', 'look': 'xx_hip_0001', 'seta': 'hip', 'setb': '0001'},
+            {'arg': 'multi', 'look': 'xx_hip_0001:09', 'seta': 'hip', 'setb': '0001:09'},
+            {'arg': 'multi', 'look': 'xx_hip_0002', 'seta': 'hip', 'setb': '0002'},
+            {'arg': 'multi', 'look': 'xx_hip_0002:18', 'seta': 'hip', 'setb': '0002:18'},
+            {'arg': 'multi', 'look': 'xx_hop_0000', 'seta': 'hop', 'setb': '0000'},
+            {'arg': 'multi', 'look': 'xx_hop_0000:00', 'seta': 'hop', 'setb': '0000:00'},
+            {'arg': 'multi', 'look': 'xx_hop_0001', 'seta': 'hop', 'setb': '0001'},
+            {'arg': 'multi', 'look': 'xx_hop_0001:09', 'seta': 'hop', 'setb': '0001:09'},
+            {'arg': 'multi', 'look': 'xx_hop_0002', 'seta': 'hop', 'setb': '0002'},
+            {'arg': 'multi', 'look': 'xx_hop_0002:18', 'seta': 'hop', 'setb': '0002:18'},
+        ])
+        shutil.rmtree(tmpd)
 
     def test_expand_mixed(self):
         rv = util.expand(dict(
@@ -813,11 +949,11 @@ class utObservers(TestCase):
     def test_observers_basics(self):
         rv = observers.keys()
         self.assertListEqual(rv, [
-            '__main__.FootprintTestBuiltins',
-            '__main__.FootprintTestMeta',
-            '__main__.FootprintTestOne',
-            '__main__.FootprintTestRWD',
-            '__main__.FootprintTestTwo',
+            __name__ + '.FootprintTestBuiltins',
+            __name__ + '.FootprintTestMeta',
+            __name__ + '.FootprintTestOne',
+            __name__ + '.FootprintTestRWD',
+            __name__ + '.FootprintTestTwo',
         ])
 
 
@@ -1565,7 +1701,7 @@ class utFootprintBase(TestCase):
         self.assertTrue(FootprintTestMeta._explicit)
         self.assertTrue(FootprintTestMeta.footprint_abstract())
         self.assertTupleEqual(FootprintTestMeta._collector, ('garbage',))
-        self.assertEqual(FootprintTestMeta.fullname(), '__main__.FootprintTestMeta')
+        self.assertEqual(FootprintTestMeta.fullname(), __name__ + '.FootprintTestMeta')
         self.assertEqual(FootprintTestMeta.__doc__, 'Not documented yet.')
         self.assertListEqual(FootprintTestMeta.footprint_mandatory(), list())
         self.assertDictEqual(FootprintTestMeta._footprint.as_dict(), dict(
@@ -1747,22 +1883,23 @@ class utFootprintBase(TestCase):
         self.assertFalse(rv)
         self.assertSetEqual(attr_input, set(['kind']))
         self.assertDictEqual(report.last.as_dict(), {
-            '__main__.FootprintTestOne': {'someint': {'why': 'Missing value'}}
+            __name__ + '.FootprintTestOne': {'someint': {'why': 'Missing value'}}
         })
 
         rv, attr_input = FootprintTestOne.footprint_couldbe(dict(kind='hip', someint=12), mkreport=True)
         self.assertFalse(rv)
         self.assertSetEqual(attr_input, set(['kind']))
         self.assertDictEqual(report.last.as_dict(), {
-            '__main__.FootprintTestOne': {'someint': {'why': 'Not in values', 'args': 12}}
+            __name__ + '.FootprintTestOne': {'someint': {'why': 'Not in values', 'args': 12}}
         })
 
         rv, attr_input = FootprintTestOne.footprint_couldbe(dict(kind='hip', someint=2), mkreport=True)
         self.assertTrue(rv)
         self.assertSetEqual(attr_input, set(['kind', 'someint']))
         self.assertDictEqual(report.last.as_dict(), {
-            '__main__.FootprintTestOne': {}
+            __name__ + '.FootprintTestOne': {}
         })
+
 
 # Classes usint builins wrappers as attributes
 

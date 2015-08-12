@@ -5,10 +5,13 @@
 __all__ = []
 
 import re
+from collections import defaultdict
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
+from vortex.tools.date import Time
+from vortex.util.structs import ShellEncoder
 from .ifsroot import IFSParallel
 
 
@@ -93,6 +96,30 @@ class Forecast(IFSParallel):
         if self.promises:
             self.io_poll_args = ('ICMSH', 'PF')
             self.flyput = True
+
+    def postfix(self, rh, opts):
+        """Find out if any special resources have been produced."""
+        super(Forecast, self).postfix(rh, opts)
+
+        sh = self.system
+
+        # Look up for the gridpoint files
+        gp_out = sh.ls('PF{}*'.format(self.xpname))
+        gp_map = defaultdict(list)
+        if gp_out:
+            re_pf = re.compile(r'^PF{}(\w+)\+(\d+(?::\d+)?)$'.format(self.xpname))
+            for fname in gp_out:
+                match_pf = re_pf.match(fname)
+                if match_pf:
+                    gp_map[match_pf.group(1).lower()].append(Time(match_pf.group(2)))
+            for k, v in gp_map.iteritems():
+                v.sort()
+                logger.info('Gridpoint files found: domain=%s, terms=%s',
+                            k,
+                            ','.join([str(t) for t in v]))
+        if len(gp_map) == 0:
+            logger.info('No gridpoint file was found.')
+        sh.json_dump(gp_map, 'gridpoint_map.out', indent=4, cls=ShellEncoder)
 
 
 class LAMForecast(Forecast):

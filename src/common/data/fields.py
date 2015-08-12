@@ -57,7 +57,7 @@ class RawFields(Resource):
     def basename_info(self):
         return dict(
             radical = self.fields,
-            src     = [self.origin, self.model],
+            src     = [self.origin, ],
         )
 
 
@@ -99,5 +99,5 @@ class GeoFields(GeoFlowResource):
             radical = self.fields,
             geo     = lgeo,
             fmt     = self.nativefmt,
-            src     = [self.origin, self.model],
+            src     = [self.model],
         )
