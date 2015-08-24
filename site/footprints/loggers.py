@@ -16,11 +16,11 @@ lognames = set()
 formats = dict(
     default = logging.Formatter(
         fmt = '# [%(asctime)s][%(name)s][%(funcName)s:%(lineno)04d][%(levelname)s]: %(message)s',
-        datefmt = '%Y/%d/%m-%H:%M:%S',
+        datefmt = '%Y/%m/%d-%H:%M:%S',
     ),
     fixsize = logging.Formatter(
         fmt = '# [%(asctime)s][%(name)-24s][%(funcName)16s:%(lineno)04d][%(levelname)9s]: %(message)s',
-        datefmt = '%Y/%d/%m-%H:%M:%S',
+        datefmt = '%Y/%m/%d-%H:%M:%S',
     ),
 )
 

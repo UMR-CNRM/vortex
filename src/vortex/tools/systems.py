@@ -626,6 +626,7 @@ class OSExtended(System):
         logger.debug('Abstract System init %s', self.__class__)
         self._rmtreemin = kw.pop('rmtreemin', 3)
         self._cmpaftercp = kw.pop('cmpaftercp', True)
+        self.ftraw    = kw.pop('ftraw', True)
         self.ftputcmd = kw.pop('ftputcmd', None)
         self.ftgetcmd = kw.pop('ftgetcmd', None)
         super(OSExtended, self).__init__(*args, **kw)
@@ -718,21 +719,28 @@ class OSExtended(System):
 
     @fmtshcmd
     def rawftput(self, source, destination, hostname=None, logname=None):
-        """Proceed some external ftput command on the specified target."""
+        """Proceed with some external ftput command on the specified target."""
         rc = False
         if isinstance(source, basestring):
             if self.path.exists(source):
                 ftcmd = self.ftputcmd or 'ftput'
-                rc = self.spawn([ftcmd, source, destination], output=False)
+                rc = self.spawn([ftcmd, '-o', 'mkdir', source, destination], output=False)
             else:
                 raise IOError('No such file or directory: {!s}'.format(source))
         else:
             raise IOError('Source is not a plain file path: {!r}'.format(source))
         return rc
 
+    def smartftput(self, source, destination, hostname=None, logname=None, fmt=None):
+        """Proceed some ftput or rawftput."""
+        if self.ftraw and isinstance(source, basestring) and isinstance(destination, basestring):
+            return self.rawftput(source, destination, hostname=hostname, logname=logname, fmt=fmt)
+        else:
+            return self.ftput(source, destination, hostname=hostname, logname=logname, fmt=fmt)
+
     @fmtshcmd
     def rawftget(self, source, destination, hostname=None, logname=None):
-        """Proceed some external ftget command on the specified target."""
+        """Proceed with some external ftget command on the specified target."""
         rc = False
         if isinstance(source, basestring) and isinstance(destination, basestring):
             if self.filecocoon(destination):

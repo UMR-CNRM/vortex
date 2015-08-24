@@ -78,7 +78,7 @@ class TimeInt(int):
     def __new__(cls, ti, tm=None):
         ti = str(ti)
         if not re.match(r'-?\d*(?::\d\d+)?$', ti):
-            return ValueError("{} is not a valid TimeInt".format(ti))
+            return ValueError('{} is not a valid TimeInt'.format(ti))
         if ti.startswith('-'):
             thesign = -1
             ti = ti[1:]
@@ -195,9 +195,14 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
         else:
             realstart = pstart
         if realstart.startswith('-'):
-            actualrange = [ realstart ]
-        else:
-            actualrange = realstart.split('-')
+            realstart = '__MINUS__' + realstart[1:]
+        if '--' in realstart:
+            realstart = realstart.replace('--', '/__MINUS__').replace('-', '/')
+        if realstart.startswith('__MINUS__') and '/' not in realstart:
+            realstart = realstart.replace('-', '/')
+        realstart = realstart.replace('__MINUS__', '-')
+        csplit = '/' if '/' in realstart else '-'
+        actualrange = realstart.split(csplit)
         realstart = TimeInt(actualrange[0])
 
         if len(actualrange) > 1:

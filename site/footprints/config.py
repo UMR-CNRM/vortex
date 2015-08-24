@@ -63,10 +63,12 @@ class FootprintSetup(util.GetByTag):
         self.fastmode   = bool(fastmode)
         self.fastkeys   = tuple(fastkeys)
         self.callback   = callback
+
         if proxies is None:
             self.proxies = set()
         else:
             self.proxies = set(proxies)
+
         self._defaults  = util.LowerCaseDict()
         if defaults is not None:
             self._defaults.update(defaults)

@@ -165,7 +165,7 @@ class ExitHandler(object):
         """Be sure to call all registred callbacks at exit time."""
         self.daemon.info('Context exit ' + repr(self.daemon))
         self.daemon.info('Context exit ' + repr(exc_type))
-        if exc_value.message:
+        if hasattr(exc_value, 'message') and exc_value.message:
             self.daemon.critical('Context exit', error=exc_value)
             print "\n", '-' * 80
             print exc_value.message
@@ -869,8 +869,6 @@ class Jeeves(BaseDaemon, HouseKeeping):
         """Infinite work loop."""
 
         self.info('Just ask Jeeves...')
-        self.redo = dict()
-
         self.multi_start()
 
         # migrate existing requests forgotten in processing directory
@@ -881,12 +879,23 @@ class Jeeves(BaseDaemon, HouseKeeping):
             for bad in todorun:
                 self.migrate(thispool, bad, target='retry')
 
+        # setup default autoexit mode, once for all
+        autoexit = self.config['driver'].get('autoexit', 0)
+        self.info('Automatic', exit=autoexit)
+
+        # initiate retry tracking
+        self.redo = dict()
+        maxdelay = self.config['driver'].get('maxdelay', 24 * 3600)
+        rtdelay  = self.config['driver'].get('rtdelay', 60)
+        rtslow   = self.config['driver'].get('rtslow', 10)
+
         tprev = datetime.now()
         tbusy = False
         nbsleep = 0
         silent  = False
+        working = True
 
-        while True:
+        while working:
 
             tnext = datetime.now()
             ttime = ( tnext - tprev ).total_seconds()
@@ -927,25 +936,45 @@ class Jeeves(BaseDaemon, HouseKeeping):
             thispool = pools.get(tag='retry')
             if thispool.active:
                 self.debug('Processing', pool=thispool.tag, path=thispool.path)
-                while thispool.contents:
+                if thispool.contents:
                     tbusy = True
                     todo = sorted(thispool.contents)
                     # look for previous retry requests
+                    stamp = datetime.now()
                     for req in todo[:]:
-                        self.migrate(thispool, req)
-                        todo.remove(req)
+                        self.redo.setdefault(req, dict(first=stamp, last=stamp, delay=0, nbt=0))
+                        rt = self.redo.get(req)
+                        rtwait = stamp - rt['last']
+                        if rtwait.total_seconds() > rt['delay']:
+                            self.warning('Retry', json=req)
+                            self.migrate(thispool, req)
+                            todo.remove(req)
+                            rt['nbt'] = rt['nbt'] + 1
+                            rt['last'] = stamp
+                            rt['delay'] = max(rt['nbt'] * rtdelay * rtslow, maxdelay)
             else:
                 self.warning('Inactive', pool=thispool.tag, path=thispool.path)
 
             if not tbusy:
+                # nothing done... so handle sleeping mechanism.
                 nbsleep += 1
+
+                # check if we must exit from current session
+                if autoexit and nbsleep > autoexit:
+                    working = False
+                    self.warning('Stop', idle=autoexit)
+                    continue
+
+                # do not sleep more than the maxsleep config parameter (in seconds).
                 maxsleep = self.config['driver'].get('maxsleep', 10)
                 time.sleep(min(nbsleep, maxsleep))
-                if not silent:
+                if not silent and nbsleep > maxsleep:
                     silent_delay = self.config['driver'].get('silent', 10)
                     if nbsleep - maxsleep >= silent_delay:
+                        # we have been sleeping chunks of maxsleep seconds more that silent_delay times.
                         self.warning('Enter silent mode', after=silent_delay)
                         silent = True
             else:
+                # something has been done in this loop so... reset all sleeping mechanisms.
                 nbsleep = 0
                 silent = False
