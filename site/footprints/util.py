@@ -198,11 +198,9 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
             realstart = '__MINUS__' + realstart[1:]
         if '--' in realstart:
             realstart = realstart.replace('--', '/__MINUS__').replace('-', '/')
-        if realstart.startswith('__MINUS__') and '/' not in realstart:
-            realstart = realstart.replace('-', '/')
+        realstart = realstart.replace('-', '/')
         realstart = realstart.replace('__MINUS__', '-')
-        csplit = '/' if '/' in realstart else '-'
-        actualrange = realstart.split(csplit)
+        actualrange = realstart.split('/')
         realstart = TimeInt(actualrange[0])
 
         if len(actualrange) > 1:
