@@ -75,7 +75,7 @@ class ProGrid(BlackBox):
     """A tool for grib conversion."""
 
     _footprint = dict(
-         info = 'ProGrid utility for grib conversion',
+        info = 'ProGrid utility for grib conversion',
         attr = dict(
             gvar = dict(
                 type     = GenvKey,
@@ -98,7 +98,7 @@ class ProTool(BlackBox):
     """A tool for adding fields on FA objects."""
 
     _footprint = dict(
-         info = 'ProTool utility for field manipulation',
+        info = 'ProTool utility for field manipulation',
         attr = dict(
             gvar = dict(
                 type     = GenvKey,
@@ -121,7 +121,7 @@ class IOAssign(BlackBox):
     """A tool for ODB pools mapping."""
 
     _footprint = dict(
-         info = 'ProTool utility for field manipulation',
+        info = 'ProTool utility for field manipulation',
         attr = dict(
             kind = dict(
                 values   = ['ioassign', 'odbioassign'],
@@ -149,7 +149,7 @@ class Batodb(BlackBox):
     """A tool for conversion to ODB format."""
 
     _footprint = dict(
-         info = 'Batodb conversion program',
+        info = 'Batodb conversion program',
         attr = dict(
             kind = dict(
                 values   = ['bator', 'batodb'],
@@ -172,7 +172,7 @@ class Odbtools(BlackBox):
     """A tool for shuffle operations in ODB format."""
 
     _footprint = dict(
-         info = 'Odbtools shuffle program',
+        info = 'Odbtools shuffle program',
         attr = dict(
             kind = dict(
                 values   = ['odbtools'],
@@ -192,7 +192,7 @@ class Odbtools(BlackBox):
     def command_line(self, dbin='ECMA', dbout='CCMA', npool=1, nslot=1, fcma=None, masksize=None, date=None):
         """Build command line for execution as a single string."""
         cmdline = '-i{0:s} -o{1:s} -b1 -a{2:d} -T{3:d}'.format(dbin.upper(), dbout.upper(), npool, nslot)
-        if fcma is not None :
+        if fcma is not None:
             cmdline = cmdline + ' -F{0:s}'.format(fcma.upper())
         if masksize is not None:
             cmdline = cmdline + ' -n{0:d}'.format(int(masksize))
@@ -205,7 +205,7 @@ class VarBCTool(BlackBox):
     """Well... a single minded binary for a quite explicite purpose."""
 
     _footprint = dict(
-         info = 'VarBC merger program',
+        info = 'VarBC merger program',
         attr = dict(
             kind = dict(
                 values   = ['varbctool'],
@@ -227,7 +227,7 @@ class LopezMix(BlackBox):
     """Some mixture for surface fields during the 3DVar assimilation process."""
 
     _footprint = dict(
-         info = 'Surface mix',
+        info = 'Surface mix',
         attr = dict(
             kind = dict(
                 values   = ['lopezmix', 'lopez', 'mastsurf', 'surfmix'],
@@ -244,3 +244,25 @@ class LopezMix(BlackBox):
     @property
     def realkind(self):
         return 'lopezmix'
+
+
+class MasterDiagPI(BlackBox):
+    """A binary to compute some diagnostics with aromepi's gribs."""
+
+    _footprint = dict(
+        info = 'MasterDiag utility for diagnostics computation',
+        attr = dict(
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_diag_aromepi'
+            ),
+            kind = dict(
+                values   = [ 'masterdiagpi' ],
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'masterdiagpi'
