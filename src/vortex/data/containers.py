@@ -229,7 +229,7 @@ class Virtual(Container):
 
     def exists(self):
         """In case of a virtual container, always true."""
-        return True
+        return self.filled
 
     def iotarget(self):
         """Virtual container's io target is an io descriptor."""

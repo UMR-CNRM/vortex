@@ -93,6 +93,11 @@ class IFSParallel(Parallel):
         super(IFSParallel, self).prepare(rh, opts)
         for optpack in ('drhook', 'gribapi'):
             self.export(optpack)
+        #TODO insert namelist setup in case rh.cmdline is False
+        # See the mpi setup to get an idea of effective namelists inputs
+        # Basis is given by a call to spawn_command_options
+        # The mapping between this dict and actual namelist keys should be done by an extra class
+        # ... and it could be generalized to mpi setup by the way !
 
     def setlink(self, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
         """Set a symbolic link for actual resource playing defined role."""

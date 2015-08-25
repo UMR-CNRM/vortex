@@ -19,6 +19,9 @@ class Fa2Grib(BlindRun):
             kind = dict(
                 values = [ 'fa2grib' ],
             ),
+            timeout = dict(
+                default = 180,
+            ),
             fortnam = dict(
                 optional = True,
                 default  = 'fort.4',
@@ -101,7 +104,7 @@ class Fa2Grib(BlindRun):
             self.system.cat(self.fortnam, output=False)
 
             # Expect the input FP file source to be there...
-            self.grab(r, comment='fullpos source', timeout=180)
+            self.grab(r, comment='fullpos source')
 
             # Finaly set the actual init file
             self.system.softlink(r.container.localpath(), self.fortinput)
