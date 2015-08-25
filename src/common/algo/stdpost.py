@@ -191,3 +191,84 @@ class AddField(BlindRun):
         """Post add cleaning."""
         super(AddField, self).postfix(rh, opts)
         self.system.remove(self.fortnam)
+
+
+class DiagPI(BlindRun):
+    """Execution of diagnotics on grib input."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = [ 'diagpi' ],
+            ),
+        ),
+    )
+
+    def prepare(self, rh, opts):
+        """Set some variables according to target definition."""
+        super(DiagPI, self).prepare(rh, opts)
+        # Tweak the namelist
+        namrh = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
+        for nam in [ x for x in namrh if 'NAM_PARAM' in x.contents ]:
+            logger.info("Substitute the run's date to AAAAMMJJHH namelist entry")
+            nam.contents['NAM_PARAM']['AAAAMMJJHH'] = self.env.YYYYMMDDHH
+            logger.info("Substitute the the number of terms to NECH(0) namelist entry")
+            nam.contents['NAM_PARAM']['NECH(0)'] = 1
+            nam.save()
+        # Prevent DrHook to initialise MPI
+        self.export('drhook_not_mpi')
+
+    def setlink(self, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
+        """Set a symbolic link for actual resource playing defined role."""
+        initrh = [
+            x.rh
+            for x in self.context.sequence.effective_inputs(role=initrole, kind=initkind)
+            if inittest(x.rh)
+        ]
+
+        if not initrh:
+            logger.warning(
+                'Could not find logical role %s with kind %s - assuming already renamed',
+                initrole, initkind
+            )
+
+        if len(initrh) > 1:
+            logger.warning('More than one role %s with kind %s %s', initrole, initkind, initrh)
+
+        if initname is not None:
+            for l in [ x.container.localpath() for x in initrh ]:
+                if not self.system.path.exists(initname):
+                    self.system.symlink(l, initname)
+                    break
+
+        return initrh
+
+    def spawn_hook(self):
+        """Usually a good habit to dump the fort.4 namelist."""
+        super(DiagPI, self).spawn_hook()
+        if self.system.path.exists('fort.4'):
+            self.system.subtitle('{0:s} : dump namelist <fort.4>'.format(self.realkind))
+            self.system.cat('fort.4', output=False)
+
+    def execute(self, rh, opts):
+        """Loop on the various initial conditions provided."""
+        srcrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
+                                                                       kind='gridpoint') ]
+        srcrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
+        for r in srcrh:
+            self.system.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
+                                                                           r.resource.term.fmthm))
+            # Tweak the namelist
+            namrh = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
+            for nam in [ x for x in namrh if 'NAM_PARAM' in x.contents ]:
+                logger.info("Substitute the ressource term to NECH(1) namelist entry")
+                # NB: term should be expressed in minutes
+                nam.contents['NAM_PARAM']['NECH(1)'] = int(r.resource.term)
+                nam.save()
+
+            # Expect the input grib file to be there...
+            self.grab(r, comment='diagpi source')
+
+            # Standard execution
+            opts['loop'] = r.resource.term
+            super(DiagPI, self).execute(rh, opts)
