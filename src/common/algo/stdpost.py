@@ -218,33 +218,9 @@ class DiagPI(BlindRun):
             logger.info("Substitute the the number of terms to NECH(0) namelist entry")
             nam.contents['NAM_PARAM']['NECH(0)'] = 1
             nam.save()
-        # Prevent DrHook to initialise MPI
-        self.export('drhook_not_mpi')
-
-    def setlink(self, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
-        """Set a symbolic link for actual resource playing defined role."""
-        initrh = [
-            x.rh
-            for x in self.context.sequence.effective_inputs(role=initrole, kind=initkind)
-            if inittest(x.rh)
-        ]
-
-        if not initrh:
-            logger.warning(
-                'Could not find logical role %s with kind %s - assuming already renamed',
-                initrole, initkind
-            )
-
-        if len(initrh) > 1:
-            logger.warning('More than one role %s with kind %s %s', initrole, initkind, initrh)
-
-        if initname is not None:
-            for l in [ x.container.localpath() for x in initrh ]:
-                if not self.system.path.exists(initname):
-                    self.system.symlink(l, initname)
-                    break
-
-        return initrh
+        # Prevent DrHook to initialise MPI and setup grib_api
+        for optpack in ('drhook_not_mpi', 'gribapi'):
+            self.export(optpack)
 
     def spawn_hook(self):
         """Usually a good habit to dump the fort.4 namelist."""

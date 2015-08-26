@@ -85,7 +85,7 @@ class AlgoComponent(footprints.FootprintBase):
         if self._promises is None:
             self._promises = [
                 x.rh for x in self.context.sequence.outputs()
-                    if x.rh.provider.expected == True
+                if x.rh.provider.expected
             ]
         return self._promises
 
@@ -95,7 +95,7 @@ class AlgoComponent(footprints.FootprintBase):
         if self._expected is None:
             self._expected = [
                 x.rh for x in self.context.sequence.effective_inputs()
-                    if x.rh.is_expected()
+                if x.rh.is_expected()
             ]
         return self._expected
 
@@ -385,6 +385,30 @@ class AlgoComponent(footprints.FootprintBase):
                 print '{0}  {1:s}: {2:s}'.format(tab, subobj, str(obj))
         print
 
+    def setlink(self, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
+        """Set a symbolic link for actual resource playing defined role."""
+        initrh = [
+            x.rh for x in self.context.sequence.effective_inputs(role=initrole, kind=initkind)
+            if inittest(x.rh)
+        ]
+
+        if not initrh:
+            logger.warning(
+                'Could not find logical role %s with kind %s - assuming already renamed',
+                initrole, initkind
+            )
+
+        if len(initrh) > 1:
+            logger.warning('More than one role %s with kind %s %s', initrole, initkind, initrh)
+
+        if initname is not None:
+            for l in [ x.container.localpath() for x in initrh ]:
+                if not self.system.path.exists(initname):
+                    self.system.symlink(l, initname)
+                    break
+
+        return initrh
+
 
 class Expresso(AlgoComponent):
     """
@@ -494,7 +518,7 @@ class Parallel(AlgoComponent):
 
         if not mpi:
             logger.critical('Component %s could not find any mpitool', self.footprint_clsname())
-            raise AttributeError, 'No valid mpitool attr could be found.'
+            raise AttributeError('No valid mpitool attr could be found.')
 
         mpi.import_basics(self)
         mpi.options = opts.get('mpiopts', dict())
@@ -517,7 +541,8 @@ class Parallel(AlgoComponent):
         args = list()
         if io:
             io.import_basics(self)
-            io.options = { x[3:] : opts[x] for x in opts.keys() if x.startswith('io_') }
+            io.options = {x[3:]: opts[x]
+                          for x in opts.keys() if x.startswith('io_')}
             mpi.options['nn'] = mpi.options['nn'] - io.options['nn']
             io.master = mpi.master
             args = io.mkcmdline(self.spawn_command_line(rh))

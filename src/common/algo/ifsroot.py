@@ -93,35 +93,11 @@ class IFSParallel(Parallel):
         super(IFSParallel, self).prepare(rh, opts)
         for optpack in ('drhook', 'gribapi'):
             self.export(optpack)
-        #TODO insert namelist setup in case rh.cmdline is False
+        # TODO insert namelist setup in case rh.cmdline is False
         # See the mpi setup to get an idea of effective namelists inputs
         # Basis is given by a call to spawn_command_options
         # The mapping between this dict and actual namelist keys should be done by an extra class
         # ... and it could be generalized to mpi setup by the way !
-
-    def setlink(self, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
-        """Set a symbolic link for actual resource playing defined role."""
-        initrh = [
-            x.rh for x in self.context.sequence.effective_inputs(role=initrole, kind=initkind)
-                if inittest(x.rh)
-        ]
-
-        if not initrh:
-            logger.warning(
-                'Could not find logical role %s with kind %s - assuming already renamed',
-                initrole, initkind
-            )
-
-        if len(initrh) > 1:
-            logger.warning('More than one role %s with kind %s %s', initrole, initkind, initrh)
-
-        if initname is not None:
-            for l in [ x.container.localpath() for x in initrh ]:
-                if not self.system.path.exists(initname):
-                    self.system.symlink(l, initname)
-                    break
-
-        return initrh
 
     def execute(self, rh, opts):
         """Standard IFS-Like execution parallel execution."""
