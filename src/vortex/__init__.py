@@ -68,11 +68,13 @@ proxy.objects = footprints.proxy.objects
 
 import tools
 
-def getglove():
+def vortexfpdefaults():
     """Return actual glove, according to current environment."""
-    return dict(glove = tools.env.current().glove)
+    return dict(
+        glove = tools.env.current().glove
+    )
 
-footprints.setup.callback = getglove
+footprints.setup.callback = vortexfpdefaults
 
 # Set a background environment and a root session
 

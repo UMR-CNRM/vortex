@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 """
 A generic multi-purpose fabric for objects with parametrable footprints,
 i.e. some set of keys/values pairs that attributes (possibly optionals) could cover.
@@ -123,7 +125,7 @@ def collected_priorities(tag):
     plevel = priorities.top.level(tag)
     for cl in sorted(set([c for cv in collectors.values() for c in cv.filter_higher_level(plevel)]), key=lambda z: z.fullname()):
         pl = cl.footprint_level()
-        print pl.rjust(10), '-', cl.fullname()
+        print(pl.rjust(10), '-', cl.fullname())
 
 def reset_package_priority(packname, tag):
     """Reset priority level in all collectors for the specified ``package``."""
@@ -775,13 +777,13 @@ class FootprintBase(object):
     def footprint_setattr(self, attr, value, auth=None):
         """Set actual attribute to the value specified. Protected method."""
         if auth != self._fp_auth:
-            raise AttributeError, "can't set attribute without valid authorization"
+            raise AttributeError("Can't set attribute without valid authorization")
         self._attributes[attr] = value
 
     def footprint_delattr(self, attr, auth=None):
         """Delete actual attribute. Protected method."""
         if auth != self._fp_auth:
-            raise AttributeError, "can't set attribute without valid authorization"
+            raise AttributeError("Can't set attribute without valid authorization")
         del self._attributes[attr]
 
     def footprint_clone(self, full=False):

@@ -69,11 +69,13 @@ def gribNames(cutoff, reseau, model, run=None):
         map_suffix = dict(
             zip(
                 range(0, 24, 3),
-                map('r'.__add__, ('CM', 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU'))
+                map('r'.__add__, ('AM', 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU'))
             )
         )
         prefix = 'GRID'
         suffix = map_suffix[reseau]
+        if cutoff == 'short':
+            suffix = 'rCM'
     elif model == 'arpege' and run:
         map_suffix = dict(
             zip(

@@ -42,6 +42,7 @@ knownfmt = set([
 
 # Special classes
 
+
 class DelayedEnvValue(object):
     """
     Store a environment variable and restitue value when needed,
@@ -81,6 +82,10 @@ class FmtInt(int):
 
     def __str__(self):
         return '{0:{fmt}d}'.format(self.__int__(), fmt=self._fmt)
+
+    def export_dict(self):
+        """The pure dict/json output is the raw integer"""
+        return int(self)
 
     def nice(self, value):
         """Returns the specified ``value`` with the format of the current object."""

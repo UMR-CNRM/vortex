@@ -246,8 +246,8 @@ class LFI_Tool(addons.Addon):
         else:
             return self.sh.ftput(source, destination, hostname=hostname, logname=logname)
 
-    fa_ftput = lfi_ftput =_std_ftput
-    fa_rawftput = lfi_rawftput =_std_ftput
+    fa_ftput = lfi_ftput = _std_ftput
+    fa_rawftput = lfi_rawftput = _std_ftput
 
     def _std_remove(self, *args):
         """Remove (possibly) multi lfi files."""

@@ -331,28 +331,32 @@ class Handler(object):
         """Method to retrieve through the provider the resource and feed the current container."""
         rst = False
         if self.complete:
-            store = self.store
-            if store:
-                logger.debug('Get resource %s at %s from %s', self, self.lasturl, store)
-                rst = store.get(
-                    self.uridata,
-                    self.container.iotarget(),
-                    self.mkopts(dict(rhandler = self.as_dict()), extras)
-                )
-                self.container.updfill(rst)
-                self.history.append(store.fullname(), 'get', rst)
-                if rst:
-                    if store.delayed:
-                        self.updstage('expected')
-                        logger.info('Resource <%s> is expected', self.container.iotarget())
-                    else:
-                        self.updstage('get')
-                        for hook_name in sorted(self.hooks.keys()):
-                            hook_func, hook_args = self.hooks[hook_name]
-                            #logger.info('HOOK after get <%s(%s)>' % (hook_func, hook_args))
-                            hook_func(sessions.current(), self, *hook_args)
+            if self.alternate and self.container.exists():
+                logger.info('Alternate <%s> exists', self.alternate)
+                rst = True
             else:
-                logger.error('Could not find any store to get %s', self.lasturl)
+                store = self.store
+                if store:
+                    logger.debug('Get resource %s at %s from %s', self, self.lasturl, store)
+                    rst = store.get(
+                        self.uridata,
+                        self.container.iotarget(),
+                        self.mkopts(dict(rhandler = self.as_dict()), extras)
+                    )
+                    self.container.updfill(rst)
+                    self.history.append(store.fullname(), 'get', rst)
+                    if rst:
+                        if store.delayed:
+                            self.updstage('expected')
+                            logger.info('Resource <%s> is expected', self.container.iotarget())
+                        else:
+                            self.updstage('get')
+                            for hook_name in sorted(self.hooks.keys()):
+                                hook_func, hook_args = self.hooks[hook_name]
+                                #logger.info('HOOK after get <%s(%s)>' % (hook_func, hook_args))
+                                hook_func(sessions.current(), self, *hook_args)
+                else:
+                    logger.error('Could not find any store to get %s', self.lasturl)
         else:
             logger.error('Could not get an incomplete rh %s', self)
         return rst
