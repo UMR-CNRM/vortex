@@ -25,6 +25,7 @@ from vortex.tools.env       import Environment
 from vortex.tools.net       import StdFtp
 from vortex.util.structs    import History
 from vortex.util.decorators import nicedeco
+from vortex.util.interrupt  import SignalInterruptHandler
 
 
 #: Pre-compiled regex to check a none str value
@@ -630,6 +631,8 @@ class OSExtended(System):
         self.ftputcmd = kw.pop('ftputcmd', None)
         self.ftgetcmd = kw.pop('ftgetcmd', None)
         super(OSExtended, self).__init__(*args, **kw)
+        # Intialiase the signal handler object
+        self._signal_intercept_init()
 
     def target(self, **kw):
         """Provide a default target according to system own attributes."""
@@ -1196,6 +1199,18 @@ class OSExtended(System):
             x for x in self.cat(*lookfiles)
                 if re.search('\S', x) and re.search('[^\'\"\)\],\s]', x)
         ])
+
+    def _signal_intercept_init(self):
+        """Initialise the signal handler object (but do not activate it)."""
+        self._sighandler = SignalInterruptHandler()
+
+    def signal_intercept_on(self):
+        """Activate the signal catching."""
+        self._sighandler.activate()
+
+    def signal_intercept_off(self):
+        """Deactivate the signal catching."""
+        self._sighandler.deactivate()
 
 
 class Python26(object):
