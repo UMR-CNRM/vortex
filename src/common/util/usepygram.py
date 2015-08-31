@@ -11,7 +11,10 @@ in EPyGrAM package.
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-import epygram
+try:
+    import epygram
+except ImportError:
+    pass
 import numpy
 
 footprints.proxy.containers.discard_package('epygram')
