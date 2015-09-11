@@ -114,8 +114,8 @@ def setup(**kw):
 
     t.env.RUNDIR = kw.get('rundir', mkdtemp(prefix=t.glove.tag + '-'))
     t.sh.cd(t.env.RUNDIR, create=True)
+    t.sh.chmod(t.env.RUNDIR, 0755)
     t.rundir = t.sh.getcwd()
-
     logger.info('Current rundir <%s>', t.rundir)
 
     #--------------------------------------------------------------------------------------------------
