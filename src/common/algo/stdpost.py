@@ -115,7 +115,11 @@ class Fa2Grib(BlindRun):
 
             # Freeze the current output
             if self.system.path.exists(thisoutput):
-                self.system.move(thisoutput, 'GRIB{0:s}+{1:s}'.format(r.resource.geometry.area, r.resource.term.fmthm))
+                actualname = 'GRIB{0:s}+{1:s}'.format(r.resource.geometry.area, r.resource.term.fmthm)
+                self.system.move(thisoutput, actualname)
+                expected = [ x for x in self.promises if x.container.localpath() == actualname ]
+                for thispromise in expected:
+                    thispromise.put(incache=True)
             else:
                 logger.warning('Missing some grib output for domain %s term %s',
                                r.resource.geometry.area, r.resource.term.fmthm)
