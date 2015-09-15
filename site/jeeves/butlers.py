@@ -623,11 +623,12 @@ class Jeeves(BaseDaemon, HouseKeeping):
     def read_config(self, filename):
         """Parse a configuration file and try to evaluate values as best as we can."""
         config = dict(driver=dict(pools=[]))
-        if os.path.exists(self.inifile):
-            self.absfile = os.path.abspath(self.inifile)
-            self.info('Configuration', path=self.absfile)
+        if os.path.exists(filename):
+            absfile = os.path.abspath(filename)
+            self.info('Configuration', path=absfile)
             cfg = SafeConfigParser()
-            cfg.read(self.absfile)
+            cfg.read(absfile)
+
             self.info('Configuration', sections=','.join(cfg.sections()))
             for section in cfg.sections():
                 if section not in config:
@@ -637,10 +638,10 @@ class Jeeves(BaseDaemon, HouseKeeping):
                         v = literal_eval(v)
                     except (SyntaxError, ValueError):
                         if k.startswith('options') or ',' in v:
-                            v = [ x for x in v.replace(' ', '').split(',') ]
+                            v = [ x for x in v.replace('\n','').replace(' ', '').split(',') ]
                     config[section][k.lower()] = v
         else:
-            self.error('No configuration', path=self.inifile)
+            self.error('No configuration', path=filename)
         return config
 
     def mkpools(self, clear=False):
@@ -921,9 +922,10 @@ class Jeeves(BaseDaemon, HouseKeeping):
 
         # initiate retry tracking
         self.redo = dict()
-        maxdelay = self.config['driver'].get('maxdelay', 24 * 3600)
-        rtdelay  = self.config['driver'].get('rtdelay', 60)
-        rtslow   = self.config['driver'].get('rtslow', 10)
+        rtinit = self.config['driver'].get('rtinit', 60)
+        rtslow = self.config['driver'].get('rtslow', 2)
+        rtceil = self.config['driver'].get('rtceil', 24 * 3600)
+        rtstop = self.config['driver'].get('rtstop', 24 * 3600 * 5)
 
         tprev = datetime.now()
         tbusy = False
@@ -975,21 +977,28 @@ class Jeeves(BaseDaemon, HouseKeeping):
             if thispool.active:
                 self.debug('Processing', pool=thispool.tag, path=thispool.path)
                 if thispool.contents:
-                    tbusy = True
                     todo = sorted(thispool.contents)
                     # look for previous retry requests
                     stamp = datetime.now()
                     for req in todo[:]:
-                        self.redo.setdefault(req, dict(first=stamp, last=stamp, delay=0, nbt=0))
+                        self.redo.setdefault(req, dict(first=stamp, last=stamp, delay=rtinit, nbt=0))
                         rt = self.redo.get(req)
-                        rtwait = stamp - rt['last']
-                        if rtwait.total_seconds() > rt['delay']:
-                            self.warning('Retry', json=req)
+                        rttotal = (stamp - rt['first']).total_seconds()
+                        rtlast  = (stamp - rt['last']).total_seconds()
+                        if rttotal > rtstop:
+                            tbusy = True
+                            self.warning('Abandonning retry', json=req, nbt=rt['nbt'], totaltime=rttotal)
+                            self.migrate(thispool, req, target='error')
+                            todo.remove(req)
+                            del self.redo[req]
+                        elif rtlast > rt['delay']:
+                            tbusy = True
+                            rt['nbt'] += 1
+                            rt['last'] = stamp
+                            rt['delay'] = min(rtceil, max(1, int(rt['delay'] * rtslow)))
+                            self.warning('Retry', json=req, nbt=rt['nbt'], nextdelay=rt['delay'])
                             self.migrate(thispool, req)
                             todo.remove(req)
-                            rt['nbt'] = rt['nbt'] + 1
-                            rt['last'] = stamp
-                            rt['delay'] = max(rt['nbt'] * rtdelay * rtslow, maxdelay)
             else:
                 self.warning('Inactive', pool=thispool.tag, path=thispool.path)
 
