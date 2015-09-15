@@ -7,7 +7,7 @@ Default action classes must provide four methods: on, off, status, execute.
 The on, off and status functions must return a boolean value reflecting the
 status of the action. As far as the execute function is concerned,
 it must deal with the data (given to realize the action) and the action
-to be processed: e.g. mail, sendbdap, routing, alarm.
+to be processed: e.g. mail, routing, alarm.
 """
 
 #: No automatic export

@@ -13,6 +13,7 @@ logger = footprints.loggers.getLogger(__name__)
 import vortex
 from vortex.algo  import mpitools
 from vortex.tools import date
+from vortex.syntax.stdattrs import DelayedEnvValue
 
 
 class AlgoComponent(footprints.FootprintBase):
@@ -488,6 +489,10 @@ class Parallel(AlgoComponent):
                 optional = True,
                 default  = None,
             ),
+            timeoutrestart = dict(
+                optional = True,
+                default  = DelayedEnvValue('MPI_INIT_TIMEOUT_RESTART', 2),
+            ),
         )
     )
 
@@ -547,6 +552,7 @@ class Parallel(AlgoComponent):
             io.master = mpi.master
             args = io.mkcmdline(self.spawn_command_line(rh))
 
+        mpi.options['init-timeout-restart'] = self.timeoutrestart
         args[:0] = mpi.mkcmdline(self.spawn_command_line(rh))
         logger.info('Run in parallel mode %s', args)
 

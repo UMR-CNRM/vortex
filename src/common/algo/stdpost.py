@@ -115,7 +115,11 @@ class Fa2Grib(BlindRun):
 
             # Freeze the current output
             if self.system.path.exists(thisoutput):
-                self.system.move(thisoutput, 'GRIB{0:s}+{1:s}'.format(r.resource.geometry.area, r.resource.term.fmthm))
+                actualname = 'GRIB{0:s}+{1:s}'.format(r.resource.geometry.area, r.resource.term.fmthm)
+                self.system.move(thisoutput, actualname)
+                expected = [ x for x in self.promises if x.container.localpath() == actualname ]
+                for thispromise in expected:
+                    thispromise.put(incache=True)
             else:
                 logger.warning('Missing some grib output for domain %s term %s',
                                r.resource.geometry.area, r.resource.term.fmthm)
@@ -210,14 +214,6 @@ class DiagPI(BlindRun):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(DiagPI, self).prepare(rh, opts)
-        # Tweak the namelist
-        namrh = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
-        for nam in [ x for x in namrh if 'NAM_PARAM' in x.contents ]:
-            logger.info("Substitute the run's date to AAAAMMJJHH namelist entry")
-            nam.contents['NAM_PARAM']['AAAAMMJJHH'] = self.env.YYYYMMDDHH
-            logger.info("Substitute the the number of terms to NECH(0) namelist entry")
-            nam.contents['NAM_PARAM']['NECH(0)'] = 1
-            nam.save()
         # Prevent DrHook to initialise MPI and setup grib_api
         for optpack in ('drhook_not_mpi', 'gribapi'):
             self.export(optpack)
@@ -240,6 +236,10 @@ class DiagPI(BlindRun):
             # Tweak the namelist
             namrh = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
             for nam in [ x for x in namrh if 'NAM_PARAM' in x.contents ]:
+                logger.info("Substitute the date (%s) to AAAAMMJJHH namelist entry", r.resource.date.ymdh)
+                nam.contents['NAM_PARAM']['AAAAMMJJHH'] = r.resource.date.ymdh
+                logger.info("Substitute the the number of terms to NECH(0) namelist entry")
+                nam.contents['NAM_PARAM']['NECH(0)'] = 1
                 logger.info("Substitute the ressource term to NECH(1) namelist entry")
                 # NB: term should be expressed in minutes
                 nam.contents['NAM_PARAM']['NECH(1)'] = int(r.resource.term)
