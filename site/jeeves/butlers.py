@@ -85,8 +85,17 @@ class GentleTalk(object):
     def _msgfmt(self, level, msg, args, kw):
         """Formatting log message as `msg <key:value> ...` string."""
         if self.levels.index(level.upper()) >= self.loglevel:
-            msg = str(msg) + ' ' + ' '.join([
-                '<' + k + ':' + str(v) + '>' for k, v in kw.items()
+            # older messages come with the '%' format syntax, newer with {}
+            if args:
+                if '%' in str(msg):
+                    msg = str(msg) % args
+                else:
+                    msg = str(msg).format(*args)
+            else:
+                msg = str(msg)
+            msg += ' ' + ' '.join([
+                '<' + k + ':' + str(v) + '>'
+                for k, v in kw.items()
             ])
             thisprocess = multiprocessing.current_process()
             mutex = multiprocessing.Lock()
@@ -117,6 +126,21 @@ class GentleTalk(object):
 
     def critical(self, msg, *args, **kw):
         return self._msgfmt('critical', msg, args, kw)
+
+
+class GentleTalkMono(GentleTalk):
+    """Monochrome version of the GentleTalk interface."""
+
+    DEBUG    = ''
+    INFO     = ''
+    WARNING  = ''
+    ERROR    = ''
+    CRITICAL = ''
+    ENDC     = ''
+    BOLD     = ''
+    HEADER   = ''
+    OKBLUE   = ''
+    OKGREEN  = ''
 
 
 class ExitHandler(object):
@@ -330,7 +354,7 @@ class BaseDaemon(object):
     @property
     def logger(self):
         if self._logger is None:
-            self._logger = GentleTalk()
+            self._logger = GentleTalkMono(loglevel=self.loglevel)
         return self._logger
 
     def debug(self, msg, **kw):

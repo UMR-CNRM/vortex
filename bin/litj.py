@@ -21,8 +21,22 @@ from jeeves.butlers import Jeeves
 
 def get_options():
     default_tag = 'test'
+    default_level = 'INFO'
     description = "Leave it to Jeeves - A basic launching interface to Jeeves' services !"
     parser = argparse.ArgumentParser(description=description)
+    parser.add_argument(
+        '-f',
+        '--foreground',
+        help="run in the foreground( don't daemonize)",
+        action='store_true',
+    )
+    parser.add_argument(
+        '-l',
+        '--loglevel',
+        help='log level of the logger (defaults to {})'.format(default_level),
+        default=default_level,
+        choices=['DEBUG', 'INFO', 'WARNING'],
+    )
     parser.add_argument(
         'action',
         help='desired action',
@@ -41,10 +55,10 @@ if __name__ == "__main__":
 
     opts = get_options()
 
-    j = Jeeves(tag=opts.tagname)
+    j = Jeeves(tag=opts.tagname, loglevel=opts.loglevel)
 
     if opts.action == 'start':
-        j.start(mkdaemon=True)
+        j.start(mkdaemon=not opts.foreground)
 
     elif opts.action == 'stop':
         j.stop()
