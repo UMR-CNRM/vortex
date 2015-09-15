@@ -85,8 +85,17 @@ class GentleTalk(object):
     def _msgfmt(self, level, msg, args, kw):
         """Formatting log message as `msg <key:value> ...` string."""
         if self.levels.index(level.upper()) >= self.loglevel:
-            msg = str(msg) + ' ' + ' '.join([
-                '<' + k + ':' + str(v) + '>' for k, v in kw.items()
+            # older messages come with the '%' format syntax, newer with {}
+            if args:
+                if '%' in str(msg):
+                    msg = str(msg) % args
+                else:
+                    msg = str(msg).format(*args)
+            else:
+                msg = str(msg)
+            msg += ' ' + ' '.join([
+                '<' + k + ':' + str(v) + '>'
+                for k, v in kw.items()
             ])
             thisprocess = multiprocessing.current_process()
             mutex = multiprocessing.Lock()
@@ -117,6 +126,21 @@ class GentleTalk(object):
 
     def critical(self, msg, *args, **kw):
         return self._msgfmt('critical', msg, args, kw)
+
+
+class GentleTalkMono(GentleTalk):
+    """Monochrome version of the GentleTalk interface."""
+
+    DEBUG    = ''
+    INFO     = ''
+    WARNING  = ''
+    ERROR    = ''
+    CRITICAL = ''
+    ENDC     = ''
+    BOLD     = ''
+    HEADER   = ''
+    OKBLUE   = ''
+    OKGREEN  = ''
 
 
 class ExitHandler(object):
@@ -330,7 +354,7 @@ class BaseDaemon(object):
     @property
     def logger(self):
         if self._logger is None:
-            self._logger = GentleTalk()
+            self._logger = GentleTalkMono(loglevel=self.loglevel)
         return self._logger
 
     def debug(self, msg, **kw):
@@ -599,11 +623,12 @@ class Jeeves(BaseDaemon, HouseKeeping):
     def read_config(self, filename):
         """Parse a configuration file and try to evaluate values as best as we can."""
         config = dict(driver=dict(pools=[]))
-        if os.path.exists(self.inifile):
-            self.absfile = os.path.abspath(self.inifile)
-            self.info('Configuration', path=self.absfile)
+        if os.path.exists(filename):
+            absfile = os.path.abspath(filename)
+            self.info('Configuration', path=absfile)
             cfg = SafeConfigParser()
-            cfg.read(self.absfile)
+            cfg.read(absfile)
+
             self.info('Configuration', sections=','.join(cfg.sections()))
             for section in cfg.sections():
                 if section not in config:
@@ -613,10 +638,10 @@ class Jeeves(BaseDaemon, HouseKeeping):
                         v = literal_eval(v)
                     except (SyntaxError, ValueError):
                         if k.startswith('options') or ',' in v:
-                            v = [ x for x in v.replace(' ', '').split(',') ]
+                            v = [ x for x in v.replace('\n','').replace(' ', '').split(',') ]
                     config[section][k.lower()] = v
         else:
-            self.error('No configuration', path=self.inifile)
+            self.error('No configuration', path=filename)
         return config
 
     def mkpools(self, clear=False):
@@ -742,6 +767,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         if result:
             pnum = None
             prc = None
+            pvalue = None
             try:
                 pnum, prc, pvalue = result
                 if prc:
@@ -782,10 +808,10 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 jpool,
                 jfile,
                 self.ppool.apply_async(
-                    func,
-                    (pnum, ask, self.config.copy(), self.logger.clone(pnum)),
-                    opts,
-                    self.async_callback
+                    func=func,
+                    args=(pnum, ask, self.config.copy(), self.logger.clone(pnum)),
+                    kwds=opts,
+                    callback=self.async_callback
                 )
             )
         except StandardError as trouble:
@@ -797,72 +823,79 @@ class Jeeves(BaseDaemon, HouseKeeping):
 
     def process_request(self, pool, jfile):
         """Process a standard request."""
-        rc = False
-        dispatched = False
+
         ask = self.json_load(pool, jfile)
-        if ask is not None:
-            tp = self.migrate(pool, jfile)
-            if tp is not None:
-                rc = True
-                rctarget = 'error'
-                if ask.todo in self.config['driver'].get('actions', tuple()):
-                    action = 'action_' + ask.todo
-                    if action in self.config:
-                        acfg = self.config[action]
-                    else:
-                        self.warning('Undefined', action=ask.todo)
-                        acfg = dict(
-                            dispatch = False,
-                            module   = 'internal',
-                            entry    = ask.todo,
-                        )
-                    if acfg.get('active', True):
-                        thismod  = acfg.get('module', 'internal')
-                        thisname = acfg.get('entry', ask.todo)
-                        self.info('Processing',
-                            action   = ask.todo,
-                            function = thisname,
-                            module   = thismod,
-                        )
-                        if thismod == 'internal':
-                            thisfunc = getattr(self, 'internal_' + thisname, None)
-                        else:
-                            thismobj = self.import_module(thismod)
-                            if thismobj:
-                                thisfunc = getattr(thismobj, thisname, None)
-                            else:
-                                self.error('Import failed', module=acfg.get('module'))
-                                thisfunc = None
-                                rc = False
-                        if thisfunc is None or not callable(thisfunc):
-                            self.error('Not a function', entry=thisname)
-                            rc = False
-                        else:
-                            if acfg.get('dispatch', False):
-                                rc = self.dispatch(thisfunc, ask, acfg, tp.tag, jfile)
-                                dispatched = True
-                            else:
-                                try:
-                                    rc = apply(thisfunc, (ask,), ask.opts)
-                                except StandardError as trouble:
-                                    self.error('Trouble', action=ask.todo, error=trouble)
-                                    rc = False
-                    else:
-                        self.warning('Inactive', action=ask.todo)
-                        rctarget = 'ignore'
+        if ask is None:
+            return False
+
+        # tp = tag of the pool the jfile was migrated to
+        tp = self.migrate(pool, jfile)
+        if tp is None:
+            return False
+
+        rc = True
+        dispatched = False
+        rctarget = 'error'
+        if ask.todo in self.config['driver'].get('actions', tuple()):
+            action = 'action_' + ask.todo
+            if action in self.config:
+                acfg = self.config[action]
+            else:
+                self.warning('Undefined', action=ask.todo)
+                acfg = dict(
+                    dispatch = False,
+                    module   = 'internal',
+                    entry    = ask.todo,
+                )
+            if acfg.get('active', True):
+                thismod  = acfg.get('module', 'internal')
+                thisname = acfg.get('entry', ask.todo)
+                self.info('Processing',
+                    action   = ask.todo,
+                    function = thisname,
+                    module   = thismod,
+                )
+                if thismod == 'internal':
+                    thisfunc = getattr(self, 'internal_' + thisname, None)
                 else:
-                    self.error('Unregistered', action=ask.todo)
+                    thismobj = self.import_module(thismod)
+                    if thismobj:
+                        thisfunc = getattr(thismobj, thisname, None)
+                    else:
+                        self.error('Import failed', module=acfg.get('module'))
+                        thisfunc = None
+                        rc = False
+                if thisfunc is None or not callable(thisfunc):
+                    self.error('Not a function', entry=thisname)
                     rc = False
-                    rctarget = 'ignore'
-                if rc:
-                    if not dispatched:
-                        self.migrate(tp, jfile)
                 else:
-                    self.migrate(tp, jfile, target=rctarget)
+                    if acfg.get('dispatch', False):
+                        rc = self.dispatch(thisfunc, ask, acfg, tp.tag, jfile)
+                        dispatched = True
+                    else:
+                        try:
+                            rc = apply(thisfunc, (ask,), ask.opts)
+                        except StandardError as trouble:
+                            self.error('Trouble', action=ask.todo, error=trouble)
+                            rc = False
+            else:
+                self.warning('Inactive', action=ask.todo)
+                rctarget = 'ignore'
+        else:
+            self.error('Unregistered', action=ask.todo)
+            rc = False
+            rctarget = 'ignore'
+
+        if rc:
+            if not dispatched:
+                self.migrate(tp, jfile)
+        else:
+            self.migrate(tp, jfile, target=rctarget)
+
         return rc
 
     def exit_callbacks(self):
-        """Return a list of callbacks to be launch before daemon exit."""
+        """Return a list of callbacks to be launched before daemon exit."""
         return (self.multi_stop, self.bye)
 
     def run(self):
@@ -881,13 +914,18 @@ class Jeeves(BaseDaemon, HouseKeeping):
 
         # setup default autoexit mode, once for all
         autoexit = self.config['driver'].get('autoexit', 0)
-        self.info('Automatic', exit=autoexit)
+        self.info('Automatic', autoexit=autoexit)
+
+        # setup silent mode parameters
+        maxsleep     = self.config['driver'].get('maxsleep', 10)
+        silent_delay = self.config['driver'].get('silent', 10)
 
         # initiate retry tracking
         self.redo = dict()
-        maxdelay = self.config['driver'].get('maxdelay', 24 * 3600)
-        rtdelay  = self.config['driver'].get('rtdelay', 60)
-        rtslow   = self.config['driver'].get('rtslow', 10)
+        rtinit = self.config['driver'].get('rtinit', 60)
+        rtslow = self.config['driver'].get('rtslow', 2)
+        rtceil = self.config['driver'].get('rtceil', 24 * 3600)
+        rtstop = self.config['driver'].get('rtstop', 24 * 3600 * 5)
 
         tprev = datetime.now()
         tbusy = False
@@ -899,15 +937,17 @@ class Jeeves(BaseDaemon, HouseKeeping):
 
             tnext = datetime.now()
             ttime = ( tnext - tprev ).total_seconds()
+            if not silent:
+                self.info('Loop', previous=ttime, busy=tbusy, nbsleep=nbsleep)
             tprev = tnext
             tbusy = False
-            if not silent:
-                self.info('Loop', previous=ttime, busy=tbusy)
 
             # do some cleaning to clear the place before real work
             for pool in pools.values():
-                self.debug('Inspect', pool=pool.tag, path=pool.path, size=len(pool.contents), active=pool.active)
-                pool.clean()
+                size=len(pool.contents)
+                if size:
+                    self.debug('Inspect', pool=pool.tag, path=pool.path, size=size, active=pool.active)
+                    pool.clean()
 
             # process the input pool first
             thispool = pools.get(tag='in')
@@ -937,21 +977,28 @@ class Jeeves(BaseDaemon, HouseKeeping):
             if thispool.active:
                 self.debug('Processing', pool=thispool.tag, path=thispool.path)
                 if thispool.contents:
-                    tbusy = True
                     todo = sorted(thispool.contents)
                     # look for previous retry requests
                     stamp = datetime.now()
                     for req in todo[:]:
-                        self.redo.setdefault(req, dict(first=stamp, last=stamp, delay=0, nbt=0))
+                        self.redo.setdefault(req, dict(first=stamp, last=stamp, delay=rtinit, nbt=0))
                         rt = self.redo.get(req)
-                        rtwait = stamp - rt['last']
-                        if rtwait.total_seconds() > rt['delay']:
-                            self.warning('Retry', json=req)
+                        rttotal = (stamp - rt['first']).total_seconds()
+                        rtlast  = (stamp - rt['last']).total_seconds()
+                        if rttotal > rtstop:
+                            tbusy = True
+                            self.warning('Abandonning retry', json=req, nbt=rt['nbt'], totaltime=rttotal)
+                            self.migrate(thispool, req, target='error')
+                            todo.remove(req)
+                            del self.redo[req]
+                        elif rtlast > rt['delay']:
+                            tbusy = True
+                            rt['nbt'] += 1
+                            rt['last'] = stamp
+                            rt['delay'] = min(rtceil, max(1, int(rt['delay'] * rtslow)))
+                            self.warning('Retry', json=req, nbt=rt['nbt'], nextdelay=rt['delay'])
                             self.migrate(thispool, req)
                             todo.remove(req)
-                            rt['nbt'] = rt['nbt'] + 1
-                            rt['last'] = stamp
-                            rt['delay'] = max(rt['nbt'] * rtdelay * rtslow, maxdelay)
             else:
                 self.warning('Inactive', pool=thispool.tag, path=thispool.path)
 
@@ -966,10 +1013,8 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     continue
 
                 # do not sleep more than the maxsleep config parameter (in seconds).
-                maxsleep = self.config['driver'].get('maxsleep', 10)
                 time.sleep(min(nbsleep, maxsleep))
                 if not silent and nbsleep > maxsleep:
-                    silent_delay = self.config['driver'].get('silent', 10)
                     if nbsleep - maxsleep >= silent_delay:
                         # we have been sleeping chunks of maxsleep seconds more that silent_delay times.
                         self.warning('Enter silent mode', after=silent_delay)

@@ -56,7 +56,7 @@ LOGIN_NODES = [
 # default Formatter for alarm logfile output
 DEFAULT_ALARMLOG_FORMATTER = logging.Formatter(
     fmt     = '[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
-    datefmt = '%Y/%d/%m-%H:%M:%S',
+    datefmt = '%Y/%m/%d-%H:%M:%S',
 )
 
 # Syslog formatting *must* be compatible with RFC 5424., e.g.

@@ -310,7 +310,7 @@ class LiteralParser(object):
         elif isinstance(value, complex ): return self.encode_complex(value)
         elif isinstance(value, str     ): return self.encode_character(value)
         else:
-            raise ValueError("Type %s is cannot be FORTRAN encoded" % type(value))
+            raise ValueError("Type %s cannot be FORTRAN encoded" % type(value))
 
 
 class NamelistBlock(object):
