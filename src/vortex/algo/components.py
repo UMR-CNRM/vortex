@@ -501,7 +501,7 @@ class Parallel(AlgoComponent):
         """
         Run the specified resource handler through the `mitool` launcher,
         using the resource command_line method as args.
-        A argument named `mpiopts` could be provided as a dictionary.
+        An argument named `mpiopts` could be provided as a dictionary.
         """
         mpi = self.mpitool
         if not mpi:

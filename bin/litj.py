@@ -6,12 +6,13 @@ Leave it to Jeeves
 A basic launching interface to Jeeves' services !
 """
 
-import os, sys
+import os
+import sys
 import argparse
 
 rootpath = os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
-incvortex = [ os.path.realpath(x) for x in sys.path if 'vortex' in x ]
-for thispath in [ os.path.join(rootpath, x) for x in ('site', 'src') ]:
+incvortex = [os.path.realpath(x) for x in sys.path if 'vortex' in x]
+for thispath in [os.path.join(rootpath, x) for x in ('site', 'src')]:
     if thispath not in incvortex:
         print 'ADD to sys.path', thispath
         sys.path.append(thispath)
