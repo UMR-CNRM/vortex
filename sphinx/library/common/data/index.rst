@@ -9,14 +9,16 @@ Data resources
 
    data
 
+   assim
    binaries
    boundaries
    climfiles
    consts
    diagnostics
+   fields
    gridfiles
    logs
-   obs
    modelstates
    namelists
+   obs
    surfex

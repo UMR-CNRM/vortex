@@ -201,7 +201,7 @@ class AddField(BlindRun):
 
 
 class DiagPI(BlindRun):
-    """Execution of diagnotics on grib input."""
+    """Execution of diagnotics on grib input (Arome-PI's specific)."""
 
     _footprint = dict(
         attr = dict(
@@ -226,7 +226,7 @@ class DiagPI(BlindRun):
             self.system.cat('fort.4', output=False)
 
     def execute(self, rh, opts):
-        """Loop on the various initial conditions provided."""
+        """Loop on the various grib files provided."""
         srcrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
                                                                        kind='gridpoint') ]
         srcrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))

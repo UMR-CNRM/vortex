@@ -1,8 +1,8 @@
-:mod:`jeeves.butlers` --- Basic and Jeeves daemons
-==================================================
+:mod:`common.data.assim` --- Common data assimilation ressources
+================================================================
 
-.. automodule:: jeeves.butlers
-   :synopsis: Defines default daemons for multi-purpose requests handling
+.. automodule:: common.data.assim
+   :synopsis: Ressources used by NWP data assimilation systems
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -16,37 +16,43 @@ Package
 Classes
 -------
 
-.. autoclass:: GentleTalk
+.. autoclass:: AnalysedStateMinim
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: StartingPointMinim
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: InternalMinim
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: GentleTalkMono
+.. autoclass:: Precev
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: PrecevMap
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: ExitHandler
+.. autoclass:: RawControlVector
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: BackgroundStdError
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: PidFile
+.. autoclass::  Wavelet
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-.. autoclass:: BaseDaemon
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: HouseKeeping
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Jeeves
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
+   

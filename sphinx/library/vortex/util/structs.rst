@@ -36,3 +36,7 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ShellEncoder
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

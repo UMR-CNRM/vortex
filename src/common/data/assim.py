@@ -150,6 +150,7 @@ class RawControlVector(GeoFlowResource):
         """OLIVE specific naming convention."""
         return 'MININCR'
 
+
 class InternalMinim(GeoFlowResource):
     """
     Generic class for resources internal to minimisation.
@@ -186,7 +187,7 @@ class InternalMinim(GeoFlowResource):
 
 class StartingPointMinim(InternalMinim):
     """
-    Guess as output of the minimisation.
+    Guess as reprocessed by the minimisation.
     """
 
     _footprint = dict(
@@ -209,7 +210,7 @@ class StartingPointMinim(InternalMinim):
 
 class AnalysedStateMinim(InternalMinim):
     """
-    Analysed state as output of the minimisation.
+    Analysed state as produced by the minimisation.
     """
 
     _footprint = dict(
@@ -232,7 +233,7 @@ class AnalysedStateMinim(InternalMinim):
 
 class PrecevMap(FlowResource):
     """
-    Map of the precondionning eigenvectors as produced bt minimisation.
+    Map of the precondionning eigenvectors as produced by minimisation.
     """
 
     _footprint = dict(
@@ -266,7 +267,7 @@ class PrecevMap(FlowResource):
 
 class Precev(FlowResource):
     """
-    Low resolution guess as output of the minimisation.
+    Precondionning eigenvectors as produced by minimisation.
     """
 
     _footprint = dict(

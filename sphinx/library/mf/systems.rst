@@ -44,12 +44,3 @@ Old NEC system and targets
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-
-Local systems
--------------
-
-.. autoclass:: Macosx
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical

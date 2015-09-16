@@ -7,8 +7,6 @@ Data resources
 .. toctree::
    :maxdepth: 1
 
-   data
+   algo
 
-   containers
-   providers
-   stores
+   misc

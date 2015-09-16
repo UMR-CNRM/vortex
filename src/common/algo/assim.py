@@ -16,7 +16,12 @@ from .ifsroot import IFSParallel
 
 
 class MergeVarBC(Parallel):
-    """Nothing really specific."""
+    """
+    Merge two VarBC files.
+
+    The VarBC file resulting from the MergeVarBC contains all the items of the
+    first VarBC file plus any new item that would be present in the second file.
+    """
 
     _footprint = dict(
         attr = dict(
@@ -64,7 +69,7 @@ class Anamix(IFSParallel):
 
 
 class SstAnalysis(IFSParallel):
-    """SST Analysis"""
+    """SST (Sea Surface Temperature) Analysis"""
 
     _footprint = dict(
         attr = dict(
@@ -484,7 +489,7 @@ class Trajectory(IFSODBCCMA):
 
 
 class PseudoTrajectory(BlindRun):
-    """Some kind of mysterious Lopez Mix..."""
+    """Copy a few fields from the Guess file into the Analysis file"""
     _footprint = dict(
         attr = dict(
             kind = dict(

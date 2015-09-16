@@ -16,12 +16,7 @@ Package
 Classes
 -------
 
-.. autoclass:: MergeVarBC
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: IFSODB
+.. autoclass:: Anamix
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -31,7 +26,17 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Screening
+.. autoclass:: IFSODB
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IFSODBCCMA
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MergeVarBC
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -45,3 +50,24 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: SeaIceAnalysis
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Screening
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Trajectory
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SstAnalysis
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   

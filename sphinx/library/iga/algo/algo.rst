@@ -1,21 +1,20 @@
-:mod:`iga.data` --- TODO Module Header
+:mod:`iga.algo` --- TODO Module Header
 ======================================
 
-.. automodule:: iga.data
+.. automodule:: iga.algo
    :synopsis: TODO Module Synopsis
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.7
+.. versionadded:: 0.9
 
 Package
 -------
 
 .. autodata:: __all__
 
+
 Included Modules
 ----------------
 
-* :mod:`iga.data.providers`
-* :mod:`iga.data.providers`
-* :mod:`iga.data.stores`
+* :mod:`iga.algo.misc`

@@ -13,6 +13,8 @@ Package
 
 .. autodata:: __all__
 
-Classes
+Modules
 -------
 
+* :mod:`common.tools.igastuff`
+* :mod:`common.tools.shortcuts`

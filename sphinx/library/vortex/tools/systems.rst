@@ -59,6 +59,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Macosx
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Python26
    :show-inheritance:
    :members:

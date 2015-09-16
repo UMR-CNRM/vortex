@@ -33,6 +33,7 @@ Extras
    table
    tododev
    tododoc
+   checkreport
 
 .. toctree::
    :maxdepth: 1

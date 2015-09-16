@@ -30,7 +30,6 @@ class SignalInterruptHandler(object):
                                 signal.SIGUSR1, signal.SIGUSR2, signal.SIGTERM
                                 )):
         '''
-        Handler to deal with system signals.
 
         :param signals: list/tupple of signals that will be caught
         '''

@@ -8,11 +8,15 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.7
 
+
 Package
 -------
 
 .. autodata:: __all__
 
-Classes
+
+Modules
 -------
 
+* :mod:`sandbox.data.providers`
+* :mod:`sandbox.data.resources`

@@ -48,6 +48,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: JsonDictContent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: DataRaw
    :show-inheritance:
    :members:

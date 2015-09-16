@@ -19,6 +19,9 @@ pip-log.txt
 .coverage
 .tox
 
+# RST file generated on the fly
+checkreport.rst
+
 #Translations
 *.mo
 

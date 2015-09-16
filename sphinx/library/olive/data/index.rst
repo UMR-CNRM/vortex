@@ -10,8 +10,6 @@ Data resources
    data
 
    bestof
-   errgrib
-   fields
    providers
    stores
 

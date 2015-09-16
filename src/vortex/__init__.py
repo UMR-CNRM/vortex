@@ -49,7 +49,9 @@ footprints.priorities.set_before('debug', 'olive', 'oper')
 
 # Set a root logging mechanism for vortex
 
+#: Shortcut to Vortex's root logger
 logger = footprints.loggers.getLogger('vortex')
+
 footprints.loggers.defaultrootname = 'vortex'
 
 # Populate a fake proxy module with footprints shortcuts

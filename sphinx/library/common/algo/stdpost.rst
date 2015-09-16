@@ -21,6 +21,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: DiagPI
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Fa2Grib
    :show-inheritance:
    :members:

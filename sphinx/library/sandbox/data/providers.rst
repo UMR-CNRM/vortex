@@ -16,3 +16,7 @@ Package
 Classes
 -------
 
+.. autoclass:: Bidon
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
