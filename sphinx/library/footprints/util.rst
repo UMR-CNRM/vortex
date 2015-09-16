@@ -58,3 +58,7 @@ Base Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: TimeInt
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

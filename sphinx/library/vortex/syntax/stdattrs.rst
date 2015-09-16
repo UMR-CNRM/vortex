@@ -65,3 +65,14 @@ Class attributes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: XPid
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Namespace
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   

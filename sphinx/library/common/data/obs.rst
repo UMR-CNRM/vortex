@@ -72,8 +72,3 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-.. autoclass:: BackgroundStdError
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical

@@ -57,6 +57,16 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: VortexOpArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VortexStdArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: CacheStore
    :show-inheritance:
    :members:

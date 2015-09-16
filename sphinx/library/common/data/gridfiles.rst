@@ -22,6 +22,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: GridPointMap
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
 .. autoclass:: GridPointFullPos
    :show-inheritance:
    :members:

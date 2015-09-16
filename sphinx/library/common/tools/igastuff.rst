@@ -18,6 +18,14 @@ Package
 .. autodata:: fuzzystr
 
 
+Classes
+-------
+
+.. autoclass:: IgakeyFactory
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Functions
 ---------
 

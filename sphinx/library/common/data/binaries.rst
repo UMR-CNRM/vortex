@@ -37,6 +37,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MasterDiagPI
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
 .. autoclass:: IOAssign
    :show-inheritance:
    :members:

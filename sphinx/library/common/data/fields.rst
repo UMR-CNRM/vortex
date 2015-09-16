@@ -1,22 +1,21 @@
-:mod:`olive.data.fields` --- Olive Fields oriented resources
-============================================================
+:mod:`common.data.fields` --- Simple field ressources
+=====================================================
 
-.. automodule:: olive.data.fields
-   :synopsis: Fields oriented resources for Olive application
+.. automodule:: common.data.fields
+   :synopsis: Simple field ressources
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.1
+.. versionadded:: 0.9
 
 Package
 -------
 
 .. autodata:: __all__
 
-
 Classes
 -------
- 
+
 .. autoclass:: RawFields
    :show-inheritance:
    :members:
@@ -26,5 +25,4 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-
+   

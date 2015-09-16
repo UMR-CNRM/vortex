@@ -454,13 +454,16 @@ class FactorizedReport(object):
                 ('only', (REPORT_ONLY_NOTFOUND, REPORT_ONLY_NOTMATCH)),
             ) ):
         """
-        Generates a report whose items are sorted using some parameters
+        Generates a report whose items are sorted using some parameters:
 
-         - ``tag`` is the end-level entry that have to be sorted
-         - ``ordering`` describes the sorting options. It must be a
-         list of pair (key-name, selected-values) where :
-             * the order of the list defines the priority order for sorting
-             * the selected-values is a tuple of values to focus on if encountered.
+        * ``tag`` is the end-level entry that have to be sorted
+        * ``ordering`` describes the sorting options. It must be a
+
+        list of pair (key-name, selected-values) where:
+
+        * the order of the list defines the priority order for sorting
+        * the selected-values is a tuple of values to focus on if encountered.
+
         """
         self.focus   = focus
         self._define = dict(ordering)

@@ -13,9 +13,9 @@ Modules
 -------
 
 * :mod:`vortex.gloves`
-* :mod:`vortex.proxy`
-* :mod:`vortex.sessions`
-* :mod:`vortex.toolbox`
+* :mod:`vortex.layout`
+* :mod:`vortex.syntax`
+* :mod:`vortex.util`
 
 
 Included packages
@@ -23,18 +23,27 @@ Included packages
 
 * :mod:`vortex.algo`
 * :mod:`vortex.data`
-* :mod:`vortex.layout`
-* :mod:`vortex.syntax`
+* :mod:`vortex.proxy`
+* :mod:`vortex.sessions`
 * :mod:`vortex.tools`
-* :mod:`vortex.util`
+* :mod:`vortex.toolbox`
+
+
+Vortex defaults interface
+-------------------------
+
+.. autodata:: logger
+.. autodata:: setup
+.. autofunction:: vortexfpdefaults
 
 
 Session and system interface
 ----------------------------
 
+.. autodata:: rootenv
 .. autofunction:: ticket
 .. autofunction:: sh
-.. autofunction:: getglove
+
 
 
 Classes

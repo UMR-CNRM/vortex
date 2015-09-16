@@ -10,10 +10,16 @@ opts = sh.rawopts(
     defaults = dict(
         verbose = 'off',
         mkrst = 'on',
+        missingonly = 'off',
+        generaterst = '',
     )
 )
 
-sh.header('Checking vortex ' + vortex.__version__ + 'library documentation')
+# Do not create new rst file when generating a report
+if opts['generaterst']:
+    opts['mkrst'] = False
+
+sh.header('Checking vortex ' + vortex.__version__ + ' library documentation')
 print ' > Options:', opts
 
 from vortex.util.introspection import Sherlock
@@ -32,16 +38,23 @@ def rstcreate(rstf, modname):
         '',
         '.. moduleauthor:: The Vortex Team',
         '.. sectionauthor:: The Vortex Team',
-        '.. versionadded:: 0.7',
+        '.. versionadded:: ' + vortex.__version__,
         '',
         'Package',
         '-------',
         '',
         '.. autodata:: __all__',
         '',
+        '',
+        'Modules',
+        '-------',
+        '',
+        'Included Modules',
+        '----------------',
+        '',
         'Classes',
         '-------',
-        ''
+        '',
     ]
     with open(rstf, 'w') as fdoc:
         for docline in newdoc:
@@ -99,25 +112,54 @@ for modulename, loaded in sh.vortex_loaded_modules():
         report['nope'].append(rstloc)
 
     for objname, objptr1 in intro.getlocalmembers(m).iteritems():
-        if objname not in rstnames:
+        if (objname not in rstnames) and (not objname.startswith('_')):
             report['miss'].append(rstloc + ': ' + objname)
         thedoc = inspect.getdoc(objptr1)
         if not thedoc:
             report['dstr'].append(modulename + ': ' + objname)
-        elif re.search('docstring|todo', thedoc, re.IGNORECASE):
+        elif re.search('docstring|todo|not documented yet', thedoc, re.IGNORECASE):
             report['quid'].append(modulename + ': ' + objname)
         if inspect.isclass(objptr1):
             for objmeth, objptr2 in intro.getlocalmembers(objptr1, m).iteritems():
                 thedoc = inspect.getdoc(objptr2)
                 if not thedoc:
-                    report['dstr'].append(modulename + ': ' + objname + '.' + objmeth)
-                elif re.search('docstring|todo', thedoc, re.IGNORECASE):
+                    if ((not re.match('__.*__$', objmeth)) and
+                            (objmeth not in ('iteritems', ))):
+                        report['dstr'].append(modulename + ': ' + objname + '.' + objmeth)
+                elif re.search('docstring|todo|not documented yet', thedoc, re.IGNORECASE):
                     report['quid'].append(modulename + ': ' + objname + '.' + objmeth)
 
-for k, v in sorted(report.iteritems()):
-    if k != 'miss':
-        continue
-    print '=' * 80
-    print 'REPORT /', k, '(', len(v), ')'
-    for reportrst in v:
-        print ' >', reportrst
+key_translation = {'dstr': 'Missing docstring',
+                   'miss': 'Autoclass cause missing in the rst file',
+                   'mkrst': 'Rst file has been created',
+                   'nope': 'Unabled to find a suitable rst file',
+                   'quid': 'a "TODO" was detected in the class/method docstring',
+                   'todo': 'a "TODO" was detected in the rst file'}
+
+if not opts['generaterst']:
+    for k, v in sorted(report.iteritems()):
+        if opts['missingonly'] and k != 'miss':
+            continue
+        print '=' * 80
+        print 'REPORT /', k, '/', key_translation.get(k, k), '(', len(v), ')'
+        for reportrst in v:
+            print ' >', reportrst
+
+else:
+    fh = open(opts['generaterst'], 'w')
+    fh.writelines([
+        '%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n',
+        'Documentation checker report\n',
+        '%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n',
+        '\n',
+        'Here is the automatic output of the documentation checker\n',
+        '\n'])
+    for k, v in sorted(report.iteritems()):
+        if k == 'mkrst':
+            continue
+        header = '\n{} - {} ({:d})\n'.format(k, key_translation.get(k, k), len(v))
+        fh.writelines([header,
+                       '-' * len(header) + '\n',
+                       ] +
+                      ['* {}\n'.format(reportrst)  for reportrst in v])
+    fh.close()

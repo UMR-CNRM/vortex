@@ -16,16 +16,6 @@ Package
 Classes
 -------
 
-.. autoclass:: AmvBias
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: AmvError
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: CoverParams
    :show-inheritance:
    :members:
@@ -50,4 +40,3 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
