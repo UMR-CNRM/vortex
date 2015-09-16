@@ -43,5 +43,5 @@ html: checkreport
 # Clean the build directory and checkdoc report
 clean:
 	rm -rf $(BUILDDIR)
-	rm $(SOURCEDIR)/checkreport.rst
+	rm -f $(SOURCEDIR)/checkreport.rst
 
