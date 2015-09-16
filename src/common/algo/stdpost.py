@@ -245,8 +245,15 @@ class DiagPI(BlindRun):
                 nam.contents['NAM_PARAM']['NECH(1)'] = int(r.resource.term)
                 nam.save()
 
-            # Expect the input grib file to be there...
+            # Expect the input grib file to be here
             self.grab(r, comment='diagpi source')
+            # Also link in previous grib files in order to compute some winter diagnostics
+            srcprh = [x.rh
+                      for x in self.context.sequence.effective_inputs(role=('Preview', 'Previous'),
+                                                                      kind='gridpoint')
+                      if x.rh.resource.term < r.resource.term]
+            for pr in srcprh:
+                self.grab(pr, comment='diagpi additional source for winter diag')
 
             # Standard execution
             opts['loop'] = r.resource.term
