@@ -123,8 +123,9 @@ for modulename, loaded in sh.vortex_loaded_modules():
             for objmeth, objptr2 in intro.getlocalmembers(objptr1, m).iteritems():
                 thedoc = inspect.getdoc(objptr2)
                 if not thedoc:
-                    if ((not re.match('__.*__$', objmeth)) and
-                            (objmeth not in ('iteritems', ))):
+                    if (not ((re.match('__.*__$', objmeth)) or
+                             (re.match('_(get|set)', objmeth)) or
+                             (objmeth in ('iteritems', 'keys')))):
                         report['dstr'].append(modulename + ': ' + objname + '.' + objmeth)
                 elif re.search('docstring|todo|not documented yet', thedoc, re.IGNORECASE):
                     report['quid'].append(modulename + ': ' + objname + '.' + objmeth)
