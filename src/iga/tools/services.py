@@ -764,6 +764,11 @@ class DayfileReportService(FileReportService):
         return self.task
 
     @property
+    def nodelist(self):
+        """Nodeset of the task (could be expanded)."""
+        return self.env.get('SLURM_JOB_NODELIST') or '<SLURM_JOB_NODELIST missing>'
+
+    @property
     def timestamp(self):
         """Formatted hour used as standard prefix in log files."""
         return '{0.hour:02d}-{0.minute:02d}-{0.second:02d}'.format(date.now())
@@ -806,7 +811,7 @@ class DayfileReportService(FileReportService):
             RAW='{0.message}',
             TEXTE='{0.timestamp} -> {0.message}',
             ECHEANCE='{0.timestamp} == {0.message}',
-            DEBUT='{0.timestamp} == {0.mode}    {0.taskname} === noeuds {0.message}',
+            DEBUT='{0.timestamp} == {0.mode}    {0.taskname} === noeuds {0.nodelist}',
             FIN='{0.timestamp} == {0.mode} OK {0.taskname} ===',
             ERREUR='{0.timestamp} == {0.mode} {0.taskname} *****'
         )
