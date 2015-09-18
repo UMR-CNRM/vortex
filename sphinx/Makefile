@@ -11,6 +11,7 @@ PAPEROPT_letter = -D latex_paper_size=letter
 
 BUILDDIR      = build
 SOURCEDIR     = ./
+CHECKREPORT   = $(SOURCEDIR)/checkreport.rst
 
 ALLSPHINXOPTS   = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCEDIR)
 
@@ -21,6 +22,8 @@ export FOOTPRINT_DOCSTRINGS
 
 
 all: html
+
+.PHONY: all full-check miss-check $(CHECKREPORT) html clean
 
 
 # Create rst files for new modules and check all of the aspects
@@ -33,15 +36,15 @@ miss-check:
 	$(PYTHON) $(CHECKDOC) missingonly=on
 
 # Generate the checkdoc report
-checkreport:
-	$(PYTHON) $(CHECKDOC) generaterst=$(SOURCEDIR)/checkreport.rst
+$(CHECKREPORT):
+	$(PYTHON) $(CHECKDOC) generaterst=$@
 
 # Build the html documentation
-html: checkreport
+html: $(CHECKREPORT)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
-# Clean the build directory and checkdoc report
+# Clean the build directory and the checkdoc report
 clean:
 	rm -rf $(BUILDDIR)
-	rm -f $(SOURCEDIR)/checkreport.rst
+	rm -f $(CHECKREPORT)
 
