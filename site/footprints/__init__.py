@@ -120,12 +120,14 @@ def collected_classes():
         l.extend(kv.items())
     return set(l)
 
+
 def collected_priorities(tag):
     """Print a table of collected classes with a priority level higher or equal to ``tag``."""
     plevel = priorities.top.level(tag)
     for cl in sorted(set([c for cv in collectors.values() for c in cv.filter_higher_level(plevel)]), key=lambda z: z.fullname()):
         pl = cl.footprint_level()
         print(pl.rjust(10), '-', cl.fullname())
+
 
 def reset_package_priority(packname, tag):
     """Reset priority level in all collectors for the specified ``package``."""
@@ -329,60 +331,63 @@ class Footprint(object):
         changed = 1
         while changed:
             changed = 0
-            mobj = replattr.search(str(guess[k]))
-            if mobj:
-                replk = mobj.group(1)
-                replm = mobj.group(2)
-                replx = mobj.group(3)
-                if replk not in guess and replk not in extras:
-                    if replx:
-                        changed = 1
-                        guess[k] = replattr.sub(replx, guess[k], 1)
-                    else:
-                        logger.error('No %s attribute in guess:', replk)
-                        logger.error('%s', guess)
-                        logger.error('No %s attribute in extras:', replk)
-                        logger.error('%s', extras)
-                        logger.error('Actual defaults: %s', setup.defaults)
-                        raise FootprintUnreachableAttr('Could not replace attribute ' + replk)
-                if replk in guess:
-                    if replk not in todo:
+            if isinstance(guess[k], basestring):
+                mobj = replattr.search(str(guess[k]))
+                if mobj:
+                    replk = mobj.group(1)
+                    replm = mobj.group(2)
+                    replx = mobj.group(3)
+                    if replk not in guess and replk not in extras:
+                        if replx:
+                            changed = 1
+                            guess[k] = replattr.sub(replx, guess[k], 1)
+                        else:
+                            logger.error('No %s attribute in guess:', replk)
+                            logger.error('%s', guess)
+                            logger.error('No %s attribute in extras:', replk)
+                            logger.error('%s', extras)
+                            logger.error('Actual defaults: %s', setup.defaults)
+                            raise FootprintUnreachableAttr('Could not replace attribute ' + replk)
+                    if replk in guess:
+                        if replk not in todo:
+                            changed = 1
+                            if replm:
+                                subattr = getattr(guess[replk], replm, None)
+                                if subattr is None:
+                                    guess[k] = None
+                                else:
+                                    guess[k] = replattr.sub(str(subattr), guess[k], 1)
+                            else:
+                                guess[k] = replattr.sub(str(guess[replk]), guess[k], 1)
+                    elif replk in extras:
                         changed = 1
                         if replm:
-                            subattr = getattr(guess[replk], replm, None)
+                            subattr = getattr(extras[replk], replm, None)
                             if subattr is None:
                                 guess[k] = None
                             else:
-                                guess[k] = replattr.sub(str(subattr), guess[k], 1)
+                                if callable(subattr):
+                                    try:
+                                        if isinstance(subattr, types.BuiltinFunctionType):
+                                            attrcall = subattr()
+                                        else:
+                                            attrcall = subattr(guess, extras)
+                                    except StandardError as trouble:
+                                        logger.critical(trouble)
+                                        attrcall = '__SKIP__'
+                                        changed = 0
+                                    if attrcall is None:
+                                        guess[k] = None
+                                    elif attrcall != '__SKIP__':
+                                        guess[k] = replattr.sub(str(attrcall), guess[k], 1)
+                                else:
+                                    guess[k] = replattr.sub(str(subattr), guess[k], 1)
                         else:
-                            guess[k] = replattr.sub(str(guess[replk]), guess[k], 1)
-                elif replk in extras:
-                    changed = 1
-                    if replm:
-                        subattr = getattr(extras[replk], replm, None)
-                        if subattr is None:
-                            guess[k] = None
-                        else:
-                            if callable(subattr):
-                                try:
-                                    if type(subattr) is types.BuiltinFunctionType:
-                                        attrcall = subattr()
-                                    else:
-                                        attrcall = subattr(guess, extras)
-                                except StandardError as trouble:
-                                    logger.critical(trouble)
-                                    attrcall = '__SKIP__'
-                                    changed = 0
-                                if attrcall is None:
-                                    guess[k] = None
-                                elif attrcall != '__SKIP__':
-                                    guess[k] = replattr.sub(str(attrcall), guess[k], 1)
-                            else:
-                                guess[k] = replattr.sub(str(subattr), guess[k], 1)
-                    else:
-                        guess[k] = replattr.sub(str(extras[replk]), guess[k], 1)
+                            guess[k] = replattr.sub(str(extras[replk]), guess[k], 1)
 
-        if guess[k] is not None and replattr.search(str(guess[k])):
+        if (guess[k] is not None and
+                isinstance(guess[k], basestring) and
+                replattr.search(str(guess[k]))):
             logger.debug(' > Requeue resolve < %s > : %s', k, guess[k])
             todo.append(k)
             return False
@@ -438,7 +443,7 @@ class Footprint(object):
 
             attr_seen.add(k)
 
-            while guess[k].__hash__ is not None and kdef['remap'].has_key(guess[k]):
+            while guess[k].__hash__ is not None and guess[k] in kdef['remap']:
                 logger.debug(' > Attr %s remap(%s) = %s', k, guess[k], kdef['remap'][guess[k]])
                 guess[k] = kdef['remap'][guess[k]]
 
