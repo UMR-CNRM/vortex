@@ -306,7 +306,7 @@ class Footprint(object):
         suggested in the ``more`` dictionary which are not already defined
         in ``extras`` or the actual ``guess``.
         """
-        for k in [ x.lower() for x in more.keys() ]:
+        for k in more.iterkeys():
             if k not in extras and k not in guess:
                 extras[k] = more[k]
 
@@ -522,7 +522,7 @@ class Footprint(object):
             if after or before:
                 actualattr = k.partition('_')[-1]
 
-            actualvalue = rd.get(actualattr, params.get(actualattr.lower(), None))
+            actualvalue = rd.get(actualattr, params.get(actualattr, None))
             if actualvalue is None:
                 rd = False
                 report.add(attribute=actualattr, only=reporting.REPORT_ONLY_NOTFOUND, args=k)
