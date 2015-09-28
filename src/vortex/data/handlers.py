@@ -56,8 +56,11 @@ class Handler(object):
         self._options   = rd.copy()
         self._observer  = observer_board(kw.pop('observer', None))
         self._options.update(kw)
-        self._ghost   = self._options.pop('ghost', False)
-        self._hooks   = { x[5:]:self._options.pop(x) for x in self._options.keys() if x.startswith('hook_') }
+        self._mdcheck   = self._options.pop('metadatacheck', False)
+        self._ghost     = self._options.pop('ghost', False)
+        self._hooks     = {x[5:]: self._options.pop(x)
+                           for x in self._options.keys()
+                           if x.startswith('hook_') }
         self._history = structs.History(tag='data-handler')
         self._history.append(self.__class__.__name__, 'init', True)
         self._stage = ['load']
@@ -344,6 +347,12 @@ class Handler(object):
                         self.mkopts(dict(rhandler = self.as_dict()), extras)
                     )
                     self.container.updfill(rst)
+                    if rst and self._mdcheck:
+                        rst = rst and self.contents.metadata_check(self.resource)
+                        if not rst:
+                            logger.info("We are now cleaning up the container and data content.")
+                            self.reset_contents()
+                            self.clear()
                     self.history.append(store.fullname(), 'get', rst)
                     if rst:
                         if store.delayed:
@@ -417,12 +426,8 @@ class Handler(object):
         rst = False
         if self.container:
             logger.debug('Remove resource container %s', self.container)
-            sh = sessions.system()
-            rst = sh.remove(
-                self.container.localpath(),
-                fmt = self.container.actualfmt
-            )
-            self.history.append(sh.fullname(), 'clear', rst)
+            rst = self.container.clear()
+            self.history.append(self.container.actualpath(), 'clear', rst)
         return rst
 
     def mkgetpr(self, pr_getter=None, tplfile=None, tplskip='sync-skip.tpl', tplfetch='sync-fetch.tpl', py_exec=sys.executable, py_opts=''):

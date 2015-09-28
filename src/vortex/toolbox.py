@@ -22,11 +22,12 @@ defaults = footprints.setup.defaults
 
 sectionmap = {'input': 'get', 'output': 'put', 'executable': 'get'}
 
-active_now     = False
-active_insitu  = False
-active_verbose = True
-active_promise = True
-active_clear   = False
+active_now              = False
+active_insitu           = False
+active_verbose          = True
+active_promise          = True
+active_clear            = False
+active_metadatacheck    = True
 
 #: History recording
 history = History(tag='rload')
@@ -152,11 +153,11 @@ def add_section(section, args, kw):
     # Third, collect arguments for triggering some hook
     hooks = dict()
     for ahook in [ x for x in kw.keys() if x.startswith('hook_') ]:
-         cbhook = footprints.util.mktuple(kw.pop(ahook))
-         cbfunc = cbhook[0]
-         if not callable(cbfunc):
-             cbfunc = t.sh.import_function(cbfunc)
-         hooks[ahook] = footprints.FPTuple((cbfunc, cbhook[1:]))
+        cbhook = footprints.util.mktuple(kw.pop(ahook))
+        cbfunc = cbhook[0]
+        if not callable(cbfunc):
+            cbfunc = t.sh.import_function(cbfunc)
+        hooks[ahook] = footprints.FPTuple((cbfunc, cbhook[1:]))
 
     # Swich off autorecording of the current context
     ctx = t.context
@@ -169,6 +170,12 @@ def add_section(section, args, kw):
 
     # Distinguish between section arguments, and resource loader arguments
     opts, kwclean = stripargs_section(**kw)
+
+    # Strip the metadatacheck option depending on active_metadatacheck
+    if not active_metadatacheck:
+        if kwclean.get('metadatacheck', False):
+            logger.info("The metadatacheck option is forced to False since active_metadatacheck=False.")
+            kwclean['metadatacheck'] = False
 
     # Show the actual set of arguments
     if talkative:

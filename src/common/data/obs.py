@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from vortex.util.structs import ReadOnlyDict
 
 #: Automatic export of Observations class
 __all__ = [ 'Observations' ]
@@ -11,8 +12,9 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.flow     import GeoFlowResource, FlowResource
-from vortex.data.contents import TextContent
+from vortex.data.contents import TextContent, AlmostListContent
 from vortex.syntax        import stdattrs
+from vortex.tools.date    import Date
 
 from gco.syntax.stdattrs  import GenvKey
 
@@ -193,9 +195,28 @@ class ObsRaw(Observations):
             )
 
 
+class VarBCContent(AlmostListContent):
+
+    def slurp(self, container):
+        """Get data from the ``container`` and find the metadata."""
+        super(VarBCContent, self).slurp(container)
+        mdata = {}
+        # First we look for the version of the VarBC file
+        mobj = re.match('\w+\.version(\d+)', self.data[0])
+        if mobj:
+            mdata['version'] = int(mobj.group(1))
+            # Then we fetch the date of the file
+            mobj = re.match('\s*\w+\s+(\d{8})\s+(\d{5,})', self.data[1])
+            if mobj:
+                mdata['date'] = Date('{:s}{:06d}'.format(mobj.group(1),
+                                                         int(mobj.group(2))))
+                # The metadata are updated only if both version and data are here
+                self._metadata = ReadOnlyDict(mdata)
+
+
 class VarBC(FlowResource):
     """
-    TODO.
+    VarBC file ressource. Contains all the coefficients for the VarBC bias correction scheme.
     """
 
     _footprint = dict(
@@ -204,11 +225,14 @@ class VarBC(FlowResource):
             kind = dict(
                 values   = ['varbc']
             ),
+            clscontents = dict(
+                default  = VarBCContent,
+            ),
             nativefmt = dict(
                 values   = ['ascii', 'txt'],
                 default  = 'txt',
                 remap    = dict(ascii = 'txt'),
-           ),
+            ),
             stage = dict(
                 optional = True,
                 values   = ['void', 'merge', 'screen', 'screening', 'minim', 'traj'],
@@ -315,7 +339,6 @@ class BlackList(FlowResource):
             model = self.model
         )
 
-
     def archive_map(self):
         """OP ARCHIVE specific naming convention."""
         return {
@@ -331,6 +354,7 @@ class BlackList(FlowResource):
 
 #: A namedtuple of the internal fields of an ObsRef file
 ObsRefItem = namedtuple('ObsRefItem', ('data', 'fmt', 'instr', 'date', 'time'))
+
 
 class ObsRefContent(TextContent):
     """Content class for refdata resources."""

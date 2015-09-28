@@ -274,3 +274,25 @@ class ShellEncoder(json.JSONEncoder):
         elif hasattr(obj, '__dict__'):
             return vars(obj)
         return json.JSONEncoder.default(self, obj)
+
+
+class ReadOnlyDict(collections.Mapping):
+    """A type of readonly dictionnary."""
+
+    def __init__(self, data=dict()):
+        self._data = data
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __len__(self):
+        return len(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __repr__(self):
+        return repr(self._data)
+
+    def __str__(self):
+        return str(self._data)
