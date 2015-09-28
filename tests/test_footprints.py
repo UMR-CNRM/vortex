@@ -3,7 +3,7 @@
 
 from unittest import TestCase, main
 
-import os, shutil, tempfile, pickle
+import os, shutil, tempfile, pickle  # @IgnorePep8
 import logging
 import datetime
 from copy import deepcopy
@@ -13,10 +13,8 @@ import footprints
 
 from footprints import \
     dump, observers, priorities, reporting, util, \
-    Footprint, FootprintBase, FootprintBaseMeta, \
+    Footprint, FootprintBase, \
     FPDict, FPList, FPSet, FPTuple
-
-from footprints.access import FootprintAttrDescriptorRXX
 
 from footprints.config import FootprintSetup
 
@@ -602,6 +600,20 @@ class utExpand(TestCase):
             {'atuple': 'two', 'alist': 'b', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'}
         ])
 
+    def test_expand_dict(self):
+        rv = util.expand(dict(arg=('hip', 'hop'), item=dict(arg={'hip': 'hop', 'hop':'hip'})))
+        self.assertListEqual(sorted(rv), [
+            {'arg': 'hip', 'item': 'hop'},
+            {'arg': 'hop', 'item': 'hip'},
+        ])
+
+    def test_expand_FP(self):
+        rv = util.expand(dict(arg=('hip', 'hop'), item=FPList([1, 2, 3])))
+        self.assertListEqual(sorted(rv), [
+            {'arg': 'hip', 'item': FPList([1, 2, 3])},
+            {'arg': 'hop', 'item': FPList([1, 2, 3])},
+        ])
+
 
 # Base class for catalogs like objects
 
@@ -932,7 +944,9 @@ class utPriorities(TestCase):
         rv = priorities.top
         self.assertIsInstance(rv, priorities.PrioritySet)
 
-        rv = priorities.top
+        rv.freeze('original_priorities')
+
+        rv.reset()
         self.assertTupleEqual(rv.levels, ('NONE', 'DEFAULT', 'TOOLBOX', 'DEBUG'))
 
         priorities.set_after('default', 'hip', 'hop')
@@ -947,6 +961,8 @@ class utPriorities(TestCase):
         rv.reset()
         self.assertTupleEqual(rv.levels, ('NONE', 'DEFAULT', 'TOOLBOX', 'DEBUG'))
 
+        rv.restore('original_priorities')
+
 
 # Tests for footprints observers
 
@@ -954,13 +970,12 @@ class utObservers(TestCase):
 
     def test_observers_basics(self):
         rv = observers.keys()
-        self.assertListEqual(rv, [
-            __name__ + '.FootprintTestBuiltins',
-            __name__ + '.FootprintTestMeta',
-            __name__ + '.FootprintTestOne',
-            __name__ + '.FootprintTestRWD',
-            __name__ + '.FootprintTestTwo',
-        ])
+        for o in [__name__ + '.FootprintTestBuiltins',
+                  __name__ + '.FootprintTestMeta',
+                  __name__ + '.FootprintTestOne',
+                  __name__ + '.FootprintTestRWD',
+                  __name__ + '.FootprintTestTwo', ]:
+            self.assertIn(o, rv,)
 
 
 # Tests for footprints reporting
@@ -973,7 +988,8 @@ class utReporting(TestCase):
         self.assertEqual(rv.tag, 'default')
 
         rv = reporting.keys()
-        self.assertListEqual(rv, ['default', 'footprint-garbage', 'void'])
+        for r in ['default', 'footprint-garbage', 'void']:
+            self.assertIn(r, rv)
 
         rv = reporting.get(tag='void')
         self.assertIsInstance(rv, reporting.FootprintLog)
@@ -1245,11 +1261,7 @@ class utFootprint(TestCase):
     def test_footprint_extras(self):
         fp = self.fpbis
         self.assertIsInstance(footprints.setup, FootprintSetup)
-        self.assertIs(footprints.setup.callback, None)
-
-        rv = fp._findextras(dict())
-        self.assertIsInstance(rv, dict)
-        self.assertDictEqual(rv, dict())
+        callback_ori = footprints.setup.callback
 
         def groundvalues():
             return dict(cool=2)
@@ -1271,6 +1283,8 @@ class utFootprint(TestCase):
         rv = fp._findextras(dict(foo='notused', good=obj))
         self.assertIsInstance(rv, dict)
         self.assertDictEqual(rv, dict(cool=2, kind='hop', someint=7, somestr='this'))
+
+        footprints.setup.callback = callback_ori
 
     def test_footprint_addextras(self):
         fp = self.fpbis
@@ -1757,11 +1771,13 @@ class utFootprintBase(TestCase):
             set(['someint', 'somestr', 'kind', 'stuff'])
         )
 
+        footprints.logger.setLevel(logging.CRITICAL)
         with self.assertRaises(footprints.FootprintFatalError):
             u_fp1 = FootprintTestOne(kind='hip')
 
         with self.assertRaises(footprints.FootprintFatalError):
             u_fp1 = FootprintTestOne(kind='hip', someint=13)
+        footprints.logger.setLevel(logging.WARNING)
 
         fp1 = FootprintTestOne(kind='hip', someint=7)
         self.assertIsInstance(fp1, FootprintTestOne)
@@ -1785,12 +1801,14 @@ class utFootprintBase(TestCase):
             somestr = 'this',
         ))
 
+        footprints.logger.setLevel(logging.CRITICAL)
         with self.assertRaises(AttributeError):
             fp1 = FootprintTestOne(stuff='foo', someint='7', checked=True)
             self.assertDictEqual(fp1.footprint_as_dict(), dict(
                 stuff = 'foo',
                 someint = '7',
             ))
+        footprints.logger.setLevel(logging.WARNING)
 
         fp1 = FootprintTestOne(kind='foo', someint='7', checked=True)
         self.assertDictEqual(fp1.footprint_as_dict(), dict(
@@ -1810,6 +1828,7 @@ class utFootprintBase(TestCase):
 
         thefoo = Foo(inside=2)
 
+        footprints.logger.setLevel(logging.CRITICAL)
         with self.assertRaises(footprints.FootprintFatalError):
             u_fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo)
 
@@ -1818,6 +1837,7 @@ class utFootprintBase(TestCase):
 
         with self.assertRaises(footprints.FootprintFatalError):
             u_fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=7)
+        footprints.logger.setLevel(logging.WARNING)
 
         fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
         self.assertIsInstance(fp2, FootprintTestTwo)
@@ -1982,4 +2002,3 @@ class utCollector(TestCase):
 
 if __name__ == '__main__':
     main(verbosity=2)
-    vortex.exit()

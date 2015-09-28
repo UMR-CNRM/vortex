@@ -14,6 +14,10 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 
+class VortexNameBuilderError(Exception):
+    pass
+
+
 class VortexNameBuilder(object):
     """Basenames factory for resources handled by some Vortex like provider."""
     def __init__(self, *args, **kw):
@@ -139,10 +143,12 @@ class VortexNameBuilder(object):
         Main entry point to convert a description into a file name
         according to the so-called observation style.
         """
+        if (d.get('nativefmt', None) is None):
+            raise VortexNameBuilderError
         name = '.'.join([
             d['nativefmt'] + '-' + d.get('layout', 'std'),
-            d.get('stage', 'void'),
-            d.get('part', 'all')
+            'void' if d['stage'] is None else d['stage'],
+            'all' if d['part'] is None else d['part'],
         ])
         if d['suffix'] is not None:
             name = name + '.' + d['suffix']
@@ -157,6 +163,6 @@ class VortexNameBuilder(object):
         name = '.'.join((
             d['radical'],
             '-'.join(self.pack_std_items(d['stage'])),
-            d.get('fmt', 'txt')
+            'txt' if d['fmt'] is None else d['fmt'],
         ))
         return name.lower()

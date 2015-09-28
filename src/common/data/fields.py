@@ -81,6 +81,10 @@ class GeoFields(GeoFlowResource):
         )
     ]
 
+    @property
+    def realkind(self):
+        return 'geofields'
+
     def olive_basename(self):
         bname = 'icmshanal' + self.fields
         if self.fields == 'seaice':

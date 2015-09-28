@@ -1,136 +1,67 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
-import logging
-logging.basicConfig(level=logging.ERROR)
+import unittest
 
-from unittest import TestCase, TestLoader, TextTestRunner
-
-from vortex import toolbox
-#from vortex import sessions
-from vortex.data.geometries import SpectralGeometry
-
-from olive.data import providers
-from common.data import fields
-u_fill_fp_catalogs = fields
+import footprints as fp
+import common.data.fields  # @UnusedImport
+from vortex.data import geometries
+from vortex.tools.date import Date
+from vortex.util.names import VortexNameBuilder
 
 
-class UtRawFields(TestCase):
+class TestFieldsRawFields(unittest.TestCase):
 
     def setUp(self):
-        self.attrset = dict(
-            kind='rawfields',
-            suite='oper',
-            date = '2012022800',
-            cutoff='assim',
-            namespace='[suite].archive.fr'
-        )
-        #sessions.current().debug()
+        self.vb = VortexNameBuilder()
 
-    def test_v1(self):
-        #sessions.current().debug()
-        rl = toolbox.rload(
-            self.attrset,
-            namespace='vortex.cache.fr',
-            block='observation',
-            experiment='oper',
-            fields='seaice',
-            origin='bdm',
-            local='ICE_file'
-        )
-        for rh in rl:
-            self.assertTrue(rh.complete)
-        self.assertEqual(
-            rl[0].location(),
-            'vortex://vortex.cache.fr/play/sandbox/oper/20120228T0000A/observation/seaice.bdm'
-        )
-
-    def test_r1(self):
-        #sessions.current().debug()
-        rl = toolbox.rload(
-             self.attrset,
-             igakey='arpege',
-             fields='sst',
-             origin='nesdis,ostia',
-             local='SST_File'
-        )
-        for rh in rl:
-            self.assertTrue(rh.complete)
-        self.assertEqual(
-            rl[0].location(),
-            'op://oper.archive.fr/arpege/oper/assim/2012/02/28/r0/sst.nesdis.bdap'
-        )
-        self.assertEqual(
-            rl[1].location(),
-            'op://oper.archive.fr/arpege/oper/assim/2012/02/28/r0/sst.ostia'
-        )
-
-    def test_r2(self):
-        rl = toolbox.rload(
-            self.attrset,
-            igakey='arpege',
-            fields='seaice',
-            origin='bdm',
-            local='ICE_file'
-        )
-        for rh in rl:
-            self.assertTrue(rh.complete)
-        self.assertEqual(
-            rl[0].location(),
-            'op://oper.archive.fr/arpege/oper/assim/2012/02/28/r0/ice_concent'
-        )
+    def test_rawfields_names(self):
+        fpcommon = dict(date=Date(1970, 1, 1, 1, 0, 0), cutoff='assim',
+                        kind='rawfields')
+        res = fp.proxy.resource(origin='ostia', fields='sst', ** fpcommon)
+        self.assertEqual(res.olive_basename(), 'sstostia')
+        self.assertEqual(res.archive_basename(), 'sst.ostia')
+        self.assertEqual(self.vb.pack(res.basename_info()), 'sst.ostia')
+        res = fp.proxy.resource(origin='nesdis', fields='sst', ** fpcommon)
+        self.assertEqual(res.olive_basename(), 'sstnesdis')
+        self.assertEqual(res.archive_basename(), 'sst.nesdis.bdap')
+        self.assertEqual(self.vb.pack(res.basename_info()), 'sst.nesdis')
+        res = fp.proxy.resource(origin='bdm', fields='seaice', ** fpcommon)
+        self.assertEqual(res.olive_basename(), 'seaicebdm')
+        self.assertEqual(res.archive_basename(), 'ice_concent')
+        self.assertEqual(self.vb.pack(res.basename_info()), 'seaice.bdm')
 
 
-class UtGeoFields(TestCase):
+class TestFieldsGeoFields(unittest.TestCase):
 
     def setUp(self):
-        self.std = SpectralGeometry(id='Current op', truncation=798,
-                                    stretching=2.4, area='france', lam=False)
-        self.attrset = dict(kind='geofields', suite='oper', date = '2012022806',
-                            cutoff='production', namespace='[suite].archive.fr',
-                            model='arpege')
-        #sessions.current().debug()
+        self.vb = VortexNameBuilder()
+        self.geo = geometries.SpectralGeometry(tag='fgeo', kind='spectral',
+                                               area='france', truncation=798,
+                                               stretching=2.4, lam=False)
+        self.geoL = geometries.SpectralGeometry(tag='fgeol', kind='spectral',
+                                                area='france', resolution=2.5,
+                                                runit='km', lam=True)
 
-    def test_g1(self):
-        rl = toolbox.rload(
-             self.attrset,
-             igakey='arpege',
-             geometry=self.std,
-             fields='sst,seaice',
-             local='ICMSH_SST'
-        )
-        for rh in rl:
-            self.assertTrue(rh.complete)
-        self.assertEqual(
-            rl[0].location(),
-            'op://oper.archive.fr/arpege/oper/production/2012/02/28/r6/icmshanalsst'
-        )
-        self.assertEqual(
-            rl[1].location(),
-            'op://oper.archive.fr/arpege/oper/production/2012/02/28/r6/icmshanalseaice'
-        )
-
-    def test_v1(self):
-        rl = toolbox.rload(
-             self.attrset,
-             namespace='vortex.cache.fr',
-             experiment='oper',
-             block='observation',
-             geometry=self.std,
-             fields='sst',
-             local='ICMSH_SST'
-        )
-        for rh in rl:
-            self.assertTrue(rh.complete)
-        self.assertEqual(
-            rl[0].location(),
-            'vortex://vortex.cache.fr/play/sandbox/oper/20120228T0600P/observation/sst.arpege.tl798-c24.fa'
-        )
+    def test_geofields_names(self):
+        # Global
+        fpcommon = dict(date=Date(1970, 1, 1, 1, 0, 0), cutoff='assim',
+                        model='arpege', kind='geofields',
+                        geometry=self.geo)
+        res = fp.proxy.resource(fields='sst', ** fpcommon)
+        self.assertEqual(res.olive_basename(), 'icmshanalsst')
+        self.assertEqual(res.archive_basename(), 'icmshanalsst')
+        self.assertEqual(self.vb.pack(res.basename_info()),
+                         'sst.arpege.tl798-c24.fa')
+        res = fp.proxy.resource(fields='seaice', ** fpcommon)
+        self.assertEqual(res.olive_basename(), 'ICMSHANALSEAICE')
+        self.assertEqual(res.archive_basename(), 'icmshanalseaice')
+        self.assertEqual(self.vb.pack(res.basename_info()),
+                         'seaice.arpege.tl798-c24.fa')
+        # LAM case
+        fpcommon['geometry'] = self.geoL
+        res = fp.proxy.resource(fields='seaice', ** fpcommon)
+        self.assertEqual(self.vb.pack(res.basename_info()),
+                         'seaice.arpege.france-02km50.fa')
 
 
-if __name__ == '__main__':
-    for test in [ UtRawFields, UtGeoFields ]:
-        x = TextTestRunner(verbosity=2).run(TestLoader().loadTestsFromTestCase(test))
-        if x.errors or x.failures:
-            print "Something went wrong !"
-            break
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

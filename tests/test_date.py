@@ -22,6 +22,7 @@ class utDate(TestCase):
 
         rv = date.Date(2011, 7, 26, 12)
         self.assertEqual(rv.compact(), "20110726120000")
+        self.assertTrue(rv.is_synoptic())
 
         rv = date.Date(2011, 7, 26, 12, 13)
         self.assertEqual(rv.compact(), "20110726121300")
@@ -29,11 +30,54 @@ class utDate(TestCase):
         rv = date.Date(2011, 7, 26, 12, 13, 14)
         self.assertEqual(rv.compact(), "20110726121314")
 
+        rv = date.Date((2011, 7, 26, 12, 13, 14))
+        self.assertEqual(rv.compact(), "20110726121314")
+
+        rv = date.Date(year=2011, month=7, day=26,
+                       hour=12, minute=13, second=14)
+        self.assertEqual(rv.compact(), "20110726121314")
+
         rv = date.Date("2011-0726121314")
         self.assertEqual(rv.compact(), "20110726121314")
 
         rv = date.Date("2011-07-26T121314Z")
         self.assertEqual(rv.compact(), "20110726121314")
+
+        rv = date.Date("20110726T12")
+        self.assertEqual(rv.compact(), "20110726120000")
+
+        rv = date.Date("yesterday", base=date.Date("20110726T12"))
+        self.assertEqual(rv.compact(), "20110725120000")
+
+        rv = date.Date(float(1))
+        self.assertEqual(rv.compact(), "19700101000001")
+
+    def test_date_format(self):
+        rv = date.Date("2011-07-26T021314Z")
+        self.assertEqual(rv.ymd, "20110726")
+        self.assertEqual(rv.ymdh, "2011072602")
+        self.assertEqual(rv.ymdhm, "201107260213")
+        self.assertEqual(rv.ymdhms, "20110726021314")
+        self.assertEqual(rv.hm, "0213")
+        self.assertEqual(rv.hh, "02")
+
+    def test_date_time(self):
+        rv = date.Date("2011-07-26T021314Z")
+        self.assertEqual(rv.time(), date.Time("2:13"))
+
+    def test_date_bounds(self):
+        rv = date.Date("2011-07-26T021314Z")
+        self.assertEqual(rv.bounds(), (date.Date("20110701"),
+                                       date.Date("201107312359")))
+        self.assertEqual(rv.outbound, "20110801")
+        rv = date.Date("2011-07-01T021314Z")
+        self.assertEqual(rv.outbound, "20110630")
+        self.assertEqual(rv.midcross, "20110630")
+        rv = date.Date("2011-07-16T115900Z")
+        self.assertEqual(rv.outbound, "20110630")
+        self.assertEqual(rv.midcross, "20110801")
+        rv = date.Date("2011-07-16T120100Z")
+        self.assertEqual(rv.outbound, "20110801")
 
     def test_date_period(self):
         p = date.Period('PT12S')
@@ -130,6 +174,7 @@ class utDate(TestCase):
             ('20120101', 22645),
             ('20120229', 22704),
             ('20390101', 32507),
+            ((2039, 1, 1), 32507),
         )
         for d, j in test_dates:
             self.assertEqual(date.Date(d).to_cnesjulian(), j)
@@ -174,6 +219,28 @@ class utDate(TestCase):
         self.assertTrue(d <= 20160101)
         self.assertTrue(d <= 201507091234)
 
+    def test_date_utilities(self):
+        rv = date.Date("20110726121314")
+        self.assertEqual(date.yesterday(rv), "20110725121314")
+        rv = date.Date("20110726121314")
+        self.assertEqual(date.tomorrow(rv), "20110727121314")
+        rv = date.at_second()
+        self.assertEqual(rv.microsecond, 0)
+        rv = date.at_hour()
+        self.assertEqual(rv.microsecond, 0)
+        self.assertEqual(rv.second, 0)
+        self.assertEqual(rv.minute, 0)
+        rv = date.guess('20130509T00')
+        self.assertIsInstance(rv, date.Date)
+        rv = date.guess('PT6H')
+        self.assertIsInstance(rv, date.Period)
+        with self.assertRaises(ValueError):
+            rv = date.guess('20130631T00')
+        self.assertEqual([x for x in date.daterange('20150101', 
+                                                    end='20150103')],
+                         [date.Date('20150101'), date.Date('20150102'),
+                          date.Date('20150103')])
+
 
 class utSpecial(TestCase):
 
@@ -187,6 +254,10 @@ class utSpecial(TestCase):
         self.assertEqual(d.iso8601(), '2013-04-11T18:00:00Z')
         d = date.synop(base=date.Date('2013-04-11T11:48Z'))
         self.assertEqual(d.iso8601(), '2013-04-11T06:00:00Z')
+        d = date.synop(base=date.Date('2013-04-11T11:48Z'), time=0)
+        self.assertEqual(d.iso8601(), '2013-04-11T00:00:00Z')
+        with self.assertRaises(ValueError):
+            d = date.synop(base=date.Date('2013-04-11T11:48Z'), time=1, step=2)
 
     def test_date_round(self):
         basedate = date.Date('2013-04-11T11:48Z')
@@ -206,11 +277,30 @@ class utSpecial(TestCase):
 
 class utJeffrey(TestCase):
 
+        def test_period_ini(self):
+            res_exp = date.Period('PT6H3M2S')
+            self.assertEqual(res_exp.total_seconds(), 21782)
+            obj = date.Period(hours=6, minutes=3, seconds=2)
+            self.assertEqual(obj, res_exp)
+            res_exp = date.Period(date.Time('06:03'))
+            self.assertEqual(res_exp.total_seconds(), 21780)
+            obj = date.Period(0, 21780)
+            self.assertEqual(obj, res_exp)
+
+        def test_period_utilities(self):
+            obj_sec = 86410
+            obj = date.Period(obj_sec)
+            self.assertEqual(len(obj), obj_sec)
+            self.assertEqual(obj.length, obj_sec)
+            self.assertEqual(int(obj.time()), obj_sec / 60)  # 24h
+
         def test_period_add(self):
             obj1 = date.Period('PT1S')
             obj2 = date.Period('PT10S')
             result = obj1 + obj2
             self.assertEqual(str(result), '0:00:11')
+            self.assertEqual(result.iso8601(), 'PT11S')
+            result = obj1 + 'PT10S'
             self.assertEqual(result.iso8601(), 'PT11S')
 
         def test_period_substract(self):
@@ -218,12 +308,18 @@ class utJeffrey(TestCase):
             obj2 = date.Period('PT10S')
             result = obj2 - obj1
             self.assertEqual(result.iso8601(), 'PT9S')
+            result = obj2 - 'PT1S'
+            self.assertEqual(result.iso8601(), 'PT9S')
 
         def test_period_multiply(self):
             obj = date.Period('PT10S')
             factor = 3
             result = obj * factor
             self.assertEqual(result.iso8601(), 'PT30S')
+            factor = '3'
+            result = obj * factor
+            self.assertEqual(result.iso8601(), 'PT30S')
+
 
         def test_date_substractmore(self):
             obj1 = date.Date('2011-07-03T12:20:00Z')
@@ -263,6 +359,9 @@ class utTime(TestCase):
         t = date.Time(16, 5)
         self.assertEqual(str(t), '16:05')
 
+        t = date.Time(hour=16, minute=5)
+        self.assertEqual(str(t), '16:05')
+
         t = date.Time([7, 45])
         self.assertEqual(str(t), '07:45')
 
@@ -290,7 +389,9 @@ class utTime(TestCase):
         t = date.Time('07:45')
         t = t + date.Time(1, 22)
         self.assertEqual(str(t), '09:07')
-        t = t - date.Time(9, 5)
+        t = t - date.Time(0, 10)
+        self.assertEqual(str(t), '08:57')
+        t = t - date.Time(8, 55)
         self.assertEqual(str(t), '00:02')
         t = date.Time(18, 45)
         self.assertEqual(int(t), 1125)
@@ -425,10 +526,25 @@ class utMonth(TestCase):
         m2 = date.Month(8)
         rv = m1 + 1
         self.assertEqual(rv.month, m2.month)
+        rv = m1 + 'P1M'
+        self.assertEqual(rv.month, m2.month)
         rv = m2 - 1
         self.assertEqual(rv.month, m1.month)
+        rv = m2 - 'P1M'
+        self.assertEqual(rv.month, m1.month)
 
+    def test_month_compare(self):
+        m1 = date.Month(7)
+        m2 = date.Month(8)
+        self.assertGreater(m2, m1)
+        self.assertGreater(m2, 7)
+        self.assertLess(m1, m2)
+        m1 = date.Month(12, 2015)
+        m2 = date.Month(1, 2016)
+        self.assertGreater(m2, m1)
+        self.assertGreater(m2, (12, 2015))
+        self.assertEqual(m2, (1, 2016))
+        self.assertEqual(m2, (1, 0))
 
 if __name__ == '__main__':
     main(verbosity=2)
-    vortex.exit()
