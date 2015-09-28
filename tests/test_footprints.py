@@ -49,6 +49,10 @@ class FootprintTestOne(FootprintBase):
             someint = dict(
                 values = range(10),
                 type = int,
+            ),
+            someMixedCase = dict(
+                optional = True,
+                values = [ 'why ?', 'toto' ],
             )
         )
     )
@@ -745,6 +749,39 @@ class utCatalog(TestCase):
         self.assertTrue(db.weak)
 
 
+# Base for Lower and UpperCaseDict objects
+
+# noinspection PyPropertyAccess
+class utCaseDict(TestCase):
+
+    def setUp(self):
+        self.tdict = {'Toto': 1, 'blop': 2, 'SCRONTCH': 3}
+        self.ld = util.LowerCaseDict(self.tdict)
+        self.ud = util.UpperCaseDict(self.tdict)
+
+    def test_case_processing(self):
+        self.setUp()
+        for speciald in (self.ld, self.ud):
+            self.assertIn('Toto', speciald)
+            self.assertIn('toto', speciald)
+            self.assertIn('TOTO', speciald)
+            self.assertIn('toTo', speciald)
+            del speciald['scrontch']
+            self.assertNotIn('SRONTch', speciald)
+            speciald['blop'] = 3
+            speciald['bLop'] = 4
+            speciald['BLOP'] = 4
+            self.assertEqual(speciald['blop'], 4)
+            self.assertEqual(len(speciald), 2)
+
+    def test_special_content(self):
+        self.setUp()
+        self.assertDictEqual(self.ld,
+                             {k.lower(): v for k, v in self.tdict.iteritems()})
+        self.assertDictEqual(self.ud,
+                             {k.upper(): v for k, v in self.tdict.iteritems()})
+
+
 # Tests for footprints priorities
 
 class utPriorities(TestCase):
@@ -1270,7 +1307,8 @@ class utFootprint(TestCase):
 
         rv = fp._findextras(dict(foo='notused', good=obj))
         self.assertIsInstance(rv, dict)
-        self.assertDictEqual(rv, dict(cool=2, kind='hop', someint=7, somestr='this'))
+        self.assertDictEqual(rv, dict(cool=2, kind='hop', someMixedCase=None,
+                                      someint=7, somestr='this'))
 
     def test_footprint_addextras(self):
         fp = self.fpbis
@@ -1749,12 +1787,14 @@ class utFootprintBase(TestCase):
 
     def test_baseclass_fp1(self):
         self.assertFalse(FootprintTestOne.footprint_abstract())
-        self.assertListEqual(FootprintTestOne.footprint_mandatory(), ['someint', 'kind'])
+        self.assertListEqual(FootprintTestOne.footprint_mandatory(),
+                             ['someint', 'kind'])
         self.assertTrue(FootprintTestOne.footprint_optional('somestr'))
+        self.assertTrue(FootprintTestOne.footprint_optional('someMixedCase'))
         self.assertListEqual(FootprintTestOne.footprint_values('kind'), ['hip', 'hop'])
         self.assertSetEqual(
             FootprintTestOne.footprint_retrieve().as_opts(),
-            set(['someint', 'somestr', 'kind', 'stuff'])
+            set(['someint', 'somestr', 'kind', 'stuff', 'someMixedCase'])
         )
 
         with self.assertRaises(footprints.FootprintFatalError):
@@ -1764,18 +1804,22 @@ class utFootprintBase(TestCase):
             u_fp1 = FootprintTestOne(kind='hip', someint=13)
 
         fp1 = FootprintTestOne(kind='hip', someint=7)
+        print fp1
         self.assertIsInstance(fp1, FootprintTestOne)
         self.assertEqual(fp1.realkind, 'bigone')
-        self.assertListEqual(fp1.footprint_attributes, ['kind', 'someint', 'somestr'])
+        self.assertListEqual(fp1.footprint_attributes, 
+                             ['kind', 'someMixedCase', 'someint', 'somestr',])
         self.assertEqual(fp1.footprint_info, 'Test class')
 
-        fp1 = FootprintTestOne(stuff='hip', someint=7)
+        fp1 = FootprintTestOne(stuff='hip', someint=7, someMixedCase='why ?')
         self.assertIsInstance(fp1, FootprintTestOne)
-        self.assertListEqual(fp1.footprint_attributes, ['kind', 'someint', 'somestr'])
+        self.assertListEqual(fp1.footprint_attributes,
+                             ['kind', 'someMixedCase', 'someint', 'somestr'])
         self.assertDictEqual(fp1.footprint_as_dict(), dict(
             kind = 'hip',
             someint = 7,
             somestr = 'this',
+            someMixedCase = 'why ?',
         ))
 
         fp1 = FootprintTestOne(stuff='foo', someint='7')
@@ -1783,6 +1827,7 @@ class utFootprintBase(TestCase):
             kind = 'hop',
             someint = 7,
             somestr = 'this',
+            someMixedCase = None,
         ))
 
         with self.assertRaises(AttributeError):
@@ -1805,7 +1850,7 @@ class utFootprintBase(TestCase):
         self.assertListEqual(FootprintTestTwo.footprint_values('kind'), ['hip', 'hop'])
         self.assertSetEqual(
             FootprintTestTwo.footprint_retrieve().as_opts(),
-            set(['someint', 'somestr', 'kind', 'stuff', 'somefoo'])
+            set(['someint', 'somestr', 'kind', 'stuff', 'somefoo', 'someMixedCase'])
         )
 
         thefoo = Foo(inside=2)
@@ -1821,13 +1866,15 @@ class utFootprintBase(TestCase):
 
         fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
         self.assertIsInstance(fp2, FootprintTestTwo)
-        self.assertListEqual(fp2.footprint_attributes, ['kind', 'somefoo', 'someint', 'somestr'])
+        self.assertListEqual(fp2.footprint_attributes, 
+                             ['kind', 'someMixedCase', 'somefoo', 'someint', 'somestr'])
         self.assertEqual(fp2.footprint_info, 'Another test class')
         self.assertDictEqual(fp2.footprint_as_dict(), dict(
             kind = 'hip',
             someint = 5,
             somestr = 'this',
-            somefoo = thefoo
+            somefoo = thefoo,
+            someMixedCase = None,
         ))
 
     def test_baseclass_rwd(self):
@@ -1927,6 +1974,11 @@ class utFootprintBuiltins(TestCase):
         self.assertEqual(l[1], 'two')
         l.append(4)
         self.assertListEqual(l[:], ['one', 'two', 3, 4])
+
+        l = FPList([3])
+        self.assertIsInstance(l, FPList)
+        self.assertIsInstance(l, list)
+        self.assertListEqual(l, [3])
 
         s = FPSet(['one', 'two', 3])
         self.assertIsInstance(s, FPSet)
