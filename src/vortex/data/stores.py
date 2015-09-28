@@ -188,7 +188,9 @@ class Store(footprints.FootprintBase):
 
     def in_situ(self, local, options):
         """Return true when insitu option is active and local file exists."""
-        return bool(options.get('insitu', False) and (self.system.path.exists(local) or self.system.path.exists(local + '.fake')))
+        return bool(options.get('insitu', False) and
+                    options.get('alternate', False) and
+                    (self.system.path.exists(local) or self.system.path.exists(local + '.fake')))
 
     def notyet(self, *args):
         """
@@ -470,7 +472,7 @@ class Finder(Store):
         rpath = self.fullpath(remote)
         if 'intent' in options and options['intent'] == dataflow.intent.IN:
             logger.info('Ignore intent <in> for remote input %s', rpath)
-        return self.system.cp(rpath, local, fmt=options.get('fmt'))
+        return self.system.cp(rpath, local, fmt=options.get('fmt'), intent=dataflow.intent.INOUT)
 
     def fileput(self, local, remote, options):
         """Delegates to ``system`` the copy of ``local`` to ``remote``."""
