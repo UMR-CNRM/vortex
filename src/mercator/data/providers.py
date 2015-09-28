@@ -15,7 +15,8 @@ class MercatorArchive(Provider):
         attr = dict(
             namespace = dict(
                 optional = False,
-                default = 'mercator.archive.fr'
+                default = 'mercator.archive.fr',
+                values = ['mercator.archive.fr',]
             ),
         )
     )

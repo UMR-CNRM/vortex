@@ -104,7 +104,7 @@ class XPid(str):
         return str(self) in opsuites
 
 #: Default values for operational experiment names.
-opsuites = set([ XPid(x) for x in ['OPER', 'DBLE', 'TEST'] + [ 'OP{0:02d}'.format(i) for i in range(100) ] ])
+opsuites = set([ XPid(x) for x in ['OPER', 'DBLE', 'TEST', 'MIRR'] + [ 'OP{0:02d}'.format(i) for i in range(100) ] ])
 
 
 class Namespace(str):

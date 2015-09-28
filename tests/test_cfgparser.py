@@ -12,8 +12,7 @@ from unittest import TestCase, TestLoader, TextTestRunner
 from vortex.util.config import GenericConfigParser
 from iga.data.providers import IgaCfgParser
 
-DATAPATHTEST = './data'
-IGADATAPATH = '/ch/mxpt/mxpt001/steph_perso/python/Vortex/src/iga/data'
+DATAPATHTEST = '/'.join(__file__.split('/')[0:-1]) + '/data'
 
 
 class UtGenericConfigParser(TestCase):
@@ -41,7 +40,9 @@ class UtGenericConfigParser(TestCase):
                     'climmodel', 'climdomain']
         self.assertTrue(sorted(igacfgp.sections()), sorted(sections))
         for section in igacfgp.sections():
-            self.assertTrue(igacfgp.options(section) == [ 'resolvedpath' ])
+            self.assertEqual(igacfgp.options(section), [ 'resolvedpath' ],
+                             msg='Block: {}. {!s}'.format(section, 
+                                                          igacfgp.options(section)))
         self.assertRaises(
             InterpolationMissingOptionError,
             igacfgp.get,
@@ -66,6 +67,9 @@ class UtGenericConfigParser(TestCase):
 
 class UtIgaCfgParser(TestCase):
 
+    def setUp(self):
+        self.path = DATAPATHTEST
+
     def test_void_init(self):
         icp = IgaCfgParser()
         self.assertTrue(type(icp) == IgaCfgParser)
@@ -75,11 +79,11 @@ class UtIgaCfgParser(TestCase):
         self.assertRaises(Exception, IgaCfgParser, 'absent.ini')
 
     def test_init_2(self):
-        false_ini = 'false.ini'
-        self.assertRaises(Exception, IgaCfgParser, false_ini)
+        real_ini = os.path.join(self.path, 'false.ini')
+        self.assertRaises(Exception, IgaCfgParser, real_ini)
 
     def test_init_3(self):
-        real_ini = 'iga-map-resources.ini'
+        real_ini = os.path.join(self.path, 'iga-map-resources.ini')
         igacfgp = IgaCfgParser(real_ini)
         for section in ['analysis', 'matfilter', 'rtcoef', 'namelist', 'clim_model', 'clim_bdap']:
             self.assertIn(section, igacfgp.sections())
@@ -92,7 +96,7 @@ class UtIgaCfgParser(TestCase):
         )
 
     def test_setall(self):
-        real_ini = 'iga-map-resources.ini'
+        real_ini = os.path.join(self.path, 'iga-map-resources.ini')
         igacfgp = IgaCfgParser(real_ini)
         kwargs = {
             'model': 'arpege',
@@ -105,7 +109,7 @@ class UtIgaCfgParser(TestCase):
         self.assertTrue( igacfgp.get('analysis', 'resolvedpath') == resolvedpath )
 
     def test_resolvedpath(self):
-        real_ini = 'iga-map-resources.ini'
+        real_ini = os.path.join(self.path, 'iga-map-resources.ini')
         igacfgp = IgaCfgParser(real_ini)
         kwargs = {
             'model': 'arpege',
