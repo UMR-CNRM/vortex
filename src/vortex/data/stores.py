@@ -192,6 +192,10 @@ class Store(footprints.FootprintBase):
                     (options.get('rhandler', None).get('alternate', None) is None) and
                     (self.system.path.exists(local) or self.system.path.exists(local + '.fake')))
 
+    def _isnot_fake(self, local, options):
+        """Check if the insitu ressource is a fake or not"""
+        return self.system.path.exists(local)
+
     def notyet(self, *args):
         """
         Internal method to be used as a critical backup method
@@ -218,7 +222,7 @@ class Store(footprints.FootprintBase):
         else:
             if self.in_situ(local, options):
                 logger.info('Store %s in situ resource <%s>', self.footprint_clsname(), local)
-                return True
+                return self._isnot_fake(local, options)
             else:
                 return getattr(self, self.scheme + 'get', self.notyet)(remote, local, options)
 
@@ -356,7 +360,7 @@ class MultiStore(footprints.FootprintBase):
         """Go through internal opened stores and put resource for each of them."""
         logger.debug('Multistore put from %s to %s', local, remote)
         if not self.openedstores:
-            logger.warning('Funny attemp to put on an emty multistore...')
+            logger.warning('Funny attemp to put on an empty multistore...')
             return False
         rc = True
         for sto in self.openedstores:

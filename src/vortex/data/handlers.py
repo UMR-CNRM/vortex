@@ -343,13 +343,15 @@ class Handler(object):
                 store = self.store
                 if store:
                     logger.debug('Get resource %s at %s from %s', self, self.lasturl, store)
+                    st_options = self.mkopts(dict(rhandler = self.as_dict()), extras)
+                    is_insitu = store.in_situ(self.container.iotarget(), st_options)
                     rst = store.get(
                         self.uridata,
                         self.container.iotarget(),
-                        self.mkopts(dict(rhandler = self.as_dict()), extras)
+                        st_options,
                     )
                     self.container.updfill(rst)
-                    if rst and self._mdcheck:
+                    if rst and not is_insitu and self._mdcheck:
                         rst = rst and self.contents.metadata_check(self.resource)
                         if not rst:
                             logger.info("We are now cleaning up the container and data content.")
@@ -362,10 +364,10 @@ class Handler(object):
                             logger.info('Resource <%s> is expected', self.container.iotarget())
                         else:
                             self.updstage('get')
-                            for hook_name in sorted(self.hooks.keys()):
-                                hook_func, hook_args = self.hooks[hook_name]
-                                #logger.info('HOOK after get <%s(%s)>' % (hook_func, hook_args))
-                                hook_func(sessions.current(), self, *hook_args)
+                            if not is_insitu:
+                                for hook_name in sorted(self.hooks.keys()):
+                                    hook_func, hook_args = self.hooks[hook_name]
+                                    hook_func(sessions.current(), self, *hook_args)
                 else:
                     logger.error('Could not find any store to get %s', self.lasturl)
         else:
