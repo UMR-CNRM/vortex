@@ -269,6 +269,8 @@ class Handler(object):
             obj = getattr(self, subobj, None)
             if obj is not None:
                 rhd[subobj] = obj.footprint_export()
+        rhd['role'] = self.role
+        rhd['alternate'] = self.alternate
         return rhd
 
     @property

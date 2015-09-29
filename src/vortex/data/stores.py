@@ -189,7 +189,7 @@ class Store(footprints.FootprintBase):
     def in_situ(self, local, options):
         """Return true when insitu option is active and local file exists."""
         return bool(options.get('insitu', False) and
-                    options.get('alternate', False) and
+                    (options.get('rhandler', None).get('alternate', None) is None) and
                     (self.system.path.exists(local) or self.system.path.exists(local + '.fake')))
 
     def notyet(self, *args):
