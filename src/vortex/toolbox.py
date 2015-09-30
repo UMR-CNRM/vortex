@@ -35,6 +35,15 @@ history = History(tag='rload')
 # Most commonly used functions
 
 
+def show_toolbox_settings(ljust=24):
+    """Print the current settings of the toolbox."""
+    for key in ['active_{}'.format(act) for act in
+                ('now', 'insitu', 'verbose', 'promise', 'metadatacheck', 'clear')]:
+        kval = globals().get(key, None)
+        if kval is not None:
+            print '+', key.ljust(ljust), '=', kval
+
+
 def quickview(args, nb=0, indent=0):
     """Recursive call to any quick view of objects specified as arguments."""
     if not isinstance(args, list) and not isinstance(args, tuple):

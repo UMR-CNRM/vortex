@@ -6,7 +6,7 @@ __all__ = []
 
 
 from vortex.data.executables import BlackBox, NWPModel
-from gco.syntax.stdattrs import GenvKey
+from gco.syntax.stdattrs import GenvKey, ArpIfsSimplifiedCycle
 
 
 class IFSModel(NWPModel):
@@ -26,6 +26,11 @@ class IFSModel(NWPModel):
             model = dict(
                 outcast  = ['aladin', 'arome'],
             ),
+            cycle = dict(
+                type     = ArpIfsSimplifiedCycle,
+                optional = True,
+                default  = 'cy40',  # For "old" Olive configurations to keep working
+            )
         )
     )
 
@@ -46,10 +51,16 @@ class IFSModel(NWPModel):
     def command_line(self, model='arpifs', vmodel='meteo',
                      name='XRUN', conf=1, timescheme='sli',
                      timestep=600, fcterm=0, fcunit='h'):
-        """Build command line for execution as a single string."""
-        return '-v{0:s} -e{1:s} -c{2:d} -a{3:s} -t{4:g} -f{5:s}{6:d} -m{7:s}'.format(
-            vmodel, name, conf, timescheme, timestep, fcunit, fcterm, model
-        )
+        """
+        Build command line for execution as a single string.
+        Depending on the cycle it may returns nothing.
+        """
+        if self.cycle < 'cy41':
+            return '-v{0:s} -e{1:s} -c{2:d} -a{3:s} -t{4:g} -f{5:s}{6:d} -m{7:s}'.format(
+                vmodel, name, conf, timescheme, timestep, fcunit, fcterm, model
+            )
+        else:
+            return ()
 
 
 class Arome(IFSModel):
