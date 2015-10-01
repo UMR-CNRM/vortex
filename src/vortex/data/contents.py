@@ -10,15 +10,17 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
+from vortex.util.structs import ReadOnlyDict
 
 
 class DataContent(object):
     """Root class for data contents used by resources."""
 
     def __init__(self, **kw):
-        self._datafmt = None
-        self._data    = None
-        self._size    = 0
+        self._datafmt   = None
+        self._data      = None
+        self._metadata  = ReadOnlyDict()
+        self._size      = 0
         for k, v in kw.iteritems():
             self.__dict__['_' + k] = v
 
@@ -43,6 +45,26 @@ class DataContent(object):
     def size(self):
         """The actual size of the contents."""
         return self._size
+
+    @property
+    def metadata(self):
+        """Return the metadata of the ressource in the container (maybe empty)."""
+        return self._metadata
+
+    def metadata_check(self, resource):
+        """Check that the metadata of the ressource in the container matches
+        the attributes of the ressource given as an argument."""
+        if not len(self.metadata):
+            logger.error('Metadata check is not implemented for this format. ' +
+                         'The check will always succeed...')
+        outcome = True
+        for mkey, mval in self.metadata.iteritems():
+            if hasattr(resource, mkey):
+                outcome = outcome and getattr(resource, mkey) == mval
+        if not outcome:
+            logger.warning("The ressource in the container doesn't match the resource footprint: %s",
+                           str(self.metadata))
+        return outcome
 
     @property
     def datafmt(self):
@@ -146,9 +168,9 @@ class JsonDictContent(AlmostDictContent):
             return [cls._unicode2str(value) for value in jsdecode]
         elif isinstance(jsdecode, unicode):
             try:
-              return jsdecode.encode()
+                return jsdecode.encode()
             except UnicodeEncodeError:
-              return jsdecode
+                return jsdecode
         else:
             return jsdecode
 
@@ -335,3 +357,73 @@ class FormatAdapter(DataContent):
                     fmtdelayedopen = True,
                     format         = container.actualfmt.upper(),
                 )
+                # Look for a metadatareader object
+                if self._data and footprints.proxy.metadatareaders is not None:
+                    mreader = footprints.proxy.metadatareader(
+                        format     = container.actualfmt.upper(),
+                    )
+                    if mreader is not None:
+                        mreader.content_init(self._data)
+                        self._metadata = mreader
+
+
+class MetaDataReader(footprints.FootprintBase):
+    '''
+    Abstract class for any MetaDataReader.
+
+    Note: _do_delayed_init have to be subclassed. That's where the content of the
+    container is actually read.
+    '''
+
+    _abstract  = True
+    _collector = ('metadatareader',)
+    _footprint = dict(
+        info = 'Abstract MetaDataReader',
+        attr = dict(
+            format = dict(
+                type     = str,
+            )
+        )
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        self._content_in = None
+        self._datahide = None
+        super(MetaDataReader, self).__init__(*kargs, **kwargs)
+
+    @property
+    def _data(self):
+        '''Internal: check if one needs to intialise the _datahide dict.'''
+        if self._datahide is None and self._content_in is not None:
+            self._do_delayed_init()
+        return self._datahide
+
+    def content_init(self, thecontent):
+        '''Set the data content that will be used to read the metadata'''
+        self._content_in = thecontent
+
+    def _do_delayed_init(self):
+        '''Internal: actually initialise the _data array. Have to be subclassed !'''
+        raise NotImplementedError
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __len__(self):
+        return len(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def iteritems(self):
+        for k in self:
+            yield k, self[k]
+
+    def __repr__(self):
+        if self._datahide is None:
+            return '{}: Not yet initialised'.format(self.__class__)
+        else:
+            return repr(self._data)
+
+    def __str__(self):
+        return str(self._data)

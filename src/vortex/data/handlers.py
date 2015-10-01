@@ -56,8 +56,11 @@ class Handler(object):
         self._options   = rd.copy()
         self._observer  = observer_board(kw.pop('observer', None))
         self._options.update(kw)
-        self._ghost   = self._options.pop('ghost', False)
-        self._hooks   = { x[5:]:self._options.pop(x) for x in self._options.keys() if x.startswith('hook_') }
+        self._mdcheck   = self._options.pop('metadatacheck', False)
+        self._ghost     = self._options.pop('ghost', False)
+        self._hooks     = {x[5:]: self._options.pop(x)
+                           for x in self._options.keys()
+                           if x.startswith('hook_') }
         self._history = structs.History(tag='data-handler')
         self._history.append(self.__class__.__name__, 'init', True)
         self._stage = ['load']
@@ -266,6 +269,8 @@ class Handler(object):
             obj = getattr(self, subobj, None)
             if obj is not None:
                 rhd[subobj] = obj.footprint_export()
+        rhd['role'] = self.role
+        rhd['alternate'] = self.alternate
         return rhd
 
     @property
@@ -338,12 +343,20 @@ class Handler(object):
                 store = self.store
                 if store:
                     logger.debug('Get resource %s at %s from %s', self, self.lasturl, store)
+                    st_options = self.mkopts(dict(rhandler = self.as_dict()), extras)
+                    is_insitu = store.in_situ(self.container.iotarget(), st_options)
                     rst = store.get(
                         self.uridata,
                         self.container.iotarget(),
-                        self.mkopts(dict(rhandler = self.as_dict()), extras)
+                        st_options,
                     )
                     self.container.updfill(rst)
+                    if rst and not is_insitu and self._mdcheck:
+                        rst = rst and self.contents.metadata_check(self.resource)
+                        if not rst:
+                            logger.info("We are now cleaning up the container and data content.")
+                            self.reset_contents()
+                            self.clear()
                     self.history.append(store.fullname(), 'get', rst)
                     if rst:
                         if store.delayed:
@@ -351,10 +364,10 @@ class Handler(object):
                             logger.info('Resource <%s> is expected', self.container.iotarget())
                         else:
                             self.updstage('get')
-                            for hook_name in sorted(self.hooks.keys()):
-                                hook_func, hook_args = self.hooks[hook_name]
-                                #logger.info('HOOK after get <%s(%s)>' % (hook_func, hook_args))
-                                hook_func(sessions.current(), self, *hook_args)
+                            if not is_insitu:
+                                for hook_name in sorted(self.hooks.keys()):
+                                    hook_func, hook_args = self.hooks[hook_name]
+                                    hook_func(sessions.current(), self, *hook_args)
                 else:
                     logger.error('Could not find any store to get %s', self.lasturl)
         else:
@@ -417,12 +430,8 @@ class Handler(object):
         rst = False
         if self.container:
             logger.debug('Remove resource container %s', self.container)
-            sh = sessions.system()
-            rst = sh.remove(
-                self.container.localpath(),
-                fmt = self.container.actualfmt
-            )
-            self.history.append(sh.fullname(), 'clear', rst)
+            rst = self.container.clear()
+            self.history.append(self.container.actualpath(), 'clear', rst)
         return rst
 
     def mkgetpr(self, pr_getter=None, tplfile=None, tplskip='sync-skip.tpl', tplfetch='sync-fetch.tpl', py_exec=sys.executable, py_opts=''):

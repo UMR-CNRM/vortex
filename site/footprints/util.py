@@ -541,6 +541,14 @@ class Catalog(object):
 class SpecialDict(dict):
     """Add some special features to std dict for dealing to dedicated case dictionaries."""
 
+    def __init__(self, *kargs, **kwargs):
+        tmpdict = dict(*kargs, **kwargs)
+        # Check the dictionnary keys. If necessary change them
+        for k, v in [(k, v) for k, v in tmpdict.iteritems() if k != self.remap(k)]:
+            del tmpdict[k]
+            tmpdict[self.remap(k)] = v
+        super(SpecialDict, self).__init__(tmpdict)
+
     def show(self, ljust=24):
         """Print the actual values of the dictionary."""
         for k in sorted(self.keys()):
@@ -595,8 +603,6 @@ class UpperCaseDict(SpecialDict):
         return key.upper()
 
 
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
-

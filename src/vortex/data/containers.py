@@ -10,6 +10,7 @@ import tempfile
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
+from vortex import sessions
 from vortex.syntax.stdattrs import a_actualfmt
 
 CONTAINER_INCORELIMIT = 1048576 * 8
@@ -87,6 +88,12 @@ class Container(footprints.FootprintBase):
         """Change current filled status according to return code of the get command."""
         if getrc is not None and getrc:
             self._filled = True
+
+    def clear(self, fmt=None):
+        """Delete the container content."""
+        self.close()
+        self._filled = False
+        return True
 
     @property
     def totalsize(self):
@@ -489,6 +496,15 @@ class SingleFile(Container):
     def iotarget(self):
         """File container's io target is a plain pathname."""
         return self.localpath()
+
+    def clear(self, *kargs, **kw):
+        """Delete the container content (in this case the actual file)."""
+        rst = super(SingleFile, self).clear(*kargs, **kw)
+        # Physically delete the file if it exists
+        if self.exists():
+            sh = kw.pop('system', sessions.system())
+            rst = rst and sh.remove(self.localpath(), fmt=self.actualfmt)
+        return rst
 
     def exists(self):
         """Check the existence of the actual file."""

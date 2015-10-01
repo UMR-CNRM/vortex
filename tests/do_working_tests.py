@@ -5,10 +5,12 @@ import unittest
 import os
 
 
-testmodules = ['test_env',
+testmodules = ['test_import',
+               'test_footprints',
                'test_date',
-               'test_import',
+               'test_env',
                'test_cfgparser',
+               'test_vortexnames',
                ]
 
 
@@ -36,12 +38,8 @@ if __name__ == '__main__':
     Now we run the tests
     '''
 
-    # First we test footprints (it need to be done first before any of the
-    # vortex module is import. Otherwise it fails !
-    footprint_special = build_suite(['test_footprints', ])
-    footprint_special.run(result=results)
     # We run all the other tests (in the original working directory)
-    os.chdir(dirsave)
+    # os.chdir(dirsave)
     suite = build_suite(testmodules)
     suite.run(result=results)
 

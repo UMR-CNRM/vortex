@@ -33,7 +33,7 @@ import os, sys
 try:
     # With a standard Unix file descriptor
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-except IOError:
+except (IOError, AttributeError):
     try:
         # With an IOStream without file number
         sys.stdout.flush_interval = 0

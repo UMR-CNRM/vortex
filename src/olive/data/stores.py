@@ -281,7 +281,7 @@ class OpCacheStore(CacheStore):
                 default = 'auto'
             ),
             headdir = dict(
-                default = 'op',
+                default = 'oper',
                 outcast = ['xp', 'vortex', 'gco'],
             ),
         )

@@ -11,11 +11,13 @@ in EPyGrAM package.
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
+from vortex.data.contents import MetaDataReader
+from vortex.tools.date import Date, Time
+
 try:
     import epygram
 except ImportError:
     pass
-import numpy
 
 footprints.proxy.containers.discard_package('epygram')
 
@@ -71,3 +73,63 @@ def addfield(t, rh, fieldsource, fieldtarget, constvalue):
         localenv.active(False)
     else:
         logger.warning('Try to add field on a missing resource <%s>', rh.container.localpath())
+
+
+class EpygramMetadataReader(MetaDataReader):
+
+    _abstract = True
+    _footprint = dict(
+        info = 'Abstract MetaDataReader for formats handled by epygram',
+    )
+
+    def _do_delayed_init(self):
+        epyf = self._content_in
+        if not epyf.isopen:
+            epyf.open()
+        date_epy, term_epy = self._process_epy(epyf)
+        self._datahide = {
+            'date': Date(date_epy) if date_epy else date_epy,
+            'term': Time(hour=int(term_epy.total_seconds() / 3600),
+                         minute=int((term_epy.total_seconds() / 60)) % 60)
+        }
+
+
+class FaMetadataReader(EpygramMetadataReader):
+
+    _footprint = dict(
+        info = 'MetaDataReader for the FA file format',
+        attr = dict(
+            format = dict(
+                values = ('FA',)
+            )
+        )
+    )
+
+    def _process_epy(self, epyf):
+        # Just call the epygram function !
+        return epyf.validity.getbasis(), epyf.validity.term()
+
+
+class GribMetadataReader(EpygramMetadataReader):
+
+    _footprint = dict(
+        info = 'MetaDataReader for the GRIB file format',
+        attr = dict(
+            format = dict(
+                values = ('GRIB',)
+            )
+        )
+    )
+
+    def _process_epy(self, epyf):
+        # Loop over the fields and check the unicity of date/term
+        bundle = set()
+        for epyfld in epyf.iter_field(getdata=False):
+            bundle.add((epyfld.validity.getbasis(), epyfld.validity.term()))
+        if len(bundle) > 1:
+            logger.error("The GRIB file contains fileds with different date and terms.")
+        if len(bundle) == 0:
+            logger.warning("The GRIB file doesn't contains any fields")
+            return None, 0
+        else:
+            return bundle[0]

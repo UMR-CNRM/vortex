@@ -8,6 +8,9 @@ import re
 import socket
 
 import footprints
+from vortex.tools import fortran
+
+
 logger = footprints.loggers.getLogger(__name__)
 
 
@@ -96,3 +99,17 @@ def olive_jobout(sh, env, output, localout=None):
         logger.warning('Could not connect to remote jobout server %s', (swapp_host, swapp_port))
 
     return rc
+
+
+def olive_gnam_hook_factory(nickname, nam_delta):
+    '''Hook functions factory to apply namelist delta on a given ressource.'''
+    namdelta_l = fortran.namparse(nam_delta)
+
+    def olive_gnam_hook(t, namrh):
+        t.sh.subtitle('Applying the following namelist patch {} to namelist {}'.format(nickname,
+                                                                                       namrh.container.localpath()))
+        print namdelta_l.dumps()
+        namrh.contents.merge(namdelta_l)
+        namrh.save()
+
+    return olive_gnam_hook
