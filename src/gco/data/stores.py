@@ -108,29 +108,25 @@ class GcoCentralStore(Store):
         (gtool, tampon, gname) = self.actualgget(remote['path'])
         sh = self.system
         sh.env.GGET_TAMPON = tampon
-        rc = sh.spawn([gtool, gname], output=False)
+
+        extract = remote['query'].get('extract', None)
+        if extract and sh.path.exists(gname):
+            logger.info("The resource was already fetched in a previous extract.")
+            rc = True
+        else:
+            rc = sh.spawn([gtool, gname], output=False)
+
         if rc and sh.path.exists(gname):
             if not sh.path.isdir(gname) and sh.is_tarfile(gname):
-                loccwd = sh.getcwd()
-                loctmp = tempfile.mkdtemp(prefix='gget_', dir=loccwd)
-                sh.cd(loctmp)
-                rc = sh.untar('../' + gname, output=False)
-                unpacked = sh.glob('*')
-                for untaritem in unpacked:
-                    if sh.path.exists('../' + untaritem):
-                        logger.error('Some previous item exists before untar [%s]', untaritem)
-                    else:
-                        sh.mv(untaritem, '../' + untaritem)
-                sh.cd(loccwd)
-                sh.rm(loctmp)
+                destdir = sh.path.dirname(sh.path.realpath(local))
+                unpacked = sh.smartuntar(gname, destdir, output=False)
             else:
                 unpacked = None
-            extract = remote['query'].get('extract', None)
             if extract:
                 logger.info('GCO Central Store get %s', gname + '/' + extract[0])
                 rc = sh.cp(gname + '/' + extract[0], local)
             else:
-                logger.info( 'GCO Central Store get %s', gname )
+                logger.info('GCO Central Store get %s', gname)
                 if unpacked is None or len(unpacked) > 1:
                     rc = sh.mv(gname, local)
                 else:
@@ -195,7 +191,8 @@ class GcoCacheStore(CacheStore):
         else:
             rc = self.incacheget(remote, local, options)
             if rc and not self.system.path.isdir(local) and self.system.is_tarfile(local):
-                rc = self.system.untar(local, output=False)
+                destdir = self.system.path.dirname(self.system.path.realpath(local))
+                unpacked = self.system.smartuntar(local, destdir, output=False)
             return rc
 
     def ggetput(self, local, remote, options):

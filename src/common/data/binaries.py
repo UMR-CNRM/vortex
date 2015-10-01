@@ -5,7 +5,7 @@
 __all__ = []
 
 
-from vortex.data.executables import BlackBox, NWPModel
+from vortex.data.executables import Script, BlackBox, NWPModel
 from gco.syntax.stdattrs import GenvKey, ArpIfsSimplifiedCycle
 
 
@@ -60,7 +60,7 @@ class IFSModel(NWPModel):
                 vmodel, name, conf, timescheme, timestep, fcunit, fcterm, model
             )
         else:
-            return ()
+            return ''
 
 
 class Arome(IFSModel):
@@ -277,3 +277,50 @@ class MasterDiagPI(BlackBox):
     @property
     def realkind(self):
         return 'masterdiagpi'
+
+
+class IOPoll(Script):
+    """
+    The IOPoll script. A Genvkey can be given.
+    """
+    _footprint = dict(
+        info='IOPoll script',
+        attr=dict(
+            kind=dict(
+                values=['iopoll', 'io_poll'],
+                remap=dict(autoremap='first'),
+            ),
+            gvar=dict(
+                type=GenvKey,
+                optional=True,
+                default='tools_io_poll',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'iopoll'
+
+
+class LFITools(BlackBox):
+    """Multipurpose tool to handle LFI/FA files."""
+
+    _footprint = dict(
+        info = 'Tool to handle LFI/FA files',
+        attr = dict(
+            kind = dict(
+                values   = ['lfitools', ],
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_lfitools'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'lfitools'
+

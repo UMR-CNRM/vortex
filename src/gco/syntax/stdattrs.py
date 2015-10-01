@@ -50,10 +50,10 @@ class GenvDomain(str):
 class ArpIfsSimplifiedCycle(object):
     """
     Type that holds a simplified representation of an ArpegeIFS cycle.
-    
+
     It provides basic comparison operators to determine if a given cycle is more recent or not
     compared to another one.
-    
+
     It can be used in a footprint specification.
     """
     _cy_re = re.compile('(?:cy|al)(\d+)(?:t(\d{1,3}))?(?:_.*?(?:op(\d{1,3}))?(:?\.\d+)?)?$')
@@ -88,7 +88,7 @@ class ArpIfsSimplifiedCycle(object):
 
     def __str__(self):
         return ('cy{:d}'.format(self._number) +
-                ('t{:d}'.format(self._toulouse) if self._toulouse else ''),
+                ('t{:d}'.format(self._toulouse) if self._toulouse else '') +
                 ('_op{:d}'.format(self._op) if self._op else ''))
 
     def __repr__(self):

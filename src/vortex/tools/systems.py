@@ -9,7 +9,7 @@ system interaction. Systems objects use the :mod:`footprints` mechanism.
 #: No automatic export
 __all__ = []
 
-import os, stat, resource, shutil, socket
+import os, stat, resource, shutil, socket, tempfile
 import re, platform, sys, io, filecmp, time
 import glob
 import tarfile
@@ -1095,6 +1095,24 @@ class OSExtended(System):
         cmd = ['tar', self.taropts(args[0], 'xf', kw.pop('verbose', True)), args[0]]
         cmd.extend(args[1:])
         return self.spawn(cmd, **kw)
+
+    def smartuntar(self, source, destination, **kw):
+        """Unpack a file archive in the appropriate directory."""
+        loccwd = self.getcwd()
+        fullsource = self.path.realpath(source)
+        self.mkdir(destination)
+        loctmp = tempfile.mkdtemp(prefix='untar_', dir=destination)
+        self.cd(loctmp)
+        rc = self.untar(fullsource, **kw)
+        unpacked = self.glob('*')
+        for untaritem in unpacked:
+            if self.path.exists('../' + untaritem):
+                logger.error('Some previous item exists before untar [%s]', untaritem)
+            else:
+                self.mv(untaritem, '../' + untaritem)
+        self.cd(loccwd)
+        self.rm(loctmp)
+        return unpacked
 
     def is_tarname(self, objname):
         """Check if a ``objname`` is a string with ``.tar`` suffix."""

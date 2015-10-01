@@ -121,7 +121,7 @@ class DrHookListing(Listing):
 
     def basename_info(self):
         """From base information of ``listing``, add mpi."""
-        info = super(ParallelListing, self).basename_info()
+        info = super(DrHookListing, self).basename_info()
         if self.mpi:
             info['compute'] = [{'mpi': self.mpi}, ]
         return info

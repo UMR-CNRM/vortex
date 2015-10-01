@@ -22,6 +22,7 @@ def use_in_shell(sh, **kw):
     kw['shell'] = sh
     return footprints.proxy.addon(**kw)
 
+
 class LFI_Status(object):
     """
     Store lfi commands status as a set of attributes:
@@ -91,10 +92,9 @@ class LFI_Status(object):
         return bool(self.rc in self.ok)
 
 
-class LFI_Tool(addons.Addon):
+class LFI_Tool_Raw(addons.Addon):
     """
-    Default interface to LFI commands.
-    These commands are the one defined by the ``lfitools`` binary found in the IFS-ARPEGE framework.
+    Interface to LFI commands through Perl wrappers.
     """
 
     LFI_HNDL_SPEC   = ':1'
@@ -105,7 +105,7 @@ class LFI_Tool(addons.Addon):
     KMP_MONITOR_STACKSIZE = '32M'
 
     _footprint = dict(
-        info = 'Default LFI system interface',
+        info = 'Default LFI system interface (Perl)',
         attr = dict(
             kind = dict(
                 values   = ['lfi'],
@@ -122,13 +122,23 @@ class LFI_Tool(addons.Addon):
                 optional = True,
                 default  = False,
             ),
+            wraplanguage = dict(
+                values   = ['perl', ],
+                default  = 'perl',
+                optional = True,
+            ),
         )
     )
 
     def _spawn(self, cmd, **kw):
         """Tube to set LFITOOLS env variable."""
         self.env.LFITOOLS = self.path + '/' + self.cmd
-        return super(LFI_Tool, self)._spawn(cmd, **kw)
+        return super(LFI_Tool_Raw, self)._spawn(cmd, **kw)
+
+    def _spawn_wrap(self, func, cmd, **kw):
+        """Tube to set LFITOOLS env variable."""
+        self.env.LFITOOLS = self.path + '/' + self.cmd
+        return super(LFI_Tool_Raw, self)._spawn_wrap(['lfi_' + func, ] + cmd, **kw)
 
     def is_xlfi(self, source):
         """Check if the given ``source`` is a multipart-lfi file."""
@@ -209,6 +219,12 @@ class LFI_Tool(addons.Addon):
 
     fa_diff = lfi_diff = _std_diff
 
+    def _pack_stream(self, source):
+        return self._spawn_wrap('pack', [source, ],
+                                output  = False,
+                                inpipe  = True,
+                                bufsize = 8192)
+
     def _std_ftput(self, source, destination, hostname=None, logname=None):
         """On the fly packing and ftp."""
         if self.is_xlfi(source):
@@ -225,12 +241,7 @@ class LFI_Tool(addons.Addon):
 
             ftp = self.sh.ftp(hostname, logname)
             if ftp:
-                p = self._spawn(
-                    ['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', '-'],
-                    output  = False,
-                    inpipe  = True,
-                    bufsize = 8192,
-                )
+                p = self._pack_stream(source)
                 st.rc = ftp.put(p.stdout, destination)
                 self.sh.pclose(p)
                 st.result = [destination]
@@ -248,6 +259,81 @@ class LFI_Tool(addons.Addon):
 
     fa_ftput = lfi_ftput = _std_ftput
     fa_rawftput = lfi_rawftput = _std_ftput
+
+    def _std_prepare(self, source, destination, intent='in'):
+        """Check for the source and prepare the destination."""
+        if intent not in ('in', 'inout'):
+            raise ValueError('Incorrect value for intent ({})'.format(intent))
+        st = LFI_Status()
+        if not self.sh.path.exists(source):
+            logger.error('Missing source %s', source)
+            st.rc = 2
+            st.stderr = 'No such source file or directory : [' + source + ']'
+            return st
+        if not self.sh.filecocoon(destination):
+            raise OSError('Could not cocoon [' + destination + ']')
+        if not self.lfi_rm(destination):
+            raise OSError('Could not clean destination [' + destination + ']')
+        return st
+
+    def _std_remove(self, *args):
+        """Remove (possibly) multi lfi files."""
+        st = LFI_Status(result=list())
+        for pname in args:
+            for objpath in self.sh.glob(pname):
+                rc = self._spawn_wrap('remove', [objpath, ], output=False)
+                st.result.append(dict(path=objpath,
+                                      multi=self.is_xlfi(objpath), rc=rc))
+                st.rc = rc
+        return st
+
+    lfi_rm = lfi_remove = fa_rm = fa_remove = _std_remove
+
+    def _std_copy(self, source, destination, intent='in', pack=False):
+        """Extended copy for (possibly) multi lfi file."""
+        st = self._std_prepare(source, destination, intent)
+        st.rc = self._spawn_wrap('copy', (['-pack', ] if pack else []) +
+                                         ['-intent={}'.format(intent),
+                                          source, destination],
+                                 output=False)
+        return st
+
+    lfi_cp = lfi_copy = fa_cp = fa_copy = _std_copy
+
+    def _std_move(self, source, destination, intent='in', pack=False):
+        """Extended mv for (possibly) multi lfi file."""
+        st = self._std_prepare(source, destination, intent)
+        st.rc = self._spawn_wrap('move', (['-pack', ] if pack else []) +
+                                         ['-intent={}'.format(intent),
+                                          source, destination],
+                                 output=False)
+        return st
+
+    lfi_mv = lfi_move = fa_mv = fa_move = _std_move
+
+
+class LFI_Tool_Py(LFI_Tool_Raw):
+    """
+    Rewritten Python interface to LFITOOLS command.
+    These commands are the one defined by the ``lfitools`` binary found in the IFS-ARPEGE framework.
+    WARNING: This interface is broken from cy41 onward.
+    """
+
+    _footprint = dict(
+        info = 'Default LFI system interface (Python)',
+        attr = dict(
+            wraplanguage = dict(
+                values   = ['python', ],
+            ),
+        )
+    )
+
+    def _pack_stream(self, source):
+        return self._spawn(['lfi_alt_pack', '--lfi-file-in', source,
+                            '--lfi-file-out', '-'],
+                           output  = False,
+                           inpipe  = True,
+                           bufsize = 8192)
 
     def _std_remove(self, *args):
         """Remove (possibly) multi lfi files."""
@@ -401,7 +487,8 @@ class IO_Poll(addons.Addon):
     def _spawn(self, cmd, **kw):
         """Tube to set LFITOOLS env variable."""
         if 'LFITOOLS' not in self.env:
-            active_lfi = LFI_Tool.in_shell(self.sh)
+            active_lfi = (LFI_Tool_Raw.in_shell(self.sh) or
+                          LFI_Tool_Py.in_shell(self.sh))
             if active_lfi is None:
                 raise StandardError('Could not find any active LFI Tool')
             self.env.LFITOOLS = active_lfi.path + '/' + active_lfi.cmd

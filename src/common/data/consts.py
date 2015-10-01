@@ -92,22 +92,44 @@ class BatodbConf(GenvModelResource):
         return 'batodbconf'
 
 
-class AtmsMask(GenvModelResource):
+class BatorAveragingMask(GenvModelResource):
     """
-    TODO. A Genvkey can be given.
+    Configuration file that drives the averaging of radiances in Bator.'''
     """
     _footprint = dict(
-        info = 'Set of GPS coefficients',
+        info = 'Definition file for the bator averaging',
         attr = dict(
             kind = dict(
-                values  = ['atms', 'atmsmask'],
-                remap   = dict(atms = 'atmsmask'),
+                values  = [ 'avgmask', ]
+            ),
+            sensor = dict(
+                values  = [ 'atms', 'ssmis', ]
             ),
             clscontents = dict(
                 default = TextContent,
             ),
             gvar = dict(
-                default = 'MASK_ATMS'
+                default = 'MASK_[sensor]',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'avgmask'
+
+
+class AtmsMask(BatorAveragingMask):
+    """Kept for backward compatibility with cy40 (see BatorAveragingMask)."""
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values   = [ 'atms', 'atmsmask', ],
+                remap    = dict(atms='atmsmask'),
+            ),
+            sensor = dict(
+                default  = 'atms',
+                optional = True,
             ),
         )
     )
@@ -671,3 +693,27 @@ class AmvBias(StaticResource):
     @property
     def realkind(self):
         return 'amv_bias'
+
+
+class LFIScripts(StaticResource):
+    """
+    The LFI scripts. A Genvkey can be given.
+    """
+    _footprint = dict(
+        info='LFI scripts',
+        attr=dict(
+            kind=dict(
+                values=['lfiscripts', ],
+            ),
+            gvar=dict(
+                type=GenvKey,
+                optional=True,
+                default='tools_lfi'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'lfiscripts'
+

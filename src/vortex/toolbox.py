@@ -537,13 +537,12 @@ def rescue(*files, **opts):
                 thisrescue = sh.mv
             else:
                 thisrescue = sh.cp
-            rescuefmt = opts.get('fmt', 'lfi')
             for ritem in items:
                 rtarget = sh.path.join(bkupdir, ritem)
                 if sh.path.exists(ritem) and not sh.path.islink(ritem) :
                     if sh.path.isfile(ritem):
-                        sh.rm(rtarget, fmt=rescuefmt)
-                        thisrescue(ritem, rtarget, fmt=rescuefmt)
+                        sh.rm(rtarget)
+                        thisrescue(ritem, rtarget)
                     else:
                         thisrescue(ritem, rtarget)
 

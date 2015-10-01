@@ -55,7 +55,12 @@ class IFSParallel(Parallel):
             xpname = dict(
                 optional = True,
                 default  = 'XPVT'
-            )
+            ),
+            drhookprof = dict(
+                optional = True,
+                type     = bool,
+                default  = False,
+            ),
         )
     )
 
@@ -105,13 +110,13 @@ class IFSParallel(Parallel):
         nam_updated = False
         # For cy41 onward, replace some namelist macros with the command line
         # arguments
-        if rh.ressource.cycle >= 'cy41':
+        if rh.resource.cycle >= 'cy41':
             if 'NAMARG' in namcontents:
                 opts_arg = self.spawn_command_options()
                 logger.info('Setup macro CEXP=%s in %s', opts_arg['name'], namlocal)
                 namcontents.setmacro('CEXP', opts_arg['name'])
                 logger.info('Setup macro TIMESTEP=%g in %s', opts_arg['timestep'], namlocal)
-                namcontents.setmacro('TIMESTEP', '{:g}'.opts_arg['timestep'])
+                namcontents.setmacro('TIMESTEP', opts_arg['timestep'])
                 fcstop = '{:s}{:d}'.format(opts_arg['fcunit'], opts_arg['fcterm'])
                 logger.info('Setup macro FCSTOP=%s in %s', fcstop, namlocal)
                 namcontents.setmacro('FCSTOP', fcstop)
@@ -124,13 +129,14 @@ class IFSParallel(Parallel):
         """Update each of the namelists."""
         for namrh in self.find_namelists(opts):
             namc = namrh.contents
-            if self.setup_namelist_delta(rh, namc, namrh.container.actualpath()):
+            if self.prepare_namelist_delta(rh, namc, namrh.container.actualpath()):
                 namc.rewrite(namrh.container)
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(IFSParallel, self).prepare(rh, opts)
-        for optpack in ('drhook', 'gribapi'):
+        for optpack in ('drhook{}'.format('prof' if self.drhookprof else ''), 
+                        'gribapi'):
             self.export(optpack)
         self.prepare_namelists(rh, opts)
 

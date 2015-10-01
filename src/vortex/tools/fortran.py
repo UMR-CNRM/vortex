@@ -49,7 +49,14 @@ _ALPHANUMERIC_CHARACTER = "[A-Z0-9_]"
 _CHARACTER              = "[A-Z0-9_ =+-*/(),.':!\"%&;<>?$]"
 
 # Low-lever
-_NAME = _LETTER + _ALPHANUMERIC_CHARACTER + '*'
+_QUOTE      = "'"
+_DQUOTE     = '"'
+_STRDELIM_B = "(?P<STRB>[" + _QUOTE + _DQUOTE + "])"
+_STRDELIM_E = "(?(STRB)[" + _QUOTE + _DQUOTE + "])"
+_NAME       = _LETTER + _ALPHANUMERIC_CHARACTER + '*'
+_MACRONAME  = (_STRDELIM_B + r'?\$?' +
+               "(?P<NAME>" + _LETTER + _ALPHANUMERIC_CHARACTER + '*' + ")" +
+               _STRDELIM_E)
 
 # Operators
 _POWER_OP  = "[*][*]"
@@ -464,11 +471,22 @@ class NamelistBlock(object):
             if self._literal is None:
                 self._literal = LiteralParser()
             literal = self._literal
-        if item in self._subs:
-            if self._subs[item] is None:
+        if isinstance(item, basestring):
+            itemli = item[:]
+            # Ignore quote and double-quote when mathing macro's name
+            if ((itemli.startswith("'") and itemli.endswith("'")) or
+                    (itemli.startswith('"') and itemli.endswith('"'))):
+                itemli = itemli[1:-1]
+            # Ignore the dollar sign before a macro name
+            if itemli.startswith('$'):
+                itemli = itemli[1:]
+        else:
+            itemli = item
+        if itemli in self._subs:
+            if self._subs[itemli] is None:
                 return item
             else:
-                return literal.encode(self._subs[item])
+                return literal.encode(self._subs[itemli])
         else:
             return literal.encode(item)
 
@@ -522,7 +540,7 @@ class NamelistParser(object):
                  re_block = r'&.*/',
                  re_bname = _NAME,
                  re_entry = _LETTER + r'[ A-Z0-9_,\%\(\):]*' + r"(?=\s*=)",
-                 re_macro = _NAME,
+                 re_macro = _MACRONAME,
                  re_endol = r"(?=\s*(,|/|\n))",
                  re_comma = r"\s*,"):
         self._literal = literal
@@ -621,11 +639,11 @@ class NamelistParser(object):
                 continue
 
             elif re.match(self._re_macro + self._re_endol, source, self._re_flags):
-                item = re.match(self._re_macro + self._re_endol, source, self._re_flags).group(0)
-                if item in self.macros:
-                    namelist.addmacro(item, None)
-                    values.append(item)
-                    source = self._namelist_clean(source[len(item):])
+                rmatch = re.match(self._re_macro + self._re_endol, source, self._re_flags)
+                if rmatch.group('NAME') in self.macros:
+                    namelist.addmacro(rmatch.group('NAME'), None)
+                    values.append(rmatch.group(0))
+                    source = self._namelist_clean(source[len(rmatch.group(0)):])
                     if self.comma.match(source):
                         source = self._namelist_clean(self.comma.sub('', source, 1))
                     continue

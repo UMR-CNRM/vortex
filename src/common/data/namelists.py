@@ -31,6 +31,7 @@ class NamelistContent(AlmostDictContent):
           * namblockcls : class for new blocks
         """
         kw.setdefault('macros', dict(
+            NPROC     = None,
             NBPROC    = None,
             NBPROC_IO = None,
             NCPROC    = None,
@@ -38,6 +39,9 @@ class NamelistContent(AlmostDictContent):
             NBPROCIN  = None,
             NBPROCOUT = None,
             IDAT      = None,
+            CEXP      = None,
+            TIMESTEP  = None,
+            FCSTOP    = None,
         ))
         kw.setdefault('remove', set())
         kw.setdefault('parser', None)
@@ -335,6 +339,11 @@ class NamelistFullPos(NamelistTerm):
 class XXTContent(IndexedTable):
     """Indexed table of selection namelist used by inlined fullpos forecasts."""
 
+    def __init__(self, *kargs, **kwargs):
+        super(XXTContent, self).__init__(*kargs, **kwargs)
+        self._cachedomains = None
+        self._cachedomains_term = None
+
     def fmtkey(self, key):
         """Reshape entry keys of the internal dictionary as a :class:`~vortex.tools.date.Time` value."""
         key = Time(key)
@@ -380,22 +389,36 @@ class XXTContent(IndexedTable):
                 maxterm = -1
         maxterm = Time(maxterm)
 
-        import vortex.tools.fortran
+        if (self._cachedomains is None) or (self._cachedomains_term != maxterm):
 
-        for term in [ x for x in allterms if x <= maxterm ]:
-            tvalue = self.get(term.fmthm, self.get(str(term.hour), None))
-            sh = sessions.system()
-            if tvalue[0] is not None and sh.path.exists(tvalue[0]):
-                fortp = vortex.tools.fortran.NamelistParser()
-                with open(tvalue[0], 'r') as fd:
-                    xx = fortp.parse(fd.read())
-                domains = set()
-                for nb in xx.values():
-                    for domlist in [ y for x, y in nb.iteritems() if x.startswith('CLD') ]:
-                        domains = domains | set(domlist.pop().split(':'))
-                mapdom[term.fmthm] = list(domains)
-                if term.minute == 0:
-                    mapdom[str(term.hour)] = list(domains)
+            import vortex.tools.fortran
+
+            select_seen = dict()
+            for term in [ x for x in allterms if x <= maxterm ]:
+                tvalue = self.get(term.fmthm, self.get(str(term.hour), None))
+                sh = sessions.system()
+                if tvalue[0] is not None and sh.path.exists(tvalue[0]):
+                    # Do not waste time on duplicated selects...
+                    if tvalue[1] not in select_seen:
+                        fortp = vortex.tools.fortran.NamelistParser()
+                        with open(tvalue[0], 'r') as fd:
+                            xx = fortp.parse(fd.read())
+                        domains = set()
+                        for nb in xx.values():
+                            for domlist in [ y for x, y in nb.iteritems() if x.startswith('CLD') ]:
+                                domains = domains | set(domlist.pop().split(':'))
+                        select_seen[tvalue[1]] = domains
+                    else:
+                        domains = select_seen[tvalue[1]]
+                    mapdom[term.fmthm] = list(domains)
+                    if term.minute == 0:
+                        mapdom[str(term.hour)] = list(domains)
+
+            self._cachedomains_term = maxterm
+            self._cachedomains = mapdom
+
+        else:
+            mapdom = self._cachedomains
 
         return dict(term=mapdom)
 
