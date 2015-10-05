@@ -35,6 +35,15 @@ history = History(tag='rload')
 # Most commonly used functions
 
 
+def show_toolbox_settings(ljust=24):
+    """Print the current settings of the toolbox."""
+    for key in ['active_{}'.format(act) for act in
+                ('now', 'insitu', 'verbose', 'promise', 'metadatacheck', 'clear')]:
+        kval = globals().get(key, None)
+        if kval is not None:
+            print '+', key.ljust(ljust), '=', kval
+
+
 def quickview(args, nb=0, indent=0):
     """Recursive call to any quick view of objects specified as arguments."""
     if not isinstance(args, list) and not isinstance(args, tuple):
@@ -528,13 +537,12 @@ def rescue(*files, **opts):
                 thisrescue = sh.mv
             else:
                 thisrescue = sh.cp
-            rescuefmt = opts.get('fmt', 'lfi')
             for ritem in items:
                 rtarget = sh.path.join(bkupdir, ritem)
                 if sh.path.exists(ritem) and not sh.path.islink(ritem) :
                     if sh.path.isfile(ritem):
-                        sh.rm(rtarget, fmt=rescuefmt)
-                        thisrescue(ritem, rtarget, fmt=rescuefmt)
+                        sh.rm(rtarget)
+                        thisrescue(ritem, rtarget)
                     else:
                         thisrescue(ritem, rtarget)
 

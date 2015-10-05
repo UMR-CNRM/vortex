@@ -41,7 +41,7 @@ class Listing(FlowResource):
     def basename_info(self):
         """Generic information, radical = ``listing``."""
         return dict(
-            radical = 'listing',
+            radical = self.realkind,
             src     = [self.binary, self.task.split('/').pop()],
             compute = self.part,
         )
@@ -94,4 +94,34 @@ class ParallelListing(Listing):
             info['compute'] = [{'mpi': self.mpi}, {'openmp': self.openmp}]
         if self.seta and self.setb:
             info['compute'] = [{'seta': self.seta}, {'setb': self.setb}]
+        return info
+
+
+class DrHookListing(Listing):
+    """Output produced by DrHook"""
+    _footprint = [
+        dict(
+             attr = dict(
+                kind = dict(
+                    values = ['drhook', ],
+                ),
+                mpi = dict(
+                    optional = True,
+                    default  = None,
+                    type     = FmtInt,
+                    args     = dict(fmt = '03'),
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'drhookprof'
+
+    def basename_info(self):
+        """From base information of ``listing``, add mpi."""
+        info = super(DrHookListing, self).basename_info()
+        if self.mpi:
+            info['compute'] = [{'mpi': self.mpi}, ]
         return info

@@ -92,13 +92,12 @@ class Addon(footprints.FootprintBase):
         lx = [x for x in shell.search if isinstance(x, cls)]
         return lx[0] if lx else None
 
-    def _spawn(self, cmd, **kw):
+    def _spawn_commons(self, cmd, **kw):
         """Internal method setting local environment and calling standard shell spawn."""
 
-        # Insert the actual tool command as first argument
-        cmd.insert(0, self.cmd)
-        if self.path is not None:
-            cmd[0] = self.path + '/' + cmd[0]
+        # Is there a need for an interpreter ?
+        if 'interpreter' in kw:
+            cmd.insert(0, kw.pop('interpreter'))
 
         # Overwrite global module env values with specific ones
         localenv = self.sh.env.clone()
@@ -118,3 +117,22 @@ class Addon(footprints.FootprintBase):
         localenv.active(False)
 
         return rc
+
+    def _spawn(self, cmd, **kw):
+        """Internal method setting local environment and calling standard shell spawn."""
+
+        # Insert the actual tool command as first argument
+        cmd.insert(0, self.cmd)
+        if self.path is not None:
+            cmd[0] = self.path + '/' + cmd[0]
+
+        return self._spawn_commons(cmd, **kw)
+
+    def _spawn_wrap(self, cmd, **kw):
+        """Internal method setting local environment and calling standard shell spawn."""
+
+        # Insert the tool path before the first argument
+        if self.path is not None:
+            cmd[0] = self.path + '/' + cmd[0]
+
+        return self._spawn_commons(cmd, **kw)

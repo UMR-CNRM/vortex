@@ -277,8 +277,9 @@ class MpiSubmit(MpiTool):
     def setup_namelist_delta(self, namcontents, namlocal):
         """Applying MPI profile on local namelist ``namlocal`` with contents namcontents."""
         namw = False
-        if 'NBPROC' in namcontents.macros():
+        if ('NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros()):
             logger.info('Setup NBPROC=%s in %s', self.nprocs, namlocal)
+            namcontents.setmacro('NPROC', self.nprocs)
             namcontents.setmacro('NBPROC', self.nprocs)
             namcontents.setmacro('NCPROC', int(self.env.VORTEX_NPRGPNS or self.nprocs))
             namcontents.setmacro('NDPROC', int(self.env.VORTEX_NPRGPEW or 1))

@@ -55,7 +55,12 @@ class IFSParallel(Parallel):
             xpname = dict(
                 optional = True,
                 default  = 'XPVT'
-            )
+            ),
+            drhookprof = dict(
+                optional = True,
+                type     = bool,
+                default  = False,
+            ),
         )
     )
 
@@ -88,16 +93,52 @@ class IFSParallel(Parallel):
             fcunit     = self.fcunit,
         )
 
+    def find_namelists(self, opts=None):
+        """Find any namelists candidates in actual context inputs."""
+        namcandidates = [ x.rh for x in self.context.sequence.effective_inputs(kind=('namelist', 'namelistfp')) ]
+        self.system.subtitle('Namelist candidates')
+        for nam in namcandidates:
+            nam.quickview()
+        return namcandidates
+
+    def prepare_namelist_delta(self, rh, namcontents, namlocal):
+        """Apply a namelist delta depending on the cycle of the binary."""
+        # TODO: The mapping between the dict that contains the settings
+        # (i.e elf.spawn_command_options()) and actual namelist keys should
+        # be done by an extra class ... and it could be generalized to mpi
+        # setup by the way !
+        nam_updated = False
+        # For cy41 onward, replace some namelist macros with the command line
+        # arguments
+        if rh.resource.cycle >= 'cy41':
+            if 'NAMARG' in namcontents:
+                opts_arg = self.spawn_command_options()
+                logger.info('Setup macro CEXP=%s in %s', opts_arg['name'], namlocal)
+                namcontents.setmacro('CEXP', opts_arg['name'])
+                logger.info('Setup macro TIMESTEP=%g in %s', opts_arg['timestep'], namlocal)
+                namcontents.setmacro('TIMESTEP', opts_arg['timestep'])
+                fcstop = '{:s}{:d}'.format(opts_arg['fcunit'], opts_arg['fcterm'])
+                logger.info('Setup macro FCSTOP=%s in %s', fcstop, namlocal)
+                namcontents.setmacro('FCSTOP', fcstop)
+                nam_updated = True
+            else:
+                logger.error('No NAMARG block in %s. It will probably crash', namlocal)
+        return nam_updated
+
+    def prepare_namelists(self, rh, opts=None):
+        """Update each of the namelists."""
+        for namrh in self.find_namelists(opts):
+            namc = namrh.contents
+            if self.prepare_namelist_delta(rh, namc, namrh.container.actualpath()):
+                namc.rewrite(namrh.container)
+
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(IFSParallel, self).prepare(rh, opts)
-        for optpack in ('drhook', 'gribapi'):
+        for optpack in ('drhook{}'.format('prof' if self.drhookprof else ''), 
+                        'gribapi'):
             self.export(optpack)
-        # TODO insert namelist setup in case rh.cmdline is False
-        # See the mpi setup to get an idea of effective namelists inputs
-        # Basis is given by a call to spawn_command_options
-        # The mapping between this dict and actual namelist keys should be done by an extra class
-        # ... and it could be generalized to mpi setup by the way !
+        self.prepare_namelists(rh, opts)
 
     def execute(self, rh, opts):
         """Standard IFS-Like execution parallel execution."""
