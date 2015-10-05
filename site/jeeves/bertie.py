@@ -1,16 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
-import io
-import pwd
-
-from datetime import datetime
-
 from . import pools
 
 #: No automatic export
 __all__ = []
+
 
 def ask(**kw):
     """Build a proper request to Jeeves."""
@@ -30,9 +25,11 @@ def ask(**kw):
 
     return jr
 
+
 def ask_active(*args):
     """Switch on the specified pools."""
     return ask(todo='active', data=args)
+
 
 def ask_any(**kw):
     """Ask for some miscellaneous action..."""
@@ -40,29 +37,36 @@ def ask_any(**kw):
     kw.setdefault('jtag', kw.pop('jfile', 'depot/' + kw['todo']))
     return ask(**kw)
 
+
 def ask_conf():
     """Wrapper for configuration display."""
     return ask(todo='show')
+
 
 def ask_debug():
     """Switch log verbosity to DEBUG level."""
     return ask(todo='level', data='debug')
 
+
 def ask_level(value):
     """Switch log verbosity to sepcified level."""
     return ask(todo='level', data=str(value))
+
 
 def ask_mute(*args):
     """Switch off the specified pools."""
     return ask(todo='mute', data=args)
 
+
 def ask_on(*args):
     """Swith on the specified actions."""
     return ask(todo='seton', data=args)
 
+
 def ask_off(*args):
     """Swith off the specified actions."""
     return ask(todo='setoff', data=args)
+
 
 def ask_reload(*args):
     """Force reload of the ini file and pool creation."""
@@ -70,11 +74,12 @@ def ask_reload(*args):
         args = ('config', 'mkpools')
     return ask(todo='reload', data=args)
 
+
 def ask_sleep(duration=30):
     """Make the server perfom a little nap."""
     return ask(todo='sleep', data=int(duration))
 
+
 def ask_update(**kw):
     """Wrapper for configuration display."""
     return ask(todo='update', data=kw)
-
