@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys, os, platform
+import sys
+import os
+import platform
 import time
 import fcntl
 import io
@@ -18,8 +20,8 @@ from signal       import SIGTERM
 from ConfigParser import SafeConfigParser
 
 import footprints
-
 from . import pools
+
 
 #: No automatic export
 __all__ = []
@@ -68,6 +70,10 @@ class GentleTalk(object):
         return self._loglevel
 
     def _set_loglevel(self, value):
+        """
+        @type value: int | str
+        @rtype: Nnoe
+        """
         try:
             value = int(value)
         except ValueError:
@@ -109,24 +115,29 @@ class GentleTalk(object):
                 thisprocess.name,
                 level.upper(),
                 msg,
-                color = getattr(self, level.upper()),
-                endcolor = self.ENDC
+                color=getattr(self, level.upper()),
+                endcolor=self.ENDC
             )
             mutex.release()
 
     def debug(self, msg, *args, **kw):
+        """Logger factorization."""
         return self._msgfmt('debug', msg, args, kw)
 
     def info(self, msg, *args, **kw):
+        """Logger factorization."""
         return self._msgfmt('info', msg, args, kw)
 
     def warning(self, msg, *args, **kw):
+        """Logger factorization."""
         return self._msgfmt('warning', msg, args, kw)
 
     def error(self, msg, *args, **kw):
+        """Logger factorization."""
         return self._msgfmt('error', msg, args, kw)
 
     def critical(self, msg, *args, **kw):
+        """Logger factorization."""
         return self._msgfmt('critical', msg, args, kw)
 
 
@@ -150,12 +161,12 @@ class ExitHandler(object):
 
     def __init__(self, daemon, on_exit=None, on_stack=False):
         self._on_stack = on_stack
-        self._daemon   = daemon
+        self._daemon = daemon
         try:
             on_exit[0]
         except TypeError:
             on_exit = (on_exit,)
-        self._on_exit  = tuple(on_exit)
+        self._on_exit = tuple(on_exit)
 
     @property
     def on_stack(self):
@@ -179,11 +190,13 @@ class ExitHandler(object):
         if (old_handler != signal.SIG_DFL) and (old_handler != self.sigterm_handler):
             if not self.on_stack:
                 raise RuntimeError('Handler already registered for SIGTERM: [%r]' % old_handler)
+
             def handler(signum, frame):
                 try:
                     self.sigterm_handler(signum, frame)
                 finally:
                     old_handler(signum, frame)
+
             signal.signal(signal.SIGTERM, handler)
         return self
 
@@ -221,6 +234,7 @@ class PidFile(object):
         self.reset()
 
     def reset(self):
+        """Create the pid file (would erase an older one) and lock it."""
         try:
             self._fd = os.open(self._filename, os.O_CREAT | os.O_RDWR)
         except IOError as iotrouble:
@@ -240,9 +254,11 @@ class PidFile(object):
         return self._procname
 
     def unlock(self):
+        """Unlock the pid file."""
         assert not fcntl.flock(self.fd, fcntl.LOCK_UN)
 
     def write(self, pid=None):
+        """Write the pid in the (already open) file."""
         if pid is None:
             pid = os.getpid()
         os.ftruncate(self.fd, 0)
@@ -255,6 +271,7 @@ class PidFile(object):
             os.remove(self.filename)
 
     def kill(self, retry=10):
+        """Kill the process of which we handle the pid."""
         pid = int(os.read(self.fd, 4096))
         os.lseek(self.fd, 0, os.SEEK_SET)
 
@@ -275,6 +292,7 @@ class PidFile(object):
             return 'Failed to kill %d' % pid
 
     def is_running(self):
+        """Is there a running process having the pid we handle."""
         contents = os.read(self.fd, 4096)
         os.lseek(self.fd, 0, os.SEEK_SET)
 
@@ -289,7 +307,7 @@ class PidFile(object):
         if stdout == "COMM\n":
             return False
 
-        if self.procname in stdout[stdout.find("\n")+1:]:
+        if self.procname in stdout[stdout.find("\n") + 1:]:
             return True
 
         return False
@@ -303,6 +321,7 @@ class BaseDaemon(object):
 
     Usage: subclass the BaseDaemon class and override the run() method
     """
+
     def __init__(self, tag='test', pidfile=None, loglevel=1, inifile=None, redirect=None):
         self._tag        = tag
         self._pidfile    = PidFile(tag=tag, filename=pidfile)
@@ -360,18 +379,23 @@ class BaseDaemon(object):
         return self._logger
 
     def debug(self, msg, **kw):
+        """Logger factorization."""
         return self.logger.debug(msg, **kw)
 
     def info(self, msg, **kw):
+        """Logger factorization."""
         return self.logger.info(msg, **kw)
 
     def warning(self, msg, **kw):
+        """Logger factorization."""
         return self.logger.warning(msg, **kw)
 
     def error(self, msg, **kw):
+        """Logger factorization."""
         return self.logger.error(msg, **kw)
 
     def critical(self, msg, **kw):
+        """Logger factorization."""
         return self.logger.critical(msg, **kw)
 
     @property
@@ -421,7 +445,7 @@ class BaseDaemon(object):
             for fd in range(3, maxfd):
                 try:
                     os.close(fd)
-                except OSError:   # ERROR, fd wasn't open to begin with (ignored)
+                except OSError:  # ERROR, fd wasn't open to begin with (ignored)
                     pass
 
         # remap std 0, 1 and 2
@@ -509,7 +533,6 @@ class BaseDaemon(object):
             self.pidfile.unlock()
             sys.exit(error)
 
-
     def restart(self):
         """Restart the daemon."""
         self.stop()
@@ -588,7 +611,7 @@ class HouseKeeping(object):
 
     def internal_switch_pool(self, ask, status=False):
         """Update active parameters for pools."""
-        for pool in [ x.lower() for x in footprints.util.mktuple(ask.data) ]:
+        for pool in [x.lower() for x in footprints.util.mktuple(ask.data)]:
             poolcfg = 'pool_' + pool
             if poolcfg in self.config:
                 self.warning('Switch pool', active=status)
@@ -607,7 +630,7 @@ class HouseKeeping(object):
 
     def internal_switch_action(self, ask, status=False):
         """Update active parameters for an action."""
-        for action in [ x.lower() for x in footprints.util.mktuple(ask.data) ]:
+        for action in [x.lower() for x in footprints.util.mktuple(ask.data)]:
             actioncfg = 'action_' + action
             if actioncfg not in self.config:
                 self.config[actioncfg] = dict()
@@ -645,7 +668,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                         v = literal_eval(v)
                     except (SyntaxError, ValueError):
                         if k.startswith('options') or ',' in v:
-                            v = [ x for x in v.replace('\n','').replace(' ', '').split(',') ]
+                            v = [x for x in v.replace('\n', '').replace(' ', '').split(',')]
                     config[section][k.lower()] = v
         else:
             self.error('No configuration', path=filename)
@@ -808,7 +831,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         self.ptask += 1
         pnum = '{0:06d}'.format(self.ptask)
         opts = ask.opts.copy()
-        for extra in [ x for x in acfg.get('options', tuple()) if x not in opts ]:
+        for extra in [x for x in acfg.get('options', tuple()) if x not in opts]:
             opts[extra] = acfg.get(extra, None)
         try:
             self.async[pnum] = (
@@ -850,17 +873,18 @@ class Jeeves(BaseDaemon, HouseKeeping):
             else:
                 self.warning('Undefined', action=ask.todo)
                 acfg = dict(
-                    dispatch = False,
-                    module   = 'internal',
-                    entry    = ask.todo,
+                    dispatch=False,
+                    module='internal',
+                    entry=ask.todo,
                 )
             if acfg.get('active', True):
-                thismod  = acfg.get('module', 'internal')
+                thismod = acfg.get('module', 'internal')
                 thisname = acfg.get('entry', ask.todo)
-                self.info('Processing',
-                    action   = ask.todo,
-                    function = thisname,
-                    module   = thismod,
+                self.info(
+                    'Processing',
+                    action=ask.todo,
+                    function=thisname,
+                    module=thismod,
                 )
                 if thismod == 'internal':
                     thisfunc = getattr(self, 'internal_' + thisname, None)
@@ -871,7 +895,6 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     else:
                         self.error('Import failed', module=acfg.get('module'))
                         thisfunc = None
-                        rc = False
                 if thisfunc is None or not callable(thisfunc):
                     self.error('Not a function', entry=thisname)
                     rc = False
@@ -924,7 +947,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         self.info('Automatic', autoexit=autoexit)
 
         # setup silent mode parameters
-        maxsleep     = self.config['driver'].get('maxsleep', 10)
+        maxsleep = self.config['driver'].get('maxsleep', 10)
         silent_delay = self.config['driver'].get('silent', 10)
 
         # initiate retry tracking
@@ -937,13 +960,13 @@ class Jeeves(BaseDaemon, HouseKeeping):
         tprev = datetime.now()
         tbusy = False
         nbsleep = 0
-        silent  = False
+        silent = False
         working = True
 
         while working:
 
             tnext = datetime.now()
-            ttime = ( tnext - tprev ).total_seconds()
+            ttime = (tnext - tprev).total_seconds()
             if not silent:
                 self.info('Loop', previous=ttime, busy=tbusy, nbsleep=nbsleep)
             tprev = tnext
@@ -961,12 +984,12 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     tbusy = True
                     todo = sorted(thispool.contents)
                     # ignore some files with an explicit name
-                    for bad in [ x for x in todo if 'ignore' in x ]:
+                    for bad in [x for x in todo if 'ignore' in x]:
                         tp = self.migrate(thispool, bad, target='ignore')
                         if tp is not None:
                             todo.remove(bad)
                     # look for config requests
-                    for cfg in [ x for x in todo if x.endswith('.config.json') ]:
+                    for cfg in [x for x in todo if x.endswith('.config.json')]:
                         self.process_request(thispool, cfg)
                         todo.remove(cfg)
                     # look for other input requests
@@ -988,7 +1011,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                         self.redo.setdefault(req, dict(first=stamp, last=stamp, delay=rtinit, nbt=0))
                         rt = self.redo.get(req)
                         rttotal = (stamp - rt['first']).total_seconds()
-                        rtlast  = (stamp - rt['last']).total_seconds()
+                        rtlast  = (stamp - rt['last' ]).total_seconds()
                         if rttotal > rtstop:
                             tbusy = True
                             self.warning('Abandonning retry', json=req, nbt=rt['nbt'], totaltime=rttotal)

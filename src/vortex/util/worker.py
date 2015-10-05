@@ -11,6 +11,30 @@ logger = footprints.loggers.getLogger(__name__)
 
 
 class AttrDict(dict):
+    """Dict object that can be accessed by attributes.
+
+    >>> obj = AttrDict()
+    >>> obj.test = 'hi'
+    >>> print obj['test']
+    hi
+
+    >>> obj['test'] = "bye"
+    >>> print obj.test
+    bye
+
+    >>> print len(obj)
+    1
+
+    >>> obj.clear()
+    >>> print len(obj)
+    0
+
+    >>> obj.a
+    Traceback (most recent call last):
+        ...
+    AttributeError: 'AttrDict' object has no attribute 'a'
+    """
+
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self

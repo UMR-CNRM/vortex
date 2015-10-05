@@ -1,8 +1,8 @@
-:mod:`jeeves.pools` --- Requests and Deposits for by Jeeves
-===========================================================
+:mod:`jeeves.pools` --- Requests and Deposits for Jeeves
+========================================================
 
 .. automodule:: jeeves.pools
-   :synopsis: Requests and Deposits for by Jeeves
+   :synopsis: Requests and Deposits for Jeeves
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

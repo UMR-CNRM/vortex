@@ -13,6 +13,7 @@ from datetime import datetime
 
 import footprints
 
+
 #: No automatic export
 __all__ = []
 
@@ -25,25 +26,31 @@ def get(**kw):
     """Return actual session ticket object matching description."""
     return Deposit(**kw)
 
+
 def keys():
     """Return the list of current session tickets names collected."""
     return Deposit.tag_keys()
+
 
 def values():
     """Return the list of current session ticket values collected."""
     return Deposit.tag_values()
 
+
 def items():
     """Return the items of the session tickets table."""
     return Deposit.tag_items()
+
 
 def clear_all():
     """Clear internal references to existing deposits."""
     Deposit.tag_clear()
 
+
 def timestamp():
     """Time stamp with raw precision of a second."""
     return datetime.now().strftime('%Y%m%d%H%M%S')
+
 
 def logname():
     """Technical wrapper to overcome some strange results of the native os.getlogin function."""
@@ -149,7 +156,7 @@ class Request(object):
 
     def as_dict(self):
         """Return a plain dictionnay of arguments."""
-        return { k : v for k, v in self.__dict__.items() if not k.startswith('_') }
+        return {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
 
     @property
     def last(self):
@@ -171,7 +178,7 @@ class Request(object):
         """Display specified attributes values or all of them."""
         if not args:
             args = self.__dict__.keys() + ['last']
-        for attr in sorted([ x for x in args if not x.startswith('_')]):
+        for attr in sorted([x for x in args if not x.startswith('_')]):
             print ' *', attr, '=', getattr(self, attr)
 
 
@@ -262,7 +269,7 @@ class Deposit(footprints.util.GetByTag):
 
     @property
     def contents(self):
-        return sorted([ os.path.basename(x) for x in glob(self.path + '/ask.*.json') ])
+        return sorted([os.path.basename(x) for x in glob(self.path + '/ask.*.json')])
 
     def clean(self):
         """Try to clean up the current pool."""

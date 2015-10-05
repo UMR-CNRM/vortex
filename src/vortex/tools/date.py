@@ -136,6 +136,7 @@ def stamp():
 
 def easter(year=None):
     """Return date for easter of the given year
+
     >>> dates = [2013, 2014, 2015, 2016, 2017, 2018]
     >>> [easter(d).ymd for d in dates]
     ['20130331', '20140420', '20150405', '20160327', '20170416', '20180401']
@@ -563,6 +564,7 @@ class Date(datetime.datetime):
     def to_cnesjulian(self, date=None):
         """
         Convert current Date() object, or arbitrary date, to CNES julian calendar
+
         >>> d = Date('20111026')
         >>> d.to_cnesjulian()
         22578
@@ -577,6 +579,7 @@ class Date(datetime.datetime):
 
     def from_cnesjulian(self, jdays=None):
         """
+
         >>> d = Date('20111025')
         >>> d.from_cnesjulian()
         Date(2011, 10, 25, 0, 0)
