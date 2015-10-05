@@ -26,7 +26,12 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: LFI_Tool
+.. autoclass:: LFI_Tool_Raw
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: LFI_Tool_Py
    :show-inheritance:
    :members:
    :member-order: alphabetical

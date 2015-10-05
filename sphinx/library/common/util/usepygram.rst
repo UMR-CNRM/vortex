@@ -20,3 +20,20 @@ Functions
 
 .. autofunction:: clone_fields
 
+Classes
+-------
+
+.. autoclass:: EpygramMetadataReader
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FaMetadataReader
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GribMetadataReader
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

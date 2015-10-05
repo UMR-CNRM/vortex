@@ -38,6 +38,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: VarBCContent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: VarBC
    :show-inheritance:
    :members:

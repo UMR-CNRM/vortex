@@ -42,6 +42,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: BatorAveragingMask
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: AtmsMask
    :show-inheritance:
    :members:
@@ -152,3 +157,7 @@ Classes
    :members:
    :member-order: alphabetical
    
+.. autoclass:: LFIScripts
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

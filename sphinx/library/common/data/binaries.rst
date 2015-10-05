@@ -66,3 +66,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: IOPoll
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: LFITools
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

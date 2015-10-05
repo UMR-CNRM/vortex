@@ -72,6 +72,8 @@ Informations
 
 .. autofunction:: show_outputs
 
+.. autofunction:: show_toolbox_settings
+
 .. autofunction:: nicedump
 
 

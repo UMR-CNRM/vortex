@@ -11,9 +11,12 @@
 Base Classes
 ------------
 
-.. autoclass:: VortexNameBuilder
+.. autoclass:: VortexNameBuilderError
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-
+.. autoclass:: VortexNameBuilder
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

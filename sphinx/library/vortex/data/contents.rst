@@ -23,6 +23,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MetaDataReader
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: UnknownContent
    :show-inheritance:
    :members:

@@ -25,6 +25,7 @@ Interface functions
 
 .. autofunction:: olive_jobout
 
+.. autofunction:: olive_gnam_hook_factory
 
 Classes
 -------
