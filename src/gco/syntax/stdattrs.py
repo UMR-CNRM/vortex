@@ -13,7 +13,6 @@ import re
 __all__ = [ 'GenvKey', 'GenvDomain' ]
 
 domain_remap = dict(
-    caledonie = 'NCAL'
 )
 
 
