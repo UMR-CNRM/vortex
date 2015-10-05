@@ -14,7 +14,6 @@ from functools import total_ordering
 __all__ = [ 'GenvKey', 'GenvDomain' ]
 
 domain_remap = dict(
-    caledonie = 'NCAL'
 )
 
 
