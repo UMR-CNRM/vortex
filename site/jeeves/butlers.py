@@ -72,7 +72,7 @@ class GentleTalk(object):
     def _set_loglevel(self, value):
         """
         @type value: int | str
-        @rtype: Nnoe
+        @rtype: None
         """
         try:
             value = int(value)
