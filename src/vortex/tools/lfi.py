@@ -474,6 +474,12 @@ class IO_Poll(addons.Addon):
             ),
             path = dict(
                 alias   = ('iopollpath', 'io_pollpath', 'io_poll_path', 'iopath'),
+            ),
+            interpreter = dict(
+                values  = ['perl', 'none', 'None'],
+                remap   = dict({'None': 'none', }),
+                default = 'perl',
+                optional = True,
             )
         )
     )
@@ -492,6 +498,9 @@ class IO_Poll(addons.Addon):
             if active_lfi is None:
                 raise StandardError('Could not find any active LFI Tool')
             self.env.LFITOOLS = active_lfi.path + '/' + active_lfi.cmd
+        # Is there a need for an interpreter ?
+        if self.interpreter != 'none':
+            kw['interpreter'] = self.interpreter
         return super(IO_Poll, self)._spawn(cmd, **kw)
 
     def io_poll(self, prefix, nproc_io=None):

@@ -95,6 +95,10 @@ class Addon(footprints.FootprintBase):
     def _spawn_commons(self, cmd, **kw):
         """Internal method setting local environment and calling standard shell spawn."""
 
+        # Is there a need for an interpreter ?
+        if 'interpreter' in kw:
+            cmd.insert(0, kw.pop('interpreter'))
+
         # Overwrite global module env values with specific ones
         localenv = self.sh.env.clone()
         localenv.active(True)
@@ -132,4 +136,3 @@ class Addon(footprints.FootprintBase):
             cmd[0] = self.path + '/' + cmd[0]
 
         return self._spawn_commons(cmd, **kw)
-
