@@ -7,7 +7,7 @@ import shutil
 import io
 import zipfile
 import json
-
+import time
 from glob import glob
 from datetime import datetime
 
@@ -15,6 +15,8 @@ import footprints
 
 #: No automatic export
 __all__ = []
+
+ZIP_ARCHIVE_BASE_PATH = 'archive'
 
 
 # Module Interface
@@ -46,6 +48,62 @@ def timestamp():
 def logname():
     """Technical wrapper to overcome some strange results of the native os.getlogin function."""
     return pwd.getpwuid(os.getuid())[0]
+
+
+def duration_to_hours(value):
+    """Convert to hours a duration given as an int, possibly
+    suffixed with 'h' for 'hours' (default) or 'd' for days.
+
+    >>> duration_to_hours(12)
+    12
+    >>> duration_to_hours('25H')
+    25
+    >>> duration_to_hours('3d')
+    72
+    >>> duration_to_hours('3w')
+    Traceback (most recent call last):
+     ...
+    ValueError: invalid literal for int() with base 10: '3w'
+    """
+    try:
+        value = int(value)
+    except ValueError:
+        value = str(value).lower().rstrip('h')
+        if value.endswith('d'):
+            value = value.rstrip('d')
+            value = int(value) * 24
+        else:
+            value = int(value)
+    return value
+
+
+def clean_older_files(logger, path, timelimit, pattern='*'):
+    """Remove files in this path matching the glob pattern and
+       older than timelimit (not recursive).
+       See :py:func:`duration_to_hours` for the timelimit accepted forms.
+    """
+    hours = duration_to_hours(timelimit)
+    rightnow = time.time()
+    antiques = [f for f in glob(os.path.join(path, pattern))
+                if os.path.isfile(f)
+                and (rightnow - os.path.getmtime(f)) / 3600 > hours]
+    logger.debug('Cleaning archived files', path=path, nfiles=len(antiques))
+    for antique in antiques:
+        os.remove(antique)
+
+
+def parent_mkdir(path, mode=0755):
+    """mkdir -p : creates parent directories if necessary.
+       Does not change the mode of existing directories.
+       Return True if at least one directory was created.
+    """
+    try:
+        os.makedirs(path, mode=mode)
+        return True
+    except OSError:
+        pass
+    return False
+
 
 class Request(object):
     """
@@ -122,14 +180,16 @@ class Deposit(footprints.util.GetByTag):
 
     _tag_default = 'foo'
 
-    def __init__(self, logger=None, path=None, active=False, target=None, cleaning=True, maxitems=128, maxtime='24H'):
+    def __init__(self, logger=None, path=None, active=False, target=None,
+                 cleaning=True, maxitems=128, maxtime='24H', keepzip='10d'):
         self._logger   = logger
-        self._cleaning = cleaning
         self._target   = target
         self._path     = self.tag if path is None else path
         self.active    = active
-        self.maxtime   = maxtime
+        self._cleaning = cleaning
         self.maxitems  = maxitems
+        self.maxtime   = maxtime
+        self.keepzip   = keepzip
 
     @property
     def logger(self):
@@ -138,6 +198,10 @@ class Deposit(footprints.util.GetByTag):
     @property
     def cleaning(self):
         return self._cleaning
+
+    @property
+    def archivepath(self):
+        return os.path.join(ZIP_ARCHIVE_BASE_PATH, self.path)
 
     def _get_path(self):
         return self._path
@@ -184,18 +248,17 @@ class Deposit(footprints.util.GetByTag):
         return self._maxtime
 
     def _set_maxtime(self, value):
-        try:
-            value = int(value)
-        except ValueError:
-            value = str(value).lower().rstrip('h')
-            if value.endswith('d'):
-                value = value.rstrip('d')
-                value = int(value) * 24
-            else:
-                value = int(value)
-        self._maxtime = value
+        self._maxtime = duration_to_hours(value)
 
     maxtime = property(_get_maxtime, _set_maxtime)
+
+    def _get_keepzip(self):
+        return self._keepzip
+
+    def _set_keepzip(self, value):
+        self._keepzip = duration_to_hours(value)
+
+    _keepzip = property(_get_keepzip, _set_keepzip)
 
     @property
     def contents(self):
@@ -203,35 +266,37 @@ class Deposit(footprints.util.GetByTag):
 
     def clean(self):
         """Try to clean up the current pool."""
+        if not self.cleaning:
+            return
+
         items = self.contents
-        psize = len(items)
-        if 0 < self.maxitems < psize:
-            justnow = datetime.now()
-            oldfiles = list()
-            for askfile in items:
-                try:
-                    askdate = datetime.strptime(askfile.split('.')[1], '%Y%m%d%H%M%S')
-                except ValueError:
-                    self.logger.error('Bad request format', item=askfile)
-                    os.remove(os.path.join(self.path, askfile))
-                else:
-                    if (justnow - askdate).seconds / 3600 > self.maxtime:
-                        oldfiles.append(askfile)
-            if oldfiles:
-                zipname = os.path.join(
-                    self.path,
-                    '.'.join((
-                        'old', self.tag,
-                        oldfiles[0].split('.')[1] + '-' + oldfiles[-1].split('.')[1],
-                        'zip'
-                    ))
-                )
-                self.logger.info('Zip', path=zipname, old=self.maxtime, size=len(oldfiles))
-                with zipfile.ZipFile(zipname, 'w') as pzip:
-                    for xfile in oldfiles:
-                        actualfile = os.path.join(self.path, xfile)
-                        pzip.write(actualfile, xfile)
-                        os.remove(actualfile)
+        if len(items) < self.maxitems:
+            return
+        self.logger.debug('cleaning', path=self.path, len=len(items), maxtime=self.maxtime)
+
+        justnow = datetime.now()
+        oldfiles = list()
+        for askfile in items:
+            try:
+                askdate = datetime.strptime(askfile.split('.')[1], '%Y%m%d%H%M%S')
+            except ValueError:
+                self.logger.error('Bad request format', item=askfile)
+                os.remove(os.path.join(self.path, askfile))
+            else:
+                if (justnow - askdate).total_seconds() / 3600 > self.maxtime:
+                    oldfiles.append(askfile)
+        if oldfiles:
+            zipname = os.path.join(
+                self.archivepath,
+                oldfiles[0].split('.')[1] + '-' + oldfiles[-1].split('.')[1] + '.zip'
+            )
+            self.logger.info('Zip', path=zipname, maxtime=self.maxtime, size=len(oldfiles))
+            with zipfile.ZipFile(zipname, 'w') as pzip:
+                for xfile in oldfiles:
+                    actualfile = os.path.join(self.path, xfile)
+                    pzip.write(actualfile, xfile)
+                    os.remove(actualfile)
+            self.clean_archive()
 
     def migrate(self, item, target=None):
         """Migrate the request to the chained pool."""
@@ -243,3 +308,21 @@ class Deposit(footprints.util.GetByTag):
             os.rename(os.path.join(self.path, item), os.path.join(target.path, item))
             rc = target.tag
         return rc
+
+    def clean_archive(self):
+        """Remove old archive files."""
+        if self.cleaning:
+            clean_older_files(self.logger, self.archivepath, self.keepzip, '*.zip')
+
+    def cocoon(self):
+        """Create directories for the pool and for it's zip archives."""
+        if parent_mkdir(self.path, 0755):
+            self.logger.warning('Mkdir', pool=self.tag, path=self.path)
+        else:
+            self.logger.info('Mkdir skipped', pool=self.tag, path=self.path, size=len(self.contents))
+
+        if self.cleaning:
+            if parent_mkdir(self.archivepath):
+                self.logger.warning('Mkdir', pool=self.tag, archivepath=self.archivepath)
+            else:
+                self.clean_archive()

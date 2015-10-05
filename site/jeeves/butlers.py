@@ -24,6 +24,8 @@ from . import pools
 #: No automatic export
 __all__ = []
 
+LOG_ARCHIVE_PATH = 'archive/log'
+
 
 class GentleTalk(object):
     """An alternative to the logging interface that can be exchanged between processes."""
@@ -430,7 +432,12 @@ class BaseDaemon(object):
             sys.stdout.flush()
             sys.stderr.flush()
             if self.stdout and os.path.exists(self.stdout):
-                os.rename(self.stdout, self.stdout + '.' + pools.timestamp())
+                oldpath, oldname = os.path.split(self.stdout)
+                newpath = os.path.join(oldpath, LOG_ARCHIVE_PATH)
+                pools.parent_mkdir(newpath, mode=0755)
+                os.rename(self.stdout, os.path.join(
+                    newpath, oldname + '.' + pools.timestamp()
+                ))
             stdnew = open(self.stdout, 'a+', 1)
             os.dup2(stdnew.fileno(), sys.stdout.fileno())
             os.dup2(stdnew.fileno(), sys.stderr.fileno())
@@ -654,11 +661,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 self.warning('No dedicated conf', pool=pool)
                 self.config[poolcfg] = dict()
             thispool = pools.get(tag=pool, logger=self.logger, **self.config[poolcfg])
-            if os.path.isdir(thispool.path):
-                self.info('Mkdir skipped', pool=thispool.tag, path=thispool.path, size=len(thispool.contents))
-            else:
-                self.warning('Mkdir', pool=thispool.tag, path=thispool.path)
-                os.mkdir(thispool.path, 0755)
+            thispool.cocoon()
 
     def setup(self):
         """
@@ -671,6 +674,10 @@ class Jeeves(BaseDaemon, HouseKeeping):
 
         # check or create pool directories
         self.mkpools()
+
+        # clean old log files
+        keeplog = self.config['driver'].get('keeplog', '10d')
+        pools.clean_older_files(self.logger, LOG_ARCHIVE_PATH, keeplog, '*.log.*')
 
     def multi_start(self):
         """Start a pool of co-workers processes."""
@@ -944,10 +951,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
 
             # do some cleaning to clear the place before real work
             for pool in pools.values():
-                size=len(pool.contents)
-                if size:
-                    self.debug('Inspect', pool=pool.tag, path=pool.path, size=size, active=pool.active)
-                    pool.clean()
+                pool.clean()
 
             # process the input pool first
             thispool = pools.get(tag='in')

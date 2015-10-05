@@ -32,6 +32,12 @@ Interface functions
 
 .. autofunction:: logname
 
+.. autofunction:: duration_to_hours
+
+.. autofunction:: clean_older_files
+
+.. autofunction:: parent_mkdir
+
 
 Classes
 -------
