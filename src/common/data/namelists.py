@@ -11,7 +11,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.tools import env
-from vortex.tools.date import Time
+from vortex.tools.date import Time, Date
 from vortex.data.outflow import ModelResource, NoDateResource
 from vortex.data.contents import AlmostDictContent, IndexedTable
 from vortex.syntax.stdattrs import binaries, term, cutoff
@@ -46,6 +46,7 @@ class NamelistContent(AlmostDictContent):
             CEXP      = None,
             TIMESTEP  = None,
             FCSTOP    = None,
+            NMODVAL   = None,
         ))
         kw.setdefault('remove', set())
         kw.setdefault('parser', None)
@@ -163,6 +164,10 @@ class Namelist(ModelResource):
                 values   = binaries,
                 default  = '[model]',
             ),
+            date = dict(
+                type     = Date,
+                optional = True,
+            )                
         )
     )
 
@@ -170,9 +175,35 @@ class Namelist(ModelResource):
     def realkind(self):
         return 'namelist'
 
+    def _find_source(self):
+        sources = self.source.split(',')
+        if len(sources) == 1:
+            source = sources[0].split(':')[0]
+        else:
+            datedSource = {}
+            for s in sources:   
+                dateNsource = s.split(':')
+                if dateNsource[0]:
+                    if len(dateNsource) == 2:
+                        date = Date(dateNsource[1])
+                    else:
+                        date = Date('yyyy0101')
+                    if date not in datedSource.keys():
+                        datedSource[date] = dateNsource[0]
+                    else:
+                        logger.warning('%s already begins the %s, %s is ignored.',datedSource[date],date.strftime('%d of %b.'),dateNsource[0])
+ 
+            datedSource = sorted(datedSource.iteritems(),reverse=True)
+            for dateNsource in datedSource:
+                if self.date >= dateNsource[0]:
+                    source = dateNsource[1]
+                    break;
+         
+        return source
+
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
-        return 'extract=' + self.source
+        return 'extract=' + self._find_source()
 
 
 class NamelistUtil(Namelist):

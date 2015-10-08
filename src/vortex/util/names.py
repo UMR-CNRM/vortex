@@ -33,6 +33,7 @@ class VortexNameBuilder(object):
             stage     = None,
             part      = None,
             compute   = None,
+            number    = None,
         )
         self.setdefault(**kw)
 
@@ -129,6 +130,9 @@ class VortexNameBuilder(object):
 
         if d['term'] is not None:
             name = name + '+' + str(d['term'])
+            
+        if d['number'] is not None:
+            name = name + '.' + str(d['number'])
 
         if d['fmt'] is not None:
             name = name + '.' + d['fmt']

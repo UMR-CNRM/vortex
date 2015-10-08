@@ -259,12 +259,14 @@ class DiagPI(BlindRun):
             opts['loop'] = r.resource.term
             super(DiagPI, self).execute(rh, opts)
 
+<<<<<<< HEAD
             # The diagnostic output may be promised
             actualname = 'GRIB_PI{0:s}+{1:s}'.format(r.resource.geometry.area,
                                                      r.resource.term.fmthm)
             expected = [ x for x in self.promises if x.container.localpath() == actualname ]
             for thispromise in expected:
                 thispromise.put(incache=True)
+=======
 
 class Fa2GaussGrib(BlindRun):
     """Standard FA conversion, e.g. with GOBPTOUT as a binary resource."""
@@ -331,7 +333,7 @@ class Fa2GaussGrib(BlindRun):
             self.system.softlink(r.container.localpath(), self.fortinput)
 
             # Standard execution
-            super(Fa2GaussGrib, self).execute(rh, opts)
+            super(Fa2GaussGrib, self).execute(rh)
 
             # Freeze the current output
             if self.system.path.exists(thisoutput):
@@ -342,3 +344,4 @@ class Fa2GaussGrib(BlindRun):
 
             # Some cleaning
             self.system.rmall(self.fortinput)
+>>>>>>> PEARP first steps with Vortex

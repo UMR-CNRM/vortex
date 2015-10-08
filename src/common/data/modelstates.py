@@ -180,7 +180,7 @@ class Historic(SpectralGeoFlowResource):
         return dict(
             fmt     = self.nativefmt,
             geo     = lgeo,
-            radical = 'historic',
+            radical = self.realkind,
             src     = self.model,
             term    = self.term.fmthm,
         )

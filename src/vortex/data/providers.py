@@ -9,7 +9,7 @@ import os.path
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.syntax.stdattrs import a_xpid, opsuites, Namespace
+from vortex.syntax.stdattrs import a_xpid, opsuites, Namespace, FmtInt
 from vortex.util.names import VortexNameBuilder
 from vortex.tools import net
 
@@ -202,7 +202,8 @@ class Vortex(Provider):
             experiment = a_xpid,
             block = dict(),
             member = dict(
-                type     = int,
+                type    = FmtInt,
+                args    = dict(fmt = '03'),
                 optional = True,
             ),
             namespace = dict(
@@ -262,7 +263,7 @@ class Vortex(Provider):
 
     def nice_member(self):
         """Nice formatting view of the member number, if any."""
-        return 'm{0:04d}'.format(self.member) if self.member is not None else ''
+        return 'mb' + str(self.member) if self.member is not None else ''
 
     def pathname(self, resource):
         """Constructs pathname of the ``resource`` according to :func:`pathinfo`."""

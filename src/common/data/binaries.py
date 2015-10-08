@@ -324,3 +324,46 @@ class LFITools(BlackBox):
     def realkind(self):
         return 'lfitools'
 
+
+class Combi(BlackBox):
+    """Multipurpose tool to build the initial states of the ensemble prediction system."""
+
+    _footprint = dict(
+        info = 'Tool to build EPS initial conditions',
+        attr = dict(
+            kind = dict(
+                values   = ['combi'],
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_combi'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'combi'
+    
+    
+class Gobptout(BlackBox):
+    """A tool for grib conversion on a gaussian grid."""
+
+    _footprint = dict(
+        info = 'Gobptout utility for grib conversion',
+        attr = dict(
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_gobtout'
+            ),
+            kind = dict(
+                values   = ['gobptout'],
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'gobptout'
