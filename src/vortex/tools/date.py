@@ -47,6 +47,7 @@ __all__ = []
 import re
 import datetime
 import calendar
+import functools
 
 
 def mkisodate(datestr):
@@ -364,19 +365,12 @@ class Date(datetime.datetime):
     _origin = datetime.datetime(1970, 1, 1, 0, 0, 0)
 
     def __new__(cls, *args, **kw):
-        """
-        Initial values include:
-            * a datetime object;
-            * a tuple containing at least (year, month, day) values;
-            * a dictionary with this named values ;
-            * a string that could be reshaped as an ISO 8601 date string.
-        """
         if kw and not args:
             args = (datetime.datetime(**kw),)
         if not args:
             raise ValueError("No initial value provided for Date")
         top = args[0]
-        delta = ''
+        deltas = []
         ld = list()
         if isinstance(top, str) and top in local_date_functions:
             try:
@@ -392,7 +386,9 @@ class Date(datetime.datetime):
             top = Date._origin + datetime.timedelta(0, top)
             ld = [ top.year, top.month, top.day, top.hour, top.minute, top.second ]
         elif isinstance(top, str):
-            (top, u_sep, delta) = top.partition('/')
+            s_top = top.split('/')
+            top = s_top[0]
+            deltas = s_top[1:]
             ld = [ int(x) for x in re.split('[-:HTZ]+', mkisodate(top)) if re.match(r'\d+$', x) ]
         else:
             ld = [ int(x) for x in args if type(x) in (int, float) or (isinstance(x, str) and
@@ -400,11 +396,19 @@ class Date(datetime.datetime):
         if not ld:
             raise ValueError("Initial Date value unknown")
         newdate = datetime.datetime.__new__(cls, *ld)
-        if delta:
-            newdate = newdate.__add__(delta)
+        if deltas:
+            newdate += sum([Period(d) for d in deltas], Period(0))
         return newdate
 
     def __init__(self, *args, **kw):
+        """
+        Initial values include:
+            * a datetime object;
+            * a tuple containing at least (year, month, day) values;
+            * a dictionary with this named values ;
+            * a string that could be reshaped as an ISO 8601 date string.
+            * a string with one or more time deltas (e.g. 201509010600/-PT1H/-PT2H)
+        """
         super(Date, self).__init__()
         delta_o = self - Date._origin
         self._epoch = delta_o.days * 86400 + delta_o.seconds

@@ -51,16 +51,26 @@ class DataContent(object):
         """Return the metadata of the ressource in the container (maybe empty)."""
         return self._metadata
 
-    def metadata_check(self, resource):
-        """Check that the metadata of the ressource in the container matches
-        the attributes of the ressource given as an argument."""
+    def metadata_check(self, resource, delta=None):
+        """Check that the metadata of the resource in the container matches
+        the attributes of the resource given as an argument.
+        
+        Prior to the comparison, the delta argument will be added to the 
+        attribute read in the container. For example, if delta=dict(date='-PT1H'), 
+        we will in fact check that the date of the resource in the container is 
+        one hour before the date specified in the resource's footprint.
+        """
         if not len(self.metadata):
             logger.error('Metadata check is not implemented for this format. ' +
                          'The check will always succeed...')
+        delta = delta or {}
         outcome = True
         for mkey, mval in self.metadata.iteritems():
             if hasattr(resource, mkey):
-                outcome = outcome and getattr(resource, mkey) == mval
+                cval = getattr(resource, mkey)
+                if mkey in delta:
+                    cval += delta[mkey]
+                outcome = outcome and cval == mval
         if not outcome:
             logger.warning("The ressource in the container doesn't match the resource footprint: %s",
                            str(self.metadata))

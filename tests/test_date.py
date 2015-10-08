@@ -98,8 +98,17 @@ class utDate(TestCase):
         d = date.Date('2013-04-11T10:57Z/PT4M')
         self.assertEqual(d.compact(), '20130411110100')
 
+        d = date.Date('2013-04-11T10:57Z/PT4M/PT4M')
+        self.assertEqual(d.compact(), '20130411110500')
+
+        d = date.Date('2013-04-11T10:57Z/-PT1H/-PT3H')
+        self.assertEqual(d.compact(), '20130411065700')
+
         d = date.Date('2013-04-11T10:57Z/-P1DT2H58M')
         self.assertEqual(d.compact(), '20130410075900')
+
+        d = date.Date('2013-04-11T10:57Z/-P1DT2H58M/+P2D')
+        self.assertEqual(d.compact(), '20130412075900')
 
     def test_date_monthrange(self):
         rv = date.Date("20110726121314")

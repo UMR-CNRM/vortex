@@ -57,6 +57,7 @@ class Handler(object):
         self._observer  = observer_board(kw.pop('observer', None))
         self._options.update(kw)
         self._mdcheck   = self._options.pop('metadatacheck', False)
+        self._mddelta   = self._options.pop('metadatadelta', dict())
         self._ghost     = self._options.pop('ghost', False)
         self._hooks     = {x[5:]: self._options.pop(x)
                            for x in self._options.keys()
@@ -352,7 +353,8 @@ class Handler(object):
                     )
                     self.container.updfill(rst)
                     if rst and not is_insitu and self._mdcheck:
-                        rst = rst and self.contents.metadata_check(self.resource)
+                        rst = rst and self.contents.metadata_check(self.resource,
+                                                                   delta = self._mddelta)
                         if not rst:
                             logger.info("We are now cleaning up the container and data content.")
                             self.reset_contents()
