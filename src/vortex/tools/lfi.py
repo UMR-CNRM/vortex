@@ -292,10 +292,11 @@ class LFI_Tool_Raw(addons.Addon):
     def _std_copy(self, source, destination, intent='in', pack=False):
         """Extended copy for (possibly) multi lfi file."""
         st = self._std_prepare(source, destination, intent)
-        st.rc = self._spawn_wrap('copy', (['-pack', ] if pack else []) +
-                                         ['-intent={}'.format(intent),
-                                          source, destination],
-                                 output=False)
+        if st.rc == 0:
+            st.rc = self._spawn_wrap('copy', (['-pack', ] if pack else []) +
+                                             ['-intent={}'.format(intent),
+                                              source, destination],
+                                     output=False)
         return st
 
     lfi_cp = lfi_copy = fa_cp = fa_copy = _std_copy
@@ -303,10 +304,11 @@ class LFI_Tool_Raw(addons.Addon):
     def _std_move(self, source, destination, intent='in', pack=False):
         """Extended mv for (possibly) multi lfi file."""
         st = self._std_prepare(source, destination, intent)
-        st.rc = self._spawn_wrap('move', (['-pack', ] if pack else []) +
-                                         ['-intent={}'.format(intent),
-                                          source, destination],
-                                 output=False)
+        if st.rc == 0:
+            st.rc = self._spawn_wrap('move', (['-pack', ] if pack else []) +
+                                             ['-intent={}'.format(intent),
+                                              source, destination],
+                                     output=False)
         return st
 
     lfi_mv = lfi_move = fa_mv = fa_move = _std_move
