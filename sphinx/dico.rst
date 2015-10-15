@@ -50,7 +50,7 @@ Logical space
       In the :term:`logical space` the session refers to the most abstract level of the general context
       the user operates.
 
-      DevGuide: :ref:`env-interface`
+      Techincal Documentation: :ref:`env-interface`
 
       Modules: :mod:`vortex.sessions`
 
@@ -67,6 +67,6 @@ Physical space
       Vortex provides the user with a very powerfull interface on top
       of the usual :obj:`os.environ` instance.
 
-      DevGuide: :ref:`env-interface`
+      Techincal Documentation: :ref:`env-interface`
 
       Modules: :mod:`vortex.tools.env`

@@ -1,9 +1,8 @@
-
 .. _french-index:
 
-####################
-French Documentation
-####################
+############################################
+The VORTEX User Guide (French Documentation)
+############################################
 
 :Release: |version|
 :Date: |today|
