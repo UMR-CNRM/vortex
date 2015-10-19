@@ -8,7 +8,7 @@ This modules defines the low level physical layout for data handling.
 #: No automatic export.
 __all__ = []
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -79,12 +79,12 @@ class Section(object):
 
     def updstage_get(self, info):
         """Upgrade current section to 'get' level."""
-        if info.get('stage') == 'get' and self.kind == ixo.INPUT:
+        if info.get('stage') == 'get' and self.kind in (ixo.INPUT, ixo.EXEC):
             self.stages.append('get')
 
     def updstage_expected(self, info):
         """Upgrade current section to 'expected' level."""
-        if info.get('stage') == 'expected' and self.kind == ixo.INPUT:
+        if info.get('stage') == 'expected' and self.kind == (ixo.INPUT, ixo.EXEC):
             self.stages.append('expected')
 
     def updstage_put(self, info):
@@ -228,6 +228,10 @@ class Sequence(object):
         """Return a list of current sequence sections with ``ixo.INPUT`` or ``ixo.EXEC`` kind."""
         return [ x for x in self.sections if ( x.kind == ixo.INPUT or x.kind == ixo.EXEC ) ]
 
+    def inputs_report(self):
+        """Return a SequenceInputsReport object built using the current sequence."""
+        return SequenceInputsReport(self.inputs())
+
     def effective_inputs(self, **kw):
         """
         Walk through the inputs of the current sequence which reach the 'get' stage.
@@ -275,3 +279,95 @@ class Sequence(object):
             selectkind = mktuple(kw['kind'])
             outkind = [ x for x in outset if x.rh.resource.realkind in selectkind ]
         return outrole or outkind or outset
+
+
+class SequenceInputsReport(object):
+    """Summarize data about inputs (missing resources, alternates, ...)."""
+
+    _StatusTupple = namedtuple('_StatusTupple',
+                               ('PRESENT', 'EXPECTED', 'MISSING'))
+    _Status = _StatusTupple(PRESENT='present', EXPECTED='expected',
+                            MISSING='missing')
+    _TranslateStage = dict(get=_Status.PRESENT,
+                           expected=_Status.EXPECTED,
+                           void=_Status.MISSING,
+                           load=_Status.MISSING)
+
+    def __init__(self, inputs):
+        self._local_map = defaultdict(lambda: defaultdict(list))
+        for insec in inputs:
+            local = insec.rh.container.localpath()
+            # Determine if the current section is an alternate or not...
+            kind = 'alternate' if insec.alternate is not None else 'nominal'
+            self._local_map[local][kind].append(insec)
+
+    def _local_status(self, local):
+        '''Find out the local resource status (see _Status).
+
+        It returns a tupple that contains:
+
+        * The local resource status (see _Status)
+        * The resource handler that was actually used to get the resource
+        * The resource handler that should have been used in the nominal case
+        '''
+        desc = self._local_map[local]
+        # First, check the nominal resource
+        nominal = desc['nominal'][-1]
+        status = self._TranslateStage[nominal.stage]
+        true_rh = None
+        # Look for alternates:
+        if status == self._Status.MISSING:
+            for alter in desc['alternate']:
+                alter_status = self._TranslateStage[alter.stage]
+                if alter_status != self._Status.MISSING:
+                    status = alter_status
+                    true_rh = alter.rh
+                    break
+        else:
+            true_rh = nominal.rh
+        return status, true_rh, nominal.rh
+
+    def print_report(self, detailed=False):
+        '''Print a list of each local resource with its status.
+
+        :param detailed: when alternates are used, tell which resource handler
+                         is actualy used and which one should have been used in
+                         the nominal case.
+        '''
+        for local in sorted(self._local_map):
+            status, true_rh, nominal_rh = self._local_status(local)
+            extrainfo = ''
+            if status != self._Status.MISSING and (true_rh is not nominal_rh):
+                extrainfo = '(ALTERNATE USED)'
+            print '* {:8s} {:16s} : {:s}'.format(status, extrainfo, local)
+            if detailed and extrainfo != '':
+                print "  * The following resource is used:"
+                true_rh.quickview(indent=2)
+                print "  * Instead of:"
+                nominal_rh.quickview(indent=2)
+
+    def active_alternates(self):
+        '''List the local resource for which an alternative resource has been used.
+
+        It returns a dictionary that associates the local resource name with
+        a tupple that contains:
+
+        * The resource handler that was actually used to get the resource
+        * The resource handler that should have been used in the nominal case
+        '''
+        outstack = dict()
+        for local in self._local_map:
+            status, true_rh, nominal_rh = self._local_status(local)
+            if status != self._Status.MISSING and (true_rh is not nominal_rh):
+                outstack[local] = (true_rh, nominal_rh)
+        return outstack
+
+    def missing_resources(self):
+        '''List the missing local resources.'''
+        outstack = dict()
+        for local in self._local_map:
+            (status, true_rh,  # @UnusedVariable
+             nominal_rh) = self._local_status(local)
+            if status == self._Status.MISSING:
+                outstack[local] = nominal_rh
+        return outstack
