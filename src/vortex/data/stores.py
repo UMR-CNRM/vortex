@@ -422,6 +422,91 @@ class MagicPlace(Store):
         return False
 
 
+class FunctionStore(Store):
+    """Calls a function that returns a File like object (get only).
+
+    This store is only able to perform the get action: it imports and calls
+    the function specified in the URI path. This function should return a
+    file like object that will be written in the local container.
+
+    The function is given an option dictionary that contains all of the
+    options provided to the store's get function, plus any additional
+    information specified in the 'query' part of the URI.
+
+    :Example:
+
+    Lets consider the following URI:
+
+      ``function:///sandbox.utils.storefunctions.echofunction?msg=toto&msg=titi``
+
+    It will be seen as follows:
+
+    * scheme: ``'function'``
+    * netloc: ``''``
+    * path: ``'/sandbox.utils.storefunctions.echofunction'``
+    * query: ``dict(msg=['toto', 'titi'])``
+
+    As a result, the :func:`sandbox.utils.storefunctions.echofunction` will be
+    called with an option dictionary that contains ['toto', 'titi'] for the
+    'msg' key (plus any other options passed to the store's get method).
+    """
+
+    _footprint = dict(
+        info = 'Dummy store that calls a function',
+        attr = dict(
+            scheme = dict(
+                values   = ['function'],
+            ),
+            netloc = dict(
+                values   = [''],
+            )
+        ),
+        priority = dict(
+            level = footprints.priorities.top.DEFAULT
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'functionstore'
+
+    def functioncheck(self, remote, options):
+        """Void - Always False."""
+        return False
+
+    def functionlocate(self, remote, options):
+        """The name of the function that will be called."""
+        cleanname = remote['path'][1:]
+        if cleanname.endswith('/'):
+            cleanname = cleanname[:-1]
+        return cleanname
+
+    def functionget(self, remote, local, options):
+        """Calls the appropriate function and writes the result."""
+        # Find the appropriate function
+        cbfunc = self.system.import_function(self.functionlocate(remote,
+                                                                 options))
+        # ... and call it
+        opts = dict()
+        opts.update(options)
+        opts.update(remote['query'])
+        fres = cbfunc(opts)
+        # NB: fres should be a file like object (StringIO will do the trick)
+        if 'intent' in options and options['intent'] == dataflow.intent.IN:
+            logger.info('Ignore intent <in> for function input.')
+        return self.system.cp(fres, local)
+
+    def functionput(self, local, remote, options):
+        """This should not happened - Always False."""
+        logger.error("The function store is enabled to perform PUTs.")
+        return False
+
+    def functiondelete(self, remote, options):
+        """This should not happened - Always False."""
+        logger.error("The function store is enabled to perform Deletes.")
+        return False
+
+
 class Finder(Store):
     """The most usual store: your current filesystem!"""
 
