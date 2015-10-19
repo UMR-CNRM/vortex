@@ -582,7 +582,7 @@ class Footprint(object):
 
     @property
     def level(self):
-        """Read-only property. Dorect access to internal footprtin priority level."""
+        """Read-only property. Direct access to internal footprint priority level."""
         return self.priority['level']
 
 
@@ -606,6 +606,7 @@ class FootprintBaseMeta(type):
         # Footprint merging
         fplocal  = d.get('_footprint', dict())
         bcfp = [ c.__dict__.get('_footprint', dict()) for c in b ]
+        bcfp.reverse()  # That way, footprint's inheritance is consistent with python's
         if type(fplocal) is types.ListType:
             bcfp.extend(fplocal)
         else:
@@ -752,10 +753,6 @@ class FootprintBase(object):
         """Things to do after new or init construction."""
         self._observer.notify_new(self, dict())
 
-    def __deepcopy__(self, memo):
-        """No deepcopy expected, so ``self`` is returned."""
-        return self
-
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['_observer']
@@ -807,16 +804,26 @@ class FootprintBase(object):
         """Returns the list of current attributes."""
         return sorted(self._attributes.keys())
 
-    def footprint_as_dict(self, refresh=False):
-        """Returns a shallow copy of the current attributes."""
-        if self._puredict is None or refresh:
+    def footprint_as_dict(self, refresh=False, deepcopy=False):
+        """Returns a dictionnary that contains the current attributes.
+
+        :param refresh: Return a new shallow copy.
+        :param deepcopy: Force the result to be a deepcopy of the attributes.
+        """
+        if self._puredict is None or refresh or deepcopy:
             self._puredict = dict()
             for k in self._attributes.keys():
                 self._puredict[k] = getattr(self, k)
-        return self._puredict
+        if deepcopy:
+            return copy.deepcopy(self._puredict)
+        else:
+            return self._puredict
 
-    def footprint_export(self):
-        """See the current footprint as a pure dictionary when exported."""
+    def footprint_export(self, deepcopy=False):
+        """See the current footprint as a pure dictionary when exported.
+
+        :param deepcopy: Force the result to be a deepcopy.
+        """
         exd = dict()
         for k in self._attributes.keys():
             exportmethod = 'footprint_export_' + k
@@ -830,7 +837,10 @@ class FootprintBase(object):
                     exd[k] = thisattr.export_dict()
                 else:
                     exd[k] = thisattr
-        return exd
+        if deepcopy:
+            return copy.deepcopy(exd)
+        else:
+            return exd
 
     def _str_more(self):
         """Additional information to be combined in repr output."""
