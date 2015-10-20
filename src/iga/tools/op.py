@@ -28,6 +28,12 @@ def setup(**kw):
     t = vortex.sessions.get()
     t.sh.subtitle('OP setup')
 
+    #Symlink to job's last execution log in op's resul directory
+    if t.env["SLURM_JOB_NAME"] is not None:
+        if t.sh.path.exists('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf'):
+            t.sh.remove('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
+        t.sh.softlink(t.env["__log_sbatch"], '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
+
     t.sh.prompt = t.prompt
     t.info()
 
@@ -157,6 +163,11 @@ def setup(**kw):
     print '+ JEEVES default =', vortex.toolbox.defaults.get('jname')
 
     #--------------------------------------------------------------------------------------------------
+    t.sh.header('START message to op MESSDAYF reporting file')
+    ad.report(kind='dayfile', mode='DEBUT')
+
+    #--------------------------------------------------------------------------------------------------
+
     t.sh.header('SMS Settings')
     ad.sms_info()
 
@@ -193,7 +204,9 @@ def setenv(t, **kw):
     for opvar in sorted([ x for x in opd.keys() if x.startswith('op_') ]):
         t.env.setvar(opvar, opd[opvar])
         nb_op += 1
-
+    t.env.MTOOLDIR = "/chaine/mxpt001/vortex/mtool"
+    #t.env.MTOOLDIR = t.env.get('OP_MTOOLDIR', None)
+        
     logger.info('Global op variables found: %d', nb_op)
 
     #--------------------------------------------------------------------------------------------------
@@ -228,6 +241,7 @@ def setenv(t, **kw):
 def complete(t, **kw):
     """Exit from OP session."""
     ad = vortex.tools.actions.actiond
+    ad.report(kind='dayfile', mode='FIN')
     ad.sms_complete()
     t.close()
 
@@ -256,6 +270,7 @@ def register(t, cycle, dump=True):
 def rescue(**kw):
     """Something goes wrong... so, do your best to save current state."""
     ad = vortex.tools.actions.actiond
+    ad.report(kind='dayfile', mode='ERREUR')
     ad.sms_abort()
     print 'Bad luck...'
 
