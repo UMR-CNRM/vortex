@@ -14,7 +14,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 
-class VortexNameBuilderError(Exception):
+class VortexNameBuilderError(ValueError):
     pass
 
 

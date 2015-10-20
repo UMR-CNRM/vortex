@@ -17,7 +17,7 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex.tools import env
 
 
-class MpiException(Exception):
+class MpiException(StandardError):
     """Raise an exception in the parallel execution mode."""
     pass
 

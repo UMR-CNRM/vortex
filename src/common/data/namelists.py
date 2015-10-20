@@ -18,6 +18,10 @@ from vortex.syntax.stdattrs import binaries, term
 from gco.syntax.stdattrs import GenvKey
 
 
+class NamelistContentError(StandardError):
+    pass
+
+
 class NamelistContent(AlmostDictContent):
     """Fortran namelist including namelist blocks."""
 
@@ -119,7 +123,7 @@ class NamelistContent(AlmostDictContent):
         if namset:
             self._data = namset.as_dict()
         else:
-            raise Exception('Could not parse container contents')
+            raise NamelistContentError('Could not parse container contents')
 
     def rewrite(self, container):
         """Write the namelist contents in the specified container."""

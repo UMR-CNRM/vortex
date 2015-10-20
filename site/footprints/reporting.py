@@ -46,7 +46,7 @@ def items():
     return FootprintLog.tag_items()
 
 
-class FootprintBadLogEntry(Exception):
+class FootprintBadLogEntry(StandardError):
     """Exception raised when inappropriate log entries are met."""
     pass
 

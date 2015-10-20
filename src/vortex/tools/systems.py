@@ -519,7 +519,7 @@ class System(footprints.FootprintBase):
                 raise
             else:
                 logger.warning('Carry on because fatal is off')
-        except Exception as perr:
+        except StandardError as perr:
             logger.critical('System returns {!s}'.format(perr))
             if fatal:
                 raise RuntimeError('System {!s} spawned {!s} got [{!s}]: {!s}'.format(self, args, perr.returncode, perr))

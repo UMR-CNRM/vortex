@@ -89,7 +89,7 @@ class GenericConfigParser(object):
                         local.filecocoon(persofile)
                         local.touch(persofile)
                     else:
-                        raise Exception('Configuration file ' + inifile + ' not found')
+                        raise ValueError('Configuration file ' + inifile + ' not found')
         if self.file is not None:
             self.parser.read(self.file)
 
