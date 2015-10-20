@@ -141,13 +141,13 @@ def slurm_parameters(t, **kw):
 
     try:
         slurm['nn'] = int(e.SLURM_NNODES)
-    except StandardError as pb:
+    except (ValueError, TypeError) as pb:
         logger.warning('SLURM_NNODES: %s', str(pb))
         slurm['nn'] = 1
 
     try:
         slurm['nnp'] = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
-    except StandardError as pb:
+    except (ValueError, TypeError) as pb:
         logger.warning('SLURM_TASKS_PER_NODE: %s', str(pb))
         slurm['nnp'] = 1
 
@@ -158,7 +158,7 @@ def slurm_parameters(t, **kw):
             guess_cpus  = int(re.sub('\(.*$', '', e.SLURM_JOB_CPUS_PER_NODE)) / 2
             guess_tasks = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
             slurm['openmp'] = guess_cpus / guess_tasks
-        except StandardError as pb:
+        except (ValueError, TypeError) as pb:
             logger.warning('SLURM_JOB_CPUS_PER_NODE: %s', str(pb))
 
     for x in ('nn', 'nnp', 'openmp'):

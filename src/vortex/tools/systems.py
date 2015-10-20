@@ -51,7 +51,7 @@ def fmtshcmd(func):
     return formatted_method
 
 
-class ExecutionError(StandardError):
+class ExecutionError(RuntimeError):
     """Go through exception for internal :meth:`spawn` errors."""
     pass
 
@@ -660,7 +660,7 @@ class OSExtended(System):
         if defaults:
             try:
                 opts.update(defaults)
-            except StandardError as pb:
+            except (ValueError, TypeError):
                 logger.warning('Could not update options default: %s', defaults)
 
         if cmdline is None:

@@ -29,7 +29,7 @@ ATM_LIST_TWO = set([
     'ctbto', 'mocchim', 'mocvolc'
 ])
 
-class SopranoModelError(StandardError):
+class SopranoModelError(ValueError):
     pass
 
 

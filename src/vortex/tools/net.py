@@ -212,7 +212,7 @@ class StdFtp(object):
         rc = False
         try:
             self.retrbinary('RETR ' + source, target.write)
-        except StandardError as e:
+        except (ValueError, TypeError, IOError) as e:
             logger.error('FTP could not get {!r}: {!s}'.format(source, e))
             raise
         except ftplib.all_errors as e:
@@ -256,14 +256,14 @@ class StdFtp(object):
             logger.warning('Replacing <file:{!s}>'.format(destination))
         except ftplib.error_perm:
             logger.warning('Creating <file:{!s}>'.format(destination))
-        except (StandardError,
+        except (ValueError, TypeError, IOError,
                 ftplib.error_proto, ftplib.error_reply, ftplib.error_temp) as e:
             logger.critical('Serious delete trouble <file:{!s}> <error:{!s}>'.format(destination, e))
         logger.info('FTP <put:{!s}>'.format(destination))
         rc = False
         try:
             self.storbinary('STOR ' + destination, inputsrc)
-        except StandardError as e:
+        except (ValueError, IOError, TypeError, ftplib.all_errors) as e:
             logger.error('FTP could not put {!r}: {!s}'.format(source, e))
         else:
             if xsource:

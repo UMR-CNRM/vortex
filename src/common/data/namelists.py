@@ -18,7 +18,7 @@ from vortex.syntax.stdattrs import binaries, term
 from gco.syntax.stdattrs import GenvKey
 
 
-class NamelistContentError(StandardError):
+class NamelistContentError(ValueError):
     pass
 
 

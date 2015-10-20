@@ -500,7 +500,7 @@ class Finder(Store):
         if ftp:
             try:
                 rc = ftp.size(self.rootdir + remote['path'])
-            except StandardError, ftplib.all_errors:
+            except (ValueError, TypeError, ftplib.all_errors):
                 pass
             finally:
                 ftp.close()
@@ -610,7 +610,7 @@ class ArchiveStore(Store):
         if ftp:
             try:
                 rc = ftp.size(self.storeroot + remote['path'])
-            except StandardError, ftplib.all_errors:
+            except (ValueError, TypeError, ftplib.all_errors):
                 pass
             finally:
                 ftp.close()

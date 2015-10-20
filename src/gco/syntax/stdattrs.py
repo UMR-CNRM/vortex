@@ -76,7 +76,7 @@ class ArpIfsSimplifiedCycle(object):
         if not isinstance(other, ArpIfsSimplifiedCycle):
             try:
                 other = ArpIfsSimplifiedCycle(other)
-            except StandardError:
+            except (ValueError, TypeError):
                 return False
         return hash(self) == hash(other)
 

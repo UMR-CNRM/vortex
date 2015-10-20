@@ -16,7 +16,7 @@ logger = footprints.loggers.getLogger(__name__)
 from footprints.util import mktuple
 
 
-class SectionFatalError(StandardError):
+class SectionFatalError(Exception):
     """Exception when fatal mode is activated."""
     pass
 

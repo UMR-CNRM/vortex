@@ -376,7 +376,7 @@ class Date(datetime.datetime):
             try:
                 top = local_date_functions[top](**kw)
                 kw = dict()
-            except StandardError:
+            except (ValueError, TypeError):
                 pass
         if isinstance(top, datetime.datetime):
             ld = [ top.year, top.month, top.day, top.hour, top.minute, top.second ]
@@ -523,7 +523,7 @@ class Date(datetime.datetime):
         """Compare two Date values or a Date and a datetime or string value."""
         try:
             other = self.__class__(other).compact()
-        except StandardError:
+        except (ValueError, TypeError):
             pass
         finally:
             return self.compact() == '{0:<08s}'.format(str(other))
@@ -535,7 +535,7 @@ class Date(datetime.datetime):
         """Compare two Date values or a Date and a datetime or string value."""
         try:
             other = self.__class__(other).compact()
-        except StandardError:
+        except (ValueError, TypeError):
             pass
         finally:
             return self.compact() < '{0:<08s}'.format(str(other))
@@ -547,7 +547,7 @@ class Date(datetime.datetime):
         """Compare two Date values or a Date and a datetime or string value."""
         try:
             other = self.__class__(other).compact()
-        except StandardError:
+        except (ValueError, TypeError):
             pass
         finally:
             return self.compact() > '{0:<08s}'.format(str(other))
@@ -718,18 +718,18 @@ class Time(object):
     def __eq__(self, other):
         try:
             other = self.__class__(other)
-        except StandardError:
+        except (ValueError, TypeError):
             pass
         try:
             return int(self) == int(other)
-        except StandardError:
+        except (ValueError, TypeError):
             return False
 
     def __cmp__(self, other):
         """Compare two Time values or a Time and an int value."""
         try:
             other = self.__class__(other)
-        except StandardError:
+        except (ValueError, TypeError):
             pass
         return cmp(int(self), int(other))
 
@@ -799,7 +799,7 @@ class Month(object):
         delta = kw.pop('delta', 0)
         try:
             args = (datetime.datetime(**kw),)
-        except StandardError:
+        except (ValueError, TypeError):
             pass
         if not args:
             raise ValueError("No initial value provided for Month")
@@ -947,7 +947,7 @@ class Month(object):
                     rc = cmp(self.month, mtest.month)
                 else:
                     rc = cmp(self.fmtym, mtest.fmtym)
-        except StandardError:
+        except (ValueError, TypeError):
             rc = 1
         finally:
             return rc
