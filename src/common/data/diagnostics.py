@@ -4,11 +4,11 @@
 #: No automatic export
 __all__ = []
 
-from vortex.data.flow import GeoFlowResource
+from vortex.data.flow import SpectralGeoFlowResource
 from vortex.syntax.stdattrs import a_term
 
 
-class ISP(GeoFlowResource):
+class ISP(SpectralGeoFlowResource):
 
     """
     Class for Forecasted Satellite Image resource.
@@ -54,7 +54,7 @@ class ISP(GeoFlowResource):
         )
 
 
-class DDH(GeoFlowResource):
+class DDH(SpectralGeoFlowResource):
 
     """
     Class for Horizontal Diagnostics.

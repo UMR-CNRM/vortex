@@ -4,7 +4,8 @@
 #: No automatic export
 __all__ = []
 
-from vortex.data.outflow    import ModelResource, StaticResource
+from vortex.data.resources  import Resource
+from vortex.data.outflow    import ModelResource, StaticSpectralResource
 from vortex.data.geometries import GridGeometry
 from vortex.data.contents   import TextContent
 
@@ -25,7 +26,7 @@ class GenvModelResource(ModelResource):
     )
 
 
-class GenvStaticResource(StaticResource):
+class GenvStaticSpectralResource(StaticSpectralResource):
     """Abstract class for gget driven resources."""
 
     _abstract  = True
@@ -540,7 +541,7 @@ class ODBRaw(GenvModelResource):
         return 'odbraw'
 
 
-class MatFilter(GenvStaticResource):
+class MatFilter(GenvStaticSpectralResource):
     """
     Class of a filtering matrix. A SpectralGeometry object is needed,
     as well as the GridGeometry of the scope domain (countaining the filtering used).
@@ -585,7 +586,7 @@ class MatFilter(GenvStaticResource):
                '.c' + str(self.geometry.stretching)
 
 
-class Stabal(GenvStaticResource):
+class Stabal(GenvStaticSpectralResource):
     """
     TODO.
     A GenvKey can be given.
@@ -617,7 +618,7 @@ class Stabal(GenvStaticResource):
         return 'stabal'
 
 
-class WaveletTable(GenvStaticResource):
+class WaveletTable(GenvStaticSpectralResource):
     """
     TODO.
     A GenvKey can be given.
@@ -641,7 +642,7 @@ class WaveletTable(GenvStaticResource):
         return 'wtable'
 
 
-class AmvError(StaticResource):
+class AmvError(StaticSpectralResource):
     """
     TODO.
     A Genvkey can be given.
@@ -670,7 +671,7 @@ class AmvError(StaticResource):
         return 'amv_error'
 
 
-class AmvBias(StaticResource):
+class AmvBias(StaticSpectralResource):
     """
     TODO.
     A Genvkey can be given.
@@ -695,7 +696,7 @@ class AmvBias(StaticResource):
         return 'amv_bias'
 
 
-class LFIScripts(StaticResource):
+class LFIScripts(Resource):
     """
     The LFI scripts. A Genvkey can be given.
     """

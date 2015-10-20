@@ -5,7 +5,7 @@
 __all__ = []
 
 from resources import Resource
-from geometries import SpectralGeometry
+from geometries import HorizontalGeometry, SpectralGeometry, GridGeometry
 from vortex.syntax.stdattrs import model
 
 
@@ -26,13 +26,13 @@ class ModelResource(NoDateResource):
         )
 
 
-class StaticResource(ModelResource):
+class StaticGeoResource(ModelResource):
 
     _abstract = True
     _footprint = dict(
         attr = dict(
             geometry = dict(
-                type = SpectralGeometry,
+                type = HorizontalGeometry,
             )
         )
     )
@@ -44,3 +44,27 @@ class StaticResource(ModelResource):
             fmt      = self.nativefmt,
             geometry = self.geometry,
         )
+
+
+class StaticSpectralResource(StaticGeoResource):
+
+    _abstract = True
+    _footprint = dict(
+        attr = dict(
+            geometry = dict(
+                type = SpectralGeometry,
+            )
+        )
+    )
+
+
+class StaticGridResource(StaticGeoResource):
+
+    _abstract = True
+    _footprint = dict(
+        attr = dict(
+            geometry = dict(
+                type = GridGeometry,
+            )
+        )
+    )

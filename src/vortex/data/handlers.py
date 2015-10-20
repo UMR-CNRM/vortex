@@ -240,7 +240,8 @@ class Handler(object):
                     '{0}{0}Attributes : {4:s}'
                 )).format(
                     tab,
-                    subobj.capitalize(), obj, obj.realkind, obj.footprint_as_dict()
+                    subobj.capitalize(), 
+                    obj, obj.realkind, obj.footprint_as_shallow_dict()
                 )
             else:
                 thisdoc = '{0}{1:s} undefined'.format(tab, subobj.capitalize())

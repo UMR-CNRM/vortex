@@ -19,6 +19,7 @@ import time
 import copy
 import types
 import weakref
+import collections
 
 # Default logging
 
@@ -145,6 +146,7 @@ class Footprint(object):
 
     def __init__(self, *args, **kw):
         """Initialisation and checking of a given set of footprint."""
+        myclsname = kw.pop('myclsname', 'unknown class')
         if kw.pop('nodefault', False):
             fp = dict(attr = dict())
         else:
@@ -157,13 +159,31 @@ class Footprint(object):
                     level = priorities.top.DEFAULT
                 )
             )
+        typescheck = collections.defaultdict(list)
         for a in args:
+            adict = None
             if isinstance(a, dict) and bool(a):
                 logger.debug('Init Footprint updated with dict %s', a)
-                util.dictmerge(fp, util.list2dict(a, ('attr', 'only')))
+                adict = util.list2dict(a, ('attr', 'only'))
             if isinstance(a, Footprint) and bool(a.attr):
                 logger.debug('Init Footprint updated with object %s', a)
-                util.dictmerge(fp, a.as_dict())
+                adict = a.as_dict()
+            if adict is not None:
+                util.dictmerge(fp, adict)
+                if 'attr' in adict:
+                    for attr, attrdict in adict['attr'].iteritems():
+                        if 'type' in attrdict:
+                            typescheck[attr].append(attrdict['type'])
+        # Check that the type of a given attribute is consistent among
+        # footprints (warning only)
+        for attr, typelist in typescheck.iteritems():
+            if len(typelist) > 1:
+                fine = True
+                for i in range(len(typelist) - 1, 0, -1):
+                    fine = fine and issubclass(typelist[i], typelist[i - 1])
+                if not fine:
+                    logger.warning('%s: Type inconsistency among footprints for attribute %s: %s',
+                                   myclsname, attr, ",".join([repr(x) for x in typelist]))
         util.dictmerge(fp, util.list2dict(kw, ('attr', 'only')))
         for a in fp['attr'].keys():
             fp['attr'][a].setdefault('default', None)
@@ -293,7 +313,7 @@ class Footprint(object):
         for vdesc in desc.values():
             if isinstance(vdesc, FootprintBase):
                 logger.debug('Extend extras with %s', vdesc)
-                additems = vdesc.footprint_as_dict()
+                additems = vdesc.footprint_as_shallow_dict()
                 logger.debug('Add items %s', additems)
                 extras.update(additems)
         if extras:
@@ -611,7 +631,7 @@ class FootprintBaseMeta(type):
             bcfp.extend(fplocal)
         else:
             bcfp.append(fplocal)
-        thisfp = d['_footprint'] = Footprint(*bcfp)
+        thisfp = d['_footprint'] = Footprint(*bcfp, myclsname=n)
 
         # Setting descriptors for footprint attributes
         d['_fp_auth'] = hash(d['__module__'] + '.' + n)
@@ -804,26 +824,26 @@ class FootprintBase(object):
         """Returns the list of current attributes."""
         return sorted(self._attributes.keys())
 
-    def footprint_as_dict(self, refresh=False, deepcopy=False):
-        """Returns a dictionnary that contains the current attributes.
+    def footprint_as_shallow_dict(self, refresh=False):
+        """Returns a dictionary that containsa shallow copy of the current attributes.
 
         :param refresh: Return a new shallow copy.
-        :param deepcopy: Force the result to be a deepcopy of the attributes.
         """
-        if self._puredict is None or refresh or deepcopy:
+        if self._puredict is None or refresh:
             self._puredict = dict()
             for k in self._attributes.keys():
                 self._puredict[k] = getattr(self, k)
-        if deepcopy:
-            return copy.deepcopy(self._puredict)
-        else:
-            return self._puredict
+        return self._puredict
 
-    def footprint_export(self, deepcopy=False):
-        """See the current footprint as a pure dictionary when exported.
+    def footprint_as_dict(self):
+        """Returns a dictionary that contains a deepcopy of the current attributes."""
+        puredict = dict()
+        for k in self._attributes.keys():
+            puredict[k] = copy.deepcopy(getattr(self, k))
+        return puredict
 
-        :param deepcopy: Force the result to be a deepcopy.
-        """
+    def footprint_export(self):
+        """See the current footprint as a pure dictionary when exported."""
         exd = dict()
         for k in self._attributes.keys():
             exportmethod = 'footprint_export_' + k
@@ -836,11 +856,8 @@ class FootprintBase(object):
                 elif hasattr(thisattr, 'export_dict'):
                     exd[k] = thisattr.export_dict()
                 else:
-                    exd[k] = thisattr
-        if deepcopy:
-            return copy.deepcopy(exd)
-        else:
-            return exd
+                    exd[k] = copy.deepcopy(thisattr)
+        return exd
 
     def _str_more(self):
         """Additional information to be combined in repr output."""

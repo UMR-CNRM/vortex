@@ -4,13 +4,12 @@
 #: No automatic export
 __all__ = []
 
-from vortex.data.outflow import StaticResource
+from vortex.data.outflow import StaticSpectralResource, StaticGridResource
 from vortex.syntax.stdattrs import a_model, month
-from vortex.data.geometries import GridGeometry
 from gco.syntax.stdattrs import GenvKey, GenvDomain
 
 
-class Clim(StaticResource):
+class ClimSP(StaticSpectralResource):
     """
     Abstract class for all kinds of climatology
     """
@@ -28,7 +27,7 @@ class Clim(StaticResource):
                     default = 'fa',
                 ),
             )
-          )
+        )
     ]
 
     @property
@@ -45,7 +44,7 @@ class Clim(StaticResource):
         return '.m' + str(self.month)
 
 
-class ClimModel(Clim):
+class ClimModel(ClimSP):
     """
     Abstract class for a model climatology. A SpectralGeometry object is needed. A Genvkey can be given.
     """
@@ -131,7 +130,7 @@ class ClimLAM(ClimModel):
         )
 
 
-class ClimBDAP(Clim):
+class ClimBDAP(StaticGridResource):
     """
     Class for a climatology of a BDAP domain.
     A GridGeometry object is needed. A Genvkey can be given
@@ -144,8 +143,9 @@ class ClimBDAP(Clim):
                 kind = dict(
                     values = ['clim_bdap']
                 ),
-                geometry= dict(
-                    type = GridGeometry,
+                nativefmt = dict(
+                    values = ['fa'],
+                    default = 'fa',
                 ),
                 gdomain = dict(
                     type = GenvDomain,
@@ -156,9 +156,9 @@ class ClimBDAP(Clim):
                     type = GenvKey,
                     optional = True,
                     default = 'clim_dap_[gdomain]'
-                    ),
+                ),
             )
-          )
+        )
     ]
 
     @property
@@ -172,5 +172,9 @@ class ClimBDAP(Clim):
             geo     = self.geometry.area,
             radical = 'clim',
             src     = self.model,
-            suffix  = {'month':self.month},
+            suffix  = {'month': self.month},
         )
+
+    def gget_basename(self):
+        """GGET specific naming convention."""
+        return '.m' + str(self.month)

@@ -1923,7 +1923,7 @@ class utFootprintBase(TestCase):
         self.assertListEqual(fp2.footprint_attributes, 
                              ['kind', 'someMixedCase', 'somefoo', 'someint', 'somestr'])
         self.assertEqual(fp2.footprint_info, 'Another test class')
-        self.assertDictEqual(fp2.footprint_as_dict(), dict(
+        self.assertDictEqual(fp2.footprint_as_shallow_dict(), dict(
             kind = 'hip',
             someint = 5,
             somestr = 'this',
@@ -1935,12 +1935,12 @@ class utFootprintBase(TestCase):
         # Base object
         thefoo = Foo(inside=2)
         fp0 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
-        exp_dict = fp0.footprint_as_dict()
+        exp_dict = fp0.footprint_as_shallow_dict()
         # Pure dict is a shallow copy...
         self.assertIs(exp_dict['somefoo'], fp0.somefoo)
         # Copied object
         fpc = deepcopy(fp0)
-        exp_dict_c = fpc.footprint_as_dict()
+        exp_dict_c = fpc.footprint_as_shallow_dict()
         # Is the new Pure dict fine ?
         self.assertIs(exp_dict_c['somefoo'], fpc.somefoo)
         # Check that the deep copy works by playing with the mutable somefoo
@@ -1953,20 +1953,26 @@ class utFootprintBase(TestCase):
         self.assertIn(fp0, col.instances)
         self.assertIn(fpc, col.instances)
 
-    def test_as_dict(self):
+    def test_as_shallow_dict(self):
         # Base object
         thefoo = Foo(inside=2)
         fp0 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
         # Defaults
-        exp1 = fp0.footprint_as_dict()
-        exp2 = fp0.footprint_as_dict()
+        exp1 = fp0.footprint_as_shallow_dict()
+        exp2 = fp0.footprint_as_shallow_dict()
         self.assertIs(exp1, exp2)
         # Shallow copy
-        exp2 = fp0.footprint_as_dict(refresh=True)
+        exp2 = fp0.footprint_as_shallow_dict(refresh=True)
         self.assertIsNot(exp1, exp2)
         self.assertIs(exp1['somefoo'], exp2['somefoo'])
+
+    def test_as_dict(self):
+        # Base object
+        thefoo = Foo(inside=2)
+        fp0 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
         # Deepcopy
-        exp2 = fp0.footprint_as_dict(deepcopy=True)
+        exp1 = fp0.footprint_as_dict()
+        exp2 = fp0.footprint_as_dict()
         self.assertIsNot(exp1, exp2)
         self.assertIsNot(exp1['somefoo'], exp2['somefoo'])
 

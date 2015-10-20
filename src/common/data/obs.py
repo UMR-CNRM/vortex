@@ -11,7 +11,7 @@ from collections import namedtuple
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.data.flow     import GeoFlowResource, FlowResource
+from vortex.data.flow     import SpectralGeoFlowResource, FlowResource
 from vortex.data.contents import TextContent, AlmostListContent
 from vortex.syntax        import stdattrs
 from vortex.tools.date    import Date
@@ -19,7 +19,7 @@ from vortex.tools.date    import Date
 from gco.syntax.stdattrs  import GenvKey
 
 
-class Observations(GeoFlowResource):
+class Observations(SpectralGeoFlowResource):
     """
     Abstract observation resource.
     """
