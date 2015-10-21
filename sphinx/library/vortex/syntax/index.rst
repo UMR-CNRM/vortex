@@ -8,5 +8,4 @@ Contains:
    :maxdepth: 1
 
    syntax
-   cycles
    stdattrs
