@@ -824,16 +824,12 @@ class FootprintBase(object):
         """Returns the list of current attributes."""
         return sorted(self._attributes.keys())
 
-    def footprint_as_shallow_dict(self, refresh=False):
-        """Returns a dictionary that containsa shallow copy of the current attributes.
-
-        :param refresh: Return a new shallow copy.
-        """
-        if self._puredict is None or refresh:
-            self._puredict = dict()
-            for k in self._attributes.keys():
-                self._puredict[k] = getattr(self, k)
-        return self._puredict
+    def footprint_as_shallow_dict(self):
+        """Returns a dictionary that contains the current attributes (shallow copy)."""
+        _puredict = dict()
+        for k in self._attributes.keys():
+            _puredict[k] = getattr(self, k)
+        return _puredict
 
     def footprint_as_dict(self):
         """Returns a dictionary that contains a deepcopy of the current attributes."""

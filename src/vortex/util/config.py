@@ -59,7 +59,7 @@ class GenericConfigParser(object):
 
     def __deepcopy__(self, memo):
         """Warning: deepcopy of any item of the class is... itself!"""
-        memo[self] = self
+        memo[id(self)] = self
         return self
 
     def as_dump(self):

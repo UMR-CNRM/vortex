@@ -1792,7 +1792,7 @@ class utFootprintBase(TestCase):
         ftm = FootprintTestMeta()
         self.assertIsInstance(ftm._footprint, Footprint)
         self.assertListEqual(ftm.footprint_attributes, list())
-        self.assertDictEqual(ftm.footprint_as_dict(), dict())
+        self.assertDictEqual(ftm.footprint_as_shallow_dict(), dict())
         self.assertDictEqual(ftm.footprint_export(), dict())
         self.assertEqual(ftm.footprint_clsname(), 'FootprintTestMeta')
         self.assertEqual(ftm.footprint_info, 'Not documented')
@@ -1865,7 +1865,7 @@ class utFootprintBase(TestCase):
         self.assertIsInstance(fp1, FootprintTestOne)
         self.assertListEqual(fp1.footprint_attributes,
                              ['kind', 'someMixedCase', 'someint', 'somestr'])
-        self.assertDictEqual(fp1.footprint_as_dict(), dict(
+        self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
             kind = 'hip',
             someint = 7,
             somestr = 'this',
@@ -1873,7 +1873,7 @@ class utFootprintBase(TestCase):
         ))
 
         fp1 = FootprintTestOne(stuff='foo', someint='7')
-        self.assertDictEqual(fp1.footprint_as_dict(), dict(
+        self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
             kind = 'hop',
             someint = 7,
             somestr = 'this',
@@ -1883,14 +1883,14 @@ class utFootprintBase(TestCase):
         footprints.logger.setLevel(logging.CRITICAL)
         with self.assertRaises(AttributeError):
             fp1 = FootprintTestOne(stuff='foo', someint='7', checked=True)
-            self.assertDictEqual(fp1.footprint_as_dict(), dict(
+            self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
                 stuff = 'foo',
                 someint = '7',
             ))
         footprints.logger.setLevel(logging.WARNING)
 
         fp1 = FootprintTestOne(kind='foo', someint='7', checked=True)
-        self.assertDictEqual(fp1.footprint_as_dict(), dict(
+        self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
             kind = 'foo',
             someint = '7',
         ))
@@ -1957,12 +1957,9 @@ class utFootprintBase(TestCase):
         # Base object
         thefoo = Foo(inside=2)
         fp0 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
-        # Defaults
+        # Shallow copy
         exp1 = fp0.footprint_as_shallow_dict()
         exp2 = fp0.footprint_as_shallow_dict()
-        self.assertIs(exp1, exp2)
-        # Shallow copy
-        exp2 = fp0.footprint_as_shallow_dict(refresh=True)
         self.assertIsNot(exp1, exp2)
         self.assertIs(exp1['somefoo'], exp2['somefoo'])
 

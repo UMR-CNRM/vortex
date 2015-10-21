@@ -463,6 +463,17 @@ class GetByTag(object):
         """Return a list of current classes that have been registred with the same GetByTag root."""
         return list(cls._tag_class)
 
+    def __copy__(self):
+        """I don't know how to deep copy a GetByTag..."""
+        logger.info("There is no trivial way to copy a GetByTag instance: returning self")
+        return self
+
+    def __deepcopy__(self, memo):
+        """I don't know how to deep copy a GetByTag..."""
+        logger.info("There is no trivial way to deepcopy a GetByTag instance: returning self")
+        memo[id(self)] = self
+        return self
+
 
 class Catalog(object):
     """

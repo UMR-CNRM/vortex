@@ -79,7 +79,7 @@ class GridGeoFlowResource(HorizontalGeoFlowResource):
     _footprint = dict(
         attr = dict(
             geometry = dict(
-                type = SpectralGeometry,
+                type = GridGeometry,
             ),
         )
     )

@@ -137,6 +137,7 @@ class ClimBDAP(StaticGridResource):
     with a default name retrieved thanks to a GenvDomain object.
     """
     _footprint = [
+        month,
         dict(
             info = 'Bdap climatology',
             attr = dict(
