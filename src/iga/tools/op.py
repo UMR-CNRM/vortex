@@ -11,6 +11,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 import vortex.tools.actions
 import iga.tools.services
+from vortex.tools.actions import actiond as ad
 
 from iga.util import swissknife
 
@@ -223,6 +224,25 @@ def setenv(t, **kw):
     logger.info('Effective time    = %s', t.env.OP_RUNTIME)
 
     return t.env.clone()
+
+
+def report(t, try_ok=True, **kw):
+    """Report status of the OP session (input review, mail diffusion...)."""
+
+    reseau = t.env.getvar('OP_RUNDATE').hh
+    task   = kw.get('task', 'unknown_task')
+    if try_ok:
+        t.sh.header('Input review')
+        report = t.context.sequence.inputs_report()
+        report.print_report(detailed=True)
+        if any(report.active_alternates()):
+            t.sh.header('Input informations: active alternates were found')
+            ad.opmail(reseau=reseau, task=task, id='mode_secours')
+        else:
+            t.sh.header('Input informations: everything is ok')
+    else:
+        t.sh.header('Input informations: input fail')
+        ad.opmail(reseau=reseau, task=task, id='input_fail')
 
 
 def complete(t, **kw):

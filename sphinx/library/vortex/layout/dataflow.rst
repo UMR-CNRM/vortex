@@ -51,3 +51,7 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: SequenceInputsReport
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
