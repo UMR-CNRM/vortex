@@ -29,7 +29,7 @@ def setup(**kw):
     t.sh.subtitle('OP setup')
 
     #Symlink to job's last execution log in op's resul directory
-    if t.env["SLURM_JOB_NAME"] is not None:
+    if "SLURM_JOB_NAME" in t.env():
         if t.sh.path.exists('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf'):
             t.sh.remove('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
         t.sh.softlink(t.env["__log_sbatch"], '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
@@ -175,6 +175,7 @@ def setup(**kw):
         ad.sms_off()
 
     ad.sms_init(t.env.SLURM_JOBID)
+    t.sh.signal_intercept_on()
 
     return t
 
@@ -243,6 +244,7 @@ def complete(t, **kw):
     ad = vortex.tools.actions.actiond
     ad.report(kind='dayfile', mode='FIN')
     ad.sms_complete()
+    t.sh.signal_intercept_off()
     t.close()
 
 
