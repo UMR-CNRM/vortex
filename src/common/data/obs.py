@@ -507,7 +507,6 @@ class ObsMap(FlowResource):
             gvar = dict(
                 type     = GenvKey,
                 optional = True,
-                default  = 'bator_map',
             ),
             clscontents = dict(
                 default  = ObsMapContent,
@@ -549,10 +548,22 @@ class ObsMap(FlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        if  self.scope.startswith('surf'):
+        if self.scope.startswith('surf'):
             return 'BATOR_MAP_' + self.scope[:4].lower()
-        else :
+        else:
             return 'BATOR_MAP'
+
+    def genv_basename(self):
+        """Genv key naming convention."""
+        cutoff_map = {'production': 'prod'}
+        if self.gvar is None:
+            if self.scope == 'surface':
+                gkey = 'bator_map_surf'
+            else:
+                gkey = 'bator_map_' + cutoff_map.get(self.cutoff, self.cutoff)
+            return GenvKey(gkey)
+        else:
+            return self.gvar
 
     def basename_info(self):
         """Generic information for names fabric, with radical = ``obsmap``."""

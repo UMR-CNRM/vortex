@@ -94,7 +94,7 @@ class Resource(footprints.FootprintBase):
 
     def genv_basename(self):
         """Proxy to :meth:`gget_basename`."""
-        return self.gget_basename()
+        return getattr(self, 'gvar', '')
 
     def gget_urlquery(self):
         """Duck typing: return an empty string by default."""
