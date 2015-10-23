@@ -1,9 +1,9 @@
 
 .. _userguide-index:
 
-#####################
-The VORTEX User Guide
-#####################
+##################################
+The VORTEX Technical Documentation
+##################################
 
 :Release: |version|
 :Date: |today|
@@ -15,4 +15,5 @@ This will contain instructions for end users of the toolbox.
 
    shell
    fortran
+   environment
    actions
