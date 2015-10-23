@@ -13,5 +13,4 @@ Package
 
 .. autodata:: __all__
   
-* :mod:`vortex.syntax.cycles`
 * :mod:`vortex.syntax.stdattrs`
