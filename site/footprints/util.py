@@ -123,7 +123,7 @@ class TimeInt(int):
     def __eq__(self, other):
         try:
             other = self.__class__(other)
-        except StandardError:
+        except (ValueError, TypeError):
             return False
         return self.ti * 60 + self.tm == other.ti * 60 + other.tm
 

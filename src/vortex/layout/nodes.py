@@ -514,11 +514,11 @@ class Driver(footprints.util.GetByTag, NiceLayout):
 
         jobname = name or self.jobname or self.env.get(envname)
         if jobname is None:
-            raise StandardError('No job name provided.')
+            raise ValueError('No job name provided.')
 
         rundate = date or self.rundate or self.env.get(envdate)
         if rundate is None:
-            raise StandardError('No date provided for this run.')
+            raise ValueError('No date provided for this run.')
 
         if verbose:
             self.sh.title(['Starting job', '', jobname, '', 'date ' + rundate.isoformat()])

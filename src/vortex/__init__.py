@@ -96,7 +96,7 @@ sh = sessions.system
 
 # Specific toolbox exceptions
 
-class VortexForceComplete(StandardError):
+class VortexForceComplete(Exception):
     """Exception for handling fast exit mecanisms."""
     pass
 

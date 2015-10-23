@@ -249,7 +249,7 @@ class AlmostListContent(DataContent):
     def _set_maxprint(self, value):
         try:
             self._maxprint = abs(int(value))
-        except ValueError:
+        except (ValueError, TypeError):
             pass
         self._maxprint = max(10, self._maxprint)
 

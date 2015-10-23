@@ -95,7 +95,7 @@ def mkjob(t, **kw):
         iniparser = GenericConfigParser(inifile=opts['inifile'])
         opts['tplinit'] = iniparser.file
         tplconf = iniparser.as_dict()
-    except Exception as pb:
+    except StandardError as pb:
         logger.warning('Could not read config %s', str(pb))
         tplconf = dict()
 
@@ -141,13 +141,13 @@ def slurm_parameters(t, **kw):
 
     try:
         slurm['nn'] = int(e.SLURM_NNODES)
-    except Exception as pb:
+    except (ValueError, TypeError) as pb:
         logger.warning('SLURM_NNODES: %s', str(pb))
         slurm['nn'] = 1
 
     try:
         slurm['nnp'] = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
-    except Exception as pb:
+    except (ValueError, TypeError) as pb:
         logger.warning('SLURM_TASKS_PER_NODE: %s', str(pb))
         slurm['nnp'] = 1
 
@@ -158,7 +158,7 @@ def slurm_parameters(t, **kw):
             guess_cpus  = int(re.sub('\(.*$', '', e.SLURM_JOB_CPUS_PER_NODE)) / 2
             guess_tasks = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
             slurm['openmp'] = guess_cpus / guess_tasks
-        except Exception as pb:
+        except (ValueError, TypeError) as pb:
             logger.warning('SLURM_JOB_CPUS_PER_NODE: %s', str(pb))
 
     for x in ('nn', 'nnp', 'openmp'):

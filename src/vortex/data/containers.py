@@ -17,7 +17,7 @@ CONTAINER_INCORELIMIT = 1048576 * 8
 CONTAINER_MAXREADSIZE = 1048576 * 64
 
 
-class DataSizeTooBig(StandardError):
+class DataSizeTooBig(IOError):
     """Exception raised when totasize is over the container MaxReadSize limit."""
     pass
 

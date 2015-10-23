@@ -63,7 +63,7 @@ replattr = re.compile(r'\[(\w+)(?::+(\w+))?(?:#(\w+))?\]')
 
 # Footprint exceptions
 
-class FootprintException(StandardError):
+class FootprintException(Exception):
     pass
 
 
@@ -483,7 +483,7 @@ class Footprint(object):
                     try:
                         guess[k] = ktype(guess[k], **kwargs)
                         logger.debug(' > Attr %s reclassed = %s', k, guess[k])
-                    except StandardError:
+                    except (ValueError, TypeError):
                         logger.debug(' > Attr %s badly reclassed as %s = %s', k, ktype, guess[k])
                         report.add(attribute=k, why=reporting.REPORT_WHY_RECLASS,
                                    args=(ktype.__name__, str(guess[k])))

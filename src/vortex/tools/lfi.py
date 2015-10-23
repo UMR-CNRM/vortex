@@ -498,7 +498,7 @@ class IO_Poll(addons.Addon):
             active_lfi = (LFI_Tool_Raw.in_shell(self.sh) or
                           LFI_Tool_Py.in_shell(self.sh))
             if active_lfi is None:
-                raise StandardError('Could not find any active LFI Tool')
+                raise RuntimeError('Could not find any active LFI Tool')
             self.env.LFITOOLS = active_lfi.path + '/' + active_lfi.cmd
         # Is there a need for an interpreter ?
         if self.interpreter != 'none':

@@ -76,7 +76,7 @@ class ArpIfsSimplifiedCycle(object):
         if not isinstance(other, ArpIfsSimplifiedCycle):
             try:
                 other = ArpIfsSimplifiedCycle(other)
-            except StandardError:
+            except (ValueError, TypeError):
                 return False
         return hash(self) == hash(other)
 
@@ -87,8 +87,8 @@ class ArpIfsSimplifiedCycle(object):
 
     def __str__(self):
         return ('cy{:d}'.format(self._number) +
-                ('t{:d}'.format(self._toulouse) if self._toulouse else '') +
-                ('_op{:d}'.format(self._op) if self._op else ''))
+                ('t{:d}'.format(self._toulouse - 1) if self._toulouse else '') +
+                ('_op{:d}'.format(self._op - 1) if self._op else ''))
 
     def __repr__(self):
         return '{} | {}'.format(self.__class__, str(self))

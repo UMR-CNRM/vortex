@@ -46,7 +46,7 @@ class FootprintAttrDescriptorRWD(FootprintAttrDescriptor):
                 try:
                     value = atype(value, **initargs)
                     logger.debug(' > Attr %s reclassed = %s', self._attr, value)
-                except Exception:
+                except (ValueError, TypeError):
                     raise ValueError('Unable to reclass {0:s} as {1:s}'.format(str(value), str(atype)))
             if fpdef['values'] and not fp.in_values(value, fpdef['values']):
                 raise ValueError('Value {0:s} not in range {1:s}'.format(str(value), str(list(fpdef['values']))))

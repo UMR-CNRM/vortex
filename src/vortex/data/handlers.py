@@ -20,7 +20,7 @@ from vortex.data   import stores, containers, resources, providers
 OBSERVER_TAG = 'Resources-Handlers'
 
 
-class HandlerError(StandardError):
+class HandlerError(RuntimeError):
     """Exception in case of missing resource during the wait mecanism."""
     pass
 

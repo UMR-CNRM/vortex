@@ -191,7 +191,7 @@ class AlgoComponent(footprints.FootprintBase):
                         bingo.put(incache=True)
                     else:
                         logger.warning('Polled data not promised <%s>', thisdata)
-            except Exception as trouble:
+            except StandardError as trouble:
                 logger.error('Polling trouble: %s', str(trouble))
                 redo = False
             finally:

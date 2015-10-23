@@ -51,7 +51,7 @@ def fmtshcmd(func):
     return formatted_method
 
 
-class ExecutionError(StandardError):
+class ExecutionError(RuntimeError):
     """Go through exception for internal :meth:`spawn` errors."""
     pass
 
@@ -519,7 +519,7 @@ class System(footprints.FootprintBase):
                 raise
             else:
                 logger.warning('Carry on because fatal is off')
-        except Exception as perr:
+        except StandardError as perr:
             logger.critical('System returns {!s}'.format(perr))
             if fatal:
                 raise RuntimeError('System {!s} spawned {!s} got [{!s}]: {!s}'.format(self, args, perr.returncode, perr))
@@ -660,7 +660,7 @@ class OSExtended(System):
         if defaults:
             try:
                 opts.update(defaults)
-            except StandardError as pb:
+            except (ValueError, TypeError):
                 logger.warning('Could not update options default: %s', defaults)
 
         if cmdline is None:

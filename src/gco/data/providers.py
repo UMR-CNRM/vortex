@@ -129,9 +129,9 @@ class GEnv(GcoProvider):
         gconf = genv.contents(cycle=self.genv)
         if not gconf:
             logger.error('Cycle not registred <%s>', self.genv)
-            raise Exception('Unknow cycle ' + self.genv)
+            raise ValueError('Unknow cycle ' + self.genv)
         gkey = resource.basename(self.realkind)
         if gkey not in gconf:
             logger.error('Key <%s> unknown in cycle <%s>', gkey, self.genv)
-            raise Exception('Unknow gvar ' + gkey)
+            raise ValueError('Unknow gvar ' + gkey)
         return gconf[gkey] + resource.basename('gget')
