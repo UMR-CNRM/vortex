@@ -300,8 +300,9 @@ class Period(datetime.timedelta):
         return datetime.timedelta.__new__(cls, *ld)
 
     def __deepcopy__(self, memo):
-        """No deepcopy expected, so ``self`` is returned."""
-        return self
+        newinstance = type(self)(self)
+        memo[id(self)] = newinstance
+        return newinstance
 
     def __len__(self):
         return self.days * 86400 + self.seconds
@@ -418,8 +419,9 @@ class Date(datetime.datetime):
         return (self.__class__, (self.iso8601(),))
 
     def __deepcopy__(self, memo):
-        """No deepcopy expected, so ``self`` is returned."""
-        return self
+        newinstance = type(self)(self)
+        memo[id(self)] = newinstance
+        return newinstance
 
     @property
     def origin(self):

@@ -12,7 +12,7 @@ from weakref import WeakSet
 import footprints
 
 from footprints import \
-    dump, observers, priorities, reporting, util, \
+    dump, observers, priorities, reporting, util, collectors, \
     Footprint, FootprintBase, \
     FPDict, FPList, FPSet, FPTuple
 
@@ -1792,12 +1792,47 @@ class utFootprintBase(TestCase):
         ftm = FootprintTestMeta()
         self.assertIsInstance(ftm._footprint, Footprint)
         self.assertListEqual(ftm.footprint_attributes, list())
-        self.assertDictEqual(ftm.footprint_as_dict(), dict())
+        self.assertDictEqual(ftm.footprint_as_shallow_dict(), dict())
         self.assertDictEqual(ftm.footprint_export(), dict())
         self.assertEqual(ftm.footprint_clsname(), 'FootprintTestMeta')
         self.assertEqual(ftm.footprint_info, 'Not documented')
 
         del FootprintTestMeta
+
+    def test_metaclass_inheritance(self):
+        class testA(FootprintBase):
+            _footprint = dict(
+                attr = dict(
+                    att1 = dict(default = 'toto',
+                                optional = True,
+                                values = ['toto', 'titi']),
+                    att2 = dict(type=int),
+                )
+            )
+
+        class testB(FootprintBase):
+            _footprint = dict(
+                attr = dict(
+                    att1 = dict(default = 'titi'),
+                    att3 = dict(default = 'scrontch',
+                                optional = True),
+                )
+            )
+
+        class testC(testB, testA):
+            _footprint = dict(
+                attr = dict(
+                    att2 = dict(values = [1, 2, 3])
+                )
+            )
+
+        self.assertEqual(testC._footprint.attr['att1']['default'], 'titi')
+        self.assertEqual(testC._footprint.attr['att1']['optional'], False)
+        self.assertEqual(testC._footprint.attr['att1']['values'], set())
+        self.assertEqual(testC._footprint.attr['att2']['type'], int)
+        self.assertEqual(testC._footprint.attr['att2']['values'], set((1, 2, 3)))
+        self.assertEqual(testC._footprint.attr['att3']['default'], 'scrontch')
+        self.assertEqual(testC._footprint.attr['att3']['optional'], True)
 
     def test_baseclass_fp1(self):
         self.assertFalse(FootprintTestOne.footprint_abstract())
@@ -1830,7 +1865,7 @@ class utFootprintBase(TestCase):
         self.assertIsInstance(fp1, FootprintTestOne)
         self.assertListEqual(fp1.footprint_attributes,
                              ['kind', 'someMixedCase', 'someint', 'somestr'])
-        self.assertDictEqual(fp1.footprint_as_dict(), dict(
+        self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
             kind = 'hip',
             someint = 7,
             somestr = 'this',
@@ -1838,7 +1873,7 @@ class utFootprintBase(TestCase):
         ))
 
         fp1 = FootprintTestOne(stuff='foo', someint='7')
-        self.assertDictEqual(fp1.footprint_as_dict(), dict(
+        self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
             kind = 'hop',
             someint = 7,
             somestr = 'this',
@@ -1848,14 +1883,14 @@ class utFootprintBase(TestCase):
         footprints.logger.setLevel(logging.CRITICAL)
         with self.assertRaises(AttributeError):
             fp1 = FootprintTestOne(stuff='foo', someint='7', checked=True)
-            self.assertDictEqual(fp1.footprint_as_dict(), dict(
+            self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
                 stuff = 'foo',
                 someint = '7',
             ))
         footprints.logger.setLevel(logging.WARNING)
 
         fp1 = FootprintTestOne(kind='foo', someint='7', checked=True)
-        self.assertDictEqual(fp1.footprint_as_dict(), dict(
+        self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
             kind = 'foo',
             someint = '7',
         ))
@@ -1888,13 +1923,55 @@ class utFootprintBase(TestCase):
         self.assertListEqual(fp2.footprint_attributes, 
                              ['kind', 'someMixedCase', 'somefoo', 'someint', 'somestr'])
         self.assertEqual(fp2.footprint_info, 'Another test class')
-        self.assertDictEqual(fp2.footprint_as_dict(), dict(
+        self.assertDictEqual(fp2.footprint_as_shallow_dict(), dict(
             kind = 'hip',
             someint = 5,
             somestr = 'this',
             somefoo = thefoo,
             someMixedCase = None,
         ))
+
+    def test_deepcopy(self):
+        # Base object
+        thefoo = Foo(inside=2)
+        fp0 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
+        exp_dict = fp0.footprint_as_shallow_dict()
+        # Pure dict is a shallow copy...
+        self.assertIs(exp_dict['somefoo'], fp0.somefoo)
+        # Copied object
+        fpc = deepcopy(fp0)
+        exp_dict_c = fpc.footprint_as_shallow_dict()
+        # Is the new Pure dict fine ?
+        self.assertIs(exp_dict_c['somefoo'], fpc.somefoo)
+        # Check that the deep copy works by playing with the mutable somefoo
+        self.assertIsNot(fp0.somefoo, fpc.somefoo)
+        fpc.somefoo.inside = 3
+        self.assertEqual(fpc.somefoo.inside, 3)
+        self.assertEqual(fp0.somefoo.inside, 2)
+        # Check that the collector knows about the copied class
+        col = collectors.get()
+        self.assertIn(fp0, col.instances)
+        self.assertIn(fpc, col.instances)
+
+    def test_as_shallow_dict(self):
+        # Base object
+        thefoo = Foo(inside=2)
+        fp0 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
+        # Shallow copy
+        exp1 = fp0.footprint_as_shallow_dict()
+        exp2 = fp0.footprint_as_shallow_dict()
+        self.assertIsNot(exp1, exp2)
+        self.assertIs(exp1['somefoo'], exp2['somefoo'])
+
+    def test_as_dict(self):
+        # Base object
+        thefoo = Foo(inside=2)
+        fp0 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
+        # Deepcopy
+        exp1 = fp0.footprint_as_dict()
+        exp2 = fp0.footprint_as_dict()
+        self.assertIsNot(exp1, exp2)
+        self.assertIsNot(exp1['somefoo'], exp2['somefoo'])
 
     def test_baseclass_rwd(self):
         x = FootprintTestRWD(somefoo=Foo(inside=2), someint=4, somestr='two')

@@ -7,7 +7,7 @@ __all__ = []
 import re
 
 from vortex.data.contents import JsonDictContent
-from vortex.data.flow import GeoFlowResource, FlowResource
+from vortex.data.flow import GridGeoFlowResource, FlowResource
 from vortex.data.geometries import GridGeometry
 from vortex.syntax.stdattrs import term
 from vortex.tools import env
@@ -15,7 +15,7 @@ from vortex.tools import env
 from common.tools.igastuff import archive_suffix
 
 
-class GridPoint(GeoFlowResource):
+class GridPoint(GridGeoFlowResource):
     """
     Class for gridpoint model files calculated in a post-treatment task. Possible formats are 'grib' and 'fa'.
     A gridpoint file can be calculated for files from different sources given by the "origin" attribute.
@@ -44,9 +44,6 @@ class GridPoint(GeoFlowResource):
                         era40 = 'e40',
                         era15 = 'e15'
                     )
-                ),
-                geometry = dict(
-                    type = GridGeometry,
                 ),
                 kind = dict(
                     values = [ 'gridpoint', 'gribfile', 'fullpos' ],

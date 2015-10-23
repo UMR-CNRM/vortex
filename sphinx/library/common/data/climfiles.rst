@@ -17,7 +17,7 @@ Package
 Classes
 -------
  
-.. autoclass:: Clim
+.. autoclass:: ClimSP
    :show-inheritance:
    :members:
    :member-order: alphabetical

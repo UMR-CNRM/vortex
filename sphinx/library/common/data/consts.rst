@@ -87,7 +87,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: GenvStaticResource
+.. autoclass:: GenvStaticSpectralResource
    :show-inheritance:
    :members:
    :member-order: alphabetical

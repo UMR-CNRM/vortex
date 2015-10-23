@@ -6,14 +6,14 @@ __all__ = []
 
 import re
 
-from vortex.data.flow       import GeoFlowResource
+from vortex.data.flow       import SpectralGeoFlowResource
 from vortex.syntax.stdattrs import term
 from vortex.tools.date      import Time
 
 from common.tools.igastuff  import archive_suffix
 
 
-class Analysis(GeoFlowResource):
+class Analysis(SpectralGeoFlowResource):
     """
     Class for analysis resource. It can be an atmospheric or surface or full
     analysis (full = atmospheric + surface).
@@ -121,7 +121,7 @@ class Analysis(GeoFlowResource):
         )
 
 
-class Historic(GeoFlowResource):
+class Historic(SpectralGeoFlowResource):
     """
     Class for historical state of a model (e.g. from a forecast).
     """
@@ -186,7 +186,7 @@ class Historic(GeoFlowResource):
         )
 
 
-class BiasDFI(GeoFlowResource):
+class BiasDFI(SpectralGeoFlowResource):
     """
     Class for some kind of DFI bias (please add proper documentation).
     """
