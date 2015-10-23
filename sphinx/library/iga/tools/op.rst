@@ -21,6 +21,8 @@ Functions
 
 .. autofunction:: setenv
 
+.. autofunction:: report
+
 .. autofunction:: complete
 
 .. autofunction:: register

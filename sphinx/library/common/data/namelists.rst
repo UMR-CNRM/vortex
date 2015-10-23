@@ -13,6 +13,13 @@ Package
 
 .. autodata:: __all__
 
+Exceptions
+----------
+
+.. autoclass:: NamelistContentError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 Classes
 -------
