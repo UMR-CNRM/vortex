@@ -465,12 +465,12 @@ class GetByTag(object):
 
     def __copy__(self):
         """I don't know how to deep copy a GetByTag..."""
-        logger.info("There is no trivial way to copy a GetByTag instance: returning self")
+        logger.debug("There is no trivial way to copy a GetByTag instance: returning self")
         return self
 
     def __deepcopy__(self, memo):
         """I don't know how to deep copy a GetByTag..."""
-        logger.info("There is no trivial way to deepcopy a GetByTag instance: returning self")
+        logger.debug("There is no trivial way to deepcopy a GetByTag instance: returning self")
         memo[id(self)] = self
         return self
 
