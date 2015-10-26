@@ -84,7 +84,7 @@ class Section(object):
 
     def updstage_expected(self, info):
         """Upgrade current section to 'expected' level."""
-        if info.get('stage') == 'expected' and self.kind == (ixo.INPUT, ixo.EXEC):
+        if info.get('stage') == 'expected' and self.kind in (ixo.INPUT, ixo.EXEC):
             self.stages.append('expected')
 
     def updstage_put(self, info):
