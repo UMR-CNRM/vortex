@@ -14,7 +14,7 @@ from vortex.tools import env
 from vortex.tools.date import Time
 from vortex.data.outflow import ModelResource, NoDateResource
 from vortex.data.contents import AlmostDictContent, IndexedTable
-from vortex.syntax.stdattrs import binaries, term
+from vortex.syntax.stdattrs import binaries, term, cutoff
 from gco.syntax.stdattrs import GenvKey
 
 
@@ -429,33 +429,37 @@ class XXTContent(IndexedTable):
 
 class NamelistSelectDef(NoDateResource):
     """Utility, so-called xxt file."""
-    _footprint = dict(
-        info = 'xxt.def file from namelist pack',
-        attr = dict(
-            gvar = dict(
-                type = GenvKey,
-                optional = True,
-                values = ['NAMELIST_' + x.upper() for x in binaries],
-                default = 'namelist_[binary]'
+    _footprint = [
+        cutoff,
+        dict(
+            info = 'xxt.def file from namelist pack',
+            attr = dict(
+                gvar = dict(
+                    type = GenvKey,
+                    optional = True,
+                    values = ['NAMELIST_' + x.upper() for x in binaries],
+                    default = 'namelist_[binary]'
+                ),
+                source = dict(
+                    optional = True,
+                ),
+                binary = dict(
+                    optional = True,
+                    values = binaries,
+                    default = '[model]',
+                ),
+                kind = dict(
+                    values = [ 'xxtdef', 'namselectdef' ]
+                ),
+                clscontents = dict(
+                    default = XXTContent
+                )
             ),
-            source = dict(
-                optional = True,
-                default = 'xxt.def'
-            ),
-            binary = dict(
-                optional = True,
-                values = binaries,
-                default = '[model]',
-            ),
-            kind = dict(
-                values = [ 'xxtdef', 'namselectdef' ]
-            ),
-            clscontents = dict(
-                default = XXTContent
-            )
-        ),
-        bind = ['gvar', 'source']
-    )
+            bind = ['gvar', 'source']
+        )
+    ]
+
+    _source_map = dict(assim='xxt.def.assim', )
 
     @property
     def realkind(self):
@@ -463,4 +467,9 @@ class NamelistSelectDef(NoDateResource):
 
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
-        return 'extract=' + self.source
+        if self.source is None:
+            thesource = self._source_map.get(self.cutoff, 'xxt.def')
+        else:
+            thesource = self.source
+        return 'extract=' + thesource
+
