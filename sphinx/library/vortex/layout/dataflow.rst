@@ -55,3 +55,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+ 
+.. autoclass:: LocalTracker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+ 
+.. autoclass:: LocalTrackerEntry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

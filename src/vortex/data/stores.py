@@ -12,7 +12,6 @@ import ftplib
 __all__ = [ 'Store' ]
 
 import re
-import json
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -20,10 +19,21 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex import sessions
 from vortex.layout import dataflow
 from vortex.util import config
-from vortex.tools import caches, date
+from vortex.tools import caches, date, actions
 from vortex.tools.actions import actiond as ad
 from vortex.syntax.stdattrs import Namespace
 from vortex.syntax.stdattrs import DelayedEnvValue
+
+
+OBSERVER_TAG = 'Stores-Activity'
+
+
+def observer_board(obsname=None):
+    """Proxy to :func:`footprints.observers.get`."""
+    if obsname is None:
+        obsname = OBSERVER_TAG
+    return footprints.observers.get(tag=obsname)
+
 
 class StoreGlue(object):
     """Defines a way to glue stored objects together."""
@@ -173,7 +183,13 @@ class Store(footprints.FootprintBase):
         sh = kw.pop('system', sessions.system())
         super(Store, self).__init__(*args, **kw)
         self._sh = sh
+        self._observer = observer_board()
+        self._observer.notify_new(self, dict())
         self.delayed = False
+
+    def __del__(self):
+        self._observer.notify_del(self, dict())
+        super(Store, self).__del__()
 
     @property
     def realkind(self):
@@ -188,15 +204,15 @@ class Store(footprints.FootprintBase):
         """Boolean fonction to check if the current store use a local cache."""
         return False
 
-    def in_situ(self, local, options):
-        """Return true when insitu option is active and local file exists."""
-        return bool(options.get('insitu', False) and
-                    (options.get('rhandler', None).get('alternate', None) is None) and
-                    (self.system.path.exists(local) or self.system.path.exists(local + '.fake')))
-
-    def _isnot_fake(self, local, options):
-        """Check if the insitu ressource is a fake or not"""
-        return self.system.path.exists(local)
+    def _observer_notify(self, action, rc, remote, local=None, options=None):
+        infos = dict(action=action, status=rc, remote=remote)
+        # Is a localpath provided ?
+        if local is not None:
+            infos['local'] = local
+        # We may want to cheat on the localpath...
+        if options is not None and 'obs_overridelocal' in options:
+            infos['local'] = options['obs_overridelocal']
+        self._observer.notify_upd(self, infos)
 
     def notyet(self, *args):
         """
@@ -208,7 +224,9 @@ class Store(footprints.FootprintBase):
     def check(self, remote, options=None):
         """Proxy method to dedicated check method accordind to scheme."""
         logger.debug('Store check from %s', remote)
-        return getattr(self, self.scheme + 'check', self.notyet)(remote, options)
+        rc = getattr(self, self.scheme + 'check', self.notyet)(remote, options)
+        self._observer_notify('check', rc, remote)
+        return rc
 
     def locate(self, remote, options=None):
         """Proxy method to dedicated get method accordind to scheme."""
@@ -222,11 +240,14 @@ class Store(footprints.FootprintBase):
             logger.warning('Skip this store because a cache is requested')
             return True
         else:
-            if self.in_situ(local, options):
-                logger.info('Store %s in situ resource <%s>', self.footprint_clsname(), local)
-                return self._isnot_fake(local, options)
+            if (options is None or (not options.get('insitu', False)) or
+                    self.use_cache()):
+                rc = getattr(self, self.scheme + 'get', self.notyet)(remote, local, options)
+                self._observer_notify('get', rc, remote, local=local, options=options)
+                return rc
             else:
-                return getattr(self, self.scheme + 'get', self.notyet)(remote, local, options)
+                logger.error('Only cache stores can be used when insitu is True.')
+                return False
 
     def put(self, local, remote, options=None):
         """Proxy method to dedicated put method accordind to scheme."""
@@ -235,12 +256,23 @@ class Store(footprints.FootprintBase):
             logger.warning('Skip this store because a cache is requested')
             return True
         else:
-            return getattr(self, self.scheme + 'put', self.notyet)(local, remote, options)
+            filtered = False
+            if options is not None and 'urifilter' in options:
+                filtered = options['urifilter'](self, remote)
+            if filtered:
+                rc = True
+                logger.info("This remote URI as been filtered out: we are skipping it.")
+            else:
+                rc = getattr(self, self.scheme + 'put', self.notyet)(local, remote, options)
+                self._observer_notify('put', rc, remote, local=local, options=options)
+            return rc
 
     def delete(self, remote, options=None):
         """Proxy method to dedicated delete method accordind to scheme."""
         logger.debug('Store delete from %s', remote)
-        return getattr(self, self.scheme + 'delete', self.notyet)(remote, options)
+        rc = getattr(self, self.scheme + 'delete', self.notyet)(remote, options)
+        self._observer_notify('del', rc, remote)
+        return rc
 
 
 class MultiStore(footprints.FootprintBase):
@@ -314,13 +346,6 @@ class MultiStore(footprints.FootprintBase):
     def use_cache(self):
         """Boolean fonction to check if any included store use a local cache."""
         return any([ x.use_cache() for x in self.openedstores ])
-
-    def in_situ(self, local, options):
-        """Return cumulative value for the same method of internal opened stores."""
-        rc = True
-        for sto in self.openedstores:
-            rc = rc and sto.in_situ(local, options)
-        return rc
 
     def check(self, remote, options=None):
         """Go through internal opened stores and check for the resource."""
@@ -1081,6 +1106,27 @@ class PromiseCacheStore(VortexCacheStore):
         )
     )
 
+    @staticmethod
+    def _add_default_options(options):
+        if options is not None:
+            options_upd = options.copy()
+        else:
+            options_upd = dict()
+        options_upd['fmt'] = 'ascii'  # Promises are always JSON files
+        return options_upd
+
+    def vortexget(self, remote, local, options):
+        """Proxy to :meth:`incacheget`."""
+        return super(PromiseCacheStore, self).vortexget(remote, local, self._add_default_options(options))
+
+    def vortexput(self, local, remote, options):
+        """Proxy to :meth:`incacheput`."""
+        return super(PromiseCacheStore, self).vortexput(local, remote, self._add_default_options(options))
+
+    def vortexdelete(self, remote, options):
+        """Proxy to :meth:`incachedelete`."""
+        return super(PromiseCacheStore, self).vortexdelete(remote, self._add_default_options(options))
+
 
 class PromiseStore(footprints.FootprintBase):
     """Combined a Promise Store for expected resources and any other matching Store."""
@@ -1099,10 +1145,6 @@ class PromiseStore(footprints.FootprintBase):
             prstorename = dict(
                 optional = True,
                 default  = 'promise.cache.fr',
-            ),
-            prlogfile = dict(
-                optional = True,
-                default  = 'vortex-promises.log',
             ),
         ),
     )
@@ -1146,13 +1188,6 @@ class PromiseStore(footprints.FootprintBase):
         """Shortcut to current system interface."""
         return self._sh
 
-    def in_situ(self, local, options):
-        """Return cumulative value for the same method of internal opened stores."""
-        rc = True
-        for sto in self.openedstores:
-            rc = rc and sto.in_situ(local, options)
-        return rc
-
     def mkpromise_info(self, remote, options):
         """Build a dictionary with relevant informations for the promise."""
         return dict(
@@ -1170,24 +1205,6 @@ class PromiseStore(footprints.FootprintBase):
         self.system.json_dump(info, pfile, sort_keys=True, indent=4)
         return pfile
 
-    def mkpromise_log(self, info):
-        """Insert current promise information to promises logfile."""
-        sh = self.system
-        loglist = list()
-        logboard = footprints.observers.get(tag='Promises-Log')
-        if self.prlogfile and sh.path.exists(self.prlogfile):
-            loglist = sh.json_load(self.prlogfile)
-        else:
-            logboard.notify_new(self, dict(logfile=sh.path.realpath(self.prlogfile)))
-        loglist.append(info)
-        sh.json_dump(loglist, self.prlogfile, sort_keys=True, indent=4)
-        logboard.notify_upd(
-            self, dict(
-                logfile = sh.path.realpath(self.prlogfile),
-                logsize = len(loglist),
-            )
-        )
-
     def check(self, remote, options=None):
         """Go through internal opened stores and check for the resource."""
         logger.debug('Promise check from %s', remote)
@@ -1204,33 +1221,19 @@ class PromiseStore(footprints.FootprintBase):
         if options is None:
             options = dict()
         self.delayed = False
-        if self.in_situ(local, options):
-            logger.info('Store %s in situ resource <%s>', self.footprint_clsname(), local)
-            if not self.system.path.exists(local + '.fake') and self.system.size(local) < 4096:
-                pr = dict()
-                try:
-                    pr = self.system.json_load(local)
-                except ValueError:
-                    logger.warning('Information expected in situ resource not json friendly <%s>', local)
-                self.delayed = pr.get('promise', False)
-            return True
+        logger.info('Try promise from store %s', self.promise)
+        rc = self.promise.get(remote.copy(), local, options)
+        if rc:
+            self.delayed = True
         else:
-            logger.info('Try promise from store %s', self.promise)
-            oldfmt = options.pop('fmt', None)
-            options['fmt'] = 'ascii'
-            rc = self.promise.get(remote.copy(), local, options)
-            if rc:
-                self.delayed = True
-            else:
-                logger.info('Try promise from store %s', self.other)
-                options['fmt'] = oldfmt
-                rc = self.other.get(remote.copy(), local, options)
-            if not rc and options.get('pretend', False):
-                logger.warning('Pretending to get a promise for <%s>', local)
-                pr_info = self.mkpromise_info(remote, options)
-                pr_file = self.mkpromise_file(pr_info, local)
-                self.system.move(pr_file, local)
-                rc = self.delayed = True
+            logger.info('Try promise from store %s', self.other)
+            rc = self.other.get(remote.copy(), local, options)
+        if not rc and options.get('pretend', False):
+            logger.warning('Pretending to get a promise for <%s>', local)
+            pr_info = self.mkpromise_info(remote, options)
+            pr_file = self.mkpromise_file(pr_info, local)
+            self.system.move(pr_file, local)
+            rc = self.delayed = True
         return rc
 
     def put(self, local, remote, options=None):
@@ -1246,19 +1249,16 @@ class PromiseStore(footprints.FootprintBase):
             logger.warning('Log a promise instead of missing resource <%s>', local)
             pr_info = self.mkpromise_info(remote, options)
             pr_file = self.mkpromise_file(pr_info, local)
-            oldfmt = options.pop('fmt', None)
-            options['fmt'] = 'ascii'
+            options['obs_overridelocal'] = local  # Pretty nasty :-(
             rc = self.promise.put(pr_file, remote.copy(), options)
-            self.mkpromise_log(pr_info)
             self.system.remove(pr_file)
             if rc:
-                options['fmt'] = oldfmt
+                del options['obs_overridelocal']
                 self.other.delete(remote.copy(), options)
         else:
             logger.info('Actual promise does exists <%s>', local)
             rc = self.other.put(local, remote.copy(), options)
             if rc:
-                options['fmt'] = 'ascii'
                 self.promise.delete(remote.copy(), options)
         return rc
 
@@ -1279,30 +1279,3 @@ class VortexPromiseStore(PromiseStore):
             ),
         )
     )
-
-class PromisesObserver(footprints.util.GetByTag, footprints.observers.Observer):
-    """Track promises logfiles."""
-
-    def __init__(self):
-        """Instanciate a set of lognames."""
-        self._logs = dict()
-        footprints.observers.get(tag='Promises-Log').register(self)
-
-    @property
-    def logs(self):
-        return self._logs
-
-    def newobsitem(self, item, info):
-        """A new ``item`` has been created. Some information is provided through the dict ``info``."""
-        super(PromisesObserver, self).newobsitem(item, info)
-        self.logs[info.get('logfile')] = 0
-
-    def updobsitem(self, item, info):
-        """A new ``item`` has been created. Some information is provided through the dict ``info``."""
-        super(PromisesObserver, self).updobsitem(item, info)
-        self.logs[info.get('logfile')] = info.get('logsize')
-
-    def clear_promises(self):
-        """Remove promises registred in current logfiles."""
-        for thislog in self.logs:
-            logger.info('Clear promises from <%s>', thislog)

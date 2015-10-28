@@ -5,6 +5,8 @@
 __all__ = []
 
 import sys, io
+import functools
+
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -14,14 +16,14 @@ from vortex import sessions
 
 from vortex.tools  import net
 from vortex.util   import config, roles, structs
-from vortex.layout import dataflow
+from vortex.layout import contexts, dataflow
 from vortex.data   import stores, containers, resources, providers
 
 OBSERVER_TAG = 'Resources-Handlers'
 
 
 class HandlerError(RuntimeError):
-    """Exception in case of missing resource during the wait mecanism."""
+    """Exception in case of missing resource during the wait mechanism."""
     pass
 
 
@@ -54,7 +56,7 @@ class Handler(object):
         self._contents  = None
         self._uridata   = None
         self._options   = rd.copy()
-        self._observer  = observer_board(kw.pop('observer', None))
+        self._observer  = observer_board(obsname=kw.pop('observer', None))
         self._options.update(kw)
         self._mdcheck   = self._options.pop('metadatacheck', False)
         self._mddelta   = self._options.pop('metadatadelta', dict())
@@ -125,15 +127,15 @@ class Handler(object):
 
     @property
     def observer(self):
-        """Footprint observer devoted to ressource handlers tracking."""
+        """Footprint observer devoted to resource handlers tracking."""
         return self._observer
 
     def observers(self):
-        """Remote objects observing the current ressource handler... and my be some others."""
+        """Remote objects observing the current resource handler... and my be some others."""
         return self._observer.observers()
 
     def observed(self):
-        """Other objects observed by the observers of the current ressource handler."""
+        """Other objects observed by the observers of the current resource handler."""
         return [ x for x in self._observer.observed() if x is not self ]
 
     @property
@@ -146,10 +148,24 @@ class Handler(object):
         """Return current resource handler stage (load, get, put)."""
         return self._stage[-1]
 
-    def updstage(self, newstage):
+    @property
+    def _cur_session(self):
+        """Return the current active session."""
+        return sessions.current()
+
+    @property
+    def _cur_context(self):
+        """Return the current active context."""
+        return contexts.focus()
+
+    def _updstage(self, newstage, insitu=False):
         """Notify the new stage to any observing system."""
         self._stage.append(newstage)
-        self._observer.notify_upd(self, dict(stage = newstage))
+        self._observer.notify_upd(self, dict(stage = newstage, insitu = insitu))
+
+    def _notifyhook(self, stage, hookname):
+        """Notify that a hook function has been executed."""
+        self._observer.notify_upd(self, dict(stage = stage, hook = hookname))
 
     def is_expected(self):
         """Return a boolean value according to the last stage value (expected or not)."""
@@ -259,7 +275,7 @@ class Handler(object):
                 print '{0}  {1:10s}: {2:s}'.format(tab, subobj.capitalize(), str(obj))
 
     def as_dict(self):
-        """Produce a raw json-compatible dictionnay."""
+        """Produce a raw json-compatible dictionary."""
         rhd = dict(options=dict())
         for k, v in self.options.iteritems():
             try:
@@ -289,7 +305,7 @@ class Handler(object):
     def store(self):
         if self.resource and self.provider:
             self._uridata = net.uriparse(self.location())
-            stopts = { k:v for k, v in self.options.items() if k.startswith('stor') }
+            stopts = { k: v for k, v in self.options.items() if k.startswith('stor') }
             return footprints.proxy.store(
                 scheme = self._uridata.pop('scheme'),
                 netloc = self._uridata.pop('netloc'),
@@ -334,51 +350,107 @@ class Handler(object):
             logger.error('Could not locate an incomplete rh %s', self)
         return rst
 
-    def get(self, **extras):
-        """Method to retrieve through the provider the resource and feed the current container."""
+    def _actual_get(self, **extras):
+        """Internal method in charge of the getting the resource.
+
+        If requested, it will check the metadata of the resource and apply the
+        hook functions.
+        """
         rst = False
-        if self.complete:
-            if self.alternate and self.container.exists():
-                logger.info('Alternate <%s> exists', self.alternate)
-                rst = True
-            else:
-                store = self.store
-                if store:
-                    logger.debug('Get resource %s at %s from %s', self, self.lasturl, store)
-                    st_options = self.mkopts(dict(rhandler = self.as_dict()), extras)
-                    is_insitu = store.in_situ(self.container.iotarget(), st_options)
-                    rst = store.get(
-                        self.uridata,
-                        self.container.iotarget(),
-                        st_options,
-                    )
-                    self.container.updfill(rst)
-                    if rst and not is_insitu and self._mdcheck:
-                        rst = rst and self.contents.metadata_check(self.resource,
-                                                                   delta = self._mddelta)
-                        if not rst:
-                            logger.info("We are now cleaning up the container and data content.")
-                            self.reset_contents()
-                            self.clear()
-                    self.history.append(store.fullname(), 'get', rst)
-                    if rst:
-                        if store.delayed:
-                            self.updstage('expected')
-                            logger.info('Resource <%s> is expected', self.container.iotarget())
-                        else:
-                            self.updstage('get')
-                            if not is_insitu:
-                                for hook_name in sorted(self.hooks.keys()):
-                                    hook_func, hook_args = self.hooks[hook_name]
-                                    hook_func(sessions.current(), self, *hook_args)
+        store = self.store
+        if store:
+            logger.debug('Get resource %s at %s from %s', self, self.lasturl, store)
+            st_options = self.mkopts(dict(rhandler = self.as_dict()), extras)
+            # Actual get
+            rst = store.get(
+                self.uridata,
+                self.container.iotarget(),
+                st_options,
+            )
+            self.container.updfill(rst)
+            # Check metadata if sensible
+            if self._mdcheck and rst and not store.delayed:
+                rst = self.contents.metadata_check(self.resource,
+                                                   delta = self._mddelta)
+                if not rst:
+                    logger.info("We are now cleaning up the container and data content.")
+                    self.reset_contents()
+                    self.clear()
+            # For the record...
+            self.history.append(store.fullname(), 'get', rst)
+            if rst:
+                # This is an expected resource
+                if store.delayed:
+                    self._updstage('expected')
+                    logger.info('Resource <%s> is expected', self.container.iotarget())
+                # This is a "real" resource
                 else:
-                    logger.error('Could not find any store to get %s', self.lasturl)
+                    self._updstage('get')
+                    for hook_name in sorted(self.hooks.keys()):
+                        hook_func, hook_args = self.hooks[hook_name]
+                        hook_func(self._cur_session, self, *hook_args)
+                        self._notifyhook(self.stage, hook_name)
+        else:
+            logger.error('Could not find any store to get %s', self.lasturl)
+        return rst
+
+    def get(self, **extras):
+        """Method to retrieve the resource through the provider and feed the current container.
+
+        The behaviour of this method depends on the insitu and alternate options:
+
+        * When insitu is True, the :class:`~vortex.layout.dataflow.LocalTracker`
+          object associated with the active context is checked to determine
+          whether the resource has already been fetched or not. If not, another
+          try is made (but without using any non-cache store).
+        * When insitu is False, an attempt to get the resource is systematically
+          made except if "alternate" is defined and the local container already
+          exists.
+        """
+        if self.complete:
+            if self.options.get('insitu', False):  # This a second pass (or third, forth, ...)
+                rst = True  # Always succeed since it was already processed once
+                cur_tracker = self._cur_context.localtracker
+                iotarget = self.container.iotarget()
+                # The localpath is here and listed in the tracker
+                if self.container.exists() and cur_tracker.is_tracked_input(iotarget):
+                    # Am I consistent with the ResourceHandler recorded in the tracker ?
+                    if cur_tracker[iotarget].match_rh('get', self):
+                        self.container.updfill(True)
+                        self._updstage('get', insitu=True)
+                        logger.info('The <%s> resource is already here and matches the RH description :-)',
+                                    self.container.iotarget())
+                    else:
+                        logger.info("The resource is already here but doesn't matches the RH description :-(")
+                # Bloody hell, the localpath doesn't exist
+                else:
+                    tmprst = self._actual_get(**extras)  # This might be an expected resource...
+                    if tmprst:
+                        logger.info("The resource was successfully fetched :-)")
+                    else:
+                        logger.info("Could not get the resurce :-(")
+            else:
+                if self.alternate and self.container.exists():
+                    logger.info('Alternate <%s> exists', self.alternate)
+                    rst = True
+                else:
+                    if self.container.exists():
+                        logger.warning('The resource is already here: That should not happen at this stage !')
+                    rst = self._actual_get(**extras)
         else:
             logger.error('Could not get an incomplete rh %s', self)
         return rst
 
     def put(self, **extras):
-        """Method to store data from the current container through the provider."""
+        """Method to store data from the current container through the provider.
+
+        Hook functions may be applied before the put in the designated store. We
+        will ensure that a given hook function (identified by its name) is not
+        applied more than once to the local container.
+
+        Conversely, the low-level stores are made aware of the previous successful
+        put. That way, a local container is not put twice to the same destination.
+        """
         rst = False
         if self.complete:
             store = self.store
@@ -386,21 +458,36 @@ class Handler(object):
                 iotarget = self.container.iotarget()
                 logger.debug('Put resource %s as io %s at store %s', self, iotarget, store)
                 if iotarget is not None and ( self.container.exists() or self.provider.expected ):
-                    for hook_name in sorted(self.hooks.keys()):
-                        hook_func, hook_args = self.hooks[hook_name]
-                        logger.info('HOOK before put <%s(%s)>' % (hook_func, hook_args))
-                        hook_func(sessions.current(), self, *hook_args)
+                    mytracker = self._cur_context.localtracker[iotarget]
+                    # Execute the hooks only if the local file exists
+                    if self.container.exists():
+                        for hook_name in sorted(self.hooks.keys()):
+                            hook_func, hook_args = self.hooks[hook_name]
+                            # If the hook was already executed, skip it
+                            if mytracker.redundant_hook('put', hook_name):
+                                logger.info('Hook already executed before put <%s(%s)>' %
+                                            (hook_func, hook_args))
+                            else:
+                                logger.info('Executing Hook before put <%s(%s)>' %
+                                            (hook_func, hook_args))
+                                hook_func(self._cur_session, self, *hook_args)
+                                self._notifyhook('put', hook_name)
+                    # Add a filter function to remove duplicated PUTs to the same uri
+                    extras_ext = dict(extras)
+                    extras_ext['urifilter'] = functools.partial(mytracker.redundant_uri, 'put')
+                    # Actual put
                     logger.debug('Put resource %s at %s from %s', self, self.lasturl, store)
                     rst = store.put(
                         iotarget,
                         self.uridata,
-                        self.mkopts(dict(rhandler = self.as_dict()), extras)
+                        self.mkopts(dict(rhandler = self.as_dict()), extras_ext)
                     )
+                    # For the record...
                     self.history.append(store.fullname(), 'put', rst)
-                    self.updstage('put')
+                    self._updstage('put')
                 elif self.ghost:
                     self.history.append(store.fullname(), 'put', False)
-                    self.updstage('ghost')
+                    self._updstage('ghost')
                     rst = True
                 else:
                     logger.error('Could not find any source to put [%s]', iotarget)
@@ -443,24 +530,24 @@ class Handler(object):
             tplfile = tplfetch if self.is_expected() else tplskip
         if pr_getter is None:
             pr_getter = self.container.localpath() + '.getpr'
-        tpl = config.load_template(sessions.current(), tplfile)
+        t = self._cur_session
+        tpl = config.load_template(t, tplfile)
         with io.open(pr_getter, 'wb') as fd:
             fd.write(tpl.substitute(
                 python  = py_exec,
                 pyopts  = py_opts,
                 promise = self.container.localpath(),
             ))
-        sh = sessions.system()
-        sh.chmod(pr_getter, 0555)
+        t.sh.chmod(pr_getter, 0555)
         return pr_getter
 
     def wait(self, sleep=10, timeout=300, fatal=False):
-        """Wait for an expected resource or return immediatly."""
+        """Wait for an expected resource or return immediately."""
         rc = True
         local = self.container.localpath()
         if self.is_expected():
             nb = 0
-            sh = sessions.system()
+            sh = self._cur_session.sh
             pr = sh.json_load(local)
             itself  = pr.get('itself')
             nbtries = int(timeout / sleep)

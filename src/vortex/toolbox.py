@@ -215,8 +215,8 @@ def add_section(section, args, kw):
         ok = bool(newsections)
         if ok and now:
             if talkative:
-                t.sh.subtitle('Resource no {0:02d}/{1:02d}'.format(ir+1, len(rl)))
-                rhandler.quickview(nb=ir+1, indent=0)
+                t.sh.subtitle('Resource no {0:02d}/{1:02d}'.format(ir + 1, len(rl)))
+                rhandler.quickview(nb=ir + 1, indent=0)
                 t.sh.header('Action ' + doitmethod)
                 logger.info('%s %s ...', doitmethod.upper(), rhandler.location())
             ok = getattr(newsections[0], doitmethod)(**cmdopts)
@@ -230,9 +230,6 @@ def add_section(section, args, kw):
                 if complete:
                     logger.warning('Force complete for %s', rhandler.location())
                     raise VortexForceComplete('Force task complete on resource error')
-                if not opts['fatal']:
-                    logger.warning('Make a fake resource %s', rhandler.container.localpath())
-                    t.sh.touch(rhandler.container.localpath() + '.fake')
             if t.sh.trace:
                 print
         if ok:
@@ -378,7 +375,7 @@ def diff(*args, **kw):
     for ir, rhandler in enumerate(rload(*args, **kwclean)):
         if talkative:
             print t.line
-            rhandler.quickview(nb=ir+1, indent=0)
+            rhandler.quickview(nb=ir + 1, indent=0)
             print t.line
         if not rhandler.complete:
             logger.error('Uncomplete Resource Handler for diff [%s]', rhandler)
@@ -459,24 +456,39 @@ def print_namespaces(**kw):
     prefix = kw.pop('prefix', '+ ')
     nd = namespaces(**kw)
     justify = max([ len(x) for x in nd.keys() ])
-    linesep = ",\n" + ' ' * (justify+len(prefix)+2)
+    linesep = ",\n" + ' ' * (justify + len(prefix) + 2)
     for k, v in sorted(nd.iteritems()):
         nice_v = linesep.join(v) if len(v) > 1 else v[0]
         print prefix + k.ljust(justify), '[' + nice_v + ']'
 
 
-def clear_promises(clear=None):
-    """Remove all promises that have been made in the current python session."""
+def clear_promises(clear=None, netloc='promise.cache.fr', scheme='vortex',
+                   storeoptions=None):
+    """Remove all promises that have been made in the current python session.
+
+    :param netloc: Netloc of the promise's cache store to clean up
+    :param scheme: Scheme of the promise's cache store to clean up
+    :param storeoptions: Option dictionary passed to the store (may be None)
+    """
     if clear is None:
         clear = active_clear
-    t = sessions.current()
     if clear:
-        t.sh.header('Clear promises')
-        print 'OBSERVERS', footprints.observers.keys()
-        for obs in footprints.observers.get(tag='Promises-Log').observers():
-            logger.info('Promises observer <%s>', obs.tag)
-            for k, v in obs.logs.items():
-                logger.info('Clear <%d> promises from <%s>', v, k)
+        t = sessions.current()
+        t.sh.header('Clear promises for {}://{}'.format(scheme, netloc))
+        skeleton = dict(scheme=scheme, netloc=netloc)
+        promises = t.context.localtracker.grep_uri('put', skeleton)
+        if promises:
+            logger.info('Some promises are left pending...')
+            if storeoptions is None:
+                storeoptions = dict()
+            store = footprints.proxy.store(scheme=scheme, netloc=netloc, 
+                                           **storeoptions)
+            for promise in [pr.copy() for pr in promises]:
+                del promise['scheme']
+                del promise['netloc']
+                store.delete(promise)
+        else:
+            logger.info('No promises were left pending.')
 
 
 def rescue(*files, **opts):
@@ -539,7 +551,7 @@ def rescue(*files, **opts):
                 thisrescue = sh.cp
             for ritem in items:
                 rtarget = sh.path.join(bkupdir, ritem)
-                if sh.path.exists(ritem) and not sh.path.islink(ritem) :
+                if sh.path.exists(ritem) and not sh.path.islink(ritem):
                     if sh.path.isfile(ritem):
                         sh.rm(rtarget)
                         thisrescue(ritem, rtarget)
