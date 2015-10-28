@@ -258,3 +258,10 @@ class DiagPI(BlindRun):
             # Standard execution
             opts['loop'] = r.resource.term
             super(DiagPI, self).execute(rh, opts)
+
+            # The diagnostic output may be promised
+            actualname = 'GRIB_PI{0:s}+{1:s}'.format(r.resource.geometry.area,
+                                                     r.resource.term.fmthm)
+            expected = [ x for x in self.promises if x.container.localpath() == actualname ]
+            for thispromise in expected:
+                thispromise.put(incache=True)
