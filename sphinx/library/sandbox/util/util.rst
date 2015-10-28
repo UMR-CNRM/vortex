@@ -19,4 +19,5 @@ Modules
 -------
 
 * :mod:`sandbox.util.askjeeves`
+* :mod:`sandbox.util.hooks`
 * :mod:`sandbox.util.storefunctions`
