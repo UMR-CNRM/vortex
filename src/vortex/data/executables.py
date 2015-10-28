@@ -27,6 +27,9 @@ class Jacket(object):
             repr(self._initfile)
         )
 
+    def export_dict(self):
+        return self._initfile
+
 
 class Executable(Resource):
     """Abstract class for resources that could be executed."""

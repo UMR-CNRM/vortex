@@ -40,6 +40,10 @@ class FPSet(set):
         """Return a tuple copy of internal components of the FPSet."""
         return tuple(self)
 
+    def footprint_export(self):
+        """A set is not jsonable so it will be converted to a list."""
+        return list(self)
+
 
 class FPTuple(tuple):
     """A tuple type for FootPrints arguments (without expansion)."""
