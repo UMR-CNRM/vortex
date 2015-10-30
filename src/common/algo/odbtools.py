@@ -9,6 +9,7 @@ import re, io
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
+from vortex.tools.systems   import ExecutionError
 from vortex.tools           import date, odb
 from vortex.algo.components import Parallel
 from vortex.util.structs    import Foo
@@ -287,7 +288,11 @@ class Raw2ODB(OdbProcess):
             # Standard execution
             self.env.ODB_SRCPATH_ECMA  = sh.path.abspath(odbname)
             self.env.ODB_DATAPATH_ECMA = sh.path.abspath(odbname)
-            super(Raw2ODB, self).execute(rh, opts)
+            try:
+                super(Raw2ODB, self).execute(rh, opts)
+            except ExecutionError:
+                customised = ExecutionError("Error while processing the {} database.".format(odbname))
+                self.delayed_exception_add(customised)
 
             # Save current stdout
             if sh.path.exists('stdeo.0'):
