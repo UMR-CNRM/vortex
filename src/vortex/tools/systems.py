@@ -336,14 +336,21 @@ class System(footprints.FootprintBase):
         """Clone of the unix command."""
         filename = self.path.expanduser(filename)
         self.stderr('touch', filename)
-        fh = file(filename, 'a')
-        rc = True
-        try:
-            os.utime(filename, None)
-        except StandardError:
-            rc = False
-        finally:
-            fh.close()
+        if self.path.isdir(filename):
+            rc = True
+            try:
+                os.utime(filename, None)
+            except StandardError:
+                rc = False
+        else:
+            fh = file(filename, 'a')
+            rc = True
+            try:
+                os.utime(filename, None)
+            except StandardError:
+                rc = False
+            finally:
+                fh.close()
         return rc
 
     @fmtshcmd

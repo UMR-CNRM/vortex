@@ -61,7 +61,17 @@ class Cache(footprints.FootprintBase):
                 optional = True,
                 default  = False,
                 access   = 'rwx',
-            )
+            ),
+            rtouch = dict(
+                type     = bool,
+                optional = True,
+                default  = False,
+            ),
+            rtouchskip = dict(
+                type     = int,
+                optional = True,
+                default  = 0,
+            ),
         )
     )
 
@@ -121,9 +131,22 @@ class Cache(footprints.FootprintBase):
         if self.actual_record:
             self.history.append(action, item, infos)
 
+    def _recursive_touch(self, rc, item):
+        """Make recursive touches on parent directories.
+
+        It might be usefull for cleaning scripts.
+        """
+        if self.rtouch and rc:
+            items = item.lstrip('/').split('/')
+            if len(items) > 2:
+                items = items[:-2]  # It's useless to touch the rightmost directory
+                for index in range(len(items), self.rtouchskip, -1):
+                    self.sh.touch(self.fullpath(self.sh.path.join(*items[:index])))
+
     def insert(self, item, local, intent='in', fmt='foo', info=None):
         """Insert an item in the current cache."""
         rc = self.sh.cp(local, self.fullpath(item), intent=intent, fmt=fmt)
+        self._recursive_touch(rc, item)
         self.addrecord('INSERT', item, status=rc, info=info, fmt=fmt, intent=intent)
         return rc
 
@@ -136,6 +159,7 @@ class Cache(footprints.FootprintBase):
                 rc = rc and self.sh.cp(subpath, self.sh.path.basename(subpath), intent=intent, fmt=fmt)
         else:
             rc = self.sh.cp(source, local, intent=intent, fmt=fmt)
+        self._recursive_touch(rc, item)
         self.addrecord('RETRIEVE', item, status=rc, info=info, fmt=fmt, intent=intent)
         return rc
 

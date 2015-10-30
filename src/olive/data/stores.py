@@ -101,6 +101,12 @@ class OliveCacheStore(CacheStore):
                 default = 'xp',
                 outcast = ['vortex']
             ),
+            rtouch = dict(
+                default = True,
+            ),
+            rtouchskip = dict(
+                default = 1,
+            ),
         )
     )
 
