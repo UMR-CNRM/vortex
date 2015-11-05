@@ -4,6 +4,8 @@
 #: No automatic export
 __all__ = []
 
+import sys
+import traceback
 import shlex
 import multiprocessing
 
@@ -14,6 +16,24 @@ import vortex
 from vortex.algo  import mpitools
 from vortex.tools import date
 from vortex.syntax.stdattrs import DelayedEnvValue
+
+
+class AlgoComponentError(Exception):
+    """Generic exception class for Algo Componnents."""
+    pass
+
+
+class DelayedAlgoComponentError(AlgoComponentError):
+    """Triggered when exceptions occured during the execution but were delayed."""
+    def __init__(self, excs):
+        super(DelayedAlgoComponentError, self).__init__("One or several errors occurs during the run.")
+        self._excs = excs
+
+    def __str__(self):
+        outstr = "One or several errors occur during the run. In order of appearence:\n"
+        outstr += "\n".join(['{0:3d}. {1!s} (type: {2!s})'.format(i + 1, exc, type(exc))
+                             for i, exc in enumerate(self._excs)])
+        return outstr
 
 
 class AlgoComponent(footprints.FootprintBase):
@@ -56,6 +76,7 @@ class AlgoComponent(footprints.FootprintBase):
         self._fslog = list()
         self._promises = None
         self._expected = None
+        self._delayed_excs = list()
         super(AlgoComponent, self).__init__(*args, **kw)
 
     @property
@@ -99,6 +120,16 @@ class AlgoComponent(footprints.FootprintBase):
                 if x.rh.is_expected()
             ]
         return self._expected
+
+    def delayed_exception_add(self, exc):
+        """Store the exception so that it will be handled at the end of the run."""
+        logger.error("An exception is delayed")
+        (exc_type, exc_value, exc_traceback) = sys.exc_info()
+        print 'Exception type: ' + str(exc_type)
+        print 'Exception info: ' + str(exc_value)
+        print 'Traceback:'
+        print "\n".join(traceback.format_tb(exc_traceback))
+        self._delayed_excs.append(exc)
 
     def grab(self, rh, comment='resource', fatal=True, sleep=10, timeout=None):
         """Wait for a given resource and get it if expected."""
@@ -322,6 +353,13 @@ class AlgoComponent(footprints.FootprintBase):
         """Dump to local file the internal log of the current algo component."""
         self.system.pickle_dump(self.fslog, 'log.' + self.fstag())
 
+    def delayed_exceptions(self, opts):
+        """Gather all the delayed exceptions and raises one if necessary."""
+        if len(self._delayed_excs) > 0:
+            excstmp = self._delayed_excs
+            self._delayed_excs = list()
+            raise DelayedAlgoComponentError(excstmp)
+
     def valid_executable(self, rh):
         """
         Return a boolean value according to the effective executable nature
@@ -368,6 +406,7 @@ class AlgoComponent(footprints.FootprintBase):
         self.fscheck(kw)            #4
         self.postfix(rh, kw)        #5
         self.dumplog(kw)            #6
+        self.delayed_exceptions(kw) #7
 
         # Restore previous OS environement and free local references
         self.env.active(False)
