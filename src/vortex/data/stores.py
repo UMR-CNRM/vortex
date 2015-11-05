@@ -932,6 +932,16 @@ class CacheStore(Store):
                 optional = True,
                 default  = None,
             ),
+            rtouch = dict(
+                type     = bool,
+                optional = True,
+                default  = False,
+            ),
+            rtouchskip = dict(
+                type     = int,
+                optional = True,
+                default  = 0,
+            ),
         )
     )
 
@@ -957,10 +967,12 @@ class CacheStore(Store):
     def _get_cache(self):
         if not self._cache:
             self._cache = footprints.proxy.caches.default(
-                kind    = self.strategy,
-                storage = self.hostname,
-                rootdir = self.rootdir,
-                headdir = self.headdir,
+                kind        = self.strategy,
+                storage     = self.hostname,
+                rootdir     = self.rootdir,
+                headdir     = self.headdir,
+                rtouch      = self.rtouch,
+                rtouchskip  = self.rtouchskip,
             )
         return self._cache
 
@@ -1037,6 +1049,12 @@ class VortexCacheStore(CacheStore):
             headdir = dict(
                 default = 'vortex',
                 outcast = ['xp'],
+            ),
+            rtouch = dict(
+                default = True,
+            ),
+            rtouchskip = dict(
+                default = 3,
             ),
         )
     )
