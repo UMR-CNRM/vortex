@@ -107,7 +107,6 @@ import toolbox, algo, data
 # Register proper vortex exit before the end of interpreter session
 
 def complete():
-    toolbox.clear_promises()
     sessions.exit()
     import multiprocessing
     for kid in multiprocessing.active_children():

@@ -45,6 +45,10 @@ class StaticGeoResource(ModelResource):
             geometry = self.geometry,
         )
 
+    def footprint_export_geometry(self):
+        """Return the ``geometry`` attribute as its id tag."""
+        return self.geometry.tag
+
 
 class StaticSpectralResource(StaticGeoResource):
 

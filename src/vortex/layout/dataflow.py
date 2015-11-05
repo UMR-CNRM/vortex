@@ -8,12 +8,15 @@ This modules defines the low level physical layout for data handling.
 #: No automatic export.
 __all__ = []
 
+import collections
 from collections import namedtuple, defaultdict
+import json
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from footprints.util import mktuple
+from vortex.util.structs import Utf8PrettyPrinter
 
 
 class SectionFatalError(Exception):
@@ -73,33 +76,33 @@ class Section(object):
         """The last stage of the current section."""
         return self.stages[-1]
 
-    def updignore(self, info):
+    def _updignore(self, info):
         """Fake function for undefined information driven updates."""
         logger.warning('Unable to update %s with info %s', self, info)
 
-    def updstage_get(self, info):
+    def _updstage_get(self, info):
         """Upgrade current section to 'get' level."""
         if info.get('stage') == 'get' and self.kind in (ixo.INPUT, ixo.EXEC):
             self.stages.append('get')
 
-    def updstage_expected(self, info):
+    def _updstage_expected(self, info):
         """Upgrade current section to 'expected' level."""
         if info.get('stage') == 'expected' and self.kind in (ixo.INPUT, ixo.EXEC):
             self.stages.append('expected')
 
-    def updstage_put(self, info):
+    def _updstage_put(self, info):
         """Upgrade current section to 'put' level."""
         if info.get('stage') == 'put' and self.kind == ixo.OUTPUT:
             self.stages.append('put')
 
-    def updstage_ghost(self, info):
+    def _updstage_ghost(self, info):
         """Upgrade current section to 'ghost' level."""
         if info.get('stage') == 'ghost' and self.kind == ixo.OUTPUT:
             self.stages.append('ghost')
 
     def updstage(self, info):
         """Upgrade current section level according to information given in dict ``info``."""
-        updmethod = getattr(self, 'updstage_' + info.get('stage'), self.updignore)
+        updmethod = getattr(self, '_updstage_' + info.get('stage'), self._updignore)
         updmethod(info)
 
     def get(self, **kw):
@@ -138,7 +141,7 @@ class Section(object):
         return rc
 
     def show(self, **kw):
-        """Nice dump of the section attributs and contents."""
+        """Nice dump of the section attributes and contents."""
         for k, v in sorted(vars(self).items()):
             if k != 'rh':
                 print ' ', k.ljust(16), ':', v
@@ -350,7 +353,7 @@ class SequenceInputsReport(object):
         '''List the local resource for which an alternative resource has been used.
 
         It returns a dictionary that associates the local resource name with
-        a tupple that contains:
+        a tuple that contains:
 
         * The resource handler that was actually used to get the resource
         * The resource handler that should have been used in the nominal case
@@ -371,3 +374,264 @@ class SequenceInputsReport(object):
             if status == self._Status.MISSING:
                 outstack[local] = nominal_rh
         return outstack
+
+
+class LocalTrackerEntry(object):
+    """Holds the data for a given local container.
+
+    It includes data for two kinds of "actions": get/put. For each "action",
+    Involved resource handlers, hook functions calls and get/put from low level
+    stores are tracked.
+    """
+
+    _actions = ('get', 'put',)
+    _internals = ('rhdict', 'hook', 'uri')
+
+    def __init__(self):
+        self._data = dict()
+        for internal in self._internals:
+            self._data[internal] = {act: list() for act in self._actions}
+
+    @classmethod
+    def _check_action(cls, action):
+        return action in cls._actions
+
+    @staticmethod
+    def _jsonize(stuff):
+        """Make 'stuff' comparable to the result of a json.load."""
+        return json.loads(json.dumps(stuff))
+
+    def _clean_uri(self, store, remote):
+        return self._jsonize(dict(scheme=store.scheme, netloc=store.netloc,
+                                  path=remote['path'], params=remote['params'],
+                                  query=remote['query'], fragment=remote['fragment']))
+
+    def _clean_rhdict(self, rhdict):
+        if 'options' in rhdict:
+            del rhdict['options']
+        return self._jsonize(rhdict)
+
+    def update_rh(self, rh, info):
+        """Update the entry based on data received from the observer board.
+
+        This method is to be called with data originated from the
+        Resources-Handlers observer board (when updates are notified).
+
+        :param rh: :class:`~vortex.data.handlers.Handler` object that sends the update.
+        :param info: Info dictionary sent by the :class:`~vortex.data.handlers.Handler` object
+        """
+        stage = info['stage']
+        if self._check_action(stage):
+            if 'hook' in info:
+                self._data['hook'][stage].append(self._jsonize((info['hook'])))
+            elif not info.get('insitu', False):
+                # We are using as_dict since this may be written to a JSON file
+                self._data['rhdict'][stage].append(self._clean_rhdict(rh.as_dict()))
+
+    def update_store(self, store, info):
+        """Update the entry based on data received from the observer board.
+
+        This method is to be called with data originated from the
+        Stores-Activity observer board (when updates are notified).
+
+        :param store: :class:`~vortex.data.stores.Store` object that sends the update.
+        :param info: Info dictionary sent by the :class:`~vortex.data.stores.Store` object
+        """
+        action = info['action']
+        # Only known action and successfull attempts
+        if self._check_action(action) and info['status']:
+            self._data['uri'][action].append(self._clean_uri(store, info['remote']))
+
+    def dump_as_dict(self):
+        """Export the entry as a dictionary."""
+        return self._data
+
+    def load_from_dict(self, dumpeddict):
+        """Restore the entry from a previous export.
+
+        :param dumpeddict: Dictionary that will be loaded (usually generated by
+            the :meth:`dump_as_dict` method)
+        """
+        self._data = dumpeddict
+
+    def latest_rhdict(self, action):
+        """Return the dictionary that represents the latest :class:`~vortex.data.handlers.Handler` object involved.
+
+        :param action: Action that is considered.
+        """
+        if self._check_action(action) and self._data['rhdict'][action]:
+            return self._data['rhdict'][action][-1]
+        else:
+            return dict()
+
+    def match_rh(self, action, rh):
+        """Check if an :class:`~vortex.data.handlers.Handler` object matches the one stored internally.
+
+        :param action: Action that is considered
+        :param rh: :class:`~vortex.data.handlers.Handler` object that will be checked
+        """
+        if self._check_action(action):
+            return self.latest_rhdict(action) == self._clean_rhdict(rh.as_dict())
+        else:
+            return False
+
+    def check_uri_remote_delete(self, store, remote):
+        """Called when a :class:`~vortex.data.stores.Store` object notifies a delete.
+
+        The URIs stored for the "put" action are checked against the delete
+        request. If a match is found, the URI is deleted.
+
+        :param store: :class:`~vortex.data.stores.Store` object that requested the delete
+        :param remote: Remote path to the deleted resource
+        """
+        theuri = self._clean_uri(store, remote)
+        while theuri in self._data['uri']['put']:
+            self._data['uri']['put'].remove(theuri)
+
+    def _redundant_stuff(self, internal, action, stuff):
+        if self._check_action(action):
+            return stuff in self._data[internal][action]
+        else:
+            return False
+
+    def redundant_hook(self, action, hookname):
+        """Check of a hook function has already been applied.
+
+        :param action: Action that is considered.
+        :param hookname: Name of the Hook function that will be checked.
+        """
+        return self._redundant_stuff('hook', action, self._jsonize(hookname))
+
+    def redundant_uri(self, action, store, remote):
+        """Check if an URI has already been processed.
+
+        :param action: Action that is considered.
+        :param store: :class:`~vortex.data.stores.Store` object that will be checked.
+        :param remote: Remote path that will be checked.
+        """
+        return self._redundant_stuff('uri', action, self._clean_uri(store, remote))
+
+    def _grep_stuff(self, internal, action, skeleton=dict()):
+        stack = []
+        for element in self._data[internal][action]:
+            if isinstance(element, collections.Mapping):
+                succeed = True
+                for key, val in skeleton.iteritems():
+                    succeed = succeed and ((key in element) and (element[key] == val))
+                if succeed:
+                    stack.append(element)
+        return stack
+
+    def __str__(self):
+        out = ''
+        for action in self._actions:
+            for internal in self._internals:
+                if len(self._data[internal][action]) > 0:
+                    out += "+ {:4s} / {}\n{}\n".format(action.upper(), internal,
+                                                       Utf8PrettyPrinter().pformat(self._data[internal][action]))
+        return out
+
+
+class LocalTracker(defaultdict):
+    """Dictionary like structure that gathers data on the various local containers.
+
+    For each local container (identified by the result of its iotarget method), a
+    dictionary entry is created. Its value is a :class:`~vortex.layout.dataflow.LocalTrackerEntry`
+    object.
+    """
+
+    _default_json_filename = 'local-tracker-state.json'
+
+    def __missing__(self, key):
+        self[key] = LocalTrackerEntry()
+        return self[key]
+
+    def update_rh(self, rh, info):
+        """Update the object based on data received from the observer board.
+
+        This method is to be called with data originated from the
+        Resources-Handlers observer board (when updates are notified).
+
+        :param rh: :class:`~vortex.data.handlers.Handler` object that sends the update.
+        :param info: Info dictionary sent by the :class:`~vortex.data.handlers.Handler` object
+        """
+        lpath = rh.container.iotarget()
+        if isinstance(lpath, basestring):
+            self[lpath].update_rh(rh, info)
+        else:
+            logger.info("The iotarget isn't a basestring: It will be skipped in %s",
+                        self.__class__)
+
+    def update_store(self, store, info):
+        """Update the object based on data received from the observer board.
+
+        This method is to be called with data originated from the
+        Stores-Activity observer board (when updates are notified).
+
+        :param store: :class:`~vortex.data.stores.Store` object that sends the update.
+        :param info: Info dictionary sent by the :class:`~vortex.data.stores.Store` object
+        """
+        lpath = info.get('local', None)
+        if lpath is None:
+            # Check for file deleted on the remote side
+            if info['action'] == 'del' and info['status']:
+                for atracker in self.itervalues():
+                    atracker.check_uri_remote_delete(store, info['remote'])
+        else:
+            if isinstance(lpath, basestring):
+                self[lpath].update_store(store, info)
+            else:
+                logger.info("The iotarget isn't a basestring: It will be skipped in %s",
+                            self.__class__)
+
+    def is_tracked_input(self, local):
+        """Check if the given `local` container is listed as an input and associated with a valid :class:`~vortex.data.handlers.Handler`.
+
+        :param local: Local name of the input that will be checked
+        """
+        return (isinstance(local, basestring) and
+                (local in self) and
+                (self[local].latest_rhdict('get')))
+
+    def _grep_stuff(self, internal, action, skeleton=dict()):
+        stack = []
+        for entry in self.itervalues():
+            stack.extend(entry._grep_stuff(internal, action, skeleton))
+        return stack
+
+    def grep_uri(self, action, skeleton=dict()):
+        """Returns all the URIs that contains the same key/values than `skeleton`.
+
+        :param action: Action that is considered.
+        :param skeleton: Dictionary that will be used as a search pattern
+        """
+        return self._grep_stuff('uri', action, skeleton)
+
+    def json_dump(self, filename=_default_json_filename):
+        """Dump the object to a JSON file.
+
+        :param filename: Path to the JSON file.
+        """
+        outdict = {loc: entry.dump_as_dict() for loc, entry in self.iteritems()}
+        with file(filename, 'w') as fpout:
+            json.dump(outdict, fpout, indent=2, sort_keys=True)
+
+    def json_load(self, filename=_default_json_filename):
+        """Restore the object using a JSON file.
+
+        :param filename: Path to the JSON file.
+        """
+        with file(filename, 'r') as fpin:
+            indict = json.load(fpin)
+        # Start from scratch
+        self.clear()
+        for loc, adict in indict.iteritems():
+            self[loc].load_from_dict(adict)
+
+    def __str__(self):
+        out = ''
+        for loc, entry in self.iteritems():
+            entryout = str(entry)
+            if entryout:
+                out += "========== {} ==========\n{}".format(loc, entryout)
+        return out

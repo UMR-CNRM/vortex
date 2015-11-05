@@ -92,3 +92,7 @@ class ArpIfsSimplifiedCycle(object):
 
     def __repr__(self):
         return '{} | {}'.format(self.__class__, str(self))
+
+    def export_dict(self):
+        """The pure dict/json output is the raw integer"""
+        return str(self)

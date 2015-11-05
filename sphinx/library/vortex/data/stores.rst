@@ -101,8 +101,3 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-.. autoclass:: PromisesObserver
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical

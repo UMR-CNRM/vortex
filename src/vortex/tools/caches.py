@@ -143,6 +143,7 @@ class Cache(footprints.FootprintBase):
         """Delete an item from the current cache."""
         rc = self.sh.remove(self.fullpath(item), fmt=fmt)
         self.addrecord('DELETE', item, status=rc, info=info, fmt=fmt)
+        return rc
 
     def flush(self, dumpfile=None):
         """Flush actual history to the specified ``dumpfile`` if record is on."""

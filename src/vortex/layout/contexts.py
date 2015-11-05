@@ -17,6 +17,10 @@ from vortex.tools.env    import Environment
 from . import dataflow
 
 
+_RHANDLERS_OBSBOARD = 'Resources-Handlers'
+_STORES_OBSBOARD = 'Stores-Activity'
+
+
 # Module Interface
 
 def get(**kw):
@@ -48,7 +52,8 @@ class Context(footprints.util.GetByTag):
 
     _tag_default = 'ctx'
 
-    def __init__(self, path=None, topenv=None, sequence=None, task=None):
+    def __init__(self, path=None, topenv=None, sequence=None, localtracker=None,
+                 task=None):
         """Initate a new execution context."""
         logger.debug('Context initialisation %s', self)
         if path is None:
@@ -70,21 +75,28 @@ class Context(footprints.util.GetByTag):
         else:
             self._sequence = dataflow.Sequence()
 
+        if localtracker:
+            self._localtracker = localtracker
+        else:
+            self._localtracker = dataflow.LocalTracker()
+
         self.bind(self._task)
-        footprints.observers.get(tag='Resources-Handlers').register(self)
+        footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
+        footprints.observers.get(tag=_STORES_OBSBOARD).register(self)
 
     def newobsitem(self, item, info):
         """
-        Resources-Handlers observing facility.
+        Resources-Handlers / Store-Activity observing facility.
         Register a new section in void active context with the resource handler ``item``.
         """
-        logger.debug('Notified %s new item %s', self, item)
-        if self.void and self.has_focus():
-            self._sequence.section(rh=item, stage='load')
+        if self.has_focus():
+            logger.debug('Notified %s new item %s', self, item)
+            if (self.void and info['observerboard'] == _RHANDLERS_OBSBOARD):
+                self._sequence.section(rh=item, stage='load')
 
     def delobsitem(self, item, info):
         """
-        Resources-Handlers observing facility.
+        Resources-Handlers / Store-Activity observing facility.
         Should removed the associated section. Yet to be coded.
         """
         if self.has_focus():
@@ -92,14 +104,21 @@ class Context(footprints.util.GetByTag):
 
     def updobsitem(self, item, info):
         """
-        Resources-Handlers observing facility.
+        Resources-Handlers / Store-Activity observing facility.
         Track the new stage of the section containing the resource handler ``item``.
         """
         if self.has_focus():
             logger.debug('Notified %s upd item %s', self, item)
-            for section in self._sequence:
-                if section.rh == item:
-                    section.updstage(info)
+            if info['observerboard'] == _RHANDLERS_OBSBOARD:
+                # Update the sequence
+                for section in self._sequence:
+                    if section.rh == item:
+                        section.updstage(info)
+                # Update the local tracker
+                self._localtracker.update_rh(item, info)
+            elif info['observerboard'] == _STORES_OBSBOARD:
+                # Update the local tracker
+                self._localtracker.update_store(item, info)
 
     @property
     def path(self):
@@ -170,6 +189,11 @@ class Context(footprints.util.GetByTag):
     def sequence(self):
         """Return the :class:`~vortex.layout.dataflow.Sequence` object associated to that context."""
         return self._sequence
+
+    @property
+    def localtracker(self):
+        """Return the :class:`~vortex.layout.dataflow.LocalTracker` object associated to that context."""
+        return self._localtracker
 
     @property
     def bound(self):

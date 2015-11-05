@@ -11,6 +11,8 @@ to an undetermined number of items hold by :class:`ObserverBoard` objects.
 #: No automatic export
 __all__ = []
 
+import copy
+
 from . import loggers
 logger = loggers.getLogger(__name__)
 
@@ -88,19 +90,24 @@ class ObserverBoard(util.GetByTag):
         """Remove the ``remote`` object from the list of listening objects."""
         self._listen.discard(remote)
 
+    def _extended_info(self, info):
+        fullinfo = copy.copy(info)  # This is only a shallow copy...
+        fullinfo['observerboard'] = self.tag
+        return fullinfo
+
     def notify_new(self, item, info):
         """Notify the listening objects that a new observed object is born."""
         logger.debug('Notify new %s info %s', repr(item), info)
         self._items.add(item)
         for remote in list(self._listen):
-            remote.newobsitem(item, info)
+            remote.newobsitem(item, self._extended_info(info))
 
     def notify_del(self, item, info):
         """Notify the listening objects that an observed object does not exists anymore."""
         if item in self._items:
             logger.debug('Notify del %s info %s', repr(item), info)
             for remote in list(self._listen):
-                remote.delobsitem(item, info)
+                remote.delobsitem(item, self._extended_info(info))
             self._items.discard(item)
 
     def notify_upd(self, item, info):
@@ -108,5 +115,5 @@ class ObserverBoard(util.GetByTag):
         if item in self._items:
             logger.debug('Notify upd %s info %s', repr(item), info)
             for remote in list(self._listen):
-                remote.updobsitem(item, info)
+                remote.updobsitem(item, self._extended_info(info))
 

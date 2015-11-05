@@ -8,4 +8,5 @@ Utilities
    util
 
    askjeeves
+   hooks
    storefunctions

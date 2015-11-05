@@ -131,6 +131,9 @@ class GenericConfigParser(object):
             raise AttributeError
         return getattr(self.parser, attr)
 
+    def footprint_export(self):
+        return self.file
+
 
 class DelayedConfigParser(GenericConfigParser):
     """Configuration file parser with possible delayed loading."""
