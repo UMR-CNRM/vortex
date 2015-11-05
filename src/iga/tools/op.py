@@ -33,7 +33,8 @@ def setup(**kw):
     if "SLURM_JOB_NAME" in t.env():
         if t.sh.path.exists('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf'):
             t.sh.remove('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
-        t.sh.softlink(t.env["__log_sbatch"], '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
+        if "__log_sbatch" in t.env():
+            t.sh.softlink(t.env["__log_sbatch"], '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
 
     t.sh.prompt = t.prompt
     t.info()
@@ -130,7 +131,6 @@ def setup(**kw):
 
     vortex.toolbox.active_verbose = True
     vortex.toolbox.active_now     = True
-    vortex.toolbox.active_insitu  = True
     vortex.toolbox.active_clear   = True
 
     for activeattr in [ x for x in dir(vortex.toolbox) if x.startswith('active_') ]:
@@ -327,4 +327,15 @@ def fulltraceback(localsd=None):
         sh.header('Traceback Error / END')
     else:
         print '-' * 100
+
+
+def op_hook_factory(kind, productid, sshhost):
+    """Hook functions factory to route files while the execution is running"""
+
+    def hook_report(t, rh):
+        if rh.resource.geometry.area=='EURW1S100':
+            ad.route(kind=kind, productid=productid, sshhost=sshhost, domain=rh.resource.geometry.area, term=rh.resource.term, filename=rh.container.basename) 
+            print t.prompt, 'routing file = ', rh
+
+    return hook_report
 
