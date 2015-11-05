@@ -329,11 +329,11 @@ def fulltraceback(localsd=None):
         print '-' * 100
 
 
-def op_hook_factory(kind, productid, sshhost):
+def oproute_hook_factory(kind, productid, sshhost, areafilter=None):
     """Hook functions factory to route files while the execution is running"""
 
     def hook_report(t, rh):
-        if rh.resource.geometry.area=='EURW1S100':
+        if (areafilter is None) or (rh.resource.geometry.area in areafilter):
             ad.route(kind=kind, productid=productid, sshhost=sshhost, domain=rh.resource.geometry.area, term=rh.resource.term, filename=rh.container.basename) 
             print t.prompt, 'routing file = ', rh
 

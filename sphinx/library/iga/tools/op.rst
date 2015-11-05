@@ -31,6 +31,8 @@ Functions
 
 .. autofunction:: fulltraceback
 
+.. autofunction:: oproute_hook_factory
+
 
 Classes
 -------
