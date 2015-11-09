@@ -11,7 +11,7 @@ i.e. some set of keys/values pairs that attributes (possibly optionals) could co
 #: No automatic export
 __all__ = []
 
-__version__ = '0.9.22'
+__version__ = '0.9.23'
 
 import os
 import re
