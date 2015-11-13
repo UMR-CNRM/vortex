@@ -259,6 +259,22 @@ def report(t, try_ok=True, **kw):
         ad.opmail(reseau=reseau, task=task, id='input_fail')
 
 
+class InputReportContext(object):
+    """Context manager that print a report on inputs."""
+
+    def __init__(self, task, ticket):
+        self._task = task
+        self._ticket = ticket
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if isinstance(exc_value, StandardError):
+            fulltraceback(dict(t=self._ticket))
+        report(self._ticket, exc_type is None, self._task)
+
+
 def complete(t, **kw):
     """Exit from OP session."""
     ad = vortex.tools.actions.actiond

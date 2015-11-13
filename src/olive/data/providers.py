@@ -10,7 +10,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.providers import Provider
-from common.tools.igastuff import archive_suffix, fuzzyname, suites, IgakeyFactory
+from common.tools.igastuff import archive_suffix, fuzzyname, suites, IgakeyFactoryArchive
 from vortex.syntax.stdattrs import Namespace
 
 
@@ -104,7 +104,7 @@ class OpArchive(Provider):
                 remap    = dict(dbl = 'dble')
             ),
             igakey = dict(
-                type     = IgakeyFactory,
+                type     = IgakeyFactoryArchive,
                 optional = True,
                 default  = '[vapp]/[vconf]'
             ),

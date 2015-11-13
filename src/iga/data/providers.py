@@ -15,6 +15,8 @@ from vortex.syntax.stdattrs import a_suite, Namespace
 
 from gco.data.providers import GEnv
 
+from common.tools.igastuff import IgakeyFactoryInline
+
 import iga.util.bpnames as bp
 
 #: TODO move in config file
@@ -89,7 +91,11 @@ class IgaProvider(Provider):
                 type     = int,
                 optional = True,
             ),
-            igakey = dict(),
+            igakey = dict(
+                type     = IgakeyFactoryInline,
+                optional = True,
+                default  = '[vapp]/[vconf]'
+            ),
             config = dict(
                 type     = IgaCfgParser,
                 optional = True,
