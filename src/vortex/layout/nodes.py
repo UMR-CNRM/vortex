@@ -6,6 +6,9 @@ This modules defines the base nodes of the logical layout
 for any :mod:`vortex` experiment.
 """
 
+import collections
+import itertools
+
 #: Export real nodes.
 __all__ = ['Driver', 'Task', 'Family']
 
@@ -61,6 +64,13 @@ class ConfigSet(footprints.util.LowerCaseDict):
             pass
         return value
 
+    def remap_geometry(self, value):
+        try:
+            value = data.geometries.get(tag=value)
+        except ValueError:
+            pass
+        return value
+
     def remap_default(self, value):
         return value
 
@@ -73,28 +83,102 @@ class ConfigSet(footprints.util.LowerCaseDict):
     def __setattr__(self, attr, value):
         self[attr] = value
 
+    @staticmethod
+    def _litteral_cleaner(litteral):
+        """Remove unwanted characters from a configuration file's string."""
+        cleaned = litteral.lstrip().rstrip()
+        # Remove \n and \r
+        cleaned = cleaned.replace("\n", ' ').replace("\r", '')
+        # Useless spaces after/before parenthesis
+        cleaned = re.sub('\(\s*', '(', cleaned)
+        cleaned = re.sub('\s*\)', ')', cleaned)
+        # Useless spaces around separators
+        cleaned = re.sub('\s*:\s*', ':', cleaned)
+        cleaned = re.sub('\s*,\s*', ',', cleaned)
+        # Duplicated spaces
+        cleaned = re.sub('\s+', ' ', cleaned)
+        return cleaned
+
+    @staticmethod
+    def _sparser(litteral, itemsep=None, keysep=None):
+        """Split a string taking into account (nested?) parenthesis."""
+        if itemsep is None and keysep is None:
+            return [litteral, ]
+        if keysep is not None and itemsep is None:
+            raise ValueError("keysep can not be set without itemsep")
+        # What are the expected separators ?
+        markers_it = itertools.cycle([keysep, itemsep ] if keysep else [itemsep, ])
+        # Default values
+        res_stack = []
+        accumstr = ''
+        parenthesis = 0
+        marker = markers_it.next()
+        # Process the string characters one by one and but take parenthesis into
+        # account.
+        for c in litteral:
+            if c == '(':
+                parenthesis += 1
+            elif c == ')':
+                parenthesis -= 1
+            if parenthesis < 0:
+                raise ValueError("'{}' unbalanced paranthesis". format(litteral))
+            if parenthesis == 0 and c == marker:
+                res_stack.append(accumstr)
+                marker = markers_it.next()
+                accumstr = ''
+            else:
+                accumstr += c
+        res_stack.append(accumstr)
+        if parenthesis > 0:
+            raise ValueError("'{}' unbalanced paranthesis". format(litteral))
+        if (keysep is not None) and (res_stack) and (len(res_stack) % 2 != 0):
+            raise ValueError("'{}' could not be processed as a dictionnary".format(litteral))
+        return res_stack
+
+    def _value_expand(self, value, remap):
+        """Recursively expand the configuration file's string."""
+        # dictionaries...
+        if isinstance(value, basestring) and re.match('dict\(.*\)$', value):
+            value = value[5:-1]
+            basis = self._sparser(value, itemsep=' ', keysep=':')
+            value = {k: self._value_expand(v, remap)
+                     for k, v in zip(basis[0::2], basis[1::2])}
+        # lists...
+        separeted = self._sparser(value, itemsep=',')
+        if isinstance(value, basestring) and len(separeted) > 1:
+            value = [self._value_expand(v, remap) for v in separeted]
+        # Usual values...
+        if isinstance(value, basestring):
+            value = remap(value)
+        return value
+
     def __setitem__(self, key, value):
         if value is not None and isinstance(value, basestring):
+            # Check if a type cast is needed, remove spaces, ...
             rmap = 'default'
-            if re.match('\w+\(.*\)', value):
+            value = self._litteral_cleaner(value)
+            if (not re.match('dict', value) and
+                    re.match('\w+\(.*\)', value)):
                 ipos = value.index('(')
-                rmap = value[:ipos]
-                value = value[ipos+1:-1]
+                rmap = value[:ipos].lower()
+                value = value[ipos + 1:-1]
             remap = getattr(self, 'remap_' + rmap)
-            if key.endswith('_range'):
-                key = key[:-6]
-                value = footprints.util.rangex(value.replace(' ', ''))
-            elif key.endswith('_map'):
+            # Support for old style dictionnaries (compatibility)
+            if key.endswith('_map'):
                 key = key[:-4]
-                value = { k:remap(v) for k, v in [ x.split(':') for x in value.split() ] }
-            elif key.endswith('geometry'):
-                value = data.geometries.get(tag=value)
-            elif ',' in value:
-                value = [ remap(v) for v in value.replace(' ', '').split(',') ]
-            elif value == 'None':
-                value = None
-            else:
-                value = remap(value)
+                value = 'dict(' + value + ')'
+            # Support for geometries
+            if 'geometry' in key or 'geometries' in key:
+                remap = self.remap_geometry
+            # Process the alues recursively
+            value = self._value_expand(value, remap)
+            # Special case for rangex
+            if key.endswith('_range') and isinstance(value, list):
+                key = key[:-6]
+                value = footprints.util.rangex(* valsue)
+            if key.endswith('_range') and isinstance(value, basestring):
+                key = key[:-6]
+                value = footprints.util.rangex(re.sub('\s', '', value))
         super(ConfigSet, self).__setitem__(key, value)
 
 
