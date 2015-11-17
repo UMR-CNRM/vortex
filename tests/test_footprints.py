@@ -29,6 +29,9 @@ class Foo(object):
     def justdoit(self, guess, extras):
         return 'done_' + str(len(guess))
 
+    def justanint(self, guess, extras):
+        return 3
+
 
 class FootprintTestOne(FootprintBase):
     _footprint = dict(
@@ -1160,6 +1163,20 @@ class utFootprint(TestCase):
             info = 'Some nice stuff'
         )
 
+        self.fpter = Footprint(
+            attr = dict(
+                stuff1 = dict(
+                    alias = ('arg1',)
+                ),
+                stuff2 = dict(
+                    type = int,
+                    optional = True,
+                    default = 1
+                ),
+            ),
+            info = 'Some nice stuff'
+        )
+
     def test_footprint_basics(self):
         fp = Footprint(nodefault=True)
         self.assertIsInstance(fp, Footprint)
@@ -1364,6 +1381,10 @@ class utFootprint(TestCase):
             u_rv = fp._replacement(nbpass, 'stuff1', guess, extras, guess.keys())
         footprints.logger.setLevel(logging.WARNING)
 
+        guess = dict(nothing='void', stuff1='misc_[stuff2#0]')
+        rv = fp._replacement(nbpass, 'stuff1', guess, extras, guess.keys())
+        self.assertDictEqual(guess, dict(stuff1='misc_0', nothing='void'))
+
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2]'))
         todo = guess.keys()
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2]', stuff2='foo'))
@@ -1429,6 +1450,51 @@ class utFootprint(TestCase):
         rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_done_2', stuff2='foo'))
+
+    def test_footprint_replacementfmt(self):
+        fp = self.fpbis
+        nbpass = 0
+        extras = dict()
+
+        guess = dict(nothing='void', stuff1='misc_[stuff2#0%03d]')
+        rv = fp._replacement(nbpass, 'stuff1', guess, extras, guess.keys())
+        self.assertDictEqual(guess, dict(stuff1='misc_0', nothing='void'))
+
+        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2%03d]'))
+        self.assertDictEqual(guess, dict(stuff1='misc_[stuff2%03d]', stuff2='foo'))
+        todo = ['stuff1', ]
+        footprints.logger.setLevel(logging.CRITICAL)
+        with self.assertRaises(ValueError):
+            rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        footprints.logger.setLevel(logging.WARNING)
+
+        # If the replacement target is in extras
+        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2]_and_[more%02d]', more=2))
+        self.assertDictEqual(guess, dict(stuff1='misc_[stuff2]_and_[more%02d]', stuff2='foo'))
+        todo = ['stuff1', ]
+        extras = dict(more=2)
+        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        self.assertTrue(rv)
+        self.assertDictEqual(guess, dict(stuff1='misc_foo_and_02', stuff2='foo'))
+
+        thisfoo = Foo(value=2)
+        extras = dict(somefoo=thisfoo)
+        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justanint%02d]', somefoo=thisfoo))
+        self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justanint%02d]', stuff2='foo'))
+        todo = ['stuff1', ]
+        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        self.assertTrue(rv)
+        self.assertDictEqual(guess, dict(stuff1='misc_03', stuff2='foo'))
+
+        # If the replacement target is in guess
+        fp = self.fpter
+        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2%02d]_and_[more%02d]', more=2))
+        self.assertDictEqual(guess, dict(stuff1='misc_[stuff2%02d]_and_[more%02d]', stuff2=1))
+        todo = ['stuff1', ]
+        extras = dict(more=2)
+        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        self.assertTrue(rv)
+        self.assertDictEqual(guess, dict(stuff1='misc_01_and_02', stuff2=1))
 
     def test_resolve_unknown(self):
         fp = Footprint(self.fpbis, dict(
