@@ -8,6 +8,7 @@ This modules defines the low level physical layout for data handling.
 #: No automatic export.
 __all__ = []
 
+import re
 import collections
 from collections import namedtuple, defaultdict
 import json
@@ -235,12 +236,30 @@ class Sequence(object):
         """Return a SequenceInputsReport object built using the current sequence."""
         return SequenceInputsReport(self.inputs())
 
+    @staticmethod
+    def _fuzzy_match(stuff, allowed):
+        '''Check if ``stuff`` is in ``allowed``. ``allowed`` may contain regex.'''
+        if (isinstance(allowed, basestring) or
+                not isinstance(allowed, collections.Iterable)):
+            allowed = [allowed, ]
+        for pattern in allowed:
+            if ((isinstance(pattern, re._pattern_type) and pattern.search(stuff)) or
+                    (pattern == stuff)):
+                return True
+        return False
+
     def effective_inputs(self, **kw):
         """
         Walk through the inputs of the current sequence which reach the 'get' stage.
         If a ``role`` or ``kind`` (or both) is provided as named argument,
         it operates as a filter on the inputs list. If both keys are available
         the ``role`` applies first, and then the ``kind`` in case of empty match.
+
+        The ``role`` or ``kind`` named arguments are lists that may contain
+        strings and/or compiled regular expressions. Regular expressions are c
+        hecked against the input's attributes using the 'search' function
+        (i.e.  ^ should be explicitely added if one wants to match the begining
+        of the string).
         """
         inset = [ x for x in self.inputs() if ( x.stage == 'get' or x.stage == 'expected' ) and x.rh.container.exists() ]
         if not kw:
@@ -249,10 +268,11 @@ class Sequence(object):
         inkind = list()
         if 'role' in kw and kw['role'] is not None:
             selectrole = mktuple(kw['role'])
-            inrole = [ x for x in inset if x.role in selectrole or x.alternate in selectrole ]
+            inrole = [ x for x in inset if (self._fuzzy_match(x.role, selectrole) or
+                                            self._fuzzy_match(x.alternate, selectrole)) ]
         if not inrole and 'kind' in kw:
             selectkind = mktuple(kw['kind'])
-            inkind = [ x for x in inset if x.rh.resource.realkind in selectkind ]
+            inkind = [ x for x in inset if self._fuzzy_match(x.rh.resource.realkind, selectkind) ]
         return inrole or inkind
 
     def executables(self):
