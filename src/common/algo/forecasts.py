@@ -35,6 +35,11 @@ class Forecast(IFSParallel):
                 optional = True,
                 default  = True,
             ),
+            ddhpack = dict(
+                type     = bool,
+                optional = True,
+                default  = False,
+            )
         )
     )
 
@@ -120,6 +125,18 @@ class Forecast(IFSParallel):
         if len(gp_map) == 0:
             logger.info('No gridpoint file was found.')
         sh.json_dump(gp_map, 'gridpoint_map.out', indent=4, cls=ShellEncoder)
+
+        # Gather DDH in folders
+        if self.ddhpack:
+            ddhmap = dict(DL='dlimited', GL='global', ZO='zonal')
+            for (prefix, ddhkind) in ddhmap.iteritems():
+                flist = sh.glob('DHF{}{}+*'.format(prefix, self.xpname))
+                if flist:
+                    dest = 'ddhpack_{}'.format(ddhkind)
+                    logger.info('Creating a DDH pack: {}'.format(dest))
+                    sh.mkdir(dest)
+                    for lfa in flist:
+                        sh.mv(lfa, dest, fmt='lfa')
 
 
 class LAMForecast(Forecast):
