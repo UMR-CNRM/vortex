@@ -10,7 +10,7 @@ PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 
 BUILDDIR      = build
-SOURCEDIR     = ./
+SOURCEDIR     = .
 CHECKREPORT   = $(SOURCEDIR)/checkreport.rst
 
 ALLSPHINXOPTS   = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCEDIR)
