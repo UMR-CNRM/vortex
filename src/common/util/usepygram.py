@@ -24,55 +24,94 @@ footprints.proxy.containers.discard_package('epygram')
 __all__ = []
 
 
-def clone_fields(data, source, name='NEWFIELD', value=0., pack=None):
-    """Clone any existing fields ending with``source`` to some new constant field."""
-    name = name.upper().replace(' ', '.')
-    source = source.upper()
-    table = data.listfields()
+def clone_fields(datain, dataout, sources, names=None, value=None, pack=None):
+    """Clone any existing fields ending with``source`` to some new field."""
+    # Prepare sources names
+    if not isinstance(sources, (list, tuple, set)):
+        sources = [sources, ]
+    sources = [source.upper() for source in sources]
+    # Prepare output names
+    if names is None:
+        names = sources
+    else:
+        if not isinstance(names, (list, tuple, set)):
+            names = [names, ]
+        names = [name.upper().replace(' ', '.') for name in names]
+    # aliases
+    tablein = datain.listfields()
+    tableout = dataout.listfields()
     addfields = list()
 
-    for fieldname in [ x for x in sorted(table) if x.endswith(source) ]:
-        newfield = fieldname.replace(source, '') + name
-        if newfield in table:
-            logger.warning('Field <%s> already in file', newfield)
-        else:
-            fx = data.readfield(fieldname)
-            fy = fx.clone({ x:newfield for x in fx.fid.keys() })
-            fy.data.fill(value)
-            comprpack = data.fieldscompression.get(fieldname)
-            if pack is not None:
-                comprpack.update(pack)
-            addfields.append((fy, comprpack))
+    # Look for the input fields,
+    for source, name in zip(sources, names):
+        for fieldname in [ x for x in sorted(tablein) if x.endswith(source) ]:
+            newfield = fieldname.replace(source, '') + name
+            if newfield in tableout:
+                logger.warning('Field <%s> already in output file', newfield)
+            else:
+                fx = datain.readfield(fieldname)
+                fy = fx.clone({x: newfield for x in fx.fid.keys()})
+                if value is not None:
+                    fy.data.fill(value)
+                comprpack = datain.fieldscompression.get(fieldname)
+                if pack is not None:
+                    comprpack.update(pack)
+                addfields.append((fy, comprpack))
 
+    # Write output fields
     if addfields:
-        data.close()
-        data.open(openmode='a')
+        dataout.close()
+        dataout.open(openmode='a')
         for newfield, pack in addfields:
             logger.info('Add field %s pack=%s' % (newfield.fid, pack))
-            data.writefield(newfield, compression=pack)
+            dataout.writefield(newfield, compression=pack)
 
-    data.close()
+    dataout.close()
 
     return len(addfields)
+
+
+def _out_prepare(t, rh):
+    rh.container.updfill(True)
+    t.sh.chmod(rh.container.localpath(), 0644)
+
+
+def _env_prepare(t):
+    localenv = t.sh.env.clone()
+    localenv.active(True)
+    localenv.verbose(True, t.sh)
+    if localenv.OMP_NUM_THREADS is None:
+        localenv.OMP_NUM_THREADS = 1
+    localenv.update(
+        DR_HOOK_SILENT  = 1,
+        DR_HOOK_NOT_MPI = 1,
+    )
+    return localenv
 
 
 def addfield(t, rh, fieldsource, fieldtarget, constvalue):
     """Provider hook for adding a field through cloning."""
     if rh.container.exists():
-        rh.container.updfill(True)
-        t.sh.chmod(rh.container.localpath(), 0644)
-        localenv = t.sh.env.clone()
-        localenv.active(True)
-        localenv.verbose(True, t.sh)
-        localenv.update(
-            LFI_HNDL_SPEC   = ':1',
-            DR_HOOK_SILENT  = 1,
-            DR_HOOK_NOT_MPI = 1,
-        )
-        clone_fields(rh.contents.data, fieldsource, name=fieldtarget, value=constvalue)
+        _out_prepare(t, rh)
+        localenv = _env_prepare(t)
+        clone_fields(rh.contents.data, rh.contents.data,
+                     fieldsource, names=fieldtarget, value=constvalue)
         localenv.active(False)
     else:
-        logger.warning('Try to add field on a missing resource <%s>', rh.container.localpath())
+        logger.warning('Try to add field on a missing resource <%s>',
+                       rh.container.localpath())
+
+
+def copyfield(t, rh, rhsource, fieldsource, fieldtarget):
+    """Provider hook for copying fields between FA files."""
+    if rh.container.exists():
+        _out_prepare(t, rh)
+        localenv = _env_prepare(t)
+        clone_fields(rhsource.contents.data, rh.contents.data, fieldsource, fieldtarget)
+        localenv.active(False)
+    else:
+        logger.warning('Try to copy field on a missing resource <%s>',
+                       rh.container.localpath())
 
 
 class EpygramMetadataReader(MetaDataReader):
