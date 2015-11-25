@@ -713,13 +713,19 @@ class ArchiveStore(Store):
         """Returns the current :attr:`storage`."""
         return self.storage
 
+    def _ftpformatpath(self, remote):
+        return self.system.path.join(
+            remote.get('root', self.storeroot),
+            remote['path'].lstrip(self.system.path.sep)
+        )
+
     def ftpcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
         rc = None
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             try:
-                rc = ftp.size(self.storeroot + remote['path'])
+                rc = ftp.size(self._ftpformatpath(remote))
             except (ValueError, TypeError, ftplib.all_errors):
                 pass
             finally:
@@ -731,15 +737,14 @@ class ArchiveStore(Store):
         rc = None
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
-            rc = ftp.netpath(self.storeroot + remote['path'])
+            rc = ftp.netpath(self._ftpformatpath(remote))
             ftp.close()
         return rc
 
     def ftpget(self, remote, local, options):
         """Delegates to ``system.ftp`` the get action."""
         return self.system.ftget(
-            self.storeroot + remote['path'],
-            local,
+            self._ftpformatpath(remote), local,
             # ftp control
             hostname = self.hostname(),
             logname  = remote['username'],
@@ -749,24 +754,20 @@ class ArchiveStore(Store):
     def ftpput(self, local, remote, options):
         """Delegates to ``system.ftp`` the put action."""
         put_sync = options.get('synchro', not options.get('delayed', not self.storesync))
-        destination = self.system.path.join(
-            remote.get('root', self.storeroot),
-            remote['path'].lstrip(self.system.path.sep)
-        )
         put_opts = dict(
             hostname = self.hostname(),
             logname  = remote['username'],
             fmt      = options.get('fmt'),
         )
         if put_sync:
-            return self.system.ftput(local, destination, **put_opts)
+            return self.system.ftput(local, self._ftpformatpath(remote), **put_opts)
         else:
             tempo = footprints.proxy.service(kind='hiddencache', asfmt=put_opts['fmt'])
             put_opts.update(
                 todo        = 'ftput',
                 rhandler    = options.get('rhandler', None),
                 source      = tempo(local),
-                destination = destination,
+                destination = self._ftpformatpath(remote),
             )
             return ad.jeeves(**put_opts)
 
@@ -775,15 +776,12 @@ class ArchiveStore(Store):
         rc = None
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
-            targetpath = self.system.path.join(
-                remote.get('root', self.storeroot),
-                remote['path'].lstrip(self.system.path.sep)
-            )
-            if self.ftpcheck(targetpath, options=options):
-                rc = ftp.delete(targetpath)
+            if self.ftpcheck(remote, options=options):
+                rc = ftp.delete(self._ftpformatpath(remote))
                 ftp.close()
             else:
-                logger.error('Try to remove a non-existing resource <%s>', targetpath)
+                logger.error('Try to remove a non-existing resource <%s>',
+                             self._ftpformatpath(remote))
         return rc
 
 
