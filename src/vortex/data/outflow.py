@@ -6,6 +6,7 @@ __all__ = []
 
 from resources import Resource
 from geometries import HorizontalGeometry, SpectralGeometry, GridGeometry
+from contents   import FormatAdapter
 from vortex.syntax.stdattrs import model
 
 
@@ -33,7 +34,10 @@ class StaticGeoResource(ModelResource):
         attr = dict(
             geometry = dict(
                 type = HorizontalGeometry,
-            )
+            ),
+            clscontents = dict(
+                default = FormatAdapter,
+            ),
         )
     )
 

@@ -61,14 +61,14 @@ class Forecast(IFSParallel):
                 return bool(actualrh.resource.month == thismonth)
 
             self.setlink(
-                initrole = 'GlobalClim',
+                initrole = ('GlobalClim', 'InitialClim'),
                 initkind = 'clim_model',
                 initname = 'Const.Clim',
                 inittest = checkmonth,
             )
 
             for bdaprh in [ x.rh for x in self.context.sequence.effective_inputs(
-                role = 'LocalClim',
+                role = ('LocalClim', 'TargetClim', 'BDAPClim'),
                 kind = 'clim_bdap',
             ) if x.rh.resource.month == thismonth ]:
                 thisclim = bdaprh.container.localpath()
