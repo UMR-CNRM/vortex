@@ -1,10 +1,6 @@
 CLOCPY		= bin/countlines.py
 CLOCDEF		= project/cloc.defs
-ifeq ($(shell uname),Darwin)
-	CLOCBIN     = cloc
-else
-	CLOCBIN     = cloc.pl
-endif
+CLOCBIN     = cloc
 
 DOC_DIR		= sphinx
 TEST_DIR	   = tests
