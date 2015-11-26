@@ -587,10 +587,10 @@ class Parallel(AlgoComponent):
             io.import_basics(self)
             io.options = {x[3:]: opts[x]
                           for x in opts.keys() if x.startswith('io_')}
+            
             mpi.options['nn'] = mpi.options['nn'] - io.options['nn']
             io.master = mpi.master
             args = io.mkcmdline(self.spawn_command_line(rh))
-
         mpi.options['init-timeout-restart'] = self.timeoutrestart
         args[:0] = mpi.mkcmdline(self.spawn_command_line(rh))
         logger.info('Run in parallel mode %s', args)

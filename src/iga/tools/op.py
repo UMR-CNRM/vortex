@@ -206,9 +206,19 @@ def setenv(t, **kw):
     for opvar in sorted([ x for x in opd.keys() if x.startswith('op_') ]):
         t.env.setvar(opvar, opd[opvar])
         nb_op += 1
-    t.env.MTOOLDIR = "/chaine/mxpt001/vortex/mtool"
-    #t.env.MTOOLDIR = t.env.get('OP_MTOOLDIR', None)
-        
+    tg = vortex.sh().target()
+
+    # Set some more environment variables from the 'target*.ini' file 
+    if "LUSTRE_OPER" in t.env:
+        t.env.setvar("MTOOLDIR", "/" + t.env["LUSTRE_OPER"] + tg.get('mtool:MTOOLDIR'))
+    else:
+        logger.warning('No "LUSTRE_OPER" variable in the environment, unabale to export MTOOLDIR')
+    lfipath  = tg.get('lfi:lfipath')
+    lficmd   = tg.get('lfi:lficmd')
+    lfitools = t.sh.path.join(lfipath, lficmd)
+    t.env.setvar("LFITOOLS", lfitools)    
+
+    
     logger.info('Global op variables found: %d', nb_op)
 
     #--------------------------------------------------------------------------------------------------
@@ -272,7 +282,7 @@ class InputReportContext(object):
     def __exit__(self, exc_type, exc_value, traceback):
         if isinstance(exc_value, StandardError):
             fulltraceback(dict(t=self._ticket))
-        report(self._ticket, exc_type is None, self._task)
+        report(self._ticket, exc_type is None, task=self._task)
 
 
 def complete(t, **kw):

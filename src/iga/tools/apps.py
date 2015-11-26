@@ -26,7 +26,9 @@ class OpTask(Task):
                 tbalgo.run(binary, **kwargs)
             except StandardError:
                 reseau = self.conf.rundate.hh
+                self.sh.header('Send a mail due to an execution error')
                 ad.opmail(reseau=reseau, task=self.tag, id = 'execution_error')
+                raise
 
     def register_cycle(self, cycle):
         """Register a given GCO cycle."""
@@ -47,11 +49,13 @@ class OpTaskMPI(OpTask):
 
     def component_runner(self, tbalgo, tbx, **kwargs):
         """Run the binaries listed in tbx using the tbalgo algo component."""
-        mpiopts = dict(nn = self.conf.nnodes,
-                       nnp = self.conf.ntasks, openmp = self.conf.openmp)
+        mpiopts = dict(nn = int(self.conf.nnodes),
+                       nnp = int(self.conf.ntasks), openmp = int(self.conf.openmp))
         for binary in tbx:
             try:
                 tbalgo.run(binary, mpiopts = mpiopts, **kwargs)
             except StandardError:
                 reseau = self.conf.rundate.hh
+                self.sh.header('Send a mail due to an execution error')
                 ad.opmail(reseau=reseau, task=self.tag, id = 'execution_error')
+                raise

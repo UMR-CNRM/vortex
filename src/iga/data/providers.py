@@ -15,7 +15,7 @@ from vortex.syntax.stdattrs import a_suite, Namespace
 
 from gco.data.providers import GEnv
 
-from common.tools.igastuff import IgakeyFactoryInline
+from common.tools.igastuff import IgakeyFactoryInline, suites
 
 import iga.util.bpnames as bp
 
@@ -169,7 +169,10 @@ class SopranoProvider(Provider):
                 values   = ['scp', 'rcp', 'ftp'],
                 default  = 'ftp'
             ),
-            suite = a_suite,
+            suite = dict(
+                values   = suites,
+                remap    = dict(dbl = 'double', dble = 'double'),
+            ), 
             source = dict(
                 values   = list(ATM_LIST_ONE | ATM_LIST_TWO),
                 optional = True

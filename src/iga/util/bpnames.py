@@ -442,7 +442,10 @@ def global_snames(resource, provider):
             elif resource.part == 'surf':
                 bname = 'OBSOUL_SURFAN' + modsuff + '.' + suff
         elif resource.nativefmt == 'bufr':
-            bname = 'BUFR.' + resource.part + modsuff + '.' + suff
+            bname = resource.nativefmt.upper() + '.' + resource.part + modsuff + '.' + suff
+        elif resource.nativefmt == 'netcdf':
+            if resource.part == 'sev000':
+                bname = resource.nativefmt.upper() + '.' + resource.part + modsuff + '.' + suff
         logger.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
     if resource.realkind == 'refdata':
         suff = map_suffix[(cutoff, resource.date.hour)]
