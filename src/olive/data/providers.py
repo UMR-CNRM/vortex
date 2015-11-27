@@ -10,8 +10,8 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.providers import Provider
-from common.tools.igastuff import archive_suffix, fuzzyname, suites, IgakeyFactoryArchive
-from vortex.syntax.stdattrs import Namespace
+from common.tools.igastuff import archive_suffix, fuzzyname, IgakeyFactoryArchive
+from vortex.syntax.stdattrs import Namespace, a_suite
 
 
 class Olive(Provider):
@@ -97,12 +97,11 @@ class OpArchive(Provider):
                 type     = Namespace,
                 optional = True,
                 default  = '[suite].multi.fr',
-                values   = ['oper.archive.fr', 'dble.archive.fr', 'oper.multi.fr', 'dble.multi.fr'],
+                values   = ['oper.archive.fr', 'dble.archive.fr',
+                            'oper.multi.fr', 'dble.multi.fr',
+                            'mirr.multi.fr', 'mirr.multi.fr', ],
             ),
-            suite = dict(
-                values   = suites,
-                remap    = dict(dbl = 'dble')
-            ),
+            suite = a_suite,
             igakey = dict(
                 type     = IgakeyFactoryArchive,
                 optional = True,
@@ -175,9 +174,10 @@ class OpArchive(Provider):
         return bname
 
     def pathname(self, resource):
+        suite_map = dict(dble='dbl', mirr='miroir')
         rinfo = self.pathinfo(resource)
         rdate = rinfo.get('date', '')
-        suite = self.suite.rstrip('e')
+        suite = suite_map.get(self.suite, self.suite)
         yyyy = str(rdate.year)
         mm = '{0:02d}'.format(rdate.month)
         dd = '{0:02d}'.format(rdate.day)

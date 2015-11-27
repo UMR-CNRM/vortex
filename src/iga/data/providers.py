@@ -73,9 +73,11 @@ class IgaProvider(Provider):
             namespace = dict(
                 optional = True,
                 default  = '[suite].inline.fr',
-                values   = ['oper.inline.fr', 'dble.inline.fr', 'dbl.inline.fr', 'test.inline.fr'],
+                values   = ['oper.inline.fr', 'dble.inline.fr', 'dbl.inline.fr',
+                            'test.inline.fr', 'mirr.inline.fr', 'miroir.inline.fr'],
                 remap    = {
-                    'dbl.inline.fr': 'dble.inline.fr'
+                    'dbl.inline.fr': 'dble.inline.fr',
+                    'miroir.inline.fr': 'mirr.inline.fr'
                 },
             ),
             tube = dict(
@@ -207,7 +209,7 @@ class SopranoProvider(Provider):
         The actual pathname is the directly obtained from the templated ini file
         provided through the ``config`` footprint attribute.
         """
-        suite_map = dict(dble='double', )
+        suite_map = dict(dble='double', mirr='oper')
         info = self.pathinfo(resource)
         if self.vapp == 'arome' and self.vconf == 'pifrance':
             info['model'] = 'aromepi'

@@ -6,9 +6,6 @@ import re
 #: No automatic export
 __all__ = []
 
-#: Default values for suite ids.
-suites = ['oper', 'dbl', 'dble', 'test', 'miroir']
-
 #: Specific tricks for base naming in iga fuzzy namespace.
 fuzzystr = dict(
     histfix = dict(
@@ -18,7 +15,7 @@ fuzzystr = dict(
         ),
     ),
     prefix = dict(
-        gridpoint = dict( oper = 'PE', dbl = 'PA' ),
+        gridpoint = dict( oper = 'PE', dble = 'PA', mirr='PE' ),
     ),
     suffix = dict(
         bgstderr = dict( input = 'in', output = 'out' )

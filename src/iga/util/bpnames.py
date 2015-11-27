@@ -137,7 +137,7 @@ def global_pnames(provider, resource):
         * geometry,
         * fmt
     """
-    suite_map = dict(dble='dbl', )
+    suite_map = dict(dble='dbl', mirr='oper')
     info = getattr(resource, provider.realkind + '_pathinfo',
                    resource.vortex_pathinfo)()
     for mnd in ('suite', 'igakey', 'fmt'):
