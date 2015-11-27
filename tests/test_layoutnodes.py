@@ -65,11 +65,15 @@ class TestConfigSet(unittest.TestCase):
         # Basics...
         self.assertEqual(cs._value_expand('toto', lambda x: x),
                          'toto')
+        self.assertIs(cs._value_expand('None', lambda x: x),
+                      None)
         self.assertEqual(cs._value_expand('toto(scrontch)', lambda x: x),
                          'toto(scrontch)')
         # Lists...
         self.assertListEqual(cs._value_expand('toto,titi,tata', lambda x: x),
                              ['toto', 'titi', 'tata'])
+        self.assertListEqual(cs._value_expand('toto,None,tata', lambda x: x),
+                             ['toto', None, 'tata'])
         self.assertListEqual(cs._value_expand('tot(o,tit)i,tata', lambda x: x),
                              ['tot(o,tit)i', 'tata'])
         # Dictionnaries...
@@ -95,6 +99,8 @@ class TestConfigSet(unittest.TestCase):
                               'production': {'01': 4, '02': 5}})
         self.assertEqual(cs._value_expand('dict(01:1,26,25 02:2),1', int),
                          [{'01': [1, 26, 25], '02': 2}, 1])
+        self.assertEqual(cs._value_expand('dict(01:1,None,25 02:2),1', int),
+                         [{'01': [1, None, 25], '02': 2}, 1])
 
     def test_setitem(self):
         cs = ConfigSet()
@@ -119,6 +125,8 @@ class TestConfigSet(unittest.TestCase):
         self.assertDictEqual(cs.tdict2, {'toto': 1, 'tata': 2})
         cs.tlist = 'float(2.6,2.8)'
         self.assertListEqual(cs.tlist, [2.6, 2.8])
+        cs.tlist = 'float(2.6, None)'
+        self.assertListEqual(cs.tlist, [2.6, None])
         # Strange case
         for sval in ('dict(toto:titi,tata tata:titi)',
                      "dict(toto:titi,tata \n\ntata:titi)",

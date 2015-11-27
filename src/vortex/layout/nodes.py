@@ -147,6 +147,9 @@ class ConfigSet(footprints.util.LowerCaseDict):
         separeted = self._sparser(value, itemsep=',')
         if isinstance(value, basestring) and len(separeted) > 1:
             value = [self._value_expand(v, remap) for v in separeted]
+        # None ?
+        if value == 'None':
+            value = None
         # Usual values...
         if isinstance(value, basestring):
             value = remap(value)
@@ -175,7 +178,7 @@ class ConfigSet(footprints.util.LowerCaseDict):
             # Special case for rangex
             if key.endswith('_range') and isinstance(value, list):
                 key = key[:-6]
-                value = footprints.util.rangex(* valsue)
+                value = footprints.util.rangex(* value)
             if key.endswith('_range') and isinstance(value, basestring):
                 key = key[:-6]
                 value = footprints.util.rangex(re.sub('\s', '', value))
