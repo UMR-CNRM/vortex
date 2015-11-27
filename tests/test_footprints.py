@@ -115,6 +115,33 @@ class FootprintTestBuiltins(FootprintBase):
     )
 
 
+class FooFP(FootprintBase):
+    _footprint = dict(
+        info = 'To test footprint class as footprint attributes (see FootprintTestFpAttr)',
+        attr = dict(
+            blop = dict(
+                type = int,
+            ),
+            scrontch = dict(
+            ),
+        )
+    )
+
+
+class FootprintTestFpAttr(FootprintTestOne):
+    _footprint = dict(
+        info = 'Yet another test class',
+        attr = dict(
+            somefoo = dict(
+                type = FooFP
+            ),
+            someint = dict(
+                outcast = (2, 7)
+            )
+        )
+    )
+
+
 # Tests for miscellaneous dumps
 
 class utDump(TestCase):
@@ -2047,6 +2074,37 @@ class utFootprintBase(TestCase):
         self.assertSetEqual(attr_input, set(['kind', 'someint']))
         self.assertDictEqual(report.last.as_dict(), {
             __name__ + '.FootprintTestOne': {}
+        })
+
+        rv, attr_input = FootprintTestTwo.footprint_couldbe(dict(kind='hip', someint=1, somefoo=Foo(1)), mkreport=True)
+        self.assertTrue(rv)
+        self.assertSetEqual(attr_input, set(['kind', 'someint', 'somefoo']))
+        self.assertDictEqual(report.last.as_dict(), {
+            __name__ + '.FootprintTestTwo': {}
+        })
+
+        rv, attr_input = FootprintTestTwo.footprint_couldbe(dict(kind='hip', someint=1, somefoo=1), mkreport=True)
+        self.assertTrue(rv)
+        self.assertSetEqual(attr_input, set(['kind', 'someint', 'somefoo']))
+        self.assertDictEqual(report.last.as_dict(), {
+            __name__ + '.FootprintTestTwo': {}
+        })
+
+        rv, attr_input = FootprintTestFpAttr.footprint_couldbe(dict(kind='hip', someint=1, somefoo=FooFP(blop=1, scrontch='hello')), mkreport=True)
+        self.assertTrue(rv)
+        self.assertSetEqual(attr_input, set(['kind', 'someint', 'somefoo']))
+        self.assertDictEqual(report.last.as_dict(), {
+            __name__ + '.FootprintTestFpAttr': {}
+        })
+
+        # How does it react when somefoo can not be reclassed inte a FooFP type ?
+        a_foo = Foo(1)
+        rv, attr_input = FootprintTestFpAttr.footprint_couldbe(dict(kind='hip', someint=1, somefoo=a_foo), mkreport=True)
+        self.assertFalse(rv)
+        self.assertSetEqual(attr_input, set(['kind', 'someint']))
+        self.assertDictEqual(report.last.as_dict(), {
+            __name__ + '.FootprintTestFpAttr': {'somefoo': {'args': ('FooFP', repr(a_foo)),
+                                                'why': 'Could not reclass'}}
         })
 
 
