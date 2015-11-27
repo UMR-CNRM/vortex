@@ -419,7 +419,7 @@ class Refdata(FlowResource):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return self.realkind + self.part
+        return self.realkind + '.' + self.part
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
