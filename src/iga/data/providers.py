@@ -15,7 +15,7 @@ from vortex.syntax.stdattrs import a_suite, Namespace
 
 from gco.data.providers import GEnv
 
-from common.tools.igastuff import IgakeyFactoryInline, suites
+from common.tools.igastuff import IgakeyFactoryInline
 
 import iga.util.bpnames as bp
 
@@ -30,6 +30,7 @@ ATM_LIST_TWO = set([
     'perle_arp', 'perle_ifs', 'perle_arom',
     'ctbto', 'mocchim', 'mocvolc'
 ])
+
 
 class SopranoModelError(ValueError):
     pass
@@ -130,18 +131,18 @@ class IgaProvider(Provider):
         provided through the ``config`` footprint attribute.
         """
         info = bp.global_pnames(self, resource)
-        #patch pour les couplages
+        # patch pour les couplages
         if (
             'fmt' in info and
             resource.realkind == 'boundary' and
             self.igakey != 'reunion'
         ):
             info['fmt'] = 'fic_day'
-        if not hasattr(resource, 'model') or resource.model =='surfex':
+        if not hasattr(resource, 'model') or resource.model == 'surfex':
             info['model'] = self.vapp
         self.config.setall(info)
         logger.debug('IgaProvider:pathname info %s', info)
-        #patch for the pearp kind experiment
+        # patch for the pearp kind experiment
         if self.member:
             suffix = 'RUN' + str(self.member)
             new_path = os.path.join(
@@ -169,10 +170,7 @@ class SopranoProvider(Provider):
                 values   = ['scp', 'rcp', 'ftp'],
                 default  = 'ftp'
             ),
-            suite = dict(
-                values   = suites,
-                remap    = dict(dbl = 'double', dble = 'double'),
-            ), 
+            suite = a_suite,
             source = dict(
                 values   = list(ATM_LIST_ONE | ATM_LIST_TWO),
                 optional = True
@@ -209,6 +207,7 @@ class SopranoProvider(Provider):
         The actual pathname is the directly obtained from the templated ini file
         provided through the ``config`` footprint attribute.
         """
+        suite_map = dict(dble='double', )
         info = self.pathinfo(resource)
         if self.vapp == 'arome' and self.vconf == 'pifrance':
             info['model'] = 'aromepi'
@@ -216,7 +215,7 @@ class SopranoProvider(Provider):
             info['model'] = self.vapp
         if info['model'] in ATM_LIST_ONE:
             info['level_one']   = 'modele'
-            info['level_two']   = self.suite
+            info['level_two']   = suite_map.get(self.suite, self.suite)
             info['level_three'] = info['model']
         elif info['model'] in ATM_LIST_TWO:
             info['level_one']   = 'serv'
@@ -227,4 +226,3 @@ class SopranoProvider(Provider):
         logger.debug('sopranoprovider::pathname info %s', info)
         self.config.setall(info)
         return self.config.resolvedpath('soprano')
-

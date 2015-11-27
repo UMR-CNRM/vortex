@@ -274,7 +274,8 @@ term = footprints.Footprint(info = 'Abstract term', attr = dict(term = a_term))
 a_suite = dict(
     values = [ 'oper', 'dble', 'dbl', 'test' ],
     remap  = dict(
-        dble = 'dbl'
+        dbl = 'dble',
+        double = 'dble',
     )
 )
 

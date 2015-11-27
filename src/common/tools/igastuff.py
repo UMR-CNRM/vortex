@@ -141,8 +141,6 @@ class IgakeyFactoryArchive(_BaseIgakeyFactory):
                           'court': 'arpege', },
                'arome': {'3dvarfr': 'arome',
                          'france': 'arome',
-                         'pifrance':'france',
-                         'frcourt':'france',
                          'pegase': 'pegase', },
                'aladin': {'antiguy': 'antiguy',
                           'caledonie': 'caledonie',
@@ -159,7 +157,6 @@ class IgakeyFactoryInline(_BaseIgakeyFactory):
 
     _keymap = {'arpege': {'4dvarfr': 'france',
                           '4dvar': 'france',
-                          'france': 'france',
                           'pearp': 'pearp',
                           'aearp': 'aearp',
                           'courtfr': 'frcourt',
@@ -167,8 +164,6 @@ class IgakeyFactoryInline(_BaseIgakeyFactory):
                           'court': 'frcourt', },
                'arome': {'3dvarfr': 'france',
                          'france': 'france',
-                         'pifrance':'france',
-                         'frcourt':'france',
                          'pegase': 'pegase', },
                'aladin': {'antiguy': 'antiguy',
                           'caledonie': 'caledonie',
@@ -176,4 +171,3 @@ class IgakeyFactoryInline(_BaseIgakeyFactory):
                           'polynesie': 'polynesie',
                           'reunion': 'reunion', },
                }
-

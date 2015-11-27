@@ -136,15 +136,18 @@ def global_pnames(provider, resource):
         * geometry,
         * fmt
     """
+    suite_map = dict(dble='dbl', )
     info = getattr(resource, provider.realkind + '_pathinfo',
                    resource.vortex_pathinfo)()
     for mnd in ('suite', 'igakey', 'fmt'):
         if mnd not in info:
             info[mnd] = getattr(provider, mnd, None)
-    #patch: if model is not in info we must provide it through the
-    #provider's attributes: model or vapp
+    # patch: if model is not in info we must provide it through the
+    # provider's attributes: model or vapp
     if 'model' not in info:
         info['model'] = getattr(provider, 'model', getattr(provider, 'vapp'))
+    # The suite may not e consistant between the vortex cache and the inline cache
+    info['suite'] = suite_map.get(info['suite'], info['suite'])
     return info
 
 
