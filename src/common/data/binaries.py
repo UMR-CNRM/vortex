@@ -367,3 +367,69 @@ class Gobptout(BlackBox):
     @property
     def realkind(self):
         return 'gobptout'
+    
+    
+class Clust(BlackBox):
+    """Multipurpose tool to build the initial states of the ensemble prediction system."""
+
+    _footprint = dict(
+        info = 'Tool to build EPS initial conditions',
+        attr = dict(
+            kind = dict(
+                values   = ['clust'],
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_clust'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'clust'
+    
+    
+class PertSurf(BlackBox):
+    """Multipurpose tool to build the initial states of the ensemble prediction system."""
+
+    _footprint = dict(
+        info = 'Tool to build EPS initial conditions',
+        attr = dict(
+            kind = dict(
+                values   = ['pertsurf'],
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_pertsurf'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'pertsurf'
+    
+    
+class AddPearp(BlackBox):
+    """Multipurpose tool to build the initial states of the ensemble prediction system."""
+
+    _footprint = dict(
+        info = 'Tool to build EPS initial conditions',
+        attr = dict(
+            kind = dict(
+                values   = ['addpearp'],
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_addpearp'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'addpearp'

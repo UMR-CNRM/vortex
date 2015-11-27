@@ -47,6 +47,9 @@ class NamelistContent(AlmostDictContent):
             TIMESTEP  = None,
             FCSTOP    = None,
             NMODVAL   = None,
+            NBE       = None,
+            SEED      = None,
+            MEMBER    = None,
         ))
         kw.setdefault('remove', set())
         kw.setdefault('parser', None)
@@ -176,7 +179,7 @@ class Namelist(ModelResource):
         return 'namelist'
 
     def _find_source(self):
-        sources = self.source.split(',')
+        sources = self.source.split('|')
         if len(sources) == 1:
             source = sources[0].split(':')[0]
         else:
@@ -185,20 +188,21 @@ class Namelist(ModelResource):
                 dateNsource = s.split(':')
                 if dateNsource[0]:
                     if len(dateNsource) == 2:
-                        date = Date(dateNsource[1])
+                        date = Date(dateNsource[1], year = self.date.year)
                     else:
-                        date = Date('yyyy0101')
+                        date = Date(self.date.year, 1, 1)
                     if date not in datedSource.keys():
                         datedSource[date] = dateNsource[0]
                     else:
                         logger.warning('%s already begins the %s, %s is ignored.',datedSource[date],date.strftime('%d of %b.'),dateNsource[0])
- 
             datedSource = sorted(datedSource.iteritems(),reverse=True)
+            source = datedSource[0][1]
             for dateNsource in datedSource:
                 if self.date >= dateNsource[0]:
                     source = dateNsource[1]
-                    break;
-         
+                    break;                
+            logger.info('The consistent source is %s',source)
+            
         return source
 
     def gget_urlquery(self):
@@ -365,6 +369,10 @@ class NamelistFullPos(NamelistTerm):
             )
         )
     ]
+
+    @property
+    def realkind(self):
+        return 'namelistfp'
 
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""

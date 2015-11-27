@@ -252,8 +252,9 @@ class FullPosGeo(FullPos):
         sh = self.system
 
         initrh = [ x.rh for x in self.context.sequence.effective_inputs(
-            kind = ('analysis', 'historic', 'perturbation'),
+            kind = ('analysis', 'historic', re.compile('pert')),
         ) ]
+
         # is there one (deterministic forecast) or many (ensemble forecast) fullpos to perform ?
         isMany = len(initrh) > 1
         infile = 'ICMSH{0:s}INIT'.format(self.xpname)
@@ -293,9 +294,10 @@ class FullPosGeo(FullPos):
         sh = self.system
         super(FullPosGeo, self).postfix(rh, opts)
         
-        initrh = [ x.rh for x in self.context.sequence.effective_inputs(
-            kind = ('analysis', 'historic', 'perturbation'),
-        ) ]
+        initrh = self.setlink(initkind=('analysis', 'historic', re.compile('pert')))
+#         initrh = [ x.rh for x in self.context.sequence.effective_inputs(
+#             kind = ('analysis', 'historic', 'perturbation'),
+#         ) ]
         if len(initrh) > 1:
             for num, r in enumerate(initrh):
                 sh.move('RUNOUT/pfout_{:d}'.format(num),
@@ -323,7 +325,6 @@ class FullPosBDAP(FullPos):
         sh = self.system
 
         namrh = [ x.rh for x in self.context.sequence.effective_inputs(
-            role = 'Namelist',
             kind = 'namelistfp'
         ) ]
 
@@ -361,6 +362,12 @@ class FullPosBDAP(FullPos):
             sh.mkdir(runstore)
 
             # Define an input namelist
+            print r.resource.term
+            print len(namrh)
+            for x in self.context.sequence.effective_inputs(kind='namelistfp'):
+                print x.rh.resource.kind
+            for x in namrh:
+                print x.resource.term
             try:
                 namfp = [ x for x in namrh if x.resource.term == r.resource.term ].pop()
                 sh.remove('fort.4')

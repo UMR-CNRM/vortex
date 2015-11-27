@@ -26,10 +26,9 @@ def drawingfunction(options):
     rhdict = options.get('rhandler', None)
     if rhdict:
         date = rhdict['resource']['date']
-        seed(int(date))
+        seed(int(date[:-2]))
         nbpert = rhdict['resource']['nblot']
         nbset = rhdict['resource']['nbset']
-        print options.get('start', 1)
         start = int(options.get('start', [1])[0])
         population = footprints.util.rangex(start, nbset + start -1)
         tirage = sample(population * (nbpert / nbset), (nbpert / nbset) * nbset) + sample(population, nbpert % nbset)

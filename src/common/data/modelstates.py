@@ -93,7 +93,7 @@ class Analysis(SpectralGeoFlowResource):
         return dict(
             fmt     = self.nativefmt,
             geo     = lgeo,
-            radical = 'analysis',
+            radical = self.realkind,
             src     = [self.filling, self.model],
         )
 
