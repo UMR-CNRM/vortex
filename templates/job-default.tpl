@@ -39,6 +39,7 @@ op_tplfile  = '$tplfile'
 op_tplinit  = '$tplinit'
 op_mail     = $mail
 op_jeeves   = '$jeeves'
+op_cycle    = '$opcycle'
 
 oplocals = locals()
 
@@ -52,10 +53,16 @@ sys.path.extend(
 
 import iga.tools.op as op
 import $package.$task as todo
+from vortex import toolbox
+from vortex.tools.actions import actiond as ad
+from iga.tools import actions
+from iga.tools import services
 
 try:
     t = op.setup(actual=oplocals)
     e = op.setenv(t, actual=oplocals)
+    ad.opmail_on()
+    toolbox.defaults(smtpserver='smtp.meteo.fr', sender='dsiop_igasc@meteo.fr', cycle=op_cycle)
     opts = t.sh.rawopts(defaults=dict(play=op_fullplay))
     driver = todo.setup(t, **opts)
     driver.setup()

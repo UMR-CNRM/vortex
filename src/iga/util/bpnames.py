@@ -14,8 +14,11 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 
-def faNames(cutoff, reseau, model, filling=None, vapp=None):
-    if cutoff == 'assim':
+_arpcourt_vconf = ('courtfr', 'frcourt', 'court')
+
+
+def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
+    if cutoff == 'assim' and vconf not in _arpcourt_vconf:
         map_suffix = dict(
              zip(
                  zip(
@@ -25,17 +28,18 @@ def faNames(cutoff, reseau, model, filling=None, vapp=None):
                  ('r00', 'r06', 'r12', 'r18')
              )
          )
-    elif cutoff == 'production':
+    elif cutoff == 'production' and vconf not in _arpcourt_vconf:
+        suffix_r0 = 'rAM' if model == 'arpege' else 'rCM'
         map_suffix = dict(
             zip(
                 zip(
                     (cutoff,)*8,
                     range(0, 24, 3)
                 ),
-                ('rAM', 'rTR', 'rSX', 'rNF', 'rPM', 'rQZ', 'rDH', 'rVU')
+                (suffix_r0, 'rTR', 'rSX', 'rNF', 'rPM', 'rQZ', 'rDH', 'rVU')
             )
         )
-    elif cutoff == 'short':
+    elif vconf in _arpcourt_vconf:
         map_suffix = {(cutoff, 0): 'rCM'}
     else:
         logger.warning(
@@ -63,7 +67,7 @@ def faNames(cutoff, reseau, model, filling=None, vapp=None):
     return model_info, suffix
 
 
-def gribNames(cutoff, reseau, model, run=None):
+def gribNames(cutoff, reseau, model, run=None, vapp=None, vconf=None):
     logger.debug('model %s run %s', model, run)
     if model == 'arome':
         map_suffix = dict(
@@ -87,7 +91,7 @@ def gribNames(cutoff, reseau, model, run=None):
         suffix = map_suffix[reseau]
     elif model == 'arpege' and not run:
         logger.debug('cutoff %s', cutoff)
-        if cutoff == 'assim':
+        if cutoff == 'assim' and vconf not in _arpcourt_vconf:
             map_suffix = dict(
                  zip(
                      zip(
@@ -97,7 +101,7 @@ def gribNames(cutoff, reseau, model, run=None):
                      ('00', '06', '12', '18')
                  )
              )
-        elif cutoff == 'production':
+        elif cutoff == 'production' and vconf not in _arpcourt_vconf:
             map_suffix = dict(
                 zip(
                     zip(
@@ -107,7 +111,7 @@ def gribNames(cutoff, reseau, model, run=None):
                     ('rAM', 'rSX', 'rPM', 'rDH')
                 )
             )
-        elif cutoff == 'short':
+        elif vconf in _arpcourt_vconf:
             map_suffix = {(cutoff, 0): 'rCM'}
         else:
             logger.warning(
@@ -133,19 +137,22 @@ def global_pnames(provider, resource):
         * geometry,
         * fmt
     """
+    suite_map = dict(dble='dbl', mirr='oper')
     info = getattr(resource, provider.realkind + '_pathinfo',
                    resource.vortex_pathinfo)()
     for mnd in ('suite', 'igakey', 'fmt'):
         if mnd not in info:
             info[mnd] = getattr(provider, mnd, None)
-    #patch: if model is not in info we must provide it through the
-    #provider's attributes: model or vapp
+    # patch: if model is not in info we must provide it through the
+    # provider's attributes: model or vapp
     if 'model' not in info:
         info['model'] = getattr(provider, 'model', getattr(provider, 'vapp'))
+    # The suite may not e consistant between the vortex cache and the inline cache
+    info['suite'] = suite_map.get(info['suite'], info['suite'])
     return info
 
 
-def clim_bdap_bnames(resource):
+def clim_bdap_bnames(resource, provider):
     """docstring for clim_bdap_bnames"""
     if 'arome' in resource.model:
         localname = 'BDAP_frangp_isba' + str(resource.month)
@@ -165,7 +172,7 @@ def clim_bdap_bnames(resource):
     return localname
 
 
-def clim_model_bnames(resource):
+def clim_model_bnames(resource, provider):
     """docstring for clim_model_bnames"""
     if resource.model == 'arome' or resource.model == 'aladin':
         localname = 'clim_' + resource.geometry.area + '_isba' + str(resource.month)
@@ -176,7 +183,7 @@ def clim_model_bnames(resource):
     return localname
 
 
-def rawfields_bnames(resource):
+def rawfields_bnames(resource, provider):
     """docstring for rawfileds_bnames"""
     if resource.origin == 'nesdis':
         return resource.fields + '.' + resource.origin + '.' + 'bdap'
@@ -188,15 +195,16 @@ def rawfields_bnames(resource):
         return None
 
 
-def geofields_bnames(resource):
+def geofields_bnames(resource, provider):
     """docstring for geofields_bnames"""
     return 'ICMSHANAL' + resource.fields.upper()
 
 
-def analysis_bnames(resource, vapp=None):
+def analysis_bnames(resource, provider):
     """docstring for analysis_bnames"""
     model_info, suffix = faNames(
-        resource.cutoff, resource.date.hour, resource.model, resource.filling, vapp=vapp
+        resource.cutoff, resource.date.hour, resource.model, resource.filling,
+        vapp=provider.vapp, vconf=provider.vconf,
     )
     #patch for the different kind of analysis (surface and atmospheric)
     if resource.model == 'arome' and resource.filling == 'surf':
@@ -208,17 +216,19 @@ def analysis_bnames(resource, vapp=None):
         return  anabase + '.' + suffix
 
 
-def historic_bnames(resource, vapp=None):
+def historic_bnames(resource, provider):
     """docstring for historic_bnames"""
     if resource.model == 'surfex':
-        return histsurf_bnames(resource, vapp)
-    model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model, vapp=vapp)
+        return histsurf_bnames(resource, provider)
+    model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
+                                 vapp=provider.vapp, vconf=provider.vconf)
     return 'ICMSH' + model_info + '+' + resource.term.fmthour + '.' + suffix
 
 
-def histsurf_bnames(resource, vapp=None):
+def histsurf_bnames(resource, provider):
     """docstring for histsurf"""
-    model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model, vapp=vapp)
+    model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
+                                 vapp=provider.vapp, vconf=provider.vconf)
     reseau = resource.date.hour
     map_suffix = dict(
         zip(
@@ -230,27 +240,30 @@ def histsurf_bnames(resource, vapp=None):
     return 'ICMSH' + model_info + '+' + resource.term.fmthour + '.sfx.' + suffix
 
 
-def gridpoint_bnames(resource, member=None):
+def gridpoint_bnames(resource, provider):
     """docstring for gridpoint_bnames"""
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
     logger.debug('gridpoint_bnames: cutoff %s reseau %s model %s',
                  cutoff, reseau, model)
-    logger.debug('gridpoint_bnames: member %s', member)
+    logger.debug('gridpoint_bnames: member %s', provider.member)
     if resource.nativefmt == 'fa':
-        model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model)
+        model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
+                                     vapp=provider.vapp, vconf=provider.vconf)
         localname = 'PF' + model_info + resource.geometry.area + '+' \
             + resource.term.fmthour + '.' + suffix
     elif resource.nativefmt == 'grib':
         if resource.model == 'arpege':
-            prefix, suffix = gribNames(cutoff, reseau, model, member)
+            prefix, suffix = gribNames(cutoff, reseau, model, provider.member,
+                                       vapp=provider.vapp, vconf=provider.vconf)
             nw_term = "{0:03d}".format(resource.term.hour)
-            if member:
-                localname = prefix + '_' + suffix + '_' + str(member) + '_' \
+            if provider.member is not None:
+                localname = prefix + '_' + suffix + '_' + str(provider.member) + '_' \
                     + resource.geometry.area + '_' + resource.term.fmthour
             else:
                 localname = prefix + suffix + nw_term + resource.geometry.area
         elif resource.model == 'arome':
-            prefix, suffix = gribNames(cutoff, reseau, model, member)
+            prefix, suffix = gribNames(cutoff, reseau, model, provider.member,
+                                       vapp=provider.vapp, vconf=provider.vconf)
             localname = prefix + resource.geometry.area + suffix + resource.term.fmthour
         else:
             return None
@@ -259,7 +272,7 @@ def gridpoint_bnames(resource, member=None):
     return localname
 
 
-def varbc_bnames(resource):
+def varbc_bnames(resource, provider):
     """docstring for varbc_bnames"""
     reseau, model, stage  = resource.date.hour, resource.model, resource.stage
     if model in ['reunion', 'aladin', 'caledonie', 'antiguy', 'polynesie']:
@@ -277,7 +290,7 @@ def varbc_bnames(resource):
     return localname
 
 
-def boundary_bnames(resource):
+def boundary_bnames(resource, provider):
     """docstring for boundary_bnames"""
     cutoff, reseau, model, term = resource.cutoff, resource.date.hour, resource.model, resource.term
     if 'arome' in model:
@@ -291,7 +304,7 @@ def boundary_bnames(resource):
     return localname
 
 
-def refdata_bnames(resource):
+def refdata_bnames(resource, provider):
     """docstring for refdata_bnames."""
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
     logger.debug('cutoff %s reseau %s model %s', cutoff, reseau, model)
@@ -300,8 +313,8 @@ def refdata_bnames(resource):
     return localname
 
 
-def bgstderr_bnames(resource, ens=None):
-    if ens == 'france':
+def bgstderr_bnames(resource, provider):
+    if provider.igakey == 'france':
         #errgrib_scr type
         return 'errgrib_scr.r' + str(resource.date.hour)
     else:
@@ -318,7 +331,7 @@ def bgstderr_bnames(resource, ens=None):
         return prefix + '_' + stdname + '.' + suffix.compact()
 
 
-def observations_bnames(resource):
+def observations_bnames(resource, provider):
     """docstring for observations_bnames"""
     fmt, part = resource.nativefmt, resource.part
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
@@ -355,18 +368,8 @@ def global_bnames(resource, provider):
             if current_file == __file__:
                 itself = sys.modules[elmt]
     searched_func = resource.realkind + '_bnames'
-    attr = hasattr(itself, searched_func)
-    member = getattr(provider, 'member', None)
-    if member and attr:
-        return getattr(itself, searched_func)(resource, member)
-    elif attr:
-        if 'bgstderr' in searched_func:
-            return getattr(itself, searched_func)(resource, ens=provider.igakey)
-        else:
-            if getattr(resource, 'model', 'none') == 'surfex':
-                return getattr(itself, searched_func)(resource, vapp=provider.vapp)
-            else:
-                return getattr(itself, searched_func)(resource)
+    if hasattr(itself, searched_func):
+        return getattr(itself, searched_func)(resource, provider)
     else:
         if resource.realkind == 'rtcoef':
             return resource.realkind + '.tar'
@@ -443,7 +446,10 @@ def global_snames(resource, provider):
             elif resource.part == 'surf':
                 bname = 'OBSOUL_SURFAN' + modsuff + '.' + suff
         elif resource.nativefmt == 'bufr':
-            bname = 'BUFR.' + resource.part + modsuff + '.' + suff
+            bname = resource.nativefmt.upper() + '.' + resource.part + modsuff + '.' + suff
+        elif resource.nativefmt == 'netcdf':
+            if resource.part == 'sev000':
+                bname = resource.nativefmt.upper() + '.' + resource.part + modsuff + '.' + suff
         logger.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
     if resource.realkind == 'refdata':
         suff = map_suffix[(cutoff, resource.date.hour)]

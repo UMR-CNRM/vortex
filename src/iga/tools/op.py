@@ -206,9 +206,15 @@ def setenv(t, **kw):
     for opvar in sorted([ x for x in opd.keys() if x.startswith('op_') ]):
         t.env.setvar(opvar, opd[opvar])
         nb_op += 1
-    t.env.MTOOLDIR = "/chaine/mxpt001/vortex/mtool"
-    #t.env.MTOOLDIR = t.env.get('OP_MTOOLDIR', None)
-        
+    tg = vortex.sh().target()
+
+    # Set some more environment variables from the 'target*.ini' file 
+    if "LUSTRE_OPER" in t.env:
+        t.env.setvar("MTOOLDIR", "/" + t.env["LUSTRE_OPER"] + tg.get('op:MTOOLDIR'))
+    else:
+        logger.warning('No "LUSTRE_OPER" variable in the environment, unabale to export MTOOLDIR')
+
+    
     logger.info('Global op variables found: %d', nb_op)
 
     #--------------------------------------------------------------------------------------------------
@@ -257,6 +263,22 @@ def report(t, try_ok=True, **kw):
     else:
         t.sh.header('Input informations: input fail')
         ad.opmail(reseau=reseau, task=task, id='input_fail')
+
+
+class InputReportContext(object):
+    """Context manager that print a report on inputs."""
+
+    def __init__(self, task, ticket):
+        self._task = task
+        self._ticket = ticket
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if isinstance(exc_value, StandardError):
+            fulltraceback(dict(t=self._ticket))
+        report(self._ticket, exc_type is None, task=self._task)
 
 
 def complete(t, **kw):

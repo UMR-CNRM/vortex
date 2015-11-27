@@ -272,9 +272,10 @@ term = footprints.Footprint(info = 'Abstract term', attr = dict(term = a_term))
 
 #: Usual definition of operational suite
 a_suite = dict(
-    values = [ 'oper', 'dble', 'dbl', 'test' ],
+    values = [ 'oper', 'dble', 'dbl', 'test', 'mirr', 'miroir' ],
     remap  = dict(
-        dbl = 'dble'
+        dbl = 'dble',
+        miroir = 'mirr',
     )
 )
 

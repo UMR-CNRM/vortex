@@ -6,9 +6,6 @@ import re
 #: No automatic export
 __all__ = []
 
-#: Default values for suite ids.
-suites = ['oper', 'dbl', 'dble', 'test', 'miroir']
-
 #: Specific tricks for base naming in iga fuzzy namespace.
 fuzzystr = dict(
     histfix = dict(
@@ -18,7 +15,7 @@ fuzzystr = dict(
         ),
     ),
     prefix = dict(
-        gridpoint = dict( oper = 'PE', dbl = 'PA' ),
+        gridpoint = dict( oper = 'PE', dble = 'PA', mirr='PE' ),
     ),
     suffix = dict(
         bgstderr = dict( input = 'in', output = 'out' )
@@ -104,26 +101,14 @@ def archive_suffix(model, cutoff, date):
     return str(rr[(cutoff, date.hour)])
 
 
-class IgakeyFactory(str):
+class _BaseIgakeyFactory(str):
     """
-    Given the vapp/vconf, returns a default value for the igakey attribute
+    Given the vapp/vconf, returns a default value for the igakey attribute.
+
+    Needs to be subclassed !
     """
 
     _re_appconf = re.compile('^(\w+)/(\w+)$')
-
-    _keymap = {'arpege': {'4dvar': 'arpege',
-                          'pearp': 'pearp',
-                          'aearp': 'aearp',
-                          'court': 'arpege',
-                          'frcourt': 'arpege', },
-               'arome': {'france': 'arome',
-                         'pegase': 'pegase', },
-               'aladin': {'antiguy': 'antiguy',
-                          'caledonie': 'caledonie',
-                          'nc': 'caledonie',
-                          'polynesie': 'polynesie',
-                          'reunion': 'reunion', },
-               }
 
     def __new__(cls, value):
         """
@@ -137,3 +122,49 @@ class IgakeyFactory(str):
                                     {}).get(val_split.group(2),
                                             val_split.group(1))
         return str.__new__(cls, value)
+
+
+class IgakeyFactoryArchive(_BaseIgakeyFactory):
+    """
+    Given the vapp/vconf, returns a default value for the igakey attribute
+    """
+
+    _keymap = {'arpege': {'4dvarfr': 'arpege',
+                          '4dvar': 'arpege',
+                          'pearp': 'pearp',
+                          'aearp': 'aearp',
+                          'courtfr': 'arpege',
+                          'frcourt': 'arpege',
+                          'court': 'arpege', },
+               'arome': {'3dvarfr': 'arome',
+                         'france': 'arome',
+                         'pegase': 'pegase', },
+               'aladin': {'antiguy': 'antiguy',
+                          'caledonie': 'caledonie',
+                          'nc': 'caledonie',
+                          'polynesie': 'polynesie',
+                          'reunion': 'reunion', },
+               }
+
+
+class IgakeyFactoryInline(_BaseIgakeyFactory):
+    """
+    Given the vapp/vconf, returns a default value for the igakey attribute
+    """
+
+    _keymap = {'arpege': {'4dvarfr': 'france',
+                          '4dvar': 'france',
+                          'pearp': 'pearp',
+                          'aearp': 'aearp',
+                          'courtfr': 'frcourt',
+                          'frcourt': 'frcourt',
+                          'court': 'frcourt', },
+               'arome': {'3dvarfr': 'france',
+                         'france': 'france',
+                         'pegase': 'pegase', },
+               'aladin': {'antiguy': 'antiguy',
+                          'caledonie': 'caledonie',
+                          'nc': 'caledonie',
+                          'polynesie': 'polynesie',
+                          'reunion': 'reunion', },
+               }
