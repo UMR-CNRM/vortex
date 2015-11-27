@@ -13,15 +13,23 @@ Package
 
 .. autodata:: __all__
 
-.. autodata:: suites
-
 .. autodata:: fuzzystr
 
 
 Classes
 -------
 
-.. autoclass:: IgakeyFactory
+.. autoclass:: _BaseIgakeyFactory
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IgakeyFactoryArchive
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IgakeyFactoryInline
    :show-inheritance:
    :members:
    :member-order: alphabetical

@@ -20,3 +20,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: OpTaskMPI
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

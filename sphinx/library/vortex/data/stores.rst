@@ -13,6 +13,10 @@ Package
 
 .. autodata:: __all__
 
+Functions
+---------
+
+.. autofunction:: observer_board
 
 Classes
 -------

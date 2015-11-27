@@ -14,6 +14,18 @@ Package
 
 .. autodata:: __all__
 
+Exceptions
+----------
+
+.. autoclass:: AlgoComponentError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: DelayedAlgoComponentError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 Classes
 -------
@@ -37,4 +49,3 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-

@@ -37,3 +37,7 @@ Functions
 Classes
 -------
 
+.. autoclass:: InputReportContext
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
