@@ -1,9 +1,9 @@
-CLOCBIN     = cloc.pl
 CLOCPY		= bin/countlines.py
-CLOCDEF		= .cloc.defs
+CLOCDEF		= project/cloc.defs
+CLOCBIN     = cloc
 
 DOC_DIR		= sphinx
-TEST_DIR	= tests
+TEST_DIR	   = tests
 
 SUBDIRS		= tests sphinx
 CLEANDIRS 	= $(SUBDIRS:%=clean-%)
@@ -29,11 +29,21 @@ doc:
 	$(MAKE) -C $(DOC_DIR)
 
 # Count the number of source code lines
-cloc:
-	$(CLOCPY) -p $(CLOCBIN) -d $(CLOCDEF) site src tests conf,templates examples sphinx
+cloc    : ; $(CLOCPY) -p $(CLOCBIN) -d $(CLOCDEF) site src tests conf templates examples sphinx
+cloc_all: ; $(CLOCPY) -p $(CLOCBIN) -d $(CLOCDEF) .
 
-# Clean all the directories
+# Code quality analysis : pyflakes + pep8 + McCabe (cyclomatic complexity)
+flake8: ; flake8 --config=project/flake8.ini --statistics . > project/flake8_report.txt || true
+
+# Code quality analysis : pylint
+pylint: ; pylint --rcfile=project/pylint.rc src/* site/* > project/pylint_global.txt || true
+
+# Clean all the directories, then locally
 clean: $(CLEANDIRS)
+	rm -f project/{flake8_report,pylint_global}.txt
+
 $(CLEANDIRS):
 	$(MAKE) -C $(@:clean-%=%) clean
 
+# Usual target
+clobber: clean

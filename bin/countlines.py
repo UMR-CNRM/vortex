@@ -15,7 +15,7 @@ import re
 
 
 ClocResultLineTp = collections.namedtuple('ClocResultLine',
-                                          ('blank', 'comment', 'code', 'usefull'))
+                                          ('blank', 'comment', 'code', 'useful'))
 
 
 class ClocResultLine(ClocResultLineTp):
@@ -33,7 +33,7 @@ class ClocResult():
                                                                 'Blank',
                                                                 'Comment',
                                                                 'Code',
-                                                                'Usefull')
+                                                                'Useful')
     res_fmt = '{:20s}:  {:8d}  {:8d}  {:8d}  {:8d}'
 
     def __init__(self, xmloutput):

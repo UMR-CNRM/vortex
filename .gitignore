@@ -20,13 +20,17 @@ coverage_report
 .coverage
 .tox
 
+# metrics reports
+flake8_report.txt
+pylint_global.txt
+
 # RST file generated on the fly
 checkreport.rst
 
-#Translations
+# Translations
 *.mo
 
-#Mr Developer
+# Mr Developer
 .mr.developer.cfg
 
 # Eclipse unwanted files
@@ -35,5 +39,4 @@ checkreport.rst
 .pydevproject
 
 # Pascal unwanted files
-makefile
 playground
