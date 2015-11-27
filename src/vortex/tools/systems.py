@@ -794,9 +794,11 @@ class OSExtended(System):
                 self.makedirs(normdir)
                 return True
             except OSError:
-                if fatal:
+                # The directory may have been created exactly at the same time
+                # by another process...
+                if fatal and not self.path.isdir(normdir):
                     raise
-                return False
+                return self.path.isdir(normdir)
         else:
             return True
 
