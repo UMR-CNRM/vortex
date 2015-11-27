@@ -210,13 +210,9 @@ def setenv(t, **kw):
 
     # Set some more environment variables from the 'target*.ini' file 
     if "LUSTRE_OPER" in t.env:
-        t.env.setvar("MTOOLDIR", "/" + t.env["LUSTRE_OPER"] + tg.get('mtool:MTOOLDIR'))
+        t.env.setvar("MTOOLDIR", "/" + t.env["LUSTRE_OPER"] + tg.get('op:MTOOLDIR'))
     else:
         logger.warning('No "LUSTRE_OPER" variable in the environment, unabale to export MTOOLDIR')
-    lfipath  = tg.get('lfi:lfipath')
-    lficmd   = tg.get('lfi:lficmd')
-    lfitools = t.sh.path.join(lfipath, lficmd)
-    t.env.setvar("LFITOOLS", lfitools)    
 
     
     logger.info('Global op variables found: %d', nb_op)

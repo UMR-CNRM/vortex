@@ -29,13 +29,14 @@ def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
              )
          )
     elif cutoff == 'production' and vconf not in _arpcourt_vconf:
+        suffix_r0 = 'rAM' if model == 'arpege' else 'rCM'
         map_suffix = dict(
             zip(
                 zip(
                     (cutoff,)*8,
                     range(0, 24, 3)
                 ),
-                ('rAM', 'rTR', 'rSX', 'rNF', 'rPM', 'rQZ', 'rDH', 'rVU')
+                (suffix_r0, 'rTR', 'rSX', 'rNF', 'rPM', 'rQZ', 'rDH', 'rVU')
             )
         )
     elif vconf in _arpcourt_vconf:

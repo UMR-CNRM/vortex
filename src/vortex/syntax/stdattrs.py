@@ -275,7 +275,6 @@ a_suite = dict(
     values = [ 'oper', 'dble', 'dbl', 'test' ],
     remap  = dict(
         dbl = 'dble',
-        double = 'dble',
     )
 )
 

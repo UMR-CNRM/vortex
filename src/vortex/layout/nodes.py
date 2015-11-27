@@ -91,6 +91,8 @@ class ConfigSet(footprints.util.LowerCaseDict):
                 value = data.geometries.get(tag=value)
             elif ',' in value:
                 value = [ remap(v) for v in value.replace(' ', '').split(',') ]
+            elif value == 'None':
+                value = None
             else:
                 value = remap(value)
         super(ConfigSet, self).__setitem__(key, value)

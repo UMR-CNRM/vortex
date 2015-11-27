@@ -7,7 +7,7 @@ import re
 __all__ = []
 
 #: Default values for suite ids.
-suites = ['oper', 'dbl', 'dble', 'test', 'miroir', 'double']
+suites = ['oper', 'dbl', 'dble', 'test', 'miroir']
 
 #: Specific tricks for base naming in iga fuzzy namespace.
 fuzzystr = dict(
