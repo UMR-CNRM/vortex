@@ -7,7 +7,6 @@ __all__ = []
 import sys, io
 import functools
 
-
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -63,7 +62,7 @@ class Handler(object):
         self._ghost     = self._options.pop('ghost', False)
         self._hooks     = {x[5:]: self._options.pop(x)
                            for x in self._options.keys()
-                           if x.startswith('hook_') }
+                           if x.startswith('hook_')}
         self._history = structs.History(tag='data-handler')
         self._history.append(self.__class__.__name__, 'init', True)
         self._stage = ['load']
@@ -136,7 +135,7 @@ class Handler(object):
 
     def observed(self):
         """Other objects observed by the observers of the current resource handler."""
-        return [ x for x in self._observer.observed() if x is not self ]
+        return [x for x in self._observer.observed() if x is not self]
 
     @property
     def complete(self):
@@ -243,7 +242,7 @@ class Handler(object):
             '{0}{0}Complete  : {4}',
             '{0}{0}Options   : {5}',
             '{0}{0}Location  : {6}'
-       )).format(
+        )).format(
             tab,
             self, self.role, self.alternate, self.complete, self.options, self.location()
         )
@@ -256,7 +255,7 @@ class Handler(object):
                     '{0}{0}Attributes : {4:s}'
                 )).format(
                     tab,
-                    subobj.capitalize(), 
+                    subobj.capitalize(),
                     obj, obj.realkind, obj.footprint_as_shallow_dict()
                 )
             else:
@@ -269,7 +268,7 @@ class Handler(object):
         tab = '  ' * indent
         print '{0}{1:02d}. {2:s}'.format(tab, nb, repr(self))
         print '{0}  Complete  : {1:s}'.format(tab, str(self.complete))
-        for subobj in ( 'container', 'provider', 'resource' ):
+        for subobj in ('container', 'provider', 'resource'):
             obj = getattr(self, subobj, None)
             if obj:
                 print '{0}  {1:10s}: {2:s}'.format(tab, subobj.capitalize(), str(obj))
@@ -305,7 +304,7 @@ class Handler(object):
     def store(self):
         if self.resource and self.provider:
             self._uridata = net.uriparse(self.location())
-            stopts = { k: v for k, v in self.options.items() if k.startswith('stor') }
+            stopts = {k: v for k, v in self.options.items() if k.startswith('stor')}
             return footprints.proxy.store(
                 scheme = self._uridata.pop('scheme'),
                 netloc = self._uridata.pop('netloc'),
@@ -407,6 +406,7 @@ class Handler(object):
           made except if "alternate" is defined and the local container already
           exists.
         """
+        rst = False
         if self.complete:
             if self.options.get('insitu', False):  # This a second pass (or third, forth, ...)
                 rst = True  # Always succeed since it was already processed once
@@ -457,7 +457,7 @@ class Handler(object):
             if store:
                 iotarget = self.container.iotarget()
                 logger.debug('Put resource %s as io %s at store %s', self, iotarget, store)
-                if iotarget is not None and ( self.container.exists() or self.provider.expected ):
+                if iotarget is not None and (self.container.exists() or self.provider.expected):
                     mytracker = self._cur_context.localtracker[iotarget]
                     # Execute the hooks only if the local file exists
                     if self.container.exists():
@@ -524,7 +524,8 @@ class Handler(object):
             self.history.append(self.container.actualpath(), 'clear', rst)
         return rst
 
-    def mkgetpr(self, pr_getter=None, tplfile=None, tplskip='sync-skip.tpl', tplfetch='sync-fetch.tpl', py_exec=sys.executable, py_opts=''):
+    def mkgetpr(self, pr_getter=None, tplfile=None, tplskip='sync-skip.tpl',
+                tplfetch='sync-fetch.tpl', py_exec=sys.executable, py_opts=''):
         """Build a getter for the expected resource."""
         if tplfile is None:
             tplfile = tplfetch if self.is_expected() else tplskip
@@ -586,5 +587,5 @@ class Handler(object):
 
     def strlast(self):
         """String formatted log of the last action."""
-        return ' '.join([ str(x) for x in self.history.last ])
+        return ' '.join([str(x) for x in self.history.last])
 

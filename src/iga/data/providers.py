@@ -18,16 +18,12 @@ from gco.data.providers import GEnv
 import iga.util.bpnames as bp
 
 #: TODO move in config file
-ATM_LIST_ONE = set([
-    'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie', 'polynesie',
-    'restart_cep', 'reunion', 'ssmice', 'varpack'
-])
+ATM_LIST_ONE = {'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie',
+                'polynesie', 'restart_cep', 'reunion', 'ssmice', 'varpack'}
 
 #: TODO move in config file
-ATM_LIST_TWO = set([
-    'perle_arp', 'perle_ifs', 'perle_arom',
-    'ctbto', 'mocchim', 'mocvolc'
-])
+ATM_LIST_TWO = {'perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim', 'mocvolc'}
+
 
 class SopranoModelError(ValueError):
     pass
@@ -124,18 +120,18 @@ class IgaProvider(Provider):
         provided through the ``config`` footprint attribute.
         """
         info = bp.global_pnames(self, resource)
-        #patch pour les couplages
+        # patch pour les couplages
         if (
             'fmt' in info and
             resource.realkind == 'boundary' and
             self.igakey != 'reunion'
         ):
             info['fmt'] = 'fic_day'
-        if not hasattr(resource, 'model') or resource.model =='surfex':
+        if not hasattr(resource, 'model') or resource.model == 'surfex':
             info['model'] = self.vapp
         self.config.setall(info)
         logger.debug('IgaProvider:pathname info %s', info)
-        #patch for the pearp kind experiment
+        # patch for the pearp kind experiment
         if self.member:
             suffix = 'RUN' + str(self.member)
             new_path = os.path.join(
@@ -218,4 +214,3 @@ class SopranoProvider(Provider):
         logger.debug('sopranoprovider::pathname info %s', info)
         self.config.setall(info)
         return self.config.resolvedpath('soprano')
-

@@ -9,7 +9,7 @@ Store objects use the :mod:`footprints` mechanism.
 import ftplib
 
 #: Export base class
-__all__ = [ 'Store' ]
+__all__ = ['Store']
 
 import re
 
@@ -79,7 +79,7 @@ class StoreGlue(object):
     def gluelist(self, section):
         """returns the list of options in the specified ``section``."""
         if self.gluemap.has_section(section):
-            return [ x for x in self.gluemap.options(section) if not x.startswith('obj') ]
+            return [x for x in self.gluemap.options(section) if not x.startswith('obj')]
         else:
             logger.warning('No such section <%s> in %s', section, self)
             return []
@@ -100,7 +100,7 @@ class StoreGlue(object):
         Possibly builds and then returns a reverse dictionay
         of founded options with the specified ``item`` defined.
         """
-        if not item in self._cross:
+        if item not in self._cross:
             self._cross[item] = dict()
             for section, contents in self.as_dict().iteritems():
                 for option, desc in contents.iteritems():
@@ -222,19 +222,19 @@ class Store(footprints.FootprintBase):
         logger.critical('Scheme %s not yet implemented', self.scheme)
 
     def check(self, remote, options=None):
-        """Proxy method to dedicated check method accordind to scheme."""
+        """Proxy method to dedicated check method according to scheme."""
         logger.debug('Store check from %s', remote)
         rc = getattr(self, self.scheme + 'check', self.notyet)(remote, options)
         self._observer_notify('check', rc, remote)
         return rc
 
     def locate(self, remote, options=None):
-        """Proxy method to dedicated get method accordind to scheme."""
+        """Proxy method to dedicated locate method according to scheme."""
         logger.debug('Store locate %s', remote)
         return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
 
     def get(self, remote, local, options=None):
-        """Proxy method to dedicated get method accordind to scheme."""
+        """Proxy method to dedicated get method according to scheme."""
         logger.debug('Store get from %s to %s', remote, local)
         if options is not None and options.get('incache', False) and not self.use_cache():
             logger.warning('Skip this store because a cache is requested')
@@ -250,7 +250,7 @@ class Store(footprints.FootprintBase):
                 return False
 
     def put(self, local, remote, options=None):
-        """Proxy method to dedicated put method accordind to scheme."""
+        """Proxy method to dedicated put method according to scheme."""
         logger.debug('Store put from %s to %s', local, remote)
         if options is not None and options.get('incache', False) and not self.use_cache():
             logger.warning('Skip this store because a cache is requested')
@@ -268,7 +268,7 @@ class Store(footprints.FootprintBase):
             return rc
 
     def delete(self, remote, options=None):
-        """Proxy method to dedicated delete method accordind to scheme."""
+        """Proxy method to dedicated delete method according to scheme."""
         logger.debug('Store delete from %s', remote)
         rc = getattr(self, self.scheme + 'delete', self.notyet)(remote, options)
         self._observer_notify('del', rc, remote)
@@ -339,13 +339,13 @@ class MultiStore(footprints.FootprintBase):
         """
         return [
             dict(scheme=x, netloc=y)
-                for x in self.alternates_scheme()
-                for y in self.alternates_netloc()
+            for x in self.alternates_scheme()
+            for y in self.alternates_netloc()
         ]
 
     def use_cache(self):
         """Boolean fonction to check if any included store use a local cache."""
-        return any([ x.use_cache() for x in self.openedstores ])
+        return any([x.use_cache() for x in self.openedstores])
 
     def check(self, remote, options=None):
         """Go through internal opened stores and check for the resource."""
@@ -377,7 +377,7 @@ class MultiStore(footprints.FootprintBase):
             rc = sto.get(remote.copy(), local, options)
             if rc:
                 if self.refillstore and num > 0:
-                    restore = self.openedstores[num-1]
+                    restore = self.openedstores[num - 1]
                     logger.info('Refill back in previous store [%s]', restore)
                     rc = restore.put(local, remote.copy(), options)
                 break
@@ -524,13 +524,13 @@ class FunctionStore(Store):
         return self.system.cp(fres, local)
 
     def functionput(self, local, remote, options):
-        """This should not happened - Always False."""
-        logger.error("The function store is enabled to perform PUTs.")
+        """This should not happen - Always False."""
+        logger.error("The function store is not able to perform PUTs.")
         return False
 
     def functiondelete(self, remote, options):
-        """This should not happened - Always False."""
-        logger.error("The function store is enabled to perform Deletes.")
+        """This should not happen - Always False."""
+        logger.error("The function store is not able to perform Deletes.")
         return False
 
 
@@ -817,7 +817,7 @@ class VortexArchiveStore(ArchiveStore):
 
     def remap_write(self, remote, options):
         """Remap actual remote path to distant store path for intrusive actions."""
-        if not 'root' in remote:
+        if 'root' not in remote:
             remote['root'] = self.storehead
 
     def vortexcheck(self, remote, options):
@@ -1105,7 +1105,7 @@ class VortexStore(MultiStore):
 
     def alternates_netloc(self):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
-        return [ self.netloc.firstname + d for d in ('.cache.fr', '.archive.fr') ]
+        return [self.netloc.firstname + d for d in ('.cache.fr', '.archive.fr')]
 
 
 class PromiseCacheStore(VortexCacheStore):
@@ -1182,7 +1182,8 @@ class PromiseStore(footprints.FootprintBase):
             netloc = self.prstorename,
         )
         if self.promise is None:
-            logger.critical('Could not find store scheme <%s> netloc <%s>', self.proxyscheme, self.prstorename)
+            logger.critical('Could not find store scheme <%s> netloc <%s>',
+                            self.proxyscheme, self.prstorename)
             raise ValueError('Could not get a Promise Store')
 
         # Find the other "real" store (could be a multi-store)
@@ -1257,7 +1258,6 @@ class PromiseStore(footprints.FootprintBase):
     def put(self, local, remote, options=None):
         """Put a promise or the actual resource if available."""
         logger.debug('Multistore put from %s to %s', local, remote)
-        rc = False
         if options is None:
             options = dict()
         if options.get('force', False) or not self.system.path.exists(local):
@@ -1287,7 +1287,7 @@ class PromiseStore(footprints.FootprintBase):
 
 
 class VortexPromiseStore(PromiseStore):
-    """Combined a Promise Store for expected resources and any VORTEX Store."""
+    """Combine a Promise Store for expected resources and any VORTEX Store."""
 
     _footprint = dict(
         info = 'VORTEX promise store',
