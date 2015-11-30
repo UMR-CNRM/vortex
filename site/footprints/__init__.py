@@ -58,7 +58,7 @@ proxy = proxies.get()
 # Predefined constants
 
 UNKNOWN  = '__unknown__'
-replattr = re.compile(r'\[(\w+)(?::+(\w+))?(?:#(\w+))?\]')
+replattr = re.compile(r'\[(\w+)(?::+(\w+))?(?:#(\w+))?(?:%(\w+))?\]')
 
 
 # Footprint exceptions
@@ -343,6 +343,14 @@ class Footprint(object):
 
         If the ``key-name`` could not be found in actual ``guess`` or ``extras`` dictionaries
         the method raises an :exception:`FootprintUnreachableAttr`.
+
+        Additional flags can be added:
+
+          * '[key-name#01]'  will result in '01' if key-name is not in ``guess`` nor in ``extras``
+            (instead of raising a :exception:`FootprintUnreachableAttr` exception.)
+          * '[key-name%03d]' will print the value of key-name using the '03d' format string.
+            If the format string is incorrect, or if it can not be applied to key-name, a
+            :exception:`ValueError` exception will be raised
         """
         if nbpass > 25:
             logger.error('Resolve probably cycling too much... %d tries ?', nbpass)
@@ -357,9 +365,22 @@ class Footprint(object):
                     replk = mobj.group(1)
                     replm = mobj.group(2)
                     replx = mobj.group(3)
+
+                    def myautofmt(repl, myfmt=mobj.group(4)):
+                        if myfmt:
+                            try:
+                                return ("{:" + myfmt + "}").format(repl)
+                            except ValueError:
+                                logger.error('Formating failed for %s. Please check the format string.',
+                                             mobj.group(0))
+                                raise
+                        else:
+                            return str(repl)
+
                     if replk not in guess and replk not in extras:
                         if replx:
                             changed = 1
+                            # Here we do not call _autofmt since replx is already a str
                             guess[k] = replattr.sub(replx, guess[k], 1)
                         else:
                             logger.error('No %s attribute in guess:', replk)
@@ -376,9 +397,9 @@ class Footprint(object):
                                 if subattr is None:
                                     guess[k] = None
                                 else:
-                                    guess[k] = replattr.sub(str(subattr), guess[k], 1)
+                                    guess[k] = replattr.sub(myautofmt(subattr), guess[k], 1)
                             else:
-                                guess[k] = replattr.sub(str(guess[replk]), guess[k], 1)
+                                guess[k] = replattr.sub(myautofmt(guess[replk]), guess[k], 1)
                     elif replk in extras:
                         changed = 1
                         if replm:
@@ -399,11 +420,11 @@ class Footprint(object):
                                     if attrcall is None:
                                         guess[k] = None
                                     elif attrcall != '__SKIP__':
-                                        guess[k] = replattr.sub(str(attrcall), guess[k], 1)
+                                        guess[k] = replattr.sub(myautofmt(attrcall), guess[k], 1)
                                 else:
-                                    guess[k] = replattr.sub(str(subattr), guess[k], 1)
+                                    guess[k] = replattr.sub(myautofmt(subattr), guess[k], 1)
                         else:
-                            guess[k] = replattr.sub(str(extras[replk]), guess[k], 1)
+                            guess[k] = replattr.sub(myautofmt(extras[replk]), guess[k], 1)
 
         if (guess[k] is not None and
                 isinstance(guess[k], basestring) and
