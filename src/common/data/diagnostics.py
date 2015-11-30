@@ -54,28 +54,54 @@ class ISP(SpectralGeoFlowResource):
         )
 
 
-class DDH(SpectralGeoFlowResource):
+class _DDHcommon(SpectralGeoFlowResource):
+    """
+    Abstract class for Horizontal Diagnostics.
+    """
+    _abstract = True
+    _footprint = dict(
+        info = 'Diagnostic on Horizontal Domains',
+        attr = dict(
+            kind = dict(
+                values = [ 'ddh', 'dhf' ],
+                remap = dict( dhf = 'ddh' )
+            ),
+            nativefmt = dict(),
+            scope = dict(
+                values = [ 'limited', 'dlimited', 'global', 'zonal' ],
+                remap = dict( limited = 'dlimited' )
+            ),
+        )
+    )
 
+    def basename_info(self):
+        """Generic information, radical = ``ddh``."""
+        if self.geometry.lam:
+            lgeo = [self.geometry.area, self.geometry.rnice]
+        else:
+            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
+
+        return dict(
+            fmt     = self.nativefmt,
+            geo     = lgeo,
+            radical = 'ddh',
+            src     = [ self.model, self.scope ],
+        )
+
+
+class DDH(_DDHcommon):
     """
     Class for Horizontal Diagnostics.
     Used to be a ``dhf`` !
     """
     _footprint = dict(
-       info = 'Diagnostic on Horizontal Domains',
-       attr = dict(
-           kind = dict(
-               values = [ 'ddh', 'dhf' ],
-               remap = dict( dhf = 'ddh' )
-           ),
-           nativefmt = dict(
+        info = 'Diagnostic on Horizontal Domains',
+        attr = dict(
+            nativefmt = dict(
                 values = [ 'lfi', 'lfa' ],
                 default = 'lfi',
-           ),
-           scope = dict(
-            values = [ 'limited', 'dlimited', 'global', 'zonal' ],
-            remap = dict( limited = 'dlimited' )
-           ),
-           term = a_term
+            ),
+            term = a_term
         )
     )
 
@@ -92,17 +118,25 @@ class DDH(SpectralGeoFlowResource):
         return 'DHF{0:s}{0:s}+{0:s}'.format(self.scope[:2].upper(), self.model[:4].upper(), self.term.fmth)
 
     def basename_info(self):
-        """Generic information, radical = ``isp``."""
-        if self.geometry.lam:
-            lgeo = [self.geometry.area, self.geometry.rnice]
-        else:
-            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
+        bdict = super(DDH, self).basename_info()
+        bdict['term'] = self.term.fmthm
+        return bdict
 
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = lgeo,
-            radical = 'ddh',
-            src     = [ self.model, self.scope ],
-            term    = self.term.fmthm,
+
+class DDHpack(_DDHcommon):
+    """
+    Class for Horizontal Diagnostics with all terms packed in a single directory.
+    Used to be a ``dhf`` !
+    """
+    _footprint = dict(
+        info = 'Diagnostic on Horizontal Domains packed in a single directory',
+        attr = dict(
+            nativefmt = dict(
+                values = [ 'ddhpack', ],
+            ),
         )
+    )
 
+    @property
+    def realkind(self):
+        return 'ddhpack'
