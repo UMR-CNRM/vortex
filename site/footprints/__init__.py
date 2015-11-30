@@ -483,7 +483,7 @@ class Footprint(object):
                     try:
                         guess[k] = ktype(guess[k], **kwargs)
                         logger.debug(' > Attr %s reclassed = %s', k, guess[k])
-                    except (ValueError, TypeError):
+                    except (ValueError, TypeError, FootprintException):
                         logger.debug(' > Attr %s badly reclassed as %s = %s', k, ktype, guess[k])
                         report.add(attribute=k, why=reporting.REPORT_WHY_RECLASS,
                                    args=(ktype.__name__, str(guess[k])))
