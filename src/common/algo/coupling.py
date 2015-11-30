@@ -96,6 +96,8 @@ class Coupling(IFSParallel):
                 cplpath = cplout.container.localpath()
                 if sh.path.exists(cplpath):
                     actualdate = cplout.resource.date + cplout.resource.term
+                    # Expect the coupling guess to be there...
+                    self.grab(cplout, comment='coupling guess')
                     logger.info('Coupling with existing guess <%s>', cplpath)
                     if cplpath != 'PFFPOSAREA+0000':
                         sh.remove('PFFPOSAREA+0000', fmt='lfi')
@@ -113,7 +115,7 @@ class Coupling(IFSParallel):
 
             sh.remove('Const.Clim')
             self.setlink(
-                initrole = 'GlobalClim',
+                initrole = ('GlobalClim', 'InitialClim'),
                 initkind = 'clim_model',
                 initname = 'Const.Clim',
                 inittest = checkmonth
@@ -121,7 +123,7 @@ class Coupling(IFSParallel):
 
             sh.remove('const.clim.AREA')
             self.setlink(
-                initrole = 'LocalClim',
+                initrole = ('LocalClim', 'TargetClim'),
                 initkind = 'clim_model',
                 initname = 'const.clim.AREA',
                 inittest = checkmonth
