@@ -45,6 +45,8 @@ from vortex.tools.services   import Service, FileReportService, TemplatedMailSer
 from vortex.tools.schedulers import SMS
 from vortex.tools.actions    import actiond as ad
 
+from common.tools.agt import agt_actual_command
+
 
 # TODO devrait dépendre d'un objet TARGET
 LOGIN_NODES = [
@@ -382,14 +384,6 @@ class RoutingService(Service):
             raise KeyError('missing ' + key + ' in the environment')
         return value
 
-    def agt_env(self):
-        """Environment for the agt routing binaries (case counts)."""
-        keys = ['HOME_SOPRA', 'LD_LIBRARY_PATH',
-                'base_transfert_agent', 'DIAP_AGENT_NUMPROG_AGENT']
-        vals = ["export " + key + "="
-                + self.sh.target().get('agt:'+key.upper()) for key in keys]
-        return ' ; '.join(vals)
-
     @property
     def taskname(self):
         """IGA task name (TACHE)."""
@@ -459,7 +453,7 @@ class RoutingUpstreamService(RoutingService):
         attr = dict(
             agt_pa_cmd = dict(
                 optional = True,
-                default  = None
+                default  = 'agt_pa_cmd',
             ),
         ),
     )
@@ -472,18 +466,12 @@ class RoutingUpstreamService(RoutingService):
         """Build the line to send to the IGA log file."""
         raise NotImplementedError()
 
-    def actual_agt_pa_cmd(self):
-        """Actual routing command, without options."""
-        pa_cmd = self.actual_value('agt_pa_cmd', default='router_pa.bin')
-        binary = self.sh.path.join(self.actual_value('agt_path'), pa_cmd)
-        return self.agt_env() + ' ; ' + binary
-
     def get_cmdline(self):
         """Complete command line that runs the Transfer Agent."""
         # The only mode implemented is "tables usage": "productid -R"
         # The "addresses" mode is unused: "-L client [client...]"
         options = "{0.filename} {0.productid} {mode}".format(self, mode="-R")
-        return self.actual_agt_pa_cmd() + ' ' + options
+        return agt_actual_command(self.sh, self.agt_pa_cmd, options)
 
 
 class BdmService(RoutingUpstreamService):
@@ -572,7 +560,7 @@ class BdpeService(RoutingService):
             ),
             agt_pe_cmd = dict(
                 optional = True,
-                default  = None
+                default  = 'agt_pe_cmd',
             ),
             term = a_term,
         )
@@ -612,12 +600,6 @@ class BdpeService(RoutingService):
             "@{0.filename}@{0.realkind}_{0.producer}"
         return s.format(self, now=date.now().compact())
 
-    def actual_agt_pe_cmd(self):
-        """Actual routing command, without options."""
-        pe_cmd = self.actual_value('agt_pe_cmd', default='router_pe.bin')
-        binary = self.sh.path.join(self.actual_value('agt_path'), pe_cmd)
-        return self.agt_env() + ' ; ' + binary
-
     def get_cmdline(self):
         """Complete command line that runs the Transfer Agent."""
         if self.actual_routingkey is None:
@@ -625,7 +607,7 @@ class BdpeService(RoutingService):
         options = "{0.filename} {0.actual_routingkey} -p {0.producer}" \
                   " -n {0.productid} -e {0.term.fmtraw} -d {0.dmt_date_pivot}" \
                   " -q {0.quality} -r {0.soprano_target}".format(self)
-        return self.actual_agt_pe_cmd() + ' ' + options
+        return agt_actual_command(self.sh, self.agt_pe_cmd, options)
 
 
 class BdpeOperationsService(BdpeService):

@@ -1,45 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import
+
 import footprints
 
 from vortex.data.stores import Store
 from vortex.tools import date
-from vortex.syntax.stdattrs import DelayedEnvValue
+
+from common.tools.agt import agt_actual_command
 
 #: No automatic export
 __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
-
-
-class AgtConfigurationError(Exception):
-    """Specific Transfer Agent configuration error."""
-    pass
-
-
-def agt_actual_command(sh, binary_name, args):
-    """Build the command able to execute a Transfer Agent binary.
-
-    The context, the execution path and the command name are
-    provided by the configuration file of the target.
-
-    The resulting command should be executed on a transfer node.
-    """
-    config = sh.target().config
-    if not config.has_section('agt'):
-        fmt = 'Missing section "agt" in configuration file\n"{}"'
-        raise AgtConfigurationError(fmt.format(config.file))
-
-    agt_path = sh.target().get('agt_path', default=None)
-    agt_bin  = sh.target().get(binary_name, default=None)
-    if not all([agt_path, agt_bin]):
-        fmt = 'Missing key "agt_path" or "{}" in configuration file\n"{}"'
-        raise AgtConfigurationError(fmt.format(binary_name, config.file))
-
-    context = ' ; '.join(["export {}={}".format(key.upper(), value)
-                          for (key, value) in config.items('agt')])
-    return '{} ; {} {}'.format(context, sh.path.join(agt_path, agt_bin), args)
 
 
 class BdpeStore(Store):
@@ -53,16 +27,6 @@ class BdpeStore(Store):
             ),
             netloc = dict(
                 values   = ['bdpe.archive.fr'],
-            ),
-            store_preferred_target = dict(
-                optional = True,
-                default  = DelayedEnvValue('BDPE_CIBLE_PREFEREE', 'OPER'),
-                values   = ['OPER', 'INT', 'SEC', 'DEV'],
-            ),
-            store_forbidden_target = dict(
-                optional = True,
-                default  = DelayedEnvValue('BDPE_CIBLE_INTERDITE', 'DEV'),
-                values   = ['OPER', 'INT', 'SEC', 'DEV'],
             ),
         ),
         priority = dict(
@@ -98,8 +62,13 @@ class BdpeStore(Store):
     def bdpeget(self, remote, local, options):
         """Real extraction from the BDPE database."""
 
+        # Check that local is a file (i.e not a virtual conainter)
+        if not isinstance(local, basestring):
+            raise TypeError('The BDPE provider can not deal with virtual containers')
+
         # remote['path'] looks like '/86GV/20151105T0000P/BDPE_42+06:00'
-        _, experiment, str_date, more = remote['path'].split('/')
+        _, targetmix, str_date, more = remote['path'].split('/')
+        p_target, f_target = targetmix.split('no')
         productid, str_term = more[5:].split('+')
         args = '{id} {date} {term} {local}'.format(
             id    = productid,
@@ -107,30 +76,23 @@ class BdpeStore(Store):
             term  = date.Time(str_term).fmtraw,  # HHHHmm
             local = local,
         )
-        actual_command = agt_actual_command(self.system, 'agt_lirepe', args)
+        actual_command = agt_actual_command(self.system, 'agt_lirepe', args,
+                                            extraenv=dict(BDPE_CIBLE_PREFEREE=p_target,
+                                                          BDPE_CIBLE_INTERDITE=f_target))
 
-        # TODO appel lirepe
-        #    - ajouter BDPE_CIBLE_PREFEREE et BDPE_CIBLE_INTERDITE dans l'env
-        #    - executer sur un nœud de transfer (service ssh, Cf.
-        #      ad.ssh dans iga/tools/services.py::431)
-        #    - mais le résultat est un fichier **local** et la bdpe
-        #      n'écrit pas dans un pipe
-        #    - lirepe retourne $? == 0 pour "arguments ok", >0 sinon
-        #    - et si erreur d'exécution, ou produit manquant ?
-        #      Vérifier, et/ou s'il manque, montrer le contenu du fichier
-        #      de diagnostique (output_demandé + '.diag')
-        #    - utiliser ce agt_actual_command pour simplifier ce qui
-        #      est fait dans iga/tools/services.py:
-        #        * RoutingService.agt_env()
-        #        * BdpeService.actual_agt_pe_cmd()
-        #        * RoutingUpstreamService.actual_agt_pa_cmd()
+        logger.debug('lirepe_cmd: {}'.format(actual_command))
 
-        # plpl debug
-        self.system.title('bdpeget')
-        print 'remote : {}'.format(remote)
-        print 'local  : {}'.format(local)
-        # print 'options: {}'.format(options)
-        print
-        print 'actual_command =', actual_command
+        rc = self.system.spawn([actual_command, ], shell=True, output=False, fatal=False)
+        rc = rc and self.system.path.exists(local)
 
-        return True
+        diagfile = local + '.diag'
+        if not rc:
+            logger.warning('Something went wrong with the following command: {}'.format(actual_command))
+            if self.system.path.exists(diagfile):
+                logger.warning('The {} file is:'.format(diagfile))
+                self.system.cat(diagfile)
+
+        if self.system.path.exists(diagfile):
+            self.system.remove(diagfile)
+
+        return rc

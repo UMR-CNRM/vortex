@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import
+
 import footprints
 
 from vortex.data.providers import Provider
 from vortex.util.config import GenericConfigParser
+from vortex.syntax.stdattrs import Namespace, DelayedEnvValue
 
 #: No automatic export
 __all__ = []
@@ -44,14 +47,24 @@ class BdpeProvider(Provider):
     _footprint = dict(
         info = 'BDPE provider',
         attr = dict(
-            experiment = dict(),
             namespace = dict(
+                type     = Namespace,
                 optional = True,
-                default  = 'bdpe.archive.fr',
+                default  = Namespace('bdpe.archive.fr'),
                 values   = ['bdpe.archive.fr'],
             ),
             bdpeid = dict(
                 type    = str,
+            ),
+            prefered_target = dict(
+                optional = True,
+                default  = DelayedEnvValue('BDPE_CIBLE_PREFEREE', 'OPER'),
+                values   = ['OPER', 'INT', 'SEC', 'DEV'],
+            ),
+            forbidden_target = dict(
+                optional = True,
+                default  = DelayedEnvValue('BDPE_CIBLE_INTERDITE', 'DEV'),
+                values   = ['OPER', 'INT', 'SEC', 'DEV'],
             ),
             config = dict(
                 optional = True,
@@ -75,15 +88,16 @@ class BdpeProvider(Provider):
 
     def netloc(self):
         """The actual netloc is the ``namespace`` attribute of the current provider."""
-        return self.namespace
+        return self.namespace.netloc
 
     def basename(self, resource):
         """Something like 'BDPE_num+term'."""
-        return 'BDPE_{}+{}'.format(self.bdpeid, resource.term)
+        return 'BDPE_{}+{!s}'.format(self.bdpeid, resource.term)
 
     def pathname(self, resource):
-        """Something like 'EXPE/date/'."""
-        return '{}/{}'.format(self.experiment, resource.date.vortex())
+        """Something like 'PREFEREDnoFORBIDDEN/date/'."""
+        return '{}no{}/{}'.format(self.prefered_target, self.forbidden_target,
+                                  resource.date.vortex())
 
     def uri(self, resource):
         """Overridden to check the resource attributes against
@@ -94,11 +108,10 @@ class BdpeProvider(Provider):
             fmt = 'Missing product n°{} in BDPE configuration file\n"{}"'
             raise BdpeConfigurationError(fmt.format(self.bdpeid, self.config.file))
 
-        # resource description: replace GetByTag objects by their tag (e.g. for geometry)
-        rsrcdict = {k: v.tag if isinstance(v, footprints.util.GetByTag)
-                    else str(v)
-                    for (k, v) in resource.footprint_as_shallow_dict().iteritems()
-                    }
+        # resource description: rely on the footprint_export (it is also used to
+        # JSONise resource).
+        rsrcdict = {k: str(v)
+                    for k, v in resource.footprint_export().iteritems()}
 
         # check the BDPE pairs against the resource's
         for (k, v) in self.config.items(self.bdpeid):
