@@ -31,8 +31,8 @@ def setup(**kw):
 
     #Symlink to job's last execution log in op's resul directory
     if "SLURM_JOB_NAME" in t.env():
-        if t.sh.path.exists('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf'):
-            t.sh.remove('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
+        if t.sh.path.islink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf'):
+            t.sh.unlink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
         if "__log_sbatch" in t.env():
             t.sh.softlink(t.env["__log_sbatch"], '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
 
@@ -211,8 +211,9 @@ def setenv(t, **kw):
     # Set some more environment variables from the 'target*.ini' file 
     if "LUSTRE_OPER" in t.env:
         t.env.setvar("MTOOLDIR", "/" + t.env["LUSTRE_OPER"] + tg.get('op:MTOOLDIR'))
+        t.env.setvar("DATADIR", "/" + t.env["LUSTRE_OPER"] + tg.get('op:datadir'))
     else:
-        logger.warning('No "LUSTRE_OPER" variable in the environment, unabale to export MTOOLDIR')
+        logger.warning('No "LUSTRE_OPER" variable in the environment, unabale to export MTOOLDIR and datadir')
 
     
     logger.info('Global op variables found: %d', nb_op)

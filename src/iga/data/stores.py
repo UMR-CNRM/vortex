@@ -13,6 +13,8 @@ from vortex.syntax.stdattrs import DelayedEnvValue
 from gco.data.stores import GcoCacheStore
 
 
+
+
 class IgaGcoCacheStore(GcoCacheStore):
     """Some kind of cache for GCO components in OP context."""
 
@@ -65,8 +67,8 @@ class IgaFinder(Finder):
             rootdir = dict(
                 alias    = [ 'opdata', 'datadir' ],
                 optional = True,
-                default  = '/chaine/mxpt001'
-            )
+                default  = DelayedEnvValue('DATADIR'),
+            ),
         ),
         priority = dict(
             level = footprints.priorities.top.OPER
