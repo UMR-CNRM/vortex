@@ -18,7 +18,7 @@ def use_in_shell(sh, **kw):
 
 class GRIBAPI_Tool(addons.Addon):
     """
-    Interface to gribapi commands.
+    Interface to gribapi commands (designed as a shell Addon).
     """
 
     _footprint = dict(

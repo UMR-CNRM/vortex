@@ -21,6 +21,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: DDHpack
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ISP
    :show-inheritance:
    :members:

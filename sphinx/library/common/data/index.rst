@@ -21,4 +21,6 @@ Data resources
    modelstates
    namelists
    obs
+   providers
+   stores
    surfex

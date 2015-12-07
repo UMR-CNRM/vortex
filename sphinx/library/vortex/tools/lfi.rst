@@ -29,11 +29,13 @@ Classes
 .. autoclass:: LFI_Tool_Raw
    :show-inheritance:
    :members:
+   :private-members:
    :member-order: alphabetical
 
 .. autoclass:: LFI_Tool_Py
    :show-inheritance:
    :members:
+   :private-members:
    :member-order: alphabetical
 
 .. autoclass:: IO_Poll

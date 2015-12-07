@@ -10,8 +10,11 @@ Miscellaneous Tools
    addons
    caches
    date
+   ddhpack
    env
+   folder
    fortran
+   grib
    lfi
    net
    odb

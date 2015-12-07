@@ -28,5 +28,7 @@ Included Modules
 * :mod:`common.data.modelstates`
 * :mod:`common.data.namelists`
 * :mod:`common.data.obs`
+* :mod:`common.data.providers`
+* :mod:`common.data.stores`
 * :mod:`common.data.surfex`
 

@@ -20,6 +20,8 @@ Functions
 
 .. autofunction:: clone_fields
 
+.. autofunction:: copyfield
+
 Classes
 -------
 

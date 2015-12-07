@@ -17,8 +17,11 @@ Package
 * :mod:`vortex.tools.addons`
 * :mod:`vortex.tools.caches`
 * :mod:`vortex.tools.date`
+* :mod:`vortex.tools.ddhpack`
 * :mod:`vortex.tools.env`
+* :mod:`vortex.tools.folder`
 * :mod:`vortex.tools.fortran`
+* :mod:`vortex.tools.grib`
 * :mod:`vortex.tools.lfi`
 * :mod:`vortex.tools.net`
 * :mod:`vortex.tools.odb`
