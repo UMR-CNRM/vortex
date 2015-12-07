@@ -210,8 +210,11 @@ def setenv(t, **kw):
 
     # Set some more environment variables from the 'target*.ini' file 
     if "LUSTRE_OPER" in t.env:
-        t.env.setvar("MTOOLDIR", "/" + t.env["LUSTRE_OPER"] + tg.get('op:MTOOLDIR'))
-        t.env.setvar("DATADIR", "/" + t.env["LUSTRE_OPER"] + tg.get('op:datadir'))
+        lustre_oper = "/" + t.env["LUSTRE_OPER"]
+        t.env.setvar("MTOOLDIR", lustre_oper + tg.get('op:MTOOLDIR'))
+        t.env.setvar("DATADIR", lustre_oper + tg.get('op:datadir'))
+        if t.env.OP_GCOCACHE is None:
+            t.env.setvar("OP_GCOCACHE", lustre_oper + tg.get('gco:gcocache'))
     else:
         logger.warning('No "LUSTRE_OPER" variable in the environment, unabale to export MTOOLDIR and datadir')
 
@@ -297,17 +300,17 @@ def register(t, cycle, dump=True):
     if cycle in genv.cycles():
         logger.warning('Cycle %s already registred', cycle)
     else:
-        if t.env.OP_ROOTAPP:
-            genvdef = t.sh.path.join(t.env.OP_ROOTAPP, 'genv', cycle + '.genv')
-            if t.sh.path.exists(genvdef):
-                logger.info('Fill GCO cycle with file <%s>', genvdef)
-                genv.autofill(cycle, t.sh.cat(genvdef, output=True))
-            else:
-                logger.error('No contents defined for cycle %s', cycle)
-                raise ValueError('Bad cycle value')
+        if t.env.OP_GCOCACHE:
+            genvdef = t.sh.path.join(t.env.OP_GCOCACHE, 'genv', cycle + '.genv')
         else:
-            logger.warning('OP context without OP_ROOTAPP variable')
+            logger.warning('OP context without OP_GCOCACHE variable')
             genv.autofill(cycle)
+        if t.sh.path.exists(genvdef):
+            logger.info('Fill GCO cycle with file <%s>', genvdef)
+            genv.autofill(cycle, t.sh.cat(genvdef, output=True))
+        else:
+            logger.error('No contents defined for cycle %s or bad opcycle path %s', cycle, genvdef)
+            raise ValueError('Bad cycle value')
         if dump:
             print genv.as_rawstr(cycle=cycle)
 
