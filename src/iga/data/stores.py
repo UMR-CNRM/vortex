@@ -13,8 +13,6 @@ from vortex.syntax.stdattrs import DelayedEnvValue
 from gco.data.stores import GcoCacheStore
 
 
-
-
 class IgaGcoCacheStore(GcoCacheStore):
     """Some kind of cache for GCO components in OP context."""
 

@@ -15,6 +15,7 @@ from vortex.tools.actions import actiond as ad
 
 from iga.util import swissknife
 
+
 def setup(**kw):
     """
     Open a new vortex session with an op profile,
@@ -216,9 +217,8 @@ def setenv(t, **kw):
         if t.env.OP_GCOCACHE is None:
             t.env.setvar("OP_GCOCACHE", lustre_oper + tg.get('gco:gcocache'))
     else:
-        logger.warning('No "LUSTRE_OPER" variable in the environment, unabale to export MTOOLDIR and datadir')
+        logger.warning('No "LUSTRE_OPER" variable in the environment, unable to export MTOOLDIR and datadir')
 
-    
     logger.info('Global op variables found: %d', nb_op)
 
     #--------------------------------------------------------------------------------------------------
