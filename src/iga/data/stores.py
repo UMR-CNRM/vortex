@@ -65,8 +65,8 @@ class IgaFinder(Finder):
             rootdir = dict(
                 alias    = [ 'opdata', 'datadir' ],
                 optional = True,
-                default  = '/chaine/mxpt001'
-            )
+                default  = DelayedEnvValue('DATADIR'),
+            ),
         ),
         priority = dict(
             level = footprints.priorities.top.OPER

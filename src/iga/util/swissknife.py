@@ -43,7 +43,7 @@ def mkjob(t, **kw):
     opts = dict(
         python    = '/usr/bin/python',
         pyopts    = '-u',
-        profile   = 'research',
+        profile   = None,
         template  = 'job-default.tpl',
         inifile   = 'job-default.ini',
         exclusive = 'exclusive',
@@ -54,7 +54,7 @@ def mkjob(t, **kw):
         home      = t.env.HOME,
         rundate   = None,
         runtime   = None,
-        runstep   = None,
+        runstep   = 1,
         taskconf  = None,
         wrap      = True,
         verbose   = True,

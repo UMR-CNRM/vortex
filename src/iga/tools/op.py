@@ -15,6 +15,7 @@ from vortex.tools.actions import actiond as ad
 
 from iga.util import swissknife
 
+
 def setup(**kw):
     """
     Open a new vortex session with an op profile,
@@ -31,8 +32,8 @@ def setup(**kw):
 
     #Symlink to job's last execution log in op's resul directory
     if "SLURM_JOB_NAME" in t.env():
-        if t.sh.path.exists('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf'):
-            t.sh.remove('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
+        if t.sh.path.islink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf'):
+            t.sh.unlink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
         if "__log_sbatch" in t.env():
             t.sh.softlink(t.env["__log_sbatch"], '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
 
@@ -210,11 +211,14 @@ def setenv(t, **kw):
 
     # Set some more environment variables from the 'target*.ini' file 
     if "LUSTRE_OPER" in t.env:
-        t.env.setvar("MTOOLDIR", "/" + t.env["LUSTRE_OPER"] + tg.get('op:MTOOLDIR'))
+        lustre_oper = "/" + t.env["LUSTRE_OPER"]
+        t.env.setvar("MTOOLDIR", lustre_oper + tg.get('op:MTOOLDIR'))
+        t.env.setvar("DATADIR", lustre_oper + tg.get('op:datadir'))
+        if t.env.OP_GCOCACHE is None:
+            t.env.setvar("OP_GCOCACHE", lustre_oper + tg.get('gco:gcocache'))
     else:
-        logger.warning('No "LUSTRE_OPER" variable in the environment, unabale to export MTOOLDIR')
+        logger.warning('No "LUSTRE_OPER" variable in the environment, unable to export MTOOLDIR and datadir')
 
-    
     logger.info('Global op variables found: %d', nb_op)
 
     #--------------------------------------------------------------------------------------------------
@@ -296,17 +300,17 @@ def register(t, cycle, dump=True):
     if cycle in genv.cycles():
         logger.warning('Cycle %s already registred', cycle)
     else:
-        if t.env.OP_ROOTAPP:
-            genvdef = t.sh.path.join(t.env.OP_ROOTAPP, 'genv', cycle + '.genv')
-            if t.sh.path.exists(genvdef):
-                logger.info('Fill GCO cycle with file <%s>', genvdef)
-                genv.autofill(cycle, t.sh.cat(genvdef, output=True))
-            else:
-                logger.error('No contents defined for cycle %s', cycle)
-                raise ValueError('Bad cycle value')
+        if t.env.OP_GCOCACHE:
+            genvdef = t.sh.path.join(t.env.OP_GCOCACHE, 'genv', cycle + '.genv')
         else:
-            logger.warning('OP context without OP_ROOTAPP variable')
+            logger.warning('OP context without OP_GCOCACHE variable')
             genv.autofill(cycle)
+        if t.sh.path.exists(genvdef):
+            logger.info('Fill GCO cycle with file <%s>', genvdef)
+            genv.autofill(cycle, t.sh.cat(genvdef, output=True))
+        else:
+            logger.error('No contents defined for cycle %s or bad opcycle path %s', cycle, genvdef)
+            raise ValueError('Bad cycle value')
         if dump:
             print genv.as_rawstr(cycle=cycle)
 
@@ -354,10 +358,10 @@ def fulltraceback(localsd=None):
 def oproute_hook_factory(kind, productid, sshhost, areafilter=None):
     """Hook functions factory to route files while the execution is running"""
 
-    def hook_report(t, rh):
+    def hook_route(t, rh):
         if (areafilter is None) or (rh.resource.geometry.area in areafilter):
             ad.route(kind=kind, productid=productid, sshhost=sshhost, domain=rh.resource.geometry.area, term=rh.resource.term, filename=rh.container.basename) 
             print t.prompt, 'routing file = ', rh
 
-    return hook_report
+    return hook_route
 

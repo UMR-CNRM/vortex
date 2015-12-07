@@ -29,6 +29,7 @@ def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
              )
          )
     elif cutoff == 'production' and vconf not in _arpcourt_vconf:
+       
         suffix_r0 = 'rAM' if model == 'arpege' else 'rCM'
         map_suffix = dict(
             zip(
@@ -70,10 +71,14 @@ def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
 def gribNames(cutoff, reseau, model, run=None, vapp=None, vconf=None):
     logger.debug('model %s run %s', model, run)
     if model == 'arome':
+        if reseau == 0:
+            suffix_0 = 'CM'
+        else:
+             suffix_0 = 'AM'
         map_suffix = dict(
             zip(
                 range(0, 24, 3),
-                map('r'.__add__, ('AM', 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU'))
+                map('r'.__add__, (suffix_0, 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU'))
             )
         )
         prefix = 'GRID'
