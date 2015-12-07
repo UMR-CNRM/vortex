@@ -20,16 +20,11 @@ from common.tools.igastuff import IgakeyFactoryInline
 import iga.util.bpnames as bp
 
 #: TODO move in config file
-ATM_LIST_ONE = set([
-    'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie', 'polynesie',
-    'restart_cep', 'reunion', 'ssmice', 'varpack'
-])
+ATM_LIST_ONE = {'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie',
+                'polynesie', 'restart_cep', 'reunion', 'ssmice', 'varpack'}
 
 #: TODO move in config file
-ATM_LIST_TWO = set([
-    'perle_arp', 'perle_ifs', 'perle_arom',
-    'ctbto', 'mocchim', 'mocvolc'
-])
+ATM_LIST_TWO = {'perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim', 'mocvolc'}
 
 
 class SopranoModelError(ValueError):
