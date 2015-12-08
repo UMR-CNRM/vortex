@@ -10,6 +10,8 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.layout.nodes import Task
 from vortex.tools.actions import actiond as ad
+from vortex.tools.systems import ExecutionError
+from vortex.algo.components import DelayedAlgoComponentError
 
 from . import op
 
@@ -21,13 +23,17 @@ class OpTask(Task):
 
     def component_runner(self, tbalgo, tbx, **kwargs):
         """Run the binaries listed in tbx using the tbalgo algo component."""
+        
         for binary in tbx:
             try:
                 tbalgo.run(binary, **kwargs)
-            except StandardError:
+            except DelayedAlgoComponentError, ExecutionError:
                 reseau = self.conf.rundate.hh
+                logpath = self.env.LOG
+                rundir  = self.env.getvar('RUNDIR') + '/opview/' + self.tag
+                listing = rundir + '/NODE.001_01'
                 self.sh.header('Send a mail due to an execution error')
-                ad.opmail(reseau=reseau, task=self.tag, id = 'execution_error')
+                ad.opmail(reseau=reseau, task=self.tag, id = 'execution_error', log=logpath, rundir=rundir, listing=listing)
                 raise
 
     def register_cycle(self, cycle):
@@ -54,8 +60,11 @@ class OpTaskMPI(OpTask):
         for binary in tbx:
             try:
                 tbalgo.run(binary, mpiopts = mpiopts, **kwargs)
-            except StandardError:
-                reseau = self.conf.rundate.hh
+            except DelayedAlgoComponentError, ExecutionError:
+                reseau  = self.conf.rundate.hh
+                logpath = self.env.LOG
+                rundir  = self.env.RUNDIR + '/opview/' + self.tag
+                listing = rundir + '/NODE.001_01'
                 self.sh.header('Send a mail due to an execution error')
-                ad.opmail(reseau=reseau, task=self.tag, id = 'execution_error')
+                ad.opmail(reseau=reseau, task=self.tag, id = 'execution_error', log=logpath, rundir=rundir, listing=listing)
                 raise
