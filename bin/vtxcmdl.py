@@ -16,7 +16,7 @@ This scripts only supports two notations for the command line:
 
 from __future__ import print_function
 
-argparse_epilog='''
+argparse_epilog = '''
 Examples:
 
 vtxget.py --local toto_[geometry:area] --kind=gridpoint --format=grib \\
@@ -42,7 +42,7 @@ vortex.toolbox.rload(local='toto_[geometry:area]',
                      nativefmt='[format]')
 
 One can see that namespace, vapp, vconf, model and nativefmt are automaticaly
-taken from the defaults. The user can override the defaults from the 
+taken from the defaults. The user can override the defaults from the
 command-line.
 
 The `rangex` utility function can be specified directly on the command-line.
@@ -62,6 +62,11 @@ import sys
 import os
 import re
 import traceback
+
+# Automatically set the python path
+vortexbase = os.path.dirname(os.path.abspath(__file__)).rstrip('/bin')
+sys.path.insert(0, os.path.join(vortexbase, 'site'))
+sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 import footprints as fp
 import vortex
