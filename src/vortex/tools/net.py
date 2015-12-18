@@ -165,6 +165,9 @@ class StdFtp(object):
             nrc = netrc()
             if nrc:
                 auth = nrc.authenticators(self.host)
+                if not auth:
+                    # self.host may be a FQDN, try to guess only the hostname
+                    auth = nrc.authenticators(self.host.split('.')[0])
                 if auth:
                     self._logname = auth[0]
                     self.stderr('netrc', self._logname)
