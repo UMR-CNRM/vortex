@@ -60,7 +60,7 @@ class Forecast(IFSParallel):
 
         if analysis:
             analysis  = analysis.pop()
-            thismonth = analysis.resource.date.month
+            thismonth = analysis.rh.resource.date.month
 
             def checkmonth(actualrh):
                 return bool(actualrh.resource.month == thismonth)
@@ -275,7 +275,6 @@ class FullPosBDAP(FullPos):
             ),
         )
     )
-
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""

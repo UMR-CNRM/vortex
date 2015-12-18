@@ -49,8 +49,8 @@ class Coupling(IFSParallel):
     def prepare(self, rh, opts):
         """Default pre-link for namelist file and domain change."""
         super(Coupling, self).prepare(rh, opts)
-        namrh = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
-        for nam in [ x for x in namrh if 'NAMFPC' in x.contents ]:
+        namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
+        for nam in [ x.rh for x in namsec if 'NAMFPC' in x.rh.contents ]:
             logger.info('Substitute "AREA" to CFPDOM namelist entry')
             nam.contents['NAMFPC']['CFPDOM'] = 'AREA'
             nam.save()
@@ -60,20 +60,21 @@ class Coupling(IFSParallel):
 
         sh = self.system
 
-        cplrh = [ x.rh for x in self.context.sequence.effective_inputs(
+        cplsec = self.context.sequence.effective_inputs(
             role = ('InitialCondition', 'CouplingSource'),
             kind = ('historic', 'analysis')
-        ) ]
-        cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
+        )
+        cplsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
 
-        cplguess = [ x.rh for x in self.context.sequence.effective_inputs(role = 'Guess') ]
-        cplguess.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
+        cplguess = self.context.sequence.effective_inputs(role = 'Guess')
+        cplguess.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
 
         guessing = bool(cplguess)
 
         basedate = self.basedate or self.env.YYYYMMDDHH
 
-        for r in cplrh:
+        for sec in cplsec:
+            r = sec.rh
             sh.subtitle('Loop on {0:s}'.format(str(r.resource)))
 
             # Set a local storage place
@@ -88,14 +89,14 @@ class Coupling(IFSParallel):
             sh.softlink(r.container.localpath(), 'ICMSHFPOSINIT')
 
             # Expect the coupling source to be there...
-            self.grab(r, comment='coupling source')
+            self.grab(sec, comment='coupling source')
 
             # The output could be an input as well
             if cplguess:
                 cplout  = cplguess.pop(0)
-                cplpath = cplout.container.localpath()
+                cplpath = cplout.rh.container.localpath()
                 if sh.path.exists(cplpath):
-                    actualdate = cplout.resource.date + cplout.resource.term
+                    actualdate = cplout.rh.resource.date + cplout.rh.resource.term
                     # Expect the coupling guess to be there...
                     self.grab(cplout, comment='coupling guess')
                     logger.info('Coupling with existing guess <%s>', cplpath)
@@ -143,7 +144,7 @@ class Coupling(IFSParallel):
                 )
                 if sh.path.exists(posfile):
                     sh.rm(posfile)
-                expected = [ x for x in self.promises if x.container.localpath() == actualname ]
+                expected = [ x for x in self.promises if x.rh.container.localpath() == actualname ]
                 if expected:
                     locpwd = sh.getcwd()
                     sh.cd(runstore)
@@ -169,4 +170,3 @@ class Coupling(IFSParallel):
             sh.move(cplfile, sh.path.basename(cplfile), fmt='lfi')
         sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')
         sh.dir(output=False)
-

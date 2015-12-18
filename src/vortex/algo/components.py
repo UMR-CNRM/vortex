@@ -106,7 +106,7 @@ class AlgoComponent(footprints.FootprintBase):
         """Build and return list of actual promises of the current component."""
         if self._promises is None:
             self._promises = [
-                x.rh for x in self.context.sequence.outputs()
+                x for x in self.context.sequence.outputs()
                 if x.rh.provider.expected
             ]
         return self._promises
@@ -116,7 +116,7 @@ class AlgoComponent(footprints.FootprintBase):
         """Return the list of really expected inputs."""
         if self._expected is None:
             self._expected = [
-                x.rh for x in self.context.sequence.effective_inputs()
+                x for x in self.context.sequence.effective_inputs()
                 if x.rh.is_expected()
             ]
         return self._expected
@@ -131,16 +131,16 @@ class AlgoComponent(footprints.FootprintBase):
         print "\n".join(traceback.format_tb(exc_traceback))
         self._delayed_excs.append(exc)
 
-    def grab(self, rh, comment='resource', fatal=True, sleep=10, timeout=None):
+    def grab(self, sec, comment='resource', sleep=10, timeout=None):
         """Wait for a given resource and get it if expected."""
-        local = rh.container.localpath()
+        local = sec.rh.container.localpath()
         self.system.header('Wait for ' + comment + ' ... [' + local + ']')
         if timeout is None:
             timeout = self.timeout
-        if rh.wait(timeout=timeout, sleep=sleep):
-            if rh.is_expected():
-                rh.get(incache=True, insitu=False, fatal=fatal)
-        elif fatal:
+        if sec.rh.wait(timeout=timeout, sleep=sleep):
+            if sec.rh.is_expected():
+                sec.get(incache=True)
+        elif sec.fatal:
             logger.critical('Missing expected resource <%s>', local)
             raise ValueError('Could not get ' + local)
         else:
@@ -179,14 +179,14 @@ class AlgoComponent(footprints.FootprintBase):
         actual_args = list()
         for arg in self.flyput_args():
             logger.info('Check arg <%s>', arg)
-            if any([ x.container.basename.startswith(arg) for x in self.promises ]):
+            if any([ x.rh.container.basename.startswith(arg) for x in self.promises ]):
                 logger.info(
                     'Match some promise %s',
-                    str([ x.container.basename for x in self.promises if x.container.basename.startswith(arg) ])
+                    str([ x.rh.container.basename for x in self.promises if x.rh.container.basename.startswith(arg) ])
                 )
                 actual_args.append(arg)
             else:
-                logger.info('Do not match any promise %s', str([ x.container.basename for x in self.promises ]))
+                logger.info('Do not match any promise %s', str([ x.rh.container.basename for x in self.promises ]))
         return actual_args
 
     def flyput_sleep(self):
@@ -215,7 +215,7 @@ class AlgoComponent(footprints.FootprintBase):
                 data = [ x for x in data if x ]
                 logger.info('Polling retrieved data %s', str(data))
                 for thisdata in data:
-                    candidates = [ x for x in self.promises if x.container.basename == thisdata ]
+                    candidates = [ x for x in self.promises if x.rh.container.basename == thisdata ]
                     if candidates:
                         logger.info('Polled data is promised <%s>', thisdata)
                         bingo = candidates.pop()
@@ -427,27 +427,28 @@ class AlgoComponent(footprints.FootprintBase):
 
     def setlink(self, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
         """Set a symbolic link for actual resource playing defined role."""
-        initrh = [
-            x.rh for x in self.context.sequence.effective_inputs(role=initrole, kind=initkind)
+        initsec = [
+            x for x in self.context.sequence.effective_inputs(role=initrole, kind=initkind)
             if inittest(x.rh)
         ]
 
-        if not initrh:
+        if not initsec:
             logger.warning(
                 'Could not find logical role %s with kind %s - assuming already renamed',
                 initrole, initkind
             )
 
-        if len(initrh) > 1:
-            logger.warning('More than one role %s with kind %s %s', initrole, initkind, initrh)
+        if len(initsec) > 1:
+            logger.warning('More than one role %s with kind %s %s',
+                           initrole, initkind, initsec.rh)
 
         if initname is not None:
-            for l in [ x.container.localpath() for x in initrh ]:
+            for l in [ x.rh.container.localpath() for x in initsec ]:
                 if not self.system.path.exists(initname):
                     self.system.symlink(l, initname)
                     break
 
-        return initrh
+        return initsec
 
 
 class Expresso(AlgoComponent):
