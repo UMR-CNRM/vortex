@@ -4,8 +4,6 @@
 #: No automatic export
 __all__ = []
 
-import tempfile
-
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -19,7 +17,7 @@ class GcoCentralStore(Store):
     Extended footprint:
 
     * scheme (in values: ``gget``)
-    * netloc (in values: ``gco.meteo.fr``) 
+    * netloc (in values: ``gco.meteo.fr``)
     """
 
     _footprint = dict(
@@ -192,7 +190,7 @@ class GcoCacheStore(CacheStore):
             rc = self.incacheget(remote, local, options)
             if rc and not self.system.path.isdir(local) and self.system.is_tarfile(local):
                 destdir = self.system.path.dirname(self.system.path.realpath(local))
-                unpacked = self.system.smartuntar(local, destdir, output=False)
+                self.system.smartuntar(local, destdir, output=False)
             return rc
 
     def ggetput(self, local, remote, options):
@@ -200,7 +198,7 @@ class GcoCacheStore(CacheStore):
         extract = remote['query'].get('extract', None)
         if extract:
             logger.warning('Skip cache put with extracted %s', extract)
-            return True
+            return False
         else:
             return self.incacheput(local, remote, options)
 
