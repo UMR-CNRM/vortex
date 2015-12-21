@@ -22,22 +22,25 @@ _STORES_OBSBOARD = 'Stores-Activity'
 
 
 # Module Interface
-
 def get(**kw):
     """Return actual context object matching description."""
     return Context(**kw)
+
 
 def keys():
     """Return the list of current context tags."""
     return Context.tag_keys()
 
+
 def values():
     """Return the list of current context values."""
     return Context.tag_values()
 
+
 def items():
     """Return the items of the contexts table."""
     return Context.tag_items()
+
 
 def focus():
     """Return the context with the focus on, if any."""
@@ -47,7 +50,61 @@ def focus():
     return tf
 
 
-class Context(footprints.util.GetByTag):
+class ContextObserverRecorder(footprints.observers.Observer):
+
+    def __init__(self):
+        self._binded_context = None
+        self._tracker_recorder = None
+        self._stages_recorder = None
+
+    def __del__(self):
+        self.unregister()
+
+    def __getstate__(self):
+        # Objects have to be unregistered before being pickled
+        self.unregister()
+        return self.__dict__
+
+    def register(self, context):
+        self._binded_context = context
+        self._tracker_recorder = dataflow.LocalTracker()
+        self._stages_recorder = list()
+        footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
+        footprints.observers.get(tag=_STORES_OBSBOARD).register(self)
+
+    def unregister(self):
+        if self._binded_context is not None:
+            self._binded_context = None
+            footprints.observers.get(tag=_RHANDLERS_OBSBOARD).unregister(self)
+            footprints.observers.get(tag=_STORES_OBSBOARD).unregister(self)
+
+    def updobsitem(self, item, info):
+        if (self._binded_context is not None) and self._binded_context.has_focus():
+            logger.debug('Recording upd item %s', item)
+            if info['observerboard'] == _RHANDLERS_OBSBOARD:
+                processed_item = item.as_dict()
+                self._stages_recorder.append((processed_item, info))
+                self._tracker_recorder.update_rh(item, info)
+            elif info['observerboard'] == _STORES_OBSBOARD:
+                self._tracker_recorder.update_store(item, info)
+
+    def replay_in(self, context):
+        """Replays the observer's record in a given context"""
+        # First the stages of the sequence
+        if self._stages_recorder:
+            logger.info('The recorder is replaying stages for context <%s>', context.tag)
+            rhdicts = [ section.rh.as_dict() for section in context.sequence ]
+            for (pr_item, info) in self._stages_recorder:
+                for section, rhdict in zip(context.sequence, rhdicts):
+                    if rhdict == pr_item:
+                        section.updstage(info)
+        # Then the localtracker
+        if self._tracker_recorder is not None:
+            logger.info('The recorder is updating the LocalTracker for context <%s>', context.tag)
+            context.localtracker.append(self._tracker_recorder)
+
+
+class Context(footprints.util.GetByTag, footprints.observers.Observer):
     """Physical layout of a session or task, etc."""
 
     _tag_default = 'ctx'
@@ -94,14 +151,6 @@ class Context(footprints.util.GetByTag):
             if (self.void and info['observerboard'] == _RHANDLERS_OBSBOARD):
                 self._sequence.section(rh=item, stage='load')
 
-    def delobsitem(self, item, info):
-        """
-        Resources-Handlers / Store-Activity observing facility.
-        Should removed the associated section. Yet to be coded.
-        """
-        if self.has_focus():
-            logger.debug('Notified %s del item %s', self, item)
-
     def updobsitem(self, item, info):
         """
         Resources-Handlers / Store-Activity observing facility.
@@ -119,6 +168,11 @@ class Context(footprints.util.GetByTag):
             elif info['observerboard'] == _STORES_OBSBOARD:
                 # Update the local tracker
                 self._localtracker.update_store(item, info)
+
+    def get_recorder(self):
+        rec = ContextObserverRecorder()
+        rec.register(self)
+        return rec
 
     @property
     def path(self):

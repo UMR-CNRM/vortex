@@ -474,6 +474,12 @@ class LocalTrackerEntry(object):
         """
         self._data = dumpeddict
 
+    def append(self, anotherentry):
+        """Append the content of another LocalTrackerEntry object into this one."""
+        for internal in self._internals:
+            for act in self._actions:
+                self._data[internal][act].extend(anotherentry._data[internal][act])
+
     def latest_rhdict(self, action):
         """Return the dictionary that represents the latest :class:`~vortex.data.handlers.Handler` object involved.
 
@@ -647,6 +653,11 @@ class LocalTracker(defaultdict):
         self.clear()
         for loc, adict in indict.iteritems():
             self[loc].load_from_dict(adict)
+
+    def append(self, othertracker):
+        """Append the content of another LocalTracker object into this one."""
+        for loc, entry in othertracker.iteritems():
+            self[loc].append(entry)
 
     def __str__(self):
         out = ''
