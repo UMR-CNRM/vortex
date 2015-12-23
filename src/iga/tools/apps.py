@@ -32,8 +32,10 @@ class OpTask(Task):
                 logpath = self.env.LOG
                 rundir  = self.env.getvar('RUNDIR') + '/opview/' + self.tag
                 listing = rundir + '/NODE.001_01'
+                model   = t.env.getvar('OP_VAPP').upper()
+                conf    = t.env.getvar('OP_VCONF').upper()
                 self.sh.header('Send a mail due to an execution error')
-                ad.opmail(reseau=reseau, task=self.tag, id = 'execution_error', log=logpath, rundir=rundir, listing=listing)
+                ad.opmail(reseau=reseau, task=self.tag, id = 'execution_error', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf)
                 raise
 
     def register_cycle(self, cycle):
@@ -60,11 +62,13 @@ class OpTaskMPI(OpTask):
         for binary in tbx:
             try:
                 tbalgo.run(binary, mpiopts = mpiopts, **kwargs)
-            except DelayedAlgoComponentError, ExecutionError:
+            except DelayedAlgoComponentError, StandardError:
                 reseau  = self.conf.rundate.hh
                 logpath = self.env.LOG
                 rundir  = self.env.RUNDIR + '/opview/' + self.tag
                 listing = rundir + '/NODE.001_01'
+                model   = t.env.getvar('OP_VAPP').upper()
+                conf    = t.env.getvar('OP_VCONF').upper()
                 self.sh.header('Send a mail due to an execution error')
-                ad.opmail(reseau=reseau, task=self.tag, id = 'execution_error', log=logpath, rundir=rundir, listing=listing)
+                ad.opmail(reseau=reseau, task=self.tag, id = 'execution_error', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf)
                 raise

@@ -264,18 +264,20 @@ def report(t, try_ok=True, **kw):
     report  = t.context.sequence.inputs_report()
     logpath = t.env.getvar('LOG')
     rundir  = t.env.getvar('RUNDIR') + '/opview/' + task
+    model   = t.env.getvar('OP_VAPP').upper()
+    conf    = t.env.getvar('OP_VCONF').upper()
     if try_ok:
         t.sh.header('Input review')
         report.print_report(detailed=True)
         if any(report.active_alternates()):
             t.sh.header('Input informations: active alternates were found')
-            ad.opmail(reseau=reseau, task=task, id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir)
+            ad.opmail(reseau=reseau, task=task, id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf)
         else:
             t.sh.header('Input informations: everything is ok')
     else:
         t.sh.header('Input informations: input fail')
         report.print_report(detailed=True)
-        ad.opmail(reseau=reseau, task=task, id='input_fail', report=report.synthetic_report(), log=logpath, rundir=rundir)
+        ad.opmail(reseau=reseau, task=task, id='input_fail', report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf)
 
 
 class InputReportContext(object):
