@@ -71,11 +71,6 @@ def clone_fields(datain, dataout, sources, names=None, value=None, pack=None):
     return len(addfields)
 
 
-def _out_prepare(t, rh):
-    rh.container.updfill(True)
-    t.sh.chmod(rh.container.localpath(), 0644)
-
-
 def _env_prepare(t):
     localenv = t.sh.env.clone()
     localenv.active(True)
@@ -92,7 +87,6 @@ def _env_prepare(t):
 def addfield(t, rh, fieldsource, fieldtarget, constvalue):
     """Provider hook for adding a field through cloning."""
     if rh.container.exists():
-        _out_prepare(t, rh)
         localenv = _env_prepare(t)
         clone_fields(rh.contents.data, rh.contents.data,
                      fieldsource, names=fieldtarget, value=constvalue)
@@ -105,7 +99,6 @@ def addfield(t, rh, fieldsource, fieldtarget, constvalue):
 def copyfield(t, rh, rhsource, fieldsource, fieldtarget):
     """Provider hook for copying fields between FA files."""
     if rh.container.exists():
-        _out_prepare(t, rh)
         localenv = _env_prepare(t)
         clone_fields(rhsource.contents.data, rh.contents.data, fieldsource, fieldtarget)
         localenv.active(False)
