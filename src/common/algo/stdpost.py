@@ -66,12 +66,13 @@ class Fa2Grib(BlindRun):
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
 
-        gprh = [ x.rh for x in self.context.sequence.effective_inputs(role='Gridpoint', kind='gridpoint') ]
-        gprh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
+        gpsec = self.context.sequence.effective_inputs(role='Gridpoint', kind='gridpoint')
+        gpsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
 
         thisoutput = 'GRIDOUTPUT'
 
-        for r in gprh:
+        for sec in gpsec:
+            r = sec.rh
             self.system.title('Loop on domain {0:s} and term {1:s}'.format(
                 r.resource.geometry.area, r.resource.term.fmthm))
 
@@ -104,7 +105,7 @@ class Fa2Grib(BlindRun):
             self.system.cat(self.fortnam, output=False)
 
             # Expect the input FP file source to be there...
-            self.grab(r, comment='fullpos source')
+            self.grab(sec, comment='fullpos source')
 
             # Finaly set the actual init file
             self.system.softlink(r.container.localpath(), self.fortinput)
@@ -117,7 +118,7 @@ class Fa2Grib(BlindRun):
             if self.system.path.exists(thisoutput):
                 actualname = 'GRIB{0:s}+{1:s}'.format(r.resource.geometry.area, r.resource.term.fmthm)
                 self.system.move(thisoutput, actualname)
-                expected = [ x for x in self.promises if x.container.localpath() == actualname ]
+                expected = [ x for x in self.promises if x.rh.container.localpath() == actualname ]
                 for thispromise in expected:
                     thispromise.put(incache=True)
             else:
@@ -227,15 +228,16 @@ class DiagPI(BlindRun):
 
     def execute(self, rh, opts):
         """Loop on the various grib files provided."""
-        srcrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
-                                                                       kind='gridpoint') ]
-        srcrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
-        for r in srcrh:
+        srcsec = self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
+                                                        kind='gridpoint')
+        srcsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+        for sec in srcsec:
+            r = sec.rh
             self.system.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
                                                                            r.resource.term.fmthm))
             # Tweak the namelist
-            namrh = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
-            for nam in [ x for x in namrh if 'NAM_PARAM' in x.contents ]:
+            namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
+            for nam in [ x.rh for x in namsec if 'NAM_PARAM' in x.rh.contents ]:
                 logger.info("Substitute the date (%s) to AAAAMMJJHH namelist entry", r.resource.date.ymdh)
                 nam.contents['NAM_PARAM']['AAAAMMJJHH'] = r.resource.date.ymdh
                 logger.info("Substitute the the number of terms to NECH(0) namelist entry")
@@ -246,13 +248,13 @@ class DiagPI(BlindRun):
                 nam.save()
 
             # Expect the input grib file to be here
-            self.grab(r, comment='diagpi source')
+            self.grab(sec, comment='diagpi source')
             # Also link in previous grib files in order to compute some winter diagnostics
-            srcprh = [x.rh
-                      for x in self.context.sequence.effective_inputs(role=('Preview', 'Previous'),
-                                                                      kind='gridpoint')
-                      if x.rh.resource.term < r.resource.term]
-            for pr in srcprh:
+            srcpsec = [x
+                       for x in self.context.sequence.effective_inputs(role=('Preview', 'Previous'),
+                                                                       kind='gridpoint')
+                       if x.rh.resource.term < r.resource.term]
+            for pr in srcpsec:
                 self.grab(pr, comment='diagpi additional source for winter diag')
 
             # Standard execution
@@ -262,6 +264,6 @@ class DiagPI(BlindRun):
             # The diagnostic output may be promised
             actualname = 'GRIB_PI{0:s}+{1:s}'.format(r.resource.geometry.area,
                                                      r.resource.term.fmthm)
-            expected = [ x for x in self.promises if x.container.localpath() == actualname ]
+            expected = [ x for x in self.promises if x.rh.container.localpath() == actualname ]
             for thispromise in expected:
                 thispromise.put(incache=True)
