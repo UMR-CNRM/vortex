@@ -10,6 +10,9 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.layout.nodes import Task
 from vortex.tools.actions import actiond as ad
+from vortex.tools.systems import ExecutionError
+from vortex.algo.components import DelayedAlgoComponentError
+from vortex.util.interrupt import SignalInterruptError
 
 from . import op
 
@@ -24,11 +27,21 @@ class OpTask(Task):
         for binary in tbx:
             try:
                 tbalgo.run(binary, **kwargs)
-            except StandardError:
-                reseau = self.conf.rundate.hh
-                self.sh.header('Send a mail due to an execution error')
-                ad.opmail(reseau=reseau, task=self.tag, id = 'execution_error')
+            except (DelayedAlgoComponentError, ExecutionError,
+                    SignalInterruptError):
+                self.report_execution_error()
                 raise
+
+    def report_execution_error(self):
+        reseau = self.conf.rundate.hh
+        logpath = self.env.LOG
+        rundir  = self.env.getvar('RUNDIR') + '/opview/' + self.tag
+        listing = rundir + '/NODE.001_01'
+        model   = self.env.getvar('OP_VAPP').upper()
+        conf    = self.env.getvar('OP_VCONF').upper()
+        self.sh.header('Send a mail due to an execution error')
+        ad.opmail(reseau=reseau, task=self.tag, id ='execution_error', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf)
+        raise
 
     def register_cycle(self, cycle):
         """Register a given GCO cycle."""
@@ -54,8 +67,7 @@ class OpTaskMPI(OpTask):
         for binary in tbx:
             try:
                 tbalgo.run(binary, mpiopts = mpiopts, **kwargs)
-            except StandardError:
-                reseau = self.conf.rundate.hh
-                self.sh.header('Send a mail due to an execution error')
-                ad.opmail(reseau=reseau, task=self.tag, id = 'execution_error')
+            except (DelayedAlgoComponentError, ExecutionError,
+                    SignalInterruptError):
+                self.report_execution_error()
                 raise

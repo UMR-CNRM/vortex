@@ -219,6 +219,13 @@ def setenv(t, **kw):
     else:
         logger.warning('No "LUSTRE_OPER" variable in the environment, unable to export MTOOLDIR and datadir')
 
+    if "__log_sbatch" in t.env():
+        t.env.setvar("LOG", t.env["OP_ROOTAPP"] + '/logs/' + t.env["__log_sbatch"])
+    elif nb_slurm > 0: 
+        t.env.setvar("LOG", t.env["SLURM_SUBMIT_DIR"] + '/slurm-' + t.env["SLURM_JOB_ID"] + '.out') 
+    else:
+        t.env.setvar("LOG", None) 
+
     logger.info('Global op variables found: %d', nb_op)
 
     #--------------------------------------------------------------------------------------------------
@@ -253,20 +260,24 @@ def setenv(t, **kw):
 def report(t, try_ok=True, **kw):
     """Report status of the OP session (input review, mail diffusion...)."""
 
-    reseau = t.env.getvar('OP_RUNDATE').hh
-    task   = kw.get('task', 'unknown_task')
+    reseau  = t.env.getvar('OP_RUNDATE').hh
+    task    = kw.get('task', 'unknown_task')
+    report  = t.context.sequence.inputs_report()
+    logpath = t.env.getvar('LOG')
+    rundir  = t.env.getvar('RUNDIR') + '/opview/' + task
+    model   = t.env.getvar('OP_VAPP').upper()
+    conf    = t.env.getvar('OP_VCONF').upper()
+    report.print_report(detailed=True)
     if try_ok:
         t.sh.header('Input review')
-        report = t.context.sequence.inputs_report()
-        report.print_report(detailed=True)
         if any(report.active_alternates()):
             t.sh.header('Input informations: active alternates were found')
-            ad.opmail(reseau=reseau, task=task, id='mode_secours')
+            ad.opmail(reseau=reseau, task=task, id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf)
         else:
             t.sh.header('Input informations: everything is ok')
     else:
         t.sh.header('Input informations: input fail')
-        ad.opmail(reseau=reseau, task=task, id='input_fail')
+        ad.opmail(reseau=reseau, task=task, id='input_fail', report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf)
 
 
 class InputReportContext(object):
@@ -282,7 +293,7 @@ class InputReportContext(object):
     def __exit__(self, exc_type, exc_value, traceback):
         if isinstance(exc_value, StandardError):
             fulltraceback(dict(t=self._ticket))
-        report(self._ticket, exc_type is None, task=self._task)
+        report(self._ticket, exc_type is None, task=self._task.tag)
 
 
 def complete(t, **kw):

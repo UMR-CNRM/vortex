@@ -350,6 +350,27 @@ class SequenceInputsReport(object):
             true_rh = nominal.rh
         return status, true_rh, nominal.rh
 
+    def synthetic_report(self, detailed=False):
+        '''Returns a string that decribes each local resource with its status.
+
+        :param detailed: when alternates are used, tell which resource handler
+                         is actualy used and which one should have been used in
+                         the nominal case.
+        '''
+        outstr = ''
+        for local in sorted(self._local_map):
+            status, true_rh, nominal_rh = self._local_status(local)
+            extrainfo = ''
+            if status != self._Status.MISSING and (true_rh is not nominal_rh):
+                extrainfo = '(ALTERNATE USED)'
+            outstr += "* {:8s} {:16s} : {:s}\n".format(status, extrainfo, local)
+            if detailed and extrainfo != '':
+                outstr += "  * The following resource is used:\n"
+                outstr += true_rh.idcard(indent=6) + "\n"
+                outstr += "  * Instead of:"
+                outstr += nominal_rh.idcard(indent=6) + "\n"
+        return outstr
+
     def print_report(self, detailed=False):
         '''Print a list of each local resource with its status.
 
@@ -357,17 +378,7 @@ class SequenceInputsReport(object):
                          is actualy used and which one should have been used in
                          the nominal case.
         '''
-        for local in sorted(self._local_map):
-            status, true_rh, nominal_rh = self._local_status(local)
-            extrainfo = ''
-            if status != self._Status.MISSING and (true_rh is not nominal_rh):
-                extrainfo = '(ALTERNATE USED)'
-            print '* {:8s} {:16s} : {:s}'.format(status, extrainfo, local)
-            if detailed and extrainfo != '':
-                print "  * The following resource is used:"
-                true_rh.quickview(indent=2)
-                print "  * Instead of:"
-                nominal_rh.quickview(indent=2)
+        print self.synthetic_report(detailed=detailed)
 
     def active_alternates(self):
         '''List the local resource for which an alternative resource has been used.
