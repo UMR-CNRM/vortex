@@ -12,6 +12,7 @@ from vortex.layout.nodes import Task
 from vortex.tools.actions import actiond as ad
 from vortex.tools.systems import ExecutionError
 from vortex.algo.components import DelayedAlgoComponentError
+from vortex.util.interrupt import SignalInterruptError
 
 from . import op
 
@@ -23,20 +24,24 @@ class OpTask(Task):
 
     def component_runner(self, tbalgo, tbx, **kwargs):
         """Run the binaries listed in tbx using the tbalgo algo component."""
-        
         for binary in tbx:
             try:
                 tbalgo.run(binary, **kwargs)
-            except DelayedAlgoComponentError, ExecutionError:
-                reseau = self.conf.rundate.hh
-                logpath = self.env.LOG
-                rundir  = self.env.getvar('RUNDIR') + '/opview/' + self.tag
-                listing = rundir + '/NODE.001_01'
-                model   = t.env.getvar('OP_VAPP').upper()
-                conf    = t.env.getvar('OP_VCONF').upper()
-                self.sh.header('Send a mail due to an execution error')
-                ad.opmail(reseau=reseau, task=self.tag, id = 'execution_error', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf)
+            except (DelayedAlgoComponentError, ExecutionError,
+                    SignalInterruptError):
+                self.report_execution_error()
                 raise
+
+    def report_execution_error(self):
+        reseau = self.conf.rundate.hh
+        logpath = self.env.LOG
+        rundir  = self.env.getvar('RUNDIR') + '/opview/' + self.tag
+        listing = rundir + '/NODE.001_01'
+        model   = self.env.getvar('OP_VAPP').upper()
+        conf    = self.env.getvar('OP_VCONF').upper()
+        self.sh.header('Send a mail due to an execution error')
+        ad.opmail(reseau=reseau, task=self.tag, id ='execution_error', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf)
+        raise
 
     def register_cycle(self, cycle):
         """Register a given GCO cycle."""
@@ -62,13 +67,7 @@ class OpTaskMPI(OpTask):
         for binary in tbx:
             try:
                 tbalgo.run(binary, mpiopts = mpiopts, **kwargs)
-            except DelayedAlgoComponentError, StandardError:
-                reseau  = self.conf.rundate.hh
-                logpath = self.env.LOG
-                rundir  = self.env.RUNDIR + '/opview/' + self.tag
-                listing = rundir + '/NODE.001_01'
-                model   = t.env.getvar('OP_VAPP').upper()
-                conf    = t.env.getvar('OP_VCONF').upper()
-                self.sh.header('Send a mail due to an execution error')
-                ad.opmail(reseau=reseau, task=self.tag, id = 'execution_error', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf)
+            except (DelayedAlgoComponentError, ExecutionError,
+                    SignalInterruptError):
+                self.report_execution_error()
                 raise
