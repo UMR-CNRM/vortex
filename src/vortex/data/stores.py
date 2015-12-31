@@ -372,15 +372,22 @@ class MultiStore(footprints.FootprintBase):
         """Go through internal opened stores for the first available resource."""
         logger.debug('Multistore get from %s to %s', remote, local)
         rc = False
-        for num, sto in enumerate(self.openedstores):
-            logger.debug('Multistore get at %s', sto)
-            rc = sto.get(remote.copy(), local, options)
-            if rc:
-                if self.refillstore and num > 0:
+        refill_in_progress = True
+        while refill_in_progress:
+            for num, sto in enumerate(self.openedstores):
+                logger.debug('Multistore get at %s', sto)
+                rc = sto.get(remote.copy(), local, options)
+                # Are we trying a refill ?
+                refill_in_progress = rc and self.refillstore and num > 0
+                if refill_in_progress:
                     restore = self.openedstores[num - 1]
                     logger.info('Refill back in previous store [%s]', restore)
-                    rc = restore.put(local, remote.copy(), options)
-                break
+                    refill_in_progress = restore.put(local, remote.copy(), options)
+                if refill_in_progress:
+                    logger.info("Starting another round because the refill succeeded")
+                # Whatever the refill's outcome, that's fine
+                if rc:
+                    break
         return rc
 
     def put(self, local, remote, options=None):
