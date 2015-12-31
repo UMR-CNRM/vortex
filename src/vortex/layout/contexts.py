@@ -51,6 +51,16 @@ def focus():
 
 
 class ContextObserverRecorder(footprints.observers.Observer):
+    """Record events related to a given Context.
+
+    In order to start recording, this object should be associated with a
+    :obj:`Context` object using the :meth:`register` method. The recording will
+    be stopped when the :meth:`unregister` method is called. The recording is
+    automatically stopped whenever the object is pickled.
+
+    At any time, the `record` can be replayed in a given Context using the
+    :meth:`replay_in` method.
+    """
 
     def __init__(self):
         self._binded_context = None
@@ -66,6 +76,10 @@ class ContextObserverRecorder(footprints.observers.Observer):
         return self.__dict__
 
     def register(self, context):
+        """Associate a particular :obj:`Context` object and start recording.
+
+        :param context: The :obj:`Context` object that will be recorded.
+        """
         self._binded_context = context
         self._tracker_recorder = dataflow.LocalTracker()
         self._stages_recorder = list()
@@ -73,6 +87,7 @@ class ContextObserverRecorder(footprints.observers.Observer):
         footprints.observers.get(tag=_STORES_OBSBOARD).register(self)
 
     def unregister(self):
+        """Stop recording."""
         if self._binded_context is not None:
             self._binded_context = None
             footprints.observers.get(tag=_RHANDLERS_OBSBOARD).unregister(self)
@@ -89,7 +104,10 @@ class ContextObserverRecorder(footprints.observers.Observer):
                 self._tracker_recorder.update_store(item, info)
 
     def replay_in(self, context):
-        """Replays the observer's record in a given context"""
+        """Replays the observer's record in a given context.
+
+        :param context: The :obj:`Context` object where the record will be replayed.
+        """
         # First the stages of the sequence
         if self._stages_recorder:
             logger.info('The recorder is replaying stages for context <%s>', context.tag)
@@ -111,7 +129,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
 
     def __init__(self, path=None, topenv=None, sequence=None, localtracker=None,
                  task=None):
-        """Initate a new execution context."""
+        """Initiate a new execution context."""
         logger.debug('Context initialisation %s', self)
         if path is None:
             logger.critical('Try to define a new context without virtual path')
@@ -170,6 +188,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
                 self._localtracker.update_store(item, info)
 
     def get_recorder(self):
+        """Return a :obj:`ContextObserverRecorder` object recording the changes in this Context."""
         rec = ContextObserverRecorder()
         rec.register(self)
         return rec
@@ -220,7 +239,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
     def void(self):
         """
         Return whether the current context is a void context, and therefore not bound to a task.
-        One may be aware that this value could be temporarly overwritten through the record on/off mechanism.
+        One may be aware that this value could be temporarily overwritten through the record on/off mechanism.
         """
         return self._void
 
@@ -274,7 +293,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
     def newcontext(self, name, focus=False):
         """
         Create a new child context, attached to the current one.
-        The tagname of the new kid is given through the mandatory ``name`` arugument,
+        The tagname of the new kid is given through the mandatory ``name`` argument,
         as well as the default ``focus``.
         """
         newctx = self.__class__(tag=name, topenv=self.env, path=self.path)
@@ -317,7 +336,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         self._void = False
 
     def record_on(self):
-        """Restaure default value to void context as it was before any :func:`record_off` call."""
+        """Restore default value to void context as it was before any :func:`record_off` call."""
         self._void = self._record
 
     def clear_stamps(self):
