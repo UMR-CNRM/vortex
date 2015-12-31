@@ -193,7 +193,8 @@ class AlgoComponent(footprints.FootprintBase):
         """Return a sleeping time in seconds between io_poll commands."""
         return getattr(self, 'io_poll_sleep', self.env.get('IO_POLL_SLEEP', 20))
 
-    def flyput_job(self, io_poll_method, io_poll_args, event_complete, event_free):
+    def flyput_job(self, io_poll_method, io_poll_args, event_complete, event_free,
+                   queue_context):
         """Poll new data resources."""
         logger.info('Polling with method %s', str(io_poll_method))
         logger.info('Polling with args %s', str(io_poll_args))
@@ -201,9 +202,12 @@ class AlgoComponent(footprints.FootprintBase):
         time_sleep = self.flyput_sleep()
         redo = True
 
+        # Start recording the chnges in the current context
+        ctxrec = self.context.get_recorder()
+
         while redo and not event_complete.is_set():
-            data = list()
             event_free.clear()
+            data = list()
             try:
                 for arg in io_poll_args:
                     logger.info('Polling check arg %s', arg)
@@ -227,9 +231,15 @@ class AlgoComponent(footprints.FootprintBase):
                 redo = False
             finally:
                 event_free.set()
-            if redo and not data:
+            if redo and not data and not event_complete.is_set():
                 logger.info('Get asleep for %d seconds...', time_sleep)
                 self.system.sleep(time_sleep)
+
+        # Stop recording and send back the results
+        ctxrec.unregister()
+        logger.info('Sending the Context recorder to the master process.')
+        queue_context.put(ctxrec)
+        queue_context.close()
 
         if redo:
             logger.info('Polling exit on complete event')
@@ -239,7 +249,7 @@ class AlgoComponent(footprints.FootprintBase):
     def flyput_begin(self):
         """Launch a co-process to handle promises."""
 
-        nope = (None, None, None)
+        nope = (None, None, None, None)
         if not self.flyput:
             return nope
 
@@ -265,24 +275,37 @@ class AlgoComponent(footprints.FootprintBase):
         # Define events for a nice termination
         event_stop = multiprocessing.Event()
         event_free = multiprocessing.Event()
+        queue_ctx = multiprocessing.Queue()
 
         p_io = multiprocessing.Process(
             name   = self.footprint_clsname(),
             target = self.flyput_job,
-            args   = (io_poll_method, io_poll_args, event_stop, event_free),
+            args   = (io_poll_method, io_poll_args, event_stop, event_free, queue_ctx),
         )
 
         # The co-process is started
         p_io.start()
 
-        return (p_io, event_stop, event_free)
+        return (p_io, event_stop, event_free, queue_ctx)
 
-    def flyput_end(self, p_io, e_complete, e_free):
+    def flyput_end(self, p_io, e_complete, e_free, queue_ctx):
         """Wait for the co-process in charge of promises."""
         e_complete.set()
         logger.info('Waiting for polling process... <%s>', p_io.pid)
         t0 = date.now()
         e_free.wait(60)
+        # Get the Queue and update the context
+        time_sleep = self.flyput_sleep()
+        try:
+            # allow 5 sec to put data into queue (it should be more than enough)
+            ctxrec = queue_ctx.get(block=True, timeout=time_sleep + 5)
+        except multiprocessing.queues.Empty:
+            logger.warning("Impossible to get the Context recorder")
+            ctxrec = None
+        finally:
+            queue_ctx.close()
+        if ctxrec is not None:
+            ctxrec.replay_in(self.context)
         p_io.join(30)
         t1 = date.now()
         waiting = t1 - t0
@@ -315,7 +338,7 @@ class AlgoComponent(footprints.FootprintBase):
             self.env.osdump()
 
         # On-the-fly coprocessing initialisation
-        p_io, e_complete, e_free = self.flyput_begin()
+        p_io, e_complete, e_free, q_ctx = self.flyput_begin()
 
         sh.subtitle('{0:s} : directory listing (pre-execution)'.format(self.realkind))
         sh.remove('core')
@@ -330,7 +353,7 @@ class AlgoComponent(footprints.FootprintBase):
 
         # On-the-fly coprocessing cleaning
         if p_io:
-            self.flyput_end(p_io, e_complete, e_free)
+            self.flyput_end(p_io, e_complete, e_free, q_ctx)
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""

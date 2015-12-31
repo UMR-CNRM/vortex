@@ -26,6 +26,11 @@ Interface functions
 Classes
 -------
 
+.. autoclass:: ContextObserverRecorder
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
 .. autoclass:: Context
    :show-inheritance:
    :members:
