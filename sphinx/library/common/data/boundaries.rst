@@ -16,8 +16,18 @@ Package
 
 Classes
 -------
+
+.. autoclass:: _AbstractLAMBoundary
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
  
 .. autoclass:: LAMBoundary
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: EnhancedLAMBoundary
    :show-inheritance:
    :members:
    :member-order: alphabetical

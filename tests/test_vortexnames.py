@@ -53,6 +53,12 @@ class TestNameBuilder(unittest.TestCase):
                          'dummy.arpege-minim1')
         self.assertEqual(vb.pack(dict(src=['arpege', 'clim', {'month': 2}])),
                          'dummy.arpege-clim-m2')
+        self.assertEqual(vb.pack(dict(src=['arpege', 'clim',
+                                           {'cutoff': 'production'}])),
+                         'dummy.arpege-clim-prod')
+        self.assertEqual(vb.pack(dict(src=['arpege', 'clim',
+                                           {'cutoff': 'assim'}])),
+                         'dummy.arpege-clim-assim')
         # geo option:
         self.assertEqual(vb.pack(dict(geo=[{'stretching': 2.2},
                                            {'truncation': 789},

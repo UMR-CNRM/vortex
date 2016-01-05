@@ -20,21 +20,20 @@ _arpcourt_vconf = ('courtfr', 'frcourt', 'court')
 def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
     if cutoff == 'assim' and vconf not in _arpcourt_vconf:
         map_suffix = dict(
-             zip(
-                 zip(
-                     (cutoff,)*4,
-                     (0, 6, 12, 18)
-                 ),
-                 ('r00', 'r06', 'r12', 'r18')
-             )
-         )
+            zip(
+                zip(
+                    (cutoff,) * 4,
+                    (0, 6, 12, 18)
+                ),
+                ('r00', 'r06', 'r12', 'r18')
+            )
+        )
     elif cutoff == 'production' and vconf not in _arpcourt_vconf:
-       
         suffix_r0 = 'rAM' if model == 'arpege' else 'rCM'
         map_suffix = dict(
             zip(
                 zip(
-                    (cutoff,)*8,
+                    (cutoff,) * 8,
                     range(0, 24, 3)
                 ),
                 (suffix_r0, 'rTR', 'rSX', 'rNF', 'rPM', 'rQZ', 'rDH', 'rVU')
@@ -68,22 +67,19 @@ def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
     return model_info, suffix
 
 
-def gribNames(cutoff, reseau, model, run=None, vapp=None, vconf=None):
+def gribNames(cutoff, reseau, model, run=None, vapp=None, vconf=None,
+              force_courtfr=False):
     logger.debug('model %s run %s', model, run)
     if model == 'arome':
-        if reseau == 0:
-            suffix_0 = 'CM'
-        else:
-             suffix_0 = 'AM'
         map_suffix = dict(
             zip(
                 range(0, 24, 3),
-                map('r'.__add__, (suffix_0, 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU'))
+                map('r'.__add__, ('AM', 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU'))
             )
         )
         prefix = 'GRID'
         suffix = map_suffix[reseau]
-        if cutoff == 'short':
+        if force_courtfr:
             suffix = 'rCM'
     elif model == 'arpege' and run:
         map_suffix = dict(
@@ -98,19 +94,19 @@ def gribNames(cutoff, reseau, model, run=None, vapp=None, vconf=None):
         logger.debug('cutoff %s', cutoff)
         if cutoff == 'assim' and vconf not in _arpcourt_vconf:
             map_suffix = dict(
-                 zip(
-                     zip(
-                         (cutoff,)*4,
-                         (0, 6, 12, 18)
-                     ),
-                     ('00', '06', '12', '18')
-                 )
-             )
+                zip(
+                    zip(
+                        (cutoff,) * 4,
+                        (0, 6, 12, 18)
+                    ),
+                    ('00', '06', '12', '18')
+                )
+            )
         elif cutoff == 'production' and vconf not in _arpcourt_vconf:
             map_suffix = dict(
                 zip(
                     zip(
-                        (cutoff,)*4,
+                        (cutoff,) * 4,
                         (0, 6, 12, 18)
                     ),
                     ('rAM', 'rSX', 'rPM', 'rDH')
@@ -287,7 +283,7 @@ def varbc_bnames(resource, provider):
     elif model == "arome":
         suffix = '_aro'
     else:
-        raise ValueError ('Unknown model {:s} in varbc_bnames'.format(model))
+        raise ValueError('Unknown model {:s} in varbc_bnames'.format(model))
     if stage == 'merge':
         localname = 'VARBC.merge.' + str(reseau)
     else:
@@ -299,11 +295,15 @@ def boundary_bnames(resource, provider):
     """docstring for boundary_bnames"""
     cutoff, reseau, model, term = resource.cutoff, resource.date.hour, resource.model, resource.term
     if 'arome' in model:
-        u_prefix, suffix = gribNames(cutoff, reseau, model)
+        if hasattr(resource, 'source_conf'):
+            is_court = resource.source_conf in ('court', 'courtfr', 'frcourt')
+        else:
+            is_court = resource.date.hour == 0
+        _, suffix = gribNames(cutoff, reseau, model, force_courtfr=is_court)
         nw_term = "{0:03d}".format(term.hour)
         localname = 'ELSCFAROMALBC' + nw_term + '.' + suffix
     else:
-        u_model_info, suffix = faNames(cutoff, reseau, model)
+        _, suffix = faNames(cutoff, reseau, model)
         nw_term = "{0:03d}".format(resource.term.hour)
         localname = 'ELSCFALADALBC' + nw_term + '.' + suffix
     return localname

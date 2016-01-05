@@ -36,10 +36,11 @@ class TestFieldsGeoFields(unittest.TestCase):
         self.vb = VortexNameBuilder()
         self.geo = geometries.SpectralGeometry(tag='fgeo', kind='spectral',
                                                area='france', truncation=798,
-                                               stretching=2.4, lam=False)
+                                               stretching=2.4, lam=False,
+                                               new=True)
         self.geoL = geometries.SpectralGeometry(tag='fgeol', kind='spectral',
                                                 area='france', resolution=2.5,
-                                                runit='km', lam=True)
+                                                runit='km', lam=True, new=True)
 
     def test_geofields_names(self):
         # Global
