@@ -6,12 +6,11 @@ This module handles store objects in charge of physically accessing resources.
 Store objects use the :mod:`footprints` mechanism.
 """
 
-import ftplib
-
 #: Export base class
 __all__ = ['Store']
 
 import re
+import ftplib
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -616,7 +615,7 @@ class Finder(Store):
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             try:
-                rc = ftp.size(self.rootdir + remote['path'])
+                rc = ftp.size(self.fullpath(remote))
             except (ValueError, TypeError, ftplib.all_errors):
                 pass
             finally:
