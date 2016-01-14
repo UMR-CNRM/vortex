@@ -345,7 +345,13 @@ class utRangex(TestCase):
         rv = util.rangex('0-30-6,36-72-12')
         self.assertListEqual(rv, [0, 6, 12, 18, 24, 30, 36, 48, 60, 72])
 
+        rv = util.rangex(['0-30-6', '36-72-12'])
+        self.assertListEqual(rv, [0, 6, 12, 18, 24, 30, 36, 48, 60, 72])
+
         rv = util.rangex('0-30-6,36', 48, 12)
+        self.assertListEqual(rv, [0, 6, 12, 18, 24, 30, 36, 48])
+
+        rv = util.rangex(('0-30-6', 36), 48, 12)
         self.assertListEqual(rv, [0, 6, 12, 18, 24, 30, 36, 48])
 
         rv = util.rangex('-30--6-6,36')
@@ -369,6 +375,9 @@ class utRangex(TestCase):
 
     def test_rangex_comma(self):
         rv = util.rangex('0,4', 12, 3, 0)
+        self.assertListEqual(rv, [0, 3, 4, 6, 7, 9, 10, 12])
+
+        rv = util.rangex((0, 4), 12, 3, 0)
         self.assertListEqual(rv, [0, 3, 4, 6, 7, 9, 10, 12])
 
     def test_rangex_fmt(self):

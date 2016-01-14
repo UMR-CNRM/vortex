@@ -187,7 +187,9 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     """
     rangevalues = list()
 
-    for pstart in str(start).split(','):
+    pstarts = ([str(s) for s in start]
+               if isinstance(start, (list, tuple)) else str(start).split(','))
+    for pstart in pstarts:
 
         if re.search('_', pstart):
             prefix, realstart = pstart.split('_')
