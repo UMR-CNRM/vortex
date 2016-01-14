@@ -89,6 +89,7 @@ class Environment(object):
         self.__dict__['_frozen']  = (dict(), list())
         self.__dict__['_pool']    = dict()
         self.__dict__['_mods']    = set()
+        self.__dict__['_sh']      = None
         if env is not None and isinstance(env, Environment):
             self._pool.update(env)
             if verbose:
