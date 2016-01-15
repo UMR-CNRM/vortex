@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from vortex.util.structs import ReadOnlyDict
 
 #: Automatic export of Observations class
 __all__ = [ 'Observations' ]
 
 import re
+import itertools
 from collections import namedtuple
 
 import footprints
@@ -15,6 +15,7 @@ from vortex.data.flow     import SpectralGeoFlowResource, FlowResource
 from vortex.data.contents import TextContent, AlmostListContent
 from vortex.syntax        import stdattrs
 from vortex.tools.date    import Date
+from vortex.util.structs  import ReadOnlyDict
 
 from gco.syntax.stdattrs  import GenvKey
 
@@ -429,11 +430,33 @@ class Refdata(FlowResource):
 #: A namedtuple of the internal fields of an ObsMap file
 ObsMapItem = namedtuple('ObsMapItem', ('odb', 'data', 'fmt', 'instr'))
 
+
 class ObsMapContent(TextContent):
-    """Content class for obsmap resources."""
+    """Content class for the *ObsMap* resources.
+
+    The :class:`ObsMap` resource provides its *discard* attribute. This
+    attribute is a :class:`footprints.stdtypes.FPSet` object thats holds *odb:data* pairs
+    that will be used to discard some of the lines of the local resource. The
+    matching is done using regular expressions (however, when *:data* is
+    omitted, ':' is automativaly added at the end of the regular expression).
+    Here are some examples:
+
+    * ``discard=FPSet(('sev',))`` -> The *sev* ODB database will be discarded
+      (but the *seviri* database is kept).
+    * ``discard=FPSet(('radar', 'radar1'))`` -> Both the *radar* and *radar1*
+      ODB databases will be discarded.
+    * ``discard=FPSet(('radar1?', ))`` -> Same result as above.
+    * ``discard=FPSet(('conv:temp', ))`` -> Discard the *temp* data file that
+      would usualy be inserted in the *conv* database.
+    * ``discard=FPSet(('conv:temp', ))`` -> Discard the *temp* data file that
+      would usualy be inserted in the *conv* database.
+    * ``discard=FPSet(('conv:t[ea]', ))`` -> Discard the data file starting
+      with *te* or *ta* that would usualy be inserted in the *conv* database.
+    """
 
     @property
     def discarded(self):
+        """Set of *odb:data* pairs that will be discarded."""
         return self._discarded
 
     def append(self, item):
@@ -443,11 +466,17 @@ class ObsMapContent(TextContent):
     def slurp(self, container):
         """Get data from the ``container``."""
         container.rewind()
-        self.extend([
-            obs for obs in
-                [ ObsMapItem(*x.split()) for x in [ line.strip() for line in container ] if x and not x.startswith('#') ]
-            if obs.odb not in self.discarded
-        ])
+        filters = [re.compile(d if ':' in d else d + ':')
+                   for d in self.discarded]
+        self.extend(
+            itertools.ifilter(
+                lambda o: not any([f.match(':'.join([o.odb, o.data]))
+                                   for f in filters]),
+                [ObsMapItem(* x.split())
+                 for x in [ line.strip() for line in container ]
+                 if x and not x.startswith('#')]
+            )
+        )
 
     @classmethod
     def formatted_data(self, item):
@@ -494,10 +523,16 @@ class ObsMapContent(TextContent):
 
 
 class ObsMap(FlowResource):
-    """
+    """Observation mapping.
+
     Simple ascii table for the description of the mapping of
     observations set to ODB bases. The native format is :
     odb / data / fmt / instr.
+
+    The *discard* attribute is passed directly to the :class:`ObsMapContent`
+    object in charge of accessing this resource: It is used to discard some
+    of the lines of the *ObsMap* file (for more details see the 
+    :class:`ObsMapContent` class documentation)
     """
 
     _footprint = dict(
