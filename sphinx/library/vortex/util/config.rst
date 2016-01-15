@@ -40,3 +40,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: AppConfigStringDecoder
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
