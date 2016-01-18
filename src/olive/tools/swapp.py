@@ -6,6 +6,7 @@ __all__ = []
 
 import re
 import socket
+import string
 
 import footprints
 from vortex.tools import fortran
@@ -67,13 +68,13 @@ def olive_jobout(sh, env, output, localout=None):
         depot = env.MTOOL_STEP_DEPOT or env.MTOOL_STEP_STORE
         localout = ':'.join(
             [ x for x in sh.ls(depot + '/step.[0-9][0-9]') if (
-                sh.path.exists(x+'.done') and
+                sh.path.exists(x + '.done') and
                 int(re.search(r'\.(\d+)$', x).group(1)) < int(env.MTOOL_STEP)
             ) ]
         )
 
     localhost = sh.target().inetname
-    swapp_user, swapp_host, swapp_port = env.VORTEX_OUTPUT_ID.split(':')
+    _, swapp_host, swapp_port = env.VORTEX_OUTPUT_ID.split(':')
     user = env.VORTEX_TARGET_LOGNAME or env.TARGET_LOGNAME or env.SWAPP_USER or sh.getlogin()
 
     if 'VORTEX_SOCKET_TIMEOUT' in env:
@@ -101,9 +102,18 @@ def olive_jobout(sh, env, output, localout=None):
     return rc
 
 
-def olive_gnam_hook_factory(nickname, nam_delta):
+def olive_gnam_hook_factory(nickname, nam_delta, env=None):
     '''Hook functions factory to apply namelist delta on a given ressource.'''
-    namdelta_l = fortran.namparse(nam_delta)
+    if env is not None:
+        # If an Environment object is given: try to substitute variable
+        nam_delta = string.Template(nam_delta).substitute(env)
+
+    try:
+        namdelta_l = fortran.namparse(nam_delta)
+    except ValueError:
+        logger.critical("Error while parsing the following namelist delta:\n%s",
+                        nam_delta)
+        raise
 
     def olive_gnam_hook(t, namrh):
         t.sh.subtitle('Applying the following namelist patch {} to namelist {}'.format(nickname,
