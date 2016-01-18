@@ -84,7 +84,7 @@ class VortexNameBuilder(object):
 
     def pack_std_item_stretching(self, value):
         """Packing of the stretching factor in spectral geometry."""
-        return 'c' + str(int(value*10))
+        return 'c' + str(int(value * 10))
 
     def pack_std_item_truncation(self, value):
         """Packing of the geometry's truncation value."""
@@ -93,6 +93,11 @@ class VortexNameBuilder(object):
     def pack_std_item_filtering(self, value):
         """Packing of the geometry's filtering value."""
         return 'f' + str(value)
+
+    def pack_std_item_cutoff(self, value):
+        """Abbreviate the cutoff name."""
+        cutoff_map = dict(production='prod')
+        return cutoff_map.get(value, value)
 
     def pack_std_items(self, items):
         """

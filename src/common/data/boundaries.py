@@ -9,17 +9,18 @@ import re
 
 from vortex.tools import date, env
 from vortex.data.flow import SpectralGeoFlowResource
-from vortex.syntax.stdattrs import a_term
+from vortex.syntax.stdattrs import a_term, a_cutoff
 
 from common.tools.igastuff import archive_suffix
 
 
-class LAMBoundary(SpectralGeoFlowResource):
+class _AbstractLAMBoundary(SpectralGeoFlowResource):
     """
     Class of a coupling file for a Limited Area Model.
-    A SpectralGeometry object is needed and the source model is given in the footprint.
+    A SpectralGeometry object is needed.
     """
 
+    _abstract = True
     _footprint = dict(
         info = 'Coupling file for a limited area model',
         attr = dict(
@@ -32,15 +33,16 @@ class LAMBoundary(SpectralGeoFlowResource):
                 values  = ['fa', 'grib'],
                 default = 'fa',
             ),
-            source = dict(
-                values  = ['arpege', 'aladin', 'arome', 'ifs', 'ecmwf']
-            ),
         )
     )
 
     @property
     def realkind(self):
         return 'boundary'
+
+    @property
+    def _mysrc(self):
+        raise NotImplementedError
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
@@ -59,9 +61,10 @@ class LAMBoundary(SpectralGeoFlowResource):
         """OP ARCHIVE specific naming convention."""
         suffix = archive_suffix(self.model, self.cutoff, self.date)
         prefix = 'COUPL'
+        source = self._mysrc[0] if isinstance(self._mysrc, list) else self._mysrc
         if re.match('assist1bis|testms1', self.geometry.area):
             prefix = 'COUPL1'
-        if re.match('ifs|ecmwf', self.source) and '16km' in self.geometry.rnice:
+        if re.match('ifs|ecmwf', source) and '16km' in self.geometry.rnice:
             prefix = 'COUPLIFS'
 
         return prefix + self.term.fmthour + '.r' + str(suffix)
@@ -71,7 +74,7 @@ class LAMBoundary(SpectralGeoFlowResource):
         return dict(
             fmt     = self.nativefmt,
             geo     = [self.geometry.area, self.geometry.rnice],
-            src     = self.source,
+            src     = self._mysrc,
             radical = 'cpl',
             term    = self.term.fmthm,
         )
@@ -87,3 +90,49 @@ class LAMBoundary(SpectralGeoFlowResource):
             model     = self.model,
             nativefmt = self.nativefmt,
         )
+
+
+class LAMBoundary(_AbstractLAMBoundary):
+    """
+    Class of a coupling file for a Limited Area Model.
+    A SpectralGeometry object is needed and the source model is given in the footprint.
+    """
+
+    _footprint = dict(
+        attr = dict(
+            source = dict(
+                values  = ['arpege', 'aladin', 'arome', 'ifs', 'ecmwf']
+            ),
+        )
+    )
+
+    @property
+    def _mysrc(self):
+        return self.source
+
+
+_a_source_cutoff = a_cutoff
+del _a_source_cutoff['alias']
+_a_source_cutoff['optional'] = True
+_a_source_cutoff['default'] = 'production'
+
+
+class EnhancedLAMBoundary(_AbstractLAMBoundary):
+    """
+    Class of a coupling file for a Limited Area Model.
+    A SpectralGeometry object is needed and the source app, source conf and
+    source cutoff is given in the footprint.
+    """
+
+    _footprint = dict(
+        attr = dict(
+            source_app = dict(),
+            source_conf = dict(),
+            source_cutoff = _a_source_cutoff,
+        )
+    )
+
+    @property
+    def _mysrc(self):
+        return [self.source_app, self.source_conf,
+                {'cutoff': self.source_cutoff}]
