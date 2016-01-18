@@ -705,7 +705,8 @@ class OSExtended(System):
     @fmtshcmd
     def ftget(self, source, destination, hostname=None, logname=None):
         """Proceed direct ftp get on the specified target."""
-        self.rm(destination)
+        if isinstance(destination, basestring):  # destination may be Virtual
+            self.rm(destination)
         ftp = self.ftp(hostname, logname)
         if ftp:
             rc = ftp.get(source, destination)

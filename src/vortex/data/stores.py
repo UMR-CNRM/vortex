@@ -578,6 +578,11 @@ class Finder(Store):
         else:
             return remote['path']
 
+    def _localtarfix(self, local):
+        if isinstance(local, basestring) and self.system.is_tarfile(local):
+            destdir = self.system.path.dirname(self.system.path.realpath(local))
+            self.system.smartuntar(local, destdir, output=False)
+
     def filecheck(self, remote, options):
         """Returns a stat-like object if the ``remote`` exists on the ``system`` provided."""
         try:
@@ -595,7 +600,10 @@ class Finder(Store):
         rpath = self.fullpath(remote)
         if 'intent' in options and options['intent'] == dataflow.intent.IN:
             logger.info('Ignore intent <in> for remote input %s', rpath)
-        return self.system.cp(rpath, local, fmt=options.get('fmt'), intent=dataflow.intent.INOUT)
+        rc = self.system.cp(rpath, local, fmt=options.get('fmt'), intent=dataflow.intent.INOUT)
+        if rc:
+            self._localtarfix(local)
+        return rc
 
     def fileput(self, local, remote, options):
         """Delegates to ``system`` the copy of ``local`` to ``remote``."""
@@ -635,7 +643,7 @@ class Finder(Store):
 
     def ftpget(self, remote, local, options):
         """Delegates to ``system`` the file transfer of ``remote`` to ``local``."""
-        return self.system.ftget(
+        rc = self.system.ftget(
             self.fullpath(remote),
             local,
             # ftp control
@@ -643,6 +651,9 @@ class Finder(Store):
             logname  = remote['username'],
             fmt      = options.get('fmt'),
         )
+        if rc:
+            self._localtarfix(local)
+        return rc
 
     def ftpput(self, local, remote, options):
         """Delegates to ``system`` the file transfer of ``local`` to ``remote``."""
