@@ -5,6 +5,7 @@
 __all__ = []
 
 import re
+import ftplib
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -50,7 +51,7 @@ class OliveArchiveStore(ArchiveStore):
 
     def remap_write(self, remote, options):
         """Remap actual remote path to distant store path for intrusive actions."""
-        if not 'root' in remote:
+        if 'root' not in remote:
             remote['root'] = self.storehead
 
     def olivecheck(self, remote, options):
@@ -200,8 +201,11 @@ class OpArchiveStore(ArchiveStore):
             cleanpath = self.fullpath(remote)
             (dirname, basename) = self.system.path.split(cleanpath)
             if not extract and self.glue.containsfile(basename):
-                cleanpath, u_targetpath = self.glue.filemap(self.system, dirname, basename)
-            rloc = ftp.netpath(cleanpath)
+                cleanpath, _ = self.glue.filemap(self.system, dirname, basename)
+            if cleanpath is not None:
+                rloc = ftp.netpath(cleanpath)
+            else:
+                rloc = None
             ftp.close()
             return rloc
         else:
@@ -210,15 +214,20 @@ class OpArchiveStore(ArchiveStore):
     def opcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
         ftp = self.system.ftp(self.hostname(), remote['username'])
+        rc = None
         if ftp:
             extract = remote['query'].get('extract', None)
             cleanpath = self.fullpath(remote)
             (dirname, basename) = self.system.path.split(cleanpath)
             if not extract and self.glue.containsfile(basename):
-                cleanpath, u_targetpath = self.glue.filemap(self.system, dirname, basename)
-            rc = ftp.size(cleanpath)
-            ftp.close()
-            return rc
+                cleanpath, _ = self.glue.filemap(self.system, dirname, basename)
+            try:
+                rc = ftp.size(cleanpath)
+            except (ValueError, TypeError, ftplib.all_errors):
+                pass
+            finally:
+                ftp.close()
+        return rc
 
     def opget(self, remote, local, options):
         """File transfer: get from store."""
@@ -243,7 +252,7 @@ class OpArchiveStore(ArchiveStore):
             if not rc:
                 logger.error('FTP could not get file %s', cleanpath)
             elif extract:
-                if extract == 'all' :
+                if extract == 'all':
                     rc = self.system.untar(targetpath, output=False)
                 else:
                     rc = self.system.untar(targetpath, extract, output=False)
@@ -340,4 +349,3 @@ class OpStore(MultiStore):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
         prefix, u_multi, u_region = self.netloc.split('.')
         return ( prefix + '.cache.fr', prefix + '.archive.fr' )
-
