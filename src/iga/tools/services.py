@@ -529,7 +529,7 @@ class BdapService(RoutingUpstreamService):
 
     def get_logline(self):
         """Build the line to send to IGA main routing log file."""
-        return "{now}@{0.taskname}@{0.domain}@{0.term.hour:03d}@${0.productid}@{0.filename}" \
+        return "{now}@{0.taskname}@{0.domain}@{0.term.hour:03d}@{0.productid}@{0.filename}" \
                "@{0.realkind}".format(self, now=date.now().compact())
 
 
