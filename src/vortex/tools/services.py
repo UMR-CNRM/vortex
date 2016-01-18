@@ -396,7 +396,7 @@ class SSHProxy(Service):
                     self.sh.spawn([
                         ' '.join((
                             self.sshcmd,
-                            '-o', 'ConnectTimeout=4',
+                            '-o', 'ConnectTimeout=6',
                             '-o', 'PasswordAuthentication=false',
                             guess,
                             'echo >/dev/null 2>&1'
