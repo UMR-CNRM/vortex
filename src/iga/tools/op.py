@@ -34,8 +34,8 @@ def setup(**kw):
     if "SLURM_JOB_NAME" in t.env():
         if t.sh.path.islink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf'):
             t.sh.unlink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
-        if "__log_sbatch" in t.env():
-            t.sh.softlink(t.env["__log_sbatch"], '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
+        if "LOG_SBATCH" in t.env():
+            t.sh.softlink(t.env["LOG_SBATCH"], '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
 
     t.sh.prompt = t.prompt
     t.info()
@@ -219,8 +219,8 @@ def setenv(t, **kw):
     else:
         logger.warning('No "LUSTRE_OPER" variable in the environment, unable to export MTOOLDIR and datadir')
 
-    if "__log_sbatch" in t.env():
-        t.env.setvar("LOG", t.env["OP_ROOTAPP"] + '/logs/' + t.env["__log_sbatch"])
+    if "LOG_SBATCH" in t.env():
+        t.env.setvar("LOG", t.env["LOG_SBATCH"])
     elif nb_slurm > 0: 
         t.env.setvar("LOG", t.env["SLURM_SUBMIT_DIR"] + '/slurm-' + t.env["SLURM_JOB_ID"] + '.out') 
     else:
