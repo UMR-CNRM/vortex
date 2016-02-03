@@ -1131,16 +1131,22 @@ class OSExtended(System):
     def tarfix_in(self, source, destination):
         """Untar the ``destination`` if ``source`` is a tarfile."""
         ok = True
-        if self.is_tarname(source) and not self.is_tarname(destination):
+        if (self.path.isfile(source) and self.is_tarname(source) and
+                not self.is_tarname(destination)):
             logger.info('Untar from get <%s>', source)
             thiscwd = self.getcwd()
+            (destdir, destfile) = self.path.split(self.path.abspath(destination))
             desttar = self.path.abspath(destination + '.tar')
-            (destdir, destfile) = self.path.split(desttar)
             ok = ok and self.move(destination, desttar)
-            ok = ok and self.cd(destdir)
-            ok = ok and self.untar(destfile, output=False)
+            loctmp = tempfile.mkdtemp(prefix='untar_', dir=destdir)
+            self.cd(loctmp)
+            ok = ok and self.untar(desttar, output=False)
+            unpacked = self.glob('*')
+            ok = ok and len(unpacked) == 1  # Only one element allowed in this kind of tarfiles
+            ok = ok and self.mv(unpacked[0], self.path.join(destdir, destfile))
             ok = ok and self.remove(desttar)
             self.cd(thiscwd)
+            self.rm(loctmp)
         return (ok, source, destination)
 
     def tarfix_out(self, source, destination):
