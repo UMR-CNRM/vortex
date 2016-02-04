@@ -886,7 +886,8 @@ class OSExtended(System):
                         self.stderr('chmod', 0444, destination)
                         oldtrace, self.trace = self.trace, False
                         for linkedfile in self.ffind(destination):
-                            self.chmod(linkedfile, 0444)
+                            if not self.path.islink(linkedfile):  # This make no sense to chmod symlinks
+                                self.chmod(linkedfile, 0444)
                         self.trace = oldtrace
                         return rc
                     else:
