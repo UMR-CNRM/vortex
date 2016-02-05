@@ -170,3 +170,22 @@ class Coupling(IFSParallel):
             sh.move(cplfile, sh.path.basename(cplfile), fmt='lfi')
         sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')
         sh.dir(output=False)
+
+
+class LAMCoupling(Coupling):
+    """Coupling for IFS-like LAM Models from IFS-like LAM Models."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values   = ['lamcpl', 'lamcoupling'],
+                remap    = dict(lamcoupling = 'lamcpl'),
+            ),
+        )
+    )
+
+    def spawn_command_options(self):
+        """Dictionary provided for command line factory."""
+        d = super(LAMCoupling, self).spawn_command_options()
+        d['model'] = 'aladin'
+        return d

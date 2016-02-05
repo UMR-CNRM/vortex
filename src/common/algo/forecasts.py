@@ -13,6 +13,7 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex.tools.date import Time
 from vortex.util.structs import ShellEncoder
 from .ifsroot import IFSParallel
+from vortex.layout.dataflow import intent
 
 
 class Forecast(IFSParallel):
@@ -263,6 +264,66 @@ class FullPosGeo(FullPos):
         )
     )
 
+    def execute(self, rh, opts):
+        """Loop on the various initial conditions provided."""
+
+        sh = self.system
+
+        initrh = [ x.rh for x in self.context.sequence.effective_inputs(
+            role = ('Analysis', 'Guess', 'InitialCondition'),
+            kind = ('analysis', 'historic', 'ic', re.compile('(stp|ana)min'),
+                    re.compile('pert'), ),
+        ) ]
+
+        # is there one (deterministic forecast) or many (ensemble forecast) fullpos to perform ?
+        isMany = len(initrh) > 1
+        infile = 'ICMSH{0:s}INIT'.format(self.xpname)
+
+        for num, r in enumerate(initrh):
+            str_subtitle = 'Fullpos execution on {}'.format(r.container.localpath())
+            sh.subtitle(str_subtitle)
+
+            # Set the actual init file
+            if isMany:
+                if sh.path.exists(infile):
+                    logger.critical('Cannot process multiple Historic files if %s exists.', infile)
+                sh.cp(r.container.localpath(), 'ICMSH{0:s}INIT'.format(self.xpname),
+                      fmt=r.container.actualfmt, intent=intent.IN)
+
+            # Standard execution
+            super(FullPosGeo, self).execute(rh, opts)
+
+            # prepares the next execution
+            if isMany:
+                # Set a local storage place
+                runstore = 'RUNOUT'
+                sh.mkdir(runstore)
+                # Freeze the current output
+                for posfile in [ x for x in sh.glob('PF{0:s}*+*'.format(self.xpname)) ]:
+                    sh.move(posfile, sh.path.join(runstore, 'pfout_{:d}'.format(num)), fmt = r.container.actualfmt)
+
+                # The only one listing
+                sh.cat('NODE.001_01', output='NODE.all')
+
+                # Some cleaning
+                sh.rmall('ncf927', 'dirlst')
+                sh.remove('ICMSH{0:s}INIT'.format(self.xpname), fmt=r.container.actualfmt)
+
+    def postfix(self, rh, opts):
+        """Post processing cleaning."""
+        sh = self.system
+        super(FullPosGeo, self).postfix(rh, opts)
+
+        initrh = [ x.rh for x in self.context.sequence.effective_inputs(
+            kind = ('analysis', 'historic', re.compile('pert')),
+        ) ]
+        if len(initrh) > 1:
+            for num, r in enumerate(initrh):
+                sh.move('RUNOUT/pfout_{:d}'.format(num),
+                        'PF' + re.sub('^(?:ICMSH)(.*?)(?:INIT)(.*)$', r'\1\2', r.container.localpath()).format(self.xpname),
+                        fmt=r.container.actualfmt)
+                sh.dir(output=False)
+
 
 class FullPosBDAP(FullPos):
     """Post-processing for IFS-like Models."""
@@ -282,7 +343,6 @@ class FullPosBDAP(FullPos):
         sh = self.system
 
         namrh = [ x.rh for x in self.context.sequence.effective_inputs(
-            role = 'Namelist',
             kind = 'namelistfp'
         ) ]
 

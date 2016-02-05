@@ -17,4 +17,5 @@ Included Modules
 ----------------
 
 * :mod:`common.util.async`
+* :mod:`common.util.ens`
 * :mod:`common.algo.useepygram`

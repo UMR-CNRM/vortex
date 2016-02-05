@@ -11,7 +11,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.tools import env
-from vortex.tools.date import Time
+from vortex.tools.date import Time, Date
 from vortex.data.outflow import ModelResource, NoDateResource
 from vortex.data.contents import AlmostDictContent, IndexedTable
 from vortex.syntax.stdattrs import binaries, term, cutoff
@@ -46,6 +46,10 @@ class NamelistContent(AlmostDictContent):
             CEXP      = None,
             TIMESTEP  = None,
             FCSTOP    = None,
+            NMODVAL   = None,
+            NBE       = None,
+            SEED      = None,
+            MEMBER    = None,
         ))
         kw.setdefault('remove', set())
         kw.setdefault('parser', None)
@@ -163,6 +167,10 @@ class Namelist(ModelResource):
                 values   = binaries,
                 default  = '[model]',
             ),
+            date = dict(
+                type     = Date,
+                optional = True,
+            )
         )
     )
 
@@ -170,9 +178,42 @@ class Namelist(ModelResource):
     def realkind(self):
         return 'namelist'
 
+    def _find_source(self):
+        sources = self.source.split('|')
+        if len(sources) == 1:
+            source = sources[0].split(':')[0]
+        else:
+            # Check that the date argument was provided.:
+            if self.date is None:
+                raise AttributeError('The date argument should be provided when dealing ' +
+                                     'with time based namelist sources.')
+            datedSource = {}
+            for s in sources:
+                dateNsource = s.split(':')
+                if dateNsource[0]:
+                    if len(dateNsource) == 2:
+                        date = Date(dateNsource[1], year = self.date.year)
+                    else:
+                        date = Date(self.date.year, 1, 1)
+                    if date not in datedSource.keys():
+                        datedSource[date] = dateNsource[0]
+                    else:
+                        logger.warning('%s already begins the %s, %s is ignored.',
+                                       datedSource[date],
+                                       date.strftime('%d of %b.'), dateNsource[0])
+            datedSource = sorted(datedSource.iteritems(), reverse=True)
+            source = datedSource[0][1]
+            for dateNsource in datedSource:
+                if self.date >= dateNsource[0]:
+                    source = dateNsource[1]
+                    break
+            logger.info('The consistent source is %s', source)
+
+        return source
+
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
-        return 'extract=' + self.source
+        return 'extract=' + self._find_source()
 
 
 class NamelistUtil(Namelist):
@@ -206,8 +247,8 @@ class NamelistTerm(Namelist):
     _footprint = [
         term,
         dict(
-             info = 'Terms dependent namelist',
-             attr = dict(
+            info = 'Terms dependent namelist',
+            attr = dict(
                 kind = dict(
                     values = ['namterm']
                 )
@@ -259,7 +300,7 @@ class NamelistTerm(Namelist):
 
         fixed = 0
 
-        for r in (r1, r2, r3) :
+        for r in (r1, r2, r3):
             s = r.search(val)
             if s:
                 fixed = 1
@@ -298,8 +339,8 @@ class NamelistSelect(NamelistTerm):
     """
     _footprint = [
         dict(
-             info = 'Select namelist for fullpos ',
-             attr = dict(
+            info = 'Select namelist for fullpos ',
+            attr = dict(
                 kind = dict(
                     values = [ 'namselect' ]
                 )
@@ -326,14 +367,18 @@ class NamelistFullPos(NamelistTerm):
     """
     _footprint = [
         dict(
-             info = 'Namelist for offline fullpos ',
-             attr = dict(
+            info = 'Namelist for offline fullpos ',
+            attr = dict(
                 kind = dict(
                     values = [ 'namelistfp' ]
                 )
             )
         )
     ]
+
+    @property
+    def realkind(self):
+        return 'namelistfp'
 
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
@@ -472,4 +517,3 @@ class NamelistSelectDef(NoDateResource):
         else:
             thesource = self.source
         return 'extract=' + thesource
-

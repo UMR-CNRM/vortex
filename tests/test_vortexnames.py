@@ -77,7 +77,9 @@ class TestNameBuilder(unittest.TestCase):
                          'dummy+6')
         self.assertEqual(vb.pack(dict(fmt='fa')),
                          'dummy.fa')
-
+        # number option
+        self.assertEqual(vb.pack(dict(number=6)),
+                         'dummy.6')
 
 
 if __name__ == "__main__":

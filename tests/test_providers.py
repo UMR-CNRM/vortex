@@ -142,8 +142,8 @@ class TestProviderVortexStd(unittest.TestCase):
             # Member
             fpd['member'] = 3
             pr = fp.proxy.provider(** fpd)
-            self.assertIs(pr.member, 3)
-            self.assertEqual(pr.nice_member(), 'm0003')
+            self.assertEqual(pr.member, 3)
+            self.assertEqual(pr.nice_member(), 'mb003')
             # Expected
             fpd['expected'] = True
             pr = fp.proxy.provider(** fpd)
@@ -159,7 +159,7 @@ class TestProviderVortexStd(unittest.TestCase):
         # member ?
         pr = fp.proxy.provider(member=3, ** self.fp_defaults)
         self.assertEqual(pr.pathname(self.t_res),
-                         'arpege/4dvar/VOID/20000101T0000A/m0003/dummy')
+                         'arpege/4dvar/VOID/20000101T0000A/mb003/dummy')
         # username ?
         pr = fp.proxy.provider(username='toto', ** self.fp_defaults)
         self.assertEqual(pr.uri(self.t_res),

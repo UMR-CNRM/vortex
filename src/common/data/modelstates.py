@@ -20,28 +20,28 @@ class Analysis(SpectralGeoFlowResource):
     The analysis can be filtered (filling attribute).
     """
     _footprint = dict(
-       info = 'Analysis',
-       attr = dict(
-           kind = dict(
-               values   = ['analysis', 'analyse', 'atm_analysis']
-           ),
-           nativefmt = dict(
-               values   = ['fa', 'grib', 'lfi'],
-               default  = 'fa',
-           ),
-           filtering = dict(
-               optional = True,
-               values   = ['dfi'],
-           ),
-           filling = dict(
-               optional = True,
-               default  = 'full',
-               values   = ['surface', 'surf', 'atmospheric', 'atm', 'full'],
-               remap    = dict(
-                   surface     = 'surf',
-                   atmospheric = 'atm',
-               ),
-           )
+        info = 'Analysis',
+        attr = dict(
+            kind = dict(
+                values   = ['analysis', 'analyse', 'atm_analysis']
+            ),
+            nativefmt = dict(
+                values   = ['fa', 'grib', 'lfi'],
+                default  = 'fa',
+            ),
+            filtering = dict(
+                optional = True,
+                values   = ['dfi'],
+            ),
+            filling = dict(
+                optional = True,
+                default  = 'full',
+                values   = ['surface', 'surf', 'atmospheric', 'atm', 'full'],
+                remap    = dict(
+                    surface     = 'surf',
+                    atmospheric = 'atm',
+                ),
+            )
         )
     )
 
@@ -93,7 +93,7 @@ class Analysis(SpectralGeoFlowResource):
         return dict(
             fmt     = self.nativefmt,
             geo     = lgeo,
-            radical = 'analysis',
+            radical = self.realkind,
             src     = [self.filling, self.model],
         )
 
@@ -119,6 +119,33 @@ class Analysis(SpectralGeoFlowResource):
             model     = self.model,
             nativefmt = self.nativefmt,
         )
+
+
+class InitialCondition(Analysis):
+    """
+    Class for initial condition resources : anything from which a model run can be performed.
+    """
+    _footprint = dict(
+        info = 'Initial condition',
+        attr = dict(
+            kind = dict(
+                values   = ['initial_condition', 'ic', 'starting_point'],
+                remap    = dict(autoremap = 'first'),
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'ic'
+
+    def olive_basename(self):
+        """OLIVE specific naming convention."""
+        raise NotImplementedError("The number is only known by the provider, not supported yet.")
+
+    def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
+        raise NotImplementedError("The number is only known by the provider, not supported yet.")
 
 
 class Historic(SpectralGeoFlowResource):
@@ -180,7 +207,7 @@ class Historic(SpectralGeoFlowResource):
         return dict(
             fmt     = self.nativefmt,
             geo     = lgeo,
-            radical = 'historic',
+            radical = self.realkind,
             src     = self.model,
             term    = self.term.fmthm,
         )

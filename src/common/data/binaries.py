@@ -324,3 +324,112 @@ class LFITools(BlackBox):
     def realkind(self):
         return 'lfitools'
 
+
+class Combi(BlackBox):
+    """Multipurpose tool to build the initial states of the ensemble prediction system."""
+
+    _footprint = dict(
+        info = 'Tool to build EPS initial conditions',
+        attr = dict(
+            kind = dict(
+                values   = ['combi'],
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_combi'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'combi'
+
+
+class Gobptout(BlackBox):
+    """A tool for grib conversion on a gaussian grid."""
+
+    _footprint = dict(
+        info = 'Gobptout utility for grib conversion',
+        attr = dict(
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_gobtout'
+            ),
+            kind = dict(
+                values   = ['gobptout'],
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'gobptout'
+
+
+class Clust(BlackBox):
+    """Tool that selects a subset of EPS members using the Clustering method."""
+
+    _footprint = dict(
+        info = 'Tool that selects a subset of EPS members using the Clustering method',
+        attr = dict(
+            kind = dict(
+                values   = ['clust'],
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_clust'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'clust'
+
+
+class PertSurf(BlackBox):
+    """Tool that adds perturbations to surface fields."""
+
+    _footprint = dict(
+        info = 'Tool that adds perturbations to surface fields',
+        attr = dict(
+            kind = dict(
+                values   = ['pertsurf'],
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_pertsurf'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'pertsurf'
+
+
+class AddPearp(BlackBox):
+    """Tool that adds perturbations taken from a given PEARP member to the deterministic initial conditions."""
+
+    _footprint = dict(
+        info = 'Tool that adds perturbations taken from a given PEARP member',
+        attr = dict(
+            kind = dict(
+                values   = ['addpearp'],
+            ),
+            gvar = dict(
+                type     = GenvKey,
+                optional = True,
+                default  = 'master_addpearp'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'addpearp'

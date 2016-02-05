@@ -18,6 +18,7 @@ Included Modules
 
 * :mod:`common.algo.assim`
 * :mod:`common.algo.coupling`
+* :mod:`common.algo.ens`
 * :mod:`common.algo.forecasts`
 * :mod:`common.algo.ifsroot`
 * :mod:`common.algo.mpitools`

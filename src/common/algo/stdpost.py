@@ -267,3 +267,85 @@ class DiagPI(BlindRun):
             expected = [ x for x in self.promises if x.rh.container.localpath() == actualname ]
             for thispromise in expected:
                 thispromise.put(incache=True)
+
+
+class Fa2GaussGrib(BlindRun):
+    """Standard FA conversion, e.g. with GOBPTOUT as a binary resource."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values  = ['fa2gaussgrib'],
+            ),
+            fortinput = dict(
+                optional = True,
+                default = 'PFFPOS_FIELDS',
+            ),
+            numod = dict(
+                type     = int,
+                optional = True,
+                default  = DelayedEnvValue('VORTEX_GRIB_NUMOD', 212),
+            ),
+            verbose = dict(
+                type     = bool,
+                optional = True,
+                default  = False,
+            ),
+        )
+    )
+
+    def prepare(self, rh, opts):
+        """Set some variables according to target definition."""
+        super(Fa2GaussGrib, self).prepare(rh, opts)
+        # Prevent DrHook to initialize MPI and setup grib_api
+        self.export('drhook_not_mpi')
+
+    def execute(self, rh, opts):
+        """Loop on the various initial conditions provided."""
+
+        thisoutput = 'GRID_' + self.fortinput[7:14] + '1'
+
+        gpsec = self.context.sequence.effective_inputs(role=('Historic', 'ModelState'))
+        gpsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+
+        for sec in gpsec:
+            r = sec.rh
+
+            self.system.title('Loop on files: '.format(r.container.localpath()))
+
+            # Some preventive cleaning
+            self.system.remove(thisoutput)
+            self.system.remove('fort.4')
+
+            # Build the local namelist block
+            from vortex.tools.fortran import NamelistBlock
+            nb = NamelistBlock(name='NAML')
+            nb.NBDOM = 1
+            nb.INUMOD = self.numod
+
+            nb['LLBAVE'] = self.verbose
+            nb['CDNOMF(1)'] = self.fortinput
+            with open('fort.4', 'w') as namfd:
+                namfd.write(nb.dumps())
+
+            self.system.header('{0:s} : local namelist {1:s} dump'.format(self.realkind, 'fort.4'))
+            self.system.cat('fort.4', output=False)
+
+            # Expect the input FP file source to be there...
+            self.grab(sec, comment='fullpos source')
+
+            # Finaly set the actual init file
+            self.system.softlink(r.container.localpath(), self.fortinput)
+
+            # Standard execution
+            super(Fa2GaussGrib, self).execute(rh, opts)
+
+            # Freeze the current output
+            if self.system.path.exists(thisoutput):
+                self.system.move(thisoutput, 'GGRID' + r.container.localpath()[6:], fmt = r.container.actualfmt)
+            else:
+                logger.warning('Missing some grib output for %s',
+                               thisoutput)
+
+            # Some cleaning
+            self.system.rmall(self.fortinput)
