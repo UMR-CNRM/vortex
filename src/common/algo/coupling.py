@@ -183,11 +183,6 @@ class LAMCoupling(Coupling):
 
     def spawn_command_options(self):
         """Dictionary provided for command line factory."""
-        return dict(
-            name       = (self.xpname + 'xxxx')[:4].upper(),
-            timescheme = self.timescheme,
-            timestep   = self.timestep,
-            fcterm     = self.fcterm,
-            fcunit     = self.fcunit,
-            model      = 'aladin',
-        )
+        d = super(LAMCoupling, self).spawn_command_options()
+        d['model'] = 'aladin'
+        return d

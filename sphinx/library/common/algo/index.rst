@@ -11,6 +11,7 @@ Algo components
 
    assim
    coupling
+   ens
    ifsroot
    forecasts
    mpitools

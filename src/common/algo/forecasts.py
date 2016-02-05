@@ -15,6 +15,7 @@ from vortex.util.structs import ShellEncoder
 from .ifsroot import IFSParallel
 from vortex.layout.dataflow import intent
 
+
 class Forecast(IFSParallel):
     """Forecast for IFS-like Models."""
 
@@ -258,17 +259,17 @@ class FullPosGeo(FullPos):
         # is there one (deterministic forecast) or many (ensemble forecast) fullpos to perform ?
         isMany = len(initrh) > 1
         infile = 'ICMSH{0:s}INIT'.format(self.xpname)
-        
+
         for num, r in enumerate(initrh):
             str_subtitle = 'Fullpos execution on {}'.format(r.container.localpath())
             sh.subtitle(str_subtitle)
-                
+
             # Set the actual init file
             if isMany:
                 if sh.path.exists(infile):
                     logger.critical('Cannot process multiple Historic files if %s exists.', infile)
-                sh.cp(r.container.localpath(), 'ICMSH{0:s}INIT'.format(self.xpname), 
-                    fmt=r.container.actualfmt, intent=intent.IN)
+                sh.cp(r.container.localpath(), 'ICMSH{0:s}INIT'.format(self.xpname),
+                      fmt=r.container.actualfmt, intent=intent.IN)
 
             # Standard execution
             super(FullPosGeo, self).execute(rh, opts)
@@ -281,7 +282,7 @@ class FullPosGeo(FullPos):
                 # Freeze the current output
                 for posfile in [ x for x in sh.glob('PF{0:s}*+*'.format(self.xpname)) ]:
                     sh.move(posfile, sh.path.join(runstore, 'pfout_{:d}'.format(num)), fmt = r.container.actualfmt)
-                    
+
                 # The only one listing
                 sh.cat('NODE.001_01', output='NODE.all')
 
@@ -293,11 +294,8 @@ class FullPosGeo(FullPos):
         """Post processing cleaning."""
         sh = self.system
         super(FullPosGeo, self).postfix(rh, opts)
-        
+
         initrh = self.setlink(initkind=('analysis', 'historic', re.compile('pert')))
-#         initrh = [ x.rh for x in self.context.sequence.effective_inputs(
-#             kind = ('analysis', 'historic', 'perturbation'),
-#         ) ]
         if len(initrh) > 1:
             for num, r in enumerate(initrh):
                 sh.move('RUNOUT/pfout_{:d}'.format(num),
@@ -317,7 +315,6 @@ class FullPosBDAP(FullPos):
             ),
         )
     )
-
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
@@ -362,12 +359,6 @@ class FullPosBDAP(FullPos):
             sh.mkdir(runstore)
 
             # Define an input namelist
-            print r.resource.term
-            print len(namrh)
-            for x in self.context.sequence.effective_inputs(kind='namelistfp'):
-                print x.rh.resource.kind
-            for x in namrh:
-                print x.resource.term
             try:
                 namfp = [ x for x in namrh if x.resource.term == r.resource.term ].pop()
                 sh.remove('fort.4')

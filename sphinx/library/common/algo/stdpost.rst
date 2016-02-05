@@ -30,3 +30,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: Fa2GaussGrib
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

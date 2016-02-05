@@ -13,6 +13,14 @@ class utDate(TestCase):
         rv = date.Date("20110726121314")
         self.assertEqual(rv.compact(), "20110726121314")
 
+        rv = date.Date("YYYY0201", year=1995)
+        self.assertEqual(rv.compact(), "19950201000000")
+        rv = date.Date("yyyy0201", year=1995)
+        self.assertEqual(rv.compact(), "19950201000000")
+        rv = date.Date("yyyy0201")
+        self.assertEqual(rv.compact(),
+                         "{:4d}0201000000".format(date.today().year))
+
         dt = datetime(2011, 7, 26, 12, 13, 14)
         rv = date.Date(dt)
         self.assertEqual(rv.compact(), "20110726121314")
@@ -51,7 +59,7 @@ class utDate(TestCase):
 
         rv = date.Date(float(1))
         self.assertEqual(rv.compact(), "19700101000001")
-
+ 
     def test_date_format(self):
         rv = date.Date("2011-07-26T021314Z")
         self.assertEqual(rv.ymd, "20110726")

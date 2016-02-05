@@ -7,24 +7,24 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.tools.date      import Time
-from vortex.data.flow       import FlowResource
-from vortex.data.contents   import JsonDictContent, TextContent
-from vortex.syntax.stdattrs import FmtInt
-from common.data.modelstates       import Historic, Analysis
+from vortex.tools.date        import Time
+from vortex.data.flow         import FlowResource
+from vortex.data.contents     import JsonDictContent, TextContent
+from vortex.syntax.stdattrs   import FmtInt
+from common.data.modelstates  import Historic
 
 
 class PerturbedState(Historic):
     """
     Class for numbered historic resources, for example perturbations or perturbed states of the EPS.
     """
-    
+
     _footprint = dict(
         info = 'Perturbation or perturbed state',
         attr = dict(
             kind = dict(
                 values  = ['perturbation', 'perturbed_historic', 'perturbed_state', 'pert'],
-                 remap = dict(autoremap = 'first')
+                remap = dict(autoremap = 'first')
             ),
             number = dict(
                 type    = FmtInt,
@@ -33,66 +33,35 @@ class PerturbedState(Historic):
             term = dict(
                 type = Time,
                 optional = True,
-                default = Time(0)    
+                default = Time(0)
+            ),
+            processing = dict(
+                values = ['unit', 'normed'],
+                optional = True,
             ),
         )
     )
 
     @property
     def realkind(self):
-        return 'perturbation'
-    
+        return 'pert'
+
     def basename_info(self):
         """Generic information for names fabric."""
+        pr_transform = {'unit': 'u', 'normed': 'n'}
         d = super(PerturbedState, self).basename_info()
         d['number'] = self.number
+        d['radical'] = pr_transform.get(self.processing, '') + self.realkind
         return d
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        raise NotImplementedError, "Perturbations were previously tar files, not supported yet."
+        raise NotImplementedError("Perturbations were previously tar files, not supported yet.")
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        raise NotImplementedError, "Perturbations were previously tar files, not supported yet."
+        raise NotImplementedError("Perturbations were previously tar files, not supported yet.")
 
-class UnitPerturbedState(PerturbedState):
-    """
-    Class for numbered historic resources, for example perturbations or perturbed states of the EPS.
-    """
-    
-    _footprint = dict(
-        info = 'Perturbation or perturbed state',
-        attr = dict(
-            kind = dict(
-                values  = ['unit_perturbation', 'upert'],
-                remap = dict(autoremap = 'first')
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'upert'
-    
-class NormedPerturbedState(PerturbedState):
-    """
-    Class for numbered historic resources, for example perturbations or perturbed states of the EPS.
-    """
-    
-    _footprint = dict(
-        info = 'Perturbation or perturbed state',
-        attr = dict(
-            kind = dict(
-                values  = ['normed_perturbation', 'npert'],
-                remap = dict(autoremap = 'first')
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'npert'
 
 class SingularVector(Historic):
     """
@@ -105,15 +74,17 @@ class SingularVector(Historic):
                 values  = ['svector'],
             ),
             number = dict(
-                type     = int,
+                type    = FmtInt,
+                args    = dict(fmt = '03'),
             ),
             zone = dict(
-                values  = ['ateur', 'hnc', 'hs', 'pno', 'oise', 'an', 'pne', 'oiso', 'ps', 'oin','trop1','trop2','trop3','trop4'],
+                values  = ['ateur', 'hnc', 'hs', 'pno', 'oise', 'an', 'pne',
+                           'oiso', 'ps', 'oin', 'trop1', 'trop2', 'trop3', 'trop4'],
             ),
             term = dict(
                 type = Time,
                 optional = True,
-                default = Time(0)    
+                default = Time(0)
             ),
             optime = dict(
                 type = Time,
@@ -140,34 +111,6 @@ class SingularVector(Historic):
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
         return 'SVARPE'  + '{0:03d}'.format(self.number) + '+0000'
-
-
-class InitialCondition(Analysis):
-    """
-    Class for initial condition resources : anything from which a model run can be performed.
-    """
-    _footprint = dict(
-       info = 'Initial condition',
-       attr = dict(
-           kind = dict(
-               values   = ['initial_condition', 'ic', 'starting_point'],
-               remap    = dict(autoremap = 'first'),
-           ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'ic'
-
-    def olive_basename(self):
-        """OLIVE specific naming convention."""
-        #if self.vapp == 'pearp': icname = 'ICFC_'        
-        raise NotImplementedError, "The number is only known by the provider, not supported yet."
-
-    def archive_basename(self):
-        """OP ARCHIVE specific naming convention."""
-        raise NotImplementedError, "The number is only known by the provider, not supported yet."
 
 
 class NormCoeff(FlowResource):
@@ -211,7 +154,8 @@ class NormCoeff(FlowResource):
 
 
 class SampleContent(JsonDictContent):
-    
+    """Specialisation of the JSONDictContent to deal with drawing lots."""
+
     def drawing(self, g, x):
         """Return the number of a sampled element according to the local number."""
         n = g.get('number', x.get('number', None))
@@ -231,23 +175,17 @@ class SampleContent(JsonDictContent):
                 return n
             else:
                 return self.data['drawing'][n - 1]
-            
-            
+
+
 class Sample(FlowResource):
     """
     Lot drawn out of a set.
     """
 
+    _abstract = True,
     _footprint = dict(
-        abstract = True,
         info = 'Sample',
         attr = dict(
-#             kind = dict(
-#                 values   = ['mbsample', 'mbselect', 'mbdrawing', 'members_select'],
-#                 remap = dict(
-#                         remap = dict(autoremap = 'first'),
-#                     )
-#             ),
             clscontents = dict(
                 default = SampleContent,
             ),
@@ -260,7 +198,7 @@ class Sample(FlowResource):
             ),
             nbset = dict(
                 type = int,
-            ),      
+            ),
         )
     )
 
@@ -283,7 +221,7 @@ class MembersSample(Sample):
             kind = dict(
                 values   = ['mbsample', 'mbselect', 'mbdrawing', 'members_select'],
                 remap = dict(autoremap = 'first'),
-            ),           
+            ),
         )
     )
 
@@ -291,7 +229,7 @@ class MembersSample(Sample):
     def realkind(self):
         return 'mbsample'
 
-           
+
 class MultiphysicsSample(Sample):
     """
     List of physical packages selected among a set.
@@ -303,7 +241,7 @@ class MultiphysicsSample(Sample):
             kind = dict(
                 values   = ['physample', 'physelect', 'phydrawing'],
                 remap = dict(autoremap = 'first'),
-            ),          
+            ),
         )
     )
 
@@ -313,25 +251,15 @@ class MultiphysicsSample(Sample):
 
 
 class ClustContent(TextContent):
-    
-#     def selection(self, g, x):
-#         """Return the number of a sampled element according to the local number."""
-#         n = g.get('number', x.get('number', None))
-#         if n is None:
-#             return None
-#         else:
-#             try:
-#                 n = int(n)
-#             except TypeError:
-#                 return None
-#             return self.data[n - 1]
+    """Specialisation of the TextContent to deal with clustering outputs."""
 
     def getNumber(self, idx):
-        return self.data[idx - 1]    
-            
+        return self.data[idx - 1]
+
+
 class GeneralCluster(FlowResource):
     """
-    Files from the clustering step of the LAM PE.
+    Files produced by the clustering step of the LAM PE.
     """
 
     _footprint = dict(
@@ -354,7 +282,7 @@ class GeneralCluster(FlowResource):
                 values   = ['population', 'pop', 'members'],
                 remap    = dict(population = 'pop'),
                 default  = '',
-            ),        
+            ),
         )
     )
 
@@ -368,5 +296,3 @@ class GeneralCluster(FlowResource):
             radical = self.realkind,
             fmt     = self.nativefmt,
         )
-        
-        

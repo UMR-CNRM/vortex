@@ -76,3 +76,28 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: Gobptout
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Combi
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Clust
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: PertSurf
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: AddPearp
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

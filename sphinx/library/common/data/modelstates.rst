@@ -21,6 +21,11 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+ 
+.. autoclass:: InitialCondition
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 .. autoclass:: Historic
    :show-inheritance:

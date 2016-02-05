@@ -1,0 +1,68 @@
+:mod:`common.algo.ens` --- Algo components for ensemble processing
+==================================================================
+
+.. automodule:: common.algo.ens
+   :synopsis: Generic algo components usefull to process ensembles
+
+.. moduleauthor:: The Vortex Team
+.. sectionauthor:: The Vortex Team
+.. versionadded:: 0.9
+
+Package
+-------
+
+.. autodata:: __all__
+
+Classes
+-------
+
+.. autoclass:: Svect
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Combi
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CombiSV
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CombiSVunit
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CombiSVnorm
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CombiIC
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CombiBreeding
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SurfCombiIC
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Clustering
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Addpearp
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   

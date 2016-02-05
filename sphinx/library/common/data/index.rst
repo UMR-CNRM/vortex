@@ -15,6 +15,7 @@ Data resources
    climfiles
    consts
    diagnostics
+   ens
    fields
    gridfiles
    logs

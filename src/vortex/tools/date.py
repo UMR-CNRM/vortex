@@ -389,7 +389,7 @@ class Date(datetime.datetime):
         elif isinstance(top, str):
             s_top = top.split('/')
             top = s_top[0]
-            top = re.sub('^YYYY',str(max(0, int(kw.pop('year', today().year)))),top.upper())
+            top = re.sub('^YYYY', str(max(0, int(kw.pop('year', today().year)))), top.upper())
             deltas = s_top[1:]
             ld = [ int(x) for x in re.split('[-:HTZ]+', mkisodate(top)) if re.match(r'\d+$', x) ]
         else:

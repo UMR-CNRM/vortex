@@ -345,8 +345,8 @@ class Combi(BlackBox):
     @property
     def realkind(self):
         return 'combi'
-    
-    
+
+
 class Gobptout(BlackBox):
     """A tool for grib conversion on a gaussian grid."""
 
@@ -367,13 +367,13 @@ class Gobptout(BlackBox):
     @property
     def realkind(self):
         return 'gobptout'
-    
-    
+
+
 class Clust(BlackBox):
-    """Multipurpose tool to build the initial states of the ensemble prediction system."""
+    """Tool that selects a subset of EPS members using the Clustering method."""
 
     _footprint = dict(
-        info = 'Tool to build EPS initial conditions',
+        info = 'Tool that selects a subset of EPS members using the Clustering method',
         attr = dict(
             kind = dict(
                 values   = ['clust'],
@@ -389,13 +389,13 @@ class Clust(BlackBox):
     @property
     def realkind(self):
         return 'clust'
-    
-    
+
+
 class PertSurf(BlackBox):
-    """Multipurpose tool to build the initial states of the ensemble prediction system."""
+    """Tool that adds perturbations to surface fields."""
 
     _footprint = dict(
-        info = 'Tool to build EPS initial conditions',
+        info = 'Tool that adds perturbations to surface fields',
         attr = dict(
             kind = dict(
                 values   = ['pertsurf'],
@@ -411,13 +411,13 @@ class PertSurf(BlackBox):
     @property
     def realkind(self):
         return 'pertsurf'
-    
-    
+
+
 class AddPearp(BlackBox):
-    """Multipurpose tool to build the initial states of the ensemble prediction system."""
+    """Tool that adds perturbations taken from a given PEARP member to the deterministic initial conditions."""
 
     _footprint = dict(
-        info = 'Tool to build EPS initial conditions',
+        info = 'Tool that adds perturbations taken from a given PEARP member',
         attr = dict(
             kind = dict(
                 values   = ['addpearp'],
