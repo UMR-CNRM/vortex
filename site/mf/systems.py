@@ -138,3 +138,31 @@ class Prolix(MeteoBull):
 
     del x
     del y
+
+
+class Aneto(Target):
+    """Aneto cluster at Meteo-France CNRM."""
+
+    _footprint = dict(
+        info='Aneto Cluster at CNRM',
+        attr=dict(
+            hostname=dict(
+                values=[x + str(y) for x in ('ncx',) for y in range(30)] +
+                [x + str(y) for x in ('ntx',) for y in range(6)]
+            ),
+            inetname=dict(
+                default='aneto',
+                values=['aneto']
+            ),
+            inifile=dict(
+                optional=True,
+                default='target-aneto.ini',
+            ),
+        ),
+        priority = dict(
+            level = footprints.priorities.top.TOOLBOX
+        )
+    )
+
+    del x
+    del y
