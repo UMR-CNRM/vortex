@@ -277,7 +277,8 @@ class AppConfigStringDecoder(object):
                 accumstr = ''
             else:
                 accumstr += c
-        res_stack.append(accumstr)
+        if accumstr:
+            res_stack.append(accumstr)
         if parenthesis > 0:
             raise ValueError("'{}' unbalanced paranthesis". format(litteral))
         if (keysep is not None) and (res_stack) and (len(res_stack) % 2 != 0):
