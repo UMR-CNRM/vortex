@@ -22,13 +22,16 @@ def get(**kw):
     """Return actual collector object matching description."""
     return Collector(**kw)
 
+
 def keys():
     """Return the list of current entries names collected."""
     return Collector.tag_keys()
 
+
 def values():
     """Return the list of current entries values collected."""
     return Collector.tag_values()
+
 
 def items():
     """Return the items of the collectors table."""
@@ -49,7 +52,8 @@ class Collector(util.GetByTag, util.Catalog):
         logger.debug('Footprints collector init {!s}'.format(self))
         self.instances = util.Catalog(weak=True)
         self.register = True
-        self.report = True
+        self.report = config.LIGHT_REPORTING
+        self.lreport_len = config.DFLT_MAXLEN_LIGHT_REPORTING
         self.report_auto = True
         self.report_tag = None
         self.altreport = False
@@ -57,7 +61,8 @@ class Collector(util.GetByTag, util.Catalog):
             bc.__init__(self, **kw)
         if self.report_tag is None:
             self.report_tag = 'footprint-' + self.tag
-        self.report_log = reporting.get(tag=self.report_tag)
+        r_maxlen = None if self.report == config.FULL_REPORTING else self.lreport_len
+        self.report_log = reporting.get(tag=self.report_tag, log_maxlen=r_maxlen)
         config.add2proxies(self)
 
     @classmethod
@@ -248,7 +253,7 @@ class Collector(util.GetByTag, util.Catalog):
             fp = c.footprint_retrieve()
             for k in [ ka for ka in fp.attr.keys() if ( only is None or ka in only ) ]:
                 opt = ' [optional]' if fp.optional(k) else ''
-                alist = attrmap.setdefault(k+opt, list())
+                alist = attrmap.setdefault(k + opt, list())
                 alist.append(dict(
                     name    = c.__name__,
                     module  = c.__module__,

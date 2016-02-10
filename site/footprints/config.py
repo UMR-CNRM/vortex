@@ -11,7 +11,7 @@ __all__ = []
 from . import loggers
 logger = loggers.getLogger(__name__)
 
-from . import dump, reporting, util
+from . import reporting, util
 
 
 # Module interface
@@ -20,17 +20,21 @@ def get(**kw):
     """Return actual setup object matching description."""
     return FootprintSetup(**kw)
 
+
 def keys():
     """Return the list of current setup names."""
     return FootprintSetup.tag_keys()
+
 
 def values():
     """Return the list of current setup values."""
     return FootprintSetup.tag_values()
 
+
 def items():
     """Return the items for all the setups available."""
     return FootprintSetup.tag_items()
+
 
 def add2proxies(c, **kw):
     """
@@ -42,27 +46,36 @@ def add2proxies(c, **kw):
         setattr(p, c.tag, c.load)
         setattr(p, c.tag + 's', c)
 
+# Constants
+
+NO_REPORTING = 0
+LIGHT_REPORTING = 1
+FULL_REPORTING = 2
+
+DFLT_MAXLEN_LIGHT_REPORTING = 100
+
 
 # Base class
 
 class FootprintSetup(util.GetByTag):
     """Defines some defaults and external tools."""
 
-    def __init__(self,
-        docstrings=True, extended=True, fastmode=False, fatal=True, shortnames=False,
-        fastkeys=('kind',), callback=None, defaults=None, proxies=None,
-        report=True, nullreport=reporting.NullReport()
-    ):
+    def __init__(self, docstrings=True, extended=True, fastmode=False,
+                 fatal=True, shortnames=False, fastkeys=('kind',),
+                 callback=None, defaults=None, proxies=None,
+                 report=LIGHT_REPORTING, lreport_len=DFLT_MAXLEN_LIGHT_REPORTING,
+                 nullreport=reporting.NullReport()):
         """Initialisation of a simple footprint setup driver."""
-        self._extended  = bool(extended)
-        self.docstrings = bool(docstrings)
-        self.shortnames = bool(shortnames)
-        self.fatal      = bool(fatal)
-        self.report     = bool(report)
-        self.nullreport = nullreport
-        self.fastmode   = bool(fastmode)
-        self.fastkeys   = tuple(fastkeys)
-        self.callback   = callback
+        self._extended   = bool(extended)
+        self.docstrings  = bool(docstrings)
+        self.shortnames  = bool(shortnames)
+        self.fatal       = bool(fatal)
+        self.report      = report
+        self.lreport_len = lreport_len
+        self.nullreport  = nullreport
+        self.fastmode    = bool(fastmode)
+        self.fastkeys    = tuple(fastkeys)
+        self.callback    = callback
 
         if proxies is None:
             self.proxies = set()
@@ -89,7 +102,7 @@ class FootprintSetup(util.GetByTag):
         return dict([ (k.lstrip('_'), v) for k, v in self.__dict__.items() ])
 
     def info(self):
-        """Summuray of actual settings."""
+        """Summary of actual settings."""
         for k, v in sorted(self.as_dict().items()):
             print k.ljust(12), ':', v
 
@@ -104,7 +117,7 @@ class FootprintSetup(util.GetByTag):
             for k, v in collectors.items():
                 if clear or not hasattr(obj, k):
                     setattr(obj, k, v.load)
-                if clear or not hasattr(obj, k+'s'):
+                if clear or not hasattr(obj, k + 's'):
                     setattr(obj, k + 's', v)
         else:
             logger.error('Could not populate a non-module or non-instance object: %s', obj)
@@ -115,7 +128,7 @@ class FootprintSetup(util.GetByTag):
         return self._defaults
 
     def _set_defaults(self, *args, **kw):
-        """Property setter for current defaults environnement of the footprint resolution."""
+        """Property setter for current defaults environment of the footprint resolution."""
         self._defaults = util.LowerCaseDict()
         self._defaults.update(*args, **kw)
 

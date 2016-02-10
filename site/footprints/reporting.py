@@ -14,6 +14,7 @@ from datetime import datetime
 import re
 import weakref
 import dump
+import collections
 
 from . import util
 
@@ -198,8 +199,8 @@ class FootprintLogClass(FootprintLogEntry):
 class FootprintLog(util.GetByTag):
     """Collect log informations to produce footprints reports."""
 
-    def __init__(self, weak=True):
-        self._log = list()
+    def __init__(self, log_maxlen=None, weak=True):
+        self._log = collections.deque(maxlen=log_maxlen)
         self._weak = weak
         self._current = None
         self._xml = None

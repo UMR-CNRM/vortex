@@ -87,7 +87,8 @@ class FootprintInvalidDefinition(FootprintException):
 
 def pickup(rd):
     """Find in current description the attributes that are collected under the ``tag`` name."""
-    return collectors.get(tag=rd.pop('tag', 'garbage')).pickup(rd)
+    return collectors.get(tag=rd.pop('tag', 'garbage'),
+                          report=setup.report, lreport_len=setup.lreport_len).pickup(rd)
 
 
 def load(**kw):
@@ -95,7 +96,8 @@ def load(**kw):
     Same as pickup but operates on an expanded dictionary.
     Return either ``None`` or an object compatible with the ``tag``.
     """
-    return collectors.get(tag=kw.pop('tag', 'garbage')).load(**kw)
+    return collectors.get(tag=kw.pop('tag', 'garbage'),
+                          report=setup.report, lreport_len=setup.lreport_len).load(**kw)
 
 
 def default(**kw):
@@ -103,7 +105,8 @@ def default(**kw):
     Try to find in existing instances tracked by the ``tag`` collector
     a suitable candidate according to description.
     """
-    return collectors.get(tag=kw.pop('tag', 'garbage')).default(**kw)
+    return collectors.get(tag=kw.pop('tag', 'garbage'),
+                          report=setup.report, lreport_len=setup.lreport_len).default(**kw)
 
 
 def grep(**kw):
@@ -687,7 +690,7 @@ class FootprintBaseMeta(type):
             for cname in realcls._collector:
                 if cname in thisfp.allkeys():
                     raise FootprintInvalidDefinition('A attribute or alias name is equal to collector tag: ' + cname)
-                thiscollector = collectors.get(tag=cname)
+                thiscollector = collectors.get(tag=cname, report=setup.report, lreport_len=setup.lreport_len)
                 thiscollector.add(realcls)
                 if thiscollector.register:
                     observers.get(tag=realcls.fullname()).register(thiscollector)
