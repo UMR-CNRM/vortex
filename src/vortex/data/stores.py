@@ -96,7 +96,7 @@ class StoreGlue(object):
 
     def crossitem(self, item):
         """
-        Possibly builds and then returns a reverse dictionay
+        Possibly builds and then returns a reverse dictionary
         of founded options with the specified ``item`` defined.
         """
         if item not in self._cross:
@@ -200,7 +200,7 @@ class Store(footprints.FootprintBase):
         return self._sh
 
     def use_cache(self):
-        """Boolean fonction to check if the current store use a local cache."""
+        """Boolean function to check if the current store use a local cache."""
         return False
 
     def _observer_notify(self, action, rc, remote, local=None, options=None):
@@ -223,21 +223,29 @@ class Store(footprints.FootprintBase):
     def check(self, remote, options=None):
         """Proxy method to dedicated check method according to scheme."""
         logger.debug('Store check from %s', remote)
-        rc = getattr(self, self.scheme + 'check', self.notyet)(remote, options)
-        self._observer_notify('check', rc, remote)
+        if options is not None and options.get('incache', False) and not self.use_cache():
+            logger.warning('Skip this store because a cache is requested')
+            rc = False
+        else:
+            rc = getattr(self, self.scheme + 'check', self.notyet)(remote, options)
+            self._observer_notify('check', rc, remote)
         return rc
 
     def locate(self, remote, options=None):
         """Proxy method to dedicated locate method according to scheme."""
         logger.debug('Store locate %s', remote)
-        return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
+        if options is not None and options.get('incache', False) and not self.use_cache():
+            logger.warning('Skip this store because a cache is requested')
+            return None
+        else:
+            return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
 
     def get(self, remote, local, options=None):
         """Proxy method to dedicated get method according to scheme."""
         logger.debug('Store get from %s to %s', remote, local)
         if options is not None and options.get('incache', False) and not self.use_cache():
             logger.warning('Skip this store because a cache is requested')
-            return True
+            return False
         else:
             if (options is None or (not options.get('insitu', False)) or
                     self.use_cache()):
@@ -269,8 +277,12 @@ class Store(footprints.FootprintBase):
     def delete(self, remote, options=None):
         """Proxy method to dedicated delete method according to scheme."""
         logger.debug('Store delete from %s', remote)
-        rc = getattr(self, self.scheme + 'delete', self.notyet)(remote, options)
-        self._observer_notify('del', rc, remote)
+        if options is not None and options.get('incache', False) and not self.use_cache():
+            logger.warning('Skip this store because a cache is requested')
+            rc = True
+        else:
+            rc = getattr(self, self.scheme + 'delete', self.notyet)(remote, options)
+            self._observer_notify('del', rc, remote)
         return rc
 
 
@@ -310,7 +322,7 @@ class MultiStore(footprints.FootprintBase):
     def loadstores(self):
         """
         Load default stores during the initialisation of the current object.
-        Stores could be relaoded at any time. The current method provides
+        Stores could be reloaded at any time. The current method provides
         a default loading mechanism through the actual module :func:`load` function
         and an alternate list of footprint descriptors as returned by method
         :func:`alternates_fp`.
@@ -343,7 +355,7 @@ class MultiStore(footprints.FootprintBase):
         ]
 
     def use_cache(self):
-        """Boolean fonction to check if any included store use a local cache."""
+        """Boolean function to check if any included store use a local cache."""
         return any([x.use_cache() for x in self.openedstores])
 
     def check(self, remote, options=None):
@@ -364,7 +376,9 @@ class MultiStore(footprints.FootprintBase):
         rloc = list()
         for sto in self.openedstores:
             logger.debug('Multistore locate at %s', sto)
-            rloc.append(sto.locate(remote.copy(), options))
+            tmp_rloc = sto.locate(remote.copy(), options)
+            if tmp_rloc:
+                rloc.append(tmp_rloc)
         return ';'.join(rloc)
 
     def get(self, remote, local, options=None):
@@ -393,7 +407,7 @@ class MultiStore(footprints.FootprintBase):
         """Go through internal opened stores and put resource for each of them."""
         logger.debug('Multistore put from %s to %s', local, remote)
         if not self.openedstores:
-            logger.warning('Funny attemp to put on an empty multistore...')
+            logger.warning('Funny attempt to put on an empty multistore...')
             return False
         rc = True
         for sto in self.openedstores:
@@ -416,7 +430,7 @@ class MultiStore(footprints.FootprintBase):
 
 
 class MagicPlace(Store):
-    """Somewher, over the rainbow!"""
+    """Somewhere, over the rainbow!"""
 
     _footprint = dict(
         info = 'Evanescent physical store',
