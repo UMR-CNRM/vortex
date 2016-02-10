@@ -272,6 +272,12 @@ class TestProviderOpArchive(unittest.TestCase):
         pr = fp.proxy.provider(suite='oper', ** self.fp_defaults)
         self.assertEqual(pr.basename(t_res),
                          'PE00000GLOB25_toto')
+        # Even ugglier things for the production cutoff :-(
+        t_res = DummyRessource(realkind='gridpoint', cutoff='production',
+                               bname='(gribfix:igakey)_toto')
+        pr = fp.proxy.provider(suite='oper', ** self.fp_defaults)
+        self.assertEqual(pr.basename(t_res),
+                         'PEAM000GLOB25_toto')
 
         # Strange naming convention for errgribvor
         fpd = dict()
@@ -322,19 +328,30 @@ class TestProviderOpArchiveCourt(unittest.TestCase):
 
     def setUp(self):
         self.fp_defaults = dict(vapp='arpege',
-                                vconf='frcourt',
                                 experiment='oper',
                                 namespace='oper.archive.fr')
         self.t_suites = ('oper', 'dbl', 'test', 'miroir')
+        self.t_vconfs = ('frcourt', 'courtfr', 'court')
         self.t_res = DummyRessource()
 
     def test_oparchivecourt_basics(self):
         for ns in self.t_suites:
-            pr = fp.proxy.provider(suite=ns, ** self.fp_defaults)
-            self.assertEqual(pr.scheme(), 'op')
-            self.assertEqual(pr.netloc(), 'oper.archive.fr')
-            self.assertEqual(pr.pathname(self.t_res),
-                             'arpege/{}/court/2000/01/01/r0'.format(ns))
+            for nc in self.t_vconfs:
+                pr = fp.proxy.provider(suite=ns, vconf=nc, ** self.fp_defaults)
+                self.assertEqual(pr.scheme(), 'op')
+                self.assertEqual(pr.netloc(), 'oper.archive.fr')
+                self.assertEqual(pr.pathname(self.t_res),
+                                 'arpege/{}/court/2000/01/01/r0'.format(ns))
+
+    def test_oparchivecourt_strangenames(self):
+        for nc in self.t_vconfs:
+            # Uggly things for the production cutoff :-(
+            t_res = DummyRessource(realkind='gridpoint', cutoff='production',
+                                   bname='(gribfix:igakey)_toto')
+            pr = fp.proxy.provider(suite='oper', vconf=nc, ** self.fp_defaults)
+            self.assertEqual(pr.basename(t_res),
+                             'PECM000GLOB25_toto')
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

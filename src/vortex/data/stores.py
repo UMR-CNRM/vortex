@@ -592,7 +592,8 @@ class Finder(Store):
             return remote['path']
 
     def _localtarfix(self, local):
-        if isinstance(local, basestring) and self.system.is_tarfile(local):
+        if (isinstance(local, basestring) and self.system.path.isfile(local) and
+                self.system.is_tarfile(local)):
             destdir = self.system.path.dirname(self.system.path.realpath(local))
             self.system.smartuntar(local, destdir, output=False)
 

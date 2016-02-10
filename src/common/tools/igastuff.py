@@ -52,13 +52,15 @@ fuzzystr = dict(
     ),
 )
 
+arpcourt_vconf = ('courtfr', 'frcourt', 'court')
+
 
 def fuzzyname(entry, realkind, key):
     """Returns any non-standard naming convention in the operational namespace."""
     return fuzzystr[entry][realkind][key]
 
 
-def archive_suffix(model, cutoff, date):
+def archive_suffix(model, cutoff, date, vconf=None):
     """Returns the suffix for iga filenames according to specified ``model``, ``cutoff`` and ``date`` hour."""
 
     hh = range(0, 21, 3)
@@ -77,7 +79,7 @@ def archive_suffix(model, cutoff, date):
             )
         )
     else:
-        if re.search('court|arome', model):
+        if (re.search('court|arome', model) or (vconf in arpcourt_vconf)):
             rr = dict(
                 zip(
                     zip(

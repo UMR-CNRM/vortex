@@ -10,7 +10,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.providers import Provider
-from common.tools.igastuff import archive_suffix, fuzzyname, IgakeyFactoryArchive
+from common.tools.igastuff import archive_suffix, fuzzyname, arpcourt_vconf, IgakeyFactoryArchive
 from vortex.syntax.stdattrs import Namespace, a_suite
 
 
@@ -85,7 +85,7 @@ class OpArchive(Provider):
         info = 'Old archive provider',
         attr = dict(
             vconf = dict(
-                outcast  = ['frcourt']
+                outcast  = arpcourt_vconf
             ),
             tube = dict(
                 optional = True,
@@ -151,7 +151,8 @@ class OpArchive(Provider):
                         keyattr = getattr(self, keyattr)
                     fuzzy = fuzzyname(entry, resource.realkind, keyattr)
                 elif entry == 'gribfix':
-                    rr = archive_suffix(resource.model, resource.cutoff, resource.date)
+                    rr = archive_suffix(resource.model, resource.cutoff,
+                                        resource.date, vconf=self.vconf)
                     if getattr(self, keyattr) == 'pearp':
                         fuzzy = '_'.join(('fc', rr, str(self.member), resource.geometry.area, resource.term.fmthour))
                     else:
@@ -207,7 +208,7 @@ class OpArchiveCourt(OpArchive):
         info = 'Old archive provider for very short cutoff',
         attr = dict(
             vconf = dict(
-                values  = ['frcourt'],
+                values  = arpcourt_vconf,
                 outcast = set(),
             ),
         )
