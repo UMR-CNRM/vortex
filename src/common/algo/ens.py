@@ -128,7 +128,7 @@ class CombiSV(Combi):
 
         nbVectNam = namsec[0].rh.contents['NAMENS']['NBVECT']
         if int(nbVectNam) != totalVects:
-            logger.warning("%s singular vectors expected but only %d accounted for.", (nbVectNam, totalVects))
+            logger.warning("%s singular vectors expected but only %d accounted for.", nbVectNam, totalVects)
             logger.info("Update the total number of vectors in the NBVECT namelist entry")
             namsec[0].rh.contents['NAMENS']['NBVECT'] = totalVects
 
