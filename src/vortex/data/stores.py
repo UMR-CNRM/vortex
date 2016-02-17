@@ -709,7 +709,7 @@ class ArchiveStore(Store):
             ),
             storage = dict(
                 optional = True,
-                default  = 'hendrix.meteo.fr',
+                default  = None,
             ),
             storeroot = dict(
                 optional = True,
@@ -742,8 +742,11 @@ class ArchiveStore(Store):
         return 'archivestore'
 
     def hostname(self):
-        """Returns the current :attr:`storage`."""
-        return self.storage
+        """Returns the current :attr:`storage` or the value from the configuration file."""
+        if self.storage is None:
+            return self.system.target().get('stores:storage', 'hendrix.meteo.fr')
+        else:
+            return self.storage
 
     def _ftpformatpath(self, remote):
         return self.system.path.join(

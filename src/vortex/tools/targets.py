@@ -9,16 +9,26 @@ hosting a specific execution.Target objects use the :mod:`footprints` mechanism.
 #: No automatic export
 __all__ = []
 
+import re
 import platform
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.util.config import GenericConfigParser
+from vortex import sessions
 
 
 class Target(footprints.FootprintBase):
-    """Root class for any :class:`Target` subclasses."""
+    """Root class for any :class:`Target` subclasses.
+
+    Target classes are used to define specific settings and/or behaviour for a
+    given host (*e.g.* your own workstation) or group of hosts (*e.g.* each of
+    the nodes of a cluster).
+
+    Through the :meth:`get` method, it gives access to the **Target**'s specific
+    configuration file (``target-[hostname].ini`` by default).
+    """
 
     _abstract  = True
     _explicit  = False
@@ -71,17 +81,40 @@ class Target(footprints.FootprintBase):
         return self.inetname
 
     def get(self, key, default=None):
-        """Get the actual value of the specified ``key`` ( ``section:option`` )."""
+        """Get the actual value of the specified ``key`` ( ``section:option`` ).
+
+        Sections of the configuration file may be overwritten with sections
+        specific to a given user's group (identified by the Glove's realkind
+        property).
+
+        :example:
+        Let's consider a user with the *opuser* Glove's realkind and the
+        following configuration file::
+
+            [sectionname]
+            myoption = generic
+            [sectionname@opuser]
+            myoption = operations
+
+        The :meth:`get` method called whith ``key='sectionname:myoption'`` will
+        return 'operations'.
+        """
+        my_glove_rk = '@' + sessions.current().glove.realkind
+        glove_rk_id = re.compile(r'^.*@\w+$')
         if ':' in key:
             section, option = [ x.strip() for x in key.split(':', 1) ]
-            if self.config.has_option(section, option):
-                return self.config.get(section, option)
-            else:
-                return default
+            # Check if an override section exists
+            sections = [ x for x in (section + my_glove_rk, section)
+                         if x in self.config.sections() ]
         else:
-            for section in [ x for x in self.config.sections() if self.config.has_option(x, key) ]:
-                return self.config.get(section, key)
-            return default
+            option = key
+            # First look in override sections, then in default one
+            sections = ([ s for s in self.config.sections() if s.endswith(my_glove_rk) ] +
+                        [ s for s in self.config.sections() if not glove_rk_id.match(s) ])
+        # Return the first matching section/option
+        for section in [ x for x in sections if self.config.has_option(x, option) ]:
+            return self.config.get(section, option)
+        return default
 
     @classmethod
     def is_anonymous(cls):
@@ -95,6 +128,7 @@ class Target(footprints.FootprintBase):
 
 
 class LocalTarget(Target):
+    """A very generic class usable for most of the computers."""
 
     _footprint = dict(
         info = 'Nice local target',

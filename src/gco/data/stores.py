@@ -41,6 +41,10 @@ class GcoCentralStore(Store):
                 optional = True,
                 default  = None
             ),
+            ggetarchive = dict(
+                optional = True,
+                default  = None
+            ),
         )
     )
 
@@ -54,8 +58,8 @@ class GcoCentralStore(Store):
         """Default realkind is ``gstore``."""
         return 'gstore'
 
-    def actualgget(self, rpath):
-        """Return actual (gtool, gname)."""
+    def _actualgget(self, rpath):
+        """Return actual (gtool, garchive, tampon, gname)."""
         tg = self.system.target()
 
         l = rpath.lstrip('/').split('/')
@@ -80,7 +84,11 @@ class GcoCentralStore(Store):
             else:
                 gpath = tg.get('gco:ggetpath', '')
 
-        return (self.system.path.join(gpath, gcmd), tampon, gname)
+        garchive = self.ggetarchive
+        if garchive is None:
+            garchive = tg.get('gco:ggetarchive', 'hendrix')
+
+        return (self.system.path.join(gpath, gcmd), garchive, tampon, gname)
 
     def ggetcheck(self, remote, options):
         """Verify disponibility in GCO's tampon using ``gget`` external tool."""
@@ -92,10 +100,10 @@ class GcoCentralStore(Store):
 
     def ggetlocate(self, remote, options):
         """Get location in GCO's tampon using ``gget`` external tool."""
-        (gtool, tampon, gname) = self.actualgget(remote['path'])
+        (gtool, archive, tampon, gname) = self._actualgget(remote['path'])
         sh = self.system
         sh.env.GGET_TAMPON = tampon
-        gloc = sh.spawn([gtool, '-path', gname], output=True)
+        gloc = sh.spawn([gtool, '-path', '-host', archive, gname], output=True)
         if gloc and sh.path.exists(gloc[0]):
             return gloc[0]
         else:
@@ -103,7 +111,7 @@ class GcoCentralStore(Store):
 
     def ggetget(self, remote, local, options):
         """System call to ``gget`` external tool."""
-        (gtool, tampon, gname) = self.actualgget(remote['path'])
+        (gtool, archive, tampon, gname) = self._actualgget(remote['path'])
         sh = self.system
         sh.env.GGET_TAMPON = tampon
 
@@ -112,7 +120,7 @@ class GcoCentralStore(Store):
             logger.info("The resource was already fetched in a previous extract.")
             rc = True
         else:
-            rc = sh.spawn([gtool, gname], output=False)
+            rc = sh.spawn([gtool, '-host', archive, gname], output=False)
 
         if rc and sh.path.exists(gname):
             if not sh.path.isdir(gname) and sh.is_tarfile(gname):
