@@ -179,8 +179,8 @@ def gget_resource_exists(t, ggetfile, monthly=False):
         return False
 
     # all monthly files must be present
-    months = [ ggetfile + '.m{0:02d}'.format(m) for m in range(1, 13) ]
-    missing = [ month for month in months if not t.sh.path.isfile(month) ]
+    months = [ggetfile + '.m{:02d}'.format(m) for m in range(1, 13)]
+    missing = [month for month in months if not t.sh.path.isfile(month)]
     if missing:
         print 'missing :', missing
         return False
@@ -190,23 +190,23 @@ def gget_resource_exists(t, ggetfile, monthly=False):
 def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='gco/tampon', logpath=None):
     """
     Retrieve a copy of all relevant gco resources for a cycle.
-    The genv reference is kept in ./genv/cycle.genv
+    The genv reference is kept in ./genv/cycle.genv.
     The resources are stored in current ``gcopath`` target path.
     Use ``force=True`` to continue in spite of errors.
     """
-    tg = t.sh.target()
-
+    sh = t.sh
+    tg = sh.target()
     defs = genv.autofill(cycle)
 
     # Save genv raw output in specified `genvpath` folder
-    t.sh.mkdir(genvpath)
-    genvconf = t.sh.path.join(genvpath, cycle + '.genv')
+    sh.mkdir(genvpath)
+    genvconf = sh.path.join(genvpath, cycle + '.genv')
     with io.open(genvconf, mode='w', encoding='utf-8') as fp:
         fp.write(unicode(genv.as_rawstr(cycle=cycle)))
 
     # Start a log
     if logpath is None:
-        logpath = t.sh.path.join(genvpath, 'freeze_cycle.log')
+        logpath = sh.path.join(genvpath, 'freeze_cycle.log')
     log = io.open(logpath, mode='a', encoding='utf-8')
     log.write(unicode(t.line))
     log.write(unicode(t.prompt + ' ' + cycle + ' upgrade ' + date.now().reallynice() + "\n"))
@@ -232,55 +232,76 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
             ggetnames |= set(v)
 
     # Could filter out here unwanted extensions
+    #
 
     # Perform gget on all resources to target directory
-    t.sh.cd(gcopath, create=True)
     gcmd  = tg.get('gco:ggetcmd', 'gget')
     gpath = tg.get('gco:ggetpath', '')
-    gtool = t.sh.path.join(gpath, gcmd)
+    gtool = sh.path.join(gpath, gcmd)
 
     increase = 0
     details  = dict(retrieved=list(), inplace=list(), failed=list(), expanded=list())
 
-    for name in sorted(list(ggetnames)):
-        if verbose:
-            print t.line
-            print name, '...',
-        if gget_resource_exists(t, name, name in monthly):
+    with sh.cdcontext(gcopath, create=True):
+        for name in sorted(list(ggetnames)):
             if verbose:
-                print 'already there'
-                t.sh.ll(name)
-            details['inplace'].append(name)
-        else:
-            try:
-                t.sh.spawn([gtool, name], output=False)
-                increase += t.sh.size(name)
-                t.sh.readonly(name)
+                print t.line
+                print name, '...',
+            if gget_resource_exists(t, name, name in monthly):
                 if verbose:
-                    print 'ok'
-                    t.sh.ll(name)
-                details['retrieved'].append(name)
-                if name.endswith('.tgz'):
-                    subpath = name[:-4]
-                    locpath = t.sh.getcwd()
-                    t.sh.cd(subpath, create=True)
-                    t.sh.untar('../' + name, output=False)
-                    for subfile in t.sh.glob('*'):
-                        details['expanded'].append(t.sh.path.join(subpath, subfile))
-                        t.sh.readonly(subfile)
-                    t.sh.cd(locpath)
-                    t.sh.remove(name)
-            except StandardError:
-                if verbose:
-                    print 'failed &',
-                details['failed'].append(name)
-                if force:
-                    print 'continue'
-                else:
-                    print 'abort'
-                    log.write(unicode('Aborted on ' + name + "\n"))
-                    log.close()
-                    raise
+                    print 'already there'
+                    sh.ll(name + '*')
+                details['inplace'].append(name)
+            else:
+                try:
+                    if verbose:
+                        print 'spawning: {} {}'.format(gtool, name)
+                    sh.spawn([gtool, name], output=False)
+                    increase += sh.size(name)
+                    details['retrieved'].append(name)
+                    sh.readonly(name)
+                    if verbose:
+                        print 'ok'
+                        sh.ll(name + '*')
+
+                    if sh.is_tarname(name):
+                        radix = sh.tarname_radix(name)
+                        if verbose:
+                            print 'expanding to', radix
+                        unpacked = sh.smartuntar(name, radix)
+
+                        # a unique directory is moved one level up
+                        if len(unpacked) == 1 and sh.path.isdir(sh.path.join(radix, unpacked[0])):
+                            if verbose:
+                                print 'moving contents one level up:', unpacked[0]
+                            import tempfile
+                            tmpdir = tempfile.mkdtemp(prefix='_renaming_', dir='.')
+                            sh.move(sh.path.join(radix, unpacked[0]), tmpdir)
+                            sh.rmdir(radix)
+                            sh.mv(sh.path.join(tmpdir, unpacked[0]), radix)
+                            sh.remove(tmpdir)
+                            with sh.cdcontext(radix):
+                                unpacked = sh.glob('*')
+
+                        if verbose:
+                            print 'unpacked:\n\t' + '\n\t'.join(unpacked)
+                        for subfile in unpacked:
+                            subfilepath = sh.path.join(radix, subfile)
+                            details['expanded'].append(subfilepath)
+                            increase += sh.size(subfilepath)
+                            sh.readonly(subfilepath)
+
+                except StandardError:
+                    if verbose:
+                        print 'failed &',
+                    details['failed'].append(name)
+                    if force:
+                        print 'continue'
+                    else:
+                        print 'abort'
+                        log.write(unicode('Aborted on ' + name + "\n"))
+                        log.close()
+                        raise
 
     if verbose:
         print t.line

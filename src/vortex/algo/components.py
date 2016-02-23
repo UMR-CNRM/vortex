@@ -19,7 +19,7 @@ from vortex.syntax.stdattrs import DelayedEnvValue
 
 
 class AlgoComponentError(Exception):
-    """Generic exception class for Algo Componnents."""
+    """Generic exception class for Algo Components."""
     pass
 
 
