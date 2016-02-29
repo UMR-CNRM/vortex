@@ -12,8 +12,8 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex import toolbox
-from vortex.data.geometries import SpectralGeometry, GridGeometry
-from vortex import data, algo, tools
+from vortex.data.geometries import GaussGeometry, ProjectedGeometry, LonlatGeometry
+from vortex import data, algo, tools  # @UnusedImport
 
 #: No automatic export
 __all__ = []
@@ -463,7 +463,10 @@ class Dispatcher(object):
         Instanciate a SpectralGeometry with specified attributes.
         Return the new object.
         """
-        info = SpectralGeometry(**kw)
+        if kw.get('lam', True):
+            info = ProjectedGeometry(**kw)
+        else:
+            info = GaussGeometry(**kw)
         return (0, str(info), info)
 
     def grid(self, t, kw):
@@ -471,7 +474,7 @@ class Dispatcher(object):
         Instanciate a GridGeometry with specified attributes.
         Return the new object.
         """
-        info = GridGeometry(**kw)
+        info = LonlatGeometry(**kw)
         return (0, str(info), info)
 
     def handler(self, t, kw):

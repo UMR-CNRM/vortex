@@ -6,11 +6,10 @@ __all__ = []
 
 
 from .resources  import Resource
-from .geometries import HorizontalGeometry, SpectralGeometry, GridGeometry
+from .geometries import HorizontalGeometry
 from .contents   import FormatAdapter
 
 from vortex.syntax.stdattrs import model, date, cutoff
-
 
 
 class FlowResource(Resource):
@@ -29,10 +28,9 @@ class FlowResource(Resource):
         )
 
 
-class HorizontalGeoFlowResource(FlowResource):
-    """Abstract class which is a :class:`FlowResource` bound to a geometry."""
+class GeoFlowResource(FlowResource):
+    """Class which is a :class:`FlowResource` bound to a geometry."""
 
-    _abstract = True
     _footprint = dict(
         attr = dict(
             geometry = dict(
@@ -57,29 +55,3 @@ class HorizontalGeoFlowResource(FlowResource):
     def footprint_export_geometry(self):
         """Return the ``geometry`` attribute as its id tag."""
         return self.geometry.tag
-
-
-class SpectralGeoFlowResource(HorizontalGeoFlowResource):
-    """Abstract class which is a :class:`FlowResource` bound to a geometry."""
-
-    _abstract = True
-    _footprint = dict(
-        attr = dict(
-            geometry = dict(
-                type = SpectralGeometry,
-            ),
-        )
-    )
-
-
-class GridGeoFlowResource(HorizontalGeoFlowResource):
-    """Abstract class which is a :class:`FlowResource` bound to a geometry."""
-
-    _abstract = True
-    _footprint = dict(
-        attr = dict(
-            geometry = dict(
-                type = GridGeometry,
-            ),
-        )
-    )

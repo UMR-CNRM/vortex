@@ -13,21 +13,26 @@ from vortex.util.config import GenericConfigParser
 
 # Module Interface
 
+
 def get(**kw):
     """Return actual geometry object matching description."""
     return Geometry(**kw)
+
 
 def keys():
     """Return the list of current names of geometries collected."""
     return Geometry.tag_keys()
 
+
 def values():
     """Return the list of current values of geometries collected."""
     return Geometry.tag_values()
 
+
 def items():
     """Return the items of the geometries table."""
     return Geometry.tag_items()
+
 
 def load(inifile='geometries.ini', refresh=False, verbose=True):
     """Load a set of pre-defined geometries from a configuration file."""
@@ -35,12 +40,17 @@ def load(inifile='geometries.ini', refresh=False, verbose=True):
     for item in iniconf.sections():
         gdesc = dict(iniconf.items(item))
         gkind = gdesc.get('kind')
-        thisclass = [ x for x in Geometry.tag_classes() if x.__name__.lower().startswith(gkind.lower()) ].pop()
+        try:
+            thisclass = [x for x in Geometry.tag_classes()
+                         if x.__name__.lower().startswith(gkind.lower())].pop()
+        except IndexError:
+            raise AttributeError('Kind={:s} is unknown (for geometry [{:s}])'.format(gkind, item))
         if verbose:
             print '+ Load', item.ljust(16), 'as', thisclass
         if refresh:
             gdesc['new'] = True
-        gnew = thisclass(tag=item, **gdesc)
+        thisclass(tag=item, **gdesc)
+
 
 def grep(**kw):
     """Grep items that match the set of attributes given as named arguments."""
@@ -106,6 +116,8 @@ class HorizontalGeometry(Geometry):
             area = None,
             nlon = None,
             nlat = None,
+            ni = None,
+            nj = None,
             resolution = 0.,
             truncation = None,
             stretching = None,
@@ -120,7 +132,7 @@ class HorizontalGeometry(Geometry):
                 self.__dict__[k] = True
             if isinstance(v, basestring) and re.match('false', v, re.IGNORECASE):
                 self.__dict__[k] = False
-        for item in ('nlon', 'nlat', 'truncation'):
+        for item in ('nlon', 'nlat', 'ni', 'nj', 'truncation'):
             cv = getattr(self, item)
             if cv is not None:
                 setattr(self, item, int(cv))
@@ -128,6 +140,11 @@ class HorizontalGeometry(Geometry):
             cv = getattr(self, item)
             if cv is not None:
                 setattr(self, item, float(cv))
+        self._check_attributes()
+
+    def _check_attributes(self):
+        if self.lam and (self.area is None):
+            raise AttributeError("Some mandatory arguments are missing")
 
     @property
     def gam(self):
@@ -158,77 +175,113 @@ class HorizontalGeometry(Geometry):
         of the valuable information contained by this geometry.
         """
         indent = ' ' * indent
+        # Basics...
         card = "\n".join((
             '{0}Geometry {1!r}',
             '{0}{0}Info       : {2:s}',
-            '{0}{0}Resolution : {3:s}',
-            '{0}{0}Truncation : {4:s}',
-            '{0}{0}Stretching : {5:s}',
-            '{0}{0}Area       : {6:s}',
-            '{0}{0}Local      : {7:s}',
-            '{0}{0}NLon       : {8:s}',
-            '{0}{0}NLat       : {9:s}',
-        )).format(
-            indent,
-            self, self.info, str(self.resolution), str(self.truncation), str(self.stretching),
-            str(self.area), str(self.lam), str(self.nlon), str(self.nlat)
-        )
+            '{0}{0}LAM        : {3:s}',
+        )).format(indent, self, self.info, str(self.lam))
+        # Optional infos
+        for attr in [k for k in ('area', 'resolution', 'truncation',
+                                 'stretching', 'nlon', 'nlat', 'ni', 'nj')
+                     if getattr(self, k, False)]:
+            card += "\n{0}{0}{1:10s} : {2!s}".format(indent, attr.title(),
+                                                     getattr(self, attr))
         return card
 
     def strheader(self):
         """Return beginning of formatted print representation."""
-        return '{0:s}.{1:s} | tag=\'{2}\' id=\'{3:s}\' area=\'{4:s}\''.format(
+        header = '{0:s}.{1:s} | tag=\'{2}\' id=\'{3:s}\''.format(
             self.__module__,
             self.__class__.__name__,
             self.tag,
             self.info,
-            self.area,
         )
+        if self.lam:
+            header += ' area=\'{0:s}\''.format(self.area)
+        return header
 
 
-class SpectralGeometry(HorizontalGeometry):
-    """
-    Horizontal spectral geometry,
-    mostly defined through its ``truncation`` and ``stretching`` attributes.
-    """
+class GaussGeometry(HorizontalGeometry):
+    """Gaussian grid (stretched or not, rotated or not)."""
 
     _tag_topcls = False
 
     def __init__(self, **kw):
-        logger.debug('Spectral Geometry init %s', self)
-        kw.setdefault('runit', 'km')
-        super(SpectralGeometry, self).__init__(**kw)
-        self.kind = 'spectral'
+        logger.debug('Gauss Geometry init %s', self)
+        super(GaussGeometry, self).__init__(**kw)
+        self.kind = 'gauss'
+
+    def _check_attributes(self):
+        self.lam = False  # Always false for gaussian grid
+        if self.truncation is None or self.stretching is None:
+            raise AttributeError("Some mandatory arguments are missing")
 
     def __str__(self):
         """Standard formatted print representation."""
-        if self.lam:
-            return '<{0:s} r=\'{1:s}\'>'.format(self.strheader(), self.rnice)
-        else:
-            return '<{0:s} t={1:d} c={2:g}>'.format(self.strheader(), self.truncation, self.stretching)
+        return '<{0:s} t={1:d} c={2:g}>'.format(self.strheader(), self.truncation, self.stretching)
 
 
-class GridGeometry(HorizontalGeometry):
-    """
-    Horizontal grid points geometry,
-    mostly defined through its ``nlon`` and ``nlat`` attributes.
-    """
+class ProjectedGeometry(HorizontalGeometry):
+    """Geometry defined by a geographical projection on a plane."""
 
     _tag_topcls = False
 
-    def __init__(self, *args, **kw):
-        logger.debug('Grid Geometry init %s', self)
-        kw.setdefault('nlon', 3200)
-        kw.setdefault('nlat', 1600)
-        kw.setdefault('runit', 'dg')
-        super(GridGeometry, self).__init__(**kw)
-        self.kind       = 'grid'
-        self.truncation = None
-        self.stretching = None
+    def __init__(self, **kw):
+        logger.debug('Projected Geometry init %s', self)
+        kw.setdefault('runit', 'km')
+        super(ProjectedGeometry, self).__init__(**kw)
+        self.kind = 'projected'
+
+    def _check_attributes(self):
+        super(ProjectedGeometry, self)._check_attributes()
+        if self.resolution is None:
+            raise AttributeError("Some mandatory arguments are missing")
 
     def __str__(self):
         """Standard formatted print representation."""
         return '<{0:s} r=\'{1:s}\'>'.format(self.strheader(), self.rnice)
+
+
+class LonlatGeometry(HorizontalGeometry):
+    """Geometry defined by a geographical projection on plane."""
+
+    _tag_topcls = False
+
+    def __init__(self, **kw):
+        logger.debug('Lon/Lat Geometry init %s', self)
+        kw.setdefault('runit', 'dg')
+        super(LonlatGeometry, self).__init__(**kw)
+        self.kind = 'lonlat'
+
+    def __str__(self):
+        """Standard formatted print representation."""
+        return '<{0:s} r=\'{1:s}\'>'.format(self.strheader(), self.rnice)
+
+
+class UnstructuredGeometry(HorizontalGeometry):
+    """Unstructured grid (curvlinear, finite-elements, ...)."""
+
+    _tag_topcls = False
+
+    def __init__(self, *args, **kw):
+        logger.debug('Unstructured Geometry init %s', self)
+        super(UnstructuredGeometry, self).__init__(**kw)
+        self.kind = 'unstructured'
+
+    def __str__(self):
+        """Standard formatted print representation."""
+        return '<{0:s}>'.format(self.strheader())
+
+
+class CurvlinearGeometry(UnstructuredGeometry):
+
+    _tag_topcls = False
+
+    def _check_attributes(self):
+        super(CurvlinearGeometry, self)._check_attributes()
+        if self.ni is None or self.nj is None:
+            raise AttributeError("Some mandatory arguments are missing")
 
 # Load default geometries
 load(verbose=False)

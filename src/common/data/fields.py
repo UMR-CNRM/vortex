@@ -5,7 +5,7 @@
 __all__ = []
 
 from vortex.data.resources  import Resource
-from vortex.data.flow import SpectralGeoFlowResource
+from vortex.data.flow import GeoFlowResource
 
 from vortex.syntax.stdattrs import date, cutoff
 
@@ -61,7 +61,7 @@ class RawFields(Resource):
         )
 
 
-class GeoFields(SpectralGeoFlowResource):
+class GeoFields(GeoFlowResource):
 
     _footprint = [
         dict(

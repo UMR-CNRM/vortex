@@ -12,9 +12,9 @@ class TestAnalysis(unittest.TestCase):
 
     def setUp(self):
         self.vb = VortexNameBuilder()
-        self.geo = geometries.SpectralGeometry(tag='fgeo', kind='spectral',
-                                               area='france', truncation=798,
-                                               stretching=2.4, lam=False)
+        self.geo = geometries.GaussGeometry(tag='fgeo', area='france',
+                                            truncation=798, stretching=2.4,
+                                            new=True)
 
     def test_names(self):
         fpcommon = dict(date=Date(1970, 1, 1, 1, 0, 0), cutoff='assim',
@@ -28,9 +28,9 @@ class TestInitialCondition(unittest.TestCase):
 
     def setUp(self):
         self.vb = VortexNameBuilder()
-        self.geo = geometries.SpectralGeometry(tag='fgeo', kind='spectral',
-                                               area='france', truncation=798,
-                                               stretching=2.4, lam=False)
+        self.geo = geometries.GaussGeometry(tag='fgeo', area='france',
+                                            truncation=798, stretching=2.4,
+                                            new=True)
 
     def test_names(self):
         fpcommon = dict(date=Date(1970, 1, 1, 1, 0, 0), cutoff='assim',

@@ -8,13 +8,13 @@ __all__ = []
 import re
 
 from vortex.tools import date, env
-from vortex.data.flow import SpectralGeoFlowResource
+from vortex.data.flow import GeoFlowResource
 from vortex.syntax.stdattrs import a_term, a_cutoff
 
 from common.tools.igastuff import archive_suffix
 
 
-class _AbstractLAMBoundary(SpectralGeoFlowResource):
+class _AbstractLAMBoundary(GeoFlowResource):
     """
     Class of a coupling file for a Limited Area Model.
     A SpectralGeometry object is needed.

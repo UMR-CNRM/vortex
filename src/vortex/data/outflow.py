@@ -5,7 +5,7 @@
 __all__ = []
 
 from resources import Resource
-from geometries import HorizontalGeometry, SpectralGeometry, GridGeometry
+from geometries import HorizontalGeometry
 from contents   import FormatAdapter
 from vortex.syntax.stdattrs import model
 
@@ -28,8 +28,8 @@ class ModelResource(NoDateResource):
 
 
 class StaticGeoResource(ModelResource):
+    """A :class:`ModelResource` bound to a geometry."""
 
-    _abstract = True
     _footprint = dict(
         attr = dict(
             geometry = dict(
@@ -52,27 +52,3 @@ class StaticGeoResource(ModelResource):
     def footprint_export_geometry(self):
         """Return the ``geometry`` attribute as its id tag."""
         return self.geometry.tag
-
-
-class StaticSpectralResource(StaticGeoResource):
-
-    _abstract = True
-    _footprint = dict(
-        attr = dict(
-            geometry = dict(
-                type = SpectralGeometry,
-            )
-        )
-    )
-
-
-class StaticGridResource(StaticGeoResource):
-
-    _abstract = True
-    _footprint = dict(
-        attr = dict(
-            geometry = dict(
-                type = GridGeometry,
-            )
-        )
-    )

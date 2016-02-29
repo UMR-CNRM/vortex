@@ -13,9 +13,9 @@ class TestLAMBoundary(unittest.TestCase):
 
     def setUp(self):
         self.vb = VortexNameBuilder()
-        self.geo = geometries.SpectralGeometry(tag='fgeol', kind='spectral',
-                                               area='FRANGP', resolution=16,
-                                               runit='km', lam=True, new=True)
+        self.geo = geometries.ProjectedGeometry(tag='fgeol', area='FRANGP',
+                                                resolution=16, runit='km',
+                                                lam=True, new=True)
         self.fpcommon = dict(date=Date(1970, 1, 1, 3, 0, 0), cutoff='assim',
                              kind='boundary', geometry=self.geo, term=1,
                              model='arome')

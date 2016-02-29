@@ -4,11 +4,11 @@
 #: No automatic export
 __all__ = []
 
-from vortex.data.outflow import StaticSpectralResource
+from vortex.data.outflow import StaticGeoResource
 from gco.syntax.stdattrs import GenvKey
 
 
-class PGDRaw(StaticSpectralResource):
+class PGDRaw(StaticGeoResource):
     """
     SURFEX climatological resource.
     A Genvkey can be provided.
@@ -78,7 +78,7 @@ class PGDFA(PGDRaw):
     )
 
 
-class CoverParams(StaticSpectralResource):
+class CoverParams(StaticGeoResource):
     """
     Class of a tar-zip set of coefficients for radiative transfers computations.
     A Genvkey can be given.
@@ -108,7 +108,7 @@ class CoverParams(StaticSpectralResource):
         return 'coverparams'
 
 
-class IsbaParams(StaticSpectralResource):
+class IsbaParams(StaticGeoResource):
     """
     Class of surface (vegetations, etc.) coefficients.
     A Genvkey can be given.
