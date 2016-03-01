@@ -193,11 +193,12 @@ class Sample(FlowResource):
                 values  = ['json'],
                 default = 'json',
             ),
-            nblot = dict(
+            nbsample = dict(
                 type = int,
             ),
-            nbset = dict(
-                type = int,
+            population = dict(
+                type = list,
+                optional = True
             ),
         )
     )
@@ -205,7 +206,7 @@ class Sample(FlowResource):
     def basename_info(self):
         """Generic information for names fabric."""
         return dict(
-            radical = self.realkind + '.{:d}outof{:d}'.format(self.nblot, self.nbset),
+            radical = self.realkind + 'of{:d}'.format(self.nbsample),
             fmt     = self.nativefmt,
         )
 

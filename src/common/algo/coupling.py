@@ -10,10 +10,11 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools import date
-from .ifsroot import IFSParallel
+from .forecasts import FullPos
+from vortex.layout.dataflow import intent
 
 
-class Coupling(IFSParallel):
+class Coupling(FullPos):
     """Coupling for IFS-like LAM Models."""
 
     _footprint = dict(
@@ -21,24 +22,11 @@ class Coupling(IFSParallel):
             kind = dict(
                 values   = [ 'coupling' ],
             ),
-            xpname = dict(
-                default  = 'FPOS'
-            ),
-            conf = dict(
-                default  = 1,
-            ),
             basedate = dict(
                 type     = date.Date,
                 optional = True,
-                default  = None,
             ),
-            flyput = dict(
-                default  = False,
-                values   = [False],
-            ),
-            timeout = dict(
-                default = 180,
-            )
+
         )
     )
 
@@ -52,41 +40,56 @@ class Coupling(IFSParallel):
         namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
         for nam in [ x.rh for x in namsec if 'NAMFPC' in x.rh.contents ]:
             logger.info('Substitute "AREA" to CFPDOM namelist entry')
-            nam.contents['NAMFPC']['CFPDOM'] = 'AREA'
+            nam.contents['NAMFPC']['CFPDOM(1)'] = 'AREA'
             nam.save()
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
 
         sh = self.system
+        basedate = self.basedate or self.env.YYYYMMDDHH
 
         cplsec = self.context.sequence.effective_inputs(
             role = ('InitialCondition', 'CouplingSource'),
             kind = ('historic', 'analysis')
         )
         cplsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+        infile = 'ICMSH{0:s}INIT'.format(self.xpname)
+        isMany = len(cplsec) > 1
 
         cplguess = self.context.sequence.effective_inputs(role = 'Guess')
         cplguess.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
-
         guessing = bool(cplguess)
 
-        basedate = self.basedate or self.env.YYYYMMDDHH
+        cplsurf = self.context.sequence.effective_inputs(role = ('SurfaceInitialCondition', 'SurfaceCouplingSource'))
+        cplsurf.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+        surfacing = bool(cplsurf)
+        infilesurf = 'ICMSH{0:s}INIT.sfx'.format(self.xpname)
 
         for sec in cplsec:
             r = sec.rh
             sh.subtitle('Loop on {0:s}'.format(str(r.resource)))
 
-            # Set a local storage place
-            runstore = 'RUNOUT' + r.resource.term.fmtraw
-            sh.mkdir(runstore)
-
             # First attempt to set actual date as the one of the source model
             actualdate = r.resource.date + r.resource.term
 
-            # Finaly set the actual init file
-            sh.rm('ICMSHFPOSINIT')
-            sh.softlink(r.container.localpath(), 'ICMSHFPOSINIT')
+            # Set the actual init file
+            if sh.path.exists(infile):
+                if isMany:
+                    logger.critical('Cannot process multiple Historic files if %s exists.', infile)
+            else:
+                sh.cp(r.container.localpath(), infile, fmt=r.container.actualfmt, intent=intent.IN)
+
+            # If the surface file is needed, set the actual initsurf file
+            if cplsurf:
+                cplout  = cplsurf.pop(0)
+                if sh.path.exists(infilesurf):
+                    if isMany:
+                        logger.critical('Cannot process multiple surface historic files if %s exists.', infilesurf)
+                else:
+                    sh.cp(cplout.rh.container.localpath(), infilesurf, fmt=cplout.rh.container.actualfmt, intent=intent.IN)
+            elif surfacing:
+                logger.error('No more surface source to loop on for coupling')
 
             # Expect the coupling source to be there...
             self.grab(sec, comment='coupling source')
@@ -96,7 +99,10 @@ class Coupling(IFSParallel):
                 cplout  = cplguess.pop(0)
                 cplpath = cplout.rh.container.localpath()
                 if sh.path.exists(cplpath):
-                    actualdate = cplout.rh.resource.date + cplout.rh.resource.term
+                    actualdateguess = cplout.rh.resource.date + cplout.rh.resource.term
+                    if (actualdate == actualdateguess):
+                        logger.error('The guess date, {:s}, is different from the source date {:s}, !'
+                                     .format(actualdateguess.reallynice(), actualdate.reallynice()))
                     # Expect the coupling guess to be there...
                     self.grab(cplout, comment='coupling guess')
                     logger.info('Coupling with existing guess <%s>', cplpath)
@@ -133,59 +139,45 @@ class Coupling(IFSParallel):
             # Standard execution
             super(Coupling, self).execute(rh, opts)
 
-            # Freeze the current output
-            for posfile in [ x for x in sh.glob('PFFPOSAREA+*') if re.match(r'PFFPOSAREA\+\d+(?:\:\d+)?$', x) ]:
-                actualterm = (actualdate - basedate).time()
-                actualname = 'CPLOUT+' + actualterm.fmthm
-                sh.mv(
-                    sh.path.realpath(posfile),
-                    sh.path.join(runstore, actualname),
-                    fmt='lfi',
-                )
-                if sh.path.exists(posfile):
-                    sh.rm(posfile)
-                expected = [ x for x in self.promises if x.rh.container.localpath() == actualname ]
-                if expected:
-                    locpwd = sh.getcwd()
-                    sh.cd(runstore)
-                    try:
-                        for thispromise in expected:
-                            thispromise.put(incache=True)
-                    finally:
-                        sh.cd(locpwd)
-            for logfile in sh.glob('NODE.*', 'std*'):
-                sh.move(logfile, sh.path.join(runstore, logfile))
+            # Set a local appropriate file
+            posfile = [ x for x in sh.glob('PFFPOSAREA+*') if re.match(r'PFFPOSAREA\+\d+(?:\:\d+)?(?:\.sfx)?$', x) ]
+            if (len(posfile) > 1):
+                logger.critical('Many PFFPOSAREA files, do not know how to adress that')
+            posfile = posfile[0]
+            actualterm = (actualdate - basedate).time()
 
-            # Some cleaning
-            sh.rmall('PXFPOS*', fmt='lfi')
-            sh.rmall('ncf927', 'dirlst')
+            actualname = re.sub(r'^.+?((?:_\d+)?)\+[:\w]+$', r'CPLOUT\1+', r.container.localpath()) + actualterm.fmthm
+            sh.move(
+                    sh.path.realpath(posfile),
+                    actualname,
+                    fmt=r.container.actualfmt
+            )
+            if sh.path.exists(posfile):
+                sh.rm(posfile)
+            
+            # promises management
+            expected = [ x for x in self.promises if x.rh.container.localpath() == actualname ]
+            if expected:
+                for thispromise in expected:
+                    thispromise.put(incache=True)
+
+            # prepares the next execution
+            if isMany:
+                # The only one listing
+                sh.cat('NODE.001_01', output='NODE.all')
+
+                # Some cleaning
+                sh.rmall('PXFPOS*', fmt = r.container.actualfmt)
+                sh.rmall('ncf927', 'dirlst')
+                sh.remove(infile, fmt = r.container.actualfmt)
+                if cplsurf:
+                    sh.remove(infilesurf, fmt = r.container.actualfmt)
 
     def postfix(self, rh, opts):
-        """Post coupling cleaning."""
+        """Post processing cleaning."""
         super(Coupling, self).postfix(rh, opts)
-
         sh = self.system
-
-        for cplfile in sh.glob('RUNOUT*/CPLOUT+*:[0-9][0-9]'):
-            sh.move(cplfile, sh.path.basename(cplfile), fmt='lfi')
-        sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')
+        if sh.path.exists('NODE.all'):
+            sh.move('NODE.all', 'NODE.001_01')
         sh.dir(output=False)
 
-
-class LAMCoupling(Coupling):
-    """Coupling for IFS-like LAM Models from IFS-like LAM Models."""
-
-    _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values   = ['lamcpl', 'lamcoupling'],
-                remap    = dict(lamcoupling = 'lamcpl'),
-            ),
-        )
-    )
-
-    def spawn_command_options(self):
-        """Dictionary provided for command line factory."""
-        d = super(LAMCoupling, self).spawn_command_options()
-        d['model'] = 'aladin'
-        return d

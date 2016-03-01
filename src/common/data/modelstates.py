@@ -4,6 +4,9 @@
 #: No automatic export
 __all__ = []
 
+import footprints
+logger = footprints.loggers.getLogger(__name__)
+
 import re
 
 from vortex.data.flow       import SpectralGeoFlowResource
@@ -141,7 +144,8 @@ class InitialCondition(Analysis):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        raise NotImplementedError("The number is only known by the provider, not supported yet.")
+        logger.warning("The member number is only known by the provider, so the generic historic name is returned.")
+        return 'ICMSH' + self.model[:4].upper() + '+' + self.term.fmthour
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""

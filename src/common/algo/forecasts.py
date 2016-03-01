@@ -245,6 +245,10 @@ class FullPos(IFSParallel):
             xpname = dict(
                 default = 'FPOS'
             ),
+            flyput = dict(
+                default  = False,
+                values   = [False],
+            ),
         )
     )
 
@@ -284,11 +288,11 @@ class FullPosGeo(FullPos):
             sh.subtitle(str_subtitle)
 
             # Set the actual init file
-            if isMany:
-                if sh.path.exists(infile):
+            if sh.path.exists(infile):
+                if isMany:
                     logger.critical('Cannot process multiple Historic files if %s exists.', infile)
-                sh.cp(r.container.localpath(), 'ICMSH{0:s}INIT'.format(self.xpname),
-                      fmt=r.container.actualfmt, intent=intent.IN)
+            else:
+                sh.cp(r.container.localpath(), infile, fmt=r.container.actualfmt, intent=intent.IN)
 
             # Standard execution
             super(FullPosGeo, self).execute(rh, opts)
@@ -307,7 +311,7 @@ class FullPosGeo(FullPos):
 
                 # Some cleaning
                 sh.rmall('ncf927', 'dirlst')
-                sh.remove('ICMSH{0:s}INIT'.format(self.xpname), fmt=r.container.actualfmt)
+                sh.remove(infile, fmt=r.container.actualfmt)
 
     def postfix(self, rh, opts):
         """Post processing cleaning."""
@@ -315,14 +319,16 @@ class FullPosGeo(FullPos):
         super(FullPosGeo, self).postfix(rh, opts)
 
         initrh = [ x.rh for x in self.context.sequence.effective_inputs(
-            kind = ('analysis', 'historic', re.compile('pert')),
+            role = ('Analysis', 'Guess', 'InitialCondition'),
+            kind = ('analysis', 'historic', 'ic', re.compile('(stp|ana)min'),
+                    re.compile('pert'), ),
         ) ]
         if len(initrh) > 1:
             for num, r in enumerate(initrh):
                 sh.move('RUNOUT/pfout_{:d}'.format(num),
                         'PF' + re.sub('^(?:ICMSH)(.*?)(?:INIT)(.*)$', r'\1\2', r.container.localpath()).format(self.xpname),
                         fmt=r.container.actualfmt)
-                sh.dir(output=False)
+        sh.dir(output=False)
 
 
 class FullPosBDAP(FullPos):

@@ -61,6 +61,10 @@ class IFSParallel(Parallel):
                 type     = bool,
                 default  = False,
             ),
+            member = dict(
+                optional = True,
+                type     = int,
+            ),
         )
     )
 
@@ -123,6 +127,12 @@ class IFSParallel(Parallel):
                 nam_updated = True
             else:
                 logger.error('No NAMARG block in %s. It will probably crash', namlocal)
+                
+        if self.member is not None:
+            namcontents.setmacro('MEMBER', self.member)
+            nam_updated = True
+            logger.info('Setup macro MEMBER=%s in %s', self.member, namlocal)
+
         return nam_updated
 
     def prepare_namelists(self, rh, opts=None):

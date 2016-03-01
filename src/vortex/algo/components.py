@@ -65,7 +65,7 @@ class AlgoComponent(footprints.FootprintBase):
             timeout = dict(
                 type     = int,
                 optional = True,
-                default  = 120,
+                default  = 180,
             ),
         )
     )
