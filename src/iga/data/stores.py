@@ -36,14 +36,14 @@ class IgaGcoCacheStore(GcoCacheStore):
         extract = remote['query'].get('extract', None)
         if extract:
             remote['path'] = self.system.path.join(remote['path'], extract[0])
-            logger.warning('Extend remote path with extract value <%s>', remote['path'])
+            logger.info('Extend remote path with extract value <%s>', remote['path'])
+        options_tmp = options.copy()
+        options_tmp['auto_tarextract'] = True
+        # Is it a preprocessed tar (i.e ggetall alreadu untared it ?)
         if remote['path'].endswith('.tgz'):
             remote['path'] = remote['path'][:-4]
-            local = None
-        rc = self.incacheget(remote, local, options)
-        if rc and local and not self.system.path.isdir(local) and self.system.is_tarfile(local):
-            rc = self.system.untar(local, output=False)
-        return rc
+            options_tmp['auto_dirextract'] = True
+        return self.incacheget(remote, local, options_tmp)
 
 
 class IgaFinder(Finder):

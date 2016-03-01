@@ -187,11 +187,9 @@ class GcoCacheStore(CacheStore):
             logger.warning('Skip cache get with extracted %s', extract)
             return False
         else:
-            rc = self.incacheget(remote, local, options)
-            if rc and not self.system.path.isdir(local) and self.system.is_tarfile(local):
-                destdir = self.system.path.dirname(self.system.path.realpath(local))
-                self.system.smartuntar(local, destdir, output=False)
-            return rc
+            options_tmp = options.copy()
+            options_tmp['auto_tarextract'] = True
+            return self.incacheget(remote, local, options_tmp)
 
     def ggetput(self, local, remote, options):
         """Gateway to :meth:`incacheputt`."""
