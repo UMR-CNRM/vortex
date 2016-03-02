@@ -34,15 +34,16 @@ class IgaGcoCacheStore(GcoCacheStore):
         Resources should be already extracted from in-cache archives files.
         """
         extract = remote['query'].get('extract', None)
-        if extract:
-            remote['path'] = self.system.path.join(remote['path'], extract[0])
-            logger.info('Extend remote path with extract value <%s>', remote['path'])
         options_tmp = options.copy()
         options_tmp['auto_tarextract'] = True
         # Is it a preprocessed tar (i.e ggetall alreadu untared it ?)
         if remote['path'].endswith('.tgz'):
             remote['path'] = remote['path'][:-4]
-            options_tmp['auto_dirextract'] = True
+            if not extract:
+                options_tmp['auto_dirextract'] = True
+        if extract:
+            remote['path'] = self.system.path.join(remote['path'], extract[0])
+            logger.info('Extend remote path with extract value <%s>', remote['path'])
         return self.incacheget(remote, local, options_tmp)
 
 
