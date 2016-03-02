@@ -17,6 +17,16 @@ Package
 Classes
 -------
 
+.. autoclass:: GenvModelResource
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GenvStaticGeoResource
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: AmvBias
    :show-inheritance:
    :members:
@@ -78,16 +88,6 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: CstLim
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: GenvModelResource
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: GenvStaticSpectralResource
    :show-inheritance:
    :members:
    :member-order: alphabetical

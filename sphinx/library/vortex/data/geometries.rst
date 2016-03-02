@@ -52,12 +52,28 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: SpectralGeometry
+.. autoclass:: GaussGeometry
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: GridGeometry
+.. autoclass:: ProjectedGeometry
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: LonlatGeometry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: UnstructuredGeometry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: CurvlinearGeometry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
