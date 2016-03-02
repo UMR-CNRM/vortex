@@ -75,8 +75,8 @@ class TestSample(unittest.TestCase):
 
     def test_names(self):
         fpcommon = dict(date=Date(1970, 1, 1, 1, 0, 0), cutoff='assim',
-                        model='arpege', nblot=5, nbset=15)
-        answer = '{}.5outof15.json'
+                        model='arpege', nbsample=5)
+        answer = '{}of5.json'
         for skind in ('mbsample', 'physample'):
             res = fp.proxy.resource(kind=skind, ** fpcommon)
             self.assertEqual(self.vb.pack(res.basename_info()), answer.format(skind))
