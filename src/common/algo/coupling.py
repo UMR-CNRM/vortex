@@ -24,7 +24,6 @@ class Coupling(FullPos):
             ),
             basedate = dict(
                 type     = date.Date,
-                optional = True,
             ),
 
         )
@@ -47,7 +46,6 @@ class Coupling(FullPos):
         """Loop on the various initial conditions provided."""
 
         sh = self.system
-        basedate = self.basedate or self.env.YYYYMMDDHH
 
         cplsec = self.context.sequence.effective_inputs(
             role = ('InitialCondition', 'CouplingSource'),
@@ -61,7 +59,8 @@ class Coupling(FullPos):
         cplguess.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
         guessing = bool(cplguess)
 
-        cplsurf = self.context.sequence.effective_inputs(role = ('SurfaceInitialCondition', 'SurfaceCouplingSource'))
+        cplsurf = self.context.sequence.effective_inputs(role = ('SurfaceInitialCondition',
+                                                                 'SurfaceCouplingSource'))
         cplsurf.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
         surfacing = bool(cplsurf)
         infilesurf = 'ICMSH{0:s}INIT.sfx'.format(self.xpname)
@@ -73,6 +72,9 @@ class Coupling(FullPos):
             # First attempt to set actual date as the one of the source model
             actualdate = r.resource.date + r.resource.term
 
+            # Expect the coupling source to be there...
+            self.grab(sec, comment='coupling source')
+
             # Set the actual init file
             if sh.path.exists(infile):
                 if isMany:
@@ -82,17 +84,17 @@ class Coupling(FullPos):
 
             # If the surface file is needed, set the actual initsurf file
             if cplsurf:
-                cplout  = cplsurf.pop(0)
+                # Expecting the coupling surface source to be there...
+                cplsurf_in  = cplsurf.pop(0)
+                self.grab(cplsurf_in, comment='coupling surface source')
                 if sh.path.exists(infilesurf):
                     if isMany:
                         logger.critical('Cannot process multiple surface historic files if %s exists.', infilesurf)
                 else:
-                    sh.cp(cplout.rh.container.localpath(), infilesurf, fmt=cplout.rh.container.actualfmt, intent=intent.IN)
+                    sh.cp(cplsurf_in.rh.container.localpath(), infilesurf,
+                          fmt=cplsurf_in.rh.container.actualfmt, intent=intent.IN)
             elif surfacing:
                 logger.error('No more surface source to loop on for coupling')
-
-            # Expect the coupling source to be there...
-            self.grab(sec, comment='coupling source')
 
             # The output could be an input as well
             if cplguess:
@@ -107,8 +109,10 @@ class Coupling(FullPos):
                     self.grab(cplout, comment='coupling guess')
                     logger.info('Coupling with existing guess <%s>', cplpath)
                     if cplpath != 'PFFPOSAREA+0000':
-                        sh.remove('PFFPOSAREA+0000', fmt='lfi')
-                        sh.softlink(cplpath, 'PFFPOSAREA+0000')
+                        sh.remove('PFFPOSAREA+0000', fmt=cplout.rh.container.actualfmt)
+                        sh.move(cplpath, 'PFFPOSAREA+0000',
+                                fmt=cplout.rh.container.actualfmt,
+                                intent=intent.INOUT)
                 else:
                     logger.warning('Missing guess input for coupling <%s>', cplpath)
             elif guessing:
@@ -140,21 +144,19 @@ class Coupling(FullPos):
             super(Coupling, self).execute(rh, opts)
 
             # Set a local appropriate file
-            posfile = [ x for x in sh.glob('PFFPOSAREA+*') if re.match(r'PFFPOSAREA\+\d+(?:\:\d+)?(?:\.sfx)?$', x) ]
+            posfile = [x for x in sh.glob('PFFPOSAREA+*')
+                       if re.match(r'PFFPOSAREA\+\d+(?:\:\d+)?(?:\.sfx)?$', x)]
             if (len(posfile) > 1):
                 logger.critical('Many PFFPOSAREA files, do not know how to adress that')
             posfile = posfile[0]
-            actualterm = (actualdate - basedate).time()
+            actualterm = (actualdate - self.basedate).time()
 
-            actualname = re.sub(r'^.+?((?:_\d+)?)\+[:\w]+$', r'CPLOUT\1+', r.container.localpath()) + actualterm.fmthm
-            sh.move(
-                    sh.path.realpath(posfile),
-                    actualname,
-                    fmt=r.container.actualfmt
-            )
+            actualname = re.sub(r'^.+?((?:_\d+)?)\+[:\d]+$', r'CPLOUT\1+', r.container.localpath()) + actualterm.fmthm
+            sh.move(sh.path.realpath(posfile), actualname,
+                    fmt=r.container.actualfmt)
             if sh.path.exists(posfile):
                 sh.rm(posfile)
-            
+
             # promises management
             expected = [ x for x in self.promises if x.rh.container.localpath() == actualname ]
             if expected:
@@ -180,4 +182,3 @@ class Coupling(FullPos):
         if sh.path.exists('NODE.all'):
             sh.move('NODE.all', 'NODE.001_01')
         sh.dir(output=False)
-
