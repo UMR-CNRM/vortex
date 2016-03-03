@@ -88,8 +88,9 @@ class Target(footprints.FootprintBase):
         property).
 
         :example:
-        Let's consider a user with the *opuser* Glove's realkind and the
-        following configuration file::
+
+        Let's consider a user with the *opuser* Glove's realkind and
+        the following configuration file::
 
             [sectionname]
             myoption = generic

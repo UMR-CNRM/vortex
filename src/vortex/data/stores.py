@@ -744,7 +744,9 @@ class ArchiveStore(Store):
     def hostname(self):
         """Returns the current :attr:`storage` or the value from the configuration file."""
         if self.storage is None:
-            return self.system.target().get('stores:storage', 'hendrix.meteo.fr')
+            return self.system.env.get('VORTEX_DEFAULT_STORAGE',
+                                       self.system.target().get('stores:storage', 'hendrix.meteo.fr')
+                                       )
         else:
             return self.storage
 
