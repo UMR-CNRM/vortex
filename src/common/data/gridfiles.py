@@ -31,7 +31,7 @@ class GridPoint(GridGeoFlowResource):
                     values = [
                         'analyse', 'ana', 'guess', 'gss', 'arpege', 'arp', 'arome', 'aro',
                         'aladin', 'ald', 'historic', 'hst', 'forecast', 'fcst', 'era40', 'e40',
-                        'era15', 'e15', 'interp', 'sumo'
+                        'era15', 'e15', 'interp', 'sumo', 'filter'
                     ],
                     remap = dict(
                         analyse = 'ana',

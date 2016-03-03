@@ -22,7 +22,7 @@ __all__ = [
 #: Default values for atmospheric models.
 models = set([
     'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro',
-    'aearp', 'pearp', 'mocage', 'mesonh', 'surfex'
+    'aearp', 'pearp', 'mocage', 'mesonh', 'surfex', 'hycom',
 ])
 
 #: Default values for the most common binaries.
