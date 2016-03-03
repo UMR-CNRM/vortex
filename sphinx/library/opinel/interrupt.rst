@@ -1,7 +1,7 @@
-:mod:`vortex.util.interrupt` --- Signal handling utility class
-==============================================================
+:mod:`opinel.interrupt` --- Signal handling utility class
+=========================================================
 
-.. automodule:: vortex.util.interrupt
+.. automodule:: opinel.interrupt
    :synopsis: An utility class used to trap system signals
 
 .. moduleauthor:: The Vortex Team

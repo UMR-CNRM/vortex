@@ -21,11 +21,12 @@ import pwd as passwd
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
+from opinel.interrupt import SignalInterruptHandler
+
 from vortex.tools.env       import Environment
 from vortex.tools.net       import StdFtp
 from vortex.util.structs    import History
 from vortex.util.decorators import nicedeco
-from vortex.util.interrupt  import SignalInterruptHandler
 
 
 #: Pre-compiled regex to check a none str value

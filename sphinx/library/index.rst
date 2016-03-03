@@ -10,19 +10,21 @@ The VORTEX Standard Library
 List of modules.
 
 .. toctree::
-   :maxdepth: 3
-
+   :maxdepth: 2
+   
    footprints/index
    jeeves/index
    mf/index
+   opinel/index
 
+.. toctree::
+   :maxdepth: 3
+   
    vortex/index
-
+   
    common/index
    gco/index
    iga/index
    mercator/index
    olive/index
    sandbox/index
-
-   mf/index

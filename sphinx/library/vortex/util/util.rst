@@ -22,7 +22,6 @@ Modules
 * :mod:`vortex.util.decorators`
 * :mod:`vortex.util.dispatch`
 * :mod:`vortex.util.empty`
-* :mod:`vortex.util.interrupt`
 * :mod:`vortex.util.introspection`
 * :mod:`vortex.util.names`
 * :mod:`vortex.util.patterns`

@@ -8,11 +8,12 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
+from opinel.interrupt import SignalInterruptError
+
 from vortex.layout.nodes import Task
 from vortex.tools.actions import actiond as ad
 from vortex.tools.systems import ExecutionError
 from vortex.algo.components import DelayedAlgoComponentError
-from vortex.util.interrupt import SignalInterruptError
 
 from . import op
 
