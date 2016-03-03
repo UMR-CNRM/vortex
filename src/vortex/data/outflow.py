@@ -30,6 +30,7 @@ class ModelResource(NoDateResource):
 class StaticGeoResource(ModelResource):
     """A :class:`ModelResource` bound to a geometry."""
 
+    _abstract = True
     _footprint = dict(
         attr = dict(
             geometry = dict(

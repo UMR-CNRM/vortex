@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from mlt import Geometry
 
 #: No automatic export
 __all__ = []
@@ -13,27 +12,30 @@ from gco.syntax.stdattrs import GenvKey, GenvDomain
 
 class ClimModel(StaticGeoResource):
     """
-    Abstract class for a model climatology. An HorizontalGeometry object is needed. 
+    Abstract class for a model climatology. An HorizontalGeometry object is needed.
     A Genvkey can be given.
     """
     _abstract = True
-    _footprint = dict(
-        info = 'Model climatology',
-        attr = dict(
-            model = a_model,
-            gvar = dict(
-                type = GenvKey,
-                optional = True,
-            ),
-            kind = dict(
-                values = ['clim_model']
-            ),
-            nativefmt = dict(
-                values = ['fa'],
-                default = 'fa',
-            ),
+    _footprint = [
+        month,
+        dict(
+            info = 'Model climatology',
+            attr = dict(
+                model = a_model,
+                gvar = dict(
+                    type = GenvKey,
+                    optional = True,
+                ),
+                kind = dict(
+                    values = ['clim_model']
+                ),
+                nativefmt = dict(
+                    values = ['fa'],
+                    default = 'fa',
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):

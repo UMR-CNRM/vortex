@@ -31,6 +31,7 @@ class FlowResource(Resource):
 class GeoFlowResource(FlowResource):
     """Class which is a :class:`FlowResource` bound to a geometry."""
 
+    _abstract = True
     _footprint = dict(
         attr = dict(
             geometry = dict(
