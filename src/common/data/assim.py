@@ -10,13 +10,13 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.date      import Time
 
-from vortex.data.flow       import FlowResource, SpectralGeoFlowResource
+from vortex.data.flow       import FlowResource, GeoFlowResource
 from vortex.data.contents   import JsonDictContent
 from vortex.syntax.stdattrs import FmtInt, term
 from gco.syntax.stdattrs    import GenvKey
 
 
-class BackgroundStdError(SpectralGeoFlowResource):
+class BackgroundStdError(GeoFlowResource):
     """
     Background error standard deviation.
     """
@@ -76,7 +76,7 @@ class BackgroundStdError(SpectralGeoFlowResource):
             return 'sigma_b'
 
 
-class Wavelet(SpectralGeoFlowResource):
+class Wavelet(GeoFlowResource):
     """
     TODO.
     """
@@ -118,7 +118,7 @@ class Wavelet(SpectralGeoFlowResource):
         return 'wavelet.cv.t' + str(self.geometry.truncation)
 
 
-class RawControlVector(SpectralGeoFlowResource):
+class RawControlVector(GeoFlowResource):
     """
     Raw Control Vector as issued by minimisation, playing the role of an Increment.
     """
@@ -151,7 +151,7 @@ class RawControlVector(SpectralGeoFlowResource):
         return 'MININCR'
 
 
-class InternalMinim(SpectralGeoFlowResource):
+class InternalMinim(GeoFlowResource):
     """
     Generic class for resources internal to minimisation.
     """

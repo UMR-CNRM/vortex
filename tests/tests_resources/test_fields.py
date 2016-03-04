@@ -34,13 +34,12 @@ class TestFieldsGeoFields(unittest.TestCase):
 
     def setUp(self):
         self.vb = VortexNameBuilder()
-        self.geo = geometries.SpectralGeometry(tag='fgeo', kind='spectral',
-                                               area='france', truncation=798,
-                                               stretching=2.4, lam=False,
-                                               new=True)
-        self.geoL = geometries.SpectralGeometry(tag='fgeol', kind='spectral',
-                                                area='france', resolution=2.5,
-                                                runit='km', lam=True, new=True)
+        self.geo = geometries.GaussGeometry(tag='fgeo', area='france',
+                                            truncation=798, stretching=2.4,
+                                            new=True)
+        self.geoL = geometries.ProjectedGeometry(tag='fgeol', area='france',
+                                                 resolution=2.5, runit='km',
+                                                 new=True)
 
     def test_geofields_names(self):
         # Global

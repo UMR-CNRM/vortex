@@ -31,14 +31,3 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-.. autoclass:: StaticSpectralResource
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: StaticGridResource
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-   

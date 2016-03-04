@@ -7,7 +7,7 @@ from vortex.tools import date
 import vortex.data
 import vortex.algo
 
-from vortex.data.geometries import SpectralGeometry
+from vortex.data.geometries import GaussGeometry
 
 import common.data
 import common.algo
@@ -32,7 +32,7 @@ cache = myenv.home + '/tmp/fcdemo/'
 arpege_cycle = 'cy36t1_op2.16'
 
 rundate = date.Date('2012041300')
-geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
+geo = GaussGeometry(id='Current op', area='france', truncation=798, lam=False)
 
 
 fpenv = vortex.toolbox.defaults(

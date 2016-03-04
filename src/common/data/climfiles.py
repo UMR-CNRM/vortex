@@ -4,23 +4,30 @@
 #: No automatic export
 __all__ = []
 
-from vortex.data.outflow import StaticSpectralResource, StaticGridResource
+from vortex.data.geometries import LonlatGeometry
+from vortex.data.outflow import StaticGeoResource
 from vortex.syntax.stdattrs import a_model, month
 from gco.syntax.stdattrs import GenvKey, GenvDomain
 
 
-class ClimSP(StaticSpectralResource):
+class ClimModel(StaticGeoResource):
     """
-    Abstract class for all kinds of climatology
+    Abstract class for a model climatology. An HorizontalGeometry object is needed.
+    A Genvkey can be given.
     """
     _abstract = True
     _footprint = [
         month,
         dict(
-            info = 'Climatology file',
+            info = 'Model climatology',
             attr = dict(
+                model = a_model,
+                gvar = dict(
+                    type = GenvKey,
+                    optional = True,
+                ),
                 kind = dict(
-                    values = ['clim'],
+                    values = ['clim_model']
                 ),
                 nativefmt = dict(
                     values = ['fa'],
@@ -32,7 +39,7 @@ class ClimSP(StaticSpectralResource):
 
     @property
     def realkind(self):
-        return 'clim'
+        return 'clim_model'
 
     @property
     def truncation(self):
@@ -42,30 +49,6 @@ class ClimSP(StaticSpectralResource):
     def gget_basename(self):
         """GGET specific naming convention."""
         return '.m' + str(self.month)
-
-
-class ClimModel(ClimSP):
-    """
-    Abstract class for a model climatology. A SpectralGeometry object is needed. A Genvkey can be given.
-    """
-    _abstract = True
-    _footprint = dict(
-        info = 'Model climatology',
-        attr = dict(
-            model = a_model,
-            gvar = dict(
-                type = GenvKey,
-                optional = True,
-            ),
-            kind = dict(
-                values = ['clim_model']
-            )
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'clim_model'
 
 
 class ClimGlobal(ClimModel):
@@ -130,10 +113,10 @@ class ClimLAM(ClimModel):
         )
 
 
-class ClimBDAP(StaticGridResource):
+class ClimBDAP(StaticGeoResource):
     """
     Class for a climatology of a BDAP domain.
-    A GridGeometry object is needed. A Genvkey can be given
+    A LonlatGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """
     _footprint = [
@@ -147,6 +130,9 @@ class ClimBDAP(StaticGridResource):
                 nativefmt = dict(
                     values = ['fa'],
                     default = 'fa',
+                ),
+                geometry = dict(
+                    type = LonlatGeometry,
                 ),
                 gdomain = dict(
                     type = GenvDomain,

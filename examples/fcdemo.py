@@ -9,7 +9,7 @@ from vortex.tools import date
 import vortex.data
 import vortex.algo
 
-from vortex.data.geometries import SpectralGeometry, GridGeometry
+from vortex.data.geometries import GaussGeometry, LonlatGeometry
 
 import common.data
 import olive.data
@@ -35,8 +35,8 @@ print t.prompt, sh.pwd()
 arpege_cycle = 'cy37t1_op1.17'
 
 rundate = date.Date(2013, 4, 25, 0)
-geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
-geoBDAP = GridGeometry(area='GLOB15', resolution=1.5, runit='dg')
+geo = GaussGeometry(id='Current op', area='france', truncation=798, lam=False)
+geoBDAP = LonlatGeometry(area='GLOB15', resolution=1.5, runit='dg')
 
 fpenv = vortex.toolbox.defaults(
     geometry=geo,

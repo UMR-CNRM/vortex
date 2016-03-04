@@ -22,18 +22,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: HorizontalGeoFlowResource
+.. autoclass:: GeoFlowResource
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-.. autoclass:: SpectralGeoFlowResource
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: GridGeoFlowResource
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-   

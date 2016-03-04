@@ -8,7 +8,7 @@ import vortex.data
 import common.data
 import common.algo
 import olive.data
-from vortex.data.geometries import SpectralGeometry
+from vortex.data.geometries import ProjectedGeometry
 from vortex.tools import env, date
 
 t = vortex.ticket()
@@ -28,7 +28,7 @@ vortex.toolbox.defaults(
     source='arpege',
     model='arome',
     cutoff='production',
-    geometry=SpectralGeometry(id='Current op', area='frangp', resolution=2.5, runit='km'),
+    geometry=ProjectedGeometry(id='Current op', area='frangp', resolution=2.5, runit='km'),
 )
 
 rl = vortex.toolbox.rload

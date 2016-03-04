@@ -31,6 +31,13 @@ Bull Targets
    :members:
    :member-order: alphabetical
 
+CNRM Targets
+------------
+
+.. autoclass:: Aneto
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 Old NEC system and targets
 --------------------------

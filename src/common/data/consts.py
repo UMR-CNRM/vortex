@@ -5,8 +5,8 @@
 __all__ = []
 
 from vortex.data.resources  import Resource
-from vortex.data.outflow    import ModelResource, StaticSpectralResource
-from vortex.data.geometries import GridGeometry
+from vortex.data.outflow    import ModelResource, StaticGeoResource
+from vortex.data.geometries import LonlatGeometry, GaussGeometry
 from vortex.data.contents   import TextContent
 
 from gco.syntax.stdattrs    import GenvKey
@@ -26,7 +26,7 @@ class GenvModelResource(ModelResource):
     )
 
 
-class GenvStaticSpectralResource(StaticSpectralResource):
+class GenvStaticGeoResource(StaticGeoResource):
     """Abstract class for gget driven resources."""
 
     _abstract  = True
@@ -462,7 +462,8 @@ class AtlasEmissivity(GenvModelResource):
         info = 'Atlas of emissitivity according to some pack of instrument(s).',
         attr = dict(
             kind = dict(
-                values   = ['atlas_emissivity',  'atlasemissivity', 'atlasemiss', 'emiss'],
+                values   = ['atlas_emissivity', 'atlasemissivity',
+                            'atlasemiss', 'emiss'],
                 remap    = dict(autoremap = 'first'),
             ),
         )
@@ -489,6 +490,7 @@ class AtlasEmissivityInstrument(AtlasEmissivity):
             ),
         )
     )
+
 
 class AtlasEmissivityPack(AtlasEmissivity):
     """
@@ -541,10 +543,11 @@ class ODBRaw(GenvModelResource):
         return 'odbraw'
 
 
-class MatFilter(GenvStaticSpectralResource):
+class MatFilter(GenvStaticGeoResource):
     """
-    Class of a filtering matrix. A SpectralGeometry object is needed,
-    as well as the GridGeometry of the scope domain (countaining the filtering used).
+    Class of a filtering matrix. A GaussGeometry object is needed,
+    as well as the LonlatGeometry of the scope domain (containing the
+    filtering used).
     A GenvKey can be given.
     """
 
@@ -557,8 +560,11 @@ class MatFilter(GenvStaticSpectralResource):
             kind = dict(
                 values   = ['matfilter']
             ),
+            geometry = dict(
+                type     = GaussGeometry
+            ),
             scope = dict(
-                type     = GridGeometry,
+                type     = LonlatGeometry,
             ),
             gvar = dict(
                 default  = 'mat_filter_[scope::area]'
@@ -586,7 +592,7 @@ class MatFilter(GenvStaticSpectralResource):
                '.c' + str(self.geometry.stretching)
 
 
-class Stabal(GenvStaticSpectralResource):
+class Stabal(GenvStaticGeoResource):
     """
     TODO.
     A GenvKey can be given.
@@ -618,7 +624,7 @@ class Stabal(GenvStaticSpectralResource):
         return 'stabal'
 
 
-class WaveletTable(GenvStaticSpectralResource):
+class WaveletTable(GenvStaticGeoResource):
     """
     TODO.
     A GenvKey can be given.
@@ -642,7 +648,7 @@ class WaveletTable(GenvStaticSpectralResource):
         return 'wtable'
 
 
-class AmvError(StaticSpectralResource):
+class AmvError(GenvStaticGeoResource):
     """
     TODO.
     A Genvkey can be given.
@@ -659,8 +665,6 @@ class AmvError(StaticSpectralResource):
                 ),
             ),
             gvar=dict(
-                type=GenvKey,
-                optional=True,
                 default='amv_tracking_error',
             ),
         )
@@ -671,7 +675,7 @@ class AmvError(StaticSpectralResource):
         return 'amv_error'
 
 
-class AmvBias(StaticSpectralResource):
+class AmvBias(GenvStaticGeoResource):
     """
     TODO.
     A Genvkey can be given.
@@ -684,8 +688,6 @@ class AmvBias(StaticSpectralResource):
                 remap=dict(amvbias='amv_bias'),
             ),
             gvar=dict(
-                type=GenvKey,
-                optional=True,
                 default='amv_bias_info'
             ),
         )
@@ -717,4 +719,3 @@ class LFIScripts(Resource):
     @property
     def realkind(self):
         return 'lfiscripts'
-

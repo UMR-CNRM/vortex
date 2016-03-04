@@ -2,7 +2,7 @@
 # -*- coding:Utf-8 -*-
 
 import vortex
-from vortex.data.geometries import SpectralGeometry
+from vortex.data.geometries import GaussGeometry
 from vortex.tools import date
 
 import common.data
@@ -22,7 +22,7 @@ sh.cd(e.TMPDIR + '/rundir')
 print t.prompt, sh.pwd()
 
 rundate = date.Date('2011092200')
-geo = SpectralGeometry(id='Current op', area='france', truncation=798, lam=False)
+geo = GaussGeometry(id='Current op', area='france', truncation=798, lam=False)
 
 print t.line
 

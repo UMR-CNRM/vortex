@@ -15,7 +15,7 @@ class UtEnv(TestCase):
 
     def setUp(self):
         self.res = Analysis(
-            geometry = geometries.get(tag='globalsp'),
+            geometry = geometries.get(tag='global798'),
             model    = 'arpege',
             date     = '201304231500',
             cutoff   = 'prod',
@@ -73,7 +73,7 @@ class UtEnv(TestCase):
         e['toto'] = self.res
         self.assertEqual(
             os.environ['TOTO'],
-            '{"cutoff": "production", "kind": "analysis", "nativefmt": "fa", "geometry": "globalsp", '
+            '{"cutoff": "production", "kind": "analysis", "nativefmt": "fa", "geometry": "global798", '
             '"filling": "full", "filtering": null, "date": "201304231500", '
             '"clscontents": ["vortex.data.contents", "FormatAdapter"], '
             '"model": "arpege"}'
