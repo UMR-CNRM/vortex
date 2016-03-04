@@ -150,15 +150,28 @@ class Cache(footprints.FootprintBase):
         self.addrecord('INSERT', item, status=rc, info=info, fmt=fmt, intent=intent)
         return rc
 
-    def retrieve(self, item, local, intent='in', fmt='foo', info=None):
+    def retrieve(self, item, local, intent='in', fmt='foo', info=None,
+                 dirextract=False, tarextract=False):
         """Retrieve an item from the current cache."""
         source = self.fullpath(item)
-        if self.sh.path.isdir(source) and local is None:
+        # If auto_dirextract, copy recursively each file contained in source
+        if dirextract and self.sh.path.isdir(source):
             rc = True
+            destdir = self.sh.path.dirname(self.sh.path.realpath(local))
+            logger.info('Automatic directory extract to: %s', destdir)
             for subpath in self.sh.glob(source + '/*'):
-                rc = rc and self.sh.cp(subpath, self.sh.path.basename(subpath), intent=intent, fmt=fmt)
+                rc = rc and self.sh.cp(subpath,
+                                       self.sh.path.join(destdir, self.sh.path.basename(subpath)),
+                                       intent=intent, fmt=fmt)
+        # The usual case: just copy source
         else:
             rc = self.sh.cp(source, local, intent=intent, fmt=fmt)
+            # If auto_tarextract, a potential tar file is extracted
+            if (rc and tarextract and not self.sh.path.isdir(local) and
+                    self.sh.is_tarname(local) and self.sh.is_tarfile(local)):
+                destdir = self.sh.path.dirname(self.sh.path.realpath(local))
+                logger.info('Automatic Tar extract to: %s', destdir)
+                rc = rc and self.sh.smartuntar(local, destdir, output=False)
         self._recursive_touch(rc, item)
         self.addrecord('RETRIEVE', item, status=rc, info=info, fmt=fmt, intent=intent)
         return rc

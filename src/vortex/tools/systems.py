@@ -1128,7 +1128,9 @@ class OSExtended(System):
 
     def is_tarname(self, objname):
         """Check if a ``objname`` is a string with ``.tar`` suffix."""
-        return isinstance(objname, str) and ( objname.endswith('.tar') or objname.endswith('.tgz') )
+        return isinstance(objname, str) and ( objname.endswith('.tar') or
+                                              objname.endswith('.tar.gz') or
+                                              objname.endswith('.tgz') )
 
     def tarfix_in(self, source, destination):
         """Untar the ``destination`` if ``source`` is a tarfile."""
