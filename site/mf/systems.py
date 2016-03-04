@@ -125,9 +125,9 @@ class Prolix(MeteoBull):
         attr = dict(
             hostname = dict(
                 values = \
-                    [ x + str(y) for x in ('prolix',) for y in range(990) ] + \
+                    [ x + str(y) for x in ('prolix',) for y in range(1800) ] + \
                     [ x + str(y) for x in ('prolixlogin',) for y in range(6) ] + \
-                    [ x + str(y) for x in ('prolixtransfert',) for y in range(4) ]
+                    [ x + str(y) for x in ('prolixtransfert',) for y in range(8) ]
             ),
             inetname = dict(
                 default = 'prolix',
