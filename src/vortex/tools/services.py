@@ -304,12 +304,21 @@ class FileReportService(ReportService):
 
 
 class SSHProxy(Service):
-    """
-    Remote execution via ssh on a generic target.
-    If ``node`` is the specified hostname value, some target hostname
-    will be built on the basis of attributes ,``nodebase``, ``nodetype`` and ``noderange``.
-    In that case, hostname = nodebase + nodetype + nodenumber.
-    The nodenumber is taken as the first value in noderange, with random permutation or not.
+    """Remote execution via ssh on a generic target.
+
+    If ``node`` is the specified :attr:`hostname` value, some target hostname
+    will be built on the basis of attributes, :attr:`genericnode`,
+    :attr:`nodebase`, :attr:`nodetype` and :attr:`noderange`.
+
+    In this case, if :attr:`genericnode` is defined it will be used. If not, the
+    configuration file will be checked for a configuration key named
+    ``'{}node'.format(self.nodetype)`` in the services section.
+
+    If none of the :attr:`genericnode` attribute or its configuration file
+    counterpart is defined, then ``hostname = self.nodebase + self.nodetype + nodenumber``.
+    When several ``nodenumber`` are available (they are values of the
+    :attr:`noderange` attribute with random permutation or not), the first
+    responding ``hostname`` will be selected.
     """
 
     _footprint = dict(
@@ -320,6 +329,11 @@ class SSHProxy(Service):
                 remap    = dict(autoremap = 'first'),
             ),
             hostname = dict(),
+            genericnode = dict(
+                optional = True,
+                default  = None,
+                access   = 'rwx',
+            ),
             nodebase = dict(
                 optional = True,
                 default  = None,
@@ -347,12 +361,17 @@ class SSHProxy(Service):
             ),
             sshcmd = dict(
                 optional = True,
-                default  = '/usr/bin/ssh',
+                default  = None,
             ),
             sshopts = dict(
                 optional = True,
                 type     = footprints.FPList,
-                default  = footprints.FPList(['-x']),
+                default  = None,
+            ),
+            sshretryopts = dict(
+                optional = True,
+                type     = footprints.FPList,
+                default  = None,
             ),
         )
     )
@@ -362,28 +381,38 @@ class SSHProxy(Service):
         super(SSHProxy, self).__init__(*args, **kw)
         self._retries = None
 
+    def _actual_sshopts(self, key):
+        act = self.actual_value(key)
+        if not isinstance(act, (list, tuple)):
+            act = act.split()
+        return act
+
     @property
     def retries(self):
         return self._retries
 
-    def build_targets(self):
+    def _build_targets(self):
         """Build a list of candidate target hostnames."""
         targets = [ self.hostname.strip().lower() ]
         if targets[0] == 'node':
-            nodebase  = self.nodebase  or self.actual_value('ssh' + self.nodetype + 'base', default=self.sh.target().inetname)
-            noderange = self.noderange or self.actual_value('ssh' + self.nodetype + 'range')
-            if noderange is None:
-                noderange = ('',)
+            genericnode = self.genericnode or self.actual_value(self.nodetype + 'node',)
+            if genericnode and genericnode != 'no_generic':
+                targets = [ genericnode, ]
             else:
-                if isinstance(noderange, basestring):
-                    noderange = [ x.strip() for x in noderange.split(',') ]
-                if self.permut:
-                    noderange = list(noderange)
-                    random.shuffle(noderange)
-            targets = [ nodebase + self.nodetype + str(x) for x in noderange ]
+                nodebase  = self.nodebase  or self.actual_value('ssh' + self.nodetype + 'base', default=self.sh.target().inetname)
+                noderange = self.noderange or self.actual_value('ssh' + self.nodetype + 'range')
+                if noderange is None:
+                    noderange = ('',)
+                else:
+                    if isinstance(noderange, basestring):
+                        noderange = [ x.strip() for x in noderange.split(',') ]
+                    if self.permut:
+                        noderange = list(noderange)
+                        random.shuffle(noderange)
+                targets = [ nodebase + self.nodetype + str(x) for x in noderange ]
         return targets
 
-    def get_target(self):
+    def _get_target(self, targets):
         """Node name to use for this kind of remote execution."""
         target = None
         ntry = 0
@@ -391,20 +420,13 @@ class SSHProxy(Service):
             ntry += 1
             self._retries = ntry
             logger.debug('SSH connect try number ' + str(ntry))
-            for guess in self.build_targets():
+            for guess in targets:
                 try:
-                    self.sh.spawn([
-                        ' '.join((
-                            self.sshcmd,
-                            '-o', 'ConnectTimeout=6',
-                            '-o', 'PasswordAuthentication=false',
-                            guess,
-                            'echo >/dev/null 2>&1'
-                        ))],
-                        shell  = True,
-                        output = False,
-                        silent = True,
-                    )
+                    thecmd = [' '.join([ self.actual_value('sshcmd'), ] +
+                                       self._actual_sshopts('sshopts') +
+                                       self._actual_sshopts('sshretryopts') +
+                                       [ guess, 'echo >/dev/null 2>&1'])]
+                    self.sh.spawn(thecmd, shell=True, output=False, silent=True)
                 except StandardError:
                     pass
                 else:
@@ -414,18 +436,18 @@ class SSHProxy(Service):
 
     def __call__(self, *args):
         """Remote execution."""
-        thistarget = self.get_target()
-        if thistarget is None:
-            logger.error('Could not find any valid SSH target in %s', str(self.build_targets()))
-            rc = False
+        targets = self._build_targets()
+        if len(targets) > 1:
+            thistarget = self._get_target(targets)
+            if thistarget is None:
+                logger.error('Could not find any valid SSH target in %s', str(targets))
+                return False
         else:
-            logger.info('Remote command on target [%s] <%s>', thistarget, str(args))
-            rc = self.sh.spawn(
-                [ self.sshcmd ] + self.sshopts + [ thistarget ] + list(args),
-                shell  = False,
-                output = True,
-            )
-        return rc
+            thistarget = targets[0]
+
+        logger.info('Remote command on target [%s] <%s>', targets[0], str(args))
+        thecmd = [ self.actual_value('sshcmd') ] + self._actual_sshopts('sshopts') + [ thistarget ] + list(args)
+        return self.sh.spawn(thecmd, shell=False, output=True)
 
 
 class JeevesService(Service):
