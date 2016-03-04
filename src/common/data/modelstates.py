@@ -26,7 +26,7 @@ class Analysis(SpectralGeoFlowResource):
                 values   = ['analysis', 'analyse', 'atm_analysis']
             ),
             nativefmt = dict(
-                values   = ['fa', 'grib', 'lfi'],
+                values   = ['fa', 'grib', 'lfi', 'unknown'],
                 default  = 'fa',
             ),
             filtering = dict(
@@ -164,7 +164,7 @@ class Historic(SpectralGeoFlowResource):
                     )
                 ),
                 nativefmt = dict(
-                    values = ['fa', 'grib', 'lfi'],
+                    values = ['fa', 'grib', 'lfi', 'unknown'],
                     default = 'fa',
                 ),
             )

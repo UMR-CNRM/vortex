@@ -30,7 +30,7 @@ class _AbstractLAMBoundary(SpectralGeoFlowResource):
             ),
             term = a_term,
             nativefmt = dict(
-                values  = ['fa', 'grib'],
+                values  = ['fa', 'grib', 'unknown'],
                 default = 'fa',
             ),
         )
