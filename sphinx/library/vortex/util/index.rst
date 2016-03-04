@@ -14,7 +14,6 @@ Utilities
    decorators
    dispatch
    empty
-   interrupt
    introspection
    names
    patterns

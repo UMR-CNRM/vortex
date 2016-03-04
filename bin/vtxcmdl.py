@@ -69,8 +69,8 @@ sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 import footprints as fp
+from opinel.interrupt import SignalInterruptError
 import vortex
-from vortex.util.interrupt import SignalInterruptError
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter

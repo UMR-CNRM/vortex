@@ -14,15 +14,10 @@ class SignalInterruptError(Exception):
 
 class SignalInterruptHandler(object):
     '''
-    Handler to deal with system signals.
+    
 
-    For each of the signals specified to the class constructor, this
-    signal handler is able to swith on and off a customise signal
-    handler that will raise a SignalInterruptError exception when
-    the signal is received by the python shell.
 
-    An exception is made with SIGINT that will trigger the usual
-    Python's KeyboardInterrupt exception.
+
     '''
 
     def __init__(self, signals=(signal.SIGHUP, signal.SIGINT, signal.SIGQUIT,
@@ -30,8 +25,48 @@ class SignalInterruptHandler(object):
                                 signal.SIGUSR1, signal.SIGUSR2, signal.SIGTERM
                                 )):
         '''
+        Handler class to deal with system signals.
 
         :param signals: list/tupple of signals that will be caught
+
+        For each of the signals specified to the class constructor, this
+        signal handler is able to switch on and off a customised signal
+        handler that will raise a :class:`SignalInterruptError` exception when
+        the signal is received by the python shell.
+
+        An exception is made with SIGINT that will trigger the usual
+        Python's :class:`KeyboardInterrupt` exception.
+
+        :example: a simple way of activating/deactivating the signal handlers:
+
+        .. code-block:: python
+
+            shandler = SignalInterruptHandler()
+            shandler.activate()
+
+            # In this portion of the script an exception is raised when a signal is
+            # sent to the python shell
+
+            print 'Is the signal handler active?', shandler.active
+
+            shandler.deactivate()
+
+            # In this portion of the script the python shell will abruptly stop if
+            # a signal is received
+
+        :example: the same thing but using a context:
+
+        .. code-block:: python
+
+            with SignalInterruptHandler() as shandler:
+
+                # In this portion of the script an exception is raised when a signal is
+                # sent to the python shell
+
+                print 'Is the signal handler active?', shandler.active
+
+            # In this portion of the script the python shell will abruptly stop if
+            # a signal is received
         '''
 
         self._signals = signals
