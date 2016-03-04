@@ -16,6 +16,7 @@ List of modules.
    jeeves/index
    mf/index
    opinel/index
+   taylorism/index
 
 .. toctree::
    :maxdepth: 3
