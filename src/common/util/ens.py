@@ -39,14 +39,14 @@ def drawingfunction(options):
     if rhdict:
         date = rhdict['resource']['date']
         seed(int(date[:-2]))
-        nbpert = rhdict['resource']['nblot']
-        nbset = rhdict['resource']['nbset']
-        start = int(options.get('start', [1])[0])
-        population = footprints.util.rangex(start, nbset + start - 1)
-        tirage = (sample(population * (nbpert / nbset), (nbpert / nbset) * nbset) +
-                  sample(population, nbpert % nbset))
+        nbsample = rhdict['resource']['nbsample']    
+        population = rhdict['resource']['population']
+        nbset = len(population)
+        
+        tirage = (sample(population * (nbsample / nbset), (nbsample / nbset) * nbset) +
+                sample(population, nbsample % nbset))
         logger.info('List of random elements: ' + ', '.join(map(str, tirage)))
     else:
         raise ValueError("no resource handler here :-(\n")
     # NB: The result have to be a file like object !
-    return StringIO(json.dumps({'drawing': tirage}))
+    return StringIO(json.dumps({'drawing': tirage, 'population': population}))

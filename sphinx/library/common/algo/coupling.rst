@@ -20,8 +20,3 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-.. autoclass:: LAMCoupling
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
