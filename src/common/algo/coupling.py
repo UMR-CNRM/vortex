@@ -64,6 +64,13 @@ class Coupling(FullPos):
         cplsurf.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
         surfacing = bool(cplsurf)
         infilesurf = 'ICMSH{0:s}INIT.sfx'.format(self.xpname)
+        if surfacing:
+            # Link in the Surfex's PGD
+            self.setlink(
+                initrole = ('ClimPGD', ),
+                initkind = ('pgdfa', 'pgdlfi'),
+                initname = 'const.clim.sfx.AREA',
+            )
 
         for sec in cplsec:
             r = sec.rh
@@ -150,12 +157,17 @@ class Coupling(FullPos):
                 logger.critical('Many PFFPOSAREA files, do not know how to adress that')
             posfile = posfile[0]
             actualterm = (actualdate - self.basedate).time()
-
-            actualname = re.sub(r'^.+?((?:_\d+)?)\+[:\d]+$', r'CPLOUT\1+', r.container.localpath()) + actualterm.fmthm
-            sh.move(sh.path.realpath(posfile), actualname,
-                    fmt=r.container.actualfmt)
-            if sh.path.exists(posfile):
-                sh.rm(posfile)
+            actualname = (re.sub(r'^.+?((?:_\d+)?)(?:\+[:\d]+)?$', r'CPLOUT\1+', r.container.localpath()) +
+                          actualterm.fmthm)
+            if isMany:
+                sh.move(sh.path.realpath(posfile), actualname,
+                        fmt=r.container.actualfmt)
+                if sh.path.exists(posfile):
+                    sh.rm(posfile)
+            else:
+                # This is here because of legacy with .sfx files
+                sh.cp(sh.path.realpath(posfile), actualname,
+                      fmt=r.container.actualfmt, intent=intent.IN)
 
             # promises management
             expected = [ x for x in self.promises if x.rh.container.localpath() == actualname ]
@@ -163,14 +175,14 @@ class Coupling(FullPos):
                 for thispromise in expected:
                     thispromise.put(incache=True)
 
+            # The only one listing
+            sh.cat('NODE.001_01', output='NODE.all')
+
             # prepares the next execution
             if isMany:
-                # The only one listing
-                sh.cat('NODE.001_01', output='NODE.all')
-
                 # Some cleaning
                 sh.rmall('PXFPOS*', fmt = r.container.actualfmt)
-                sh.rmall('ncf927', 'dirlst')
+                sh.rmall('ncf927', 'dirlst', 'NODE.[0123456789]*', 'std*')
                 sh.remove(infile, fmt = r.container.actualfmt)
                 if cplsurf:
                     sh.remove(infilesurf, fmt = r.container.actualfmt)
@@ -178,7 +190,4 @@ class Coupling(FullPos):
     def postfix(self, rh, opts):
         """Post processing cleaning."""
         super(Coupling, self).postfix(rh, opts)
-        sh = self.system
-        if sh.path.exists('NODE.all'):
-            sh.move('NODE.all', 'NODE.001_01')
-        sh.dir(output=False)
+        self.system.dir(output=False)
