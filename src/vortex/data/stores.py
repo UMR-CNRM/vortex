@@ -174,6 +174,11 @@ class Store(footprints.FootprintBase):
                 type  = Namespace,
                 alias = ('domain', 'namespace')
             ),
+            storetrack = dict(
+                type  = bool,
+                default = True,
+                optional = True,
+            ),
         ),
     )
 
@@ -204,14 +209,15 @@ class Store(footprints.FootprintBase):
         return False
 
     def _observer_notify(self, action, rc, remote, local=None, options=None):
-        infos = dict(action=action, status=rc, remote=remote)
-        # Is a localpath provided ?
-        if local is not None:
-            infos['local'] = local
-        # We may want to cheat on the localpath...
-        if options is not None and 'obs_overridelocal' in options:
-            infos['local'] = options['obs_overridelocal']
-        self._observer.notify_upd(self, infos)
+        if self.storetrack:
+            infos = dict(action=action, status=rc, remote=remote)
+            # Is a localpath provided ?
+            if local is not None:
+                infos['local'] = local
+            # We may want to cheat on the localpath...
+            if options is not None and 'obs_overridelocal' in options:
+                infos['local'] = options['obs_overridelocal']
+            self._observer.notify_upd(self, infos)
 
     def notyet(self, *args):
         """
@@ -1202,6 +1208,11 @@ class PromiseStore(footprints.FootprintBase):
             netloc = dict(
                 alias    = ('domain', 'namespace')
             ),
+            storetrack = dict(
+                type  = bool,
+                default = True,
+                optional = True,
+            ),
             prstorename = dict(
                 optional = True,
                 default  = 'promise.cache.fr',
@@ -1222,6 +1233,7 @@ class PromiseStore(footprints.FootprintBase):
         self.promise = footprints.proxy.store(
             scheme = self.proxyscheme,
             netloc = self.prstorename,
+            storetrack = self.storetrack,
         )
         if self.promise is None:
             logger.critical('Could not find store scheme <%s> netloc <%s>',
@@ -1232,6 +1244,7 @@ class PromiseStore(footprints.FootprintBase):
         self.other = footprints.proxy.store(
             scheme = self.proxyscheme,
             netloc = self.netloc,
+            storetrack = self.storetrack,
         )
         if self.other is None:
             logger.critical('Could not find store scheme <%s> netloc <%s>', self.proxyscheme, self.netloc)
