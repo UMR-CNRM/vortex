@@ -8,6 +8,9 @@ from vortex.tools.date import Date
 from vortex.tools import env
 from vortex.util.names import VortexNameBuilder
 
+rcollect = fp.collectors.get(tag='resource')
+rcollect.fasttrack = ('kind', )
+
 
 class TestLAMBoundary(unittest.TestCase):
 

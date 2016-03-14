@@ -49,8 +49,9 @@ def add2proxies(c, **kw):
 # Constants
 
 NO_REPORTING = 0
-LIGHT_REPORTING = 1
-FULL_REPORTING = 2
+ONERROR_REPORTING = 1
+LIGHT_REPORTING = 2
+FULL_REPORTING = 3
 
 DFLT_MAXLEN_LIGHT_REPORTING = 100
 
@@ -63,7 +64,7 @@ class FootprintSetup(util.GetByTag):
     def __init__(self, docstrings=True, extended=True, fastmode=False,
                  fatal=True, shortnames=False, fastkeys=('kind',),
                  callback=None, defaults=None, proxies=None,
-                 report=LIGHT_REPORTING, lreport_len=DFLT_MAXLEN_LIGHT_REPORTING,
+                 report=ONERROR_REPORTING, lreport_len=DFLT_MAXLEN_LIGHT_REPORTING,
                  nullreport=reporting.NullReport()):
         """Initialisation of a simple footprint setup driver."""
         self._extended   = bool(extended)

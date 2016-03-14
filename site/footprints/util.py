@@ -11,6 +11,7 @@ __all__ = []
 import re, copy, glob
 import types
 from weakref import WeakSet
+from collections import deque
 
 from . import loggers
 logger = loggers.getLogger(__name__)
@@ -285,7 +286,7 @@ def expand(desc):
 
     """
 
-    ld = [ desc ]
+    ld = deque([ desc, ])
     todo = True
     nbpass = 0
 
@@ -295,14 +296,17 @@ def expand(desc):
         if nbpass > 25:
             logger.error('Expansion is getting messy... (%d) ?', nbpass)
             raise MemoryError('Expand depth too high')
-        for i, d in enumerate(ld):
+        newld = deque()
+        while ld:
+            d = ld.popleft()
+            somechanges = False
             for k, v in d.iteritems():
                 if v.__class__.__name__.startswith('FP'):
                     continue
                 if isinstance(v, list) or isinstance(v, tuple) or isinstance(v, set):
                     logger.debug(' > List expansion %s', v)
-                    ld[i:i+1] = [ inplace(d, k, x) for x in v ]
-                    todo = True
+                    newld.extend([ inplace(d, k, x) for x in v ])
+                    somechanges = True
                     break
                 if isinstance(v, str) and re.match(r'range\(\d+(,\d+)?(,\d+)?\)$', v, re.IGNORECASE):
                     logger.debug(' > Range expansion %s', v)
@@ -310,18 +314,19 @@ def expand(desc):
                     if len(lv) < 2:
                         lv.append(lv[0])
                     lv[1] += 1
-                    ld[i:i+1] = [ inplace(d, k, x) for x in range(*lv) ]
-                    todo = True
+                    newld.extend([ inplace(d, k, x) for x in range(*lv) ])
+                    somechanges = True
                     break
                 if isinstance(v, str) and re.search(r',', v):
                     logger.debug(' > Coma separated string %s', v)
-                    ld[i:i+1] = [ inplace(d, k, x) for x in v.split(',') ]
-                    todo = True
+                    newld.extend([ inplace(d, k, x) for x in v.split(',') ])
+                    somechanges = True
                     break
                 if isinstance(v, str) and re.search(r'{glob:', v):
                     logger.debug(' > Globbing from string %s', v)
                     vglob = v
                     globitems = list()
+
                     def getglob(matchobj):
                         globitems.append([matchobj.group(1), matchobj.group(2)])
                         return '*'
@@ -342,23 +347,27 @@ def expand(desc):
                         if m:
                             globmap = dict()
                             for ig in range(len(globitems)):
-                                globmap[globitems[ig][0]] = m.group(ig+1)
+                                globmap[globitems[ig][0]] = m.group(ig + 1)
                             repld.append(inplace(d, k, filename, globmap))
-                    ld[i:i+1] = repld
-                    todo = True
+                    newld.extend(repld)
+                    somechanges = True
                     break
                 if isinstance(v, dict):
                     for dk in [ x for x in v.keys() if x in d ]:
                         dv = d[dk]
                         if not(isinstance(dv, list) or isinstance(dv, tuple) or isinstance(dv, set)):
-                            ld[i] = inplace(d, k, v[dk][str(dv)])
-                            todo = True
+                            newld.append(inplace(d, k, v[dk][str(dv)]))
+                            somechanges = True
                             break
-                    if todo:
+                    if somechanges:
                         break
+            todo = todo or somechanges
+            if not somechanges:
+                newld.append(d)
+        ld = newld
 
     logger.debug('Expand in %d loops', nbpass)
-    return ld
+    return list(ld)
 
 
 class GetByTagMeta(type):

@@ -7,6 +7,9 @@ from vortex.data import geometries
 from vortex.tools.date import Date
 from vortex.util.names import VortexNameBuilder
 
+rcollect = fp.collectors.get(tag='resource')
+rcollect.fasttrack = ('kind', )
+
 
 class TestPerturbedState(unittest.TestCase):
 

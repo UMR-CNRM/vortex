@@ -4,6 +4,9 @@ import unittest
 import footprints as fp
 import common.data.namelists  # @UnusedImport
 
+rcollect = fp.collectors.get(tag='resource')
+rcollect.fasttrack = ('kind', )
+
 
 class TestNamelist(unittest.TestCase):
 

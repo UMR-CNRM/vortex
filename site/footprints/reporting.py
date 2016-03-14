@@ -56,7 +56,8 @@ class NullReport(object):
     """Fake reporting: accept any log report command but do nothing."""
 
     def __init__(self, *args, **kw):
-        self._blindlog = list()
+        self._maxlen = 1000
+        self._blindlog = collections.deque(maxlen=self._maxlen)
 
     def __len__(self):
         return len(self._blindlog)
@@ -67,7 +68,7 @@ class NullReport(object):
 
     def clear(self):
         """Rewind internal raw list of log commands."""
-        self._blindlog = list()
+        self._blindlog = collections.deque(maxlen=self._maxlen)
 
     def add(self, *args, **kw):
         """Push any arg provided to the internal raw list of log commands."""

@@ -281,29 +281,37 @@ class Footprint(object):
         param = setup.defaults
         inputattr = set()
         for k, kdef in self.attr.iteritems():
-            if kdef['optional']:
-                if kdef['default'] is None:
-                    guess[k] = UNKNOWN
-                else:
-                    try:
-                        guess[k] = kdef['default'].footprint_value()
-                    except AttributeError:
-                        guess[k] = kdef['default']
-            else:
-                guess[k] = None
-            if k in param:
-                guess[k] = param[k]
-                inputattr.add(k)
-            if k in desc and not ( kdef['optional'] and desc[k] is None ):
+            kopt = kdef['optional']
+            if k in desc and not (kopt and desc[k] is None):
                 guess[k] = desc[k]
                 inputattr.add(k)
-                logger.debug(' > Attr %s in description : %s', k, desc[k])
+                # logger.debug(' > Attr %s in description : %s', k, desc[k])
             else:
+                alias_ok = False
                 for a in kdef['alias']:
-                    if a in desc:
+                    if a in desc and not (kopt and desc[a] is None):
                         guess[k] = desc[a]
                         inputattr.add(k)
+                        alias_ok = True
                         break
+
+                if not alias_ok:
+                    if k in param:
+                        guess[k] = param[k]
+                        inputattr.add(k)
+                    else:
+                        if kopt:
+                            kdefault = kdef['default']
+                            if kdefault is None:
+                                guess[k] = UNKNOWN
+                            else:
+                                try:
+                                    guess[k] = kdefault.footprint_value()
+                                except AttributeError:
+                                    guess[k] = kdefault
+                        else:
+                            guess[k] = None
+
         return (guess, inputattr)
 
     def _findextras(self, desc):
@@ -315,9 +323,7 @@ class Footprint(object):
         extras = setup.extras()
         for vdesc in desc.values():
             if isinstance(vdesc, FootprintBase):
-                logger.debug('Extend extras with %s', vdesc)
                 additems = vdesc.footprint_as_shallow_dict()
-                logger.debug('Add items %s', additems)
                 extras.update(additems)
         if extras:
             logger.debug(' > Extras : %s', extras)
@@ -359,11 +365,13 @@ class Footprint(object):
             logger.error('Resolve probably cycling too much... %d tries ?', nbpass)
             raise FootprintMaxIter('Too many Footprint replacements')
 
+        guessk = guess[k]
+
         changed = 1
         while changed:
             changed = 0
-            if isinstance(guess[k], basestring):
-                mobj = replattr.search(str(guess[k]))
+            if isinstance(guessk, basestring):
+                mobj = replattr.search(guessk)
                 if mobj:
                     replk = mobj.group(1)
                     replm = mobj.group(2)
@@ -384,7 +392,7 @@ class Footprint(object):
                         if replx:
                             changed = 1
                             # Here we do not call _autofmt since replx is already a str
-                            guess[k] = replattr.sub(replx, guess[k], 1)
+                            guessk = replattr.sub(replx, guessk, 1)
                         else:
                             logger.error('No %s attribute in guess:', replk)
                             logger.error('%s', guess)
@@ -398,17 +406,17 @@ class Footprint(object):
                             if replm:
                                 subattr = getattr(guess[replk], replm, None)
                                 if subattr is None:
-                                    guess[k] = None
+                                    guessk = None
                                 else:
-                                    guess[k] = replattr.sub(myautofmt(subattr), guess[k], 1)
+                                    guessk = replattr.sub(myautofmt(subattr), guessk, 1)
                             else:
-                                guess[k] = replattr.sub(myautofmt(guess[replk]), guess[k], 1)
+                                guessk = replattr.sub(myautofmt(guess[replk]), guessk, 1)
                     elif replk in extras:
                         changed = 1
                         if replm:
                             subattr = getattr(extras[replk], replm, None)
                             if subattr is None:
-                                guess[k] = None
+                                guessk = None
                             else:
                                 if callable(subattr):
                                     try:
@@ -421,22 +429,23 @@ class Footprint(object):
                                         attrcall = '__SKIP__'
                                         changed = 0
                                     if attrcall is None:
-                                        guess[k] = None
+                                        guessk = None
                                     elif attrcall != '__SKIP__':
-                                        guess[k] = replattr.sub(myautofmt(attrcall), guess[k], 1)
+                                        guessk = replattr.sub(myautofmt(attrcall), guessk, 1)
                                 else:
-                                    guess[k] = replattr.sub(myautofmt(subattr), guess[k], 1)
+                                    guessk = replattr.sub(myautofmt(subattr), guessk, 1)
                         else:
-                            guess[k] = replattr.sub(myautofmt(extras[replk]), guess[k], 1)
+                            guessk = replattr.sub(myautofmt(extras[replk]), guessk, 1)
 
-        if (guess[k] is not None and
-                isinstance(guess[k], basestring) and
-                replattr.search(str(guess[k]))):
-            logger.debug(' > Requeue resolve < %s > : %s', k, guess[k])
+        if (guessk is not None and
+                isinstance(guessk, basestring) and
+                replattr.search(guessk)):
+            logger.debug(' > Requeue resolve < %s > : %s', k, guessk)
             todo.append(k)
             return False
         else:
             logger.debug(' > No more substitution for %s', k)
+            guess[k] = guessk
             return True
 
     def in_values(self, item, values):
