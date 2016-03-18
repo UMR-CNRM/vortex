@@ -4,14 +4,116 @@
 #: No automatic export
 __all__ = []
 
+import time
+
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.algo.components import BlindRun, AlgoComponentError
-from vortex.syntax.stdattrs import DelayedEnvValue
+from vortex.layout.monitor    import BasicInputMonitor
+from vortex.algo.components   import BlindRun, ParaBlindRun, AlgoComponentError
+from vortex.syntax.stdattrs   import DelayedEnvValue, FmtInt
+from vortex.tools.fortran     import NamelistBlock
+from vortex.tools.parallelism import VortexWorkerBlindRun
+from vortex.tools.systems     import ExecutionError
 
 
-class Fa2Grib(BlindRun):
+class _FA2GribWorker(VortexWorkerBlindRun):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['fa2grib']
+            ),
+            # Progrid parameters
+            fortnam = dict(),
+            fortinput = dict(),
+            compact = dict(),
+            timeshift = dict(
+                type = int
+            ),
+            timeunit = dict(
+                type = int
+            ),
+            numod = dict(
+                type = int
+            ),
+            sciz = dict(
+                type = int
+            ),
+            # Input/Output data
+            file_in = dict(),
+            file_out = dict(),
+            member = dict(
+                type = FmtInt,
+                optional = True,
+            )
+        )
+    )
+
+    def vortex_task(self, **kwargs):
+
+        logger.info("Starting the Fa2Grib processing for tag=%s", self.name)
+
+        thisoutput = 'GRIDOUTPUT'
+        rdict = dict(rc=True)
+
+        # Jump into a working directory
+        cwd = self.system.pwd()
+        tmpwd = self.system.path.join(cwd, self.file_out + '.process.d')
+        self.system.mkdir(tmpwd)
+        self.system.cd(tmpwd)
+
+        # Build the local namelist block
+        nb = NamelistBlock(name='NAML')
+        nb.NBDOM = 1
+        nb.CHOPER = self.compact
+        nb.INUMOD = self.numod
+        if self.sciz:
+            nb.ISCIZ = self.sciz + (self.member if self.member is not None else 0)
+        if self.timeshift:
+            nb.IHCTPI = self.timeshift
+        if self.timeunit:
+            nb.ITUNIT = self.timeunit
+        nb['CLFSORT(1)'] = thisoutput
+        nb['CDNOMF(1)'] = self.fortinput
+        with open(self.fortnam, 'w') as namfd:
+            namfd.write(nb.dumps())
+
+        # Finally set the actual init file
+        self.system.softlink(self.system.path.join(cwd, self.file_in),
+                             self.fortinput)
+
+        # Standard execution
+        list_name = self.system.path.join(cwd, self.file_out + ".listing")
+        try:
+            self.local_spawn(list_name)
+        except ExecutionError as e:
+            rdict['rc'] = e
+
+        # Freeze the current output
+        if self.system.path.exists(thisoutput):
+            self.system.move(thisoutput, self.system.path.join(cwd, self.file_out))
+        else:
+            logger.warning('Missing some grib output: %s', self.file_out)
+            rdict['rc'] = False
+
+        # Final cleaning
+        self.system.cd(cwd)
+        self.system.remove(tmpwd)
+
+        if self.system.path.exists(self.file_out):
+            # Deal with promised resources
+            expected = [x for x in self.context.sequence.outputs()
+                        if x.rh.provider.expected and x.rh.container.localpath() == self.file_out]
+            for thispromise in expected:
+                thispromise.put(incache=True)
+
+        logger.info("Fa2Grib processing is done for tag=%s", self.name)
+
+        return rdict
+
+
+class Fa2Grib(ParaBlindRun):
     """Standard FA conversion, e.g. with PROGRID as a binary resource."""
 
     _footprint = dict(
@@ -20,7 +122,19 @@ class Fa2Grib(BlindRun):
                 values = [ 'fa2grib' ],
             ),
             timeout = dict(
+                type = int,
+                optional = True,
                 default = 180,
+            ),
+            refreshtime = dict(
+                type = int,
+                optional = True,
+                default = 20,
+            ),
+            fatal = dict(
+                type = bool,
+                optional = True,
+                default = True,
             ),
             fortnam = dict(
                 optional = True,
@@ -66,67 +180,64 @@ class Fa2Grib(BlindRun):
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
 
-        gpsec = self.context.sequence.effective_inputs(role='Gridpoint', kind='gridpoint')
-        gpsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+        self._default_pre_execute(rh, opts)
 
-        thisoutput = 'GRIDOUTPUT'
+        common_i = self._default_common_instructions(rh, opts)
+        # Update the common instructions
+        common_i.update(dict(fortnam=self.fortnam, fortinput=self.fortinput,
+                             compact=self.compact, numod=self.numod, sciz=self.sciz,
+                             timeshift=self.timeshift, timeunit=self.timeunit))
 
-        for sec in gpsec:
-            r = sec.rh
-            self.system.title('Loop on domain {0:s} and term {1:s}'.format(
-                r.resource.geometry.area, r.resource.term.fmthm))
+        # Monitor for the input files
+        bm = BasicInputMonitor(self.context.sequence, caching_freq=self.refreshtime,
+                               role='Gridpoint', kind='gridpoint')
 
-            # Some preventive cleaning
-            self.system.remove(thisoutput)
-            self.system.remove(self.fortnam)
+        tmout = False
+        latestfound = time.time()
+        while not bm.all_done or len(bm.available) > 0:
 
-            # Build the local namelist block
-            from vortex.tools.fortran import NamelistBlock
-            nb = NamelistBlock(name='NAML')
-            nb.NBDOM = 1
-            nb.CHOPER = self.compact
-            nb.INUMOD = self.numod
+            while bm.available:
+                s = bm.available.pop(0).section
+                file_in = s.rh.container.localpath()
+                # Find the name of the output file
+                if s.rh.provider.member is not None:
+                    file_out = 'GRIB{0:s}_{1!s}+{2:s}'.format(s.rh.resource.geometry.area,
+                                                              s.rh.provider.member,
+                                                              s.rh.resource.term.fmthm)
+                else:
+                    file_out = 'GRIB{0:s}+{1:s}'.format(s.rh.resource.geometry.area,
+                                                        s.rh.resource.term.fmthm)
+                logger.info("Adding input file %s to the job list", file_in)
+                self._add_instructions(common_i,
+                                       dict(name=[file_in, ],
+                                            file_in=[file_in, ], file_out=[file_out, ],
+                                            member=[s.rh.provider.member, ]))
+                latestfound = time.time()
 
-            if self.sciz:
-                nb.ISCIZ = self.sciz
+            # Timeout ?
+            if (self.timeout > 0) and (time.time() - latestfound > self.timeout):
+                logger.error("The waiting loop timed out (%d seconds)", self.timeout)
+                logger.error("The following files are still unaccounted for: %s",
+                             ",".join([e.section.rh.container.localpath() for e in bm.expected]))
+                tmout = True
+                break
 
-            if self.timeshift:
-                nb.IHCTPI = self.timeshift
+            # Wait a little bit :-)
+            if not bm.all_done or len(bm.available) > 0:
+                self.system.sleep(1)
 
-            if self.timeunit:
-                nb.ITUNIT = self.timeunit
+        self._default_post_execute(rh, opts)
 
-            nb['CLFSORT(1)'] = thisoutput
-            nb['CDNOMF(1)'] = self.fortinput
-            with open(self.fortnam, 'w') as namfd:
-                namfd.write(nb.dumps())
+        if bm.failed:
+            for failed_files in [e.section.rh.container.localpath() for e in bm.failed]:
+                logger.error("We were unable to fetch the following file: %s",
+                             failed_files)
+                if self.fatal:
+                    self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_files)),
+                                               traceback=False)
 
-            self.system.header('{0:s} : local namelist {1:s} dump'.format(self.realkind, self.fortnam))
-            self.system.cat(self.fortnam, output=False)
-
-            # Expect the input FP file source to be there...
-            self.grab(sec, comment='fullpos source')
-
-            # Finaly set the actual init file
-            self.system.softlink(r.container.localpath(), self.fortinput)
-
-            # Standard execution
-            opts['loop'] = r.resource.term
-            super(Fa2Grib, self).execute(rh, opts)
-
-            # Freeze the current output
-            if self.system.path.exists(thisoutput):
-                actualname = 'GRIB{0:s}+{1:s}'.format(r.resource.geometry.area, r.resource.term.fmthm)
-                self.system.move(thisoutput, actualname)
-                expected = [ x for x in self.promises if x.rh.container.localpath() == actualname ]
-                for thispromise in expected:
-                    thispromise.put(incache=True)
-            else:
-                logger.warning('Missing some grib output for domain %s term %s',
-                               r.resource.geometry.area, r.resource.term.fmthm)
-
-            # Some cleaning
-            self.system.rmall('DAPDIR', self.fortinput)
+        if tmout:
+            raise IOError("The waiting loop timed out")
 
 
 class AddField(BlindRun):

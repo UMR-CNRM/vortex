@@ -29,6 +29,7 @@ console = logging.StreamHandler()
 console.setLevel(logging.DEBUG)
 console.setFormatter(formats['default'])
 
+
 # A hook filter (optional)
 class LoggingFilter(logging.Filter):
     """Add module name to record."""
@@ -62,9 +63,52 @@ def getLogger(modname):
     else:
         return logging.getLogger(modname)
 
+
 def setLogMethods(logger, methods=('debug', 'info', 'warning', 'error', 'critical')):
     """Reset some loggers methods with methods from an external logger."""
     for modname in lognames:
         thislog = logging.getLogger(modname)
         for logmethod in methods:
             setattr(thislog, logmethod, getattr(logger, logmethod))
+
+
+class SlurpHandler(logging.Handler):
+    """A strange Handler that accumulate the log-records in a lists.
+
+    We try to make sure that each individual record is pickable.
+    """
+
+    def __init__(self, records_stack):
+        super(SlurpHandler, self).__init__()
+        self._stack = records_stack
+
+    def prepare(self, record):
+        """
+        Prepares a record for queuing.
+
+        The base implementation formats the record to merge the message
+        and arguments, and removes unpickleable items from the record
+        in-place.
+
+        :param record: The record to prepare.
+        """
+        self.format(record)
+        record.msg = record.message
+        record.args = None
+        record.exc_info = None
+        return record
+
+    def emit(self, record):
+        """
+        Emit a record.
+
+        Adds the LogRecord to the stack, preparing it for pickling first.
+
+        :param record: The record to emit.
+        """
+        try:
+            self._stack.append(self.prepare(record))
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
