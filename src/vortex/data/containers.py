@@ -58,6 +58,10 @@ class Container(footprints.FootprintBase):
 
     def __getattr__(self, key):
         """Gateway to undefined method or attributes if present in internal io descriptor."""
+        # It avoids to call self.iodesc() when footprint_export is called...
+        if key.startswith('footprint_export') or key == 'export_dict':
+            raise AttributeError('Could not get an io descriptor')
+        # Normal processing
         iod = self.iodesc()
         if iod:
             return getattr(iod, key)
