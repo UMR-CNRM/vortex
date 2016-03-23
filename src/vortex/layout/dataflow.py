@@ -11,6 +11,7 @@ __all__ = []
 import re
 import collections
 from collections import namedtuple, defaultdict
+import weakref
 import json
 
 import footprints
@@ -18,6 +19,10 @@ logger = footprints.loggers.getLogger(__name__)
 
 from footprints.util import mktuple
 from vortex.util.structs import Utf8PrettyPrinter
+from vortex.util.roles import setrole
+
+
+_RHANDLERS_OBSBOARD = 'Resources-Handlers'
 
 
 class SectionFatalError(Exception):
@@ -59,18 +64,29 @@ class Section(object):
         self.kind       = ixo.INPUT
         self.intent     = intent.INOUT
         self.fatal      = True
-        self.role       = kw.get('role', None)
-        self.alternate  = None
-        self.rh         = None
+        self._role      = setrole(kw.pop('role', 'anonymous'))
+        self._alternate = setrole(kw.pop('alternate', None))
+        self._rh        = kw.pop('rh', None)
         self.stages     = [ kw.pop('stage', 'void') ]
         self.__dict__.update(kw)
-        if self.rh:
-            if self.rh.role and not self.role:
-                self.role = self.rh.role
-            if self.rh.alternate:
-                self.alternate = self.rh.alternate
-            self.rh.role = self.role
-            self.rh.alternate = self.alternate
+        # We realy need a ResourceHandler...
+        if self.rh is None:
+            raise AttributeError("A proper rh attribute have to be provided")
+        # If alternate is specified role have to be removed
+        if self._alternate:
+            self._role = None
+
+    @property
+    def role(self):
+        return self._role
+
+    @property
+    def alternate(self):
+        return self._alternate
+
+    @property
+    def rh(self):
+        return self._rh
 
     @property
     def stage(self):
@@ -111,6 +127,8 @@ class Section(object):
         rc = False
         if self.kind == ixo.INPUT or self.kind == ixo.EXEC:
             kw['intent'] = self.intent
+            if self.alternate:
+                kw['alternate'] = self.alternate
             try:
                 rc = self.rh.get(**kw)
             except StandardError as e:
@@ -149,7 +167,7 @@ class Section(object):
         self.rh.quickview(indent=1)
 
 
-class Sequence(object):
+class Sequence(footprints.observers.Observer):
     """
     Logical sequence of sections such as inputs or outputs sections.
     Instances are iterable and callable.
@@ -158,6 +176,16 @@ class Sequence(object):
     def __init__(self, *args, **kw):
         logger.debug('Sequence initialisation %s', self)
         self.sections = list()
+        # This hash table will be used to speedup the searches...
+        # If one uses the remove method, a WeakSet is not usefull. However,
+        # nothing will prevent the user from trashing the sections list...
+        # consequently a WealSet is safer !
+        self._sections_hash = defaultdict(weakref.WeakSet)
+        footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
+
+    def __del__(self):
+        footprints.observers.get(tag=_RHANDLERS_OBSBOARD).unregister(self)
+        super(Sequence, self).__del__()
 
     def __iter__(self):
         for s in self.sections:
@@ -169,6 +197,7 @@ class Sequence(object):
     def clear(self):
         """Clear the internal list of sections."""
         self.sections = list()
+        self._sections_hash.clear()
 
     def add(self, candidate):
         """
@@ -177,6 +206,7 @@ class Sequence(object):
         """
         if isinstance(candidate, Section):
             self.sections.append(candidate)
+            self._sections_hash[candidate.rh.simplified_hashkey].add(candidate)
         else:
             logger.warning('Try to add a non-section object %s in sequence %s', candidate, self)
 
@@ -187,6 +217,7 @@ class Sequence(object):
         """
         if isinstance(candidate, Section):
             self.sections.remove(candidate)
+            self._sections_hash[candidate.rh.simplified_hashkey].discard(candidate)
         else:
             logger.warning('Try to remove a non-section object %s in sequence %s', candidate, self)
 
@@ -303,6 +334,49 @@ class Sequence(object):
             outkind = [ x for x in outset if x.rh.resource.realkind in selectkind ]
         return outrole or outkind or outset
 
+    def updobsitem(self, item, info):
+        """
+        Resources-Handlers observing facility.
+        Track hashkey alteration for the resource handler ``item``.
+        """
+        if (info['observerboard'] == _RHANDLERS_OBSBOARD and
+                'oldhash' in info):
+            logger.debug('Notified %s upd item %s', self, item)
+            oldhash = info['oldhash']
+            # Fist remove the oldhash
+            if oldhash in self._sections_hash:
+                for section in [s for s in self._sections_hash[oldhash] if s.rh is item]:
+                    self._sections_hash[oldhash].discard(section)
+            # Then add the new hash: This is relatively slow so that it should not be used much...
+            for section in [s for s in self.sections if s.rh is item]:
+                self._sections_hash[section.rh.simplified_hashkey].add(section)
+
+    def fastsearch(self, skeleton):
+        """
+        Uses the sections hash table to significantly speed-up searches.
+
+        The fastsearch method returns a list of possible candidates (given the
+        skeleton). It is of the user responsibility to check each of the
+        returned sections to verify if it exactly matches or not.
+        """
+        try:
+            hkey = skeleton.simplified_hashkey
+            trydict = False
+        except AttributeError:
+            trydict = True
+        if not trydict:
+            return self._sections_hash[hkey]
+        elif trydict and isinstance(skeleton, dict):
+            # We assume it is a resource handler dictionary
+            try:
+                hkey = (skeleton['resource'].get('kind', None),
+                        skeleton['container'].get('filename', None))
+            except KeyError:
+                logger.critical("This is probably not a ResourceHandler dictionary.")
+                raise
+            return self._sections_hash[hkey]
+        raise ValueError("Cannot process a {!s} type skeleton".format(type(skeleton)))
+
 
 class SequenceInputsReport(object):
     """Summarize data about inputs (missing resources, alternates, ...)."""
@@ -407,6 +481,29 @@ class SequenceInputsReport(object):
         return outstack
 
 
+def _str2unicode(jsencode):
+    """Convert all the strings to Unicode."""
+    if isinstance(jsencode, dict):
+        return {_str2unicode(key): _str2unicode(value)
+                for key, value in jsencode.iteritems()}
+    elif isinstance(jsencode, list):
+        return [_str2unicode(value) for value in jsencode]
+    elif isinstance(jsencode, str):
+        return unicode(str)
+    else:
+        return jsencode
+
+
+def _fast_clean_uri(store, remote):
+    """Clean a URI so that it can be compared with a JSON load version."""
+    return _str2unicode({u'scheme': unicode(store.scheme),
+                         u'netloc': unicode(store.netloc),
+                         u'path': unicode(remote['path']),
+                         u'params': unicode(remote['params']),
+                         u'query': remote['query'],
+                         u'fragment': unicode(remote['fragment'])})
+
+
 class LocalTrackerEntry(object):
     """Holds the data for a given local container.
 
@@ -418,8 +515,13 @@ class LocalTrackerEntry(object):
     _actions = ('get', 'put',)
     _internals = ('rhdict', 'hook', 'uri')
 
-    def __init__(self):
+    def __init__(self, master_tracker=None):
+        """
+
+        :param master_tracker: The LocalTracker this entry belongs to.
+        """
         self._data = dict()
+        self._master_tracker = master_tracker
         for internal in self._internals:
             self._data[internal] = {act: list() for act in self._actions}
 
@@ -431,11 +533,6 @@ class LocalTrackerEntry(object):
     def _jsonize(stuff):
         """Make 'stuff' comparable to the result of a json.load."""
         return json.loads(json.dumps(stuff))
-
-    def _clean_uri(self, store, remote):
-        return self._jsonize(dict(scheme=store.scheme, netloc=store.netloc,
-                                  path=remote['path'], params=remote['params'],
-                                  query=remote['query'], fragment=remote['fragment']))
 
     def _clean_rhdict(self, rhdict):
         if 'options' in rhdict:
@@ -459,19 +556,21 @@ class LocalTrackerEntry(object):
                 # We are using as_dict since this may be written to a JSON file
                 self._data['rhdict'][stage].append(self._clean_rhdict(rh.as_dict()))
 
-    def update_store(self, store, info):
+    def update_store(self, info, uri):
         """Update the entry based on data received from the observer board.
 
         This method is to be called with data originated from the
         Stores-Activity observer board (when updates are notified).
 
-        :param store: :class:`~vortex.data.stores.Store` object that sends the update.
         :param info: Info dictionary sent by the :class:`~vortex.data.stores.Store` object
+        :param uri: A cleaned (i.e. compatible with JSON) representation of the URI
         """
         action = info['action']
         # Only known action and successfull attempts
         if self._check_action(action) and info['status']:
-            self._data['uri'][action].append(self._clean_uri(store, info['remote']))
+            self._data['uri'][action].append(uri)
+            if self._master_tracker is not None:
+                self._master_tracker.uri_map_append(self, action, uri)
 
     def dump_as_dict(self):
         """Export the entry as a dictionary."""
@@ -484,6 +583,9 @@ class LocalTrackerEntry(object):
             the :meth:`dump_as_dict` method)
         """
         self._data = dumpeddict
+        for action in self._actions:
+            for uri in self._data['uri'][action]:
+                self._master_tracker.uri_map_append(self, action, uri)
 
     def append(self, anotherentry):
         """Append the content of another LocalTrackerEntry object into this one."""
@@ -512,18 +614,18 @@ class LocalTrackerEntry(object):
         else:
             return False
 
-    def check_uri_remote_delete(self, store, remote):
+    def check_uri_remote_delete(self, uri):
         """Called when a :class:`~vortex.data.stores.Store` object notifies a delete.
 
         The URIs stored for the "put" action are checked against the delete
         request. If a match is found, the URI is deleted.
 
-        :param store: :class:`~vortex.data.stores.Store` object that requested the delete
-        :param remote: Remote path to the deleted resource
+        :param uri: A cleaned (i.e. compatible with JSON) representation of the URI
         """
-        theuri = self._clean_uri(store, remote)
-        while theuri in self._data['uri']['put']:
-            self._data['uri']['put'].remove(theuri)
+        while uri in self._data['uri']['put']:
+            self._data['uri']['put'].remove(uri)
+            if self._master_tracker is not None:
+                self._master_tracker.uri_map_remove(self, 'put', uri)
 
     def _redundant_stuff(self, internal, action, stuff):
         if self._check_action(action):
@@ -546,7 +648,7 @@ class LocalTrackerEntry(object):
         :param store: :class:`~vortex.data.stores.Store` object that will be checked.
         :param remote: Remote path that will be checked.
         """
-        return self._redundant_stuff('uri', action, self._clean_uri(store, remote))
+        return self._redundant_stuff('uri', action, _fast_clean_uri(store, remote))
 
     def _grep_stuff(self, internal, action, skeleton=dict()):
         stack = []
@@ -579,9 +681,35 @@ class LocalTracker(defaultdict):
 
     _default_json_filename = 'local-tracker-state.json'
 
+    def __init__(self):
+        super(LocalTracker, self).__init__()
+        # This hash table will be used to speedup searches
+        self._uri_map = defaultdict(lambda: defaultdict(weakref.WeakSet))
+
     def __missing__(self, key):
-        self[key] = LocalTrackerEntry()
+        self[key] = LocalTrackerEntry(master_tracker=self)
         return self[key]
+
+    def _hashable_uri(self, uri):
+        """Produces a version of the URI that is hashable."""
+        listuri = list()
+        for k in sorted(uri.keys()):
+            listuri.append(k)
+            if isinstance(uri[k], dict):
+                listuri.append(self._hashable_uri(uri[k]))
+            elif isinstance(uri[k], list):
+                listuri.append(tuple(uri[k]))
+            else:
+                listuri.append(uri[k])
+        return tuple(listuri)
+
+    def uri_map_remove(self, entry, action, uri):
+        """Delete an entry in the URI hash table."""
+        self._uri_map[action][self._hashable_uri(uri)].discard(entry)
+
+    def uri_map_append(self, entry, action, uri):
+        """Add a new entry in the URI hash table."""
+        self._uri_map[action][self._hashable_uri(uri)].add(entry)
 
     def update_rh(self, rh, info):
         """Update the object based on data received from the observer board.
@@ -609,14 +737,16 @@ class LocalTracker(defaultdict):
         :param info: Info dictionary sent by the :class:`~vortex.data.stores.Store` object
         """
         lpath = info.get('local', None)
+        clean_uri = _fast_clean_uri(store, info['remote'])
         if lpath is None:
             # Check for file deleted on the remote side
             if info['action'] == 'del' and info['status']:
-                for atracker in self.itervalues():
-                    atracker.check_uri_remote_delete(store, info['remote'])
+                huri = self._hashable_uri(clean_uri)
+                for atracker in list(self._uri_map['put'][huri]):
+                    atracker.check_uri_remote_delete(clean_uri)
         else:
             if isinstance(lpath, basestring):
-                self[lpath].update_store(store, info)
+                self[lpath].update_store(info, clean_uri)
             else:
                 logger.info("The iotarget isn't a basestring: It will be skipped in %s",
                             self.__class__)
