@@ -942,6 +942,10 @@ class VortexOpArchiveStore(VortexArchiveStore):
 class CacheStore(Store):
     """Generic Cache Store."""
 
+    # Each Cache object created by a CacheStore will be stored here:
+    # This way it won't be garbage collect and could be re-used later on
+    _caches_object_stack = set()
+
     _footprint = dict(
         info = 'Generic cache store',
         attr = dict(
@@ -1009,6 +1013,7 @@ class CacheStore(Store):
                 rtouch      = self.rtouch,
                 rtouchskip  = self.rtouchskip,
             )
+            self._caches_object_stack.add(self._cache)
         return self._cache
 
     def _set_cache(self, newcache):

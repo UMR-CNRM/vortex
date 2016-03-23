@@ -78,7 +78,6 @@ class Cache(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         logger.debug('Abstract cache init %s', self.__class__)
         super(Cache, self).__init__(*args, **kw)
-        self._sh = sessions.system()
         if not self.config:
             self._attributes['config'] = GenericConfigParser(inifile=self.inifile, mkforce=self.iniauto)
         self._history = History(tag=self.entry)
@@ -89,7 +88,7 @@ class Cache(footprints.FootprintBase):
 
     @property
     def sh(self):
-        return self._sh
+        return sessions.system()
 
     @property
     def history(self):
