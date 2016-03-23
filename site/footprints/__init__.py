@@ -947,11 +947,14 @@ class FootprintBase(object):
         and then compare to my actual values.
         """
         fp = self.footprint
-        resolved, u_inputattr, u_attr_seen = fp.resolve(rd, fatal=False, fast=False, report=None)
-        rc = True
-        for k in rd.keys():
-            if resolved[k] is None or self._attributes[k] != resolved[k]:
-                rc = False
+        #resolved, u_inputattr, u_attr_seen = fp.resolve(rd, fatal=False, fast=False, report=None)
+        resolved, u_inputattr, u_attr_seen = fp.resolve(rd, fatal=False, report=None)
+        rc = resolved and None not in resolved.values()
+        if rc:
+            for k in rd.keys():
+                if self._attributes[k] != resolved[k]:
+                    rc = False
+                    break
         return rc
 
     def footprint_cleanup(self, rd):
