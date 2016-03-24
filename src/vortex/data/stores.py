@@ -612,6 +612,7 @@ class Finder(Store):
     def fileget(self, remote, local, options):
         """Delegates to ``system`` the copy of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
+        logger.info('fileget on %s (to: %s)', rpath, local)
         if 'intent' in options and options['intent'] == dataflow.intent.IN:
             logger.info('Ignore intent <in> for remote input %s', rpath)
         rc = self.system.cp(rpath, local, fmt=options.get('fmt'), intent=dataflow.intent.INOUT)
@@ -621,13 +622,17 @@ class Finder(Store):
 
     def fileput(self, local, remote, options):
         """Delegates to ``system`` the copy of ``local`` to ``remote``."""
-        return self.system.cp(local, self.fullpath(remote), fmt=options.get('fmt'))
+        rpath = self.fullpath(remote)
+        logger.info('fileput to %s (from: %s)', rpath, local)
+        return self.system.cp(local, rpath, fmt=options.get('fmt'))
 
     def filedelete(self, remote, options):
         """Delegates to ``system`` the removing of ``remote``."""
         rc = None
         if self.filecheck(remote, options):
-            rc = self.system.remove(self.fullpath(remote), fmt=options.get('fmt'))
+            rpath = self.fullpath(remote)
+            logger.info('filedelete on %s', rpath)
+            rc = self.system.remove(rpath, fmt=options.get('fmt'))
         else:
             logger.error('Try to remove a non-existing resource <%s>', self.fullpath(remote))
         return rc
@@ -657,8 +662,10 @@ class Finder(Store):
 
     def ftpget(self, remote, local, options):
         """Delegates to ``system`` the file transfer of ``remote`` to ``local``."""
+        rpath = self.fullpath(remote)
+        logger.info('ftpget on ftp://%s/%s (to: %s)', self.hostname(), rpath, local)
         rc = self.system.ftget(
-            self.fullpath(remote),
+            rpath,
             local,
             # ftp control
             hostname = self.hostname(),
@@ -671,9 +678,11 @@ class Finder(Store):
 
     def ftpput(self, local, remote, options):
         """Delegates to ``system`` the file transfer of ``local`` to ``remote``."""
+        rpath = self.fullpath(remote)
+        logger.info('ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
         return self.system.ftput(
             local,
-            self.fullpath(remote),
+            rpath,
             # ftp control
             hostname = self.hostname(),
             logname  = remote['username'],
@@ -687,6 +696,7 @@ class Finder(Store):
         if ftp:
             actualpath = self.fullpath(remote)
             if self.ftpcheck(actualpath, options=options):
+                logger.info('ftpdelete on ftp://%s/%s', self.hostname(), actualpath)
                 rc = ftp.delete(actualpath)
                 ftp.close()
             else:
@@ -780,8 +790,10 @@ class ArchiveStore(Store):
 
     def ftpget(self, remote, local, options):
         """Delegates to ``system.ftp`` the get action."""
+        rpath = self._ftpformatpath(remote)
+        logger.info('ftpget on ftp://%s/%s (to: %s)', self.hostname(), rpath, local)
         return self.system.smartftget(
-            self._ftpformatpath(remote), local,
+            rpath, local,
             # ftp control
             hostname = self.hostname(),
             logname  = remote['username'],
@@ -796,15 +808,18 @@ class ArchiveStore(Store):
             logname  = remote['username'],
             fmt      = options.get('fmt'),
         )
+        rpath = self._ftpformatpath(remote)
         if put_sync:
-            return self.system.smartftput(local, self._ftpformatpath(remote), **put_opts)
+            logger.info('ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
+            return self.system.smartftput(local, rpath, **put_opts)
         else:
+            logger.info('delayed ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
             tempo = footprints.proxy.service(kind='hiddencache', asfmt=put_opts['fmt'])
             put_opts.update(
                 todo        = 'ftput',
                 rhandler    = options.get('rhandler', None),
                 source      = tempo(local),
-                destination = self._ftpformatpath(remote),
+                destination = rpath,
             )
             return ad.jeeves(**put_opts)
 
@@ -814,7 +829,9 @@ class ArchiveStore(Store):
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             if self.ftpcheck(remote, options=options):
-                rc = ftp.delete(self._ftpformatpath(remote))
+                rpath = self._ftpformatpath(remote)
+                logger.info('ftpdelete on ftp://%s/%s', self.hostname(), rpath)
+                rc = ftp.delete(rpath)
                 ftp.close()
             else:
                 logger.error('Try to remove a non-existing resource <%s>',
@@ -1041,6 +1058,8 @@ class CacheStore(Store):
 
     def incacheget(self, remote, local, options):
         """Simple copy from current cache cache to ``local``."""
+        logger.info('incacheget on %s://%s/%s (to: %s)',
+                    self.scheme, self.netloc, remote['path'], local)
         return self.cache.retrieve(
             remote['path'],
             local,
@@ -1053,6 +1072,8 @@ class CacheStore(Store):
 
     def incacheput(self, local, remote, options):
         """Simple copy from ``local`` to the current cache in readonly mode."""
+        logger.info('incacheput to %s://%s/%s (from: %s)',
+                    self.scheme, self.netloc, remote['path'], local)
         return self.cache.insert(
             remote['path'],
             local,
@@ -1063,6 +1084,8 @@ class CacheStore(Store):
 
     def incachedelete(self, remote, options):
         """Simple removing of the remote resource in cache."""
+        logger.info('incachedelete on %s://%s/%s',
+                    self.scheme, self.netloc, remote['path'])
         return self.cache.delete(
             remote['path'],
             fmt  = options.get('fmt'),
