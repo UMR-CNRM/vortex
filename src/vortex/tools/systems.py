@@ -344,6 +344,26 @@ class System(footprints.FootprintBase):
         else:
             return False
 
+    def wperm(self, filename, force=False):
+        """Return whether a file exists and is writable by owner or not."""
+        if os.path.exists(filename):
+            st = os.stat(filename).st_mode
+            is_w = bool(st & stat.S_IWUSR)
+            if not is_w and force:
+                self.chmod(filename, st | stat.S_IWUSR)
+                is_w = True
+            return is_w
+        else:
+            return False
+
+    def wpermtree(self, objpath, force=False):
+        """Return whether all items are owner-writeable in a hierarchy."""
+        rc = self.wperm(objpath, force)
+        for dirpath, dirnames, filenames in self.walk(objpath):
+            for item in filenames + dirnames:
+                rc = self.wperm(self.path.join(dirpath, item), force) and rc
+        return rc
+
     def which(self, command):
         """Clone of the unix command."""
         self.stderr('which', command)
@@ -427,6 +447,14 @@ class System(footprints.FootprintBase):
                     rc = self.chmod(inodename, st & ~( stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH ))
                 else:
                     rc = True
+        return rc
+
+    def readonlytree(self, objpath):
+        """Recursively set permissions of the ``dirname`` object to read-only."""
+        rc = self.readonly(objpath)
+        for dirpath, dirnames, filenames in self.walk(objpath):
+            for item in filenames + dirnames:
+                rc = self.readonly(self.path.join(dirpath, item)) and rc
         return rc
 
     def sleep(self, nbsecs):
@@ -818,6 +846,21 @@ class OSExtended(System):
             return self.stat(filepath).st_size
         except StandardError:
             return -1
+
+    def treesize(self, objpath):
+        """Size in byte of the whole directory (or file).
+           Links are not followed, and directory sizes are taken
+           into account: should return the same as ``du -sb``.
+           Raises OSError if objpath does not exist.
+        """
+        objpath = self.path.expanduser(objpath)
+        if self.path.isdir(objpath):
+            total_size = self.size(objpath)
+            for dirpath, dirnames, filenames in self.walk(objpath):
+                for f in filenames + dirnames:
+                    total_size += self.lstat(self.path.join(dirpath, f)).st_size
+            return total_size
+        return self.lstat(objpath).st_size
 
     def mkdir(self, dirpath, fatal=True):
         """Normalizes path name and recursively creates this directory."""

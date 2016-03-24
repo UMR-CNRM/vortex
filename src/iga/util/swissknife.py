@@ -169,7 +169,7 @@ def slurm_parameters(t, **kw):
     return slurm, kw
 
 
-def gget_resource_exists(t, ggetfile, monthly=False):
+def gget_resource_exists(t, ggetfile, monthly=False, verbose=False):
     """Check whether a gget resource exists in the current path or not."""
 
     if t.sh.path.exists(ggetfile):
@@ -182,7 +182,8 @@ def gget_resource_exists(t, ggetfile, monthly=False):
     months = [ggetfile + '.m{:02d}'.format(m) for m in range(1, 13)]
     missing = [month for month in months if not t.sh.path.isfile(month)]
     if missing:
-        print 'missing :', missing
+        if verbose:
+            print 'missing :', missing
         return False
     return True
 
@@ -247,7 +248,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
             if verbose:
                 print t.line
                 print name, '...',
-            if gget_resource_exists(t, name, name in monthly):
+            if gget_resource_exists(t, name, name in monthly, verbose):
                 if verbose:
                     print 'already there'
                     sh.ll(name + '*')
@@ -259,7 +260,11 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
                     sh.spawn([gtool, name], output=False)
                     increase += sh.size(name)
                     details['retrieved'].append(name)
-                    sh.readonly(name)
+                    if name in monthly:
+                        for month in range(1, 13):
+                            sh.readonly('{}.m{:02d}'.format(name, month))
+                    else:
+                        sh.readonlytree(name)
                     if verbose:
                         print 'ok'
                         sh.ll(name + '*')
@@ -289,9 +294,11 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
                             subfilepath = sh.path.join(radix, subfile)
                             details['expanded'].append(subfilepath)
                             increase += sh.size(subfilepath)
-                            sh.readonly(subfilepath)
+                        sh.readonlytree(radix)
 
-                except StandardError:
+                except StandardError as error:
+                    print error
+                    log. write(unicode('Caught StandardError: ' + str(error) + "\n"))
                     if verbose:
                         print 'failed &',
                     details['failed'].append(name)
@@ -314,3 +321,106 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     log.close()
 
     return (increase, details)
+
+
+def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopath='gco/tampon', logpath=None):
+    """
+    Remove a frozen cycle: undoes what freeze_cycle did, but without removing
+    any file in use by any of the other frozen cycles ("*.genv" in genvpath).
+    """
+    sh = t.sh
+    tg = sh.target()
+
+    def genv_contents(cycle):
+        """Return all files and level 0 directories for a cycle."""
+
+        genvdict = genv.autofill(cycle)
+
+        # these keys are always ignored
+        for prefix in ('PACK', 'SRC'):
+            for key in genvdict.keys():
+                if key.startswith(prefix):
+                    del genvdict[key]
+
+        # corresponding files or directories
+        contents = set()
+        for k in genvdict:
+            names = genvdict[k]
+            if isinstance(names, basestring):
+                names = [names]
+            for name in names:
+                if k.startswith('CLIM_') or k.endswith('_MONTHLY'):
+                    contents |= {name + '.m{:02d}'.format(m) for m in range(1, 13)}
+                else:
+                    contents.add(name)
+                    if sh.is_tarname(name):
+                        radix = sh.tarname_radix(name)
+                        contents.add(radix)
+        return contents
+
+    # Rename the genv file (used as a marker of frozen cycle)
+    sh.mkdir(genvpath)
+    genvconf = sh.path.join(genvpath, delcycle + '.genv')
+    if not fake and sh.path.isfile(genvconf):
+        sh.move(genvconf, genvconf + '.removed')
+
+    # Start a log
+    if logpath is None:
+        logpath = sh.path.join(genvpath, 'freeze_cycle.log')
+    if fake:
+        logpath = '/dev/null'
+    log = io.open(logpath, mode='a', encoding='utf-8')
+    log.write(unicode(t.line))
+    log.write(unicode(t.prompt + ' ' + delcycle + ' UNFREEZING ' + date.now().reallynice() + "\n"))
+
+    decrease = 0
+    details  = dict(removed=list(), failed=list())
+
+    # all contents must be removed
+    delitems = genv_contents(delcycle)
+
+    # except if used by another cycle
+    with sh.cdcontext(genvpath):
+        for cycle in [x.strip('.genv') for x in sh.glob('*.genv')]:
+            if cycle != delcycle:
+                delitems -= genv_contents(cycle)
+
+    # let's remove them
+    with sh.cdcontext(gcopath):
+        for delitem in delitems:
+            if not sh.path.exists(delitem):
+                continue
+            size = sh.treesize(delitem)
+            if fake:
+                if verbose:
+                    print "would remove: ", delitem
+                details['removed'].append(delitem)
+                decrease += size
+            else:
+                try:
+                    sh.wpermtree(delitem, force=True)
+                    if sh.remove(delitem):
+                        if verbose:
+                            print "removed: ", delitem
+                        details['removed'].append(delitem)
+                        decrease += size
+                    else:
+                        if verbose:
+                            print "could not remove: ", delitem
+                        details['failed'].append(delitem)
+                except OSError as error:
+                    print 'OSError on removing ', delitem
+                    print error
+                    details['failed'].append(delitem)
+
+    if verbose:
+        print t.line
+
+    for k, v in details.items():
+        log.write(unicode('Number of items ' + k + ' = ' + str(len(v)) + "\n"))
+        for item in v:
+            log.write(unicode(' > '  + item + "\n"))
+
+    log.close()
+
+    return (decrease, details)
