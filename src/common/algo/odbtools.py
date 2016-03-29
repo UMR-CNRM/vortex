@@ -452,15 +452,13 @@ class OdbAverage(OdbProcess):
 
         sh = self.system
 
-        oldpwd = sh.getcwd()
-        sh.cd(self.layout_new)
-        for ccma in sh.glob('{0:s}.*'.format(self.layout_new)):
-            slurp = sh.cat(ccma, outsplit=False).replace(self.layout_new, self.layout_in)
-            with io.open(ccma.replace(self.layout_new, self.layout_in), 'w') as fd:
-                fd.write(unicode(slurp))
-            sh.rm(ccma)
+        with sh.cdcontext(self.layout_new):
+            for ccma in sh.glob('{0:s}.*'.format(self.layout_new)):
+                slurp = sh.cat(ccma, outsplit=False).replace(self.layout_new, self.layout_in)
+                with io.open(ccma.replace(self.layout_new, self.layout_in), 'w') as fd:
+                    fd.write(unicode(slurp))
+                sh.rm(ccma)
 
-        sh.cd(oldpwd)
         sh.mv(self.layout_new, self.layout_in + '.' + self.bingo.resource.part)
 
 
