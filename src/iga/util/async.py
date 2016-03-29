@@ -23,7 +23,7 @@ class LockedOpen(object):
         return self.fp
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        """Called when leaving the context: unlock and close the file"""
+        """Called when leaving the context: unlock and close the file."""
         fcntl.flock(self.fid, fcntl.LOCK_UN)
         self.fp.close()
 

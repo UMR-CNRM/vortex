@@ -57,6 +57,29 @@ class ExecutionError(RuntimeError):
     pass
 
 
+class CdContext(object):
+    """
+    Context manager for temporarily changing the working directory.
+
+    Returns to the initial directory, even when an exception is raised.
+    Has the syntax of system.cd, and can be used through system:
+    ``with sh.cdcontext(newpath, create=True):
+          # work in newpath
+      # back to the original path``
+    """
+    def __init__(self, sh, newpath, create=False):
+        self.sh = sh
+        self.create = create
+        self.newpath = self.sh.path.expanduser(newpath)
+
+    def __enter__(self):
+        self.oldath = self.sh.getcwd()
+        self.sh.cd(self.newpath, create=self.create)
+
+    def __exit__(self, etype, value, traceback):
+        self.sh.cd(self.oldath)
+
+
 class System(footprints.FootprintBase):
     """
     Root class for any :class:`System` subclasses.
@@ -321,6 +344,26 @@ class System(footprints.FootprintBase):
         else:
             return False
 
+    def wperm(self, filename, force=False):
+        """Return whether a file exists and is writable by owner or not."""
+        if os.path.exists(filename):
+            st = os.stat(filename).st_mode
+            is_w = bool(st & stat.S_IWUSR)
+            if not is_w and force:
+                self.chmod(filename, st | stat.S_IWUSR)
+                is_w = True
+            return is_w
+        else:
+            return False
+
+    def wpermtree(self, objpath, force=False):
+        """Return whether all items are owner-writeable in a hierarchy."""
+        rc = self.wperm(objpath, force)
+        for dirpath, dirnames, filenames in self.walk(objpath):
+            for item in filenames + dirnames:
+                rc = self.wperm(self.path.join(dirpath, item), force) and rc
+        return rc
+
     def which(self, command):
         """Clone of the unix command."""
         self.stderr('which', command)
@@ -373,13 +416,15 @@ class System(footprints.FootprintBase):
         """Shortcut to :meth:`remove` method (file or directory)."""
         return self.remove(objpath)
 
-    def ps(self, opts=[], search=None, pscmd=None):
+    def ps(self, opts=None, search=None, pscmd=None):
         """
         Performs a standard process inquiry through :class:`subprocess.Popen`
         and filter the output if a ``search`` expression is provided.
         """
         if not pscmd:
             pscmd = ['ps']
+        if opts is None:
+            opts = []
         pscmd.extend(self._psopts)
         pscmd.extend(opts)
         self.stderr(*pscmd)
@@ -398,10 +443,18 @@ class System(footprints.FootprintBase):
                 rc = self.chmod(inodename, 0555)
             else:
                 st = self.stat(inodename).st_mode
-                if ( st & stat.S_IWUSR or st & stat.S_IWGRP or st & stat.S_IWOTH):
+                if st & stat.S_IWUSR or st & stat.S_IWGRP or st & stat.S_IWOTH:
                     rc = self.chmod(inodename, st & ~( stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH ))
                 else:
                     rc = True
+        return rc
+
+    def readonlytree(self, objpath):
+        """Recursively set permissions of the ``dirname`` object to read-only."""
+        rc = self.readonly(objpath)
+        for dirpath, dirnames, filenames in self.walk(objpath):
+            for item in filenames + dirnames:
+                rc = self.readonly(self.path.join(dirpath, item)) and rc
         return rc
 
     def sleep(self, nbsecs):
@@ -418,8 +471,11 @@ class System(footprints.FootprintBase):
             for x in self.ffind(mroot)
         ]
         return [
-            re.sub(r'(?:\/__init__)?\.py$', '', x).replace('/', '.')
-            for x in mfiles if ( not x.startswith('.' ) and re.search(only, x, re.IGNORECASE) and x.endswith('.py') )
+            re.sub(r'(?:/__init__)?\.py$', '', x).replace('/', '.')
+            for x in mfiles
+            if (not x.startswith('.' ) and
+                re.search(only, x, re.IGNORECASE) and
+                x.endswith('.py'))
         ]
 
     def vortex_loaded_modules(self, only='.', output=None):
@@ -486,7 +542,8 @@ class System(footprints.FootprintBase):
         else:
             return False
 
-    def spawn(self, args, ok=None, shell=False, stdin=None, output=None, outmode='a', outsplit=True, silent=False, fatal=True):
+    def spawn(self, args, ok=None, shell=False, stdin=None, output=None,
+              outmode='a', outsplit=True, silent=False, fatal=True):
         """Subprocess call of ``args``."""
         rc = False
         if ok is None:
@@ -530,7 +587,8 @@ class System(footprints.FootprintBase):
         except StandardError as perr:
             logger.critical('System returns {!s}'.format(perr))
             if fatal:
-                raise RuntimeError('System {!s} spawned {!s} got [{!s}]: {!s}'.format(self, args, perr.returncode, perr))
+                raise RuntimeError('System {!s} spawned {!s} got [{!s}]: {!s}'
+                                   .format(self, args, p.returncode, perr))
             else:
                 logger.warning('Carry on because fatal is off')
         else:
@@ -616,6 +674,9 @@ class System(footprints.FootprintBase):
     def getlogname(self):
         """Be sure to get actual login name."""
         return passwd.getpwuid(self._os.getuid())[0]
+
+    def cdcontext(self, path, create=False):
+        return CdContext(self, path, create)
 
 
 class OSExtended(System):
@@ -785,6 +846,21 @@ class OSExtended(System):
             return self.stat(filepath).st_size
         except StandardError:
             return -1
+
+    def treesize(self, objpath):
+        """Size in byte of the whole directory (or file).
+           Links are not followed, and directory sizes are taken
+           into account: should return the same as ``du -sb``.
+           Raises OSError if objpath does not exist.
+        """
+        objpath = self.path.expanduser(objpath)
+        if self.path.isdir(objpath):
+            total_size = self.size(objpath)
+            for dirpath, dirnames, filenames in self.walk(objpath):
+                for f in filenames + dirnames:
+                    total_size += self.lstat(self.path.join(dirpath, f)).st_size
+            return total_size
+        return self.lstat(objpath).st_size
 
     def mkdir(self, dirpath, fatal=True):
         """Normalizes path name and recursively creates this directory."""
@@ -1072,7 +1148,7 @@ class OSExtended(System):
         return self.glob(*rl)
 
     def ldirs(self, *args):
-        """Proxy to diretories globbing after removing any option. A bit like :meth:`ls` method."""
+        """Proxy to directories globbing after removing any option. A bit like :meth:`ls` method."""
         rl = [x for x in args if not x.startswith('-')]
         if not rl:
             rl.append('*')
@@ -1094,6 +1170,10 @@ class OSExtended(System):
             zopt.add('z')
         else:
             zopt.discard('z')
+        if tarfile.endswith('bz') or tarfile.endswith('bz2'):
+            zopt.add('j')
+        else:
+            zopt.discard('j')
         return ''.join(zopt)
 
     def tar(self, *args, **kw):
@@ -1110,27 +1190,36 @@ class OSExtended(System):
 
     def smartuntar(self, source, destination, **kw):
         """Unpack a file archive in the appropriate directory."""
-        loccwd = self.getcwd()
         fullsource = self.path.realpath(source)
         self.mkdir(destination)
         loctmp = tempfile.mkdtemp(prefix='untar_', dir=destination)
-        self.cd(loctmp)
-        rc = self.untar(fullsource, **kw)
-        unpacked = self.glob('*')
-        for untaritem in unpacked:
-            if self.path.exists('../' + untaritem):
-                logger.error('Some previous item exists before untar [%s]', untaritem)
-            else:
-                self.mv(untaritem, '../' + untaritem)
-        self.cd(loccwd)
+        with self.cdcontext(loctmp):
+            self.untar(fullsource, **kw)
+            unpacked = self.glob('*')
+            for untaritem in unpacked:
+                if self.path.exists('../' + untaritem):
+                    logger.error('Some previous item exists before untar [%s]', untaritem)
+                else:
+                    self.mv(untaritem, '../' + untaritem)
         self.rm(loctmp)
         return unpacked
 
     def is_tarname(self, objname):
         """Check if a ``objname`` is a string with ``.tar`` suffix."""
-        return isinstance(objname, str) and ( objname.endswith('.tar') or
-                                              objname.endswith('.tar.gz') or
-                                              objname.endswith('.tgz') )
+        return isinstance(objname, str) and (objname.endswith('.tar') or
+                                             objname.endswith('.tar.gz') or
+                                             objname.endswith('.tgz') or
+                                             objname.endswith('.tar.bz2') or
+                                             objname.endswith('.tbz'))
+
+    def tarname_radix(self, objname):
+        """Remove any ``.tar`` specific suffix."""
+        if not self.is_tarname(objname):
+            return objname
+        radix = self.path.splitext(objname)[0]
+        if radix.endswith('.tar'):
+            radix = radix[:-4]
+        return radix
 
     def tarfix_in(self, source, destination):
         """Untar the ``destination`` if ``source`` is a tarfile."""
@@ -1138,19 +1227,17 @@ class OSExtended(System):
         if (self.path.isfile(source) and self.is_tarname(source) and
                 not self.is_tarname(destination)):
             logger.info('Untar from get <%s>', source)
-            thiscwd = self.getcwd()
             (destdir, destfile) = self.path.split(self.path.abspath(destination))
             desttar = self.path.abspath(destination + '.tar')
             self.remove(desttar)
             ok = ok and self.move(destination, desttar)
             loctmp = tempfile.mkdtemp(prefix='untar_', dir=destdir)
-            self.cd(loctmp)
-            ok = ok and self.untar(desttar, output=False)
-            unpacked = self.glob('*')
-            ok = ok and len(unpacked) == 1  # Only one element allowed in this kind of tarfiles
-            ok = ok and self.move(unpacked[0], self.path.join(destdir, destfile))
-            ok = ok and self.remove(desttar)
-            self.cd(thiscwd)
+            with self.cdcontext(loctmp):
+                ok = ok and self.untar(desttar, output=False)
+                unpacked = self.glob('*')
+                ok = ok and len(unpacked) == 1  # Only one element allowed in this kind of tarfiles
+                ok = ok and self.move(unpacked[0], self.path.join(destdir, destfile))
+                ok = ok and self.remove(desttar)
             self.rm(loctmp)
         return (ok, source, destination)
 
@@ -1159,13 +1246,11 @@ class OSExtended(System):
         ok = True
         if not self.is_tarname(source) and self.is_tarname(destination):
             logger.info('Tar before put <%s>', source)
-            thiscwd   = self.getcwd()
             sourcetar = self.path.abspath(source + '.tar')
             (sourcedir, sourcefile) = self.path.split(sourcetar)
-            ok = ok and self.cd(sourcedir)
-            ok = ok and self.remove(sourcefile)
-            ok = ok and self.tar(sourcefile, source, output=False)
-            self.cd(thiscwd)
+            with self.cdcontext(sourcedir):
+                ok = ok and self.remove(sourcefile)
+                ok = ok and self.tar(sourcefile, source, output=False)
             return (ok, sourcetar, destination)
         else:
             return (ok, source, destination)
@@ -1232,11 +1317,11 @@ class OSExtended(System):
         """Return number of significant code or configuration lines in specified directories."""
         lookfiles = [
             x for x in self.ffind(*args)
-                if x.endswith('.py') or x.endswith('.ini') or x.endswith('.tpl') or x.endswith('.rst')
+            if self.path.splitext[1] in ['.py', '.ini', '.tpl', '.rst']
         ]
         return len([
             x for x in self.cat(*lookfiles)
-                if re.search('\S', x) and re.search('[^\'\"\)\],\s]', x)
+            if re.search('\S', x) and re.search('[^\'\"\)\],\s]', x)
         ])
 
     def _signal_intercept_init(self):
