@@ -24,6 +24,11 @@ Exceptions
 Classes
 -------
 
+.. autoclass:: CdContext
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: System
    :show-inheritance:
    :members:

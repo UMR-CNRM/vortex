@@ -62,10 +62,11 @@ class CdContext(object):
     Context manager for temporarily changing the working directory.
 
     Returns to the initial directory, even when an exception is raised.
-    Has the syntax of system.cd, and can be used through system:
-    ``with sh.cdcontext(newpath, create=True):
-          # work in newpath
-      # back to the original path``
+    Has the syntax of system.cd, and can be used through system::
+
+        with sh.cdcontext(newpath, create=True):
+            # work in newpath
+        # back to the original path
     """
     def __init__(self, sh, newpath, create=False):
         self.sh = sh
