@@ -10,7 +10,7 @@
 
 
 Base Class
------------
+----------
 
 .. autoclass:: AttrDict
    :show-inheritance:

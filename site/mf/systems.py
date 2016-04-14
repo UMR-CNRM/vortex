@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This package handles some common targets sused at Meteo France.
+This package handles some common targets used at Meteo France.
 """
 
 #: No automatic export
