@@ -973,7 +973,7 @@ class OpMailService(TemplatedMailService):
     def trailer(self):
         """String appended to the message body."""
         return '\n--\nEnvoi automatique par Vortex ' \
-               'pour <{}@{}>\n'.format(self.env.user, self.env.host)
+               'pour <{}@{}>\n'.format(self.env.user, self.sh.target().inetname)
 
     def __call__(self, *args):
         """Main action as inherited, and prompts.
