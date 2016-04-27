@@ -1339,3 +1339,9 @@ class VortexPromiseStore(PromiseStore):
             ),
         )
     )
+
+
+# Activate the footprint's fasttrack on the stores collector
+fcollect = footprints.collectors.get(tag='store')
+fcollect.fasttrack = ('netloc', 'scheme')
+del fcollect
