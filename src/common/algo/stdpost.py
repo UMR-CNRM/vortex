@@ -7,7 +7,7 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.algo.components import BlindRun
+from vortex.algo.components import BlindRun, AlgoComponentError
 from vortex.syntax.stdattrs import DelayedEnvValue
 
 
@@ -201,13 +201,71 @@ class AddField(BlindRun):
         self.system.remove(self.fortnam)
 
 
+class DiagPE(BlindRun):
+    """Execution of diagnostics on grib input (ensemble forecasts specific)."""
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = [ 'diagpe' ],
+            ),
+            method = dict(
+                info   = 'The method used to compute the diagnosis',
+                values = [ 'neighbour' ],
+            ),
+        ),
+    )
+
+    def prepare(self, rh, opts):
+        """Set some variables according to target definition."""
+        super(DiagPE, self).prepare(rh, opts)
+        # Prevent DrHook to initialise MPI and setup grib_api
+        for optpack in ('drhook_not_mpi', 'gribapi'):
+            self.export(optpack)
+
+    def spawn_hook(self):
+        """Usually a good habit to dump the fort.4 namelist."""
+        super(DiagPE, self).spawn_hook()
+        if self.system.path.exists('fort.4'):
+            self.system.subtitle('{0:s} : dump namelist <fort.4>'.format(self.realkind))
+            self.system.cat('fort.4', output=False)
+
+    def execute(self, rh, opts):
+        """Loop on the various grib files provided."""
+        srcsec = self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
+                                                        kind='gridpoint')
+        # Find out what are the terms
+        terms = sorted(set([s.rh.resource.term for s in srcsec]))
+        # Check that the date is consistent among inputs
+        basedates = list(set([s.rh.resource.date for s in srcsec]))
+        if len(basedates) > 1:
+            raise AlgoComponentError('The date must be consistent among the input resources')
+        basedate = basedates[-1]
+
+        for term in terms:
+            # Tweak the namelist
+            namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
+            for nam in [ x.rh for x in namsec if 'NAM_PARAM' in x.rh.contents ]:
+                logger.info("Substitute the date (%s) to AAAAMMJJHH namelist entry", basedate.ymdh)
+                nam.contents['NAM_PARAM']['AAAAMMJJHH'] = basedate.ymdh
+                logger.info("Substitute the the number of terms to NECH(0) namelist entry")
+                nam.contents['NAM_PARAM']['NECH(0)'] = 1
+                logger.info("Substitute the ressource term to NECH(1) namelist entry")
+                # NB: term should be expressed in minutes
+                nam.contents['NAM_PARAM']['NECH(1)'] = int(term)
+                nam.save()
+
+            # Standard execution
+            opts['loop'] = term
+            super(DiagPE, self).execute(rh, opts)
+
+
 class DiagPI(BlindRun):
-    """Execution of diagnotics on grib input (Arome-PI's specific)."""
+    """Execution of diagnostics on grib input (deterministic forecasts specific)."""
 
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = [ 'diagpi' ],
+                values = [ 'diagpi', 'diaglabo' ],
             ),
         ),
     )
@@ -245,6 +303,9 @@ class DiagPI(BlindRun):
                 logger.info("Substitute the ressource term to NECH(1) namelist entry")
                 # NB: term should be expressed in minutes
                 nam.contents['NAM_PARAM']['NECH(1)'] = int(r.resource.term)
+                if r.provider.member is not None:
+                    mblock = nam.contents.newblock('NAM_PARAMPE')
+                    mblock['NMEMBER'] = int(r.provider.member)
                 nam.save()
 
             # Expect the input grib file to be here
