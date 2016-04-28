@@ -10,6 +10,8 @@ class which follow the :class:`footprints.Footprint` syntax.
 import re
 from functools import total_ordering
 
+import footprints
+
 #: Export some new class for attributes in footprint objects, eg : GenvKey
 __all__ = [ 'GenvKey', 'GenvDomain' ]
 
@@ -33,6 +35,13 @@ class GenvKey(str):
         """Proxy to ``str.__new___`` with attributes inside brackets translated to lower case."""
         return str.__new__(cls, re.sub('\[\w+\]', _lowerattr, value.upper()))
 
+a_gvar = dict(type     = GenvKey,
+              optional = True,)
+
+#: Usual definition of the ``genv`` attribute.
+gvar = footprints.Footprint(info = 'A GENV access key',
+                            attr = dict(gvar = a_gvar))
+
 
 class GenvDomain(str):
     """
@@ -43,6 +52,15 @@ class GenvDomain(str):
     def __new__(cls, value):
         """Proxy to ``str.__new___`` with on the fly remapping of domain names to short values."""
         return str.__new__(cls, domain_remap.get(value, value))
+
+
+a_gdomain = dict(type = GenvDomain,
+                 optional = True,
+                 default = '[geometry::area]')
+
+#: Usual definition of the ``gdomain`` attribute.
+gdomain = footprints.Footprint(info = 'A domain name in GCO convention',
+                               attr = dict(gdomain = a_gdomain))
 
 
 @total_ordering

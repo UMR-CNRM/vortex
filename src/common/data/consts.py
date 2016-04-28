@@ -9,35 +9,21 @@ from vortex.data.outflow    import ModelResource, StaticGeoResource
 from vortex.data.geometries import LonlatGeometry, GaussGeometry
 from vortex.data.contents   import TextContent
 
-from gco.syntax.stdattrs    import GenvKey
+from gco.syntax.stdattrs    import gvar
 
 
 class GenvModelResource(ModelResource):
     """Abstract class for gget driven resources."""
 
     _abstract  = True
-    _footprint = dict(
-        attr = dict(
-            gvar = dict(
-                type     = GenvKey,
-                optional = True,
-            ),
-        )
-    )
+    _footprint = [ gvar, ]
 
 
 class GenvStaticGeoResource(StaticGeoResource):
     """Abstract class for gget driven resources."""
 
     _abstract  = True
-    _footprint = dict(
-        attr = dict(
-            gvar = dict(
-                type     = GenvKey,
-                optional = True,
-            ),
-        )
-    )
+    _footprint = [ gvar, ]
 
 
 class GPSList(GenvModelResource):
@@ -702,19 +688,20 @@ class LFIScripts(Resource):
     """
     The LFI scripts. A Genvkey can be given.
     """
-    _footprint = dict(
-        info='LFI scripts',
-        attr=dict(
-            kind=dict(
-                values=['lfiscripts', ],
-            ),
-            gvar=dict(
-                type=GenvKey,
-                optional=True,
-                default='tools_lfi'
-            ),
+    _footprint = [
+        gvar,
+        dict(
+            info='LFI scripts',
+            attr=dict(
+                kind=dict(
+                    values=['lfiscripts', ],
+                ),
+                gvar=dict(
+                    default='tools_lfi'
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
