@@ -111,7 +111,7 @@ class TimeInt(int):
     @property
     def str_time(self):
         signstr = '-' if self.ti * 60 + self.tm < 0 else ''
-        return '{0:}{1:04d}:{2:02d}'.format(signstr, 
+        return '{0:}{1:04d}:{2:02d}'.format(signstr,
                                             abs(self.ti), abs(self.tm))
 
     def __str__(self):
@@ -119,6 +119,9 @@ class TimeInt(int):
             return str(self.ti)
         else:
             return self.str_time
+
+    def __hash__(self):
+        return self.ti * 60 + self.tm
 
     def __eq__(self, other):
         try:
