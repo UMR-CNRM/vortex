@@ -140,7 +140,7 @@ class IgaProvider(Provider):
         self.config.setall(info)
         logger.debug('IgaProvider:pathname info %s', info)
         # patch for the pearp kind experiment
-        if self.member:
+        if self.member is not None:
             suffix = 'RUN' + str(self.member)
             new_path = os.path.join(
                 self.config.resolvedpath(resource.realkind),
