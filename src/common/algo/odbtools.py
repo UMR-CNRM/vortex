@@ -10,7 +10,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.systems   import ExecutionError
-from vortex.tools           import date, odb
+from vortex.tools           import odb
 from vortex.algo.components import Parallel
 from vortex.util.structs    import Foo
 from vortex.syntax.stdattrs import a_date
@@ -130,13 +130,13 @@ class Raw2ODB(OdbProcess):
 
         # Building refdata map for direct access to (fmt, data, instr) entries
         refmap = dict()
-        refall = [ x.rh for x in self.context.sequence.effective_inputs(kind = 'refdata') ]
+        refall = list(self.context.sequence.effective_inputs(kind = 'refdata'))
         for rd in refall:
-            logger.info('Inspect refdata ' + rd.container.localpath())
+            logger.info('Inspect refdata ' + rd.rh.container.localpath())
             sh.subtitle(rd.role)
-            rd.container.cat()
-            for item in rd.contents:
-                refmap[(item.fmt.lower(), item.data, item.instr)] = (rd, item)
+            rd.rh.container.cat()
+            for item in rd.rh.contents:
+                refmap[(item.fmt.lower(), item.data, item.instr)] = (rd.rh, item)
 
         # Build actual refdata
         for obs in obsok:
@@ -161,11 +161,11 @@ class Raw2ODB(OdbProcess):
 
         # Looking for obs maps
         mapitems = list()
-        for om in [ x.rh for x in self.context.sequence.effective_inputs(kind = 'obsmap') ]:
-            logger.info(' '.join(('Gathering information from map', om.container.localpath())))
+        for om in self.context.sequence.effective_inputs(kind = 'obsmap'):
+            logger.info(' '.join(('Gathering information from map', om.rh.container.localpath())))
             sh.subtitle(om.role)
-            om.container.cat()
-            mapitems.extend(om.contents)
+            om.rh.container.cat()
+            mapitems.extend(om.rh.contents)
 
         # Building actual map / refdata correspondance
         self.obspack = dict()
@@ -173,7 +173,7 @@ class Raw2ODB(OdbProcess):
             logger.info('Inspect ' + str(imap))
             candidates = [
                 obs for obs in obsok
-                    if obs.rh.resource.part == imap.data and obs.rh.container.actualfmt.lower() == imap.fmt.lower()
+                if obs.rh.resource.part == imap.data and obs.rh.container.actualfmt.lower() == imap.fmt.lower()
             ]
             for obs in candidates:
                 obs.mapped = True
@@ -208,7 +208,7 @@ class Raw2ODB(OdbProcess):
                 logger.warning('Creating automatic refdata entry for ' + str(thiskey))
                 item = ObsRefItem(imap.data, imap.fmt, imap.instr, self.date.ymd, self.date.hh)
                 if refall:
-                    thismap.refdata.append(refall[0].contents.formatted_data(item))
+                    thismap.refdata.append(refall[0].rh.contents.formatted_data(item))
                 else:
                     logger.error('No default for formatting data %s', item)
                     thismap.refdata.append(ObsRefContent.formatted_data(item))
@@ -324,8 +324,9 @@ class Raw2ODB(OdbProcess):
                 fd.write(unicode(ObsMapContent.formatted_data(x) + '\n'))
 
         # Generate a global refdata (if possible)
-        rdrh_dict = { y.rh.resource.part: y.rh for y in self.context.sequence.effective_inputs(kind = 'refdata')
-                                               if y.rh.resource.part != 'all' }
+        rdrh_dict = {y.rh.resource.part: y.rh
+                     for y in self.context.sequence.effective_inputs(kind = 'refdata')
+                     if y.rh.resource.part != 'all'}
         with io.open('refdata_global', 'w') as rdg:
             for x in sorted(self.obsmapout):
                 if x.data in rdrh_dict and self.system.path.getsize(rdrh_dict[x.data].container.localpath()) > 0:
