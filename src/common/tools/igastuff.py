@@ -110,7 +110,7 @@ class _BaseIgakeyFactory(str):
     Needs to be subclassed !
     """
 
-    _re_appconf = re.compile('^(\w+)/(\w+)$')
+    _re_appconf = re.compile('^(\w+)/([\w@]+)$')
 
     def __new__(cls, value):
         """
@@ -169,4 +169,8 @@ class IgakeyFactoryInline(_BaseIgakeyFactory):
                           'nc': 'caledonie',
                           'polynesie': 'polynesie',
                           'reunion': 'reunion', },
+               'hycom':  {'atl@anarp': 'surcotes',
+                          'med@anarp': 'surcotes',
+                          'atl@fcarp': 'surcotes',
+                          'med@fcarp': 'surcotes', },
                }
