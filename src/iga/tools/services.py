@@ -422,7 +422,7 @@ class RoutingService(Service):
         if not self.file_ok():
             return False
 
-        rc = ad.ssh(cmdline, hostname=self.sshhost, nodetype='transfert')
+        rc = ad.ssh(cmdline, hostname=self.sshhost, nodetype='transfer')
 
         logfile = 'routage.' + date.today().ymd
         ad.report(kind='dayfile', mode='RAW', message=self.get_logline(),

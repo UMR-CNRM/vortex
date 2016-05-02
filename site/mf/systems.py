@@ -88,7 +88,7 @@ class MeteoBull(Target):
 
     def generic(self):
         """Generic name is inetname suffixed with ``fe`` or ``cn``."""
-        if 'login' in self.hostname or 'transfert' in self.hostname:
+        if 'login' in self.hostname or 'transfer' in self.hostname:
             return self.inetname + 'fe'
         else:
             return self.inetname + 'cn'
