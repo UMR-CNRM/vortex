@@ -116,13 +116,13 @@ dont l'empreinte est constituée par un attribut, sa couleur, qui semble lui col
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
       File "/home/sevault/git-dev/vortex/site/footprints/access.py", line 93, in __set__
-        raise AttributeError, 'Read-only attribute [' + self._attr + '] (write)'
+        raise AttributeError('Read-only attribute [' + self._attr + '] (write)')
     AttributeError: Read-only attribute [couleur] (write)
     >>> del p.couleur
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
       File "/home/sevault/git-dev/vortex/site/footprints/access.py", line 96, in __delete__
-        raise AttributeError, 'Read-only attribute [' + self._attr + '] (delete)'
+        raise AttributeError('Read-only attribute [' + self._attr + '] (delete)')
     AttributeError: Read-only attribute [couleur] (delete)
 
 C'est déjà pas mal (en étant très bienveillant). Mais franchement ça ne casse pas trois pattes à un canard.
