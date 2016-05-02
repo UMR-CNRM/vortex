@@ -12,12 +12,15 @@ opts = sh.rawopts(
         mkrst = 'on',
         missingonly = 'off',
         generaterst = '',
+        discard = 'taylorism',
     )
 )
 
 # Do not create new rst file when generating a report
 if opts['generaterst']:
     opts['mkrst'] = False
+
+opts['discard'] = opts['discard'].split(',')
 
 sh.header('Checking vortex ' + vortex.__version__ + ' library documentation')
 print ' > Options:', opts
@@ -80,6 +83,8 @@ print '=' * 80
 print 'MODULES REVIEW'
 
 for modulename, loaded in sh.vortex_loaded_modules():
+    if not all([modulename.startswith(d) for d in opts['discard']]) == False:
+        continue
     if opts['verbose']:
         print '---'
     if not loaded:
