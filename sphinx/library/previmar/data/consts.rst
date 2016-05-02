@@ -1,13 +1,12 @@
-:mod:`vortex.data.executables` --- Launchable resources
-=======================================================
+:mod:`previmar.data.consts` --- PreviMAR's constant resources
+=============================================================
 
-.. automodule:: vortex.data.executables
-   :synopsis: Basic executable resources
+.. automodule:: previmar.data.consts
+   :synopsis: PreviMAR's constant resources
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.2.1
-
+.. versionadded:: 0.9.27
 
 Package
 -------
@@ -17,37 +16,42 @@ Package
 Classes
 -------
 
-.. autoclass:: Jacket
+.. autoclass:: TidalHarmonic
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Executable
+.. autoclass:: CteMaree
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-.. autoclass:: Script
+   
+.. autoclass:: SurgesForcingData
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-.. autoclass:: Binary
+   
+.. autoclass:: BlkdatData
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-.. autoclass:: BlackBox
+   
+.. autoclass:: ConfSurgesModel
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-.. autoclass:: NWPModel
+   
+.. autoclass:: ConfRunSurgesModel
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-.. autoclass:: OceanographicModel
+   
+.. autoclass:: BinProjSurges
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: CbData
    :show-inheritance:
    :members:
    :member-order: alphabetical

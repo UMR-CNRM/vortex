@@ -28,4 +28,5 @@ List of modules.
    iga/index
    mercator/index
    olive/index
+   previmar/index
    sandbox/index
