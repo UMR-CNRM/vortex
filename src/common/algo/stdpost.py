@@ -252,6 +252,7 @@ class DiagPE(BlindRun):
                 logger.info("Substitute the ressource term to NECH(1) namelist entry")
                 # NB: term should be expressed in minutes
                 nam.contents['NAM_PARAM']['NECH(1)'] = int(term)
+                nam.contents['NAM_PARAM']['ECHFINALE'] = terms[-1].hour
                 nam.save()
 
             # Standard execution
