@@ -16,17 +16,20 @@ class TidalHarmonic(GenvModelResource):
 
     A Genvkey can be given.
     """
-    _footprint = dict(
-        info = 'Set of tidal Harmonic, fortran binary data',
-        attr = dict(
-            kind = dict(
-                values  = ['coefMar']
-            ),
-            gvar = dict(
-                default = 'pesurcote_forcing_tide_tgz',
-            ),
+    _footprint = [
+        gdomain,
+        dict(
+            info = 'Set of tidal Harmonic, fortran binary data',
+            attr = dict(
+                kind = dict(
+                    values  = ['coefMar']
+                ),
+                gvar = dict(
+                    default = '[model]_forcing_tide_[gdomain]_tgz',
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -47,12 +50,7 @@ class CteMaree(GenvModelResource):
                     values  = ['cteMaree']
                 ),
                 gvar = dict(
-                    default  = 'pesurcote_tide_list_[gdomain]',
-                    values   = ['pesurcote_tide_list_atl',
-                                'pesurcote_tide_list_med',
-                                'tide_list_atl', 'tide_list_med'],
-                    remap    = {'tide_list_atl': 'pesurcote_tide_list_atl',
-                                'tide_list_med': 'pesurcote_tide_list_med', },
+                    default  = '[model]_tide_list_[gdomain]',
                 ),
             )
         )
@@ -80,7 +78,7 @@ class SurgesForcingData(GenvModelResource):
                     values  = ['SurgesForcingData']
                 ),
                 gvar = dict(
-                    default = 'pesurcote_regional_[gdomain]_tgz',
+                    default = '[model]_regional_[gdomain]_tgz',
                 ),
             )
         )
@@ -108,7 +106,7 @@ class BlkdatData(GenvModelResource):
                     values  = ['BlkdatData']
                 ),
                 gvar = dict(
-                    default = 'pesurcote_blkdat_[gdomain]_tgz',
+                    default = '[model]_blkdat_[gdomain]_tgz',
                 ),
             )
         )
@@ -133,7 +131,7 @@ class ConfSurgesModel(GenvModelResource):
                     values  = ['ConfigSurges'],
                 ),
                 gvar = dict(
-                    default = 'pesurcote_[param]_[gdomain]',
+                    default = '[model]_[param]_[gdomain]',
                 ),
                 param = dict(
                     values  = ['pts', 'savefield', 'ports', 'patch'],
@@ -161,7 +159,7 @@ class ConfRunSurgesModel(GenvModelResource):
                     values  = ['ConfigRunSurges'],
                 ),
                 gvar = dict(
-                    default = 'pesurcote_run_[gdomain]_tgz',
+                    default = '[model]_run_[gdomain]_tgz',
                 ),
             )
         )
@@ -188,13 +186,7 @@ class BinProjSurges(GenvModelResource):
                     values  = ['BinHycomBdap']
                 ),
                 gvar = dict(
-                    default  = 'pesurcote_indices_hycom_mf_[gdomain]',
-                    values   = ['pesurcote_indices_hycom_mf_atl',
-                                'pesurcote_indices_hycom_mf_med',
-                                'indices_hycom_mf_atl', 'indices_hycom_mf_med'],
-                    remap    = {
-                               'indices_hycom_mf_atl': 'pesurcote_indices_hycom_mf_atl',
-                               'indices_hycom_mf_med': 'pesurcote_indices_hycom_mf_med', },
+                    default  = '[model]_indices_mf_[gdomain]',
                 ),
             )
         )
@@ -219,7 +211,7 @@ class CbData(GenvModelResource):
                     values  = ['BottomFriction']
                 ),
                 gvar = dict(
-                    default = 'pesurcote_cb_[gdomain]_tgz',
+                    default = '[model]_cb_[gdomain]_tgz',
                 ),
             )
         )

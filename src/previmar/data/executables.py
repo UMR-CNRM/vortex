@@ -25,12 +25,7 @@ class MasterSurges(OceanographicModel):
                 gvar = dict(
                     type = GenvKey,
                     optional = True,
-                    default  = 'master_pesurcote_main_[gdomain]',
-                    values   = ['master_pesurcote_main_atl',
-                                'master_pesurcote_main_med',
-                                'main_atl', 'main_med'],
-                    remap    = {'main_atl': 'master_pesurcote_main_atl',
-                                'main_med': 'master_pesurcote_main_med', },
+                    default  = 'master_[model]_main_[gdomain]',
                 ),
                 model = dict(
                     value = ['hycom', ],
@@ -64,9 +59,7 @@ class IniZeroSurges(BlackBox):
             gvar = dict(
                 type     = GenvKey,
                 optional = True,
-                default  = 'master_pesurcote_inizero',
-                values   = ['master_pesurcote_inizero', 'ini_zero'],
-                remap    = { 'ini_zero': 'master_pesurcote_inizero' },
+                default  = 'master_[model]_inizero',
             ),
             binopts = dict(
                 optional = False,
@@ -119,12 +112,7 @@ class ConversionGrib2Taux(BlackBox):
                 gvar = dict(
                     type     = GenvKey,
                     optional = True,
-                    default  = 'master_pesurcote_grib2taux_[gdomain]',
-                    values   = ['master_pesurcote_grib2taux_atl',
-                                'master_pesurcote_grib2taux_med',
-                                'grib2taux_atl', 'grib2taux_med'],
-                    remap    = {'grib2taux_atl': 'master_pesurcote_grib2taux_atl',
-                                'grib2taux_med': 'master_pesurcote_grib2taux_med', },
+                    default  = 'master_[model]_grib2taux_[gdomain]',
                 ),
             )
         )
