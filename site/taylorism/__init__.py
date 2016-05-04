@@ -77,6 +77,7 @@ import sys
 import traceback
 import copy
 import os
+from pickle import PickleError
 
 import footprints
 from footprints import FootprintBase, proxy as fpx
@@ -206,17 +207,25 @@ class Worker(FootprintBase):
         From within this method down, everything is done in the subprocess
         world !
         """
-
         with interrupt.SignalInterruptHandler():
-            to_be_sent_back = {'name':self.name, 'report':None}
+            to_be_sent_back = {'name': self.name, 'report': None}
             try:
-                to_be_sent_back = {'name':self.name, 'report':self._task()}
+                to_be_sent_back = {'name': self.name, 'report': self._task()}
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 tb = traceback.format_exception(exc_type, exc_value, exc_traceback)
-                to_be_sent_back = {'name':self.name, 'report':e, 'traceback':tb}
+                to_be_sent_back = {'name': self.name, 'report': e, 'traceback': tb}
             finally:
-                self._messenger.put(to_be_sent_back)
+                try:
+                    self._messenger.put(to_be_sent_back)
+                except (ValueError, PickleError) as e:
+                    # ValueError = to_be_sent_back too big.
+                    # PickleError = to_be_sent_back unpickelable.
+                    sys.stderr.write("The to_be_sent_back variable was:\n")
+                    sys.stderr.write(str(to_be_sent_back))
+                    to_be_sent_back = {'name': self.name, 'report': e,
+                                       'traceback': 'Traceback missing'}
+                    self._messenger.put(to_be_sent_back)
 
     def _task(self, **kwargs):
         """
@@ -240,22 +249,20 @@ class Boss(object):
     .schedulers.BaseScheduler and implemented launchable() method.
     """
 
-    control_signals = {'HALT':'Suspend ordering workers to work until RESUME.',
-                       'RESUME':'Resume loop on pending_instructions/workers.',
-                       'SEND_REPORT':'Send interim report (and continue normally).',
-                       'END':'Terminate all pending work, then Stop listening.\
-                              No new instructions from control will be listened,\
-                              except a STOP*.',
-                       'STOP':'Halt pending work, but let workers finish their\
-                               current work, and then stop listening.',
-                       'STOP_LISTENING':'Stop listening, while workers continue\
-                                         their current job.',
-                       'STOP_RIGHTNOW':'Stop workers immediately and stop\
-                                        listening.'}
+    control_signals = {'HALT': 'Suspend ordering workers to work until RESUME.',
+                       'RESUME': 'Resume loop on pending_instructions/workers.',
+                       'SEND_REPORT': 'Send interim report (and continue normally).',
+                       'END': 'Terminate all pending work, then Stop listening.\
+                               No new instructions from control will be listened,\
+                               except a STOP*.',
+                       'STOP': 'Halt pending work, but let workers finish their\
+                                current work, and then stop listening.',
+                       'STOP_LISTENING': 'Stop listening, while workers continue\
+                                          their current job.',
+                       'STOP_RIGHTNOW': 'Stop workers immediately and stop\
+                                         listening.'}
 
-    def __init__(self, scheduler=MaxThreadsScheduler(),
-                       name=None,
-                       verbose=False):
+    def __init__(self, scheduler=MaxThreadsScheduler(), name=None, verbose=False):
 
         assert isinstance(scheduler, BaseScheduler)
         self.scheduler = scheduler
@@ -268,6 +275,8 @@ class Boss(object):
 
         self._process = mpc.Process(target=self._listen_and_communicate)
         self._process.start()
+
+        self._finalreport = None
 
     def __del__(self):
         if hasattr(self, '_process'):
@@ -300,10 +309,19 @@ class Boss(object):
             for _ in range(indiv_instr_num):
                 instructions = copy.copy(common_instructions)
                 for k, v in individual_instructions.items():
-                    instructions.update({k:v.pop(0)})
+                    instructions.update({k: v.pop(0)})
                 instructions_sets.append(instructions)
         # send instructions to control
-        self.control_messenger_out.send(instructions_sets)
+        try:
+            self.control_messenger_out.send(instructions_sets)
+        except (ValueError, PickleError):
+            # ValueError = instructions_sets too big.
+            # PickleError = instructions_sets unpickelable.
+            sys.stderr.write("The instructions_sets variable was:\n")
+            sys.stderr.write(str(instructions_sets))
+            taylorism_log.error("Impossible to send data through the pipe")
+            self.stop_them_working()
+            raise
 
     def make_them_work(self, terminate=False, stop_listening=False):
         """
@@ -329,11 +347,21 @@ class Boss(object):
         If *interim*, ask for an interim report if no report is available,
         i.e. containing the work done by the time of calling.
         """
+        return self._internal_get_report(interim=interim)
+
+    def _internal_get_report(self, interim=True, final=False):
+        """
+        Get report of the work executed.
+        If *interim*, ask for an interim report if no report is available,
+        i.e. containing the work done by the time of calling.
+        If *final*, the report is saved in an internal variable and the saved
+        report will be returned whenever get_report is called.
+        """
 
         received_a_report = self.control_messenger_out.poll
 
         def _getreport():
-            if received_a_report():
+            if final or received_a_report():
                 received = self.control_messenger_out.recv()
                 if isinstance(received['workers_report'], Exception):
                     taylorism_log.error("Error was catch in subprocesses with traceback:")
@@ -344,8 +372,14 @@ class Boss(object):
             return received
 
         # first try to get report
-        report = _getreport()
-        if report is None and interim:
+        if self._finalreport is None:
+            report = _getreport()
+            if final:
+                self._finalreport = report
+        else:
+            report = self._finalreport
+
+        if report is None and not final and interim:
             self.control_messenger_out.send(self.control_signals['SEND_REPORT'])
             while report is None:
                 report = _getreport()
@@ -364,8 +398,8 @@ class Boss(object):
 
     def wait_till_finished(self):
         """Block the calling tree until all instructions have been executed."""
-
         self.end()
+        self._internal_get_report(final=True)
         self._process.join()
 
 # boss subprocess internal methods
@@ -383,19 +417,26 @@ class Boss(object):
             try:
                 (workers_report, pending_instructions) = self._listen()
                 if len(pending_instructions) == 0:
-                    report = {'workers_report':workers_report,
-                              'status':'finished'}
+                    report = {'workers_report': workers_report,
+                              'status': 'finished'}
                 else:
-                    report = {'workers_report':workers_report,
-                              'status':'pending',
-                              'pending':pending_instructions}
+                    report = {'workers_report': workers_report,
+                              'status': 'pending',
+                              'pending': pending_instructions}
             except (Exception, KeyboardInterrupt) as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 tb = traceback.format_exception(exc_type, exc_value, exc_traceback)
-                report = {'workers_report':e, 'traceback':tb}
+                report = {'workers_report': e, 'traceback': tb}
                 self.stop_them_working()
             finally:
-                self.control_messenger_in.send(report)
+                try:
+                    self.control_messenger_in.send(report)
+                except ValueError as e:
+                    # ValueError = to_be_sent_back too big.
+                    # We are sure that a PickleError won't occur since data were already pickled once (by the workers)
+                    taylorism_log.error("The report is too big to be sent back :-(")
+                    report = {'workers_report': e, 'traceback': 'Traceback missing'}
+                    self.control_messenger_in.send(report)
 
     def _listen(self):
         """
@@ -435,13 +476,19 @@ class Boss(object):
                 if control in self.control_signals.values():
                     # received a control signal
                     if control == self.control_signals['SEND_REPORT']:
-                        self.control_messenger_in.send({'workers_report':report, 'status':'interim'})
+                        try:
+                            self.control_messenger_in.send({'workers_report': report, 'status': 'interim'})
+                        except ValueError:
+                            # ValueError = report too big.
+                            # We are sure that a PickleError won't occur since data were already pickled once (by the workers)
+                            taylorism_log.error("The report is too big to be sent back :-(")
+                            raise
                     elif control == self.control_signals['HALT']:
                         halt = True
                     elif control == self.control_signals['RESUME']:
                         halt = False
-                    elif control in [self.control_signals[k] for k in self.control_signals.keys() if 'STOP' in k] \
-                         or control == self.control_signals['END']:
+                    elif (control in [self.control_signals[k] for k in self.control_signals.keys() if 'STOP' in k] or
+                          control == self.control_signals['END']):
                         end = True
                         if control == self.control_signals['STOP_LISTENING']:
                             break  # leave out the infinite loop
@@ -498,5 +545,3 @@ class Boss(object):
                 break
 
         return (report, pending_instructions)
-
-
