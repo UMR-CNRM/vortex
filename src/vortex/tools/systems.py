@@ -697,7 +697,7 @@ class OSExtended(System):
         logger.debug('Abstract System init %s', self.__class__)
         self._rmtreemin = kw.pop('rmtreemin', 3)
         self._cmpaftercp = kw.pop('cmpaftercp', True)
-        self.ftraw    = kw.pop('ftraw', True)
+        self.ftraw    = kw.pop('ftraw', False)
         self.ftputcmd = kw.pop('ftputcmd', None)
         self.ftgetcmd = kw.pop('ftgetcmd', None)
         super(OSExtended, self).__init__(*args, **kw)
@@ -798,7 +798,15 @@ class OSExtended(System):
         if isinstance(source, basestring):
             if self.path.exists(source):
                 ftcmd = self.ftputcmd or 'ftput'
-                rc = self.spawn([ftcmd, '-o', 'mkdir', source, destination], output=False)
+                extras = list()
+                if hostname:
+                    extras.extend(['-h', hostname])
+                if logname:
+                    extras.extend(['-u', logname])
+                rc = self.spawn([ftcmd,
+                                 '-o', 'mkdir',  # Automatically create subdirectories
+                                 '-q', ] +  # Asynchronous mode
+                                extras + [source, destination], output=False)
             else:
                 raise IOError('No such file or directory: {!s}'.format(source))
         else:
@@ -819,13 +827,25 @@ class OSExtended(System):
         if isinstance(source, basestring) and isinstance(destination, basestring):
             if self.filecocoon(destination):
                 destination = self.path.expanduser(destination)
+                extras = list()
+                if hostname:
+                    extras.extend(['-h', hostname])
+                if logname:
+                    extras.extend(['-u', logname])
                 ftcmd = self.ftgetcmd or 'ftget'
-                rc = self.spawn([ftcmd, source, destination], output=False)
+                rc = self.spawn([ftcmd, ] + extras + [source, destination], output=False)
             else:
                 raise IOError('No such file or directory: {!s}'.format(source))
         else:
             raise IOError('Source or destination is not a plain file path: {!r}'.format(source))
         return rc
+
+    def smartftget(self, source, destination, hostname=None, logname=None, fmt=None):
+        """Proceed some ftget or rawftget."""
+        if self.ftraw and isinstance(source, basestring) and isinstance(destination, basestring):
+            return self.rawftget(source, destination, hostname=hostname, logname=logname, fmt=fmt)
+        else:
+            return self.ftget(source, destination, hostname=hostname, logname=logname, fmt=fmt)
 
     def softlink(self, source, destination):
         """Set a symbolic link if source is not destination."""

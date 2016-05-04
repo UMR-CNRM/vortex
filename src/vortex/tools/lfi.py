@@ -257,8 +257,15 @@ class LFI_Tool_Raw(addons.Addon):
         else:
             return self.sh.ftput(source, destination, hostname=hostname, logname=logname)
 
+    def _std_rawftput(self, source, destination, hostname=None, logname=None):
+        """Use ftserv as much as possible."""
+        if self.is_xlfi(source):
+            return self._std_ftput(source, destination, hostname, logname)
+        else:
+            return self.sh.rawftput(source, destination, hostname=hostname, logname=logname)
+
     fa_ftput = lfi_ftput = _std_ftput
-    fa_rawftput = lfi_rawftput = _std_ftput
+    fa_rawftput = lfi_rawftput = _std_rawftput
 
     def _std_prepare(self, source, destination, intent='in'):
         """Check for the source and prepare the destination."""

@@ -780,7 +780,7 @@ class ArchiveStore(Store):
 
     def ftpget(self, remote, local, options):
         """Delegates to ``system.ftp`` the get action."""
-        return self.system.ftget(
+        return self.system.smartftget(
             self._ftpformatpath(remote), local,
             # ftp control
             hostname = self.hostname(),
@@ -797,7 +797,7 @@ class ArchiveStore(Store):
             fmt      = options.get('fmt'),
         )
         if put_sync:
-            return self.system.ftput(local, self._ftpformatpath(remote), **put_opts)
+            return self.system.smartftput(local, self._ftpformatpath(remote), **put_opts)
         else:
             tempo = footprints.proxy.service(kind='hiddencache', asfmt=put_opts['fmt'])
             put_opts.update(
