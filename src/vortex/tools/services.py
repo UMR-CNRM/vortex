@@ -341,7 +341,7 @@ class SSHProxy(Service):
             ),
             nodetype = dict(
                 optional = True,
-                values   = ['login', 'transfert'],
+                values   = ['login', 'transfer'],
                 default  = 'login',
             ),
             noderange = dict(

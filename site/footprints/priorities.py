@@ -12,7 +12,7 @@ class PriorityLevel(object):
         if isinstance(pset, PrioritySet):
             self._pset = pset
         else:
-            raise TypeError, 'argument `pset` should be a PrioritySet, not ' + str(type(pset))
+            raise TypeError('argument `pset` should be a PrioritySet, not ' + str(type(pset)))
 
     def __call__(self):
         return self.rank

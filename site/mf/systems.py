@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This package handles some common targets sused at Meteo France.
+This package handles some common targets used at Meteo France.
 """
 
 #: No automatic export
@@ -82,7 +82,7 @@ class MeteoBull(Target):
 
     def generic(self):
         """Generic name is inetname suffixed with ``fe`` or ``cn``."""
-        if 'login' in self.hostname or 'transfert' in self.hostname:
+        if 'login' in self.hostname or 'transfer' in self.hostname:
             return self.inetname + 'fe'
         else:
             return self.inetname + 'cn'

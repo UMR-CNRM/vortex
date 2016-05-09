@@ -264,7 +264,7 @@ class OpArchiveStore(ArchiveStore):
         return rc
 
     def opput(self, local, remote, options):
-        """File transfert: put to store."""
+        """File transfer: put to store."""
         return self.system.smartftput(
             local,
             self.fullpath(remote),

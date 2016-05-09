@@ -74,7 +74,7 @@ class FootprintAttrDescriptorRWX(FootprintAttrDescriptorRWD):
     access_mode = 'rwx'
 
     def __delete__(self, instance):
-        raise AttributeError, 'Read-only attribute [' + self._attr + '] (delete)'
+        raise AttributeError('Read-only attribute [' + self._attr + '] (delete)')
 
 
 class FootprintAttrDescriptorWeakRWX(FootprintAttrDescriptorRWX):
@@ -90,10 +90,10 @@ class FootprintAttrDescriptorRXX(FootprintAttrDescriptor):
     access_mode = 'rxx'
 
     def __set__(self, instance, value):
-        raise AttributeError, 'Read-only attribute [' + self._attr + '] (write)'
+        raise AttributeError('Read-only attribute [' + self._attr + '] (write)')
 
     def __delete__(self, instance):
-        raise AttributeError, 'Read-only attribute [' + self._attr + '] (delete)'
+        raise AttributeError('Read-only attribute [' + self._attr + '] (delete)')
 
 
 class FootprintAttrDescriptorWeakRXX(FootprintAttrDescriptorRXX):

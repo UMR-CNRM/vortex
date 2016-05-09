@@ -31,7 +31,7 @@ def parse_command_line():
 
     parser = argparse.ArgumentParser(description=description)
 
-    group = parser.add_argument_group(title='at least one of -c and -f is mandatory')
+    group = parser.add_argument_group(title='at least one of -c, -f or -r is mandatory')
     group.add_argument('-c', '--cycle', nargs='+', help='name(s) of cycle(s) to freeze')
     group.add_argument('-f', '--file', nargs='+', help='file(s) containing a list of cycles to freeze')
     group.add_argument('-r', '--remove', help='name of the cycle to remove')
@@ -45,7 +45,7 @@ def parse_command_line():
 
     args = parser.parse_args()
     if not (args.cycle or args.file or args.remove):
-        parser.error('\nNo action requested.\nUse at least one of: -c, -f and -r\n')
+        parser.error('\nNo action requested.\nUse at least one of: -c, -f or -r\n')
     return args
 
 

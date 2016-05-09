@@ -179,8 +179,7 @@ def guess(*args):
             return isoclass(*args)
         except (ValueError, TypeError):
             continue
-    else:
-        raise ValueError("Cannot guess what Period or Date could be {!s}".format(args))
+    raise ValueError("Cannot guess what Period or Date could be %s" % str(args))
 
 
 def daterange(start, end=None, step='P1D'):
@@ -239,8 +238,7 @@ class Period(datetime.timedelta):
             for key1, factor, key2 in Period._const_times:
                 if key == key1:
                     return Period._adder(key2, factor * value)
-            else:
-                raise KeyError("Unknown key in Period string: {:s}".format(key))
+            raise KeyError("Unknown key in Period string: %s" % key)
 
     @staticmethod
     def parse(string):
@@ -248,11 +246,11 @@ class Period(datetime.timedelta):
         if not isinstance(string, basestring):
             raise TypeError("Expected string input")
         if len(string) < 2:
-            raise ValueError("Badly formed short string {:s}".format(string))
+            raise ValueError("Badly formed short string %s" % string)
 
         match = Period.period_regex(string)
         if not match:
-            raise ValueError("Badly formed string {:s}".format(string))
+            raise ValueError("Badly formed string %s" % string)
 
         values = match.groupdict()
         values.pop('T')
@@ -396,7 +394,7 @@ class Date(datetime.datetime):
             deltas = s_top[1:]
             ld = [ int(x) for x in re.split('[-:HTZ]+', mkisodate(top)) if re.match(r'\d+$', x) ]
         else:
-            ld = [ int(x) for x in args if type(x) in (int, float) or (isinstance(x, str) and
+            ld = [ int(x) for x in args if isinstance(x, (int, float)) or (isinstance(x, str) and
                                                                        re.match(r'\d+$', x)) ]
         if not ld:
             raise ValueError("Initial Date value unknown")
