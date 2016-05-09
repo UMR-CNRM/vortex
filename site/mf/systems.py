@@ -80,12 +80,6 @@ class MeteoBull(Target):
         )
     )
 
-    def spawn_hook(self, sh):
-        """Specific target hook before any serious execution."""
-        if not sh.env.VORTEX_NOFLUSH_LUSTRE:
-            sh.header('Flush Lustre Locks')
-            sh.spawn(['/opt/softs/bin/flush-lustre-locks'], output=False)
-
     def generic(self):
         """Generic name is inetname suffixed with ``fe`` or ``cn``."""
         if 'login' in self.hostname or 'transfert' in self.hostname:

@@ -2,7 +2,7 @@
 Footprints package
 ==================
 
-:Release: |version|
+:Release: |version_fp|
 :Date: |today|
 
 List of modules.

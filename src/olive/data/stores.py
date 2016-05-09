@@ -147,6 +147,9 @@ class OliveStore(MultiStore):
             netloc = dict(
                 values = ['olive.multi.fr'],
             ),
+            refillstore = dict(
+                default = True,
+            )
         )
     )
 

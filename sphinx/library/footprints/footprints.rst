@@ -1,6 +1,9 @@
 :mod:`footprints` --- Footprints mechanisms
 ===========================================
 
+:Release: |version_fp|
+:Date: |today|
+
 .. automodule:: footprints
    :synopsis: Generic footprint implementation
 

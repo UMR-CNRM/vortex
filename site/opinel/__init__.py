@@ -8,5 +8,11 @@ of the Vortex package. Ideally, we would have chosen the name
 *swissknife* for this package but sadly we were pipped to the post.
 """
 
+import footprints.loggers
+
+logger = footprints.loggers.getLogger(__name__)
+
 #: No automatic export
 __all__ = []
+
+__version__ = '0.9.27'

@@ -326,7 +326,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
 def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopath='gco/tampon', logpath=None):
     """
     Remove a frozen cycle: undoes what freeze_cycle did, but without removing
-    any file in use by any of the other frozen cycles ("*.genv" in genvpath).
+    any file in use by any of the other frozen cycles ("\*.genv" in genvpath).
     """
     sh = t.sh
     tg = sh.target()

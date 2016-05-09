@@ -19,25 +19,25 @@ from __future__ import print_function
 argparse_epilog = '''
 Examples:
 
-vtxget.py --local toto_[geometry:area] --kind=gridpoint --format=grib \\
-  --geometry=glob25,glob15 --origin=historic --experiment=A0WB --block=forecast \\
-  --date=2015102000 --term=0 --cutoff=assim
+vtxget.py --local toto_[geometry:area]_[term] --kind=gridpoint --format=grib \\
+  --geometry=antil0025 --origin=historic --experiment=OPER --block=forecast \\
+  --date=2016050100 --term=0,12,24 --cutoff=prod --vapp=arome --vconf=antilles
 
 will results in the following ``vortex.toolbox.rload``` call:
 
-vortex.toolbox.rload(local='toto_[geometry:area]',
+vortex.toolbox.rload(local='toto_[geometry:area]_[term]',
                      kind='gridpoint',
                      format='grib',
-                     geometry='glob25,glob15',
+                     geometry='antil0025',
                      origin='historic',
-                     experiment='A0WB',
+                     experiment='OPER',
                      block='forecast',
-                     date='2015102000',
-                     term='0',
-                     cutoff='assim',
+                     date='2016050100',
+                     term='0,12,24',
+                     cutoff='production',
                      namespace='vortex.cache.fr',
-                     vapp='arpege',
-                     vconf='4dvarfr',
+                     vapp='arome',
+                     vconf='antilles',
                      model='[vapp]',
                      nativefmt='[format]')
 
@@ -62,6 +62,8 @@ import sys
 import os
 import re
 import traceback
+from argparse import ArgumentParser
+from argparse import RawDescriptionHelpFormatter
 
 # Automatically set the python path
 vortexbase = os.path.dirname(os.path.abspath(__file__)).rstrip('/bin')
@@ -69,12 +71,9 @@ sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 import footprints as fp
+import opinel
 from opinel.interrupt import SignalInterruptError
 import vortex
-
-from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
-
 
 # Main script logger
 logger = fp.loggers.getLogger(__name__)
@@ -204,6 +203,7 @@ def main():
     else:
         (loglevel_main, loglevel_fp) = ('DEBUG', 'DEBUG')
     logger.setLevel(loglevel_main)
+    opinel.logger.setLevel(loglevel_fp)
     vortex.logger.setLevel(loglevel_main)
     fp.logger.setLevel(loglevel_fp)
     del args.verbose
