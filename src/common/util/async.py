@@ -19,7 +19,7 @@ def system_ftput(pnum, ask, config, logger, **opts):
 
     with VortexWorker(logger=logger) as vwork:
         sh = vwork.vortex.sh()
-        sh.trace = True
+        sh.trace = False
         data = vwork.get_dataset(ask)
         logger.info('FTPut host', hostname=data.hostname, logname=data.logname)
         logger.info('FTPut data', source=data.source, destination=data.destination)
@@ -36,7 +36,7 @@ def system_ftput(pnum, ask, config, logger, **opts):
                 logger.warning('FTPut failed', attempt=trynum, error=e)
                 putrc = False
             if putrc:
-                value = dict(clear = sh.rm(data.source, fmt=data.fmt))
+                value = dict(clear=sh.rm(data.source, fmt=data.fmt))
                 break
 
     return (pnum, vwork.rc, value)

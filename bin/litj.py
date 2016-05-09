@@ -16,6 +16,8 @@ for thispath in [os.path.join(rootpath, x) for x in ('site', 'src')]:
     if thispath not in incvortex:
         print 'ADD to sys.path', thispath
         sys.path.append(thispath)
+    else:
+        print "using", thispath
 
 from jeeves.butlers import Jeeves
 
