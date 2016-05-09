@@ -9,7 +9,7 @@ import re
 
 from vortex.tools import date, env
 from vortex.data.flow import GeoFlowResource
-from vortex.syntax.stdattrs import a_term, a_cutoff
+from vortex.syntax.stdattrs import term, a_cutoff
 
 from common.tools.igastuff import archive_suffix
 
@@ -21,20 +21,22 @@ class _AbstractLAMBoundary(GeoFlowResource):
     """
 
     _abstract = True
-    _footprint = dict(
-        info = 'Coupling file for a limited area model',
-        attr = dict(
-            kind = dict(
-                values  = ['boundary', 'elscf', 'coupled'],
-                remap   = dict(autoremap = 'first'),
-            ),
-            term = a_term,
-            nativefmt = dict(
-                values  = ['fa', 'grib', 'unknown'],
-                default = 'fa',
-            ),
+    _footprint = [
+        term,
+        dict(
+            info = 'Coupling file for a limited area model',
+            attr = dict(
+                kind = dict(
+                    values  = ['boundary', 'elscf', 'coupled'],
+                    remap   = dict(autoremap = 'first'),
+                ),
+                nativefmt = dict(
+                    values  = ['fa', 'grib', 'unknown'],
+                    default = 'fa',
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):

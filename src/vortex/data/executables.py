@@ -147,3 +147,26 @@ class NWPModel(Binary):
     def command_line(self, **opts):
         """Abstract method."""
         return ''
+
+
+class OceanographicModel(Binary):
+    """Base class for any Oceanographic Model."""
+
+    _abstract = True
+    _footprint = dict(
+        info = 'Oceanographic Model',
+        attr = dict(
+            model = a_model,
+            kind = dict(
+                values = ['oceanmodel']
+            )
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'oceanmodel'
+
+    def command_line(self, **opts):
+        """Abstract method."""
+        return ''

@@ -61,6 +61,8 @@ def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
         model_info = 'ALAD'
     elif model == 'surfex':
         model_info = vapp[:4].upper()
+    elif model == 'hycom':
+        model_info = 'HYCOM'
     else:
         logger.critical('Unknown model <%s> for op names fabrik', model)
         raise ValueError('Unknown model')
@@ -81,7 +83,7 @@ def gribNames(cutoff, reseau, model, run=None, vapp=None, vconf=None,
         suffix = map_suffix[reseau]
         if force_courtfr:
             suffix = 'rCM'
-    elif model == 'arpege' and run:
+    elif model == 'arpege' and run is not None:
         map_suffix = dict(
             zip(
                 (6, 18),
@@ -148,7 +150,9 @@ def global_pnames(provider, resource):
     # provider's attributes: model or vapp
     if 'model' not in info:
         info['model'] = getattr(provider, 'model', getattr(provider, 'vapp'))
-    # The suite may not e consistant between the vortex cache and the inline cache
+    # In the inline cache, Hycom data are stored in the "vagues" directory
+    info['model'] = dict(hycom='vagues').get(info['model'], info['model'])
+    # The suite may not e consistent between the vortex cache and the inline cache
     info['suite'] = suite_map.get(info['suite'], info['suite'])
     return info
 
@@ -210,6 +214,13 @@ def analysis_bnames(resource, provider):
     #patch for the different kind of analysis (surface and atmospheric)
     if resource.model == 'arome' and resource.filling == 'surf':
         return 'INIT_SURF.fa.' + suffix
+    elif resource.model == 'hycom' and resource.filling == 'surf':
+        if provider.vconf[:3] == 'atl':
+            DOM = ""
+        elif provider.vconf[:3] == 'med':
+            DOM = "MED_"
+        anabase = 's_init_sort'
+        return anabase + '_' + provider.vconf[-3:] + '_' + DOM + 'ana' + '.' + resource.date.ymdh
     else:
         anabase = 'ICMSH' + model_info + 'INIT'
         if resource.filling == 'surf':

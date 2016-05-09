@@ -1,0 +1,38 @@
+:mod:`previmar.data.executables` --- PreviMAR's binaries resources
+==================================================================
+
+.. automodule:: previmar.data.executables
+   :synopsis: PreviMAR's binaries resources
+
+.. moduleauthor:: The Vortex Team
+.. sectionauthor:: The Vortex Team
+.. versionadded:: 0.9.27
+
+Package
+-------
+
+.. autodata:: __all__
+
+Classes
+-------
+
+.. autoclass:: MasterSurges
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IniZeroSurges
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: FiltrageGrib
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: ConversionGrib2Taux
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   

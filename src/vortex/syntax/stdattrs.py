@@ -37,7 +37,7 @@ knownfmt = set([
     'auto', 'autoconfig', 'unknown', 'foo',
     'ascii', 'txt', 'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib',
     'bufr', 'obsoul', 'odb', 'ecma', 'ccma',
-    'bullx', 'sx', 'ddhpack',
+    'bullx', 'sx', 'ddhpack', 'tar',
 ])
 
 # Special classes

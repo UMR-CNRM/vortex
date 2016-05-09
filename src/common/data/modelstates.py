@@ -112,6 +112,9 @@ class Analysis(GeoFlowResource):
                 directory = 'workdir/analyse'
             else:
                 directory = 'autres'
+        elif self.model == 'hycom':
+            if self.filling == 'surf':
+                directory = 'guess'
         else:
             if self.filling == 'surf':
                 directory = 'autres'
