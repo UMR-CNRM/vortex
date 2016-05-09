@@ -1,6 +1,9 @@
 :mod:`opinel` --- A collection of basic utilities
 =================================================
 
+:Release: |version_opinel|
+:Date: |today|
+
 .. automodule:: opinel
    :synopsis: A collection of basic utilities
 

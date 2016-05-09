@@ -1,5 +1,9 @@
 :mod:`taylorism` --- Framework for parallelisation of tasks
 ===========================================================
+
+:Release: |version_taylorism|
+:Date: |today|
+
 .. automodule:: taylorism
    :synopsis: Framework for parallelisation of tasks
 
