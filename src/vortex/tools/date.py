@@ -130,10 +130,12 @@ def synop(delta=0, base=None, time=None, step=6):
             raise ValueError('Not a synoptic hour: ' + str(time))
     return synopdate
 
+
 def stamp():
     """Return date up to microseconds as a tuple."""
     td = datetime.datetime.now()
     return (td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
+
 
 def easter(year=None):
     """Return date for easter of the given year
@@ -163,6 +165,7 @@ local_date_functions = dict([
 # noinspection PyUnboundLocalVariable
 del x
 
+
 def stardates():
     """Nice dump of predefined dates functions."""
     for k, v in sorted(local_date_functions.items()):
@@ -177,7 +180,7 @@ def guess(*args):
         except (ValueError, TypeError):
             continue
     else:
-        raise ValueError, "Cannot guess what Period or Date could be %s" % str(args)
+        raise ValueError("Cannot guess what Period or Date could be {!s}".format(args))
 
 
 def daterange(start, end=None, step='P1D'):
@@ -237,19 +240,19 @@ class Period(datetime.timedelta):
                 if key == key1:
                     return Period._adder(key2, factor * value)
             else:
-                raise KeyError, "Unknown key in Period string: %s" % key
+                raise KeyError("Unknown key in Period string: {:s}".format(key))
 
     @staticmethod
     def parse(string):
         """Find out time duration that could be extracted from string argument."""
         if not isinstance(string, basestring):
-            raise TypeError, "Expected string input"
+            raise TypeError("Expected string input")
         if len(string) < 2:
-            raise ValueError, "Badly formed short string %s" % string
+            raise ValueError("Badly formed short string {:s}".format(string))
 
         match = Period.period_regex(string)
         if not match:
-            raise ValueError, "Badly formed string %s" % string
+            raise ValueError("Badly formed string {:s}".format(string))
 
         values = match.groupdict()
         values.pop('T')
@@ -672,13 +675,13 @@ class Time(object):
         elif isinstance(top, datetime.time) or isinstance(top, Time):
             self._hour, self._minute = top.hour, top.minute
         elif isinstance(top, float):
-            self._hour, self._minute = int(top), int((top-int(top))*60)
+            self._hour, self._minute = int(top), int((top - int(top)) * 60)
         elif isinstance(top, str):
             ld = [ int(x) for x in re.split('[-:hHTZ]+', top) if re.match(r'\d+$', x) ]
         else:
             ld = [ int(x) for x in args
-                   if type(x) in (int, float)
-                   or (isinstance(x, str) and re.match(r'\d+$', x)) ]
+                   if (type(x) in (int, float) or
+                       (isinstance(x, str) and re.match(r'\d+$', x))) ]
         if ld:
             if len(ld) < 2:
                 ld.append(0)
@@ -718,6 +721,10 @@ class Time(object):
         """Convert to `int`, ie: returns hours * 60 + minutes."""
         return self._hour * 60 + self._minute
 
+    def __hash__(self):
+        """Return a hashkey."""
+        return self.__int__()
+
     def __eq__(self, other):
         try:
             other = self.__class__(other)
@@ -743,7 +750,7 @@ class Time(object):
         """
         delta = Time(delta)
         hour, minute = self.hour + delta.hour, self.minute + delta.minute
-        hour, minute = hour + int(minute/60), minute % 60
+        hour, minute = hour + int(minute / 60), minute % 60
         return Time(hour, minute)
 
     def __radd__(self, delta):
@@ -875,6 +882,9 @@ class Month(object):
     def prevmonth(self):
         """Return the month before the current one."""
         return self - 1
+
+    def __hash__(self):
+        return hash((self._year, self._month))
 
     def __str__(self):
         """Return a two digit value of the current month int value."""
