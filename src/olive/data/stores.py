@@ -244,7 +244,7 @@ class OpArchiveStore(ArchiveStore):
         if cleanpath is None:
             rc = False
         else:
-            rc = self.system.ftget(
+            rc = self.system.smartftget(
                 cleanpath,
                 targetpath,
                 # ftp control
@@ -265,7 +265,7 @@ class OpArchiveStore(ArchiveStore):
 
     def opput(self, local, remote, options):
         """File transfert: put to store."""
-        return self.system.ftput(
+        return self.system.smartftput(
             local,
             self.fullpath(remote),
             # ftp control
