@@ -132,3 +132,9 @@ class Unknown(Resource):
     def vortex_basename(self):
         """Keep the Unknown resource unknown."""
         return 'unknown'
+
+
+# Activate the footprint's fasttrack on the resources collector
+fcollect = footprints.collectors.get(tag='resource')
+fcollect.fasttrack = ('kind', )
+del fcollect

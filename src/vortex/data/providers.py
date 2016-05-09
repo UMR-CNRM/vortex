@@ -319,3 +319,9 @@ class VortexOp(Vortex):
     def netloc(self):
         """Vortex Special OP scheme, aka VSOP !"""
         return 'vsop.' + self.namespace.domain
+
+
+# Activate the footprint's fasttrack on the resources collector
+fcollect = footprints.collectors.get(tag='provider')
+fcollect.fasttrack = ('namespace', )
+del fcollect

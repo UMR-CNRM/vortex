@@ -111,10 +111,10 @@ class ContextObserverRecorder(footprints.observers.Observer):
         # First the stages of the sequence
         if self._stages_recorder:
             logger.info('The recorder is replaying stages for context <%s>', context.tag)
-            rhdicts = [ section.rh.as_dict() for section in context.sequence ]
+
             for (pr_item, info) in self._stages_recorder:
-                for section, rhdict in zip(context.sequence, rhdicts):
-                    if rhdict == pr_item:
+                for section in context.sequence.fastsearch(pr_item):
+                    if section.rh.as_dict() == pr_item:
                         section.updstage(info)
         # Then the localtracker
         if self._tracker_recorder is not None:
@@ -179,10 +179,11 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         """
         if self.has_focus():
             logger.debug('Notified %s upd item %s', self, item)
-            if info['observerboard'] == _RHANDLERS_OBSBOARD:
+            if (info['observerboard'] == _RHANDLERS_OBSBOARD and
+                    'stage' in info):
                 # Update the sequence
-                for section in self._sequence:
-                    if section.rh == item:
+                for section in self._sequence.fastsearch(item):
+                    if section.rh is item:
                         section.updstage(info)
                 # Update the local tracker
                 self._localtracker.update_rh(item, info)

@@ -13,7 +13,7 @@ _activetag = 'default'
 
 def stdfactoryrole(role):
     """Standard processing for role names."""
-    return role.title()
+    return ''.join([s[0].upper() + s[1:] for s in role.split()])
 
 
 def switchfactory(tag='default'):

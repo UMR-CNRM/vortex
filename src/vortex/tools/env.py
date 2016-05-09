@@ -189,6 +189,16 @@ class Environment(object):
         else:
             return self.getvar(varname)
 
+    @property
+    def glove(self):
+        """
+        Return the current glove.
+
+        This could be handled by __getattr__, but this property is
+        slightly faster...
+        """
+        return self._pool.get('GLOVE', self._pool.get('glove', None))
+
     def delvar(self, varname):
         """
         Delete ``varname`` from current environment (this is not case sensitive).

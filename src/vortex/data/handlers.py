@@ -14,9 +14,9 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex import sessions
 
 from vortex.tools  import net
-from vortex.util   import config, roles, structs
+from vortex.util   import config, structs
 from vortex.layout import contexts, dataflow
-from vortex.data   import stores, containers, resources, providers
+from vortex.data   import containers, resources, providers
 
 OBSERVER_TAG = 'Resources-Handlers'
 
@@ -43,11 +43,6 @@ class Handler(object):
     def __init__(self, rd, **kw):
         if 'glove' in rd:
             del rd['glove']
-        self.role      = roles.setrole(rd.pop('role', 'anonymous'))
-        self.alternate = roles.setrole(rd.get('alternate', None))
-        if 'alternate' in rd:
-            del rd['alternate']
-            self.role  = None
         self._resource  = rd.pop('resource', None)
         self._provider  = rd.pop('provider', None)
         self._container = rd.pop('container', None)
@@ -88,7 +83,9 @@ class Handler(object):
     def _set_resource(self, value):
         """Setter for ``resource`` property."""
         if isinstance(value, resources.Resource):
+            oldhash = self.simplified_hashkey
             self._resource = value
+            self._notifyhash(oldhash)
         else:
             raise ValueError('This value is not a plain Resource <%s>', value)
 
@@ -101,7 +98,9 @@ class Handler(object):
     def _set_provider(self, value):
         """Setter for ``provider`` property."""
         if isinstance(value, providers.Provider):
+            oldhash = self.simplified_hashkey
             self._provider = value
+            self._notifyhash(oldhash)
         else:
             raise ValueError('This value is not a plain Provider <%s>', value)
 
@@ -114,7 +113,9 @@ class Handler(object):
     def _set_container(self, value):
         """Setter for ``container`` property."""
         if isinstance(value, containers.Container):
+            oldhash = self.simplified_hashkey
             self._container = value
+            self._notifyhash(oldhash)
         else:
             raise ValueError('This value is not a plain Container <%s>', value)
 
@@ -148,6 +149,16 @@ class Handler(object):
         return self._stage[-1]
 
     @property
+    def simplified_hashkey(self):
+        """Returns a tuple that can be used as a hashkey to quickly identify the handler."""
+        if self.complete:
+            rkind = getattr(self.resource, 'kind', None)
+            rfile = getattr(self.container, 'filename', None)
+            return (rkind, rfile)
+        else:
+            return ('incomplete', )
+
+    @property
     def _cur_session(self):
         """Return the current active session."""
         return sessions.current()
@@ -165,6 +176,10 @@ class Handler(object):
     def _notifyhook(self, stage, hookname):
         """Notify that a hook function has been executed."""
         self._observer.notify_upd(self, dict(stage = stage, hook = hookname))
+
+    def _notifyhash(self, oldhash):
+        """Notify that the hashkey has changed."""
+        self._observer.notify_upd(self, dict(oldhash = oldhash, ))
 
     def is_expected(self):
         """Return a boolean value according to the last stage value (expected or not)."""
@@ -237,14 +252,12 @@ class Handler(object):
         tab = ' ' * indent
         card = "\n".join((
             '{0}Handler {1!r}',
-            '{0}{0}Role      : {2:s}',
-            '{0}{0}Alternate : {3:s}',
-            '{0}{0}Complete  : {4}',
-            '{0}{0}Options   : {5}',
-            '{0}{0}Location  : {6}'
+            '{0}{0}Complete  : {2}',
+            '{0}{0}Options   : {3}',
+            '{0}{0}Location  : {4}'
         )).format(
             tab,
-            self, self.role, self.alternate, self.complete, self.options, self.location()
+            self, self.complete, self.options, self.location()
         )
         for subobj in ('resource', 'provider', 'container'):
             obj = getattr(self, subobj, None)
@@ -286,8 +299,6 @@ class Handler(object):
             obj = getattr(self, subobj, None)
             if obj is not None:
                 rhd[subobj] = obj.footprint_export()
-        rhd['role'] = self.role
-        rhd['alternate'] = self.alternate
         return rhd
 
     @property
@@ -393,7 +404,7 @@ class Handler(object):
             logger.error('Could not find any store to get %s', self.lasturl)
         return rst
 
-    def get(self, **extras):
+    def get(self, alternate=False, **extras):
         """Method to retrieve the resource through the provider and feed the current container.
 
         The behaviour of this method depends on the insitu and alternate options:
@@ -430,8 +441,8 @@ class Handler(object):
                     else:
                         logger.info("Could not get the resurce :-(")
             else:
-                if self.alternate and self.container.exists():
-                    logger.info('Alternate <%s> exists', self.alternate)
+                if alternate and self.container.exists():
+                    logger.info('Alternate <%s> exists', alternate)
                     rst = True
                 else:
                     if self.container.exists():

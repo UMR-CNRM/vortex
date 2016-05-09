@@ -13,6 +13,8 @@ __all__ = []
 from . import loggers
 logger = loggers.getLogger(__name__)
 
+import collections
+
 from . import config, dump, priorities, reporting, util
 
 
@@ -52,7 +54,7 @@ class Collector(util.GetByTag, util.Catalog):
         logger.debug('Footprints collector init {!s}'.format(self))
         self.instances = util.Catalog(weak=True)
         self.register = True
-        self.report = config.LIGHT_REPORTING
+        self.report = config.ONERROR_REPORTING
         self.lreport_len = config.DFLT_MAXLEN_LIGHT_REPORTING
         self.report_auto = True
         self.report_tag = None
@@ -64,6 +66,11 @@ class Collector(util.GetByTag, util.Catalog):
         r_maxlen = None if self.report == config.FULL_REPORTING else self.lreport_len
         self.report_log = reporting.get(tag=self.report_tag, log_maxlen=r_maxlen)
         config.add2proxies(self)
+        self._fasttrack_attr = set()
+        self._fasttrack_index = dict()
+        self._fasttrack_type = dict()
+        self._fasttrack_typeargs = dict()
+        self._fasttrack_trap = dict()
 
     @classmethod
     def tag_clean(cls, tag):
@@ -137,6 +144,91 @@ class Collector(util.GetByTag, util.Catalog):
             fp = cl.footprint_retrieve()
             fp.priority['level'] = plevel
 
+    def _upd_fasttrack_index(self, cls):
+        attrerror = set()
+        for myattr in self._fasttrack_attr:
+            myfp = cls.footprint_retrieve()
+            if myattr in myfp.mandatory():
+                myvalues = myfp.get_values(myattr)
+                # Is there some restrictions on values ?
+                if myvalues:
+                    # Ensure that the attribute types are consistent
+                    if self._fasttrack_type[myattr] is None:
+                        self._fasttrack_type[myattr] = myfp.attr[myattr].get('type', str)
+                        self._fasttrack_typeargs[myattr] = myfp.attr[myattr].get('args', dict())
+                    else:
+                        if not (self._fasttrack_type[myattr] is myfp.attr[myattr].get('type', str) and
+                                self._fasttrack_typeargs[myattr] == myfp.attr[myattr].get('args', dict())):
+                            logger.warning("Inconsistent types for fasttrack attributes. Removing it from the fasttrack list.")
+                            attrerror.add(myattr)
+                            continue
+                    # Let's go...
+                    for myvalue in myvalues:
+                        self._fasttrack_index[myattr][myvalue].add(cls)
+
+                # No restrictions on values so it's a potential candidate for everyone
+                else:
+                    self._fasttrack_trap[myattr].add(cls)
+
+            # The attribute is optional or missing so it's a possible candidate for everyone
+            else:
+                self._fasttrack_trap[myattr].add(cls)
+
+        # Process errors
+        if attrerror:
+            for myattr in set(self._fasttrack_attr):
+                if myattr in attrerror:
+                    self._fasttrack_attr.remove(myattr)
+
+    def _set_fasttrack(self, attrset):
+        self._fasttrack_attr = set(attrset)
+        for myattr in self._fasttrack_attr:
+            self._fasttrack_type[myattr] = None
+            self._fasttrack_typeargs[myattr] = dict()
+            self._fasttrack_index[myattr] = collections.defaultdict(set)
+            self._fasttrack_trap[myattr] = set()
+        for mycls in self._items:
+            self._upd_fasttrack_index(mycls)
+
+    def _get_fasttrack(self):
+        return set(self._fasttrack_attr)
+
+    fasttrack = property(_get_fasttrack, _set_fasttrack)
+
+    def _fasttrack_subsetting(self, desc):
+        if self._fasttrack_attr:
+            objgroup_list = list()
+            for k, v in desc.iteritems():
+                if k in self._fasttrack_attr:
+                    # Check if the key's value is in the index
+                    if v in self._fasttrack_index[k]:
+                        indexkey = v
+                    else:
+                        # A type conversion might be usefull
+                        try:
+                            v_conv = self._fasttrack_type[k](v, ** self._fasttrack_typeargs[k])
+                        except (ValueError, TypeError):
+                            v_conv = None
+                        if v_conv is not None and v_conv in self._fasttrack_index[k]:
+                            indexkey = v_conv
+                        else:
+                            # Ok we give up...
+                            indexkey = None
+
+                    if indexkey is not None:
+                        logger.debug('Fasttrack subsetting took place for key %s', k)
+                        objgroup_list.append(self._fasttrack_index[k][indexkey] |
+                                             self._fasttrack_trap[k])
+            if objgroup_list:
+                return set.intersection(* objgroup_list)
+
+        return self._items
+
+    def add(self, *items):
+        super(Collector, self).add(*items)
+        for item in items:
+            self._upd_fasttrack_index(item)
+
     def pickup(self, desc):
         """Try to pickup inside the collector a item that could match the description."""
         logger.debug('Pick up a "{:s}" in description {!s} with collector {!r}'.format(self.tag, desc, self))
@@ -171,12 +263,20 @@ class Collector(util.GetByTag, util.Catalog):
         as described by argument ``desc``.
         """
         logger.debug('Search any {!s} in collector {!s}'.format(desc, self._items))
-        if self.report:
-            self.report_log.add(collector=self)
-        for item in self._items:
-            resolved, u_input = item.footprint_couldbe(desc, report=self.report_log)
-            if resolved:
-                return item(resolved, checked=True)
+        requeue = True
+        report_log = None if self.report == config.ONERROR_REPORTING else self.report_log
+        while requeue:
+            requeue = False
+            if self.report and report_log is not None:
+                report_log.add(collector=self)
+            for item in self._fasttrack_subsetting(desc):
+                resolved, u_input = item.footprint_couldbe(desc, report=report_log)
+                if resolved:
+                    return item(resolved, checked=True)
+            if (self.report == config.ONERROR_REPORTING and
+                    report_log is None):
+                requeue = True
+                report_log = self.report_log
         return None
 
     def find_all(self, desc):
@@ -185,13 +285,22 @@ class Collector(util.GetByTag, util.Catalog):
         as described by argument ``desc``.
         """
         logger.debug('Search all {!s} in collector {!s}'.format(desc, self._items))
-        found = list()
-        if self.report:
-            self.report_log.add(collector=self)
-        for item in self._items:
-            resolved, theinput = item.footprint_couldbe(desc, report=self.report_log)
-            if resolved:
-                found.append((item, resolved, theinput))
+        requeue = True
+        report_log = None if self.report == config.ONERROR_REPORTING else self.report_log
+        while requeue:
+            requeue = False
+            found = list()
+            if self.report and report_log is not None:
+                report_log.add(collector=self)
+            for item in self._fasttrack_subsetting(desc):
+                resolved, theinput = item.footprint_couldbe(desc, report=report_log)
+                if resolved:
+                    found.append((item, resolved, theinput))
+            if (not found and
+                    self.report == config.ONERROR_REPORTING and
+                    report_log is None):
+                requeue = True
+                report_log = self.report_log
         return found
 
     def find_best(self, desc):
