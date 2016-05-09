@@ -143,6 +143,7 @@ def setup(**kw):
     import common
     import olive.data.providers
     from iga.data import containers, providers, stores
+    from previmar.data import consts, executables, resources
 
     print '+ common               =', common.__file__
     print '+ olive.data.providers =', olive.data.providers.__file__
@@ -253,6 +254,13 @@ def setenv(t, **kw):
     t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
     logger.info('Effective rundate = %s', t.env.OP_RUNDATE.ymdhm)
     logger.info('Effective time    = %s', t.env.OP_RUNTIME)
+
+    t.sh.header('Setting member')
+
+    if not t.env.OP_MEMBER:
+        t.env.OP_MEMBER = t.env.get('DMT_ECHEANCE', None)
+    
+    logger.info('Effective member  = %s', t.env.OP_MEMBER)
 
     return t.env.clone()
 

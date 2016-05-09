@@ -210,7 +210,7 @@ class Node(footprints.util.GetByTag):
 
     def xp2conf(self):
         """Set the actual experiment value -- Could be the name of the op suite if any."""
-        if 'experiment' not in self.conf:
+        if 'experiment' or 'xpid' not in self.conf:
             self.conf.xpid = self.conf.experiment = self.conf.get('suite', self.env.VORTEX_XPID)
         if self.conf.experiment is None:
             raise ValueError('Could not set a proper experiment id.')
