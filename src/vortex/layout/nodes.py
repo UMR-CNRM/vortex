@@ -210,11 +210,11 @@ class Node(footprints.util.GetByTag):
 
     def xp2conf(self):
         """Set the actual experiment value -- Could be the name of the op suite if any."""
-        if 'experiment' not in self.conf:
-            self.conf.xpid = self.conf.experiment = self.conf.get('suite', self.env.VORTEX_XPID)
-        if self.conf.experiment is None:
+        if 'xpid' not in self.conf:
+            self.conf.xpid = self.conf.get('suite', self.env.VORTEX_XPID)
+        if self.conf.xpid is None:
             raise ValueError('Could not set a proper experiment id.')
-        logger.info('Experiment name is <%s>', self.conf.experiment)
+        logger.info('Experiment name is <%s>', self.conf.xpid)
 
     def register_cycle(self, cyclename):
         """Abstract method."""

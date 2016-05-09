@@ -184,7 +184,7 @@ class OperGlove(Glove):
             ),
             profile = dict(
                 optional = False,
-                values   = ['oper', 'dble', 'test'],
+                values   = ['oper', 'dble', 'test', 'miroir'],
             )
         )
     )
