@@ -72,6 +72,11 @@ class Cache(footprints.FootprintBase):
                 optional = True,
                 default  = 0,
             ),
+            readonly = dict(
+                type     = bool,
+                optional = True,
+                default  = False,
+            ),
         )
     )
 
@@ -135,7 +140,7 @@ class Cache(footprints.FootprintBase):
 
         It might be usefull for cleaning scripts.
         """
-        if self.rtouch and rc:
+        if self.rtouch and (not self.readonly) and rc:
             items = item.lstrip('/').split('/')
             if len(items) > 2:
                 items = items[:-2]  # It's useless to touch the rightmost directory
@@ -144,6 +149,8 @@ class Cache(footprints.FootprintBase):
 
     def insert(self, item, local, intent='in', fmt='foo', info=None):
         """Insert an item in the current cache."""
+        if self.readonly:
+            raise IOError("This Cache is readonly.")
         rc = self.sh.cp(local, self.fullpath(item), intent=intent, fmt=fmt)
         self._recursive_touch(rc, item)
         self.addrecord('INSERT', item, status=rc, info=info, fmt=fmt, intent=intent)
@@ -177,6 +184,8 @@ class Cache(footprints.FootprintBase):
 
     def delete(self, item, fmt='foo', info=None):
         """Delete an item from the current cache."""
+        if self.readonly:
+            raise IOError("This Cache is readonly.")
         rc = self.sh.remove(self.fullpath(item), fmt=fmt)
         self.addrecord('DELETE', item, status=rc, info=info, fmt=fmt)
         return rc
@@ -196,10 +205,10 @@ class Cache(footprints.FootprintBase):
 
 
 class MtoolCache(Cache):
-    """Cache items for the MTOOL jobs."""
+    """Cache items for the MTOOL jobs (or any job that acts like it)."""
 
     _footprint = dict(
-        info = 'Default cache description',
+        info = 'MTOOL like Cache',
         attr = dict(
             kind = dict(
                 values   = ['mtool', 'swapp'],
@@ -234,3 +243,40 @@ class MtoolCache(Cache):
             cache = self.actual_rootdir
         return self.sh.path.join(cache, self.actual_headdir)
 
+
+class Op2ResearchCache(Cache):
+    """Cache of the operational suite (read-only)."""
+
+    _footprint = dict(
+        info = 'MTOOL like Operations Cache (read-only)',
+        attr = dict(
+            kind = dict(
+                values   = ['op2r_primary', 'op2r_secondary'],
+            ),
+            rootdir = dict(
+                optional = True,
+                default  = 'auto'
+            ),
+            headdir = dict(
+                optional = True,
+                default  = 'vortex',
+            ),
+            readonly = dict(
+                default = True,
+            )
+        )
+    )
+
+    @property
+    def entry(self):
+        if self.rootdir == 'auto':
+            fs = self.sh.target().get('op:' + self.kind[5:] + 'fs', '')
+            mt = self.sh.target().get('op:mtooldir', None)
+            if mt is None:
+                raise ValueError("The %s cache can't be initialised since op:mtooldir is missing",
+                                 self.kind)
+            cache = fs + mt if mt.startswith('/') else self.sh.path.join(fs, mt)
+            cache = self.sh.path.join(cache, 'cache')
+        else:
+            cache = self.actual_rootdir
+        return self.sh.path.join(cache, self.actual_headdir)

@@ -427,16 +427,14 @@ class MayFly(Virtual):
             raise
 
 
-class SingleFile(Container):
+class _SingleFileStyle(Container):
     """
-    Default file container. Data is stored as a file object.
+    Template for any file container. Data is stored as a file object.
     """
+    _abstract = True,
     _footprint = dict(
         info = 'File container',
         attr = dict(
-            filename = dict(
-                alias    = ('filepath', 'local'),
-            ),
             cwdtied = dict(
                 type     = bool,
                 optional = True,
@@ -447,8 +445,8 @@ class SingleFile(Container):
 
     def __init__(self, *args, **kw):
         """Business as usual... but define actualpath according to ``cwdtied`` attribute."""
-        logger.debug('SingleFile container init %s', self.__class__)
-        super(SingleFile, self).__init__(*args, **kw)
+        logger.debug('_SingleFileStyle container init %s', self.__class__)
+        super(_SingleFileStyle, self).__init__(*args, **kw)
         if self.cwdtied:
             self._actualpath = os.path.realpath(self.filename)
         else:
@@ -503,7 +501,7 @@ class SingleFile(Container):
 
     def clear(self, *kargs, **kw):
         """Delete the container content (in this case the actual file)."""
-        rst = super(SingleFile, self).clear(*kargs, **kw)
+        rst = super(_SingleFileStyle, self).clear(*kargs, **kw)
         # Physically delete the file if it exists
         if self.exists():
             sh = kw.pop('system', sessions.system())
@@ -513,3 +511,52 @@ class SingleFile(Container):
     def exists(self):
         """Check the existence of the actual file."""
         return os.path.exists(self.localpath())
+
+
+class SingleFile(_SingleFileStyle):
+    """
+    Default file container. Data is stored as a file object.
+    """
+    _footprint = dict(
+        attr = dict(
+            filename = dict(
+                alias    = ('filepath', 'local'),
+            ),
+        )
+    )
+
+
+class UnnamedSingleFile(_SingleFileStyle):
+    """
+    Unnamed file container. Data is stored as a file object.
+
+    The filename is chosen arbitrarily when the object is created.
+    """
+    _footprint = dict(
+        attr = dict(
+            shouldfly = dict(
+                type = bool,
+                values = [ True ],
+            ),
+            cwdtied = dict(
+                default = True,
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('UnnamedSingleFile container init %s', self.__class__)
+        fh, fpath = tempfile.mkstemp(prefix="shouldfly-", dir=os.getcwd())
+        os.close(fh)  # mkstemp opens the file but we do not really care...
+        self._auto_filename = os.path.basename(fpath)
+        logger.debug('The localfile will be: ', self.filename)
+        super(UnnamedSingleFile, self).__init__(*args, **kw)
+
+    @property
+    def filename(self):
+        return self._auto_filename
+
+    def exists(self, empty=False):
+        """Check the existence of the actual file."""
+        return (os.path.exists(self.localpath()) and
+                (empty or os.path.getsize(self.localpath())))
