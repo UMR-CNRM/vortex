@@ -62,11 +62,10 @@ Cf. taylorism.examples for a simple example.
 
 Dependencies
 ------------
-**multiprocessing**
 
-**footprints**
+``footprints`` (MF package)
 
-**interrupt** (side-package of **taylorism**)
+``opinel`` (MF package)
 """
 
 from __future__ import absolute_import, print_function
@@ -81,7 +80,6 @@ from pickle import PickleError
 
 import footprints
 from footprints import FootprintBase, proxy as fpx
-
 from opinel import interrupt  # because subprocesses must be killable properly
 
 from .schedulers import BaseScheduler, MaxThreadsScheduler
@@ -92,7 +90,7 @@ taylorism_log = footprints.loggers.getLogger(__name__)
 #: timeout when polling for a Queue/Pipe communication
 communications_timeout = 0.01
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 #################
 ### FUNCTIONS ###
@@ -364,6 +362,8 @@ class Boss(object):
         def _getreport():
             if final or received_a_report():
                 received = self.control_messenger_out.recv()
+                if final:
+                    self._finalreport = received
                 if isinstance(received['workers_report'], Exception):
                     taylorism_log.error("Error was catch in subprocesses with traceback:")
                     sys.stderr.writelines(received['traceback'])
@@ -375,8 +375,6 @@ class Boss(object):
         # first try to get report
         if self._finalreport is None:
             report = _getreport()
-            if final:
-                self._finalreport = report
         else:
             report = self._finalreport
 
