@@ -428,9 +428,11 @@ class MultiStore(footprints.FootprintBase):
                 # Do the refills and check if one of them succeed
                 refill_in_progress = False
                 for restore in restores:
-                    logger.info('Refill back in writeable store [%s]', restore)
-                    refill_in_progress = (refill_in_progress or
-                                          restore.put(local, remote.copy(), options))
+                    # Another refill may have filled the gap...
+                    if not restore.check(remote.copy(), options):
+                        logger.info('Refill back in writeable store [%s]', restore)
+                        refill_in_progress = (refill_in_progress or
+                                              restore.put(local, remote.copy(), options))
                 if refill_in_progress:
                     logger.info("Starting another round because at least one refill succeeded")
                 # Whatever the refill's outcome, that's fine
