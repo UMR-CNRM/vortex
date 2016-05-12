@@ -48,4 +48,18 @@ Actors
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
+:mod:`taylorism.examples` --- Examples using the taylorism package
+==================================================================
+
+Examples
+--------
+
+.. automodule:: taylorism.examples
+   :synopsis: Basic, illustrative examples of use.
+
+.. autoclass:: Sleeper
+   :members:
+   :private-members: _task
+     
+.. autofunction:: sleepers_example_program
