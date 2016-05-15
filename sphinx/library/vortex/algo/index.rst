@@ -11,3 +11,5 @@ Contains:
 
    components
    mpitools
+   serversynctools
+   

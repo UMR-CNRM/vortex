@@ -70,6 +70,18 @@ class AlgoComponent(footprints.FootprintBase):
                 optional = True,
                 default  = 180,
             ),
+            server_run = dict(
+                type     = bool,
+                optional = True,
+                values   = [False],
+                default  = False,
+            ),
+            serversync_method = dict(
+                optional = True,
+            ),
+            serversync_medium = dict(
+                optional = True,
+            )
         )
     )
 
@@ -80,6 +92,8 @@ class AlgoComponent(footprints.FootprintBase):
         self._promises = None
         self._expected = None
         self._delayed_excs = list()
+        self._server_synctool = None
+        self._server_process = None
         super(AlgoComponent, self).__init__(*args, **kw)
 
     @property
@@ -320,6 +334,74 @@ class AlgoComponent(footprints.FootprintBase):
         logger.info('Polling still alive ? %s', str(p_io.is_alive()))
         return not p_io.is_alive()
 
+    def server_begin(self, rh, opts):
+        """Start a subprocess and run the server in it."""
+        self._server_event = multiprocessing.Event()
+        self._server_process = multiprocessing.Process(
+            name   = self.footprint_clsname(),
+            target = self.server_job,
+            args   = (rh, opts)
+        )
+        self._server_process.start()
+
+    def server_job(self, rh, opts):
+        """Actually run the server and catch all Exceptions.
+
+        If the server crashes, is killed or whatever, the Exception is displayed
+        and the appropriate Event is set.
+        """
+        self.system.signal_intercept_on()
+        try:
+            self.execute_single(rh, opts)
+        except:
+            (exc_type, exc_value, exc_traceback) = sys.exc_info()
+            print 'Exception type: ' + str(exc_type)
+            print 'Exception info: ' + str(exc_value)
+            print 'Traceback:'
+            print "\n".join(traceback.format_tb(exc_traceback))
+            # Alert the main process of the error
+            self._server_event.set()
+
+    def server_alive(self):
+        """Is the server still running ?"""
+        return (self._server_process is not None and
+                self._server_process.is_alive())
+
+    def server_end(self):
+        """End the server.
+
+        A first attempt is made to terminate it nicely. If it doesn't work,
+        a SIGTERM is sent.
+        """
+        rc = False
+        # This test should always suceed...
+        if (self._server_synctool is not None and
+                self._server_process is not None):
+            # Is the process still running ?
+            if self._server_process.is_alive():
+                # Try to stop it nicely
+                if self._server_synctool.trigger_stop():
+                    t0 = date.now()
+                    self._server_process.join(30)
+                    waiting = date.now() - t0
+                    logger.info('Waiting for the server to stop took %f seconds',
+                                waiting.total_seconds())
+                # Be less nice if needed...
+                if self._server_process.is_alive():
+                    logger.warning('Force termination of the server process')
+                    self._server_process.terminate()
+                    self.system.sleep(1)  # Allow some time for the process to terminate
+            rc = not self._server_event.is_set()
+            logger.info('Server still alive ? %s', str(self._server_process.is_alive()))
+            # We are done with the server
+            self._server_synctool = None
+            self._server_process = None
+            del self._server_event
+            # Check the rc
+            if not rc:
+                raise AlgoComponentError('The server process ended badly.')
+        return rc
+
     def spawn_hook(self):
         """Last chance to say something before execution."""
         pass
@@ -368,9 +450,42 @@ class AlgoComponent(footprints.FootprintBase):
         opts = self.spawn_command_options()
         return shlex.split(rh.resource.command_line(**opts))
 
+    def execute_single(self, rh, opts):
+        """Abstract method.
+
+        When server_run is True, this method is used to start the server.
+        Otherwise, this method is called by each :meth:`execute` call.
+        """
+        pass
+
     def execute(self, rh, opts):
         """Abstract method."""
-        pass
+        if self.server_run:
+            # First time here ?
+            if self._server_synctool is None:
+                if self.serversync_method is None:
+                    raise ValueError('The serversync_method must be provided.')
+                self._server_synctool = footprints.proxy.serversynctool(
+                    method = self.serversync_method,
+                    medium = self.serversync_medium,
+                )
+                self._server_synctool.set_servercheck_callback(self.server_alive)
+                self.server_begin(rh, opts)
+                # Wait for the first request
+                self._server_synctool.trigger_wait()
+            # Acknowledge that we are ready and wait for the next request
+            self._server_synctool.trigger_run()
+        else:
+            self.execute_single(rh, opts)
+
+    def execute_finalise(self, opts):
+        """Abstract method.
+
+        This method is called inconditionaly when :meth:`execute` exits (even
+        if an Exception was raised).
+        """
+        if self.server_run:
+            self.server_end()
 
     def postfix(self, rh, opts):
         """Abstract method."""
@@ -427,13 +542,16 @@ class AlgoComponent(footprints.FootprintBase):
         self.env.active(True)
 
         # The actual "run" recipe
-        self.prepare(rh, kw)        #1
-        self.fsstamp(kw)            #2
-        self.execute(rh, kw)        #3
-        self.fscheck(kw)            #4
-        self.postfix(rh, kw)        #5
-        self.dumplog(kw)            #6
-        self.delayed_exceptions(kw) #7
+        self.prepare(rh, kw)            #1
+        self.fsstamp(kw)                #2
+        try:
+            self.execute(rh, kw)        #3
+        finally:
+            self.execute_finalise(kw)   #3.1
+        self.fscheck(kw)                #4
+        self.postfix(rh, kw)            #5
+        self.dumplog(kw)                #6
+        self.delayed_exceptions(kw)     #7
 
         # Restore previous OS environement and free local references
         self.env.active(False)
@@ -496,12 +614,12 @@ class Expresso(AlgoComponent):
         )
     )
 
-    def execute(self, rh, opts):
+    def execute_single(self, rh, opts):
         """
         Run the specified resource handler through the current interpreter,
         using the resource command_line method as args.
         """
-        args = [ self.interpreter, rh.container.localpath() ]
+        args = [self.interpreter, rh.container.localpath()]
         args.extend(self.spawn_command_line(rh))
         logger.debug('Run script %s', args)
         self.spawn(args, opts)
@@ -521,13 +639,13 @@ class BlindRun(AlgoComponent):
         )
     )
 
-    def execute(self, rh, opts):
+    def execute_single(self, rh, opts):
         """
         Run the specified resource handler as an absolute executable,
         using the resource command_line method as args.
         """
 
-        args = [ self.absexcutable(rh.container.localpath()) ]
+        args = [self.absexcutable(rh.container.localpath())]
         args.extend(self.spawn_command_line(rh))
         logger.debug('BlindRun executable resource %s', args)
         self.spawn(args, opts)
@@ -664,7 +782,7 @@ class Parallel(AlgoComponent):
         if opts.get('mpitool', True):
             self.export('mpitool')
 
-    def execute(self, rh, opts):
+    def execute_single(self, rh, opts):
         """
         Run the specified resource handler through the `mitool` launcher,
         using the resource command_line method as args.

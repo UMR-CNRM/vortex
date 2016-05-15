@@ -99,7 +99,7 @@ class IFSParallel(Parallel):
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
-        namcandidates = [ x.rh for x in self.context.sequence.effective_inputs(kind=('namelist', 'namelistfp')) ]
+        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind=('namelist', 'namelistfp'))]
         self.system.subtitle('Namelist candidates')
         for nam in namcandidates:
             nam.quickview()
@@ -127,7 +127,7 @@ class IFSParallel(Parallel):
                 nam_updated = True
             else:
                 logger.error('No NAMARG block in %s. It will probably crash', namlocal)
-                
+
         if self.member is not None:
             namcontents.setmacro('MEMBER', self.member)
             nam_updated = True
@@ -145,12 +145,12 @@ class IFSParallel(Parallel):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(IFSParallel, self).prepare(rh, opts)
-        for optpack in ('drhook{}'.format('prof' if self.drhookprof else ''), 
+        for optpack in ('drhook{}'.format('prof' if self.drhookprof else ''),
                         'gribapi'):
             self.export(optpack)
         self.prepare_namelists(rh, opts)
 
-    def execute(self, rh, opts):
+    def execute_single(self, rh, opts):
         """Standard IFS-Like execution parallel execution."""
         self.system.ls(output='dirlst')
-        super(IFSParallel, self).execute(rh, opts)
+        super(IFSParallel, self).execute_single(rh, opts)
