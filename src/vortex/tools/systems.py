@@ -117,7 +117,8 @@ class System(footprints.FootprintBase):
             ),
             python = dict(
                 optional = True,
-                default  = platform.python_version()
+                default  = re.sub(r'^(\d+\.\d+\.\d+).*$', r'\1',
+                                  platform.python_version())
             )
         )
     )
