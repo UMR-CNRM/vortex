@@ -66,7 +66,7 @@ class GenericConfigParser(object):
 
     def as_dump(self):
         """Return a nicely formated class name for dump in footprint."""
-        return "{0:s}.{1:s}('{2:s}')".format(self.__module__, self.__class__.__name__, str(self.file))
+        return 'file={!s}'.format(self.file)
 
     def setfile(self, inifile):
         """Read the specified ``inifile`` as new configuration."""

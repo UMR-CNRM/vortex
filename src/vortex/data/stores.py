@@ -53,7 +53,7 @@ class StoreGlue(object):
 
     def as_dump(self):
         """Return a nicely formated class name for dump in footprint."""
-        return "{0:s}.{1:s}('{2:s}')".format(self.__module__, self.__class__.__name__, str(self.gluemap))
+        return str(self.gluemap)
 
     def sections(self):
         """Returns a list of available glue section names. Mostly file archive names."""

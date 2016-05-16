@@ -443,10 +443,6 @@ class Date(datetime.datetime):
         """Default string representation is iso8601."""
         return self.iso8601()
 
-    def as_dump(self):
-        """Nicely formatted representation in dumper."""
-        return self.__repr__()
-
     def is_synoptic(self):
         """True if the current hour is a synoptic one."""
         return self.hour in (0, 6, 12, 18)
@@ -703,10 +699,6 @@ class Time(object):
         """Standard hour-minute representation."""
         return 'Time({0:d}, {1:d})'.format(self.hour, self.minute)
 
-    def as_dump(self):
-        """Nicely formatted representation in dumper."""
-        return self.__repr__()
-
     def export_dict(self):
         """String representation for dict or shell variable."""
         return self.__str__()
@@ -891,10 +883,6 @@ class Month(object):
     def __repr__(self):
         """Return a formated id of the current month."""
         return '{0:s}({1:02d}, year={2:d})'.format(self.__class__.__name__, self._month, self._year)
-
-    def as_dump(self):
-        """Nicely formatted representation in dumper."""
-        return self.__repr__()
 
     def __add__(self, delta):
         """

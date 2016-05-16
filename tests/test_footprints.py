@@ -150,13 +150,13 @@ class FootprintTestFpAttr(FootprintTestOne):
 class utDump(TestCase):
 
     def test_dump_types(self):
-        self.assertFalse(dump.is_instance(Foo))
-        self.assertTrue(dump.is_instance(Foo()))
+        self.assertFalse(dump.is_an_instance(Foo))
+        self.assertTrue(dump.is_an_instance(Foo()))
 
         class FooBis(Foo):
             pass
 
-        self.assertFalse(dump.is_instance(FooBis))
+        self.assertFalse(dump.is_an_instance(FooBis))
         self.assertTrue(dump.is_class(Foo))
         self.assertTrue(dump.is_class(FooBis))
 
@@ -859,7 +859,7 @@ class utPriorities(TestCase):
         self.assertEqual(rv.TOOLBOX(), 1)
         self.assertEqual(rv.DEBUG(),   2)
         self.assertEqual(cmp(rv.DEBUG, 'bof'), -1)
-        self.assertEqual(rv.DEBUG.as_dump(), "footprints.priorities.PriorityLevel('DEBUG')")
+        self.assertEqual(rv.DEBUG.as_dump(), "DEBUG")
 
         rv.reset()
         self.assertEqual(len(rv), 2)

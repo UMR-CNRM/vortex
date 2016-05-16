@@ -56,6 +56,9 @@ class DelayedEnvValue(object):
         self._value  = None
         self._frozen = False
 
+    def as_dump(self):
+        return 'varname={},default={}'.format(self.varname, self.default)
+
     def footprint_value(self):
         """
         Return the actual env value of the ``varname`` variable.
