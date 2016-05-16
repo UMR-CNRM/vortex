@@ -8,16 +8,16 @@ Data dumper... mostly used in objects' docstring with a footprint.
 #: No automatic export
 __all__ = []
 
-from types import *  # @UnusedWildImport
-
 from . import util
 
 
 def DEBUG(msg, obj=None, level=None):
     """Fake method for debug purpose (then should provide a print statement)."""
-    #print msg, str(obj)
+    # print msg, str(obj)
     pass
 
+
+# Global settings for the Txt dumper
 max_depth = 32
 
 indent_first = 6
@@ -53,20 +53,14 @@ break_after_dict_begin = False
 break_before_dict_end = True
 break_after_dict_end = False
 
-DICT_TYPES = {DictionaryType: 1}
-
-
-def atomic_type(t):
-    return t in (NoneType, StringType, IntType, LongType, FloatType, ComplexType)
-
 
 def is_instance(val):
-    if type(val) is InstanceType:
-        return True
+    # Change: This routine will no longer detect old-style classes !
+    #         (because the support of old-style classes will be removed)
     # instance of extension class, but not an actual extension class
-    elif (hasattr(val, '__class__') and
-          hasattr(val, '__dict__') and
-          not hasattr(val, '__bases__')):
+    if (hasattr(val, '__class__') and
+            hasattr(val, '__dict__') and
+            not hasattr(val, '__bases__')):
         return True
     else:
         return False
@@ -76,31 +70,9 @@ def is_class(val):
     return hasattr(val, '__bases__')
 
 
-def simple_value(val):
-    t = type(val)
-
-    if atomic_type(val):
-        return True
-
-    if t not in DICT_TYPES and t not in (ListType, TupleType) and not is_instance(val):
-        return True
-    elif t in (ListType, TupleType) and len(val) <= 10:
-        for x in val:
-            if not atomic_type(type(x)):
-                return False
-        return True
-    elif t in DICT_TYPES and len(val) <= 5:
-        for (k, v) in val.items():
-            if not (atomic_type(type(k)) and atomic_type(type(v))):
-                return False
-        return True
-    else:
-        return False
-
-
 def indent(level=0, nextline=True):
     if nextline:
-        return "\n" + indent_space * ( indent_first + indent_size * level )
+        return "\n" + indent_space * (indent_first + indent_size * level)
     else:
         return ""
 
@@ -108,6 +80,7 @@ def indent(level=0, nextline=True):
 def get(**kw):
     """Return actual dumper object matching description."""
     return Dumper(**kw)
+
 
 class Dumper(util.GetByTag):
     """Could dump almost anything."""
@@ -131,21 +104,21 @@ class Dumper(util.GetByTag):
                     exploredict = obj.__dict__
                 result = "%s%s__dict__ :: %s" % (
                     result,
-                    indent(level+1),
-                    self.dump_dict(exploredict, level+1)
+                    indent(level + 1),
+                    self.dump_dict(exploredict, level + 1)
                 )
 
             if isinstance(obj, dict):
                 result = "%s%sas_dict :: %s" % (
                     result,
-                    indent(level+1),
-                    self.dump_dict(obj, level+1)
+                    indent(level + 1),
+                    self.dump_dict(obj, level + 1)
                 )
             elif isinstance(obj, list):
                 result = "%s%sas_list :: %s" % (
                     result,
-                    indent(level+1),
-                    self.dump_list(obj, level+1)
+                    indent(level + 1),
+                    self.dump_list(obj, level + 1)
                 )
 
             result = "%s%s>>" % (result, indent(level))
@@ -177,11 +150,9 @@ class Dumper(util.GetByTag):
                 indent(level, break_after_tuple_end)
             )
         else:
-            items = ["%s%s" % (
-                    indent(level + 1, break_before_tuple_item),
-                    self.dump(x, level + 1)
-                ) for x in obj
-            ]
+            items = ["%s%s" % (indent(level + 1, break_before_tuple_item),
+                               self.dump(x, level + 1))
+                     for x in obj]
             return "%s(%s%s%s)%s" % (
                 indent(level, nextline and break_before_tuple_begin),
                 indent(level + 1, break_after_tuple_begin), ', '.join(items),
@@ -197,11 +168,9 @@ class Dumper(util.GetByTag):
                 indent(level, break_after_list_end)
             )
         else:
-            items = ["%s%s" % (
-                    indent(level + 1, break_before_list_item),
-                    self.dump(x, level + 1)
-                ) for x in obj
-            ]
+            items = ["%s%s" % (indent(level + 1, break_before_list_item),
+                               self.dump(x, level + 1))
+                     for x in obj]
             return "%s[%s%s%s]%s" % (
                 indent(level, nextline and break_before_list_begin),
                 indent(level + 1, break_after_list_begin), ', '.join(items),
@@ -238,14 +207,12 @@ class Dumper(util.GetByTag):
                 indent(level, break_after_dict_end)
             )
         else:
-            items = ["%s%s = %s%s," % (
-                    indent(level + 1, break_before_dict_key),
-                    #self.dump(k, level + 1),
-                    str(k),
-                    indent(level + 2, break_before_dict_value),
-                    self.dump(v, level + 1)
-                ) for k, v in sorted(obj.items())
-            ]
+            items = ["%s%s = %s%s," % (indent(level + 1, break_before_dict_key),
+                                       # self.dump(k, level + 1),
+                                       str(k),
+                                       indent(level + 2, break_before_dict_value),
+                                       self.dump(v, level + 1))
+                     for k, v in sorted(obj.items())]
             breakdict = break_before_dict_end
             if not len(obj):
                 breakdict = False
@@ -261,7 +228,7 @@ class Dumper(util.GetByTag):
 
         this_id = id(obj)
 
-        if self.seen.has_key(this_id):
+        if this_id in self.seen:
             return self.seen[this_id]
 
         if is_instance(obj) and hasattr(obj, 'as_dump'):

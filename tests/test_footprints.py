@@ -150,9 +150,6 @@ class FootprintTestFpAttr(FootprintTestOne):
 class utDump(TestCase):
 
     def test_dump_types(self):
-        for x in (None, 'foo', 2, long(2), 2., 1+2j):
-            self.assertTrue(dump.atomic_type(type(x)))
-
         self.assertFalse(dump.is_instance(Foo))
         self.assertTrue(dump.is_instance(Foo()))
 
@@ -162,18 +159,6 @@ class utDump(TestCase):
         self.assertFalse(dump.is_instance(FooBis))
         self.assertTrue(dump.is_class(Foo))
         self.assertTrue(dump.is_class(FooBis))
-
-        for x in (None, 'foo', 2, long(2), 2., 1+2j, Foo):
-            self.assertTrue(dump.simple_value(x))
-
-        for x in (Foo(),):
-            self.assertFalse(dump.simple_value(x))
-
-        for x in (range(10), tuple(range(10)), {str(i): i for i in range(5)}):
-            self.assertTrue(dump.simple_value(x))
-
-        for x in (range(11), tuple(range(11)), {str(i): i for i in range(7)}, {'foo': Foo()}, [Foo(), Foo()]):
-            self.assertFalse(dump.simple_value(x))
 
     def test_dump_indent(self):
         self.assertEqual(dump.indent(nextline=False), '')
