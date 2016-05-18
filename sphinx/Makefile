@@ -3,6 +3,7 @@ PYTHON        = python
 
 SPHINXBUILD   = sphinx-build
 CHECKDOC      = ../bin/checkdoc.py
+GENEDOC       = ../bin/config2doc.py
 
 SPHINXOPTS    =
 PAPER         = a4
@@ -12,6 +13,8 @@ PAPEROPT_letter = -D latex_paper_size=letter
 BUILDDIR      = build
 SOURCEDIR     = .
 CHECKREPORT   = $(SOURCEDIR)/checkreport.rst
+GEOLIST       = $(SOURCEDIR)/geometries.rst
+GEOLISTDEP    = ../conf/geometries.ini
 
 ALLSPHINXOPTS   = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCEDIR)
 
@@ -39,12 +42,16 @@ miss-check:
 $(CHECKREPORT):
 	$(PYTHON) $(CHECKDOC) generaterst=$@
 
+# Other automatic lists
+$(GEOLIST): $(GEOLISTDEP)
+	$(PYTHON) $(GENEDOC) --geometry $(GEOLIST)
+
 # Build the html documentation
-html: $(CHECKREPORT)
+html: $(CHECKREPORT) $(GEOLIST)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 # Clean the build directory and the checkdoc report
 clean:
 	rm -rf $(BUILDDIR)
-	rm -f $(CHECKREPORT)
+	rm -f $(CHECKREPORT) $(GEOLIST)
 
