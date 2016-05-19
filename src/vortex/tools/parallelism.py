@@ -9,21 +9,22 @@ import sys
 
 import footprints
 from footprints import loggers
-logger = loggers.getLogger(__name__)
 import taylorism
-
 import vortex
+
+logger = loggers.getLogger(__name__)
 
 
 class TaylorVortexWorker(taylorism.Worker):
     """Vortex version of the :class:`taylorism.Worker` class.
 
     This class provides additional features:
-    * Useful shortcuts (system, context, ...)
-    * Setup a Context recorder to track changes in the Context (and replay them later)
-    * The necessary hooks to record the logging messages and standard output. They
-      are sent back to the main process where they are displayed using the
-      :class:`ParellelResultParser` class.
+
+        * Useful shortcuts (system, context, ...)
+        * Setup a Context recorder to track changes in the Context (and replay them later)
+        * Setup necessary hooks to record the logging messages and standard output. They
+          are sent back to the main process where they are displayed using the
+          :class:`ParallelResultParser` class.
     """
 
     _abstract = True
@@ -124,7 +125,15 @@ class VortexWorkerBlindRun(TaylorVortexWorker):
 
 
 class ParallelResultParser(object):
-    """Summarise the results of a parallel execution."""
+    """Summarise the results of a parallel execution.
+
+    Just pass to this object the `rc` of a `taylorism` worker based on
+    :class:`TaylorVortexWorker`. It will:
+
+        * update the context with the changes made by the worker ;
+        * display the standard output/error if the worker
+        * display the log messages issued by the worker
+    """
 
     def __init__(self, context):
         """

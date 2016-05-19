@@ -18,5 +18,6 @@ Included Modules
 
 * :mod:`vortex.layout.contexts`
 * :mod:`vortex.layout.dataflow`
+* :mod:`vortex.layout.monitor`
 * :mod:`vortex.layout.nodes`
 

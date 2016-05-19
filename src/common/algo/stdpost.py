@@ -18,6 +18,10 @@ from vortex.tools.systems     import ExecutionError
 
 
 class _FA2GribWorker(VortexWorkerBlindRun):
+    """The taylorism worker that actually do the gribing (in parallel).
+
+    This is called indirectly by taylorism when :class:`Fa2Grib` is used.
+    """
 
     _footprint = dict(
         attr = dict(
@@ -131,7 +135,7 @@ class Fa2Grib(ParaBlindRun):
             timeout = dict(
                 type = int,
                 optional = True,
-                default = 180,
+                default = 300,
             ),
             refreshtime = dict(
                 type = int,

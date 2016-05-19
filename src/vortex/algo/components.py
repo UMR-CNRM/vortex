@@ -608,9 +608,7 @@ class ParaBlindRun(AlgoComponent):
         """
         This should be adapted to your needs...
 
-        A usual sequence is:
-
-        .. highlight:: python
+        A usual sequence is::
 
             self._default_pre_execute(rh, opts)
             common_i = _default_common_instructions(rh, opts)
@@ -625,6 +623,7 @@ class ParaBlindRun(AlgoComponent):
             # Your own code here
 
             self._default_post_execute(rh, opts)
+
         """
         raise NotImplementedError
 

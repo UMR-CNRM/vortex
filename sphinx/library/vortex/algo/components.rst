@@ -45,6 +45,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ParaBlindRun
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Parallel
    :show-inheritance:
    :members:

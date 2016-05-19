@@ -18,6 +18,7 @@ Miscellaneous Tools
    lfi
    net
    odb
+   parallelism
    schedulers
    services
    systems

@@ -568,6 +568,10 @@ class Handler(object):
             return None
 
     def is_grabable(self, check_exists=False):
+        """Return if an expected resource is availlable or not.
+        
+        Note: If it returns True, the user still need to :meth:`get` the resource.
+        """
         rc = True
         if self.is_expected():
             pr = self._localpr_json

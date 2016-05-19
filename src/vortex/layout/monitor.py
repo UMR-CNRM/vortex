@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This module defines generic classes that are used to check the states a list of
+This module defines generic classes that are used to check the states of a list of
 sections
 """
 
@@ -17,21 +17,32 @@ logger = loggers.getLogger(__name__)
 __all__ = []
 
 
-class _InputMonitorEntry(object):
+class InputMonitorEntry(object):
 
     def __init__(self, section):
+        """An entry manipulated by a :class:`BasicInputMonitor` object.
+
+        :param vortex.layout.dataflow.Section section: The section associated
+            with this entry
+        """
         self._nchecks = 0
         self._section = section
 
     @property
     def nchecks(self):
+        """
+        The number of checks performed for this entry before it was moved to
+        `available` or `failed`.
+        """
         return self._nchecks
 
     def check_done(self):
+        """Internal use: increments the nchecks count."""
         self._nchecks += 1
 
     @property
     def section(self):
+        """The section associated with this entry."""
         return self._section
 
 
@@ -74,7 +85,7 @@ class BasicInputMonitor(object):
         assert(not(self._role is None and self._kind is None))
 
         # Generate the first list of sections
-        toclassify = [_InputMonitorEntry(x)
+        toclassify = [InputMonitorEntry(x)
                       for x in self._seq.filtered_inputs(role=self._role, kind=self._kind)]
         # Initialise other lists
         self._ufo = list()
@@ -184,7 +195,10 @@ class BasicInputMonitor(object):
 
     @property
     def ufo(self):
-        """The list of resources in an unknown state."""
+        """The list of resources in an unknown state.
+
+        :return: A list of :class:`InputMonitorEntry` objects
+        """
         return self._ufo
 
     @property

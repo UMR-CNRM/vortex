@@ -16,6 +16,21 @@ Package
 Classes
 -------
 
+.. autoclass:: _FA2GribWorker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Fa2Grib
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Fa2GaussGrib
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: AddField
    :show-inheritance:
    :members:
@@ -27,16 +42,6 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: DiagPI
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Fa2Grib
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Fa2GaussGrib
    :show-inheritance:
    :members:
    :member-order: alphabetical

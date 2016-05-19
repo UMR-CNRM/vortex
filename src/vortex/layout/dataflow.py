@@ -296,7 +296,7 @@ class Sequence(footprints.observers.Observer):
     def effective_inputs(self, **kw):
         """
         Similar to :meth:`filtered_inputs` but only walk through the inputs of
-        the current sequence.
+        that reached the 'get' or 'expected' stage.
         """
         return self._section_list_filter([x for x in self.inputs()
                                           if ( x.stage == 'get' or x.stage == 'expected' ) and x.rh.container.exists()],
@@ -305,7 +305,6 @@ class Sequence(footprints.observers.Observer):
     def filtered_inputs(self, **kw):
         """Walk through the inputs of the current sequence.
 
-         which reach the 'get' stage.
         If a ``role`` or ``kind`` (or both) is provided as named argument,
         it operates as a filter on the inputs list. If both keys are available
         the ``role`` applies first, and then the ``kind`` in case of empty match.
