@@ -161,10 +161,10 @@ class utDump(TestCase):
         self.assertTrue(dump.is_class(FooBis))
 
     def test_dump_indent(self):
-        self.assertEqual(dump.indent(nextline=False), '')
-        self.assertEqual(dump.indent(nextline=False, level=2), '')
-        self.assertEqual(dump.indent(), '\n      ')
-        self.assertEqual(dump.indent(level=1), '\n          ')
+        self.assertEqual(dump._indent(nextline=False), '')
+        self.assertEqual(dump._indent(nextline=False, level=2), '')
+        self.assertEqual(dump._indent(), '\n      ')
+        self.assertEqual(dump._indent(level=1), '\n          ')
 
 
 # Tests for footprints util

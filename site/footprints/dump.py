@@ -14,7 +14,7 @@ import re
 from . import util
 
 
-def DEBUG(msg, obj=None, level=None):
+def _DEBUG(msg, obj=None, level=None):
     """Fake method for debug purpose (then should provide a print statement)."""
     # print msg, str(obj)
     pass
@@ -58,6 +58,10 @@ break_after_dict_end = False
 
 
 def is_an_instance(val):
+    """Detect if a given object is an instance (as opposed to being a class).
+
+    :param val: The object to analyse
+    """
     # Change: This routine will no longer detect old-style classes !
     #         (because the support of old-style classes will be removed)
     # instance of extension class, but not an actual extension class
@@ -70,10 +74,14 @@ def is_an_instance(val):
 
 
 def is_class(val):
+    """Detect if a given object is a class (as opposed to being an instance).
+
+    :param val: The object to analyse
+    """
     return hasattr(val, '__bases__')
 
 
-def indent(level=0, nextline=True):
+def _indent(level=0, nextline=True):
     if nextline:
         return "\n" + indent_space * (indent_first + indent_size * level)
     else:
@@ -81,7 +89,7 @@ def indent(level=0, nextline=True):
 
 
 def get(**kw):
-    """Return actual dumper object matching description."""
+    """Return an actual TxtDumper object matching the description."""
     return TxtDumper(**kw)
 
 
@@ -124,7 +132,7 @@ class _AbstractDumper(util.GetByTag):
                                         obj.as_dump())
 
     def dump_default(self, obj, level=0, nextline=True):
-        DEBUG('dump_default')
+        _DEBUG('dump_default')
         # Great, obj as a as_dict method: top choice
         if hasattr(obj, '__dict__') and hasattr(obj, 'as_dict'):
             return self._dump_internal_dict(obj.as_dict(), level + 1)
@@ -152,7 +160,7 @@ class _AbstractDumper(util.GetByTag):
 
     def _recursive_dump(self, obj, level=0, nextline=True):
         """This routine can be called recursively (if necessary)."""
-        DEBUG('dump top', obj)
+        _DEBUG('dump top', obj)
 
         this_id = id(obj)
 
@@ -160,16 +168,16 @@ class _AbstractDumper(util.GetByTag):
             return self.seen[this_id]
 
         if is_an_instance(obj) and hasattr(obj, 'as_dump'):
-            DEBUG('dump shortcut', obj)
+            _DEBUG('dump shortcut', obj)
             self.seen[this_id] = self._dump_obj_shortcut(obj, level, nextline)
             return self.seen[this_id]
 
         if is_class(obj):
             if obj.__module__ == '__builtin__':
-                DEBUG('builtin')
+                _DEBUG('builtin')
                 self.seen[this_id] = self._dump_builtin(obj, level, nextline)
             else:
-                DEBUG('class ' + str(obj))
+                _DEBUG('class ' + str(obj))
                 self.seen[this_id] = self._dump_class(obj, level, nextline)
             return self.seen[this_id]
 
@@ -178,16 +186,28 @@ class _AbstractDumper(util.GetByTag):
         return dump_func(obj, level, nextline)
 
     def dump(self, obj, level=0, nextline=True):
-        """Call this method to dump anything (or at least try to...)."""
+        """Call this method to dump ``obj`` (or at least try to...).
+
+        :param obj: The object that will be dumped
+        :param int level: For internal use only.
+        :param bool nextline: For internal use only.
+        """
         return self._recursive_dump(obj, level=level, nextline=nextline)
 
     def cleandump(self, obj):
-        """Clear cache dump and provide a dump of the provided ``obj``."""
+        """Clear cache dump and provide a dump of the provided ``obj``.
+
+        :param obj: The object that will be dumped
+        """
         self.reset()
         return self.dump(obj)
 
 
 class JsonableDumper(_AbstractDumper):
+    """Return a dump consisting of a pure mix of dictionaries and lists.
+
+    The resulting dump can be serialised using the standard pickle module.
+    """
 
     def dump_dict(self, obj, level=0, nextline=True):
         return {self._recursive_dump(k, level, nextline):
@@ -205,6 +225,13 @@ class JsonableDumper(_AbstractDumper):
 
 
 class XmlDomDumper(JsonableDumper):
+    """Return a dump as a XML DOM object (instance of :class:`xml.minidom.Document`).
+
+    :param tuple named_nodes: List of XML nodes that supports a `name` attribute.
+        For such nodes, a dictionary will be converted as follow :
+        ``attr=dict(toto="BlaBla",titi="BlaBla")`` becomes
+        ``<attr name="toto">BlaBla</attr><attr name="titi">BlaBla</attr>``
+    """
 
     def __init__(self, named_nodes=()):
         super(XmlDomDumper, self).__init__()
@@ -272,6 +299,15 @@ class XmlDomDumper(JsonableDumper):
             xroot.appendChild(xdoc.createTextNode(str(obj)))
 
     def dump(self, obj, root, rootattr=None, level=0, nextline=True):
+        """Call this method to dump ``obj`` (or at least try to...).
+
+        :param obj: The object that will be dumped
+        :param str root: Name of the XML root node
+        :param dict rootattr: dictionary of attributes that will be added to the
+            XML root element.
+        :param int level: For internal use only.
+        :param bool nextline: For internal use only.
+        """
         parent_dump = self._recursive_dump(obj, level, nextline)
         xdoc = minidom.Document()
         xroot = xdoc.createElement(root)
@@ -284,24 +320,25 @@ class XmlDomDumper(JsonableDumper):
 
 
 class TxtDumper(_AbstractDumper):
+    """Dump a text representation of almost any object..."""
 
     def _dump_internal_dict(self, obj, level=0, nextline=True):
         parent_dump = super(TxtDumper, self)._dump_internal_dict(obj, level + 1, nextline)
-        return "<<{:s}__dict__:: {!s}{:s}>>".format(indent(level + 1),
+        return "<<{:s}__dict__:: {!s}{:s}>>".format(_indent(level + 1),
                                                     parent_dump,
-                                                    indent(level))
+                                                    _indent(level))
 
     def _dump_as_proxy(self, proxy, obj, level=0, nextline=True):
         parent_dump = super(TxtDumper, self)._dump_as_proxy(proxy, obj, level + 1, nextline)
-        return "<<{:s}as_{:s}:: {!s}{:s}>>".format(indent(level + 1),
+        return "<<{:s}as_{:s}:: {!s}{:s}>>".format(_indent(level + 1),
                                                    proxy, parent_dump,
-                                                   indent(level),)
+                                                   _indent(level),)
 
     def _dump_unknown_obj(self, obj, level=0, nextline=True):
         return self._unknown_obj_overview(obj)
 
     def dump_default(self, obj, level=0, nextline=True):
-        DEBUG('dump_default')
+        _DEBUG('dump_default')
         if level + 1 > max_depth:
             return " <%s...>" % type(obj).__class__
         else:
@@ -310,8 +347,8 @@ class TxtDumper(_AbstractDumper):
                                             parent_dump)
 
     def dump_base(self, obj, level=0, nextline=True):
-        DEBUG('dump base ' + type(obj).__name__)
-        return "%s%s" % (indent(level, break_base), obj)
+        _DEBUG('dump base ' + type(obj).__name__)
+        return "%s%s" % (_indent(level, break_base), obj)
 
     dump_NoneType = dump_base
     dump_int = dump_base
@@ -319,102 +356,111 @@ class TxtDumper(_AbstractDumper):
     dump_float = dump_base
 
     def dump_str(self, obj, level=0, nextline=True):
-        DEBUG('dump_str', obj)
-        return "%s'%s'" % (indent(level, break_string), obj)
+        _DEBUG('dump_str', obj)
+        return "%s'%s'" % (_indent(level, break_string), obj)
 
     def dump_bool(self, obj, level=0, nextline=True):
-        DEBUG('dump_bool', obj)
-        return "%s%s" % (indent(level, break_bool), str(obj))
+        _DEBUG('dump_bool', obj)
+        return "%s%s" % (_indent(level, break_bool), str(obj))
 
     def dump_tuple(self, obj, level=0, nextline=True):
-        DEBUG('dump_tuple', obj)
+        _DEBUG('dump_tuple', obj)
         if level + 1 > max_depth:
             return "%s(...)%s" % (
-                indent(level, break_before_tuple_begin),
-                indent(level, break_after_tuple_end)
+                _indent(level, break_before_tuple_begin),
+                _indent(level, break_after_tuple_end)
             )
         else:
-            items = ["%s%s" % (indent(level + 1, break_before_tuple_item),
+            items = ["%s%s" % (_indent(level + 1, break_before_tuple_item),
                                self._recursive_dump(x, level + 1))
                      for x in obj]
             return "%s(%s%s%s)%s" % (
-                indent(level, nextline and break_before_tuple_begin),
-                indent(level + 1, break_after_tuple_begin), ', '.join(items),
-                indent(level, break_before_tuple_end),
-                indent(level, break_after_tuple_end)
+                _indent(level, nextline and break_before_tuple_begin),
+                _indent(level + 1, break_after_tuple_begin), ', '.join(items),
+                _indent(level, break_before_tuple_end),
+                _indent(level, break_after_tuple_end)
             )
 
     def dump_list(self, obj, level=0, nextline=True):
-        DEBUG('dump_list', obj)
+        _DEBUG('dump_list', obj)
         if level + 1 > max_depth:
             return "%s[...]%s" % (
-                indent(level, break_before_list_begin),
-                indent(level, break_after_list_end)
+                _indent(level, break_before_list_begin),
+                _indent(level, break_after_list_end)
             )
         else:
-            items = ["%s%s" % (indent(level + 1, break_before_list_item),
+            items = ["%s%s" % (_indent(level + 1, break_before_list_item),
                                self._recursive_dump(x, level + 1))
                      for x in obj]
             return "%s[%s%s%s]%s" % (
-                indent(level, nextline and break_before_list_begin),
-                indent(level + 1, break_after_list_begin), ', '.join(items),
-                indent(level, break_before_list_end),
-                indent(level, break_after_list_end)
+                _indent(level, nextline and break_before_list_begin),
+                _indent(level + 1, break_after_list_begin), ', '.join(items),
+                _indent(level, break_before_list_end),
+                _indent(level, break_after_list_end)
             )
 
     def dump_set(self, obj, level=0, nextline=True):
-        DEBUG('dump_set', obj)
+        _DEBUG('dump_set', obj)
         if level + 1 > max_depth:
             return "%sset([...])%s" % (
-                indent(level, break_before_set_begin),
-                indent(level, break_after_set_end)
+                _indent(level, break_before_set_begin),
+                _indent(level, break_after_set_end)
             )
         else:
             items = [
                 "%s%s" % (
-                    indent(level + 1, break_before_set_item),
+                    _indent(level + 1, break_before_set_item),
                     self._recursive_dump(x, level + 1)
                 ) for x in obj
             ]
             return "%sset([%s%s%s])%s" % (
-                indent(level, nextline and break_before_set_begin),
-                indent(level + 1, break_after_set_begin), ', '.join(items),
-                indent(level, break_before_set_end),
-                indent(level, break_after_set_end)
+                _indent(level, nextline and break_before_set_begin),
+                _indent(level + 1, break_after_set_begin), ', '.join(items),
+                _indent(level, break_before_set_end),
+                _indent(level, break_after_set_end)
             )
 
     def dump_dict(self, obj, level=0, nextline=True):
-        DEBUG('dump_dict', obj)
+        _DEBUG('dump_dict', obj)
         if level + 1 > max_depth:
             return "%s{...}%s" % (
-                indent(level, break_before_dict_begin),
-                indent(level, break_after_dict_end)
+                _indent(level, break_before_dict_begin),
+                _indent(level, break_after_dict_end)
             )
         else:
-            items = ["%s%s = %s%s," % (indent(level + 1, break_before_dict_key),
+            items = ["%s%s = %s%s," % (_indent(level + 1, break_before_dict_key),
                                        # self.dump(k, level + 1),
                                        str(k),
-                                       indent(level + 2, break_before_dict_value),
+                                       _indent(level + 2, break_before_dict_value),
                                        self._recursive_dump(v, level + 1))
                      for k, v in sorted(obj.items())]
             breakdict = break_before_dict_end
             if not len(obj):
                 breakdict = False
             return "%sdict(%s%s%s)%s" % (
-                indent(level, nextline and break_before_dict_begin),
-                indent(level + 1, break_after_dict_begin), ' '.join(items),
-                indent(level, breakdict),
-                indent(level, break_after_dict_end)
+                _indent(level, nextline and break_before_dict_begin),
+                _indent(level + 1, break_after_dict_begin), ' '.join(items),
+                _indent(level, breakdict),
+                _indent(level, break_after_dict_end)
             )
 
     def cleandump(self, obj):
-        """Clear cache dump and provide a top indented dump of the provided ``obj``."""
+        """Clear cache dump and provide a top indented dump of the provided ``obj``.
+
+        :param obj: The object that will be dumped
+        """
         parent_dump = super(TxtDumper, self).cleandump(obj)
         return indent_space * indent_first + parent_dump
 
 
 def fulldump(obj, startpos=indent_first, reset=True):
-    """Entry point. Return a string."""
+    """Entry point: Return a text dump of the provided ``obj``.
+
+    :param obj: The object that will be dumped
+    :param int startpos: Number of blank characters that will be added to the
+        first line of the text dump
+    :param bool reset: Reset the TxtDumper object's cache before dumping ``obj``
+    """
     d = TxtDumper()
     if reset:
         d.reset()
@@ -422,13 +468,16 @@ def fulldump(obj, startpos=indent_first, reset=True):
 
 
 def lightdump(obj, break_before_dict_key=True, break_before_dict_value=False):
-    """Have a quick glance to an assumed 1-depth dictionary."""
-    DEBUG('dump_dict', obj)
+    """Entry point: Have a quick glance to an assumed 1-depth dictionary.
+
+    :param obj: The object that will be dumped
+    """
+    _DEBUG('dump_dict', obj)
     items = [
         "%s%s = %s%s," % (
-            indent(0, break_before_dict_key),
+            _indent(0, break_before_dict_key),
             str(k),
-            indent(1, break_before_dict_value),
+            _indent(1, break_before_dict_value),
             str(v)
         ) for k, v in sorted(obj.items())
     ]

@@ -17,23 +17,30 @@ Interface
 
 .. autofunction:: lightdump
 
-.. autofunction:: atomic_type
-
-.. autofunction:: is_instance
+.. autofunction:: is_an_instance
 
 .. autofunction:: is_class
-
-.. autofunction:: simple_value
-
-.. autofunction:: indent
-
-.. autofunction:: DEBUG
-
 
 Dumper class
 ------------
 
-.. autoclass:: Dumper
+.. autoclass:: _AbstractDumper
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: JsonableDumper
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: XmlDomDumper
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: TxtDumper
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
