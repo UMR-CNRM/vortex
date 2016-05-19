@@ -40,6 +40,10 @@ class _FA2GribWorker(VortexWorkerBlindRun):
             sciz = dict(
                 type = int
             ),
+            scizoffset = dict(
+                type = int,
+                optional = True
+            ),
             # Input/Output data
             file_in = dict(),
             file_out = dict(),
@@ -68,8 +72,11 @@ class _FA2GribWorker(VortexWorkerBlindRun):
         nb.NBDOM = 1
         nb.CHOPER = self.compact
         nb.INUMOD = self.numod
-        if self.sciz:
-            nb.ISCIZ = self.sciz + (self.member if self.member is not None else 0)
+        if self.scizoffset is not None:
+            nb.ISCIZ = self.scizoffset + (self.member if self.member is not None else 0)
+        else:
+            if self.sciz:
+                nb.ISCIZ = self.sciz
         if self.timeshift:
             nb.IHCTPI = self.timeshift
         if self.timeunit:
@@ -168,6 +175,10 @@ class Fa2Grib(ParaBlindRun):
                 optional = True,
                 default  = DelayedEnvValue('VORTEX_GRIB_SCIZ', 0),
             ),
+            scizoffset = dict(
+                type     = int,
+                optional = True,
+            ),
         )
     )
 
@@ -185,7 +196,8 @@ class Fa2Grib(ParaBlindRun):
         common_i = self._default_common_instructions(rh, opts)
         # Update the common instructions
         common_i.update(dict(fortnam=self.fortnam, fortinput=self.fortinput,
-                             compact=self.compact, numod=self.numod, sciz=self.sciz,
+                             compact=self.compact, numod=self.numod,
+                             sciz=self.sciz, sciz_offset=self.scizoffset,
                              timeshift=self.timeshift, timeunit=self.timeunit))
 
         # Monitor for the input files
