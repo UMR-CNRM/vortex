@@ -1136,7 +1136,7 @@ class CacheStore(Store):
 
 
 class _VortexCacheBaseStore(CacheStore):
-    """Some kind of cache for VORTEX experiments: one still needs to chose the cache strategy."""
+    """Some kind of cache for VORTEX experiments: one still needs to choose the cache strategy."""
 
     _abstract = True
     _footprint = dict(
@@ -1205,7 +1205,7 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
 
 
 class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
-    """The Operations VORTEX cache where researchers can get fresh data."""
+    """The DSI/OP VORTEX cache where researchers can get the freshest data."""
 
     _footprint = dict(
         info = 'VORTEX Mtool cache access',
@@ -1229,7 +1229,7 @@ class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
         return '_'.join((self.strategy, mgrp.group(1)))
 
 
-class VortexVsopCache(MultiStore):
+class VortexVsopCacheStore(MultiStore):
 
     _footprint = dict(
         info = 'VORTEX vsop magic cache access',

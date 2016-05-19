@@ -81,7 +81,17 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: VortexCacheStore
+.. autoclass:: VortexCacheMtStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VortexCacheOp2ResearchStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VortexVsopCacheStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
