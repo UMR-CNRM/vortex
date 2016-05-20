@@ -19,6 +19,7 @@ from vortex import sessions
 from vortex.layout import dataflow
 from vortex.util import config
 from vortex.tools import caches, date
+from vortex.tools.systems import ExecutionError
 from vortex.tools.actions import actiond as ad
 from vortex.syntax.stdattrs import Namespace
 from vortex.syntax.stdattrs import DelayedEnvValue
@@ -431,8 +432,12 @@ class MultiStore(footprints.FootprintBase):
                     # Another refill may have filled the gap...
                     if not restore.check(remote.copy(), options):
                         logger.info('Refill back in writeable store [%s]', restore)
-                        refill_in_progress = (refill_in_progress or
-                                              restore.put(local, remote.copy(), options))
+                        try:
+                            refill_in_progress = (restore.put(local, remote.copy(), options) or
+                                                  refill_in_progress)
+                        except ExecutionError as e:
+                            logger.error("An ExecutionError happened during the refill: {!s}".format(e))
+                            logger.error("This error is ignored... but that's ugly !")
                 if refill_in_progress:
                     logger.info("Starting another round because at least one refill succeeded")
                 # Whatever the refill's outcome, that's fine
