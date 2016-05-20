@@ -142,7 +142,7 @@ class Remote(Provider):
             ),
             tube = dict(
                 optional = True,
-                values   = ['scp', 'ftp', 'rcp', 'file'],
+                values   = ['scp', 'ftp', 'rcp', 'file', 'symlink'],
                 default  = 'file',
             ),
             username = dict(

@@ -561,7 +561,7 @@ class Finder(Store):
         info = 'Miscellaneous file access',
         attr = dict(
             scheme = dict(
-                values  = ['file', 'ftp', 'rcp', 'scp'],
+                values  = ['file', 'ftp', 'symlink', 'rcp', 'scp'],
             ),
             netloc = dict(
                 outcast = ['oper.inline.fr'],
@@ -631,6 +631,26 @@ class Finder(Store):
         else:
             logger.error('Try to remove a non-existing resource <%s>', self.fullpath(remote))
         return rc
+
+    symlinkcheck = filecheck
+    symlinklocate = filelocate
+
+    def symlinkget(self, remote, local, options):
+        rpath = self.fullpath(remote)
+        if 'intent' in options and options['intent'] == dataflow.intent.INOUT:
+            logger.error('It is unsafe to have a symlink with intent=inout: %s', rpath)
+            return False
+        rc = self.system.remove(local)
+        self.system.symlink(rpath, local)
+        return rc and self.system.path.exists(local)
+
+    def symlinkput(self, local, remote, options):
+        logger.error("The Finder store with scheme:symlink is not able to perform Puts.")
+        return False
+
+    def symlinkdelete(self, remote, options):
+        logger.error("The Finder store with scheme:symlink is not able to perform Deletes.")
+        return False
 
     def ftpcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
