@@ -3,3 +3,5 @@
 
 #: No automatic export
 __all__ = []
+
+import services

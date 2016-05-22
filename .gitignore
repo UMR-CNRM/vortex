@@ -23,6 +23,7 @@ coverage_report
 # metrics reports
 flake8_report.txt
 pylint_global.txt
+tbinterface_*.json
 
 # RST file generated on the fly
 checkreport.rst
