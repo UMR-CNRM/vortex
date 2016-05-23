@@ -13,10 +13,10 @@ Nous allons voir que la puissance de collaboration entre les deux package vient 
 L'installation d'EPyGrAM
 ========================
 
-Les informations de cette section sont issues d'un courrier d'Alexandre Mary en date du 18 décembre 2014.
+Les informations de cette section sont issues d'un courrier d'Alexandre Mary en date du 24 mars 2016.
 La documentation peut avoir évoluer par ailleurs. 
 
-.. todo:: faire le point avec Alex.
+.. todo:: faire le point égulièrement avec Alex.
 
 Il vous faut tout d'abord vérifier que vous disposez d'une installation locale du package **epygram**.
 C'est très simple pour tous les PC CNRM et sur les supercalculateurs *beaufix* et *prolix*. 
@@ -24,14 +24,16 @@ C'est très simple pour tous les PC CNRM et sur les supercalculateurs *beaufix* 
 Installation sur PC
 -------------------
 
-  * Lancer :file:`/cnrm/coope/mary/public/install_EPyGrAM.sh` qui va copier la librairie chez vous, dans le répertoire que vous voudrez, et compléter dans votre :file:`.bash_profile` les variables nécessaires pour l'utiliser ;
-  * Les variables d'environnement affectées sont :envvar:`EPYGRAM_INSTALL_DIR`, :envvar:`PYTHONPATH` et :envvar:`PATH`.
+  * Des versions pré-installées sont disponibles sous :file:`/home/common/epygram`
+  * Lire les rapides instructions de :file:`/home/common/epygram/EPyGrAM.current/_install/INSTALL_README_cnrm_bull.txt` (et nettoyer l'ancienne installation, le cas échéant)
+
+.. note:: si le répertoire `/home/common/epygram` n'aparaît pas sur votre PC, contacter E. Escalière et/ou CTI.
 
 Installation sur supercalculateurs
 ----------------------------------
 
-  * EPyGrAM est également disponible sur *beaufix* et *dev:targets:prolix*, avec un jeu réduit d'outils (tout ce qui n'est pas graphique).
-  * Pour l'utiliser, il suffit de rajouter le contenu de :file:`~mary/public/epygram_bash_profile` dans votre :file:`.bash_profile`.
+  * EPyGrAM est également disponible sur *beaufix* et *prolix*, avec un jeu réduit d'outils (tout ce qui n'est pas graphique).
+  * Lire les rapides instructions de :file:`/home/gmap/mrpe/mary/public/EPyGrAM.0.6.7/_install/INSTALL_README_cnrm_bull.txt`
   * Attention toutefois, n'allez pas saturer la mémoire et le cpu des nœuds de login avec !!!
 
 Usage générique
@@ -39,8 +41,8 @@ Usage générique
 
   * Un certains nombre d'outils se lancent depuis votre shell courant, ils sont disponibles sous :file:`$EPYGRAM_INSTALL_DIR/apptools` (inclus dans le :envvar:`PATH`) ;
   * Pour chaque outil, l'option :option:`-h` (ou :option:`--help`) vous renseignera sur la syntaxe et les options (parfois nombreuses) de l'outil en question.
-  * Pour utiliser EPyGrAM dans vos scripts et librairies Python, effectuer une commande *import epygram* (le tout après avoir ré-exécuté votre :file:`.bash_profile`).
-  * La documentation de la librairie est sous :file:`/cnrm/coope/mary/public/EPyGrAM/doc_html/index.html`.
+  * Pour utiliser EPyGrAM dans vos scripts et librairies Python, effectuer une commande *import epygram*.
+  * La documentation de la librairie est sous :file:`/home/common/epygram/EPyGrAM.current/epygram/doc_sphinx/index.html`.
 
 
 =================================

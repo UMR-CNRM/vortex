@@ -15,7 +15,7 @@ from vortex.data.contents import MetaDataReader
 from vortex.tools.date import Date, Time
 
 try:
-    import epygram
+    import epygram  # @UnusedImport
 except ImportError:
     pass
 
@@ -156,12 +156,14 @@ class GribMetadataReader(EpygramMetadataReader):
     def _process_epy(self, epyf):
         # Loop over the fields and check the unicity of date/term
         bundle = set()
-        for epyfld in epyf.iter_field(getdata=False):
+        epyfld = epyf.iter_fields(getdata=False)
+        while epyfld:
             bundle.add((epyfld.validity.getbasis(), epyfld.validity.term()))
+            epyfld = epyf.iter_fields(getdata=False)
         if len(bundle) > 1:
             logger.error("The GRIB file contains fileds with different date and terms.")
         if len(bundle) == 0:
             logger.warning("The GRIB file doesn't contains any fields")
             return None, 0
         else:
-            return bundle[0]
+            return bundle.pop()
