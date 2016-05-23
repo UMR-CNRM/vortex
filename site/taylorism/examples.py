@@ -3,7 +3,7 @@
 """
 Basic examples of how to use the module.
 
-A more advanced example of use can be found in **epygram**'s epy_conv.py tool.
+A more advanced example of use can be found in ``epygram``'s epy_conv.py tool.
 """
 
 from __future__ import absolute_import, print_function
@@ -43,11 +43,16 @@ class Sleeper(Worker):
             self.wakeup_sentence = 'Hello !'
 
     def _task(self):
+        """
+        Actual task of the Sleeper is implemented therein.
+        Return the report to be sent back to the Boss.
+        """
         time.sleep(self.sleeping_time)
         return ' '.join([self.wakeup_sentence, "Woke up after", str(self.sleeping_time), "s sleep."])
 
 
-def example_program(verbose=True):
+
+def sleepers_example_program(verbose=True):
     """Example: how to run and control the Boss."""
 
     boss = run_as_server(common_instructions={},
