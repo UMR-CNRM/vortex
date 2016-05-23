@@ -175,6 +175,11 @@ class Store(footprints.FootprintBase):
                 type  = Namespace,
                 alias = ('domain', 'namespace')
             ),
+            storetrack = dict(
+                type  = bool,
+                default = True,
+                optional = True,
+            ),
             readonly = dict(
                 type     = bool,
                 optional = True,
@@ -210,14 +215,15 @@ class Store(footprints.FootprintBase):
         return False
 
     def _observer_notify(self, action, rc, remote, local=None, options=None):
-        infos = dict(action=action, status=rc, remote=remote)
-        # Is a localpath provided ?
-        if local is not None:
-            infos['local'] = local
-        # We may want to cheat on the localpath...
-        if options is not None and 'obs_overridelocal' in options:
-            infos['local'] = options['obs_overridelocal']
-        self._observer.notify_upd(self, infos)
+        if self.storetrack:
+            infos = dict(action=action, status=rc, remote=remote)
+            # Is a localpath provided ?
+            if local is not None:
+                infos['local'] = local
+            # We may want to cheat on the localpath...
+            if options is not None and 'obs_overridelocal' in options:
+                infos['local'] = options['obs_overridelocal']
+            self._observer.notify_upd(self, infos)
 
     def notyet(self, *args):
         """
@@ -285,7 +291,10 @@ class Store(footprints.FootprintBase):
                 rc = True
                 logger.info("This remote URI as been filtered out: we are skipping it.")
             else:
-                rc = getattr(self, self.scheme + 'put', self.notyet)(local, remote, options)
+                dryrun = False
+                if options is not None and 'dryrun' in options:
+                    dryrun = options['dryrun']
+                rc = dryrun or getattr(self, self.scheme + 'put', self.notyet)(local, remote, options)
                 self._observer_notify('put', rc, remote, local=local, options=options)
             return rc
 
@@ -1361,6 +1370,11 @@ class PromiseStore(footprints.FootprintBase):
             netloc = dict(
                 alias    = ('domain', 'namespace')
             ),
+            storetrack = dict(
+                type  = bool,
+                default = True,
+                optional = True,
+            ),
             prstorename = dict(
                 optional = True,
                 default  = 'promise.cache.fr',
@@ -1381,6 +1395,7 @@ class PromiseStore(footprints.FootprintBase):
         self.promise = footprints.proxy.store(
             scheme = self.proxyscheme,
             netloc = self.prstorename,
+            storetrack = self.storetrack,
         )
         if self.promise is None:
             logger.critical('Could not find store scheme <%s> netloc <%s>',
@@ -1391,6 +1406,7 @@ class PromiseStore(footprints.FootprintBase):
         self.other = footprints.proxy.store(
             scheme = self.proxyscheme,
             netloc = self.netloc,
+            storetrack = self.storetrack,
         )
         if self.other is None:
             logger.critical('Could not find store scheme <%s> netloc <%s>', self.proxyscheme, self.netloc)
@@ -1456,6 +1472,13 @@ class PromiseStore(footprints.FootprintBase):
             rc = self.delayed = True
         return rc
 
+    @staticmethod
+    def _clean_pr_json(prjson):
+        del prjson['stamp']
+        if 'options' in prjson['rhandler']:
+            prjson['rhandler']['options'].pop('storetrack', False)
+        return prjson
+
     def put(self, local, remote, options=None):
         """Put a promise or the actual resource if available."""
         logger.debug('Multistore put from %s to %s', local, remote)
@@ -1465,15 +1488,36 @@ class PromiseStore(footprints.FootprintBase):
             if not self.other.use_cache():
                 logger.critical('Could not promise resource without other cache <%s>', self.other)
                 raise ValueError('Could not promise: other store does not use cache')
-            logger.warning('Log a promise instead of missing resource <%s>', local)
             pr_info = self.mkpromise_info(remote, options)
             pr_file = self.mkpromise_file(pr_info, local)
+            # Check if a previous promise with the same description exists
+            preexisting = self.promise.check(remote.copy(), options)
+            if preexisting:
+                pr_old_file = self.promise.locate(remote.copy())
+                prcheck = self._clean_pr_json(self.system.json_load(pr_old_file))
+                prnew = self._clean_pr_json(self.system.json_load(pr_file))
+                preexisting = prcheck == prnew
+                if preexisting:
+                    logger.info("The promise file <%s> preexisted and is compatible",
+                                pr_old_file)
+                    rc = True
+                else:
+                    logger.warning("The promise file <%s> already exists but doesn't match",
+                                   pr_old_file)
+
+            # Put the new promise file in the PromiseCache
             options['obs_overridelocal'] = local  # Pretty nasty :-(
-            rc = self.promise.put(pr_file, remote.copy(), options)
+            if not preexisting:
+                logger.warning('Log a promise instead of missing resource <%s>', local)
+                rc = self.promise.put(pr_file, remote.copy(), options)
+                if rc:
+                    del options['obs_overridelocal']
+                    self.other.delete(remote.copy(), options)
+            else:
+                options['dryrun'] = True  # Just update the tracker
+                rc = self.promise.put(pr_file, remote.copy(), options)
             self.system.remove(pr_file)
-            if rc:
-                del options['obs_overridelocal']
-                self.other.delete(remote.copy(), options)
+
         else:
             logger.info('Actual promise does exists <%s>', local)
             rc = self.other.put(local, remote.copy(), options)

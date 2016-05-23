@@ -37,3 +37,7 @@ Descriptors classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: SlurpHandler
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

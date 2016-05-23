@@ -62,6 +62,7 @@ class Handler(object):
         self._history.append(self.__class__.__name__, 'init', True)
         self._stage = ['load']
         self._observer.notify_new(self, dict(stage = 'load'))
+        self._localpr_cache = None  # To cache the promise dictionary
         logger.debug('New resource handler %s', self.__dict__)
 
     def __del__(self):
@@ -402,6 +403,10 @@ class Handler(object):
                         self._notifyhook(self.stage, hook_name)
         else:
             logger.error('Could not find any store to get %s', self.lasturl)
+
+        # Reset the promise dictionary cache
+        self._localpr_cache = None  # To cache the promise dictionary
+
         return rst
 
     def get(self, alternate=False, **extras):
@@ -553,6 +558,30 @@ class Handler(object):
         t.sh.chmod(pr_getter, 0555)
         return pr_getter
 
+    @property
+    def _localpr_json(self):
+        if self.is_expected():
+            if self._localpr_cache is None:
+                self._localpr_cache = self._cur_session.sh.json_load(self.container.localpath())
+            return self._localpr_cache
+        else:
+            return None
+
+    def is_grabable(self, check_exists=False):
+        """Return if an expected resource is availlable or not.
+        
+        Note: If it returns True, the user still need to :meth:`get` the resource.
+        """
+        rc = True
+        if self.is_expected():
+            pr = self._localpr_json
+            itself  = pr.get('itself')
+            rc = not self._cur_session.sh.path.exists(itself)
+            if rc and check_exists:
+                remote = pr.get('locate').split(';')[0]
+                rc = self._cur_session.sh.path.exists(remote)
+        return rc
+
     def wait(self, sleep=10, timeout=300, fatal=False):
         """Wait for an expected resource or return immediately."""
         rc = True
@@ -560,7 +589,7 @@ class Handler(object):
         if self.is_expected():
             nb = 0
             sh = self._cur_session.sh
-            pr = sh.json_load(local)
+            pr = self._localpr_json
             itself  = pr.get('itself')
             nbtries = int(timeout / sleep)
             logger.info('Waiting %d x %d s. for expected resource <%s>', nbtries, sleep, local)

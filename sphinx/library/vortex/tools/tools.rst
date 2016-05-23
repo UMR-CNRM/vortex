@@ -25,8 +25,8 @@ Package
 * :mod:`vortex.tools.lfi`
 * :mod:`vortex.tools.net`
 * :mod:`vortex.tools.odb`
+* :mod:`vortex.tools.parallelism`
 * :mod:`vortex.tools.services`
-* :mod:`vortex.tools.sms`
 * :mod:`vortex.tools.systems`
 * :mod:`vortex.tools.targets`
 

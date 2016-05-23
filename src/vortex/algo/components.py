@@ -9,12 +9,15 @@ import traceback
 import shlex
 import multiprocessing
 
+from taylorism import Boss
+from taylorism.schedulers import MaxThreadsScheduler
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 import vortex
 from vortex.algo  import mpitools
 from vortex.tools import date
+from vortex.tools.parallelism import ParallelResultParser
 from vortex.syntax.stdattrs import DelayedEnvValue
 
 
@@ -121,14 +124,15 @@ class AlgoComponent(footprints.FootprintBase):
             ]
         return self._expected
 
-    def delayed_exception_add(self, exc):
+    def delayed_exception_add(self, exc, traceback=True):
         """Store the exception so that it will be handled at the end of the run."""
         logger.error("An exception is delayed")
-        (exc_type, exc_value, exc_traceback) = sys.exc_info()
-        print 'Exception type: ' + str(exc_type)
-        print 'Exception info: ' + str(exc_value)
-        print 'Traceback:'
-        print "\n".join(traceback.format_tb(exc_traceback))
+        if traceback:
+            (exc_type, exc_value, exc_traceback) = sys.exc_info()
+            print 'Exception type: ' + str(exc_type)
+            print 'Exception info: ' + str(exc_value)
+            print 'Traceback:'
+            print "\n".join(traceback.format_tb(exc_traceback))
         self._delayed_excs.append(exc)
 
     def grab(self, sec, comment='resource', sleep=10, timeout=None):
@@ -527,6 +531,101 @@ class BlindRun(AlgoComponent):
         args.extend(self.spawn_command_line(rh))
         logger.debug('BlindRun executable resource %s', args)
         self.spawn(args, opts)
+
+
+class ParaBlindRun(AlgoComponent):
+    """
+    Run any executable resource (without MPI) in the current environment.
+
+    This abstract class includes helpers to use the taylorism package in order
+    to introduce an external parallelisation. It is designed to work well with a
+    taylorism Worker class that inherits from
+    :class:`vortex.tools.parallelism.VortexWorkerBlindRun`.
+    """
+
+    _abstract = True
+    _footprint = dict(
+        attr = dict(
+            engine = dict(
+                values = ['blind']
+            ),
+            kind = dict(),
+            verbose = dict(
+                type = bool,
+                default = False,
+                optional = True
+            ),
+            ntasks = dict(
+                type = int,
+                default = DelayedEnvValue('VORTEX_SUBMIT_TASKS', 1),
+                optional = True
+            ),
+        )
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        super(ParaBlindRun, self).__init__(*kargs, **kwargs)
+        self._boss = None
+
+    def _default_common_instructions(self, rh, opts):
+        '''Create a common instruction dictionary that will be used by the workers.'''
+        return dict(kind=self.kind,
+                    progname=self.absexcutable(rh.container.localpath()),
+                    progargs=footprints.FPList(self.spawn_command_line(rh)), )
+
+    def _default_pre_execute(self, rh, opts):
+        '''Various initialisations. In particular it creates the task scheduler (Boss).'''
+        # Start the task scheduler
+        self._boss = Boss(verbose=self.verbose,
+                          scheduler=MaxThreadsScheduler(max_threads=self.ntasks))
+        self._boss.make_them_work()
+
+    def _add_instructions(self, common_i, individual_i):
+        '''Give a new set of instructions to the Boss.'''
+        self._boss.set_instructions(common_i, individual_i)
+
+    def _default_post_execute(self, rh, opts):
+        '''Summarise the results of the various tasks that were run.'''
+        logger.info("All the input files were dealt with: now waiting for the parallel processing to finish")
+        self._boss.wait_till_finished()
+        logger.info("The parallel processing has finished. here are the results:")
+        report = self._boss.get_report()
+        prp = ParallelResultParser(self.context)
+        for r in report['workers_report']:
+            rc = prp(r)
+            if isinstance(rc, Exception):
+                self.delayed_exception_add(rc, traceback=False)
+                rc = False
+            self._default_rc_action(rh, opts, r, rc)
+
+    def _default_rc_action(self, rh, opts, report, rc):
+        '''How should we process the return code ?'''
+        if not rc:
+            logger.waning("Apparently something went sideways with this task (rc=%s).",
+                          str(rc))
+
+    def execute(self, rh, opts):
+        """
+        This should be adapted to your needs...
+
+        A usual sequence is::
+
+            self._default_pre_execute(rh, opts)
+            common_i = _default_common_instructions(rh, opts)
+            # Update the common instructions
+            common_i.update(dict(someattribute='Toto', ))
+
+            # Your own code here
+
+            # Give some instructions to the boss
+            self._add_instructions(common_i, dict(someattribute=['Toto', ],))
+
+            # Your own code here
+
+            self._default_post_execute(rh, opts)
+
+        """
+        raise NotImplementedError
 
 
 class Parallel(AlgoComponent):

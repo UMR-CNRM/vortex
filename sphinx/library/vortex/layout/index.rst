@@ -10,4 +10,5 @@ Contains:
    layout
    contexts
    dataflow
+   monitor
    nodes

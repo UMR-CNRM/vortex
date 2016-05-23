@@ -259,14 +259,6 @@ class Sequence(footprints.observers.Observer):
         kw.setdefault('intent', intent.IN)
         return self.section(kind=ixo.EXEC, **kw)
 
-    def inputs(self):
-        """Return a list of current sequence sections with ``ixo.INPUT`` or ``ixo.EXEC`` kind."""
-        return [ x for x in self.sections if ( x.kind == ixo.INPUT or x.kind == ixo.EXEC ) ]
-
-    def inputs_report(self):
-        """Return a SequenceInputsReport object built using the current sequence."""
-        return SequenceInputsReport(self.inputs())
-
     @staticmethod
     def _fuzzy_match(stuff, allowed):
         '''Check if ``stuff`` is in ``allowed``. ``allowed`` may contain regex.'''
@@ -279,9 +271,40 @@ class Sequence(footprints.observers.Observer):
                 return True
         return False
 
+    def _section_list_filter(self, sections, **kw):
+        if not kw:
+            return sections
+        inrole = list()
+        inkind = list()
+        if 'role' in kw and kw['role'] is not None:
+            selectrole = mktuple(kw['role'])
+            inrole = [ x for x in sections if (self._fuzzy_match(x.role, selectrole) or
+                                               self._fuzzy_match(x.alternate, selectrole)) ]
+        if not inrole and 'kind' in kw:
+            selectkind = mktuple(kw['kind'])
+            inkind = [ x for x in sections if self._fuzzy_match(x.rh.resource.realkind, selectkind) ]
+        return inrole or inkind
+
+    def inputs(self):
+        """Return a list of current sequence sections with ``ixo.INPUT`` or ``ixo.EXEC`` kind."""
+        return [x for x in self.sections if ( x.kind == ixo.INPUT or x.kind == ixo.EXEC )]
+
+    def inputs_report(self):
+        """Return a SequenceInputsReport object built using the current sequence."""
+        return SequenceInputsReport(self.inputs())
+
     def effective_inputs(self, **kw):
         """
-        Walk through the inputs of the current sequence which reach the 'get' stage.
+        Similar to :meth:`filtered_inputs` but only walk through the inputs of
+        that reached the 'get' or 'expected' stage.
+        """
+        return self._section_list_filter([x for x in self.inputs()
+                                          if ( x.stage == 'get' or x.stage == 'expected' ) and x.rh.container.exists()],
+                                         **kw)
+
+    def filtered_inputs(self, **kw):
+        """Walk through the inputs of the current sequence.
+
         If a ``role`` or ``kind`` (or both) is provided as named argument,
         it operates as a filter on the inputs list. If both keys are available
         the ``role`` applies first, and then the ``kind`` in case of empty match.
@@ -292,27 +315,15 @@ class Sequence(footprints.observers.Observer):
         (i.e.  ^ should be explicitely added if one wants to match the begining
         of the string).
         """
-        inset = [ x for x in self.inputs() if ( x.stage == 'get' or x.stage == 'expected' ) and x.rh.container.exists() ]
-        if not kw:
-            return inset
-        inrole = list()
-        inkind = list()
-        if 'role' in kw and kw['role'] is not None:
-            selectrole = mktuple(kw['role'])
-            inrole = [ x for x in inset if (self._fuzzy_match(x.role, selectrole) or
-                                            self._fuzzy_match(x.alternate, selectrole)) ]
-        if not inrole and 'kind' in kw:
-            selectkind = mktuple(kw['kind'])
-            inkind = [ x for x in inset if self._fuzzy_match(x.rh.resource.realkind, selectkind) ]
-        return inrole or inkind
+        return self._section_list_filter(self.inputs(), **kw)
 
     def executables(self):
         """Return a list of current sequence sections with ``ixo.EXEC`` kind."""
-        return [ x for x in self.sections if ( x.kind == ixo.EXEC ) ]
+        return [x for x in self.sectionss if x.kind == ixo.EXEC]
 
     def outputs(self):
         """Return a list of current sequence sections with ``ixo.OUTPUT`` kind."""
-        return [ x for x in self.sections if x.kind == ixo.OUTPUT ]
+        return [x for x in self.sections if x.kind == ixo.OUTPUT]
 
     def effective_outputs(self, **kw):
         """
@@ -321,18 +332,7 @@ class Sequence(footprints.observers.Observer):
         it operates as a filter on the inputs list. If both keys are available
         the ``role`` applies first, and then the ``kind`` in case of empty match.
         """
-        outset = self.outputs()
-        if not kw:
-            return outset
-        outrole = list()
-        outkind = list()
-        if 'role' in kw and kw['role'] is not None:
-            selectrole = mktuple(kw['role'])
-            outrole = [ x for x in outset if x.role in selectrole ]
-        if not outrole and 'kind' in kw:
-            selectkind = mktuple(kw['kind'])
-            outkind = [ x for x in outset if x.rh.resource.realkind in selectkind ]
-        return outrole or outkind or outset
+        return self._section_list_filter(self.outputs(), **kw)
 
     def updobsitem(self, item, info):
         """
