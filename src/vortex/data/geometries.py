@@ -70,15 +70,20 @@ class Geometry(footprints.util.GetByTag):
     """Abstract geometry."""
 
     def __init__(self, **kw):
-        logger.debug('Abstract Geometry init %s %s', self, kw)
         self.info    = 'anonymous'
         self.inifile = None
         self.__dict__.update(kw)
+        self.kind    = 'abstract'
+        logger.debug('Abstract Geometry init kw={!s}'.format(kw))
 
     @classmethod
     def tag_clean(self, tag):
         """Geometries id tags are lower case."""
         return tag.lower()
+
+    def doc_export(self):
+        """Relevant informations to print in the documentation."""
+        return 'kind={:s}'.format(self.kind)
 
 
 class CombinedGeometry(Geometry):
@@ -87,11 +92,11 @@ class CombinedGeometry(Geometry):
     _tag_topcls = False
 
     def __init__(self, **kw):
-        logger.debug('Combined Geometry init %s %s', self, kw)
-        self.info = 'anonymous'
         self.hgeo = None
         self.vgeo = None
         super(CombinedGeometry, self).__init__(**kw)
+        self.kind = 'combined'
+        logger.debug('Combined Geometry init {!s} {!s}'.format(self, kw))
 
 
 class VerticalGeometry(Geometry):
@@ -100,8 +105,9 @@ class VerticalGeometry(Geometry):
     _tag_topcls = False
 
     def __init__(self, **kw):
-        logger.debug('Abstract Vertital Geometry init %s %s', self, kw)
         super(VerticalGeometry, self).__init__(**kw)
+        self.kind = 'vertical'
+        logger.debug('Abstract Vertital Geometry init {!s} {!s}'.format(self, kw))
 
 
 class HorizontalGeometry(Geometry):
@@ -110,7 +116,6 @@ class HorizontalGeometry(Geometry):
     _tag_topcls = False
 
     def __init__(self, **kw):
-        logger.debug('Abstract Horizontal Geometry init %s %s', self, kw)
         desc = dict(
             info = 'anonymous',
             area = None,
@@ -141,6 +146,7 @@ class HorizontalGeometry(Geometry):
             if cv is not None:
                 setattr(self, item, float(cv))
         self._check_attributes()
+        logger.debug('Abstract Horizontal Geometry init {!s}'.format(self))
 
     def _check_attributes(self):
         if self.lam and (self.area is None):
@@ -208,9 +214,9 @@ class GaussGeometry(HorizontalGeometry):
     _tag_topcls = False
 
     def __init__(self, **kw):
-        logger.debug('Gauss Geometry init %s', self)
         super(GaussGeometry, self).__init__(**kw)
         self.kind = 'gauss'
+        logger.debug('Gauss Geometry init {!s}'.format(self))
 
     def _check_attributes(self):
         self.lam = False  # Always false for gaussian grid
@@ -221,6 +227,14 @@ class GaussGeometry(HorizontalGeometry):
         """Standard formatted print representation."""
         return '<{0:s} t={1:d} c={2:g}>'.format(self.strheader(), self.truncation, self.stretching)
 
+    def doc_export(self):
+        """Relevant informations to print in the documentation."""
+        if self.stretching > 1:
+            fmts = 'kind={0:s}, t={1:d}, c={2:g} (pole of interest over {3!s})'
+        else:
+            fmts = 'kind={0:s}, t={1:d}, c={2:g}'
+        return fmts.format(self.kind, self.truncation, self.stretching, self.area)
+
 
 class ProjectedGeometry(HorizontalGeometry):
     """Geometry defined by a geographical projection on a plane."""
@@ -228,10 +242,10 @@ class ProjectedGeometry(HorizontalGeometry):
     _tag_topcls = False
 
     def __init__(self, **kw):
-        logger.debug('Projected Geometry init %s', self)
         kw.setdefault('runit', 'km')
         super(ProjectedGeometry, self).__init__(**kw)
         self.kind = 'projected'
+        logger.debug('Projected Geometry init {!s}'.format(self))
 
     def _check_attributes(self):
         super(ProjectedGeometry, self)._check_attributes()
@@ -242,6 +256,14 @@ class ProjectedGeometry(HorizontalGeometry):
         """Standard formatted print representation."""
         return '<{0:s} r=\'{1:s}\'>'.format(self.strheader(), self.rnice)
 
+    def doc_export(self):
+        """Relevant informations to print in the documentation."""
+        if self.lam:
+            fmts = 'kind={0:s}, r={1:s}, limited-area={2:s}'
+        else:
+            fmts = 'kind={0:s}, r={1:s}, global'
+        return fmts.format(self.kind, self.rnice, self.area)
+
 
 class LonlatGeometry(HorizontalGeometry):
     """Geometry defined by a geographical projection on plane."""
@@ -249,14 +271,22 @@ class LonlatGeometry(HorizontalGeometry):
     _tag_topcls = False
 
     def __init__(self, **kw):
-        logger.debug('Lon/Lat Geometry init %s', self)
         kw.setdefault('runit', 'dg')
         super(LonlatGeometry, self).__init__(**kw)
         self.kind = 'lonlat'
+        logger.debug('Lon/Lat Geometry init {!s}'.format(self))
 
     def __str__(self):
         """Standard formatted print representation."""
         return '<{0:s} r=\'{1:s}\'>'.format(self.strheader(), self.rnice)
+
+    def doc_export(self):
+        """Relevant informations to print in the documentation."""
+        if self.lam:
+            fmts = 'kind={0:s}, r={1:s}, limited-area={2:s}, nlon={3!s}, nlat={4!s}'
+        else:
+            fmts = 'kind={0:s}, r={1:s}, global, nlon={3!s}, nlat={4!s}'
+        return fmts.format(self.kind, self.rnice, self.area, self.nlon, self.nlat)
 
 
 class UnstructuredGeometry(HorizontalGeometry):
@@ -265,9 +295,9 @@ class UnstructuredGeometry(HorizontalGeometry):
     _tag_topcls = False
 
     def __init__(self, *args, **kw):
-        logger.debug('Unstructured Geometry init %s', self)
         super(UnstructuredGeometry, self).__init__(**kw)
         self.kind = 'unstructured'
+        logger.debug('Unstructured Geometry init {!s}'.format(self))
 
     def __str__(self):
         """Standard formatted print representation."""
@@ -280,8 +310,17 @@ class CurvlinearGeometry(UnstructuredGeometry):
 
     def _check_attributes(self):
         super(CurvlinearGeometry, self)._check_attributes()
+        self.kind = 'curvlinear'
         if self.ni is None or self.nj is None:
             raise AttributeError("Some mandatory arguments are missing")
+
+    def doc_export(self):
+        """Relevant informations to print in the documentation."""
+        if self.lam:
+            fmts = 'kind={0:s}, r={1:s}, limited-area={2:s}, ni={3!s}, nj={4!s}'
+        else:
+            fmts = 'kind={0:s}, r={1:s}, global, ni={3!s}, nj={4!s}'
+        return fmts.format(self.kind, self.rnice, self.area, self.nlon, self.nlat)
 
 # Load default geometries
 load(verbose=False)

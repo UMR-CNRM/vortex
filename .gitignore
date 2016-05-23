@@ -26,6 +26,7 @@ pylint_global.txt
 
 # RST file generated on the fly
 checkreport.rst
+geometries.rst
 
 # Translations
 *.mo

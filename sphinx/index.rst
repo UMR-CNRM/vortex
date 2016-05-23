@@ -28,6 +28,7 @@ Extras
 .. toctree::
    :maxdepth: 1
 
+   List of default geometries <geometries>
    table
    checkreport
 
