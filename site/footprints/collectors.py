@@ -13,6 +13,7 @@ __all__ = []
 from . import loggers
 logger = loggers.getLogger(__name__)
 
+from weakref import WeakSet
 import collections
 
 from . import config, dump, priorities, reporting, util
@@ -53,6 +54,7 @@ class Collector(util.GetByTag, util.Catalog):
     def __init__(self, **kw):
         logger.debug('Footprints collector init {!s}'.format(self))
         self.instances = util.Catalog(weak=True)
+        self.abstract_classes = util.Catalog(weak=True)
         self.register = True
         self.report = config.ONERROR_REPORTING
         self.lreport_len = config.DFLT_MAXLEN_LIGHT_REPORTING
@@ -66,11 +68,7 @@ class Collector(util.GetByTag, util.Catalog):
         r_maxlen = None if self.report == config.FULL_REPORTING else self.lreport_len
         self.report_log = reporting.get(tag=self.report_tag, log_maxlen=r_maxlen)
         config.add2proxies(self)
-        self._fasttrack_attr = set()
-        self._fasttrack_index = dict()
-        self._fasttrack_type = dict()
-        self._fasttrack_typeargs = dict()
-        self._fasttrack_trap = dict()
+        self._del_fasttrack()
 
     @classmethod
     def tag_clean(cls, tag):
@@ -179,14 +177,33 @@ class Collector(util.GetByTag, util.Catalog):
             for myattr in set(self._fasttrack_attr):
                 if myattr in attrerror:
                     self._fasttrack_attr.remove(myattr)
+                    del self._fasttrack_type[myattr]
+                    del self._fasttrack_typeargs[myattr]
+                    del self._fasttrack_index[myattr]
+                    del self._fasttrack_trap[myattr]
+
+    def _upd_fasttrack_delete(self, cls):
+        for values in self._fasttrack_index.itervalues():
+            for classes in values.itervalues():
+                classes.discard(cls)
+        for classes in self._fasttrack_trap.itervalues():
+            classes.discard(cls)
+
+    def _del_fasttrack(self):
+        self._fasttrack_attr = set()
+        self._fasttrack_index = dict()
+        self._fasttrack_type = dict()
+        self._fasttrack_typeargs = dict()
+        self._fasttrack_trap = dict()
 
     def _set_fasttrack(self, attrset):
+        self._del_fasttrack()
         self._fasttrack_attr = set(attrset)
         for myattr in self._fasttrack_attr:
             self._fasttrack_type[myattr] = None
             self._fasttrack_typeargs[myattr] = dict()
-            self._fasttrack_index[myattr] = collections.defaultdict(set)
-            self._fasttrack_trap[myattr] = set()
+            self._fasttrack_index[myattr] = collections.defaultdict(WeakSet)
+            self._fasttrack_trap[myattr] = WeakSet()
         for mycls in self._items:
             self._upd_fasttrack_index(mycls)
 
@@ -220,14 +237,29 @@ class Collector(util.GetByTag, util.Catalog):
                         objgroup_list.append(self._fasttrack_index[k][indexkey] |
                                              self._fasttrack_trap[k])
             if objgroup_list:
-                return set.intersection(* objgroup_list)
+                if len(objgroup_list) > 1:
+                    finalset = objgroup_list[0]
+                    for objgroup in objgroup_list[1:]:
+                        finalset = finalset.intersection(objgroup)
+                    return finalset
+                else:
+                    return objgroup_list[0]
 
         return self._items
 
-    def add(self, *items):
-        super(Collector, self).add(*items)
-        for item in items:
-            self._upd_fasttrack_index(item)
+    def add(self, *items, **kwargs):
+        """Add the ``items`` entries in the current catalog."""
+        if kwargs.get('abstract', False):
+            self.abstract_classes.add(*items)
+        else:
+            super(Collector, self).add(*items)
+            for item in items:
+                self._upd_fasttrack_index(item)
+
+    def discard(self, bye):
+        """Remove the ``bye`` entry from current catalog."""
+        super(Collector, self).discard(bye)
+        self._upd_fasttrack_delete(bye)
 
     def pickup(self, desc):
         """Try to pickup inside the collector a item that could match the description."""
