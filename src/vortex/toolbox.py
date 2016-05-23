@@ -88,9 +88,9 @@ def rload(*args, **kw):
     if rd:
         history.append(rd.copy())
     rx = [
-        proxy.containers.pickup(
-            proxy.providers.pickup(
-                proxy.resources.pickup(x)
+        proxy.containers.pickup(  # @UndefinedVariable
+            proxy.providers.pickup(  # @UndefinedVariable
+                proxy.resources.pickup(x)  # @UndefinedVariable
             )
         ) for x in footprints.util.expand(rd)
     ]
@@ -242,7 +242,7 @@ def add_section(section, args, kw):
 
 
 # noinspection PyShadowingBuiltins
-def input(*args, **kw):
+def input(*args, **kw):  # @ReservedAssignment
     """Add an input section to the current sequence."""
     kw.setdefault('insitu', active_insitu)
     return add_section('input', args, kw)
@@ -327,7 +327,7 @@ def algo(*args, **kw):
     if talkative:
         nicedump('Loading algo component with description:', **kw)
 
-    ok = proxy.component(**kw)
+    ok = proxy.component(**kw)  # @UndefinedVariable
     if ok and talkative:
         print t.line
         ok.quickview(nb=1, indent=0)
@@ -371,6 +371,9 @@ def diff(*args, **kw):
     if loglevel is not None:
         t.setloglevel(loglevel.upper())
 
+    # Do not track the reference files
+    kwclean['storetrack'] = False
+
     # Let the magic of footprints resolution operate...
     for ir, rhandler in enumerate(rload(*args, **kwclean)):
         if talkative:
@@ -378,27 +381,50 @@ def diff(*args, **kw):
             rhandler.quickview(nb=ir + 1, indent=0)
             print t.line
         if not rhandler.complete:
-            logger.error('Uncomplete Resource Handler for diff [%s]', rhandler)
+            logger.error('Incomplete Resource Handler for diff [%s]', rhandler)
             if fatal:
-                raise ValueError('Uncomplete Resource Handler for diff')
-        rc = t.sh.diff(
-            rhandler.container.localpath(),
-            rhandler.locate(),
-            fmt = rhandler.container.actualfmt,
-        )
+                raise ValueError('Incomplete Resource Handler for diff')
+        comp_source = rhandler.container
+        # Is the reference available in cache ?
+        if rhandler.check(incache=True):
+            rc = t.sh.diff(comp_source.localpath(),
+                           rhandler.locate().split(';')[0],
+                           fmt = rhandler.container.actualfmt)
+        else:
+            # Create a new container to hold the reference file
+            lazzycontainer = footprints.proxy.container(shouldfly=True,
+                                                        actualfmt=comp_source.actualfmt)
+            # Swapp the original container with the lazzy one
+            rhandler.container = lazzycontainer
+            # Get the reference file
+            rcget = rhandler.get()
+            if not rcget:
+                logger.error('Cannot get the reference resource: %s', rhandler.locate())
+                if fatal:
+                    raise ValueError('Cannot get the reference resource')
+            else:
+                logger.info('The reference file is stored under: %s',
+                            rhandler.container.localpath())
+            # What are the differences ?
+            rc = rcget and t.sh.diff(comp_source.localpath(),
+                                     rhandler.container.localpath(),
+                                     fmt = rhandler.container.actualfmt)
+            # Delete the reference file
+            lazzycontainer.clear()
+        # Now proceed with the result
         logger.info('Diff return %s', str(rc))
         try:
             logger.info('Diff result %s', str(rc.result))
         except AttributeError:
             pass
         if not rc:
-            logger.warning('Some diff occured with %s', rhandler.locate())
+            logger.warning('Some diff occurred with %s', rhandler.locate())
             try:
                 rc.result.differences()
             except StandardError:
                 pass
             if fatal:
-                logger.critical('Difference in resource comparaison is fatal')
+                logger.critical('Difference in resource comparison is fatal')
                 raise ValueError('Fatal diff')
         if t.sh.trace:
             print
@@ -481,7 +507,7 @@ def clear_promises(clear=None, netloc='promise.cache.fr', scheme='vortex',
             logger.info('Some promises are left pending...')
             if storeoptions is None:
                 storeoptions = dict()
-            store = footprints.proxy.store(scheme=scheme, netloc=netloc, 
+            store = footprints.proxy.store(scheme=scheme, netloc=netloc,
                                            **storeoptions)
             for promise in [pr.copy() for pr in promises]:
                 del promise['scheme']

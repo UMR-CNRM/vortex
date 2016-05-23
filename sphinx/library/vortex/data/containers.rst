@@ -45,7 +45,17 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: _SingleFileStyle
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
 .. autoclass:: SingleFile
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: UnnamedSingleFile
    :show-inheritance:
    :members:
    :member-order: alphabetical

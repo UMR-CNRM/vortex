@@ -18,7 +18,8 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex import sessions
 from vortex.layout import dataflow
 from vortex.util import config
-from vortex.tools import caches, date, actions
+from vortex.tools import caches, date
+from vortex.tools.systems import ExecutionError
 from vortex.tools.actions import actiond as ad
 from vortex.syntax.stdattrs import Namespace
 from vortex.syntax.stdattrs import DelayedEnvValue
@@ -174,6 +175,11 @@ class Store(footprints.FootprintBase):
                 type  = Namespace,
                 alias = ('domain', 'namespace')
             ),
+            readonly = dict(
+                type     = bool,
+                optional = True,
+                default  = False,
+            ),
         ),
     )
 
@@ -220,6 +226,14 @@ class Store(footprints.FootprintBase):
         """
         logger.critical('Scheme %s not yet implemented', self.scheme)
 
+    @property
+    def writeable(self):
+        return not self.readonly
+
+    def enforce_readonly(self):
+        if self.readonly:
+            raise IOError('This store is in readonly mode')
+
     def check(self, remote, options=None):
         """Proxy method to dedicated check method according to scheme."""
         logger.debug('Store check from %s', remote)
@@ -259,6 +273,7 @@ class Store(footprints.FootprintBase):
     def put(self, local, remote, options=None):
         """Proxy method to dedicated put method according to scheme."""
         logger.debug('Store put from %s to %s', local, remote)
+        self.enforce_readonly()
         if options is not None and options.get('incache', False) and not self.use_cache():
             logger.warning('Skip this store because a cache is requested')
             return True
@@ -277,6 +292,7 @@ class Store(footprints.FootprintBase):
     def delete(self, remote, options=None):
         """Proxy method to dedicated delete method according to scheme."""
         logger.debug('Store delete from %s', remote)
+        self.enforce_readonly()
         if options is not None and options.get('incache', False) and not self.use_cache():
             logger.warning('Skip this store because a cache is requested')
             rc = True
@@ -311,13 +327,20 @@ class MultiStore(footprints.FootprintBase):
 
     def __init__(self, *args, **kw):
         logger.debug('Abstract multi store init %s', self.__class__)
+        sh = kw.pop('system', sessions.system())
         super(MultiStore, self).__init__(*args, **kw)
+        self._sh = sh
         self.openedstores = self.loadstores()
         self.delayed = False
 
     @property
     def realkind(self):
         return 'multistore'
+
+    @property
+    def system(self):
+        """Shortcut to current system interface."""
+        return self._sh
 
     def loadstores(self):
         """
@@ -349,7 +372,7 @@ class MultiStore(footprints.FootprintBase):
         while loading alternates stores.
         """
         return [
-            dict(scheme=x, netloc=y)
+            dict(system=self.system, scheme=x, netloc=y)
             for x in self.alternates_scheme()
             for y in self.alternates_netloc()
         ]
@@ -357,6 +380,14 @@ class MultiStore(footprints.FootprintBase):
     def use_cache(self):
         """Boolean function to check if any included store use a local cache."""
         return any([x.use_cache() for x in self.openedstores])
+
+    @property
+    def readonly(self):
+        return all([x.readonly for x in self.openedstores])
+
+    @property
+    def writeable(self):
+        return not self.readonly
 
     def check(self, remote, options=None):
         """Go through internal opened stores and check for the resource."""
@@ -390,14 +421,25 @@ class MultiStore(footprints.FootprintBase):
             for num, sto in enumerate(self.openedstores):
                 logger.debug('Multistore get at %s', sto)
                 rc = sto.get(remote.copy(), local, options)
-                # Are we trying a refill ?
-                refill_in_progress = rc and self.refillstore and num > 0
+                # Are we trying a refill ? -> find the previous writeable store
+                restores = []
+                if rc and self.refillstore and num > 0:
+                    restores = [ostore for ostore in self.openedstores[:num]
+                                if ostore.writeable]
+                # Do the refills and check if one of them succeed
+                refill_in_progress = False
+                for restore in restores:
+                    # Another refill may have filled the gap...
+                    if not restore.check(remote.copy(), options):
+                        logger.info('Refill back in writeable store [%s]', restore)
+                        try:
+                            refill_in_progress = (restore.put(local, remote.copy(), options) or
+                                                  refill_in_progress)
+                        except ExecutionError as e:
+                            logger.error("An ExecutionError happened during the refill: {!s}".format(e))
+                            logger.error("This error is ignored... but that's ugly !")
                 if refill_in_progress:
-                    restore = self.openedstores[num - 1]
-                    logger.info('Refill back in previous store [%s]', restore)
-                    refill_in_progress = restore.put(local, remote.copy(), options)
-                if refill_in_progress:
-                    logger.info("Starting another round because the refill succeeded")
+                    logger.info("Starting another round because at least one refill succeeded")
                 # Whatever the refill's outcome, that's fine
                 if rc:
                     break
@@ -410,7 +452,7 @@ class MultiStore(footprints.FootprintBase):
             logger.warning('Funny attempt to put on an empty multistore...')
             return False
         rc = True
-        for sto in self.openedstores:
+        for sto in [ostore for ostore in self.openedstores if ostore.writeable]:
             logger.info('Multistore put at %s', sto)
             rcloc = sto.put(local, remote.copy(), options)
             logger.info('Multistore out = %s', rcloc)
@@ -421,7 +463,7 @@ class MultiStore(footprints.FootprintBase):
         """Go through internal opened stores and delete the resource."""
         logger.debug('Multistore delete from %s', remote)
         rc = False
-        for sto in self.openedstores:
+        for sto in [ostore for ostore in self.openedstores if ostore.writeable]:
             logger.info('Multistore delete at %s', sto)
             rc = sto.delete(remote.copy(), options)
             if not rc:
@@ -440,7 +482,7 @@ class MagicPlace(Store):
             ),
         ),
         priority = dict(
-            level = footprints.priorities.top.DEFAULT
+            level = footprints.priorities.top.DEFAULT  # @UndefinedVariable
         )
     )
 
@@ -509,7 +551,7 @@ class FunctionStore(Store):
             )
         ),
         priority = dict(
-            level = footprints.priorities.top.DEFAULT
+            level = footprints.priorities.top.DEFAULT  # @UndefinedVariable
         )
     )
 
@@ -568,7 +610,7 @@ class Finder(Store):
             ),
         ),
         priority = dict(
-            level = footprints.priorities.top.DEFAULT
+            level = footprints.priorities.top.DEFAULT  # @UndefinedVariable
         )
     )
 
@@ -612,6 +654,7 @@ class Finder(Store):
     def fileget(self, remote, local, options):
         """Delegates to ``system`` the copy of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
+        logger.info('fileget on %s (to: %s)', rpath, local)
         if 'intent' in options and options['intent'] == dataflow.intent.IN:
             logger.info('Ignore intent <in> for remote input %s', rpath)
         rc = self.system.cp(rpath, local, fmt=options.get('fmt'), intent=dataflow.intent.INOUT)
@@ -621,13 +664,17 @@ class Finder(Store):
 
     def fileput(self, local, remote, options):
         """Delegates to ``system`` the copy of ``local`` to ``remote``."""
-        return self.system.cp(local, self.fullpath(remote), fmt=options.get('fmt'))
+        rpath = self.fullpath(remote)
+        logger.info('fileput to %s (from: %s)', rpath, local)
+        return self.system.cp(local, rpath, fmt=options.get('fmt'))
 
     def filedelete(self, remote, options):
         """Delegates to ``system`` the removing of ``remote``."""
         rc = None
         if self.filecheck(remote, options):
-            rc = self.system.remove(self.fullpath(remote), fmt=options.get('fmt'))
+            rpath = self.fullpath(remote)
+            logger.info('filedelete on %s', rpath)
+            rc = self.system.remove(rpath, fmt=options.get('fmt'))
         else:
             logger.error('Try to remove a non-existing resource <%s>', self.fullpath(remote))
         return rc
@@ -657,8 +704,10 @@ class Finder(Store):
 
     def ftpget(self, remote, local, options):
         """Delegates to ``system`` the file transfer of ``remote`` to ``local``."""
+        rpath = self.fullpath(remote)
+        logger.info('ftpget on ftp://%s/%s (to: %s)', self.hostname(), rpath, local)
         rc = self.system.ftget(
-            self.fullpath(remote),
+            rpath,
             local,
             # ftp control
             hostname = self.hostname(),
@@ -671,9 +720,11 @@ class Finder(Store):
 
     def ftpput(self, local, remote, options):
         """Delegates to ``system`` the file transfer of ``local`` to ``remote``."""
+        rpath = self.fullpath(remote)
+        logger.info('ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
         return self.system.ftput(
             local,
-            self.fullpath(remote),
+            rpath,
             # ftp control
             hostname = self.hostname(),
             logname  = remote['username'],
@@ -687,6 +738,7 @@ class Finder(Store):
         if ftp:
             actualpath = self.fullpath(remote)
             if self.ftpcheck(actualpath, options=options):
+                logger.info('ftpdelete on ftp://%s/%s', self.hostname(), actualpath)
                 rc = ftp.delete(actualpath)
                 ftp.close()
             else:
@@ -780,8 +832,10 @@ class ArchiveStore(Store):
 
     def ftpget(self, remote, local, options):
         """Delegates to ``system.ftp`` the get action."""
+        rpath = self._ftpformatpath(remote)
+        logger.info('ftpget on ftp://%s/%s (to: %s)', self.hostname(), rpath, local)
         return self.system.smartftget(
-            self._ftpformatpath(remote), local,
+            rpath, local,
             # ftp control
             hostname = self.hostname(),
             logname  = remote['username'],
@@ -796,15 +850,18 @@ class ArchiveStore(Store):
             logname  = remote['username'],
             fmt      = options.get('fmt'),
         )
+        rpath = self._ftpformatpath(remote)
         if put_sync:
-            return self.system.smartftput(local, self._ftpformatpath(remote), **put_opts)
+            logger.info('ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
+            return self.system.smartftput(local, rpath, **put_opts)
         else:
+            logger.info('delayed ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
             tempo = footprints.proxy.service(kind='hiddencache', asfmt=put_opts['fmt'])
             put_opts.update(
                 todo        = 'ftput',
                 rhandler    = options.get('rhandler', None),
                 source      = tempo(local),
-                destination = self._ftpformatpath(remote),
+                destination = rpath,
             )
             return ad.jeeves(**put_opts)
 
@@ -814,7 +871,9 @@ class ArchiveStore(Store):
         ftp = self.system.ftp(self.hostname(), remote['username'])
         if ftp:
             if self.ftpcheck(remote, options=options):
-                rc = ftp.delete(self._ftpformatpath(remote))
+                rpath = self._ftpformatpath(remote)
+                logger.info('ftpdelete on ftp://%s/%s', self.hostname(), rpath)
+                rc = ftp.delete(rpath)
                 ftp.close()
             else:
                 logger.error('Try to remove a non-existing resource <%s>',
@@ -1003,10 +1062,15 @@ class CacheStore(Store):
         """Boolean value to insure that this store is using a cache."""
         return True
 
+    @property
+    def underlying_cache_kind(self):
+        """The kind of cache that will be used."""
+        return self.strategy
+
     def _get_cache(self):
         if not self._cache:
             self._cache = footprints.proxy.caches.default(
-                kind        = self.strategy,
+                kind        = self.underlying_cache_kind,
                 storage     = self.hostname,
                 rootdir     = self.rootdir,
                 headdir     = self.headdir,
@@ -1041,6 +1105,8 @@ class CacheStore(Store):
 
     def incacheget(self, remote, local, options):
         """Simple copy from current cache cache to ``local``."""
+        logger.info('incacheget on %s://%s/%s (to: %s)',
+                    self.scheme, self.netloc, remote['path'], local)
         return self.cache.retrieve(
             remote['path'],
             local,
@@ -1053,6 +1119,8 @@ class CacheStore(Store):
 
     def incacheput(self, local, remote, options):
         """Simple copy from ``local`` to the current cache in readonly mode."""
+        logger.info('incacheput to %s://%s/%s (from: %s)',
+                    self.scheme, self.netloc, remote['path'], local)
         return self.cache.insert(
             remote['path'],
             local,
@@ -1063,6 +1131,8 @@ class CacheStore(Store):
 
     def incachedelete(self, remote, options):
         """Simple removing of the remote resource in cache."""
+        logger.info('incachedelete on %s://%s/%s',
+                    self.scheme, self.netloc, remote['path'])
         return self.cache.delete(
             remote['path'],
             fmt  = options.get('fmt'),
@@ -1070,20 +1140,15 @@ class CacheStore(Store):
         )
 
 
-class VortexCacheStore(CacheStore):
-    """Some kind of cache for VORTEX experiments."""
+class _VortexCacheBaseStore(CacheStore):
+    """Some kind of cache for VORTEX experiments: one still needs to choose the cache strategy."""
 
+    _abstract = True
     _footprint = dict(
         info = 'VORTEX cache access',
         attr = dict(
             scheme = dict(
                 values  = ['vortex'],
-            ),
-            netloc = dict(
-                values  = ['vortex.cache.fr', 'vsop.cache.fr'],
-            ),
-            strategy = dict(
-                default = 'mtool',
             ),
             rootdir = dict(
                 default = 'auto'
@@ -1103,7 +1168,7 @@ class VortexCacheStore(CacheStore):
 
     def __init__(self, *args, **kw):
         logger.debug('Vortex cache store init %s', self.__class__)
-        super(VortexCacheStore, self).__init__(*args, **kw)
+        super(_VortexCacheBaseStore, self).__init__(*args, **kw)
         del self.cache
 
     def vortexcheck(self, remote, options):
@@ -1125,6 +1190,80 @@ class VortexCacheStore(CacheStore):
     def vortexdelete(self, remote, options):
         """Proxy to :meth:`incachedelete`."""
         return self.incachedelete(remote, options)
+
+
+class VortexCacheMtStore(_VortexCacheBaseStore):
+    """Some kind of MTOOL cache for VORTEX experiments."""
+
+    _footprint = dict(
+        info = 'VORTEX MTOOL like Cache access',
+        attr = dict(
+            netloc = dict(
+                values  = ['vortex.cache.fr', 'vortex.cache-mt.fr',
+                           'vsop.cache-mt.fr'],
+            ),
+            strategy = dict(
+                default = 'mtool',
+            ),
+        )
+    )
+
+
+class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
+    """The DSI/OP VORTEX cache where researchers can get the freshest data."""
+
+    _footprint = dict(
+        info = 'VORTEX Mtool cache access',
+        attr = dict(
+            netloc = dict(
+                values  = ['vsop.cache-primary.fr', 'vsop.cache-secondary.fr'],
+            ),
+            strategy = dict(
+                default = 'op2r',
+            ),
+            readonly = dict(
+                default = True,
+            )
+        )
+    )
+
+    @property
+    def underlying_cache_kind(self):
+        """The kind of cache that will be used."""
+        mgrp = re.match(r'\w+\.cache-(\w+)\.\w+', self.netloc)
+        return '_'.join((self.strategy, mgrp.group(1)))
+
+
+class VortexVsopCacheStore(MultiStore):
+
+    _footprint = dict(
+        info = 'VORTEX vsop magic cache access',
+        attr = dict(
+            scheme = dict(
+                values  = ['vortex'],
+            ),
+            netloc = dict(
+                values  = ['vsop.cache.fr', ],
+            ),
+            glovekind = dict(
+                optional = True,
+                default = '[glove::realkind]',
+            ),
+            refillstore = dict(
+                default = False,
+            )
+        )
+    )
+
+    def alternates_netloc(self):
+        '''For Non-Op users, Op caches may be accessed in read-only mode.'''
+        todo = ['vsop.cache-mt.fr', ]  # The MTOOL Cache remains a must :-)
+        print 'DBG', self.glovekind
+        if self.glovekind != 'opuser':
+            for loc in ('primary', 'secondary'):
+                if int(self.system.target().get('stores:vsop_cache_op{}'.format(loc), '0')):
+                    todo.append('vsop.cache-{}.fr'.format(loc))
+        return todo
 
 
 class VortexStore(MultiStore):
@@ -1150,7 +1289,7 @@ class VortexStore(MultiStore):
         return [self.netloc.firstname + d for d in ('.cache.fr', '.archive.fr')]
 
 
-class PromiseCacheStore(VortexCacheStore):
+class PromiseCacheStore(VortexCacheMtStore):
     """Some kind of vortex cache for EXPECTED resources."""
 
     _footprint = dict(

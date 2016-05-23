@@ -17,6 +17,7 @@ import subprocess
 import pickle
 import json
 import pwd as passwd
+from datetime import datetime
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -902,19 +903,36 @@ class OSExtended(System):
         else:
             return True
 
+    def safe_filesuffix(self):
+        """return a file suffix that should be unique across the system"""
+        return '.'.join((datetime.now().strftime('%Y%m%d_%H%M%S_%f'),
+                         self.hostname, 'p{0:06d}'.format(os.getpid()),))
+
     def rawcp(self, source, destination):
-        """Perform a simple ``copyfile`` or ``copytree`` command."""
+        """Perform a simple ``copyfile`` or ``copytree`` command.
+
+        When copying a file, the operation is atomic. When copying a directory
+        it is not (although the non-atomic portion is very limited).
+        """
         source = self.path.expanduser(source)
         destination = self.path.expanduser(destination)
         self.stderr('rawcp', source, destination)
-        tmp = destination  + '.sh.tmp'
+        tmp = destination  + self.safe_filesuffix()
         if self.path.isdir(source):
             self.copytree(source, tmp)
+            # Warning: Not an atomic portion of code (sorry)
+            do_cleanup = self.path.exists(destination)
+            if do_cleanup:
+                # Move fails if a directory already exists
+                self.move(destination, tmp + '.olddir')
             self.move(tmp, destination)
+            if do_cleanup:
+                self.remove(tmp + '.olddir')
+            # End of none atomic part
             return self.path.isdir(destination)
         else:
             self.copyfile(source, tmp)
-            self.move(tmp, destination)
+            self.move(tmp, destination)  # Move is atomic for a file
             if self._cmpaftercp:
                 return filecmp.cmp(source, destination)
             else:
@@ -923,7 +941,10 @@ class OSExtended(System):
     def hybridcp(self, source, destination):
         """
         Copy the ``source`` file to a safe ``destination``.
-        The return value is produced by a raw compare of the two files.
+
+        ``source`` and/or ``destination`` may be File-like objects. If
+        ``destination`` is a realword file name (i.e. not e File-like object),
+        the operation is atomic.
         """
         self.stderr('hybridcp', source, destination)
         if isinstance(source, basestring):
@@ -937,12 +958,11 @@ class OSExtended(System):
                 logger.warning('Could not rewind io source before cp: ' + str(source))
         if isinstance(destination, basestring):
             if self.filecocoon(destination):
-                if self.remove(destination):
-                    destination = io.open(self.path.expanduser(destination), 'wb')
-                    xdestination = True
-                else:
-                    logger.error('Could not remove destination before copy %s', destination)
-                    return False
+                # Write to a temp file
+                original_dest = self.path.expanduser(destination)
+                tmp_dest = self.path.expanduser(destination) + self.safe_filesuffix()
+                destination = io.open(tmp_dest, 'wb')
+                xdestination = True
             else:
                 logger.error('Could not create a cocoon for file %s', destination)
                 return False
@@ -956,6 +976,10 @@ class OSExtended(System):
             source.close()
         if xdestination:
             destination.close()
+            # Move the tmp_file to the real destination
+            if not self.move(tmp_dest, original_dest):  # Move is atomic for a file
+                logger.error('Cannot move the tmp file to the final destination %s', original_dest)
+                return False
         return rc
 
     def is_samefs(self, path1, path2):
@@ -968,6 +992,9 @@ class OSExtended(System):
         """
         Hard link the ``source`` file to a safe ``destination`` if possible.
         Otherwise, let the standard copy do the job.
+
+        When working on a file, the operation is atomic. When working on a
+        directory some restrictions apply (see :meth:`rawcp`)
         """
         self.stderr('smartcp', source, destination)
         if not isinstance(source, basestring) or not isinstance(destination, basestring):
@@ -978,52 +1005,64 @@ class OSExtended(System):
             return False
         if self.filecocoon(destination):
             destination = self.path.expanduser(destination)
-            if self.remove(destination):
-                if self.is_samefs(source, destination):
-                    if self.path.isdir(source):
-                        rc = self.spawn(['cp', '-al', source, destination], output=False)
-                        self.stderr('chmod', 0444, destination)
-                        oldtrace, self.trace = self.trace, False
-                        for linkedfile in self.ffind(destination):
-                            if not self.path.islink(linkedfile):  # This make no sense to chmod symlinks
-                                self.chmod(linkedfile, 0444)
-                        self.trace = oldtrace
-                        return rc
-                    else:
-                        self.link(source, destination)
-                        self.readonly(destination)
-                        return self.path.samefile(source, destination)
-                else:
-                    rc = self.rawcp(source, destination)
+            if self.is_samefs(source, destination):
+                tmp_destination = destination + self.safe_filesuffix()
+                if self.path.isdir(source):
+                    rc = self.spawn(['cp', '-al', source, tmp_destination], output=False)
+                    self.stderr('chmod', 0444, tmp_destination)
+                    oldtrace, self.trace = self.trace, False
+                    for linkedfile in self.ffind(tmp_destination):
+                        if not self.path.islink(linkedfile):  # This make no sense to chmod symlinks
+                            self.chmod(linkedfile, 0444)
+                    self.trace = oldtrace
                     if rc:
-                        self.readonly(destination)
+                        # Warning: Not an atomic portion of code (sorry)
+                        do_cleanup = self.path.exists(destination)
+                        if do_cleanup:
+                            # Move fails if a directory already exists
+                            self.move(destination, tmp_destination + '.olddir')
+                        rc = self.move(tmp_destination, destination)
+                        if do_cleanup:
+                            self.remove(tmp_destination + '.olddir')
+                        # End of none atomic part
+                        if not rc:
+                            logger.error('Cannot move the tmp directory to the final destination %s', destination)
+                            self.remove(tmp_destination)  # Anyway, try to clean-up things
+                    else:
+                        logger.error('Cannot copy the data to the tmp directory %s', tmp_destination)
+                        self.remove(tmp_destination)  # Anyway, try to clean-up things
                     return rc
+                else:
+                    self.link(source, tmp_destination)
+                    self.readonly(tmp_destination)
+                    self.move(tmp_destination, destination)  # Move is atomic for a file
+                    return self.path.samefile(source, destination)
             else:
-                logger.error('Could not remove destination before copy %s', destination)
-                return False
+                rc = self.rawcp(source, destination)  # Rawcp is atomic as much as possiblr
+                if rc:
+                    self.readonly(destination)
+                return rc
         else:
             logger.error('Could not create a cocoon for file %s', destination)
             return False
 
     @fmtshcmd
     def cp(self, source, destination, intent='inout', smartcp=True):
-        """Copy the ``source`` file to a safe ``destination``."""
+        """Copy the ``source`` file to a safe ``destination``.
+
+        It relies on :meth:`hybridcp`, :meth:`smartcp` or :meth:`rawcp`
+        depending on ``source``, ``destination`` and ``intent``.
+        """
         self.stderr('cp', source, destination)
         if not isinstance(source, basestring) or not isinstance(destination, basestring):
             return self.hybridcp(source, destination)
-        if smartcp and intent == 'in':
-            return self.smartcp(source, destination)
-        source = self.path.expanduser(source)
         if not self.path.exists(source):
             logger.error('Missing source %s', source)
             return False
+        if smartcp and intent == 'in':
+            return self.smartcp(source, destination)
         if self.filecocoon(destination):
-            destination = self.path.expanduser(destination)
-            if self.remove(destination):
-                return self.rawcp(source, destination)
-            else:
-                logger.error('Could not remove destination before copy %s', destination)
-                return False
+            return self.rawcp(source, destination)
         else:
             logger.error('Could not create a cocoon for file %s', destination)
             return False

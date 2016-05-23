@@ -25,3 +25,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: Op2ResearchCache
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
