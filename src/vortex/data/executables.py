@@ -21,11 +21,7 @@ class Jacket(object):
         self._initfile = afile
 
     def as_dump(self):
-        return "{0:s}.{1:s}(file={2:s})".format(
-            self.__module__,
-            self.__class__.__name__,
-            repr(self._initfile)
-        )
+        return "file={!r}".format(self._initfile)
 
     def export_dict(self):
         return self._initfile

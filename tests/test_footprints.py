@@ -150,36 +150,21 @@ class FootprintTestFpAttr(FootprintTestOne):
 class utDump(TestCase):
 
     def test_dump_types(self):
-        for x in (None, 'foo', 2, long(2), 2., 1+2j):
-            self.assertTrue(dump.atomic_type(type(x)))
-
-        self.assertFalse(dump.is_instance(Foo))
-        self.assertTrue(dump.is_instance(Foo()))
+        self.assertFalse(dump.is_an_instance(Foo))
+        self.assertTrue(dump.is_an_instance(Foo()))
 
         class FooBis(Foo):
             pass
 
-        self.assertFalse(dump.is_instance(FooBis))
+        self.assertFalse(dump.is_an_instance(FooBis))
         self.assertTrue(dump.is_class(Foo))
         self.assertTrue(dump.is_class(FooBis))
 
-        for x in (None, 'foo', 2, long(2), 2., 1+2j, Foo):
-            self.assertTrue(dump.simple_value(x))
-
-        for x in (Foo(),):
-            self.assertFalse(dump.simple_value(x))
-
-        for x in (range(10), tuple(range(10)), {str(i): i for i in range(5)}):
-            self.assertTrue(dump.simple_value(x))
-
-        for x in (range(11), tuple(range(11)), {str(i): i for i in range(7)}, {'foo': Foo()}, [Foo(), Foo()]):
-            self.assertFalse(dump.simple_value(x))
-
     def test_dump_indent(self):
-        self.assertEqual(dump.indent(nextline=False), '')
-        self.assertEqual(dump.indent(nextline=False, level=2), '')
-        self.assertEqual(dump.indent(), '\n      ')
-        self.assertEqual(dump.indent(level=1), '\n          ')
+        self.assertEqual(dump._indent(nextline=False), '')
+        self.assertEqual(dump._indent(nextline=False, level=2), '')
+        self.assertEqual(dump._indent(), '\n      ')
+        self.assertEqual(dump._indent(level=1), '\n          ')
 
 
 # Tests for footprints util
@@ -874,7 +859,7 @@ class utPriorities(TestCase):
         self.assertEqual(rv.TOOLBOX(), 1)
         self.assertEqual(rv.DEBUG(),   2)
         self.assertEqual(cmp(rv.DEBUG, 'bof'), -1)
-        self.assertEqual(rv.DEBUG.as_dump(), "footprints.priorities.PriorityLevel('DEBUG')")
+        self.assertEqual(rv.DEBUG.as_dump(), "DEBUG")
 
         rv.reset()
         self.assertEqual(len(rv), 2)

@@ -798,10 +798,6 @@ class FootprintBase(object):
         """A kind of shortcut to parent class. Warning: use with care."""
         return super(self.__class__, self)
 
-    def footprint_as_dump(self):
-        """Nicely formated view of the current class in dump context."""
-        return str(self)
-
     def footprint_riseup(self):
         """Things to do after new or init construction."""
         self._observer.notify_new(self, dict())
