@@ -54,7 +54,7 @@ class DataContent(object):
     def metadata_check(self, resource, delta=None):
         """Check that the metadata of the resource in the container matches
         the attributes of the resource given as an argument.
-        
+
         Prior to the comparison, the delta argument will be added to the 
         attribute read in the container. For example, if delta=dict(date='-PT1H'), 
         we will in fact check that the date of the resource in the container is 
@@ -108,9 +108,9 @@ class AlmostDictContent(DataContent):
     """Implement some dictionary-like functions."""
 
     def __init__(self, **kw):
-        if 'data' not in kw or not kw['data']:
-            kw['data'] = dict()
         super(AlmostDictContent, self).__init__(**kw)
+        if self._data is None:
+            self._data = dict()
 
     def fmtkey(self, key):
         """Reshape entry keys of the internal dictionary."""
@@ -206,11 +206,10 @@ class AlmostListContent(DataContent):
     """
 
     def __init__(self, **kw):
-        if 'data' not in kw or not kw['data']:
-            kw['data'] = list()
-        if 'maxprint' not in kw or not kw['maxprint']:
-            kw['maxprint'] = 20
+        self._maxprint = kw.pop('maxprint', 20)
         super(AlmostListContent, self).__init__(**kw)
+        if self._data is None:
+            self._data = list()
 
     def __delitem__(self, idx):
         del(self._data[idx])
@@ -360,7 +359,7 @@ class FormatAdapter(DataContent):
         """Load a dataformat object."""
         super(FormatAdapter, self).slurp(container)
         if self.datafmt:
-            with self as c:
+            with self:
                 self._data = footprints.proxy.dataformat(
                     filename       = container.abspath,
                     openmode       = 'r',

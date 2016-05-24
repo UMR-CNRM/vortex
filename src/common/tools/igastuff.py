@@ -111,6 +111,7 @@ class _BaseIgakeyFactory(str):
     """
 
     _re_appconf = re.compile('^(\w+)/([\w@]+)$')
+    _keymap = {}
 
     def __new__(cls, value):
         """

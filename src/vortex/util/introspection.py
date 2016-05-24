@@ -22,8 +22,8 @@ class Sherlock(object):
 
     def __init__(self, **kw):
         self.verbose = False
-        kw.setdefault('ticket', sessions.current())
-        kw.setdefault('glove', sessions.getglove())
+        self.ticket = kw.pop('ticket', sessions.current())
+        self.glove = kw.pop('glove', sessions.getglove())
         self.__dict__.update(kw)
         logger.debug('Sherlock init %s', self)
 

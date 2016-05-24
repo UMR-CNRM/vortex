@@ -142,7 +142,7 @@ class DelayedConfigParser(GenericConfigParser):
 
     def __init__(self, inifile=None):
         GenericConfigParser.__init__(self)
-        self.__dict__['delay'] = inifile
+        self.delay = inifile
 
     def refresh(self):
         """Load the delayed inifile."""

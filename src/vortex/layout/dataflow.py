@@ -185,7 +185,6 @@ class Sequence(footprints.observers.Observer):
 
     def __del__(self):
         footprints.observers.get(tag=_RHANDLERS_OBSBOARD).unregister(self)
-        super(Sequence, self).__del__()
 
     def __iter__(self):
         for s in self.sections:
@@ -319,7 +318,7 @@ class Sequence(footprints.observers.Observer):
 
     def executables(self):
         """Return a list of current sequence sections with ``ixo.EXEC`` kind."""
-        return [x for x in self.sectionss if x.kind == ixo.EXEC]
+        return [x for x in self.sections if x.kind == ixo.EXEC]
 
     def outputs(self):
         """Return a list of current sequence sections with ``ixo.OUTPUT`` kind."""

@@ -162,6 +162,11 @@ class IFSODB(IFSParallel, odb.OdbComponent):
                 default  = 'ecma',
                 access   = 'rwx',
             ),
+            date = dict(
+                optional = True,
+                access   = 'rwx',
+                type     = Date,
+            ),
         )
     )
 

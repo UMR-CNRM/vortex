@@ -111,11 +111,11 @@ class DDH(_DDHcommon):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'dhf%s%s+%4.4d'.format(self.scope[:2].lower(), self.model[:4].lower(), self.term.fmth)
+        return 'dhf{:s}{:s}+{:4.4d}'.format(self.scope[:2].lower(), self.model[:4].lower(), self.term.fmth)
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'DHF{0:s}{0:s}+{0:s}'.format(self.scope[:2].upper(), self.model[:4].upper(), self.term.fmth)
+        return 'DHF{:s}{:s}+{:s}'.format(self.scope[:2].upper(), self.model[:4].upper(), self.term.fmth)
 
     def basename_info(self):
         bdict = super(DDH, self).basename_info()

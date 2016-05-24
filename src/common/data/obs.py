@@ -37,6 +37,7 @@ class Observations(GeoFlowResource):
             nativefmt = dict(
                 alias    = ('format',),
             ),
+            stage = dict(),
         )
     )
 

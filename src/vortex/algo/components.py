@@ -601,8 +601,8 @@ class ParaBlindRun(AlgoComponent):
     def _default_rc_action(self, rh, opts, report, rc):
         '''How should we process the return code ?'''
         if not rc:
-            logger.waning("Apparently something went sideways with this task (rc=%s).",
-                          str(rc))
+            logger.warning("Apparently something went sideways with this task (rc=%s).",
+                           str(rc))
 
     def execute(self, rh, opts):
         """

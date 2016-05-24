@@ -500,7 +500,7 @@ class Fa2GaussGrib(BlindRun):
         for sec in gpsec:
             r = sec.rh
 
-            self.system.title('Loop on files: '.format(r.container.localpath()))
+            self.system.title('Loop on files: {:s}'.format(r.container.localpath()))
 
             # Some preventive cleaning
             self.system.remove(thisoutput)

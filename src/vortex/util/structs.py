@@ -91,7 +91,7 @@ class History(footprints.util.GetByTag):
     def __setitem__(self, key, value):
         logger.warning('Could not set a value to a history item.')
 
-    def __delitem__(self, key, value):
+    def __delitem__(self, key):
         logger.warning('Could not delete a value of a history item.')
 
     def grep(self, key):
@@ -273,7 +273,7 @@ class ShellEncoder(json.JSONEncoder):
             return obj.footprint_export()
         elif hasattr(obj, '__dict__'):
             return vars(obj)
-        return json.JSONEncoder.default(self, obj)
+        return super(ShellEncoder, self).default(obj)
 
 
 class ReadOnlyDict(collections.Mapping):

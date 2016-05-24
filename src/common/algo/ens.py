@@ -61,6 +61,10 @@ class Combi(BlindRun):
         namsec[0].rh.container.cat()
         super(Combi, self).execute(rh, opts)
 
+    @property
+    def nmod(self):
+        raise NotImplementedError("Abstract property")
+
     def _addNmod(self, namrh, msg):
         namrh.contents['NAMMOD']['NMOD'] = self.nmod
         logger.info("NMOD set to %d: %s.", self.nmod, msg)

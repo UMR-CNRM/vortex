@@ -549,7 +549,7 @@ class UnnamedSingleFile(_SingleFileStyle):
         fh, fpath = tempfile.mkstemp(prefix="shouldfly-", dir=os.getcwd())
         os.close(fh)  # mkstemp opens the file but we do not really care...
         self._auto_filename = os.path.basename(fpath)
-        logger.debug('The localfile will be: ', self.filename)
+        logger.debug('The localfile will be: %s', self.filename)
         super(UnnamedSingleFile, self).__init__(*args, **kw)
 
     @property

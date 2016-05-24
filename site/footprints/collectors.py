@@ -118,7 +118,7 @@ class Collector(util.GetByTag, util.Catalog):
 
     def discard_higher_level(self, tag, verbose=True):
         """Discard from current collector classes with priority level higher or equal to ``level``."""
-        for x in self.filter_level(tag):
+        for x in self.filter_higher_level(tag):
             if verbose:
                 print 'Bye...', x
             self.discard(x)

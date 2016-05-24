@@ -327,13 +327,13 @@ class NamelistBlock(object):
     """
 
     def __init__(self, name='UNKNOWN'):
-        self.__dict__['_name'] = name
-        self.__dict__['_keys'] = list()
-        self.__dict__['_pool'] = dict()
-        self.__dict__['_mods'] = set()
-        self.__dict__['_dels'] = set()
-        self.__dict__['_subs'] = dict()
-        self.__dict__['_literal'] = None
+        self._name = name
+        self._keys = list()
+        self._pool = dict()
+        self._mods = set()
+        self._dels = set()
+        self._subs = dict()
+        self._literal = None
 
     @property
     def name(self):
