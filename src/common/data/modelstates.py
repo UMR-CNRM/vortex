@@ -249,11 +249,11 @@ class BiasDFI(GeoFlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'BIASDFI+{1:04d}'.format(self.term)
+        return 'BIASDFI+{0:04d}'.format(self.term.hour)
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'BIASDFI{0:s}+{1:04d}'.format(self.model[:4].upper(), self.term)
+        return 'BIASDFI{0:s}+{1:04d}'.format(self.model[:4].upper(), self.term.hour)
 
     def basename_info(self):
         """Generic information, radical = ``historic``."""

@@ -63,7 +63,7 @@ class BdpeStore(Store):
     def bdpeget(self, remote, local, options):
         """Real extraction from the BDPE database."""
 
-        # Check that local is a file (i.e not a virtual conainter)
+        # Check that local is a file (i.e not a virtual container)
         if not isinstance(local, basestring):
             raise TypeError('The BDPE provider can not deal with virtual containers')
 

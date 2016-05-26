@@ -107,7 +107,7 @@ class VerticalGeometry(Geometry):
     def __init__(self, **kw):
         super(VerticalGeometry, self).__init__(**kw)
         self.kind = 'vertical'
-        logger.debug('Abstract Vertital Geometry init {!s} {!s}'.format(self, kw))
+        logger.debug('Abstract Vertical Geometry init {!s} {!s}'.format(self, kw))
 
 
 class HorizontalGeometry(Geometry):

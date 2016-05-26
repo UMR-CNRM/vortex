@@ -130,8 +130,8 @@ class ServerSyncSimpleSocket(ServerSyncTool):
             self._socket_conn = None
             return True
         else:
-            # This should not happened ! If we are sitting here, it's most likely
-            # that the main process recieved a signal like SIGTERM...
+            # This should not happen ! If we are sitting here, it's most likely
+            # that the main process received a signal like SIGTERM...
             return False
 
     def trigger_wait(self):
