@@ -287,6 +287,26 @@ class Handler(object):
             if obj:
                 print '{0}  {1:10s}: {2:s}'.format(tab, subobj.capitalize(), str(obj))
 
+    def wide_key_lookup(self, key, exports=False):
+        """Return the *key* attribute if it exists in the provider or resource.
+
+        If *exports" is True, the footprint_export() or the export_dict() function
+        is called upon the return value.
+        """
+        try:
+            a_value = getattr(self.provider, key)
+        except AttributeError:
+            try:
+                a_value = getattr(self.resource, key)
+            except AttributeError:
+                raise AttributeError('The {:s} attribute could not be found in {!r}'.format(key, self))
+        if exports:
+            if hasattr(a_value, 'footprint_export'):
+                a_value = a_value.footprint_export()
+            elif hasattr(a_value, 'export_dict'):
+                a_value = a_value.export_dict()
+        return a_value
+
     def as_dict(self):
         """Produce a raw json-compatible dictionary."""
         rhd = dict(options=dict())
@@ -337,6 +357,9 @@ class Handler(object):
                     self.mkopts(extras)
                 )
                 self.history.append(store.fullname(), 'check', rst)
+                # Indicate that the resource was checked
+                if rst and self.stage == 'load':
+                    self._updstage('checked')
             else:
                 logger.error('Could not find any store to check %s', self.lasturl)
         else:

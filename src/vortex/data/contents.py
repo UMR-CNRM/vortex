@@ -195,7 +195,7 @@ class JsonDictContent(AlmostDictContent):
         """Write the list contents in the specified container."""
         t = sessions.current()
         container.close()
-        t.sh.json_dump(self.data, self.container.localpath())
+        t.sh.json_dump(self.data, container.localpath(), indent=4)
 
 
 class AlmostListContent(DataContent):

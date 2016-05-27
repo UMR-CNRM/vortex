@@ -7,7 +7,7 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.tools.date        import Time
+from vortex.tools.date        import Date, Time
 from vortex.data.flow         import FlowResource
 from vortex.data.contents     import JsonDictContent, TextContent
 from vortex.syntax.stdattrs   import FmtInt
@@ -176,15 +176,48 @@ class SampleContent(JsonDictContent):
             else:
                 return self.data['drawing'][n - 1]
 
+    def __getattr__(self, attr):
+        # Return an access function that corresponds to the key
+        drawing_keys = set([item
+                            for d in self.data.get('drawing', []) if isinstance(d, dict)
+                            for item in d.keys()])
+        if attr in drawing_keys:
+            def _attr_access(g, x):
+                elt = self.drawing(g, x)
+                return elt[attr]
+            return _attr_access
+        # Returns the list of drawn keys
+        listing_keys = set([item + 's'
+                            for d in self.data.get('drawing', []) if isinstance(d, dict)
+                            for item in d.keys()])
+        if attr in listing_keys:
+            return [d[attr[:-1]] for d in self.data['drawing']]
+        # Return the list of available keys
+        listing_keys = set([item + 's'
+                            for d in self.data['population'] if isinstance(d, dict)
+                            for item in d.keys()])
+        if attr in listing_keys:
+            return [d[attr[:-1]] for d in self.data['population']]
+        raise AttributeError()
 
-class Sample(FlowResource):
+    def timedelta(self, g, x):
+        """Find the time difference between the resource's date and the targetdate."""
+        targetdate = g.get('targetdate', x.get('targetdate', None))
+        if targetdate is None:
+            raise ValueError("A targetdate attribute must be present if timedelta is used")
+        targetdate = Date(targetdate)
+        thedate = Date(self.date(g, x))
+        return targetdate - thedate
+
+
+class PopulationList(FlowResource):
     """
-    Lot drawn out of a set.
+    Description of available data
     """
 
-    _abstract = True,
+    _abstract = True
     _footprint = dict(
-        info = 'Sample',
+        info = 'A Population List',
         attr = dict(
             clscontents = dict(
                 default = SampleContent,
@@ -194,10 +227,53 @@ class Sample(FlowResource):
                 default = 'json',
             ),
             nbsample = dict(
+                optional = True,
                 type = int,
             ),
+            checkrole = dict(
+                optional = True
+            )
+        )
+    )
+
+    def basename_info(self):
+        """Generic information for names fabric."""
+        return dict(
+            radical = self.realkind,
+            fmt     = self.nativefmt,
+        )
+
+
+class MembersPopulation(PopulationList):
+
+    _footprint = dict(
+        info = 'Members population',
+        attr = dict(
+            kind = dict(
+                values   = ['mbpopulation', ],
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'mbpopulation'
+
+
+class Sample(PopulationList):
+    """
+    Lot drawn out of a set.
+    """
+
+    _abstract = True,
+    _footprint = dict(
+        info = 'Sample',
+        attr = dict(
+            nbsample = dict(
+                optional = False,
+            ),
             population = dict(
-                type = list,
+                type = footprints.stdtypes.FPList,
                 optional = True
             ),
         )
