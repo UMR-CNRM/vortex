@@ -206,11 +206,11 @@ class VarBCContent(AlmostListContent):
         super(VarBCContent, self).slurp(container)
         mdata = {}
         # First we look for the version of the VarBC file
-        mobj = re.match('\w+\.version(\d+)', self.data[0])
+        mobj = re.match(r'\w+\.version(\d+)', self.data[0])
         if mobj:
             mdata['version'] = int(mobj.group(1))
             # Then we fetch the date of the file
-            mobj = re.match('\s*\w+\s+(\d{8})\s+(\d+)', self.data[1])
+            mobj = re.match(r'\s*\w+\s+(\d{8})\s+(\d+)', self.data[1])
             if mobj:
                 mdata['date'] = Date('{:s}{:06d}'.format(mobj.group(1),
                                                          int(mobj.group(2))))

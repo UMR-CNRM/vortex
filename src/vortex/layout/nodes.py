@@ -99,7 +99,7 @@ class ConfigSet(footprints.util.LowerCaseDict):
                     value = 'dict(' + value + ')'
             # Support for geometries
             if (('geometry' in key or 'geometries' in key) and
-                    (not re.match('^geometry\(.*\)$', value, flags=re.IGNORECASE))):
+                    (not re.match(r'^geometry\(.*\)$', value, flags=re.IGNORECASE))):
                 value = 'geometry(' + value + ')'
             # Process the values recursively
             value = self._confdecoder(value)
@@ -109,7 +109,7 @@ class ConfigSet(footprints.util.LowerCaseDict):
                 value = footprints.util.rangex(* value)
             if key.endswith('_range') and isinstance(value, basestring):
                 key = key[:-6]
-                value = footprints.util.rangex(re.sub('\s', '', value))
+                value = footprints.util.rangex(re.sub(r'\s', '', value))
         super(ConfigSet, self).__setitem__(key, value)
 
 
