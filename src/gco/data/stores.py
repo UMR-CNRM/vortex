@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
+# pylint: disable=unused-argument
 
 #: No automatic export
 __all__ = []
