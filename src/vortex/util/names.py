@@ -8,8 +8,6 @@ Functions and tools to handle resources names or other kind of names.
 #: No automatic export
 __all__ = []
 
-from types import *   # @UnusedWildImport
-
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -105,11 +103,11 @@ class VortexNameBuilder(object):
         Go through all items and pack them according to the so-called standard way.
         Result is always a list of string values.
         """
-        if type(items) is not ListType:
+        if not isinstance(items, list):
             items = [items]
         packed = list()
         for i in items:
-            if type(i) is DictType:
+            if isinstance(i, dict):
                 for k, v in i.iteritems():
                     packmtd = getattr(self, 'pack_std_item_' + k, self.pack_void)
                     packed.append(packmtd(v))
