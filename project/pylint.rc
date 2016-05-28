@@ -66,7 +66,7 @@ confidence=
 #   Codes are here: http://pep8.readthedocs.org/en/latest/intro.html#error-codes
 #   They are ignored: E113,E121,E123,E133,E201,E202,E221,E225,E226,E241,E242,E251,E401,W292
 # PYLINT codes there : http://pylint-messages.wikidot.com/all-codes
-disable=E1608,W1627,E1601,E1603,E1602,E1605,E1604,E1607,E1606,W1621,W1620,W1623,W1622,W1625,W1624,W1609,W1608,W1607,W1606,W1605,W1604,W1603,W1602,W1601,W1639,W1640,I0021,W1638,I0020,W1618,W1619,W1630,W1626,W1637,W1634,W1635,W1610,W1611,W1612,W1613,W1614,W1615,W1616,W1617,W1632,W1633,W0704,W1628,W1629,W1636,C0326,C0326
+disable=C0326
 
 [REPORTS]
 
@@ -107,10 +107,10 @@ msg-template={msg_id}:{path}:{line},{column:2d}: {msg} ({symbol})
 required-attributes=
 
 # List of builtins function names that should not be used, separated by a comma
-bad-functions=map,filter,input
+bad-functions=map,filter
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=i,j,k,ex,Run,_
+good-names=e,i,j,k,t,x,y,ad,ex,fd,fh,fp,kw,rc,rh,sh,st,Run,logger,_
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata
@@ -194,7 +194,7 @@ docstring-min-length=-1
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=100
+max-line-length=110
 
 # Regexp for a line that is allowed to be longer than the limit.
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$
@@ -207,7 +207,7 @@ single-line-if-stmt=no
 no-space-check=trailing-comma,dict-separator
 
 # Maximum number of lines in a module
-max-module-lines=1000
+max-module-lines=1500
 
 # String used as indentation unit. This is usually " " (4 spaces) or "\t" (1
 # tab).
