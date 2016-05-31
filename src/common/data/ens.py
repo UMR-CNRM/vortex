@@ -206,8 +206,10 @@ class SampleContent(JsonDictContent):
         if targetdate is None:
             raise ValueError("A targetdate attribute must be present if timedelta is used")
         targetdate = Date(targetdate)
+        targetterm = Time(g.get('targetterm', x.get('targetterm', 0)))
         thedate = Date(self.date(g, x))
-        return targetdate - thedate
+        period = (targetdate + targetterm) - thedate
+        return str(period.time())
 
 
 class PopulationList(FlowResource):
