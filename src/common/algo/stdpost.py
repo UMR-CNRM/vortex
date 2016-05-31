@@ -5,6 +5,7 @@
 __all__ = []
 
 import time
+import re
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -474,9 +475,10 @@ class DiagPI(BlindRun):
             super(DiagPI, self).execute(rh, opts)
 
             # The diagnostic output may be promised
-            actualname = 'GRIB_PI{0:s}+{1:s}'.format(r.resource.geometry.area,
-                                                     r.resource.term.fmthm)
-            expected = [ x for x in self.promises if x.rh.container.localpath() == actualname ]
+            actualname = r'GRIB[-_A-Z]+{0:s}\+{1:s}'.format(r.resource.geometry.area,
+                                                            r.resource.term.fmthm)
+            expected = [x for x in self.promises
+                        if re.match(actualname, x.rh.container.localpath())]
             for thispromise in expected:
                 thispromise.put(incache=True)
 
