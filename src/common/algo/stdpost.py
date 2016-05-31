@@ -339,6 +339,11 @@ class DiagPE(BlindRun):
                 info   = 'The method used to compute the diagnosis',
                 values = [ 'neighbour' ],
             ),
+            numod = dict(
+                type     = int,
+                optional = True,
+                default  = DelayedEnvValue('VORTEX_GRIB_NUMOD', 118),
+            ),
         ),
     )
 
@@ -380,6 +385,10 @@ class DiagPE(BlindRun):
                 # NB: term should be expressed in minutes
                 nam.contents['NAM_PARAM']['NECH(1)'] = int(term)
                 nam.contents['NAM_PARAM']['ECHFINALE'] = terms[-1].hour
+                # Now, update the model number for the GRIB files
+                logger.info("Substitute the model number (%d) to namelist entry", self.numod)
+                nam.contents['NAM_PARAM']['NMODELE'] = self.numod
+                # We are done with the namelist
                 nam.save()
 
             # Standard execution
@@ -394,6 +403,11 @@ class DiagPI(BlindRun):
         attr = dict(
             kind = dict(
                 values = [ 'diagpi', 'diaglabo' ],
+            ),
+            numod = dict(
+                type     = int,
+                optional = True,
+                default  = DelayedEnvValue('VORTEX_GRIB_NUMOD', 62),
             ),
         ),
     )
@@ -431,9 +445,18 @@ class DiagPI(BlindRun):
                 logger.info("Substitute the ressource term to NECH(1) namelist entry")
                 # NB: term should be expressed in minutes
                 nam.contents['NAM_PARAM']['NECH(1)'] = int(r.resource.term)
+                # Add the member number in a dedicated namelist block
                 if r.provider.member is not None:
                     mblock = nam.contents.newblock('NAM_PARAMPE')
                     mblock['NMEMBER'] = int(r.provider.member)
+                # Now, update the model number for the GRIB files
+                if 'NAM_DIAG' in x.rh.contents:
+                    nmod = self.numod
+                    logger.info("Substitute the model number (%d) to namelist entry", nmod)
+                    for namk in ('CONV', 'BR', 'HIV', 'ECHOT', 'ICA'):
+                        if nam.contents['NAM_DIAG'].has_key(namk) and nam.contents['NAM_DIAG'][namk] != 0:
+                            nam.contents['NAM_DIAG'][namk] = nmod
+                # We are done with the namelist
                 nam.save()
 
             # Expect the input grib file to be here

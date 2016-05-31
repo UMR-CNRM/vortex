@@ -50,6 +50,7 @@ class NamelistContent(AlmostDictContent):
             NBE       = None,
             SEED      = None,
             MEMBER    = None,
+            NUMOD     = None,
         ))
         kw.setdefault('remove', set())
         kw.setdefault('parser', None)
