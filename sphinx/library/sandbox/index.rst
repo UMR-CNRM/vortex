@@ -15,6 +15,5 @@ List of modules.
 
    sandbox
 
-   data/index
    util/index
 

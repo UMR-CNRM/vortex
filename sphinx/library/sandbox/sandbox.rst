@@ -13,5 +13,4 @@ Package
 
 .. autodata:: __all__
 
-* :mod:`sandbox.data`
 * :mod:`sandbox.util`

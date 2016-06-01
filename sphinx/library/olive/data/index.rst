@@ -9,7 +9,6 @@ Data resources
 
    data
 
-   bestof
    providers
    stores
 

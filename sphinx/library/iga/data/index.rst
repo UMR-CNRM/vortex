@@ -9,6 +9,5 @@ Data resources
 
    data
 
-   containers
    providers
    stores

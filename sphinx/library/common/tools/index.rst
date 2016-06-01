@@ -11,6 +11,3 @@ Common tools
 
    agt
    igastuff
-   shortcuts
-
-

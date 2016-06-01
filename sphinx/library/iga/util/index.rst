@@ -11,8 +11,6 @@ Miscellaneous utilities for Op
 
    async
    bpnames
-   helpers
    loggers
    oldcompat
    swissknife
-   util

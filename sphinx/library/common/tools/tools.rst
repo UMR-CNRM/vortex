@@ -18,4 +18,3 @@ Modules
 
 * :mod:`common.tools.agt`
 * :mod:`common.tools.igastuff`
-* :mod:`common.tools.shortcuts`
