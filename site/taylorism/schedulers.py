@@ -95,3 +95,26 @@ class MaxMemoryScheduler(BaseScheduler):
                 not_yet_launchable.append(instructions)
 
         return (launchable, not_yet_launchable)
+
+
+class SingleOpenFileScheduler(MaxThreadsScheduler):
+    """
+    Ensure that files will not be open 2 times simultaneously by 2 workers.
+    And with a maximum threads number.
+    """
+
+    def launchable(self, pending_instructions, workers, report):
+        launchable = []
+        not_yet_launchable = []
+        open_files = [w.fileA for w in workers.values()] + [w.fileB for w in workers.values()]
+        # check files are not already open by other worker
+        for pi in pending_instructions:
+            if pi['fileA'] in open_files or pi['fileB'] in open_files:
+                not_yet_launchable.append(pi)
+            else:
+                launchable.append(pi)
+        # and finally sort with regards to MaxThreads
+        (launchable, nyl) = super(SingleOpenFileScheduler, self).launchable(launchable, workers, report)
+        not_yet_launchable.extend(nyl)
+
+        return (launchable, not_yet_launchable)
