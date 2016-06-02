@@ -368,6 +368,8 @@ class DiagPE(BlindRun):
                                                         kind='gridpoint')
         # Find out what are the terms
         terms = sorted(set([s.rh.resource.term for s in srcsec]))
+        # Find out the number of members
+        members = sorted(set([s.rh.provider.member for s in srcsec]))
         # Check that the date is consistent among inputs
         basedates = list(set([s.rh.resource.date for s in srcsec]))
         if len(basedates) > 1:
@@ -380,6 +382,8 @@ class DiagPE(BlindRun):
             for nam in [ x.rh for x in namsec if 'NAM_PARAM' in x.rh.contents ]:
                 logger.info("Substitute the date (%s) to AAAAMMJJHH namelist entry", basedate.ymdh)
                 nam.contents['NAM_PARAM']['AAAAMMJJHH'] = basedate.ymdh
+                logger.info("Substitute the number of members (%d) to NBRUN namelist entry", len(members))
+                nam.contents['NAM_PARAM']['NBRUN'] = len(members)
                 logger.info("Substitute the the number of terms to NECH(0) namelist entry")
                 nam.contents['NAM_PARAM']['NECH(0)'] = 1
                 logger.info("Substitute the ressource term to NECH(1) namelist entry")
