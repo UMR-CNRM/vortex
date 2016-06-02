@@ -257,8 +257,8 @@ class LopezMix(BlackBox):
         return 'lopezmix'
 
 
-class MasterDiagPI(BlackBox):
-    """A binary to compute some diagnostics with aromepi's gribs."""
+class MasterDiag(BlackBox):
+    """A binary to compute a diagnostic with some gribs."""
 
     _footprint = dict(
         info = 'MasterDiag utility for diagnostics computation',
@@ -266,17 +266,24 @@ class MasterDiagPI(BlackBox):
             gvar = dict(
                 type     = GenvKey,
                 optional = True,
-                default  = 'master_diag_aromepi'
+                default  = 'master_diag_[diagnostic]'
             ),
             kind = dict(
-                values   = [ 'masterdiagpi' ],
+                values   = ['masterdiag', 'masterdiagpi'],
+                remap    = dict(masterdiagpi='masterdiag'),
+            ),
+            diagnostic = dict(
+                optional = True,
+                default  = 'aromepi',
+                values   = ['voisin', 'neighbour', 'aromepi'],
+                remap    = dict(neighbour='voisin'),
             ),
         )
     )
 
     @property
     def realkind(self):
-        return 'masterdiagpi'
+        return 'masterdiag'
 
 
 class IOPoll(Script):
