@@ -5,6 +5,7 @@
 __all__ = []
 
 import time
+import re
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -344,6 +345,11 @@ class DiagPE(BlindRun):
                 info   = 'The method used to compute the diagnosis',
                 values = [ 'neighbour' ],
             ),
+            numod = dict(
+                type     = int,
+                optional = True,
+                default  = DelayedEnvValue('VORTEX_GRIB_NUMOD', 118),
+            ),
         ),
     )
 
@@ -367,6 +373,8 @@ class DiagPE(BlindRun):
                                                         kind='gridpoint')
         # Find out what are the terms
         terms = sorted(set([s.rh.resource.term for s in srcsec]))
+        # Find out the number of members
+        members = sorted(set([s.rh.provider.member for s in srcsec]))
         # Check that the date is consistent among inputs
         basedates = list(set([s.rh.resource.date for s in srcsec]))
         if len(basedates) > 1:
@@ -379,12 +387,18 @@ class DiagPE(BlindRun):
             for nam in [ x.rh for x in namsec if 'NAM_PARAM' in x.rh.contents ]:
                 logger.info("Substitute the date (%s) to AAAAMMJJHH namelist entry", basedate.ymdh)
                 nam.contents['NAM_PARAM']['AAAAMMJJHH'] = basedate.ymdh
+                logger.info("Substitute the number of members (%d) to NBRUN namelist entry", len(members))
+                nam.contents['NAM_PARAM']['NBRUN'] = len(members)
                 logger.info("Substitute the the number of terms to NECH(0) namelist entry")
                 nam.contents['NAM_PARAM']['NECH(0)'] = 1
                 logger.info("Substitute the ressource term to NECH(1) namelist entry")
                 # NB: term should be expressed in minutes
                 nam.contents['NAM_PARAM']['NECH(1)'] = int(term)
                 nam.contents['NAM_PARAM']['ECHFINALE'] = terms[-1].hour
+                # Now, update the model number for the GRIB files
+                logger.info("Substitute the model number (%d) to namelist entry", self.numod)
+                nam.contents['NAM_PARAM']['NMODELE'] = self.numod
+                # We are done with the namelist
                 nam.save()
 
             # Standard execution
@@ -399,6 +413,11 @@ class DiagPI(BlindRun):
         attr = dict(
             kind = dict(
                 values = [ 'diagpi', 'diaglabo' ],
+            ),
+            numod = dict(
+                type     = int,
+                optional = True,
+                default  = DelayedEnvValue('VORTEX_GRIB_NUMOD', 62),
             ),
         ),
     )
@@ -436,9 +455,18 @@ class DiagPI(BlindRun):
                 logger.info("Substitute the ressource term to NECH(1) namelist entry")
                 # NB: term should be expressed in minutes
                 nam.contents['NAM_PARAM']['NECH(1)'] = int(r.resource.term)
+                # Add the member number in a dedicated namelist block
                 if r.provider.member is not None:
                     mblock = nam.contents.newblock('NAM_PARAMPE')
                     mblock['NMEMBER'] = int(r.provider.member)
+                # Now, update the model number for the GRIB files
+                if 'NAM_DIAG' in x.rh.contents:
+                    nmod = self.numod
+                    logger.info("Substitute the model number (%d) to namelist entry", nmod)
+                    for namk in ('CONV', 'BR', 'HIV', 'ECHOT', 'ICA'):
+                        if nam.contents['NAM_DIAG'].has_key(namk) and nam.contents['NAM_DIAG'][namk] != 0:
+                            nam.contents['NAM_DIAG'][namk] = nmod
+                # We are done with the namelist
                 nam.save()
 
             # Expect the input grib file to be here
@@ -456,9 +484,10 @@ class DiagPI(BlindRun):
             super(DiagPI, self).execute(rh, opts)
 
             # The diagnostic output may be promised
-            actualname = 'GRIB_PI{0:s}+{1:s}'.format(r.resource.geometry.area,
-                                                     r.resource.term.fmthm)
-            expected = [ x for x in self.promises if x.rh.container.localpath() == actualname ]
+            actualname = r'GRIB[-_A-Z]+{0:s}\+{1:s}'.format(r.resource.geometry.area,
+                                                            r.resource.term.fmthm)
+            expected = [x for x in self.promises
+                        if re.match(actualname, x.rh.container.localpath())]
             for thispromise in expected:
                 thispromise.put(incache=True)
 
