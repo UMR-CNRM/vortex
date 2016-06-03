@@ -11,6 +11,7 @@ __all__ = []
 
 import os, stat, resource, shutil, socket, tempfile
 import re, platform, sys, io, filecmp, time
+import signal
 import glob
 import tarfile
 import subprocess
@@ -22,7 +23,7 @@ from datetime import datetime
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from opinel.interrupt import SignalInterruptHandler
+from opinel.interrupt import SignalInterruptHandler, SignalInterruptError
 
 from vortex.tools.env       import Environment
 from vortex.tools.net       import StdFtp
@@ -594,6 +595,16 @@ class System(footprints.FootprintBase):
                                    .format(self, args, p.returncode, perr))
             else:
                 logger.warning('Carry on because fatal is off')
+        except (SignalInterruptError, KeyboardInterrupt) as perr:
+            logger.critical('The python process was killed: {!s} '.format(perr) +
+                            'Trying to terminate the subprocess.')
+            if p:
+                if shell:
+                    # Kill the process group: apparently it's the only way when shell=T
+                    self.killpg(self.getpgid(p.pid), signal.SIGTERM)
+                else:
+                    p.terminate()
+                p.wait()
         else:
             if p.returncode in ok:
                 if isinstance(output, bool) and output:
@@ -624,8 +635,6 @@ class System(footprints.FootprintBase):
                         p.stderr.close()
             elif not isinstance(output, bool):
                 output.close()
-            if p:
-                p.wait()
             del p
 
         return rc

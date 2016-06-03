@@ -20,12 +20,20 @@ class Coupling(FullPos):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values   = [ 'coupling' ],
+                values   = ['coupling'],
             ),
             basedate = dict(
                 type     = date.Date,
             ),
-
+            server_run = dict(
+                values   = [True, False],
+            ),
+            serversync_method = dict(
+                default  = 'simple_socket',
+            ),
+            serversync_medium = dict(
+                default  = 'cnt3_wait',
+            )
         )
     )
 
@@ -37,7 +45,7 @@ class Coupling(FullPos):
         """Default pre-link for namelist file and domain change."""
         super(Coupling, self).prepare(rh, opts)
         namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
-        for nam in [ x.rh for x in namsec if 'NAMFPC' in x.rh.contents ]:
+        for nam in [x.rh for x in namsec if 'NAMFPC' in x.rh.contents]:
             logger.info('Substitute "AREA" to CFPDOM namelist entry')
             nam.contents['NAMFPC']['CFPDOM(1)'] = 'AREA'
             nam.save()
@@ -170,22 +178,24 @@ class Coupling(FullPos):
                       fmt=r.container.actualfmt, intent=intent.IN)
 
             # promises management
-            expected = [ x for x in self.promises if x.rh.container.localpath() == actualname ]
+            expected = [x for x in self.promises if x.rh.container.localpath() == actualname]
             if expected:
                 for thispromise in expected:
                     thispromise.put(incache=True)
 
             # The only one listing
-            sh.cat('NODE.001_01', output='NODE.all')
+            if not self.server_run:
+                sh.cat('NODE.001_01', output='NODE.all')
 
             # prepares the next execution
             if isMany:
                 # Some cleaning
                 sh.rmall('PXFPOS*', fmt = r.container.actualfmt)
-                sh.rmall('ncf927', 'dirlst', 'NODE.[0123456789]*', 'std*')
                 sh.remove(infile, fmt = r.container.actualfmt)
                 if cplsurf:
                     sh.remove(infilesurf, fmt = r.container.actualfmt)
+                if not self.server_run:
+                    sh.rmall('ncf927', 'dirlst', 'NODE.[0123456789]*', 'std*')
 
     def postfix(self, rh, opts):
         """Post processing cleaning."""
