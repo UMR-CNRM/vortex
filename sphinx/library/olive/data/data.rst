@@ -18,6 +18,5 @@ Package
 Included Modules
 ----------------
 
-* :mod:`olive.data.bestof`
 * :mod:`olive.data.providers`
 * :mod:`olive.data.stores`

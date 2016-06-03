@@ -1,7 +1,5 @@
-
 from cProfile import Profile
-#from meliae import scanner
-import gc
+# from meliae import scanner
 import pstats
 import os
 import datetime
@@ -30,17 +28,16 @@ fp.setup.defaults = dict(model='arpege',
 
 for n in range(n_loads):
 
-    rh = toolbox.rh(
-            kind='gridpoint',
-            format='grib',
-            nativefmt='[format]',
-            origin='hst',
-            term=3,
-            local='toto',
-            namespace='vortex.multi.fr',
-            experiment='0007',
-            block='forecast',
-        )
+    rh = toolbox.rh(kind='gridpoint',
+                    format='grib',
+                    nativefmt='[format]',
+                    origin='hst',
+                    term=3,
+                    local='toto',
+                    namespace='vortex.multi.fr',
+                    experiment='0007',
+                    block='forecast',
+                    )
 
 pr.disable()
 ps = pstats.Stats(pr).sort_stats('cumulative')
@@ -50,4 +47,4 @@ radix = (os.environ['HOME'] + '/footprint_rh_' +
          datetime.datetime.utcnow().isoformat())
 ps.dump_stats(radix + '.prof')
 
-#scanner.dump_all_objects(radix + '.mem')
+# scanner.dump_all_objects(radix + '.mem')

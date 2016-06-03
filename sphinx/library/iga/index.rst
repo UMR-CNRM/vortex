@@ -15,8 +15,6 @@ List of modules.
 
    iga
 
-   algo/index
    data/index
-   tasks/index
    tools/index
    util/index

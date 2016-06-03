@@ -4,4 +4,4 @@
 #: No automatic export
 __all__ = []
 
-import containers, providers, stores
+import providers, stores
