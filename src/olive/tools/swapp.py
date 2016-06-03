@@ -10,6 +10,7 @@ import string
 
 import footprints
 from vortex.tools import fortran
+from common.data.namelists import KNOWN_NAMELIST_MACROS
 
 
 logger = footprints.loggers.getLogger(__name__)
@@ -109,7 +110,7 @@ def olive_gnam_hook_factory(nickname, nam_delta, env=None):
         nam_delta = string.Template(nam_delta).substitute(env)
 
     try:
-        namdelta_l = fortran.namparse(nam_delta)
+        namdelta_l = fortran.namparse(nam_delta, macros=KNOWN_NAMELIST_MACROS)
     except ValueError:
         logger.critical("Error while parsing the following namelist delta:\n%s",
                         nam_delta)

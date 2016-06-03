@@ -18,6 +18,12 @@ from vortex.syntax.stdattrs import binaries, term, cutoff
 from gco.syntax.stdattrs import GenvKey
 
 
+KNOWN_NAMELIST_MACROS = set(['NPROC', 'NBPROC', 'NBPROC_IO', 'NCPROC', 'NDPROC',
+                             'NBPROCIN', 'NBPROCOUT', 'IDAT', 'CEXP',
+                             'TIMESTEP', 'FCSTOP', 'NMODVAL', 'NBE', 'SEED',
+                             'MEMBER'])
+
+
 class NamelistContentError(ValueError):
     pass
 
@@ -34,23 +40,7 @@ class NamelistContent(AlmostDictContent):
           * automkblock : give automaticaly a name to new blocks when not provided
           * namblockcls : class for new blocks
         """
-        kw.setdefault('macros', dict(
-            NPROC     = None,
-            NBPROC    = None,
-            NBPROC_IO = None,
-            NCPROC    = None,
-            NDPROC    = None,
-            NBPROCIN  = None,
-            NBPROCOUT = None,
-            IDAT      = None,
-            CEXP      = None,
-            TIMESTEP  = None,
-            FCSTOP    = None,
-            NMODVAL   = None,
-            NBE       = None,
-            SEED      = None,
-            MEMBER    = None,
-        ))
+        kw.setdefault('macros', {k: None for k in KNOWN_NAMELIST_MACROS})
         kw.setdefault('remove', set())
         kw.setdefault('parser', None)
         kw.setdefault('automkblock', 0)
@@ -93,7 +83,7 @@ class NamelistContent(AlmostDictContent):
 
     def dumps(self):
         """Returns the namelist contents as a string."""
-        return ''.join([ self.get(x).dumps() for x in sorted(self.keys()) ])
+        return ''.join([self.get(x).dumps() for x in sorted(self.keys())])
 
     def merge(self, delta, rmkeys=None, rmblocks=None, clblocks=None):
         """Merge of the current namelist content with the set of namelist blocks provided."""
@@ -104,14 +94,19 @@ class NamelistContent(AlmostDictContent):
                 newblock = self._namblockcls(name=namblock.name)
                 for dk in namblock.keys():
                     newblock[dk] = namblock[dk]
+                # Also copy the macro and delete information
+                for mn in namblock.macros():
+                    newblock.addmacro(mn, None)
+                for dn in namblock.rmkeys():
+                    newblock.todelete(dn)
                 self[namblock.name] = newblock
         if rmblocks is None and hasattr(delta, 'rmblocks'):
             rmblocks = delta.rmblocks()
         if rmblocks is not None:
-            for item in [ x for x in rmblocks if x in self ]:
+            for item in [x for x in rmblocks if x in self]:
                 del self[item]
         if clblocks is not None:
-            for item in [ x for x in clblocks if x in self ]:
+            for item in [x for x in clblocks if x in self]:
                 self[item].clear()
         if rmkeys is not None:
             for item in self:
@@ -123,11 +118,11 @@ class NamelistContent(AlmostDictContent):
         if not self._parser:
             import vortex.tools.fortran
             self._parser = vortex.tools.fortran.NamelistParser(macros=self._macros.keys())
-        namset = self._parser.parse(container.read())
-        if namset:
-            self._data = namset.as_dict()
-        else:
-            raise NamelistContentError('Could not parse container contents')
+        try:
+            namset = self._parser.parse(container.read())
+        except (ValueError, IOError) as e:
+            raise NamelistContentError('Could not parse container contents: {!s}'.format(e))
+        self._data = namset.as_dict()
 
     def rewrite(self, container):
         """Write the namelist contents in the specified container."""

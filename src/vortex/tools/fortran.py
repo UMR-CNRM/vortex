@@ -30,11 +30,13 @@ every situation that may happen.
 Inital author: Joris Picot (2010-12-08 / CERFACS)
 """
 
+from decimal import Decimal
+import re
+import StringIO
+
 #: No automatic export
 __all__ = []
 
-from decimal import Decimal
-import re
 _RE_FLAGS = re.IGNORECASE + re.DOTALL
 
 # Processor
@@ -125,16 +127,16 @@ _LITERAL_CONSTANT = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + _BOZ_LITERAL_CO
 class LiteralParser(object):
     """Object in charge of parsing litteral fortran expressions that could be found in a namelist."""
     def __init__(self,
-            re_flags     = _RE_FLAGS,
-            re_integer   = '^' + _SIGNED_INT_LITERAL_CONSTANT + '$',
-            re_boz       = '^' + _BOZ_LITERAL_CONSTANT + '$',
-            re_real      = '^' + _SIGNED_REAL_LITERAL_CONSTANT + '$',
-            re_complex   = '^' + _COMPLEX_LITERAL_CONSTANT + '$',
-            re_character = '^' + _CHAR_LITERAL_CONSTANT + '$',
-            re_logical   = '^' + _LOGICAL_LITERAL_CONSTANT + '$',
-            re_true      = r'\.T(?:RUE)?\.',
-            re_false     = r'\.F(?:ALSE)?\.',
-        ):
+                 re_flags     = _RE_FLAGS,
+                 re_integer   = '^' + _SIGNED_INT_LITERAL_CONSTANT + '$',
+                 re_boz       = '^' + _BOZ_LITERAL_CONSTANT + '$',
+                 re_real      = '^' + _SIGNED_REAL_LITERAL_CONSTANT + '$',
+                 re_complex   = '^' + _COMPLEX_LITERAL_CONSTANT + '$',
+                 re_character = '^' + _CHAR_LITERAL_CONSTANT + '$',
+                 re_logical   = '^' + _LOGICAL_LITERAL_CONSTANT + '$',
+                 re_true      = r'\.T(?:RUE)?\.',
+                 re_false     = r'\.F(?:ALSE)?\.',
+                 ):
         self._re_flags     = re_flags
         self._re_integer   = re_integer
         self._re_boz       = re_boz
@@ -149,14 +151,14 @@ class LiteralParser(object):
 
     def recompile(self):
         """Recompile regexps according to internal characters strings by literal types."""
-        self.integer   = re.compile(self._re_integer,   self._re_flags)
-        self.boz       = re.compile(self._re_boz,       self._re_flags)
-        self.real      = re.compile(self._re_real,      self._re_flags)
-        self.complex   = re.compile(self._re_complex,   self._re_flags)
+        self.integer = re.compile(self._re_integer, self._re_flags)
+        self.boz = re.compile(self._re_boz, self._re_flags)
+        self.real = re.compile(self._re_real, self._re_flags)
+        self.complex = re.compile(self._re_complex, self._re_flags)
         self.character = re.compile(self._re_character, self._re_flags)
-        self.logical   = re.compile(self._re_logical,   self._re_flags)
-        self.true      = re.compile(self._re_true,      self._re_flags)
-        self.false     = re.compile(self._re_false,     self._re_flags)
+        self.logical = re.compile(self._re_logical, self._re_flags)
+        self.true = re.compile(self._re_true, self._re_flags)
+        self.false = re.compile(self._re_false, self._re_flags)
 
     # Fast check
 
@@ -190,17 +192,17 @@ class LiteralParser(object):
         """If the argument looks like a FORTRAN integer, returns the matching python integer."""
         if self.integer.match(string):
             # Removes the kind parameter.
-            cleaned_string = re.sub("_"+_KIND_PARAM, "", string, self._re_flags)
+            cleaned_string = re.sub("_" + _KIND_PARAM, "", string, self._re_flags)
             return int(cleaned_string)
         raise ValueError("Literal %s doesn't represent a FORTRAN integer" % string)
 
     def parse_boz(self, string):
         """If the argument looks like a FORTRAN boz, returns the matching python integer."""
         if self.boz.match(string):
-            if   string[0] == "B":
-                return int(string[2:-1],  2)
+            if string[0] == "B":
+                return int(string[2:-1], 2)
             elif string[0] == "O":
-                return int(string[2:-1],  8)
+                return int(string[2:-1], 8)
             elif string[0] == "Z":
                 return int(string[2:-1], 16)
         raise ValueError("Literal %s doesn't represent a FORTRAN boz" % string)
@@ -209,7 +211,7 @@ class LiteralParser(object):
         """If the argument looks like a FORTRAN real, returns the matching python float."""
         if self.real.match(string):
             # Removes the kind parameter.
-            string = re.sub("_"+_KIND_PARAM, "", string, self._re_flags)
+            string = re.sub("_" + _KIND_PARAM, "", string, self._re_flags)
             # Changes the exponent d to e.
             cleaned_string = re.sub("d|D", "E", string, self._re_flags)
             return Decimal(cleaned_string)
@@ -245,7 +247,7 @@ class LiteralParser(object):
         """If the argument looks like a FORTRAN logical, returns the matching python boolean."""
         if self.logical.match(string):
             # Removes the kind parameter.
-            cleaned_string = re.sub("_"+_KIND_PARAM, "", string, self._re_flags)
+            cleaned_string = re.sub("_" + _KIND_PARAM, "", string, self._re_flags)
             if self.true.match(cleaned_string):
                 return True
             elif self.false.match(cleaned_string):
@@ -260,12 +262,18 @@ class LiteralParser(object):
         type. Resolution order is: integer, boz, real, complex, character
         and logical.
         """
-        if   self.check_integer(string)  : return self.parse_integer(string)
-        elif self.check_boz(string)      : return self.parse_boz(string)
-        elif self.check_real(string)     : return self.parse_real(string)
-        elif self.check_complex(string)  : return self.parse_complex(string)
-        elif self.check_character(string): return self.parse_character(string)
-        elif self.check_logical(string)  : return self.parse_logical(string)
+        if self.check_integer(string):
+            return self.parse_integer(string)
+        elif self.check_boz(string):
+            return self.parse_boz(string)
+        elif self.check_real(string):
+            return self.parse_real(string)
+        elif self.check_complex(string):
+            return self.parse_complex(string)
+        elif self.check_character(string):
+            return self.parse_character(string)
+        elif self.check_logical(string):
+            return self.parse_logical(string)
         else:
             raise ValueError("Literal %s doesn't represent a FORTRAN literal" % string)
 
@@ -310,12 +318,18 @@ class LiteralParser(object):
 
     def encode(self, value):
         """Returns the string form of the specified ``value`` according to its type."""
-        if   isinstance(value, bool    ): return self.encode_logical(value)
-        elif isinstance(value, int     ): return self.encode_integer(value)
-        elif isinstance(value, float   ): return self.encode_real(value)
-        elif isinstance(value, Decimal ): return self.encode_real(value)
-        elif isinstance(value, complex ): return self.encode_complex(value)
-        elif isinstance(value, str     ): return self.encode_character(value)
+        if isinstance(value, bool):
+            return self.encode_logical(value)
+        elif isinstance(value, int):
+            return self.encode_integer(value)
+        elif isinstance(value, float):
+            return self.encode_real(value)
+        elif isinstance(value, Decimal):
+            return self.encode_real(value)
+        elif isinstance(value, complex):
+            return self.encode_complex(value)
+        elif isinstance(value, str):
+            return self.encode_character(value)
         else:
             raise ValueError("Type %s cannot be FORTRAN encoded" % type(value))
 
@@ -351,11 +365,12 @@ class NamelistBlock(object):
         """Insert or change a namelist block key."""
         varname = varname.upper()
         if type(value) != list:
-            value = [ value ]
+            value = [value, ]
         self._pool[varname] = value
         if varname not in self._keys:
             self._keys.append(varname)
         self._mods.add(varname)
+        self._dels.discard(varname)
 
     def __setitem__(self, varname, value):
         return self.setvar(varname, value)
@@ -375,7 +390,7 @@ class NamelistBlock(object):
             else:
                 return self._pool[varname]
         else:
-            return None
+            raise AttributeError("Unknown Namelist variable")
 
     def __getitem__(self, varname):
         return self.getvar(varname)
@@ -404,14 +419,14 @@ class NamelistBlock(object):
             yield t
 
     def __contains__(self, item):
-        return self.has_key(item)
+        return item.upper() in self._pool
 
     def has_key(self, item):
         """
         Returns whether ``varname`` value is defined as a namelist key or not.
         Also used as internal for dictionary access.
         """
-        return item.upper() in self._pool
+        return item in self
 
     def keys(self):
         """Returns the ordered keys of the namelist block."""
@@ -498,15 +513,19 @@ class NamelistBlock(object):
                 self.__dict__['_literal'] = LiteralParser()
             literal = self._literal
         for key in self._keys:
-            value_strings = [ self.nice(value, literal) for value in self._pool[key] ]
+            value_strings = [self.nice(value, literal) for value in self._pool[key]]
             namout += '   {0:s}={1:s},\n'.format(key, ','.join(value_strings))
         return namout + " /\n"
 
     def merge(self, delta):
         """Merge the delta provided to the current block."""
         self.update(delta.pool())
-        for dk in filter(lambda x: x in self, delta.rmkeys()):
+        for dk in [x for x in delta.rmkeys() if x in self]:
             self.delvar(dk)
+            self.todelete(dk)
+        # Preserve macros
+        for sk in delta.macros():
+            self._subs[sk] = delta._subs[sk]
 
 
 class NamelistSet(object):
@@ -523,7 +542,7 @@ class NamelistSet(object):
 
     def dumps(self):
         """Join the fortran-strings dumped by each namelist block."""
-        return ''.join([ self._namset[x].dumps() for x in self.keys() ])
+        return ''.join([self._namset[x].dumps() for x in self.keys()])
 
     def as_dict(self):
         """Return the actual namelist set as a dictionary."""
@@ -602,7 +621,7 @@ class NamelistParser(object):
         """Parse a block of namelist."""
         source = self._namelist_clean(source)
         block_name = self.bname.match(source[1:]).group(0)
-        source = self._namelist_clean(source[1+len(block_name):])
+        source = self._namelist_clean(source[1 + len(block_name):])
         namelist = NamelistBlock(block_name)
 
         current = None
@@ -693,7 +712,7 @@ class NamelistParser(object):
             else:
                 raise ValueError("Badly formatted FORTRAN namelist: [[%s]]" % source[:32])
 
-        return ( namelist, source )
+        return (namelist, source)
 
     def parse(self, obj):
         """
@@ -708,118 +727,14 @@ class NamelistParser(object):
                 iod.close()
             return self._namelist_parse(obj)
 
-        elif isinstance(obj, file):
+        elif isinstance(obj, (file, StringIO.StringIO)):
             obj.seek(0)
             return self._namelist_parse(obj.read())
         else:
             raise ValueError("Argument %s cannot be parsed." % str(obj))
 
 
-def namparse(obj):
+def namparse(obj, **kwargs):
     """Raw parsing with an default anonymous fortran parser."""
-    np = NamelistParser()
+    np = NamelistParser(**kwargs)
     return np.parse(obj)
-
-
-def _test_literal(lp):
-    """
-    This function tries to parse most tricky FORTRAN literals.
-    It also checks that exceptions are triggered when one needs to.
-    """
-
-    def _parse_test(string, parser=None):
-        parse = lp.parse
-        if parser:
-            parse = getattr(lp, 'parse_' + parser)
-        try:
-            parsed = parse(string)
-        except ValueError, e:
-            parsed = e
-        print "Parsing %10s with %15s: %s" % (string, parse.__name__, parsed)
-        return
-
-    _parse_test("1")
-    _parse_test("+0")
-    _parse_test("-2")
-    _parse_test("+46527_8")         # With kind.
-    _parse_test("1.", 'integer')    # To avoid confusion with real.
-    _parse_test("B'1010'")
-    _parse_test("O'76'")
-    _parse_test("Z'ABC'")
-    _parse_test("B'012'")           # Meaningless digit.
-    _parse_test("1.")
-    _parse_test("-.1")
-    _parse_test("+1E23")
-    _parse_test("2.e4_8")           # With kind.
-    _parse_test(".45D2")
-    _parse_test("10", 'real')       # To avoid confusion with integer
-    _parse_test("(1.,0.)")
-    _parse_test("(0,1d0)")
-    _parse_test("'Foo'")
-    _parse_test('"baR"')
-    _parse_test('2_"kind"')         # With kind.
-    _parse_test("'T_machin'")       # Underscore in the string.
-    _parse_test('foo')
-    _parse_test(".TRUE.")
-    _parse_test(".False.")
-    _parse_test(".true._2")         # With kind.
-    _parse_test(".truea")
-
-    def _encode_test(string):
-        parsed = lp.encode(string)
-        print "Encoding %s: %s" % (string, parsed)
-        return
-
-    _encode_test(1)
-    _encode_test(1243523)
-    _encode_test(1.)
-    _encode_test(1e-76)
-    _encode_test(1e124)
-    _encode_test(complex(1, 1))
-    _encode_test("machin")
-    _encode_test("mach'in")
-    _encode_test("mach\"in")
-    _encode_test("'mach\"in")
-    _encode_test(True)
-
-    return
-
-
-def _test_incore(np):
-    from StringIO import StringIO
-    ori = StringIO()
-    ori.write("""\
-! This is a test namelist
- &MyNamelistTest
-  title = 'Coordinates/t=10',
-  A = 25,30, ! This is a parameter
-  x = 300.d0, y=628.318, z=0d0,
-  /
-&MySecondOne C=.TRUE./
-""")
-    for namelist in np.parse(ori.getvalue()).values():
-        print namelist.dumps()
-    return
-
-
-def _test_namparser(np):
-    import sys
-
-    if len(sys.argv ) == 1:
-        _test_incore(np)
-    else:
-        filename = sys.argv[1]
-        testin = open(filename, "r")
-        try:
-            namelists = np.parse(testin)
-            for namelist in namelists.values():
-                sys.stdout.write( "\nContent of %s\n" % namelist.name )
-                for ( name, values ) in namelist.items():
-                    sys.stdout.write( "%s: %s\n" % (name, values) )
-        finally:
-            testin.close()
-
-
-if __name__ == "__main__":
-    _test_literal(LiteralParser())
-    _test_namparser(NamelistParser())
