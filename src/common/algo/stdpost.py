@@ -541,7 +541,6 @@ class Fa2GaussGrib(BlindRun):
             self.system.remove('fort.4')
 
             # Build the local namelist block
-            from vortex.tools.fortran import NamelistBlock
             nb = NamelistBlock(name='NAML')
             nb.NBDOM = 1
             nb.INUMOD = self.numod

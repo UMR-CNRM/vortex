@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
+"""
+A collection of utility functions used in the context of Ensemble forecasts.
+"""
+
 from StringIO import StringIO
 import json
 from random import seed, sample
@@ -51,7 +56,7 @@ def drawingfunction(options):
 
         tirage = (sample(population * (nbsample / nbset), (nbsample / nbset) * nbset) +
                   sample(population, nbsample % nbset))
-        logger.info('List of random elements: ' + ', '.join(map(str, tirage)))
+        logger.info('List of random elements: %s', ', '.join([str(x) for x in tirage]))
     else:
         raise ValueError("no resource handler here :-(\n")
     # NB: The result have to be a file like object !
@@ -66,6 +71,10 @@ def drawingfunction(options):
 
 
 def _checkingfunction_dict(options):
+    """
+    Internal function that returns a dictionnary that describes the available
+    inputs.
+    """
     rhdict = options.get('rhandler', None)
     if rhdict:
         # If no nbsample id provided, this is fine...
@@ -82,7 +91,21 @@ def _checkingfunction_dict(options):
 
 
 def checkingfunction(options):
-    """Check what are the available resources and returns the list."""
+    """Check what are the available resources and returns the list.
+
+    This function is designed to be executed by a
+    :obj:`vortex.data.stores.FunctionStore` object.
+
+    The *checkrole* resource attribute is used to look into the current context
+    in order to establish the list of resources that will checked.
+
+    :param dict options: All the options passed to the store plus anything from
+        the query part of the URI.
+
+    :return: Content of a :obj:`common.data.ens.PopulationList` resource
+
+    :rtype: A file like object
+    """
     rhdict = options.get('rhandler', None)
     avail_list = _checkingfunction_dict(options)
     outdict = dict(vapp = rhdict['provider'].get('vapp', None),
@@ -95,7 +118,10 @@ def checkingfunction(options):
 
 
 def safedrawingfunction(options):
-    """Combined called to checkingfunction and drawingfunction."""
+    """Combined called to :func:`checkingfunction` and :func:`drawingfunction`.
+
+    See the documentation of these two functions for more details.
+    """
     checkedlist = _checkingfunction_dict(options)
     options['rhandler']['resource']['population'] = checkedlist
     return drawingfunction(options)

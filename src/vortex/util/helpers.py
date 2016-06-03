@@ -13,6 +13,7 @@ logger = fp.loggers.getLogger(__name__)
 
 
 class InputCheckerError(Exception):
+    """Exception raised when the Input checking process fails."""
     pass
 
 
@@ -34,7 +35,6 @@ def generic_input_checker(grouping_keys, min_items, *rhandlers, **kwargs):
 
     if len(rhandlers) == 0:
         raise ValueError('At least one resource handler have to be provided')
-    mandatory = kwargs.pop('mandatory', [])
     # Just in case min_items is not an int...
     min_items = int(min_items)
 
@@ -42,7 +42,7 @@ def generic_input_checker(grouping_keys, min_items, *rhandlers, **kwargs):
     flat_rhlist = []
     flat_rhmandatory = []
     for inlist, outlist in ((rhandlers, flat_rhlist),
-                            (mandatory, flat_rhmandatory),):
+                            (kwargs.pop('mandatory', []), flat_rhmandatory),):
         for rh in inlist:
             if isinstance(rh, list) or isinstance(rh, tuple):
                 outlist.extend(rh)
