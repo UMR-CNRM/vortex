@@ -5,4 +5,4 @@
 __all__ = []
 
 # Recursive inclusion of packages with potential FootprintBase classes
-import data
+import data, tools

@@ -696,14 +696,15 @@ class FootprintBaseMeta(type):
         if not abstract:
             if realcls._explicit and not realcls.footprint_mandatory():
                 raise FootprintInvalidDefinition('Explicit class without any mandatory footprint attribute.')
-            for cname in realcls._collector:
-                if cname in thisfp.allkeys():
-                    raise FootprintInvalidDefinition('A attribute or alias name is equal to collector tag: ' + cname)
-                thiscollector = collectors.get(tag=cname, report=setup.report, lreport_len=setup.lreport_len)
-                thiscollector.add(realcls)
-                if thiscollector.register:
-                    observers.get(tag=realcls.fullname()).register(thiscollector)
-                    logger.debug('Register class %s in collector %s (%s)', realcls, thiscollector, cname)
+        # Add all classes in collectors but take into accout the abstract key
+        for cname in realcls._collector:
+            if cname in thisfp.allkeys():
+                raise FootprintInvalidDefinition('A attribute or alias name is equal to collector tag: ' + cname)
+            thiscollector = collectors.get(tag=cname, report=setup.report, lreport_len=setup.lreport_len)
+            thiscollector.add(realcls, abstract=abstract)
+            if not abstract and thiscollector.register:
+                observers.get(tag=realcls.fullname()).register(thiscollector)
+                logger.debug('Register class %s in collector %s (%s)', realcls, thiscollector, cname)
 
         # Docstring building
         basedoc = realcls.__doc__

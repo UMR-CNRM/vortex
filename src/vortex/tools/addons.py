@@ -5,13 +5,11 @@
 __all__ = []
 
 
-import weakref
-
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.env import Environment
-from vortex.tools.systems import System
+from vortex.tools.systems import OSExtended
 
 
 class Addon(footprints.FootprintBase):
@@ -24,7 +22,7 @@ class Addon(footprints.FootprintBase):
         attr = dict(
             kind = dict(),
             sh = dict(
-                type     = System,
+                type     = OSExtended,
                 alias    = ('shell',),
                 access   = 'rwx-weak',
             ),

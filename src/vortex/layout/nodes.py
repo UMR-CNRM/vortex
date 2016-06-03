@@ -25,6 +25,11 @@ from . import dataflow
 class NiceLayout(object):
     """Some nice method to share between layout items."""
 
+    @property
+    def sh(self):
+        """Abstract property: have to be defined later on"""
+        raise NotImplementedError
+
     def subtitle(self, *args, **kw):
         """Proxy to :meth:`~vortex.tools.systems.subtitle` method."""
         return self.sh.subtitle(*args, **kw)
@@ -94,7 +99,7 @@ class ConfigSet(footprints.util.LowerCaseDict):
                     value = 'dict(' + value + ')'
             # Support for geometries
             if (('geometry' in key or 'geometries' in key) and
-                    (not re.match('^geometry\(.*\)$', value, flags=re.IGNORECASE))):
+                    (not re.match(r'^geometry\(.*\)$', value, flags=re.IGNORECASE))):
                 value = 'geometry(' + value + ')'
             # Process the values recursively
             value = self._confdecoder(value)
@@ -104,11 +109,11 @@ class ConfigSet(footprints.util.LowerCaseDict):
                 value = footprints.util.rangex(* value)
             if key.endswith('_range') and isinstance(value, basestring):
                 key = key[:-6]
-                value = footprints.util.rangex(re.sub('\s', '', value))
+                value = footprints.util.rangex(re.sub(r'\s', '', value))
         super(ConfigSet, self).__setitem__(key, value)
 
 
-class Node(footprints.util.GetByTag):
+class Node(footprints.util.GetByTag, NiceLayout):
     """Base class type for any element in the logical layout."""
 
     def __init__(self, kw):
@@ -309,7 +314,7 @@ class Node(footprints.util.GetByTag):
         pass
 
 
-class Family(Node, NiceLayout):
+class Family(Node):
     """Logical group of :class:`Family` or :class:`Task`."""
 
     def __init__(self, **kw):
@@ -348,19 +353,17 @@ class Family(Node, NiceLayout):
         self.complete()
 
 
-class Task(Node, NiceLayout):
+class Task(Node):
     """Terminal node including a :class:`Sequence`."""
 
     def __init__(self, **kw):
         logger.debug('Task init %s', repr(self))
         super(Task, self).__init__(kw)
-        self.__dict__.update(
-            steps   = kw.pop('steps',   tuple()),
-            fetch   = kw.pop('fetch',   'fetch'),
-            compute = kw.pop('compute', 'compute'),
-            backup  = kw.pop('backup',  'backup'),
-            starter = kw.pop('starter', False),
-        )
+        self.steps   = kw.pop('steps', tuple()),
+        self.fetch   = kw.pop('fetch', 'fetch'),
+        self.compute = kw.pop('compute', 'compute'),
+        self.backup  = kw.pop('backup', 'backup'),
+        self.starter = kw.pop('starter', False),
         self._sequence = dataflow.Sequence()
         self.options = kw.copy()
         if isinstance(self.steps, basestring):

@@ -1382,7 +1382,7 @@ class OSExtended(System):
         ]
         return len([
             x for x in self.cat(*lookfiles)
-            if re.search('\S', x) and re.search('[^\'\"\)\],\s]', x)
+            if re.search(r'\S', x) and re.search(r'[^\'\"\)\],\s]', x)
         ])
 
     def _signal_intercept_init(self):

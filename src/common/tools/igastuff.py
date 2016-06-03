@@ -110,7 +110,8 @@ class _BaseIgakeyFactory(str):
     Needs to be subclassed !
     """
 
-    _re_appconf = re.compile('^(\w+)/([\w@]+)$')
+    _re_appconf = re.compile(r'^(\w+)/([\w@]+)$')
+    _keymap = {}
 
     def __new__(cls, value):
         """

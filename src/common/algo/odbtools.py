@@ -181,6 +181,7 @@ class Raw2ODB(OdbProcess):
                     obs.discarded = True
                     logger.warning(
                         'Observation [%s] discarded [time mismatch: %s / %s]',
+                        obs.rh.resource.part,
                         obs.rh.resource.date.isoformat(),
                         self.date.isoformat()
                     )

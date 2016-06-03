@@ -159,10 +159,11 @@ class FootprintLogCollector(FootprintLogEntry):
 class FootprintLogClass(FootprintLogEntry):
     """Dedicated entry to :class:`footprints.FootprintBase` items."""
 
-    def __init__(self, node, **kw):
+    def __init__(self, node, parent, **kw):
         """Default name is the ``node`` fullname method output."""
         super(FootprintLogClass, self).__init__(node, **kw)
         self.name = self.node.fullname()
+        self.parent = parent
         self.parent.add(self)
 
     def __iter__(self):

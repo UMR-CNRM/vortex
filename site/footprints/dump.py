@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
+# pylint: disable=unused-argument
 
 """
 Data dumper... mostly used in objects' docstring with a footprint.

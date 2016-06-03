@@ -33,7 +33,7 @@ class GenvKey(str):
 
     def __new__(cls, value):
         """Proxy to ``str.__new___`` with attributes inside brackets translated to lower case."""
-        return str.__new__(cls, re.sub('\[\w+\]', _lowerattr, value.upper()))
+        return str.__new__(cls, re.sub(r'\[\w+\]', _lowerattr, value.upper()))
 
 a_gvar = dict(type     = GenvKey,
               optional = True,)
@@ -73,7 +73,7 @@ class ArpIfsSimplifiedCycle(object):
 
     It can be used in a footprint specification.
     """
-    _cy_re = re.compile('(?:cy|al)(\d+)(?:t(\d{1,3}))?(?:_.*?(?:op(\d{1,3}))?(:?\.\d+)?)?$')
+    _cy_re = re.compile(r'(?:cy|al)(\d+)(?:t(\d{1,3}))?(?:_.*?(?:op(\d{1,3}))?(:?\.\d+)?)?$')
     _hash_shift = 10000
 
     def __init__(self, cyclestr):

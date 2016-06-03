@@ -162,6 +162,11 @@ class IFSODB(IFSParallel, odb.OdbComponent):
                 default  = 'ecma',
                 access   = 'rwx',
             ),
+            date = dict(
+                optional = True,
+                access   = 'rwx',
+                type     = Date,
+            ),
         )
     )
 
@@ -183,7 +188,7 @@ class IFSODB(IFSParallel, odb.OdbComponent):
                 if 'channel' in x.rh.options
         ]
         for thisnam in namchan:
-            thisloc = re.sub('\d+$', '', thisnam.options['channel']) + 'channels'
+            thisloc = re.sub(r'\d+$', '', thisnam.options['channel']) + 'channels'
             if thisloc != thisnam.container.localpath():
                 self.system.softlink(thisnam.container.localpath(), thisloc)
 

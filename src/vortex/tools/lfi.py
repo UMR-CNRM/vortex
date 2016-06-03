@@ -200,7 +200,7 @@ class LFI_Tool_Raw(addons.Addon):
         kw['output'] = True
 
         rawout = self._spawn(cmd, **kw)
-        fields = [ tuple(x.split(' ', 2)[-2:]) for x in rawout if re.match(' (?:\!=|\+\+|\-\-)', x) ]
+        fields = [ tuple(x.split(' ', 2)[-2:]) for x in rawout if re.match(r' (?:\!=|\+\+|\-\-)', x) ]
 
         trfields = Tracker(
             deleted = [ x[1] for x in fields if x[0] == '--' ],

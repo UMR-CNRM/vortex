@@ -22,8 +22,8 @@ class Sherlock(object):
 
     def __init__(self, **kw):
         self.verbose = False
-        kw.setdefault('ticket', sessions.current())
-        kw.setdefault('glove', sessions.getglove())
+        self.ticket = kw.pop('ticket', sessions.current())
+        self.glove = kw.pop('glove', sessions.getglove())
         self.__dict__.update(kw)
         logger.debug('Sherlock init %s', self)
 
@@ -34,7 +34,7 @@ class Sherlock(object):
         subpath = modpath
         for installpath in self.glove.sitesrc:
             subpath = re.sub(installpath, '', subpath)
-        subpath = re.sub('\.pyc?', '', subpath)
+        subpath = re.sub(r'\.pyc?', '', subpath)
         subpath = subpath.split('/')
         if subpath[-1] == '__init__':
             subpath[-1] = subpath[-2]

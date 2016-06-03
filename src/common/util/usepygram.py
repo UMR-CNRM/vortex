@@ -125,6 +125,10 @@ class EpygramMetadataReader(MetaDataReader):
                          minute=int((term_epy.total_seconds() / 60)) % 60)
         }
 
+    def _process_epy(self, epyf):
+        """Abstract method that does the actual processing using epygram."""
+        raise NotImplementedError("Abstract method")
+
 
 class FaMetadataReader(EpygramMetadataReader):
 

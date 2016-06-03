@@ -2,3 +2,5 @@
 # -*- coding:Utf-8 -*-
 
 __all__ = [ 'data' ]
+
+import data

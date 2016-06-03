@@ -7,8 +7,6 @@ Interface to SMS commands.
 
 __all__ = []
 
-from types import *   # @UnusedWildImport
-
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -156,7 +154,7 @@ class SMS(Scheduler):
             logger.warning('SMS mute command [%s]', cmd)
         else:
             args = [self.cmdpath(cmd)]
-            if type(options) is ListType or type(options) is TupleType:
+            if isinstance(options, (tuple, list)):
                 args.extend(options)
             else:
                 args.append(options)

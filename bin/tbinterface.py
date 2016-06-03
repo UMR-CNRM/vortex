@@ -9,7 +9,12 @@ import json
 from xml.dom import minidom
 
 import footprints
-import vortex
+import vortex  # @UnusedImport
+# For the addons to be recognised
+import vortex.tools.folder  # @UnusedImport
+import vortex.tools.odb  # @UnusedImport
+import vortex.tools.ddhpack  # @UnusedImport
+import vortex.tools.lfi  # @UnusedImport
 
 
 NAMESPACES_MAP = dict(swapp=('common', 'gco', 'olive'),
@@ -19,13 +24,22 @@ NAMESPACES_MAP = dict(swapp=('common', 'gco', 'olive'),
 COLLECTORS_DFLT = ('container', 'provider', 'resource', 'component')
 
 
-def swapp_exporter(collectors, filebase):
+def collectors_list(colarg):
+    if colarg[0] == 'all':
+        return footprints.collectors.values()
+    else:
+        return [footprints.collectors.get(tag=clname) for clname in colarg]
+
+
+def swapp_exporter(collectors, abstract, filebase):
     outstack = ['= VERSION v{}'.format(vortex.__version__),
                 '= CONTEXT Research']
-    for clname in collectors:
+    if abstract:
+        print('No way this exporter includes abstract classes... Ignoring the option')
+    for collector in collectors_list(collectors):
         outstack.append('')
-        outstack.append('= CLASS {}S'.format(clname.upper()))
-        for c in footprints.collectors.get(tag=clname).items():
+        outstack.append('= CLASS {}S'.format(collector.tag.upper()))
+        for c in collector.items():
             attrx = list()
             attro = list()
             attrs = c.footprint_retrieve().attr
@@ -46,46 +60,65 @@ def swapp_exporter(collectors, filebase):
         fd.write('\n'.join(outstack))
 
 
-def json_exporter(collectors, filebase):
+def json_exporter(collectors, abstract, filebase):
     dp = footprints.dump.JsonableDumper(tag='fpdump')
-    for clname in collectors:
+
+    def _add_entry(export_dict, c, abstract):
+        fp = c.footprint_retrieve()
+        export_dict[c.fullname()] = dict()
+        export_dict[c.fullname()]['bases'] = ["{}.{}".format(ac.__module__, ac.__name__)
+                                              for ac in c.__bases__]
+        export_dict[c.fullname()]['footprint'] = dp.dump(fp)
+        if abstract:
+            export_dict[c.fullname()]['footprint_abstract'] = True
+
+    for collector in collectors_list(collectors):
         export_dict = {}
-        for c in footprints.collectors.get(tag=clname).items():
-            fp = c.footprint_retrieve()
-            export_dict[c.fullname()] = dict()
-            export_dict[c.fullname()]['bases'] = ["{}.{}".format(ac.__module__, ac.__name__)
-                                                  for ac in c.__bases__]
-            export_dict[c.fullname()]['footprint'] = dp.dump(fp)
-        outfile = '{}_{}.json'.format(filebase, clname)
+        if abstract:
+            for c in collector.abstract_classes.items():
+                _add_entry(export_dict, c, abstract=True)
+        for c in collector.items():
+            _add_entry(export_dict, c, abstract=False)
+        outfile = '{}_{}.json'.format(filebase, collector.tag)
         print('Output file:', outfile)
         with open(outfile, 'w') as fd:
             json.dump(export_dict, fd, indent=2, encoding='utf-8')
 
 
-def xml_exporter(collectors, filebase):
+def xml_exporter(collectors, abstract, filebase):
     dp = footprints.dump.XmlDomDumper(tag='fpdump',
                                       named_nodes=('attr', 'remap'))
-    for clname in collectors:
+
+    def _add_entry(xroot, c, abstract):
+        xclass = xdoc.createElement('class')
+        xclass.setAttribute('name', c.fullname())
+        xbases = xdoc.createElement('bases')
+        for ac in c.__bases__:
+            xbase = xdoc.createElement('base')
+            xbaseT = xdoc.createTextNode("{}.{}".format(ac.__module__, ac.__name__))
+            xbase.appendChild(xbaseT)
+            xbases.appendChild(xbase)
+        xclass.appendChild(xbases)
+        if abstract:
+            cdom = dp.dump(c.footprint_retrieve(), root='footprint',
+                           rootattr=dict(abstract='True'))
+        else:
+            cdom = dp.dump(c.footprint_retrieve(), root='footprint')
+        xclass.appendChild(cdom.firstChild)
+        xroot.appendChild(xclass)
+
+    for collector in collectors_list(collectors):
         xdoc = minidom.Document()
         xroot = xdoc.createElement('collector')
-        xroot.setAttribute('name', clname)
-        for c in footprints.collectors.get(tag=clname).items():
-            xclass = xdoc.createElement('class')
-            xclass.setAttribute('name', c.fullname())
-            xbases = xdoc.createElement('bases')
-            for ac in c.__bases__:
-                xbase = xdoc.createElement('base')
-                xbaseT = xdoc.createTextNode("{}.{}".format(ac.__module__, ac.__name__))
-                xbase.appendChild(xbaseT)
-                xbases.appendChild(xbase)
-            xclass.appendChild(xbases)
-            cdom = dp.dump(c.footprint_retrieve(),
-                           root='footprint')
-            xclass.appendChild(cdom.firstChild)
-            xroot.appendChild(xclass)
+        xroot.setAttribute('name', collector.tag)
+        if abstract:
+            for c in collector.abstract_classes.items():
+                _add_entry(xroot, c, abstract=True)
+        for c in collector.items():
+            _add_entry(xroot, c, abstract=False)
         xdoc.appendChild(xroot)
         # Merge the DOM
-        outfile = '{}_{}.xml'.format(filebase, clname)
+        outfile = '{}_{}.xml'.format(filebase, collector.tag)
         print('Output file:', outfile)
         with open(outfile, 'w') as fd:
             fd.write(xdoc.toprettyxml(indent='  ', encoding='utf-8'))
@@ -97,6 +130,8 @@ if __name__ == "__main__":
         return tuple(argstr.split(','))
 
     parser = argparse.ArgumentParser(description="Dump the footprints descriptions")
+    parser.add_argument('-a', '--abstract', help='Also exports abstract classes',
+                        action='store_true')
     parser.add_argument('-f', '--format', help='Output format [default: %(default)s]',
                         action='store', default='swapp', choices=['swapp', 'json', 'xml'])
     parser.add_argument('-c', '--collectors', action='store', type=_process_arglist,
@@ -116,4 +151,4 @@ if __name__ == "__main__":
         importlib.import_module(namespace)
 
     exporter = vars()['{}_exporter'.format(args.format)]
-    exporter(args.collectors, args.filebase)
+    exporter(args.collectors, args.abstract, args.filebase)

@@ -142,7 +142,7 @@ class DelayedConfigParser(GenericConfigParser):
 
     def __init__(self, inifile=None):
         GenericConfigParser.__init__(self)
-        self.__dict__['delay'] = inifile
+        self.delay = inifile
 
     def refresh(self):
         """Load the delayed inifile."""
@@ -239,13 +239,13 @@ class AppConfigStringDecoder(object):
         # Remove \n and \r
         cleaned = cleaned.replace("\n", ' ').replace("\r", '')
         # Useless spaces after/before parenthesis
-        cleaned = re.sub('\(\s*', '(', cleaned)
-        cleaned = re.sub('\s*\)', ')', cleaned)
+        cleaned = re.sub(r'\(\s*', '(', cleaned)
+        cleaned = re.sub(r'\s*\)', ')', cleaned)
         # Useless spaces around separators
-        cleaned = re.sub('\s*:\s*', ':', cleaned)
-        cleaned = re.sub('\s*,\s*', ',', cleaned)
+        cleaned = re.sub(r'\s*:\s*', ':', cleaned)
+        cleaned = re.sub(r'\s*,\s*', ',', cleaned)
         # Duplicated spaces
-        cleaned = re.sub('\s+', ' ', cleaned)
+        cleaned = re.sub(r'\s+', ' ', cleaned)
         return cleaned
 
     @staticmethod
@@ -288,7 +288,7 @@ class AppConfigStringDecoder(object):
     def _value_expand(self, value, remap):
         """Recursively expand the configuration file's string."""
         # dictionaries...
-        if isinstance(value, basestring) and re.match('^dict\(.*\)$', value):
+        if isinstance(value, basestring) and re.match(r'^dict\(.*\)$', value):
             value = value[5:-1]
             basis = self._sparser(value, itemsep=' ', keysep=':')
             value = {k: self._value_expand(v, remap)
@@ -312,7 +312,7 @@ class AppConfigStringDecoder(object):
             rmap = 'default'
             value = self._litteral_cleaner(value)
             if (not re.match('^dict', value) and
-                    re.match('^\w+\(.*\)$', value)):
+                    re.match(r'^\w+\(.*\)$', value)):
                 ipos = value.index('(')
                 rmap = value[:ipos].lower()
                 value = value[ipos + 1:-1]

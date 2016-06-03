@@ -77,7 +77,7 @@ def mkjob(t, **kw):
 
     # Try to find default runtime according to jobname
     if opts['runtime'] is None and opts['rundate'] is None:
-        jtime = re.search('_t?(\d+(?:[:-h]?\d+)?)', opts['name'], re.IGNORECASE)
+        jtime = re.search(r'_t?(\d+(?:[:-h]?\d+)?)', opts['name'], re.IGNORECASE)
         if jtime:
             jtime = re.sub('[:-hH]', '', jtime.group(1))
             if len(jtime) > 2:
@@ -99,7 +99,7 @@ def mkjob(t, **kw):
         logger.warning('Could not read config %s', str(pb))
         tplconf = dict()
 
-    opts['name'] = re.sub('\.py$', '', opts['name'])
+    opts['name'] = re.sub(r'\.py$', '', opts['name'])
 
     tplconf = tplconf.get(opts['profile'], tplconf.get('void'))
 
@@ -146,7 +146,7 @@ def slurm_parameters(t, **kw):
         slurm['nn'] = 1
 
     try:
-        slurm['nnp'] = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
+        slurm['nnp'] = int(re.sub(r'\(.*$', '', e.SLURM_TASKS_PER_NODE))
     except (ValueError, TypeError) as pb:
         logger.warning('SLURM_TASKS_PER_NODE: %s', str(pb))
         slurm['nnp'] = 1
@@ -155,8 +155,8 @@ def slurm_parameters(t, **kw):
         slurm['openmp'] = e.OMP_NUM_THREADS
     else:
         try:
-            guess_cpus  = int(re.sub('\(.*$', '', e.SLURM_JOB_CPUS_PER_NODE)) / 2
-            guess_tasks = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
+            guess_cpus  = int(re.sub(r'\(.*$', '', e.SLURM_JOB_CPUS_PER_NODE)) / 2
+            guess_tasks = int(re.sub(r'\(.*$', '', e.SLURM_TASKS_PER_NODE))
             slurm['openmp'] = guess_cpus / guess_tasks
         except (ValueError, TypeError) as pb:
             logger.warning('SLURM_JOB_CPUS_PER_NODE: %s', str(pb))

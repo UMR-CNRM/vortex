@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# pylint: disable=unused-argument
 
 """
 This module handles store objects in charge of physically accessing resources.

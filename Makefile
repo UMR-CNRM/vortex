@@ -9,7 +9,7 @@ SUBDIRS		= tests sphinx
 CLEANDIRS 	= $(SUBDIRS:%=clean-%)
 
 
-.PHONY: check tests cover doc cloc clean $(CLEANDIRS)
+.PHONY: check tests cover doc cloc cloc_all pylint flake8 clean $(CLEANDIRS)
 
 
 # Run a minimal set of tests (should always succeed)
@@ -36,11 +36,14 @@ cloc_all: ; $(CLOCPY) -p $(CLOCBIN) -d $(CLOCDEF) .
 flake8: ; flake8 --config=project/flake8.ini --statistics . > project/flake8_report.txt || true
 
 # Code quality analysis : pylint
-pylint: ; pylint --rcfile=project/pylint.rc src/* site/* > project/pylint_global.txt || true
+pylint:
+	bin/tbinterface.py -a -c all -n 'common,gco,iga,mercator,olive,previmar,sandbox' -f json -o 'project/tbinterface'
+	pylint --rcfile=project/pylint.rc src/* site/* > project/pylint_global.txt || true
 
 # Clean all the directories, then locally
 clean: $(CLEANDIRS)
 	rm -f project/{flake8_report,pylint_global}.txt
+	rm -f project/tbinterface_*.json
 
 $(CLEANDIRS):
 	$(MAKE) -C $(@:clean-%=%) clean
