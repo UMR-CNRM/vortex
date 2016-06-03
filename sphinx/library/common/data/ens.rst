@@ -37,7 +37,17 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: PopulationList
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
 .. autoclass:: Sample
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MembersPopulation
    :show-inheritance:
    :members:
    :member-order: alphabetical

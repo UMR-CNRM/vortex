@@ -48,6 +48,10 @@ Actors
    :show-inheritance:
    :members:
    :member-order: alphabetical
+.. autoclass:: SingleOpenFileScheduler
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 :mod:`taylorism.examples` --- Examples using the taylorism package
 ==================================================================

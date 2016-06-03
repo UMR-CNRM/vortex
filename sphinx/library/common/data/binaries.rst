@@ -37,7 +37,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MasterDiagPI
+.. autoclass:: MasterDiag
    :show-inheritance:
    :members:
    :member-order: alphabetical

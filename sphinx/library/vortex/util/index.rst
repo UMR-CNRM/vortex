@@ -14,6 +14,7 @@ Utilities
    decorators
    dispatch
    empty
+   helpers
    introspection
    names
    patterns

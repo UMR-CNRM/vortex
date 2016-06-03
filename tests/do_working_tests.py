@@ -11,6 +11,9 @@ testmodules = ['test_import',
                'test_env',
                'test_cfgparser',
                'test_vortexnames',
+               'test_fortran',
+               'test_layoutnodes',
+               'test_providers'
                ]
 
 

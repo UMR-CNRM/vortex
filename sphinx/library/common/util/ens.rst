@@ -17,3 +17,7 @@ Functions
 ---------
 
 .. autofunction:: drawingfunction
+
+.. autofunction:: checkingfunction
+
+.. autofunction:: safedrawingfunction

@@ -292,7 +292,7 @@ class Handler(object):
     def wide_key_lookup(self, key, exports=False):
         """Return the *key* attribute if it exists in the provider or resource.
 
-        If *exports" is True, the footprint_export() or the export_dict() function
+        If *exports* is True, the footprint_export() or the export_dict() function
         is called upon the return value.
         """
         try:
