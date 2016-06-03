@@ -6,6 +6,7 @@ __all__ = []
 
 import collections
 import re
+import copy
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -323,6 +324,11 @@ class Clustering(BlindRun):
             nbclust = dict(
                 type = int,
             ),
+            nbmembers = dict(
+                type = int,
+                optional = True,
+                access = 'rwx',
+            ),
         )
     )
 
@@ -330,20 +336,87 @@ class Clustering(BlindRun):
         """Set some variables according to target definition."""
         super(Clustering, self).prepare(rh, opts)
 
-        grib_sections = self.context.sequence.effective_inputs(role='Model state',
+        grib_sections = self.context.sequence.effective_inputs(role='ModelState',
                                                                kind='gridpoint')
-        fileList = [grib.rh.container.localpath() for grib in grib_sections]
+        avail_json = self.context.sequence.effective_inputs(role='AvailableMembers',
+                                                            kind='mbpopulation')
 
-        # Tweak the namelist
-        namsec = self.setlink(initrole='Namelist', initkind='namelist')
-        logger.info("NBRCLUST added to NAMCLUST namelist entry: %d", self.nbclust)
-        namsec[0].rh.contents['NAMCLUST']['NBRCLUST'] = self.nbclust
-        namsec[0].rh.save()
-        namsec[0].rh.container.cat()
+        # If no population file is here, just do a sort on the file list,
+        # otherwise use the population list
+        if avail_json:
+            population = avail_json[0].rh.contents.data['population']
+            self.nbmembers = len(population)
+            fileList = list()
+            for elt in population:
+                sublist_ids = list()
+                for (i, grib) in enumerate(grib_sections):
+                    # If the grib file matches, let's go
+                    if all([grib.rh.wide_key_lookup(key, exports=True) == value
+                            for (key, value) in elt.iteritems()]):
+                        sublist_ids.append(i)
+                # Stack the gribs in fileList
+                fileList.extend(sorted([grib_sections[i].rh.container.localpath()
+                                        for i in sublist_ids]))
+                for i in reversed(sublist_ids):
+                    del grib_sections[i]
+        else:
+            fileList = sorted([grib.rh.container.localpath()
+                               for grib in grib_sections])
 
-        fileList.sort()
-        with open(self.fileoutput, 'w') as optFile:
-            optFile.write('\n'.join(fileList))
+        if (self.nbmembers is None or self.nbmembers > self.nbclust):
+
+            # Tweak the namelist
+            namsec = self.setlink(initrole='Namelist', initkind='namelist')
+            logger.info("NBRCLUST added to NAMCLUST namelist entry: %d", self.nbclust)
+            namsec[0].rh.contents['NAMCLUST']['NBRCLUST'] = self.nbclust
+            if self.nbmembers is not None:
+                logger.info("NBRMB added to NAMCLUST namelist entry: %d", self.nbmembers)
+                namsec[0].rh.contents['NAMCLUST']['NBRMB'] = self.nbmembers
+            namsec[0].rh.save()
+            namsec[0].rh.container.cat()
+
+            with open(self.fileoutput, 'w') as optFile:
+                optFile.write('\n'.join(fileList))
+
+    def execute(self, rh, opts):
+        # If the number of members is big enough -> normal processing
+        if (self.nbmembers is None or self.nbmembers > self.nbclust):
+            logger.info("Normal clustering run (%d members, %d clusters)",
+                        self.nbmembers, self.nbclust)
+            super(Clustering, self).execute(rh, opts)
+        # if not, generate face outputs
+        else:
+            logger.info("Generating fake outputs with %d members", self.nbmembers)
+            with open('ASCII_RMCLUST', 'w') as fdrm:
+                fdrm.write("\n".join([str(i) for i in range(1, self.nbmembers + 1)]))
+            with open('ASCII_POPCLUST', 'w') as fdpop:
+                fdpop.write("\n".join(['1', ] * self.nbmembers))
+
+    def postfix(self, rh, opts):
+        """Create a JSON with all the clustering informations."""
+        avail_json = self.context.sequence.effective_inputs(role='AvailableMembers',
+                                                            kind='mbpopulation')
+        # If no population file is here, does nothing
+        if avail_json:
+            logger.info("Creating a JSON output...")
+            # Read the clustering information
+            with open('ASCII_RMCLUST') as fdrm:
+                cluster_members = [int(m) for m in fdrm.readlines()]
+            with open('ASCII_POPCLUST') as fdpop:
+                cluster_sizes = [int(s) for s in fdpop.readlines()]
+            # Update the population JSON
+            mycontent = copy.deepcopy(avail_json[0].rh.contents)
+            mycontent.data['resource_kind'] = 'mbsample'
+            mycontent.data['drawing'] = list()
+            for member_no, cluster_size in zip(cluster_members, cluster_sizes):
+                mycontent.data['drawing'].append(copy.copy(mycontent.data['population'][member_no - 1]))
+                mycontent.data['drawing'][-1]['cluster_size'] = cluster_size
+            # Create a clustering output file
+            new_container = footprints.proxy.container(filename='clustering_output.json',
+                                                       mode='w', actualfmt='json')
+            mycontent.rewrite(new_container)
+
+        super(Clustering, self).postfix(rh, opts)
 
 
 class Addpearp(BlindRun):

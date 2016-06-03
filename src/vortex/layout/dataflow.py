@@ -97,6 +97,11 @@ class Section(object):
         """Fake function for undefined information driven updates."""
         logger.warning('Unable to update %s with info %s', self, info)
 
+    def _updstage_checked(self, info):
+        """Upgrade current section to 'checked' level."""
+        if info.get('stage') == 'checked' and self.kind in (ixo.INPUT, ixo.EXEC):
+            self.stages.append('checked')
+
     def _updstage_get(self, info):
         """Upgrade current section to 'get' level."""
         if info.get('stage') == 'get' and self.kind in (ixo.INPUT, ixo.EXEC):
@@ -381,13 +386,14 @@ class SequenceInputsReport(object):
     """Summarize data about inputs (missing resources, alternates, ...)."""
 
     _StatusTupple = namedtuple('_StatusTupple',
-                               ('PRESENT', 'EXPECTED', 'MISSING'))
+                               ('PRESENT', 'EXPECTED', 'CHECKED', 'MISSING'))
     _Status = _StatusTupple(PRESENT='present', EXPECTED='expected',
-                            MISSING='missing')
+                            CHECKED='checked', MISSING='missing')
     _TranslateStage = dict(get=_Status.PRESENT,
                            expected=_Status.EXPECTED,
                            void=_Status.MISSING,
-                           load=_Status.MISSING)
+                           load=_Status.MISSING,
+                           checked=_Status.CHECKED)
 
     def __init__(self, inputs):
         self._local_map = defaultdict(lambda: defaultdict(list))
