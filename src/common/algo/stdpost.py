@@ -65,6 +65,11 @@ class _FA2GribWorker(VortexWorkerBlindRun):
         thisoutput = 'GRIDOUTPUT'
         rdict = dict(rc=True)
 
+        # First, check that the hooks were applied
+        for thisinput in [x for x in self.context.sequence.inputs()
+                          if x.rh.container.localpath() == self.file_in]:
+            thisinput.rh.apply_get_hooks()
+
         # Jump into a working directory
         cwd = self.system.pwd()
         tmpwd = self.system.path.join(cwd, self.file_out + '.process.d')

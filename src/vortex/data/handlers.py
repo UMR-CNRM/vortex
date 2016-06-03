@@ -43,21 +43,23 @@ class Handler(object):
     def __init__(self, rd, **kw):
         if 'glove' in rd:
             del rd['glove']
-        self._resource  = rd.pop('resource', None)
-        self._provider  = rd.pop('provider', None)
-        self._container = rd.pop('container', None)
-        self._empty     = rd.pop('empty', False)
-        self._contents  = None
-        self._uridata   = None
-        self._options   = rd.copy()
-        self._observer  = observer_board(obsname=kw.pop('observer', None))
+        self._resource      = rd.pop('resource', None)
+        self._provider      = rd.pop('provider', None)
+        self._container     = rd.pop('container', None)
+        self._empty         = rd.pop('empty', False)
+        self._contents      = None
+        self._uridata       = None
+        self._options       = rd.copy()
+        self._observer      = observer_board(obsname=kw.pop('observer', None))
         self._options.update(kw)
-        self._mdcheck   = self._options.pop('metadatacheck', False)
-        self._mddelta   = self._options.pop('metadatadelta', dict())
-        self._ghost     = self._options.pop('ghost', False)
-        self._hooks     = {x[5:]: self._options.pop(x)
-                           for x in self._options.keys()
-                           if x.startswith('hook_')}
+        self._mdcheck       = self._options.pop('metadatacheck', False)
+        self._mddelta       = self._options.pop('metadatadelta', dict())
+        self._ghost         = self._options.pop('ghost', False)
+        self._hooks         = {x[5:]: self._options.pop(x)
+                               for x in self._options.keys()
+                               if x.startswith('hook_')}
+        self._delayhooks    = self._options.pop('delayhooks', False)
+
         self._history = structs.History(tag='data-handler')
         self._history.append(self.__class__.__name__, 'init', True)
         self._stage = ['load']
@@ -361,6 +363,30 @@ class Handler(object):
             logger.error('Could not locate an incomplete rh %s', self)
         return rst
 
+    def _generic_apply_hooks(self, action, **extras):
+        """Apply the hooks after a get request (or verify that they were done)."""
+        if self.hooks:
+            mytracker = extras.get('mytracker', None)
+            if mytracker is None:
+                iotarget = self.container.iotarget()
+                mytracker = self._cur_context.localtracker[iotarget]
+            for hook_name in sorted(self.hooks.keys()):
+                if mytracker.redundant_hook(action, hook_name):
+                    logger.info('Hook already executed <hook_name:%s>', hook_name)
+                else:
+                    logger.info('Executing Hook <hook_name:%s>', hook_name)
+                    hook_func, hook_args = self.hooks[hook_name]
+                    hook_func(self._cur_session, self, *hook_args)
+                    self._notifyhook(action, hook_name)
+
+    def apply_get_hooks(self, **extras):
+        """Apply the hooks after a get request (or verify that they were done)."""
+        self._generic_apply_hooks(action='get', **extras)
+
+    def apply_put_hooks(self, **extras):
+        """Apply the hooks before a put request (or verify that they were done)."""
+        self._generic_apply_hooks(action='put', **extras)
+
     def _actual_get(self, **extras):
         """Internal method in charge of the getting the resource.
 
@@ -397,10 +423,11 @@ class Handler(object):
                 # This is a "real" resource
                 else:
                     self._updstage('get')
-                    for hook_name in sorted(self.hooks.keys()):
-                        hook_func, hook_args = self.hooks[hook_name]
-                        hook_func(self._cur_session, self, *hook_args)
-                        self._notifyhook(self.stage, hook_name)
+                    if self.hooks:
+                        if not self._delayhooks:
+                            self.apply_get_hooks(**extras)
+                        else:
+                            logger.info("(get-)Hooks were delayed")
         else:
             logger.error('Could not find any store to get %s', self.lasturl)
 
@@ -477,17 +504,11 @@ class Handler(object):
                     mytracker = self._cur_context.localtracker[iotarget]
                     # Execute the hooks only if the local file exists
                     if self.container.exists():
-                        for hook_name in sorted(self.hooks.keys()):
-                            hook_func, hook_args = self.hooks[hook_name]
-                            # If the hook was already executed, skip it
-                            if mytracker.redundant_hook('put', hook_name):
-                                logger.info('Hook already executed before put <%s(%s)>' %
-                                            (hook_func, hook_args))
+                        if self.hooks:
+                            if not self._delayhooks:
+                                self.apply_put_hooks(mytracker=mytracker, **extras)
                             else:
-                                logger.info('Executing Hook before put <%s(%s)>' %
-                                            (hook_func, hook_args))
-                                hook_func(self._cur_session, self, *hook_args)
-                                self._notifyhook('put', hook_name)
+                                logger.info("(put-)Hooks were delayed")
                     # Add a filter function to remove duplicated PUTs to the same uri
                     extras_ext = dict(extras)
                     extras_ext['urifilter'] = functools.partial(mytracker.redundant_uri, 'put')
