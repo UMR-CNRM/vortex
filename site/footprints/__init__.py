@@ -361,7 +361,7 @@ class Footprint(object):
             If the format string is incorrect, or if it can not be applied to key-name, a
             :exception:`ValueError` exception will be raised
         """
-        if nbpass > 25:
+        if nbpass > 50:
             logger.error('Resolve probably cycling too much... %d tries ?', nbpass)
             raise FootprintMaxIter('Too many Footprint replacements')
 
@@ -440,11 +440,11 @@ class Footprint(object):
         if (guessk is not None and
                 isinstance(guessk, basestring) and
                 replattr.search(guessk)):
-            logger.debug(' > Requeue resolve < %s > : %s', k, guessk)
+            logger.debug(' > Requeue resolve < %s > : %s (npass=%d)', k, guessk, nbpass)
             todo.append(k)
             return False
         else:
-            logger.debug(' > No more substitution for %s', k)
+            logger.debug(' > No more substitution for %s (npass=%d)', k, nbpass)
             guess[k] = guessk
             return True
 
