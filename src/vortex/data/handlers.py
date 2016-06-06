@@ -225,6 +225,10 @@ class Handler(object):
     def options(self):
         return self._options
 
+    @property
+    def delayhooks(self):
+        return self._delayhooks
+
     def mkopts(self, *dicos, **kw):
         """Returns options associated to that handler and a system reference."""
         opts = dict(
@@ -447,7 +451,7 @@ class Handler(object):
                 else:
                     self._updstage('get')
                     if self.hooks:
-                        if not self._delayhooks:
+                        if not self.delayhooks:
                             self.apply_get_hooks(**extras)
                         else:
                             logger.info("(get-)Hooks were delayed")
@@ -528,7 +532,7 @@ class Handler(object):
                     # Execute the hooks only if the local file exists
                     if self.container.exists():
                         if self.hooks:
-                            if not self._delayhooks:
+                            if not self.delayhooks:
                                 self.apply_put_hooks(mytracker=mytracker, **extras)
                             else:
                                 logger.info("(put-)Hooks were delayed")

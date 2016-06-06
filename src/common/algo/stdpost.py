@@ -69,7 +69,8 @@ class _FA2GribWorker(VortexWorkerBlindRun):
         # First, check that the hooks were applied
         for thisinput in [x for x in self.context.sequence.inputs()
                           if x.rh.container.localpath() == self.file_in]:
-            thisinput.rh.apply_get_hooks()
+            if thisinput.rh.delayhooks:
+                thisinput.rh.apply_get_hooks()
 
         # Jump into a working directory
         cwd = self.system.pwd()
@@ -207,7 +208,7 @@ class Fa2Grib(ParaBlindRun):
         # Update the common instructions
         common_i.update(dict(fortnam=self.fortnam, fortinput=self.fortinput,
                              compact=self.compact, numod=self.numod,
-                             sciz=self.sciz, sciz_offset=self.scizoffset,
+                             sciz=self.sciz, scizoffset=self.scizoffset,
                              timeshift=self.timeshift, timeunit=self.timeunit))
 
         # Monitor for the input files
