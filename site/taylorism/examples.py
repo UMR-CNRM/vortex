@@ -27,7 +27,7 @@ class Sleeper(Worker):
             sleeping_time=dict(
                 info="Sleeping time in s.",
                 type=float,
-                values=[1, 2, 3, 5, 10, 15, 30, 60]),
+                values=[0.001, 0.1, 0.01, 1, 2, 3, 5, 10, 15, 30, 60]),
             wakeup_sentence=dict(
                 info="What to say after sleep.",
                 type=str,

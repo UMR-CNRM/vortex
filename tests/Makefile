@@ -3,7 +3,7 @@ NOSE          = nosetests
 
 NOSE_OPTS     = --verbosity=2 --no-byte-compile
 
-COVER_PACK    = footprints,vortex,common,olive,gco,iga
+COVER_PACK    = footprints,vortex,common,olive,gco,iga,taylorism
 COVER_OUT	  = coverage_report
 COVER_OPTS    = --no-byte-compile --with-coverage --cover-package=$(COVER_PACK) --cover-branch --cover-html --cover-html-dir=$(shell pwd)/$(COVER_OUT)
 

@@ -311,17 +311,21 @@ class Boss(object):
                 for k, v in individual_instructions.items():
                     instructions.update({k: v.pop(0)})
                 instructions_sets.append(instructions)
+
         # send instructions to control
-        try:
-            self.control_messenger_out.send(instructions_sets)
-        except (ValueError, PickleError):
-            # ValueError = instructions_sets too big.
-            # PickleError = instructions_sets unpickelable.
-            sys.stderr.write("The instructions_sets variable was:\n")
-            sys.stderr.write(str(instructions_sets))
-            taylorism_log.error("Impossible to send data through the pipe")
-            self.stop_them_working()
-            raise
+        if self._process.is_alive():
+            try:
+                self.control_messenger_out.send(instructions_sets)
+            except (ValueError, PickleError):
+                # ValueError = instructions_sets too big.
+                # PickleError = instructions_sets unpickelable.
+                sys.stderr.write("The instructions_sets variable was:\n")
+                sys.stderr.write(str(instructions_sets))
+                taylorism_log.error("Impossible to send data through the pipe")
+                self.stop_them_working()
+                raise
+        else:
+            self.get_report(interim=True)
 
     def make_them_work(self, terminate=False, stop_listening=False):
         """
@@ -427,7 +431,6 @@ class Boss(object):
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 tb = traceback.format_exception(exc_type, exc_value, exc_traceback)
                 report = {'workers_report': e, 'traceback': tb}
-                self.stop_them_working()
             finally:
                 try:
                     self.control_messenger_in.send(report)
@@ -469,79 +472,83 @@ class Boss(object):
         halt = False
         end = False
         stop = False
-        while True:
-            # A. listen to control
-            if self.control_messenger_in.poll(communications_timeout):
-                control = self.control_messenger_in.recv()
-                if control in self.control_signals.values():
-                    # received a control signal
-                    if control == self.control_signals['SEND_REPORT']:
-                        try:
-                            self.control_messenger_in.send({'workers_report': report, 'status': 'interim'})
-                        except ValueError:
-                            # ValueError = report too big.
-                            # We are sure that a PickleError won't occur since data were already pickled once (by the workers)
-                            taylorism_log.error("The report is too big to be sent back :-(")
-                            raise
-                    elif control == self.control_signals['HALT']:
-                        halt = True
-                    elif control == self.control_signals['RESUME']:
-                        halt = False
-                    elif (control in [self.control_signals[k] for k in self.control_signals.keys() if 'STOP' in k] or
-                          control == self.control_signals['END']):
-                        end = True
-                        if control == self.control_signals['STOP_LISTENING']:
-                            break  # leave out the infinite loop
-                        elif control in (self.control_signals['STOP'], self.control_signals['STOP_RIGHTNOW']):
-                            stop = True
-                            if control == self.control_signals['STOP_RIGHTNOW']:
-                                stop_them_working()
-
+        try:
+            while True:
+                # A. listen to control
+                if self.control_messenger_in.poll(communications_timeout):
+                    control = self.control_messenger_in.recv()
+                    if control in self.control_signals.values():
+                        # received a control signal
+                        if control == self.control_signals['SEND_REPORT']:
+                            try:
+                                self.control_messenger_in.send({'workers_report': report, 'status': 'interim'})
+                            except ValueError:
+                                # ValueError = report too big.
+                                # We are sure that a PickleError won't occur since data were already pickled once (by the workers)
+                                taylorism_log.error("The report is too big to be sent back :-(")
+                                raise
+                        elif control == self.control_signals['HALT']:
+                            halt = True
+                        elif control == self.control_signals['RESUME']:
+                            halt = False
+                        elif (control in [self.control_signals[k] for k in self.control_signals.keys() if 'STOP' in k] or
+                              control == self.control_signals['END']):
+                            end = True
+                            if control == self.control_signals['STOP_LISTENING']:
+                                break  # leave out the infinite loop
+                            elif control in (self.control_signals['STOP'], self.control_signals['STOP_RIGHTNOW']):
+                                stop = True
+                                if control == self.control_signals['STOP_RIGHTNOW']:
+                                    stop_them_working()
+    
+                    else:
+                        # received new instructions
+                        if not end:
+                            # if an END or STOP signal has been received, new instructions are not listened to
+                            if isinstance(control, list):
+                                pending_instructions.extend(control)
+                            elif isinstance(control, dict):
+                                pending_instructions.append(control)
+                # B. listen to workers
+                try:
+                    reported = self.workers_messenger.get(timeout=communications_timeout)
+                except mpc.queues.Empty:
+                    pass
                 else:
-                    # received new instructions
-                    if not end:
-                        # if an END or STOP signal has been received, new instructions are not listened to
-                        if isinstance(control, list):
-                            pending_instructions.extend(control)
-                        elif isinstance(control, dict):
-                            pending_instructions.append(control)
-            # B. listen to workers
-            try:
-                reported = self.workers_messenger.get(timeout=communications_timeout)
-            except mpc.queues.Empty:
-                pass
-            else:
-                # got a new message from workers !
-                report.append(reported)
-                if isinstance(reported['report'], Exception):
-                    # worker got an exception
-                    taylorism_log.error("error encountered with worker " + reported['name'] + " with traceback:")
-                    sys.stderr.writelines(reported['traceback'])
-                    sys.stderr.write("Instructions of guilty worker:\n")
-                    w = [repr(a) + '\n' for a in sorted(workers[reported['name']].footprint_as_dict().items()) if a]
-                    sys.stderr.writelines(w)
-                    stop_them_working()
-                    raise reported['report']
-                else:
-                    # worker has finished
-                    if self.verbose:
-                        taylorism_log.info(str(reported['report']))
-                workers.pop(reported['name']).bye()
-            # C. there is work to do and no STOP signal has been received: re-launch
-            if len(pending_instructions) > 0 and not stop and not halt:
-                (launchable, not_yet_launchable) = self.scheduler.launchable(pending_instructions, workers=workers, report=report)
-                for instructions in launchable:
-                    w = hire_worker(instructions)
-                    w.work()
-                    if self.verbose:
-                        taylorism_log.info(' '.join(['Worker', w.name, 'started.']))
-                pending_instructions = not_yet_launchable
-            # D. should we stop now ?
-            if end and (len(workers) == len(pending_instructions) == 0):
-                # a STOP signal has been received, all workers are done and no more pending instructions remain:
-                # we can leave out infinite loop
-                stop = True
-            if stop:
-                break
+                    # got a new message from workers !
+                    report.append(reported)
+                    if isinstance(reported['report'], Exception):
+                        # worker got an exception
+                        taylorism_log.error("error encountered with worker " + reported['name'] + " with traceback:")
+                        sys.stderr.writelines(reported['traceback'])
+                        sys.stderr.write("Instructions of guilty worker:\n")
+                        w = [repr(a) + '\n' for a in sorted(workers[reported['name']].footprint_as_dict().items()) if a]
+                        sys.stderr.writelines(w)
+                        stop_them_working()
+                        raise reported['report']
+                    else:
+                        # worker has finished
+                        if self.verbose:
+                            taylorism_log.info(str(reported['report']))
+                    workers.pop(reported['name']).bye()
+                # C. there is work to do and no STOP signal has been received: re-launch
+                if len(pending_instructions) > 0 and not stop and not halt:
+                    (launchable, not_yet_launchable) = self.scheduler.launchable(pending_instructions, workers=workers, report=report)
+                    for instructions in launchable:
+                        w = hire_worker(instructions)
+                        w.work()
+                        if self.verbose:
+                            taylorism_log.info(' '.join(['Worker', w.name, 'started.']))
+                    pending_instructions = not_yet_launchable
+                # D. should we stop now ?
+                if end and (len(workers) == len(pending_instructions) == 0):
+                    # a STOP signal has been received, all workers are done and no more pending instructions remain:
+                    # we can leave out infinite loop
+                    stop = True
+                if stop:
+                    break
+        except (interrupt.SignalInterruptError, KeyboardInterrupt):
+            stop_them_working()
+            raise
 
         return (report, pending_instructions)
