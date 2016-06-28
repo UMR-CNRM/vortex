@@ -142,12 +142,11 @@ def setup(**kw):
 
     import common
     import olive.data.providers
-    from iga.data import containers, providers, stores
+    from iga.data import providers, stores
     from previmar.data import consts, executables, resources
 
     print '+ common               =', common.__file__
     print '+ olive.data.providers =', olive.data.providers.__file__
-    print '+ iga.data.containers  =', containers.__file__
     print '+ iga.data.providers   =', providers.__file__
     print '+ iga.data.stores      =', stores.__file__
 
