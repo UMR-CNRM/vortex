@@ -50,6 +50,10 @@ class ClimModel(StaticGeoResource):
         """GGET specific naming convention."""
         return '.m' + str(self.month)
 
+    def olive_basename(self):
+        """OLIVE specific naming convention."""
+        return 'Const.Clim.' + str(self.month)
+
 
 class ClimGlobal(ClimModel):
     """
@@ -165,3 +169,7 @@ class ClimBDAP(StaticGeoResource):
     def gget_basename(self):
         """GGET specific naming convention."""
         return '.m' + str(self.month)
+
+    def olive_basename(self):
+        """OLIVE specific naming convention."""
+        return 'Const.Clim.' + str(self.month)
