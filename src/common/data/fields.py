@@ -21,10 +21,10 @@ class RawFields(Resource):
                     values = ['rawfields']
                 ),
                 origin = dict(
-                    values = ['nesdis', 'ostia', 'bdm']
+                    values = ['bdm', 'nesdis', 'ostia', 'psy4']
                 ),
                 fields = dict(
-                    values = ['sst', 'seaice']
+                    values = ['sst', 'seaice', 'ocean']
                 ),
             )
         )
@@ -71,7 +71,7 @@ class GeoFields(GeoFlowResource):
                     values  = ['geofields']
                 ),
                 fields = dict(
-                    values  = ['sst', 'seaice']
+                    values  = ['sst', 'seaice', 'ocean']
                 ),
                 nativefmt = dict(
                     values  = ['fa'],
