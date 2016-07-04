@@ -160,3 +160,41 @@ class Aneto(Target):
 
     del x
     del y
+
+
+class MeteoSoprano(Target):
+    """A Soprano Server."""
+
+    _abstract = True
+    _footprint = dict(
+        info = 'A Soprano Server at Meteo France',
+        attr = dict(
+            sysname = dict(
+                values = [ 'Linux' ]
+            ),
+        ),
+        priority = dict(
+            level = footprints.priorities.top.TOOLBOX
+        )
+    )
+
+
+class MeteoSopranoDevRH6(MeteoSoprano):
+    """ A Soprano Development Server running CentOS 6."""
+
+    _footprint = dict(
+        info = 'A Soprano Development Server running CentOS 6',
+        attr = dict(
+            hostname = dict(
+                values = ['alose', 'pagre', 'rason', 'orphie'],
+            ),
+            inifile=dict(
+                optional=True,
+                default='target-soprano_dev_rh6.ini',
+            ),
+        ),
+    )
+
+    def generic(self):
+        """Generic name to be used in acess paths"""
+        return 'soprano_dev_rh6'
