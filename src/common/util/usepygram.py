@@ -8,6 +8,9 @@ When loaded, this module discards any FootprintBase resource collected as a cont
 in EPyGrAM package.
 """
 
+import sys
+from distutils.version import LooseVersion
+
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -24,6 +27,41 @@ footprints.proxy.containers.discard_package('epygram')
 __all__ = []
 
 
+def is_epygram_available(minimal_version='0.0.0'):
+    """Is epygram available ?
+
+    :param str minimal_version: The minimal version we are looking for.
+    """
+    return (('epygram' in sys.modules) and
+            (LooseVersion(epygram.__version__) >= LooseVersion(minimal_version)))
+
+
+class EpygramUnavailableError(Exception):
+    pass
+
+
+def disabled_if_no_epygram(minimal_version_or_name):
+    """This decorator disables the provided object if epygram is not available.
+
+    :param str minimal_version_or_name: The minimal version we are looking for.
+    """
+    minimal_version = ('0.0.0'
+                       if callable(minimal_version_or_name)
+                       else minimal_version_or_name)
+
+    def actual_disabled_if_no_epygram(func_or_cls):
+        def error_func(*args, **kw):
+            raise EpygramUnavailableError()
+        return (func_or_cls
+                if is_epygram_available(minimal_version)
+                else error_func)
+
+    if callable(minimal_version_or_name):
+        return actual_disabled_if_no_epygram(minimal_version_or_name)
+    return actual_disabled_if_no_epygram
+
+
+@disabled_if_no_epygram
 def clone_fields(datain, dataout, sources, names=None, value=None, pack=None):
     """Clone any existing fields ending with``source`` to some new field."""
     # Prepare sources names
@@ -84,6 +122,7 @@ def _env_prepare(t):
     return localenv
 
 
+@disabled_if_no_epygram
 def addfield(t, rh, fieldsource, fieldtarget, constvalue):
     """Provider hook for adding a field through cloning."""
     if rh.container.exists():
@@ -96,6 +135,7 @@ def addfield(t, rh, fieldsource, fieldtarget, constvalue):
                        rh.container.localpath())
 
 
+@disabled_if_no_epygram
 def copyfield(t, rh, rhsource, fieldsource, fieldtarget):
     """Provider hook for copying fields between FA files."""
     if rh.container.exists():
@@ -130,6 +170,7 @@ class EpygramMetadataReader(MetaDataReader):
         raise NotImplementedError("Abstract method")
 
 
+@disabled_if_no_epygram
 class FaMetadataReader(EpygramMetadataReader):
 
     _footprint = dict(
@@ -146,6 +187,7 @@ class FaMetadataReader(EpygramMetadataReader):
         return epyf.validity.getbasis(), epyf.validity.term()
 
 
+@disabled_if_no_epygram('1.0.0')
 class GribMetadataReader(EpygramMetadataReader):
 
     _footprint = dict(
