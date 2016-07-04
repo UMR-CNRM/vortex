@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# pylint: disable=unused-argument
 
 """
 Functions and tools to handle resources names or other kind of names.
@@ -16,19 +15,30 @@ logger = footprints.loggers.getLogger(__name__)
 
 
 _arpcourt_vconf = ('courtfr', 'frcourt', 'court')
-
+_arome_vconf    = ('3dvarfr',)
 
 def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
     if cutoff == 'assim' and vconf not in _arpcourt_vconf:
-        map_suffix = dict(
-            zip(
+        if vconf in _arome_vconf:
+            map_suffix = dict(
                 zip(
-                    (cutoff,) * 4,
-                    (0, 6, 12, 18)
-                ),
-                ('r00', 'r06', 'r12', 'r18')
+                    zip(
+                        (cutoff,) * 2,
+                        (9, 21)
+                    ),
+                    ('r09', 'r21')
+                )
+            ) 
+        else:
+            map_suffix = dict(
+                zip(
+                    zip(
+                        (cutoff,) * 4,
+                        (0, 6, 12, 18)
+                    ),
+                    ('r00', 'r06', 'r12', 'r18')
+                )
             )
-        )
     elif cutoff == 'production' and vconf not in _arpcourt_vconf:
         suffix_r0 = 'rAM' if model == 'arpege' else 'rCM'
         map_suffix = dict(
@@ -235,8 +245,10 @@ def historic_bnames(resource, provider):
         return histsurf_bnames(resource, provider)
     model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
                                  vapp=provider.vapp, vconf=provider.vconf)
-    return 'ICMSH' + model_info + '+' + resource.term.fmthour + '.' + suffix
-
+    if provider.vconf == 'pearp':
+        return 'ICMSHPREV' + '+' + resource.term.fmthour + '.' + suffix
+    else:
+        return 'ICMSH' + model_info + '+' + resource.term.fmthour + '.' + suffix
 
 def histsurf_bnames(resource, provider):
     """docstring for histsurf"""
