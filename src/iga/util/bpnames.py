@@ -223,7 +223,7 @@ def analysis_bnames(resource, provider):
         vapp=provider.vapp, vconf=provider.vconf,
     )
     #patch for the different kind of analysis (surface and atmospheric)
-    if resource.model == 'arome' and resource.filling == 'surf':
+    if ( resource.model == 'arome' and resource.filling == 'surf' ) or resource.model == 'surfex':
         return 'INIT_SURF.fa.' + suffix
     elif resource.model == 'hycom' and resource.filling == 'surf':
         if provider.vconf[:3] == 'atl':

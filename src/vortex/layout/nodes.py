@@ -359,11 +359,13 @@ class Task(Node):
     def __init__(self, **kw):
         logger.debug('Task init %s', repr(self))
         super(Task, self).__init__(kw)
-        self.steps   = kw.pop('steps', tuple()),
-        self.fetch   = kw.pop('fetch', 'fetch'),
-        self.compute = kw.pop('compute', 'compute'),
-        self.backup  = kw.pop('backup', 'backup'),
-        self.starter = kw.pop('starter', False),
+        self.__dict__.update(
+            steps   = kw.pop('steps',   tuple()),
+            fetch   = kw.pop('fetch',   'fetch'),
+            compute = kw.pop('compute', 'compute'),
+            backup  = kw.pop('backup',  'backup'),
+            starter = kw.pop('starter', False),
+        )
         self._sequence = dataflow.Sequence()
         self.options = kw.copy()
         if isinstance(self.steps, basestring):

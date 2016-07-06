@@ -115,6 +115,8 @@ class Analysis(GeoFlowResource):
         elif self.model == 'hycom':
             if self.filling == 'surf':
                 directory = 'guess'
+        elif self.model == 'surfex':
+            directory = 'fic_day'
         else:
             if self.filling == 'surf':
                 directory = 'autres'
