@@ -17,7 +17,7 @@
 # Build opts: $mkopts
 
 op_jobname  = '$name'
-op_suite    = '$suite'
+op_xpid     = '$xpid'
 op_suitebg  = '$suitebg'
 op_vapp     = '$vapp'
 op_vconf    = '$vconf'
@@ -25,8 +25,7 @@ op_cutoff   = '$cutoff'
 op_rundate  = $rundate
 op_runtime  = $runtime
 op_runstep  = $runstep
-op_rootapp  = '$rootapp/{0:s}/{1:s}/{2:s}'.format(op_suite, op_vapp, op_vconf)
-op_gcocache = $rootdir 
+op_rootapp  = '$rootapp/{0:s}/{1:s}/{2:s}'.format(op_suitebg, op_vapp, op_vconf)
 op_jobfile  = '$file'
 op_thisjob  = '{0:s}/jobs/{1:s}.py'.format(op_rootapp, op_jobfile)
 op_iniconf  = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(op_rootapp, op_vapp, op_vconf, '$taskconf')
@@ -39,7 +38,6 @@ op_tplfile  = '$tplfile'
 op_tplinit  = '$tplinit'
 op_mail     = $mail
 op_jeeves   = '$jeeves'
-op_cycle    = '$opcycle'
 
 oplocals = locals()
 
@@ -63,7 +61,7 @@ try:
     e = op.setenv(t, actual=oplocals)
     ad.opmail_on()
     ad.route_off()
-    toolbox.defaults(smtpserver='smtp.meteo.fr', sender='dsiop_igasc@meteo.fr', cycle=op_cycle)
+    toolbox.defaults(smtpserver='smtp.meteo.fr', sender='dsiop_igasc@meteo.fr')
     opts = t.sh.rawopts(defaults=dict(play=op_fullplay))
     driver = todo.setup(t, **opts)
     driver.setup()
