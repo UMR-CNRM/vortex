@@ -184,6 +184,9 @@ class System(footprints.FootprintBase):
             self.search.append(obj)
         return len(self.search)
 
+    def loaded_addons(self):
+        return [addon.kind for addon in self.search if hasattr(addon, 'kind')]
+
     def external(self, key):
         """Return effective module object reference if any, or None."""
         try:
@@ -384,21 +387,16 @@ class System(footprints.FootprintBase):
         """Clone of the unix command."""
         filename = self.path.expanduser(filename)
         self.stderr('touch', filename)
-        if self.path.isdir(filename):
-            rc = True
+        rc = True
+        if self.path.exists(filename):
+            # Note: "filename" might as well be a directory...
             try:
                 os.utime(filename, None)
             except StandardError:
                 rc = False
         else:
             fh = file(filename, 'a')
-            rc = True
-            try:
-                os.utime(filename, None)
-            except StandardError:
-                rc = False
-            finally:
-                fh.close()
+            fh.close()
         return rc
 
     @fmtshcmd
@@ -914,7 +912,7 @@ class OSExtended(System):
 
     def safe_filesuffix(self):
         """return a file suffix that should be unique across the system"""
-        return '.'.join((datetime.now().strftime('%Y%m%d_%H%M%S_%f'),
+        return '.'.join((datetime.now().strftime('_%Y%m%d_%H%M%S_%f'),
                          self.hostname, 'p{0:06d}'.format(os.getpid()),))
 
     def rawcp(self, source, destination):

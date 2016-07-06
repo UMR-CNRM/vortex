@@ -134,12 +134,25 @@ class MpiNWPIO(mpitools.MpiServerIO):
         self.system.touch('io_poll.todo')
 
         # Get a look inside io server output directories according to its own pattern
+        ioserv_filelist = set()
+        ioserv_prefixes = set()
+        logfmt = '%24s: %32s %s'
+        iofile_re = re.compile(r'((ICMSH|PF|GRIBPF).*\+\d+(?:\:\d+)?)(?:\..*)?$')
         for iodir in self.iodirs():
             self.system.subtitle('Parallel io directory {0:s}'.format(iodir))
-            self.system.ls('-l', iodir, output=False)
-            for iofile in self.system.ls(iodir):
-                zf = re.match(r'((?:ICMSH|PF).*\+\d+(?:\:\d+)?)(?:\..*)?$', iofile)
+            for iofile in self.system.listdir(iodir):
+                zf = iofile_re.match(iofile)
                 if zf:
-                    tgfile = zf.group(1)
-                    if not self.system.path.exists(tgfile):
-                        self.system.touch(tgfile)
+                    logger.info(logfmt, iodir, iofile, ':-)')
+                    ioserv_filelist.add(zf.group(1))
+                    ioserv_prefixes.add(zf.group(2))
+                else:
+                    logger.info(logfmt, iodir, iofile, 'UFO')
+
+        # Touch the output files
+        for tgfile in ioserv_filelist:
+            self.system.touch(tgfile)
+
+        # Touch the io_poll.todo.PREFIX
+        for prefix in ioserv_prefixes:
+            self.system.touch('io_poll.todo.{:s}'.format(prefix))

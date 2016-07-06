@@ -100,8 +100,14 @@ class Forecast(IFSParallel):
 
         # Promises should be nicely managed by a co-proccess
         if self.promises:
-            self.io_poll_args = ('ICMSH', 'PF')
-            self.flyput = True
+            prefixes_set = set()
+            for pr_res in [pr.rh.resource for pr in self.promises]:
+                if pr_res.realkind == 'historic':
+                    prefixes_set.add('ICMSH')
+                if pr_res.realkind == 'gridpoint':
+                    prefixes_set.add('{:s}PF'.format('GRIB' if pr_res.nativefmt == 'grib' else ''))
+            self.io_poll_args = tuple(prefixes_set)
+            self.flyput = len(self.io_poll_args) > 0
 
     def postfix(self, rh, opts):
         """Find out if any special resources have been produced."""
