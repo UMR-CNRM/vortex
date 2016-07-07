@@ -59,6 +59,8 @@ class TestNameBuilder(unittest.TestCase):
         self.assertEqual(vb.pack(dict(src=['arpege', 'clim',
                                            {'cutoff': 'assim'}])),
                          'dummy.arpege-clim-assim')
+        self.assertEqual(vb.pack(dict(filtername='toto')),
+                         'dummy.toto')
         # geo option:
         self.assertEqual(vb.pack(dict(geo=[{'stretching': 2.2},
                                            {'truncation': 789},

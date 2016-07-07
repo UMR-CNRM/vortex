@@ -161,3 +161,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+      
+.. autoclass:: FilteringRequest
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

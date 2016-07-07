@@ -21,17 +21,18 @@ class VortexNameBuilder(object):
     def __init__(self, *args, **kw):
         logger.debug('Init VortexNameBuilder %s', self.__class__)
         self._default = dict(
-            radical   = 'vortexdata',
-            src       = None,
-            fmt       = None,
-            term      = None,
-            geo       = None,
-            suffix    = None,
-            nativefmt = None,
-            stage     = None,
-            part      = None,
-            compute   = None,
-            number    = None,
+            radical    = 'vortexdata',
+            src        = None,
+            fmt        = None,
+            term       = None,
+            geo        = None,
+            suffix     = None,
+            nativefmt  = None,
+            stage      = None,
+            part       = None,
+            compute    = None,
+            number     = None,
+            filtername = None,
         )
         self.setdefault(**kw)
 
@@ -124,6 +125,9 @@ class VortexNameBuilder(object):
 
         if d['src'] is not None:
             name = name + '.' + '-'.join(self.pack_std_items(d['src']))
+
+        if d['filtername'] is not None:
+            name = name + '.' + d['filtername']
 
         if d['geo'] is not None:
             name = name + '.' + '-'.join(self.pack_std_items(d['geo']))

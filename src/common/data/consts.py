@@ -7,7 +7,7 @@ __all__ = []
 from vortex.data.resources  import Resource
 from vortex.data.outflow    import ModelResource, StaticGeoResource
 from vortex.data.geometries import LonlatGeometry, GaussGeometry
-from vortex.data.contents   import TextContent
+from vortex.data.contents   import TextContent, JsonDictContent
 
 from gco.syntax.stdattrs    import gvar
 
@@ -706,3 +706,33 @@ class LFIScripts(Resource):
     @property
     def realkind(self):
         return 'lfiscripts'
+
+
+class FilteringRequest(GenvModelResource):
+    """
+    Class of a JSON file that describes a resource filter. A Genvkey can be given.
+    """
+    _footprint = dict(
+        info = "Description of a resource's data filter",
+        attr = dict(
+            kind = dict(
+                values  = ['filtering_request', ],
+            ),
+            filtername = dict(
+            ),
+            nativefmt = dict(
+                values = ['json', ],
+                default = 'json',
+            ),
+            clscontents = dict(
+                default = JsonDictContent,
+            ),
+            gvar = dict(
+                default = 'filtering_request_[filtername]'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'filtering_request'

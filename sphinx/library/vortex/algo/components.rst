@@ -35,17 +35,27 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ExecutableAlgoComponent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: TaylorRun
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: BlindRun
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Expresso
+.. autoclass:: ParaBlindRun
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: ParaBlindRun
+.. autoclass:: Expresso
    :show-inheritance:
    :members:
    :member-order: alphabetical
