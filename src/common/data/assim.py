@@ -16,16 +16,58 @@ from vortex.syntax.stdattrs import FmtInt, term
 from gco.syntax.stdattrs    import GenvKey
 
 
-class BackgroundStdError(GeoFlowResource):
+class _BackgroundErrorInfo(GeoFlowResource):
+    """
+    A generic class for data in grib format related to the background error.
+    """
+
+    _abstract = True
+    _footprint = [
+        term,
+        dict(
+            info='Background standard deviation',
+            attr=dict(
+                term=dict(
+                    optional=True,
+                    values=[3, 6, 9, 12],
+                    default=6
+                ),
+                nativefmt=dict(
+                    default='grib',
+                ),
+                gvar = dict(
+                    type     = GenvKey,
+                    optional = True,
+                    default = 'errgrib_t[geometry:truncation]'
+                ),
+            ),
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'bgstdinfo'
+
+    def basename_info(self):
+        """Generic information for names fabric, with radical = ``bcor``."""
+        return dict(
+            radical = self.realkind,
+            geo     = [{'truncation': self.geometry.truncation}],
+            fmt     = self.nativefmt,
+            src     = [self.model, ],
+            term    = self.term.fmthm,
+        )
+
+
+class BackgroundStdError(_BackgroundErrorInfo):
     """
     Background error standard deviation.
     """
 
     _footprint = [
-        term,
         dict(
-             info='Background error standard deviation',
-             attr=dict(
+            info='Background error standard deviation',
+            attr=dict(
                 kind=dict(
                     values=['bgstderr', 'bg_stderr'],
                     remap=dict(autoremap='first'),
@@ -35,15 +77,10 @@ class BackgroundStdError(GeoFlowResource):
                     default='vor',
                     values=['scr', 'vor'],
                 ),
-                term=dict(
-                    optional=True,
-                    values=[3, 6, 9, 12],
-                    default=6
+                gvar = dict(
+                    default = 'errgrib_[stage]'
                 ),
-                nativefmt=dict(
-                    default='grib',
-                ),
-             ),
+            ),
         )
     ]
 
@@ -53,13 +90,9 @@ class BackgroundStdError(GeoFlowResource):
 
     def basename_info(self):
         """Generic information for names fabric, with radical = ``bcor``."""
-        return dict(
-            radical = self.realkind,
-            geo     = [{'truncation': self.geometry.truncation}],
-            fmt     = self.nativefmt,
-            src     = [self.model, self.stage],
-            term    = self.term.fmthm,
-        )
+        infos = super(BackgroundStdError, self).basename_info()
+        infos['src'].append(self.stage)
+        return infos
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
@@ -74,6 +107,38 @@ class BackgroundStdError(GeoFlowResource):
             return 'errgribvor'
         else:
             return 'sigma_b'
+
+
+class BackgroundErrorNorm(_BackgroundErrorInfo):
+    """
+    Background error normalisation data.
+    """
+
+    _footprint = [
+        dict(
+            info='Background standard error normalisation data',
+            attr=dict(
+                kind=dict(
+                    values=['bgerrnorm', ],
+                ),
+                gvar = dict(
+                    default = 'srenorm_t[geometry:truncation]'
+                ),
+            ),
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'bgerrnorm'
+
+    def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
+        return 'srenorm.t.' + str(self.geometry.truncation)
+
+    def olive_basename(self):
+        """OLIVE specific naming convention."""
+        return 'srenorm.t.' + str(self.geometry.truncation)
 
 
 class Wavelet(GeoFlowResource):

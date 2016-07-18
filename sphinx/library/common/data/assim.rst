@@ -45,8 +45,18 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: _BackgroundErrorInfo
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
    
 .. autoclass:: BackgroundStdError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: BackgroundErrorNorm
    :show-inheritance:
    :members:
    :member-order: alphabetical
