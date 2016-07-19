@@ -152,13 +152,14 @@ class ObsRaw(Observations):
         info = 'Raw observations set',
         attr = dict(
             nativefmt = dict(
-                values  = ['obsoul', 'grib', 'bufr', 'ascii', 'netcdf'],
+                values  = ['obsoul', 'grib', 'bufr', 'ascii', 'netcdf', 'hdf5'],
                 remap   = dict(
                     OBSOUL = 'obsoul',
                     GRIB   = 'grib',
                     BUFR   = 'bufr',
                     ASCII  = 'ascii',
                     NETCDF = 'netcdf',
+                    HDF5   = 'hdf5'
                 )
             ),
             stage = dict(
@@ -173,6 +174,7 @@ class ObsRaw(Observations):
                     grib   = 'obsgrib',
                     bufr   = 'obsbufr',
                     netcdf = 'netcdf',
+                    hdf5 = 'hdf5',
                 ),
             )
         )
@@ -188,7 +190,8 @@ class ObsRaw(Observations):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        if re.match(r'^(?:bufr|obsoul|grib|netcdf)$', self.nativefmt) and self.part != 'full' and self.stage == 'void':
+        if (re.match(r'^(?:bufr|obsoul|grib|netcdf|hdf5)$', self.nativefmt) and
+                self.part != 'full' and self.stage == 'void'):
             return '.'.join((self.nativefmt, self.part))
         elif re.match(r'^obsoul$', self.nativefmt) and self.part == 'full' and self.stage == 'void':
             return 'obsoul'

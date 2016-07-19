@@ -36,7 +36,7 @@ notinrepr = set(['kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'])
 knownfmt = set([
     'auto', 'autoconfig', 'unknown', 'foo',
     'ascii', 'txt', 'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib',
-    'bufr', 'obsoul', 'odb', 'ecma', 'ccma',
+    'bufr', 'hdf5', 'obsoul', 'odb', 'ecma', 'ccma',
     'bullx', 'sx', 'ddhpack', 'tar',
 ])
 
