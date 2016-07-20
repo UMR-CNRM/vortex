@@ -40,6 +40,10 @@ class Forecast(IFSParallel):
                 type     = bool,
                 optional = True,
                 default  = False,
+            ),
+            outputid = dict(
+                type     = str,
+                optional = True,
             )
         )
     )
@@ -90,12 +94,16 @@ class Forecast(IFSParallel):
             kind = 'namelist',
         ) ]:
             try:
+                namlocal = namrh.container.actualpath()
                 namc = namrh.contents
                 namc['NAMCT0'].NFPOS = int(self.inline)
-                sh.header('FullPos InLine '  + str(self.inline))
+                logger.info("Setup NAMCT0's NFPOS=%d in %s", int(self.inline), namlocal)
+                if self.outputid is not None:
+                    namc.setmacro('OUTPUTID', self.outputid)
+                    logger.info('Setup macro OUTPUTID=%s in %s', self.outputid, namlocal)
                 namc.rewrite(namrh.container)
             except Exception:
-                logger.critical('Could not fix NAMCT0 in %s', namrh.container.actualpath())
+                logger.critical('Could not fix %s', namrh.container.actualpath())
                 raise
 
         # Promises should be nicely managed by a co-proccess

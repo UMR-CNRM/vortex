@@ -15,6 +15,7 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex.layout.monitor    import BasicInputMonitor
 from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, AlgoComponentError
 from vortex.syntax.stdattrs   import DelayedEnvValue, FmtInt
+from vortex.tools             import grib
 from vortex.tools.fortran     import NamelistBlock
 from vortex.tools.parallelism import TaylorVortexWorker, VortexWorkerBlindRun
 from vortex.tools.systems     import ExecutionError
@@ -324,7 +325,7 @@ class Fa2Grib(ParaBlindRun):
             raise IOError("The waiting loop timed out")
 
 
-class StandaloneGRIBFilter(TaylorRun):
+class StandaloneGRIBFilter(TaylorRun, grib.GribApiComponent):
 
     _footprint = dict(
         attr = dict(
@@ -348,6 +349,11 @@ class StandaloneGRIBFilter(TaylorRun):
             ),
         )
     )
+
+    def prepare(self, rh, opts):
+        """Set some variables according to target definition."""
+        super(StandaloneGRIBFilter, self).prepare(rh, opts)
+        self.gribapi_setup(rh, opts)
 
     def execute(self, rh, opts):
 
@@ -481,7 +487,7 @@ class AddField(BlindRun):
         self.system.remove(self.fortnam)
 
 
-class DiagPE(BlindRun):
+class DiagPE(BlindRun, grib.GribApiComponent):
     """Execution of diagnostics on grib input (ensemble forecasts specific)."""
     _footprint = dict(
         attr = dict(
@@ -504,8 +510,9 @@ class DiagPE(BlindRun):
         """Set some variables according to target definition."""
         super(DiagPE, self).prepare(rh, opts)
         # Prevent DrHook to initialise MPI and setup grib_api
-        for optpack in ('drhook_not_mpi', 'gribapi'):
+        for optpack in ('drhook_not_mpi', ):
             self.export(optpack)
+        self.gribapi_setup(rh, opts)
 
     def spawn_hook(self):
         """Usually a good habit to dump the fort.4 namelist."""
@@ -554,7 +561,7 @@ class DiagPE(BlindRun):
             super(DiagPE, self).execute(rh, opts)
 
 
-class DiagPI(BlindRun):
+class DiagPI(BlindRun, grib.GribApiComponent):
     """Execution of diagnostics on grib input (deterministic forecasts specific)."""
 
     _footprint = dict(
@@ -574,8 +581,9 @@ class DiagPI(BlindRun):
         """Set some variables according to target definition."""
         super(DiagPI, self).prepare(rh, opts)
         # Prevent DrHook to initialise MPI and setup grib_api
-        for optpack in ('drhook_not_mpi', 'gribapi'):
+        for optpack in ('drhook_not_mpi', ):
             self.export(optpack)
+        self.gribapi_setup(rh, opts)
 
     def spawn_hook(self):
         """Usually a good habit to dump the fort.4 namelist."""

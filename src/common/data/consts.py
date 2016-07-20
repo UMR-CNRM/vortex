@@ -736,3 +736,31 @@ class FilteringRequest(GenvModelResource):
     @property
     def realkind(self):
         return 'filtering_request'
+
+
+class GribAPIConfig(Resource):
+    """
+    Configuration files for the Grib-API (samples or definitions)
+    """
+    _footprint = [
+        gvar,
+        dict(
+            info='Grib-API configuration files',
+            attr=dict(
+                kind=dict(
+                    values=['gribapiconf', ],
+                ),
+                target = dict(
+                    values=['samples', 'def', 'definitions'],
+                    remap=dict(definitions='def'),
+                ),
+                gvar=dict(
+                    default='grib_api_[target]'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'gribapiconf'

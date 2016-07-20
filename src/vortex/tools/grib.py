@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import io
+import re
 import urlparse
 
 import footprints
@@ -176,6 +177,53 @@ class GRIB_Tool(addons.Addon):
 
     grib_ftput = _std_ftput
     grib_rawftput = _std_rawftput
+
+
+class GribApiComponent(object):
+    """Extend Algo Components with GribApi features."""
+
+    def gribapi_setup(self, rh, opts):
+        # First set the GRIB-API paths by inspecting the binary
+        libs = self.system.ldd(rh.container.localpath()) if rh is not None else {}
+        gribapi_lib = None
+        for lib in libs.iterkeys():
+            if re.match(r'^libgrib_api(?:-[.0-9]+)?\.so(?:\.[.0-9]+)?$', lib):
+                gribapi_lib = lib
+                break
+        if gribapi_lib is not None:
+            gribapi_root = self.system.path.dirname(libs[gribapi_lib])
+            gribapi_root = self.system.path.split(gribapi_root)[0]
+            gribapi_share = self.system.path.join(gribapi_root, 'share', 'grib_api')
+            if 'GRIB_DEFINITION_PATH' not in self.env:
+                # This one is for compatibility with old versions of the gribapi !
+                self.env.setgenericpath('GRIB_DEFINITION_PATH',
+                                        self.system.path.join(gribapi_root, 'share', 'definitions'))
+                # This should be the lastest one:
+                self.env.setgenericpath('GRIB_DEFINITION_PATH',
+                                        self.system.path.join(gribapi_share, 'definitions'))
+            if 'GRIB_SAMPLES_PATH' not in self.env:
+                # This one is for compatibility with old versions of the gribapi !
+                self.env.setgenericpath('GRIB_SAMPLES_PATH',
+                                        self.system.path.join(gribapi_root, 'ifs_samples', 'grib1'))
+                # This should be the lastest one:
+                self.env.setgenericpath('GRIB_SAMPLES_PATH',
+                                        self.system.path.join(gribapi_share, 'ifs_samples', 'grib1'))
+        else:
+            # Use the default GRIB-API config if the ldd approach fails
+            self.export('gribapi')
+        # Then, inspect the context to look for customised search paths
+        for a_role, a_var in (('AdditionalGribAPIDefinitions', 'GRIB_DEFINITION_PATH'),
+                              ('AdditionalGribAPISamples', 'GRIB_SAMPLES_PATH')):
+            for gdef in self.context.sequence.effective_inputs(role=a_role):
+                local_path = gdef.rh.container.localpath()
+                new_path = (local_path if self.system.path.isdir(local_path)
+                            else self.system.path.dirname(local_path))
+                # NB: Grib-API doesn't understand relative paths...
+                new_path = self.system.path.abspath(new_path)
+                self.env.setgenericpath(a_var, new_path, pos=0)
+        # Recap
+        for a_var in ('GRIB_DEFINITION_PATH', 'GRIB_SAMPLES_PATH'):
+            logger.info('After gribapi_setup %s = %s', a_var, self.env.getvar(a_var))
 
 
 class GRIBAPI_Tool(addons.Addon):

@@ -1404,6 +1404,23 @@ class OSExtended(System):
         """Deactivate the signal catching."""
         self._sighandler.deactivate()
 
+    _LDD_REGEX = re.compile(r'^\s*([^\s]+)\s+=>\s*([^\s]+)\s+\(0x.+\)$')
+
+    def ldd(self, filename):
+        """Call ldd on a file.
+
+        Return the mapping between the library name and its physical path
+        """
+        if self.path.isfile(filename):
+            ldd_out = self.spawn(('ldd', filename))
+            libs = dict()
+            for ldd_match in [self._LDD_REGEX.match(l) for l in ldd_out]:
+                if ldd_match is not None:
+                    libs[ldd_match.group(1)] = ldd_match.group(2)
+            return libs
+        else:
+            raise ValueError('{} is not a regular file'.format(filename))
+
 
 class Python26(object):
     """Old fashion features before Python 2.7."""
