@@ -350,11 +350,6 @@ class StandaloneGRIBFilter(TaylorRun, grib.GribApiComponent):
         )
     )
 
-    def prepare(self, rh, opts):
-        """Set some variables according to target definition."""
-        super(StandaloneGRIBFilter, self).prepare(rh, opts)
-        self.gribapi_setup(rh, opts)
-
     def execute(self, rh, opts):
 
         # We re-serialise data because footprints don't like dictionaries
