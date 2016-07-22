@@ -42,7 +42,7 @@ def register(**kw):
         if entry:
             nextcycle = entry
         else:
-            nextcycle = 'CYCLE{0:03d}'.format(len(p)+1)
+            nextcycle = 'CYCLE{0:03d}'.format(len(p) + 1)
         logger.debug('Register a new genv cycle %s', nextcycle)
         p[nextcycle] = dict(CYCLE = cycle)
         regcycle = p[nextcycle]
@@ -95,11 +95,20 @@ def clearall():
     p.clear()
 
 
-def autofill(cycle, gcout=None):
+def autofill(cycle, gcout=None, writes_dump=False):
     """Use the ``genv`` external tool to fill the specified cycle."""
     actualcycle = None
     if gcout is None:
-        gcout = vortex.sh().spawn([actualgenv(), cycle], output=True)
+        sh = vortex.sh()
+        cachefile = '{:s}_vortex_genv_cache'.format(cycle)
+        if sh.path.isfile(cachefile):
+            with open(cachefile, 'r') as genvfh:
+                gcout = [l.rstrip('\n') for l in genvfh.readlines()]
+        else:
+            gcout = vortex.sh().spawn([actualgenv(), cycle], output=True)
+            if writes_dump:
+                with open(cachefile, 'w') as genvfh:
+                    genvfh.writelines([l + "\n" for l in gcout])
     if gcout:
         gcdict = dict()
         for item in gcout:
@@ -111,7 +120,7 @@ def autofill(cycle, gcout=None):
             if ' ' in v:
                 vlist = v.split(' ')
                 gcdict[k] = vlist[0]
-                gcdict[k+'_LIST'] = vlist
+                gcdict[k + '_LIST'] = vlist
             else:
                 gcdict[k] = v
         register(**gcdict)
