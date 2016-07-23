@@ -31,3 +31,19 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: RemoteGenericSet
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: RemoteBinset
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: RemoteExtractSet
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
