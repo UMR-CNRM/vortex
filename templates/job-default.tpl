@@ -41,7 +41,7 @@ op_jeeves   = '$jeeves'
 
 oplocals = locals()
 
-import os, sys
+import os, sys, re
 sys.stderr = sys.stdout
 
 pathdirs = [ os.path.join(op_rootapp, xpath) for xpath in ('', 'src', 'vortex/site', 'vortex/src') ]
@@ -72,3 +72,12 @@ except Exception as trouble:
     op.rescue(actual=locals())
 finally:
     print 'Bye bye Op...'
+    if 'DMT_PATH_EXEC' in os.environ:
+        option_insertion = '--id ' + os.environ['SLURM_JOB_ID'] + ' --date-pivot=' + os.environ['DMT_DATE_PIVOT'] + ' --job-path=' + re.sub(r'.*vortex/','',os.environ['DMT_PATH_EXEC'] + '/' + os.environ['DMT_JOB_NAME']) + ' --log=' + re.sub(r'.*oldres/','',os.environ['LOG_SBATCH'] + ' --machine ' + os.environ['CALCULATEUR'])
+        if 'DATA_OUTPUT_ARCH_PATH' in os.environ:
+            option_insertion = option_insertion + ' --arch-path=' + os.environ['DATA_OUTPUT_ARCH_PATH']
+        file = os.environ['HOME'] + '/tempo/option_insertion.' + os.environ['SLURM_JOB_ID'] + '.txt'
+        print file
+        print option_insertion
+        with open(file, "w") as f:
+            f.write(option_insertion)
