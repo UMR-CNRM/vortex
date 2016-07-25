@@ -9,9 +9,11 @@ import re
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.data.providers import Provider
-from common.tools.igastuff import archive_suffix, fuzzyname, arpcourt_vconf, IgakeyFactoryArchive
+from vortex.data.providers import Provider, Remote
 from vortex.syntax.stdattrs import Namespace, a_suite
+from vortex.util.config import GenericConfigParser
+
+from common.tools.igastuff import archive_suffix, fuzzyname, arpcourt_vconf, IgakeyFactoryArchive
 
 
 class Olive(Provider):
@@ -219,3 +221,75 @@ class OpArchiveCourt(OpArchive):
         rinfo = super(OpArchiveCourt, self).pathinfo(resource)
         rinfo['cutoff'] = 'court'
         return rinfo
+
+
+class RemoteGenericSet(Remote):
+
+    _abstract = True
+    _footprint = dict(
+        info = 'A set of things in a remote repository',
+        attr = dict(
+            setcontent = dict(
+            ),
+        ),
+        priority = dict(
+            level = footprints.priorities.top.TOOLBOX
+        )
+    )
+
+    def pathname(self, resource):
+        """OS dirname of the ``remote`` attribute."""
+        return self.remote
+
+
+class RemoteBinset(RemoteGenericSet):
+
+    _footprint = dict(
+        info = 'A set of binaries in a remote repository',
+        attr = dict(
+            setcontent = dict(
+                values = ['binaries', 'bin'],
+                remap = dict(autoremap='first')
+            ),
+            binmap = dict(
+                optional = True,
+                default  = 'gco'
+            ),
+            config = dict(
+                type     = GenericConfigParser,
+                optional = True,
+                default  = GenericConfigParser('binset-map-resources.ini')
+            )
+        )
+    )
+
+    def basename(self, resource):
+        """OS basename of the ``remote`` attribute."""
+        gvar = str(resource.basename('genv')).lower()
+        if not self.config.has_section(self.binmap):
+            raise ValueError("The {:s} binmap do not exists.".format(self.binmap))
+        return self.config.get(self.binmap, gvar)
+
+
+class RemoteExtractSet(RemoteGenericSet):
+
+    _RE_EXTRACT = re.compile(r'extract\=([^&]+)(:?&|$)')
+
+    _footprint = dict(
+        info = 'A set of namelists in a remote repository',
+        attr = dict(
+            setcontent = dict(
+                values = ['namelists', 'nam'],
+                remap = dict(nam='namelists')
+            ),
+        )
+    )
+
+    def basename(self, resource):
+        """OS basename of the ``remote`` attribute."""
+        extractquery = str(resource.urlquery('gget'))
+        source = self._RE_EXTRACT.search(extractquery)
+        if source:
+            return source.group(1)
+        else:
+            raise ValueError("The gget_urlquery does not returned anything.")
