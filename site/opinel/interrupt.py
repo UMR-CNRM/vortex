@@ -95,7 +95,7 @@ class SignalInterruptHandler(object):
                     raise SignalInterruptError('Signal {:d} was caught.'.format(signum))
             for sig in self.signals:
                 self._original_handlers[sig] = signal.signal(sig, handler)
-                logger.info('Customised signal handler installed for signal %d'.sig)
+                logger.info('Customised signal handler installed for signal %d', sig)
         self._active = True
 
     def deactivate(self):
