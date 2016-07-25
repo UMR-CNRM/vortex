@@ -39,6 +39,19 @@ CNRM Targets
    :members:
    :member-order: alphabetical
 
+SOPRANO Servers
+---------------
+
+.. autoclass:: MeteoSoprano
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MeteoSopranoDevRH6
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Old NEC system and targets
 --------------------------
 
