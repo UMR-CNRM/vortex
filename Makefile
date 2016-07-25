@@ -40,6 +40,21 @@ pylint:
 	bin/tbinterface.py -a -c all -n 'common,gco,iga,mercator,olive,previmar,sandbox' -f json -o 'project/tbinterface'
 	pylint --rcfile=project/pylint.rc src/* site/* > project/pylint_global.txt || true
 
+
+# List of git contributors (for icons in project/gource_users/)
+contributors:
+	@find src site -type f -name "*.py" \
+	| while read f ; do git blame -p $$f ; done \
+	| sed -n 's/^author //p' \
+	| sort \
+	| uniq -c \
+	| sort -nr
+
+# View the animated history of the project's contributions
+gource:
+	gource -i 0 -s 0.1 --bloom-multiplier 0.7 -c 0.8 -f \
+	       --user-image-dir project/gource_users
+
 # Clean all the directories, then locally
 clean: $(CLEANDIRS)
 	rm -f project/{flake8_report,pylint_global}.txt
