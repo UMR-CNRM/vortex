@@ -31,37 +31,46 @@ def get(**kw):
     """Return actual session ticket object matching description."""
     return Ticket(**kw)
 
+
 def keys():
     """Return the list of current session tickets names collected."""
     return Ticket.tag_keys()
+
 
 def values():
     """Return the list of current session ticket values collected."""
     return Ticket.tag_values()
 
+
 def items():
     """Return the items of the session tickets table."""
     return Ticket.tag_items()
+
 
 def current():
     """Return the current active session."""
     return get(tag = Ticket.tag_focus())
 
+
 def prompt():
     """Returns a built string that could be used as a prompt for reporting."""
     return current().prompt
+
 
 def switch(tag=None):
     """Set the session associated to the actual ``tag`` as active."""
     return current().switch(tag=tag)
 
+
 def getglove(**kw):
     """Proxy to :mod:`gloves` collector."""
     return footprints.proxy.gloves.default(**kw)
 
+
 def system(**kw):
     """Returns the system associated to the current ticket."""
     return get(tag = kw.pop('tag', Ticket.tag_focus())).system(**kw)
+
 
 # noinspection PyShadowingBuiltins
 def exit():
@@ -88,8 +97,7 @@ class Ticket(footprints.util.GetByTag):
                  topenv  = None,
                  glove   = None,
                  context = None,
-                 prompt  = 'Vortex:'
-    ):
+                 prompt  = 'Vortex:'):
         self.prompt = prompt
         self.line   = "\n" + '-' * 100 + "\n"
 
@@ -210,7 +218,6 @@ class Ticket(footprints.util.GetByTag):
             return self.closed - self.started
         else:
             return date.now() - self.started
-
 
     def activate(self):
         """Force the current session as active."""

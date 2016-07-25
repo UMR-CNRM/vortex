@@ -74,7 +74,7 @@ class Geometry(footprints.util.GetByTag):
         self.inifile = None
         self.__dict__.update(kw)
         self.kind    = 'abstract'
-        logger.debug('Abstract Geometry init kw={!s}'.format(kw))
+        logger.debug('Abstract Geometry init kw=%s', str(kw))
 
     @classmethod
     def tag_clean(self, tag):
@@ -96,7 +96,7 @@ class CombinedGeometry(Geometry):
         self.vgeo = None
         super(CombinedGeometry, self).__init__(**kw)
         self.kind = 'combined'
-        logger.debug('Combined Geometry init {!s} {!s}'.format(self, kw))
+        logger.debug('Combined Geometry init %s %s', str(self), str(kw))
 
 
 class VerticalGeometry(Geometry):
@@ -107,7 +107,7 @@ class VerticalGeometry(Geometry):
     def __init__(self, **kw):
         super(VerticalGeometry, self).__init__(**kw)
         self.kind = 'vertical'
-        logger.debug('Abstract Vertital Geometry init {!s} {!s}'.format(self, kw))
+        logger.debug('Abstract Vertical Geometry init %s %s', str(self), str(kw))
 
 
 class HorizontalGeometry(Geometry):
@@ -146,7 +146,7 @@ class HorizontalGeometry(Geometry):
             if cv is not None:
                 setattr(self, item, float(cv))
         self._check_attributes()
-        logger.debug('Abstract Horizontal Geometry init {!s}'.format(self))
+        logger.debug('Abstract Horizontal Geometry init %s', str(self))
 
     def _check_attributes(self):
         if self.lam and (self.area is None):
@@ -216,7 +216,7 @@ class GaussGeometry(HorizontalGeometry):
     def __init__(self, **kw):
         super(GaussGeometry, self).__init__(**kw)
         self.kind = 'gauss'
-        logger.debug('Gauss Geometry init {!s}'.format(self))
+        logger.debug('Gauss Geometry init %s', str(self))
 
     def _check_attributes(self):
         self.lam = False  # Always false for gaussian grid
@@ -245,7 +245,7 @@ class ProjectedGeometry(HorizontalGeometry):
         kw.setdefault('runit', 'km')
         super(ProjectedGeometry, self).__init__(**kw)
         self.kind = 'projected'
-        logger.debug('Projected Geometry init {!s}'.format(self))
+        logger.debug('Projected Geometry init %s', str(self))
 
     def _check_attributes(self):
         super(ProjectedGeometry, self)._check_attributes()
@@ -274,7 +274,7 @@ class LonlatGeometry(HorizontalGeometry):
         kw.setdefault('runit', 'dg')
         super(LonlatGeometry, self).__init__(**kw)
         self.kind = 'lonlat'
-        logger.debug('Lon/Lat Geometry init {!s}'.format(self))
+        logger.debug('Lon/Lat Geometry init %s', str(self))
 
     def __str__(self):
         """Standard formatted print representation."""
@@ -297,7 +297,7 @@ class UnstructuredGeometry(HorizontalGeometry):
     def __init__(self, *args, **kw):
         super(UnstructuredGeometry, self).__init__(**kw)
         self.kind = 'unstructured'
-        logger.debug('Unstructured Geometry init {!s}'.format(self))
+        logger.debug('Unstructured Geometry init %s', str(self))
 
     def __str__(self):
         """Standard formatted print representation."""

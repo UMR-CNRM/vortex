@@ -134,7 +134,7 @@ class Forecast(IFSParallel):
                 flist = sh.glob('DHF{}{}+*'.format(prefix, self.xpname))
                 if flist:
                     dest = 'ddhpack_{}'.format(ddhkind)
-                    logger.info('Creating a DDH pack: {}'.format(dest))
+                    logger.info('Creating a DDH pack: %s', dest)
                     sh.mkdir(dest)
                     for lfa in flist:
                         sh.mv(lfa, dest, fmt='lfa')

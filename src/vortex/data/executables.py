@@ -127,8 +127,8 @@ class NWPModel(Binary):
 
     _abstract = True
     _footprint = dict(
-         info = 'NWP Model',
-         attr = dict(
+        info = 'NWP Model',
+        attr = dict(
             model = a_model,
             kind = dict(
                 values = ['nwpmodel']

@@ -5,7 +5,6 @@
 Net tools.
 """
 
-import types
 import urlparse
 import io, ftplib
 from netrc import netrc
@@ -67,7 +66,7 @@ class StdFtp(object):
     """
 
     def __init__(self, system, hostname):
-        logger.debug('FTP init <host:{:s}>'.format(hostname))
+        logger.debug('FTP init <host:%s>', hostname)
         self._system  = system
         self._closed  = True
         self._ftplib  = ftplib.FTP(hostname)
@@ -112,7 +111,7 @@ class StdFtp(object):
 
     def stderr(self, cmd, *args):
         """Proxy to local system's standard error."""
-        self.system.stderr('ftp:'+cmd, *args)
+        self.system.stderr('ftp:' + cmd, *args)
 
     @property
     def closed(self):
@@ -132,7 +131,7 @@ class StdFtp(object):
             topnow = datetime.now() if self._deleted is None else self._deleted
             timelength = ( topnow - self._opened ).total_seconds()
         except TypeError:
-            logger.warning('Could not evaluate connexion length {!r}'.format(self))
+            logger.warning('Could not evaluate connexion length %s', repr(self))
         return timelength
 
     def close(self):
@@ -145,13 +144,13 @@ class StdFtp(object):
     def login(self, *args):
         """Proxy to ftplib :meth:`ftplib.FTP.login`."""
         self.stderr('login', args[0])
-        logger.debug('FTP login <args:{!s}>'.format(args))
+        logger.debug('FTP login <args:%s>', str(args))
         rc = self._ftplib.login(*args)
         if rc:
             self._closed = False
             self._opened = datetime.now()
         else:
-            logger.warning('FTP could not login <args:{!s}>'.format(args))
+            logger.warning('FTP could not login <args:%s>', str(args))
         return rc
 
     def fastlogin(self, logname, password=None):
@@ -216,18 +215,18 @@ class StdFtp(object):
         try:
             self.retrbinary('RETR ' + source, target.write)
         except (ValueError, TypeError, IOError) as e:
-            logger.error('FTP could not get {!r}: {!s}'.format(source, e))
+            logger.error('FTP could not get %s: %s', repr(source), str(e))
             raise
         except ftplib.all_errors as e:
-            logger.error('FTP internal exception {!r}: {!s}'.format(source, e))
-            raise IOError('FTP could not get {!r}: {!s}'.format(source, e))
+            logger.error('FTP internal exception %s: %s', repr(source), str(e))
+            raise IOError('FTP could not get %s: %s', repr(source), str(e))
         else:
             if xdestination:
                 target.seek(0, 2)
                 if self.size(source) == target.tell():
                     rc = True
                 else:
-                    logger.error('FTP incomplete get {!r}'.format(source))
+                    logger.error('FTP incomplete get %s', repr(source))
             else:
                 rc = True
         finally:
@@ -248,33 +247,34 @@ class StdFtp(object):
             inputsrc = source
             try:
                 inputsrc.seek(0)
-            except AttributeError as seek_error:
-                logger.warning('Could not rewind <source:{!s}>'.format(source))
-            except IOError as seek_error:
-                logger.debug('Seek trouble <source:{!s}>'.format(source))
+            except AttributeError:
+                logger.warning('Could not rewind <source:%s>', str(source))
+            except IOError:
+                logger.debug('Seek trouble <source:%s>', str(source))
             xsource = False
         self.rmkdir(destination)
         try:
             self.delete(destination)
-            logger.warning('Replacing <file:{!s}>'.format(destination))
+            logger.warning('Replacing <file:%s>', str(destination))
         except ftplib.error_perm:
-            logger.warning('Creating <file:{!s}>'.format(destination))
+            logger.warning('Creating <file:%s>', str(destination))
         except (ValueError, TypeError, IOError,
                 ftplib.error_proto, ftplib.error_reply, ftplib.error_temp) as e:
-            logger.critical('Serious delete trouble <file:{!s}> <error:{!s}>'.format(destination, e))
-        logger.info('FTP <put:{!s}>'.format(destination))
+            logger.critical('Serious delete trouble <file:%s> <error:%s>',
+                            str(destination), str(e))
+        logger.info('FTP <put:%s>', str(destination))
         rc = False
         try:
             self.storbinary('STOR ' + destination, inputsrc)
         except (ValueError, IOError, TypeError, ftplib.all_errors) as e:
-            logger.error('FTP could not put {!r}: {!s}'.format(source, e))
+            logger.error('FTP could not put %s: %s', repr(source), str(e))
         else:
             if xsource:
                 inputsrc.seek(0, 2)
                 if self.size(destination) == inputsrc.tell():
                     rc = True
                 else:
-                    logger.error('FTP incomplete put {!r}'.format(source))
+                    logger.error('FTP incomplete put %s', repr(source))
             else:
                 rc = True
         finally:
@@ -325,4 +325,3 @@ class StdFtp(object):
                 return int(s)
             except (OverflowError, ValueError):
                 return long(s)
-

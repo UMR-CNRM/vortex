@@ -185,7 +185,7 @@ class IFSODB(IFSParallel, odb.OdbComponent):
         """Look up for namelist channels in effective inputs."""
         namchan = [
             x.rh for x in self.context.sequence.effective_inputs(kind = 'namelist')
-                if 'channel' in x.rh.options
+            if 'channel' in x.rh.options
         ]
         for thisnam in namchan:
             thisloc = re.sub(r'\d+$', '', thisnam.options['channel']) + 'channels'
@@ -196,7 +196,7 @@ class IFSODB(IFSParallel, odb.OdbComponent):
         """Return a list of effective input resources which are odb observations."""
         allodb = [
             x.rh for x in self.context.sequence.effective_inputs(kind = 'observations')
-                if x.rh.container.actualfmt == 'odb'
+            if x.rh.container.actualfmt == 'odb'
         ]
         allodb.sort(lambda a, b: cmp(a.resource.part, b.resource.part))
         if not allodb and fatal:
@@ -348,7 +348,7 @@ class Screening(IFSODB):
         # Look for extras ODB raw
         odbraw = [
             x.rh for x in self.context.sequence.effective_inputs(kind = 'odbraw')
-                if x.rh.container.actualfmt == 'odb'
+            if x.rh.container.actualfmt == 'odb'
         ]
         if not odbraw:
             logger.error('No ODB bias table found')
@@ -357,7 +357,8 @@ class Screening(IFSODB):
             for rawname in rawdbnames:
                 self.env[ 'ODB_SRCPATH_' + rawname] = sh.path.join(thiscwd, rawname)
                 self.env[ 'ODB_DATAPATH_' + rawname] = sh.path.join(thiscwd, rawname)
-                for badlink in [ bl for bl in sh.glob(rawname + '/*.h') if sh.path.islink(bl) and not sh.path.exists(bl) ]:
+                for badlink in [bl for bl in sh.glob(rawname + '/*.h')
+                                if sh.path.islink(bl) and not sh.path.exists(bl)]:
                     sh.unlink(badlink)
             allio = ['IOASSIGN']
             allio.extend([ sh.path.join(x, 'IOASSIGN') for x in rawdbnames ])
@@ -430,7 +431,7 @@ class Minim(IFSODBCCMA):
     )
 
     def prepare(self, rh, opts):
-        """Find out if preconditionning eigen vectors are here."""
+        """Find out if preconditioning eigenvectors are here."""
 
         # Check if a preconditioning EV map is here
         evmaprh = self.context.sequence.effective_inputs(role=('PreconEVMap',
@@ -438,9 +439,9 @@ class Minim(IFSODBCCMA):
                                                          kind='precevmap')
         if evmaprh:
             if len(evmaprh) > 1:
-                logger.warning("Several preconditionning EV maps provided. Using the first one.")
+                logger.warning("Several preconditioning EV maps provided. Using the first one.")
             nprec_ev = evmaprh[0].rh.contents.data['evlen']
-            # If there are preconditionning EV: update the namelist
+            # If there are preconditioning EV: update the namelist
             if nprec_ev > 0:
                 for namrh in [x.rh  for x in self.context.sequence.effective_inputs(role='Namelist',
                                                                                     kind='namelist',)]:
@@ -451,11 +452,12 @@ class Minim(IFSODBCCMA):
                     except Exception:
                         logger.critical('Could not fix NAMVAR in %s', namrh.container.actualpath())
                         raise
-                logger.info("%d preconditionning EV will by used (NPCVECS=%d).", nprec_ev, nprec_ev)
+                logger.info("%d preconditioning EV will by used (NPCVECS=%d).", nprec_ev, nprec_ev)
             else:
-                logger.warning("A preconditionning EV map was found, but no preconditionning EV are availlable.")
+                logger.warning("A preconditioning EV map was found, " +
+                               "but no preconditioning EV are available.")
         else:
-            logger.info("No preconditionning EV were found.")
+            logger.info("No preconditioning EV were found.")
 
         super(Minim, self).prepare(rh, opts)
 

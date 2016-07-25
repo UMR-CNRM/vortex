@@ -107,6 +107,6 @@ def attr_descriptors(refresh=False, _cache=dict()):
         _cache.clear()
         _cache.update( dict([
             (xobj.access_mode, xobj) for xobj in globals().values()
-                if hasattr(xobj, 'access_mode') and xobj.access_mode is not None
+            if hasattr(xobj, 'access_mode') and xobj.access_mode is not None
         ]))
     return _cache

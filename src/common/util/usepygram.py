@@ -19,7 +19,7 @@ try:
 except ImportError:
     pass
 
-footprints.proxy.containers.discard_package('epygram')
+footprints.proxy.containers.discard_package('epygram', verbose=False)
 
 __all__ = []
 

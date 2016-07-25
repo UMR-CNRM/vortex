@@ -24,8 +24,8 @@ class BackgroundStdError(GeoFlowResource):
     _footprint = [
         term,
         dict(
-             info='Background error standard deviation',
-             attr=dict(
+            info='Background error standard deviation',
+            attr=dict(
                 kind=dict(
                     values=['bgstderr', 'bg_stderr'],
                     remap=dict(autoremap='first'),
@@ -43,7 +43,7 @@ class BackgroundStdError(GeoFlowResource):
                 nativefmt=dict(
                     default='grib',
                 ),
-             ),
+            ),
         )
     ]
 

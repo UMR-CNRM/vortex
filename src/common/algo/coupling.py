@@ -118,8 +118,8 @@ class Coupling(FullPos):
                 if sh.path.exists(cplpath):
                     actualdateguess = cplout.rh.resource.date + cplout.rh.resource.term
                     if (actualdate == actualdateguess):
-                        logger.error('The guess date, {:s}, is different from the source date {:s}, !'
-                                     .format(actualdateguess.reallynice(), actualdate.reallynice()))
+                        logger.error('The guess date, %s, is different from the source date %s, !',
+                                     actualdateguess.reallynice(), actualdate.reallynice())
                     # Expect the coupling guess to be there...
                     self.grab(cplout, comment='coupling guess')
                     logger.info('Coupling with existing guess <%s>', cplpath)

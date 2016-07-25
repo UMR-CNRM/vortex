@@ -301,8 +301,7 @@ class LFI_Tool_Raw(addons.Addon):
         st = self._std_prepare(source, destination, intent)
         if st.rc == 0:
             st.rc = self._spawn_wrap('copy', (['-pack', ] if pack else []) +
-                                             ['-intent={}'.format(intent),
-                                              source, destination],
+                                     ['-intent={}'.format(intent), source, destination],
                                      output=False)
         return st
 
@@ -313,8 +312,7 @@ class LFI_Tool_Raw(addons.Addon):
         st = self._std_prepare(source, destination, intent)
         if st.rc == 0:
             st.rc = self._spawn_wrap('move', (['-pack', ] if pack else []) +
-                                             ['-intent={}'.format(intent),
-                                              source, destination],
+                                     ['-intent={}'.format(intent), source, destination],
                                      output=False)
         return st
 

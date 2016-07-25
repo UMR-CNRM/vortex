@@ -13,21 +13,14 @@ class SignalInterruptError(Exception):
 
 
 class SignalInterruptHandler(object):
-    '''
-    
-
-
-
-    '''
+    '''Handler class to deal with system signals.'''
 
     def __init__(self, signals=(signal.SIGHUP, signal.SIGINT, signal.SIGQUIT,
                                 signal.SIGTRAP, signal.SIGABRT, signal.SIGFPE,
-                                signal.SIGUSR1, signal.SIGUSR2, signal.SIGTERM
-                                )):
+                                signal.SIGUSR1, signal.SIGUSR2, signal.SIGTERM)):
         '''
-        Handler class to deal with system signals.
 
-        :param signals: list/tupple of signals that will be caught
+        :param signals: list/tuple of signals that will be caught
 
         For each of the signals specified to the class constructor, this
         signal handler is able to switch on and off a customised signal
@@ -95,14 +88,14 @@ class SignalInterruptHandler(object):
         if not self._active:
             def handler(signum, frame):
                 self.deactivate()
-                logger.error('Signal {:d} was caught.'.format(signum))
+                logger.error('Signal %d was caught.', signum)
                 if signum == signal.SIGINT:
                     raise KeyboardInterrupt()
                 else:
                     raise SignalInterruptError('Signal {:d} was caught.'.format(signum))
             for sig in self.signals:
                 self._original_handlers[sig] = signal.signal(sig, handler)
-                logger.info('Customised signal handler installed for signal {:d}'.format(sig))
+                logger.info('Customised signal handler installed for signal %d'.sig)
         self._active = True
 
     def deactivate(self):
@@ -110,5 +103,5 @@ class SignalInterruptHandler(object):
         if self._active:
             for sig in self.signals:
                 signal.signal(sig, self._original_handlers[sig])
-                logger.info('Original signal handler restored for signal {:d}'.format(sig))
+                logger.info('Original signal handler restored for signal %d', sig)
         self._active = False

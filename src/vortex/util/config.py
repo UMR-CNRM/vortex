@@ -41,7 +41,7 @@ def load_template(t, tplfile):
             tpl = string.Template(tplfd.read())
         tpl.srcfile = tplfile
     except Exception as pb:
-        logger.error('Could not read template <{!s}>'.format(pb))
+        logger.error('Could not read template <%s>', str(pb))
         raise
     return tpl
 
@@ -125,7 +125,8 @@ class GenericConfigParser(object):
             if merged:
                 dico[section] = dict(self.items(section))
             else:
-                dico[section] = { k : v for k, v in self.items(section) if k in self.parser._sections[section] }
+                dico[section] = {k: v for k, v in self.items(section)
+                                 if k in self.parser._sections[section]}
         return dico
 
     def __getattr__(self, attr):
