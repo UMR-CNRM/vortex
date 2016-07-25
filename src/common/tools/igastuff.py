@@ -170,8 +170,8 @@ class IgakeyFactoryInline(_BaseIgakeyFactory):
                           'nc': 'caledonie',
                           'polynesie': 'polynesie',
                           'reunion': 'reunion', },
-               'hycom':  {'atl@anarp': 'surcotes',
-                          'med@anarp': 'surcotes',
-                          'atl@fcarp': 'surcotes',
-                          'med@fcarp': 'surcotes', },
+               'hycom': {'atl@anarp': 'surcotes',
+                         'med@anarp': 'surcotes',
+                         'atl@fcarp': 'surcotes',
+                         'med@fcarp': 'surcotes', },
                }

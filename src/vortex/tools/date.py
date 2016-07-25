@@ -158,8 +158,8 @@ def easter(year=None):
 
 local_date_functions = dict([
     (x.__name__, x)
-        for x in locals().values()
-            if hasattr(x, 'func_name') and x.__doc__.startswith('Return date')
+    for x in locals().values()
+    if hasattr(x, 'func_name') and x.__doc__.startswith('Return date')
 ])
 
 # noinspection PyUnboundLocalVariable
@@ -392,10 +392,10 @@ class Date(datetime.datetime):
             top = s_top[0]
             top = re.sub('^YYYY', str(max(0, int(kw.pop('year', today().year)))), top.upper())
             deltas = s_top[1:]
-            ld = [ int(x) for x in re.split('[-:HTZ]+', mkisodate(top)) if re.match(r'\d+$', x) ]
+            ld = [int(x) for x in re.split('[-:HTZ]+', mkisodate(top)) if re.match(r'\d+$', x)]
         else:
-            ld = [ int(x) for x in args if isinstance(x, (int, float)) or (isinstance(x, str) and
-                                                                       re.match(r'\d+$', x)) ]
+            ld = [int(x) for x in args
+                  if isinstance(x, (int, float)) or (isinstance(x, str) and re.match(r'\d+$', x)) ]
         if not ld:
             raise ValueError("Initial Date value unknown")
         newdate = datetime.datetime.__new__(cls, *ld)

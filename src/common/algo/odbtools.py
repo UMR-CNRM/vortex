@@ -151,8 +151,8 @@ class Raw2ODB(OdbProcess):
 
             # Gather equivalent refdata lines
             if not sh.path.exists('norefdata.' + thispart) and (
-                not self.env.VORTEX_OBSDB_NOREF or not re.search(thispart, self.env.VORTEX_OBSDB_NOREF, re.IGNORECASE)
-            ):
+                    not self.env.VORTEX_OBSDB_NOREF or
+                    not re.search(thispart, self.env.VORTEX_OBSDB_NOREF, re.IGNORECASE)):
                 for k, v in refmap.items():
                     x_fmt, x_data, x_instr = k
                     if x_fmt == thisfmt and x_data == thispart:

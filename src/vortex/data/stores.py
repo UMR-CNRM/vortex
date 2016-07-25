@@ -446,7 +446,7 @@ class MultiStore(footprints.FootprintBase):
                             refill_in_progress = (restore.put(local, remote.copy(), options) or
                                                   refill_in_progress)
                         except ExecutionError as e:
-                            logger.error("An ExecutionError happened during the refill: {!s}".format(e))
+                            logger.error("An ExecutionError happened during the refill: %s", str(e))
                             logger.error("This error is ignored... but that's ugly !")
                 if refill_in_progress:
                     logger.info("Starting another round because at least one refill succeeded")
@@ -827,8 +827,7 @@ class ArchiveStore(Store):
         """Returns the current :attr:`storage` or the value from the configuration file."""
         if self.storage is None:
             return self.system.env.get('VORTEX_DEFAULT_STORAGE',
-                                       self.system.target().get('stores:storage', 'hendrix.meteo.fr')
-                                       )
+                                       self.system.target().get('stores:storage', 'hendrix.meteo.fr'))
         else:
             return self.storage
 
@@ -962,7 +961,7 @@ class VortexArchiveStore(ArchiveStore):
     def vortexput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
         if not self.storetrue:
-            logger.info("put deactivated for {}".format(local))
+            logger.info("put deactivated for %s", str(local))
             return True
         self.remap_write(remote, options)
         return self.ftpput(local, remote, options)

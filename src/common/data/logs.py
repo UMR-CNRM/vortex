@@ -13,8 +13,8 @@ class Listing(FlowResource):
     """Miscelanous application output from a task processing."""
     _footprint = [
         dict(
-             info = 'Listing',
-             attr = dict(
+            info = 'Listing',
+            attr = dict(
                 task = dict(
                     optional = True,
                     default  = 'anonymous'
@@ -51,7 +51,7 @@ class ParallelListing(Listing):
     """Multi output for parallel MPI and/or OpenMP processing."""
     _footprint = [
         dict(
-             attr = dict(
+            attr = dict(
                 kind = dict(
                     values = ['listing', 'plisting', 'mlisting'],
                     remap  = dict(
@@ -101,7 +101,7 @@ class DrHookListing(Listing):
     """Output produced by DrHook"""
     _footprint = [
         dict(
-             attr = dict(
+            attr = dict(
                 kind = dict(
                     values = ['drhook', ],
                 ),

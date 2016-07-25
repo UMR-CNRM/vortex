@@ -15,15 +15,15 @@ class ISP(GeoFlowResource):
     Used to be an ``isp`` !
     """
     _footprint = dict(
-       info = 'Forecasted Satellite Image',
-       attr = dict(
-           kind = dict(
-               values = [ 'isp', 'fsi' ]
-           ),
-           nativefmt = dict(
+        info = 'Forecasted Satellite Image',
+        attr = dict(
+            kind = dict(
+                values = [ 'isp', 'fsi' ]
+            ),
+            nativefmt = dict(
                 values = [ 'foo' ],
                 default = 'foo',
-           ),
+            ),
         )
     )
 

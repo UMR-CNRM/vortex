@@ -43,11 +43,9 @@ class AttrDict(dict):
 class VortexWorker(object):
     """Context for a vortex session handled by an asynchronous process such as Jeeves."""
 
-    def __init__(self, modules=tuple(), verbose=False,
-        logger=None,
-        logmap=('debug', 'info', 'warning'),
-        logmsg='Vortex context log gateway'
-    ):
+    def __init__(self, modules=tuple(), verbose=False, logger=None,
+                 logmap=('debug', 'info', 'warning'),
+                 logmsg='Vortex context log gateway'):
         self._logger  = logger
         self._logmap  = logmap
         self._logmsg  = logmsg

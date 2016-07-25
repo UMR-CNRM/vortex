@@ -81,16 +81,17 @@ class BdpeStore(Store):
                                             extraenv=dict(BDPE_CIBLE_PREFEREE=p_target,
                                                           BDPE_CIBLE_INTERDITE=f_target))
 
-        logger.debug('lirepe_cmd: {}'.format(actual_command))
+        logger.debug('lirepe_cmd: %s', actual_command)
 
         rc = self.system.spawn([actual_command, ], shell=True, output=False, fatal=False)
         rc = rc and self.system.path.exists(local)
 
         diagfile = local + '.diag'
         if not rc:
-            logger.warning('Something went wrong with the following command: {}'.format(actual_command))
+            logger.warning('Something went wrong with the following command: %s',
+                           actual_command)
             if self.system.path.exists(diagfile):
-                logger.warning('The {} file is:'.format(diagfile))
+                logger.warning('The %s file is:', diagfile)
                 self.system.cat(diagfile)
 
         if self.system.path.exists(diagfile):

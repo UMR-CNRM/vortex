@@ -129,11 +129,9 @@ class IgaProvider(Provider):
         """
         info = bp.global_pnames(self, resource)
         # patch pour les couplages
-        if (
-            'fmt' in info and
-            resource.realkind == 'boundary' and
-            self.igakey != 'reunion'
-        ):
+        if ('fmt' in info and
+                resource.realkind == 'boundary' and
+                self.igakey != 'reunion'):
             info['fmt'] = 'fic_day'
         if not hasattr(resource, 'model') or resource.model == 'surfex':
             info['model'] = self.vapp

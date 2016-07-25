@@ -52,7 +52,7 @@ class Collector(util.GetByTag, util.Catalog):
     _tag_default = 'garbage'
 
     def __init__(self, **kw):
-        logger.debug('Footprints collector init {!s}'.format(self))
+        logger.debug('Footprints collector init %s', str(self))
         self.instances = util.Catalog(weak=True)
         self.abstract_classes = util.Catalog(weak=True)
         self.register = True
@@ -267,17 +267,17 @@ class Collector(util.GetByTag, util.Catalog):
         mkstdreport = desc.pop('_report', self.report_auto)
         mkaltreport = desc.pop('_altreport', self.altreport)
         for hidden in [ x for x in desc.keys() if x.startswith('_') ]:
-            logger.warning('Hidden argument "{:s}" ignored in pickup attributes'.format(hidden))
+            logger.warning('Hidden argument "%s" ignored in pickup attributes', hidden)
             del desc[hidden]
         if self.tag in desc and desc[self.tag] is not None:
-            logger.debug('A {:s} is already defined {!s}'.format(self.tag, desc[self.tag]))
+            logger.debug('A %s is already defined %s', self.tag, str(desc[self.tag]))
         else:
             desc[self.tag] = self.find_best(desc)
         if desc[self.tag] is not None:
             desc = desc[self.tag].footprint_cleanup(desc)
         else:
             dumper = dump.get()
-            logger.warning('No {!r} found in description {:s}'.format(self.tag, "\n" + dumper.cleandump(desc)))
+            logger.warning("No %s found in description \n%s", self.tag, dumper.cleandump(desc))
             if mkstdreport and self.report:
                 print "\n", self.report_log.info(), "\n"
                 self.report_last.lightdump()
@@ -294,7 +294,7 @@ class Collector(util.GetByTag, util.Catalog):
         Return the first item of the collector that :meth:`footprint_couldbe`
         as described by argument ``desc``.
         """
-        logger.debug('Search any {!s} in collector {!s}'.format(desc, self._items))
+        logger.debug('Search any %s in collector %s', str(desc), str(self._items))
         requeue = True
         report_log = None if self.report == config.ONERROR_REPORTING else self.report_log
         while requeue:
@@ -316,7 +316,7 @@ class Collector(util.GetByTag, util.Catalog):
         Returns all the items of the collector that :meth:`footprint_couldbe`
         as described by argument ``desc``.
         """
-        logger.debug('Search all {!s} in collector {!s}'.format(desc, self._items))
+        logger.debug('Search all %s in collector %s', str(desc), str(self._items))
         requeue = True
         report_log = None if self.report == config.ONERROR_REPORTING else self.report_log
         while requeue:
@@ -340,17 +340,17 @@ class Collector(util.GetByTag, util.Catalog):
         Returns the best of the items returned byt the :meth:`find_all` method
         according to potential priorities rules.
         """
-        logger.debug('Search best {!s} in collector {!s}'.format(desc, self._items))
+        logger.debug('Search best %s in collector %s', str(desc), str(self._items))
         candidates = self.find_all(desc)
         if not candidates:
             return None
         if len(candidates) > 1:
             dumper = dump.get()
-            logger.warning('Multiple {:s} candidates {:s}'.format(self.tag, "\n" + dumper.cleandump(desc)))
+            logger.warning("Multiple %s candidates \n%s", self.tag, dumper.cleandump(desc))
             candidates.sort(key=lambda x: x[0].footprint_weight(x[2]), reverse=True)
             for i, c in enumerate(candidates):
                 thisclass, u_resolved, theinput = c
-                logger.warning('no.{:d} in.{:d} is {!r}'.format(i+1, len(theinput), thisclass))
+                logger.warning('no.%d in.%d is %s', i + 1, len(theinput), str(thisclass))
         topcl, topr, u_topinput = candidates[0]
         return topcl(topr, checked=True)
 

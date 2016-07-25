@@ -68,7 +68,6 @@ class Service(footprints.FootprintBase):
     def env(self):
         return self._sh.env
 
-
     def actual_value(self, key, as_var=None, as_conf=None, default=None):
         """
         Return for a given ``attr`` a value from several sources in turn:
@@ -582,7 +581,8 @@ class Directory(object):
             for (k, v) in config.items('aliases')
         }
         count = self._flatten()
-        logger.debug('opmail aliases flattened in {} iterations:\n{}'.format(count, self))
+        logger.debug('opmail aliases flattened in %d iterations:\n%s',
+                     count, str(self))
 
     def get_addresses(self, definition, add_domain=True):
         """Build a space separated list of unique mail addresses
@@ -613,8 +613,9 @@ class Directory(object):
             for kref, vref in self.aliases.iteritems():
                 if kref in vref:
                     logger.error('Cycle detected in the aliases directory.\n'
-                                 'offending key: {}.\n'
-                                 'directory being flattened:\n{}'.format(kref,self))
+                                 'offending key: %s.\n'
+                                 'directory being flattened:\n%s',
+                                 str(kref), str(self))
                     raise ValueError('Cycle for key <{}> in directory definition'.format(kref))
                 for k, v in self.aliases.iteritems():
                     if kref in v:
@@ -657,7 +658,7 @@ class PromptService(Service):
         pf = Utf8PrettyPrinter().pformat
         logger_action = getattr(logger, self.level, logger.warning)
         msg = (self.comment or 'PromptService was called.') + '\noptions = {}'
-        logger_action (msg.format(pf(options)).replace('\n', '\n<prompt> '))
+        logger_action(msg.format(pf(options)).replace('\n', '\n<prompt> '))
         return True
 
 
@@ -704,7 +705,7 @@ class TemplatedMailService(MailService):
         ticket = kw.pop('ticket', sessions.get())
         super(TemplatedMailService, self).__init__(*args, **kw)
         self._ticket = ticket
-        logger.debug('TemplatedMail init for id <{}>'.format(self.id))
+        logger.debug('TemplatedMail init for id <%s>', self.id)
 
     @property
     def ticket(self):
@@ -727,7 +728,8 @@ class TemplatedMailService(MailService):
         try:
             section = dict(self.catalog.items(self.id))
         except NoSectionError:
-            logger.error('Section <{}> is missing in catalog <{}>'.format(self.id, self.catalog.file))
+            logger.error('Section <%s> is missing in catalog <%s>',
+                         self.id, self.catalog.file)
             section = None
         return section
 
@@ -746,17 +748,18 @@ class TemplatedMailService(MailService):
           * on error, a safe substitution is applied.
           * The substitution is iterated ``depth`` times.
         """
-        if not isinstance (tpl, Template):
+        if not isinstance(tpl, Template):
             tpl = Template(tpl)
         result = ''
         for level in range(depth):
             try:
                 result = tpl.substitute(tpldict)
             except KeyError as exc:
-                logger.error('Undefined key <{}> in template substitution level {}'.format(exc.message, level+1))
+                logger.error('Undefined key <%s> in template substitution level %d',
+                             exc.message, level + 1)
                 result = tpl.safe_substitute(tpldict)
             except ValueError as exc:
-                logger.error('Illegal syntax in template: {}'.format(exc.message))
+                logger.error('Illegal syntax in template: %s', exc.message)
                 result = tpl.safe_substitute(tpldict)
             tpl = Template(result)
         return result
@@ -793,7 +796,7 @@ class TemplatedMailService(MailService):
         if tpl is None:
             tpl = self.section.get('subject', None)
             if tpl is None:
-                logger.error('Missing <subject> definition for id <{}>.'.format(self.id))
+                logger.error('Missing <subject> definition for id <%s>.', self.id)
                 return None
         subject = self.substitute(tpl, tpldict)
         return subject
@@ -811,7 +814,7 @@ class TemplatedMailService(MailService):
         if tpl is None:
             tpl = self.section.get('to', None)
             if tpl is None:
-                logger.error('Missing <to> definition for id <{}>.'.format(self.id))
+                logger.error('Missing <to> definition for id <%s>.', self.id)
                 return None
         to = self.substitute(tpl, tpldict)
         if self.directory:
@@ -854,7 +857,7 @@ class TemplatedMailService(MailService):
 
         Arguments are passed as add_ons to the substitution dictionary.
         """
-        add_ons =dict()
+        add_ons = dict()
         for arg in args:
             add_ons.update(arg)
         rc = False

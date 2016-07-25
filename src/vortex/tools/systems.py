@@ -219,7 +219,7 @@ class System(footprints.FootprintBase):
 
     def stderr(self, *args):
         """Write a formatted message to standard error."""
-        count, justnow,  = self.history.append(*args)
+        count, justnow, = self.history.append(*args)
         if self.trace:
             sys.stderr.write(
                 "* [{0:s}][{1:d}] {2:s}\n".format(
@@ -322,7 +322,7 @@ class System(footprints.FootprintBase):
     def header(self, text='', tchar='-', autolen=False, xline=True, prompt=None):
         """Formated subtitle output."""
         if autolen:
-            nbc = len(prompt+text)+1
+            nbc = len(prompt + text) + 1
         else:
             nbc = 100
         print "\n", tchar * nbc
@@ -583,21 +583,21 @@ class System(footprints.FootprintBase):
             else:
                 logger.warning('Carry on because fatal is off')
         except OSError as perr:
-            logger.critical('Could not call {!s}'.format(args))
+            logger.critical('Could not call %s', str(args))
             if fatal:
                 raise
             else:
                 logger.warning('Carry on because fatal is off')
         except StandardError as perr:
-            logger.critical('System returns {!s}'.format(perr))
+            logger.critical('System returns %s', str(perr))
             if fatal:
                 raise RuntimeError('System {!s} spawned {!s} got [{!s}]: {!s}'
                                    .format(self, args, p.returncode, perr))
             else:
                 logger.warning('Carry on because fatal is off')
         except (SignalInterruptError, KeyboardInterrupt) as perr:
-            logger.critical('The python process was killed: {!s} '.format(perr) +
-                            'Trying to terminate the subprocess.')
+            logger.critical('The python process was killed: %s. Trying to terminate the subprocess.',
+                            str(perr))
             if p:
                 if shell:
                     # Kill the process group: apparently it's the only way when shell=T
@@ -617,7 +617,7 @@ class System(footprints.FootprintBase):
                     rc = not bool(p.returncode)
             else:
                 if not silent:
-                    logger.warning('Bad return code [{0:d}] for {1:s}'.format(p.returncode, args))
+                    logger.warning('Bad return code [%d] for %s', p.returncode, str(args))
                     if isinstance(output, bool) and output:
                         for xerr in p_err:
                             sys.stderr.write(xerr)

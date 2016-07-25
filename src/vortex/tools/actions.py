@@ -162,7 +162,7 @@ class AskJeeves(Action):
             kw['fwd_kind'] = kw.pop('kind')
         service = self.get_active_service(**kw)
         if service:
-            talk = { k:v for k,v in kw.items() if k not in service.footprint_attributes }
+            talk = {k: v for k, v in kw.items() if k not in service.footprint_attributes}
             rc = service(talk)
         return rc
 
@@ -181,7 +181,7 @@ class Prompt(Action):
         service = self.get_active_service(**kw)
         rc = False
         if service:
-            options = { k:v for k,v in kw.items() if k not in service.footprint_attributes }
+            options = {k: v for k, v in kw.items() if k not in service.footprint_attributes}
             rc = service(options)
         return rc
 
@@ -210,10 +210,8 @@ class SmsGateway(Action):
     def __getattr__(self, attr):
         if attr.startswith('_'):
             raise AttributeError
-        if attr in (
-            'clear', 'conf', 'info', 'mute', 'path', 'play',
-            'abort', 'complete', 'event', 'init', 'label', 'meter', 'msg', 'variable'
-        ):
+        if attr in ('clear', 'conf', 'info', 'mute', 'path', 'play', 'abort',
+                    'complete', 'event', 'init', 'label', 'meter', 'msg', 'variable'):
             self._smscmd = attr
             return self.gateway
         else:

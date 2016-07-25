@@ -56,7 +56,7 @@ class OdbDriver(object):
             self.env.default(
                 ODB_IO_GRPSIZE  = npool,
                 ODB_IO_FILESIZE = 128,
-        )
+            )
 
         if self.env.NPROC:
             self.env.default(
