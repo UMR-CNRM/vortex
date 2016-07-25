@@ -6,16 +6,21 @@ __all__ = []
 
 import time
 import re
+import json
 
 import footprints
+from footprints.stdtypes import FPTuple
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.layout.monitor    import BasicInputMonitor
-from vortex.algo.components   import BlindRun, ParaBlindRun, AlgoComponentError
+from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, AlgoComponentError
 from vortex.syntax.stdattrs   import DelayedEnvValue, FmtInt
+from vortex.tools             import grib
 from vortex.tools.fortran     import NamelistBlock
-from vortex.tools.parallelism import VortexWorkerBlindRun
+from vortex.tools.parallelism import TaylorVortexWorker, VortexWorkerBlindRun
 from vortex.tools.systems     import ExecutionError
+
+from common.tools.grib        import GRIBFilter
 
 
 class _FA2GribWorker(VortexWorkerBlindRun):
@@ -127,6 +132,63 @@ class _FA2GribWorker(VortexWorkerBlindRun):
                 thispromise.put(incache=True)
 
         logger.info("Fa2Grib processing is done for tag=%s", self.name)
+
+        return rdict
+
+
+class _GribFilterWorker(TaylorVortexWorker):
+    """The taylorism worker that actually filter the gribfiles.
+
+    This is called indirectly by taylorism when :class:`Fa2Grib` is used.
+    """
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['gribfilter']
+            ),
+            # Filter settings
+            filters = dict(
+                type = FPTuple,
+            ),
+            concatenate = dict(
+                type = bool,
+            ),
+            # Input/Output data
+            file_in = dict(),
+            file_outfmt = dict(),
+        )
+    )
+
+    def vortex_task(self, **kwargs):
+
+        logger.info("Starting the GribFiltering for tag=%s", self.file_in)
+
+        rdict = dict(rc=True)
+
+        # Create the filtering object and add filters
+        gfilter = GRIBFilter(concatenate=self.concatenate)
+        if self.filters:
+            gfilter.add_filters(* list(self.filters))
+
+        # Process the input file
+        newfiles = gfilter(self.file_in, self.file_outfmt)
+
+        if newfiles:
+            # Deal with promised resources
+            allpromises = [x for x in self.context.sequence.outputs()
+                           if x.rh.provider.expected]
+            for newfile in newfiles:
+                expected = [x for x in allpromises
+                            if x.rh.container.localpath() == newfile]
+                for thispromise in expected:
+                    thispromise.put(incache=True)
+
+        else:
+            logger.warning('No file has been generated.')
+            rdict['rc'] = False
+
+        logger.info("GribFiltering is done for tag=%s", self.name)
 
         return rdict
 
@@ -263,6 +325,91 @@ class Fa2Grib(ParaBlindRun):
             raise IOError("The waiting loop timed out")
 
 
+class StandaloneGRIBFilter(TaylorRun, grib.GribApiComponent):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = [ 'gribfilter' ],
+            ),
+            timeout = dict(
+                type = int,
+                optional = True,
+                default = 300,
+            ),
+            refreshtime = dict(
+                type = int,
+                optional = True,
+                default = 20,
+            ),
+            concatenate = dict(
+                type = bool,
+                default =False,
+                optional = True,
+            ),
+        )
+    )
+
+    def execute(self, rh, opts):
+
+        # We re-serialise data because footprints don't like dictionaries
+        filters = [json.dumps(x.rh.contents.data)
+                   for x in self.context.sequence.effective_inputs(role='GRIBFilteringRequest',
+                                                                   kind='filtering_request')]
+        filters = FPTuple(filters)
+
+        self._default_pre_execute(rh, opts)
+
+        common_i = self._default_common_instructions(rh, opts)
+        # Update the common instructions
+        common_i.update(dict(concatenate=self.concatenate,
+                             filters=filters))
+
+        # Monitor for the input files
+        bm = BasicInputMonitor(self.context.sequence, caching_freq=self.refreshtime,
+                               role='Gridpoint', kind='gridpoint')
+
+        tmout = False
+        latestfound = time.time()
+        while not bm.all_done or len(bm.available) > 0:
+
+            while bm.available:
+                s = bm.available.pop(0).section
+                file_in = s.rh.container.localpath()
+                file_outfmt = re.sub(r'^(.*?)((:?\.[^.]*)?)$', r'\1_{filtername:s}\2', file_in)
+
+                logger.info("Adding input file %s to the job list", file_in)
+                self._add_instructions(common_i,
+                                       dict(name=[file_in, ],
+                                            file_in=[file_in, ], file_outfmt=[file_outfmt, ]))
+                latestfound = time.time()
+
+            # Timeout ?
+            if (self.timeout > 0) and (time.time() - latestfound > self.timeout):
+                logger.error("The waiting loop timed out (%d seconds)", self.timeout)
+                logger.error("The following files are still unaccounted for: %s",
+                             ",".join([e.section.rh.container.localpath() for e in bm.expected]))
+                tmout = True
+                break
+
+            # Wait a little bit :-)
+            if not bm.all_done or len(bm.available) > 0:
+                self.system.sleep(1)
+
+        self._default_post_execute(rh, opts)
+
+        if bm.failed:
+            for failed_files in [e.section.rh.container.localpath() for e in bm.failed]:
+                logger.error("We were unable to fetch the following file: %s",
+                             failed_files)
+                if self.fatal:
+                    self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_files)),
+                                               traceback=False)
+
+        if tmout:
+            raise IOError("The waiting loop timed out")
+
+
 class AddField(BlindRun):
     """Miscellaneous manipulation on input FA resources."""
 
@@ -335,7 +482,7 @@ class AddField(BlindRun):
         self.system.remove(self.fortnam)
 
 
-class DiagPE(BlindRun):
+class DiagPE(BlindRun, grib.GribApiComponent):
     """Execution of diagnostics on grib input (ensemble forecasts specific)."""
     _footprint = dict(
         attr = dict(
@@ -358,8 +505,9 @@ class DiagPE(BlindRun):
         """Set some variables according to target definition."""
         super(DiagPE, self).prepare(rh, opts)
         # Prevent DrHook to initialise MPI and setup grib_api
-        for optpack in ('drhook_not_mpi', 'gribapi'):
+        for optpack in ('drhook_not_mpi', ):
             self.export(optpack)
+        self.gribapi_setup(rh, opts)
 
     def spawn_hook(self):
         """Usually a good habit to dump the fort.4 namelist."""
@@ -370,6 +518,7 @@ class DiagPE(BlindRun):
 
     def execute(self, rh, opts):
         """Loop on the various grib files provided."""
+
         srcsec = self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
                                                         kind='gridpoint')
         # Find out what are the terms
@@ -407,7 +556,7 @@ class DiagPE(BlindRun):
             super(DiagPE, self).execute(rh, opts)
 
 
-class DiagPI(BlindRun):
+class DiagPI(BlindRun, grib.GribApiComponent):
     """Execution of diagnostics on grib input (deterministic forecasts specific)."""
 
     _footprint = dict(
@@ -427,8 +576,9 @@ class DiagPI(BlindRun):
         """Set some variables according to target definition."""
         super(DiagPI, self).prepare(rh, opts)
         # Prevent DrHook to initialise MPI and setup grib_api
-        for optpack in ('drhook_not_mpi', 'gribapi'):
+        for optpack in ('drhook_not_mpi', ):
             self.export(optpack)
+        self.gribapi_setup(rh, opts)
 
     def spawn_hook(self):
         """Usually a good habit to dump the fort.4 namelist."""
@@ -439,6 +589,11 @@ class DiagPI(BlindRun):
 
     def execute(self, rh, opts):
         """Loop on the various grib files provided."""
+
+        # Intialise a GRIBFilter (at least try to)
+        gfilter = GRIBFilter(concatenate=False)
+        gfilter.add_filters(self.context)
+
         srcsec = self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
                                                         kind='gridpoint')
         srcsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
@@ -484,11 +639,19 @@ class DiagPI(BlindRun):
             opts['loop'] = r.resource.term
             super(DiagPI, self).execute(rh, opts)
 
-            # The diagnostic output may be promised
             actualname = r'GRIB[-_A-Z]+{0:s}\+{1:s}'.format(r.resource.geometry.area,
                                                             r.resource.term.fmthm)
+            # Find out the output file and filter it
+            filtered_out = list()
+            if len(gfilter):
+                for candidate in [f for f in self.system.glob('GRIB*') if re.match(actualname, f)]:
+                    logger.info("Starting GRIB filtering on %s.", candidate)
+                    filtered_out = gfilter(candidate, candidate + '_{filtername:s}')
+
+            # The diagnostic output may be promised
             expected = [x for x in self.promises
-                        if re.match(actualname, x.rh.container.localpath())]
+                        if (re.match(actualname, x.rh.container.localpath()) or
+                            x.rh.container.localpath() in filtered_out)]
             for thispromise in expected:
                 thispromise.put(incache=True)
 

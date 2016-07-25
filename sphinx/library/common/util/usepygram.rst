@@ -13,8 +13,20 @@ Package
 
 .. autodata:: __all__
 
+Exceptions
+----------
+
+.. autoclass:: EpygramUnavailableError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Functions
 ---------
+
+.. autofunction:: is_epygram_available
+
+.. autofunction:: disabled_if_no_epygram
 
 .. autofunction:: addfield
 

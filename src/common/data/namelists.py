@@ -21,7 +21,7 @@ from gco.syntax.stdattrs import GenvKey
 KNOWN_NAMELIST_MACROS = set(['NPROC', 'NBPROC', 'NBPROC_IO', 'NCPROC', 'NDPROC',
                              'NBPROCIN', 'NBPROCOUT', 'IDAT', 'CEXP',
                              'TIMESTEP', 'FCSTOP', 'NMODVAL', 'NBE', 'SEED',
-                             'MEMBER', 'NUMOD'])
+                             'MEMBER', 'NUMOD', 'OUTPUTID'])
 
 
 class NamelistContentError(ValueError):

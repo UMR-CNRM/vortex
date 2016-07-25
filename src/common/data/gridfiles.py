@@ -206,7 +206,7 @@ class GridPointExport(GridPoint):
 
         t = self.term.hour
         e = env.current()
-        if not 'VORTEX_ANA_TERMSHIFT' in e and self.origin == 'ana':
+        if 'VORTEX_ANA_TERMSHIFT' not in e and self.origin == 'ana':
             t = 0
         return 'GRID' + self.origin.upper() + self.geometry.area + '+' + self.term.nice(t)
 
@@ -223,3 +223,19 @@ class GridPointExport(GridPoint):
             raise ValueError('Could not build a proper archive name: {!s}'.format(self))
 
         return name
+
+
+class FilteredGridPointExport(GridPointExport):
+
+    _footprint = dict(
+        info = 'GridPoint fields as exported and filtered for dissemination',
+        attr = dict(
+            filtername = dict(),
+        )
+    )
+
+    def basename_info(self):
+        """Generic information, radical = ``grid``."""
+        infos = super(FilteredGridPointExport, self).basename_info()
+        infos["filtername"] = self.filtername
+        return infos

@@ -21,6 +21,16 @@ Functions
 Classes
 -------
 
+.. autoclass:: GRIB_Tool
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GribApiComponent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: GRIBAPI_Tool
    :show-inheritance:
    :members:

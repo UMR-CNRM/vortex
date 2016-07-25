@@ -15,6 +15,7 @@ from .ifsroot import IFSParallel
 from vortex.util.structs import ShellEncoder
 from vortex.algo.components import BlindRun
 from vortex.layout.dataflow import intent
+from vortex.tools import grib
 
 
 class Svect(IFSParallel):
@@ -44,7 +45,7 @@ class Svect(IFSParallel):
         return 'svector'
 
 
-class Combi(BlindRun):
+class Combi(BlindRun, grib.GribApiComponent):
     """Build the initial conditions of the EPS."""
 
     _abstract = True
@@ -55,6 +56,11 @@ class Combi(BlindRun):
             ),
         )
     )
+
+    def prepare(self, rh, opts):
+        """Set some variables according to target definition."""
+        super(Combi, self).prepare(rh, opts)
+        self.gribapi_setup(rh, opts)
 
     def execute(self, rh, opts):
         """Standard Combi execution."""
@@ -308,7 +314,7 @@ class SurfCombiIC(BlindRun):
         namsec[0].rh.save()
 
 
-class Clustering(BlindRun):
+class Clustering(BlindRun, grib.GribApiComponent):
     """Select by clustering a sample of members among the whole set."""
 
     _footprint = dict(
@@ -335,6 +341,8 @@ class Clustering(BlindRun):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(Clustering, self).prepare(rh, opts)
+
+        self.gribapi_setup(rh, opts)
 
         grib_sections = self.context.sequence.effective_inputs(role='ModelState',
                                                                kind='gridpoint')

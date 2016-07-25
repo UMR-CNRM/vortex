@@ -8,9 +8,10 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.algo.components import Parallel
+from vortex.tools import grib
 
 
-class IFSParallel(Parallel):
+class IFSParallel(Parallel, grib.GribApiComponent):
     """Abstract IFSModel parallel algo components."""
 
     _abstract = True
@@ -145,9 +146,9 @@ class IFSParallel(Parallel):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(IFSParallel, self).prepare(rh, opts)
-        for optpack in ('drhook{}'.format('prof' if self.drhookprof else ''),
-                        'gribapi'):
+        for optpack in ('drhook{}'.format('prof' if self.drhookprof else ''), ):
             self.export(optpack)
+        self.gribapi_setup(rh, opts)
         self.prepare_namelists(rh, opts)
 
     def execute_single(self, rh, opts):

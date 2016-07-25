@@ -23,7 +23,7 @@ class OpTask(Task):
 
     _tag_topcls = False
 
-    def component_runner(self, tbalgo, tbx, **kwargs):
+    def component_runner(self, tbalgo, tbx=(None, ), **kwargs):
         """Run the binaries listed in tbx using the tbalgo algo component."""
         for binary in tbx:
             try:

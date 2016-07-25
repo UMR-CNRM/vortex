@@ -1287,7 +1287,6 @@ class VortexVsopCacheStore(MultiStore):
     def alternates_netloc(self):
         '''For Non-Op users, Op caches may be accessed in read-only mode.'''
         todo = ['vsop.cache-mt.fr', ]  # The MTOOL Cache remains a must :-)
-        print 'DBG', self.glovekind
         if self.glovekind != 'opuser':
             for loc in ('primary', 'secondary'):
                 if int(self.system.target().get('stores:vsop_cache_op{}'.format(loc), '0')):

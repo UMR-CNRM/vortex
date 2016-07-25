@@ -41,7 +41,7 @@ class DelayedAlgoComponentError(AlgoComponentError):
 
 
 class AlgoComponent(footprints.FootprintBase):
-    """Component in charge of running executable resources."""
+    """Component in charge of any kind of processing."""
 
     _abstract  = True
     _collector = ('component',)
@@ -521,7 +521,7 @@ class AlgoComponent(footprints.FootprintBase):
         for step in ('prepare', 'execute', 'postfix'):
             setattr(self, step, self.abortfabrik(step, msg))
 
-    def run(self, rh, **kw):
+    def run(self, rh=None, **kw):
         """Sequence for execution : prepare / execute / postfix."""
         self._status = True
 
@@ -597,77 +597,32 @@ class AlgoComponent(footprints.FootprintBase):
         return initsec
 
 
-class Expresso(AlgoComponent):
-    """
-    Run a script resource in the good environment. Mandatory arguments are:
-     * interpreter (values = awk, ksh, bash, perl, python)
-     * engine ( values =  exec, launch )
-    """
+class ExecutableAlgoComponent(AlgoComponent):
+    """Component in charge of running executable resources."""
 
-    _footprint = dict(
-        attr = dict(
-            interpreter = dict(
-                values = ['awk', 'ksh', 'bash', 'perl', 'python']
-            ),
-            engine = dict(
-                values = ['exec', 'launch']
-            )
-        )
-    )
+    _abstract  = True
 
-    def execute_single(self, rh, opts):
+    def valid_executable(self, rh):
         """
-        Run the specified resource handler through the current interpreter,
-        using the resource command_line method as args.
+        Return a boolean value according to the effective executable nature
+        of the resource handler provided.
         """
-        args = [self.interpreter, rh.container.localpath()]
-        args.extend(self.spawn_command_line(rh))
-        logger.debug('Run script %s', args)
-        self.spawn(args, opts)
+        return rh is not None
 
 
-class BlindRun(AlgoComponent):
+class TaylorRun(AlgoComponent):
     """
-    Run any executable resource in the current environment. Mandatory argument is:
-     * engine ( values =  blind )
-    """
-
-    _footprint = dict(
-        attr = dict(
-            engine = dict(
-                values = ['blind']
-            )
-        )
-    )
-
-    def execute_single(self, rh, opts):
-        """
-        Run the specified resource handler as an absolute executable,
-        using the resource command_line method as args.
-        """
-
-        args = [self.absexcutable(rh.container.localpath())]
-        args.extend(self.spawn_command_line(rh))
-        logger.debug('BlindRun executable resource %s', args)
-        self.spawn(args, opts)
-
-
-class ParaBlindRun(AlgoComponent):
-    """
-    Run any executable resource (without MPI) in the current environment.
+    Run any taylorism Worker in the current environment.
 
     This abstract class includes helpers to use the taylorism package in order
     to introduce an external parallelisation. It is designed to work well with a
     taylorism Worker class that inherits from
-    :class:`vortex.tools.parallelism.VortexWorkerBlindRun`.
+    :class:`vortex.tools.parallelism.TaylorVortexWorker`.
     """
 
     _abstract = True
     _footprint = dict(
         attr = dict(
-            engine = dict(
-                values = ['blind']
-            ),
             kind = dict(),
             verbose = dict(
                 type = bool,
@@ -683,14 +638,12 @@ class ParaBlindRun(AlgoComponent):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(ParaBlindRun, self).__init__(*kargs, **kwargs)
+        super(TaylorRun, self).__init__(*kargs, **kwargs)
         self._boss = None
 
     def _default_common_instructions(self, rh, opts):
         '''Create a common instruction dictionary that will be used by the workers.'''
-        return dict(kind=self.kind,
-                    progname=self.absexcutable(rh.container.localpath()),
-                    progargs=footprints.FPList(self.spawn_command_line(rh)), )
+        return dict(kind=self.kind, )
 
     def _default_pre_execute(self, rh, opts):
         '''Various initialisations. In particular it creates the task scheduler (Boss).'''
@@ -747,7 +700,100 @@ class ParaBlindRun(AlgoComponent):
         raise NotImplementedError
 
 
-class Parallel(AlgoComponent):
+class Expresso(ExecutableAlgoComponent):
+    """
+    Run a script resource in the good environment. Mandatory arguments are:
+     * interpreter (values = awk, ksh, bash, perl, python)
+     * engine ( values =  exec, launch )
+    """
+
+    _footprint = dict(
+        attr = dict(
+            interpreter = dict(
+                values = ['awk', 'ksh', 'bash', 'perl', 'python']
+            ),
+            engine = dict(
+                values = ['exec', 'launch']
+            )
+        )
+    )
+
+    def execute_single(self, rh, opts):
+        """
+        Run the specified resource handler through the current interpreter,
+        using the resource command_line method as args.
+        """
+        args = [self.interpreter, rh.container.localpath()]
+        args.extend(self.spawn_command_line(rh))
+        logger.debug('Run script %s', args)
+        self.spawn(args, opts)
+
+
+class BlindRun(ExecutableAlgoComponent):
+    """
+    Run any executable resource in the current environment. Mandatory argument is:
+     * engine ( values =  blind )
+    """
+
+    _footprint = dict(
+        attr = dict(
+            engine = dict(
+                values = ['blind']
+            )
+        )
+    )
+
+    def execute_single(self, rh, opts):
+        """
+        Run the specified resource handler as an absolute executable,
+        using the resource command_line method as args.
+        """
+
+        args = [self.absexcutable(rh.container.localpath())]
+        args.extend(self.spawn_command_line(rh))
+        logger.debug('BlindRun executable resource %s', args)
+        self.spawn(args, opts)
+
+
+class ParaBlindRun(TaylorRun):
+    """
+    Run any executable resource (without MPI) in the current environment.
+
+    This abstract class includes helpers to use the taylorism package in order
+    to introduce an external parallelisation. It is designed to work well with a
+    taylorism Worker class that inherits from
+    :class:`vortex.tools.parallelism.VortexWorkerBlindRun`.
+    """
+
+    _abstract = True
+    _footprint = dict(
+        attr = dict(
+            engine = dict(
+                values = ['blind']
+            ),
+        )
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        super(ParaBlindRun, self).__init__(*kargs, **kwargs)
+        self._boss = None
+
+    def valid_executable(self, rh):
+        """
+        Return a boolean value according to the effective executable nature
+        of the resource handler provided.
+        """
+        return rh is not None
+
+    def _default_common_instructions(self, rh, opts):
+        '''Create a common instruction dictionary that will be used by the workers.'''
+        ddict = super(ParaBlindRun, self)._default_common_instructions(rh, opts)
+        ddict['progname'] = self.absexcutable(rh.container.localpath())
+        ddict['progargs'] = footprints.FPList(self.spawn_command_line(rh))
+        return ddict
+
+
+class Parallel(ExecutableAlgoComponent):
     """
     Run a binary launched with MPI support.
     """

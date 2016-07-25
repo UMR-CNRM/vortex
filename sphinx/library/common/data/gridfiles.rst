@@ -36,3 +36,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+   
+.. autoclass:: FilteredGridPointExport
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

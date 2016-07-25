@@ -21,7 +21,17 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: _GribFilterWorker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Fa2Grib
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: StandaloneGRIBFilter
    :show-inheritance:
    :members:
    :member-order: alphabetical

@@ -415,20 +415,28 @@ class Environment(object):
         else:
             return bool(varfalse.match(str(xvar)))
 
-    def setbinpath(self, value, pos=None):
-        """Insert a new path value to the bin search path at given position."""
-        mypath = self.getvar('PATH').split(':')
+    def setgenericpath(self, var, value, pos=None):
+        """Insert a new path value to a PATH like variable at a given position."""
+        mypath = self.getvar(var).split(':') if self.getvar(var) else []
         value = str(value)
         while value in mypath:
             mypath.remove(value)
         if pos is None:
             pos = len(mypath)
         mypath.insert(pos, value)
-        self.setvar('PATH', ':'.join(mypath))
+        self.setvar(var, ':'.join(mypath))
+
+    def rmgenericpath(self, var, value):
+        """Remove the specified value from a PATH like variable."""
+        mypath = self.getvar(var).split(':') if self.getvar(var) else []
+        while value in mypath:
+            mypath.remove(value)
+        self.setvar(var, ':'.join(mypath))
+
+    def setbinpath(self, value, pos=None):
+        """Insert a new path value to the bin search path at given position."""
+        self.setgenericpath('PATH', value, pos)
 
     def rmbinpath(self, value):
         """Remove the specified value from bin path."""
-        mypath = self.getvar('PATH').split(':')
-        while value in mypath:
-            mypath.remove(value)
-        self.setvar('PATH', ':'.join(mypath))
+        self.rmgenericpath('PATH', value)
