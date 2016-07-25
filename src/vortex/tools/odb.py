@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, division
+
+import io
+import re
+
+import footprints
+
+from vortex import tools
+from . import folder
+
 #: No automatic export
 __all__ = []
 
-import io
-
-import footprints
 logger = footprints.loggers.getLogger(__name__)
-
-from vortex import tools
-
-from . import folder
 
 
 class OdbDriver(object):
@@ -129,47 +132,78 @@ class TimeSlots(object):
             if len(info) > 2:
                 window = info[2]
             if len(info) > 3:
-                chunk = info[3]
-        self.center = center
+                if re.match('^regular', info[3]):
+                    center = False
+                else:
+                    chunk = info[3]
         self.nslot  = int(nslot)
+        self.center = center if self.nslot > 1 else False
         self.start  = tools.date.Period(start)
         self.window = tools.date.Period(window)
         if chunk is None:
             cslot = self.nslot - 1 if self.center else self.nslot
-            chunk = 'PT' + str((self.window.length / max(1, cslot)) / 60) + 'M'
+            chunk = 'PT' + str((self.window.length // max(1, cslot)) // 60) + 'M'
         self.chunk  = self.window if self.nslot < 2 else tools.date.Period(chunk)
+
+    def __eq__(self, other):
+        if isinstance(other, basestring):
+            try:
+                other = TimeSlots(other)
+            except ValueError:
+                pass
+        return (isinstance(other, TimeSlots) and
+                self.nslot == other.nslot and self.center == other.center and
+                self.start == other.start and self.window == other.window and
+                self.chunk == other.chunk)
+
+    def __str__(self):
+        chunky = self.chunk.isoformat() if self.center else 'regular'
+        return '{0.nslot:d}/{1:s}/{2:s}/{3:s}'.format(self,
+                                                      self.start.isoformat(),
+                                                      self.window.isoformat(),
+                                                      chunky)
+
+    def __repr__(self, *args, **kwargs):
+        return super(TimeSlots, self).__repr__()[:-1] + ' | {!s}>'.format(self)
 
     def as_slots(self):
         """Return a list of slots in seconds."""
         if self.center:
-            slots = [ self.chunk.length for x in range(self.nslot) ]
-            nb = int(self.window.length / self.chunk.length)
+            slots = [self.chunk.length, ] * self.nslot
+            nb = self.window.length // self.chunk.length
             if nb != self.nslot:
-                slots[0] = slots[-1] = self.chunk.length / 2
+                slots[0] = slots[-1] = self.chunk.length // 2
         else:
-            islot = int(self.window.length / self.nslot)
-            slots = [ islot for x in range(self.nslot) ]
+            islot = self.window.length // self.nslot
+            slots = [islot, ] * self.nslot
         return slots
 
-    def as_bounds(self, date, filename=None):
+    def as_bounds(self, date):
         """Return time slots as a list of compact date values."""
         date = tools.date.Date(date)
-        boundlist = [ date + self.start ]
+        boundlist = [date + self.start, ]
         for x in self.as_slots():
             boundlist.append(boundlist[-1] + x)
-        boundlist = [ x.compact() for x in boundlist ]
+        boundlist = [x.compact() for x in boundlist]
 
         return boundlist
 
     @property
     def leftmargin(self):
         """Return length in minutes from left margin of the window."""
-        return int(self.start.total_seconds() / 60)
+        return int(self.start.total_seconds()) // 60
 
     @property
     def rightmargin(self):
         """Return length in minutes from rigth margin of the window."""
-        return int((self.start + self.window).total_seconds() / 60)
+        return int((self.start + self.window).total_seconds()) // 60
+
+    def as_environment(self):
+        """Return a dictionary of ready-to-export variables that describe the timeslots."""
+        thelen = self.chunk.length // 60 if self.center and self.nslot > 1 else 0
+        return dict(BATOR_WINDOW_LEN=self.window.length // 60,
+                    BATOR_WINDOW_SHIFT=int(self.start.total_seconds()) // 60,
+                    BATOR_SLOT_LEN=thelen, BATOR_CENTER_LEN=thelen)
 
     def as_file(self, date, filename):
         """Fill the specified ``filename`` wih the current list of time slots at this ``date``."""

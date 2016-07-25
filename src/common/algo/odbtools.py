@@ -4,7 +4,10 @@
 #: No automatic export
 __all__ = []
 
-import re, io
+from collections import defaultdict
+import io
+import re
+
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -100,10 +103,95 @@ class Raw2ODB(OdbProcess):
         )
     )
 
+    def __init__(self, *kargs, **kwargs):
+        super(Raw2ODB, self).__init__(*kargs, **kwargs)
+        self.obspack = dict()
+        self.obsmapout = list()
+
+    def input_obs(self):
+        """Find out which are the usable observations."""
+        obsall = super(Raw2ODB, self).input_obs()
+
+        # Looking for valid raw observations
+        sizemin = self.env.VORTEX_OBS_SIZEMIN or 80
+        obsok   = list()
+        for rhobs in obsall:
+            logger.info('Inspect observation ' + rhobs.resource.part)
+            if rhobs.resource.nativefmt == 'odb':
+                logger.warning('Observations set [%s] is ODB ready',
+                               rhobs.resource.part)
+                continue
+            if rhobs.container.totalsize < sizemin:
+                logger.warning('Observations set [%s] is far too small: %d',
+                               rhobs.resource.part, rhobs.container.totalsize)
+            else:
+                logger.info('Obs size: ' + str(rhobs.container.totalsize))
+                obsok.append(Foo(rh=rhobs, refdata=list(), mapped=False))
+
+        # Check the observations dates
+        for obs in [obs for obs in obsok if obs.rh.resource.date != self.date]:
+            logger.warning('Observation [%s] %s [time mismatch: %s / %s]',
+                           'discarded' if self.ontime else 'is questionable',
+                           obs.rh.resource.part, obs.rh.resource.date.isoformat(),
+                           self.date.isoformat())
+        if self.ontime:
+            obsok = [obs for obs in obsok if obs.rh.resource.date == self.date]
+
+        return obsok
+
+    def _retrieve_refdatainfo(self, obslist):
+        """Look for refdata resources and link their content with the obslist."""
+        refmap = dict()
+        refall = list(self.context.sequence.effective_inputs(kind = 'refdata'))
+        for rdata in refall:
+            logger.info('Inspect refdata ' + rdata.rh.container.localpath())
+            self.system.subtitle(rdata.role)
+            rdata.rh.container.cat()
+            for item in rdata.rh.contents:
+                refmap[(item.fmt.lower(), item.data, item.instr)] = (rdata.rh, item)
+
+        # Build actual refdata
+        for obs in obslist:
+            thispart = obs.rh.resource.part
+            thisfmt  = obs.rh.container.actualfmt.lower()
+            logger.info(' '.join(('Building information for [', thisfmt, '/', thispart, ']')))
+
+            # Gather equivalent refdata lines
+            if not self.system.path.exists('norefdata.' + thispart) and (
+                    not self.env.VORTEX_OBSDB_NOREF or
+                    not re.search(thispart, self.env.VORTEX_OBSDB_NOREF, re.IGNORECASE)):
+                for k, v in refmap.items():
+                    x_fmt, x_data = k[:2]
+                    if x_fmt == thisfmt and x_data == thispart:
+                        rdata, item = v
+                        obs.refdata.append(rdata.contents.formatted_data(item))
+        return refmap, refall
+
+    def _map_refdatainfo(self, refmap, refall, imap, thismap):
+        """Associate obsmap entries with refdata entries."""
+        thiskey = (imap.fmt.lower(), imap.data, imap.instr)
+        if thiskey in refmap:
+            rdata, item = refmap[thiskey]
+            thismap.refdata.append(rdata.contents.formatted_data(item))
+        else:
+            logger.warning('Creating automatic refdata entry for ' + str(thiskey))
+            item = ObsRefItem(imap.data, imap.fmt, imap.instr, self.date.ymd, self.date.hh)
+            if refall:
+                thismap.refdata.append(refall[0].rh.contents.formatted_data(item))
+            else:
+                logger.error('No default for formatting data %s', item)
+                thismap.refdata.append(ObsRefContent.formatted_data(item))
+
+    @staticmethod
+    def _new_obspack_item():
+        """Create a now entry in obspack."""
+        return Foo(mapping=list(), standalone=False, refdata=list(), obsfile=dict())
+
     def prepare(self, rh, opts):
         """Get a look at raw observations input files."""
 
         sh = self.system
+        cycle = rh.resource.cycle
 
         # First create the proper IO assign table
         self.odb.ioassign_create(
@@ -112,80 +200,29 @@ class Raw2ODB(OdbProcess):
         )
 
         # Looking for input observations
-        obsall = self.input_obs()
-
-        # Looking for valid raw observations
-        sizemin = self.env.VORTEX_OBS_SIZEMIN or 80
-        obsok   = list()
-        for ro in obsall:
-            logger.info('Inspect observation ' + ro.resource.part)
-            if ro.resource.nativefmt == 'odb':
-                logger.warning('Observations set [%s] is ODB ready', ro.resource.part)
-                continue
-            if ro.container.totalsize < sizemin:
-                logger.warning('Observations set [%s] is far too small: %d', ro.resource.part, ro.container.totalsize)
-            else:
-                logger.info('Obs size: ' + str(ro.container.totalsize))
-                obsok.append(Foo(rh=ro, refdata=list(), mapped=False, discarded=False))
+        obsok = self.input_obs()
 
         # Building refdata map for direct access to (fmt, data, instr) entries
-        refmap = dict()
-        refall = list(self.context.sequence.effective_inputs(kind = 'refdata'))
-        for rd in refall:
-            logger.info('Inspect refdata ' + rd.rh.container.localpath())
-            sh.subtitle(rd.role)
-            rd.rh.container.cat()
-            for item in rd.rh.contents:
-                refmap[(item.fmt.lower(), item.data, item.instr)] = (rd.rh, item)
-
-        # Build actual refdata
-        for obs in obsok:
-            thisdate = obs.rh.resource.date
-            thispart = obs.rh.resource.part
-            thisfmt  = obs.rh.container.actualfmt.lower()
-            logger.info(' '.join(('Building information for [', thisfmt, '/', thispart, ']')))
-
-            # Check date
-            if thisdate != self.date:
-                logger.error('Run date [%s] is not obs date [%s]', thisdate.isoformat(), self.date.isoformat())
-
-            # Gather equivalent refdata lines
-            if not sh.path.exists('norefdata.' + thispart) and (
-                    not self.env.VORTEX_OBSDB_NOREF or
-                    not re.search(thispart, self.env.VORTEX_OBSDB_NOREF, re.IGNORECASE)):
-                for k, v in refmap.items():
-                    x_fmt, x_data, x_instr = k
-                    if x_fmt == thisfmt and x_data == thispart:
-                        rd, item = v
-                        obs.refdata.append(rd.contents.formatted_data(item))
+        if cycle < 'cy42_op1':
+            # Refdata information is not needed anymore with cy42_op1
+            refmap, refall = self._retrieve_refdatainfo(obsok)
 
         # Looking for obs maps
         mapitems = list()
-        for om in self.context.sequence.effective_inputs(kind = 'obsmap'):
-            logger.info(' '.join(('Gathering information from map', om.rh.container.localpath())))
-            sh.subtitle(om.role)
-            om.rh.container.cat()
-            mapitems.extend(om.rh.contents)
+        for omsec in self.context.sequence.effective_inputs(kind = 'obsmap'):
+            logger.info(' '.join(('Gathering information from map',
+                                  omsec.rh.container.localpath())))
+            sh.subtitle(omsec.role)
+            omsec.rh.container.cat()
+            mapitems.extend(omsec.rh.contents)
 
-        # Building actual map / refdata correspondance
-        self.obspack = dict()
+        self.obspack = defaultdict(self._new_obspack_item)  # Reset the obspack
         for imap in mapitems:
+            # Match observation files and obsmap entries + Various checks
             logger.info('Inspect ' + str(imap))
-            candidates = [
-                obs for obs in obsok
-                if obs.rh.resource.part == imap.data and obs.rh.container.actualfmt.lower() == imap.fmt.lower()
-            ]
-            for obs in candidates:
-                obs.mapped = True
-                if self.ontime and obs.rh.resource.date != self.date:
-                    obs.discarded = True
-                    logger.warning(
-                        'Observation [%s] discarded [time mismatch: %s / %s]',
-                        obs.rh.resource.part,
-                        obs.rh.resource.date.isoformat(),
-                        self.date.isoformat()
-                    )
-            candidates = [ obs for obs in candidates if not obs.discarded ]
+            candidates = [obs for obs in obsok
+                          if (obs.rh.resource.part == imap.data and
+                              obs.rh.container.actualfmt.lower() == imap.fmt.lower())]
             if not candidates:
                 errmsg = 'No input obsfile could match [data:{0:s}/fmt:{1:s}]'.format(imap.data, imap.fmt)
                 if self.mapall:
@@ -193,27 +230,17 @@ class Raw2ODB(OdbProcess):
                 else:
                     logger.warning(errmsg)
                     continue
-            self.obspack.setdefault(imap.odb, Foo())
-            thismap = self.obspack.get(imap.odb)
-            thismap.setdefault('mapping', list())
+            candidates[-1].mapped = True
+            # Build the obspack entry
+            thismap = self.obspack[imap.odb]
             thismap.mapping.append(imap)
-            thismap.setdefault('standalone', False)
-            thismap.setdefault('refdata', list())
-            thismap.setdefault('obsfile', dict())
             thismap.obsfile[imap.fmt.upper() + '.' + imap.data] = candidates[-1]
-            thiskey = (imap.fmt.lower(), imap.data, imap.instr)
-            if thiskey in refmap:
-                rd, item = refmap[thiskey]
-                thismap.refdata.append(rd.contents.formatted_data(item))
-            else:
-                logger.warning('Creating automatic refdata entry for ' + str(thiskey))
-                item = ObsRefItem(imap.data, imap.fmt, imap.instr, self.date.ymd, self.date.hh)
-                if refall:
-                    thismap.refdata.append(refall[0].rh.contents.formatted_data(item))
-                else:
-                    logger.error('No default for formatting data %s', item)
-                    thismap.refdata.append(ObsRefContent.formatted_data(item))
+            # Map refdata and obsmap entries
+            if cycle < 'cy42_op1':
+                # Refdata information is not needed anymore with cy42_op1
+                self._map_refdatainfo(refmap, refall, imap, thismap)
 
+        # Deal with observations that are not described in the obsmap
         for notmap in [ obs for obs in obsok if not obs.mapped ]:
             thispart = notmap.rh.resource.part
             logger.info('Inspect not mapped obs ' + thispart)
@@ -224,38 +251,43 @@ class Raw2ODB(OdbProcess):
                     logger.warning('Ignore ' + thismsg)
                 else:
                     logger.warning('Active ' + thismsg)
-                    self.obspack.setdefault(thispart, Foo())
-                    thismap = self.obspack.get(thispart)
-                    thismap.setdefault('mapping', list())
-                    thismap.setdefault('standalone', thisfmt)
-                    thismap.mapping.append(ObsMapItem(thispart, thispart, thisfmt, 'unknown'))
-                    thismap.setdefault('refdata', notmap.refdata)
-                    thismap.setdefault('obsfile', dict())
+                    thismap = self.obspack[thispart]
+                    thismap.standalone = thisfmt
+                    thismap.mapping.append(ObsMapItem(thispart, thispart, thisfmt, thispart))
+                    thismap.refdata = notmap.refdata
                     thismap.obsfile[thisfmt.upper() + '.' + thispart] = notmap
 
-        # Produces a file with time slots boundaries
-        self.slots.as_file(self.date, 'ficdate')
+        # Informations about timeslots
+        logger.info("The timeslot definition is: %s", str(self.slots))
+        if cycle < 'cy42_op1':
+            # ficdate is not needed anymore with cy42_op1...
+            self.slots.as_file(self.date, 'ficdate')
+        else:
+            # From cy42_op1 onward, we only need environment variables
+            for var, value in self.slots.as_environment().iteritems():
+                logger.info('Setting env %s = %s', var, str(value))
+                self.env[var] = value
 
-        # Let ancesters handling most of the env setting
+        # Let ancestors handling most of the env setting
         super(Raw2ODB, self).prepare(rh, opts)
         self.env.default(
             TIME_INIT_YYYYMMDD = self.date.ymd,
             TIME_INIT_HHMMSS   = self.date.hm + '00',
         )
         if self.lamflag:
-            self.env.update(
-                BATOR_LAMFLAG  = 1,
-                BATODB_LAMFLAG = 1,
-            )
+            for lamvar in ('BATOR_LAMFLAG', 'BATODB_LAMFLAG'):
+                logger.info('Setting env %s = %d', lamvar, 1)
+                self.env[lamvar] = 1
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
 
         sh = self.system
+        cycle = rh.resource.cycle
 
-        batnam = [ x.rh for x in self.context.sequence.effective_inputs(role = 'NamelistBatodb') ]
+        batnam = [x.rh for x in self.context.sequence.effective_inputs(role = 'NamelistBatodb')]
 
-        self.obsmapout = list()
+        self.obsmapout = list()  # Reset the obsmapout
 
         for odbset, thispack in self.obspack.items():
             odbname = self.virtualdb.upper() + '.' + odbset
@@ -264,22 +296,34 @@ class Raw2ODB(OdbProcess):
             # Make a soft link when necessary
             linked = list()
             for obsname, obsinfo in thispack.obsfile.items():
-                sh.subtitle(obsname)
                 if sh.path.islink(obsname):
                     sh.remove(obsname)
                 if obsname != obsinfo.rh.container.localpath():
                     sh.softlink(obsinfo.rh.container.localpath(), obsname)
+                    logger.info('creating softlink: %s -> %s', obsname,
+                                obsinfo.rh.container.localpath())
                     linked.append(obsname)
-                if thispack.standalone:
+                if thispack.standalone and cycle < 'cy42_op1':
                     sh.softlink(obsinfo.rh.container.localpath(), thispack.standalone)
+                    logger.info('creating softlink: %s -> %s', thispack.standalone,
+                                obsinfo.rh.container.localpath())
+                    linked.append(thispack.standalone)
 
             # Fill the actual refdata according to information gathered in prepare stage
-            if thispack.refdata:
-                with io.open('refdata', 'w') as fd:
-                    for r in thispack.refdata:
-                        fd.write(unicode(r + "\n"))
-                sh.subtitle('Local refdata')
-                sh.cat('refdata', output=False)
+            if cycle < 'cy42_op1':
+                if thispack.refdata:
+                    with io.open('refdata', 'w') as fd:
+                        for rdentry in thispack.refdata:
+                            fd.write(unicode(rdentry + "\n"))
+                    sh.subtitle('Local refdata')
+                    sh.cat('refdata', output=False)
+            # Drive bator with a batormap file (from cy42_op1 onward)
+            else:
+                with io.open('batormap', 'w') as fd:
+                    for mapentry in sorted(thispack.mapping):
+                        fd.write(unicode(ObsMapContent.formatted_data(mapentry) + '\n'))
+                sh.subtitle('Local batormap')
+                sh.cat('batormap', output=False)
 
             # Give a glance to the actual namelist
             if batnam:
@@ -302,6 +346,7 @@ class Raw2ODB(OdbProcess):
             # Some cleaning
             sh.header('Partial cleaning for ' + odbname)
             sh.remove('refdata')
+            sh.remove('batormap')
             for obslink in linked:
                 sh.remove(obslink)
 
@@ -317,27 +362,31 @@ class Raw2ODB(OdbProcess):
         super(Raw2ODB, self).postfix(rh, opts)
 
         # Remove empty ECMA databases from the output obsmap
-        self.obsmapout = [ x for x in self.obsmapout if self.system.path.isdir('ECMA.' + x.odb + '/1') ]
+        self.obsmapout = [x for x in self.obsmapout
+                          if self.system.path.isdir('ECMA.' + x.odb + '/1')]
 
         # Generate the output bator_map
         with io.open('batodb_map.out', 'w') as fd:
             for x in sorted(self.obsmapout):
                 fd.write(unicode(ObsMapContent.formatted_data(x) + '\n'))
 
-        # Generate a global refdata (if possible)
-        rdrh_dict = {y.rh.resource.part: y.rh
-                     for y in self.context.sequence.effective_inputs(kind = 'refdata')
-                     if y.rh.resource.part != 'all'}
-        with io.open('refdata_global', 'w') as rdg:
-            for x in sorted(self.obsmapout):
-                if x.data in rdrh_dict and self.system.path.getsize(rdrh_dict[x.data].container.localpath()) > 0:
-                    with io.open(rdrh_dict[x.data].container.localpath(), 'r') as rdl:
-                        rdg.write(rdl.readline())
-                elif self.system.path.exists('refdata.' + x.data) and self.system.path.getsize('refdata.' + x.data) > 0:
-                    with io.open('refdata.' + x.data, 'r') as rdl:
-                        rdg.write(rdl.readline())
-                else:
-                    logger.info("Unable to create a global refdata entry for data=" + x.data)
+        # Generate a global refdata (if cycle allows it and if possible)
+        if rh.resource.cycle < 'cy42_op1':
+            rdrh_dict = {y.rh.resource.part: y.rh
+                         for y in self.context.sequence.effective_inputs(kind = 'refdata')
+                         if y.rh.resource.part != 'all'}
+            with io.open('refdata_global', 'w') as rdg:
+                for x in sorted(self.obsmapout):
+                    if (x.data in rdrh_dict and
+                            self.system.path.getsize(rdrh_dict[x.data].container.localpath()) > 0):
+                        with io.open(rdrh_dict[x.data].container.localpath(), 'r') as rdl:
+                            rdg.write(rdl.readline())
+                    elif (self.system.path.exists('refdata.' + x.data) and
+                          self.system.path.getsize('refdata.' + x.data) > 0):
+                        with io.open('refdata.' + x.data, 'r') as rdl:
+                            rdg.write(rdl.readline())
+                    else:
+                        logger.info("Unable to create a global refdata entry for data=" + x.data)
 
 
 class OdbAverage(OdbProcess):

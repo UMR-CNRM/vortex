@@ -171,6 +171,11 @@ class Batodb(BlackBox):
                 optional = True,
                 default  = 'master_batodb'
             ),
+            cycle = dict(
+                type     = ArpIfsSimplifiedCycle,
+                optional = True,
+                default  = 'cy40',  # For "old" Olive configurations to keep working
+            )
         )
     )
 

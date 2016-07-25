@@ -146,10 +146,20 @@ class IFSParallel(Parallel, grib.GribApiComponent):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(IFSParallel, self).prepare(rh, opts)
+        # Basic exports
         for optpack in ('drhook{}'.format('prof' if self.drhookprof else ''), ):
             self.export(optpack)
         self.gribapi_setup(rh, opts)
+        # Namelist fixes
         self.prepare_namelists(rh, opts)
+        # Fix for RTTOV coefficients
+        rtcoefs = self.context.sequence.effective_inputs(role='RtCoef',
+                                                         kind='rtcoef')
+        if rtcoefs:
+            sh = self.system
+            rtpath = sh.path.dirname(sh.path.realpath(rtcoefs[0].rh.container.localpath()))
+            logger.info('Setting %s = %s', 'RTTOV_COEFDIR', rtpath)
+            self.env['RTTOV_COEFDIR'] = rtpath
 
     def execute_single(self, rh, opts):
         """Standard IFS-Like execution parallel execution."""
