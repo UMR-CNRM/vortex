@@ -55,9 +55,9 @@ class DataContent(object):
         """Check that the metadata of the resource in the container matches
         the attributes of the resource given as an argument.
 
-        Prior to the comparison, the delta argument will be added to the 
-        attribute read in the container. For example, if delta=dict(date='-PT1H'), 
-        we will in fact check that the date of the resource in the container is 
+        Prior to the comparison, the delta argument will be added to the
+        attribute read in the container. For example, if delta=dict(date='-PT1H'),
+        we will in fact check that the date of the resource in the container is
         one hour before the date specified in the resource's footprint.
         """
         if not len(self.metadata):
@@ -357,7 +357,6 @@ class FormatAdapter(DataContent):
 
     def slurp(self, container):
         """Load a dataformat object."""
-        super(FormatAdapter, self).slurp(container)
         if self.datafmt:
             with self:
                 self._data = footprints.proxy.dataformat(
