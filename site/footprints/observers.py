@@ -20,19 +20,25 @@ from . import util
 
 
 def get(**kw):
-    """Return an observer for the specified tag name (a class name for example)."""
+    """
+    Return an :class:`ObserverBoard` objects for the specified tag name 
+    (a class name for example).
+    """
     return ObserverBoard(**kw)
 
+
 def keys():
-    """Return actual tags names of the instanciated ObserverBoard objects."""
+    """Return actual tags names of the instantiated :class:`ObserverBoard` objects."""
     return ObserverBoard.tag_keys()
 
+
 def values():
-    """Return actual values of instanciated ObserverBoard objects."""
+    """Return actual values of the instantiated :class:`ObserverBoard` objects."""
     return ObserverBoard.tag_values()
 
+
 def items():
-    """Return the items of the ObserverBoard table."""
+    """Return the items of the :class:`ObserverBoard` objects collection."""
     return ObserverBoard.tag_items()
 
 
@@ -55,11 +61,11 @@ class Observer(object):
         logger.debug('Notified %s upd item %s info %s', self, item, info)
 
 
-class ObserverBoard(util.GetByTag):
-    """
-    A ObserverBoard provides an indirection for observing pattern.
-    It holds two lists: the one of objects that are observed and
-    an other list of observers, listening to any creation, deletion
+class SecludedObserverBoard(object):
+    """A SecludedObserverBoard provides an indirection for the observing pattern.
+
+    It holds two lists: one list of objects that are observed and
+    another list of observers, listening to any creation, deletion
     or update of the observed objects.
     """
 
@@ -91,9 +97,7 @@ class ObserverBoard(util.GetByTag):
         self._listen.discard(remote)
 
     def _extended_info(self, info):
-        fullinfo = copy.copy(info)  # This is only a shallow copy...
-        fullinfo['observerboard'] = self.tag
-        return fullinfo
+        return info
 
     def notify_new(self, item, info):
         """Notify the listening objects that a new observed object is born."""
@@ -117,3 +121,14 @@ class ObserverBoard(util.GetByTag):
             for remote in list(self._listen):
                 remote.updobsitem(item, self._extended_info(info))
 
+
+class ObserverBoard(SecludedObserverBoard, util.GetByTag):
+    """
+    Like a :class:`SecludedObserverBoard` but using the  :class:`footprints.util.GetByTag`
+    class to provide an easy access to existing boards.
+    """
+
+    def _extended_info(self, info):
+        fullinfo = copy.copy(info)  # This is only a shallow copy...
+        fullinfo['observerboard'] = self.tag
+        return fullinfo
