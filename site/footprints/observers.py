@@ -21,7 +21,7 @@ from . import util
 
 def get(**kw):
     """
-    Return an :class:`ObserverBoard` objects for the specified tag name 
+    Return an :class:`ObserverBoard` objects for the specified tag name
     (a class name for example).
     """
     return ObserverBoard(**kw)
@@ -48,17 +48,27 @@ class Observer(object):
     These three methods should be implemented by any Observer object.
     """
 
+    def _debuglogging(self, msg, *kargs):
+        logger.debug('Notified %s ' + msg, self, *kargs)
+
     def newobsitem(self, item, info):
         """A new ``item`` has been created. Some information is provided through the dict ``info``."""
-        logger.debug('Notified %s new item %s info %s', self, item, info)
+        self._debuglogging('new item %s info %s', item, info)
 
     def delobsitem(self, item, info):
         """The ``item`` has been deleted. Some information is provided through the dict ``info``."""
-        logger.debug('Notified %s del item %s info %s', self, item, info)
+        self._debuglogging('del item %s info %s', item, info)
 
     def updobsitem(self, item, info):
         """The ``item`` has been updated. Some information is provided through the dict ``info``."""
-        logger.debug('Notified %s upd item %s info %s', self, item, info)
+        self._debuglogging('upd item %s info %s', item, info)
+
+
+class ParrotObserver(Observer):
+    """Like :class:`Observer` but boosts the verbosity (useful for tests)."""
+
+    def _debuglogging(self, msg, *kargs):
+        logger.info('Notified %s ' + msg, self, *kargs)
 
 
 class SecludedObserverBoard(object):

@@ -7,14 +7,32 @@ sections
 """
 
 import time
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 
-from footprints import loggers
+from footprints import loggers, observers
 logger = loggers.getLogger(__name__)
 
 
 #: No automatic export.
 __all__ = []
+
+
+#: Definition of a EntrySt tuple
+EntryStateTuple = namedtuple('EntryStateTuple',
+                             ['ufo', 'expected', 'available', 'failed'],
+                             verbose=False)
+
+#: Predefined EntrySt values
+EntrySt = EntryStateTuple(ufo='ufo', expected='expected', available='available',
+                          failed='failed')
+
+#: Definition of a GangSt tuple
+GangStateTuple = namedtuple('GangStateTuple',
+                            ['ufo', 'collectable', 'failed'],
+                            verbose=False)
+
+#: Predefined GangSt values
+GangSt = GangStateTuple(ufo='undecided', collectable='collectable', failed='failed')
 
 
 class InputMonitorEntry(object):
@@ -27,6 +45,30 @@ class InputMonitorEntry(object):
         """
         self._nchecks = 0
         self._section = section
+        self._state = EntrySt.ufo
+        self._obsboard = observers.SecludedObserverBoard()
+        self._obsboard.notify_new(self, dict(state=self._state))
+
+    def __del__(self):
+        self._obsboard.notify_del(self, dict(state=self._state))
+        del self._obsboard
+
+    @property
+    def observerboard(self):
+        """The entry's observer board."""
+        return self._obsboard
+
+    def get_state(self):
+        return self._state
+
+    def set_state(self, newstate):
+        previous = self._state
+        self._state = newstate
+        if newstate != previous:
+            self._obsboard.notify_upd(self, dict(state=self._state,
+                                                 previous_state=previous))
+
+    state = property(get_state, set_state, doc="The entry's state.")
 
     @property
     def nchecks(self):
@@ -88,10 +130,9 @@ class BasicInputMonitor(object):
         toclassify = [InputMonitorEntry(x)
                       for x in self._seq.filtered_inputs(role=self._role, kind=self._kind)]
         # Initialise other lists
-        self._ufo = list()
-        self._expected = list()
-        self._available = list()
-        self._failed = list()
+        self._members = dict()
+        for st in EntrySt:
+            self._members[st] = list()
 
         # Sort the list of UFOs if sensitive (i.e if all resources have a term)
         has_term = 0
@@ -109,72 +150,80 @@ class BasicInputMonitor(object):
                                            int(max(map_term.values()) * 1.25))
 
         # Map to classify UFOs
-        self._map_stages = dict(expected=self._expected,
-                                get=self._available)
+        self._map_stages = dict(expected=EntrySt.expected,
+                                get=EntrySt.available)
 
         while toclassify:
-            self._classify_ufo(toclassify.pop(0), onfails=self._ufo)
+            self._classify_ufo(toclassify.pop(0), onfails=EntrySt.ufo)
 
         # Give some time to the caller to process the first available files (if any)
-        self._last_refresh = time.time() if len(self._available) else 0
+        self._last_refresh = time.time() if len(self._members[EntrySt.available]) else 0
+
+    def _append_entry(self, queue, e):
+        self._members[queue].append(e)
+        e.state = queue
 
     def _classify_ufo(self, e, onfails):
-        self._map_stages.get(e.section.stage, onfails).append(e)
+        self._append_entry(self._map_stages.get(e.section.stage, onfails), e)
+
+    def _update_timestamp(self):
+        self._inactive_since = time.time()
 
     def _check_entry_index(self, index):
         found = 0
-        e = self._expected[index]
+        e = self._members[EntrySt.expected][index]
         e.check_done()
         if e.section.rh.is_grabable():
             found = 1
-            e = self._expected.pop(index)
+            self._update_timestamp()
+            e = self._members[EntrySt.expected].pop(index)
             if e.section.rh.is_grabable(check_exists=True):
                 logger.info("The local resource %s becomes available",
                             e.section.rh.container.localpath())
                 e.section.get(incache=True)
-                self._available.append(e)
+                self._append_entry(EntrySt.available, e)
             else:
                 logger.warning("The local resource %s has failed",
                                e.section.rh.container.localpath())
-                self._failed.append(e)
+                self._append_entry(EntrySt.failed, e)
         return found
 
     def _refresh(self):
         curtime = time.time()
-        if (len(self._ufo) and
-                len(self._expected) <= self._crawling_threshold and
-                not len(self._available)):
+        # Tweak the caching_frequency
+        if (len(self._members[EntrySt.ufo]) and
+                len(self._members[EntrySt.expected]) <= self._crawling_threshold and
+                not len(self._members[EntrySt.available])):
             # If UFO are still there and not much resources are expected,
             # decrease the caching time
             eff_caching_freq = max(3, self._caching_freq / 5)
-        elif len(self._available):
-            # All available files weren't processed: give some more time to the
-            # caller
-            eff_caching_freq = self._caching_freq * 3
         else:
             eff_caching_freq = self._caching_freq
+
+        # Crawl into the monitored input if sensible
         if curtime > self._last_refresh + eff_caching_freq:
             self._last_refresh = curtime
             found = 0
             # Crawl into the ufo list
             # Always process the first self._crawling_threshold elements
-            for i_e in range(min(self._crawling_threshold, len(self._ufo)) - 1, -1, -1):
+            for i_e in range(min(self._crawling_threshold, len(self._members[EntrySt.ufo])) - 1, -1, -1):
                 logger.info("First get on local file: %s",
-                            self._ufo[i_e].section.rh.container.localpath())
-                e = self._ufo.pop(i_e)
+                            self._members[EntrySt.ufo][i_e].section.rh.container.localpath())
+                e = self._members[EntrySt.ufo].pop(i_e)
                 e.check_done()
+                self._update_timestamp()
                 e.section.get(incache=True, fatal=False)  # Do not crash at this stage
                 self._classify_ufo(e, onfails=self._failed)
             # Crawl into the expected list
             # Always process the first self._crawling_threshold elements
-            for i_e in range(min(self._crawling_threshold, len(self._expected)) - 1, -1, -1):
+            for i_e in range(min(self._crawling_threshold, len(self._members[EntrySt.expected])) - 1, -1, -1):
                 logger.debug("Checking local file: %s",
-                             self._expected[i_e].section.rh.container.localpath())
+                             self._members[EntrySt.expected][i_e].section.rh.container.localpath())
                 found += self._check_entry_index(i_e)
             # Do we attempt the kangaroo check ?
-            if (len(self._expected) > self._crawling_threshold and
+            if (len(self._members[EntrySt.expected]) > self._crawling_threshold and
                     found < self._crawling_threshold / 4):
-                l_len = len(self._expected) - self._crawling_threshold
+                l_len = len(self._members[EntrySt.expected]) - self._crawling_threshold
                 self._kangaroo_idx += self._crawling_threshold + 1
                 if self._kangaroo_idx >= l_len:
                     l_endid = l_len - 1
@@ -184,37 +233,51 @@ class BasicInputMonitor(object):
                 for i_e in range(self._crawling_threshold + l_endid,
                                  max(l_endid - 1, self._crawling_threshold - 1), -1):
                     logger.debug("Checking local file (kangaroo): %s",
-                                 self._expected[i_e].section.rh.container.localpath())
+                                 self._members[EntrySt.expected][i_e].section.rh.container.localpath())
                     found += self._check_entry_index(i_e)
 
     @property
     def all_done(self):
-        """Is there any expected sections left ?"""
+        """Is there any ufo or expected sections left ?"""
         self._refresh()
-        return len(self._expected) == 0 and len(self._ufo) == 0
+        return (len(self._members[EntrySt.expected]) == 0 and
+                len(self._members[EntrySt.ufo]) == 0)
+
+    @property
+    def members(self):
+        """Members classified by state."""
+        return self._members
+
+    def itermembers(self):
+        """Iterate over all members."""
+        for st in EntrySt:
+            for e in self._members[st]:
+                yield e
+
+    @property
+    def inactive_time(self):
+        """The time (in sec) since the last action (successful or not)."""
+        return time.time() - self._inactive_since
 
     @property
     def ufo(self):
-        """The list of resources in an unknown state.
-
-        :return: A list of :class:`InputMonitorEntry` objects
-        """
-        return self._ufo
+        """The list of sections in an unknown state."""
+        return self._members[EntrySt.ufo]
 
     @property
     def expected(self):
         """The list of expected sections."""
         self._refresh()
-        return self._expected
+        return self._members[EntrySt.expected]
 
     @property
     def available(self):
         """The list of sections that were successfully fetched."""
         self._refresh()
-        return self._available
+        return self._members[EntrySt.available]
 
     @property
     def failed(self):
         """The list of sections that ended with an error."""
         self._refresh()
-        return self._failed
+        return self._members[EntrySt.failed]
