@@ -27,6 +27,11 @@ Base Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ParrotObserver
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: SecludedObserverBoard
    :show-inheritance:
    :members:

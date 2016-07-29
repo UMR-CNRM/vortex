@@ -35,12 +35,14 @@ RH_DICT = dict(date=R_DATE, cutoff=R_CUTOFF, model=R_MODEL, kind='gridpoint',
                block='forecast', storetrack = False,
                local = 'scrontch_[term]_[member]_[geometry::area]')
 
-MISC_INIDELAY = 5
+MISC_INIDELAY = 2
 
 TodoEntry = collections.namedtuple('TodoEntry', ('t', 'rh', 'fail'))
 
 vlogger = fp.loggers.getLogger('vortex')
 vlogger.setLevel('WARNING')
+slogger = fp.loggers.getLogger('vortex.tools.systems')  # Mask errors arising while trying to poll promises
+slogger.setLevel('CRITICAL')
 logger = fp.loggers.getLogger(__name__)
 logger.setLevel('INFO')
 
@@ -161,9 +163,9 @@ def promises_argparse():
                         help="The list of domains (footprint style) [default: %(default)s]")
     parser.add_argument("-t", "--terms", default='0-6-3',
                         help="The list of terms (footprint style) [default: %(default)s]")
-    parser.add_argument("-s", "--stepdelay", type=int, default=5,
+    parser.add_argument("-s", "--stepdelay", type=int, default=4,
                         help="Duration of a one hour forecast (in sec.) [default: %(default)s]")
-    parser.add_argument("-r", "--randomdelay", type=int, default=4,
+    parser.add_argument("-r", "--randomdelay", type=int, default=2,
                         help="The random delay added to the step delay (in sec.) " +
                         "[default: %(default)s]")
     parser.add_argument("--lastfails", type=int, default=-1,

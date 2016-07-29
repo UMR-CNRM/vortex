@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This module defines generic classes that are used to check the states of a list of
+This module defines generic classes that are used to check the state of a list of
 sections
 """
 
@@ -17,35 +17,33 @@ logger = loggers.getLogger(__name__)
 __all__ = []
 
 
-#: Definition of a EntrySt tuple
+#: Class for possible states of a :class:`InputMonitorEntry` object
 EntryStateTuple = namedtuple('EntryStateTuple',
                              ['ufo', 'expected', 'available', 'failed'],
                              verbose=False)
 
-#: Predefined EntrySt values
+#: Predefined :class:`InputMonitorEntry` state values
 EntrySt = EntryStateTuple(ufo='ufo', expected='expected', available='available',
                           failed='failed')
 
-#: Definition of a GangSt tuple
+#: Class for possible states of a :class:`_Gang` object
 GangStateTuple = namedtuple('GangStateTuple',
-                            ['ufo', 'collectable', 'failed'],
+                            ['ufo', 'collectable', 'pcollectable', 'failed'],
                             verbose=False)
 
-#: Predefined GangSt values
-GangSt = GangStateTuple(ufo='undecided', collectable='collectable', failed='failed')
+#: Predefined :class:`_Gang` state values
+GangSt = GangStateTuple(ufo='undecided', collectable='collectable',
+                        pcollectable='collectable_partial', failed='failed')
 
 
-class InputMonitorEntry(object):
+class _StateFull(object):
+    """A class with a state."""
 
-    def __init__(self, section):
-        """An entry manipulated by a :class:`BasicInputMonitor` object.
+    _mystates = EntrySt  # The name of possible states
 
-        :param vortex.layout.dataflow.Section section: The section associated
-            with this entry
-        """
-        self._nchecks = 0
-        self._section = section
-        self._state = EntrySt.ufo
+    def __init__(self):
+        """Initialise the state attribute and setup the observer."""
+        self._state = self._mystates.ufo
         self._obsboard = observers.SecludedObserverBoard()
         self._obsboard.notify_new(self, dict(state=self._state))
 
@@ -58,17 +56,62 @@ class InputMonitorEntry(object):
         """The entry's observer board."""
         return self._obsboard
 
-    def get_state(self):
+    def _get_state(self):
         return self._state
 
-    def set_state(self, newstate):
-        previous = self._state
-        self._state = newstate
-        if newstate != previous:
+    def _set_state(self, newstate):
+        if newstate != self._state:
+            previous = self._state
+            self._state = newstate
             self._obsboard.notify_upd(self, dict(state=self._state,
                                                  previous_state=previous))
 
-    state = property(get_state, set_state, doc="The entry's state.")
+    state = property(_get_state, _set_state, doc="The entry's state.")
+
+
+class _StateFullMembersList(object):
+    """A class with members."""
+
+    _mstates = EntrySt  # The name of possible member's states
+    _mcontainer = list  # The container class for the members
+
+    def __init__(self):
+        """Initialise the members list."""
+        self._members = dict()
+        for st in self._mstates:
+            self._members[st] = self._mcontainer()
+
+    @property
+    def members(self):
+        """Members classified by state."""
+        return self._members
+
+    def _itermembers(self):
+        """
+        Iterate over all members: not safe if a given member is move from a
+        queue to another. That's why it's not public.
+        """
+        for st in self._mstates:
+            for e in self._members[st]:
+                yield e
+
+    @property
+    def memberslist(self):
+        """The list of all the members."""
+        return list(self._itermembers())
+
+
+class InputMonitorEntry(_StateFull):
+
+    def __init__(self, section):
+        """An entry manipulated by a :class:`BasicInputMonitor` object.
+
+        :param vortex.layout.dataflow.Section section: The section associated
+            with this entry
+        """
+        _StateFull.__init__(self)
+        self._nchecks = 0
+        self._section = section
 
     @property
     def nchecks(self):
@@ -88,7 +131,7 @@ class InputMonitorEntry(object):
         return self._section
 
 
-class BasicInputMonitor(object):
+class BasicInputMonitor(_StateFullMembersList):
 
     def __init__(self, sequence, role=None, kind=None,
                  caching_freq=20, crawling_threshold=100):
@@ -106,16 +149,18 @@ class BasicInputMonitor(object):
         If the inputs we are looking at have a *term* attribute, the input lists
         will automatically be ordered according to the *term*.
 
-        :param Sequence sequence: The sequence object that is used as a source
-            of inputs
+        :param vortex.layout.dataflow.Sequence sequence: The sequence object that
+            is used as a source of inputs
         :param str role: The role of the sections that will be watched
         :param str kind: The kind of the sections that will be watched (used only
             if role is not specified)
         :param int caching_freq: We will update the sections statuses every N
             seconds
-        :param int crawling_threshold: Maximum number of section status  to
+        :param int crawling_threshold: Maximum number of section statuses  to
             update at once
         """
+        _StateFullMembersList.__init__(self)
+
         self._seq = sequence
         self._role = role
         self._kind = kind
@@ -129,10 +174,6 @@ class BasicInputMonitor(object):
         # Generate the first list of sections
         toclassify = [InputMonitorEntry(x)
                       for x in self._seq.filtered_inputs(role=self._role, kind=self._kind)]
-        # Initialise other lists
-        self._members = dict()
-        for st in EntrySt:
-            self._members[st] = list()
 
         # Sort the list of UFOs if sensitive (i.e if all resources have a term)
         has_term = 0
@@ -244,17 +285,6 @@ class BasicInputMonitor(object):
                 len(self._members[EntrySt.ufo]) == 0)
 
     @property
-    def members(self):
-        """Members classified by state."""
-        return self._members
-
-    def itermembers(self):
-        """Iterate over all members."""
-        for st in EntrySt:
-            for e in self._members[st]:
-                yield e
-
-    @property
     def inactive_time(self):
         """The time (in sec) since the last action (successful or not)."""
         return time.time() - self._inactive_since
@@ -281,3 +311,227 @@ class BasicInputMonitor(object):
         """The list of sections that ended with an error."""
         self._refresh()
         return self._members[EntrySt.failed]
+
+
+class _Gang(observers.Observer, _StateFull, _StateFullMembersList):
+    """A Gang is a collection of :class:`InputMonitorEntry` objects or a collection of :class:`_Gang` objects.
+
+    The members of the Gang are classified depending on their state. The state
+    of each of the members may change, that's why the Gang registers as an
+    observer to its members.
+
+    Since a Gang may be a collection of Gangs, a Gang is also an observee.
+    """
+
+    _mystates = GangSt
+    _mcontainer = set
+
+    def __init__(self):
+        """
+
+        :parameters: None
+        """
+        _StateFull.__init__(self)
+        _StateFullMembersList.__init__(self)
+        self._nmembers = 0
+        self.info = dict()
+
+    @property
+    def nickname(self):
+        """A fancy representation of the info dict."""
+        if not self.info:
+            return 'Anonymous'
+        else:
+            return ", ".join(['{:s}={!s}'.format(k, v)
+                              for k, v in self.info.iteritems()])
+
+    def add_member(self, *members):
+        """Introduce one or several members to the Gang."""
+        for member in members:
+            member.observerboard.register(self)
+            self._members[member.state].add(member)
+            self._nmembers += 1
+        self._refresh_state()
+
+    def __len__(self):
+        """The number of gang members."""
+        return self._nmembers
+
+    def updobsitem(self, item, info):
+        """React to an observee notification."""
+        observers.Observer.updobsitem(self, item, info)
+        # Move the item around
+        self._members[info['previous_state']].remove(item)
+        self._members[info['state']].add(item)
+        # Update my own state
+        self._refresh_state()
+
+    def _is_collectable(self):
+        raise NotImplementedError
+
+    def _is_pcollectable(self):
+        raise NotImplementedError
+
+    def _is_undecided(self):
+        raise NotImplementedError
+
+    def _refresh_state(self):
+        """Update the state of the Gang."""
+        if self._is_collectable():
+            self.state = self._mystates.collectable
+        elif self._is_pcollectable():
+            self.state = self._mystates.pcollectable
+        elif self._is_undecided():
+            self.state = self._mystates.ufo
+        else:
+            self.state = self._mystates.failed
+
+    # We need to refresh the state just before accessing it (since the state may
+    # be time dependant)
+    def _get_state(self):
+        self._refresh_state()
+        return super(_Gang, self)._get_state()
+
+    state = property(_get_state, _StateFull._set_state, doc="The Gang's state.")
+
+
+class BasicGang(_Gang):
+    """A Gang of :class:`InputMonitorEntry` objects.
+
+    Such a Gang may have 4 states:
+
+        * undecided: Some of the members are still expected (and the
+          *waitlimit* time is not exhausted)
+        * collectable: All the members are available
+        * collectable_partial: At least *minsize* members are available, but some
+          of the members are late (because the *waitlimit* time is exceeded) or
+          have failed.
+        * failed: There are to much failed members (given *minsize*)
+    """
+
+    _mstates = EntrySt
+
+    def __init__(self, minsize=0, waitlimit=0):
+        """
+
+        :param int minsize: The minimum size for this Gang to be collectable
+                            (0 for all present)
+        :param int waitlimit: If > 0, wait no more that N sec after the first change
+                              of state
+        """
+        self.minsize = minsize
+        self.waitlimit = waitlimit
+        self._firstseen = None
+        super(BasicGang, self).__init__()
+
+    def updobsitem(self, item, info):
+        super(BasicGang, self).updobsitem(item, info)
+        if info['previous_state'] == self._mstates.expected:
+            self._firstseen = time.time()
+
+    @property
+    def _eff_minsize(self):
+        """If minsize==0, the effective minsize will be equal to the Gang's len."""
+        return self.minsize if self.minsize > 0 else len(self)
+
+    @property
+    def _ufo_members(self):
+        """The number of ufo members (from a Gang point of view)."""
+        return len(self._members[self._mstates.ufo]) + len(self._members[self._mstates.expected])
+
+    def _is_collectable(self):
+        return len(self._members[self._mstates.available]) == len(self)
+
+    def _is_pcollectable(self):
+        return (len(self._members[self._mstates.available]) >= self._eff_minsize and
+                (self._ufo_members == 0 or
+                 (self.waitlimit > 0 and self._firstseen is not None and
+                  time.time() - self._firstseen > self.waitlimit)
+                 )
+                )
+
+    def _is_undecided(self):
+        return len(self._members[self._mstates.available]) + self._ufo_members >= self._eff_minsize
+
+
+class MetaGang(_Gang):
+    """A Gang of :class:`_Gang` objects.
+
+    Such a Gang may have 4 states:
+
+        * undecided: Some of the members are still undecided
+        * collectable: All the members are collectable
+        * collectable_partial: Some of the member are only collectable_partial
+          and the rest are collectable
+        * failed: One of the member has failed
+    """
+
+    _mstates = GangSt
+
+    def has_collectable(self):
+        """Is there at least one collectable member ?"""
+        return len(self._members[self._mstates.collectable])
+
+    def has_pcollectable(self):
+        """Is there at least one collectable or collectable_partial member ?"""
+        return (len(self._members[self._mstates.pcollectable]) +
+                len(self._members[self._mstates.collectable]))
+
+    def pop_collectable(self):
+        """Retrieve a collectable member."""
+        return self._members[self._mstates.collectable].pop()
+
+    def pop_pcollectable(self):
+        """Retrieve a collectable or a collectable_partial member."""
+        if self.has_collectable():
+            return self.pop_collectable()
+        else:
+            return self._members[self._mstates.pcollectable].pop()
+
+    def _is_collectable(self):
+        return len(self._members[self._mstates.collectable]) == len(self)
+
+    def _is_pcollectable(self):
+        return (len(self._members[self._mstates.collectable]) +
+                len(self._members[self._mstates.pcollectable])) == len(self)
+
+    def _is_undecided(self):
+        return len(self._members[self._mstates.failed]) == 0
+
+    def _refresh_state(self):
+        for member in self.memberslist:
+            member.state  # Update the member's state (they might be time dependent
+        super(MetaGang, self)._refresh_state()
+
+
+class AutoMetaGang(MetaGang):
+    """
+    A :class:`MetaGang` with a method that automatically populate the object
+    given a :class:`BasicInputMonitor` object.
+    """
+
+    def autofill(self, bm, grouping_keys, allowmissing=0, waitlimit=0):
+        """
+        Crawl into the *bm* :class:`BasicInputMonitor`'s entries, create
+        :class:`BasicGang` objects based on the resource's attribute listed in
+        *grouping_keys* and finally adds these gangs to the current object.
+
+        :param vortex.layout.monitor.BasicInputMonitor bm: The BasicInputMonitor
+                                                           that will be explored
+        :param list grouping_keys: The attributes that are used to discriminate the gangs
+        :param int allowmissing: The number of missing members allowed for a gang
+            (It will be used to initialise the member gangs *minsize* attribute)
+        :param int waitlimit: The *waitlimit* attribute of the members Gangs
+        """
+        # Initialise the gangs
+        mdict = defaultdict(list)
+        for entry in bm.memberslist:
+            entryid = tuple([getattr(entry.section.rh.resource, key) for key in grouping_keys])
+            mdict[entryid].append(entry)
+        # Finalise the Gangs setup and use them...
+        for entryid, members in mdict.iteritems():
+            gang = BasicGang(waitlimit=waitlimit,
+                             minsize=len(members) - allowmissing)
+            gang.add_member(* members)
+            gang.info = {k: v for k, v in zip(grouping_keys, entryid)}
+            self.add_member(gang)
