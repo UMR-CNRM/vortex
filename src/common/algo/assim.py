@@ -143,29 +143,37 @@ class IFSODB(IFSParallel, odb.OdbComponent):
     _footprint = dict(
         attr = dict(
             npool = dict(
-                type     = int,
-                optional = True,
-                default  = 1,
+                info        = 'The number of pool(s) in the ODB database.',
+                type        = int,
+                optional    = True,
+                default     = 1,
             ),
             iomethod = dict(
-                type     = int,
-                optional = True,
-                default  = 1,
+                info        = 'The io_method of the ODB database.',
+                type        = int,
+                optional    = True,
+                default     = 1,
+                doc_zorder  = -50,
             ),
             slots = dict(
+                info     = 'The timeslots of the assimilation window.',
                 type     = odb.TimeSlots,
                 optional = True,
                 default  = odb.TimeSlots(7, chunk='PT1H'),
             ),
             virtualdb = dict(
-                optional = True,
-                default  = 'ecma',
-                access   = 'rwx',
+                info            = 'The type of the virtual ODB database.',
+                optional        = True,
+                default         = 'ecma',
+                access          = 'rwx',
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
             date = dict(
-                optional = True,
-                access   = 'rwx',
-                type     = Date,
+                info            = 'The current run date.',
+                optional        = True,
+                access          = 'rwx',
+                type            = Date,
+                doc_zorder      = -50,
             ),
         )
     )

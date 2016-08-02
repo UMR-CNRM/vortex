@@ -35,8 +35,11 @@ class GenvKey(str):
         """Proxy to ``str.__new___`` with attributes inside brackets translated to lower case."""
         return str.__new__(cls, re.sub(r'\[\w+\]', _lowerattr, value.upper()))
 
-a_gvar = dict(type     = GenvKey,
-              optional = True,)
+a_gvar = dict(info            = 'The key that identifies the resource in the Genv database.',
+              type            = GenvKey,
+              optional        = True,
+              doc_visibility  = footprints.doc.visibility.ADVANCED,
+              )
 
 #: Usual definition of the ``genv`` attribute.
 gvar = footprints.Footprint(info = 'A GENV access key',
@@ -54,9 +57,11 @@ class GenvDomain(str):
         return str.__new__(cls, domain_remap.get(value, value))
 
 
-a_gdomain = dict(type = GenvDomain,
+a_gdomain = dict(info = "The resource's geographical domain name in the Genv database.",
+                 type = GenvDomain,
                  optional = True,
-                 default = '[geometry::area]')
+                 default = '[geometry::area]',
+                 doc_visibility  = footprints.doc.visibility.ADVANCED,)
 
 #: Usual definition of the ``gdomain`` attribute.
 gdomain = footprints.Footprint(info = 'A domain name in GCO convention',
@@ -114,3 +119,14 @@ class ArpIfsSimplifiedCycle(object):
     def export_dict(self):
         """The pure dict/json output is the raw integer"""
         return str(self)
+
+
+a_arpifs_cycle = dict(info     = "An Arpege/IFS cycle name",
+                      type     = ArpIfsSimplifiedCycle,
+                      optional = True,
+                      default  = 'cy40',  # For "old" Olive configurations to keep working
+                      )
+
+#: Usual definition of the ``cycle`` attribute.
+arpifs_cycle = footprints.Footprint(info = 'An abstract arpifs_cycle in GCO convention',
+                                    attr = dict(cycle = a_arpifs_cycle))

@@ -11,7 +11,16 @@ from vortex.syntax.stdattrs import model
 
 
 class NoDateResource(Resource):
+
     _abstract = True
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                info        = "The resource's kind.",
+                doc_zorder  = 90,
+            ),
+        )
+    )
 
 
 class ModelResource(NoDateResource):
@@ -34,6 +43,7 @@ class StaticGeoResource(ModelResource):
     _footprint = dict(
         attr = dict(
             geometry = dict(
+                info = "The resource's horizontal geometry.",
                 type = HorizontalGeometry,
             ),
             clscontents = dict(

@@ -169,6 +169,7 @@ class Namespace(str):
 #: Usal definition fo the ``xpid`` or experiment name.
 
 a_xpid = dict(
+    info     = "The experiment's identifier.",
     type     = XPid,
     optional = False,
 )
@@ -177,6 +178,7 @@ xpid = footprints.Footprint(info = 'Abstract experiment id', attr = dict(experim
 
 #: Usual definition of the ``nativefmt`` attribute.
 a_nativefmt = dict(
+    info     = "The resource's storage format.",
     optional = True,
     default  = 'foo',
     values   = knownfmt,
@@ -187,6 +189,7 @@ nativefmt = footprints.Footprint(info = 'Native format', attr = dict(nativefmt =
 
 #: Usual definition of the ``actualfmt`` attribute.
 a_actualfmt = dict(
+    info     = "The resource's format.",
     optional = True,
     default  = '[nativefmt#unknown]',
     alias    = ('format',),
@@ -198,7 +201,8 @@ actualfmt = footprints.Footprint(info = 'Actual data format', attr = dict(actual
 
 #: Usual definition of the ``cutoff`` attribute.
 a_cutoff = dict(
-    type = str,
+    info     = "The cutoff type of the generating process.",
+    type     = str,
     optional = False,
     alias    = ('cut',),
     values   = [
@@ -218,7 +222,8 @@ cutoff = footprints.Footprint(info = 'Abstract cutoff', attr = dict(cutoff = a_c
 
 #: Usual definition of the ``model`` attribute.
 a_model = dict(
-    type = str,
+    info     = "The model name (from a source code perspective).",
+    type     = str,
     alias    = ('engine', 'turtle'),
     optional = False,
     values   = models,
@@ -233,6 +238,7 @@ model = footprints.Footprint(info = 'Abstract model', attr = dict(model = a_mode
 
 #: Usual definition of the ``date`` attribute.
 a_date = dict(
+    info = "The generating process run date.",
     type = Date,
     optional = False,
 )
@@ -241,6 +247,7 @@ date = footprints.Footprint(info = 'Abstract date', attr = dict(date = a_date))
 
 #: Usual definition of the ``month`` attribute.
 a_month = dict(
+    info     = "The generating process run month.",
     type     = Month,
     args     = dict(year=0),
     optional = False,
@@ -251,6 +258,7 @@ month = footprints.Footprint(info = 'Abstract month', attr = dict(month = a_mont
 
 #: Usual definition of the ``truncation`` attribute.
 a_truncation = dict(
+    info     = "The resource's truncation.",
     type     = int,
     optional = False,
 )
@@ -259,6 +267,7 @@ truncation = footprints.Footprint(info = 'Abstract truncation', attr = dict(trun
 
 #: Usual definition of the ``domain`` attribute.
 a_domain = dict(
+    info     = "The resource's geographical domain.",
     type     = str,
     optional = False,
 )
@@ -267,6 +276,7 @@ domain = footprints.Footprint(info = 'Abstract domain', attr = dict(domain = a_d
 
 #: Usual definition of the ``term`` attribute.
 a_term = dict(
+    info     = "The resource's forecast term.",
     type     = Time,
     optional = False,
 )
@@ -275,12 +285,39 @@ term = footprints.Footprint(info = 'Abstract term', attr = dict(term = a_term))
 
 #: Usual definition of operational suite
 a_suite = dict(
+    info   = "The operational suite identifier.",
     values = [ 'oper', 'dble', 'dbl', 'test', 'mirr', 'miroir' ],
     remap  = dict(
         dbl = 'dble',
         miroir = 'mirr',
     )
 )
+
+#: Usual definition of the ``member`` attribute
+a_member = dict(
+    info     = "The member's number (`None` for a deterministic configuration).",
+    type     = int,
+    optional = True,
+)
+
+member = footprints.Footprint(info = 'Abstract member', attr = dict(member = a_member))
+
+#: Usual definition of the ``block`` attribute
+a_block = dict(
+    info     = 'The subpath where to store the data.',
+)
+
+block = footprints.Footprint(info = 'Abstract block', attr = dict(block = a_block))
+
+#: Usual definition of the ``namespace`` attribute
+a_namespace = dict(
+    info     = "The namespace where to store the data.",
+    type     = Namespace,
+    optional = True,
+)
+
+namespacefp = footprints.Footprint(info = 'Abstract namespace',
+                                   attr = dict(namespace = a_namespace))
 
 
 def show():

@@ -34,7 +34,7 @@ class DelayedAlgoComponentError(AlgoComponentError):
         self._excs = excs
 
     def __str__(self):
-        outstr = "One or several errors occur during the run. In order of appearence:\n"
+        outstr = "One or several errors occur during the run. In order of appearance:\n"
         outstr += "\n".join(['{0:3d}. {1!s} (type: {2!s})'.format(i + 1, exc, type(exc))
                              for i, exc in enumerate(self._excs)])
         return outstr
@@ -49,45 +49,62 @@ class AlgoComponent(footprints.FootprintBase):
         info = 'Abstract algo component',
         attr = dict(
             engine = dict(
+                info     = 'The way the executable should be run.',
                 values   = [ 'algo' ]
             ),
             flyput = dict(
-                optional = True,
-                default  = False,
-                access   = 'rwx',
+                info            = 'Activate a background job in charge off on the fly processing.',
+                optional        = True,
+                default         = False,
+                access          = 'rwx',
+                doc_visibility  = footprints.doc.visibility.GURU,
+                doc_zorder      = -99,
             ),
             flypoll = dict(
-                optional = True,
-                default  = 'io_poll',
-                access   = 'rwx',
+                info            = 'The system method called by the flyput background job.',
+                optional        = True,
+                default         = 'io_poll',
+                access          = 'rwx',
+                doc_visibility  = footprints.doc.visibility.GURU,
+                doc_zorder      = -99,
             ),
             flyargs = dict(
-                type     = footprints.FPTuple,
-                optional = True,
-                default  = footprints.FPTuple(),
+                info            = 'Arguments for the *flypoll* method.',
+                type            = footprints.FPTuple,
+                optional        = True,
+                default         = footprints.FPTuple(),
+                doc_visibility  = footprints.doc.visibility.GURU,
+                doc_zorder      = -99,
             ),
             timeout = dict(
-                type     = int,
-                optional = True,
-                default  = 180,
+                info            = 'Default timeout (in sec.) used  when waiting for an expected resource.',
+                type            = int,
+                optional        = True,
+                default         = 180,
+                doc_zorder      = -50,
             ),
             server_run = dict(
-                type     = bool,
-                optional = True,
-                values   = [False],
-                default  = False,
+                info            = 'Run the executable as a server.',
+                type            = bool,
+                optional        = True,
+                values          = [False],
+                default         = False,
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
             serversync_method = dict(
-                optional = True,
+                info                    = 'The method that is used to synchronise with the server.',
+                optional        = True,
+                doc_visibility  = footprints.doc.visibility.GURU,
             ),
             serversync_medium = dict(
-                optional = True,
+                info            = 'The medium that is used to synchronise with the server.',
+                optional        = True,
+                doc_visibility  = footprints.doc.visibility.GURU,
             )
         )
     )
 
     def __init__(self, *args, **kw):
-        """Before parent initialization, preset the internal FS log to an empty list."""
         logger.debug('Algo component init %s', self.__class__)
         self._fslog = list()
         self._promises = None
@@ -622,17 +639,21 @@ class TaylorRun(AlgoComponent):
 
     _abstract = True
     _footprint = dict(
+        info = 'Abstract algo component based on the taylorism package.',
         attr = dict(
             kind = dict(),
             verbose = dict(
-                type = bool,
-                default = False,
-                optional = True
+                info        = 'Run in verbose mode',
+                type        = bool,
+                default     = False,
+                optional    = True,
+                doc_zorder  = -50,
             ),
             ntasks = dict(
-                type = int,
-                default = DelayedEnvValue('VORTEX_SUBMIT_TASKS', 1),
-                optional = True
+                info        = 'The maximum number of parallel tasks',
+                type        = int,
+                default     = DelayedEnvValue('VORTEX_SUBMIT_TASKS', 1),
+                optional    = True
             ),
         )
     )
@@ -701,15 +722,13 @@ class TaylorRun(AlgoComponent):
 
 
 class Expresso(ExecutableAlgoComponent):
-    """
-    Run a script resource in the good environment. Mandatory arguments are:
-     * interpreter (values = awk, ksh, bash, perl, python)
-     * engine ( values =  exec, launch )
-    """
+    """Run a script resource in the good environment."""
 
     _footprint = dict(
+        info = 'AlgoComponent that simply runs a script',
         attr = dict(
             interpreter = dict(
+                info   = 'The interpreter needed to run the script.',
                 values = ['awk', 'ksh', 'bash', 'perl', 'python']
             ),
             engine = dict(
@@ -736,6 +755,7 @@ class BlindRun(ExecutableAlgoComponent):
     """
 
     _footprint = dict(
+        info = 'AlgoComponent that simply runs a serial binary',
         attr = dict(
             engine = dict(
                 values = ['blind']
@@ -767,6 +787,7 @@ class ParaBlindRun(TaylorRun):
 
     _abstract = True
     _footprint = dict(
+        info = 'Abstract AlgoComponent that runs a serial binary using the taylorism package.',
         attr = dict(
             engine = dict(
                 values = ['blind']
@@ -799,26 +820,37 @@ class Parallel(ExecutableAlgoComponent):
     """
 
     _footprint = dict(
+        info = 'AlgoComponent that simply runs an MPI binary',
         attr = dict(
             engine = dict(
                 values   = ['parallel']
             ),
             mpitool = dict(
-                optional = True,
-                type     = mpitools.MpiSubmit
+                info            = 'The object used to launch the parallel program',
+                optional        = True,
+                type            = mpitools.MpiSubmit,
+                doc_visibility  = footprints.doc.visibility.GURU,
             ),
             mpiname = dict(
-                optional = True,
-                alias    = ['mpi'],
+                info            = ('The mpiname of a class in the mpitool collector ' +
+                                   '(used only if *mpitool* is not provided)'),
+                optional        = True,
+                alias           = ['mpi'],
+                doc_visibility  = footprints.doc.visibility.GURU,
             ),
             ioserver = dict(
-                type     = mpitools.MpiServerIO,
-                optional = True,
-                default  = None,
+                info            = 'The object used to launch the IOserver part of the binary.',
+                type            = mpitools.MpiServerIO,
+                optional        = True,
+                default         = None,
+                doc_visibility  = footprints.doc.visibility.GURU,
             ),
             timeoutrestart = dict(
-                optional = True,
-                default  = DelayedEnvValue('MPI_INIT_TIMEOUT_RESTART', 2),
+                info            = 'The number of attempts made by the mpitool object.',
+                optional        = True,
+                default         = DelayedEnvValue('MPI_INIT_TIMEOUT_RESTART', 2),
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
+                doc_zorder      = -90,
             ),
         )
     )

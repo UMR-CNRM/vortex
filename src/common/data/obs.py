@@ -17,7 +17,7 @@ from vortex.syntax        import stdattrs
 from vortex.tools.date    import Date
 from vortex.util.structs  import ReadOnlyDict
 
-from gco.syntax.stdattrs  import GenvKey
+from gco.syntax.stdattrs  import gvar, GenvKey
 
 
 class Observations(GeoFlowResource):
@@ -33,11 +33,15 @@ class Observations(GeoFlowResource):
                 values   = ['observations', 'obs'],
                 remap    = dict(obs = 'observations'),
             ),
-            part = dict(),
+            part = dict(
+                info     = 'The name of this subset of observations.'
+            ),
             nativefmt = dict(
                 alias    = ('format',),
             ),
-            stage = dict(),
+            stage = dict(
+                info     = 'The processing stage for this subset of observations.'
+            ),
         )
     )
 
@@ -71,6 +75,7 @@ class ObsODB(Observations):
                 },
             ),
             layout = dict(
+                info     = 'The layout of the ODB database.',
                 optional = True,
                 default  = 'ecma',
                 values   = [
@@ -166,9 +171,10 @@ class ObsRaw(Observations):
                 values  = ['void', 'extract', 'raw', 'std']
             ),
             olivefmt = dict(
+                info     = 'The mapping between Vortex and Olive formats names.',
                 type     = footprints.FPDict,
                 optional = True,
-                default = footprints.FPDict(
+                default  = footprints.FPDict(
                     ascii  = 'ascii',
                     obsoul = 'obsoul',
                     grib   = 'obsgrib',
@@ -176,6 +182,7 @@ class ObsRaw(Observations):
                     netcdf = 'netcdf',
                     hdf5 = 'hdf5',
                 ),
+                doc_visibility  = footprints.doc.visibility.GURU,
             )
         )
     )
@@ -223,11 +230,11 @@ class VarBCContent(AlmostListContent):
 
 class VarBC(FlowResource):
     """
-    VarBC file ressource. Contains all the coefficients for the VarBC bias correction scheme.
+    VarBC file resource. Contains all the coefficients for the VarBC bias correction scheme.
     """
 
     _footprint = dict(
-        info = 'Varbc file',
+        info = 'Varbc file (coefficients for the bias correction of observations).',
         attr = dict(
             kind = dict(
                 values   = ['varbc']
@@ -291,42 +298,43 @@ class BlackList(FlowResource):
     TODO.
     """
 
-    _footprint = dict(
-        info = 'Blacklist file for observations',
-        attr = dict(
-            kind = dict(
-                values  = ['blacklist'],
-            ),
-            gvar = dict(
-                type     = GenvKey,
-                optional = True,
-                default  = 'blacklist_[scope]',
-                values   = ['BLACKLIST_LOC', 'BLACKLIST_DIAP', 'BLACKLIST_LOCAL', 'BLACKLIST_GLOBAL'],
-                remap    = dict(
-                    BLACKLIST_LOCAL  = 'BLACKLIST_LOC',
-                    BLACKLIST_GLOBAL = 'BLACKLIST_DIAP',
-                    blacklist_local  = 'BLACKLIST_LOC',
-                    blacklist_global = 'BLACKLIST_DIAP',
-                )
-            ),
-            clscontents = dict(
-                default  = TextContent,
-            ),
-            nativefmt = dict(
-                values  = ['txt'],
-                default = 'txt'
-            ),
-            scope = dict(
-                values  = ['loc', 'local', 'site', 'global', 'diap', 'diapason'],
-                remap   = dict(
-                    loc      = 'local',
-                    site     = 'local',
-                    diap     = 'global',
-                    diapason = 'global',
-                )
-            ),
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Blacklist file for observations',
+            attr = dict(
+                kind = dict(
+                    values  = ['blacklist'],
+                ),
+                gvar = dict(
+                    default  = 'blacklist_[scope]',
+                    values   = ['BLACKLIST_LOC', 'BLACKLIST_DIAP', 'BLACKLIST_LOCAL', 'BLACKLIST_GLOBAL'],
+                    remap    = dict(
+                        BLACKLIST_LOCAL  = 'BLACKLIST_LOC',
+                        BLACKLIST_GLOBAL = 'BLACKLIST_DIAP',
+                        blacklist_local  = 'BLACKLIST_LOC',
+                        blacklist_global = 'BLACKLIST_DIAP',
+                    )
+                ),
+                clscontents = dict(
+                    default  = TextContent,
+                ),
+                nativefmt = dict(
+                    values  = ['txt'],
+                    default = 'txt'
+                ),
+                scope = dict(
+                    values  = ['loc', 'local', 'site', 'global', 'diap', 'diapason'],
+                    remap   = dict(
+                        loc      = 'local',
+                        site     = 'local',
+                        diap     = 'global',
+                        diapason = 'global',
+                    )
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -535,45 +543,45 @@ class ObsMap(FlowResource):
 
     The *discard* attribute is passed directly to the :class:`ObsMapContent`
     object in charge of accessing this resource: It is used to discard some
-    of the lines of the *ObsMap* file (for more details see the 
+    of the lines of the *ObsMap* file (for more details see the
     :class:`ObsMapContent` class documentation)
     """
 
-    _footprint = dict(
-        info = 'Bator mapping file',
-        attr = dict(
-            kind = dict(
-                values   = ['obsmap'],
-            ),
-            gvar = dict(
-                type     = GenvKey,
-                optional = True,
-            ),
-            clscontents = dict(
-                default  = ObsMapContent,
-            ),
-            nativefmt = dict(
-                values   = ['ascii', 'txt'],
-                default  = 'txt',
-                remap    = dict(ascii = 'txt')
-            ),
-            stage = dict(
-                optional = True,
-                default  = 'void'
-            ),
-            scope = dict(
-                optional = True,
-                default  = 'full',
-                values   = ['surface', 'surf', 'full'],
-                remap = dict(surf = 'surface'),
-            ),
-            discard = dict(
-                type     = footprints.FPSet,
-                optional = True,
-                default  = footprints.FPSet(),
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Bator mapping file',
+            attr = dict(
+                kind = dict(
+                    values   = ['obsmap'],
+                ),
+                clscontents = dict(
+                    default  = ObsMapContent,
+                ),
+                nativefmt = dict(
+                    values   = ['ascii', 'txt'],
+                    default  = 'txt',
+                    remap    = dict(ascii = 'txt')
+                ),
+                stage = dict(
+                    optional = True,
+                    default  = 'void'
+                ),
+                scope = dict(
+                    optional = True,
+                    default  = 'full',
+                    values   = ['surface', 'surf', 'full'],
+                    remap = dict(surf = 'surface'),
+                ),
+                discard = dict(
+                    info     = "Discard some lines of the mapping (see the class documentaion).",
+                    type     = footprints.FPSet,
+                    optional = True,
+                    default  = footprints.FPSet(),
+                )
             )
         )
-    )
+    ]
 
     @property
     def realkind(self):

@@ -10,7 +10,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.providers import Provider, Remote
-from vortex.syntax.stdattrs import Namespace, a_suite
+from vortex.syntax.stdattrs import namespacefp, member, block, Namespace, a_suite
 from vortex.util.config import GenericConfigParser
 
 from common.tools.igastuff import archive_suffix, fuzzyname, arpcourt_vconf, IgakeyFactoryArchive
@@ -22,26 +22,26 @@ class Olive(Provider):
     using the old perl toolbox.
     """
 
-    _footprint = dict(
-        info = 'Olive experiment provider',
-        attr = dict(
-            experiment = dict(),
-            block = dict(),
-            member = dict(
-                type     = int,
-                optional = True,
-            ),
-            namespace = dict(
-                type     = Namespace,
-                optional = True,
-                values   = ['olive.cache.fr', 'olive.archive.fr', 'olive.multi.fr', 'multi.olive.fr'],
-                default  = Namespace('olive.cache.fr'),
-                remap    = {
-                    'multi.olive.fr': 'olive.multi.fr',
-                }
+    _footprint = [
+        block,
+        member,
+        namespacefp,
+        dict(
+            info = 'Olive experiment provider',
+            attr = dict(
+                experiment = dict(
+                    info     = "The experiment's identifier.",
+                ),
+                namespace = dict(
+                    values   = ['olive.cache.fr', 'olive.archive.fr', 'olive.multi.fr', 'multi.olive.fr'],
+                    default  = Namespace('olive.cache.fr'),
+                    remap    = {
+                        'multi.olive.fr': 'olive.multi.fr',
+                    }
+                )
             )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -83,44 +83,42 @@ class Olive(Provider):
 
 class OpArchive(Provider):
 
-    _footprint = dict(
-        info = 'Old archive provider',
-        attr = dict(
-            vconf = dict(
-                outcast  = arpcourt_vconf
-            ),
-            tube = dict(
-                optional = True,
-                default  = 'op',
-                values   = ['op', 'ftop'],
-                remap    = dict(ftop = 'op'),
-            ),
-            namespace = dict(
-                type     = Namespace,
-                optional = True,
-                default  = '[suite].multi.fr',
-                values   = ['oper.archive.fr', 'dble.archive.fr',
-                            'oper.multi.fr', 'dble.multi.fr',
-                            'mirr.multi.fr', 'mirr.multi.fr', ],
-            ),
-            suite = a_suite,
-            igakey = dict(
-                type     = IgakeyFactoryArchive,
-                optional = True,
-                default  = '[vapp]/[vconf]'
-            ),
-            member = dict(
-                type     = int,
-                optional = True,
-            ),
-            inout = dict(
-                optional = True,
-                default  = 'input',
-                values   = ['in', 'input', 'out', 'output'],
-                remap    = {'in': 'input', 'out': 'output'}
+    _footprint = [
+        member,
+        namespacefp,
+        dict(
+            info = 'Old archive provider',
+            attr = dict(
+                vconf = dict(
+                    outcast  = arpcourt_vconf
+                ),
+                tube = dict(
+                    optional = True,
+                    default  = 'op',
+                    values   = ['op', 'ftop'],
+                    remap    = dict(ftop = 'op'),
+                ),
+                namespace = dict(
+                    default  = '[suite].multi.fr',
+                    values   = ['oper.archive.fr', 'dble.archive.fr',
+                                'oper.multi.fr', 'dble.multi.fr',
+                                'mirr.multi.fr', 'mirr.multi.fr', ],
+                ),
+                suite = a_suite,
+                igakey = dict(
+                    type     = IgakeyFactoryArchive,
+                    optional = True,
+                    default  = '[vapp]/[vconf]'
+                ),
+                inout = dict(
+                    optional = True,
+                    default  = 'input',
+                    values   = ['in', 'input', 'out', 'output'],
+                    remap    = {'in': 'input', 'out': 'output'}
+                )
             )
         )
-    )
+    ]
 
     def __init__(self, *args, **kw):
         logger.debug('Old archive provider init %s', self.__class__)
@@ -230,6 +228,7 @@ class RemoteGenericSet(Remote):
         info = 'A set of things in a remote repository',
         attr = dict(
             setcontent = dict(
+                info = 'The content of the repository',
             ),
         ),
         priority = dict(
@@ -252,13 +251,15 @@ class RemoteBinset(RemoteGenericSet):
                 remap = dict(autoremap='first')
             ),
             binmap = dict(
+                info     = 'The style of the mapping between Genv keys and binary names.',
                 optional = True,
                 default  = 'gco'
             ),
             config = dict(
-                type     = GenericConfigParser,
-                optional = True,
-                default  = GenericConfigParser('binset-map-resources.ini')
+                type            = GenericConfigParser,
+                optional        = True,
+                default         = GenericConfigParser('binset-map-resources.ini'),
+                doc_visibility  = footprints.doc.visibility.GURU,
             )
         )
     )

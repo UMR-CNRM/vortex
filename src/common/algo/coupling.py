@@ -18,11 +18,13 @@ class Coupling(FullPos):
     """Coupling for IFS-like LAM Models."""
 
     _footprint = dict(
+        info = "Create coupling files for a Limited Area Model.",
         attr = dict(
             kind = dict(
                 values   = ['coupling'],
             ),
             basedate = dict(
+                info     = "The run date of the coupling generating process",
                 type     = date.Date,
             ),
             server_run = dict(

@@ -7,7 +7,7 @@ __all__ = []
 from vortex.data.geometries import LonlatGeometry
 from vortex.data.outflow import StaticGeoResource
 from vortex.syntax.stdattrs import a_model, month
-from gco.syntax.stdattrs import GenvKey, GenvDomain
+from gco.syntax.stdattrs import gvar, GenvDomain
 
 
 class ClimModel(StaticGeoResource):
@@ -17,15 +17,12 @@ class ClimModel(StaticGeoResource):
     """
     _abstract = True
     _footprint = [
+        gvar,
         month,
         dict(
             info = 'Model climatology',
             attr = dict(
                 model = a_model,
-                gvar = dict(
-                    type = GenvKey,
-                    optional = True,
-                ),
                 kind = dict(
                     values = ['clim_model']
                 ),
@@ -124,6 +121,7 @@ class ClimBDAP(StaticGeoResource):
     with a default name retrieved thanks to a GenvDomain object.
     """
     _footprint = [
+        gvar,
         month,
         dict(
             info = 'Bdap climatology',
@@ -144,8 +142,6 @@ class ClimBDAP(StaticGeoResource):
                     default = '[geometry::area]'
                 ),
                 gvar = dict(
-                    type = GenvKey,
-                    optional = True,
                     default = 'clim_dap_[gdomain]'
                 ),
             )

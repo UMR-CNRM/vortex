@@ -4,8 +4,7 @@
 #: No automatic export
 __all__ = []
 
-from vortex.data.resources  import Resource
-from vortex.data.outflow    import ModelResource, StaticGeoResource
+from vortex.data.outflow    import NoDateResource, ModelResource, StaticGeoResource
 from vortex.data.geometries import LonlatGeometry, GaussGeometry
 from vortex.data.contents   import TextContent, JsonDictContent
 
@@ -684,7 +683,7 @@ class AmvBias(GenvStaticGeoResource):
         return 'amv_bias'
 
 
-class LFIScripts(Resource):
+class LFIScripts(NoDateResource):
     """
     The LFI scripts. A Genvkey can be given.
     """
@@ -738,7 +737,7 @@ class FilteringRequest(GenvModelResource):
         return 'filtering_request'
 
 
-class GribAPIConfig(Resource):
+class GribAPIConfig(NoDateResource):
     """
     Configuration files for the Grib-API (samples or definitions)
     """

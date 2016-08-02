@@ -10,12 +10,12 @@ Data resources
    data
 
    assim
-   binaries
    boundaries
    climfiles
    consts
    diagnostics
    ens
+   executables
    fields
    gridfiles
    logs

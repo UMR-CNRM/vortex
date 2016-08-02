@@ -35,6 +35,7 @@ class GeoFlowResource(FlowResource):
     _footprint = dict(
         attr = dict(
             geometry = dict(
+                info = "The resource's horizontal geometry.",
                 type = HorizontalGeometry,
             ),
             clscontents = dict(
