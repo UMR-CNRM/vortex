@@ -18,6 +18,7 @@ Modules
 * :mod:`footprints.access`
 * :mod:`footprints.collectors`
 * :mod:`footprints.config`
+* :mod:`footprints.doc`
 * :mod:`footprints.dump`
 * :mod:`footprints.loggers`
 * :mod:`footprints.observers`

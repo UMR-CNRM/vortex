@@ -20,7 +20,7 @@ ALLSPHINXOPTS   = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCEDIR)
 
 
 # To enable footprint to generate its documentation
-FOOTPRINT_DOCSTRINGS	:= 1
+FOOTPRINT_DOCSTRINGS	:= 2
 export FOOTPRINT_DOCSTRINGS
 
 

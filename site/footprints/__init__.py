@@ -45,7 +45,7 @@ setup = config.get(
 
 # Internal modules of the footprints package
 
-from . import access, collectors, dump, observers, priorities
+from . import access, collectors, dump, doc, observers, priorities
 from .stdtypes import *
 
 
@@ -192,6 +192,10 @@ class Footprint(object):
             fp['attr'][a].setdefault('default', None)
             fp['attr'][a].setdefault('optional', False)
             fp['attr'][a].setdefault('access', 'rxx')
+            fp['attr'][a].setdefault('doc_visibility', doc.visibility.DEFAULT)
+            fp['attr'][a].setdefault('doc_zorder', 0)
+            # doc_zorder is beetween -100 and 100
+            fp['attr'][a]['doc_zorder'], max(min(-100, fp['attr'][a]['doc_zorder']), 100)
             fp['attr'][a]['alias'] = set(fp['attr'][a].get('alias', set()))
             fp['attr'][a]['remap'] = dict(fp['attr'][a].get('remap', dict()))
             autoremap = fp['attr'][a]['remap'].pop('autoremap', None)
@@ -712,7 +716,8 @@ class FootprintBaseMeta(type):
             basedoc = 'Not documented yet.'
         realcls.__doc__ = basedoc
         if setup.docstrings:
-            realcls.__doc__ += "\n\n    Footprint::\n\n" + realcls._footprint.nice()
+            realcls.__doc__ += doc.format_docstring(realcls._footprint,
+                                                    setup.docstrings)
 
         return realcls
 

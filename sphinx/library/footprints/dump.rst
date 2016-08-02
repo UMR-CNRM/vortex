@@ -43,4 +43,8 @@ Dumper class
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
+.. autoclass:: OneLineTxtDumper
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

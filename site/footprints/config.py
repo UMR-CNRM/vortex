@@ -61,14 +61,14 @@ DFLT_MAXLEN_LIGHT_REPORTING = 100
 class FootprintSetup(util.GetByTag):
     """Defines some defaults and external tools."""
 
-    def __init__(self, docstrings=True, extended=True, fastmode=False,
+    def __init__(self, docstrings=1, extended=True, fastmode=False,
                  fatal=True, shortnames=False, fastkeys=('kind',),
                  callback=None, defaults=None, proxies=None,
                  report=ONERROR_REPORTING, lreport_len=DFLT_MAXLEN_LIGHT_REPORTING,
                  nullreport=reporting.NullReport()):
         """Initialisation of a simple footprint setup driver."""
         self._extended   = bool(extended)
-        self.docstrings  = bool(docstrings)
+        self.docstrings  = docstrings
         self.shortnames  = bool(shortnames)
         self.fatal       = bool(fatal)
         self.report      = report
