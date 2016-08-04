@@ -20,6 +20,14 @@ Global descriptors
 
 .. autodata:: GangSt
 
+Exceptions:
+-----------
+
+.. autoclass:: LayoutMonitorError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Classes
 -------
 

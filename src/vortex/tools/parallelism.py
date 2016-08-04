@@ -3,7 +3,7 @@
 #: No automatic export
 __all__ = []
 
-from collections import deque
+from collections import deque, defaultdict
 import StringIO
 import sys
 
@@ -38,48 +38,21 @@ class TaylorVortexWorker(taylorism.Worker):
         self.context = self.ticket.context
         self.system  = self.context.system
 
-    def _vortex_setuphooks(self):
-        """Records the log messages and of the standard output and suppress them."""
-        # Start the recording of the context (to be replayed in the main process)
-        self._ctx_recorder = self.context.get_recorder()
-        # Reset all the log handlers and slurp everything
-        self._log_record = deque()
-        slurp_handler = loggers.SlurpHandler(self._log_record)
-        for a_logger in [loggers.getLogger(x) for x in loggers.roots]:
-            a_logger.addHandler(slurp_handler)
-        for a_logger in [loggers.getLogger(x) for x in loggers.lognames]:
-            for a_handler in [h for h in a_logger.handlers
-                              if not isinstance(h, loggers.SlurpHandler)]:
-                a_logger.removeHandler(a_handler)
-        # Do not speak on stderr
-        self._sys_stdoe = StringIO.StringIO()
-        sys.stdout = self._sys_stdoe
-        sys.stderr = self._sys_stdoe
-
-    def _vortex_rc_wrapup(self, rc):
-        """
-        Stop the recording of the log messages and of the standard output;
-        finally send them back to the main process.
-        """
-        # Stop recording
-        self._ctx_recorder.unregister()
+    def _vortex_rc_wrapup(self, rc, psi_rc):
+        """Complement the return code with the ParallelSilencer recording."""
         # Update the return values
         if not isinstance(rc, dict):
             rc = dict(msg=rc)
-        rc['context_record'] = self._ctx_recorder
-        rc['log_record'] = self._log_record
-        self._sys_stdoe.seek(0)
-        rc['stdoe_record'] = self._sys_stdoe.readlines()
+        rc.update(psi_rc)
         return rc
 
     def _task(self, **kwargs):
         """Should not be overriden anymore: see :meth:`vortex_task`."""
         self._vortex_shortcuts()
-        self._vortex_setuphooks()
-
-        rc = self.vortex_task(**kwargs)
-
-        return self._vortex_rc_wrapup(rc)
+        with ParallelSilencer(self.context) as psi:
+            rc = self.vortex_task(**kwargs)
+            psi_rc = psi.export_result()
+        return self._vortex_rc_wrapup(rc, psi_rc)
 
     def vortex_task(self, **kwargs):
         """This method is to be implemented through inheritance: the real work happens here!"""
@@ -124,6 +97,102 @@ class VortexWorkerBlindRun(TaylorVortexWorker):
                           fatal=True)
 
 
+class ParallelSilencer(object):
+    """Record everything and suppress all outputs (stdout, loggers, ...).
+
+    The record is kept within the object: the *export_result* method returns
+    the record as a dictionary that can be processed using the
+    :class:`ParallelResultParser` class.
+
+    :note: This object is designed to be used as a Context manager.
+
+    :example:
+        .. code-block:: python
+
+            with ParallelSilencer(context) as psi:
+                # do a lot of stuff here
+                psi_record = psi.export_result()
+            # do whatever you need with the psi_record
+    """
+
+    def __init__(self, context):
+        """
+
+        :param vortex.layout.contexts.Context context: : The context we will record.
+        """
+        self._ctx = context
+        # Variables were the records will be stored
+        self._reset_records(handler=False)
+        # Other temporary stuff
+        self._reset_temporary()
+
+    def _reset_records(self, handler=True):
+        """Reset variables were the records are stored."""
+        self._ctx_r = None
+        self._log_r = deque()
+        self._io_r = StringIO.StringIO()
+        if handler:
+            self._slurp_h = loggers.SlurpHandler(self._log_r)
+
+    def _reset_temporary(self):
+        """Reset other temporary stuff."""
+        self._removed_h = defaultdict(list)
+        (self._prev_stdo, self._prev_stde) = (None, None)
+
+    def __enter__(self):
+        """The beginning of a new context."""
+        # Reset all
+        self._reset_records()
+        # Start the recording of the context (to be replayed in the main process)
+        self._ctx_r = self._ctx.get_recorder()
+        # Reset all the log handlers and slurp everything
+        for a_logger in [loggers.getLogger(x) for x in loggers.roots]:
+            a_logger.addHandler(self._slurp_h)
+        for a_logger in [loggers.getLogger(x) for x in loggers.lognames]:
+            for a_handler in [h for h in a_logger.handlers
+                              if not isinstance(h, loggers.SlurpHandler)]:
+                a_logger.removeHandler(a_handler)
+                self._removed_h[a_logger].append(a_handler)
+        # Do not speak on stdout/err
+        self._prev_stdo = sys.stdout
+        self._prev_stde = sys.stderr
+        sys.stdout = self._io_r
+        sys.stderr = self._io_r
+        return self
+
+    def __exit__(self, exctype, excvalue, exctb):
+        """The end of a context."""
+        self._stop_recording()
+
+    def _stop_recording(self):
+        """Stop recording and restore everything."""
+        if self._prev_stdo is not None:
+            # Stop recording the context
+            self._ctx_r.unregister()
+            # Restore the loggers
+            for a_logger in [loggers.getLogger(x) for x in loggers.roots]:
+                a_logger.removeHandler(self._slurp_h)
+            for a_logger in [loggers.getLogger(x) for x in loggers.lognames]:
+                for a_handler in self._removed_h[a_logger]:
+                    a_logger.addHandler(a_handler)
+            # Restore stdout/err
+            sys.stdout = self._prev_stdo
+            sys.stderr = self._prev_stde
+            # Cleanup
+            self._reset_temporary()
+
+    def export_result(self):
+        """Return everything that has been recorded.
+
+        :return: A dictionary that can be processed with the :class:`ParallelResultParser` class.
+        """
+        self._stop_recording()
+        self._io_r.seek(0)
+        return dict(context_record=self._ctx_r,
+                    log_record=self._log_r,
+                    stdoe_record=self._io_r.readlines())
+
+
 class ParallelResultParser(object):
     """Summarise the results of a parallel execution.
 
@@ -138,14 +207,14 @@ class ParallelResultParser(object):
     def __init__(self, context):
         """
 
-        :param context: The context where the results will be replayed.
+        :param vortex.layout.contexts.Context context: The context where the results will be replayed.
         """
         self.context = context
 
     def slurp(self, res):
         """Summarise the results of a parallel execution.
 
-        :param res: A result record
+        :param dict res: A result record
         """
         if isinstance(res, Exception):
             raise(res)

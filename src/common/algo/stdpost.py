@@ -4,7 +4,6 @@
 #: No automatic export
 __all__ = []
 
-import time
 import re
 import json
 
@@ -272,49 +271,49 @@ class Fa2Grib(ParaBlindRun):
                              compact=self.compact, numod=self.numod,
                              sciz=self.sciz, scizoffset=self.scizoffset,
                              timeshift=self.timeshift, timeunit=self.timeunit))
+        tmout = False
 
         # Monitor for the input files
-        bm = BasicInputMonitor(self.context.sequence, caching_freq=self.refreshtime,
+        bm = BasicInputMonitor(self.context, caching_freq=self.refreshtime,
                                role='Gridpoint', kind='gridpoint')
+        with bm:
+            while not bm.all_done or len(bm.available) > 0:
 
-        tmout = False
-        latestfound = time.time()
-        while not bm.all_done or len(bm.available) > 0:
+                while bm.available:
+                    s = bm.pop_available().section
+                    file_in = s.rh.container.localpath()
+                    # Find the name of the output file
+                    if s.rh.provider.member is not None:
+                        file_out = 'GRIB{0:s}_{1!s}+{2:s}'.format(s.rh.resource.geometry.area,
+                                                                  s.rh.provider.member,
+                                                                  s.rh.resource.term.fmthm)
+                    else:
+                        file_out = 'GRIB{0:s}+{1:s}'.format(s.rh.resource.geometry.area,
+                                                            s.rh.resource.term.fmthm)
+                    logger.info("Adding input file %s to the job list", file_in)
+                    self._add_instructions(common_i,
+                                           dict(name=[file_in, ],
+                                                file_in=[file_in, ], file_out=[file_out, ],
+                                                member=[s.rh.provider.member, ]))
 
-            while bm.available:
-                s = bm.available.pop(0).section
-                file_in = s.rh.container.localpath()
-                # Find the name of the output file
-                if s.rh.provider.member is not None:
-                    file_out = 'GRIB{0:s}_{1!s}+{2:s}'.format(s.rh.resource.geometry.area,
-                                                              s.rh.provider.member,
-                                                              s.rh.resource.term.fmthm)
-                else:
-                    file_out = 'GRIB{0:s}+{1:s}'.format(s.rh.resource.geometry.area,
-                                                        s.rh.resource.term.fmthm)
-                logger.info("Adding input file %s to the job list", file_in)
-                self._add_instructions(common_i,
-                                       dict(name=[file_in, ],
-                                            file_in=[file_in, ], file_out=[file_out, ],
-                                            member=[s.rh.provider.member, ]))
-                latestfound = time.time()
+                # Timeout ?
+                if (self.timeout > 0) and (bm.inactive_time > self.timeout):
+                    logger.error("The waiting loop timed out (%d seconds)", self.timeout)
+                    logger.error("The following files are still unaccounted for: %s",
+                                 ",".join([e.section.rh.container.localpath()
+                                           for e in bm.expected.itervalues()]))
+                    tmout = True
+                    break
 
-            # Timeout ?
-            if (self.timeout > 0) and (time.time() - latestfound > self.timeout):
-                logger.error("The waiting loop timed out (%d seconds)", self.timeout)
-                logger.error("The following files are still unaccounted for: %s",
-                             ",".join([e.section.rh.container.localpath() for e in bm.expected]))
-                tmout = True
-                break
-
-            # Wait a little bit :-)
-            if not bm.all_done or len(bm.available) > 0:
-                self.system.sleep(1)
+                # Wait a little bit :-)
+                if not bm.all_done or len(bm.available) > 0:
+                    self.system.sleep(1)
 
         self._default_post_execute(rh, opts)
 
         if bm.failed:
-            for failed_files in [e.section.rh.container.localpath() for e in bm.failed]:
+            for failed_files in [e.section.rh.container.localpath()
+                                 for e in bm.failed.itervalues()]:
                 logger.error("We were unable to fetch the following file: %s",
                              failed_files)
                 if self.fatal:
@@ -364,42 +363,42 @@ class StandaloneGRIBFilter(TaylorRun, grib.GribApiComponent):
         # Update the common instructions
         common_i.update(dict(concatenate=self.concatenate,
                              filters=filters))
+        tmout = False
 
         # Monitor for the input files
-        bm = BasicInputMonitor(self.context.sequence, caching_freq=self.refreshtime,
+        bm = BasicInputMonitor(self.context, caching_freq=self.refreshtime,
                                role='Gridpoint', kind='gridpoint')
+        with bm:
+            while not bm.all_done or len(bm.available) > 0:
 
-        tmout = False
-        latestfound = time.time()
-        while not bm.all_done or len(bm.available) > 0:
+                while bm.available:
+                    s = bm.pop_available().section
+                    file_in = s.rh.container.localpath()
+                    file_outfmt = re.sub(r'^(.*?)((:?\.[^.]*)?)$', r'\1_{filtername:s}\2', file_in)
 
-            while bm.available:
-                s = bm.available.pop(0).section
-                file_in = s.rh.container.localpath()
-                file_outfmt = re.sub(r'^(.*?)((:?\.[^.]*)?)$', r'\1_{filtername:s}\2', file_in)
+                    logger.info("Adding input file %s to the job list", file_in)
+                    self._add_instructions(common_i,
+                                           dict(name=[file_in, ],
+                                                file_in=[file_in, ], file_outfmt=[file_outfmt, ]))
 
-                logger.info("Adding input file %s to the job list", file_in)
-                self._add_instructions(common_i,
-                                       dict(name=[file_in, ],
-                                            file_in=[file_in, ], file_outfmt=[file_outfmt, ]))
-                latestfound = time.time()
+                # Timeout ?
+                if (self.timeout > 0) and (bm.inactive_time > self.timeout):
+                    logger.error("The waiting loop timed out (%d seconds)", self.timeout)
+                    logger.error("The following files are still unaccounted for: %s",
+                                 ",".join([e.section.rh.container.localpath()
+                                           for e in bm.expected.itervalues()]))
+                    tmout = True
+                    break
 
-            # Timeout ?
-            if (self.timeout > 0) and (time.time() - latestfound > self.timeout):
-                logger.error("The waiting loop timed out (%d seconds)", self.timeout)
-                logger.error("The following files are still unaccounted for: %s",
-                             ",".join([e.section.rh.container.localpath() for e in bm.expected]))
-                tmout = True
-                break
-
-            # Wait a little bit :-)
-            if not bm.all_done or len(bm.available) > 0:
-                self.system.sleep(1)
+                # Wait a little bit :-)
+                if not bm.all_done or len(bm.available) > 0:
+                    self.system.sleep(1)
 
         self._default_post_execute(rh, opts)
 
         if bm.failed:
-            for failed_files in [e.section.rh.container.localpath() for e in bm.failed]:
+            for failed_files in [e.section.rh.container.localpath()
+                                 for e in bm.failed.itervalues()]:
                 logger.error("We were unable to fetch the following file: %s",
                              failed_files)
                 if self.fatal:

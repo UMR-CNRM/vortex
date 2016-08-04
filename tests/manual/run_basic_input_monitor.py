@@ -12,6 +12,11 @@ import footprints as fp
 from utils import promises_generator as pgen
 from vortex.layout import monitor
 
+# vlogger = fp.loggers.getLogger('vortex')
+# vlogger.setLevel('INFO')
+mlogger = fp.loggers.getLogger('vortex.layout.monitor')
+mlogger.setLevel('INFO')
+
 
 class Spy(fp.observers.ParrotObserver):
     """Just look into the observerboard."""
@@ -26,14 +31,15 @@ def look_for_promises(args):
     t, wkdir, tbex = pgen.ini_expected(args)
     t.sh.header("Ok: All the expected resources are set. Now I start looking.")
     try:
-        bm = monitor.BasicInputMonitor(t.context.sequence, role=pgen.R_ROLE,
-                                       caching_freq=2)
-        james = Spy()
-        # Register the observer to the various classes
-        for entry in bm.memberslist:
-            entry.observerboard.register(james)
-        while not bm.all_done:
-            time.sleep(1)
+        with monitor.BasicInputMonitor(t.context, role=pgen.R_ROLE,
+                                       caching_freq=2, crawling_threshold=1) as bm:
+            james = Spy()
+            # Register the observer to the various classes
+            for entry in bm.memberslist:
+                entry.observerboard.register(james)
+            while not bm.all_done:
+                # print 'Unactive since: ', bm.inactive_time
+                time.sleep(1)
     finally:
         t.sh.cd(t.env.HOME)
         t.sh.rm(wkdir)

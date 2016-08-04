@@ -111,11 +111,14 @@ class ContextObserverRecorder(footprints.observers.Observer):
         # First the stages of the sequence
         if self._stages_recorder:
             logger.info('The recorder is replaying stages for context <%s>', context.tag)
-
             for (pr_item, info) in self._stages_recorder:
+                rh_stack = set()
                 for section in context.sequence.fastsearch(pr_item):
                     if section.rh.as_dict() == pr_item:
                         section.updstage(info)
+                        rh_stack.add(section.rh)
+                for rh in rh_stack:
+                    rh.external_stage_update(info.get('stage'))
         # Then the localtracker
         if self._tracker_recorder is not None:
             logger.info('The recorder is updating the LocalTracker for context <%s>', context.tag)

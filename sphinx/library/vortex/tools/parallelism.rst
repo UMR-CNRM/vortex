@@ -26,6 +26,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ParallelSilencer
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
 .. autoclass:: ParallelResultParser
    :show-inheritance:
    :members:

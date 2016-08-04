@@ -6,12 +6,20 @@ This module defines generic classes that are used to check the state of a list o
 sections
 """
 
+from collections import defaultdict, namedtuple, OrderedDict
+from itertools import islice, compress
+import Queue
+import multiprocessing
+import sys
 import time
-from collections import defaultdict, namedtuple
+import traceback
 
 from footprints import loggers, observers
-logger = loggers.getLogger(__name__)
 
+from vortex.tools import date
+from vortex.tools.parallelism import ParallelSilencer, ParallelResultParser
+
+logger = loggers.getLogger(__name__)
 
 #: No automatic export.
 __all__ = []
@@ -36,8 +44,13 @@ GangSt = GangStateTuple(ufo='undecided', collectable='collectable',
                         pcollectable='collectable_partial', failed='failed')
 
 
+class LayoutMonitorError(Exception):
+    """The default exception for this module."""
+    pass
+
+
 class _StateFull(object):
-    """A class with a state."""
+    """Defines an abstract interface: a class with a state."""
 
     _mystates = EntrySt  # The name of possible states
 
@@ -70,10 +83,10 @@ class _StateFull(object):
 
 
 class _StateFullMembersList(object):
-    """A class with members."""
+    """Defines an abstract interface: a class with members."""
 
     _mstates = EntrySt  # The name of possible member's states
-    _mcontainer = list  # The container class for the members
+    _mcontainer = set   # The container class for the members
 
     def __init__(self):
         """Initialise the members list."""
@@ -131,26 +144,39 @@ class InputMonitorEntry(_StateFull):
         return self._section
 
 
-class BasicInputMonitor(_StateFullMembersList):
+class _MonitorSilencer(ParallelSilencer):
+    """My own Silencer."""
 
-    def __init__(self, sequence, role=None, kind=None,
+    def export_result(self, key, ts, prevstate, state):
+        """Returns the recorded data, plus state related informations."""
+        return dict(report=super(_MonitorSilencer, self).export_result(),
+                    name="Input #{!s}".format(key), key=key,
+                    prevstate=prevstate, state=state, timestamp=ts)
+
+
+class BasicInputMonitor(_StateFullMembersList):
+    """
+    This object looks into the effective_inputs and check regularly the
+    status of each of the sections. If an expected resource is found the
+    "get" command is issued.
+    """
+
+    _mcontainer = OrderedDict
+
+    def __init__(self, context, role=None, kind=None,
                  caching_freq=20, crawling_threshold=100):
         """
-        This object looks into the effective_inputs and check regularly the
-        status of each of the sections. If an expected resource is found the
-        "get" command is issued.
-
-        If the list of inputs is too long (see the **crawling_threshold**
+        If the list of inputs is too long (see the *crawling_threshold*
         option), not all of the inputs will be checked at once: The first
-        **crawling_threshold** inputs will always be checked and an additional
-        batch of **crawling_threshold** other inputs will be checked (in a round
+        *crawling_threshold* inputs will always be checked and an additional
+        batch of *crawling_threshold* other inputs will be checked (in a round
         robin manner)
 
         If the inputs we are looking at have a *term* attribute, the input lists
         will automatically be ordered according to the *term*.
 
-        :param vortex.layout.dataflow.Sequence sequence: The sequence object that
-            is used as a source of inputs
+        :param vortex.layout.contexts.Context context: The object that is used
+            as a source of inputs
         :param str role: The role of the sections that will be watched
         :param str kind: The kind of the sections that will be watched (used only
             if role is not specified)
@@ -158,24 +184,35 @@ class BasicInputMonitor(_StateFullMembersList):
             seconds
         :param int crawling_threshold: Maximum number of section statuses  to
             update at once
+
+        :warning: The state of the sections is looked up by a background process.
+            Consequently the **stop** method must always be called when the
+            processing is done (in order for the background process to terminate).
         """
         _StateFullMembersList.__init__(self)
 
-        self._seq = sequence
+        self._ctx = context
+        self._seq = context.sequence
         self._role = role
         self._kind = kind
         self._caching_freq = caching_freq
         self._crawling_threshold = crawling_threshold
         self._inactive_since = time.time()
-        self._kangaroo_idx = 0
+
+        # Control objects for multiprocessing
+        self._mpqueue = multiprocessing.Queue(maxsize=0)  # No limit !
+        self._mpquit = multiprocessing.Event()
+        self._mperror = multiprocessing.Event()
+        self._mpjob = None
 
         assert(not(self._role is None and self._kind is None))
 
         # Generate the first list of sections
         toclassify = [InputMonitorEntry(x)
-                      for x in self._seq.filtered_inputs(role=self._role, kind=self._kind)]
+                      for x in self._seq.filtered_inputs(role=self._role,
+                                                         kind=self._kind)]
 
-        # Sort the list of UFOs if sensitive (i.e if all resources have a term)
+        # Sort the list of UFOs if sensible (i.e if all resources have a term)
         has_term = 0
         map_term = defaultdict(int)
         for e in toclassify:
@@ -190,96 +227,216 @@ class BasicInputMonitor(_StateFullMembersList):
             self._crawling_threshold = max(self._crawling_threshold,
                                            int(max(map_term.values()) * 1.25))
 
-        # Map to classify UFOs
+        # Create key/value pairs
+        toclassify = [(i, e) for i, e in enumerate(toclassify)]
+
+        # Classify the input depending on there stage
         self._map_stages = dict(expected=EntrySt.expected,
                                 get=EntrySt.available)
-
         while toclassify:
-            self._classify_ufo(toclassify.pop(0), onfails=EntrySt.ufo)
+            e = toclassify.pop(0)
+            self._append_entry(self._find_state(e[1], onfails=EntrySt.ufo), e)
 
-        # Give some time to the caller to process the first available files (if any)
-        self._last_refresh = time.time() if len(self._members[EntrySt.available]) else 0
+    def start(self):
+        """Start the background updater task."""
+        self._mpjob = multiprocessing.Process(
+            name   = 'BackgroundUpdater',
+            target = self._background_updater_job,
+            args   = ()
+        )
+        self._mpjob.start()
+
+    def stop(self):
+        """Ask the background process in charge of updates to stop."""
+        # Is the process still running ?
+        if self._mpjob.is_alive():
+            # Try to stop it nicely
+            self._mpquit.set()
+            t0 = date.now()
+            self._mpjob.join(5)
+            waiting = date.now() - t0
+            logger.info('Waiting for the background process to stop took %f seconds',
+                        waiting.total_seconds())
+            # Be less nice if needed...
+            if self._mpjob.is_alive():
+                logger.warning('Force termination of the background process')
+                self._mpjob.terminate()
+                time.sleep(1)  # Allow some time for the process to terminate
+            # Wrap up
+            rc = not self._mperror.is_set()
+            logger.info('Server still alive ? %s', str(self._mpjob.is_alive()))
+            if not rc:
+                raise LayoutMonitorError('The background process ended badly.')
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exctype, excvalue, exctb):
+        self.stop()
+
+    def _itermembers(self):
+        """
+        Iterate over all members: not safe if a given member is move from a
+        queue to another. That's why it's not public.
+        """
+        for st in self._mstates:
+            for e in self._members[st].itervalues():
+                yield e
+
+    def _find_state(self, e, onfails=EntrySt.failed):
+        """Find the entry's state given the section's stage."""
+        return self._map_stages.get(e.section.stage, onfails)
 
     def _append_entry(self, queue, e):
-        self._members[queue].append(e)
-        e.state = queue
+        """Add an entry into one of the processing queue."""
+        self._members[queue][e[0]] = e[1]
+        e[1].state = queue
 
-    def _classify_ufo(self, e, onfails):
-        self._append_entry(self._map_stages.get(e.section.stage, onfails), e)
+    def _key_update(self, res):
+        """Process a result dictionary of the _background_updater method."""
+        e = self._members[res['prevstate']].pop(res['key'], None)
+        # The entry might be missing if someone mess with the _memebers dicitonary
+        if e is not None:
+            self._append_entry(res['state'], (res['key'], e))
+            self._inactive_since = res['timestamp']
 
-    def _update_timestamp(self):
-        self._inactive_since = time.time()
+    def _background_updater(self):
+        """This method loops on itself regularly to update the entry's state."""
 
-    def _check_entry_index(self, index):
-        found = 0
-        e = self._members[EntrySt.expected][index]
-        e.check_done()
-        if e.section.rh.is_grabable():
-            found = 1
-            self._update_timestamp()
-            e = self._members[EntrySt.expected].pop(index)
-            if e.section.rh.is_grabable(check_exists=True):
-                logger.info("The local resource %s becomes available",
-                            e.section.rh.container.localpath())
-                e.section.get(incache=True)
-                self._append_entry(EntrySt.available, e)
+        # Initialisation
+        last_refresh = 0
+        kangaroo_idx = 0
+
+        # Stop if we are asked to or if there is nothing more to do
+        while (not self._mpquit.is_set() and
+               not(len(self._members[EntrySt.expected]) == 0 and
+                   len(self._members[EntrySt.ufo]) == 0)):
+
+            # Tweak the caching_frequency
+            if (len(self._members[EntrySt.ufo]) and
+                    len(self._members[EntrySt.expected]) <= self._crawling_threshold and
+                    not len(self._members[EntrySt.available])):
+                # If UFO are still there and not much resources are expected,
+                # decrease the caching time
+                eff_caching_freq = max(3, self._caching_freq / 5)
             else:
-                logger.warning("The local resource %s has failed",
-                               e.section.rh.container.localpath())
-                self._append_entry(EntrySt.failed, e)
-        return found
+                eff_caching_freq = self._caching_freq
+
+            curtime = time.time()
+            # Crawl into the monitored input if sensible
+            if curtime > last_refresh + eff_caching_freq:
+
+                last_refresh = curtime
+                result_stack = list()
+
+                # Crawl into the ufo list
+                # Always process the first self._crawling_threshold elements
+                for k, e in islice(self._members[EntrySt.ufo].iteritems(),
+                                   self._crawling_threshold):
+                    if self._mpquit.is_set():  # Are we ordered to stop ?
+                        break
+                    with _MonitorSilencer(self._ctx) as psi:
+                        logger.info("First get on local file: %s",
+                                    e.section.rh.container.localpath())
+                        e.section.get(incache=True, fatal=False)  # Do not crash at this stage
+                        res = psi.export_result(k, curtime, e.state, self._find_state(e))
+                    self._mpqueue.put_nowait(res)
+                    result_stack.append(res)
+
+                # What are the expected elements we will look for ?
+                # 1. The first self._crawling_threshold elements
+                exp_compress = [1, ] * min(self._crawling_threshold,
+                                           len(self._members[EntrySt.expected]))
+                # 2. An additional set of self._crawling_threshold rotating elements
+                for i in range(max(0, len(self._members[EntrySt.expected]) - self._crawling_threshold)):
+                    kdiff = i - kangaroo_idx
+                    exp_compress.append(1 if kdiff >= 0 and kdiff < self._crawling_threshold else 0)
+
+                # Crawl into the chosen items of the  expected list
+                (visited, found, kangaroo_incr) = (0, 0, 0)
+                for i, (k, e) in enumerate(compress(self._members[EntrySt.expected].iteritems(),
+                                                    exp_compress)):
+                    if self._mpquit.is_set():  # Are we ordered to stop ?
+                        break
+
+                    # Kangaroo check ?
+                    kangaroo = i >= self._crawling_threshold
+                    kangaroo_incr += int(kangaroo)
+                    if kangaroo and found > self._crawling_threshold / 2:
+                        # If a lot of resources were already found, avoid harassment
+                        break
+
+                    logger.debug("Checking local file: %s (kangaroo=%s)",
+                                 e.section.rh.container.localpath(), kangaroo)
+                    e.check_done()
+                    # Is the promise file still there or not ?
+                    if e.section.rh.is_grabable():
+                        visited += 1
+                        with _MonitorSilencer(self._ctx) as psi:
+                            if e.section.rh.is_grabable(check_exists=True):
+                                logger.info("The local resource %s becomes available",
+                                            e.section.rh.container.localpath())
+                                # This will crash in case of an error, but this should
+                                # not happens since we checked the resource just above
+                                e.section.get(incache=True)
+                                found += 1
+                                res = psi.export_result(k, curtime, e.state, self._find_state(e))
+                            else:
+                                logger.warning("The local resource %s has failed",
+                                               e.section.rh.container.localpath())
+                                res = psi.export_result(k, curtime, e.state, EntrySt.failed)
+                        self._mpqueue.put_nowait(res)
+                        result_stack.append(res)
+
+                # Update the kangaroo index
+                kangaroo_idx = kangaroo_idx + kangaroo_incr - visited
+                if kangaroo_idx > len(self._members[EntrySt.expected]) - self._crawling_threshold - 1:
+                    kangaroo_idx = 0
+
+                # Effectively updates the internal _members dictionary
+                for r in result_stack:
+                    self._key_update(r)
+
+            # Do frequent checks to look carefully into the _mpquit event
+            time.sleep(0.25)
+
+    def _background_updater_job(self):
+        """Start the updater and check for uncatched exceptions."""
+        self._ctx.system.signal_intercept_on()
+        try:
+            self._background_updater()
+        except:
+            (exc_type, exc_value, exc_traceback) = sys.exc_info()
+            print 'Exception type: ' + str(exc_type)
+            print 'Exception info: ' + str(exc_value)
+            print 'Traceback:'
+            print "\n".join(traceback.format_tb(exc_traceback))
+            # Alert the main process of the error
+            self._mperror.set()
 
     def _refresh(self):
-        curtime = time.time()
-        # Tweak the caching_frequency
-        if (len(self._members[EntrySt.ufo]) and
-                len(self._members[EntrySt.expected]) <= self._crawling_threshold and
-                not len(self._members[EntrySt.available])):
-            # If UFO are still there and not much resources are expected,
-            # decrease the caching time
-            eff_caching_freq = max(3, self._caching_freq / 5)
-        else:
-            eff_caching_freq = self._caching_freq
-
-        # Crawl into the monitored input if sensible
-        if curtime > self._last_refresh + eff_caching_freq:
-            self._last_refresh = curtime
-            found = 0
-            # Crawl into the ufo list
-            # Always process the first self._crawling_threshold elements
-            for i_e in range(min(self._crawling_threshold, len(self._members[EntrySt.ufo])) - 1, -1, -1):
-                logger.info("First get on local file: %s",
-                            self._members[EntrySt.ufo][i_e].section.rh.container.localpath())
-                e = self._members[EntrySt.ufo].pop(i_e)
-                e.check_done()
-                self._update_timestamp()
-                e.section.get(incache=True, fatal=False)  # Do not crash at this stage
-                self._classify_ufo(e, onfails=self._failed)
-            # Crawl into the expected list
-            # Always process the first self._crawling_threshold elements
-            for i_e in range(min(self._crawling_threshold, len(self._members[EntrySt.expected])) - 1, -1, -1):
-                logger.debug("Checking local file: %s",
-                             self._members[EntrySt.expected][i_e].section.rh.container.localpath())
-                found += self._check_entry_index(i_e)
-            # Do we attempt the kangaroo check ?
-            if (len(self._members[EntrySt.expected]) > self._crawling_threshold and
-                    found < self._crawling_threshold / 4):
-                l_len = len(self._members[EntrySt.expected]) - self._crawling_threshold
-                self._kangaroo_idx += self._crawling_threshold + 1
-                if self._kangaroo_idx >= l_len:
-                    l_endid = l_len - 1
-                    self._kangaroo_idx = 0
-                else:
-                    l_endid = self._kangaroo_idx - 1
-                for i_e in range(self._crawling_threshold + l_endid,
-                                 max(l_endid - 1, self._crawling_threshold - 1), -1):
-                    logger.debug("Checking local file (kangaroo): %s",
-                                 self._members[EntrySt.expected][i_e].section.rh.container.localpath())
-                    found += self._check_entry_index(i_e)
+        """Called whenever the user ask something."""
+        # Look into the result queue
+        prp = None
+        # That's bad...
+        if self._mperror.is_set():
+            self.stop()
+            raise LayoutMonitorError('The background process ended badly.')
+        # Process all the available update messages
+        while True:
+            try:
+                r = self._mpqueue.get_nowait()
+            except Queue.Empty:
+                break
+            if prp is None:
+                prp = ParallelResultParser(self._ctx)
+            prp(r)
+            self._key_update(r)
 
     @property
     def all_done(self):
-        """Is there any ufo or expected sections left ?"""
+        """Are there any ufo or expected sections left ?"""
         self._refresh()
         return (len(self._members[EntrySt.expected]) == 0 and
                 len(self._members[EntrySt.ufo]) == 0)
@@ -291,40 +448,48 @@ class BasicInputMonitor(_StateFullMembersList):
 
     @property
     def ufo(self):
-        """The list of sections in an unknown state."""
+        """The dictionary of sections in an unknown state."""
+        self._refresh()
         return self._members[EntrySt.ufo]
 
     @property
     def expected(self):
-        """The list of expected sections."""
+        """The dictionary of expected sections."""
         self._refresh()
         return self._members[EntrySt.expected]
 
     @property
     def available(self):
-        """The list of sections that were successfully fetched."""
+        """The dictionary of sections that were successfully fetched."""
         self._refresh()
         return self._members[EntrySt.available]
 
+    def pop_available(self):
+        """Pop an entry in the 'available' dictionary."""
+        return self.available.popitem(last=False)[1]
+
     @property
     def failed(self):
-        """The list of sections that ended with an error."""
+        """The dictionary of failed sections."""
         self._refresh()
         return self._members[EntrySt.failed]
 
 
 class _Gang(observers.Observer, _StateFull, _StateFullMembersList):
-    """A Gang is a collection of :class:`InputMonitorEntry` objects or a collection of :class:`_Gang` objects.
+    """
+    A Gang is a collection of :class:`InputMonitorEntry` objects or a collection
+    of :class:`_Gang` objects.
 
     The members of the Gang are classified depending on their state. The state
     of each of the members may change, that's why the Gang registers as an
     observer to its members.
 
-    Since a Gang may be a collection of Gangs, a Gang is also an observee.
+    The state of a Gang depends on the states of its members.
+
+    :note: Since a Gang may be a collection of Gangs, a Gang is also an observee.
     """
 
     _mystates = GangSt
-    _mcontainer = set
 
     def __init__(self):
         """
@@ -338,7 +503,7 @@ class _Gang(observers.Observer, _StateFull, _StateFullMembersList):
 
     @property
     def nickname(self):
-        """A fancy representation of the info dict."""
+        """A fancy representation of the Gang's motive."""
         if not self.info:
             return 'Anonymous'
         else:
@@ -414,8 +579,9 @@ class BasicGang(_Gang):
     def __init__(self, minsize=0, waitlimit=0):
         """
 
-        :param int minsize: The minimum size for this Gang to be collectable
-                            (0 for all present)
+        :param int minsize: The minimum size for this Gang to be in a
+                            collectable_partial state (0 means that all the
+                            members must be available)
         :param int waitlimit: If > 0, wait no more that N sec after the first change
                               of state
         """
@@ -506,7 +672,7 @@ class MetaGang(_Gang):
 
 class AutoMetaGang(MetaGang):
     """
-    A :class:`MetaGang` with a method that automatically populate the object
+    A :class:`MetaGang` with a method that automatically populates the Gang
     given a :class:`BasicInputMonitor` object.
     """
 
@@ -521,12 +687,13 @@ class AutoMetaGang(MetaGang):
         :param list grouping_keys: The attributes that are used to discriminate the gangs
         :param int allowmissing: The number of missing members allowed for a gang
             (It will be used to initialise the member gangs *minsize* attribute)
-        :param int waitlimit: The *waitlimit* attribute of the members Gangs
+        :param int waitlimit: The *waitlimit* attribute of the member gangs
         """
         # Initialise the gangs
         mdict = defaultdict(list)
         for entry in bm.memberslist:
-            entryid = tuple([getattr(entry.section.rh.resource, key) for key in grouping_keys])
+            entryid = tuple([entry.section.rh.wide_key_lookup(key)
+                             for key in grouping_keys])
             mdict[entryid].append(entry)
         # Finalise the Gangs setup and use them...
         for entryid, members in mdict.iteritems():
