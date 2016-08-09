@@ -4,14 +4,17 @@
 #: No automatic export
 __all__ = []
 
-import re
+import collections
 import json
+import re
+import time
 
 import footprints
 from footprints.stdtypes import FPTuple
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.layout.monitor    import BasicInputMonitor
+from vortex.layout.monitor    import BasicInputMonitor, AutoMetaGang, MetaGang
+from vortex.layout.monitor    import GangSt
 from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, AlgoComponentError
 from vortex.syntax.stdattrs   import DelayedEnvValue, FmtInt
 from vortex.tools             import grib
@@ -297,28 +300,22 @@ class Fa2Grib(ParaBlindRun):
                                                 member=[s.rh.provider.member, ]))
 
                 # Timeout ?
-                if (self.timeout > 0) and (bm.inactive_time > self.timeout):
-                    logger.error("The waiting loop timed out (%d seconds)", self.timeout)
-                    logger.error("The following files are still unaccounted for: %s",
-                                 ",".join([e.section.rh.container.localpath()
-                                           for e in bm.expected.itervalues()]))
-                    tmout = True
+                tmout = bm.is_timedout(self.timeout)
+                if tmout:
                     break
 
                 # Wait a little bit :-)
                 if not bm.all_done or len(bm.available) > 0:
-                    self.system.sleep(1)
+                    time.sleep(1)
+                    bm.health_check(interval=30)
 
         self._default_post_execute(rh, opts)
 
-        if bm.failed:
-            for failed_files in [e.section.rh.container.localpath()
-                                 for e in bm.failed.itervalues()]:
-                logger.error("We were unable to fetch the following file: %s",
-                             failed_files)
-                if self.fatal:
-                    self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_files)),
-                                               traceback=False)
+        for failed_file in [e.section.rh.container.localpath() for e in bm.failed.itervalues()]:
+            logger.error("We were unable to fetch the following file: %s", failed_file)
+            if self.fatal:
+                self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),
+                                           traceback=False)
 
         if tmout:
             raise IOError("The waiting loop timed out")
@@ -343,8 +340,13 @@ class StandaloneGRIBFilter(TaylorRun, grib.GribApiComponent):
             ),
             concatenate = dict(
                 type = bool,
-                default =False,
+                default = False,
                 optional = True,
+            ),
+            fatal = dict(
+                type = bool,
+                optional = True,
+                default = True,
             ),
         )
     )
@@ -382,28 +384,22 @@ class StandaloneGRIBFilter(TaylorRun, grib.GribApiComponent):
                                                 file_in=[file_in, ], file_outfmt=[file_outfmt, ]))
 
                 # Timeout ?
-                if (self.timeout > 0) and (bm.inactive_time > self.timeout):
-                    logger.error("The waiting loop timed out (%d seconds)", self.timeout)
-                    logger.error("The following files are still unaccounted for: %s",
-                                 ",".join([e.section.rh.container.localpath()
-                                           for e in bm.expected.itervalues()]))
-                    tmout = True
+                tmout = bm.is_timedout(self.timeout)
+                if tmout:
                     break
 
                 # Wait a little bit :-)
                 if not bm.all_done or len(bm.available) > 0:
-                    self.system.sleep(1)
+                    time.sleep(1)
+                    bm.health_check(interval=30)
 
         self._default_post_execute(rh, opts)
 
-        if bm.failed:
-            for failed_files in [e.section.rh.container.localpath()
-                                 for e in bm.failed.itervalues()]:
-                logger.error("We were unable to fetch the following file: %s",
-                             failed_files)
-                if self.fatal:
-                    self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_files)),
-                                               traceback=False)
+        for failed_file in [e.section.rh.container.localpath() for e in bm.failed.itervalues()]:
+            logger.error("We were unable to fetch the following file: %s", failed_file)
+            if self.fatal:
+                self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),
+                                           traceback=False)
 
         if tmout:
             raise IOError("The waiting loop timed out")
@@ -497,8 +493,36 @@ class DiagPE(BlindRun, grib.GribApiComponent):
                 optional = True,
                 default  = DelayedEnvValue('VORTEX_GRIB_NUMOD', 118),
             ),
+            timeout = dict(
+                type     = int,
+                optional = True,
+                default  = 900,
+            ),
+            refreshtime = dict(
+                type     = int,
+                optional = True,
+                default  = 20,
+            ),
+            missinglimit = dict(
+                values   = [0, ],
+                type     = int,
+                optional = True,
+                default  = 0,
+            ),
+            waitlimit = dict(
+                type     = int,
+                optional = True,
+                default  = 900,
+            ),
+            fatal = dict(
+                type     = bool,
+                optional = True,
+                default  = True,
+            ),
         ),
     )
+
+    _method2output_map = dict(neighbour='GRIB_PE_VOISIN')
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
@@ -518,41 +542,131 @@ class DiagPE(BlindRun, grib.GribApiComponent):
     def execute(self, rh, opts):
         """Loop on the various grib files provided."""
 
-        srcsec = self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
-                                                        kind='gridpoint')
-        # Find out what are the terms
-        terms = sorted(set([s.rh.resource.term for s in srcsec]))
-        # Find out the number of members
-        members = sorted(set([s.rh.provider.member for s in srcsec]))
+        # Intialise a GRIBFilter (at least try to)
+        gfilter = GRIBFilter(concatenate=False)
+        gfilter.add_filters(self.context)
+
+        # Monitor for the input files
+        bm = BasicInputMonitor(self.context, caching_freq=self.refreshtime,
+                               role=('Gridpoint', 'Sources'), kind='gridpoint')
         # Check that the date is consistent among inputs
-        basedates = list(set([s.rh.resource.date for s in srcsec]))
+        basedates = set()
+        members = set()
+        for rhI in [s.section.rh for s in bm.memberslist]:
+            basedates.add(rhI.resource.date)
+            members.add(rhI.provider.member)
         if len(basedates) > 1:
             raise AlgoComponentError('The date must be consistent among the input resources')
-        basedate = basedates[-1]
+        basedate = basedates.pop()
+        # Setup BasicGangs
+        basicmeta = AutoMetaGang()
+        basicmeta.autofill(bm, ('term', 'block', 'geometry'),
+                           allowmissing=self.missinglimit, waitlimit=self.waitlimit)
+        # Find out what are the terms, domains and blocks
+        geometries = set()
+        terms = collections.defaultdict(set)
+        blocks = collections.defaultdict(set)
+        reverse = dict()
+        for m in basicmeta.memberslist:
+            (geo, term, block) = (m.info['geometry'], m.info['term'], m.info['block'])
+            geometries.add(geo)
+            terms[geo].add(term)
+            blocks[geo].add(block)
+            reverse[(geo, term, block)] = m
+        for geometry in geometries:
+            terms[geometry] = sorted(terms[geometry])
+        # Setup the MetaGang that fits our needs
+        complexmeta = MetaGang()
+        complexgangs = collections.defaultdict(collections.deque)
+        for geometry in geometries:
+            nterms = len(terms[geometry])
+            for i_term, term in enumerate(terms[geometry]):
+                elementary_meta = MetaGang()
+                elementary_meta.info = dict(geometry=geometry, term=term)
+                cterms = [terms[geometry][i] for i in range(max(i_term - 1, 0),
+                                                            min(i_term + 2, nterms))]
+                for inside_term in cterms:
+                    for inside_block in blocks[geometry]:
+                        try:
+                            elementary_meta.add_member(reverse[(geometry, inside_term, inside_block)])
+                        except KeyError:
+                            raise KeyError("Something is wrong in the inputs: check again !")
+                complexmeta.add_member(elementary_meta)
+                complexgangs[geometry].append(elementary_meta)
 
-        for term in terms:
-            # Tweak the namelist
-            namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
-            for nam in [ x.rh for x in namsec if 'NAM_PARAM' in x.rh.contents ]:
-                logger.info("Substitute the date (%s) to AAAAMMJJHH namelist entry", basedate.ymdh)
-                nam.contents['NAM_PARAM']['AAAAMMJJHH'] = basedate.ymdh
-                logger.info("Substitute the number of members (%d) to NBRUN namelist entry", len(members))
-                nam.contents['NAM_PARAM']['NBRUN'] = len(members)
-                logger.info("Substitute the the number of terms to NECH(0) namelist entry")
-                nam.contents['NAM_PARAM']['NECH(0)'] = 1
-                logger.info("Substitute the ressource term to NECH(1) namelist entry")
-                # NB: term should be expressed in minutes
-                nam.contents['NAM_PARAM']['NECH(1)'] = int(term)
-                nam.contents['NAM_PARAM']['ECHFINALE'] = terms[-1].hour
-                # Now, update the model number for the GRIB files
-                logger.info("Substitute the model number (%d) to namelist entry", self.numod)
-                nam.contents['NAM_PARAM']['NMODELE'] = self.numod
-                # We are done with the namelist
-                nam.save()
+        # Now, starts monitoring everything
+        with bm:
 
-            # Standard execution
-            opts['loop'] = term
-            super(DiagPE, self).execute(rh, opts)
+            current_gang = dict()
+            for geometry in geometries:
+                try:
+                    current_gang[geometry] = complexgangs[geometry].popleft()
+                except IndexError:
+                    current_gang[geometry] = None
+
+            while any([g is not None for g in current_gang.itervalues()]):
+
+                for a_gang in [current_gang[g] for g in geometries
+                               if (current_gang[g] is not None and
+                                   current_gang[g].state == GangSt.collectable)]:
+
+                    self.system.title('Start processing for geometry={:s}, term={!s}.'.
+                                      format(geometry.area, a_gang.info['term']))
+
+                    # Tweak the namelist
+                    namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
+                    for nam in [ x.rh for x in namsec if 'NAM_PARAM' in x.rh.contents ]:
+                        logger.info("Substitute the date (%s) to AAAAMMJJHH namelist entry", basedate.ymdh)
+                        nam.contents['NAM_PARAM']['AAAAMMJJHH'] = basedate.ymdh
+                        logger.info("Substitute the number of members (%d) to NBRUN namelist entry", len(members))
+                        nam.contents['NAM_PARAM']['NBRUN'] = len(members)
+                        logger.info("Substitute the the number of terms to NECH(0) namelist entry")
+                        nam.contents['NAM_PARAM']['NECH(0)'] = 1
+                        logger.info("Substitute the ressource term to NECH(1) namelist entry")
+                        # NB: term should be expressed in minutes
+                        nam.contents['NAM_PARAM']['NECH(1)'] = int(a_gang.info['term'])
+                        nam.contents['NAM_PARAM']['ECHFINALE'] = terms[geometry][-1].hour
+                        # Now, update the model number for the GRIB files
+                        logger.info("Substitute the model number (%d) to namelist entry", self.numod)
+                        nam.contents['NAM_PARAM']['NMODELE'] = self.numod
+                        # We are done with the namelist
+                        nam.save()
+
+                    # Standard execution
+                    opts['loop'] = a_gang.info['term']
+                    super(DiagPE, self).execute(rh, opts)
+
+                    actualname = r'{0:s}_{1:s}\+{2:s}'.format(self._method2output_map[self.method],
+                                                              geometry.area,
+                                                              a_gang.info['term'].fmthm)
+                    # Find out the output file and filter it
+                    filtered_out = list()
+                    if len(gfilter):
+                        for candidate in [f for f in self.system.glob(self._method2output_map[self.method] + '*')
+                                          if re.match(actualname, f)]:
+                            logger.info("Starting GRIB filtering on %s.", candidate)
+                            filtered_out.extend(gfilter(candidate, candidate + '_{filtername:s}'))
+
+                    # The diagnostic output may be promised
+                    expected = [x for x in self.promises
+                                if (re.match(actualname, x.rh.container.localpath()) or
+                                    x.rh.container.localpath() in filtered_out)]
+                    for thispromise in expected:
+                        thispromise.put(incache=True)
+
+                    # Next one
+                    try:
+                        current_gang[geometry] = complexgangs[geometry].popleft()
+                    except IndexError:
+                        current_gang[geometry] = None
+
+                # Timeout ?
+                bm.is_timedout(self.timeout, IOError)
+
+                # Wait a little bit :-)
+                if not bm.all_done:
+                    time.sleep(1)
+                    bm.health_check(interval=30)
 
 
 class DiagPI(BlindRun, grib.GribApiComponent):
@@ -645,7 +759,7 @@ class DiagPI(BlindRun, grib.GribApiComponent):
             if len(gfilter):
                 for candidate in [f for f in self.system.glob('GRIB*') if re.match(actualname, f)]:
                     logger.info("Starting GRIB filtering on %s.", candidate)
-                    filtered_out = gfilter(candidate, candidate + '_{filtername:s}')
+                    filtered_out.extend(gfilter(candidate, candidate + '_{filtername:s}'))
 
             # The diagnostic output may be promised
             expected = [x for x in self.promises
