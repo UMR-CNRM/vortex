@@ -62,7 +62,7 @@ def disabled_if_no_epygram(minimal_version_or_name):
 
 
 @disabled_if_no_epygram
-def clone_fields(datain, dataout, sources, names=None, value=None, pack=None):
+def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, overwrite=False):
     """Clone any existing fields ending with``source`` to some new field."""
     # Prepare sources names
     if not isinstance(sources, (list, tuple, set)):
@@ -84,7 +84,7 @@ def clone_fields(datain, dataout, sources, names=None, value=None, pack=None):
     for source, name in zip(sources, names):
         for fieldname in [ x for x in sorted(tablein) if x.endswith(source) ]:
             newfield = fieldname.replace(source, '') + name
-            if newfield in tableout:
+            if not overwrite and newfield in tableout:
                 logger.warning('Field <%s> already in output file', newfield)
             else:
                 fx = datain.readfield(fieldname)
@@ -137,10 +137,22 @@ def addfield(t, rh, fieldsource, fieldtarget, constvalue):
 
 @disabled_if_no_epygram
 def copyfield(t, rh, rhsource, fieldsource, fieldtarget):
-    """Provider hook for copying fields between FA files."""
+    """Provider hook for copying fields between FA files (but do not overwrite existing fields)."""
     if rh.container.exists():
         localenv = _env_prepare(t)
         clone_fields(rhsource.contents.data, rh.contents.data, fieldsource, fieldtarget)
+        localenv.active(False)
+    else:
+        logger.warning('Try to copy field on a missing resource <%s>',
+                       rh.container.localpath())
+
+
+@disabled_if_no_epygram
+def overwritefield(t, rh, rhsource, fieldsource, fieldtarget):
+    """Provider hook for copying fields between FA files (overwrite existing fields)."""
+    if rh.container.exists():
+        localenv = _env_prepare(t)
+        clone_fields(rhsource.contents.data, rh.contents.data, fieldsource, fieldtarget, overwrite=True)
         localenv.active(False)
     else:
         logger.warning('Try to copy field on a missing resource <%s>',
