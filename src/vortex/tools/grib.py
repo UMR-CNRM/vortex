@@ -121,7 +121,7 @@ class GRIB_Tool(addons.Addon):
             rc = self._std_copy(source, destination, intent=intent)
             rc = rc and self._std_remove(source)
         else:
-            rc = rc and self._backend_mv(source, destination)
+            rc = self._backend_mv(source, destination)
         return rc
 
     grib_mv = grib_move = _std_move
@@ -276,10 +276,10 @@ class GRIBAPI_Tool(addons.Addon):
         if xgrib_support:
             if self.sh.is_xgrib(grib1):
                 grib1 = grib1_ori + '_diffcat' + self.sh.safe_filesuffix()
-                self.sh.grib_pack(grib1_ori, grib1)
+                self.sh.xgrib_pack(grib1_ori, grib1)
             if self.sh.is_xgrib(grib2):
                 grib2 = grib2_ori + '_diffcat' + self.sh.safe_filesuffix()
-                self.sh.grib_pack(grib2_ori, grib2)
+                self.sh.xgrib_pack(grib2_ori, grib2)
 
         cmd = [ 'grib_compare', '-r', '-b', ','.join(skipkeys), grib1, grib2 ]
 
