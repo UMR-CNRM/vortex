@@ -96,9 +96,9 @@ class Beaufix(MeteoBull):
         attr = dict(
             hostname = dict(
                 values = \
-                    [ x + str(y) for x in ('beaufix',) for y in range(1080) ] + \
+                    [ x + str(y) for x in ('beaufix',) for y in range(1836) ] + \
                     [ x + str(y) for x in ('beaufixlogin',) for y in range(6) ] + \
-                    [ x + str(y) for x in ('beaufixtransfert',) for y in range(4) ]
+                    [ x + str(y) for x in ('beaufixtransfert',) for y in range(8) ]
             ),
             inetname = dict(
                 default = 'beaufix',
