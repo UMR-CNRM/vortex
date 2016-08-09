@@ -198,6 +198,7 @@ class BasicInputMonitor(_StateFullMembersList):
         self._caching_freq = caching_freq
         self._crawling_threshold = crawling_threshold
         self._inactive_since = time.time()
+        self._last_healthcheck = 0
 
         # Control objects for multiprocessing
         self._mpqueue = multiprocessing.Queue(maxsize=0)  # No limit !
@@ -473,6 +474,35 @@ class BasicInputMonitor(_StateFullMembersList):
         """The dictionary of failed sections."""
         self._refresh()
         return self._members[EntrySt.failed]
+
+    def health_check(self, interval=0):
+        """Log the monitor's state.
+
+        :param int interval: Log something at most every *interval* seconds.
+        """
+        time_now = time.time()
+        if time_now - self._last_healthcheck > interval:
+            self._last_healthcheck = time_now
+            logger.info("Still waiting (ufo=%d, expected=%d, available=%d, failed=%d)...",
+                        len(self._members[EntrySt.ufo]), len(self._members[EntrySt.expected]),
+                        len(self._members[EntrySt.available]), len(self._members[EntrySt.failed]))
+
+    def is_timedout(self, timeout, exception=None):
+        """Check if a timeout occurred.
+
+        :param int timeout: The wanted timeout in seconds.
+        :param Exception exception: The exception that will be raised if a timeout occurs.
+        """
+        rc = False
+        if (timeout > 0) and (self.inactive_time > timeout):
+            logger.error("The waiting loop timed out (%d seconds)", timeout)
+            logger.error("The following files are still unaccounted for: %s",
+                         ",".join([e.section.rh.container.localpath()
+                                   for e in self.expected.itervalues()]))
+            rc = True
+        if rc and exception is not None:
+            raise exception("The waiting loop timed-out")
+        return rc
 
 
 class _Gang(observers.Observer, _StateFull, _StateFullMembersList):
