@@ -28,11 +28,14 @@ Functions
 
 .. autofunction:: disabled_if_no_epygram
 
-.. autofunction:: addfield
-
 .. autofunction:: clone_fields
 
+.. autofunction:: addfield
+
 .. autofunction:: copyfield
+
+.. autofunction:: overwritefield
+
 
 Classes
 -------
