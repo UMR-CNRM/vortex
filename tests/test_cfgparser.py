@@ -120,7 +120,8 @@ class UtIgaCfgParser(TestCase):
         }
         resolvedpath = 'arpege/france/oper/data/autres'
         igacfgp.setall(kwargs)
-        self.assertTrue(igacfgp.resolvedpath('analysis'), resolvedpath)
+        self.assertTrue(igacfgp.resolvedpath('analysis', 'play', 'sandbox'),
+                        resolvedpath)
 
 
 class TestAppConfigDecoder(TestCase):
