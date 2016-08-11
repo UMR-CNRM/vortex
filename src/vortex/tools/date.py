@@ -48,6 +48,7 @@ import re
 import datetime
 import calendar
 import functools
+import operator
 
 
 def mkisodate(datestr):
@@ -365,6 +366,8 @@ class Date(datetime.datetime):
     """Standard date objects, extending :class:`datetime.datetime` features with iso8601 facilities."""
 
     _origin = datetime.datetime(1970, 1, 1, 0, 0, 0)
+    _getattr_re = re.compile(r'^(?P<basics>(?:(?:add|sub)[^_]+_?)+)(?:_(?P<fmt>[^_]+))?(?<!_)$')
+    _getattr_basic_re = re.compile(r'^(?P<op>add|sub)(?P<operand>[^_]+)')
 
     def __new__(cls, *args, **kw):
         if kw and not args:
@@ -424,6 +427,63 @@ class Date(datetime.datetime):
         newinstance = type(self)(self)
         memo[id(self)] = newinstance
         return newinstance
+
+    def _basic_period_proxy(self, name):
+        """Return something that may (or not) create a Period object.
+
+        The sign of the Period object depends on the chosen operation.
+        """
+        # The match should always succeed because _getattr_re was called before
+        dmatch = self._getattr_basic_re.match(name).groupdict()
+        factor = dict(add=1, sub=-1)[dmatch['op']]
+        # Determine if the operand is a valid period (like PT6H)
+        try:
+            p = Period(dmatch['operand'])
+        except ValueError:
+            p = None
+        # The easy case: just return the appropriate object
+        if p is not None:
+            return factor * p
+        # Returns a function that looks up into guess and extras (given by footprints)
+        else:
+            def _period_op_proxy(guess, extra):
+                t = guess.get(dmatch['operand'], extra.get(dmatch['operand'], None))
+                if t is None:
+                    raise KeyError("'{}' was not found in guess nor in extra.".
+                                   format(dmatch['operand']))
+                return factor * Period(t)
+            return _period_op_proxy
+
+    def __getattr__(self, name):
+        """Proxy to additions and subtractions (used in footprint's replacement).
+
+        :example:
+            * self.addPT6H is equivalent to (self + Period('PT6H'))
+            * self.addPT6H_ymdh is equivalent to (self + Period('PT6H')).ymdh
+            * self.addterm_ymdh is equivalent to (self + [term]).ymdh
+            * It is possible to combine several add and sub, like in:
+              self.addterm_subPT3H_ymdh
+        """
+        match = self._getattr_re.match(name)
+        if match is not None:
+            dmatch = match.groupdict()
+            basics = dmatch['basics'].rstrip('_').split('_')
+            fmt = dmatch['fmt']
+            proxies = [self._basic_period_proxy(basic) for basic in basics]
+            fancy = any([callable(proxy) for proxy in proxies])
+            if fancy:
+                def _date_combi_proxy(guess, extra):
+                    newobj = self
+                    for proxy in proxies:
+                        newobj += proxy(guess, extra) if callable(proxy) else proxy
+                    return newobj if fmt is None else getattr(newobj, fmt)
+                return _date_combi_proxy
+            else:
+                newobj = self + functools.reduce(operator.add, proxies)
+                return newobj if fmt is None else getattr(newobj, fmt)
+        else:
+            raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__,
+                                                                            name))
 
     @property
     def origin(self):
