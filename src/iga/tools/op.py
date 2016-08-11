@@ -339,7 +339,7 @@ def rescue(**kw):
     ad.report(kind='dayfile', mode='ERREUR')
     ad.sms_abort()
     print 'Bad luck...'
-
+    exit(1)
 
 def fulltraceback(localsd=None):
     """Produce some nice traceback at the point of failure."""
