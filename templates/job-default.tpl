@@ -17,7 +17,7 @@
 # Build opts: $mkopts
 
 op_jobname  = '$name'
-op_suite    = '$suite'
+op_xpid     = '$xpid'
 op_suitebg  = '$suitebg'
 op_vapp     = '$vapp'
 op_vconf    = '$vconf'
@@ -25,8 +25,7 @@ op_cutoff   = '$cutoff'
 op_rundate  = $rundate
 op_runtime  = $runtime
 op_runstep  = $runstep
-op_rootapp  = '$rootapp/{0:s}/{1:s}/{2:s}'.format(op_suite, op_vapp, op_vconf)
-op_gcocache = $rootdir 
+op_rootapp  = '$rootapp/{0:s}/{1:s}/{2:s}'.format(op_suitebg, op_vapp, op_vconf)
 op_jobfile  = '$file'
 op_thisjob  = '{0:s}/jobs/{1:s}.py'.format(op_rootapp, op_jobfile)
 op_iniconf  = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(op_rootapp, op_vapp, op_vconf, '$taskconf')
@@ -39,11 +38,10 @@ op_tplfile  = '$tplfile'
 op_tplinit  = '$tplinit'
 op_mail     = $mail
 op_jeeves   = '$jeeves'
-op_cycle    = '$opcycle'
 
 oplocals = locals()
 
-import os, sys
+import os, sys, re
 sys.stderr = sys.stdout
 
 pathdirs = [ os.path.join(op_rootapp, xpath) for xpath in ('', 'src', 'vortex/site', 'vortex/src') ]
@@ -63,7 +61,7 @@ try:
     e = op.setenv(t, actual=oplocals)
     ad.opmail_on()
     ad.route_off()
-    toolbox.defaults(smtpserver='smtp.meteo.fr', sender='dsiop_igasc@meteo.fr', cycle=op_cycle)
+    toolbox.defaults(smtpserver='smtp.meteo.fr', sender='dsiop_igasc@meteo.fr')
     opts = t.sh.rawopts(defaults=dict(play=op_fullplay))
     driver = todo.setup(t, **opts)
     driver.setup()
@@ -74,3 +72,12 @@ except Exception as trouble:
     op.rescue(actual=locals())
 finally:
     print 'Bye bye Op...'
+    if 'DMT_PATH_EXEC' in os.environ:
+        option_insertion = '--id ' + os.environ['SLURM_JOB_ID'] + ' --date-pivot=' + os.environ['DMT_DATE_PIVOT'] + ' --job-path=' + re.sub(r'.*vortex/','',os.environ['DMT_PATH_EXEC'] + '/' + os.environ['DMT_JOB_NAME']) + ' --log=' + re.sub(r'.*oldres/','',os.environ['LOG_SBATCH'] + ' --machine ' + os.environ['CALCULATEUR'])
+        if 'DATA_OUTPUT_ARCH_PATH' in os.environ:
+            option_insertion = option_insertion + ' --arch-path=' + os.environ['DATA_OUTPUT_ARCH_PATH']
+        file = os.environ['HOME'] + '/tempo/option_insertion.' + os.environ['SLURM_JOB_ID'] + '.txt'
+        print file
+        print option_insertion
+        with open(file, "w") as f:
+            f.write(option_insertion)
