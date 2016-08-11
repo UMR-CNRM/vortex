@@ -134,7 +134,7 @@ class GcoCentralStore(Store):
                 rc = sh.cp(gname + '/' + extract[0], local)
             else:
                 logger.info('GCO Central Store get %s', gname)
-                if unpacked is None or len(unpacked) > 1:
+                if unpacked is None or len(unpacked) > 1 or sh.is_tarname(local):
                     rc = sh.mv(gname, local)
                 else:
                     if unpacked[0] == local:

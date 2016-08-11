@@ -385,32 +385,28 @@ def diff(*args, **kw):
             if fatal:
                 raise ValueError('Incomplete Resource Handler for diff')
         comp_source = rhandler.container
-        # Is the reference available in cache ?
-        if rhandler.check(incache=True):
-            rc = t.sh.diff(comp_source.localpath(),
-                           rhandler.locate().split(';')[0],
-                           fmt = rhandler.container.actualfmt)
+
+        # Create a new container to hold the reference file
+        lazzycontainer = footprints.proxy.container(shouldfly=True,
+                                                    actualfmt=comp_source.actualfmt)
+        # Swapp the original container with the lazzy one
+        rhandler.container = lazzycontainer
+        # Get the reference file
+        rcget = rhandler.get()
+        if not rcget:
+            logger.error('Cannot get the reference resource: %s', rhandler.locate())
+            if fatal:
+                raise ValueError('Cannot get the reference resource')
         else:
-            # Create a new container to hold the reference file
-            lazzycontainer = footprints.proxy.container(shouldfly=True,
-                                                        actualfmt=comp_source.actualfmt)
-            # Swapp the original container with the lazzy one
-            rhandler.container = lazzycontainer
-            # Get the reference file
-            rcget = rhandler.get()
-            if not rcget:
-                logger.error('Cannot get the reference resource: %s', rhandler.locate())
-                if fatal:
-                    raise ValueError('Cannot get the reference resource')
-            else:
-                logger.info('The reference file is stored under: %s',
-                            rhandler.container.localpath())
-            # What are the differences ?
-            rc = rcget and t.sh.diff(comp_source.localpath(),
-                                     rhandler.container.localpath(),
-                                     fmt = rhandler.container.actualfmt)
-            # Delete the reference file
-            lazzycontainer.clear()
+            logger.info('The reference file is stored under: %s',
+                        rhandler.container.localpath())
+        # What are the differences ?
+        rc = rcget and t.sh.diff(comp_source.localpath(),
+                                 rhandler.container.localpath(),
+                                 fmt = rhandler.container.actualfmt)
+        # Delete the reference file
+        lazzycontainer.clear()
+
         # Now proceed with the result
         logger.info('Diff return %s', str(rc))
         try:
