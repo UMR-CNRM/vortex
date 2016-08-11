@@ -171,6 +171,16 @@ class Handler(object):
         """Return the current active context."""
         return contexts.focus()
 
+    def external_stage_update(self, newstage):
+        """This method must not be used directly by users!
+
+        Update the stage upon request (e.g. the file has been fetched by another
+        process).
+        """
+        self._stage.append(newstage)
+        if newstage in ('get', ):
+            self.container.updfill(True)
+
     def _updstage(self, newstage, insitu=False):
         """Notify the new stage to any observing system."""
         self._stage.append(newstage)
@@ -498,7 +508,7 @@ class Handler(object):
                     if tmprst:
                         logger.info("The resource was successfully fetched :-)")
                     else:
-                        logger.info("Could not get the resurce :-(")
+                        logger.info("Could not get the resource :-(")
             else:
                 if alternate and self.container.exists():
                     logger.info('Alternate <%s> exists', alternate)
