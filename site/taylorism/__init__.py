@@ -91,7 +91,7 @@ taylorism_log = footprints.loggers.getLogger(__name__)
 #: timeout when polling for a Queue/Pipe communication
 communications_timeout = 0.01
 
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 #################
 ### FUNCTIONS ###
