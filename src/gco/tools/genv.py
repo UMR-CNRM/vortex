@@ -117,10 +117,6 @@ def autofill(cycle, gcout=None, writes_dump=False):
             if k == 'CYCLE_NAME':
                 actualcycle = v.partition('.gco')[0]
                 k, v = 'cycle', actualcycle
-            if ' ' in v:
-                vlist = v.split(' ')
-                gcdict[k] = vlist[0]
-                gcdict[k + '_LIST'] = vlist
             else:
                 gcdict[k] = v
         register(**gcdict)
