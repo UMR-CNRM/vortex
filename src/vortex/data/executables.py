@@ -4,6 +4,7 @@
 #: No automatic export
 __all__ = []
 
+import footprints
 
 from resources import Resource
 from vortex.syntax.stdattrs import a_model
@@ -35,9 +36,20 @@ class Executable(Resource):
         info = 'Miscellaneaous executable resource',
         attr = dict(
             cycle = dict(
+                info     = "Any kind of cycle name",
                 optional = True,
                 default  = None,
                 access   = 'rwx',
+            ),
+            kind = dict(
+                info        = "The resource's kind.",
+                doc_zorder  = 90,
+            ),
+            nativefmt = dict(
+                doc_visibility = footprints.doc.visibility.GURU,
+            ),
+            clscontents = dict(
+                doc_visibility = footprints.doc.visibility.GURU,
             )
         )
     )
@@ -49,10 +61,12 @@ class Script(Executable):
     _footprint = dict(
         attr = dict(
             rawopts = dict(
+                info     = "Options that will be passed directly to the script",
                 optional = True,
                 default  = '',
             ),
             language = dict(
+                info     = "The programming language",
                 values   = ['perl', 'python', 'ksh', 'bash', 'sh'],
             ),
             kind = dict(
@@ -81,17 +95,20 @@ class Binary(Executable):
     _footprint = dict(
         attr = dict(
             compiler = dict(
+                info     = "The compiler label.",
                 optional = True,
             ),
             static = dict(
+                info     = "Statically linked binary.",
                 type     = bool,
                 optional = True,
-                default  = True,
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
             jacket = dict(
-                type = Jacket,
-                optional = True,
-                default  = Jacket()
+                type            = Jacket,
+                optional        = True,
+                default         = Jacket(),
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             )
         )
     )
@@ -107,6 +124,7 @@ class BlackBox(Binary):
     _footprint = dict(
         attr = dict(
             binopts = dict(
+                info     = "Options that will be passed directly to the binary",
                 optional = True,
                 default  = '',
             ),

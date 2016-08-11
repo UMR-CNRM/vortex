@@ -68,15 +68,15 @@ class PriorityLevel(object):
 
     def nextlevel(self):
         """Return the next priority level in the set... if any."""
-        return self.inset.levelbyindex(self.rank+1)
+        return self.inset.levelbyindex(self.rank + 1)
 
     def prevlevel(self):
         """Return the previous priority level in the set... if any."""
-        return self.inset.levelbyindex(self.rank-1)
+        return self.inset.levelbyindex(self.rank - 1)
 
     def as_dump(self):
         """Return a nicely formated class name for dump in footprint."""
-        return self.tag
+        return '{0.tag} (rank={0.rank:d})'.format(self)
 
 
 class PrioritySet(object):

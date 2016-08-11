@@ -5,7 +5,7 @@
 __all__ = []
 
 from vortex.data.outflow import StaticGeoResource
-from gco.syntax.stdattrs import GenvKey
+from gco.syntax.stdattrs import gvar
 
 
 class PGDRaw(StaticGeoResource):
@@ -14,16 +14,17 @@ class PGDRaw(StaticGeoResource):
     A Genvkey can be provided.
     """
     _abstract = True
-    _footprint = dict(
-        info = 'Surfex climatological file',
-        attr = dict(
-            gvar = dict(
-                type = GenvKey,
-                optional = True,
-                default  = 'pgd_[nativefmt]',
-            ),
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Surfex climatological file',
+            attr = dict(
+                gvar = dict(
+                    default  = 'pgd_[nativefmt]',
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -83,25 +84,26 @@ class CoverParams(StaticGeoResource):
     Class of a tar-zip set of coefficients for radiative transfers computations.
     A Genvkey can be given.
     """
-    _footprint = dict(
-        info = 'Coefficients of RRTM scheme',
-        attr = dict(
-            kind = dict(
-                values   = ['coverparams', 'surfexcover'],
-                remap    = dict(surfexcover = 'coverparams'),
-            ),
-            source = dict(
-                optional = True,
-                default  = 'ecoclimap',
-                values   = ['ecoclimap', 'ecoclimap1', 'ecoclimap2'],
-            ),
-            gvar = dict(
-                type     = GenvKey,
-                optional = True,
-                default  = '[source]_covers_param'
-            ),
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Coefficients of RRTM scheme',
+            attr = dict(
+                kind = dict(
+                    values   = ['coverparams', 'surfexcover'],
+                    remap    = dict(surfexcover = 'coverparams'),
+                ),
+                source = dict(
+                    optional = True,
+                    default  = 'ecoclimap',
+                    values   = ['ecoclimap', 'ecoclimap1', 'ecoclimap2'],
+                ),
+                gvar = dict(
+                    default  = '[source]_covers_param'
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -113,20 +115,21 @@ class IsbaParams(StaticGeoResource):
     Class of surface (vegetations, etc.) coefficients.
     A Genvkey can be given.
     """
-    _footprint = dict(
-        info = 'ISBA parameters',
-        attr = dict(
-            kind = dict(
-                values   = ['isba', 'isbaan'],
-                remap    = dict(isbaan = 'isba'),
-            ),
-            gvar = dict(
-                type     = GenvKey,
-                optional = True,
-                default  = 'analyse_isba'
-            ),
+    _footprint = [
+        gvar,
+        dict(
+            info = 'ISBA parameters',
+            attr = dict(
+                kind = dict(
+                    values   = ['isba', 'isbaan'],
+                    remap    = dict(isbaan = 'isba'),
+                ),
+                gvar = dict(
+                    default  = 'analyse_isba'
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):

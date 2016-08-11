@@ -16,35 +16,45 @@ class IFSParallel(Parallel, grib.GribApiComponent):
 
     _abstract = True
     _footprint = dict(
+        info = 'Abstract AlgoComponent for anything based on Arpege/IFS.',
         attr = dict(
             kind = dict(
-                default  = 'ifsrun',
+                info            = 'The kind of processing we want the Arpege/IFS binary to perform.',
+                default         = 'ifsrun',
+                doc_zorder      = 90,
             ),
             conf = dict(
-                type     = int,
-                optional = True,
-                default  = 1,
+                info = 'The configuration number given to Arpege/IFS.',
+                type            = int,
+                optional        = True,
+                default         = 1,
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
             timescheme = dict(
-                optional = True,
-                default  = 'sli',
-                values   = ['eul', 'eulerian', 'sli', 'semilag'],
-                remap = dict(
+                info = 'The timescheme that will be used by Arpege/IFS model.',
+                optional        = True,
+                default         = 'sli',
+                values          = ['eul', 'eulerian', 'sli', 'semilag'],
+                remap           = dict(
                     eulerian = 'eul',
                     semilag  = 'sli'
-                )
+                ),
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
             timestep = dict(
+                info     = 'The timestep of the Arpege/IFS model.',
                 type     = float,
                 optional = True,
                 default  = 600.,
             ),
             fcterm = dict(
+                info     = 'The forecast term of the Arpege/IFS model.',
                 type = int,
                 optional = True,
                 default = 0,
             ),
             fcunit = dict(
+                info     = 'The unit used in the *fcterm* attribute.',
                 optional = True,
                 default  = 'h',
                 values   = ['h', 'hour', 't', 'step'],
@@ -54,17 +64,23 @@ class IFSParallel(Parallel, grib.GribApiComponent):
                 )
             ),
             xpname = dict(
-                optional = True,
-                default  = 'XPVT'
+                info = 'The default labelling of files used in Arpege/IFS model.',
+                optional        = True,
+                default         = 'XPVT',
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
             drhookprof = dict(
-                optional = True,
-                type     = bool,
-                default  = False,
+                info            = 'Activate the DrHook profiling.',
+                optional        = True,
+                type            = bool,
+                default         = False,
+                doc_zorder      = -50,
             ),
             member = dict(
-                optional = True,
-                type     = int,
+                info            = ("The current member's number " +
+                                   "(may be omitted in deterministic configurations)."),
+                optional        = True,
+                type            = int,
             ),
         )
     )

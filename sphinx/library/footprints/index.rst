@@ -16,6 +16,7 @@ List of modules.
    access
    collectors
    config
+   doc
    dump
    loggers
    observers

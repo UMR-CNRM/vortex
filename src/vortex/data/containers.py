@@ -27,19 +27,23 @@ class Container(footprints.FootprintBase):
     _abstract  = True
     _collector = ('container',)
     _footprint = dict(
-        info = 'Abstract Virtual Container',
+        info = 'Abstract Container',
         attr = dict(
             actualfmt = a_actualfmt,
             maxreadsize = dict(
-                type     = int,
-                optional = True,
-                default  = CONTAINER_MAXREADSIZE
+                info            = "The maximum amount of data that can be read (in bytes).",
+                type            = int,
+                optional        = True,
+                default         = CONTAINER_MAXREADSIZE,
+                doc_visibility  = footprints.doc.visibility.GURU,
             ),
             mode = dict(
-                optional = True,
-                default  = 'rb',
-                values   = ['a', 'ab', 'a+b', 'ab+', 'r', 'rb', 'rb+', 'r+b', 'w', 'wb', 'w+b', 'wb+'],
-                remap    = {'a+b': 'ab+', 'r+b': 'rb+', 'w+b': 'wb+'}
+                info            = "The file mode used to open the container.",
+                optional        = True,
+                default         = 'rb',
+                values          = ['a', 'ab', 'a+b', 'ab+', 'r', 'rb', 'rb+', 'r+b', 'w', 'wb', 'w+b', 'wb+'],
+                remap           = {'a+b': 'ab+', 'r+b': 'rb+', 'w+b': 'wb+'},
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             )
         )
     )
@@ -225,8 +229,10 @@ class Virtual(Container):
                 default = 'wb+'
             ),
             prefix = dict(
-                optional = True,
-                default = 'vortex.tmp.'
+                info            = "Prefix used if a temporary file needs to be written.",
+                optional        = True,
+                default         = 'vortex.tmp.',
+                doc_visibility  = footprints.doc.visibility.GURU,
             )
         )
     )
@@ -250,18 +256,22 @@ class Virtual(Container):
 class InCore(Virtual):
 
     _footprint = dict(
-        info = 'Incore container',
+        info = 'Incore container (data are kept in memory as long as possible).',
         attr = dict(
             incore = dict(
-                type = bool,
-                values = [ True ],
-                alias = ('mem', 'memory')
+                info        = 'Activate the incore container.',
+                type        = bool,
+                values      = [ True ],
+                alias       = ('mem', 'memory'),
+                doc_zorder = 90,
             ),
             incorelimit = dict(
-                type = int,
-                optional = True,
-                default = CONTAINER_INCORELIMIT,
-                alias = ('memlimit', 'spooledlimit', 'maxsize')
+                info            = 'If this limit (in bytes) is exceeded, data are flushed to file.',
+                type            = int,
+                optional        = True,
+                default         = CONTAINER_INCORELIMIT,
+                alias           = ('memlimit', 'spooledlimit', 'maxsize'),
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
         )
     )
@@ -368,17 +378,21 @@ class InCore(Virtual):
 class MayFly(Virtual):
 
     _footprint = dict(
-        info = 'Virtual container',
+        info = 'MayFly container (a temporary file is created only when needed).',
         attr = dict(
             mayfly = dict(
-                type   = bool,
-                values = [ True ],
-                alias  = ('tempo',)
+                info       = 'Activate the mayfly container.',
+                type       = bool,
+                values     = [ True ],
+                alias      = ('tempo',),
+                doc_zorder = 90,
             ),
             delete = dict(
-                type     = bool,
-                optional = True,
-                default  = True,
+                info            = 'Delete the file when the container object is destroyed.',
+                type            = bool,
+                optional        = True,
+                default         = True,
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
         )
     )
@@ -436,9 +450,11 @@ class _SingleFileStyle(Container):
         info = 'File container',
         attr = dict(
             cwdtied = dict(
-                type     = bool,
-                optional = True,
-                default  = False,
+                info            = "If *filename* is a relative path, replace it by its absolute path.",
+                type            = bool,
+                optional        = True,
+                default         = False,
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
         )
     )
@@ -520,7 +536,9 @@ class SingleFile(_SingleFileStyle):
     _footprint = dict(
         attr = dict(
             filename = dict(
-                alias    = ('filepath', 'local'),
+                info        = 'Path to the file where data are stored.',
+                alias       = ('filepath', 'local'),
+                doc_zorder  = 50,
             ),
         )
     )
@@ -533,13 +551,17 @@ class UnnamedSingleFile(_SingleFileStyle):
     The filename is chosen arbitrarily when the object is created.
     """
     _footprint = dict(
+        info = 'File container (a temporary filename is chosen at runtime)',
         attr = dict(
             shouldfly = dict(
-                type = bool,
-                values = [ True ],
+                info       = 'Activate the UnnamedSingleFile container',
+                type       = bool,
+                values     = [ True ],
+                doc_zorder = 90,
             ),
             cwdtied = dict(
                 default = True,
+                doc_visibility  = footprints.doc.visibility.GURU,
             ),
         )
     )

@@ -9,7 +9,7 @@ import os.path
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.syntax.stdattrs import a_xpid, opsuites, Namespace, FmtInt
+from vortex.syntax.stdattrs import namespacefp, xpid, member, block, opsuites, Namespace, FmtInt
 from vortex.util.names import VortexNameBuilder
 from vortex.tools import net
 
@@ -22,14 +22,18 @@ class Provider(footprints.FootprintBase):
         info = 'Abstract root provider',
         attr = dict(
             vapp = dict(
-                alias    = ('application',),
-                optional = True,
-                default  = '[glove::vapp]'
+                info        = "The application's identifier.",
+                alias       = ('application',),
+                optional    = True,
+                default     = '[glove::vapp]',
+                doc_zorder  = -10
             ),
             vconf = dict(
-                alias    = ('configuration',),
-                optional = True,
-                default  = '[glove::vconf]'
+                info        = "The configuration's identifier.",
+                alias       = ('configuration',),
+                optional    = True,
+                default     = '[glove::vconf]',
+                doc_zorder  = -10
             ),
         )
     )
@@ -107,15 +111,24 @@ class Provider(footprints.FootprintBase):
 class Magic(Provider):
 
     _footprint = dict(
-        info = 'Magic provider',
+        info = 'Magic provider that always returns the same URI.',
         attr = dict(
             fake = dict(
+                info     = "Enable this magic provider.",
                 alias    = ('nowhere', 'noprovider'),
                 type     = bool,
                 optional = True,
                 default  = True,
             ),
-            magic = dict()
+            magic = dict(
+                info     = "The URI returned by this provider."
+            ),
+            vapp = dict(
+                doc_visibility  = footprints.doc.visibility.GURU,
+            ),
+            vconf = dict(
+                doc_visibility  = footprints.doc.visibility.GURU,
+            ),
         )
     )
 
@@ -131,25 +144,36 @@ class Magic(Provider):
 class Remote(Provider):
 
     _footprint = dict(
-        info = 'Remote provider',
+        info = 'Provider that manipulates data given a real path',
         attr = dict(
             remote = dict(
-                alias    = ('remfile', 'rempath'),
+                info        = 'The path to the data.',
+                alias       = ('remfile', 'rempath'),
+                doc_zorder  = 50
             ),
             hostname = dict(
+                info     = 'The hostname that holds the data.',
                 optional = True,
                 default  = 'localhost'
             ),
             tube = dict(
+                info     = "The protocol used to access the data.",
                 optional = True,
                 values   = ['scp', 'ftp', 'rcp', 'file', 'symlink'],
                 default  = 'file',
             ),
             username = dict(
+                info     = "The username that will be used to connect to *hostname*.",
                 optional = True,
                 default  = None,
                 alias    = ('user', 'logname')
-            )
+            ),
+            vapp = dict(
+                doc_visibility  = footprints.doc.visibility.GURU,
+            ),
+            vconf = dict(
+                doc_visibility  = footprints.doc.visibility.GURU,
+            ),
         )
     )
 
@@ -196,43 +220,48 @@ class Vortex(Provider):
     """Main provider of the toolbox, using a fix-size path and a dedicated name factory."""
 
     _abstract = True
-    _footprint = dict(
-        info = 'Vortex provider',
-        attr = dict(
-            experiment = a_xpid,
-            block = dict(),
-            member = dict(
-                type    = FmtInt,
-                args    = dict(fmt = '03'),
-                optional = True,
-            ),
-            namespace = dict(
-                type     = Namespace,
-                optional = True,
-                values   = [
-                    'vortex.cache.fr', 'vortex.archive.fr', 'vortex.multi.fr',
-                    'open.cache.fr',   'open.archive.fr',   'open.multi.fr',
-                ],
-                default  = Namespace('vortex.cache.fr'),
-                remap    = {
-                    'open.cache.fr'   : 'vortex.cache.fr',
-                    'open.archive.fr' : 'vortex.archive.fr',
-                    'open.multi.fr'   : 'vortex.multi.fr',
-                }
-            ),
-            namebuild = dict(
-                optional = True,
-                type     = VortexNameBuilder,
-                default  = VortexNameBuilder(),
-            ),
-            expected = dict(
-                alias    = ('promised',),
-                type     = bool,
-                optional = True,
-                default  = False,
-            ),
+    _footprint = [
+        block,
+        member,
+        namespacefp,
+        xpid,
+        dict(
+            info = 'Vortex provider',
+            attr = dict(
+                member = dict(
+                    type    = FmtInt,
+                    args    = dict(fmt = '03'),
+                ),
+                namespace = dict(
+                    values   = [
+                        'vortex.cache.fr', 'vortex.archive.fr', 'vortex.multi.fr',
+                        'open.cache.fr', 'open.archive.fr', 'open.multi.fr',
+                    ],
+                    default  = Namespace('vortex.cache.fr'),
+                    remap    = {
+                        'open.cache.fr'   : 'vortex.cache.fr',
+                        'open.archive.fr' : 'vortex.archive.fr',
+                        'open.multi.fr'   : 'vortex.multi.fr',
+                    }
+                ),
+                namebuild = dict(
+                    info           = "The object responsible for building filenames.",
+                    optional       = True,
+                    type           = VortexNameBuilder,
+                    default        = VortexNameBuilder(),
+                    doc_visibility = footprints.doc.visibility.GURU,
+                ),
+                expected = dict(
+                    info        = "Is the resource expected ?",
+                    alias       = ('promised',),
+                    type        = bool,
+                    optional    = True,
+                    default     = False,
+                    doc_zorder  = -5,
+                ),
+            )
         )
-    )
+    ]
 
     def __init__(self, *args, **kw):
         logger.debug('Vortex experiment provider init %s', self.__class__)

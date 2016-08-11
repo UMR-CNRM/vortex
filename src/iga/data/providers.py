@@ -11,7 +11,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.providers  import Provider
 from vortex.util.config     import GenericConfigParser
-from vortex.syntax.stdattrs import a_suite, Namespace
+from vortex.syntax.stdattrs import a_suite, member, namespacefp
 
 from gco.data.providers import GEnv
 
@@ -62,45 +62,44 @@ class IgaProvider(Provider):
     needs to be done. This is provided through a dedicated ini file.
     """
 
-    _footprint = dict(
-        info = 'Iga job provider',
-        attr = dict(
-            namespace = dict(
-                optional = True,
-                default  = '[suite].inline.fr',
-                values   = ['oper.inline.fr', 'dble.inline.fr', 'dbl.inline.fr',
-                            'test.inline.fr', 'mirr.inline.fr', 'miroir.inline.fr'],
-                remap    = {
-                    'dbl.inline.fr': 'dble.inline.fr',
-                    'miroir.inline.fr': 'mirr.inline.fr'
-                },
-            ),
-            tube = dict(
-                optional = True,
-                values  = ['scp', 'rcp', 'file'],
-                default = 'file'
-            ),
-            suite = a_suite,
-            source = dict(
-                optional = True,
-                values   = ['arpege', 'arome'],
-            ),
-            member = dict(
-                type     = int,
-                optional = True,
-            ),
-            igakey = dict(
-                type     = IgakeyFactoryInline,
-                optional = True,
-                default  = '[vapp]/[vconf]'
-            ),
-            config = dict(
-                type     = IgaCfgParser,
-                optional = True,
-                default  = IgaCfgParser('iga-map-resources.ini')
-            ),
+    _footprint = [
+        member,
+        dict(
+            info = 'Iga job provider',
+            attr = dict(
+                namespace = dict(
+                    optional = True,
+                    default  = '[suite].inline.fr',
+                    values   = ['oper.inline.fr', 'dble.inline.fr', 'dbl.inline.fr',
+                                'test.inline.fr', 'mirr.inline.fr', 'miroir.inline.fr'],
+                    remap    = {
+                        'dbl.inline.fr': 'dble.inline.fr',
+                        'miroir.inline.fr': 'mirr.inline.fr'
+                    },
+                ),
+                tube = dict(
+                    optional = True,
+                    values  = ['scp', 'rcp', 'file'],
+                    default = 'file'
+                ),
+                suite = a_suite,
+                source = dict(
+                    optional = True,
+                    values   = ['arpege', 'arome'],
+                ),
+                igakey = dict(
+                    type     = IgakeyFactoryInline,
+                    optional = True,
+                    default  = '[vapp]/[vconf]'
+                ),
+                config = dict(
+                    type     = IgaCfgParser,
+                    optional = True,
+                    default  = IgaCfgParser('iga-map-resources.ini')
+                ),
+            )
         )
-    )
+    ]
 
     def __init__(self, *args, **kw):
         logger.debug('IGA job provider init %s', self.__class__)
@@ -151,32 +150,33 @@ class IgaProvider(Provider):
 
 class SopranoProvider(Provider):
 
-    _footprint = dict(
-        info = 'Soprano provider',
-        attr = dict(
-            namespace = dict(
-                type     = Namespace,
-                optional = True,
-                values   = ['prod.soprano.fr', 'intgr.soprano.fr'],
-                default  = 'prod.soprano.fr'
-            ),
-            tube = dict(
-                optional = True,
-                values   = ['scp', 'rcp', 'ftp'],
-                default  = 'ftp'
-            ),
-            suite = a_suite,
-            source = dict(
-                values   = list(ATM_LIST_ONE | ATM_LIST_TWO),
-                optional = True
-            ),
-            config = dict(
-                type     = IgaCfgParser,
-                optional = True,
-                default  = IgaCfgParser('iga-map-resources.ini')
+    _footprint = [
+        namespacefp,
+        dict(
+            info = 'Soprano provider',
+            attr = dict(
+                namespace = dict(
+                    values   = ['prod.soprano.fr', 'intgr.soprano.fr'],
+                    default  = 'prod.soprano.fr'
+                ),
+                tube = dict(
+                    optional = True,
+                    values   = ['scp', 'rcp', 'ftp'],
+                    default  = 'ftp'
+                ),
+                suite = a_suite,
+                source = dict(
+                    values   = list(ATM_LIST_ONE | ATM_LIST_TWO),
+                    optional = True
+                ),
+                config = dict(
+                    type     = IgaCfgParser,
+                    optional = True,
+                    default  = IgaCfgParser('iga-map-resources.ini')
+                )
             )
         )
-    )
+    ]
 
     def __init__(self, *args, **kw):
         logger.debug('IGA job provider init %s', self.__class__)

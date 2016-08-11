@@ -20,10 +20,12 @@ class Resource(footprints.FootprintBase):
         attr = dict(
             nativefmt = a_nativefmt,
             clscontents = dict(
-                type     = DataContent,
-                isclass  = True,
-                optional = True,
-                default  = UnknownContent,
+                info            = "The class instantiated to read the container's content",
+                type            = DataContent,
+                isclass         = True,
+                optional        = True,
+                default         = UnknownContent,
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             )
         )
     )
@@ -118,9 +120,10 @@ class Resource(footprints.FootprintBase):
 class Unknown(Resource):
 
     _footprint = dict(
-        info = 'Unknown assumed NWP Resource',
+        info = 'Unknown assumed NWP Resource (development only !)',
         attr = dict(
             unknown = dict(
+                info = "Activate the unknown resource.",
                 type = bool
             ),
             clscontents = dict(

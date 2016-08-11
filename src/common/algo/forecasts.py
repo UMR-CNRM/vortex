@@ -20,6 +20,7 @@ class Forecast(IFSParallel):
     """Forecast for IFS-like Models."""
 
     _footprint = dict(
+        info = "Run a forecast with Arpege/IFS.",
         attr = dict(
             kind = dict(
                 values   = ['forecast', 'fc'],
@@ -32,18 +33,23 @@ class Forecast(IFSParallel):
                 default  = 'FCST'
             ),
             inline = dict(
-                type     = bool,
-                optional = True,
-                default  = True,
+                info        = "Do inline post-processing",
+                type        = bool,
+                optional    = True,
+                default     = True,
+                doc_zorder  = -5,
             ),
             ddhpack = dict(
-                type     = bool,
-                optional = True,
-                default  = False,
+                info        = "After run, gather the DDH output file in directories.",
+                type        = bool,
+                optional    = True,
+                default     = False,
+                doc_zorder  = -5,
             ),
             outputid = dict(
-                type     = str,
-                optional = True,
+                info        = "The identifier for the encoding of post-processed fields.",
+                type        = str,
+                optional    = True,
             )
         )
     )
@@ -158,18 +164,23 @@ class LAMForecast(Forecast):
     """Forecast for IFS-like Limited Area Models."""
 
     _footprint = dict(
+        info = "Run a forecast with an Arpege/IFS like Limited Area Model.",
         attr = dict(
             kind = dict(
                 values   = ['lamfc', 'lamforecast'],
                 remap    = dict(lamforecast = 'lamfc'),
             ),
             synctool = dict(
-                optional = True,
-                default  = 'atcp.alad',
+                info            = 'The name of the script called when waiting for coupling files',
+                optional        = True,
+                default         = 'atcp.alad',
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
             synctpl = dict(
-                optional = True,
-                default  = 'sync-fetch.tpl',
+                info            = 'The template used to generate the *synctool* script',
+                optional        = True,
+                default         = 'sync-fetch.tpl',
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
         )
     )
@@ -235,6 +246,7 @@ class LAMForecast(Forecast):
 class DFIForecast(LAMForecast):
 
     _footprint = dict(
+        info = "Run a forecast with an Arpege/IFS like Limited Area Model (with DFIs).",
         attr = dict(
             kind = dict(
                 values = ['fcdfi'],
@@ -275,6 +287,7 @@ class FullPosGeo(FullPos):
     """FUllpos for geometries transforms in IFS-like Models."""
 
     _footprint = dict(
+        info = "Run a fullpos to interpolate to a new geometry",
         attr = dict(
             kind = dict(
                 values  = ['l2h', 'h2l'],
@@ -349,6 +362,7 @@ class FullPosBDAP(FullPos):
     """Post-processing for IFS-like Models."""
 
     _footprint = dict(
+        info = "Run a fullpos to post-process raw model outputs",
         attr = dict(
             kind = dict(
                 values  = ['fullpos', 'fp'],

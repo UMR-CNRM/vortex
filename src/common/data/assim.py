@@ -13,7 +13,7 @@ from vortex.tools.date      import Time
 from vortex.data.flow       import FlowResource, GeoFlowResource
 from vortex.data.contents   import JsonDictContent
 from vortex.syntax.stdattrs import FmtInt, term
-from gco.syntax.stdattrs    import GenvKey
+from gco.syntax.stdattrs    import gvar
 
 
 class _BackgroundErrorInfo(GeoFlowResource):
@@ -24,6 +24,7 @@ class _BackgroundErrorInfo(GeoFlowResource):
     _abstract = True
     _footprint = [
         term,
+        gvar,
         dict(
             info='Background standard deviation',
             attr=dict(
@@ -36,8 +37,6 @@ class _BackgroundErrorInfo(GeoFlowResource):
                     default='grib',
                 ),
                 gvar = dict(
-                    type     = GenvKey,
-                    optional = True,
                     default = 'errgrib_t[geometry:truncation]'
                 ),
             ),
@@ -146,20 +145,21 @@ class Wavelet(GeoFlowResource):
     TODO.
     """
 
-    _footprint = dict(
-        info = 'Wavelet... could be more talkative ?',
-        attr = dict(
-            kind = dict(
-                values   = ['wavelet', 'waveletcv'],
-                remap    = dict(autoremap = 'first'),
-            ),
-            gvar = dict(
-                type     = GenvKey,
-                optional = True,
-                default = 'wavelet_cv_t[geometry:truncation]'
-            ),
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Wavelet... could be more talkative ?',
+            attr = dict(
+                kind = dict(
+                    values   = ['wavelet', 'waveletcv'],
+                    remap    = dict(autoremap = 'first'),
+                ),
+                gvar = dict(
+                    default = 'wavelet_cv_t[geometry:truncation]'
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):

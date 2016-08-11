@@ -1,8 +1,8 @@
-:mod:`common.data.binaries` --- Common binaries resources
-=========================================================
+:mod:`common.data.executables` --- Common executable resources
+==============================================================
 
-.. automodule:: common.data.binaries
-   :synopsis: Binaries resources for usual applications
+.. automodule:: common.data.executables
+   :synopsis: Executable resources for usual applications
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

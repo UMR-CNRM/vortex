@@ -15,7 +15,7 @@ from vortex.tools.date import Time, Date
 from vortex.data.outflow import ModelResource, NoDateResource
 from vortex.data.contents import AlmostDictContent, IndexedTable
 from vortex.syntax.stdattrs import binaries, term, cutoff
-from gco.syntax.stdattrs import GenvKey
+from gco.syntax.stdattrs import gvar
 
 
 KNOWN_NAMELIST_MACROS = set(['NPROC', 'NBPROC', 'NBPROC_IO', 'NCPROC', 'NDPROC',
@@ -135,39 +135,42 @@ class Namelist(ModelResource):
     """
     Class for all kinds of namelists
     """
-    _footprint = dict(
-        info = 'Namelist from binary pack',
-        attr = dict(
-            kind = dict(
-                values   = ['namelist']
-            ),
-            clscontents = dict(
-                default  = NamelistContent
-            ),
-            gvar = dict(
-                type = GenvKey,
-                optional = True,
-                values   = ['NAMELIST_' + x.upper() for x in binaries],
-                default  = 'namelist_[binary]'
-            ),
-            source = dict(
-                optional = True,
-                default  = 'namel_[binary]',
-            ),
-            model = dict(
-                optional = True,
-            ),
-            binary = dict(
-                optional = True,
-                values   = binaries,
-                default  = '[model]',
-            ),
-            date = dict(
-                type     = Date,
-                optional = True,
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Namelist from binary pack',
+            attr = dict(
+                kind = dict(
+                    values   = ['namelist']
+                ),
+                clscontents = dict(
+                    default  = NamelistContent
+                ),
+                gvar = dict(
+                    values   = ['NAMELIST_' + x.upper() for x in binaries],
+                    default  = 'namelist_[binary]'
+                ),
+                source = dict(
+                    info        = 'The namelist name within the namelist pack.',
+                    optional    = True,
+                    default     = 'namel_[binary]',
+                    doc_zorder  = 50
+                ),
+                model = dict(
+                    optional = True,
+                ),
+                binary = dict(
+                    optional = True,
+                    values   = binaries,
+                    default  = '[model]',
+                ),
+                date = dict(
+                    type     = Date,
+                    optional = True,
+                )
             )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -471,12 +474,11 @@ class NamelistSelectDef(NoDateResource):
     """Utility, so-called xxt file."""
     _footprint = [
         cutoff,
+        gvar,
         dict(
             info = 'xxt.def file from namelist pack',
             attr = dict(
                 gvar = dict(
-                    type = GenvKey,
-                    optional = True,
                     values = ['NAMELIST_' + x.upper() for x in binaries],
                     default = 'namelist_[binary]'
                 ),

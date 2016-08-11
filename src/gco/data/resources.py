@@ -6,7 +6,7 @@ __all__ = [ 'MiscGenv' ]
 
 
 from vortex.data.outflow import NoDateResource
-from gco.syntax.stdattrs import GenvKey
+from gco.syntax.stdattrs import gvar
 
 
 class MiscGenv(NoDateResource):
@@ -19,21 +19,19 @@ class MiscGenv(NoDateResource):
     * kind (values: ``miscgenv``)
     """
 
-    _footprint = dict(
-        info = 'Miscellaneous genv constant',
-        attr = dict(
-            gvar = dict(
-                type = GenvKey,
-                optional = True,
-            ),
-            kind = dict(
-                values = ['miscgenv']
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Miscellaneous genv constant',
+            attr = dict(
+                kind = dict(
+                    values = ['miscgenv']
+                )
             )
         )
-    )
+    ]
 
     @property
     def realkind(self):
         """Default realkind is ``miscgenv``."""
         return 'miscgenv'
-

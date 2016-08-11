@@ -33,10 +33,13 @@ class Analysis(GeoFlowResource):
                 default  = 'fa',
             ),
             filtering = dict(
-                optional = True,
-                values   = ['dfi'],
+                info         = "The filtering that was applied during the generating process.",
+                optional    = True,
+                values      = ['dfi'],
+                doc_zorder  = -5,
             ),
             filling = dict(
+                info     = "The content/coverage of the analysis.",
                 optional = True,
                 default  = 'full',
                 values   = ['surface', 'surf', 'atmospheric', 'atm', 'full'],

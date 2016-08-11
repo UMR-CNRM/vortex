@@ -11,7 +11,7 @@ VORTEXBASE = os.path.dirname(os.path.abspath(__file__))
 HGEO_str = ('area', 'runit')
 HGEO_num = ('nlon', 'nlat', 'ni', 'nj', 'resolution', 'truncation', 'stretching',)
 HGEO_bool = ('lam', )
-PRIORITIES = ('default', 'toolbox', 'olive', 'oper', 'debug')
+PRIORITIES = ('default', 'toolbox', 'olive', 'oper', 'debug', 'advanced', 'guru')
 
 
 def register(linter):

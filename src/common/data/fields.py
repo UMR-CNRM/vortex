@@ -4,13 +4,13 @@
 #: No automatic export
 __all__ = []
 
-from vortex.data.resources  import Resource
+from vortex.data.outflow  import NoDateResource
 from vortex.data.flow import GeoFlowResource
 
 from vortex.syntax.stdattrs import date, cutoff
 
 
-class RawFields(Resource):
+class RawFields(NoDateResource):
 
     _footprint = [
         date, cutoff,

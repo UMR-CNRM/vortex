@@ -17,12 +17,12 @@ Included Modules
 ----------------
 
 * :mod:`common.data.assim`
-* :mod:`common.data.binaries`
 * :mod:`common.data.boundaries`
 * :mod:`common.data.climfiles`
 * :mod:`common.data.consts`
 * :mod:`common.data.diagnostics`
 * :mod:`common.data.ens`
+* :mod:`common.data.executables`
 * :mod:`common.data.fields`
 * :mod:`common.data.gridfiles`
 * :mod:`common.data.logs`

@@ -12,11 +12,12 @@ from weakref import WeakSet
 import footprints
 
 from footprints import \
-    dump, observers, priorities, reporting, util, collectors, \
+    dump, doc, observers, priorities, reporting, util, collectors, \
     Footprint, FootprintBase, \
     FPDict, FPList, FPSet, FPTuple
 
 from footprints.config import FootprintSetup
+from footprints.dump import TxtDumper
 
 
 # Classes to be used in module scope
@@ -161,10 +162,10 @@ class utDump(TestCase):
         self.assertTrue(dump.is_class(FooBis))
 
     def test_dump_indent(self):
-        self.assertEqual(dump._indent(nextline=False), '')
-        self.assertEqual(dump._indent(nextline=False, level=2), '')
-        self.assertEqual(dump._indent(), '\n      ')
-        self.assertEqual(dump._indent(level=1), '\n          ')
+        self.assertEqual(TxtDumper._indent(nextline=False), '')
+        self.assertEqual(TxtDumper._indent(nextline=False, level=2), '')
+        self.assertEqual(TxtDumper._indent(), '\n      ')
+        self.assertEqual(TxtDumper._indent(level=1), '\n          ')
 
 
 # Tests for footprints util
@@ -859,7 +860,7 @@ class utPriorities(TestCase):
         self.assertEqual(rv.TOOLBOX(), 1)
         self.assertEqual(rv.DEBUG(),   2)
         self.assertEqual(cmp(rv.DEBUG, 'bof'), -1)
-        self.assertEqual(rv.DEBUG.as_dump(), "DEBUG")
+        self.assertEqual(rv.DEBUG.as_dump(), "DEBUG (rank=2)")
 
         rv.reset()
         self.assertEqual(len(rv), 2)
@@ -1098,7 +1099,7 @@ class utFootprintSetup(TestCase):
         self.assertIsInstance(setup.report, int)
         self.assertIsInstance(setup.lreport_len, int)
         self.assertIsInstance(setup.extended, bool)
-        self.assertIsInstance(setup.docstrings, bool)
+        self.assertIsInstance(setup.docstrings, int)
         self.assertIsInstance(setup.shortnames, bool)
         self.assertIsInstance(setup.fastmode, bool)
         self.assertIsInstance(setup.fastkeys, tuple)
@@ -1224,6 +1225,8 @@ class utFootprint(TestCase):
                 remap = dict(),
                 values = set(),
                 outcast = set(),
+                doc_visibility = doc.visibility.DEFAULT,
+                doc_zorder = 0,
             )
         ))
 
@@ -1253,6 +1256,8 @@ class utFootprint(TestCase):
                     'remap': {},
                     'values': set(['hip', 'hop']),
                     'outcast': set(),
+                    'doc_visibility': doc.visibility.DEFAULT,
+                    'doc_zorder': 0,
                 }
             },
             'bind': [],
