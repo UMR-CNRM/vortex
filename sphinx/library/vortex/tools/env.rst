@@ -48,3 +48,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: EnvironmentDeltaContext
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

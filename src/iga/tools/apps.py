@@ -25,13 +25,14 @@ class OpTask(Task):
 
     def component_runner(self, tbalgo, tbx=(None, ), **kwargs):
         """Run the binaries listed in tbx using the tbalgo algo component."""
-        for binary in tbx:
-            try:
-                tbalgo.run(binary, **kwargs)
-            except (DelayedAlgoComponentError, ExecutionError,
-                    SignalInterruptError):
-                self.report_execution_error()
-                raise
+        with self.env.delta_context(OMP_NUM_THREADS=self.conf.get('openmp', 1)):
+            for binary in tbx:
+                try:
+                    tbalgo.run(binary, **kwargs)
+                except (DelayedAlgoComponentError, ExecutionError,
+                        SignalInterruptError):
+                    self.report_execution_error()
+                    raise
 
     def report_execution_error(self):
         reseau = self.conf.rundate.hh

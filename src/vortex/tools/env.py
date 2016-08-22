@@ -5,7 +5,11 @@
 Advanced environment settings.
 """
 
-import os, re, json, traceback
+import collections
+import json
+import os
+import re
+import traceback
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -40,7 +44,7 @@ def param(tag='default', pmap=None):
     """
     if pmap is None:
         pmap = paramsmap()
-    if not tag in pmap:
+    if tag not in pmap:
         pmap[tag] = Environment(active=False, clear=True)
     return pmap[tag]
 
@@ -86,7 +90,7 @@ class Environment(object):
         self.__dict__['_history'] = History(tag='env')
         self.__dict__['_active']  = False
         self.__dict__['_verbose'] = verbose
-        self.__dict__['_frozen']  = (dict(), list())
+        self.__dict__['_frozen']  = collections.deque()
         self.__dict__['_pool']    = dict()
         self.__dict__['_mods']    = set()
         self.__dict__['_sh']      = None
@@ -230,14 +234,14 @@ class Environment(object):
             yield t
 
     def __contains__(self, item):
-        return self.has_key(item)
+        return item in self._pool or item.upper() in self._pool
 
     def has_key(self, item):
         """
         Returns whether ``varname`` value is defined or not.
         Also used as internal for dictionary access.
         """
-        return item in self._pool or item.upper() in self._pool
+        return item in self
 
     def __cmp__(self, other):
         return cmp(self._pool, other._pool)
@@ -279,23 +283,29 @@ class Environment(object):
 
     def delta(self, **kw):
         """Temporarily set a collection of variables that could be reversed."""
-        upditems, newitems = self._frozen
+        upditems, newitems = (dict(), collections.deque())
         for var, value in kw.iteritems():
             if var in self:
                 upditems[var] = self.get(var)
             else:
                 newitems.append(var)
             self.setvar(var, value)
+        self._frozen.append((upditems, newitems))
 
     def rewind(self):
-        """Comme back on last environment delta changes."""
-        upditems, newitems = self._frozen
-        for item in newitems:
-            self.delvar(item)
-        for var, value in upditems.iteritems():
-            self.setvar(var, value)
-        upditems.clear()
-        newitems[:] = []
+        """Come back on last environment delta changes."""
+        if self._frozen:
+            upditems, newitems = self._frozen.pop()
+            while newitems:
+                self.delvar(newitems.pop())
+            for var, value in upditems.iteritems():
+                self.setvar(var, value)
+        else:
+            raise RuntimeError("No more delta to be rewinded...")
+
+    def delta_context(self, **kw):
+        """Create a context that will automatically create a delta then rewind it when exiting."""
+        return EnvironmentDeltaContext(self, **kw)
 
     def default(self, *args, **kw):
         """Set a collection of non defined variables given as a list of iterable items or key-values pairs."""
@@ -303,7 +313,7 @@ class Environment(object):
         argd.append(kw)
         for dico in argd:
             for var, value in dico.iteritems():
-                if not self.has_key(var):
+                if var not in self:
                     self.setvar(var, value)
 
     def merge(self, mergenv):
@@ -440,3 +450,17 @@ class Environment(object):
     def rmbinpath(self, value):
         """Remove the specified value from bin path."""
         self.rmgenericpath('PATH', value)
+
+
+class EnvironmentDeltaContext():
+    """Context that will apply a delta on the Environnement and rewind it on exit."""
+
+    def __init__(self, env, **kw):
+        self._env = env
+        self._delta = kw
+
+    def __enter__(self):
+        self._env.delta(** self._delta)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._env.rewind()
