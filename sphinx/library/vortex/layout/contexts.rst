@@ -20,7 +20,9 @@ Interface functions
 
 .. autofunction:: items
 
-.. autofunction:: focus
+.. autofunction:: current
+
+.. autofunction:: switch
 
 
 Classes

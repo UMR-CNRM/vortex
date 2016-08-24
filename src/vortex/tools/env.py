@@ -223,6 +223,9 @@ class Environment(object):
             del os.environ[varname.upper()]
             if self.verbose() and self._sh:
                 self._sh.stderr('unset', '{0:s}'.format(varname.upper()))
+        if seen:
+            self.history.append(varname.upper(), '!!deleted!!',
+                                traceback.format_stack()[:-1])
 
     def __delitem__(self, varname):
         self.delvar(varname)
