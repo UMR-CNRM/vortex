@@ -62,32 +62,28 @@ setup.add_proxy(proxy)
 proxy.cat = footprints.proxy.cat
 proxy.objects = footprints.proxy.objects
 
-# The module loader set the local logger to each module of the vortex packages
+# Set a background environment and a root session
 
-#import loader
+import tools
+import sessions
+
+rootenv = tools.env.Environment(active=True)
+
+rs = sessions.get(active=True, topenv=rootenv, glove=sessions.getglove(), prompt=__prompt__)
+if rs.system().systems_reload():
+    rs.system(refill=True)
+del rs
 
 # Insert a dynamic callback so that any footprint resolution could check the current Glove
 
-import tools
 
 def vortexfpdefaults():
     """Return actual glove, according to current environment."""
     return dict(
-        glove = tools.env.current().glove
+        glove = sessions.current().glove
     )
 
 footprints.setup.callback = vortexfpdefaults
-
-# Set a background environment and a root session
-
-import sessions
-rootenv = tools.env.Environment(active=True)
-rootenv.glove = sessions.getglove()
-
-rs = sessions.get(active=True, topenv=rootenv, glove=rootenv.glove, prompt=__prompt__)
-if rs.system().systems_reload():
-    rs.system(refill=True)
-del rs
 
 # Shorthands to sessions components
 
@@ -95,6 +91,7 @@ ticket = sessions.get
 sh = sessions.system
 
 # Specific toolbox exceptions
+
 
 class VortexForceComplete(Exception):
     """Exception for handling fast exit mecanisms."""
@@ -105,6 +102,7 @@ class VortexForceComplete(Exception):
 import toolbox, algo, data
 
 # Register proper vortex exit before the end of interpreter session
+
 
 def complete():
     sessions.exit()

@@ -98,7 +98,7 @@ class UtEnv(TestCase):
         z = Environment(env=e, active=True)
         self.assertTrue(z.active())
         self.assertTrue(z.osbound())
-        self.assertTrue(e.active())
+        self.assertFalse(e.active())
         self.assertFalse(e.osbound())
         self.assertEqual(os.environ['TOTO'], '42')
         z['bidon'] = 'coucou'
@@ -106,8 +106,38 @@ class UtEnv(TestCase):
 
         # Cleanup !
         z.active(False)
+        del z
         e.active(False)
 
+        # Too much clones ?
+        e = Environment(active=True)
+        e1 = e.clone()
+        e2 = e.clone()
+        e1_1 = e1.clone()
+        self.assertListEqual(e1.osstack(), e.osstack() + [e, ])
+        self.assertListEqual(e1_1.osstack(), e.osstack() + [e, e1])
+        e2.active(True)
+        self.assertTrue(e2.osbound())
+        self.assertFalse(e.osbound())
+        e1_1.active(True)
+        self.assertTrue(e1_1.osbound())
+        self.assertFalse(e2.osbound())
+        e1_1.active(False)
+        # Here the focus goes to the prvious ancestor...
+        self.assertTrue(e1.osbound())
+        self.assertFalse(e1_1.osbound())
+
+        # A very cool way of using clone clone
+        with e1.clone() as newactive:
+            newactive.scrontch = 2
+            self.assertEqual(os.environ['SCRONTCH'], '2')
+        self.assertNotIn('SCRONTCH', os.environ)
+        self.assertTrue(e1.osbound())
+
+        # Cleanup !
+        e.active(False)
+        del e
+        
     def test_encoding(self):
         e = Environment(active=True)
         e['toto'] = range(1, 4)

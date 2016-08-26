@@ -555,24 +555,23 @@ class AlgoComponent(footprints.FootprintBase):
         if self.target is None:
             self.target = self.system.target()
 
-        # A cloned environment is now bound to OS
+        # A cloned environment will be bound to the OS
         self.env = self.context.env.clone()
-        self.env.active(True)
+        with self.env:
 
-        # The actual "run" recipe
-        self.prepare(rh, kw)            #1
-        self.fsstamp(kw)                #2
-        try:
-            self.execute(rh, kw)        #3
-        finally:
-            self.execute_finalise(kw)   #3.1
-        self.fscheck(kw)                #4
-        self.postfix(rh, kw)            #5
-        self.dumplog(kw)                #6
-        self.delayed_exceptions(kw)     #7
+            # The actual "run" recipe
+            self.prepare(rh, kw)            #1
+            self.fsstamp(kw)                #2
+            try:
+                self.execute(rh, kw)        #3
+            finally:
+                self.execute_finalise(kw)   #3.1
+            self.fscheck(kw)                #4
+            self.postfix(rh, kw)            #5
+            self.dumplog(kw)                #6
+            self.delayed_exceptions(kw)     #7
 
-        # Restore previous OS environement and free local references
-        self.env.active(False)
+        # Free local references
         self.env = None
         self.system = None
 

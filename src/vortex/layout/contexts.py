@@ -42,12 +42,17 @@ def items():
     return Context.tag_items()
 
 
-def focus():
+def current():
     """Return the context with the focus on, if any."""
     tf = Context.tag_focus()
     if tf is not None:
         tf = Context(tag=tf)
     return tf
+
+
+def switch(tag=None):
+    """Set the session associated to the actual ``tag`` as active."""
+    return current().switch(tag=tag)
 
 
 class ContextObserverRecorder(footprints.observers.Observer):
@@ -94,7 +99,7 @@ class ContextObserverRecorder(footprints.observers.Observer):
             footprints.observers.get(tag=_STORES_OBSBOARD).unregister(self)
 
     def updobsitem(self, item, info):
-        if (self._binded_context is not None) and self._binded_context.has_focus():
+        if (self._binded_context is not None) and self._binded_context.active:
             logger.debug('Recording upd item %s', item)
             if info['observerboard'] == _RHANDLERS_OBSBOARD:
                 processed_item = item.as_dict()
@@ -130,8 +135,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
 
     _tag_default = 'ctx'
 
-    def __init__(self, path=None, topenv=None, sequence=None, localtracker=None,
-                 task=None):
+    def __init__(self, path=None, topenv=None, sequence=None, localtracker=None):
         """Initiate a new execution context."""
         logger.debug('Context initialisation %s', self)
         if path is None:
@@ -140,19 +144,19 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         if topenv is None:
             logger.critical('Try to define a new context without a topenv.')
             raise ValueError('No top environment given to new context.')
-        self._env      = Environment(env=topenv, active=topenv.active(), verbose=topenv.verbose())
+        self._env      = Environment(env=topenv, verbose=topenv.verbose(),
+                                     contextlock=self)
         self._path     = path + '/' + self.tag
         self._session  = None
         self._rundir   = None
-        self._task     = task
-        self._void     = True
         self._stamp    = '-'.join(('vortex', 'stamp', self.tag, str(id(self))))
         self._fstore   = dict()
-        self._cocooned = False
+        self._fstamps  = set()
+        self._wkdir    = None
+        self._record   = True
 
         if sequence:
             self._sequence = sequence
-            self._void = False
         else:
             self._sequence = dataflow.Sequence()
 
@@ -161,18 +165,26 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         else:
             self._localtracker = dataflow.LocalTracker()
 
-        self.bind(self._task)
         footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
         footprints.observers.get(tag=_STORES_OBSBOARD).register(self)
+
+    @property
+    def active(self):
+        """Returns wether this Context is currently active or not."""
+        return self.has_focus()
+
+    def _enforce_active(self):
+        if not self.active:
+            raise RuntimeError("It's not allowed to call this method on an inactive Context.")
 
     def newobsitem(self, item, info):
         """
         Resources-Handlers / Store-Activity observing facility.
         Register a new section in void active context with the resource handler ``item``.
         """
-        if self.has_focus():
+        if self.active:
             logger.debug('Notified %s new item %s', self, item)
-            if (self.void and info['observerboard'] == _RHANDLERS_OBSBOARD):
+            if (self._record and info['observerboard'] == _RHANDLERS_OBSBOARD):
                 self._sequence.section(rh=item, stage='load')
 
     def updobsitem(self, item, info):
@@ -180,7 +192,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         Resources-Handlers / Store-Activity observing facility.
         Track the new stage of the section containing the resource handler ``item``.
         """
-        if self.has_focus():
+        if self.active:
             logger.debug('Notified %s upd item %s', self, item)
             if (info['observerboard'] == _RHANDLERS_OBSBOARD and
                     'stage' in info):
@@ -199,6 +211,47 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         rec = ContextObserverRecorder()
         rec.register(self)
         return rec
+
+    def focus_loose_hook(self):
+        """Save the current Environment and working directory."""
+        super(Context, self).focus_loose_hook()
+        self._env = self.env
+        if self._wkdir is not None:
+            self._wkdir = self.system.getcwd()
+
+    def focus_gain_allow(self):
+        super(Context, self).focus_gain_allow()
+        # It's not possible to activate a Context that lies outside the current
+        # session
+        if not self.session.active:
+            raise RuntimeError("It's not allowed to switch to a Context that belongs to an inactive session")
+
+    def focus_gain_hook(self):
+        super(Context, self).focus_gain_hook()
+        # Activate the environment (if necessary)
+        if not self._env.active():
+            self._env.active(True)
+        # Jump to the latest working directory
+        if self._wkdir is not None:
+            self.system.cd(self._wkdir)
+
+    @classmethod
+    def switch(cls, tag=None):
+        """
+        Allows the user to switch to another context,
+        assuming that the provided tag is already known.
+        """
+        if tag in cls.tag_keys():
+            obj = Context(tag=tag)
+            obj.catch_focus()
+            return obj
+        else:
+            logger.error('Try to switch to an undefined context: %s', tag)
+            return None
+
+    def activate(self):
+        """Force the current context as active."""
+        return self.catch_focus()
 
     @property
     def path(self):
@@ -220,7 +273,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
     def _set_rundir(self, path):
         """Set a new rundir."""
         if self._rundir:
-            logger.warning('Context <%s> is changing its workding directory <%s>', self.tag, self._rundir)
+            logger.warning('Context <%s> is changing its working directory <%s>', self.tag, self._rundir)
         if self.system.path.isdir(path):
             self._rundir = path
             logger.info('Context <%s> set rundir <%s>', self.tag, self._rundir)
@@ -231,39 +284,25 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
 
     def cocoon(self):
         """Change directory to the one associated to that context."""
+        self._enforce_active()
         if self.rundir is None:
             subpath = self.path.replace(self.session.path, '', 1)
             self._rundir = self.session.rundir + subpath
         self.system.cd(self.rundir, create=True)
-        self._cocooned = True
-
-    @property
-    def cocooned(self):
-        """Check if the current context had cocooned."""
-        return self._cocooned
-
-    @property
-    def void(self):
-        """
-        Return whether the current context is a void context, and therefore not bound to a task.
-        One may be aware that this value could be temporarily overwritten through the record on/off mechanism.
-        """
-        return self._void
+        self._wkdir = self.rundir
 
     @property
     def env(self):
         """Return the :class:`~vortex.tools.env.Environment` object associated to that context."""
-        return self._env
+        if self.active:
+            return Environment.current()
+        else:
+            return self._env
 
     @property
     def system(self):
         """Return the :class:`~vortex.tools.env.System` object associated to the root session."""
         return self.session.system()
-
-    @property
-    def task(self):
-        """Return the possibly bound task."""
-        return self._task
 
     @property
     def sequence(self):
@@ -274,22 +313,6 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
     def localtracker(self):
         """Return the :class:`~vortex.layout.dataflow.LocalTracker` object associated to that context."""
         return self._localtracker
-
-    @property
-    def bound(self):
-        """Boolean property to check whether the current context is bound to a task or not."""
-        return bool(self._task)
-
-    def bind(self, task, **kw):
-        """
-        Bind the current context to the specified ``task``.
-        The task sequence becomes the current context sequence.
-        """
-        if task and hasattr(task, 'sequence'):
-            logger.info('Binding context <%s> to task <%s>', self.tag, task.tag)
-            self._sequence = task.sequence
-            self._task = task
-            self._void = False
 
     @property
     def subcontexts(self):
@@ -303,6 +326,8 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         The tagname of the new kid is given through the mandatory ``name`` argument,
         as well as the default ``focus``.
         """
+        if name in self.__class__.tag_keys():
+            raise RuntimeError("A context with tag=%s already exists.", name)
         newctx = self.__class__(tag=name, topenv=self.env, path=self.path)
         if focus:
             self.__class__.set_focus(newctx)
@@ -314,7 +339,9 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
 
     def fstrack_stamp(self, tag='default'):
         """Set a stamp to track changes on the filesystem."""
+        self._enforce_active()
         stamp = self.stamp(tag)
+        self._fstamps.add(self.system.path.abspath(stamp))
         self.system.touch(stamp)
         self._fstore[stamp] = set(self.system.ffind())
 
@@ -324,6 +351,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         in the file system that are concerned since the last associated ``tag`` stamp.
         Keys are: ``deleted``, ``created``, ``updated``.
         """
+        self._enforce_active()
         stamp = self.stamp(tag)
         if not self.system.path.exists(stamp):
             logger.warning('Missing stamp %s', stamp)
@@ -339,19 +367,20 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
 
     def record_off(self):
         """Avoid automatic recording of section while loading resource handlers."""
-        self._record = self._void
-        self._void = False
+        self._record = False
 
     def record_on(self):
         """Restore default value to void context as it was before any :func:`record_off` call."""
-        self._void = self._record
+        self._record = True
 
     def clear_stamps(self):
         """Remove local context stamps."""
         if self._fstore:
-            fstamps = self._fstore.keys()
+            fstamps = list(self._fstamps)
             self.system.rmall(*fstamps)
             logger.info('Removing context stamps %s', fstamps)
+            self._fstore = dict()
+            self._fstamps = set()
 
     def clear(self):
         """Make a clear place of local cocoon directory."""

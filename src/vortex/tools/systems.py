@@ -25,6 +25,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 from opinel.interrupt import SignalInterruptHandler, SignalInterruptError
 
+from vortex.gloves          import Glove
 from vortex.tools.env       import Environment
 from vortex.tools.net       import StdFtp
 from vortex.util.structs    import History
@@ -121,6 +122,10 @@ class System(footprints.FootprintBase):
                 optional = True,
                 default  = re.sub(r'^(\d+\.\d+\.\d+).*$', r'\1',
                                   platform.python_version())
+            ),
+            glove = dict(
+                optional = True,
+                type     = Glove,
             )
         )
     )
@@ -466,19 +471,22 @@ class System(footprints.FootprintBase):
 
     def vortex_modules(self, only='.'):
         """Return a filtered list of modules in the vortex package."""
-        g = self.env.glove
-        mfiles = [
-            re.sub(r'^' + mroot + r'/', '', x)
-            for mroot in (g.siteroot + '/src', g.siteroot + '/site')
-            for x in self.ffind(mroot)
-        ]
-        return [
-            re.sub(r'(?:/__init__)?\.py$', '', x).replace('/', '.')
-            for x in mfiles
-            if (not x.startswith('.' ) and
-                re.search(only, x, re.IGNORECASE) and
-                x.endswith('.py'))
-        ]
+        if self.glove is not None:
+            g = self.glove
+            mfiles = [
+                re.sub(r'^' + mroot + r'/', '', x)
+                for mroot in (g.siteroot + '/src', g.siteroot + '/site')
+                for x in self.ffind(mroot)
+            ]
+            return [
+                re.sub(r'(?:/__init__)?\.py$', '', x).replace('/', '.')
+                for x in mfiles
+                if (not x.startswith('.' ) and
+                    re.search(only, x, re.IGNORECASE) and
+                    x.endswith('.py'))
+            ]
+        else:
+            raise RuntimeError("A glove must be defined")
 
     def vortex_loaded_modules(self, only='.', output=None):
         """Check loaded modules, producing either a dump or a list of tuple (status, modulename)."""
@@ -766,7 +774,10 @@ class OSExtended(System):
         """Returns an open ftp session on the specified target."""
         ftpbox = StdFtp(self, hostname)
         if logname is None:
-            logname = self.env.glove.user
+            if self.glove is not None:
+                logname = self.glove.user
+            else:
+                raise ValueError("Either a logname or a glove must be set-up")
         rc = ftpbox.fastlogin(logname)
         if rc:
             return ftpbox
