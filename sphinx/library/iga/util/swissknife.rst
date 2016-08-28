@@ -34,3 +34,5 @@ Functions
 .. autofunction:: gget_resource_exists
 
 .. autofunction:: freeze_cycle
+
+.. autofunction:: unfreeze_cycle
