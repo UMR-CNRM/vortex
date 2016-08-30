@@ -15,12 +15,13 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.layout.monitor    import BasicInputMonitor, AutoMetaGang, MetaGang
 from vortex.layout.monitor    import GangSt
-from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, AlgoComponentError
+from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, Parallel, AlgoComponentError
 from vortex.syntax.stdattrs   import DelayedEnvValue, FmtInt
 from vortex.tools             import grib
 from vortex.tools.fortran     import NamelistBlock
 from vortex.tools.parallelism import TaylorVortexWorker, VortexWorkerBlindRun
 from vortex.tools.systems     import ExecutionError
+from vortex.util.structs      import FootprintCopier
 
 from common.tools.grib        import GRIBFilter
 
@@ -669,8 +670,12 @@ class DiagPE(BlindRun, grib.GribApiComponent):
                     bm.health_check(interval=30)
 
 
-class DiagPI(BlindRun, grib.GribApiComponent):
-    """Execution of diagnostics on grib input (deterministic forecasts specific)."""
+class _DiagPICommons(FootprintCopier):
+    """Class variables and methods usefull for DiagPI.
+
+    They will be copied to the "real" diagPI classes using the FootprintCopier
+    metaclass.
+    """
 
     _footprint = dict(
         attr = dict(
@@ -685,21 +690,21 @@ class DiagPI(BlindRun, grib.GribApiComponent):
         ),
     )
 
+    @staticmethod
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(DiagPI, self).prepare(rh, opts)
-        # Prevent DrHook to initialise MPI and setup grib_api
-        for optpack in ('drhook_not_mpi', ):
-            self.export(optpack)
+        super(self.__class__, self).prepare(rh, opts)
         self.gribapi_setup(rh, opts)
 
+    @staticmethod
     def spawn_hook(self):
         """Usually a good habit to dump the fort.4 namelist."""
-        super(DiagPI, self).spawn_hook()
+        super(self.__class__, self).spawn_hook()
         if self.system.path.exists('fort.4'):
             self.system.subtitle('{0:s} : dump namelist <fort.4>'.format(self.realkind))
             self.system.cat('fort.4', output=False)
 
+    @staticmethod
     def execute(self, rh, opts):
         """Loop on the various grib files provided."""
 
@@ -750,7 +755,7 @@ class DiagPI(BlindRun, grib.GribApiComponent):
 
             # Standard execution
             opts['loop'] = r.resource.term
-            super(DiagPI, self).execute(rh, opts)
+            super(self.__class__, self).execute(rh, opts)
 
             actualname = r'GRIB[-_A-Z]+{0:s}\+{1:s}'.format(r.resource.geometry.area,
                                                             r.resource.term.fmthm)
@@ -767,6 +772,18 @@ class DiagPI(BlindRun, grib.GribApiComponent):
                             x.rh.container.localpath() in filtered_out)]
             for thispromise in expected:
                 thispromise.put(incache=True)
+
+
+class DiagPI(BlindRun, grib.GribApiComponent):
+    """Execution of diagnostics on grib input (deterministic forecasts specific)."""
+
+    __metaclass__ = _DiagPICommons
+
+
+class DiagPIMPI(Parallel, grib.GribApiComponent):
+    """Execution of diagnostics on grib input (deterministic forecasts specific)."""
+
+    __metaclass__ = _DiagPICommons
 
 
 class Fa2GaussGrib(BlindRun):
