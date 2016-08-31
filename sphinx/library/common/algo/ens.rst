@@ -26,6 +26,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: CombiPert
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: CombiSV
    :show-inheritance:
    :members:

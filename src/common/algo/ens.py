@@ -125,7 +125,7 @@ class CombiSV(CombiPert):
         self.export('drhook_not_mpi')
 
         # Check the number of singular vectors and link them in succession
-        nbVect = collections.defaultdict(int)
+        nbVect = collections.OrderedDict()
         svec_sections = self.context.sequence.effective_inputs(role='SingularVectors', kind='svector')
         for num, svecsec in enumerate(svec_sections):
             componoms = re.split(r'[\.,\+]', svecsec.rh.container.localpath())
@@ -135,6 +135,7 @@ class CombiSV(CombiPert):
             radical = componoms[0]
             sufix = re.sub('^' + radical + r'[\+,\.]' + componoms[1] + r'[\+,\.]' + componoms[2],
                            '', svecsec.rh.container.localpath())
+            nbVect.setdefault(componoms[1], 0)
             nbVect[componoms[1]] += 1
             self.system.softlink(svecsec.rh.container.localpath(),
                                  radical + '{:03d}'.format(num + 1) + sufix)
