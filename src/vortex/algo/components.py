@@ -602,8 +602,8 @@ class AlgoComponent(footprints.FootprintBase):
             )
 
         if len(initsec) > 1:
-            logger.warning('More than one role %s with kind %s %s',
-                           initrole, initkind, initsec.rh)
+            logger.warning('More than one role %s with kind %s',
+                           initrole, initkind)
 
         if initname is not None:
             for l in [ x.rh.container.localpath() for x in initsec ]:

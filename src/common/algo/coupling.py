@@ -64,6 +64,7 @@ class Coupling(FullPos):
         cplsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
         infile = 'ICMSH{0:s}INIT'.format(self.xpname)
         isMany = len(cplsec) > 1
+        outprefix = 'PF{0:s}AREA'.format(self.xpname)
 
         cplguess = self.context.sequence.effective_inputs(role = 'Guess')
         cplguess.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
@@ -125,9 +126,10 @@ class Coupling(FullPos):
                     # Expect the coupling guess to be there...
                     self.grab(cplout, comment='coupling guess')
                     logger.info('Coupling with existing guess <%s>', cplpath)
-                    if cplpath != 'PFFPOSAREA+0000':
-                        sh.remove('PFFPOSAREA+0000', fmt=cplout.rh.container.actualfmt)
-                        sh.move(cplpath, 'PFFPOSAREA+0000',
+                    inoutfile = outprefix + '+0000'
+                    if cplpath != inoutfile:
+                        sh.remove(inoutfile, fmt=cplout.rh.container.actualfmt)
+                        sh.move(cplpath, inoutfile,
                                 fmt=cplout.rh.container.actualfmt,
                                 intent=intent.INOUT)
                 else:
@@ -161,10 +163,10 @@ class Coupling(FullPos):
             super(Coupling, self).execute(rh, opts)
 
             # Set a local appropriate file
-            posfile = [x for x in sh.glob('PFFPOSAREA+*')
-                       if re.match(r'PFFPOSAREA\+\d+(?:\:\d+)?(?:\.sfx)?$', x)]
+            posfile = [x for x in sh.glob(outprefix + '+*')
+                       if re.match(outprefix + r'\+\d+(?:\:\d+)?(?:\.sfx)?$', x)]
             if (len(posfile) > 1):
-                logger.critical('Many PFFPOSAREA files, do not know how to adress that')
+                logger.critical('Many ' + outprefix + ' files, do not know how to adress that')
             posfile = posfile[0]
             actualterm = (actualdate - self.basedate).time()
             actualname = (re.sub(r'^.+?((?:_\d+)?)(?:\+[:\d]+)?$', r'CPLOUT\1+', r.container.localpath()) +
