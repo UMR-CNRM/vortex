@@ -715,6 +715,11 @@ class _DiagPICommons(FootprintCopier):
         srcsec = self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
                                                         kind='gridpoint')
         srcsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+
+        outsec = self.context.sequence.effective_inputs(role='GridpointOutputPrepare')
+        if outsec:
+            outsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+
         for sec in srcsec:
             r = sec.rh
             self.system.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
@@ -745,6 +750,11 @@ class _DiagPICommons(FootprintCopier):
 
             # Expect the input grib file to be here
             self.grab(sec, comment='diagpi source')
+            if outsec:
+                out = outsec.pop(0)
+                assert(out.rh.resource.term == sec.rh.resource.term)
+                self.grab(out, comment='diagpi output')
+
             # Also link in previous grib files in order to compute some winter diagnostics
             srcpsec = [x
                        for x in self.context.sequence.effective_inputs(role=('Preview', 'Previous'),
