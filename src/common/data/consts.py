@@ -727,7 +727,7 @@ class FilteringRequest(GenvModelResource):
                 default = JsonDictContent,
             ),
             gvar = dict(
-                default = 'filtering_request_[filtername]'
+                default = 'filtering_request'
             ),
         )
     )
@@ -735,6 +735,10 @@ class FilteringRequest(GenvModelResource):
     @property
     def realkind(self):
         return 'filtering_request'
+
+    def gget_urlquery(self):
+        """GGET specific query : ``extract``."""
+        return 'extract=filter_{:s}.json'.format(self.filtername)
 
 
 class GribAPIConfig(NoDateResource):
