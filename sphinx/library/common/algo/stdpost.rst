@@ -55,3 +55,9 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: DiagPIMPI
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
