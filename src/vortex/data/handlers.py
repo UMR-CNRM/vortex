@@ -169,7 +169,7 @@ class Handler(object):
     @property
     def _cur_context(self):
         """Return the current active context."""
-        return contexts.focus()
+        return contexts.current()
 
     def external_stage_update(self, newstage):
         """This method must not be used directly by users!

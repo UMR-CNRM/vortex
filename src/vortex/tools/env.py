@@ -379,7 +379,7 @@ class Environment(object):
             self.__class__._current_active = self._os[-1]
             osrewind = self.__class__._current_active
         if not previous_act and active:
-            if self.contextlock is not None and not self.contextlock.has_focus():
+            if self.contextlock is not None and not self.contextlock.active:
                 raise RuntimeError("It's not allowed to switch to an Environment " +
                                    "that belongs to an inactive context")
             self.__class__._current_active = self
