@@ -373,6 +373,29 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         """Restore default value to void context as it was before any :func:`record_off` call."""
         self._record = True
 
+    def clear_promises(self, netloc='promise.cache.fr', scheme='vortex', storeoptions=None):
+        """Remove all promises that have been made in this context.
+
+        :param netloc: Netloc of the promise's cache store to clean up
+        :param scheme: Scheme of the promise's cache store to clean up
+        :param storeoptions: Option dictionary passed to the store (may be None)
+        """
+        self.system.header('Clear promises for {}://{}'.format(scheme, netloc))
+        skeleton = dict(scheme=scheme, netloc=netloc)
+        promises = self.localtracker.grep_uri('put', skeleton)
+        if promises:
+            logger.info('Some promises are left pending...')
+            if storeoptions is None:
+                storeoptions = dict()
+            store = footprints.proxy.store(scheme=scheme, netloc=netloc,
+                                           **storeoptions)
+            for promise in [pr.copy() for pr in promises]:
+                del promise['scheme']
+                del promise['netloc']
+                store.delete(promise)
+        else:
+            logger.info('No promises were left pending.')
+
     def clear_stamps(self):
         """Remove local context stamps."""
         if self._fstore:

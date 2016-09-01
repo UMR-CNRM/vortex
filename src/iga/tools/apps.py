@@ -56,6 +56,12 @@ class OpTask(Task):
         extras.setdefault('gnamespace', self.conf.get('gnamespace', 'opgco.cache.fr'))
         super(OpTask, self).defaults(extras)
 
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Cleanup promises on exit."""
+        # Note: If an MTOOL like tool was to be used, this should be changed...
+        self.ticket.context.clear_promises()
+        super(OpTask, self).__exit__(exc_type, exc_value, traceback)
+
 
 class OpTaskMPI(OpTask):
     """Wrapper for setting up and performing a miscellaneous op task for an MPI execution."""
