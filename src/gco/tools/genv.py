@@ -95,12 +95,12 @@ def clearall():
     p.clear()
 
 
-def autofill(cycle, gcout=None, writes_dump=False):
+def autofill(cycle, gcout=None, writes_dump=False, cacheroot='.'):
     """Use the ``genv`` external tool to fill the specified cycle."""
     actualcycle = None
     if gcout is None:
         sh = vortex.sh()
-        cachefile = '{:s}_vortex_genv_cache'.format(cycle)
+        cachefile = sh.path.join(cacheroot, '{:s}_vortex_genv_cache'.format(cycle))
         if sh.path.isfile(cachefile):
             with open(cachefile, 'r') as genvfh:
                 gcout = [l.rstrip('\n') for l in genvfh.readlines()]
