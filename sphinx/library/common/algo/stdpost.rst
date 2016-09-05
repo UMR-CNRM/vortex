@@ -46,6 +46,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: DegradedDiagPEError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: DiagPE
    :show-inheritance:
    :members:

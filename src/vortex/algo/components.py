@@ -404,12 +404,14 @@ class AlgoComponent(footprints.FootprintBase):
                     waiting = date.now() - t0
                     logger.info('Waiting for the server to stop took %f seconds',
                                 waiting.total_seconds())
+                rc = not self._server_event.is_set()
                 # Be less nice if needed...
                 if self._server_process.is_alive():
                     logger.warning('Force termination of the server process')
                     self._server_process.terminate()
                     self.system.sleep(1)  # Allow some time for the process to terminate
-            rc = not self._server_event.is_set()
+            else:
+                rc = not self._server_event.is_set()
             logger.info('Server still alive ? %s', str(self._server_process.is_alive()))
             # We are done with the server
             self._server_synctool = None
