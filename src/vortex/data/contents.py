@@ -94,6 +94,19 @@ class DataContent(object):
         """Should be overwritten. Basically get the totalsize of the actual container."""
         self._size = container.totalsize
 
+    def _merge_checkclass(self, *kargs):
+        """Utility method to check that all the kargs objects are compatible self."""
+        if not all([isinstance(obj, self.__class__) for obj in kargs]):
+            raise ValueError("The object's types are not compatible with self")
+
+    def merge(self, *kargs):
+        """Merge several DataContents into one.
+
+        This method have to be implemented and _merge_checkclass should be called
+        to ensure that the object's types are compatible with self.
+        """
+        raise NotImplementedError("Merge is not implemented for this content.")
+
     def rewrite(self, container):
         """Abstract method."""
         pass
@@ -139,6 +152,13 @@ class AlmostDictContent(DataContent):
         """Dict-like behavior looking for the formatted ``item`` in internal data."""
         return self.fmtkey(item) in self._data
 
+    def merge(self, *kargs):
+        """Merge several data contents into one."""
+        self._merge_checkclass(*kargs)
+        for obj in kargs:
+            self._data.update(obj.data)
+            self._size += obj.size
+
 
 class IndexedTable(AlmostDictContent):
     """
@@ -161,6 +181,7 @@ class IndexedTable(AlmostDictContent):
         """Get data from the ``container``."""
         container.rewind()
         self.extend([ x.split() for x in container.readlines() if not x.startswith('#') ])
+        self._size = container.totalsize
 
 
 class JsonDictContent(AlmostDictContent):
@@ -190,6 +211,7 @@ class JsonDictContent(AlmostDictContent):
         container.rewind()
         self._data = t.sh.json_load(container.localpath())
         self._data = self._unicode2str(self._data)
+        self._size = container.totalsize
 
     def rewrite(self, container):
         """Write the list contents in the specified container."""
@@ -262,12 +284,20 @@ class AlmostListContent(DataContent):
         """Get data from the ``container``."""
         container.rewind()
         self.extend(container.readlines())
+        self._size = container.totalsize
 
     def rewrite(self, container):
         """Write the list contents in the specified container."""
         container.close()
         for xline in self:
             container.write(xline)
+
+    def merge(self, *kargs):
+        """Merge several data contents into one."""
+        self._merge_checkclass(*kargs)
+        for obj in kargs:
+            self._data.extend(obj.data)
+            self._size += obj.size
 
 
 class TextContent(AlmostListContent):

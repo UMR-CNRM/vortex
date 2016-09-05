@@ -9,6 +9,9 @@ from collections import defaultdict
 
 import footprints as fp
 
+from vortex.data.handlers import Handler
+from vortex.layout.dataflow import Section
+
 logger = fp.loggers.getLogger(__name__)
 
 
@@ -95,3 +98,38 @@ def colorfull_input_checker(min_items, *rhandlers, **kwargs):
     """
     return generic_input_checker(('vapp', 'vconf', 'cutoff', 'date', 'member'),
                                  min_items, *rhandlers, **kwargs)
+
+
+def merge_contents(*kargs):
+    """Automatically merge several DataContents.
+
+    Example:
+
+    .. code-block:: python
+
+        mergedcontent = merge_contents(content1, content2, content3)
+        # With a list
+        mergedcontent = merge_contents([content1, content2, content3])
+        # With a list of ResourceHandlers (e.g. as returned by toolbox.input)
+        mergedcontent = merge_contents([rh1, rh2, rh3])
+        # With a list of Sections (e.g. as returned by effective_inputs)
+        mergedcontent = merge_contents([section1, section2, section3])
+
+    """
+    # Expand list or tuple elements
+    ctlist = list()
+    for elt in kargs:
+        if isinstance(elt, (list, tuple)):
+            ctlist.extend(elt)
+        else:
+            ctlist.append(elt)
+    # kargs may be a list of resource handlers (as returned by the toolbox)
+    if all([isinstance(obj, Handler) for obj in ctlist]):
+        ctlist = [obj.contents for obj in ctlist]
+    # kargs may be a list of sections
+    elif all([isinstance(obj, Section) for obj in ctlist]):
+        ctlist = [obj.rh.contents for obj in ctlist]
+    # Take the first content as a model for the new object
+    newcontent = ctlist[0].__class__()
+    newcontent.merge(*ctlist)
+    return newcontent
