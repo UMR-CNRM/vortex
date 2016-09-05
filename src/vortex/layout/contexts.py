@@ -380,7 +380,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         :param scheme: Scheme of the promise's cache store to clean up
         :param storeoptions: Option dictionary passed to the store (may be None)
         """
-        self.system.header('Clear promises for {}://{}'.format(scheme, netloc))
+        self.system.header('Clear promises for {}://{} in context {}'.format(scheme, netloc, self.path))
         skeleton = dict(scheme=scheme, netloc=netloc)
         promises = self.localtracker.grep_uri('put', skeleton)
         if promises:

@@ -29,6 +29,7 @@ active_verbose          = True
 active_promise          = True
 active_clear            = False
 active_metadatacheck    = True
+active_incache          = False
 
 #: History recording
 history = History(tag='rload')
@@ -126,9 +127,10 @@ def rget(*args, **kw):
     This function calls the :meth:`get` method on any resource handler returned
     by the *rload* function.
     """
+    loc_incache = kw.pop('incache', active_incache)
     rl = rload(*args, **kw)
     for rh in rl:
-        rh.get()
+        rh.get(incache=loc_incache)
     return rl
 
 
@@ -137,9 +139,10 @@ def rput(*args, **kw):
     This function calls the :meth:`put` method on any resource handler returned
     by the *rload* function.
     """
+    loc_incache = kw.pop('incache', active_incache)
     rl = rload(*args, **kw)
     for rh in rl:
-        rh.put()
+        rh.put(incache=loc_incache)
     return rl
 
 
@@ -186,6 +189,7 @@ def add_section(section, args, kw):
 
     # Second, retrieve arguments that could be used by the now command
     cmdopts = dict(
+        incache = kw.pop('incache', active_incache),
         force = kw.pop('force', False)
     )
 
@@ -541,7 +545,12 @@ def clear_promises(clear=None, netloc='promise.cache.fr', scheme='vortex',
         clear = active_clear
     if clear:
         t = sessions.current()
-        t.context.clear_promises(netloc, scheme, storeoptions)
+        myctx = t.context
+        for ctx in t.subcontexts:
+            ctx.activate()
+            ctx.clear_promises(netloc, scheme, storeoptions)
+        # Switch back to the previous context
+        myctx.activate()
 
 
 def rescue(*files, **opts):

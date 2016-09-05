@@ -13,21 +13,10 @@ Package
 
 .. autodata:: __all__
 
-
-Data definition
----------------
-
-.. autodata:: OpSetValues
-
-
 Functions
 ---------
 
 .. autofunction:: bestdate
-
-.. autofunction:: getopsetfrompath
-
-.. autofunction:: mkjob
 
 .. autofunction:: slurm_parameters
 

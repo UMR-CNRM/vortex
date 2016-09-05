@@ -6,12 +6,10 @@ from __future__ import print_function, absolute_import, division
 import collections
 import io
 import re
-import string
 
 import footprints
 from gco.tools import genv
 from vortex.tools import date
-from vortex.util.config import GenericConfigParser, load_template
 from gco.data.stores import GcoStoreConfig, GGET_DEFAULT_CONFIGFILE
 
 
@@ -26,120 +24,6 @@ OpSetValues = collections.namedtuple('OpSetValues', ['xpid', 'vapp', 'vconf'])
 def bestdate(day=None, hh=None):
     """Find out the most accurate ``today`` date."""
     return date.synop()
-
-
-def getopsetfrompath(t, path=None):
-    """
-    Extract from specified or current ``path`` what could be actual
-    ``xpid``, ``vapp`` and ``vconf`` values.
-    """
-    if path is None:
-        path = t.sh.pwd()
-    lpath = path.split('/')
-    if lpath[-1] in ('demo', 'gco', 'genv', 'jobs', 'logs', 'src', 'tasks', 'vortex'):
-        lpath.pop()
-    return OpSetValues(*lpath[-3:])
-
-
-def mkjob(t, **kw):
-    """Build a complete job file according to a template and some parameters."""
-    opts = dict(
-        python    = '/usr/bin/python',
-        pyopts    = '-u',
-        profile   = None,
-        template  = '@job-default.tpl',
-        inifile   = '@job-default.ini',
-        exclusive = 'exclusive',
-        create    = date.at_second().iso8601(),
-        mkuser    = t.glove.user,
-        mkhost    = t.sh.hostname,
-        partition = 'oper',
-        name      = 'autojob',
-        home      = t.env.HOME,
-        refill    = False,
-        rundate   = None,
-        runtime   = None,
-        runstep   = 1,
-        suitebg   = 'oper',
-        taskconf  = None,
-        wrap      = True,
-        verbose   = True,
-    )
-    opts.update(kw)
-    
-    # Fix actual options of the create process
-    opts.setdefault('mkopts', str(kw))
-
-    # Switch verbosity from boolean to plain string
-    if isinstance(opts['verbose'], bool):
-        if opts['verbose']:
-            opts['verbose'] = 'verbose'
-        else:
-            opts['verbose'] = 'noverbose'
-
-    # Fix taskconf as task by default
-#    if opts['taskconf'] is None:
-#        opts['taskconf'] = opts['task']
-
-    # Try to find default runtime according to jobname
-    if opts['runtime'] is None and opts['rundate'] is None:
-        jtime = re.search('_t?(\d+(?:[:-h]?\d+)?)', opts['name'], re.IGNORECASE)
-        if jtime:
-            jtime = re.sub('[:-hH]', '', jtime.group(1))
-            if len(jtime) > 2:
-                jtime = jtime[0:-2] + ':' + jtime[-2:]
-            opts['runtime'] = str(date.Time(jtime))
-
-    for xopt in ('rundate', 'runtime'):
-        if isinstance(opts[xopt], basestring):
-            opts[xopt] = "'" + opts[xopt] + "'"
-
-    corejob = load_template(t, opts['template'])
-    opts['tplfile'] = corejob.srcfile
-
-    try:
-        iniparser = GenericConfigParser(inifile=opts['inifile'])
-        opts['tplinit'] = iniparser.file
-        tplconf = iniparser.as_dict()
-    except Exception as pb:
-        logger.warning('Could not read config %s', str(pb))
-        tplconf = dict()
-
-    opts['name'] = re.sub('\.py$', '', opts['name'])
-
-    tplconf = tplconf.get(opts['profile'], tplconf.get('void'))
-
-    opset = getopsetfrompath(t)
-
-    tplconf.setdefault('xpid', opset.xpid)
-    tplconf.setdefault('vapp', opset.vapp)
-    tplconf.setdefault('vconf', opset.vconf)
-
-    tplconf.update(opts)
-
-    tplconf.setdefault('file', opts['name'] + '.py')
-    
-    if tplconf['taskconf']:
-        jobconf = '../conf/{0:s}_{1:s}_{2:s}.ini'.format(tplconf['vapp'], tplconf['vconf'], tplconf['taskconf'])
-    else:
-        jobconf = '../conf/{0:s}_{1:s}.ini'.format(tplconf['vapp'], tplconf['vconf'])
-
-    if t.sh.path.exists(jobconf):
-        t.sh.header('Add ' + jobconf)
-        jobparser = GenericConfigParser(inifile=jobconf)
-        tplconf.update(jobparser.as_dict().get(opts['name'], dict()))
-
-    pycode = string.Template(corejob.substitute(tplconf)).substitute(tplconf)
-
-    if opts['wrap']:
-        def autojob():
-            eval(compile(pycode, 'compile.mkjob.log', 'exec'))
-
-        objcode = autojob
-    else:
-        objcode = pycode
-
-    return objcode, tplconf
 
 
 def slurm_parameters(t, **kw):
@@ -245,8 +129,8 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     # Perform gget on all resources to target directory
     gcmd = tg.get('gco:ggetcmd', 'gget')
     gpath = tg.get('gco:ggetpath', '')
-    ghost = tg.get('gco:ggetarchive', 'hendrix')
-     
+    ghost = tg.get('gco:ggetarchive', 'hendrix.meteo.fr')
+
     gtool = sh.path.join(gpath, gcmd)
 
     increase = 0

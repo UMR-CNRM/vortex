@@ -6,20 +6,18 @@ This modules defines the base nodes of the logical layout
 for any :mod:`vortex` experiment.
 """
 
-
-#: Export real nodes.
-__all__ = ['Driver', 'Task', 'Family']
-
 import re
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import toolbox, VortexForceComplete
 from vortex.util.config import GenericConfigParser, AppConfigStringDecoder
 from vortex.syntax.stdattrs import Namespace
 
-from . import dataflow
+logger = footprints.loggers.getLogger(__name__)
+
+#: Export real nodes.
+__all__ = ['Driver', 'Task', 'Family']
 
 
 class NiceLayout(object):
@@ -118,11 +116,17 @@ class Node(footprints.util.GetByTag, NiceLayout):
 
     def __init__(self, kw):
         logger.debug('Node initialisation %s', repr(self))
-        self.play      = kw.pop('play', False)
-        self._ticket   = kw.pop('ticket', None)
-        self._conf     = None
-        self._contents = list()
-        self._aborted  = False
+        self.play       = kw.pop('play', False)
+        self._ticket    = kw.pop('ticket', None)
+        self._locprefix = kw.pop('special_prefix', 'OP_').upper()
+        self._cycle_cb  = kw.pop('register_cycle_prefix', None)
+        j_assist        = kw.pop('jobassistant', None)
+        if j_assist is not None:
+            self._locprefix = j_assist.special_prefix.upper()
+            self._cycle_cb = j_assist.register_cycle
+        self._conf      = None
+        self._contents  = list()
+        self._aborted   = False
 
     @classmethod
     def tag_clean(cls, tag):
@@ -161,13 +165,25 @@ class Node(footprints.util.GetByTag, NiceLayout):
         for node in self.contents:
             yield node
 
+    def build_context(self):
+        """Build the context and subcontexts of the current node."""
+        oldctx = self.ticket.context
+        ctx = self.ticket.context.newcontext(self.tag, focus=True)
+        ctx.cocoon()
+        self._setup_context(ctx)
+        oldctx.activate()
+
+    def setup_context(self, ctx):
+        """Setup the newly created context."""
+        pass
+
     def __enter__(self):
         """
         Enter a :keyword:`with` context, freezing the current env
         and joining a cocoon directory.
         """
         self._oldctx = self.ticket.context
-        ctx = self.ticket.context.newcontext(self.tag, focus=True)
+        ctx = self.ticket.context.switch(self.tag)
         ctx.cocoon()
         logger.debug('Node context directory <%s>', self.sh.getcwd())
         return self
@@ -199,14 +215,15 @@ class Node(footprints.util.GetByTag, NiceLayout):
         self.header('ENV catalog')
         self.env.mydump()
 
-    def op2conf(self):
+    def local2conf(self):
         """Set some parameters if defined in environment but not in actual conf."""
         autoconf = dict()
-        for opvar in sorted([ x for x in self.env.keys() if x.startswith('OP_') ]):
-            if opvar[3:] not in self.conf:
-                autoconf[opvar[3:].lower()] = self.env[opvar]
+        localstrip = len(self._locprefix)
+        for localvar in sorted([ x for x in self.env.keys() if x.startswith(self._locprefix) ]):
+            if localvar[localstrip:] not in self.conf:
+                autoconf[localvar[localstrip:].lower()] = self.env[localvar]
         if autoconf:
-            self.nicedump('Populate conf with op variables', **autoconf)
+            self.nicedump('Populate conf with local variables', **autoconf)
             self.conf.update(autoconf)
 
     def conf2io(self):
@@ -222,8 +239,11 @@ class Node(footprints.util.GetByTag, NiceLayout):
         logger.info('Experiment name is <%s>', self.conf.xpid)
 
     def register_cycle(self, cyclename):
-        """Abstract method."""
-        pass
+        """Adds a new cycle to genv if a proper callback is defined."""
+        if self._cycle_cb is not None:
+            self._cycle_cb(cyclename)
+        else:
+            raise NotImplementedError()
 
     def cycles(self):
         """Update and register some configuration cycles."""
@@ -264,7 +284,7 @@ class Node(footprints.util.GetByTag, NiceLayout):
         """A methodic way to build the conf of the node."""
         self.subtitle(self.realkind.upper() + ' setup')
         self.localenv()
-        self.op2conf()
+        self.local2conf()
         self.conf2io()
         self.xp2conf()
         self.nicedump('Update conf with last minute arguments', **kw)
@@ -279,12 +299,55 @@ class Node(footprints.util.GetByTag, NiceLayout):
         self.nicedump('Complete parameters', **self.conf)
 
     def refill(self, **kw):
-        """Populates the op vortex cache with expected input flow data."""
-        pass
+        """Populates the vortex cache with expected input flow data.
+
+        The refill method is systematically called when a task is run. However,
+        the refill is not always desirable hence the if statement that checks the
+        self.steps attribute's content.
+        """
+        # This method acts as an example: if a refill is actually needed,
+        # it should be overwritten.
+        if 'refill' in self.steps:
+            logger.warning("Refill should takes place here: please overwrite...")
 
     def process(self):
-        """Abstract method: perform the taks to do."""
-        pass
+        """Abstract method: perform the task to do."""
+        # This method acts as an example: it should be overwritten.
+
+        if 'early-fetch' in self.steps or 'fetch' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run on a
+            # transfer node. Consequently, data that may be missing from the
+            # local cache must be fetched here. (e.g. GCO's genv, data from the
+            # mass archive system, ...). Note: most of the data should be
+            # retrieved here since the use of transfer node is costless.
+            pass
+
+        if 'fetch' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run, on a
+            # compute node, just before the beginning of computations. It is the
+            # appropriate place to fetch data produced by a previous task (the
+            # so-called previous task will have to use the 'backup' step
+            # (see the later explanations) in order to make such data available
+            # in the local cache).
+            pass
+
+        if 'compute' in self.steps:
+            # The actual computations... (usually a call to the run method of an
+            # AlgoComponent)
+            pass
+
+        if 'backup' in self.steps or 'late-backup' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run, on a
+            # compute node, just after the computations. It is the appropriate
+            # place to put data in the local cache in order to make it available
+            # to a subsequent step.
+            pass
+
+        if 'late-backup' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run on a
+            # transfer node. Consequently, most of the data should be archived
+            # here.
+            pass
 
     def complete(self, aborted=False):
         """Some cleaning and completetion status."""
@@ -293,6 +356,28 @@ class Node(footprints.util.GetByTag, NiceLayout):
     def run(self, nbpass=0):
         """Abstract method: the actual job to do."""
         pass
+
+    def report_execution_error(self):
+        """may be overwritten if a report needs to be sent."""
+        pass
+
+    def component_runner(self, tbalgo, tbx=(None, ), **kwargs):
+        """Run the binaries listed in tbx using the tbalgo algo component.
+
+        This is a helper method that maybe useful (its use is not mandatory).
+        """
+        with self.env.delta_context(OMP_NUM_THREADS=int(self.conf.get('openmp', 1))):
+            mpiopts = dict(nn = int(self.conf.nnodes),
+                           nnp = int(self.conf.ntasks), openmp = int(self.conf.openmp))
+            # When multiple list of binaries are given...
+            if tbx and isinstance(tbx[0], (list, tuple)):
+                tbx = zip(tbx)
+            for binary in tbx:
+                try:
+                    tbalgo.run(binary, mpiopts = mpiopts, **kwargs)
+                except Exception:
+                    self.report_execution_error()
+                    raise
 
 
 class Family(Node):
@@ -324,6 +409,11 @@ class Family(Node):
     def realkind(self):
         return 'family'
 
+    def _setup_context(self, ctx):
+        """Build the contexts of all the nodes contained by this family."""
+        for node in self.contents:
+            node.build_context()
+
     def run(self, nbpass=0):
         """Execution driver: setup, run kids, complete."""
         self.setup(**self.options)
@@ -341,10 +431,11 @@ class Task(Node):
         logger.debug('Task init %s', repr(self))
         super(Task, self).__init__(kw)
         self.__dict__.update(
-            steps   = kw.pop('steps',   tuple()),
-            fetch   = kw.pop('fetch',   'fetch'),
+            steps   = kw.pop('steps', tuple()),
+            fetch   = kw.pop('fetch', 'fetch'),
             compute = kw.pop('compute', 'compute'),
-            backup  = kw.pop('backup',  'backup'),
+            backup  = kw.pop('backup', 'backup'),
+            refill  = kw.pop('refill', False),
         )
         self.options = kw.copy()
         if isinstance(self.steps, basestring):
@@ -358,6 +449,17 @@ class Task(Node):
     def ctx(self):
         return self.ticket.context
 
+    def _setup_context(self, ctx):
+        # If necessary load the localtracker
+        if self.options.get('conveytracker', False) and not self.starter:
+            ctx.localtracker.json_load()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        # If necessary dumps the localtracker
+        if self.options.get('conveytracker', False):
+            self.ctx.localtracker.json_dump()
+        super(Task, self).__exit__(exc_type, exc_value, traceback)
+
     def build(self, **kw):
         """Switch to rundir and check the active steps."""
 
@@ -370,13 +472,16 @@ class Task(Node):
             t.env.RUNDIR = rundir
             t.sh.cd(rundir, create=True)
             t.rundir = t.sh.getcwd()
+        print 'The current directory is: {}'.format(t.sh.getcwd())
 
         # Some attempt to find the current active steps
         if not self.steps:
             if self.refill:
                 self.steps = ('refill',)
             elif self.play:
-                self.steps = (self.fetch, self.compute, self.backup)
+                self.steps = ('early-{:s}'.format(self.fetch), self.fetch,
+                              self.compute,
+                              self.backup, 'late-{:s}'.format(self.backup))
             elif int(self.env.get('SLURM_NPROCS', 1)) > 1:
                 self.steps = (self.fetch, self.compute)
             else:
@@ -422,16 +527,21 @@ class Driver(footprints.util.GetByTag, NiceLayout):
 
     _tag_default = 'pilot'
 
-    def __init__(self, ticket=None, nodes=(), rundate=None, iniconf=None, jobname=None, options=None):
+    def __init__(self, ticket=None, nodes=(),
+                 rundate=None, iniconf=None, jobname=None, options=None):
         """Setup default args value and read config file job."""
         self._ticket = t = ticket
         self._conf = None
 
         # Set default parameters for the actual job
-        self._iniconf = iniconf or t.env.OP_INICONF
-        self._jobname = jobname or t.env.OP_JOBNAME or 'void'
-        self._rundate = rundate or t.env.OP_RUNDATE
-        self._options = options
+        self._options = dict() if options is None else options
+        self._special_prefix = self._options.get('special_prefix', 'OP_').upper()
+        j_assist = self._options.get('jobassistant', None)
+        if j_assist is not None:
+            self._special_prefix = j_assist.special_prefix.upper()
+        self._iniconf = iniconf or t.env.get('{:s}INICONF'.format(self._special_prefix))
+        self._jobname = jobname or t.env.get('{:s}JOBNAME'.format(self._special_prefix)) or 'void'
+        self._rundate = rundate or t.env.get('{:s}RUNDATE'.format(self._special_prefix))
         self._nbpass  = 0
 
         # Build the tree to schedule
@@ -447,7 +557,7 @@ class Driver(footprints.util.GetByTag, NiceLayout):
                         tag     = '{0:s}.f{1:02d}'.format(self.tag, fcount),
                         ticket  = self.ticket,
                         nodes   = x,
-                        options = options
+                        ** self._options
                     )
                 )
 
@@ -503,14 +613,12 @@ class Driver(footprints.util.GetByTag, NiceLayout):
             raise
         return thisconf
 
-    def setup(self, name=None, date=None, envname='OP_JOBNAME', envdate='OP_RUNDATE', verbose=True):
+    def setup(self, name=None, date=None, verbose=True):
         """Top setup of the current configuration, including at least one name."""
 
-        jobname = name or self.jobname or self.env.get(envname)
-        if jobname is None:
-            raise ValueError('No job name provided.')
+        jobname = name or self.jobname
 
-        rundate = date or self.rundate or self.env.get(envdate)
+        rundate = date or self.rundate
         if rundate is None:
             raise ValueError('No date provided for this run.')
 
@@ -530,13 +638,14 @@ class Driver(footprints.util.GetByTag, NiceLayout):
         self.nicedump('Configuration for job ' + self.jobname, **updconf)
         self.conf.update(updconf)
 
-        # Recursively set the configuration tree
+        # Recursively set the configuration tree and contexts
         self.conf.rundate = rundate
         for node in self.contents:
             node.setconf(self.conf.copy(), self.jobconf)
+            node.build_context()
 
     def run(self):
-        """Assume recursivity of nodes `run` methods."""
+        """Assume recursion of nodes `run` methods."""
         self._nbpass += 1
         for node in self.contents:
             with node:

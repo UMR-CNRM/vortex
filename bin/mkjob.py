@@ -2,11 +2,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-import os, sys
 import argparse
+import os
+import re
 from shutil import copyfile
+import sys
+import tempfile
 
-# Export de la version de vortex à utiliser (celle de l'application concernée)
+# Export de la version de vortex à utiliser (celle de l'application concernee)
 vortex_path = os.path.join(os.path.realpath(os.getcwd()).rstrip('/jobs'), 'vortex')
 pathdirs    = [os.path.join(vortex_path, xpath) for xpath in ('site', 'src', )]
 for d in pathdirs:
@@ -14,17 +17,12 @@ for d in pathdirs:
         sys.path.insert(0, d)
 
 import vortex
-from iga.util import swissknife
+from vortex.layout.jobs import mkjob
 from vortex.util.config import load_template
 
+_INFO_PRINT_FMT = ' > {:<16s}: {!s}'
 
 DEFAULT_JOB_FILE = 'create_job'
-
-# A essayer de mettre en fichier de conf
-sbatch_rootapp   = 'os.getcwd()'
-sms_rootapp      = 'os.environ["DMT_PATH_EXEC"]'
-test_template    = 'job-test-default.tpl'
-oper_template    = 'job-oper-default.tpl'
 
 
 def parse_command_line():
@@ -60,7 +58,7 @@ def parse_command_line():
     report = list()
     jobs = list()
 
-    # Les descriptifs de jobs sont rangés dans une liste
+    # Les descriptifs de jobs sont ranges dans une liste
     # Si un descriptif est passé manuellement (avec l'option -j) on ne traite que lui
     if not args.job and os.path.isfile(args.file):
         report.append('Generation of the jobs defined in the file : {} \n'.format(args.file))
@@ -82,13 +80,9 @@ def parse_command_line():
         for job in jobs:
             job.update(newparams)
 
-    for job in jobs:
-        if 'template' not in job.keys():
-            job['template'] = oper_template if args.oper else test_template
-        if 'inifile' not in job.keys():
-            job['inifile'] = job['template'].split(".")[0] + '.ini'
-        if not args.oper:
-            job['rootapp'] = sms_rootapp if args.sms else sbatch_rootapp
+    dflt_profile = (('oper' if args.oper else 'test') +
+                    ('-sms' if not args.oper and args.sms else ''))
+    job.setdefault('profile', dflt_profile)
 
     return args, jobs, report
 
@@ -100,9 +94,8 @@ def list_jobs(jobs):
 
 
 def make_cmdline(description):
-    print(description)
-    job_description = dict((k.strip(), v.strip()) for (k, v) in (item.split('=') for item in description))
-    return job_description
+    t = vortex.ticket()
+    return t.sh.rawopts(description)
 
 
 def list_variables():
@@ -139,7 +132,7 @@ def makejob(job):
     t.sh.header(' '.join(('Vortex', vortex.__version__, 'job builder')))
 
     for k, v in opts.iteritems():
-        print(' >', k.ljust(16), ':', v)
+        print(_INFO_PRINT_FMT.format(k, v))
 
     if not opts['name']:
         vortex.logger.error('A job name sould be provided.')
@@ -148,15 +141,41 @@ def makejob(job):
     opts['wrap']     = False
     opts['mkopts']   = ' '.join(sys.argv[1:])
 
-    corejob, tplconf = swissknife.mkjob(t, **opts)
+    corejob, tplconf = mkjob(t, **opts)
 
     t.sh.header('Template configuration')
 
     for k, v in sorted(tplconf.iteritems()):
-        print(' >', k.ljust(16), ':', v)
+        print(_INFO_PRINT_FMT.format(k, v))
 
-    with open(tplconf['file'], 'w') as job:
-        job.write(corejob)
+    def _wrap_launch(jobfile):
+        '''Launch the **jobfile** script using **extra_wrapper*.'''
+        t.sh.spawn(tplconf.get('extra_wrapper').format(injob=jobfile,
+                                                       tstamp=vortex.tools.date.now().ymdhms,
+                                                       pwd=tplconf['pwd'],
+                                                       name=tplconf['name'],
+                                                       file=tplconf['file']),
+                   output=False, shell=True)
+
+    if tplconf.get('extra_wrapper', None):
+        # Launch the script with the designated wrapper
+        if tplconf.get('extra_wrapper_keep', False):
+            # In this case, we generate the job file as usual and it is kept
+            with open(tplconf['file'], 'w') as job:
+                job.write(corejob)
+            _wrap_launch(tplconf['file'])
+        else:
+            # Here the job is written in a temporary file submitted and deleted
+            with tempfile.NamedTemporaryFile(prefix=re.sub(r'\.py$', '', tplconf['file']) + '_',
+                                             dir=tplconf['pwd'], bufsize=0) as job:
+                job.write(corejob)
+                job.flush()
+                t.sh.fsync(job)
+                _wrap_launch(job.name)
+    else:
+        # Just create the job file...
+        with open(tplconf['file'], 'w') as job:
+            job.write(corejob)
 
     t.sh.header('Job creation completed')
 
