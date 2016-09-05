@@ -224,15 +224,16 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     ggetnames = set()
     monthly = set()
     for (k, v) in defs.iteritems():
-        if k.startswith('CLIM_') or k.endswith('_MONTHLY'):
-            if isinstance(v, basestring):
-                monthly.add(v)
-            else:
-                monthly |= set(v)
-        if isinstance(v, basestring):
-            ggetnames.add(v)
+        ismonthly = k.startswith('CLIM_') or k.endswith('_MONTHLY')
+        if ' ' in v:
+            vset = set(v.split())
+            ggetnames |= vset
+            if ismonthly:
+                monthly |= vset
         else:
-            ggetnames |= set(v)
+            ggetnames.add(v)
+            if ismonthly:
+                monthly.add(v)
 
     # Could filter out here unwanted extensions
     #
@@ -347,7 +348,9 @@ def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopat
         contents = set()
         for k in genvdict:
             names = genvdict[k]
-            if isinstance(names, basestring):
+            if ' ' in names:
+                names = names.split()
+            else:
                 names = [names]
             for name in names:
                 if k.startswith('CLIM_') or k.endswith('_MONTHLY'):
