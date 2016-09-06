@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, division
+
 """
 Extract all files provided by the genv command for one or several cycles,
 and/or remove the files needed only by a specific cyle.
@@ -28,17 +30,13 @@ vortexbase = os.path.dirname(os.path.abspath(__file__)).rstrip('/bin')
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
-import vortex
-from iga.util import swissknife
-
 
 def parse_command_line():
     description = "Create or remove frozen copies of gco resources in gco/ and genv/."
-
     parser = argparse.ArgumentParser(description=description)
 
     group = parser.add_argument_group(title='at least one of -c, -f or -r is mandatory')
-    group.add_argument('-c', '--cycle', nargs='+', help='name(s) of cycle(s) to freeze')
+    group.add_argument('-c', '--cycles', nargs='+', help='name(s) of cycle(s) to freeze')
     group.add_argument('-f', '--file', nargs='+', help='file(s) containing a list of cycles to freeze')
     group.add_argument('-r', '--remove', help='name of the cycle to remove')
 
@@ -50,51 +48,61 @@ def parse_command_line():
                         action='store_false')
 
     args = parser.parse_args()
-    if not (args.cycle or args.file or args.remove):
+    if not (args.cycles or args.file or args.remove):
         parser.error('\nNo action requested.\nUse at least one of: -c, -f or -r\n')
+
+    # add cycles from -f arguments
+    args.cycles = args.cycles or list()
+    files = args.file or list()
+    for filename in files:
+        with open(filename) as fp:
+            for line in fp.readlines():
+                args.cycles.extend(line.partition('#')[0].strip().split())
+
+    # remove ".genv" extensions (to ease copy-paste)
+    args.cycles = {c.strip('.genv') for c in args.cycles}
+    if args.remove:
+        args.remove = args.remove.strip('.genv')
+
+    # check consistency
+    if args.remove in args.cycles:
+        print('\nCannot both freeze *and* remove cycle {}\n'.format(args.remove))
+        sys.exit(1)
+
     return args
 
 
-args = parse_command_line()
-cycles = args.cycle or list()
-files = args.file or list()
-for filename in files:
-    with open(filename) as fp:
-        for line in fp.readlines():
-            cycles.extend(line.partition('#')[0].strip().split())
-cycles = {c.strip('.genv') for c in cycles}
-if args.remove:
-    args.remove = args.remove.strip('.genv')
-
-# consistency
-if args.remove in cycles:
-    print '\nCannot both freeze *and* remove cycle {}\n'.format(args.remove)
-    sys.exit(1)
-
-if args.list:
+def list_cycles(args):
     sep = '\n    '
-    if cycles:
-        print 'cycles to freeze:' + sep + sep.join(cycles)
+    if args.cycles:
+        print('cycles to freeze:' + sep + sep.join(args.cycles))
     if args.remove:
-        print 'cycle  to remove:' + sep + args.remove
-    sys.exit(0)
+        print('cycle  to remove:' + sep + args.remove)
 
-t = vortex.sessions.current()
-for cycle in cycles:
-    t.sh.title('Freezing cycle : ' + cycle)
-    increase, details = swissknife.freeze_cycle(
-        vortex.ticket(),
-        cycle=cycle,
-        force=args.noerror,
-        verbose=args.verbose,
-        logpath='genv/ggetall.log'
-    )
-    print "Summary for freezing cycle", cycle
-    for k, v in details.items():
-        print '\t{:12s}:{:4d}'.format(k, len(v))
-    print '\tlocal store increase:', increase / (1024 * 1024), 'Mb'
 
-if args.remove:
+def freeze(args):
+    import vortex
+    from iga.util import swissknife
+    t = vortex.sessions.current()
+    for cycle in args.cycles:
+        t.sh.title('Freezing cycle : ' + cycle)
+        increase, details = swissknife.freeze_cycle(
+            vortex.ticket(),
+            cycle=cycle,
+            force=args.noerror,
+            verbose=args.verbose,
+            logpath='genv/ggetall.log'
+        )
+        print("Summary for freezing cycle", cycle)
+        for k, v in list(details.items()):
+            print('\t{:12s}:{:4d}'.format(k, len(v)))
+        print('\tlocal store increase:', increase // (1024 * 1024), 'Mb')
+
+
+def unfreeze(args):
+    import vortex
+    from iga.util import swissknife
+    t = vortex.sessions.current()
     if args.simulate:
         t.sh.title('Simulating removal of cycle : ' + args.remove)
     else:
@@ -106,7 +114,18 @@ if args.remove:
         verbose=args.verbose,
         logpath='genv/ggetall.log'
     )
-    print "Summary for unfreezing cycle", args.remove
-    for k, v in details.items():
-        print '\t{:12s}:{:4d}'.format(k, len(v))
-    print '\tlocal store decrease:', decrease / (1024 * 1024), 'Mb'
+    print("Summary for unfreezing cycle", args.remove)
+    for k, v in list(details.items()):
+        print('\t{:12s}:{:4d}'.format(k, len(v)))
+    print('\tlocal store decrease:', decrease // (1024 * 1024), 'Mb')
+
+
+if __name__ == "__main__":
+    args = parse_command_line()
+    if args.list:
+        list_cycles(args)
+    else:
+        if args.cycles:
+            freeze(args)
+        if args.remove:
+            unfreeze(args)
