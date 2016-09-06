@@ -20,7 +20,13 @@ and  blank lines. The usual separators are allowed (space, tab, newline).
 """
 
 import argparse
+import os
 import sys
+
+# Automatically set the python path
+vortexbase = os.path.dirname(os.path.abspath(__file__)).rstrip('/bin')
+sys.path.insert(0, os.path.join(vortexbase, 'site'))
+sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 import vortex
 from iga.util import swissknife
