@@ -91,7 +91,7 @@ def freeze(args):
             cycle=cycle,
             force=args.noerror,
             verbose=args.verbose,
-            logpath='genv/ggetall.log'
+            logpath='ggetall.log'
         )
         print("Summary for freezing cycle", cycle)
         for k, v in list(details.items()):
@@ -112,7 +112,7 @@ def unfreeze(args):
         delcycle=args.remove,
         fake=args.simulate,
         verbose=args.verbose,
-        logpath='genv/ggetall.log'
+        logpath='ggetall.log'
     )
     print("Summary for unfreezing cycle", args.remove)
     for k, v in list(details.items()):

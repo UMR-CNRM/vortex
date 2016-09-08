@@ -208,7 +208,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
 
     # Start a log
     if logpath is None:
-        logpath = sh.path.join(genvpath, 'freeze_cycle.log')
+        logpath = 'freeze_cycle.log'
     log = io.open(logpath, mode='a', encoding='utf-8')
     log.write(unicode(t.line))
     log.write(unicode(t.prompt + ' ' + cycle + ' upgrade ' + date.now().reallynice() + '\n'))
@@ -300,7 +300,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
 
                 except Exception as error:
                     print(error)
-                    log.write(unicode('Caught StandardError: ' + str(error) + '\n'))
+                    log.write(unicode('Caught Exception: ' + str(error) + '\n'))
                     if verbose:
                         print('failed &', end=' ')
                     details['failed'].append(name)
@@ -370,7 +370,7 @@ def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopat
 
     # Start a log
     if logpath is None:
-        logpath = sh.path.join(genvpath, 'freeze_cycle.log')
+        logpath = 'freeze_cycle.log'
     if fake:
         logpath = '/dev/null'
     log = io.open(logpath, mode='a', encoding='utf-8')
