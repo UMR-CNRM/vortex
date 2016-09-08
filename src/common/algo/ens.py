@@ -97,7 +97,6 @@ class CombiPert(Combi):
         attr = dict(
             nbpert = dict(
                 type      = int,
-                optionnal = False
             ),
         )
     )
@@ -230,7 +229,11 @@ class CombiIC(Combi):
             nbic = dict(
                 alias = ('nbruns',),
                 type      = int,
-                optionnal = False
+            ),
+            nbpert = dict(
+                type      = int,
+                optional = True,
+                default = 0,
             ),
         )
     )
@@ -245,7 +248,7 @@ class CombiIC(Combi):
 
         # Tweak the namelist
         namsec = self.setlink(initrole='Namelist', initkind='namelist')
-        nbPert = len(self.context.sequence.effective_inputs(role = ('AEPerturbedState, ModelState')))
+        nbPert = self.nbpert or len(self.context.sequence.effective_inputs(role = ('AEPerturbedState, ModelState')))
         namsec[0].rh.contents['NAMMOD']['LANAP'] = (nbPert != 0)
 
         sv_sections = self.context.sequence.effective_inputs(role='CoeffSV')
@@ -272,9 +275,8 @@ class CombiIC(Combi):
             nbPert = nbPert or nbBd - 1 if nbBd == self.nbic and self.nbic % 2 != 0 else self.nbic / 2
         else:
             namsec[0].rh.contents['NAMMOD']['LBRED'] = False
-        print nbPert
+
         nbPert -= 1 if nbPert * 2 == self.nbic + 1 else 0
-        print nbPert, self.nbic
         logger.info("Add the NBPERT coefficient to the NAMENS namelist entry")
         namsec[0].rh.contents['NAMENS']['NBPERT'] = nbPert
         self._addNmod(namsec[0].rh, "final combination of the perturbations")
