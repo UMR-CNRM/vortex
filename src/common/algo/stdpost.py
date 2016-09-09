@@ -566,7 +566,9 @@ class DiagPE(BlindRun, grib.GribApiComponent):
         for subgang in gang.memberslist:
             smembers = set([s.section.rh.provider.member for s in subgang.memberslist
                             if s.state == EntrySt.available])
-            missing_members[subgang.nickname] = gmembers - smembers
+            ufomembers = set([s.section.rh.provider.member for s in subgang.memberslist
+                              if s.state == EntrySt.ufo])
+            missing_members[subgang.nickname] = gmembers - smembers - ufomembers
             members &= smembers
         # Record an error
         if members != gmembers:
@@ -578,6 +580,10 @@ class DiagPE(BlindRun, grib.GribApiComponent):
                 logger.info("Fatal is false consequently no exception is recorder. It would look like this:")
                 print newexc
         members = sorted(members)
+
+        # This is hopeless :-(
+        if gang.state == GangSt.failed:
+            return
 
         # Tweak the namelist
         namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
@@ -695,8 +701,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
 
                 for geometry, a_gang in [(g, current_gang[g]) for g in geometries
                                          if (current_gang[g] is not None and
-                                             current_gang[g].state in (GangSt.collectable,
-                                                                       GangSt.pcollectable,))]:
+                                             current_gang[g].state is not GangSt.ufo)]:
 
                     self._actual_execute(members, gfilter, basedate, terms[geometry][-1],
                                          rh, opts, a_gang)
@@ -708,7 +713,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
                         current_gang[geometry] = None
 
                 if not (bm.all_done or any(current_gang[g] is not None and
-                                           gang.state in (GangSt.collectable, GangSt.pcollectable,)
+                                           gang.state is not GangSt.ufo
                                            for gang in current_gang.itervalues())):
                     # Timeout ?
                     bm.is_timedout(self.timeout, IOError)
