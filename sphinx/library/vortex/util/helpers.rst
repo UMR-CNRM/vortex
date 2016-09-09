@@ -24,3 +24,5 @@ Functions
 .. autofunction:: members_input_checker
 
 .. autofunction:: colorfull_input_checker
+
+.. autofunction:: merge_contents

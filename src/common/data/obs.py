@@ -382,6 +382,7 @@ class ObsRefContent(TextContent):
         """Get data from the ``container``."""
         container.rewind()
         self.extend([ ObsRefItem(*x.split()[:5]) for x in container if not x.startswith('#') ])
+        self._size = container.totalsize
 
     @classmethod
     def formatted_data(self, item):
@@ -489,6 +490,7 @@ class ObsMapContent(TextContent):
                  if x and not x.startswith('#')]
             )
         )
+        self._size = container.totalsize
 
     @classmethod
     def formatted_data(self, item):
@@ -570,7 +572,6 @@ class ObsMap(FlowResource):
                 scope = dict(
                     optional = True,
                     default  = 'full',
-                    values   = ['surface', 'surf', 'full'],
                     remap = dict(surf = 'surface'),
                 ),
                 discard = dict(
