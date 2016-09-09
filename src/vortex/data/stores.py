@@ -28,6 +28,9 @@ from vortex.syntax.stdattrs import DelayedEnvValue
 
 OBSERVER_TAG = 'Stores-Activity'
 
+_CACHE_PUT_INTENT = 'in'
+_CACHE_GET_INTENT_DEFAULT = 'in'
+
 
 def observer_board(obsname=None):
     """Proxy to :func:`footprints.observers.get`."""
@@ -443,7 +446,9 @@ class MultiStore(footprints.FootprintBase):
                     if not restore.check(remote.copy(), options):
                         logger.info('Refill back in writeable store [%s]', restore)
                         try:
-                            refill_in_progress = (restore.put(local, remote.copy(), options) or
+                            refill_in_progress = ((restore.put(local, remote.copy(), options) and
+                                                   (options.get('intent', _CACHE_GET_INTENT_DEFAULT) !=
+                                                    _CACHE_PUT_INTENT)) or
                                                   refill_in_progress)
                         except ExecutionError as e:
                             logger.error("An ExecutionError happened during the refill: %s", str(e))
@@ -1139,7 +1144,7 @@ class CacheStore(Store):
         return self.cache.retrieve(
             remote['path'],
             local,
-            intent     = options.get('intent'),
+            intent     = options.get('intent', _CACHE_GET_INTENT_DEFAULT),
             fmt        = options.get('fmt'),
             info       = options.get('rhandler', None),
             tarextract = options.get('auto_tarextract', False),
@@ -1153,7 +1158,7 @@ class CacheStore(Store):
         return self.cache.insert(
             remote['path'],
             local,
-            intent = 'in',
+            intent = _CACHE_PUT_INTENT,
             fmt    = options.get('fmt'),
             info   = options.get('rhandler', None),
         )
