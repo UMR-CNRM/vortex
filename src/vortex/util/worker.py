@@ -93,9 +93,13 @@ class VortexWorker(object):
         sh = vortex.sh()
         import vortex.tools.lfi
         import vortex.tools.odb
+        import vortex.tools.grib
+        import vortex.tools.ddhpack
         import footprints as fp
         self.shlfi = fp.proxy.addon(kind='lfi', shell=sh)
         self.shodb = fp.proxy.addon(kind='odb', shell=sh)
+        self.shgrb = fp.proxy.addon(kind='grib', shell=sh)
+        self.shddh = fp.proxy.addon(kind='ddhpack', shell=sh)
         self.logger.warning('VORTEX enter ' + str(self.modules))
         for modname in self.modules:
             sh.import_module(modname)
