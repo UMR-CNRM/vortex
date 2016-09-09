@@ -300,13 +300,12 @@ class Fa2Grib(ParaBlindRun):
                                                 file_in=[file_in, ], file_out=[file_out, ],
                                                 member=[s.rh.provider.member, ]))
 
-                # Timeout ?
-                tmout = bm.is_timedout(self.timeout)
-                if tmout:
-                    break
-
-                # Wait a little bit :-)
-                if not bm.all_done or len(bm.available) > 0:
+                if not (bm.all_done or len(bm.available) > 0):
+                    # Timeout ?
+                    tmout = bm.is_timedout(self.timeout)
+                    if tmout:
+                        break
+                    # Wait a little bit :-)
                     time.sleep(1)
                     bm.health_check(interval=30)
 
@@ -384,13 +383,12 @@ class StandaloneGRIBFilter(TaylorRun, grib.GribApiComponent):
                                            dict(name=[file_in, ],
                                                 file_in=[file_in, ], file_outfmt=[file_outfmt, ]))
 
-                # Timeout ?
-                tmout = bm.is_timedout(self.timeout)
-                if tmout:
-                    break
-
-                # Wait a little bit :-)
-                if not bm.all_done or len(bm.available) > 0:
+                if not (bm.all_done or len(bm.available) > 0):
+                    # Timeout ?
+                    tmout = bm.is_timedout(self.timeout)
+                    if tmout:
+                        break
+                    # Wait a little bit :-)
                     time.sleep(1)
                     bm.health_check(interval=30)
 
@@ -584,7 +582,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
             for i_term, term in enumerate(terms[geometry]):
                 elementary_meta = MetaGang()
                 elementary_meta.info = dict(geometry=geometry, term=term)
-                cterms = [terms[geometry][i] for i in range(max(i_term - 1, 0),
+                cterms = [terms[geometry][i] for i in range(i_term,
                                                             min(i_term + 2, nterms))]
                 for inside_term in cterms:
                     for inside_block in blocks[geometry]:
@@ -607,9 +605,9 @@ class DiagPE(BlindRun, grib.GribApiComponent):
 
             while any([g is not None for g in current_gang.itervalues()]):
 
-                for a_gang in [current_gang[g] for g in geometries
-                               if (current_gang[g] is not None and
-                                   current_gang[g].state == GangSt.collectable)]:
+                for geometry, a_gang in [(g, current_gang[g]) for g in geometries
+                                         if (current_gang[g] is not None and
+                                             current_gang[g].state == GangSt.collectable)]:
 
                     self.system.title('Start processing for geometry={:s}, term={!s}.'.
                                       format(geometry.area, a_gang.info['term']))
@@ -661,11 +659,11 @@ class DiagPE(BlindRun, grib.GribApiComponent):
                     except IndexError:
                         current_gang[geometry] = None
 
-                # Timeout ?
-                bm.is_timedout(self.timeout, IOError)
-
-                # Wait a little bit :-)
-                if not bm.all_done:
+                if not (bm.all_done or any(gang.state == GangSt.collectable
+                                           for gang in current_gang.itervalues())):
+                    # Timeout ?
+                    bm.is_timedout(self.timeout, IOError)
+                    # Wait a little bit :-)
                     time.sleep(1)
                     bm.health_check(interval=30)
 
