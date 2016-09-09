@@ -1,21 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, division
 
-import re
-import io
 import collections
+import io
+import re
 import string
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
+from gco.tools import genv
 from vortex.tools import date
 from vortex.util.config import GenericConfigParser, load_template
 
-from gco.tools import genv
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 OpSetValues = collections.namedtuple('OpSetValues', ['xpid', 'vapp', 'vconf'])
 
@@ -68,7 +69,7 @@ def mkjob(t, **kw):
     opts.setdefault('mkopts', str(kw))
 
     # Switch verbosity from boolean to plain string
-    if type(opts['verbose']) is bool:
+    if isinstance(opts['verbose'], bool):
         if opts['verbose']:
             opts['verbose'] = 'verbose'
         else:
@@ -98,7 +99,7 @@ def mkjob(t, **kw):
         iniparser = GenericConfigParser(inifile=opts['inifile'])
         opts['tplinit'] = iniparser.file
         tplconf = iniparser.as_dict()
-    except StandardError as pb:
+    except Exception as pb:
         logger.warning('Could not read config %s', str(pb))
         tplconf = dict()
 
@@ -108,9 +109,9 @@ def mkjob(t, **kw):
 
     opset = getopsetfrompath(t)
 
-    tplconf.setdefault('xpid',    opset.xpid)
-    tplconf.setdefault('vapp',    opset.vapp)
-    tplconf.setdefault('vconf',   opset.vconf)
+    tplconf.setdefault('xpid', opset.xpid)
+    tplconf.setdefault('vapp', opset.vapp)
+    tplconf.setdefault('vconf', opset.vconf)
 
     tplconf.update(opts)
 
@@ -127,6 +128,7 @@ def mkjob(t, **kw):
     if opts['wrap']:
         def autojob():
             eval(compile(pycode, 'compile.mkjob.log', 'exec'))
+
         objcode = autojob
     else:
         objcode = pycode
@@ -137,10 +139,7 @@ def mkjob(t, **kw):
 def slurm_parameters(t, **kw):
     """Figure out what could be nnodes, ntasks and openmp actual values."""
     e = t.env
-    slurm = dict(
-        openmp = 1,
-    )
-
+    slurm = dict(openmp=1)
     try:
         slurm['nn'] = int(e.SLURM_NNODES)
     except (ValueError, TypeError) as pb:
@@ -157,9 +156,9 @@ def slurm_parameters(t, **kw):
         slurm['openmp'] = e.OMP_NUM_THREADS
     else:
         try:
-            guess_cpus  = int(re.sub('\(.*$', '', e.SLURM_JOB_CPUS_PER_NODE)) / 2
+            guess_cpus = int(re.sub('\(.*$', '', e.SLURM_JOB_CPUS_PER_NODE)) // 2
             guess_tasks = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
-            slurm['openmp'] = guess_cpus / guess_tasks
+            slurm['openmp'] = guess_cpus // guess_tasks
         except (ValueError, TypeError) as pb:
             logger.warning('SLURM_JOB_CPUS_PER_NODE: %s', str(pb))
 
@@ -171,7 +170,7 @@ def slurm_parameters(t, **kw):
     return slurm, kw
 
 
-def gget_resource_exists(t, ggetfile, monthly=False):
+def gget_resource_exists(t, ggetfile, monthly=False, verbose=False):
     """Check whether a gget resource exists in the current path or not."""
 
     if t.sh.path.exists(ggetfile):
@@ -181,10 +180,11 @@ def gget_resource_exists(t, ggetfile, monthly=False):
         return False
 
     # all monthly files must be present
-    months = [ ggetfile + '.m{0:02d}'.format(m) for m in range(1, 13) ]
-    missing = [ month for month in months if not t.sh.path.isfile(month) ]
+    months = [ggetfile + '.m{:02d}'.format(m) for m in range(1, 13)]
+    missing = [month for month in months if not t.sh.path.isfile(month)]
     if missing:
-        print 'missing :', missing
+        if verbose:
+            print('missing :', missing)
         return False
     return True
 
@@ -192,26 +192,26 @@ def gget_resource_exists(t, ggetfile, monthly=False):
 def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='gco/tampon', logpath=None):
     """
     Retrieve a copy of all relevant gco resources for a cycle.
-    The genv reference is kept in ./genv/cycle.genv
+    The genv reference is kept in ./genv/cycle.genv.
     The resources are stored in current ``gcopath`` target path.
     Use ``force=True`` to continue in spite of errors.
     """
-    tg = t.sh.target()
-
+    sh = t.sh
+    tg = sh.target()
     defs = genv.autofill(cycle)
 
     # Save genv raw output in specified `genvpath` folder
-    t.sh.mkdir(genvpath)
-    genvconf = t.sh.path.join(genvpath, cycle + '.genv')
+    sh.mkdir(genvpath)
+    genvconf = sh.path.join(genvpath, cycle + '.genv')
     with io.open(genvconf, mode='w', encoding='utf-8') as fp:
         fp.write(unicode(genv.as_rawstr(cycle=cycle)))
 
     # Start a log
     if logpath is None:
-        logpath = t.sh.path.join(genvpath, 'freeze_cycle.log')
+        logpath = 'freeze_cycle.log'
     log = io.open(logpath, mode='a', encoding='utf-8')
     log.write(unicode(t.line))
-    log.write(unicode(t.prompt + ' ' + cycle + ' upgrade ' + date.now().reallynice() + "\n"))
+    log.write(unicode(t.prompt + ' ' + cycle + ' upgrade ' + date.now().reallynice() + '\n'))
 
     # Remove unwanted definitions
     for prefix in ('PACK', 'SRC'):
@@ -223,75 +223,208 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     ggetnames = set()
     monthly = set()
     for (k, v) in defs.iteritems():
-        if k.startswith('CLIM_') or k.endswith('_MONTHLY'):
-            if isinstance(v, basestring):
-                monthly.add(v)
-            else:
-                monthly |= set(v)
-        if isinstance(v, basestring):
-            ggetnames.add(v)
+        ismonthly = k.startswith('CLIM_') or k.endswith('_MONTHLY')
+        if ' ' in v:
+            vset = set(v.split())
+            ggetnames |= vset
+            if ismonthly:
+                monthly |= vset
         else:
-            ggetnames |= set(v)
+            ggetnames.add(v)
+            if ismonthly:
+                monthly.add(v)
 
     # Could filter out here unwanted extensions
+    #
 
     # Perform gget on all resources to target directory
-    t.sh.cd(gcopath, create=True)
-    gcmd  = tg.get('gco:ggetcmd', 'gget')
+    gcmd = tg.get('gco:ggetcmd', 'gget')
     gpath = tg.get('gco:ggetpath', '')
-    gtool = t.sh.path.join(gpath, gcmd)
+    gtool = sh.path.join(gpath, gcmd)
 
     increase = 0
-    details  = dict(retrieved=list(), inplace=list(), failed=list(), expanded=list())
+    details = dict(retrieved=list(), inplace=list(), failed=list(), expanded=list())
 
-    for name in sorted(list(ggetnames)):
-        if verbose:
-            print t.line
-            print name, '...',
-        if gget_resource_exists(t, name, name in monthly):
+    with sh.cdcontext(gcopath, create=True):
+        for name in sorted(list(ggetnames)):
             if verbose:
-                print 'already there'
-                t.sh.ll(name)
-            details['inplace'].append(name)
-        else:
-            try:
-                t.sh.spawn([gtool, name], output=False)
-                increase += t.sh.size(name)
-                t.sh.readonly(name)
+                print(t.line)
+                print(name, '...', end=' ')
+            if gget_resource_exists(t, name, name in monthly, verbose):
                 if verbose:
-                    print 'ok'
-                    t.sh.ll(name)
-                details['retrieved'].append(name)
-                if name.endswith('.tgz'):
-                    subpath = name[:-4]
-                    locpath = t.sh.getcwd()
-                    t.sh.cd(subpath, create=True)
-                    t.sh.untar('../' + name, output=False)
-                    for subfile in t.sh.glob('*'):
-                        details['expanded'].append(t.sh.path.join(subpath, subfile))
-                        t.sh.readonly(subfile)
-                    t.sh.cd(locpath)
-                    t.sh.remove(name)
-            except StandardError:
-                if verbose:
-                    print 'failed &',
-                details['failed'].append(name)
-                if force:
-                    print 'continue'
-                else:
-                    print 'abort'
-                    log.write(unicode('Aborted on ' + name + "\n"))
-                    log.close()
-                    raise
+                    print('already there')
+                    sh.ll(name + '*')
+                details['inplace'].append(name)
+            else:
+                try:
+                    if verbose:
+                        print('spawning: {} {}'.format(gtool, name))
+                    sh.spawn([gtool, name], output=False)
+                    increase += sh.size(name)
+                    details['retrieved'].append(name)
+                    if name in monthly:
+                        for month in range(1, 13):
+                            sh.readonly('{}.m{:02d}'.format(name, month))
+                    else:
+                        sh.readonlytree(name)
+                    if verbose:
+                        print('ok')
+                        sh.ll(name + '*')
+
+                    if sh.is_tarname(name):
+                        radix = sh.tarname_radix(name)
+                        if verbose:
+                            print('expanding to', radix)
+                        unpacked = sh.smartuntar(name, radix)
+
+                        # a unique directory is moved one level up
+                        if len(unpacked) == 1 and sh.path.isdir(sh.path.join(radix, unpacked[0])):
+                            if verbose:
+                                print('moving contents one level up:', unpacked[0])
+                            import tempfile
+                            tmpdir = tempfile.mkdtemp(prefix='_renaming_', dir='.')
+                            sh.move(sh.path.join(radix, unpacked[0]), tmpdir)
+                            sh.rmdir(radix)
+                            sh.mv(sh.path.join(tmpdir, unpacked[0]), radix)
+                            sh.remove(tmpdir)
+                            with sh.cdcontext(radix):
+                                unpacked = sh.glob('*')
+
+                        if verbose:
+                            print('unpacked:\n\t' + '\n\t'.join(unpacked))
+                        for subfile in unpacked:
+                            subfilepath = sh.path.join(radix, subfile)
+                            details['expanded'].append(subfilepath)
+                            increase += sh.size(subfilepath)
+                        sh.readonlytree(radix)
+
+                except Exception as error:
+                    print(error)
+                    log.write(unicode('Caught Exception: ' + str(error) + '\n'))
+                    if verbose:
+                        print('failed &', end=' ')
+                    details['failed'].append(name)
+                    if force:
+                        print('continue')
+                    else:
+                        print('abort')
+                        log.write(unicode('Aborted on ' + name + '\n'))
+                        log.close()
+                        raise
 
     if verbose:
-        print t.line
+        print(t.line)
 
     for k, v in details.items():
-        log.write(unicode('Number of items ' + k + ' = ' + str(len(v)) + "\n"))
+        log.write(unicode('Number of items ' + k + ' = ' + str(len(v)) + '\n'))
         for item in v:
-            log.write(unicode(' > '  + item + "\n"))
+            log.write(unicode(' > ' + item + '\n'))
 
     log.close()
 
-    return (increase, details)
+    return increase, details
+
+
+def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopath='gco/tampon', logpath=None):
+    """
+    Remove a frozen cycle: undoes what freeze_cycle did, but without removing
+    any file in use by any of the other frozen cycles ("\*.genv" in genvpath).
+    """
+    sh = t.sh
+
+    def genv_contents(cycle):
+        """Return all files and level 0 directories for a cycle."""
+
+        genvdict = genv.autofill(cycle)
+
+        # these keys are always ignored
+        for prefix in ('PACK', 'SRC'):
+            for key in genvdict.keys():
+                if key.startswith(prefix):
+                    del genvdict[key]
+
+        # corresponding files or directories
+        contents = set()
+        for (k, names) in genvdict.iteritems():
+            ismonthly = k.startswith('CLIM_') or k.endswith('_MONTHLY')
+            if ' ' in names:
+                names = names.split()
+            else:
+                names = [names]
+            for name in names:
+                if ismonthly:
+                    assert isinstance(name, basestring)
+                    contents |= {name + '.m{:02d}'.format(m) for m in range(1, 13)}
+                else:
+                    contents.add(name)
+                    if sh.is_tarname(name):
+                        radix = sh.tarname_radix(name)
+                        contents.add(radix)
+        return contents
+
+    # Rename the genv file (used as a marker of frozen cycle)
+    sh.mkdir(genvpath)
+    genvconf = sh.path.join(genvpath, delcycle + '.genv')
+    if not fake and sh.path.isfile(genvconf):
+        sh.move(genvconf, genvconf + '.removed')
+
+    # Start a log
+    if logpath is None:
+        logpath = 'freeze_cycle.log'
+    if fake:
+        logpath = '/dev/null'
+    log = io.open(logpath, mode='a', encoding='utf-8')
+    log.write(unicode(t.line))
+    log.write(unicode(t.prompt + ' ' + delcycle + ' UNFREEZING ' + date.now().reallynice() + '\n'))
+
+    decrease = 0
+    details = dict(removed=list(), failed=list())
+
+    # all contents must be removed
+    delitems = genv_contents(delcycle)
+
+    # except if used by another cycle
+    with sh.cdcontext(genvpath):
+        for cycle in [x.strip('.genv') for x in sh.glob('*.genv')]:
+            if cycle != delcycle:
+                delitems -= genv_contents(cycle)
+
+    # let's remove them
+    with sh.cdcontext(gcopath):
+        for delitem in delitems:
+            if not sh.path.exists(delitem):
+                continue
+            size = sh.treesize(delitem)
+            if fake:
+                if verbose:
+                    print('would remove:', delitem)
+                details['removed'].append(delitem)
+                decrease += size
+            else:
+                try:
+                    sh.wpermtree(delitem, force=True)
+                    if sh.remove(delitem):
+                        if verbose:
+                            print('removed:', delitem)
+                        details['removed'].append(delitem)
+                        decrease += size
+                    else:
+                        if verbose:
+                            print('could not remove:', delitem)
+                        details['failed'].append(delitem)
+                except OSError as error:
+                    print('OSError on removing:', delitem)
+                    print(error)
+                    details['failed'].append(delitem)
+
+    if verbose:
+        print(t.line)
+
+    for k, v in details.items():
+        log.write(unicode('Number of items ' + k + ' = ' + str(len(v)) + '\n'))
+        for item in v:
+            log.write(unicode(' > ' + item + '\n'))
+
+    log.close()
+
+    return decrease, details

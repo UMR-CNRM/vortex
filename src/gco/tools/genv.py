@@ -117,8 +117,7 @@ def autofill(cycle, gcout=None, writes_dump=False):
             if k == 'CYCLE_NAME':
                 actualcycle = v.partition('.gco')[0]
                 k, v = 'cycle', actualcycle
-            else:
-                gcdict[k] = v
+            gcdict[k] = v
         register(**gcdict)
     else:
         logger.warning('Could not automaticaly fetch cycle %s contents', actualcycle)
