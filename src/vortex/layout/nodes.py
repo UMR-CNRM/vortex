@@ -175,7 +175,7 @@ class Node(footprints.util.GetByTag, NiceLayout):
     def __exit__(self, exc_type, exc_value, traceback):
         """Exit from :keyword:`with` context."""
         logger.debug('Exit context directory <%s>', self.sh.getcwd())
-        self._oldctx.catch_focus()
+        self._oldctx.activate()
         self.ticket.context.cocoon()
 
     def setconf(self, conf_local, conf_global):
@@ -366,7 +366,6 @@ class Task(Node):
             backup  = kw.pop('backup',  'backup'),
             starter = kw.pop('starter', False),
         )
-        self._sequence = dataflow.Sequence()
         self.options = kw.copy()
         if isinstance(self.steps, basestring):
             self.steps = tuple(self.steps.replace(' ', '').split(','))
@@ -374,10 +373,6 @@ class Task(Node):
     @property
     def realkind(self):
         return 'task'
-
-    @property
-    def sequence(self):
-        return self._sequence
 
     @property
     def ctx(self):

@@ -420,8 +420,8 @@ class GetByTag(object):
         else:
             newobj = super(GetByTag, cls).__new__(cls)
             newobj._tag = tag
-            newobj.__init__(*args, **kw)
             cls._tag_table[tag] = newobj
+            newobj.__init__(*args, **kw)
         return newobj
 
     @property
@@ -456,7 +456,17 @@ class GetByTag(object):
     @classmethod
     def set_focus(cls, obj, select='default'):
         """Define a new tag value for the focus in the scope of the ``select`` value."""
+        # Do the sanity checks
+        obj.focus_gain_allow()
+        # Call the hook on the previous default object
+        prev_focus = cls._tag_focus[select]
+        if prev_focus is not None:
+            prev_obj = cls(prev_focus)
+            prev_obj.focus_loose_hook()
+        # Actually change the default
         cls._tag_focus[select] = obj.tag
+        # Call the hook on the new default object
+        obj.focus_gain_hook()
 
     def has_focus(self, select='default'):
         """Return a boolean value on equality of current tag and focus tag."""
@@ -464,7 +474,7 @@ class GetByTag(object):
 
     def catch_focus(self, select='default'):
         """The current object decides to be on focus !"""
-        self.__class__._tag_focus[select] = self.tag
+        self.set_focus(self, select)
 
     @classmethod
     def tag_clear(cls):
@@ -487,6 +497,21 @@ class GetByTag(object):
         logger.debug("There is no trivial way to deepcopy a GetByTag instance: returning self")
         memo[id(self)] = self
         return self
+
+    def focus_loose_hook(self):
+        """This method is called when an object looses the focus."""
+        pass
+
+    def focus_gain_allow(self):
+        """This method is called on the target object prior to any focus change.
+
+        It might be useful if one wants to perform chacks and raise an exception.
+        """
+        pass
+
+    def focus_gain_hook(self):
+        """This method is called when an object gains the focus."""
+        pass
 
 
 class Catalog(object):

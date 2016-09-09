@@ -486,7 +486,7 @@ def print_namespaces(**kw):
 
 def clear_promises(clear=None, netloc='promise.cache.fr', scheme='vortex',
                    storeoptions=None):
-    """Remove all promises that have been made in the current python session.
+    """Remove all promises that have been made in the current python context.
 
     :param netloc: Netloc of the promise's cache store to clean up
     :param scheme: Scheme of the promise's cache store to clean up
@@ -496,21 +496,7 @@ def clear_promises(clear=None, netloc='promise.cache.fr', scheme='vortex',
         clear = active_clear
     if clear:
         t = sessions.current()
-        t.sh.header('Clear promises for {}://{}'.format(scheme, netloc))
-        skeleton = dict(scheme=scheme, netloc=netloc)
-        promises = t.context.localtracker.grep_uri('put', skeleton)
-        if promises:
-            logger.info('Some promises are left pending...')
-            if storeoptions is None:
-                storeoptions = dict()
-            store = footprints.proxy.store(scheme=scheme, netloc=netloc,
-                                           **storeoptions)
-            for promise in [pr.copy() for pr in promises]:
-                del promise['scheme']
-                del promise['netloc']
-                store.delete(promise)
-        else:
-            logger.info('No promises were left pending.')
+        t.context.clear_promises(netloc, scheme, storeoptions)
 
 
 def rescue(*files, **opts):

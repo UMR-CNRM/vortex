@@ -9,6 +9,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.env import Environment
 
+
 class Glove(footprints.FootprintBase):
     """Base class for GLObal Versatile Environment."""
 
@@ -192,4 +193,3 @@ class OperGlove(Glove):
     @property
     def realkind(self):
         return 'opuser'
-

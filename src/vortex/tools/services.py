@@ -52,8 +52,11 @@ class Service(footprints.FootprintBase):
 
     def __init__(self, *args, **kw):
         logger.debug('Abstract service init %s', self.__class__)
-        sh = kw.pop('sh', sessions.system())
+        t = sessions.current()
+        glove = kw.pop('glove', t.glove)
+        sh = kw.pop('sh', t.system())
         super(Service, self).__init__(*args, **kw)
+        self._glove = glove
         self._sh = sh
 
     @property
@@ -67,6 +70,10 @@ class Service(footprints.FootprintBase):
     @property
     def env(self):
         return self._sh.env
+
+    @property
+    def glove(self):
+        return self._glove
 
     def actual_value(self, key, as_var=None, as_conf=None, default=None):
         """
@@ -494,9 +501,9 @@ class JeevesService(Service):
                 user = self.juser,
                 jtag = self.sh.path.join(self.jpath, self.jfile),
                 todo = self.todo,
-                mail = data.pop('mail', self.env.glove.email),
-                apps = data.pop('apps', (self.env.glove.vapp,)),
-                conf = data.pop('conf', (self.env.glove.vconf,)),
+                mail = data.pop('mail', self.glove.email),
+                apps = data.pop('apps', (self.glove.vapp,)),
+                conf = data.pop('conf', (self.glove.vconf,)),
                 task = self.env.get('JOBNAME') or self.env.get('SMSNAME', 'interactif'),
             )
             fulltalk.update(

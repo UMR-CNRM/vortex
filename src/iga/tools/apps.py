@@ -25,13 +25,14 @@ class OpTask(Task):
 
     def component_runner(self, tbalgo, tbx=(None, ), **kwargs):
         """Run the binaries listed in tbx using the tbalgo algo component."""
-        for binary in tbx:
-            try:
-                tbalgo.run(binary, **kwargs)
-            except (DelayedAlgoComponentError, ExecutionError,
-                    SignalInterruptError):
-                self.report_execution_error()
-                raise
+        with self.env.delta_context(OMP_NUM_THREADS=self.conf.get('openmp', 1)):
+            for binary in tbx:
+                try:
+                    tbalgo.run(binary, **kwargs)
+                except (DelayedAlgoComponentError, ExecutionError,
+                        SignalInterruptError):
+                    self.report_execution_error()
+                    raise
 
     def report_execution_error(self):
         reseau = self.conf.rundate.hh
@@ -54,6 +55,12 @@ class OpTask(Task):
         extras.setdefault('namespace', self.conf.get('namespace', 'vortex.cache.fr'))
         extras.setdefault('gnamespace', self.conf.get('gnamespace', 'opgco.cache.fr'))
         super(OpTask, self).defaults(extras)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Cleanup promises on exit."""
+        # Note: If an MTOOL like tool was to be used, this should be changed...
+        self.ticket.context.clear_promises()
+        super(OpTask, self).__exit__(exc_type, exc_value, traceback)
 
 
 class OpTaskMPI(OpTask):

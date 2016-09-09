@@ -98,21 +98,20 @@ class Addon(footprints.FootprintBase):
             cmd.insert(0, kw.pop('interpreter'))
 
         # Overwrite global module env values with specific ones
-        localenv = self.sh.env.clone()
-        localenv.active(True)
-        localenv.verbose(True, self.sh)
-        localenv.update(self.env)
+        with self.sh.env.clone() as localenv:
 
-        # Check if a pipe is requested
-        inpipe = kw.pop('inpipe', False)
+            localenv.verbose(True, self.sh)
+            localenv.update(self.env)
 
-        # Ask the attached shell to run the addon command
-        if inpipe:
-            kw.setdefault('stdout', True)
-            rc = self.sh.popen(cmd, **kw)
-        else:
-            rc = self.sh.spawn(cmd, **kw)
-        localenv.active(False)
+            # Check if a pipe is requested
+            inpipe = kw.pop('inpipe', False)
+
+            # Ask the attached shell to run the addon command
+            if inpipe:
+                kw.setdefault('stdout', True)
+                rc = self.sh.popen(cmd, **kw)
+            else:
+                rc = self.sh.spawn(cmd, **kw)
 
         return rc
 

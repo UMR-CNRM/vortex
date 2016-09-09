@@ -5,7 +5,11 @@
 Advanced environment settings.
 """
 
-import os, re, json, traceback
+import collections
+import json
+import os
+import re
+import traceback
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -40,7 +44,7 @@ def param(tag='default', pmap=None):
     """
     if pmap is None:
         pmap = paramsmap()
-    if not tag in pmap:
+    if tag not in pmap:
         pmap[tag] = Environment(active=False, clear=True)
     return pmap[tag]
 
@@ -60,13 +64,13 @@ def current():
 class Environment(object):
     """
     Advanced handling of environment features. Either for binding to the system
-    or to store and brodacast parameters. Creating an ``active`` environment results
+    or to store and broadcast parameters. Creating an ``active`` environment results
     in the fact that this new environment is binded to the system environment.
 
-    New objects could be instancied from an already existing ``env`` and could be
+    New objects could be instantiated from an already existing ``env`` and could be
     active or not according to the flag given at initialisation time.
 
-    The ``clear`` boolean flag implies the cration of an empty environment. In that case
+    The ``clear`` boolean flag implies the creation of an empty environment. In that case
     the new environment is by default not active.
 
     The ``noexport`` list defines the variables names that would not be broadcasted to the
@@ -80,18 +84,19 @@ class Environment(object):
     * callable
     """
 
-    _os = list()
+    _current_active = None
 
-    def __init__(self, env=None, active=False, clear=False, verbose=False, noexport=[]):
+    def __init__(self, env=None, active=False, clear=False, verbose=False, 
+                 noexport=[], contextlock=None):
         self.__dict__['_history'] = History(tag='env')
-        self.__dict__['_active']  = False
         self.__dict__['_verbose'] = verbose
-        self.__dict__['_frozen']  = (dict(), list())
+        self.__dict__['_frozen']  = collections.deque()
         self.__dict__['_pool']    = dict()
         self.__dict__['_mods']    = set()
         self.__dict__['_sh']      = None
+        self.__dict__['_os']      = list()
         if env is not None and isinstance(env, Environment):
-            self._pool.update(env)
+            self._env_clone_internals(env, contextlock)
             if verbose:
                 try:
                     self.__dict__['_sh'] = env._sh
@@ -101,12 +106,21 @@ class Environment(object):
             if clear:
                 active = False
             else:
-                if self.__class__._os:
-                    self._pool.update(self.__class__._os[-1])
+                if self._current_active is not None:
+                    self._env_clone_internals(self._current_active, contextlock)
                 else:
                     self._pool.update(os.environ)
         self.__dict__['_noexport'] = [x.upper() for x in noexport]
         self.active(active)
+
+    def _env_clone_internals(self, env, contextlock):
+        self.__dict__['_os'] = env.osstack()
+        self.__dict__['_os'].append(env)
+        self._pool.update(env)
+        if contextlock is not None:
+            self.__dict__['_contextlock'] = contextlock
+        else:
+            self.__dict__['_contextlock'] = env.contextlock
 
     @property
     def history(self):
@@ -121,12 +135,16 @@ class Environment(object):
     @classmethod
     def current(cls):
         """Return current binded environment object."""
-        return cls._os[-1]
+        return cls._current_active
 
-    @classmethod
-    def osstack(cls):
+    def osstack(self):
         """Return a list of the environment binding stack."""
-        return cls._os[:]
+        return self._os[:]
+
+    @property
+    def contextlock(self):
+        """The context this environment is bound to (this might return None)."""
+        return self._contextlock
 
     def dumps(self, value):
         """Dump the specified ``value`` as a string."""
@@ -189,16 +207,6 @@ class Environment(object):
         else:
             return self.getvar(varname)
 
-    @property
-    def glove(self):
-        """
-        Return the current glove.
-
-        This could be handled by __getattr__, but this property is
-        slightly faster...
-        """
-        return self._pool.get('GLOVE', self._pool.get('glove', None))
-
     def delvar(self, varname):
         """
         Delete ``varname`` from current environment (this is not case sensitive).
@@ -215,6 +223,9 @@ class Environment(object):
             del os.environ[varname.upper()]
             if self.verbose() and self._sh:
                 self._sh.stderr('unset', '{0:s}'.format(varname.upper()))
+        if seen:
+            self.history.append(varname.upper(), '!!deleted!!',
+                                traceback.format_stack()[:-1])
 
     def __delitem__(self, varname):
         self.delvar(varname)
@@ -230,14 +241,14 @@ class Environment(object):
             yield t
 
     def __contains__(self, item):
-        return self.has_key(item)
+        return item in self._pool or item.upper() in self._pool
 
     def has_key(self, item):
         """
         Returns whether ``varname`` value is defined or not.
         Also used as internal for dictionary access.
         """
-        return item in self._pool or item.upper() in self._pool
+        return item in self
 
     def __cmp__(self, other):
         return cmp(self._pool, other._pool)
@@ -279,23 +290,29 @@ class Environment(object):
 
     def delta(self, **kw):
         """Temporarily set a collection of variables that could be reversed."""
-        upditems, newitems = self._frozen
+        upditems, newitems = (dict(), collections.deque())
         for var, value in kw.iteritems():
             if var in self:
                 upditems[var] = self.get(var)
             else:
                 newitems.append(var)
             self.setvar(var, value)
+        self._frozen.append((upditems, newitems))
 
     def rewind(self):
-        """Comme back on last environment delta changes."""
-        upditems, newitems = self._frozen
-        for item in newitems:
-            self.delvar(item)
-        for var, value in upditems.iteritems():
-            self.setvar(var, value)
-        upditems.clear()
-        newitems[:] = []
+        """Come back on last environment delta changes."""
+        if self._frozen:
+            upditems, newitems = self._frozen.pop()
+            while newitems:
+                self.delvar(newitems.pop())
+            for var, value in upditems.iteritems():
+                self.setvar(var, value)
+        else:
+            raise RuntimeError("No more delta to be rewinded...")
+
+    def delta_context(self, **kw):
+        """Create a context that will automatically create a delta then rewind it when exiting."""
+        return EnvironmentDeltaContext(self, **kw)
 
     def default(self, *args, **kw):
         """Set a collection of non defined variables given as a list of iterable items or key-values pairs."""
@@ -303,7 +320,7 @@ class Environment(object):
         argd.append(kw)
         for dico in argd:
             for var, value in dico.iteritems():
-                if not self.has_key(var):
+                if var not in self:
                     self.setvar(var, value)
 
     def merge(self, mergenv):
@@ -322,6 +339,15 @@ class Environment(object):
         except AttributeError:
             logger.debug('Could not find verbose attributes while cloning env...')
         return eclone
+
+    def __enter__(self):
+        """Activate the environment when entering the context."""
+        self.active(True)
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """De-activate the environment on exit."""
+        self.active(False)
 
     def native(self, varname):
         """Returns the native form this variable could have in a shell environment."""
@@ -344,22 +370,25 @@ class Environment(object):
         Bind or unbind current environment to the shell environment according to a boolean flag
         given as first argument. Returns current active status after update.
         """
-        previous = self._active
+        previous_act = self.osbound()
         osrewind = None
+        active = previous_act
         if args and type(args[0]) is bool:
-            self.__dict__['_active'] = args[0]
-        if previous and not self._active and self.__class__._os and id(self) == id(self.__class__._os[-1]):
-            self.__class__._os.pop()
-            osrewind = self.__class__._os[-1]
-        if not previous and self._active:
-            osrewind = self
-            self.__class__._os.append(self)
+            active = args[0]
+        if previous_act and not active and self._os:
+            self.__class__._current_active = self._os[-1]
+            osrewind = self.__class__._current_active
+        if not previous_act and active:
+            if self.contextlock is not None and not self.contextlock.active:
+                raise RuntimeError("It's not allowed to switch to an Environment " +
+                                   "that belongs to an inactive context")
+            self.__class__._current_active = self
+            osrewind = self.__class__._current_active
         if osrewind:
-            osrewind.__dict__['_active'] = True
             os.environ.clear()
             for k in filter(lambda x: x not in osrewind._noexport, osrewind._pool.keys()):
                 os.environ[k] = osrewind.native(k)
-        return self._active
+        return active
 
     def naked(self):
         """Return ``True`` when the pool of variables is empty."""
@@ -375,7 +404,7 @@ class Environment(object):
 
     def osbound(self):
         """Returns whether this current environment is bound to the os.environ."""
-        return self._active and self.__class__._os and self is self.__class__._os[-1]
+        return self is self.__class__._current_active
 
     def tracebacks(self):
         """Dump the stack of manipulations of the current environment."""
@@ -440,3 +469,17 @@ class Environment(object):
     def rmbinpath(self, value):
         """Remove the specified value from bin path."""
         self.rmgenericpath('PATH', value)
+
+
+class EnvironmentDeltaContext():
+    """Context that will apply a delta on the Environnement and rewind it on exit."""
+
+    def __init__(self, env, **kw):
+        self._env = env
+        self._delta = kw
+
+    def __enter__(self):
+        self._env.delta(** self._delta)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._env.rewind()

@@ -29,7 +29,10 @@ from vortex.layout import contexts
 
 def get(**kw):
     """Return actual session ticket object matching description."""
-    return Ticket(**kw)
+    if kw.get('tag', 'current') == 'current' and Ticket.tag_focus() is not None:
+        return current()
+    else:
+        return Ticket(**kw)
 
 
 def keys():
@@ -101,14 +104,9 @@ class Ticket(footprints.util.GetByTag):
         self.prompt = prompt
         self.line   = "\n" + '-' * 100 + "\n"
 
-        self._active  = active
         self._started = date.now()
         self._closed  = 0
         self._system  = None
-
-        logger.debug('New session system is %s', self.system())
-
-        self._rundir  = self.sh.getcwd()
 
         if topenv:
             self._topenv = topenv
@@ -118,23 +116,21 @@ class Ticket(footprints.util.GetByTag):
         if glove:
             self._glove = glove
         else:
-            if self._topenv.glove:
-                self._glove = self._topenv.glove
-            else:
-                self._glove = getglove()
+            self._glove = getglove()
+
+        logger.debug('New session system is %s', self.system())
+
+        self._rundir  = self.sh.getcwd()
 
         logger.debug('Open session %s %s', self.tag, self)
 
         if context is None:
             context = contexts.Context(tag=self.tag, topenv=self._topenv, path=self.path)
-            if context.env.active() and not self._active:
-                context.env.active(False)
 
-        context.env.glove = self._glove
-        if self._active:
-            Ticket.set_focus(self)
-            contexts.Context.set_focus(context)
-            context.env.active(True)
+        self._last_context = context
+
+        if active:
+            self.catch_focus()
 
     def _get_rundir(self):
         """Return the path of the directory associated to current session."""
@@ -155,7 +151,7 @@ class Ticket(footprints.util.GetByTag):
     @property
     def active(self):
         """Return whether this session is active or not."""
-        return self._active
+        return self.has_focus()
 
     @property
     def started(self):
@@ -194,8 +190,11 @@ class Ticket(footprints.util.GetByTag):
 
     @property
     def context(self):
-        """Returns the active context binded to this section."""
-        return contexts.focus()
+        """Returns the active or latest context binded to this section."""
+        if self.active:
+            return contexts.current()
+        else:
+            return self._last_context
 
     def system(self, **kw):
         """
@@ -204,7 +203,7 @@ class Ticket(footprints.util.GetByTag):
         """
         refill = kw.pop('refill', False)
         if not self._system or kw or refill:
-            self._system = footprints.proxy.system(**kw)
+            self._system = footprints.proxy.system(glove=self.glove, **kw)
             if not self._system:
                 logger.critical('Could not load a system object with description %s', str(kw))
         return self._system
@@ -222,7 +221,7 @@ class Ticket(footprints.util.GetByTag):
     def activate(self):
         """Force the current session as active."""
         if self.opened:
-            return Ticket.switch(self.tag)
+            return self.switch(self.tag)
         else:
             return False
 
@@ -305,22 +304,26 @@ class Ticket(footprints.util.GetByTag):
         )
         return card
 
-    def switch(self, tag=None):
+    def focus_gain_hook(self):
+        """Activate the appropriate context."""
+        super(Ticket, self).focus_gain_hook()
+        self._last_context.catch_focus()
+
+    def focus_loose_hook(self):
+        """Keep track of the latest context."""
+        super(Ticket, self).focus_loose_hook()
+        self._last_context = self.context
+
+    @classmethod
+    def switch(cls, tag=None):
         """
         Allows the user to switch to an other session,
         assuming that the provided tag is already known.
         """
-        if tag in self.tag_keys():
-            focus = self.tag_focus()
-            table = dict(self.tag_items())
-            if tag != focus:
-                table[focus]._active = False
-                table[focus].env.active(False)
-                table[tag]._active = True
-                table[tag].env.active(True)
-                self.set_focus(table[tag])
-                contexts.Context.set_focus(table[focus].context)
-            return table[tag]
+        if tag in cls.tag_keys():
+            obj = Ticket(tag=tag)
+            obj.catch_focus()
+            return obj
         else:
             logger.error('Try to switch to an undefined session: %s', tag)
             return None
