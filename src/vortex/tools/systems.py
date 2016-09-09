@@ -611,6 +611,7 @@ class System(footprints.FootprintBase):
                 else:
                     p.terminate()
                 p.wait()
+            raise  # Fatal has no effect on that !
         else:
             if p.returncode in ok:
                 if isinstance(output, bool) and output:

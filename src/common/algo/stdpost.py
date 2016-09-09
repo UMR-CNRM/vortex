@@ -13,8 +13,7 @@ import footprints
 from footprints.stdtypes import FPTuple
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.layout.monitor    import BasicInputMonitor, AutoMetaGang, MetaGang
-from vortex.layout.monitor    import GangSt
+from vortex.layout.monitor    import BasicInputMonitor, AutoMetaGang, MetaGang, EntrySt, GangSt
 from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, Parallel, AlgoComponentError
 from vortex.syntax.stdattrs   import DelayedEnvValue, FmtInt
 from vortex.tools             import grib
@@ -476,6 +475,22 @@ class AddField(BlindRun):
         self.system.remove(self.fortnam)
 
 
+class DegradedDiagPEError(AlgoComponentError):
+    """Exception raised when some of the members are missing in the calculations."""
+    def __init__(self, ginfo, missings):
+        super(DegradedDiagPEError, self).__init__()
+        self._ginfo = ginfo
+        self._missings = missings
+
+    def __str__(self):
+        outstr = "Missing input data for geometry={0.area:s}, term={1!s}:\n".format(self._ginfo['geometry'],
+                                                                                    self._ginfo['term'])
+        for k, missing in self._missings.iteritems():
+            for member in missing:
+                outstr += "{:s}: member #{!s}\n".format(k, member)
+        return outstr
+
+
 class DiagPE(BlindRun, grib.GribApiComponent):
     """Execution of diagnostics on grib input (ensemble forecasts specific)."""
     _footprint = dict(
@@ -503,7 +518,6 @@ class DiagPE(BlindRun, grib.GribApiComponent):
                 default  = 20,
             ),
             missinglimit = dict(
-                values   = [0, ],
                 type     = int,
                 optional = True,
                 default  = 0,
@@ -537,6 +551,80 @@ class DiagPE(BlindRun, grib.GribApiComponent):
         if self.system.path.exists('fort.4'):
             self.system.subtitle('{0:s} : dump namelist <fort.4>'.format(self.realkind))
             self.system.cat('fort.4', output=False)
+
+    def _actual_execute(self, gmembers, filters, basedate, finalterm, rh, opts, gang):
+
+        mygeometry = gang.info['geometry']
+        myterm = gang.info['term']
+
+        self.system.title('Start processing for geometry={:s}, term={!s}.'.
+                          format(mygeometry.area, myterm))
+
+        # Find out what is the common set of members
+        members = set(gmembers)  # gmembers is mutable: we need a copy of it (hence the explicit set())
+        missing_members = dict()
+        for subgang in gang.memberslist:
+            smembers = set([s.section.rh.provider.member for s in subgang.memberslist
+                            if s.state == EntrySt.available])
+            missing_members[subgang.nickname] = gmembers - smembers
+            members &= smembers
+        # Record an error
+        if members != gmembers:
+            newexc = DegradedDiagPEError(gang.info, missing_members)
+            logger.error("Some of the data are missing for this geometry/term")
+            if self.fatal:
+                self.delayed_exception_add(newexc, traceback=False)
+            else:
+                logger.info("Fatal is false consequently no exception is recorder. It would look like this:")
+                print newexc
+        members = sorted(members)
+
+        # Tweak the namelist
+        namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
+        for nam in [ x.rh for x in namsec if 'NAM_PARAM' in x.rh.contents ]:
+            logger.info("Substitute the date (%s) to AAAAMMJJHH namelist entry", basedate.ymdh)
+            nam.contents['NAM_PARAM']['AAAAMMJJHH'] = basedate.ymdh
+            logger.info("Substitute the number of members (%d) to NBRUN namelist entry", len(members))
+            nam.contents['NAM_PARAM']['NBRUN'] = len(members)
+            logger.info("Substitute the the number of terms to NECH(0) namelist entry")
+            nam.contents['NAM_PARAM']['NECH(0)'] = 1
+            logger.info("Substitute the ressource term to NECH(1) namelist entry")
+            # NB: term should be expressed in minutes
+            nam.contents['NAM_PARAM']['NECH(1)'] = int(myterm)
+            nam.contents['NAM_PARAM']['ECHFINALE'] = finalterm.hour
+            # Now, update the model number for the GRIB files
+            logger.info("Substitute the model number (%d) to namelist entry", self.numod)
+            nam.contents['NAM_PARAM']['NMODELE'] = self.numod
+            # Add the NAM_PARAMPE block
+            if 'NAM_NMEMBRES' in nam.contents:
+                # Cleaning is needed...
+                del nam.contents['NAM_NMEMBRES']
+            newblock = nam.contents.newblock('NAM_NMEMBRES')
+            for i, member in enumerate(members):
+                newblock['NMEMBRES({:d})'.format(i + 1)] = int(member)
+            # We are done with the namelist
+            nam.save()
+
+        # Standard execution
+        opts['loop'] = myterm
+        super(DiagPE, self).execute(rh, opts)
+
+        actualname = r'{0:s}_{1:s}\+{2:s}'.format(self._method2output_map[self.method],
+                                                  mygeometry.area, myterm.fmthm)
+        # Find out the output file and filter it
+        filtered_out = list()
+        if len(filters):
+            for candidate in [f for f in self.system.glob(self._method2output_map[self.method] + '*')
+                              if re.match(actualname, f)]:
+                logger.info("Starting GRIB filtering on %s.", candidate)
+                filtered_out.extend(filters(candidate, candidate + '_{filtername:s}'))
+
+        # The diagnostic output may be promised
+        expected = [x for x in self.promises
+                    if (re.match(actualname, x.rh.container.localpath()) or
+                        x.rh.container.localpath() in filtered_out)]
+        for thispromise in expected:
+            thispromise.put(incache=True)
 
     def execute(self, rh, opts):
         """Loop on the various grib files provided."""
@@ -607,51 +695,11 @@ class DiagPE(BlindRun, grib.GribApiComponent):
 
                 for geometry, a_gang in [(g, current_gang[g]) for g in geometries
                                          if (current_gang[g] is not None and
-                                             current_gang[g].state == GangSt.collectable)]:
+                                             current_gang[g].state in (GangSt.collectable,
+                                                                       GangSt.pcollectable,))]:
 
-                    self.system.title('Start processing for geometry={:s}, term={!s}.'.
-                                      format(geometry.area, a_gang.info['term']))
-
-                    # Tweak the namelist
-                    namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
-                    for nam in [ x.rh for x in namsec if 'NAM_PARAM' in x.rh.contents ]:
-                        logger.info("Substitute the date (%s) to AAAAMMJJHH namelist entry", basedate.ymdh)
-                        nam.contents['NAM_PARAM']['AAAAMMJJHH'] = basedate.ymdh
-                        logger.info("Substitute the number of members (%d) to NBRUN namelist entry", len(members))
-                        nam.contents['NAM_PARAM']['NBRUN'] = len(members)
-                        logger.info("Substitute the the number of terms to NECH(0) namelist entry")
-                        nam.contents['NAM_PARAM']['NECH(0)'] = 1
-                        logger.info("Substitute the ressource term to NECH(1) namelist entry")
-                        # NB: term should be expressed in minutes
-                        nam.contents['NAM_PARAM']['NECH(1)'] = int(a_gang.info['term'])
-                        nam.contents['NAM_PARAM']['ECHFINALE'] = terms[geometry][-1].hour
-                        # Now, update the model number for the GRIB files
-                        logger.info("Substitute the model number (%d) to namelist entry", self.numod)
-                        nam.contents['NAM_PARAM']['NMODELE'] = self.numod
-                        # We are done with the namelist
-                        nam.save()
-
-                    # Standard execution
-                    opts['loop'] = a_gang.info['term']
-                    super(DiagPE, self).execute(rh, opts)
-
-                    actualname = r'{0:s}_{1:s}\+{2:s}'.format(self._method2output_map[self.method],
-                                                              geometry.area,
-                                                              a_gang.info['term'].fmthm)
-                    # Find out the output file and filter it
-                    filtered_out = list()
-                    if len(gfilter):
-                        for candidate in [f for f in self.system.glob(self._method2output_map[self.method] + '*')
-                                          if re.match(actualname, f)]:
-                            logger.info("Starting GRIB filtering on %s.", candidate)
-                            filtered_out.extend(gfilter(candidate, candidate + '_{filtername:s}'))
-
-                    # The diagnostic output may be promised
-                    expected = [x for x in self.promises
-                                if (re.match(actualname, x.rh.container.localpath()) or
-                                    x.rh.container.localpath() in filtered_out)]
-                    for thispromise in expected:
-                        thispromise.put(incache=True)
+                    self._actual_execute(members, gfilter, basedate, terms[geometry][-1],
+                                         rh, opts, a_gang)
 
                     # Next one
                     try:
@@ -659,7 +707,8 @@ class DiagPE(BlindRun, grib.GribApiComponent):
                     except IndexError:
                         current_gang[geometry] = None
 
-                if not (bm.all_done or any(gang.state == GangSt.collectable
+                if not (bm.all_done or any(current_gang[g] is not None and
+                                           gang.state in (GangSt.collectable, GangSt.pcollectable,)
                                            for gang in current_gang.itervalues())):
                     # Timeout ?
                     bm.is_timedout(self.timeout, IOError)
