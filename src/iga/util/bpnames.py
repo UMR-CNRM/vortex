@@ -17,28 +17,14 @@ logger = footprints.loggers.getLogger(__name__)
 _arpcourt_vconf = ('courtfr', 'frcourt', 'court')
 _arome_vconf    = ('3dvarfr',)
 
+
 def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
     if cutoff == 'assim' and vconf not in _arpcourt_vconf:
-        if vconf in _arome_vconf:
-            map_suffix = dict(
-                zip(
-                    zip(
-                        (cutoff,) * 2,
-                        (9, 21)
-                    ),
-                    ('r09', 'r21')
-                )
-            ) 
+        assim_cutoffs = range(0, 24, 3)
+        if (vconf in _arome_vconf) and (model == 'surfex'):
+            map_suffix = {(cutoff, h): 'r{:d}'.format(h) for h in assim_cutoffs}
         else:
-            map_suffix = dict(
-                zip(
-                    zip(
-                        (cutoff,) * 4,
-                        (0, 6, 12, 18)
-                    ),
-                    ('r00', 'r06', 'r12', 'r18')
-                )
-            )
+            map_suffix = {(cutoff, h): 'r{:02d}'.format(h) for h in assim_cutoffs}
     elif cutoff == 'production' and vconf not in _arpcourt_vconf:
         suffix_r0 = 'rAM' if model == 'arpege' else 'rCM'
         map_suffix = dict(
@@ -106,15 +92,7 @@ def gribNames(cutoff, reseau, model, run=None, vapp=None, vconf=None,
     elif model == 'arpege' and not run:
         logger.debug('cutoff %s', cutoff)
         if cutoff == 'assim' and vconf not in _arpcourt_vconf:
-            map_suffix = dict(
-                zip(
-                    zip(
-                        (cutoff,) * 4,
-                        (0, 6, 12, 18)
-                    ),
-                    ('00', '06', '12', '18')
-                )
-            )
+            map_suffix = {(cutoff, h): '{:02d}'.format(h) for h in (0, 6, 12, 18)}
         elif cutoff == 'production' and vconf not in _arpcourt_vconf:
             map_suffix = dict(
                 zip(
@@ -174,7 +152,7 @@ def clim_bdap_bnames(resource, provider):
         localname = 'BDAP_frangp_isba' + str(resource.month)
     elif resource.model == 'aladin':
         if "08" in resource.geometry.rnice:
-            #clim_dap.caled01.m01
+            # clim_dap.caled01.m01
             resolution = "01"
         else:
             resolution = "025"
@@ -222,7 +200,7 @@ def analysis_bnames(resource, provider):
         resource.cutoff, resource.date.hour, resource.model, resource.filling,
         vapp=provider.vapp, vconf=provider.vconf,
     )
-    #patch for the different kind of analysis (surface and atmospheric)
+    # patch for the different kind of analysis (surface and atmospheric)
     if ( resource.model == 'arome' and resource.filling == 'surf' ) or resource.model == 'surfex':
         return 'INIT_SURF.fa.' + suffix
     elif resource.model == 'hycom' and resource.filling == 'surf':
@@ -236,7 +214,7 @@ def analysis_bnames(resource, provider):
         anabase = 'ICMSH' + model_info + 'INIT'
         if resource.filling == 'surf':
             anabase += '_SURF'
-        return  anabase + '.' + suffix
+        return anabase + '.' + suffix
 
 
 def historic_bnames(resource, provider):
@@ -249,6 +227,7 @@ def historic_bnames(resource, provider):
         return 'ICMSHPREV' + '+' + resource.term.fmthour + '.' + suffix
     else:
         return 'ICMSH' + model_info + '+' + resource.term.fmthour + '.' + suffix
+
 
 def histsurf_bnames(resource, provider):
     """docstring for histsurf"""
@@ -344,10 +323,10 @@ def refdata_bnames(resource, provider):
 
 def bgstderr_bnames(resource, provider):
     if provider.igakey == 'france':
-        #errgrib_scr type
+        # errgrib_scr type
         return 'errgrib_scr.r' + str(resource.date.hour)
     else:
-        #I have to calculate a new date so as to get the correct run
+        # I have to calculate a new date so as to get the correct run
         prefix = 'errgrib'
         if resource.term.hour in [3, 9]:
             delta = 'PT' + str(resource.term.hour + 3) + 'H'
@@ -381,13 +360,13 @@ def observations_bnames(resource, provider):
         localname += str(day) + '.' + suffix + dico_names[fmt][1]
     else:
         localname += suffix
-    #localname = fmt + '.' + part + '.' + suffix
+    # localname = fmt + '.' + part + '.' + suffix
     return localname
 
 
 def global_bnames(resource, provider):
     """Return the basename of the resource."""
-    #itself = sys.modules.get(__name__)
+    # itself = sys.modules.get(__name__)
     for elmt in list(sys.modules):
         if sys.modules[elmt]:
             try:
@@ -455,7 +434,7 @@ def global_snames(resource, provider):
             if resource.part == 'conv':
                 bname = 'OBSOUL1F' + modsuff + '.' + suff
             elif resource.part == 'prof':
-                bname = 'OBSOUL2F' + modsuff + '.'+ suff
+                bname = 'OBSOUL2F' + modsuff + '.' + suff
             elif resource.part == 'surf':
                 bname = 'OBSOUL_SURFAN' + modsuff + '.' + suff
         elif resource.nativefmt == 'bufr':
@@ -483,4 +462,3 @@ def global_snames(resource, provider):
     if resource.realkind == 'historic':
         bname = 'toto'
     return bname
-
