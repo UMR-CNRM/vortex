@@ -251,41 +251,45 @@ class CombiIC(Combi):
 
         # Tweak the namelist
         namsec = self.setlink(initrole='Namelist', initkind='namelist')
+        nammod = namsec[0].rh.contents['NAMMOD']
 
         # Dealing with initial conditions from the assimilation ensemble
-        nbPert = len(self.context.sequence.effective_inputs(role = ('AEPerturbedState, ModelState')))
-        namsec[0].rh.contents['NAMMOD']['LANAP'] = (self.nbpert or nbPert != 0)
+        nbPert = len(self.context.sequence.effective_inputs(role = ('AEPerturbedState',
+                                                                    'ModelState')))
+        nammod['LANAP'] = bool(self.nbpert or nbPert != 0)
 
         # Dealing with singular vectors
         sv_sections = self.context.sequence.effective_inputs(role='CoeffSV')
-        namsec[0].rh.contents['NAMMOD']['LVS'] = bool(sv_sections)
+        nammod['LVS'] = bool(sv_sections)
         if sv_sections:
-            logger.info("Add the SV coefficient to the NAMCOEFVS namelist entry")
-            namsec[0].rh.contents.newblock('NAMCOEFVS')
-            namsec[0].rh.contents['NAMCOEFVS']['RCOEFVS'] = sv_sections[0].rh.contents['rcoefvs']
+            logger.info("Add the SV coefficient to the NAMCOEFVS namelist entry.")
+            namcoefvs = namsec[0].rh.contents.newblock('NAMCOEFVS')
+            namcoefvs['RCOEFVS'] = sv_sections[0].rh.contents['rcoefvs']
             nbPert = nbPert or len(self.context.sequence.effective_inputs(role = 'SVPerturbedState') or
                                    [sec for sec in self.context.sequence.effective_inputs(role = 'PerturbedState')
                                     if 'ICHR' in sec.rh.container.filename])
 
         # Dealing with breeding method's inputs
         bd_sections = self.context.sequence.effective_inputs(role='CoeffBreeding')
-        namsec[0].rh.contents['NAMMOD']['LBRED'] = bool(bd_sections)
+        nammod['LBRED'] = bool(bd_sections)
         if bd_sections:
-            logger.info("Add the breeding coefficient to the NAMCOEFBM namelist entry")
-            namsec[0].rh.contents.newblock('NAMCOEFBM')
-            namsec[0].rh.contents['NAMCOEFBM']['RCOEFBM'] = bd_sections[0].rh.contents['rcoefbm']
+            logger.info("Add the breeding coefficient to the NAMCOEFBM namelist entry.")
+            namcoefbm = namsec[0].rh.contents.newblock('NAMCOEFBM')
+            namcoefbm['RCOEFBM'] = bd_sections[0].rh.contents['rcoefbm']
             nbBd = len(self.context.sequence.effective_inputs(role = 'BreedingPerturbedState') or
                        [sec for sec in self.context.sequence.effective_inputs(role = 'PerturbedState')
                         if 'BMHR' in sec.rh.container.filename])
             nbPert = nbPert or (nbBd - 1 if nbBd == self.nbic and self.nbic % 2 != 0
                                 else self.nbic / 2)
 
-        # The mean value may be present among the AE or SV inputs: substract it
+        # The mean value may be present among the AE or SV inputs: subtract it
         nbPert -= 1 if nbPert * 2 == self.nbic + 1 else 0
 
         # The footprint's value is always preferred to the calculated one
         nbPert = self.nbpert or nbPert
-        logger.info("Add the NBPERT coefficient to the NAMENS namelist entry")
+        logger.info("NAMMOD namelist summary: LANAP=%s, LVS=%s, LBRED=%s.",
+                    * [nammod[k] for k in ('LANAP', 'LVS', 'LBRED')])
+        logger.info("Add the NBPERT=%d coefficient to the NAMENS namelist entry.", nbPert)
         namsec[0].rh.contents['NAMENS']['NBPERT'] = nbPert
 
         self._addNmod(namsec[0].rh, "final combination of the perturbations")
