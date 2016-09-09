@@ -82,6 +82,9 @@ class _GenericFilter(object):
         """Finds out if the full dictionary contains and matches subset."""
         superset_ok = True
         for k, v in subset.iteritems():
+            # Ignore the comments...
+            if k.startswith('comment'):
+                continue
             # Check for the key inside the full dictionary
             try:
                 fullvalue = full[str(k)]

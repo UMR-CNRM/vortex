@@ -277,10 +277,10 @@ class RemoteExtractSet(RemoteGenericSet):
     _RE_EXTRACT = re.compile(r'extract\=([^&]+)(:?&|$)')
 
     _footprint = dict(
-        info = 'A set of namelists in a remote repository',
+        info = 'A set of namelists or other things in a remote repository',
         attr = dict(
             setcontent = dict(
-                values = ['namelists', 'nam'],
+                values = ['namelists', 'nam', 'filters'],
                 remap = dict(nam='namelists')
             ),
         )
