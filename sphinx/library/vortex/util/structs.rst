@@ -45,3 +45,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: FootprintCopier
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
