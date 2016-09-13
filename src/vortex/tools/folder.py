@@ -50,6 +50,19 @@ class FolderShell(addons.Addon):
                 self.sh.trace = oldtrace
         return rc
 
+    def _folder_mv(self, source, destination):
+        """Shortcut to :meth:`move` method (file or directory)."""
+        if not isinstance(source, basestring) or not isinstance(destination, basestring):
+            rc = self.sh.hybridcp(source, destination)
+            if isinstance(source, basestring):
+                rc = rc and self.sh.remove(source)
+        else:
+            rc, source, destination = self.sh.tarfix_out(source, destination)
+            rc = rc and self.sh.move(source, destination)
+            if rc:
+                rc, source, destination = self.sh.tarfix_in(source, destination)
+        return rc
+
     def _folder_credentials(self, hostname=None, logname=None):
         """Some heuristic to get proper values for these arguments."""
         if hostname is None:

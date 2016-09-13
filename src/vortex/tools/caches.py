@@ -161,7 +161,7 @@ class Cache(footprints.FootprintBase):
         """Retrieve an item from the current cache."""
         source = self.fullpath(item)
         # If auto_dirextract, copy recursively each file contained in source
-        if dirextract and self.sh.path.isdir(source):
+        if dirextract and self.sh.path.isdir(source) and self.sh.is_tarname(local):
             rc = True
             destdir = self.sh.path.dirname(self.sh.path.realpath(local))
             logger.info('Automatic directory extract to: %s', destdir)
@@ -169,6 +169,8 @@ class Cache(footprints.FootprintBase):
                 rc = rc and self.sh.cp(subpath,
                                        self.sh.path.join(destdir, self.sh.path.basename(subpath)),
                                        intent=intent, fmt=fmt)
+                # For the insitu feature to work...
+                rc = rc and self.sh.touch(local)
         # The usual case: just copy source
         else:
             rc = self.sh.cp(source, local, intent=intent, fmt=fmt)
@@ -177,7 +179,8 @@ class Cache(footprints.FootprintBase):
                     self.sh.is_tarname(local) and self.sh.is_tarfile(local)):
                 destdir = self.sh.path.dirname(self.sh.path.realpath(local))
                 logger.info('Automatic Tar extract to: %s', destdir)
-                rc = rc and self.sh.smartuntar(local, destdir, output=False)
+                rc = rc and self.sh.smartuntar(local, destdir, output=False,
+                                               uniquelevel_ignore=True)
         self._recursive_touch(rc, item)
         self.addrecord('RETRIEVE', item, status=rc, info=info, fmt=fmt, intent=intent)
         return rc

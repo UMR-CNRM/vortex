@@ -2,13 +2,16 @@
 # -*- coding:Utf-8 -*-
 # pylint: disable=unused-argument
 
+import tempfile
+
+import footprints
+
+from vortex.data.stores import Store, MultiStore, CacheStore
+
 #: No automatic export
 __all__ = []
 
-import footprints
 logger = footprints.loggers.getLogger(__name__)
-
-from vortex.data.stores import Store, MultiStore, CacheStore
 
 
 class GcoCentralStore(Store):
@@ -116,6 +119,7 @@ class GcoCentralStore(Store):
         sh = self.system
         sh.env.GGET_TAMPON = tampon
 
+        fmt = options.get('fmt', 'foo')
         extract = remote['query'].get('extract', None)
         if extract and sh.path.exists(gname):
             logger.info("The resource was already fetched in a previous extract.")
@@ -124,23 +128,27 @@ class GcoCentralStore(Store):
             rc = sh.spawn([gtool, '-host', archive, gname], output=False)
 
         if rc and sh.path.exists(gname):
-            if not sh.path.isdir(gname) and sh.is_tarfile(gname):
-                destdir = sh.path.dirname(sh.path.realpath(local))
-                unpacked = sh.smartuntar(gname, destdir, output=False)
-            else:
-                unpacked = None
             if extract:
-                logger.info('GCO Central Store get %s', gname + '/' + extract[0])
-                rc = sh.cp(gname + '/' + extract[0], local)
-            else:
-                logger.info('GCO Central Store get %s', gname)
-                if unpacked is None or len(unpacked) > 1 or sh.is_tarname(local):
-                    rc = sh.mv(gname, local)
-                else:
-                    if unpacked[0] == local:
-                        logger.warning('Do not rename to existing local name [%s]', local)
+                # The file to extract may be in a tar file...
+                if not sh.path.isdir(gname) and sh.is_tarname(gname) and sh.is_tarfile(gname):
+                    destdir = sh.tarname_radix(sh.path.realpath(gname))
+                    if sh.path.exists(destdir):
+                        logger.info("%s was already fetched in a previous extract.", destdir)
                     else:
-                        rc = sh.mv(unpacked[0], local)
+                        rc = len(sh.smartuntar(gname, destdir, output=False,
+                                               uniquelevel_ignore=True)) > 0
+                    gname = destdir
+                logger.info('GCO Central Store get %s', gname + '/' + extract[0])
+                rc = rc and sh.cp(gname + '/' + extract[0], local, fmt=fmt)
+            else:
+                # Always  move the resource to destination (fmt may influence the result)
+                logger.info('GCO Central Store get %s', gname)
+                rc = rc and sh.filecocoon(local)
+                rc = rc and sh.mv(gname, local, fmt=fmt)
+                # Automatic untar if needed... (the local file need to ends with a tar extension)
+                if not sh.path.isdir(local) and sh.is_tarname(local) and sh.is_tarfile(local):
+                    destdir = sh.path.dirname(sh.path.realpath(local))
+                    sh.smartuntar(local, destdir, output=False, uniquelevel_ignore=True)
         else:
             logger.warning('GCO Central Store get %s was not successful (%s)', gname, rc)
         return rc
