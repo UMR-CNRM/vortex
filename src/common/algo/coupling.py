@@ -9,9 +9,10 @@ import re
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
+from vortex.algo.components import AlgoComponentError, BlindRun
+from vortex.layout.dataflow import intent
 from vortex.tools import date
 from .forecasts import FullPos
-from vortex.layout.dataflow import intent
 
 
 class Coupling(FullPos):
@@ -204,4 +205,140 @@ class Coupling(FullPos):
     def postfix(self, rh, opts):
         """Post processing cleaning."""
         super(Coupling, self).postfix(rh, opts)
+        self.system.dir(output=False)
+
+
+class Prep(BlindRun):
+    """Coupling/Interpolation of Surfex files."""
+
+    _footprint = dict(
+        info = "Coupling/Interpolation of Surfex files.",
+        attr = dict(
+            kind = dict(
+                values   = ['prep'],
+            ),
+            underlyingformat = dict(
+                values   = ['fa', 'lfi'],
+                optional = True,
+                default  = 'fa'
+            )
+        )
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        super(Prep, self).__init__(*kargs, **kwargs)
+        self._addon_checked = None
+
+    def _check_addons(self):
+        if self._addon_checked is None:
+            self._addon_checked = ('sfx' in self.system.loaded_addons() and
+                                   'lfi' in self.system.loaded_addons())
+        if not self._addon_checked:
+            raise RuntimeError("The sfx addon is needed... please load it.")
+
+    def _do_input_format_change(self, section, output_name):
+        (localpath, infmt) = (section.rh.container.localpath(),
+                              section.rh.container.actualfmt)
+        if section.rh.container.actualfmt != self.underlyingformat:
+            if infmt == 'fa' and self.underlyingformat == 'lfi':
+                if self.system.path.exists(output_name):
+                    raise IOError("The %s file already exists.", output_name)
+                self._check_addons()
+                logger.info("Calling sfxtools' fa2lfi from %s to %s.", localpath, output_name)
+                self.system.sfx_fa2lfi(localpath, output_name)
+            else:
+                raise RuntimeError("Format conversion from %s to %s is not possible",
+                                   infmt, self.underlyingformat)
+        else:
+            if not self.system.path.exists(output_name):
+                logger.info("Linking %s to %s", localpath, output_name)
+                self.system.cp(localpath, output_name, intent=intent.IN, fmt=infmt)
+
+    def _process_outputs(self, section, output_clim, output_name):
+        (radical, outfmt) = (self.system.path.splitext(section.rh.container.localpath())[0],
+                             section.rh.container.actualfmt)
+        finaloutput = '{:s}_interpolated.{:s}'.format(radical, outfmt)
+        finallisting = '{:s}_listing'.format(radical)
+        if outfmt != self.underlyingformat:
+            # There is a need for a format change
+            if outfmt == 'fa' and self.underlyingformat == 'lfi':
+                self._check_addons()
+                logger.info("Calling lfitools' faempty from %s to %s.", output_clim, finaloutput)
+                self.system.fa_empty(output_clim, finaloutput)
+                logger.info("Calling sfxtools' lfi2fa from %s to %s.", output_name, finaloutput)
+                self.system.sfx_lfi2fa(output_name, finaloutput)
+                self.system.rm(output_name)
+            else:
+                raise RuntimeError("Format conversion from %s to %s is not possible",
+                                   outfmt, self.underlyingformat)
+        else:
+            # No format change needed
+            logger.info("Moving %s to %s", output_name, finaloutput)
+            self.system.mv(output_name, finaloutput, fmt=outfmt)
+        # Also rename the listing :-)
+        self.system.mv('LISTING_PREP.txt', finallisting)
+        return finaloutput
+
+    def prepare(self, rh, opts):
+        """Default pre-link for namelist file and domain change."""
+        super(Prep, self).prepare(rh, opts)
+        # Basic exports
+        for optpack in ['drhook', 'drhook_not_mpi']:
+            self.export(optpack)
+        # Convert the initial clim if needed...
+        iniclim = self.context.sequence.effective_inputs(role=('InitialClim',))
+        if not (len(iniclim) == 1):
+            raise AlgoComponentError("One Initial clim have to be provided")
+        self._do_input_format_change(iniclim[0], 'PGD1.' + self.underlyingformat)
+        # Convert the target clim if needed...
+        targetclim = self.context.sequence.effective_inputs(role=('TargetClim',))
+        if not (len(targetclim) == 1):
+            raise AlgoComponentError("One Target clim have to be provided")
+        self._do_input_format_change(targetclim[0], 'PGD2.' + self.underlyingformat)
+
+    def execute(self, rh, opts):
+        """Loop on the various initial conditions provided."""
+
+        sh = self.system
+
+        cplsec = self.context.sequence.effective_inputs(
+            role = ('InitialCondition', 'CouplingSource'),
+            kind = ('historic', 'analysis')
+        )
+        cplsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+        infile = 'PREP1.{:s}'.format(self.underlyingformat)
+        outfile = 'PREP2.{:s}'.format(self.underlyingformat)
+        targetclim = self.context.sequence.effective_inputs(role=('TargetClim',))
+        targetclim = targetclim[0].rh.container.localpath()
+
+        for sec in cplsec:
+            r = sec.rh
+            sh.header('Loop on {0:s}'.format(r.container.localpath()))
+
+            # Expect the coupling source to be there...
+            self.grab(sec, comment='coupling source')
+
+            # Set the actual init file
+            if sh.path.exists(infile):
+                logger.critical('Cannot process input files if %s exists.', infile)
+            self._do_input_format_change(sec, infile)
+
+            # Standard execution
+            super(Prep, self).execute(rh, opts)
+
+            # Deal with outputs
+            actualname = self._process_outputs(sec, targetclim, outfile)
+
+            # promises management
+            expected = [x for x in self.promises if x.rh.container.localpath() == actualname]
+            if expected:
+                for thispromise in expected:
+                    thispromise.put(incache=True)
+
+            # Some cleaning
+            sh.rmall('*.des', fmt = r.container.actualfmt)
+
+    def postfix(self, rh, opts):
+        """Post processing cleaning."""
+        super(Prep, self).postfix(rh, opts)
         self.system.dir(output=False)

@@ -27,6 +27,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Prep
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ProGrid
    :show-inheritance:
    :members:
@@ -73,6 +78,11 @@ Classes
    :member-order: alphabetical
    
 .. autoclass:: LFITools
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SFXTools
    :show-inheritance:
    :members:
    :member-order: alphabetical

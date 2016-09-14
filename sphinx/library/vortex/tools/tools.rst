@@ -26,7 +26,9 @@ Package
 * :mod:`vortex.tools.net`
 * :mod:`vortex.tools.odb`
 * :mod:`vortex.tools.parallelism`
+* :mod:`vortex.tools.schedulers`
 * :mod:`vortex.tools.services`
+* :mod:`vortex.tools.surfex`
 * :mod:`vortex.tools.systems`
 * :mod:`vortex.tools.targets`
 
