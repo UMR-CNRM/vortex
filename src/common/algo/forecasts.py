@@ -207,7 +207,8 @@ class LAMForecast(Forecast):
             role = 'BoundaryConditions',
             kind = 'boundary'
         ) ]
-        cplrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
+        cplrh.sort(lambda a, b: cmp(a.resource.date + a.resource.term,
+                                    b.resource.date + b.resource.term))
 
         # Ordered pre-linking of boundaring and building ot the synchronization tools
         firstsync = None
