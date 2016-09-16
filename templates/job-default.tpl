@@ -19,7 +19,7 @@
 import os, sys, re
 
 op_jobname  = '$name'
-op_rootapp  = os.getcwd().rstrip('/jobs')
+op_rootapp  = os.environ["DMT_PATH_EXEC"].rstrip('/jobs')
 op_xpid     = os.path.split(os.path.split(os.path.split(op_rootapp)[0])[0])[1]
 op_vapp     = os.path.split(os.path.split(op_rootapp)[0])[1]
 op_vconf    = os.path.split(op_rootapp)[1]
