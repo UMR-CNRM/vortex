@@ -16,16 +16,18 @@
 # Build host: $mkhost
 # Build opts: $mkopts
 
+import os, sys, re
+
 op_jobname  = '$name'
-op_xpid     = '$xpid'
+op_rootapp  = os.getcwd().rstrip('/jobs')
+op_xpid     = os.path.split(os.path.split(os.path.split(op_rootapp)[0])[0])[1]
+op_vapp     = os.path.split(os.path.split(op_rootapp)[0])[1]
+op_vconf    = os.path.split(op_rootapp)[1]
 op_suitebg  = '$suitebg'
-op_vapp     = '$vapp'
-op_vconf    = '$vconf'
 op_cutoff   = '$cutoff'
 op_rundate  = $rundate
 op_runtime  = $runtime
 op_runstep  = $runstep
-op_rootapp  = '$rootapp/{0:s}/{1:s}/{2:s}'.format(op_suitebg, op_vapp, op_vconf)
 op_jobfile  = '$file'
 op_thisjob  = '{0:s}/jobs/{1:s}.py'.format(op_rootapp, op_jobfile)
 op_iniconf  = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(op_rootapp, op_vapp, op_vconf, '$taskconf')
@@ -41,13 +43,13 @@ op_jeeves   = '$jeeves'
 
 oplocals = locals()
 
-import os, sys, re
 sys.stderr = sys.stdout
 
-pathdirs = [ os.path.join(op_rootapp, xpath) for xpath in ('', 'src', 'vortex/site', 'vortex/src') ]
-sys.path.extend(
-    [ os.path.realpath(d) for d in pathdirs if os.path.isdir(d) ]
-)
+pathdirs = [ os.path.join(op_rootapp, xpath) for xpath in ('', 'vortex/site', 'vortex/src', 'epygram', 'epygram/site', 'epygram/grib_api') ]
+for d in pathdirs :
+    if os.path.isdir(d):
+        sys.path.insert(0, d)
+
 
 import iga.tools.op as op
 import $package.$task as todo
