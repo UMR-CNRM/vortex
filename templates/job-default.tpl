@@ -19,10 +19,10 @@
 import os, sys, re
 
 op_jobname  = '$name'
-op_rootapp  = os.environ["DMT_PATH_EXEC"].rstrip('/jobs')
-op_xpid     = os.path.split(os.path.split(os.path.split(op_rootapp)[0])[0])[1]
-op_vapp     = os.path.split(os.path.split(op_rootapp)[0])[1]
-op_vconf    = os.path.split(op_rootapp)[1]
+op_rootapp  = os.path.realpath(os.environ["DMT_PATH_EXEC"]).rstrip('/jobs')
+op_xpid     = op_rootapp.split('/')[-3]
+op_vapp     = op_rootapp.split('/')[-2]
+op_vconf    = op_rootapp.split('/')[-1]
 op_suitebg  = '$suitebg'
 op_cutoff   = '$cutoff'
 op_rundate  = $rundate
@@ -47,7 +47,6 @@ pathdirs = [ os.path.join(op_rootapp, xpath) for xpath in ('', 'vortex/site', 'v
 for d in pathdirs :
     if os.path.isdir(d):
         sys.path.insert(0, d)
-
 
 import iga.tools.op as op
 import $package.$task as todo
