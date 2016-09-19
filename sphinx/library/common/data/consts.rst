@@ -47,6 +47,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: AtlasMonthlyEmissivityInstrument
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: AtlasEmissivityPack
    :show-inheritance:
    :members:

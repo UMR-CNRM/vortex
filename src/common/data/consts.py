@@ -4,9 +4,12 @@
 #: No automatic export
 __all__ = []
 
+import footprints
+
 from vortex.data.outflow    import NoDateResource, ModelResource, StaticGeoResource
 from vortex.data.geometries import LonlatGeometry, GaussGeometry
 from vortex.data.contents   import TextContent, JsonDictContent
+from vortex.syntax.stdattrs import month
 
 from gco.syntax.stdattrs    import gvar
 
@@ -439,16 +442,14 @@ class SigmaB(GenvModelResource):
 
 class AtlasEmissivity(GenvModelResource):
     """
-    TODO.
-    A Genvkey can be given.
+    Abstract class for any Emissivity atlas.
     """
     _abstract  = True
     _footprint = dict(
-        info = 'Atlas of emissitivity according to some pack of instrument(s).',
         attr = dict(
             kind = dict(
-                values   = ['atlas_emissivity', 'atlasemissivity',
-                            'atlasemiss', 'emiss'],
+                values   = ['atlas_emissivity', 'atlasemissivity', 'atlasemiss', 'emiss',
+                            'emissivity_atlas'],
                 remap    = dict(autoremap = 'first'),
             ),
         )
@@ -461,29 +462,59 @@ class AtlasEmissivity(GenvModelResource):
 
 class AtlasEmissivityInstrument(AtlasEmissivity):
     """
-    TODO.
+    A yearly emissivity atlas for a specific instrument/sensor.
     A Genvkey can be given.
     """
     _footprint = dict(
-        info = 'Atlas of emissitivity according to some pack of instrument(s).',
+        info = 'Yearly emissivity atlas for a given instrument(s).',
         attr = dict(
             instrument = dict(
-                values  = ['seviri', 'ssmis'],
+                values  = ['seviri', 'ssmis', 'iasi', 'amsua', 'amsub', 'an1', 'an2'],
+                remap   = dict(an1='amsua', an2='amsub')
             ),
             gvar = dict(
                 default = 'emissivity_atlas_[instrument]'
             ),
+            month = dict(
+                # This is a fake attribute that avoid warnings...
+                values = [None, ],
+                optional = True,
+                default = None,
+                doc_visibility = footprints.doc.visibility.GURU,
+            )
         )
     )
 
 
+class AtlasMonthlyEmissivityInstrument(AtlasEmissivityInstrument):
+    """
+    A monthly emissivity atlas for a specific instrument/sensor.
+    A Genvkey can be given.
+    """
+    _footprint = [
+        month,
+        dict(
+            info = 'Monthly emissivity atlas for a given instrument(s).',
+            attr = dict(
+                gvar = dict(
+                    default = 'emissivity_atlas_[instrument]_monthly'
+                ),
+            )
+        ),
+    ]
+
+    def gget_basename(self):
+        """GGET specific naming convention."""
+        return '.m' + str(self.month)
+
+
 class AtlasEmissivityPack(AtlasEmissivity):
     """
-    TODO.
+    Legacy yearly emissivity atlases for Amsu-A/B. DEPRECIATED.
     A Genvkey can be given.
     """
     _footprint = dict(
-        info = 'Atlas of emissitivity according to some pack of instrument(s).',
+        info = 'Atlas of emissivity according to some pack of instrument(s).',
         attr = dict(
             pack   = dict(
                 values   = ['1', '2'],
