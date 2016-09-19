@@ -21,7 +21,7 @@ def use_in_shell(sh, **kw):
     return footprints.proxy.addon(**kw)
 
 
-class GRIB_Tool(addons.Addon):
+class GRIB_Tool(addons.FtrawEnableAddon):
     """
     Handle multipart-GRIB files properly.
     """
@@ -171,7 +171,22 @@ class GRIB_Tool(addons.Addon):
     def _std_rawftput(self, source, destination, hostname=None, logname=None):
         """Use ftserv as much as possible."""
         if self.is_xgrib(source):
-            return self._std_ftput(source, destination, hostname, logname)
+            if self.sh.ftraw and self.rawftshell is not None:
+                # Copy the GRIB pieces individually
+                pieces = self.xgrib_index_get(source)
+                newsources = [self.sh.copy2ftspool(piece) for piece in pieces]
+                request = newsources[0] + '.request'
+                with open(request, 'w') as request_fh:
+                    request_fh.writelines('\n'.join(newsources))
+                self.sh.readonly(request)
+                rc = self.sh.ftserv_put(request, destination,
+                                        hostname=hostname, logname=logname,
+                                        specialshell=self.rawftshell)
+                self.sh.rm(request)
+                return rc
+            else:
+                return self._std_ftput(source, destination,
+                                       hostname=hostname, logname=logname)
         else:
             return self.sh.rawftput(source, destination, hostname=hostname, logname=logname)
 

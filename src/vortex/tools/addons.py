@@ -31,10 +31,12 @@ class Addon(footprints.FootprintBase):
                 optional = True,
                 default  = None,
                 access   = 'rwx',
+                doc_visibility = footprints.doc.visibility.ADVANCED
             ),
             cfginfo = dict(
                 optional = True,
                 default  = '[kind]',
+                doc_visibility = footprints.doc.visibility.ADVANCED
             ),
             cmd = dict(
                 optional = True,
@@ -133,3 +135,30 @@ class Addon(footprints.FootprintBase):
             cmd[0] = self.path + '/' + cmd[0]
 
         return self._spawn_commons(cmd, **kw)
+
+
+class FtrawEnableAddon(Addon):
+    """Root class for any :class:`Addon` system subclasses that needs to override rawftput."""
+
+    _abstract  = True
+    _footprint = dict(
+        info = 'Default add-on with rawftput support.',
+        attr = dict(
+            rawftshell = dict(
+                info     = "Path to ftserv's concatenation shell",
+                optional = True,
+                default  = None,
+                access   = 'rwx',
+                doc_visibility = footprints.doc.visibility.GURU,
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        """Abstract Addon initialisation."""
+        logger.debug('Abstract Addon init %s', self.__class__)
+        super(FtrawEnableAddon, self).__init__(*args, **kw)
+        # If needed, look in the config file for the rawftshell
+        if self.rawftshell is None:
+            tg = self.sh.target()
+            self.rawftshell = tg.get(self.cfginfo + ':rawftshell', None)

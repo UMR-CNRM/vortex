@@ -243,5 +243,9 @@ class OdbShell(folder.FolderShell):
         return super(OdbShell, self)._folder_ftput(source, destination,
                                                    hostname, logname)
 
-    odb_rawftput = odb_ftput
+    def odb_rawftput(self, source, destination, hostname=None, logname=None):
+        """Proceed direct ftp get on the specified target."""
+        return super(OdbShell, self)._folder_rawftput(source, destination,
+                                                      hostname, logname)
+
     odb_rawftget = odb_ftget

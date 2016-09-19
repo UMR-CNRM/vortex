@@ -244,6 +244,23 @@ class MtoolCache(Cache):
         return self.sh.path.join(cache, self.actual_headdir)
 
 
+class FtStashCache(MtoolCache):
+    """A place to store file to be sent with ftserv."""
+
+    _footprint = dict(
+        info = 'A place to store file to be sent with ftserv',
+        attr = dict(
+            kind = dict(
+                values   = ['ftstash', ],
+            ),
+            headdir = dict(
+                optional = True,
+                default  = 'ftspool',
+            ),
+        )
+    )
+
+
 class Op2ResearchCache(Cache):
     """Cache of the operational suite (read-only)."""
 

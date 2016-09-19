@@ -20,3 +20,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: FtrawEnableAddon
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

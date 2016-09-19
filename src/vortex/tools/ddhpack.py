@@ -39,5 +39,9 @@ class DdhPackShell(folder.FolderShell):
         return super(DdhPackShell, self)._folder_ftput(source, destination,
                                                        hostname, logname)
 
-    ddhpack_rawftput = ddhpack_ftput
+    def ddhpack_rawftput(self, source, destination, hostname=None, logname=None):
+        """Proceed direct ftp get on the specified target."""
+        return super(DdhPackShell, self)._folder_rawftput(source, destination,
+                                                          hostname, logname)
+
     ddhpack_rawftget = ddhpack_ftget

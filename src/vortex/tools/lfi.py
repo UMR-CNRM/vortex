@@ -92,7 +92,7 @@ class LFI_Status(object):
         return bool(self.rc in self.ok)
 
 
-class LFI_Tool_Raw(addons.Addon):
+class LFI_Tool_Raw(addons.FtrawEnableAddon):
     """
     Interface to LFI commands through Perl wrappers.
     """
@@ -126,6 +126,7 @@ class LFI_Tool_Raw(addons.Addon):
                 values   = ['perl', ],
                 default  = 'perl',
                 optional = True,
+                doc_visibility = footprints.doc.visibility.ADVANCED,
             ),
         )
     )
@@ -260,7 +261,15 @@ class LFI_Tool_Raw(addons.Addon):
     def _std_rawftput(self, source, destination, hostname=None, logname=None):
         """Use ftserv as much as possible."""
         if self.is_xlfi(source):
-            return self._std_ftput(source, destination, hostname, logname)
+            if self.sh.ftraw and self.rawftshell is not None:
+                newsource = self.sh.copy2ftspool(source, fmt='lfi')
+                rc = self.sh.ftserv_put(newsource, destination,
+                                        hostname=hostname, logname=logname,
+                                        specialshell=self.rawftshell)
+                self.sh.rm(newsource) # Delete the request file
+                return rc
+            else:
+                return self._std_ftput(source, destination, hostname, logname)
         else:
             return self.sh.rawftput(source, destination, hostname=hostname, logname=logname)
 
