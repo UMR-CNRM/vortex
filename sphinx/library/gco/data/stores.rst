@@ -12,10 +12,16 @@ Package
 -------
 
 .. autodata:: __all__
-  
+
+.. autodata:: GGET_DEFAULT_CONFIGFILE
 
 Classes
 -------
+
+.. autoclass:: GcoStoreConfig
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
  
 .. autoclass:: GcoCentralStore
    :show-inheritance:

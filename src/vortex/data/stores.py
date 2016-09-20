@@ -1144,11 +1144,12 @@ class CacheStore(Store):
         return self.cache.retrieve(
             remote['path'],
             local,
-            intent     = options.get('intent', _CACHE_GET_INTENT_DEFAULT),
-            fmt        = options.get('fmt'),
-            info       = options.get('rhandler', None),
-            tarextract = options.get('auto_tarextract', False),
-            dirextract = options.get('auto_dirextract', False),
+            intent              = options.get('intent', _CACHE_GET_INTENT_DEFAULT),
+            fmt                 = options.get('fmt'),
+            info                = options.get('rhandler', None),
+            tarextract          = options.get('auto_tarextract', False),
+            dirextract          = options.get('auto_dirextract', False),
+            uniquelevel_ignore  = options.get('uniquelevel_ignore', True),
         )
 
     def incacheput(self, local, remote, options):

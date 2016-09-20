@@ -157,7 +157,7 @@ class Cache(footprints.FootprintBase):
         return rc
 
     def retrieve(self, item, local, intent='in', fmt='foo', info=None,
-                 dirextract=False, tarextract=False):
+                 dirextract=False, tarextract=False, uniquelevel_ignore=True):
         """Retrieve an item from the current cache."""
         source = self.fullpath(item)
         # If auto_dirextract, copy recursively each file contained in source
@@ -180,7 +180,7 @@ class Cache(footprints.FootprintBase):
                 destdir = self.sh.path.dirname(self.sh.path.realpath(local))
                 logger.info('Automatic Tar extract to: %s', destdir)
                 rc = rc and self.sh.smartuntar(local, destdir, output=False,
-                                               uniquelevel_ignore=True)
+                                               uniquelevel_ignore=uniquelevel_ignore)
         self._recursive_touch(rc, item)
         self.addrecord('RETRIEVE', item, status=rc, info=info, fmt=fmt, intent=intent)
         return rc
