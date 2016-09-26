@@ -274,7 +274,8 @@ class GcoCacheStore(CacheStore):
             return False
         else:
             gname = remote['path'].lstrip('/').split('/').pop()
-            options_tmp = self.ggetconfig.key_untar_properties(gname)
+            options_tmp = options.copy() if options else dict()
+            options_tmp.update(self.ggetconfig.key_untar_properties(gname))
             options_tmp['auto_tarextract'] = True
             return self.incacheget(remote, local, options_tmp)
 
