@@ -79,6 +79,29 @@ class Arome(IFSModel):
         return super(Arome, self).command_line(**kw)
 
 
+class Prep(BlackBox):
+    """A tool to interpolate Surfex files."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Prep utility to interpolate Surfex files',
+            attr = dict(
+                gvar = dict(
+                    default  = 'master_prep'
+                ),
+                kind = dict(
+                    values   = ['prep', ],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'prep'
+
+
 class ProGrid(BlackBox):
     """A tool for grib conversion."""
 
@@ -339,6 +362,29 @@ class LFITools(BlackBox):
     @property
     def realkind(self):
         return 'lfitools'
+
+
+class SFXTools(BlackBox):
+    """Multipurpose tool to handle Surfex files."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Tool that handles Surfex files',
+            attr = dict(
+                kind = dict(
+                    values   = ['sfxtools', ],
+                ),
+                gvar = dict(
+                    default  = 'master_sfxtools'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'sfxtools'
 
 
 class Combi(BlackBox):

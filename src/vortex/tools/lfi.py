@@ -220,6 +220,18 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     fa_diff = lfi_diff = _std_diff
 
+    def fa_empty(self, fa1, fa2, **kw):
+        """
+        Create an empty FA file
+
+        Mandatory args are:
+          * fa1 : The reference file
+          * fa2 : The new empty file
+
+        """
+        cmd = [ 'faempty', fa1, fa2 ]
+        self._spawn(cmd, **kw)
+
     def _pack_stream(self, source):
         return self._spawn_wrap('pack', [source, ],
                                 output  = False,
