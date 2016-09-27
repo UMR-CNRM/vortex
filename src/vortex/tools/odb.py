@@ -233,6 +233,10 @@ class OdbShell(folder.FolderShell):
         """Extended copy for ODB repository."""
         return super(OdbShell, self)._folder_cp(source, destination, intent)
 
+    def odb_mv(self, source, destination):
+        """Extended copy for ODB repository."""
+        return super(OdbShell, self)._folder_mv(source, destination)
+
     def odb_ftget(self, source, destination, hostname=None, logname=None):
         """Proceed direct ftp get on the specified target."""
         return super(OdbShell, self)._folder_ftget(source, destination,

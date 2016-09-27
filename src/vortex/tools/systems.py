@@ -1094,7 +1094,12 @@ class OSExtended(System):
             else:
                 rc = self.rawcp(source, destination)  # Rawcp is atomic as much as possiblr
                 if rc:
-                    self.readonly(destination)
+                    if self.path.isdir(destination):
+                        for copiedfile in self.ffind(destination):
+                            if not self.path.islink(copiedfile):  # This make no sense to chmod symlinks
+                                self.chmod(copiedfile, 0444)
+                    else:
+                        self.readonly(destination)
                 return rc
         else:
             logger.error('Could not create a cocoon for file %s', destination)
@@ -1305,17 +1310,24 @@ class OSExtended(System):
 
     def smartuntar(self, source, destination, **kw):
         """Unpack a file archive in the appropriate directory."""
+        uniquelevel_ignore = kw.pop('uniquelevel_ignore', False)
         fullsource = self.path.realpath(source)
         self.mkdir(destination)
         loctmp = tempfile.mkdtemp(prefix='untar_', dir=destination)
         with self.cdcontext(loctmp):
             self.untar(fullsource, **kw)
             unpacked = self.glob('*')
+            # If requested, ignore the first level of directory
+            if (uniquelevel_ignore and len(unpacked) == 1 and
+                    self.path.isdir(self.path.join(unpacked[0]))):
+                logger.info('Moving contents one level up: %s', unpacked[0])
+                unpacked = self.glob(self.path.join(unpacked[0], '*'))
             for untaritem in unpacked:
-                if self.path.exists('../' + untaritem):
+                itemtarget = self.path.basename(untaritem)
+                if self.path.exists('../' + itemtarget):
                     logger.error('Some previous item exists before untar [%s]', untaritem)
                 else:
-                    self.mv(untaritem, '../' + untaritem)
+                    self.mv(untaritem, '../' + itemtarget)
         self.rm(loctmp)
         return unpacked
 
@@ -1339,8 +1351,7 @@ class OSExtended(System):
     def tarfix_in(self, source, destination):
         """Untar the ``destination`` if ``source`` is a tarfile."""
         ok = True
-        if (self.path.isfile(source) and self.is_tarname(source) and
-                not self.is_tarname(destination)):
+        if self.is_tarname(source) and not self.is_tarname(destination):
             logger.info('Untar from get <%s>', source)
             (destdir, destfile) = self.path.split(self.path.abspath(destination))
             desttar = self.path.abspath(destination + '.tar')
@@ -1362,10 +1373,11 @@ class OSExtended(System):
         if not self.is_tarname(source) and self.is_tarname(destination):
             logger.info('Tar before put <%s>', source)
             sourcetar = self.path.abspath(source + '.tar')
+            (sourcedir, source_rel) = self.path.split(source)
             (sourcedir, sourcefile) = self.path.split(sourcetar)
             with self.cdcontext(sourcedir):
                 ok = ok and self.remove(sourcefile)
-                ok = ok and self.tar(sourcefile, source, output=False)
+                ok = ok and self.tar(sourcefile, source_rel, output=False)
             return (ok, sourcetar, destination)
         else:
             return (ok, source, destination)
