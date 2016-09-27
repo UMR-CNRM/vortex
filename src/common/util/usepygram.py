@@ -19,7 +19,7 @@ from vortex.tools.date import Date, Time
 
 try:
     import epygram  # @UnusedImport
-    print 'Epygram ', LooseVersion(epygram.__version__), ' loaded'
+    logger.info('Epygram %s loaded.', LooseVersion(epygram.__version__))
 except ImportError:
     pass
 
