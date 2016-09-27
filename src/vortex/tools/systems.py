@@ -13,6 +13,7 @@ import os, stat, resource, shutil, socket, tempfile
 import re, platform, sys, io, filecmp, time
 import signal
 import glob
+import hashlib
 import tarfile
 import subprocess
 import pickle
@@ -26,6 +27,7 @@ logger = footprints.loggers.getLogger(__name__)
 from opinel.interrupt import SignalInterruptHandler, SignalInterruptError
 
 from vortex.gloves          import Glove
+from vortex.tools           import date
 from vortex.tools.env       import Environment
 from vortex.tools.net       import StdFtp
 from vortex.util.structs    import History
@@ -143,7 +145,7 @@ class System(footprints.FootprintBase):
         self.__dict__['_os']      = kw.pop('os', os)
         self.__dict__['_rl']      = kw.pop('rlimit', resource)
         self.__dict__['_sh']      = kw.pop('shutil', kw.pop('sh', shutil))
-        self.__dict__['_search']  = [ self.__dict__['_os'], self.__dict__['_sh'], self.__dict__['_rl'] ]
+        self.__dict__['_search']  = [self.__dict__['_os'], self.__dict__['_sh'], self.__dict__['_rl']]
         self.__dict__['_xtrack']  = dict()
         self.__dict__['_history'] = History(tag='shell')
         self.__dict__['_rclast']  = 0
@@ -715,9 +717,13 @@ class OSExtended(System):
         logger.debug('Abstract System init %s', self.__class__)
         self._rmtreemin = kw.pop('rmtreemin', 3)
         self._cmpaftercp = kw.pop('cmpaftercp', True)
+        # Switches for rawft* methods
         self.ftraw    = kw.pop('ftraw', False)
         self.ftputcmd = kw.pop('ftputcmd', None)
         self.ftgetcmd = kw.pop('ftgetcmd', None)
+        # Some internal variables used by particular methods
+        self._ftspool_cache = None
+        # Go for the superclass' constructor
         super(OSExtended, self).__init__(*args, **kw)
         # Intialiase the signal handler object
         self._signal_intercept_init()
@@ -812,11 +818,30 @@ class OSExtended(System):
             raise IOError('No such file or directory: {!r}'.format(source))
         return rc
 
-    @fmtshcmd
-    def rawftput(self, source, destination, hostname=None, logname=None):
-        """Proceed with some external ftput command on the specified target."""
+    def ftspool_cache(self):
+        """Return a cache object for the FtSpool."""
+        if self._ftspool_cache is None:
+            self._ftspool_cache = footprints.proxy.cache(kind='ftstash')
+        return self._ftspool_cache
+
+    def copy2ftspool(self, source, nest=False, **kwargs):
+        """Make a copy of **source** to the FtSpool directory."""
+        h = hashlib.new('md5')
+        h.update(source)
+        outputname = 'vortex_{:s}_P{:06d}_{:s}'.format(date.now().strftime('%Y%m%d%H%M%S-%f'),
+                                                       self.getpid(), h.hexdigest())
+        if nest:
+            outputname = self.path.join(outputname, self.path.basename(source))
+        kwargs['intent'] = 'in'  # Force intent=in
+        if self.ftspool_cache().insert(outputname, source, **kwargs):
+            return self.ftspool_cache().fullpath(outputname)
+        else:
+            return False
+
+    def ftserv_put(self, source, destination, hostname=None, logname=None, specialshell=None):
+        """Asynchrone put of a file using FtServ."""
         rc = False
-        if isinstance(source, basestring):
+        if isinstance(source, basestring) and isinstance(destination, basestring):
             if self.path.exists(source):
                 ftcmd = self.ftputcmd or 'ftput'
                 extras = list()
@@ -824,6 +849,8 @@ class OSExtended(System):
                     extras.extend(['-h', hostname])
                 if logname:
                     extras.extend(['-u', logname])
+                if specialshell:
+                    extras.extend(['-s', specialshell])
                 rc = self.spawn([ftcmd,
                                  '-o', 'mkdir',  # Automatically create subdirectories
                                  '-q', ] +  # Asynchronous mode
@@ -831,20 +858,11 @@ class OSExtended(System):
             else:
                 raise IOError('No such file or directory: {!s}'.format(source))
         else:
-            raise IOError('Source is not a plain file path: {!r}'.format(source))
+            raise IOError('Source or destination is not a plain file path: {!r}'.format(source))
         return rc
 
-    def smartftput(self, source, destination, hostname=None, logname=None, fmt=None):
-        """Proceed some ftput or rawftput."""
-        if self.ftraw and isinstance(source, basestring) and isinstance(destination, basestring):
-            return self.rawftput(source, destination, hostname=hostname, logname=logname, fmt=fmt)
-        else:
-            return self.ftput(source, destination, hostname=hostname, logname=logname, fmt=fmt)
-
-    @fmtshcmd
-    def rawftget(self, source, destination, hostname=None, logname=None):
-        """Proceed with some external ftget command on the specified target."""
-        rc = False
+    def ftserv_get(self, source, destination, hostname=None, logname=None):
+        """Get a file using FtServ."""
         if isinstance(source, basestring) and isinstance(destination, basestring):
             if self.filecocoon(destination):
                 destination = self.path.expanduser(destination)
@@ -860,6 +878,23 @@ class OSExtended(System):
         else:
             raise IOError('Source or destination is not a plain file path: {!r}'.format(source))
         return rc
+
+    @fmtshcmd
+    def rawftput(self, source, destination, hostname=None, logname=None):
+        """Proceed with some external ftput command on the specified target."""
+        return self.ftserv_put(source, destination, hostname, logname)
+
+    def smartftput(self, source, destination, hostname=None, logname=None, fmt=None):
+        """Proceed some ftput or rawftput."""
+        if self.ftraw and isinstance(source, basestring) and isinstance(destination, basestring):
+            return self.rawftput(source, destination, hostname=hostname, logname=logname, fmt=fmt)
+        else:
+            return self.ftput(source, destination, hostname=hostname, logname=logname, fmt=fmt)
+
+    @fmtshcmd
+    def rawftget(self, source, destination, hostname=None, logname=None):
+        """Proceed with some external ftget command on the specified target."""
+        return self.ftserv_get(source, destination, hostname, logname)
 
     def smartftget(self, source, destination, hostname=None, logname=None, fmt=None):
         """Proceed some ftget or rawftget."""

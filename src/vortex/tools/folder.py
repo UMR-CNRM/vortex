@@ -12,7 +12,7 @@ logger = footprints.loggers.getLogger(__name__)
 from . import addons
 
 
-class FolderShell(addons.Addon):
+class FolderShell(addons.FtrawEnableAddon):
     """
     This abstract class defines methods to manipulate folders.
     """
@@ -32,6 +32,10 @@ class FolderShell(addons.Addon):
                 type     = bool,
                 optional = True,
                 default  = True,
+            ),
+            supportedfmt = dict(
+                optional = True,
+                default  = '[kind]',
             ),
         )
     )
@@ -136,5 +140,23 @@ class FolderShell(addons.Addon):
         else:
             return False
 
-    _folder_rawftput = _folder_ftput
+    def _folder_rawftput(self, source, destination, hostname=None, logname=None):
+        """Use ftserv as much as possible."""
+        if self.sh.ftraw and self.rawftshell is not None:
+            if not destination.endswith('.tgz'):
+                destination += '.tgz'
+            newsource = self.sh.copy2ftspool(source, nest=True,
+                                             fmt=self.supportedfmt)
+            request = self.sh.path.dirname(newsource) + '.request'
+            with open(request, 'w') as request_fh:
+                request_fh.write(self.sh.path.dirname(newsource))
+            self.sh.readonly(request)
+            rc = self.sh.ftserv_put(request, destination,
+                                    hostname=hostname, logname=logname,
+                                    specialshell=self.rawftshell)
+            self.sh.rm(request)
+            return rc
+        else:
+            return self._folder_ftput(source, destination, hostname, logname)
+
     _folder_rawftget = _folder_ftget

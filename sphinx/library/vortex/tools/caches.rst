@@ -26,6 +26,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: FtStashCache
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Op2ResearchCache
    :show-inheritance:
    :members:
