@@ -35,11 +35,9 @@ def parse_command_line():
     description = "Create or remove frozen copies of gco resources in gco/ and genv/."
     parser = argparse.ArgumentParser(description=description)
 
-    group = parser.add_argument_group(title='at least one of -c, -f or -r is mandatory')
-    group.add_argument('-c', '--cycles', nargs='+', help='name(s) of cycle(s) to freeze')
-    group.add_argument('-f', '--file', nargs='+', help='file(s) containing a list of cycles to freeze')
-    group.add_argument('-r', '--remove', help='name of the cycle to remove')
-
+    parser.add_argument('-c', '--cycles', nargs='+', help='name(s) of cycle(s) to freeze')
+    parser.add_argument('-f', '--file', nargs='+', help='file(s) containing a list of cycles to freeze, by default "oper_cycle"')
+    parser.add_argument('-r', '--remove', help='name of the cycle to reove')
     parser.add_argument('-l', '--list', help='only list cycles to handle, and exit', action='store_true')
     parser.add_argument('-n', '--noerror', help="don't stop on errors", action='store_true')
     parser.add_argument('-s', '--simulate', help="simulate removal without doing it", action='store_true')
@@ -48,12 +46,16 @@ def parse_command_line():
                         action='store_false')
 
     args = parser.parse_args()
-    if not (args.cycles or args.file or args.remove):
-        parser.error('\nNo action requested.\nUse at least one of: -c, -f or -r\n')
-
+    
+    if not (args.cycles or args.file or args.remove or args.list):
+        if os.path.isfile('oper_cycles'):
+            pass
+        else:
+            parser.error('\nNo action requested.\nUse at least one of: -c, -f or -r or give me an "oper_cycles" file.\n')
+    
     # add cycles from -f arguments
     args.cycles = args.cycles or list()
-    files = args.file or list()
+    files = args.file or ['oper_cycles',]
     for filename in files:
         with open(filename) as fp:
             for line in fp.readlines():
@@ -121,7 +123,7 @@ def unfreeze(args):
 
 
 if __name__ == "__main__":
-    args = parse_command_line()
+    args = parse_command_line() or list()
     if args.list:
         list_cycles(args)
     else:
