@@ -211,18 +211,19 @@ class GRIBFilter(_GenericFilter):
             out_filelist.append(f_name)
             out_cat = open(f_name, 'wb')
 
-        for a_in_data in in_data:
-            msg = a_in_data.iter_messages(headers_only=False)
-            while msg is not None:
-                for (a_out_data, a_filter) in zip(out_data, self._filters):
-                    thefid = msg.genfid()
-                    if self._filter_process(thefid, a_filter):
-                        logger.debug("Select succeed for filter %s: %s",
-                                     a_filter['filter_name'], thefid)
-                        msg.write_to_file(a_out_data)
-                if self.concatenate:
-                    msg.write_to_file(out_cat)
+        with usepygram.epy_env_prepare(sessions.current()):
+            for a_in_data in in_data:
                 msg = a_in_data.iter_messages(headers_only=False)
+                while msg is not None:
+                    for (a_out_data, a_filter) in zip(out_data, self._filters):
+                        thefid = msg.genfid()
+                        if self._filter_process(thefid, a_filter):
+                            logger.debug("Select succeed for filter %s: %s",
+                                         a_filter['filter_name'], thefid)
+                            msg.write_to_file(a_out_data)
+                    if self.concatenate:
+                        msg.write_to_file(out_cat)
+                    msg = a_in_data.iter_messages(headers_only=False)
 
         # Close outpout files
         for a_in_data in in_data:
