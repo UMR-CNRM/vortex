@@ -46,7 +46,7 @@ from vortex.tools.schedulers import SMS
 from vortex.tools.actions    import actiond as ad
 
 from common.tools.agt import agt_actual_command
-
+from vortex.syntax.stdattrs import DelayedEnvValue
 
 # TODO devrait dépendre d'un objet TARGET
 LOGIN_NODES = [
@@ -422,7 +422,7 @@ class RoutingService(Service):
         if not self.file_ok():
             return False
 
-        rc = ad.ssh(cmdline, hostname=self.sshhost, nodetype='transfer')
+        rc = ad.ssh(cmdline, hostname=self.sshhost, nodetype='transfert')
 
         logfile = 'routage.' + date.today().ymd
         ad.report(kind='dayfile', mode='RAW', message=self.get_logline(),
@@ -901,7 +901,7 @@ class DMTEventService(Service):
             soprano_host = dict(
                 optional = True,
                 alias    = ('soprahost', 'host'),
-                default  = 'piccolo',
+                default  = DelayedEnvValue('DMT_SERVER_HOST','piccolo'),
             ),
             expectedvars = dict(
                 type     = footprints.FPTuple,
@@ -973,7 +973,7 @@ class OpMailService(TemplatedMailService):
     def trailer(self):
         """String appended to the message body."""
         return '\n--\nEnvoi automatique par Vortex ' \
-               'pour <{}@{}>\n'.format(self.env.user, self.sh.target().inetname)
+               'pour <{}@{}>\n'.format(self.env.user, self.env.host)
 
     def __call__(self, *args):
         """Main action as inherited, and prompts.
