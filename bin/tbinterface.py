@@ -6,7 +6,14 @@ from __future__ import print_function
 import argparse
 import importlib
 import json
+import os
+import sys
 from xml.dom import minidom
+
+# Automatically set the python path
+vortexbase = os.path.dirname(os.path.abspath(__file__)).rstrip('/bin')
+sys.path.insert(0, os.path.join(vortexbase, 'site'))
+sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 import footprints
 import vortex  # @UnusedImport

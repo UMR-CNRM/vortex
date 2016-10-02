@@ -33,7 +33,7 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 # Automatically set the python path
-vortexbase = os.path.dirname(os.path.abspath(__file__)).rstrip('/bin')
+vortexbase = os.path.dirname(os.path.abspath(__file__)).rstrip('/project/bin')
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 

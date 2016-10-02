@@ -1,9 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import inspect, re, sys
+import inspect
+import os
+import re
+import sys
+
+# Automatically set the python path
+vortexbase = os.path.dirname(os.path.abspath(__file__)).rstrip('/project/bin')
+sys.path.insert(0, os.path.join(vortexbase, 'site'))
+sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 import vortex
+
 sh = vortex.sh()
 
 opts = sh.rawopts(
@@ -68,7 +77,7 @@ def rstcreate(rstf, modname):
 
 
 def rstfind(pattern, lines):
-    return bool([x for x in lines if re.search(pattern, x) ])
+    return bool([x for x in lines if re.search(pattern, x)])
 
 report = dict(
     mkrst = list(),
@@ -110,7 +119,7 @@ for modulename, loaded in sh.vortex_loaded_modules():
             rstinfo = fdrst.readlines()
         if rstfind('TODO', rstinfo):
             report['todo'].append(rstloc)
-        for rstauto in [ x for x in rstinfo if x.startswith('.. auto') ]:
+        for rstauto in [x for x in rstinfo if x.startswith('.. auto')]:
             autokind, sep, rstentry = rstauto.partition(':: ')
             rstnames.add(rstentry.strip())
     else:

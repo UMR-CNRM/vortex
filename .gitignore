@@ -28,6 +28,7 @@ tbinterface_*.json
 # RST file generated on the fly
 checkreport.rst
 geometries.rst
+sphinx/notebooks
 
 # Translations
 *.mo

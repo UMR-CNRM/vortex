@@ -1,13 +1,14 @@
-CLOCPY		= bin/countlines.py
+CLOCPY		= project/bin/countlines.py
 CLOCDEF		= project/cloc.defs
 CLOCBIN     = cloc
 
 DOC_DIR		= sphinx
-TEST_DIR	   = tests
+TEST_DIR	= tests
 
 SUBDIRS		= tests sphinx
 CLEANDIRS 	= $(SUBDIRS:%=clean-%)
 
+EXTRAPATH   = $$(pwd)/project:$$PYTHONPATH
 
 .PHONY: check tests cover doc cloc cloc_all pylint flake8 clean $(CLEANDIRS)
 
@@ -38,6 +39,7 @@ flake8: ; flake8 --config=project/flake8.ini --statistics . > project/flake8_rep
 # Code quality analysis : pylint
 pylint:
 	bin/tbinterface.py -a -c all -n 'common,gco,iga,mercator,olive,previmar,sandbox' -f json -o 'project/tbinterface'
+	PYTHONPATH=$(EXTRAPATH) \
 	pylint --rcfile=project/pylint.rc src/* site/* > project/pylint_global.txt || true
 
 

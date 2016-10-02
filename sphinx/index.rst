@@ -31,6 +31,7 @@ Extras
    List of default geometries <geometries>
    table
    checkreport
+   notebooks/index
 
 
 .. toctree::
