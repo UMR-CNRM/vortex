@@ -159,7 +159,7 @@ class SampleContent(JsonDictContent):
     def drawing(self, g, x):
         """Return the number of a sampled element according to the local number."""
         n = g.get('number', x.get('number', None))
-        virgin = g.get('untouched', x.get('untouched', []))
+        virgin = g.get('untouched', x.get('untouched', [0, ]))
         if n is None:
             return None
         else:
@@ -174,7 +174,10 @@ class SampleContent(JsonDictContent):
             if n in virgin:
                 return n
             else:
-                return self.data['drawing'][n - 1]
+                try:
+                    return self.data['drawing'][n - 1]
+                except KeyError:
+                    return None
 
     def __getattr__(self, attr):
         # Return an access function that corresponds to the key
@@ -184,7 +187,15 @@ class SampleContent(JsonDictContent):
         if attr in drawing_keys:
             def _attr_access(g, x):
                 elt = self.drawing(g, x)
-                return elt[attr]
+                # drawing may returns
+                # * None (if the 'number' attribute is incorrect or missing)
+                # * An integer if 'number' is in the 'untouched' list
+                # * A dictionary
+                if elt is None:
+                    choices = set([d[attr] for d in self.data['drawing']])
+                    return None if len(choices) > 1 else choices.pop()
+                else:
+                    return elt[attr] if isinstance(elt, dict) else None
             return _attr_access
         # Returns the list of drawn keys
         listing_keys = set([item + 's'
