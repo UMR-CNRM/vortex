@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
-
 """
 Extract all files provided by the genv command for one or several cycles,
 and/or remove the files needed only by a specific cyle.
@@ -21,23 +19,28 @@ Description files for option -f may include comments (introduced by '#')
 and  blank lines. The usual separators are allowed (space, tab, newline).
 """
 
+from __future__ import print_function, absolute_import, division
+
 import argparse
 import os
 import sys
 
 # Automatically set the python path
-vortexbase = os.path.dirname(os.path.abspath(__file__)).rstrip('/bin')
+vortexbase = os.path.dirname(os.path.realpath(__file__)).rstrip('/bin')
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
+
+DEFAULT_CYCLES_FILE = 'oper_cycles'
 
 
 def parse_command_line():
     description = "Create or remove frozen copies of gco resources in gco/ and genv/."
     parser = argparse.ArgumentParser(description=description)
 
+    helpstr = 'file(s) containing a list of cycles to freeze ; defaults to "{}"'
+    parser.add_argument('-f', '--file', nargs='+', help=helpstr.format(DEFAULT_CYCLES_FILE))
     parser.add_argument('-c', '--cycles', nargs='+', help='name(s) of cycle(s) to freeze')
-    parser.add_argument('-f', '--file', nargs='+', help='file(s) containing a list of cycles to freeze, by default "oper_cycle"')
-    parser.add_argument('-r', '--remove', help='name of the cycle to reove')
+    parser.add_argument('-r', '--remove', help='name of the cycle to remove')
     parser.add_argument('-l', '--list', help='only list cycles to handle, and exit', action='store_true')
     parser.add_argument('-n', '--noerror', help="don't stop on errors", action='store_true')
     parser.add_argument('-s', '--simulate', help="simulate removal without doing it", action='store_true')
@@ -46,17 +49,15 @@ def parse_command_line():
                         action='store_false')
 
     args = parser.parse_args()
-    
-    if not (args.cycles or args.file or args.remove or args.list):
-        if os.path.isfile('oper_cycles'):
-            pass
-        else:
-            parser.error('\nNo action requested.\nUse at least one of: -c, -f or -r or give me an "oper_cycles" file.\n')
-    
+    if not (args.cycles or args.file or args.remove):
+        args.file = [DEFAULT_CYCLES_FILE]
+
     # add cycles from -f arguments
     args.cycles = args.cycles or list()
-    files = args.file or ['oper_cycles',]
+    files = args.file or list()
     for filename in files:
+        if not os.path.isfile(filename):
+            parser.error('\nCycles definition file missing: "{}"'.format(filename))
         with open(filename) as fp:
             for line in fp.readlines():
                 args.cycles.extend(line.partition('#')[0].strip().split())
@@ -123,7 +124,7 @@ def unfreeze(args):
 
 
 if __name__ == "__main__":
-    args = parse_command_line() or list()
+    args = parse_command_line()
     if args.list:
         list_cycles(args)
     else:
