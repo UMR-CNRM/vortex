@@ -273,8 +273,8 @@ def report(t, try_ok=True, **kw):
     logpath = t.env.getvar('LOG')
     rundir  = t.env.getvar('RUNDIR') + '/opview/' + task
     model   = t.env.getvar('OP_VAPP').upper()
-    conf    = t.env.getvar('OP_VCONF').upper()
-    xpid    = t.env.getvar('OP_XPID').upper()
+    conf    = t.env.getvar('OP_VCONF').lower()
+    xpid    = t.env.getvar('OP_XPID').lower()
     report.print_report(detailed=True)
     if try_ok:
         t.sh.header('Input review')
