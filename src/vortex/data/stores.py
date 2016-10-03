@@ -526,6 +526,10 @@ class MagicPlace(Store):
         return False
 
 
+class FunctionStoreCallbackError(Exception):
+    pass
+
+
 class FunctionStore(Store):
     """Calls a function that returns a File like object (get only).
 
@@ -594,11 +598,19 @@ class FunctionStore(Store):
         opts = dict()
         opts.update(options)
         opts.update(remote['query'])
-        fres = cbfunc(opts)
-        # NB: fres should be a file like object (StringIO will do the trick)
-        if 'intent' in options and options['intent'] == dataflow.intent.IN:
-            logger.info('Ignore intent <in> for function input.')
-        return self.system.cp(fres, local)
+        try:
+            fres = cbfunc(opts)
+        except FunctionStoreCallbackError as e:
+            logger.error("An exception was raised in the Callback function")
+            logger.error("Here is the exception: %s", str(e))
+            fres = None
+        if fres is not None:
+            if 'intent' in options and options['intent'] == dataflow.intent.IN:
+                logger.info('Ignore intent <in> for function input.')
+            # NB: fres should be a file like object (StringIO will do the trick)
+            return self.system.cp(fres, local)
+        else:
+            return False
 
     def functionput(self, local, remote, options):
         """This should not happen - Always False."""

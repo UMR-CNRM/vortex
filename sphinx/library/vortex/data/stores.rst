@@ -46,6 +46,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: FunctionStoreCallbackError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: FunctionStore
    :show-inheritance:
    :members:
