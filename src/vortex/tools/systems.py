@@ -6,39 +6,47 @@ This package handles system interfaces objects that are in charge of
 system interaction. Systems objects use the :mod:`footprints` mechanism.
 """
 
-#: No automatic export
-__all__ = []
-
-import os, stat, resource, shutil, socket, tempfile
-import re, platform, sys, io, filecmp, time
-import signal
+import filecmp
 import glob
 import hashlib
-import tarfile
-import subprocess
-import pickle
+import io
 import json
+import os
+import pickle
+import platform
 import pwd as passwd
+import re
+import resource
+import shutil
+import signal
+import socket
+import stat
+import subprocess
+import sys
+import tarfile
+import tempfile
+import time
 from datetime import datetime
 
 import footprints
+from opinel.interrupt import SignalInterruptHandler, SignalInterruptError
+from vortex.gloves import Glove
+from vortex.tools import date
+from vortex.tools.env import Environment
+from vortex.tools.net import StdFtp
+from vortex.util.decorators import nicedeco
+from vortex.util.structs import History
+
+#: No automatic export
+__all__ = []
+
 logger = footprints.loggers.getLogger(__name__)
 
-from opinel.interrupt import SignalInterruptHandler, SignalInterruptError
-
-from vortex.gloves          import Glove
-from vortex.tools           import date
-from vortex.tools.env       import Environment
-from vortex.tools.net       import StdFtp
-from vortex.util.structs    import History
-from vortex.util.decorators import nicedeco
-
-
 #: Pre-compiled regex to check a none str value
-isnonedef  = re.compile(r'none',         re.IGNORECASE)
+isnonedef = re.compile(r'none', re.IGNORECASE)
 
 #: Pre-compiled regex to check a boolean true str value
-istruedef  = re.compile(r'on|true|ok',   re.IGNORECASE)
+istruedef = re.compile(r'on|true|ok', re.IGNORECASE)
 
 #: Pre-compiled regex to check a boolean false str value
 isfalsedef = re.compile(r'off|false|ko', re.IGNORECASE)
@@ -47,13 +55,15 @@ isfalsedef = re.compile(r'off|false|ko', re.IGNORECASE)
 @nicedeco
 def fmtshcmd(func):
     """This decorator give a try to the equivalent formatted command."""
+
     def formatted_method(self, *args, **kw):
         fmt = kw.pop('fmt', None)
-        fmtcall = getattr(self, str(fmt).lower()  + '_' + func.func_name, func)
+        fmtcall = getattr(self, str(fmt).lower() + '_' + func.func_name, func)
         if getattr(fmtcall, 'func_extern', False):
             return fmtcall(*args, **kw)
         else:
             return fmtcall(self, *args, **kw)
+
     return formatted_method
 
 
@@ -73,6 +83,7 @@ class CdContext(object):
             # work in newpath
         # back to the original path
     """
+
     def __init__(self, sh, newpath, create=False):
         self.sh = sh
         self.create = create
@@ -216,9 +227,10 @@ class System(footprints.FootprintBase):
             def osproxy(*args, **kw):
                 cmd = [key]
                 cmd.extend(args)
-                cmd.extend([ '{0:s}={1:s}'.format(x, str(kw[x])) for x in kw.keys() ])
+                cmd.extend(['{0:s}={1:s}'.format(x, str(kw[x])) for x in kw.keys()])
                 self.stderr(*cmd)
                 return actualattr(*args, **kw)
+
             osproxy.func_name = key
             osproxy.func_doc = actualattr.__doc__
             osproxy.func_extern = True
@@ -234,7 +246,7 @@ class System(footprints.FootprintBase):
             sys.stderr.write(
                 "* [{0:s}][{1:d}] {2:s}\n".format(
                     justnow.strftime('%Y/%m/%d-%H:%M:%S'), count,
-                    ' '.join([ str(x) for x in args ])
+                    ' '.join([str(x) for x in args])
                 )
             )
 
@@ -291,7 +303,7 @@ class System(footprints.FootprintBase):
                 files.append(pathtogo)
             else:
                 for root, u_dirs, filenames in self._os.walk(pathtogo):
-                    files.extend([ self.path.join(root, f) for f in filenames ])
+                    files.extend([self.path.join(root, f) for f in filenames])
         return sorted(files)
 
     @property
@@ -310,12 +322,12 @@ class System(footprints.FootprintBase):
         if autolen:
             nbc = autolen
         else:
-            nbc = max([ len(text) for text in textlist ])
+            nbc = max([len(text) for text in textlist])
         print
-        print tchar * ( nbc + 4 )
+        print tchar * (nbc + 4)
         for text in textlist:
             print '{0:s} {1:^{size}s} {0:s}'.format(tchar, text.upper(), size=nbc)
-        print tchar * ( nbc + 4 )
+        print tchar * (nbc + 4)
         print ''
 
     def subtitle(self, text='', tchar='-', autolen=96):
@@ -324,10 +336,10 @@ class System(footprints.FootprintBase):
             nbc = autolen
         else:
             nbc = len(text)
-        print "\n", tchar * ( nbc + 4 )
+        print "\n", tchar * (nbc + 4)
         if text:
             print '# {0:{size}s} #'.format(text, size=nbc)
-            print tchar * ( nbc + 4 )
+            print tchar * (nbc + 4)
 
     def header(self, text='', tchar='-', autolen=False, xline=True, prompt=None):
         """Formated subtitle output."""
@@ -440,7 +452,7 @@ class System(footprints.FootprintBase):
         psall = subprocess.Popen(pscmd, stdout=subprocess.PIPE).communicate()[0].split('\n')
         if search:
             psall = filter(lambda x: re.search(search, x), psall)
-        return [ x.strip() for x in psall ]
+        return [x.strip() for x in psall]
 
     def readonly(self, inodename):
         """Set permissions of the ``filename`` object to read-only."""
@@ -453,7 +465,7 @@ class System(footprints.FootprintBase):
             else:
                 st = self.stat(inodename).st_mode
                 if st & stat.S_IWUSR or st & stat.S_IWGRP or st & stat.S_IWOTH:
-                    rc = self.chmod(inodename, st & ~( stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH ))
+                    rc = self.chmod(inodename, st & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH))
                 else:
                     rc = True
         return rc
@@ -483,7 +495,7 @@ class System(footprints.FootprintBase):
             return [
                 re.sub(r'(?:/__init__)?\.py$', '', x).replace('/', '.')
                 for x in mfiles
-                if (not x.startswith('.' ) and
+                if (not x.startswith('.') and
                     re.search(only, x, re.IGNORECASE) and
                     x.endswith('.py'))
             ]
@@ -523,7 +535,7 @@ class System(footprints.FootprintBase):
         if stdout is True:
             stdout = subprocess.PIPE
         if stdin is True:
-            stdin  = subprocess.PIPE
+            stdin = subprocess.PIPE
         if stderr is True:
             stderr = subprocess.PIPE
         return subprocess.Popen(args, bufsize=bufsize, stdin=stdin, stdout=stdout, stderr=stderr, shell=shell)
@@ -548,7 +560,7 @@ class System(footprints.FootprintBase):
 
         self._rclast = p.returncode
         if ok is None:
-            ok = [ 0 ]
+            ok = [0]
         if p.returncode in ok:
             return True
         else:
@@ -559,11 +571,11 @@ class System(footprints.FootprintBase):
         """Subprocess call of ``args``."""
         rc = False
         if ok is None:
-            ok = [ 0 ]
+            ok = [0]
         if output is None:
             output = self.output
         if stdin is True:
-            stdin  = subprocess.PIPE
+            stdin = subprocess.PIPE
         if self.timer:
             args[:0] = ['time']
         self.stderr(*args)
@@ -689,7 +701,7 @@ class System(footprints.FootprintBase):
 
     def ulimit(self):
         """Dump the user limits currently defined."""
-        for limit in [ r for r in dir(self._rl) if r.startswith('RLIMIT_') ]:
+        for limit in [r for r in dir(self._rl) if r.startswith('RLIMIT_')]:
             print ' ', limit.ljust(16), ':', self._rl.getrlimit(getattr(self._rl, limit))
 
     def getlogname(self):
@@ -718,7 +730,7 @@ class OSExtended(System):
         self._rmtreemin = kw.pop('rmtreemin', 3)
         self._cmpaftercp = kw.pop('cmpaftercp', True)
         # Switches for rawft* methods
-        self.ftraw    = kw.pop('ftraw', False)
+        self.ftraw = kw.pop('ftraw', False)
         self.ftputcmd = kw.pop('ftputcmd', None)
         self.ftgetcmd = kw.pop('ftgetcmd', None)
         # Some internal variables used by particular methods
@@ -759,7 +771,7 @@ class OSExtended(System):
 
         if cmdline is None:
             cmdline = sys.argv[1:]
-        opts.update( dict([ x.split('=') for x in cmdline ]) )
+        opts.update(dict([x.split('=') for x in cmdline]))
         for k, v in opts.iteritems():
             if v not in (None, True, False):
                 if istrue.match(v):
@@ -773,8 +785,8 @@ class OSExtended(System):
     def is_iofile(self, iocandidate):
         """Check if actual candidate is a valid filename or io stream."""
         return iocandidate is not None and (
-            ( isinstance(iocandidate, basestring) and self.path.exists(iocandidate) ) or
-            ( isinstance(iocandidate, io.IOBase) )
+            (isinstance(iocandidate, basestring) and self.path.exists(iocandidate)) or
+            isinstance(iocandidate, io.IOBase)
         )
 
     def ftp(self, hostname, logname=None):
@@ -971,7 +983,7 @@ class OSExtended(System):
         source = self.path.expanduser(source)
         destination = self.path.expanduser(destination)
         self.stderr('rawcp', source, destination)
-        tmp = destination  + self.safe_filesuffix()
+        tmp = destination + self.safe_filesuffix()
         if self.path.isdir(source):
             self.copytree(source, tmp)
             # Warning: Not an atomic portion of code (sorry)
@@ -1080,7 +1092,8 @@ class OSExtended(System):
                             self.remove(tmp_destination + '.olddir')
                         # End of none atomic part
                         if not rc:
-                            logger.error('Cannot move the tmp directory to the final destination %s', destination)
+                            logger.error('Cannot move the tmp directory to the final destination %s',
+                                         destination)
                             self.remove(tmp_destination)  # Anyway, try to clean-up things
                     else:
                         logger.error('Cannot copy the data to the tmp directory %s', tmp_destination)
@@ -1154,7 +1167,7 @@ class OSExtended(System):
             safe = False
         else:
             for safepack in safedirs:
-                ( safedir, d ) = safepack
+                (safedir, d) = safepack
                 rp = self.path.relpath(thispath, safedir)
                 if not rp.startswith('..'):
                     if len(rp.split(os.sep)) < d:
@@ -1166,7 +1179,7 @@ class OSExtended(System):
         """Recursive unlinks the specified `args` objects if safe."""
         ok = True
         if isinstance(pathlist, basestring):
-            pathlist = [ pathlist ]
+            pathlist = [pathlist]
         for pname in pathlist:
             for entry in filter(lambda x: self.safepath(x, safedirs), self.glob(pname)):
                 ok = self.remove(entry) and ok
@@ -1201,7 +1214,7 @@ class OSExtended(System):
         kw['output'] = True
         llresult = self._globcmd(['ls', '-l'], args, **kw)
         if llresult:
-            for lline in [ x for x in llresult if not x.startswith('total') ]:
+            for lline in [x for x in llresult if not x.startswith('total')]:
                 print lline
         else:
             return False
@@ -1250,7 +1263,7 @@ class OSExtended(System):
 
     def mvglob(self, *args):
         """Wrapper of the ``mv`` command through the globcmd."""
-        return self._globcmd([ 'mv' ], args)
+        return self._globcmd(['mv'], args)
 
     def listdir(self, *args):
         """Proxy to standard :mod:`os` directory listing function."""
@@ -1273,7 +1286,7 @@ class OSExtended(System):
         if not rl:
             rl.append('*')
         self.stderr('ldirs', *rl)
-        return [ x for x in self.glob(*rl) if self.path.isdir(x) ]
+        return [x for x in self.glob(*rl) if self.path.isdir(x)]
 
     def is_tarfile(self, filename):
         """Return a boolean according to the tar status of the ``filename``."""
@@ -1491,7 +1504,7 @@ class Python26(object):
         buildname = ''
         for mod in modname.split('.'):
             mfile, mpath, minfo = imp.find_module(mod, path)
-            path = [ mpath ]
+            path = [mpath]
             buildname = buildname + mod
             imp.load_module(buildname, mfile, mpath, minfo)
             buildname += '.'
@@ -1597,7 +1610,7 @@ class Linux27(Linux, Python27):
         info = 'Linux base system with pretty new python version',
         attr = dict(
             python = dict(
-                values = [ '2.7.' + str(x) for x in range(3, 15) ]
+                values = ['2.7.' + str(x) for x in range(3, 15)]
             )
         )
     )

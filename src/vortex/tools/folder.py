@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
-
 import tempfile
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
 from . import addons
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class FolderShell(addons.FtrawEnableAddon):

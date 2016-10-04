@@ -7,7 +7,6 @@ import collections
 import re
 
 import footprints
-
 from vortex.data.stores import Store, MultiStore, CacheStore
 from vortex.util.config import GenericConfigParser
 
@@ -204,11 +203,11 @@ class GcoCentralStore(Store):
                 logger.info('GCO Central Store get %s', gname + '/' + extract[0])
                 rc = rc and sh.cp(gname + '/' + extract[0], local, fmt=fmt)
             else:
-                # Always  move the resource to destination (fmt may influence the result)
+                # Always move the resource to destination (fmt may influence the result)
                 logger.info('GCO Central Store get %s', gname)
                 rc = rc and sh.filecocoon(local)
                 rc = rc and sh.mv(gname, local, fmt=fmt)
-                # Automatic untar if needed... (the local file need to ends with a tar extension)
+                # Automatic untar if needed... (the local file needs to end with a tar extension)
                 if not sh.path.isdir(local) and sh.is_tarname(local) and sh.is_tarfile(local):
                     destdir = sh.path.dirname(sh.path.realpath(local))
                     untaropts = self.ggetconfig.key_untar_properties(gname)
