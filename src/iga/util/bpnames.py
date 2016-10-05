@@ -20,7 +20,10 @@ _arome_vconf    = ('3dvarfr',)
 
 def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
     if cutoff == 'assim' and vconf not in _arpcourt_vconf:
-        assim_cutoffs = range(0, 24, 3)
+        if vconf in _arome_vconf:
+            assim_cutoffs = range(0, 24, 1)
+        else:
+            assim_cutoffs = range(0, 24, 3)
         if (vconf in _arome_vconf) and (model == 'surfex'):
             map_suffix = {(cutoff, h): 'r{:d}'.format(h) for h in assim_cutoffs}
         else:
@@ -234,14 +237,19 @@ def histsurf_bnames(resource, provider):
     model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
                                  vapp=provider.vapp, vconf=provider.vconf)
     reseau = resource.date.hour
-    map_suffix = dict(
-        zip(
-            range(0, 24, 3),
-            map('r'.__add__, ('CM', 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU'))
+    if reseau in range(0, 24, 3):  
+        map_suffix = dict(
+            zip(
+                range(0, 24, 3),
+                map('r'.__add__, ('CM', 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU'))
+            )
         )
-    )
-    suffix = map_suffix[reseau]
-    return 'ICMSH' + model_info + '+' + resource.term.fmthour + '.sfx.' + suffix
+        suffix = map_suffix[reseau]
+        bname = 'ICMSH' + model_info + '+' + resource.term.fmthour + '.sfx.' + suffix
+    else:
+       print '{:02d}'.format(reseau)
+       bname = 'PREP.fa_' + '{:02d}'.format(reseau) + '.{:02d}'.format(resource.term.hour)
+    return bname
 
 
 def gridpoint_bnames(resource, provider):
