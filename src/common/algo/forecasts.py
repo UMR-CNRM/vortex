@@ -276,6 +276,15 @@ class FullPos(IFSParallel):
                 default  = False,
                 values   = [False],
             ),
+            server_run = dict(
+                values   = [True, False],
+            ),
+            serversync_method = dict(
+                default  = 'simple_socket',
+            ),
+            serversync_medium = dict(
+                default  = 'cnt3_wait',
+            ),
         )
     )
 
@@ -334,12 +343,13 @@ class FullPosGeo(FullPos):
                 for posfile in [ x for x in sh.glob('PF{0:s}*+*'.format(self.xpname)) ]:
                     sh.move(posfile, sh.path.join(runstore, 'pfout_{:d}'.format(num)), fmt = r.container.actualfmt)
 
-                # The only one listing
-                sh.cat('NODE.001_01', output='NODE.all')
-
-                # Some cleaning
-                sh.rmall('ncf927', 'dirlst')
                 sh.remove(infile, fmt=r.container.actualfmt)
+
+                if not self.server_run:
+                    # The only one listing
+                    sh.cat('NODE.001_01', output='NODE.all')
+                    # Some cleaning
+                    sh.rmall('ncf927', 'dirlst')
 
     def postfix(self, rh, opts):
         """Post processing cleaning."""
@@ -369,7 +379,15 @@ class FullPosBDAP(FullPos):
                 values  = ['fullpos', 'fp'],
                 remap   = dict(fp= 'fullpos' )
             ),
-        )
+        ),
+        outputid = dict(
+            info        = "The identifier for the encoding of post-processed fields.",
+            type        = str,
+            optional    = True,
+        ),
+        server_run = dict(
+            values   = [False, ],
+        ),
     )
 
     def execute(self, rh, opts):
@@ -417,8 +435,13 @@ class FullPosBDAP(FullPos):
             # Define an input namelist
             try:
                 namfp = [ x for x in namrh if x.resource.term == r.resource.term ].pop()
+                namfplocal = namfp.container.localpath()
+                if self.outputid is not None:
+                    namfp.contents.setmacro('OUTPUTID', self.outputid)
+                    logger.info('Setup macro OUTPUTID=%s in %s', self.outputid, namfplocal)
+                namfp.contents.rewrite(namfp.container)
                 sh.remove('fort.4')
-                sh.symlink(namfp.container.localpath(), 'fort.4')
+                sh.symlink(namfplocal, 'fort.4')
             except Exception:
                 logger.critical('Could not get a fullpos namelist for term %s', r.resource.term)
                 raise
@@ -440,12 +463,13 @@ class FullPosBDAP(FullPos):
             super(FullPosBDAP, self).execute(rh, opts)
 
             # Freeze the current output
-            for posfile in [ x for x in sh.glob('PF{0:s}*+*'.format(self.xpname)) ]:
+            for posfile in [ x for x in (sh.glob('PF{0:s}*+*'.format(self.xpname)) +
+                                         sh.glob('GRIBPF{0:s}*+*'.format(self.xpname)))]:
                 rootpos = re.sub('0+$', '', posfile)
                 sh.move(
                     posfile,
                     sh.path.join(runstore, rootpos + r.resource.term.fmthm),
-                    fmt = 'lfi',
+                    fmt = 'grib' if posfile.startswith('GRIB') else 'lfi',
                 )
             for logfile in sh.glob('NODE.*', 'std*'):
                 sh.move(logfile, sh.path.join(runstore, logfile))
