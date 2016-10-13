@@ -267,6 +267,8 @@ def setenv(t, **kw):
 def report(t, try_ok=True, **kw):
     """Report status of the OP session (input review, mail diffusion...)."""
 
+    step    = kw.get('step', 'unknown_step')
+
     reseau  = t.env.getvar('OP_RUNDATE').hh
     task    = kw.get('task', 'unknown_task')
     report  = t.context.sequence.inputs_report()
@@ -284,8 +286,9 @@ def report(t, try_ok=True, **kw):
         else:
             t.sh.header('Input informations: everything is ok')
     else:
-        t.sh.header('Input informations: input fail')
-        ad.opmail(reseau=reseau, task=task, id='input_fail', report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
+        t.sh.header('Input informations: {0:s} fail'.format(step))
+        mail_id = '{0:s}_fail'.format(step)
+        ad.opmail(reseau=reseau, task=task, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
 
 
 class InputReportContext(object):
@@ -301,7 +304,23 @@ class InputReportContext(object):
     def __exit__(self, exc_type, exc_value, traceback):
         if isinstance(exc_value, StandardError):
             fulltraceback(dict(t=self._ticket))
-        report(self._ticket, exc_type is None, task=self._task.tag)
+        report(self._ticket, exc_type is None, task=self._task.tag, step='input')
+
+class OutputReportContext(object):
+    """Context manager that print a report on outputs."""
+
+    def __init__(self, task, ticket):
+        self._task = task
+        self._ticket = ticket
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if isinstance(exc_value, StandardError):
+            fulltraceback(dict(t=self._ticket))
+        report(self._ticket, exc_type is None, task=self._task.tag, step='output')
+
 
 
 def complete(t, **kw):
