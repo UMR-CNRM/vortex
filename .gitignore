@@ -29,6 +29,7 @@ tbinterface_*.json
 checkreport.rst
 geometries.rst
 sphinx/notebooks
+_ExportXML
 
 # Translations
 *.mo

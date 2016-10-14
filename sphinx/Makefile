@@ -5,6 +5,7 @@ SPHINXBUILD   = sphinx-build
 CHECKDOC      = ../project/bin/checkdoc.py
 GENEDOC       = ../project/bin/config2doc.py
 NBOOKEXPORT   = ../project/bin/notebook2sphinx.py
+XMLEXPORT     = ../bin/tbinterface.py
 
 SPHINXOPTS    =
 PAPER         = a4
@@ -19,6 +20,7 @@ GEOLIST_DEP   = ../conf/geometries.ini
 NOTEBOOKS     = notebooks
 NOTEBOOKS_IN  = ../examples/notebooks
 NOTEBOOKS_DEP = $(shell find $(NOTEBOOKS_IN) -name *.ipynb -print) $(shell find $(NOTEBOOKS_IN) -type d -print)
+XMLEXPORTDIR  = $(SOURCEDIR)/_static/vortex-help/_ExportXML
 
 ALLSPHINXOPTS   = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCEDIR)
 
@@ -30,7 +32,7 @@ export FOOTPRINT_DOCSTRINGS
 
 all: html
 
-.PHONY: all full-check miss-check $(CHECKREPORT) html clean clean-$(NOTEBOOKS)
+.PHONY: all full-check miss-check $(CHECKREPORT) html clean clean-$(NOTEBOOKS) $(XMLEXPORTDIR)
 
 
 # Create rst files for new modules and check all of the aspects
@@ -55,8 +57,13 @@ $(NOTEBOOKS): $(NOTEBOOKS_DEP)
 	rm -rf $(NOTEBOOKS)
 	$(NBOOKEXPORT) -v -o $(NOTEBOOKS) $(NOTEBOOKS_IN)
 
+# Do the XML exort
+$(XMLEXPORTDIR):
+	mkdir -p $(XMLEXPORTDIR)
+	$(PYTHON) $(XMLEXPORT) -a -f xml -o $(XMLEXPORTDIR)/tbinterface
+
 # Build the html documentation
-html: $(CHECKREPORT) $(GEOLIST) $(NOTEBOOKS)
+html: $(CHECKREPORT) $(GEOLIST) $(NOTEBOOKS) $(XMLEXPORTDIR)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 clean-$(NOTEBOOKS):
@@ -64,6 +71,6 @@ clean-$(NOTEBOOKS):
 
 # Clean the build directory and the checkdoc report
 clean: clean-$(NOTEBOOKS)
-	rm -rf $(BUILDDIR)
+	rm -rf $(BUILDDIR) $(XMLEXPORTDIR)
 	rm -f $(CHECKREPORT) $(GEOLIST)
 
