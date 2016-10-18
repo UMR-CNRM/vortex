@@ -147,18 +147,19 @@ class GRIBFilter(_GenericFilter):
         """Returns the number of active filters (concatenate included)."""
         return super(GRIBFilter, self).__len__() + (1 if self.concatenate else 0)
 
-    def _simple_cat(self, gribfile, outfile_fmt):
+    def _simple_cat(self, gribfile, outfile_fmt, intent):
         """Just concatenate a multipart GRIB."""
         if self._xgrib_support and self._sh.is_xgrib(gribfile):
             self._sh.xgrib_pack(gribfile,
-                                outfile_fmt.format(filtername=self.CONCATENATE_FILTER))
+                                outfile_fmt.format(filtername=self.CONCATENATE_FILTER),
+                                intent=intent)
         else:
             # Just make a copy with the appropriate name...
             self._sh.cp(gribfile,
                         outfile_fmt.format(filtername=self.CONCATENATE_FILTER),
-                        intent='in', fmt='grib')
+                        intent=intent, fmt='grib')
 
-    def __call__(self, gribfile, outfile_fmt):
+    def __call__(self, gribfile, outfile_fmt, intent='in'):
         """Apply the various filters on *gribfile*.
 
         :param gribfile: The path to the input GRIB file
@@ -175,7 +176,7 @@ class GRIBFilter(_GenericFilter):
         # We just want to concatenate files...
         if not self._filters:
             if self.concatenate:
-                self._simple_cat(gribfile, outfile_fmt)
+                self._simple_cat(gribfile, outfile_fmt, intent=intent)
                 return [outfile_fmt.format(filtername=self.CONCATENATE_FILTER), ]
             else:
                 raise ValueError("Set concatenate=True or provide a filter.")
