@@ -14,6 +14,7 @@ from distutils.version import LooseVersion
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
+from vortex import sessions
 from vortex.data.contents import MetaDataReader
 from vortex.tools.date import Date, Time
 
@@ -110,9 +111,8 @@ def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, ov
     return len(addfields)
 
 
-def _env_prepare(t):
+def epy_env_prepare(t):
     localenv = t.sh.env.clone()
-    localenv.active(True)
     localenv.verbose(True, t.sh)
     if localenv.OMP_NUM_THREADS is None:
         localenv.OMP_NUM_THREADS = 1
@@ -120,6 +120,9 @@ def _env_prepare(t):
         DR_HOOK_SILENT  = 1,
         DR_HOOK_NOT_MPI = 1,
     )
+    # Clean trash...
+    del localenv.GRIB_SAMPLES_PATH
+    del localenv.GRIB_DEFINITION_PATH
     return localenv
 
 
@@ -127,10 +130,9 @@ def _env_prepare(t):
 def addfield(t, rh, fieldsource, fieldtarget, constvalue):
     """Provider hook for adding a field through cloning."""
     if rh.container.exists():
-        localenv = _env_prepare(t)
-        clone_fields(rh.contents.data, rh.contents.data,
-                     fieldsource, names=fieldtarget, value=constvalue)
-        localenv.active(False)
+        with epy_env_prepare(t):
+            clone_fields(rh.contents.data, rh.contents.data,
+                         fieldsource, names=fieldtarget, value=constvalue)
     else:
         logger.warning('Try to add field on a missing resource <%s>',
                        rh.container.localpath())
@@ -140,9 +142,8 @@ def addfield(t, rh, fieldsource, fieldtarget, constvalue):
 def copyfield(t, rh, rhsource, fieldsource, fieldtarget):
     """Provider hook for copying fields between FA files (but do not overwrite existing fields)."""
     if rh.container.exists():
-        localenv = _env_prepare(t)
-        clone_fields(rhsource.contents.data, rh.contents.data, fieldsource, fieldtarget)
-        localenv.active(False)
+        with epy_env_prepare(t):
+            clone_fields(rhsource.contents.data, rh.contents.data, fieldsource, fieldtarget)
     else:
         logger.warning('Try to copy field on a missing resource <%s>',
                        rh.container.localpath())
@@ -152,9 +153,8 @@ def copyfield(t, rh, rhsource, fieldsource, fieldtarget):
 def overwritefield(t, rh, rhsource, fieldsource, fieldtarget):
     """Provider hook for copying fields between FA files (overwrite existing fields)."""
     if rh.container.exists():
-        localenv = _env_prepare(t)
-        clone_fields(rhsource.contents.data, rh.contents.data, fieldsource, fieldtarget, overwrite=True)
-        localenv.active(False)
+        with epy_env_prepare(t):
+            clone_fields(rhsource.contents.data, rh.contents.data, fieldsource, fieldtarget, overwrite=True)
     else:
         logger.warning('Try to copy field on a missing resource <%s>',
                        rh.container.localpath())
@@ -197,7 +197,8 @@ class FaMetadataReader(EpygramMetadataReader):
 
     def _process_epy(self, epyf):
         # Just call the epygram function !
-        return epyf.validity.getbasis(), epyf.validity.term()
+        with epy_env_prepare(sessions.current()):
+            return epyf.validity.getbasis(), epyf.validity.term()
 
 
 @disabled_if_no_epygram('1.0.0')
@@ -215,10 +216,11 @@ class GribMetadataReader(EpygramMetadataReader):
     def _process_epy(self, epyf):
         # Loop over the fields and check the unicity of date/term
         bundle = set()
-        epyfld = epyf.iter_fields(getdata=False)
-        while epyfld:
-            bundle.add((epyfld.validity.getbasis(), epyfld.validity.term()))
+        with epy_env_prepare(sessions.current()):
             epyfld = epyf.iter_fields(getdata=False)
+            while epyfld:
+                bundle.add((epyfld.validity.getbasis(), epyfld.validity.term()))
+                epyfld = epyf.iter_fields(getdata=False)
         if len(bundle) > 1:
             logger.error("The GRIB file contains fileds with different date and terms.")
         if len(bundle) == 0:

@@ -35,14 +35,15 @@ class OpTask(Task):
                     raise
 
     def report_execution_error(self):
-        reseau = self.conf.rundate.hh
+        reseau  = self.conf.rundate.hh
         logpath = self.env.LOG
         rundir  = self.env.getvar('RUNDIR') + '/opview/' + self.tag
         listing = rundir + '/NODE.001_01'
         model   = self.env.getvar('OP_VAPP').upper()
-        conf    = self.env.getvar('OP_VCONF').upper()
+        conf    = self.env.getvar('OP_VCONF').lower()
+        xpid    = self.env.getvar('OP_XPID').lower()
         self.sh.header('Send a mail due to an execution error')
-        ad.opmail(reseau=reseau, task=self.tag, id ='execution_error', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf)
+        ad.opmail(reseau=reseau, task=self.tag, id ='execution_error', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf, xpid=xpid)
         raise
 
     def register_cycle(self, cycle):

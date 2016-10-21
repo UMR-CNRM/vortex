@@ -46,7 +46,7 @@ from vortex.tools.schedulers import SMS
 from vortex.tools.actions    import actiond as ad
 
 from common.tools.agt import agt_actual_command
-
+from vortex.syntax.stdattrs import DelayedEnvValue
 
 # TODO devrait dépendre d'un objet TARGET
 LOGIN_NODES = [
@@ -901,7 +901,7 @@ class DMTEventService(Service):
             soprano_host = dict(
                 optional = True,
                 alias    = ('soprahost', 'host'),
-                default  = 'piccolo',
+                default  = DelayedEnvValue('DMT_SERVER_HOST','piccolo'),
             ),
             expectedvars = dict(
                 type     = footprints.FPTuple,
