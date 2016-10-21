@@ -8,6 +8,7 @@ import footprints
 from vortex.data.providers import Provider
 from vortex.util.config import GenericConfigParser
 from vortex.syntax.stdattrs import Namespace, DelayedEnvValue
+from vortex.tools.date import Time
 
 #: No automatic export
 __all__ = []
@@ -92,7 +93,8 @@ class BdpeProvider(Provider):
 
     def basename(self, resource):
         """Something like 'BDPE_num+term'."""
-        return 'BDPE_{}+{!s}'.format(self.bdpeid, resource.term)
+        myterm = getattr(resource, 'term', Time(0))
+        return 'BDPE_{}+{!s}'.format(self.bdpeid, myterm)
 
     def pathname(self, resource):
         """Something like 'PREFEREDnoFORBIDDEN/date/'."""
