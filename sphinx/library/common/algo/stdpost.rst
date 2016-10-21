@@ -13,6 +13,11 @@ Package
 
 .. autodata:: __all__
 
+Functions
+---------
+
+.. autofunction:: parallel_grib_filter
+
 Classes
 -------
 

@@ -30,12 +30,13 @@ Functions
 
 .. autofunction:: clone_fields
 
+.. autofunction:: epy_env_prepare
+
 .. autofunction:: addfield
 
 .. autofunction:: copyfield
 
 .. autofunction:: overwritefield
-
 
 Classes
 -------

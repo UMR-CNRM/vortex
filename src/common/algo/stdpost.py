@@ -11,6 +11,8 @@ import time
 
 import footprints
 from footprints.stdtypes import FPTuple
+from taylorism import Boss
+from taylorism.schedulers import MaxThreadsScheduler
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.layout.monitor    import BasicInputMonitor, AutoMetaGang, MetaGang, EntrySt, GangSt
@@ -18,7 +20,7 @@ from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, Parallel
 from vortex.syntax.stdattrs   import DelayedEnvValue, FmtInt
 from vortex.tools             import grib
 from vortex.tools.fortran     import NamelistBlock
-from vortex.tools.parallelism import TaylorVortexWorker, VortexWorkerBlindRun
+from vortex.tools.parallelism import TaylorVortexWorker, VortexWorkerBlindRun, ParallelResultParser
 from vortex.tools.systems     import ExecutionError
 from vortex.util.structs      import FootprintCopier
 
@@ -156,9 +158,19 @@ class _GribFilterWorker(TaylorVortexWorker):
             concatenate = dict(
                 type = bool,
             ),
+            # Put files if they are expected
+            put_promises = dict(
+                type = bool,
+                optional = True,
+                default = True,
+            ),
             # Input/Output data
             file_in = dict(),
             file_outfmt = dict(),
+            file_outintent = dict(
+                optional = True,
+                default = 'in',
+            ),
         )
     )
 
@@ -174,18 +186,18 @@ class _GribFilterWorker(TaylorVortexWorker):
             gfilter.add_filters(* list(self.filters))
 
         # Process the input file
-        newfiles = gfilter(self.file_in, self.file_outfmt)
+        newfiles = gfilter(self.file_in, self.file_outfmt, self.file_outintent)
 
         if newfiles:
-            # Deal with promised resources
-            allpromises = [x for x in self.context.sequence.outputs()
-                           if x.rh.provider.expected]
-            for newfile in newfiles:
-                expected = [x for x in allpromises
-                            if x.rh.container.localpath() == newfile]
-                for thispromise in expected:
-                    thispromise.put(incache=True)
-
+            if self.put_promises:
+                # Deal with promised resources
+                allpromises = [x for x in self.context.sequence.outputs()
+                               if x.rh.provider.expected]
+                for newfile in newfiles:
+                    expected = [x for x in allpromises
+                                if x.rh.container.localpath() == newfile]
+                    for thispromise in expected:
+                        thispromise.put(incache=True)
         else:
             logger.warning('No file has been generated.')
             rdict['rc'] = False
@@ -193,6 +205,43 @@ class _GribFilterWorker(TaylorVortexWorker):
         logger.info("GribFiltering is done for tag=%s", self.name)
 
         return rdict
+
+
+def parallel_grib_filter(context, inputs, outputs, intents=(),
+                         cat=False, filters=FPTuple(), nthreads=8):
+    """A simple method that calls the GRIBFilter class in parallel.
+
+    :param vortex.layout.contexts.Context context: the current context
+    :param list inputs: the list of input file names
+    :param list outputs: the list of output file names
+    :param list intents: the list of intent (in|inout) for output files (in if omitted)
+    :param bool cat: whether or not to concatenate the input files (False by default)
+    :param tuple filters: a list of filters to apply (as a list of JSON dumps)
+    :param int nthreads: the maximum number of tasks used concurently (8 by default)
+    """
+    if not cat and len(filters) == 0:
+        raise AlgoComponentError("cat must be true or filters must be provided")
+    if len(inputs) != len(outputs):
+        raise AlgoComponentError("inputs and outputs must have the same length")
+    if len(intents) != len(outputs):
+        intents = FPTuple(['in', ] * len(outputs))
+    boss = Boss(scheduler=MaxThreadsScheduler(max_threads=nthreads))
+    common_i = dict(kind='gribfilter', filters=filters, concatenate=cat, put_promises=False)
+    for ifile, ofile, intent in zip(inputs, outputs, intents):
+        logger.info("%s -> %s (intent: %s) added to the GRIBfilter task's list",
+                    ifile, ofile, intent)
+        boss.set_instructions(common_i, dict(name=[ifile, ],
+                                             file_in=[ifile, ],
+                                             file_outfmt=[ofile, ],
+                                             file_outintent=[intent, ]))
+    boss.make_them_work()
+    boss.wait_till_finished()
+    logger.info("All files are processed.")
+    report = boss.get_report()
+    prp = ParallelResultParser(context)
+    for r in report['workers_report']:
+        if isinstance(prp(r), Exception):
+            raise AlgoComponentError("An error occured in GRIBfilter.")
 
 
 class Fa2Grib(ParaBlindRun):
@@ -504,6 +553,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
             ),
             numod = dict(
                 type     = int,
+                info     = 'The GRIB model number',
                 optional = True,
                 default  = DelayedEnvValue('VORTEX_GRIB_NUMOD', 118),
             ),
@@ -532,6 +582,11 @@ class DiagPE(BlindRun, grib.GribApiComponent):
                 optional = True,
                 default  = True,
             ),
+            gribfilter_tasks = dict(
+                type     = int,
+                optional = True,
+                default  = 8,
+            ),
         ),
     )
 
@@ -552,7 +607,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
             self.system.subtitle('{0:s} : dump namelist <fort.4>'.format(self.realkind))
             self.system.cat('fort.4', output=False)
 
-    def _actual_execute(self, gmembers, filters, basedate, finalterm, rh, opts, gang):
+    def _actual_execute(self, gmembers, ifilters, filters, basedate, finalterm, rh, opts, gang):
 
         mygeometry = gang.info['geometry']
         myterm = gang.info['term']
@@ -584,6 +639,27 @@ class DiagPE(BlindRun, grib.GribApiComponent):
         # This is hopeless :-(
         if gang.state == GangSt.failed:
             return
+
+        # If needed, concatenate or filter the "superset" files
+        supersets = list()
+        for subgang in gang.memberslist:
+            supersets.extend([(s.section.rh.container.localpath(),
+                               re.sub(r'^[a-zA-Z]+_(.*)$', r'\1', s.section.rh.container.localpath()))
+                              for s in subgang.memberslist
+                              if s.section.role == 'GridpointSuperset'])
+        supersets_todo = [(s, t) for s, t in supersets
+                          if not self.system.path.exists(t)]
+        if supersets_todo:
+            if len(ifilters):
+                parallel_grib_filter(self.context,
+                                     [s for s, t in supersets_todo],
+                                     [t for s, t in supersets_todo],
+                                     filters=ifilters, nthreads=self.gribfilter_tasks)
+            else:
+                parallel_grib_filter(self.context,
+                                     [s for s, t in supersets_todo],
+                                     [t for s, t in supersets_todo],
+                                     cat=True, nthreads=self.gribfilter_tasks)
 
         # Tweak the namelist
         namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
@@ -635,13 +711,23 @@ class DiagPE(BlindRun, grib.GribApiComponent):
     def execute(self, rh, opts):
         """Loop on the various grib files provided."""
 
-        # Intialise a GRIBFilter (at least try to)
+        # Intialise a GRIBFilter for output files (at least try to)
         gfilter = GRIBFilter(concatenate=False)
-        gfilter.add_filters(self.context)
+        # We re-serialise data because footprints don't like dictionaries
+        ofilters = [x.rh.contents.data
+                    for x in self.context.sequence.effective_inputs(role='GRIBFilteringRequest',
+                                                                    kind='filtering_request')]
+        gfilter.add_filters(ofilters)
+
+        # Do we need to filter input files ?
+        # We re-serialise data because footprints don't like dictionaries
+        ifilters = [json.dumps(x.rh.contents.data)
+                    for x in self.context.sequence.effective_inputs(role='GRIBInputFilteringRequest')]
 
         # Monitor for the input files
         bm = BasicInputMonitor(self.context, caching_freq=self.refreshtime,
-                               role=('Gridpoint', 'Sources'), kind='gridpoint')
+                               role=(re.compile(r'^Gridpoint'), 'Sources'),
+                               kind='gridpoint')
         # Check that the date is consistent among inputs
         basedates = set()
         members = set()
@@ -703,8 +789,8 @@ class DiagPE(BlindRun, grib.GribApiComponent):
                                          if (current_gang[g] is not None and
                                              current_gang[g].state is not GangSt.ufo)]:
 
-                    self._actual_execute(members, gfilter, basedate, terms[geometry][-1],
-                                         rh, opts, a_gang)
+                    self._actual_execute(members, ifilters, gfilter, basedate,
+                                         terms[geometry][-1], rh, opts, a_gang)
 
                     # Next one
                     try:
@@ -735,9 +821,20 @@ class _DiagPICommons(FootprintCopier):
                 values = [ 'diagpi', 'diaglabo' ],
             ),
             numod = dict(
+                info     = 'The GRIB model number',
                 type     = int,
                 optional = True,
                 default  = DelayedEnvValue('VORTEX_GRIB_NUMOD', 62),
+            ),
+            gribcat = dict(
+                type     = bool,
+                optional = True,
+                default  = False
+            ),
+            gribfilter_tasks = dict(
+                type     = int,
+                optional = True,
+                default  = 8,
             ),
         ),
     )
@@ -748,6 +845,25 @@ class _DiagPICommons(FootprintCopier):
         super(self.__class__, self).prepare(rh, opts)
         self.gribapi_setup(rh, opts)
 
+        # Check for input files to concatenate
+        if self.gribcat:
+            srcsec = self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
+                                                            kind='gridpoint')
+            cat_list_in = [sec for sec in srcsec if not sec.rh.is_expected()]
+            outsec = self.context.sequence.effective_inputs(role='GridpointOutputPrepare')
+            cat_list_out = [sec for sec in outsec if not sec.rh.is_expected()]
+            self._automatic_cat(cat_list_in, cat_list_out)
+
+        # prepare for delayed filtering
+        self._delayed_filtering = []
+
+    @staticmethod
+    def postfix(self, rh, opts):
+        """Filter outputs."""
+        if self._delayed_filtering:
+            self._batch_filter(self._delayed_filtering)
+        super(self.__class__, self).postfix(rh, opts)
+
     @staticmethod
     def spawn_hook(self):
         """Usually a good habit to dump the fort.4 namelist."""
@@ -755,6 +871,36 @@ class _DiagPICommons(FootprintCopier):
         if self.system.path.exists('fort.4'):
             self.system.subtitle('{0:s} : dump namelist <fort.4>'.format(self.realkind))
             self.system.cat('fort.4', output=False)
+
+    @staticmethod
+    def _automatic_cat(self, list_in, list_out):
+        """Concatenate the *list_in* and *list_out* input files."""
+        if self.gribcat:
+            inputs = []
+            outputs = []
+            intents = []
+            for (seclist, intent) in zip((list_in, list_out), ('in', 'inout')):
+                for isec in seclist:
+                    tmpin = isec.rh.container.localpath() + '.tmpcat'
+                    self.system.move(isec.rh.container.localpath(), tmpin, fmt='grib')
+                    inputs.append(tmpin)
+                    outputs.append(isec.rh.container.localpath())
+                    intents.append(intent)
+            parallel_grib_filter(self.context, inputs, outputs, intents,
+                                 cat=True, nthreads=self.gribfilter_tasks)
+            for ifile in inputs:
+                self.system.rm(ifile, fmt='grib')
+
+    @staticmethod
+    def _batch_filter(self, candidates):
+        """If no promises are made, the GRIB are filtered at once at the end."""
+        # We re-serialise data because footprints don't like dictionaries
+        filters = [json.dumps(x.rh.contents.data)
+                   for x in self.context.sequence.effective_inputs(role='GRIBFilteringRequest',
+                                                                   kind='filtering_request')]
+        parallel_grib_filter(self.context,
+                             candidates, [f + '_{filtername:s}' for f in candidates],
+                             filters=FPTuple(filters), nthreads=self.gribfilter_tasks)
 
     @staticmethod
     def execute(self, rh, opts):
@@ -800,11 +946,18 @@ class _DiagPICommons(FootprintCopier):
                 # We are done with the namelist
                 nam.save()
 
+            cat_list_in = []
+            cat_list_out = []
+
             # Expect the input grib file to be here
+            if sec.rh.is_expected():
+                cat_list_in.append(sec)
             self.grab(sec, comment='diagpi source')
             if outsec:
                 out = outsec.pop(0)
                 assert(out.rh.resource.term == sec.rh.resource.term)
+                if out.rh.is_expected():
+                    cat_list_out.append(out)
                 self.grab(out, comment='diagpi output')
 
             # Also link in previous grib files in order to compute some winter diagnostics
@@ -813,20 +966,27 @@ class _DiagPICommons(FootprintCopier):
                                                                        kind='gridpoint')
                        if x.rh.resource.term < r.resource.term]
             for pr in srcpsec:
+                if pr.rh.is_expected():
+                    cat_list_in.append(pr)
                 self.grab(pr, comment='diagpi additional source for winter diag')
+
+            self._automatic_cat(cat_list_in, cat_list_out)
 
             # Standard execution
             opts['loop'] = r.resource.term
             super(self.__class__, self).execute(rh, opts)
 
-            actualname = r'GRIB[-_A-Z]+{0:s}\+{1:s}'.format(r.resource.geometry.area,
-                                                            r.resource.term.fmthm)
+            actualname = r'GRIB[-_A-Z]+{0:s}\+{1:s}(?:_member\d+)?$'.format(r.resource.geometry.area,
+                                                                            r.resource.term.fmthm)
             # Find out the output file and filter it
             filtered_out = list()
             if len(gfilter):
                 for candidate in [f for f in self.system.glob('GRIB*') if re.match(actualname, f)]:
-                    logger.info("Starting GRIB filtering on %s.", candidate)
-                    filtered_out.extend(gfilter(candidate, candidate + '_{filtername:s}'))
+                    if len(self.promises):
+                        logger.info("Starting GRIB filtering on %s.", candidate)
+                        filtered_out.extend(gfilter(candidate, candidate + '_{filtername:s}'))
+                    else:
+                        self._delayed_filtering.append(candidate)
 
             # The diagnostic output may be promised
             expected = [x for x in self.promises
