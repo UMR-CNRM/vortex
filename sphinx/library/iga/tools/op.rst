@@ -41,3 +41,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: OutputReportContext
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

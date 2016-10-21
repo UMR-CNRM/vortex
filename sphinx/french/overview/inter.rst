@@ -19,6 +19,9 @@ sur un calculateur de Météo-France::
     import readline
     import rlcompleter
 
+    # Version de Vortex utilisée sous Olive
+    toolbox_root = '/home/mf/dp/marp/verolive/vortex/vortex-olive'
+
     readline.parse_and_bind("set show-all-if-ambiguous on")
     readline.parse_and_bind('tab: complete')
 
@@ -35,26 +38,25 @@ sur un calculateur de Météo-France::
     del os, atexit, readline, rlcompleter, save_history, historyPath
 
     try:
-        sys.path.append('/home/gmap/mrpm/esevault/public/vortex-dev/site')
+        sys.path.insert(0, toolbox_root + '/site')
         import footprints as fp
         try:
-            sys.path.append('/home/gmap/mrpm/esevault/public/vortex-dev/src')
+            sys.path.insert(0, toolbox_root + '/src')
             import vortex
             from vortex import toolbox
             from vortex.tools import date
-            from vortex.tools.actions import actiond as ad
+            from vortex.tools import lfi, odb
             t = vortex.ticket()
             sh = t.sh
             e = t.env
             fpx = fp.proxy
-            fpx.targets.discard_onflag('is_anonymous', verbose=False)
-            import vortex.tools.lfi
-            shlfi = fpx.addon(kind='lfi', shell=sh)
-            import vortex.tools.odb
-            shodb = fpx.addon(kind='odb', shell=sh)
+            shlfi = fpx.addon(shell=sh, kind='lfi')
+            shodb = fpx.addon(shell=sh, kind='odb')
         except Exception as trouble:
+            print trouble
             print "vortex: not loaded"
     except Exception as pbfp:
+        print pbfp
         print "footprints: not loaded"
 
 Tout le code avant le bloc :keyword:`try` est sans surprise. Il ne sert qu'à gérer l'historique

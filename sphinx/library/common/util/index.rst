@@ -10,5 +10,6 @@ Common utilities
    util
 
    async
+   beacon
    ens
    usepygram

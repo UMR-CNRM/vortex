@@ -31,3 +31,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: Beacon
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

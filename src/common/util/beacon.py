@@ -8,6 +8,9 @@ from StringIO import StringIO
 
 import json
 
+#: No automatic export
+__all__ = []
+
 
 def beaconfunction(options):
     """ Function to create a file and write information in:
@@ -18,7 +21,6 @@ def beaconfunction(options):
         - vconf
         - member (optional)
     """
-    outstr = ''
     rst = dict()
 
     # Find out if a resource handler is present and load the elements to be written
