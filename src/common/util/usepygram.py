@@ -77,38 +77,48 @@ def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, ov
         if not isinstance(names, (list, tuple, set)):
             names = [names, ]
         names = [name.upper().replace(' ', '.') for name in names]
-    # aliases
+    # Fill the sources list if necessary
+    if len(sources) == 1 and len(names) > 1:
+        sources *= len(names)
+    if len(sources) != len(names):
+        raise ValueError('Sizes of sources and names do not fit the requirements.')
+
     tablein = datain.listfields()
     tableout = dataout.listfields()
-    addfields = list()
+    addedfields = 0
 
     # Look for the input fields,
     for source, name in zip(sources, names):
+        fx = None
+        comprpack = None
         for fieldname in [ x for x in sorted(tablein) if x.endswith(source) ]:
             newfield = fieldname.replace(source, '') + name
             if not overwrite and newfield in tableout:
                 logger.warning('Field <%s> already in output file', newfield)
             else:
-                fx = datain.readfield(fieldname)
+                # If the values are to be overwritten : do not read the input
+                # field several times...
+                if value is None or fx is None or comprpack is None:
+                    fx = datain.readfield(fieldname)
+                    comprpack = datain.fieldscompression.get(fieldname)
+                    if pack is not None:
+                        comprpack.update(pack)
+                # Create the output field, change its name, fill it
                 fy = fx.clone({x: newfield for x in fx.fid.keys()})
                 if value is not None:
                     fy.data.fill(value)
-                comprpack = datain.fieldscompression.get(fieldname)
-                if pack is not None:
-                    comprpack.update(pack)
-                addfields.append((fy, comprpack))
+                # On the first append, open the output file
+                if addedfields == 0:
+                    dataout.close()
+                    dataout.open(openmode='a')
+                # Actually add the new field
+                logger.info('Add field %s pack=%s' % (fy.fid, comprpack))
+                dataout.writefield(fy, compression=comprpack)
+                addedfields += 1
 
-    # Write output fields
-    if addfields:
+    if addedfields:
         dataout.close()
-        dataout.open(openmode='a')
-        for newfield, pack in addfields:
-            logger.info('Add field %s pack=%s' % (newfield.fid, pack))
-            dataout.writefield(newfield, compression=pack)
-
-    dataout.close()
-
-    return len(addfields)
+    return addedfields
 
 
 def epy_env_prepare(t):
