@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 '''
-bin.coutlines -- count the lines of code in the project
+project.bin.coutlines -- count the lines of code in the project
 
 Uses the "cloc.pl" software to compute the number of lines of code in specific
 folders of the vortex project
@@ -39,9 +39,9 @@ class ClocResult():
     def __init__(self, xmloutput):
         root = ET.fromstring(re.sub('^\n*', '', xmloutput))
         self.languages = {}
-        for lang in [ l.attrib for l in root.iter('language')]:
+        for lang in [l.attrib for l in root.iter('language')]:
             self.languages[lang['name']] = ClocResultLine(lang)
-        for total in [ l.attrib for l in root.iter('total')]:
+        for total in [l.attrib for l in root.iter('total')]:
             self.total = ClocResultLine(total)
 
     def __str__(self):

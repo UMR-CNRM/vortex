@@ -6,7 +6,14 @@ from __future__ import print_function
 import argparse
 import importlib
 import json
+import os
+import sys
 from xml.dom import minidom
+
+# Automatically set the python path
+vortexbase = os.path.dirname(os.path.abspath(__file__)).rstrip('/bin')
+sys.path.insert(0, os.path.join(vortexbase, 'site'))
+sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 import footprints
 import vortex  # @UnusedImport
@@ -107,10 +114,16 @@ def xml_exporter(collectors, abstract, filebase):
         xclass.appendChild(cdom.firstChild)
         xroot.appendChild(xclass)
 
+    xdoc_col_list = minidom.Document()
+    col_export = xdoc_col_list.createElement('fp_export')
+
     for collector in collectors_list(collectors):
         xdoc = minidom.Document()
         xroot = xdoc.createElement('collector')
         xroot.setAttribute('name', collector.tag)
+        xroot_col_list = xdoc_col_list.createElement('collector')
+        xroot_col_list.setAttribute('name', collector.tag)
+        col_export.appendChild(xroot_col_list)
         if abstract:
             for c in collector.abstract_classes.items():
                 _add_entry(xroot, c, abstract=True)
@@ -122,6 +135,12 @@ def xml_exporter(collectors, abstract, filebase):
         print('Output file:', outfile)
         with open(outfile, 'w') as fd:
             fd.write(xdoc.toprettyxml(indent='  ', encoding='utf-8'))
+
+    xdoc_col_list.appendChild(col_export)
+    outfile1 = '{}.xml'.format(filebase)
+    print('Output file:', outfile1)
+    with open(outfile1, 'w') as fd:
+        fd.write(xdoc_col_list.toprettyxml(indent='  ', encoding='utf-8'))
 
 
 if __name__ == "__main__":

@@ -31,7 +31,8 @@ Extras
    List of default geometries <geometries>
    table
    checkreport
-
+   notebooks/index
+   Vortex-Help <_static/vortex-help/index.html#http://>
 
 .. toctree::
    :maxdepth: 1

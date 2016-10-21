@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+      
+    <title>Vortex-Help</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet"> -->
+
+    <!-- MetisMenu CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/metisMenu/2.5.2/metisMenu.min.css" />
+    <!-- link href="../vendor/metisMenu/metisMenu.min.css" rel="stylesheet" -->
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/3.3.7+1/css/sb-admin-2.css" />
+    <!-- <link href="../dist/css/sb-admin-2.css" rel="stylesheet"> -->
+
+    <!-- Morris Charts CSS -->
+    <!-- VortexHelp: deleted -->
+
+    <!-- Custom Fonts -->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
+    <!-- <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"> -->
+
+    <!-- VortexHelp: jstree -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />  
+
+    <!-- VortexHelp: jquery-ui -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.structure.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.theme.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/ui-lightness/jquery-ui.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/ui-lightness/theme.min.css" />
+
+    <!-- VortexHelp: jquery multiselect -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css" />
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <style type="text/css">
+    .jstree-anchor.treeabstract {
+        text-decoration: line-through; }
+    .jstree-anchor.treefull {
+        color: green;
+        font-weight: bold; }
+    .jstree-anchor.treepartial {
+        color: darkred; 
+        font-weight: bold; }
+    .panel-heading.abstraite {
+        text-decoration: line-through; }
+    </style>
+</head>
+
+<body>
+
+    <div id="loading1" class="container">
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4">
+                <p class="text-center">Vortex-Help is loading... Please
+                wait.</p>
+            </div>
+            <div class="col-md-4 col-md-offset-4" id="loading1_body" style="height:290px;">
+            </div>
+        </div>
+    </div>
+
+    <div id="wrapper" hidden="hidden">
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html">Vortex-Help</a>
+            </div>
+            <!-- /.navbar-header -->
+
+            <ul class="nav navbar-top-links navbar-right">
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown " onclick="redirection()">
+                        <i class="fa fa-question fa-fw"></i>  
+                    </a>
+                    <!-- /.dropdown-faq -->
+                </li>
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                        <i  id="user_mode" class="glyphicon glyphicon-pawn"></i>  <i class="fa fa-caret-down"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-user">
+                        <li onclick="class_level_default()"><a ><i class="glyphicon glyphicon-pawn"></i>&nbsp;Default</a>
+                        </li>
+                        <li onclick="class_level_advanced()"><a ><i class="glyphicon glyphicon-knight"></i>&nbsp;Advanced</a>
+                        </li>
+                        <li onclick="class_level_guru()"><a><i class="glyphicon glyphicon-king"></i>&nbsp;Guru</a>
+                        </li>
+                    </ul>
+                    <!-- /.dropdown-user -->
+                </li>
+                <!-- /.dropdown -->
+            </ul>
+            <!-- /.navbar-top-links -->
+          
+        </nav> 
+        <nav role="navigation" style="margin-bottom:0">
+
+            <div class="navbar-default sidebar" role="navigation" style="margin-top:0px;">
+                <div class="sidebar-nav navbar-collapse">
+                    <ul class="nav" id="side-menu">
+                        <li>
+                            <div class="form-group well well-sm">
+                                <label>Filtrer</label>
+
+                                <div id="selecteurs">
+                                    <div class ="classe">
+                                      <form >
+                                        <span style="font-weight:bold;" align="center">packages</span>
+                                        <p>
+                                        <select class="cl"  multiple="multiple">
+                                        </select>
+                                        </p>
+                                     </form>
+                                   </div>
+
+                                 <div class ="collector">
+                                    <form >
+                                    <span style="font-weight:bold;" align="center">collectors</span>
+                                      <p>
+                                      <select id="element" class="col" multiple="multiple" >
+                                      </select>
+                                      </p>
+                                    </form>
+                                </div>
+                                <!-- .panel-heading -->
+                        <li>
+                            <a href="index.html"><i class="fa  fa-refresh  fa-fw"></i> Réinitialiser</a>
+                        </li>
+                        <li>
+                            <a onclick='window.open("http://intra.cnrm.meteo.fr/algopy/sphinx/vortex/vhelp/index.html")'>
+                                <i class="fa fa-edit fa-fw"></i> Documentation Sphinx</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.sidebar-collapse -->
+            </div>
+            <!-- /.navbar-static-side -->
+        </nav>
+
+        <div id="page-wrapper">
+
+            <!-- /.row -->
+            <div class="row">
+
+                <div class="col-lg-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading" >
+                            Recherche par classe
+                        </div>
+                        <div class="panel-body" >
+                            
+                            <input class="search-input0 form-control" id="RechercheCl" placeholder="Rechercher une classe..."></input>
+                        </div>
+                      
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading" >
+                             Recherche par Attributs
+                        </div>
+                        <div class="panel-body" >
+                            <input type="text" class="form-control" placeholder="Rechercher des attributs..." id="RechercheAttr">
+
+                        </div>
+                      
+                    </div>
+                </div>      
+                <div id='event_result'></div>
+                
+                <div class="col-lg-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-bar-chart-o fa-fw"></i> Resultats
+                            <button type="button" class="btn-outline btn-danger" onclick="rm()" style="float:right">Clear</button>
+                        </div>
+                    </div>
+                    <div id ="tbs"></div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            tree
+                        </div>
+                        <div class="panel-body">
+                            <div class="tab-content">
+                                <div class="tab-pane fade in active" id="resource">
+                                    <div id="jstree"> </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /#page-wrapper -->
+    </div>
+    <!-- /#wrapper -->
+
+    <!-- jQuery -->
+    <!-- <script src="../vendor/jquery/jquery.min.js"></script> -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <!-- <script src="../vendor/bootstrap/js/bootstrap.min.js"></script> -->
+
+    <!-- Metis Menu Plugin JavaScript -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/metisMenu/2.5.2/metisMenu.min.js"></script>
+    <!-- <script src="../vendor/metisMenu/metisMenu.min.js"></script> -->
+
+    <!-- Morris Charts JavaScript -->
+    <!-- VortexHelp: delete -->
+
+    <!-- Custom Theme JavaScript -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/3.3.7+1/js/sb-admin-2.min.js"></script>
+    <!-- <script src="../dist/js/sb-admin-2.js"></script> -->
+
+    <!-- VortexHelp: jstree -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+
+    <!-- VortexHelp: jquery-ui -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+
+    <!-- VortexHelp: jquery-multiselect -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.min.js"></script>
+
+    <!-- VortexHelp: spin (the loading image...) -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+
+    <!-- VortexHelp: TypeWatch -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/TypeWatch/2.2.2/jquery.typewatch.min.js"></script>
+
+    <!-- VortexAdd: helper functions -->
+    <script type="text/javascript" src="vortexhelp-functions.js"></script>
+
+</body>
+
+</html>
