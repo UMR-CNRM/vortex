@@ -7,7 +7,6 @@ import io
 import re
 
 import footprints
-
 from vortex import tools
 from . import folder
 
@@ -22,10 +21,10 @@ class OdbDriver(object):
 
     def __init__(self, sh=None, env=None, target=None):
         """A quite challenging initialisation since sh, env and target should be provided."""
-        self.sh     = sh
+        self.sh = sh
         if self.sh is None:
             logger.critical('%s created with a proper shell access [%s]', self.__class__, self)
-        self.env    = env
+        self.env = env
         if self.env is None:
             logger.critical('%s created with a proper environment access [%s]', self.__class__, self)
         self.target = target
@@ -125,7 +124,7 @@ class TimeSlots(object):
 
     def __init__(self, nslot=7, start='-PT3H', window='PT6H', chunk=None, center=True):
         if isinstance(nslot, str):
-            info = [ x.strip() for x in nslot.split('/') ]
+            info = [x.strip() for x in nslot.split('/')]
             nslot = info[0]
             if len(info) > 1:
                 start = info[1]
@@ -143,7 +142,7 @@ class TimeSlots(object):
         if chunk is None:
             cslot = self.nslot - 1 if self.center else self.nslot
             chunk = 'PT' + str((self.window.length // max(1, cslot)) // 60) + 'M'
-        self.chunk  = self.window if self.nslot < 2 else tools.date.Period(chunk)
+        self.chunk = self.window if self.nslot < 2 else tools.date.Period(chunk)
 
     def __eq__(self, other):
         if isinstance(other, basestring):

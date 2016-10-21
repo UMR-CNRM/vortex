@@ -12,6 +12,8 @@ import footprints
 from gco.tools import genv
 from vortex.tools import date
 from vortex.util.config import GenericConfigParser, load_template
+from gco.data.stores import GcoStoreConfig, GGET_DEFAULT_CONFIGFILE
+
 
 #: No automatic export
 __all__ = []
@@ -200,6 +202,9 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     tg = sh.target()
     defs = genv.autofill(cycle)
 
+    # Configuration handler (untar specific options)
+    ggetconfig = GcoStoreConfig(GGET_DEFAULT_CONFIGFILE)
+
     # Save genv raw output in specified `genvpath` folder
     sh.mkdir(genvpath)
     genvconf = sh.path.join(genvpath, cycle + '.genv')
@@ -233,9 +238,6 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
             ggetnames.add(v)
             if ismonthly:
                 monthly.add(v)
-
-    # Could filter out here unwanted extensions
-    #
 
     # Perform gget on all resources to target directory
     gcmd = tg.get('gco:ggetcmd', 'gget')
@@ -273,23 +275,10 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
 
                     if sh.is_tarname(name):
                         radix = sh.tarname_radix(name)
+                        untaropts = ggetconfig.key_untar_properties(name)
                         if verbose:
-                            print('expanding to', radix)
-                        unpacked = sh.smartuntar(name, radix)
-
-                        # a unique directory is moved one level up
-                        if len(unpacked) == 1 and sh.path.isdir(sh.path.join(radix, unpacked[0])):
-                            if verbose:
-                                print('moving contents one level up:', unpacked[0])
-                            import tempfile
-                            tmpdir = tempfile.mkdtemp(prefix='_renaming_', dir='.')
-                            sh.move(sh.path.join(radix, unpacked[0]), tmpdir)
-                            sh.rmdir(radix)
-                            sh.mv(sh.path.join(tmpdir, unpacked[0]), radix)
-                            sh.remove(tmpdir)
-                            with sh.cdcontext(radix):
-                                unpacked = sh.glob('*')
-
+                            print('expanding to {} with opts {}'.format(radix, untaropts))
+                        unpacked = sh.smartuntar(name, radix, **untaropts)
                         if verbose:
                             print('unpacked:\n\t' + '\n\t'.join(unpacked))
                         for subfile in unpacked:

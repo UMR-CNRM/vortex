@@ -6,17 +6,17 @@ This package handles cache objects that could be in charge of
 hosting data resources. Cache objects use the :mod:`footprints` mechanism.
 """
 
-#: No automatic export
-__all__ = []
-
 from datetime import datetime
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
 from vortex import sessions
-from vortex.util.config  import GenericConfigParser
+from vortex.util.config import GenericConfigParser
 from vortex.util.structs import History
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Cache(footprints.FootprintBase):
