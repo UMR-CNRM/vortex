@@ -7,6 +7,7 @@ __all__ = []
 
 from vortex.data.flow import FlowResource
 from vortex.syntax.stdattrs import FmtInt
+from vortex.data.contents   import JsonDictContent
 
 
 class Listing(FlowResource):
@@ -125,3 +126,36 @@ class DrHookListing(Listing):
         if self.mpi:
             info['compute'] = [{'mpi': self.mpi}, ]
         return info
+
+
+class Beacon(FlowResource):
+    """Output indicating the end of a model run."""
+    _footprint = [
+        dict(
+            info = 'Beacon',
+            attr = dict(
+                kind = dict(
+                    values   = ['beacon']
+                ),
+                clscontents = dict(
+                    default = JsonDictContent,
+                ),
+                nativefmt = dict(
+                    default = 'json',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'beacon'
+
+    def basename_info(self):
+        """Generic information, radical = ``beacon``."""
+        return dict(
+            radical = self.realkind,
+            src     = [self.model],
+            fmt     = self.nativefmt
+        )
+
