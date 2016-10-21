@@ -10,7 +10,6 @@ import functools
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-
 from vortex import sessions
 
 from vortex.tools  import net
@@ -372,10 +371,35 @@ class Handler(object):
                     self.uridata,
                     self.mkopts(extras)
                 )
+                if rst and self._mdcheck:
+                    logger.info('metadatacheck is on: we are forcing a real get()...')
+                    # We are using a temporary fake container
+                    mycontainer = footprints.proxy.container(shouldfly=True,
+                                                             actualfmt=self.container.actualfmt)
+                    try:
+                        rst = store.get(
+                            self.uridata,
+                            mycontainer.iotarget(),
+                            self.mkopts(extras)
+                        )
+                        if rst:
+                            if store.delayed:
+                                logger.warning("The resource is expected... let's say that's fine.")
+                            else:
+                                # Create the content manually and drop it when we are done.
+                                contents = self.resource.contents_handler(datafmt=mycontainer.actualfmt)
+                                contents.slurp(mycontainer)
+                                rst = contents.metadata_check(self.resource, delta = self._mddelta)
+                    finally:
+                        # Delete the temporary container
+                        mycontainer.clear()
                 self.history.append(store.fullname(), 'check', rst)
-                # Indicate that the resource was checked
                 if rst and self.stage == 'load':
+                    # Indicate that the resource was checked
                     self._updstage('checked')
+                if not rst:
+                    # Always signal failures
+                    self._updstage('void')
             else:
                 logger.error('Could not find any store to check %s', self.lasturl)
         else:
@@ -465,6 +489,9 @@ class Handler(object):
                             self.apply_get_hooks(**extras)
                         else:
                             logger.info("(get-)Hooks were delayed")
+            else:
+                # Always signal failures
+                self._updstage('void')
         else:
             logger.error('Could not find any store to get %s', self.lasturl)
 
@@ -489,23 +516,30 @@ class Handler(object):
         rst = False
         if self.complete:
             if self.options.get('insitu', False):  # This a second pass (or third, forth, ...)
-                rst = True  # Always succeed since it was already processed once
                 cur_tracker = self._cur_context.localtracker
                 iotarget = self.container.iotarget()
                 # The localpath is here and listed in the tracker
                 if self.container.exists() and cur_tracker.is_tracked_input(iotarget):
                     # Am I consistent with the ResourceHandler recorded in the tracker ?
                     if cur_tracker[iotarget].match_rh('get', self):
+                        rst = True
                         self.container.updfill(True)
                         self._updstage('get', insitu=True)
                         logger.info('The <%s> resource is already here and matches the RH description :-)',
                                     self.container.iotarget())
                     else:
-                        logger.info("The resource is already here but doesn't matches the RH description :-(")
+                        # This may happen if fatal=False and the local file was fetched
+                        # by an alternate
+                        if alternate:
+                            logger.info("Alternate is on and the local file exists: ignoring the error.")
+                            rst = True
+                        else:
+                            logger.info("The resource is already here but doesn't matches the RH description :-(")
+                            self._updstage('void', insitu=True)
                 # Bloody hell, the localpath doesn't exist
                 else:
-                    tmprst = self._actual_get(**extras)  # This might be an expected resource...
-                    if tmprst:
+                    rst = self._actual_get(**extras)  # This might be an expected resource...
+                    if rst:
                         logger.info("The resource was successfully fetched :-)")
                     else:
                         logger.info("Could not get the resource :-(")
@@ -627,7 +661,7 @@ class Handler(object):
 
     def is_grabable(self, check_exists=False):
         """Return if an expected resource is availlable or not.
-        
+
         Note: If it returns True, the user still need to :meth:`get` the resource.
         """
         rc = True

@@ -67,7 +67,7 @@ class Section(object):
         self._role      = setrole(kw.pop('role', 'anonymous'))
         self._alternate = setrole(kw.pop('alternate', None))
         self._rh        = kw.pop('rh', None)
-        self.stages     = [ kw.pop('stage', 'void') ]
+        self.stages     = [ kw.pop('stage', 'load') ]
         self.__dict__.update(kw)
         # We realy need a ResourceHandler...
         if self.rh is None:
@@ -96,6 +96,11 @@ class Section(object):
     def _updignore(self, info):
         """Fake function for undefined information driven updates."""
         logger.warning('Unable to update %s with info %s', self, info)
+
+    def _updstage_void(self, info):
+        """Upgrade current section to 'checked' level."""
+        if info.get('stage') == 'void' and self.kind in (ixo.INPUT, ixo.EXEC):
+            self.stages.append('void')
 
     def _updstage_checked(self, info):
         """Upgrade current section to 'checked' level."""
@@ -386,14 +391,13 @@ class SequenceInputsReport(object):
     """Summarize data about inputs (missing resources, alternates, ...)."""
 
     _StatusTupple = namedtuple('_StatusTupple',
-                               ('PRESENT', 'EXPECTED', 'CHECKED', 'MISSING'))
+                               ('PRESENT', 'EXPECTED', 'CHECKED', 'MISSING', 'UNUSED'))
     _Status = _StatusTupple(PRESENT='present', EXPECTED='expected',
-                            CHECKED='checked', MISSING='missing')
-    _TranslateStage = dict(get=_Status.PRESENT,
-                           expected=_Status.EXPECTED,
-                           void=_Status.MISSING,
-                           load=_Status.MISSING,
-                           checked=_Status.CHECKED)
+                            CHECKED='checked', MISSING='missing',
+                            UNUSED='unused')
+    _TranslateStage = dict(get=_Status.PRESENT, expected=_Status.EXPECTED,
+                           checked=_Status.CHECKED, void=_Status.MISSING,
+                           load=_Status.UNUSED)
 
     def __init__(self, inputs):
         self._local_map = defaultdict(lambda: defaultdict(list))

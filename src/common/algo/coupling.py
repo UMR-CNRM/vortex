@@ -28,15 +28,6 @@ class Coupling(FullPos):
                 info     = "The run date of the coupling generating process",
                 type     = date.Date,
             ),
-            server_run = dict(
-                values   = [True, False],
-            ),
-            serversync_method = dict(
-                default  = 'simple_socket',
-            ),
-            serversync_medium = dict(
-                default  = 'cnt3_wait',
-            )
         )
     )
 

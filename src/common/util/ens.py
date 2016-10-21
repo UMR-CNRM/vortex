@@ -9,9 +9,11 @@ A collection of utility functions used in the context of Ensemble forecasts.
 from StringIO import StringIO
 import json
 from random import seed, sample
+import re
 
 import footprints
 from vortex import sessions
+from vortex.data.stores import FunctionStoreCallbackError
 from vortex.util import helpers
 
 #: No automatic export
@@ -48,17 +50,17 @@ def drawingfunction(options):
         seed(int(date[:-2]))
         nbsample = rhdict['resource'].get('nbsample', 0)
         if not nbsample:
-            raise ValueError('The resource must hold a non-null nbsample attribute')
+            raise FunctionStoreCallbackError('The resource must hold a non-null nbsample attribute')
         population = rhdict['resource'].get('population', [])
         if not population:
-            raise ValueError('The resource must hold a non-empty population attribute')
+            raise FunctionStoreCallbackError('The resource must hold a non-empty population attribute')
         nbset = len(population)
 
         tirage = (sample(population * (nbsample / nbset), (nbsample / nbset) * nbset) +
                   sample(population, nbsample % nbset))
         logger.info('List of random elements: %s', ', '.join([str(x) for x in tirage]))
     else:
-        raise ValueError("no resource handler here :-(\n")
+        raise FunctionStoreCallbackError("no resource handler here :-(\n")
     # NB: The result have to be a file like object !
     outdict = dict(vapp = rhdict['provider'].get('vapp', None),
                    vconf = rhdict['provider'].get('vconf', None),
@@ -81,13 +83,21 @@ def _checkingfunction_dict(options):
         nbsample = rhdict['resource'].get('nbsample', 0)
         checkrole = rhdict['resource'].get('checkrole', None)
         if not checkrole:
-            raise ValueError('The resource must hold a non-empty checkrole attribute')
-        t = sessions.current()
-        ctx = t.context
-        checklist = [sec.rh for sec in ctx.sequence.filtered_inputs(role=checkrole)]
-        return helpers.colorfull_input_checker(nbsample, checklist)
+            raise FunctionStoreCallbackError('The resource must hold a non-empty checkrole attribute')
+        rolematch = re.match('(\w+)(?:\+(\w+))?$', checkrole)
+        if rolematch:
+            ctx = sessions.current().context
+            checklist = [sec.rh for sec in ctx.sequence.filtered_inputs(role=rolematch.group(1))]
+            mandatorylist = ([sec.rh for sec in ctx.sequence.filtered_inputs(role=rolematch.group(2))]
+                             if rolematch.group(2) else [])
+        else:
+            raise FunctionStoreCallbackError('checkrole is not properly formatted')
+        try:
+            return helpers.colorfull_input_checker(nbsample, checklist, mandatory=mandatorylist)
+        except helpers.InputCheckerError as e:
+            raise FunctionStoreCallbackError('The input checher failed (%s)', str(e))
     else:
-        raise ValueError("no resource handler here :-(\n")
+        raise FunctionStoreCallbackError("no resource handler here :-(\n")
 
 
 def checkingfunction(options):
