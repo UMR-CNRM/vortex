@@ -193,11 +193,6 @@ class Coupling(FullPos):
                 if not self.server_run:
                     sh.rmall('ncf927', 'dirlst', 'NODE.[0123456789]*', 'std*')
 
-    def postfix(self, rh, opts):
-        """Post processing cleaning."""
-        super(Coupling, self).postfix(rh, opts)
-        self.system.dir(output=False)
-
 
 class Prep(BlindRun):
     """Coupling/Interpolation of Surfex files."""
@@ -329,7 +324,3 @@ class Prep(BlindRun):
             # Some cleaning
             sh.rmall('*.des', fmt = r.container.actualfmt)
 
-    def postfix(self, rh, opts):
-        """Post processing cleaning."""
-        super(Prep, self).postfix(rh, opts)
-        self.system.dir(output=False)

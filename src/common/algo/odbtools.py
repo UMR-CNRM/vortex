@@ -359,7 +359,6 @@ class Raw2ODB(OdbProcess):
 
     def postfix(self, rh, opts):
         """Post conversion cleaning."""
-        super(Raw2ODB, self).postfix(rh, opts)
 
         # Remove empty ECMA databases from the output obsmap
         self.obsmapout = [x for x in self.obsmapout
@@ -387,6 +386,8 @@ class Raw2ODB(OdbProcess):
                             rdg.write(rdl.readline())
                     else:
                         logger.info("Unable to create a global refdata entry for data=" + x.data)
+
+        super(Raw2ODB, self).postfix(rh, opts)
 
 
 class OdbAverage(OdbProcess):
@@ -499,8 +500,6 @@ class OdbAverage(OdbProcess):
 
     def postfix(self, rh, opts):
         """Post shuffle / average cleaning."""
-        super(OdbAverage, self).postfix(rh, opts)
-
         sh = self.system
 
         with sh.cdcontext(self.layout_new):
@@ -511,6 +510,8 @@ class OdbAverage(OdbProcess):
                 sh.rm(ccma)
 
         sh.mv(self.layout_new, self.layout_in + '.' + self.bingo.resource.part)
+
+        super(OdbAverage, self).postfix(rh, opts)
 
 
 class OdbMatchup(OdbProcess):

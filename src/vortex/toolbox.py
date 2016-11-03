@@ -510,7 +510,7 @@ def rescue(*files, **opts):
     clear_promises(clear=True)
 
     sh.subtitle('Rescue current dir')
-    sh.dir(output=False)
+    sh.dir(output=False, fatal=False)
 
     logger.info('Rescue files %s', files)
 

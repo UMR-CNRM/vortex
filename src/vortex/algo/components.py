@@ -449,13 +449,11 @@ class AlgoComponent(footprints.FootprintBase):
         sh.subtitle('{0:s} : directory listing (pre-execution)'.format(self.realkind))
         sh.remove('core')
         sh.softlink('/dev/null', 'core')
-        sh.dir(output=False)
+        sh.dir(output=False, fatal=False)
         self.spawn_hook()
         self.target.spawn_hook(sh)
         sh.subtitle('{0:s} : start execution'.format(self.realkind))
         sh.spawn(args, output=False, fatal=opts.get('fatal', True))
-        sh.subtitle('{0:s} : directory listing (post-execution)'.format(self.realkind))
-        sh.dir(output=False)
 
         # On-the-fly coprocessing cleaning
         if p_io:
@@ -508,8 +506,9 @@ class AlgoComponent(footprints.FootprintBase):
             self.server_end()
 
     def postfix(self, rh, opts):
-        """Abstract method."""
-        pass
+        """Some basic informations."""
+        self.system.subtitle('{0:s} : directory listing (post-run)'.format(self.realkind))
+        self.system.dir(output=False, fatal=False)
 
     def dumplog(self, opts):
         """Dump to local file the internal log of the current algo component."""

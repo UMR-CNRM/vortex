@@ -419,7 +419,7 @@ class Task(Node):
                 print rc
                 print rc.result
             sh.header('Post-IO Poll directory listing')
-            sh.ll(output=False)
+            sh.ll(output=False, fatal=False)
 
     def run(self, nbpass=0):
         """Execution driver: build, setup, refill, process, complete."""

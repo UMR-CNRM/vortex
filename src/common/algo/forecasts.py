@@ -125,7 +125,6 @@ class Forecast(IFSParallel):
 
     def postfix(self, rh, opts):
         """Find out if any special resources have been produced."""
-        super(Forecast, self).postfix(rh, opts)
 
         sh = self.system
 
@@ -158,6 +157,8 @@ class Forecast(IFSParallel):
                     sh.mkdir(dest)
                     for lfa in flist:
                         sh.mv(lfa, dest, fmt='lfa')
+
+        super(Forecast, self).postfix(rh, opts)
 
 
 class LAMForecast(Forecast):
@@ -236,12 +237,14 @@ class LAMForecast(Forecast):
     def postfix(self, rh, opts):
         """Post forecast information and cleaning."""
         sh = self.system
-        super(LAMForecast, self).postfix(rh, opts)
+
         if self.mksync:
             synclog = self.synctool + '.log'
             if sh.path.exists(synclog):
                 sh.subtitle(synclog)
                 sh.cat(synclog, output=False)
+
+        super(LAMForecast, self).postfix(rh, opts)
 
 
 class DFIForecast(LAMForecast):
@@ -354,7 +357,6 @@ class FullPosGeo(FullPos):
     def postfix(self, rh, opts):
         """Post processing cleaning."""
         sh = self.system
-        super(FullPosGeo, self).postfix(rh, opts)
 
         initrh = [ x.rh for x in self.context.sequence.effective_inputs(
             role = ('Analysis', 'Guess', 'InitialCondition'),
@@ -366,7 +368,8 @@ class FullPosGeo(FullPos):
                 sh.move('RUNOUT/pfout_{:d}'.format(num),
                         'PF' + re.sub('^(?:ICMSH)(.*?)(?:INIT)(.*)$', r'\1\2', r.container.localpath()).format(self.xpname),
                         fmt=r.container.actualfmt)
-        sh.dir(output=False)
+
+        super(FullPosGeo, self).postfix(rh, opts)
 
 
 class FullPosBDAP(FullPos):
@@ -483,8 +486,9 @@ class FullPosBDAP(FullPos):
     def postfix(self, rh, opts):
         """Post processing cleaning."""
         sh = self.system
-        super(FullPosBDAP, self).postfix(rh, opts)
+
         for fpfile in [ x for x in sh.glob('RUNOUT*/PF{0:s}*'.format(self.xpname)) if sh.path.isfile(x) ]:
             sh.move(fpfile, sh.path.basename(fpfile), fmt='lfi')
         sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')
-        sh.dir(output=False)
+
+        super(FullPosBDAP, self).postfix(rh, opts)
