@@ -297,8 +297,9 @@ class MpiSubmit(MpiTool):
         """Fix some environmental or behavior according to target definition."""
         if self.target.config.has_section('mpienv'):
             for k, v in self.target.config.items('mpienv'):
-                logger.debug('Setting MPI env %s = %s', k, v)
-                self.env[k] = str(v)
+                if k not in self.env:
+                    logger.debug('Setting MPI env %s = %s', k, v)
+                    self.env[k] = str(v)
 
 
 class MpiRun(MpiSubmit):

@@ -118,7 +118,9 @@ class ObsODB(Observations):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return '_'.join((self.layout, self.stage, self.part)) + '.tar'
+        stage_map = dict(screening='screen', build='split')
+        mystage = stage_map.get(self.stage, self.stage)
+        return '_'.join((self.layout, mystage, self.part)) + '.tar'
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
