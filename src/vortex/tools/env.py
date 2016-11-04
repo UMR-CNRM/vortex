@@ -160,12 +160,12 @@ class Environment(object):
             obj = value
         return str(obj)
 
-    def setvar(self, varname, value):
+    def setvar(self, varname, value, enforce_uppercase=True):
         """
         Set uppercase ``varname`` to value.
         Also used as internal for attribute access or dictionary access.
         """
-        upvar = varname.upper()
+        upvar = varname.upper() if enforce_uppercase else varname
         self._pool[upvar] = value
         self._mods.add(upvar)
         self.history.append(upvar, value, traceback.format_stack()[:-1])
