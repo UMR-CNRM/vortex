@@ -256,7 +256,7 @@ class CombiIC(Combi):
         # Dealing with initial conditions from the assimilation ensemble
         nbPert = len(self.context.sequence.effective_inputs(role = ('AEPerturbedState',
                                                                     'ModelState')))
-        nammod['LANAP'] = bool(self.nbpert or nbPert != 0)
+        nammod['LANAP'] = (nbPert != 0)
 
         # Dealing with singular vectors
         sv_sections = self.context.sequence.effective_inputs(role='CoeffSV')
@@ -269,6 +269,9 @@ class CombiIC(Combi):
                                    [sec for sec in self.context.sequence.effective_inputs(role = 'PerturbedState')
                                     if 'ICHR' in sec.rh.container.filename])
 
+        # The mean value may be present among the AE or SV inputs: subtract it
+        nbPert -= 1 if nbPert * 2 == self.nbic + 1 else 0
+
         # Dealing with breeding method's inputs
         bd_sections = self.context.sequence.effective_inputs(role='CoeffBreeding')
         nammod['LBRED'] = bool(bd_sections)
@@ -279,11 +282,11 @@ class CombiIC(Combi):
             nbBd = len(self.context.sequence.effective_inputs(role = 'BreedingPerturbedState') or
                        [sec for sec in self.context.sequence.effective_inputs(role = 'PerturbedState')
                         if 'BMHR' in sec.rh.container.filename])
-            nbPert = nbPert or (nbBd - 1 if nbBd == self.nbic and self.nbic % 2 != 0
+            # symmetric perturbations except if analysis: one more file
+            # or zero if one control ic (hypothesis: odd nbic)
+            nbPert = nbPert or (nbBd - 1 if nbBd == self.nbic + 1 or
+                                (nbBd == self.nbic and self.nbic % 2 != 0)
                                 else self.nbic / 2)
-
-        # The mean value may be present among the AE or SV inputs: subtract it
-        nbPert -= 1 if nbPert * 2 == self.nbic + 1 else 0
 
         # The footprint's value is always preferred to the calculated one
         nbPert = self.nbpert or nbPert
@@ -322,12 +325,12 @@ class CombiBreeding(CombiPert):
         super(CombiBreeding, self).prepare(rh, opts)
 
         # Consistent naming with the Fortran execution
-        hst_sections = self.context.sequence.effective_inputs(kind='historic')
+        hst_sections = self.context.sequence.effective_inputs(kind = ('pert', 'historic'))
         for num, hst in enumerate(hst_sections):
             self.system.softlink(hst.rh.container.localpath(), re.sub('[0-9]*$',
                                                                       '{:03d}'.format(num + 1),
                                                                       hst.rh.container.localpath()) + '.grb')
-        logger.info("Rename the %d grib files consecutively.", num)
+            logger.info("Rename the %d grib files consecutively.", num)
 
         # Tweak the namelist
         namsec = self.setlink(initrole='Namelist', initkind='namelist')
