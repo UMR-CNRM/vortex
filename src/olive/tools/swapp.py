@@ -1,19 +1,22 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
-
 import re
 import socket
 import string
 
 import footprints
+from vortex import sessions
 from vortex.tools import fortran
+from vortex.util import config
 from common.data.namelists import KNOWN_NAMELIST_MACROS
 
+#: No automatic export
+__all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
+
+STEPFILE_MAX_SIZE = 2097152  # 2Mb
 
 
 def olive_label(sh, env, target=None):
@@ -54,6 +57,24 @@ def olive_logname(sh, env, output, localout=None):
     return sh.path.join(env.HOME, localout)
 
 
+def _olive_jobout_sizecontrol(sh, stepfile, directory=None, extrasuffix=''):
+    fullstepfile = sh.path.join(directory, stepfile) if directory else stepfile
+    fullstepfile = sh.path.expanduser(fullstepfile)
+    mysize = sh.size(fullstepfile + extrasuffix)
+    if mysize > STEPFILE_MAX_SIZE:
+        tpl = config.load_template(sessions.current(),
+                                   'olive-swapp-file2big.tpl')
+        with open(fullstepfile + '.oversized' + extrasuffix, 'wb') as fd:
+            fd.write(tpl.substitute(
+                filename = fullstepfile + extrasuffix,
+                mysize = '{:.1f}'.format(mysize / 1024. / 1024.),
+                sizelimit = '{:.1f}'.format(STEPFILE_MAX_SIZE / 1024. / 1024.))
+            )
+        return stepfile + '.oversized'
+    else:
+        return stepfile
+
+
 def olive_jobout(sh, env, output, localout=None):
     """Connect to OLIVE daemon in charge of SMS outputs."""
 
@@ -68,11 +89,13 @@ def olive_jobout(sh, env, output, localout=None):
         mstep = 'on'
         depot = env.MTOOL_STEP_DEPOT or env.MTOOL_STEP_STORE
         localout = ':'.join(
-            [ x for x in sh.ls(depot + '/step.[0-9][0-9]') if (
-                sh.path.exists(x + '.done') and
-                int(re.search(r'\.(\d+)$', x).group(1)) < int(env.MTOOL_STEP)
-            ) ]
+            [_olive_jobout_sizecontrol(sh, x, extrasuffix='.out')
+             for x in sh.ls(depot + '/step.[0-9][0-9]')
+             if (sh.path.exists(x + '.done') and
+                 int(re.search(r'\.(\d+)$', x).group(1)) < int(env.MTOOL_STEP)) ]
         )
+    else:
+        localout = _olive_jobout_sizecontrol(sh, localout, directory='~')
 
     localhost = sh.target().inetname
     _, swapp_host, swapp_port = env.VORTEX_OUTPUT_ID.split(':')
