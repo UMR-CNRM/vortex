@@ -139,7 +139,7 @@ class Ticket(footprints.util.GetByTag):
     def _set_rundir(self, path):
         """Set a new default rundir for this session."""
         if self._rundir:
-            logger.warning('Session <%s> is changing its workding directory <%s>', self.tag, self._rundir)
+            logger.warning('Session <%s> is changing its working directory <%s>', self.tag, self._rundir)
         if self.sh.path.isdir(path):
             self._rundir = path
             logger.info('Session <%s> set rundir <%s>', self.tag, self._rundir)

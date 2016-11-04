@@ -73,7 +73,7 @@ class DefaultExporter(object):
         self._tarname = tarname
 
     def _ipynb_convert(self, a_file):
-        '''Actualy convert the notebook.'''
+        '''Actually convert the notebook.'''
         myname = os.path.splitext(os.path.basename(a_file))[0]
         exporter = RSTExporter(template_path=[_NBCONVERT_TEMPLATES, ],
                                template_file=rst_tplfile)

@@ -10,14 +10,9 @@ import os
 import sys
 import argparse
 
-rootpath = os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
-incvortex = [os.path.realpath(x) for x in sys.path if 'vortex' in x]
-for thispath in [os.path.join(rootpath, x) for x in ('site', 'src')]:
-    if thispath not in incvortex:
-        print 'ADD to sys.path', thispath
-        sys.path.append(thispath)
-    else:
-        print "using", thispath
+vortexbase = os.path.dirname(os.path.realpath(__file__)).rstrip('/bin')
+sys.path.insert(0, os.path.join(vortexbase, 'site'))
+sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 from jeeves.butlers import Jeeves
 

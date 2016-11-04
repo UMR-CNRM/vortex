@@ -27,7 +27,7 @@ class VortexMagics(Magics):
     """Provides the %vortex magic to an IPython shell."""
 
     def __init__(self, shell):
-        """Compute the _basedir and intialise things."""
+        """Compute the _basedir and initialise things."""
         super(VortexMagics, self).__init__(shell)
         self._basedir = os.environ.get('IVORTEX_BASEDIR', _IVORTEX_BASEDIR_DEFAULT)
         self._shell = shell
