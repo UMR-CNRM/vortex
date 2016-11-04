@@ -211,9 +211,9 @@ class CombiSVnorm(CombiSV):
 
     def postfix(self, rh, opts):
         """Post processing cleaning."""
-        super(CombiSVnorm, self).postfix(rh, opts)
         # Pick up the coeff in the namelist
         self._coeff_picking('vs', 'SV')
+        super(CombiSVnorm, self).postfix(rh, opts)
 
     @property
     def nmod(self):
@@ -339,9 +339,9 @@ class CombiBreeding(CombiPert):
 
     def postfix(self, rh, opts):
         """Post processing cleaning."""
-        super(CombiBreeding, self).postfix(rh, opts)
         # Pick up the coeff in the namelist
         self._coeff_picking('bm', 'breeding')
+        super(CombiBreeding, self).postfix(rh, opts)
 
 
 class SurfCombiIC(BlindRun):

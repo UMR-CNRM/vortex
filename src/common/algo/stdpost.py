@@ -311,6 +311,8 @@ class Fa2Grib(ParaBlindRun):
         super(Fa2Grib, self).prepare(rh, opts)
         self.system.remove(self.fortinput)
         self.env.DR_HOOK_NOT_MPI = 1
+        self.system.subtitle('{0:s} : directory listing (pre-run)'.format(self.realkind))
+        self.system.dir(output=False, fatal=False)
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
@@ -398,6 +400,12 @@ class StandaloneGRIBFilter(TaylorRun, grib.GribApiComponent):
             ),
         )
     )
+
+    def prepare(self, rh, opts):
+        """Set some variables according to target definition."""
+        super(StandaloneGRIBFilter, self).prepare(rh, opts)
+        self.system.subtitle('{0:s} : directory listing (pre-run)'.format(self.realkind))
+        self.system.dir(output=False, fatal=False)
 
     def execute(self, rh, opts):
 

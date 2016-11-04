@@ -471,8 +471,6 @@ class Minim(IFSODBCCMA):
 
     def postfix(self, rh, opts):
         """Find out if any special resources have been produced."""
-        super(Minim, self).postfix(rh, opts)
-
         sh = self.system
 
         # Look up for PREConditionning Eigen Vectors
@@ -481,6 +479,8 @@ class Minim(IFSODBCCMA):
             prec_info = dict(evlen=len(prec))
             prec_info['evnum'] = [ int(x[6:])  for x in prec ]
             sh.json_dump(prec_info, 'precev_map.out', indent=4)
+
+        super(Minim, self).postfix(rh, opts)
 
 
 class Trajectory(IFSODBCCMA):
