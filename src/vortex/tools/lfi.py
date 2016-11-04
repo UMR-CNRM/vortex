@@ -6,8 +6,6 @@ __all__ = []
 
 import io
 import re
-import weakref
-import types
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -128,17 +126,20 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
                 optional = True,
                 doc_visibility = footprints.doc.visibility.ADVANCED,
             ),
+            toolkind = dict(
+                default  = 'lfitools',
+            ),
         )
     )
 
     def _spawn(self, cmd, **kw):
         """Tube to set LFITOOLS env variable."""
-        self.env.LFITOOLS = self.path + '/' + self.cmd
+        self.env.LFITOOLS = self.actual_path + '/' + self.actual_cmd
         return super(LFI_Tool_Raw, self)._spawn(cmd, **kw)
 
     def _spawn_wrap(self, func, cmd, **kw):
         """Tube to set LFITOOLS env variable."""
-        self.env.LFITOOLS = self.path + '/' + self.cmd
+        self.env.LFITOOLS = self.actual_path + '/' + self.actual_cmd
         return super(LFI_Tool_Raw, self)._spawn_wrap(['lfi_' + func, ] + cmd, **kw)
 
     def is_xlfi(self, source):
@@ -508,6 +509,9 @@ class IO_Poll(addons.Addon):
                 remap   = dict({'None': 'none', }),
                 default = 'perl',
                 optional = True,
+            ),
+            toolkind = dict(
+                default = 'iopoll'
             )
         )
     )
@@ -525,7 +529,7 @@ class IO_Poll(addons.Addon):
                           LFI_Tool_Py.in_shell(self.sh))
             if active_lfi is None:
                 raise RuntimeError('Could not find any active LFI Tool')
-            self.env.LFITOOLS = active_lfi.path + '/' + active_lfi.cmd
+            self.env.LFITOOLS = active_lfi.actual_path + '/' + active_lfi.actual_cmd
         # Is there a need for an interpreter ?
         if self.interpreter != 'none':
             kw['interpreter'] = self.interpreter

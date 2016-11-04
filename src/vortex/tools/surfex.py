@@ -41,6 +41,9 @@ class SFX_Tool(addons.Addon):
             path = dict(
                 alias    = ('sfxpath',),
             ),
+            toolkind = dict(
+                default  = 'sfxtools',
+            )
         )
     )
 

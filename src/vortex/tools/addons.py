@@ -4,10 +4,12 @@
 #: No automatic export
 __all__ = []
 
+from collections import defaultdict
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
+from vortex.layout import contexts
 from vortex.tools.env import Environment
 from vortex.tools.systems import OSExtended
 
@@ -53,6 +55,10 @@ class Addon(footprints.FootprintBase):
                 default  = None,
                 access   = 'rwx',
             ),
+            toolkind = dict(
+                optional = True,
+                default  = None
+            ),
         )
     )
 
@@ -61,6 +67,7 @@ class Addon(footprints.FootprintBase):
         logger.debug('Abstract Addon init %s', self.__class__)
         super(Addon, self).__init__(*args, **kw)
         self.sh.extend(self)
+        self._context_cache = defaultdict(dict)
         if self.env is None:
             self.env = Environment(active=False, clear=True)
         clsenv = self.__class__.__dict__
@@ -92,6 +99,43 @@ class Addon(footprints.FootprintBase):
         lx = [x for x in shell.search if isinstance(x, cls)]
         return lx[0] if lx else None
 
+    def _query_context(self):
+        """Return the path and cmd for the current context.
+
+        Results are cached so that the context's localtracker is explored only once.
+
+        .. note:: We use the localtracker instead of the sequence because, in
+            multistep jobs, the localtracker is preserved between steps. It's
+            less elegant but it plays nice with MTOOL.
+        """
+        ctxtag = contexts.Context.tag_focus()
+        if (ctxtag not in self._context_cache and self.toolkind is not None):
+            ltrack = contexts.current().localtracker
+            # NB: 'str' is important because local might be in unicode...
+            candidates = [str(self.sh.path.realpath(local))
+                          for local, entry in ltrack.iteritems()
+                          if (entry.latest_rhdict('get').get('resource', dict()).get('kind', '') ==
+                              self.toolkind)]
+            if candidates:
+                realpath = candidates.pop()
+                self._context_cache[ctxtag] = dict(path=self.sh.path.dirname(realpath),
+                                                   cmd=self.sh.path.basename(realpath))
+        return self._context_cache[ctxtag]
+
+    @property
+    def actual_path(self):
+        """The path that should be used in the current context."""
+        infos = self._query_context()
+        ctxpath = infos.get('path', None)
+        return self.path if ctxpath is None else ctxpath
+
+    @property
+    def actual_cmd(self):
+        """The cmd that should be used in the current context."""
+        infos = self._query_context()
+        ctxcmd = infos.get('cmd', None)
+        return self.cmd if ctxcmd is None else ctxcmd
+
     def _spawn_commons(self, cmd, **kw):
         """Internal method setting local environment and calling standard shell spawn."""
 
@@ -121,9 +165,9 @@ class Addon(footprints.FootprintBase):
         """Internal method setting local environment and calling standard shell spawn."""
 
         # Insert the actual tool command as first argument
-        cmd.insert(0, self.cmd)
-        if self.path is not None:
-            cmd[0] = self.path + '/' + cmd[0]
+        cmd.insert(0, self.actual_cmd)
+        if self.actual_path is not None:
+            cmd[0] = self.actual_path + '/' + cmd[0]
 
         return self._spawn_commons(cmd, **kw)
 
@@ -131,8 +175,8 @@ class Addon(footprints.FootprintBase):
         """Internal method setting local environment and calling standard shell spawn."""
 
         # Insert the tool path before the first argument
-        if self.path is not None:
-            cmd[0] = self.path + '/' + cmd[0]
+        if self.actual_path is not None:
+            cmd[0] = self.actual_path + '/' + cmd[0]
 
         return self._spawn_commons(cmd, **kw)
 
