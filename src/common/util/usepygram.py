@@ -137,34 +137,37 @@ def epy_env_prepare(t):
 
 
 @disabled_if_no_epygram
-def addfield(t, rh, fieldsource, fieldtarget, constvalue):
+def addfield(t, rh, fieldsource, fieldtarget, constvalue, pack=None):
     """Provider hook for adding a field through cloning."""
     if rh.container.exists():
         with epy_env_prepare(t):
             clone_fields(rh.contents.data, rh.contents.data,
-                         fieldsource, names=fieldtarget, value=constvalue)
+                         fieldsource, names=fieldtarget, value=constvalue,
+                         pack=pack)
     else:
         logger.warning('Try to add field on a missing resource <%s>',
                        rh.container.localpath())
 
 
 @disabled_if_no_epygram
-def copyfield(t, rh, rhsource, fieldsource, fieldtarget):
+def copyfield(t, rh, rhsource, fieldsource, fieldtarget, pack=None):
     """Provider hook for copying fields between FA files (but do not overwrite existing fields)."""
     if rh.container.exists():
         with epy_env_prepare(t):
-            clone_fields(rhsource.contents.data, rh.contents.data, fieldsource, fieldtarget)
+            clone_fields(rhsource.contents.data, rh.contents.data,
+                         fieldsource, fieldtarget, pack=pack)
     else:
         logger.warning('Try to copy field on a missing resource <%s>',
                        rh.container.localpath())
 
 
 @disabled_if_no_epygram
-def overwritefield(t, rh, rhsource, fieldsource, fieldtarget):
+def overwritefield(t, rh, rhsource, fieldsource, fieldtarget, pack=None):
     """Provider hook for copying fields between FA files (overwrite existing fields)."""
     if rh.container.exists():
         with epy_env_prepare(t):
-            clone_fields(rhsource.contents.data, rh.contents.data, fieldsource, fieldtarget, overwrite=True)
+            clone_fields(rhsource.contents.data, rh.contents.data,
+                         fieldsource, fieldtarget, overwrite=True, pack=pack)
     else:
         logger.warning('Try to copy field on a missing resource <%s>',
                        rh.container.localpath())
