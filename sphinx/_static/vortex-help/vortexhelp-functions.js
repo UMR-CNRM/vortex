@@ -408,7 +408,8 @@ function rec_makeTree(ele_inserer,a,ide){
                     var cl_name=tree[i].getAttribute("name");
                     var id=makeId(cl_name);
                     jQuery('<ul id="tr'+ide+'"></ul>').appendTo("#jstree"+a);
-                    jQuery('<li id="'+id+'">'+cl_name+'</li>').appendTo('#tr'+ide);
+                    //About the icon: the top level of a tree is always abstract...
+                    jQuery('<li id="'+id+'" data-jstree=\'{"icon":"glyphicon glyphicon-cog"}\'>'+cl_name+'</li>').appendTo('#tr'+ide);
                     jQuery('<ul class="'+id+'"></ul>').appendTo('#'+id);
                     ele_inserer.push(cl_name);
                     rec_makeTree(ele_inserer,a);
@@ -423,6 +424,11 @@ function rec_makeTree(ele_inserer,a,ide){
 
             for(var i=0;i<tree.length;i++){
                 var bases=tree[i].getElementsByTagName('bases');
+                var myfp=tree[i].getElementsByTagName('footprint');
+                var my_isabs = 0;
+                if (myfp.length) {
+                    my_isabs = myfp[0].getAttribute('abstract')!=null && myfp[0].getAttribute('abstract').indexOf('True')!=-1;
+                }
 
                 for(var j=0;j<bases.length;j++){
                     var base =bases[0].getElementsByTagName('base');
@@ -431,7 +437,12 @@ function rec_makeTree(ele_inserer,a,ide){
                         if(base[k].textContent.indexOf(ele_inserer[l])!=-1){
                             var cl_name=tree[i].getAttribute("name");
                             var id=makeId(cl_name);
-                            jQuery('<li id="'+id+'">'+cl_name+'</li>').appendTo('.'+makeId(ele_inserer[l]));
+                            if (my_isabs) {
+                                jQuery('<li id="'+id+'" data-jstree=\'{"icon":"glyphicon glyphicon-cog"}\'>'+cl_name+'</li>').appendTo('.'+makeId(ele_inserer[l]));
+                            } else {
+                                jQuery('<li id="'+id+'" data-jstree=\'{"icon":"glyphicon glyphicon-ok"}\'>'+cl_name+'</li>').appendTo('.'+makeId(ele_inserer[l]));
+                            }
+
                             jQuery('<ul class="'+id+'"></ul>').appendTo('#'+id);
                             ele_inserer.push(cl_name);
                         }
@@ -626,7 +637,7 @@ function makeTable(value,gl_var,ct){
     var aux2=arr_class[a][b].getElementsByTagName('footprint');
     var val=  aux2[0].getAttribute('abstract');
     if(val!=null && val.indexOf('True')!=-1){
-        jQuery('<div class="abstraite panel-heading" id="ph'+id_tab+'">'+value+'</div>').appendTo('#'+id_tab);
+        jQuery('<div class="abstraite panel-heading" id="ph'+id_tab+'">'+value+' (abstract)</div>').appendTo('#'+id_tab);
     }
     else{
         jQuery('<div class="panel-heading" id="ph'+id_tab+'">'+value+'</div>').appendTo('#'+id_tab);
