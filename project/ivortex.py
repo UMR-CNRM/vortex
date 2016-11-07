@@ -13,8 +13,7 @@ import tempfile
 __all__ = []
 
 #: The list of addons to be loaded
-_IVORTEX_ADDONS = [('lfi', ('lfi',)),
-                   ('odb', ('odb',)),
+_IVORTEX_ADDONS = [('odb', ('odb',)),
                    ('ddhpack', ('ddhpack',)),
                    ('grib', ('grib', 'gribapi')), ]
 #: The path to the default basedir
