@@ -40,7 +40,7 @@ Usage générique
 ---------------
 
   * Un certains nombre d'outils se lancent depuis votre shell courant, ils sont disponibles sous :file:`$EPYGRAM_INSTALL_DIR/apptools` (inclus dans le :envvar:`PATH`) ;
-  * Pour chaque outil, l'option :option:`-h` (ou :option:`--help`) vous renseignera sur la syntaxe et les options (parfois nombreuses) de l'outil en question.
+  * Pour chaque outil, l'option ``-h`` (ou ``--help``) vous renseignera sur la syntaxe et les options (parfois nombreuses) de l'outil en question.
   * Pour utiliser EPyGrAM dans vos scripts et librairies Python, effectuer une commande *import epygram*.
   * La documentation de la librairie est sous :file:`/home/common/epygram/EPyGrAM.current/epygram/doc_sphinx/index.html`.
 

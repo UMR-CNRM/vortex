@@ -701,9 +701,7 @@ Big brother
 
 A :class:`vortex.tools.env.Environment` object records everything, it looks scary but can
 be useful for debugging. For example, just after the previous example, we can call the 
-``tracebacks`` method:
-   
-.. code-block:: python
+``tracebacks`` method::
 
    [ 2016-08-23 10:48:36.188922 ] NEWVARIABLE = 1 
    

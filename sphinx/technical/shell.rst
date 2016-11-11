@@ -69,7 +69,7 @@ However a specific value could be given through the :envvar:`FIFOTAG` environmen
   % vortex exit
   Bye foo...
 
-In fact, any command could be reoriented through the :option:`-t` command line argument.
+In fact, any command could be reoriented through the ``-t`` command line argument.
 
 .. code-block:: console
 
@@ -86,7 +86,7 @@ Arguments to a subcommand are provided through a sequence of keys/values:
 
   % vortex subcmd [k1=v1] ... [kn=vn] [set=result]
 
-The :option:`set` key is the standard way to store the result of the current command.
+The ``set`` key is the standard way to store the result of the current command.
 One should distinguish between the result of a command as an object, which could
 be stored and the result of a command as a string displayed at the command line interface.
 
@@ -109,7 +109,7 @@ But the result of this command is the session object itself:
 Internal variables
 ==================
 
-We have seen that result of commands could be stored through the :option:`set` key.
+We have seen that result of commands could be stored through the ``set`` key.
 By default some pseudo-variables are already defined:
 
 .. code-block:: console
