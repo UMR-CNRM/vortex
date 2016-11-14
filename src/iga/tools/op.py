@@ -331,6 +331,11 @@ def complete(t, **kw):
     t.sh.signal_intercept_off()
     t.close()
 
+def simulate_complete(t, **kw):
+    """Exit from OP session after a crash but simulating a happy ending. Use only in a test environment."""
+    ad = vortex.tools.actions.actiond
+    ad.sms_abort()
+    t.close()
 
 def register(t, cycle, dump=True):
     """Load and register a GCO cycle contents."""

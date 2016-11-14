@@ -34,6 +34,7 @@ op_iniconf  = '{0:s}/conf/{1:s}_{2:s}.ini'.format(op_rootapp, op_vapp, op_vconf)
 op_alarm    = $alarm
 op_archive  = $archive
 op_fullplay = $fullplay
+op_refill   = $refill
 op_mail     = $mail
 op_jeeves   = '$jeeves'
 
@@ -57,7 +58,7 @@ try:
     t = op.setup(actual=oplocals)
     e = op.setenv(t, actual=oplocals)
     ad.opmail_on()
-    ad.route_off()
+    ad.route_on()
     toolbox.defaults(smtpserver='smtp.meteo.fr', sender='dsiop_igasc@meteo.fr')
     opts = t.sh.rawopts(defaults=dict(play=op_fullplay))
     driver = todo.setup(t, **opts)
