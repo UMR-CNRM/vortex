@@ -44,6 +44,7 @@ def parse_command_line():
     parser.add_argument('-l', '--list', help='only list cycles to handle, and exit', action='store_true')
     parser.add_argument('-n', '--noerror', help="don't stop on errors", action='store_true')
     parser.add_argument('-s', '--simulate', help="simulate removal without doing it", action='store_true')
+    parser.add_argument('-g', '--glove', help='Set a non oper glove', action='store_false')
     parser.add_argument('-v', '--verbose', dest='verbose', help='verbose mode', action='store_true')
     parser.add_argument('-q', '--noverbose', dest='verbose', help='quiet (non-verbose) mode, the default',
                         action='store_false')
@@ -52,6 +53,17 @@ def parse_command_line():
     if not (args.cycles or args.file or args.remove):
         args.file = [DEFAULT_CYCLES_FILE]
 
+    if args.glove:
+        import vortex
+        gl = vortex.sessions.getglove(
+            tag     = 'opid',
+            profile = 'oper'
+        )
+        t  = vortex.sessions.get(
+            tag     = 'opview',
+            active  = True,
+            glove   = gl,
+        )
     # add cycles from -f arguments
     args.cycles = args.cycles or list()
     files = args.file or list()

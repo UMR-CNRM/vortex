@@ -201,7 +201,6 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     sh = t.sh
     tg = sh.target()
     defs = genv.autofill(cycle)
-
     # Configuration handler (untar specific options)
     ggetconfig = GcoStoreConfig(GGET_DEFAULT_CONFIGFILE)
 
@@ -242,6 +241,8 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     # Perform gget on all resources to target directory
     gcmd = tg.get('gco:ggetcmd', 'gget')
     gpath = tg.get('gco:ggetpath', '')
+    ghost = tg.get('gco:ggetarchive', 'hendrix')
+     
     gtool = sh.path.join(gpath, gcmd)
 
     increase = 0
@@ -260,8 +261,8 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
             else:
                 try:
                     if verbose:
-                        print('spawning: {} {}'.format(gtool, name))
-                    sh.spawn([gtool, name], output=False)
+                        print('spawning: {} -host {} {}'.format(gtool, ghost, name))
+                    sh.spawn([gtool, '-host', ghost, name], output=False)
                     increase += sh.size(name)
                     details['retrieved'].append(name)
                     if name in monthly:
