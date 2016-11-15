@@ -55,7 +55,7 @@ class NECSX9(Target):
                 values = [ 'SUPER-UX' ]
             ),
             inifile = dict(
-                default = 'target-necsx9.ini',
+                default = '@target-necsx9.ini',
             )
         )
     )
@@ -72,7 +72,7 @@ class MeteoBull(Target):
                 values = [ 'Linux' ]
             ),
             inifile = dict(
-                default = 'target-[inetname].ini',
+                default = '@target-[inetname].ini',
             )
         ),
         priority = dict(
@@ -150,7 +150,7 @@ class Aneto(Target):
             ),
             inifile=dict(
                 optional=True,
-                default='target-aneto.ini',
+                default='@target-aneto.ini',
             ),
         ),
         priority = dict(
@@ -190,7 +190,7 @@ class MeteoSopranoDevRH6(MeteoSoprano):
             ),
             inifile=dict(
                 optional=True,
-                default='target-soprano_dev_rh6.ini',
+                default='@target-soprano_dev_rh6.ini',
             ),
         ),
     )

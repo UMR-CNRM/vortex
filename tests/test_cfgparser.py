@@ -6,10 +6,10 @@ import os
 import logging
 logging.basicConfig(level=logging.ERROR)
 
-from ConfigParser import InterpolationMissingOptionError
+from ConfigParser import InterpolationMissingOptionError, NoSectionError, NoOptionError
 
 from unittest import TestCase, TestLoader, TextTestRunner
-from vortex.util.config import GenericConfigParser, AppConfigStringDecoder
+from vortex.util.config import ExtendedReadOnlyConfigParser, GenericConfigParser, AppConfigStringDecoder
 from vortex.data import geometries
 from iga.data.providers import IgaCfgParser
 
@@ -27,7 +27,7 @@ class UtGenericConfigParser(TestCase):
         self.assertTrue(gcp.file is None)
 
     def test_init_1(self):
-        self.assertRaises(Exception, GenericConfigParser, 'absent.ini')
+        self.assertRaises(Exception, GenericConfigParser, '@absent.ini')
 
     def test_init_2(self):
         false_ini = os.path.join(self.path, 'false.ini')
@@ -41,13 +41,13 @@ class UtGenericConfigParser(TestCase):
                     'climmodel', 'climdomain']
         self.assertTrue(sorted(igacfgp.sections()), sorted(sections))
         for section in igacfgp.sections():
-            self.assertEqual(igacfgp.options(section), [ 'resolvedpath' ],
-                             msg='Block: {}. {!s}'.format(section, 
+            self.assertEqual(igacfgp.options(section), ['resolvedpath'],
+                             msg='Block: {}. {!s}'.format(section,
                                                           igacfgp.options(section)))
         self.assertRaises(
             InterpolationMissingOptionError,
             igacfgp.get,
-            'analysis',  'resolvedpath'
+            'analysis', 'resolvedpath'
         )
 
     def test_setall(self):
@@ -62,8 +62,90 @@ class UtGenericConfigParser(TestCase):
         resolvedpath = 'arpege/france/oper/data/autres'
         igacfgp.setall(kwargs)
         self.assertTrue(
-            igacfgp.get('analysis',  'resolvedpath') == resolvedpath
+            igacfgp.get('analysis', 'resolvedpath') == resolvedpath
         )
+
+
+class UtExtendedConfigParser(TestCase):
+
+    def setUp(self):
+        self.ecp = ExtendedReadOnlyConfigParser(os.path.join(DATAPATHTEST,
+                                                             'extended-inheritance.ini'))
+
+    def test_usual(self):
+        me = 'bigbase'
+        self.assertSetEqual(set(self.ecp.options(me)),
+                            set(['toto_default', 'toto_over', 'titi', ]))
+        self.assertEqual(self.ecp.get(me, 'titi'), 'bigbase')
+        self.assertEqual(self.ecp.get(me, 'toto_default'), 'DEFAULT')
+        self.assertEqual(self.ecp.get(me, 'toto_over'), 'DEFAULT')
+
+    def test_one_tier(self):
+        me = 'fancy1'
+        self.assertSetEqual(set(self.ecp.options(me)),
+                            set(['toto_default', 'toto_over', 'titi', 'tata']))
+        self.assertEqual(self.ecp.get(me, 'tata'), 'fancy1')
+        self.assertEqual(self.ecp.get(me, 'titi'), 'bigbase')
+        self.assertEqual(self.ecp.get(me, 'toto_default'), 'DEFAULT')
+        self.assertEqual(self.ecp.get(me, 'toto_over'), 'fancy1')
+
+    def test_two_tier(self):
+        me = 'fancy2'
+        self.assertSetEqual(set(self.ecp.options(me)),
+                            set(['toto_default', 'toto_over', 'titi', 'tata', 'truc']))
+        self.assertEqual(self.ecp.get(me, 'tata'), 'fancy1')
+        self.assertEqual(self.ecp.get(me, 'titi'), 'bigbase')
+        self.assertEqual(self.ecp.get(me, 'toto_default'), 'DEFAULT')
+        self.assertEqual(self.ecp.get(me, 'toto_over'), 'fancy2')
+        self.assertEqual(self.ecp.get(me, 'truc'), 'fancy1')
+
+    def test_nightmare(self):
+        me = 'verystrange'
+        self.assertSetEqual(set(self.ecp.options(me)),
+                            set(['toto_default', 'toto_over', 'titi', 'tata', 'truc',
+                                 'bonus', 'ouf', 'cool']))
+        self.assertEqual(self.ecp.get(me, 'tata'), 'fancy1')
+        self.assertEqual(self.ecp.get(me, 'titi'), 'bigbase')
+        self.assertEqual(self.ecp.get(me, 'toto_default'), 'DEFAULT')
+        self.assertEqual(self.ecp.get(me, 'toto_over'), 'fancy2')
+        self.assertEqual(self.ecp.get(me, 'truc'), 'fancy1')
+        self.assertEqual(self.ecp.get(me, 'bonus'), 'otherbase')
+        self.assertEqual(self.ecp.get(me, 'ouf'), 'verystrange')
+        self.assertEqual(self.ecp.get(me, 'cool'), 'fancy2')
+        thedict = self.ecp.as_dict()
+        self.assertDictEqual(thedict['verystrange'],
+                             {'bonus': 'otherbase', 'tata': 'fancy1', 'titi': 'bigbase',
+                              'ouf': 'verystrange', 'toto_default': 'DEFAULT',
+                              'truc': 'fancy1', 'toto_over': 'fancy2', 'cool': 'fancy2'})
+
+    def test_tricky(self):
+        me = 'trick1'
+        self.assertSetEqual(set(self.ecp.options(me)),
+                            set(['toto_default', 'toto_over', ]))
+        self.assertEqual(self.ecp.get(me, 'toto_default'), 'DEFAULT')
+        self.assertEqual(self.ecp.get(me, 'toto_over'), 'trick1')
+        me = 'trick2'
+        self.assertSetEqual(set(self.ecp.options(me)),
+                            set(['toto_default', 'toto_over', 'titi', ]))
+        self.assertEqual(self.ecp.get(me, 'toto_default'), 'DEFAULT')
+        self.assertEqual(self.ecp.get(me, 'toto_over'), 'trick2')
+        self.assertEqual(self.ecp.get(me, 'titi'), 'bigbase')
+
+    def test_exceptions(self):
+        me = 'fake'
+        self.assertFalse(self.ecp.has_section(me))
+        with self.assertRaises(NoSectionError):
+            self.ecp.options(me)
+        with self.assertRaises(NoSectionError):
+            self.ecp.items(me)
+        with self.assertRaises(NoSectionError):
+            self.ecp.has_option(me, 'truc')
+        me = 'fancy2'
+        self.assertFalse(self.ecp.has_option(me, 'dsgqgfafaqf'))
+        with self.assertRaises(NoOptionError):
+            self.ecp.get(me, 'dsgqgfafaqf')
+        with self.assertRaises(ValueError):
+            self.ecp.as_dict(merged=False)
 
 
 class UtIgaCfgParser(TestCase):
@@ -77,7 +159,7 @@ class UtIgaCfgParser(TestCase):
         self.assertTrue(icp.file is None)
 
     def test_init_1(self):
-        self.assertRaises(Exception, IgaCfgParser, 'absent.ini')
+        self.assertRaises(Exception, IgaCfgParser, '@absent.ini')
 
     def test_init_2(self):
         real_ini = os.path.join(self.path, 'false.ini')
@@ -93,7 +175,7 @@ class UtIgaCfgParser(TestCase):
         self.assertRaises(
             InterpolationMissingOptionError,
             igacfgp.get,
-            'analysis',  'resolvedpath'
+            'analysis', 'resolvedpath'
         )
 
     def test_setall(self):
@@ -107,7 +189,7 @@ class UtIgaCfgParser(TestCase):
         }
         resolvedpath = 'arpege/france/oper/data/autres'
         igacfgp.setall(kwargs)
-        self.assertTrue( igacfgp.get('analysis', 'resolvedpath') == resolvedpath )
+        self.assertTrue(igacfgp.get('analysis', 'resolvedpath') == resolvedpath)
 
     def test_resolvedpath(self):
         real_ini = os.path.join(self.path, 'iga-map-resources.ini')
@@ -252,11 +334,13 @@ class TestAppConfigDecoder(TestCase):
 
 if __name__ == '__main__':
     action = TestLoader().loadTestsFromTestCase
-    tests = [ UtGenericConfigParser, UtIgaCfgParser, TestAppConfigDecoder]
+    tests = [UtGenericConfigParser, UtExtendedConfigParser, UtIgaCfgParser,
+             TestAppConfigDecoder]
     suites = [action(elmt) for elmt in tests]
     for suite in suites:
         TextTestRunner(verbosity=1).run(suite)
 
 
 def get_test_class():
-    return [ UtGenericConfigParser, UtIgaCfgParser, TestAppConfigDecoder]
+    return [UtGenericConfigParser, UtExtendedConfigParser, UtIgaCfgParser,
+            TestAppConfigDecoder]

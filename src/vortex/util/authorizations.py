@@ -24,8 +24,8 @@ from vortex.util.config import GenericConfigParser
 class GroupHandler(namedtuple('PermsUsersHandler', ('perms', 'users'))):
 
     def __new__(cls):
-        cfgusers = GenericConfigParser('auth-users-groups.ini')
-        cfgperms = GenericConfigParser('auth-perms-actions.ini')
+        cfgusers = GenericConfigParser('@auth-users-groups.ini')
+        cfgperms = GenericConfigParser('@auth-perms-actions.ini')
         ConstUsers = namedtuple('ConstUsers', cfgusers.sections())
         ConstPerms = namedtuple('ConstPerms', cfgperms.sections())
         return tuple.__new__(cls, (ConstPerms(**cfgperms.as_dict()), ConstUsers(**cfgusers.as_dict())))

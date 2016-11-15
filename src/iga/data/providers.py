@@ -98,7 +98,7 @@ class IgaProvider(Provider):
                 config = dict(
                     type     = IgaCfgParser,
                     optional = True,
-                    default  = IgaCfgParser('iga-map-resources.ini')
+                    default  = IgaCfgParser('@iga-map-resources.ini')
                 ),
             )
         )
@@ -175,7 +175,7 @@ class SopranoProvider(Provider):
                 config = dict(
                     type     = IgaCfgParser,
                     optional = True,
-                    default  = IgaCfgParser('iga-map-resources.ini')
+                    default  = IgaCfgParser('@iga-map-resources.ini')
                 )
             )
         )

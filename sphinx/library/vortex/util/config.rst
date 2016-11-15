@@ -2,15 +2,11 @@
 ===================================================
 
 .. automodule:: vortex.util.config
-   :synopsis: Advanced environment tool
+   :synopsis: Advanced configuration file processng
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.1
-
-.. todo::
-
-      Nothing written for :mod:`vortex.tools.config` handling yet !
 
 
 Package
@@ -26,6 +22,16 @@ Functions
 Classes
 -------
 
+.. autoclass:: GenericReadOnlyConfigParser
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ExtendedReadOnlyConfigParser
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+ 
 .. autoclass:: GenericConfigParser
    :show-inheritance:
    :members:

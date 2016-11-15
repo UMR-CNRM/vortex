@@ -5,17 +5,19 @@
 Configuration management through ini files.
 """
 
-__all__ = []
-
-
+from ConfigParser import SafeConfigParser, NoOptionError, InterpolationDepthError
 import itertools
 import re
-from ConfigParser import SafeConfigParser
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
+
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
+
+_RE_AUTO_TPL = re.compile(r'^@([^/]+\.tpl)$')
 
 
 def load_template(t, tplfile):
@@ -23,14 +25,19 @@ def load_template(t, tplfile):
     Load a template according to filename provided, either absolute or relative path.
     The first argument ``t`` should be a valid ticket session.
     """
-    if t.sh.path.exists(tplfile):
-        tplfile = t.sh.path.abspath(tplfile)
+    autofile = _RE_AUTO_TPL.match(tplfile)
+    if autofile is None:
+        if t.sh.path.exists(tplfile):
+            tplfile = t.sh.path.abspath(tplfile)
+        else:
+            raise ValueError('Template file not found: <{}>'.format(tplfile))
     else:
-        persofile = t.sh.path.join(t.glove.configrc, 'templates', t.sh.path.basename(tplfile))
+        autofile = autofile.group(1)
+        persofile = t.sh.path.join(t.glove.configrc, 'templates', autofile)
         if t.sh.path.exists(persofile):
             tplfile = persofile
         else:
-            sitefile = t.sh.path.join(t.glove.siteroot, 'templates', t.sh.path.basename(tplfile))
+            sitefile = t.sh.path.join(t.glove.siteroot, 'templates', autofile)
             if t.sh.path.exists(sitefile):
                 tplfile = sitefile
             else:
@@ -46,8 +53,28 @@ def load_template(t, tplfile):
     return tpl
 
 
-class GenericConfigParser(object):
-    """Basic configuration file parser."""
+class GenericReadOnlyConfigParser(object):
+    """A Basic ReadOnly configuration file parser.
+
+    It relies on a :class:`ConfigParser.SafeConfigParser` parser (or another class
+    that satisfies the interface) to access the configuration data.
+
+    :param str inifile: Path to a configuration file or a configuration file name
+    :param ConfigParser.SafeConfigParser parser: an existing configuration parser
+        object the will be used to access the configuration
+    :param bool mkforce: If the configuration file doesn't exists. Create an empty
+        one in ``~/.vortexrc``
+    :param type clsparser: The class that will be used to create a parser object
+        (if needed)
+
+    :note: Some of the parser's methods are directly accessible because ``__getattr__``
+        is implemented. For this ReadOnly class, only methods ``defaults``,
+        ``sections``, ``options``, ``items``, ``has_section`` and ``has_option``
+        are accessible. The user will refer to the Python's ConfigParser module
+        documentation for more details.
+    """
+
+    _RE_AUTO_SETFILE = re.compile(r'^@([^/]+\.ini)$')
 
     def __init__(self, inifile=None, parser=None, mkforce=False, clsparser=SafeConfigParser):
         self.parser = parser
@@ -57,7 +84,6 @@ class GenericConfigParser(object):
             self.setfile(inifile)
         else:
             self.file = None
-        self.updates = list()
 
     def __deepcopy__(self, memo):
         """Warning: deepcopy of any item of the class is... itself!"""
@@ -69,54 +95,61 @@ class GenericConfigParser(object):
         return 'file={!s}'.format(self.file)
 
     def setfile(self, inifile):
-        """Read the specified ``inifile`` as new configuration."""
+        """Read the specified ``inifile`` as new configuration.
+
+        If ``inifile`` is not a valid file path, the configuration file is looked for
+        both in ``~/.vortexrc`` and in the ``conf`` directory of the vortex
+        installation. If a section/option is  defined in ``~/.vortexrc`` it takes
+        precedence over the one defined in ``conf``.
+
+        :example:
+
+        Let's consider the following declaration in ``conf``::
+
+            [mysection]
+            var1=Toto
+            var2=Titi
+
+        Let's consider the following declaration in ``~/.vortexrc``::
+
+            [mysection]
+            var1=Personalised
+
+        A call to ``get('mysection', 'var1')`` will return ``Personalised`` and a
+        call to ``get('mysection', 'var2')`` will return ``Titi``.
+        """
         if self.parser is None:
             self.parser = self.clsparser()
         self.file = None
+        filestack = list()
         local = sessions.system()
-        if local.path.exists(inifile):
-            self.file = local.path.abspath(inifile)
-        else:
-            glove = sessions.getglove()
-            persofile = glove.configrc + '/' + local.path.basename(inifile)
-            if local.path.exists(persofile):
-                self.file = persofile
+        autofile = self._RE_AUTO_SETFILE.match(inifile)
+        if not autofile:
+            if local.path.exists(inifile):
+                filestack.append(local.path.abspath(inifile))
             else:
-                sitefile = glove.siteconf + '/' + local.path.basename(inifile)
-                if local.path.exists(sitefile):
-                    self.file = sitefile
+                raise ValueError('Configuration file ' + inifile + ' not found')
+        else:
+            autofile = autofile.group(1)
+            glove = sessions.getglove()
+            sitefile = glove.siteconf + '/' + autofile
+            persofile = glove.configrc + '/' + autofile
+            if local.path.exists(sitefile):
+                filestack.append(sitefile)
+            if local.path.exists(persofile):
+                filestack.append(persofile)
+            if not filestack:
+                if self.mkforce:
+                    filestack.append(persofile)
+                    local.filecocoon(persofile)
+                    local.touch(persofile)
                 else:
-                    if self.mkforce:
-                        self.file = persofile
-                        local.filecocoon(persofile)
-                        local.touch(persofile)
-                    else:
-                        raise ValueError('Configuration file ' + inifile + ' not found')
-        if self.file is not None:
-            self.parser.read(self.file)
-
-    def setall(self, kw):
-        """Define in all sections the couples of ( key, values ) given as dictionary argument."""
-        self.updates.append(kw)
-        for section in self.sections():
-            for key, value in kw.iteritems():
-                self.set(section, key, str(value))
-
-    def save(self):
-        """Write the current state of the configuration in the inital file."""
-        with open(self.file, 'wb') as configfile:
-            self.write(configfile)
-
-    @property
-    def updated(self):
-        """Return if this configuration has been updated or not."""
-        return bool(self.updates)
-
-    def history(self):
-        """Return a list of the description for each update performed."""
-        return self.updates[:]
+                    raise ValueError('Configuration file ' + inifile + ' not found')
+        self.file = ",".join(filestack)
+        self.parser.read(filestack)
 
     def as_dict(self, merged=True):
+        """Export the configuration file as a dictionary."""
         if merged:
             dico = dict()
         else:
@@ -130,16 +163,213 @@ class GenericConfigParser(object):
         return dico
 
     def __getattr__(self, attr):
-        if attr.startswith('__'):
+        # Give access to a very limited set of methods
+        if attr.startswith('get') or attr in ('defaults', 'sections', 'options', 'items',
+                                              'has_section', 'has_option'):
+            return getattr(self.parser, attr)
+        else:
             raise AttributeError
-        return getattr(self.parser, attr)
 
     def footprint_export(self):
         return self.file
 
 
+class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
+    """A ReadOnly configuration file parser with a nice inheritance feature.
+
+    Using this readonly configuration parser, a section can inherit from one or
+    several other sections. The basic interpolation (with the usual ``%(varname)s``
+    syntax) is available.
+
+    It relies on a :class:`ConfigParser.SafeConfigParser` parser (or another class
+    that satisfies the interface) to access the configuration data.
+
+    :param str inifile: Path to a configuration file or a configuration file name
+    :param ConfigParser.SafeConfigParser parser: an existing configuration parser
+        object the will be used to access the configuration
+    :param bool mkforce: If the configuration file doesn't exists. Create an empty
+        one in ``~/.vortexrc``
+    :param type clsparser: The class that will be used to create a parser object
+        (if needed)
+
+    :example: Here is an example using the inheritance mechanism. Let's consider
+        the following section declaration::
+
+            [newsection:base1:base2]
+            var1=...
+
+        ``newsection`` will inherit the variables contained in sections ``base1``
+        and ``base2``. In case of a conflict, ``base1`` takes precedence over ``base2``.
+    """
+
+    _re_validate = re.compile(r'([\w-]+)[ \t]*:?')
+    _max_interpolation_depth = 20
+
+    def _get_section_list(self, zend_section):
+        """
+        Return the stack of sections that will be used to look for a given
+        variable. Somehow, it is close to python's MRO.
+        """
+        found_sections = []
+        if self.parser.has_section(zend_section):
+            found_sections.append(zend_section)
+        for section in self.parser.sections():
+            pieces = re.split(r'[ \t]*:[ \t]*', section)
+            if len(pieces) >= 2 and pieces[0] == zend_section:
+                found_sections.append(section)
+                for inherited in pieces[1:]:
+                    found_sections.extend(self._get_section_list(inherited))
+                break
+        return found_sections
+
+    def _interpolate(self, section, rawval):
+        """Performs the basic interpolation."""
+        value = rawval
+        depth = self._max_interpolation_depth
+
+        def _interpolation_replace(match):
+            s = match.group(1)
+            return self.get(section, self.parser.optionxform(s), raw=False)
+
+        while depth:  # Loop through this until it's done
+            depth -= 1
+            if value and self._KEYCRE.match(value):
+                value = self._KEYCRE.sub(_interpolation_replace, value)
+            else:
+                break
+        if value and self._KEYCRE.match(value):
+            raise InterpolationDepthError(self.options(section), section, rawval)
+        return value
+
+    _KEYCRE = re.compile(r"%\(([^)]+)\)s")
+
+    def get(self, section, option, raw=False, myvars=None):
+        """Behaves like the GenericConfigParser's ``get`` method."""
+        expanded = self._get_section_list(section)
+        expanded.reverse()
+        acc_result = None
+        acc_except = None
+        mydefault = self.defaults().get(option, None)
+        for isection in [s for s in expanded if s is not None]:
+            try:
+                tmp_result = self.parser.get(isection, option, raw=True, vars=myvars)
+                if tmp_result is not mydefault:
+                    acc_result = tmp_result
+            except NoOptionError as err:
+                acc_except = err
+        if acc_result is None and mydefault is not None:
+            acc_result = mydefault
+        if acc_result is not None:
+            if not raw:
+                acc_result = self._interpolate(section, acc_result)
+            return acc_result
+        else:
+            raise acc_except
+
+    def sections(self):
+        """Behaves like the Python ConfigParser's ``section`` method."""
+        seen = set()
+        for section_m in [self._re_validate.match(s) for s in self.parser.sections()]:
+            if section_m is not None:
+                seen.add(section_m.group(1))
+        return list(seen)
+
+    def has_section(self, section):
+        """Return whether a section exists or not."""
+        return section in self.sections()
+
+    def options(self, section):
+        """Behaves like the Python ConfigParser's ``options`` method."""
+        expanded = self._get_section_list(section)
+        if not expanded:
+            return self.parser.options(section)  # A realistic exception will be thrown !
+        options = set()
+        for isection in [s for s in expanded]:
+            options.update(set(self.parser.options(isection)))
+        return list(options)
+
+    def has_option(self, section, option):
+        """Return whether an option exists or not."""
+        return option in self.options(section)
+
+    def items(self, section, raw=False, myvars=None):
+        """Behaves like the Python ConfigParser's ``items`` method."""
+        return [(o, self.get(section, o, raw, myvars)) for o in self.options(section)]
+
+    def __getattr__(self, attr):
+        # Give access to a very limited set of methods
+        if attr in ('defaults', ):
+            return getattr(self.parser, attr)
+        else:
+            raise AttributeError
+
+    def as_dict(self, merged=True):
+        """Export the configuration file as a dictionary."""
+        if not merged:
+            raise ValueError("merged=False is not allowed with ExtendedReadOnlyConfigParser.")
+        return super(ExtendedReadOnlyConfigParser, self).as_dict(merged=True)
+
+
+class GenericConfigParser(GenericReadOnlyConfigParser):
+    """A Basic Read/Write configuration file parser.
+
+    It relies on a :class:`ConfigParser.SafeConfigParser` parser (or another class
+    that satisfies the interface) to access the configuration data.
+
+    :param str inifile: Path to a configuration file or a configuration file name
+    :param ConfigParser.SafeConfigParser parser: an existing configuration parser
+        object the will be used to access the configuration
+    :param bool mkforce: If the configuration file doesn't exists. Create an empty
+        one in ``~/.vortexrc``
+    :param type clsparser: The class that will be used to create a parser object
+        (if needed)
+
+    :note: All of the parser's methods are directly accessible because ``__getattr__``
+        is implemented. The user will refer to the Python's ConfigParser module
+        documentation for more details.
+    """
+
+    def __init__(self, inifile=None, parser=None, mkforce=False, clsparser=SafeConfigParser):
+        super(GenericConfigParser, self).__init__(inifile, parser, mkforce, clsparser)
+        self.updates = list()
+
+    def setall(self, kw):
+        """Define in all sections the couples of ( key, values ) given as dictionary argument."""
+        self.updates.append(kw)
+        for section in self.sections():
+            for key, value in kw.iteritems():
+                self.set(section, key, str(value))
+
+    def save(self):
+        """Write the current state of the configuration in the inital file."""
+        with open(self.file.split(",").pop(), 'wb') as configfile:
+            self.write(configfile)
+
+    @property
+    def updated(self):
+        """Return if this configuration has been updated or not."""
+        return bool(self.updates)
+
+    def history(self):
+        """Return a list of the description for each update performed."""
+        return self.updates[:]
+
+    def __getattr__(self, attr):
+        # Give access to all of the parser's methods
+        if attr.startswith('__'):
+            raise AttributeError
+        return getattr(self.parser, attr)
+
+
 class DelayedConfigParser(GenericConfigParser):
-    """Configuration file parser with possible delayed loading."""
+    """Configuration file parser with possible delayed loading.
+
+    :param str inifile: Path to a configuration file or a configuration file name
+
+    :note: All of the parser's methods are directly accessible because ``__getattr__``
+        is implemented. The user will refer to the Python's ConfigParser module
+        documentation for more details.
+    """
 
     def __init__(self, inifile=None):
         GenericConfigParser.__init__(self)
@@ -154,7 +384,7 @@ class DelayedConfigParser(GenericConfigParser):
     def __getattribute__(self, attr):
         try:
             logger.debug('Getattr %s < %s >', attr, self)
-            if attr in filter(lambda x: not x.startswith('_'), dir(SafeConfigParser) + [ 'setall', 'save' ]):
+            if attr in filter(lambda x: not x.startswith('_'), dir(SafeConfigParser) + ['setall', 'save']):
                 object.__getattribute__(self, 'refresh')()
         except StandardError:
             logger.critical('Trouble getattr %s < %s >', attr, self)
@@ -162,7 +392,20 @@ class DelayedConfigParser(GenericConfigParser):
 
 
 class JacketConfigParser(GenericConfigParser):
-    """Configuration parser for Jacket files."""
+    """Configuration parser for Jacket files.
+
+    :param str inifile: Path to a configuration file or a configuration file name
+    :param ConfigParser.SafeConfigParser parser: an existing configuration parser
+        object the will be used to access the configuration
+    :param bool mkforce: If the configuration file doesn't exists. Create an empty
+        one in ``~/.vortexrc``
+    :param type clsparser: The class that will be used to create a parser object
+        (if needed)
+
+    :note: All of the parser's methods are directly accessible because ``__getattr__``
+        is implemented. The user will refer to the Python's ConfigParser module
+        documentation for more details.
+    """
 
     def get(self, section, option):
         """
@@ -257,7 +500,7 @@ class AppConfigStringDecoder(object):
         if keysep is not None and itemsep is None:
             raise ValueError("keysep can not be set without itemsep")
         # What are the expected separators ?
-        markers_it = itertools.cycle([keysep, itemsep ] if keysep else [itemsep, ])
+        markers_it = itertools.cycle([keysep, itemsep] if keysep else [itemsep, ])
         # Default values
         res_stack = []
         accumstr = ''

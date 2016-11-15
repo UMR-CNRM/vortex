@@ -781,8 +781,8 @@ class TemplatedMailService(MailService):
         tpl = self.message
         if tpl == '':
             tplfile = self.section.get('template', self.id)
-            if not tplfile.startswith('opmail-'):
-                tplfile = 'opmail-' + tplfile
+            if not tplfile.startswith('@opmail-'):
+                tplfile = '@opmail-' + tplfile
             if not tplfile.endswith('.tpl'):
                 tplfile += '.tpl'
             try:

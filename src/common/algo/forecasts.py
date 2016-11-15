@@ -184,7 +184,7 @@ class LAMForecast(Forecast):
             synctpl = dict(
                 info            = 'The template used to generate the *synctool* script',
                 optional        = True,
-                default         = 'sync-fetch.tpl',
+                default         = '@sync-fetch.tpl',
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
         )
