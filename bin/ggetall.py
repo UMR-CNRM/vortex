@@ -30,15 +30,15 @@ vortexbase = os.path.dirname(os.path.realpath(__file__)).rstrip('/bin')
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
-DEFAULT_CYCLES_FILE = 'oper_cycles'
-
+DEFAULT_OPER_CYCLES_FILE = 'oper_cycles'
+DEFAULT_DBLE_CYCLES_FILE = 'dble_cycles'
 
 def parse_command_line():
     description = "Create or remove frozen copies of gco resources in gco/ and genv/."
     parser = argparse.ArgumentParser(description=description)
 
-    helpstr = 'file(s) containing a list of cycles to freeze ; defaults to "{}"'
-    parser.add_argument('-f', '--file', nargs='+', help=helpstr.format(DEFAULT_CYCLES_FILE))
+    helpstr = 'file(s) containing a list of cycles to freeze ; defaults to "[{}, {}]"'
+    parser.add_argument('-f', '--file', nargs='+', help=helpstr.format(DEFAULT_OPER_CYCLES_FILE, DEFAULT_DBLE_CYCLES_FILE))
     parser.add_argument('-c', '--cycles', nargs='+', help='name(s) of cycle(s) to freeze')
     parser.add_argument('-r', '--remove', help='name of the cycle to remove')
     parser.add_argument('-l', '--list', help='only list cycles to handle, and exit', action='store_true')
@@ -51,7 +51,7 @@ def parse_command_line():
 
     args = parser.parse_args()
     if not (args.cycles or args.file or args.remove):
-        args.file = [DEFAULT_CYCLES_FILE]
+        args.file = [DEFAULT_OPER_CYCLES_FILE, DEFAULT_DBLE_CYCLES_FILE]
 
     if args.glove:
         import vortex
@@ -69,13 +69,16 @@ def parse_command_line():
     files = args.file or list()
     for filename in files:
         if not os.path.isfile(filename):
-            parser.error('\nCycles definition file missing: "{}"'.format(filename))
-        with open(filename) as fp:
-            for line in fp.readlines():
-                args.cycles.extend(line.partition('#')[0].strip().split())
+            print()            
+            print('WARNING : Cycles definition file missing: "{}"'.format(filename))
+        else:
+            with open(filename) as fp:
+                for line in fp.readlines():
+                    args.cycles.extend(line.partition('#')[0].strip().split())
 
     # remove ".genv" extensions (to ease copy-paste)
     args.cycles = {c.strip('.genv') for c in args.cycles}
+
     if args.remove:
         args.remove = args.remove.strip('.genv')
 
@@ -85,6 +88,7 @@ def parse_command_line():
         sys.exit(1)
 
     return args
+
 
 
 def list_cycles(args):
