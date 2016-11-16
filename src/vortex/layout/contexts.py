@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from vortex.layout import dataflow
 
 r"""
 This modules defines the physical layout.
@@ -163,7 +164,14 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         if localtracker:
             self._localtracker = localtracker
         else:
-            self._localtracker = dataflow.LocalTracker()
+            # Create the localtracker within the Session's datastore
+            if self.session.datastore.check('context_localtracker', dict(path=self.path)):
+                self._localtracker = self.session.datastore.get('context_localtracker',
+                                                                dict(path=self.path))
+            else:
+                self._localtracker = self.session.datastore.insert('context_localtracker',
+                                                                   dict(path=self.path),
+                                                                   dataflow.LocalTracker())
 
         footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
         footprints.observers.get(tag=_STORES_OBSBOARD).register(self)

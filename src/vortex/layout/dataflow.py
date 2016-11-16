@@ -821,6 +821,11 @@ class LocalTracker(defaultdict):
         for loc, entry in othertracker.iteritems():
             self[loc].append(entry)
 
+    def datastore_inplace_overwrite(self, other):
+        """Used by a DataStore object to refill a LocalTracker."""
+        self.clear()
+        self.append(other)
+
     def __str__(self):
         out = ''
         for loc, entry in self.iteritems():

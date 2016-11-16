@@ -25,14 +25,6 @@ Module data
 Interface functions
 -------------------
 
-.. autofunction:: paramsmap
-
-.. autofunction:: paramstags
-
-.. autofunction:: param
-
-.. autofunction:: share
-
 .. autofunction:: current
 
 
