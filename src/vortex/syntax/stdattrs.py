@@ -7,6 +7,9 @@ of attributes description that could be used in the footprint definition of any
 class which follow the :class:`footprints.Footprint` syntax.
 """
 
+import copy
+import re
+
 import footprints
 
 from vortex.tools import env
@@ -97,9 +100,14 @@ class FmtInt(int):
 
 
 class XPid(str):
-    """Basestring wrapper for experiment ids."""
+    """Basestring wrapper for experiment ids (abstract)."""
+    pass
+
+
+class LegacyXPid(XPid):
+    """Basestring wrapper for experiment ids (Olive/Oper convention)."""
     def __new__(cls, value):
-        if len(value) != 4:
+        if len(value) != 4 or '@' in value:
             raise ValueError('XPid should be a 4 digits string')
         return str.__new__(cls, value.upper())
 
@@ -107,8 +115,30 @@ class XPid(str):
         """Return true if current value looks like an op id."""
         return str(self) in opsuites
 
+
+class FreeXPid(XPid):
+    """Basestring wrapper for experiment ids (User defined)."""
+
+    _re_valid = re.compile(r'^\w+@\w+$')
+
+    def __new__(cls, value):
+        if not cls._re_valid.match(value):
+            raise ValueError('XPid should be something like "id@location" (not "{:s}")'
+                             .format(value))
+        return str.__new__(cls, value)
+
+    @property
+    def id(self):
+        return self.split('@')[0]
+
+    @property
+    def location(self):
+        return self.split('@')[1]
+
+
 #: Default values for operational experiment names.
-opsuites = set([ XPid(x) for x in ['OPER', 'DBLE', 'TEST', 'MIRR'] + [ 'OP{0:02d}'.format(i) for i in range(100) ] ])
+opsuites = set([LegacyXPid(x) for x in (['OPER', 'DBLE', 'TEST', 'MIRR'] +
+                                        ['OP{0:02d}'.format(i) for i in range(100)])])
 
 
 class Namespace(str):
@@ -167,15 +197,29 @@ class Namespace(str):
 
 # predefined attributes
 
-#: Usal definition fo the ``xpid`` or experiment name.
-
+#: Usual definition for the ``xpid`` or experiment name.
 a_xpid = dict(
     info     = "The experiment's identifier.",
     type     = XPid,
     optional = False,
 )
 
-xpid = footprints.Footprint(info = 'Abstract experiment id', attr = dict(experiment = a_xpid))
+xpid = footprints.Footprint(info = 'Abstract experiment id',
+                            attr = dict(experiment = a_xpid))
+
+#: Usual definition for an Olive/Oper ``xpid`` or experiment name.
+a_legacy_xpid = copy.copy(a_xpid)
+a_legacy_xpid['type'] = LegacyXPid
+
+legacy_xpid = footprints.Footprint(info = 'Abstract experiment id',
+                                   attr = dict(experiment = a_legacy_xpid))
+
+#: Usual definition for a user-defined ``xpid`` or experiment name.
+a_free_xpid = copy.copy(a_xpid)
+a_free_xpid['type'] = FreeXPid
+
+free_xpid = footprints.Footprint(info = 'Abstract experiment id',
+                                 attr = dict(experiment = a_free_xpid))
 
 #: Usual definition of the ``nativefmt`` attribute.
 a_nativefmt = dict(

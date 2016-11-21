@@ -97,10 +97,16 @@ class GenericReadOnlyConfigParser(object):
     def setfile(self, inifile):
         """Read the specified ``inifile`` as new configuration.
 
-        If ``inifile`` is not a valid file path, the configuration file is looked for
-        both in ``~/.vortexrc`` and in the ``conf`` directory of the vortex
-        installation. If a section/option is  defined in ``~/.vortexrc`` it takes
-        precedence over the one defined in ``conf``.
+        ``inifile`` may be:
+
+        * A File like object
+        * A path to a file
+        * A file name preceded by '@'
+
+        In the latter case, the configuration file is looked for both in
+        ``~/.vortexrc`` and in the ``conf`` directory of the vortex installation.
+        If a section/option is  defined in ``~/.vortexrc`` it takes precedence
+        over the one defined in ``conf``.
 
         :example:
 
@@ -123,30 +129,37 @@ class GenericReadOnlyConfigParser(object):
         self.file = None
         filestack = list()
         local = sessions.system()
-        autofile = self._RE_AUTO_SETFILE.match(inifile)
-        if not autofile:
-            if local.path.exists(inifile):
-                filestack.append(local.path.abspath(inifile))
-            else:
-                raise ValueError('Configuration file ' + inifile + ' not found')
+        if not isinstance(inifile, basestring):
+            # Assume it's an IO descriptor
+            inifile.seek(0)
+            self.parser.readfp(inifile)
+            self.file = repr(inifile)
         else:
-            autofile = autofile.group(1)
-            glove = sessions.getglove()
-            sitefile = glove.siteconf + '/' + autofile
-            persofile = glove.configrc + '/' + autofile
-            if local.path.exists(sitefile):
-                filestack.append(sitefile)
-            if local.path.exists(persofile):
-                filestack.append(persofile)
-            if not filestack:
-                if self.mkforce:
-                    filestack.append(persofile)
-                    local.filecocoon(persofile)
-                    local.touch(persofile)
+            # Let's continue as usual
+            autofile = self._RE_AUTO_SETFILE.match(inifile)
+            if not autofile:
+                if local.path.exists(inifile):
+                    filestack.append(local.path.abspath(inifile))
                 else:
                     raise ValueError('Configuration file ' + inifile + ' not found')
-        self.file = ",".join(filestack)
-        self.parser.read(filestack)
+            else:
+                autofile = autofile.group(1)
+                glove = sessions.getglove()
+                sitefile = glove.siteconf + '/' + autofile
+                persofile = glove.configrc + '/' + autofile
+                if local.path.exists(sitefile):
+                    filestack.append(sitefile)
+                if local.path.exists(persofile):
+                    filestack.append(persofile)
+                if not filestack:
+                    if self.mkforce:
+                        filestack.append(persofile)
+                        local.filecocoon(persofile)
+                        local.touch(persofile)
+                    else:
+                        raise ValueError('Configuration file ' + inifile + ' not found')
+            self.file = ",".join(filestack)
+            self.parser.read(filestack)
 
     def as_dict(self, merged=True):
         """Export the configuration file as a dictionary."""

@@ -25,8 +25,16 @@ Pre-defined sets
 
 .. autodata:: knownfmt
 
+.. autodata:: opsuites
+
 Pre-defined attributes
 ----------------------
+
+.. autodata:: a_xpid
+
+.. autodata:: a_legacy_xpid
+
+.. autodata:: a_free_xpid
 
 .. autodata:: a_actualfmt
 
@@ -67,6 +75,16 @@ Class attributes
    :member-order: alphabetical
 
 .. autoclass:: XPid
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: LegacyXPid
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FreeXPid
    :show-inheritance:
    :members:
    :member-order: alphabetical

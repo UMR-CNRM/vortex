@@ -81,6 +81,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: VortexFreeStdArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: CacheStore
    :show-inheritance:
    :members:

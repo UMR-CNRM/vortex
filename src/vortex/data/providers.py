@@ -9,7 +9,8 @@ import os.path
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.syntax.stdattrs import namespacefp, xpid, member, block, opsuites, Namespace, FmtInt
+from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, member, block
+from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt
 from vortex.util.names import VortexNameBuilder
 from vortex.tools import net
 
@@ -320,30 +321,51 @@ class Vortex(Provider):
 
 
 class VortexStd(Vortex):
-    """Standard Vortex provider (any experiment without an op id)."""
+    """Standard Vortex provider (any experiment with an Olive id)."""
 
-    _footprint = dict(
-        info = 'Vortex provider for casual experiments',
-        attr = dict(
-            experiment = dict(
-                outcast = opsuites,
+    _footprint = [
+        legacy_xpid,
+        dict(
+            info = 'Vortex provider for casual experiments with an Olive XPID',
+            attr = dict(
+                experiment = dict(
+                    outcast = opsuites,
+                ),
             ),
-        )
-    )
+        ),
+    ]
+
+
+class VortexFreeStd(Vortex):
+    """Standard Vortex provider (any experiment with an user-defined id)."""
+
+    _footprint = [
+        free_xpid,
+        dict(
+            info = 'Vortex provider for casual experiments with a user-defined XPID',
+        ),
+    ]
+
+    def netloc(self):
+        """Vortex Free scheme (for archiving data)"""
+        return 'vortex-free.' + self.namespace.domain
 
 
 class VortexOp(Vortex):
     """Standard Vortex provider (any experiment without an op id)."""
 
-    _footprint = dict(
-        info = 'Vortex provider for op experiments',
-        attr = dict(
-            experiment = dict(
-                alias  = ('suite',),
-                values = opsuites,
+    _footprint = [
+        legacy_xpid,
+        dict(
+            info = 'Vortex provider for op experiments',
+            attr = dict(
+                experiment = dict(
+                    alias  = ('suite',),
+                    values = opsuites,
+                ),
             ),
-        )
-    )
+        ),
+    ]
 
     def netloc(self):
         """Vortex Special OP scheme, aka VSOP !"""
