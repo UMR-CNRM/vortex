@@ -26,6 +26,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: PrivateHistory
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: History
    :show-inheritance:
    :members:

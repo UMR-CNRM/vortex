@@ -173,7 +173,7 @@ class Node(footprints.util.GetByTag, NiceLayout):
         self._setup_context(ctx)
         oldctx.activate()
 
-    def setup_context(self, ctx):
+    def _setup_context(self, ctx):
         """Setup the newly created context."""
         pass
 
@@ -448,17 +448,6 @@ class Task(Node):
     @property
     def ctx(self):
         return self.ticket.context
-
-    def _setup_context(self, ctx):
-        # If necessary load the localtracker
-        if self.options.get('conveytracker', False) and not self.starter:
-            ctx.localtracker.json_load()
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        # If necessary dumps the localtracker
-        if self.options.get('conveytracker', False):
-            self.ctx.localtracker.json_dump()
-        super(Task, self).__exit__(exc_type, exc_value, traceback)
 
     def build(self, **kw):
         """Switch to rundir and check the active steps."""

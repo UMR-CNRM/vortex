@@ -40,7 +40,8 @@ history = History(tag='rload')
 def show_toolbox_settings(ljust=24):
     """Print the current settings of the toolbox."""
     for key in ['active_{}'.format(act) for act in
-                ('now', 'insitu', 'verbose', 'promise', 'metadatacheck', 'clear')]:
+                ('now', 'insitu', 'verbose', 'promise', 'clear',
+                 'metadatacheck', 'incache')]:
         kval = globals().get(key, None)
         if kval is not None:
             print '+', key.ljust(ljust), '=', kval

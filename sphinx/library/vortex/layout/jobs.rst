@@ -26,7 +26,17 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MtoolReadyJobAssistant
+.. autoclass:: JobAssistantPlugin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: JobAssistantTmpdirPlugin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: JobAssistantMtoolPlugin
    :show-inheritance:
    :members:
    :member-order: alphabetical

@@ -17,11 +17,13 @@ import sys
 import traceback
 
 import footprints
+from footprints import proxy as fpx
 from footprints.stdtypes import FPSet
 
 import vortex
 from vortex.tools import date
 from vortex.util.config import ExtendedReadOnlyConfigParser, load_template
+from vortex.util.decorators import nicedeco
 
 #: Export nothing
 __all__ = []
@@ -162,15 +164,41 @@ def mkjob(t, **kw):
     return objcode, tplconf
 
 
+@nicedeco
+def _extendable(func):
+    """Decorator for some of the JobAssistant method
+
+    The added behaviour is to look into the plugins list and call appropriate
+    methods upon them.
+    """
+    def new_me(self, *kargs, **kw):
+        # Call the original function, save the result
+        res = func(self, *kargs, **kw)
+        # Automatically add the session (if missing)
+        dargs = list(kargs)
+        if not (dargs and isinstance(dargs[0], vortex.sessions.Ticket)):
+            dargs.insert(0, vortex.sessions.current())
+        # Go through the plugins and look for available methods
+        plugable_n = 'plugable_' + func.__name__.lstrip('_')
+        for p in [p for p in self.plugins if hasattr(p, plugable_n)]:
+            # If the previous result was a session, use it...
+            if isinstance(res, vortex.sessions.Ticket):
+                dargs[0] = res
+            res = getattr(p, plugable_n)(*dargs, **kw)
+        return res
+    return new_me
+
+
 class JobAssistant(footprints.FootprintBase):
     """Class in charge of setting various session and environment settings for a Vortex job."""
 
-    _abstract  = True
     _collector = ('jobassistant',)
     _footprint = dict(
         info = 'Abstract JobAssistant',
         attr = dict(
-            kind = dict(),
+            kind = dict(
+                values = ['generic', 'minimal']
+            ),
             modules = dict(
                 type = FPSet,
                 optional = True,
@@ -197,16 +225,33 @@ class JobAssistant(footprints.FootprintBase):
         super(JobAssistant, self).__init__(*args, **kw)
         # By default, no error code is thrown away
         self.unix_exit_code = 0
+        self._plugins = list()
+
+    @property
+    def plugins(self):
+        return self._plugins
+
+    def add_plugin(self, kind, **kwargs):
+        self._plugins.append(fpx.jobassistant_plugin(kind=kind, masterja=self,
+                                                     **kwargs))
+
+    def __getattr__(self, name):
+        """Search the plugins for unknown methods."""
+        if not (name.startswith('_') or name.startswith('plugable')):
+            for plugin in self.plugins:
+                if hasattr(plugin, name):
+                    return getattr(plugin, name)
+        raise AttributeError('Attribute not found.')
 
     @staticmethod
     def _printfmt(fmt, *kargs, **kwargs):
         print(fmt.format(*kargs, **kwargs))
 
-    @classmethod
-    def _print_session_info(cls, t):
+    @_extendable
+    def _print_session_info(self, t):
         """Display informations about the current session."""
 
-        locprint = functools.partial(cls._printfmt, cls._P_SESSION_INFO_FMT)
+        locprint = functools.partial(self._printfmt, self._P_SESSION_INFO_FMT)
 
         t.sh.header('Toolbox description')
 
@@ -228,8 +273,8 @@ class JobAssistant(footprints.FootprintBase):
         locprint('Target system', tg.sysname)
         locprint('Target inifile', tg.inifile)
 
-    @classmethod
-    def _print_toolbox_settings(cls, t):
+    @_extendable
+    def _print_toolbox_settings(self, t):
         """Display the toolbox settings."""
         t.sh.header('Toolbox module settings')
         vortex.toolbox.show_toolbox_settings()
@@ -246,6 +291,7 @@ class JobAssistant(footprints.FootprintBase):
                 print(cls._P_ENVVAR_FMT.format(var_name.ljust(maxlen),
                                                t.env.native(var_name)))
 
+    @_extendable
     def _add_specials(self, t, prefix=None, **kw):
         """Print some of the environment variables."""
         prefix = prefix or self.special_prefix
@@ -256,6 +302,7 @@ class JobAssistant(footprints.FootprintBase):
             t.env.update({k: v for k, v in specials.iteritems() if k.startswith(prefix)})
             self.print_somevariables(t, prefix=prefix)
 
+    @_extendable
     def _modules_preload(self, t):
         """Import all the modules listed in the footprint."""
         t.sh.header('External imports')
@@ -263,6 +310,7 @@ class JobAssistant(footprints.FootprintBase):
             importlib.import_module(module)
             print(self._P_MODULES_FMT.format(module))
 
+    @_extendable
     def _addons_preload(self, t):
         """Load shell addons."""
         t.sh.header('Add-ons to the shell')
@@ -270,11 +318,14 @@ class JobAssistant(footprints.FootprintBase):
             shadd = footprints.proxy.addon(kind=addon, shell=t.sh)
             print(self._P_ADDON_FMT.format(addon.upper(), shadd))
 
+    @_extendable
     def _system_setup(self, t, **kw):
         """Set usual settings for the system shell."""
         t.sh.header("Session's basic setup")
         t.sh.setulimit('stack')
+        t.sh.setulimit('memlock')
 
+    @_extendable
     def _early_session_setup(self, t, **kw):
         """Create a now session, set important things, ..."""
         specials = kw.get('actual', dict())
@@ -282,33 +333,28 @@ class JobAssistant(footprints.FootprintBase):
         t.glove.vconf = kw.get('vconf', specials.get(self.special_prefix + 'vconf', None))
         return t
 
+    @_extendable
     def _extra_session_setup(self, t, **kw):
         """Additional setup for the session."""
-        myrundir = kw.get('rundir', None) or t.env.TMPDIR
-        if myrundir:
-            t.rundir = kw.get('rundir', myrundir)
-            print('+ Current rundir <%s>' % (t.rundir,))
+        pass
 
+    @_extendable
     def _env_setup(self, t, **kw):
         """Session's environment setup."""
         t.env.verbose(True, t.sh)
         self._add_specials(t, **kw)
 
+    @_extendable
     def _toolbox_setup(self, t, **kw):
         """Toolbox default setup."""
         vortex.toolbox.active_verbose = True
         vortex.toolbox.active_now = True
         vortex.toolbox.active_clear = True
 
-    def register_cycle(self, cycle):
-        """A callback to register GCO cycles."""
-        t = vortex.ticket()
-        from gco.tools import genv
-        if cycle in genv.cycles():
-            logger.info('Cycle %s already registered', cycle)
-        else:
-            genv.autofill(cycle, cacheroot=t.rundir, writes_dump=True)
-            print(genv.as_rawstr(cycle=cycle))
+    @_extendable
+    def _actions_setup(self, t, **kw):
+        """Setup the action dispatcher."""
+        pass
 
     def setup(self, **kw):
         """This is the main method. it setups everything in the session."""
@@ -318,27 +364,40 @@ class JobAssistant(footprints.FootprintBase):
         # But a new session can be created here:
         t = self._early_session_setup(t, **kw)
         # Then, go on with initialisations...
-        self._system_setup(t)
-        self._print_session_info(t)
-        self._env_setup(t, **kw)
-        self._modules_preload(t)
-        self._addons_preload(t)
-        self._extra_session_setup(t, **kw)
-        self._toolbox_setup(t, **kw)
-        self._print_toolbox_settings(t)
+        self._system_setup(t)  # Tweak the session's System object
+        self._print_session_info(t)  # Print some info about the session
+        self._env_setup(t, **kw)  # Setup the session's Environment object
+        self._modules_preload(t)  # Load a few modules
+        self._addons_preload(t)  # Active some shell addons
+        self._extra_session_setup(t, **kw)  # Some extra configuration on the session
+        self._toolbox_setup(t, **kw)  # Setup toolbox settings
+        self._print_toolbox_settings(t)  # Print a summary of the toolbox settings
+        self._actions_setup(t, **kw)  # Setup the actionDispatcher
         # Begin signal handling
         t.sh.signal_intercept_on()
         return t, t.env, t.sh
 
-    @staticmethod
-    def add_extra_traces(t):
+    @_extendable
+    def add_extra_traces(self, t):
         """Switch the system shell to verbose mode."""
         t.sh.trace = True
 
+    @_extendable
+    def register_cycle(self, cycle):
+        """A callback to register GCO cycles."""
+        from gco.tools import genv
+        if cycle in genv.cycles():
+            logger.info('Cycle %s already registered', cycle)
+        else:
+            genv.autofill(cycle)
+            print(genv.as_rawstr(cycle=cycle))
+
+    @_extendable
     def complete(self):
         """Should be called when a job finishes successfully"""
         pass
 
+    @_extendable
     def fulltraceback(self, latest_error=None):
         """Produce some nice traceback at the point of failure.
 
@@ -353,12 +412,18 @@ class JobAssistant(footprints.FootprintBase):
         print("\n".join(traceback.format_tb(exc_traceback)))
         t.sh.header('Traceback Error / END')
 
+    @_extendable
     def rescue(self):
         """Called at the end of a job when something went wrong."""
         self.unix_exit_code = 1
 
+    @_extendable
     def finalise(self):
         """Called whenever a job finishes (either successfully or badly)."""
+        pass
+
+    def close(self):
+        """This must be the last called method whenever a job finishes."""
         t = vortex.ticket()
         t.sh.signal_intercept_off()
         t.close()
@@ -367,26 +432,87 @@ class JobAssistant(footprints.FootprintBase):
             exit(self.unix_exit_code)
 
 
-class MtoolReadyJobAssistant(JobAssistant):
-    """Class in charge of setting various session and environment settings for a Vortex job.
+class JobAssistantPlugin(footprints.FootprintBase):
 
-    This specialised version, take advantages of the variables automatically
-    added by MTOOL.
-    """
-
+    _conflicts = []
+    _abstract  = True
+    _collector = ('jobassistant_plugin',)
     _footprint = dict(
-        info = 'MTOOL aware JobAssistant',
+        info = 'Abstract JobAssistant Plugin',
         attr = dict(
-            kind = dict(
-                values = ['mtool', ]
+            kind = dict(),
+            masterja = dict(
+                type=JobAssistant,
             ),
         ),
     )
 
-    def _extra_session_setup(self, t, **kw):
-        # Set the rundir according to MTTOL's spool
+    def __init__(self, *kargs, **kwargs):
+        super(JobAssistantPlugin, self).__init__(*kargs, **kwargs)
+        # Check for potential conflicts
+        for conflicting in self._conflicts:
+            if conflicting in self.masterja.plugins:
+                raise RuntimeError('"{:s}" conflicts wit "{:s}"'.format(self.kind, conflicting))
+
+
+class JobAssistantTmpdirPlugin(JobAssistantPlugin):
+
+    _conflicts = ['mtool', ]
+    _footprint = dict(
+        info = 'JobAssistant TMPDIR Plugin',
+        attr = dict(
+            kind = dict(
+                values = ['tmpdir', ]
+            ),
+        ),
+    )
+
+    def plugable_extra_session_setup(self, t, **kw):
+        """Set the rundir according to the TMPDIR variable."""
+        myrundir = kw.get('rundir', None) or t.env.TMPDIR
+        if myrundir:
+            t.rundir = kw.get('rundir', myrundir)
+            print('+ Current rundir <%s>' % (t.rundir,))
+
+
+class JobAssistantMtoolPlugin(JobAssistantPlugin):
+
+    _conflicts = ['tmpdir', ]
+
+    _footprint = dict(
+        info = 'JobAssistant MTOOL Plugin',
+        attr = dict(
+            kind = dict(
+                values = ['mtool', ]
+            ),
+            step = dict(
+                type=int,
+            ),
+            stepid = dict(
+            ),
+        ),
+    )
+
+    @property
+    def mtool_steps(self):
+        steps_map = {'fetch': ('early-fetch', ),
+                     'compute': ('early-fetch', 'fetch', 'compute', 'backup'),
+                     'backup': ('backup', 'late-backup'), }
+        try:
+            return steps_map[self.stepid]
+        except KeyError:
+            logger.error("Unknown MTOOL step: %s", self.stepid)
+            return ()
+
+    def plugable_extra_session_setup(self, t, **kw):
+        """Set the rundir according to MTTOL's spool."""
         t.rundir = t.env.MTOOL_STEP_SPOOL
+        t.sh.cd(t.rundir)
         print('+ Current rundir <{:s}>'.format(t.rundir))
+        # Load the session's data store
+        if self.step > 1:
+            t.datastore.pickle_load()
+            print('+ The datastore was read from disk.')
         # Check that the log directory exists
         if "MTOOL_STEP_LOGFILE" in t.env:
             logfile = t.sh.path.normpath(t.env.MTOOL_STEP_LOGFILE)
@@ -395,18 +521,25 @@ class MtoolReadyJobAssistant(JobAssistant):
                 t.sh.mkdir(logdir)
             print('+ Current logfile <{:s}>'.format(logfile))
 
-    def complete(self):
-        """Should be called when a job finishes successfuly"""
-        super(MtoolReadyJobAssistant, self).complete()
-        t = vortex.ticket()
-        t.sh.cd(t.env.MTOOL_STEP_SPOOL)
+    def plugable_toolbox_setup(self, t, **kw):
+        """Toolbox MTOOL setup."""
+        if self.stepid == 'compute':
+            # No network activity during the compute step + promises already made
+            vortex.toolbox.active_promise = False
+            vortex.toolbox.active_insitu = True
+            vortex.toolbox.active_incache = True
 
-    def rescue(self):
+    def plugable_complete(self, t):
+        """Should be called when a job finishes successfully"""
+        t.sh.cd(t.env.MTOOL_STEP_SPOOL)
+        # Dump the session datastore in the rundir
+        t.datastore.pickle_dump()
+        print('+ The datastore is dumped to disk')
+
+    def plugable_rescue(self, t):
         """Called at the end of a job when something went wrong.
 
         It backups the session's rundir and clean promises.
         """
-        super(MtoolReadyJobAssistant, self).rescue()
-        t = vortex.ticket()
         t.sh.cd(t.env.MTOOL_STEP_SPOOL)
         vortex.toolbox.rescue(bkupdir=t.env.MTOOL_STEP_ABORT)
