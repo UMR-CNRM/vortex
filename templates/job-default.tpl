@@ -58,7 +58,7 @@ try:
     e = op.setenv(t, actual=oplocals)
     ad.opmail_on()
     ad.route_off()
-    toolbox.defaults(smtpserver='smtp.meteo.fr', sender='dsiop_igasc@meteo.fr')
+    toolbox.defaults(smtpserver='smtp.meteo.fr', sender='dt_dsi_op_iga_sc@meteo.fr')
     opts = t.sh.rawopts(defaults=dict(play=op_fullplay))
     driver = todo.setup(t, **opts)
     driver.setup()
