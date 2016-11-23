@@ -10,52 +10,11 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.algo import mpitools
+from vortex.syntax.stdattrs import DelayedEnvValue
 
 
-class NecMpiRun(mpitools.MpiRun):
-    """MPIRUN utility on NEC SX systems."""
-
-    _footprint = dict(
-        attr = dict(
-            sysname = dict(
-                values = [ 'SUPER-UX' ]
-            ),
-        )
-    )
-
-    def setup(self, opts=None):
-        """
-        Prepares automatic export of variables through the MPIEXPORT mechanism.
-        The list of variables could be extended or reduced through:
-
-         * MPIRUN_FILTER
-         * MPIRUN_DISCARD
-        """
-
-        super(NecMpiRun, self).setup(opts)
-
-        e = self.env
-
-        if not e.false('mpirun_export'):
-            if 'mpiexport' in e:
-                mpix = set(e.mpiexport.split(','))
-            else:
-                mpix = set()
-
-            if not e.false('mpirun_filter'):
-                mpifilter = re.sub(',', '|', e.mpirun_filter)
-                mpix.update(filter(lambda x: re.match(mpifilter, x), e.keys()))
-
-            if not e.false('mpirun_discard'):
-                mpidiscard = re.sub(',', '|', e.mpirun_discard)
-                mpix = set(filter(lambda x: not re.match(mpidiscard, x), mpix))
-
-            e.mpiexport = ','.join(mpix)
-            logger.debug('MPI export environment %s', e.mpiexport)
-
-
-class MpiAuto(mpitools.MpiRun):
-    """Standard MPI launcher on most systems."""
+class MpiAuto(mpitools.MpiTool):
+    """MpiTools that uses mpiauto as a proxy to several MPI implementations"""
 
     _footprint = dict(
         attr = dict(
@@ -67,16 +26,60 @@ class MpiAuto(mpitools.MpiRun):
             ),
             optprefix = dict(
                 default = '--'
-            )
+            ),
+            timeoutrestart = dict(
+                info            = 'The number of attempts made by mpiauto',
+                optional        = True,
+                default         = DelayedEnvValue('MPI_INIT_TIMEOUT_RESTART', 2),
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
+                doc_zorder      = -90,
+            ),
         )
     )
 
+    def _reshaped_mpiopts(self):
+        """Raw list of mpi tool command line options."""
+        options = super(MpiAuto, self)._reshaped_mpiopts()
+        options['init-timeout-restart'] = self.timeoutrestart
+        return options
 
-class MpiNWPIO(mpitools.MpiServerIO):
+
+class MpiNWP(mpitools.MpiBinaryBasic):
+    """The kind of binaries used in NWP"""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['basicnwp', ],
+            ),
+        ),
+    )
+
+    def setup_namelist_delta(self, namcontents, namlocal):
+        """Applying MPI profile on local namelist ``namlocal`` with contents namcontents."""
+        namw = super(MpiNWP, self).setup_namelist_delta(namcontents, namlocal)
+        if ('NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros()):
+            namcontents.setmacro('NCPROC', int(self.env.VORTEX_NPRGPNS or self.nprocs))
+            namcontents.setmacro('NDPROC', int(self.env.VORTEX_NPRGPEW or 1))
+            namw = True
+        if 'NAMPAR1' in namcontents:
+            np1 = namcontents['NAMPAR1']
+            for nstr in [ x for x in ('NSTRIN', 'NSTROUT') if x in np1 ]:
+                if np1[nstr] > self.nprocs:
+                    logger.info('Setup %s=%s in NAMPAR1 %s', nstr, self.nprocs, namlocal)
+                    np1[nstr] = self.nprocs
+                    namw = True
+        return namw
+
+
+class MpiNWPIO(mpitools.MpiBinaryIOServer):
     """Standard IFS NWP IO server."""
 
     _footprint = dict(
         attr = dict(
+            kind = dict(
+                values = ['nwpioserv', ],
+            ),
             pattern = dict(
                 optional = True,
                 default  = 'io_serv.*.d',

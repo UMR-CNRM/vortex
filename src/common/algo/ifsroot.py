@@ -23,6 +23,12 @@ class IFSParallel(Parallel, grib.GribApiComponent):
                 default         = 'ifsrun',
                 doc_zorder      = 90,
             ),
+            ioname = dict(
+                default = 'nwpioserv',
+            ),
+            binarysingle = dict(
+                default = 'basicnwp',
+            ),
             conf = dict(
                 info = 'The configuration number given to Arpege/IFS.',
                 type            = int,

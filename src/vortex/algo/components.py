@@ -5,6 +5,7 @@
 #: No automatic export
 __all__ = []
 
+import collections
 import sys
 import traceback
 import shlex
@@ -38,6 +39,13 @@ class DelayedAlgoComponentError(AlgoComponentError):
         outstr += "\n".join(['{0:3d}. {1!s} (type: {2!s})'.format(i + 1, exc, type(exc))
                              for i, exc in enumerate(self._excs)])
         return outstr
+
+
+class ParallelInconsistencyAlgoComponentError(Exception):
+    """Generic exception class for Algo Components."""
+    def __init__(self, target):
+        msg = "The len of {:s} is inconsistent with the number or ResourceHandlers."
+        super(ParallelInconsistencyAlgoComponentError, self).__init__(msg.format(target))
 
 
 class AlgoComponent(footprints.FootprintBase):
@@ -828,7 +836,7 @@ class Parallel(ExecutableAlgoComponent):
             mpitool = dict(
                 info            = 'The object used to launch the parallel program',
                 optional        = True,
-                type            = mpitools.MpiSubmit,
+                type            = mpitools.MpiTool,
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
             mpiname = dict(
@@ -838,20 +846,45 @@ class Parallel(ExecutableAlgoComponent):
                 alias           = ['mpi'],
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
+            binaries = dict(
+                info            = 'List of MpiBinaryDescription objects',
+                optional        = True,
+                type            = footprints.FPList,
+                doc_visibility  = footprints.doc.visibility.GURU,
+            ),
+            binarysingle = dict(
+                info            = 'If *binaries* is missing, the default binary role for single binaries',
+                optional        = True,
+                default         = 'basicsingle',
+                doc_visibility  = footprints.doc.visibility.GURU,
+            ),
+            binarymutli = dict(
+                info            = 'If *binaries* is missing, the default binary role for multiple binaries',
+                type            = footprints.FPList,
+                optional        = True,
+                default         = footprints.FPList(['basic', ]),
+                doc_visibility  = footprints.doc.visibility.GURU,
+            ),
             ioserver = dict(
                 info            = 'The object used to launch the IOserver part of the binary.',
-                type            = mpitools.MpiServerIO,
+                type            = mpitools.MpiBinaryIOServer,
                 optional        = True,
                 default         = None,
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
-            timeoutrestart = dict(
-                info            = 'The number of attempts made by the mpitool object.',
+            ioname = dict(
+                info            = ('The binary_kind of a class in the mpibinary collector ' +
+                                   '(used only if *ioserver* is not provided)'),
                 optional        = True,
-                default         = DelayedEnvValue('MPI_INIT_TIMEOUT_RESTART', 2),
-                doc_visibility  = footprints.doc.visibility.ADVANCED,
-                doc_zorder      = -90,
+                default         = 'ioserv',
+                doc_visibility  = footprints.doc.visibility.GURU,
             ),
+            iolocation = dict(
+                info            = 'Location of the IO server within the binary list',
+                type            = int,
+                default         = -1,
+                optional        = True
+            )
         )
     )
 
@@ -861,70 +894,138 @@ class Parallel(ExecutableAlgoComponent):
         if opts.get('mpitool', True):
             self.export('mpitool')
 
-    def execute_single(self, rh, opts):
-        """
-        Run the specified resource handler through the `mitool` launcher,
-        using the resource command_line method as args.
-        An argument named `mpiopts` could be provided as a dictionary.
-        """
+    def spawn_command_line(self, rh):
+        """Split the shell command line of the resource to be run."""
+        return [super(Parallel, self).spawn_command_line(r) for r in rh]
+
+    def _bootstrap_mpitool(self, rh, opts):
+        """Initialise the mpitool object and finds out the command line."""
+
+        # Rh is a list binaries...
+        if not isinstance(rh, collections.Iterable):
+            rh = [rh, ]
+
+        # Find the MPI launcher
         mpi = self.mpitool
         if not mpi:
-            mpi_desc = dict(
+            mpi_extras = dict()
+            if self.env.VORTEX_MPI_OPTS is not None:
+                mpi_extras['mpiopts'] = self.env.VORTEX_MPI_OPTS
+            mpi = footprints.proxy.mpitool(
                 sysname = self.system.sysname,
                 mpiname = self.mpiname or self.env.VORTEX_MPI_NAME,
-                nodes   = self.env.get('VORTEX_SUBMIT_NODES', 1),
+                ** mpi_extras
             )
-            for mpi_k in ('tasks', 'openmp'):
-                mpi_kenv = 'VORTEX_SUBMIT_' + mpi_k.upper()
-                if mpi_kenv in self.env:
-                    mpi_desc[mpi_k] = self.env.get(mpi_kenv)
-            mpi = footprints.proxy.mpitool(**mpi_desc)
-
         if not mpi:
             logger.critical('Component %s could not find any mpitool', self.footprint_clsname())
             raise AttributeError('No valid mpitool attr could be found.')
 
-        mpi.import_basics(self)
-        mpi.options = opts.get('mpiopts', dict())
-        mpi.master  = self.absexcutable(rh.container.localpath())
+        # Some MPI presets
+        mpi_desc = dict()
+        for mpi_k in ('tasks', 'openmp'):
+            mpi_kenv = 'VORTEX_SUBMIT_' + mpi_k.upper()
+            if mpi_kenv in self.env:
+                mpi_desc[mpi_k] = self.env.get(mpi_kenv)
+
+        # The usual case: no indications, 1 binary + a potential ioserver
+        if len(rh) == 1 and not self.binaries:
+
+            # The main program
+            master = footprints.proxy.mpibinary(
+                kind = self.binarysingle,
+                nodes   = self.env.get('VORTEX_SUBMIT_NODES', 1),
+                ** mpi_desc)
+            master.options = opts.get('mpiopts', dict())
+            master.master  = self.absexcutable(rh[0].container.localpath())
+            bins = [master, ]
+
+            # A potential IO server
+            io = self.ioserver
+            if not io and int(self.env.get('VORTEX_IOSERVER_NODES', -1)) >= 0:
+                io = footprints.proxy.mpibinary(
+                    kind = self.ioname,
+                    tasks   = self.env.VORTEX_IOSERVER_TASKS  or master.tasks,
+                    openmp  = self.env.VORTEX_IOSERVER_OPENMP or master.openmp)
+                io.options = {x[3:]: opts[x]
+                              for x in opts.keys() if x.startswith('io_')}
+                io.master = master.master
+            if io:
+                rh.append(rh[0])
+                master.options['nn'] = master.options['nn'] - io.options['nn']
+                if self.iolocation >= 0:
+                    bins.insert(self.iolocation, io)
+                else:
+                    bins.append(io)
+
+        # Multiple binaries are to be launched: no IO server support here.
+        elif len(rh) > 1 and not self.binaries:
+
+            # Binary roles
+            if len(self.binarymutli) == 1:
+                bnames = self.binarymutli * len(rh)
+            else:
+                if len(self.binarymutli) != len(rh):
+                    raise ParallelInconsistencyAlgoComponentError("self.binarymulti")
+                bnames = self.binarymutli
+
+            # Check mpiopts shape
+            u_mpiopts = opts.get('mpiopts', dict())
+            for k, v in u_mpiopts.iteritems():
+                if not isinstance(v, collections.Iterable):
+                    raise ValueError('In such a case, mpiopts must be Iterable')
+                if len(v) != len(rh):
+                    raise ParallelInconsistencyAlgoComponentError('mpiopts[{:s}]'.format(k))
+
+            # Create MpiBinaryDescription objects
+            bins = list()
+            for i, r in enumerate(rh):
+                bins.append(footprints.proxy.mpibinary(kind = bnames[i],
+                                                       nodes   = self.env.get('VORTEX_SUBMIT_NODES', 1),
+                                                       ** mpi_desc))
+                # Reshape mpiopts
+                bins[i].options = {k: v[i] for k, v in u_mpiopts.iteritems()}
+                bins[i].master  = self.absexcutable(r.container.localpath())
+
+        # Nothing to do: binary descriptions are provided by the user
+        else:
+            if len(self.binaries) != len(rh):
+                    raise ParallelInconsistencyAlgoComponentError("self.binaries")
+            bins = self.binaries
+            for i, r in enumerate(rh):
+                bins[i].master = self.absexcutable(r.container.localpath())
+
+        # The binaries description
+        mpi.binaries = bins
+
+        # Find out the command line
+        bargs = self.spawn_command_line(rh)
+        args = mpi.mkcmdline(bargs)
+        for r, a in zip(rh, bargs):
+            logger.info('Run %s in parallel mode. Args: %s', r.container.localpath(), ' '.join(a))
+        logger.info('Full MPI commandline: %s', ' '.join(args))
+
+        return mpi, args
+
+    def execute_single(self, rh, opts):
+        """Run the specified resource handler through the `mitool` launcher
+
+        An argument named `mpiopts` could be provided as a dictionary: it may
+        contains indications on the number of nodes, tasks, ...
+        """
 
         self.system.subtitle('{0:s} : parallel engine'.format(self.realkind))
-        print mpi
 
-        io = self.ioserver
-        if not io and int(self.env.get('VORTEX_IOSERVER_NODES', 0)) > 0:
-            io = footprints.proxy.mpitool(
-                io      = True,
-                sysname = self.system.sysname,
-                nodes   = self.env.VORTEX_IOSERVER_NODES,
-                tasks   = self.env.VORTEX_IOSERVER_TASKS  or mpi.tasks,
-                openmp  = self.env.VORTEX_IOSERVER_OPENMP or mpi.openmp,
-            )
+        # Return a mpitool object and the mpicommand line
+        mpi, args = self._bootstrap_mpitool(rh, opts)
 
-        # Building full command line options, including executable options and optional io server
-        args = list()
-        if io:
-            io.import_basics(self)
-            io.options = {x[3:]: opts[x]
-                          for x in opts.keys() if x.startswith('io_')}
-
-            mpi.options['nn'] = mpi.options['nn'] - io.options['nn']
-            io.master = mpi.master
-            args = io.mkcmdline(self.spawn_command_line(rh))
-
-        mpi.options['init-timeout-restart'] = self.timeoutrestart
-        args[:0] = mpi.mkcmdline(self.spawn_command_line(rh))
-        logger.info('Run in parallel mode %s', args)
+        # Setup various usefull things (env, system, ...)
+        mpi.import_basics(self)
 
         # Specific parallel settings
         mpi.setup(opts)
-        if io:
-            io.setup(opts)
 
         # This is actual running command
         self.spawn(args, opts)
 
         # Specific parallel cleaning
-        if io:
-            io.clean(opts)
         mpi.clean(opts)
