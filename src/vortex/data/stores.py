@@ -10,8 +10,9 @@ Store objects use the :mod:`footprints` mechanism.
 #: Export base class
 __all__ = ['Store']
 
-import re
 import ftplib
+import re
+import StringIO
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -19,7 +20,10 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex import sessions
 from vortex.layout import dataflow
 from vortex.util import config
-from vortex.tools import caches, date
+from vortex.util import hash as hashutils
+from vortex.syntax.stdattrs import hashalgo, hashalgo_avail_list
+from vortex.tools import caches
+from vortex.tools import date
 from vortex.tools.systems import ExecutionError
 from vortex.tools.actions import actiond as ad
 from vortex.syntax.stdattrs import Namespace
@@ -169,28 +173,31 @@ class Store(footprints.FootprintBase):
 
     _abstract  = True
     _collector = ('store',)
-    _footprint = dict(
-        info = 'Default store',
-        attr = dict(
-            scheme = dict(
-                alias = ('protocol',)
+    _footprint = [
+        hashalgo,
+        dict(
+            info = 'Default store',
+            attr = dict(
+                scheme = dict(
+                    alias = ('protocol',)
+                ),
+                netloc = dict(
+                    type  = Namespace,
+                    alias = ('domain', 'namespace')
+                ),
+                storetrack = dict(
+                    type     = bool,
+                    default  = True,
+                    optional = True,
+                ),
+                readonly = dict(
+                    type     = bool,
+                    optional = True,
+                    default  = False,
+                ),
             ),
-            netloc = dict(
-                type  = Namespace,
-                alias = ('domain', 'namespace')
-            ),
-            storetrack = dict(
-                type  = bool,
-                default = True,
-                optional = True,
-            ),
-            readonly = dict(
-                type     = bool,
-                optional = True,
-                default  = False,
-            ),
-        ),
-    )
+        )
+    ]
 
     def __init__(self, *args, **kw):
         logger.debug('Abstract store init %s', self.__class__)
@@ -264,6 +271,35 @@ class Store(footprints.FootprintBase):
         else:
             return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
 
+    def _hash_store_defaults(self, options):
+        """Update default options when fetching hash files."""
+        options = options.copy() if options is not None else dict()
+        options['fmt'] = 'ascii'
+        options['intent'] = _CACHE_GET_INTENT_DEFAULT
+        options['auto_tarextract'] = False
+        options['auto_dirextract'] = False
+        return options
+
+    def _hash_get_check(self, remote, local, options=None):
+        """Update default options when fetching hash files."""
+        if (self.storehash is None) or (remote['path'].endswith('.' + self.storehash)):
+            return True
+        options = self._hash_store_defaults(options)
+        remote = remote.copy()
+        remote['path'] = remote['path'] + '.' + self.storehash  # Name of the hash file
+        remote['query'].pop('extract', None)  # Ignore any extract request
+        # fetch the hash file (in a virtual file)
+        tmplocal = StringIO.StringIO()
+        rc = getattr(self, self.scheme + 'get', self.notyet)(remote, tmplocal, options)
+        # check the hash key
+        hadapt = hashutils.HashAdapter(self.storehash)
+        rc = rc and hadapt.filecheck(local, tmplocal)
+        if rc:
+            logger.info("%s hash sanity check succeeded.", self.storehash)
+        else:
+            logger.warning("%s hash sanity check failed.", self.storehash)
+        return rc
+
     def get(self, remote, local, options=None):
         """Proxy method to dedicated get method according to scheme."""
         logger.debug('Store get from %s to %s', remote, local)
@@ -279,6 +315,19 @@ class Store(footprints.FootprintBase):
             else:
                 logger.error('Only cache stores can be used when insitu is True.')
                 return False
+
+    def _hash_put(self, local, remote, options=None):
+        """Put a hash file next to the 'real' file."""
+        if (self.storehash is None) or (remote['path'].endswith('.' + self.storehash)):
+            return True
+        options = self._hash_store_defaults(options)
+        remote = remote.copy()
+        remote['path'] = remote['path'] + '.' + self.storehash
+        # Generate the hash sum
+        hadapt = hashutils.HashAdapter(self.storehash)
+        tmplocal = hadapt.file2hash_fh(local)
+        # Write it whereever the original store wants to.
+        return getattr(self, self.scheme + 'put', self.notyet)(tmplocal, remote, options)
 
     def put(self, local, remote, options=None):
         """Proxy method to dedicated put method according to scheme."""
@@ -320,23 +369,26 @@ class MultiStore(footprints.FootprintBase):
 
     _abstract  = True
     _collector = ('store',)
-    _footprint = dict(
-        info = 'Multi store',
-        attr = dict(
-            scheme = dict(
-                alias    = ('protocol',)
+    _footprint = [
+        hashalgo,
+        dict(
+            info = 'Multi store',
+            attr = dict(
+                scheme = dict(
+                    alias    = ('protocol',)
+                ),
+                netloc = dict(
+                    type     = Namespace,
+                    alias    = ('domain', 'namespace')
+                ),
+                refillstore = dict(
+                    type     = bool,
+                    optional = True,
+                    default  = False,
+                )
             ),
-            netloc = dict(
-                type     = Namespace,
-                alias    = ('domain', 'namespace')
-            ),
-            refillstore = dict(
-                type     = bool,
-                optional = True,
-                default  = False,
-            )
-        ),
-    )
+        )
+    ]
 
     def __init__(self, *args, **kw):
         logger.debug('Abstract multi store init %s', self.__class__)
@@ -385,7 +437,7 @@ class MultiStore(footprints.FootprintBase):
         while loading alternates stores.
         """
         return [
-            dict(system=self.system, scheme=x, netloc=y)
+            dict(system=self.system, storehash=self.storehash, scheme=x, netloc=y)
             for x in self.alternates_scheme()
             for y in self.alternates_netloc()
         ]
@@ -635,6 +687,9 @@ class Finder(Store):
             netloc = dict(
                 outcast = ['oper.inline.fr'],
             ),
+            storehash = dict(
+                values = hashalgo_avail_list,
+            ),
         ),
         priority = dict(
             level = footprints.priorities.top.DEFAULT  # @UndefinedVariable
@@ -685,6 +740,7 @@ class Finder(Store):
         if 'intent' in options and options['intent'] == dataflow.intent.IN:
             logger.info('Ignore intent <in> for remote input %s', rpath)
         rc = self.system.cp(rpath, local, fmt=options.get('fmt'), intent=dataflow.intent.INOUT)
+        rc = rc and self._hash_get_check(remote, local, options)
         if rc:
             self._localtarfix(local)
         return rc
@@ -693,7 +749,8 @@ class Finder(Store):
         """Delegates to ``system`` the copy of ``local`` to ``remote``."""
         rpath = self.fullpath(remote)
         logger.info('fileput to %s (from: %s)', rpath, local)
-        return self.system.cp(local, rpath, fmt=options.get('fmt'))
+        rc = self.system.cp(local, rpath, fmt=options.get('fmt'))
+        return rc and self._hash_put(local, remote, options)
 
     def filedelete(self, remote, options):
         """Delegates to ``system`` the removing of ``remote``."""
@@ -761,6 +818,7 @@ class Finder(Store):
             logname  = remote['username'],
             fmt      = options.get('fmt'),
         )
+        rc = rc and self._hash_get_check(remote, local, options)
         if rc:
             self._localtarfix(local)
         return rc
@@ -769,7 +827,7 @@ class Finder(Store):
         """Delegates to ``system`` the file transfer of ``local`` to ``remote``."""
         rpath = self.fullpath(remote)
         logger.info('ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
-        return self.system.ftput(
+        rc = self.system.ftput(
             local,
             rpath,
             # ftp control
@@ -777,6 +835,7 @@ class Finder(Store):
             logname  = remote['username'],
             fmt      = options.get('fmt'),
         )
+        return rc and self._hash_put(local, remote, options)
 
     def ftpdelete(self, remote, options):
         """Delegates to ``system`` a distant remove."""
@@ -805,6 +864,9 @@ class ArchiveStore(Store):
             ),
             netloc = dict(
                 values   = ['open.archive.fr'],
+            ),
+            storehash = dict(
+                values = hashalgo_avail_list,
             ),
             storage = dict(
                 optional = True,
@@ -880,13 +942,14 @@ class ArchiveStore(Store):
         """Delegates to ``system.ftp`` the get action."""
         rpath = self._ftpformatpath(remote)
         logger.info('ftpget on ftp://%s/%s (to: %s)', self.hostname(), rpath, local)
-        return self.system.smartftget(
+        rc = self.system.smartftget(
             rpath, local,
             # ftp control
             hostname = self.hostname(),
             logname  = remote['username'],
             fmt      = options.get('fmt'),
         )
+        return rc and self._hash_get_check(remote, local, options)
 
     def ftpput(self, local, remote, options):
         """Delegates to ``system.ftp`` the put action."""
@@ -899,7 +962,7 @@ class ArchiveStore(Store):
         rpath = self._ftpformatpath(remote)
         if put_sync:
             logger.info('ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
-            return self.system.smartftput(local, rpath, **put_opts)
+            rc = self.system.smartftput(local, rpath, **put_opts)
         else:
             logger.info('delayed ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
             tempo = footprints.proxy.service(kind='hiddencache', asfmt=put_opts['fmt'])
@@ -909,7 +972,8 @@ class ArchiveStore(Store):
                 source      = tempo(local),
                 destination = rpath,
             )
-            return ad.jeeves(**put_opts)
+            rc = ad.jeeves(**put_opts)
+        return rc and self._hash_put(local, remote, options)
 
     def ftpdelete(self, remote, options):
         """Delegates to ``system`` a distant remove."""
@@ -1060,6 +1124,9 @@ class CacheStore(Store):
             netloc = dict(
                 values   = ['open.cache.fr'],
             ),
+            storehash = dict(
+                values = hashalgo_avail_list,
+            ),
             strategy = dict(
                 optional = True,
                 default  = 'std',
@@ -1153,7 +1220,7 @@ class CacheStore(Store):
         """Simple copy from current cache cache to ``local``."""
         logger.info('incacheget on %s://%s/%s (to: %s)',
                     self.scheme, self.netloc, remote['path'], local)
-        return self.cache.retrieve(
+        rc = self.cache.retrieve(
             remote['path'],
             local,
             intent              = options.get('intent', _CACHE_GET_INTENT_DEFAULT),
@@ -1163,18 +1230,20 @@ class CacheStore(Store):
             dirextract          = options.get('auto_dirextract', False),
             uniquelevel_ignore  = options.get('uniquelevel_ignore', True),
         )
+        return rc and self._hash_get_check(remote, local, options)
 
     def incacheput(self, local, remote, options):
         """Simple copy from ``local`` to the current cache in readonly mode."""
         logger.info('incacheput to %s://%s/%s (from: %s)',
                     self.scheme, self.netloc, remote['path'], local)
-        return self.cache.insert(
+        rc = self.cache.insert(
             remote['path'],
             local,
             intent = _CACHE_PUT_INTENT,
             fmt    = options.get('fmt'),
             info   = options.get('rhandler', None),
         )
+        return rc and self._hash_put(local, remote, options)
 
     def incachedelete(self, remote, options):
         """Simple removing of the remote resource in cache."""

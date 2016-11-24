@@ -14,6 +14,7 @@ Utilities
    decorators
    dispatch
    empty
+   hash
    helpers
    introspection
    names

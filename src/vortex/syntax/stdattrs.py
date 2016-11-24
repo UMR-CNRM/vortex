@@ -11,6 +11,7 @@ import footprints
 
 from vortex.tools import env
 from vortex.tools.date import Date, Time, Month
+from vortex.util import hash as hashutils
 
 
 #: Export a set of attributes :data:`a_model`, :data:`a_date`, etc..
@@ -318,6 +319,16 @@ a_namespace = dict(
 
 namespacefp = footprints.Footprint(info = 'Abstract namespace',
                                    attr = dict(namespace = a_namespace))
+
+a_hashalgo = dict(
+    info = "The hash algorithm used to check data integrity",
+    optional = True,
+    values = [None, ],
+)
+
+hashalgo = footprints.Footprint(info = 'Abstract Hash Algo', attr = dict(storehash = a_hashalgo))
+
+hashalgo_avail_list = hashutils.HashAdapter.algorithms()
 
 
 def show():
