@@ -243,7 +243,7 @@ def histsurf_bnames(resource, provider):
     model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
                                  vapp=provider.vapp, vconf=provider.vconf)
     reseau = resource.date.hour
-    if reseau in range(0, 24, 3):  
+    if reseau in range(0, 24, 3):
         map_suffix = dict(
             zip(
                 range(0, 24, 3),
@@ -253,8 +253,8 @@ def histsurf_bnames(resource, provider):
         suffix = map_suffix[reseau]
         bname = 'ICMSH' + model_info + '+' + resource.term.fmthour + '.sfx.' + suffix
     else:
-       print '{:02d}'.format(reseau)
-       bname = 'PREP.fa_' + '{:02d}'.format(reseau) + '.{:02d}'.format(resource.term.hour)
+        print '{:02d}'.format(reseau)
+        bname = 'PREP.fa_' + '{:02d}'.format(reseau) + '.{:02d}'.format(resource.term.hour)
     return bname
 
 

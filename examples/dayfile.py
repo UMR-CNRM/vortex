@@ -12,7 +12,7 @@ With $vortex being the home of the project:
   $vortex/bin/litj.py start test
 ...
 And stop the daemon at end
-  $vortex/bin/litj.py start test
+  $vortex/bin/litj.py stop test
 """
 
 import sys
