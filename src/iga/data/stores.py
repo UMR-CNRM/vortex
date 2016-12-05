@@ -9,7 +9,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.stores     import Store, Finder
-from vortex.syntax.stdattrs import DelayedEnvValue
+from vortex.syntax.stdattrs import DelayedEnvValue, hashalgo_avail_list
 
 from gco.data.stores import GcoCacheStore
 
@@ -91,7 +91,8 @@ class IgaFinder(Finder):
     def fileget(self, remote, local, options):
         """Delegates to ``system`` the copy of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
-        return self.system.cp(rpath, local, intent=options.get('intent'), fmt=options.get('fmt'))
+        rc = self.system.cp(rpath, local, intent=options.get('intent'), fmt=options.get('fmt'))
+        return rc and self._hash_get_check(remote, local, dict())
 
 
 class SopranoStore(Store):
@@ -115,6 +116,9 @@ class SopranoStore(Store):
                 alias    = ['sopranohome'],
                 default  = '/SOPRANO',
                 optional = True,
+            ),
+            storehash = dict(
+                values = hashalgo_avail_list,
             ),
         ),
         priority = dict(
@@ -159,6 +163,7 @@ class SopranoStore(Store):
         if ftp:
             rc = ftp.get(self.fullpath(remote), local)
             ftp.close()
+            rc = rc and self._hash_get_check(remote, local, options)
             extract = remote['query'].get('extract', None)
             if extract:
                 if extract == 'all':
@@ -170,7 +175,7 @@ class SopranoStore(Store):
             return rc
 
     def ftpput(self, local, remote, options):
-        return self.system.ftput(
+        rc = self.system.ftput(
             local,
             self.fullpath(remote),
             # ftp control
@@ -178,3 +183,4 @@ class SopranoStore(Store):
             logname  = remote['username'],
             fmt      = options.get('fmt')
         )
+        return rc and self._hash_put(local, remote, options)

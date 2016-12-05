@@ -23,6 +23,7 @@ import socket
 import stat
 import subprocess
 import sys
+import StringIO
 import tarfile
 import tempfile
 import time
@@ -786,7 +787,8 @@ class OSExtended(System):
         """Check if actual candidate is a valid filename or io stream."""
         return iocandidate is not None and (
             (isinstance(iocandidate, basestring) and self.path.exists(iocandidate)) or
-            isinstance(iocandidate, io.IOBase)
+            isinstance(iocandidate, io.IOBase) or
+            isinstance(iocandidate, StringIO.StringIO)
         )
 
     def ftp(self, hostname, logname=None):
