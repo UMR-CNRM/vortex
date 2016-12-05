@@ -99,7 +99,8 @@ class FolderShell(addons.FtrawEnableAddon):
             try:
                 if self.pipeget:
                     p = self.sh.popen(
-                        ['tar', 'xvfz', '-'],
+                        # the z option is omitted consequently it also works if the file is not compressed
+                        ['tar', 'xvf', '-'],
                         stdin   = True,
                         output  = False,
                         bufsize = 8192,
