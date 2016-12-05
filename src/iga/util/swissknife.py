@@ -54,9 +54,9 @@ def mkjob(t, **kw):
         mkuser    = t.glove.user,
         mkhost    = t.sh.hostname,
         partition = 'oper',
-        rootapp   = '/home/ch/mxpt001/vortex',
         name      = 'autojob',
         home      = t.env.HOME,
+        refill    = False,
         rundate   = None,
         runtime   = None,
         runstep   = 1,
@@ -66,7 +66,7 @@ def mkjob(t, **kw):
         verbose   = True,
     )
     opts.update(kw)
-
+    
     # Fix actual options of the create process
     opts.setdefault('mkopts', str(kw))
 
@@ -78,8 +78,8 @@ def mkjob(t, **kw):
             opts['verbose'] = 'noverbose'
 
     # Fix taskconf as task by default
-    if opts['taskconf'] is None:
-        opts['taskconf'] = opts['task']
+#    if opts['taskconf'] is None:
+#        opts['taskconf'] = opts['task']
 
     # Try to find default runtime according to jobname
     if opts['runtime'] is None and opts['rundate'] is None:
@@ -118,8 +118,12 @@ def mkjob(t, **kw):
     tplconf.update(opts)
 
     tplconf.setdefault('file', opts['name'] + '.py')
+    
+    if tplconf['taskconf']:
+        jobconf = '../conf/{0:s}_{1:s}_{2:s}.ini'.format(tplconf['vapp'], tplconf['vconf'], tplconf['taskconf'])
+    else:
+        jobconf = '../conf/{0:s}_{1:s}.ini'.format(tplconf['vapp'], tplconf['vconf'])
 
-    jobconf = '../conf/{0:s}_{1:s}_{2:s}.ini'.format(tplconf['vapp'], tplconf['vconf'], tplconf['taskconf'])
     if t.sh.path.exists(jobconf):
         t.sh.header('Add ' + jobconf)
         jobparser = GenericConfigParser(inifile=jobconf)
@@ -201,7 +205,6 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     sh = t.sh
     tg = sh.target()
     defs = genv.autofill(cycle)
-
     # Configuration handler (untar specific options)
     ggetconfig = GcoStoreConfig(GGET_DEFAULT_CONFIGFILE)
 
@@ -242,6 +245,8 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     # Perform gget on all resources to target directory
     gcmd = tg.get('gco:ggetcmd', 'gget')
     gpath = tg.get('gco:ggetpath', '')
+    ghost = tg.get('gco:ggetarchive', 'hendrix')
+     
     gtool = sh.path.join(gpath, gcmd)
 
     increase = 0
@@ -260,8 +265,8 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
             else:
                 try:
                     if verbose:
-                        print('spawning: {} {}'.format(gtool, name))
-                    sh.spawn([gtool, name], output=False)
+                        print('spawning: {} -host {} {}'.format(gtool, ghost, name))
+                    sh.spawn([gtool, '-host', ghost, name], output=False)
                     increase += sh.size(name)
                     details['retrieved'].append(name)
                     if name in monthly:

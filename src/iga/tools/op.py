@@ -113,8 +113,15 @@ def setup(**kw):
     shio = footprints.proxy.addon(kind='iopoll', shell=t.sh)
     print '+ Add-on IO POLL', shio
 
-    import vortex.tools.odb
+    import vortex.tools.surfex
+    shsfx = footprints.proxy.addon(kind='sfx', shell=t.sh)
+    print '+ Add-on SFX', shsfx
 
+    import vortex.tools.grib
+    shgrib = footprints.proxy.addon(kind='grib', shell=t.sh)
+    print '+ Add-on GRIB', shgrib
+
+    import vortex.tools.odb
     shodb = footprints.proxy.addon(kind='odb', shell=t.sh)
     print '+ Add-on ODB', shodb
 
@@ -331,6 +338,11 @@ def complete(t, **kw):
     t.sh.signal_intercept_off()
     t.close()
 
+def simulate_complete(t, **kw):
+    """Exit from OP session after a crash but simulating a happy ending. Use only in a test environment."""
+    ad = vortex.tools.actions.actiond
+    ad.sms_abort()
+    t.close()
 
 def register(t, cycle, dump=True):
     """Load and register a GCO cycle contents."""

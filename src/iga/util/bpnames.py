@@ -135,6 +135,9 @@ def global_pnames(provider, resource):
     suite_map = dict(dble='dbl', mirr='oper')
     info = getattr(resource, provider.realkind + '_pathinfo',
                    resource.vortex_pathinfo)()
+    # patch pearp : the arpege surface analysis from surfex is in 'autres', not in 'fic_day'
+    if resource.model == 'surfex' and provider.vapp == 'arpege':
+        info['fmt'] = 'autres'
     for mnd in ('suite', 'igakey', 'fmt'):
         if mnd not in info:
             info[mnd] = getattr(provider, mnd, None)
@@ -205,7 +208,10 @@ def analysis_bnames(resource, provider):
     )
     # patch for the different kind of analysis (surface and atmospheric)
     if ( resource.model == 'arome' and resource.filling == 'surf' ) or resource.model == 'surfex':
-        return 'INIT_SURF.fa.' + suffix
+        if provider.vconf in _arome_vconf:
+            return 'INIT_SURF.fa.' + suffix
+        else:
+            return 'ICMSHARPEINIT.' + suffix + '.sfx'
     elif resource.model == 'hycom' and resource.filling == 'surf':
         if provider.vconf[:3] == 'atl':
             DOM = ""

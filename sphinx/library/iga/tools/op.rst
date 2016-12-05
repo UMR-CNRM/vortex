@@ -25,6 +25,8 @@ Functions
 
 .. autofunction:: complete
 
+.. autofunction:: simulate_complete
+
 .. autofunction:: register
 
 .. autofunction:: rescue

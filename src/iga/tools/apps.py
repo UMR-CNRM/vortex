@@ -29,8 +29,7 @@ class OpTask(Task):
             for binary in tbx:
                 try:
                     tbalgo.run(binary, **kwargs)
-                except (DelayedAlgoComponentError, ExecutionError,
-                        SignalInterruptError):
+                except Exception:
                     self.report_execution_error()
                     raise
 

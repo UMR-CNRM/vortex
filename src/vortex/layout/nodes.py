@@ -278,25 +278,6 @@ class Node(footprints.util.GetByTag, NiceLayout):
         """Dump actual parameters of the configuration."""
         self.nicedump('Complete parameters', **self.conf)
 
-    def reshape_starter(self, **kw):
-        """Make a nice tuple from the starter value and possible preset configurations."""
-        self.header('Reshape starter <' + str(self.starter) + '>')
-        if self.starter:
-            if type(self.starter) is bool:
-                self.starter = ('full',)
-            elif isinstance(self.starter, basestring):
-                self.starter = self.starter.replace(' ', '').split(',')
-            while any([ x for x in self.starter if x in kw ]):
-                for item in [ x for x in self.starter if x in kw ]:
-                    pos = self.starter.index(item)
-                    self.starter[pos:pos + 1] = list(kw[item])
-                    print ' + remap', item.ljust(15), '=>', kw[item]
-            self.starter = tuple(self.starter)
-        else:
-            self.starter = ('none',)
-        print ' + remap', 'complete'.ljust(15), '=>', self.starter
-        print
-
     def refill(self, **kw):
         """Populates the op vortex cache with expected input flow data."""
         pass
@@ -364,7 +345,6 @@ class Task(Node):
             fetch   = kw.pop('fetch',   'fetch'),
             compute = kw.pop('compute', 'compute'),
             backup  = kw.pop('backup',  'backup'),
-            starter = kw.pop('starter', False),
         )
         self.options = kw.copy()
         if isinstance(self.steps, basestring):
@@ -393,7 +373,9 @@ class Task(Node):
 
         # Some attempt to find the current active steps
         if not self.steps:
-            if self.play:
+            if self.refill:
+                self.steps = ('refill',)
+            elif self.play:
                 self.steps = (self.fetch, self.compute, self.backup)
             elif int(self.env.get('SLURM_NPROCS', 1)) > 1:
                 self.steps = (self.fetch, self.compute)
