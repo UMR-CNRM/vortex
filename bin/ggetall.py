@@ -33,6 +33,7 @@ sys.path.insert(0, os.path.join(vortexbase, 'src'))
 DEFAULT_OPER_CYCLES_FILE = 'oper_cycles'
 DEFAULT_DBLE_CYCLES_FILE = 'dble_cycles'
 
+
 def parse_command_line():
     description = "Create or remove frozen copies of gco resources in gco/ and genv/."
     parser = argparse.ArgumentParser(description=description)
@@ -44,7 +45,7 @@ def parse_command_line():
     parser.add_argument('-l', '--list', help='only list cycles to handle, and exit', action='store_true')
     parser.add_argument('-n', '--noerror', help="don't stop on errors", action='store_true')
     parser.add_argument('-s', '--simulate', help="simulate removal without doing it", action='store_true')
-    parser.add_argument('-g', '--glove', help='Set a non oper glove', action='store_false')
+    parser.add_argument('-t', '--tourist', help='Set a non oper glove', action='store_true')
     parser.add_argument('-v', '--verbose', dest='verbose', help='verbose mode', action='store_true')
     parser.add_argument('-q', '--noverbose', dest='verbose', help='quiet (non-verbose) mode, the default',
                         action='store_false')
@@ -53,13 +54,13 @@ def parse_command_line():
     if not (args.cycles or args.file or args.remove):
         args.file = [DEFAULT_OPER_CYCLES_FILE, DEFAULT_DBLE_CYCLES_FILE]
 
-    if args.glove:
+    if not args.tourist:
         import vortex
         gl = vortex.sessions.getglove(
             tag     = 'opid',
             profile = 'oper'
         )
-        t  = vortex.sessions.get(
+        vortex.sessions.get(
             tag     = 'opview',
             active  = True,
             glove   = gl,
@@ -69,7 +70,7 @@ def parse_command_line():
     files = args.file or list()
     for filename in files:
         if not os.path.isfile(filename):
-            print()            
+            print()
             print('WARNING : Cycles definition file missing: "{}"'.format(filename))
         else:
             with open(filename) as fp:
@@ -88,7 +89,6 @@ def parse_command_line():
         sys.exit(1)
 
     return args
-
 
 
 def list_cycles(args):
