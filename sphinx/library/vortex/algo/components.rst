@@ -27,6 +27,11 @@ Exceptions
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ParallelInconsistencyAlgoComponentError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Classes
 -------
 

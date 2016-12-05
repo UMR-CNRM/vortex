@@ -16,13 +16,13 @@ Package
 
 Classes
 -------
- 
-.. autoclass:: NecMpiRun
+
+.. autoclass:: MpiAuto
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MpiAuto
+.. autoclass:: MpiNWP
    :show-inheritance:
    :members:
    :member-order: alphabetical

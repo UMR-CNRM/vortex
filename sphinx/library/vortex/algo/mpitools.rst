@@ -29,17 +29,22 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MpiBinaryDescription
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MpiBinaryBasic
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MpiBinaryIOServer
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: MpiRun
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: MpiServerIO
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: MpiSubmit
    :show-inheritance:
    :members:
    :member-order: alphabetical
