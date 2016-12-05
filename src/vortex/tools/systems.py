@@ -998,6 +998,9 @@ class OSExtended(System):
             return self.path.isdir(destination)
         else:
             self.copyfile(source, tmp)
+            # Preserve the execution permissions...
+            if self.xperm(source):
+                self.xperm(tmp, force=True)
             self.move(tmp, destination)  # Move is atomic for a file
             if self._cmpaftercp:
                 return filecmp.cmp(source, destination)
@@ -1071,6 +1074,9 @@ class OSExtended(System):
             return False
         if self.filecocoon(destination):
             destination = self.path.expanduser(destination)
+            if self.path.islink(source):
+                # Solve the symbolic link: this may avoid a rawcp
+                source = self.path.realpath(source)
             if self.is_samefs(source, destination):
                 tmp_destination = destination + self.safe_filesuffix()
                 if self.path.isdir(source):
