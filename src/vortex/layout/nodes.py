@@ -435,7 +435,6 @@ class Task(Node):
             fetch   = kw.pop('fetch', 'fetch'),
             compute = kw.pop('compute', 'compute'),
             backup  = kw.pop('backup', 'backup'),
-            refill  = kw.pop('refill', False),
         )
         self.options = kw.copy()
         if isinstance(self.steps, basestring):
@@ -465,7 +464,7 @@ class Task(Node):
 
         # Some attempt to find the current active steps
         if not self.steps:
-            if self.refill:
+            if self.env.get(self._locprefix + 'REFILL'):
                 self.steps = ('refill',)
             elif self.play:
                 self.steps = ('early-{:s}'.format(self.fetch), self.fetch,
