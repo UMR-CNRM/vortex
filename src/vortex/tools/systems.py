@@ -1300,32 +1300,35 @@ class OSExtended(System):
         """Return a boolean according to the tar status of the ``filename``."""
         return tarfile.is_tarfile(self.path.expanduser(filename))
 
-    def taropts(self, tarfile, opts, verbose=True):
+    def taropts(self, tarfile, opts, verbose=True, autocompress=True):
         """Build a proper string sequence of tar options."""
         zopt = set(opts)
         if verbose:
             zopt.add('v')
         else:
             zopt.discard('v')
-        if tarfile.endswith('gz'):
-            zopt.add('z')
-        else:
-            zopt.discard('z')
-        if tarfile.endswith('bz') or tarfile.endswith('bz2'):
-            zopt.add('j')
-        else:
-            zopt.discard('j')
+        if autocompress:
+            if tarfile.endswith('gz'):
+                zopt.add('z')
+            else:
+                zopt.discard('z')
+            if tarfile.endswith('bz') or tarfile.endswith('bz2'):
+                zopt.add('j')
+            else:
+                zopt.discard('j')
         return ''.join(zopt)
 
     def tar(self, *args, **kw):
-        """Create a file archive (always c-something)'"""
-        cmd = ['tar', self.taropts(args[0], 'cf', kw.pop('verbose', True)), args[0]]
+        """Create a file archive (always c-something)"""
+        opts = self.taropts(args[0], 'cf', kw.pop('verbose', True), kw.pop('autocompress', True))
+        cmd = ['tar', opts, args[0]]
         cmd.extend(self.glob(*args[1:]))
         return self.spawn(cmd, **kw)
 
     def untar(self, *args, **kw):
         """Unpack a file archive (always x-something)'"""
-        cmd = ['tar', self.taropts(args[0], 'xf', kw.pop('verbose', True)), args[0]]
+        opts = self.taropts(args[0], 'xf', kw.pop('verbose', True), kw.pop('autocompress', True))
+        cmd = ['tar', opts, args[0]]
         cmd.extend(args[1:])
         return self.spawn(cmd, **kw)
 

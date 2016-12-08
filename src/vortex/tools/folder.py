@@ -12,6 +12,23 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 
+_folder_exposed_methods = set(['cp', 'mv', 'ftget', 'rawftget', 'ftput', 'rawftput'])
+
+
+def folderize(cls):
+    """Create the necessary methods in a class that inherits from :class:`FolderShell`."""
+    addon_kind = cls.footprint_retrieve().get_values('kind')
+    if len(addon_kind) != 1:
+        raise SyntaxError("Authorised values for a given Addon's kind must be unique")
+    addon_kind = addon_kind[0]
+    for basic_mtdname in _folder_exposed_methods:
+        expected_mtdname = '{:s}_{:s}'.format(addon_kind, basic_mtdname)
+        if not hasattr(cls, expected_mtdname):
+            parent_mtd = getattr(cls, '_folder_{:s}'.format(basic_mtdname))
+            setattr(cls, expected_mtdname, parent_mtd)
+    return cls
+
+
 class FolderShell(addons.FtrawEnableAddon):
     """
     This abstract class defines methods to manipulate folders.
@@ -26,12 +43,12 @@ class FolderShell(addons.FtrawEnableAddon):
             ),
             tmpname = dict(
                 optional = True,
-                default  = 'folder_tmpunpack.tgz',
+                default  = 'folder_tmpunpack',
             ),
             pipeget = dict(
                 type     = bool,
                 optional = True,
-                default  = True,
+                default  = False,
             ),
             supportedfmt = dict(
                 optional = True,
@@ -77,20 +94,36 @@ class FolderShell(addons.FtrawEnableAddon):
 
         return (hostname, logname)
 
+    def _folder_preftget(self, source, destination):
+        """Prepare source and destination"""
+        if not (source.endswith('.tgz') or source.endswith('.tar')):
+            source += '.tgz'
+        self.sh.rm(destination)
+        destination = self.sh.path.abspath(destination)
+        return source, destination
+
+    def _folder_postftget(self, destination, loccwd, loctmp):
+        """Move the untared stuff to the destination and clean-up things."""
+        try:
+            unpacked = self.sh.glob('*')
+            if unpacked:
+                self.sh.mv(unpacked[-1], destination)
+            else:
+                logger.error('Nothing to unpack')
+        except StandardError as trouble:
+            logger.critical('Unable to proceed folder post-ftget step')
+            raise trouble
+        finally:
+            self.sh.cd(loccwd)
+            self.sh.rm(loctmp)
+
     def _folder_ftget(self, source, destination, hostname=None, logname=None):
         """Proceed direct ftp get on the specified target."""
         hostname, logname = self._folder_credentials(hostname, logname)
-
         if hostname is None:
             return False
 
-        if not source.endswith('.tgz'):
-            source += '.tgz'
-
-        self.sh.rm(destination)
-
-        destination = self.sh.path.abspath(destination)
-
+        source, destination = self._folder_preftget(source, destination)
         ftp = self.sh.ftp(hostname, logname)
         if ftp:
             loccwd = self.sh.getcwd()
@@ -108,31 +141,44 @@ class FolderShell(addons.FtrawEnableAddon):
                     rc = ftp.get(source, p.stdin)
                     self.sh.pclose(p)
                 else:
-                    rc = ftp.get(source, self.tmpname)
-                    self.sh.untar(self.tmpname)
-                    self.sh.rm(self.tmpname)
+                    extname = self.sh.path.splitext(source)[1]
+                    try:
+                        rc = ftp.get(source, self.tmpname + extname)
+                        # Auto compress=False -> let tar deal automatically with the compression
+                        self.sh.untar(self.tmpname + extname, autocompress=False)
+                    finally:
+                        self.sh.rm(self.tmpname + extname)
             finally:
                 ftp.close()
-                try:
-                    unpacked = self.sh.glob('*')
-                    if unpacked:
-                        self.sh.mv(unpacked[-1], destination)
-                    else:
-                        logger.error('Nothing to unpack')
-                except StandardError as trouble:
-                    logger.critical('Unable to proceed folder post-ftget step')
-                    raise trouble
-                finally:
-                    self.sh.cd(loccwd)
-                    self.sh.rm(loctmp)
+                self._folder_postftget(destination, loccwd, loctmp)
             return rc
         else:
             return False
 
+    def _folder_rawftget(self, source, destination, hostname=None, logname=None):
+        """Use ftserv as much as possible."""
+        if self.sh.ftraw and self.rawftshell is not None:
+            source, destination = self._folder_preftget(source, destination)
+            loccwd = self.sh.getcwd()
+            loctmp = tempfile.mkdtemp(prefix='folder_', dir=loccwd)
+            self.sh.cd(loctmp)
+            try:
+                extname = self.sh.path.splitext(source)[1]
+                try:
+                    rc = self.sh.ftserv_get(source, self.tmpname + extname,
+                                            hostname=hostname, logname=logname)
+                    self.sh.untar(self.tmpname + extname, autocompress=False)
+                finally:
+                    self.sh.rm(self.tmpname + extname)
+            finally:
+                self._folder_postftget(destination, loccwd, loctmp)
+            return rc
+        else:
+            return self._folder_ftget(source, destination, hostname, logname)
+
     def _folder_ftput(self, source, destination, hostname=None, logname=None):
         """Proceed direct ftp put on the specified target."""
         hostname, logname = self._folder_credentials(hostname, logname)
-
         if hostname is None:
             return False
 
@@ -172,5 +218,3 @@ class FolderShell(addons.FtrawEnableAddon):
             return rc
         else:
             return self._folder_ftput(source, destination, hostname, logname)
-
-    _folder_rawftget = _folder_ftget
