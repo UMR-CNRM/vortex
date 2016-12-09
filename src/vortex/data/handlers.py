@@ -4,7 +4,9 @@
 #: No automatic export
 __all__ = []
 
-import sys, io
+import io
+import re
+import sys
 import functools
 
 import footprints
@@ -309,7 +311,13 @@ class Handler(object):
         is called upon the return value.
         """
         try:
-            a_value = getattr(self.provider, key)
+            if key == 'safeblock':
+                # In olive experiments, the block may contain an indication of
+                # the member's number. Usually we do not want to get that...
+                a_value = getattr(self.provider, 'block')
+                a_value = re.sub(r'(member|fc)_?\d+/', '', a_value)
+            else:
+                a_value = getattr(self.provider, key)
         except AttributeError:
             try:
                 a_value = getattr(self.resource, key)
