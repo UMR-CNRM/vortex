@@ -1,4 +1,15 @@
 #!${python} $pyopts
+#SBATCH --cpus-per-task=$openmp
+#SBATCH --export=NONE
+#SBATCH --job-name=$name
+#SBATCH --mem=$mem
+#SBATCH --nodes=$nnodes
+#SBATCH --ntasks-per-node=$ntasks
+#SBATCH --partition=$partition
+#SBATCH --time=$time
+#SBATCH --$exclusive
+#SBATCH --$verbose
+#SBATCH --output=$pwd/../logs/$file.%j
 
 # Build time: $create
 # Build user: $mkuser
@@ -47,6 +58,7 @@ ja.add_plugin('tmpdir')
 
 try:
     t, e, sh = ja.setup(actual=locals())
+    sh.ftraw = True # To activate ftserv
 
     opts = dict(jobassistant=ja, fullplay=True,
                 defaults=dict(gnamespace='gco.multi.fr'))
