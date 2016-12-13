@@ -535,6 +535,7 @@ class Handler(object):
                             rst = True
                         else:
                             logger.info("The resource is already here but doesn't matches the RH description :-(")
+                            cur_tracker[iotarget].match_rh('get', self, verbose=True)
                             self._updstage('void', insitu=True)
                 # Bloody hell, the localpath doesn't exist
                 else:
