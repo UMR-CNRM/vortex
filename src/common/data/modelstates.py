@@ -66,6 +66,8 @@ class Analysis(GeoFlowResource):
         if 'surf' in self.filling:
             if re.match('aladin|arome', self.model):
                 ananame = 'analyse_surf'
+            elif self.model == 'surfex':
+                ananame = 'analyse'
             else:
                 ananame = 'analyse_surface1'
 
