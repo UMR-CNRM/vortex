@@ -53,7 +53,10 @@ def generic_input_checker(grouping_keys, min_items, *rhandlers, **kwargs):
                 outlist.append(rh)
 
     # Check mandatory
-    if not all([rh.check() for rh in flat_rhmandatory]):
+    mychecks = [(rh, rh.check()) for rh in flat_rhmandatory]
+    if not all([acheck[1] for acheck in mychecks]):
+        for rh in [acheck[0] for acheck in mychecks if not acheck[1]]:
+            logger.error("  Missing location: %s", str(rh.locate()))
         raise InputCheckerError("Some of the mandatory resources are missing.")
 
     # Extract the group informations for each of the resource handlers
@@ -69,9 +72,16 @@ def generic_input_checker(grouping_keys, min_items, *rhandlers, **kwargs):
     outputlist = list()
     #  The keys are sorted so that results remains reproducible
     for grouping_values in sorted(rhgroups.iterkeys()):
-        if all([rh.check() for rh in rhgroups[grouping_values]]):
-            outputlist.append(fp.stdtypes.FPDict({k: v for k, v in zip(grouping_keys, grouping_values)}))
-            logger.info("Group (%s): All the input files are accounted for.", str(outputlist[-1]))
+        mychecks = [(rh, rh.check()) for rh in rhgroups[grouping_values]]
+        groupid = fp.stdtypes.FPDict({k: v for k, v in zip(grouping_keys, grouping_values)})
+        if all([acheck[1] for acheck in mychecks]):
+            outputlist.append(groupid)
+            logger.info("Group (%s): All the input files are accounted for.", str(groupid))
+        else:
+            logger.warning("Group (%s): Discarded because some of the input files are missing (see below).",
+                           str(groupid))
+            for rh in [acheck[0] for acheck in mychecks if not acheck[1]]:
+                logger.warning("  Missing location: %s", str(rh.locate()))
 
     # Enforce min_items
     if len(outputlist) < min_items:

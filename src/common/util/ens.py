@@ -60,7 +60,7 @@ def drawingfunction(options):
                   sample(population, nbsample % nbset))
         logger.info('List of random elements: %s', ', '.join([str(x) for x in tirage]))
     else:
-        raise FunctionStoreCallbackError("no resource handler here :-(\n")
+        raise FunctionStoreCallbackError("no resource handler here :-(")
     # NB: The result have to be a file like object !
     outdict = dict(vapp = rhdict['provider'].get('vapp', None),
                    vconf = rhdict['provider'].get('vconf', None),
@@ -95,7 +95,7 @@ def _checkingfunction_dict(options):
         try:
             return helpers.colorfull_input_checker(nbsample, checklist, mandatory=mandatorylist)
         except helpers.InputCheckerError as e:
-            raise FunctionStoreCallbackError('The input checher failed (%s)', str(e))
+            raise FunctionStoreCallbackError('The input checher failed ({!s})'.format(e))
     else:
         raise FunctionStoreCallbackError("no resource handler here :-(\n")
 
