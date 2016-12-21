@@ -264,7 +264,7 @@ def setenv(t, **kw):
     t.sh.header('Setting member')
 
     if not t.env.OP_MEMBER:
-        t.env.OP_MEMBER = t.env.get('DMT_ECHEANCE', None)
+        t.env.OP_MEMBER = t.env.get('DMT_ECHEANCE', None)[-3:]
     
     logger.info('Effective member  = %s', t.env.OP_MEMBER)
 
