@@ -6,13 +6,16 @@
 Data dumper... mostly used in objects' docstring with a footprint.
 """
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from xml.dom import minidom
 import re
+import six
 
 from . import util
+
+#: No automatic export
+__all__ = []
 
 
 def _DEBUG(msg, obj=None, level=None):
@@ -114,6 +117,7 @@ class _AbstractDumper(util.GetByTag):
     dump_float = _lazzy_dump
     dump_bool = _lazzy_dump
     dump_str = _lazzy_dump
+    dump_unicode = _lazzy_dump
 
     def _recursive_dump(self, obj, level=0, nextline=True):
         """This routine can be called recursively (if necessary)."""
@@ -130,7 +134,7 @@ class _AbstractDumper(util.GetByTag):
             return self.seen[this_id]
 
         if is_class(obj):
-            if obj.__module__ == '__builtin__':
+            if obj.__module__ in ('__builtin__', 'builtins'):
                 _DEBUG('builtin')
                 self.seen[this_id] = self._dump_builtin(obj, level, nextline)
             else:
@@ -169,7 +173,7 @@ class JsonableDumper(_AbstractDumper):
     def dump_dict(self, obj, level=0, nextline=True):
         return {self._recursive_dump(k, level, nextline):
                 self._recursive_dump(v, level + 1, nextline)
-                for k, v in obj.iteritems()}
+                for k, v in six.iteritems(obj)}
 
     def dump_list(self, obj, level=0, nextline=True):
         return [self._recursive_dump(v, level + 1, nextline) for v in obj]
@@ -221,7 +225,7 @@ class XmlDomDumper(JsonableDumper):
         return {'builtin': super(XmlDomDumper, self)._dump_builtin(obj, level, nextline)}
 
     def _xdump_dict(self, xdoc, xroot, obj, myname):
-        for k, v in obj.iteritems():
+        for k, v in sorted(obj.items(), key=lambda x: x[0]):
             if not isinstance(v, list):
                 if myname in self._named_nodes:
                     xnode = xdoc.createElement(myname)
@@ -269,11 +273,13 @@ class XmlDomDumper(JsonableDumper):
         xdoc = minidom.Document()
         xroot = xdoc.createElement(root)
         if rootattr is not None and isinstance(rootattr, dict):
-            for k, v in rootattr.iteritems():
+            for k, v in six.iteritems(rootattr):
                 xroot.setAttribute(k, v)
         self._xdump(xdoc, xroot, parent_dump, myname=root, topelt=True)
         xdoc.appendChild(xroot)
         return xdoc
+
+    cleandump = dump
 
 
 class TxtDumper(_AbstractDumper):
@@ -363,6 +369,8 @@ class TxtDumper(_AbstractDumper):
     def dump_str(self, obj, level=0, nextline=True):
         _DEBUG('dump_str', obj)
         return "%s'%s'" % (self._indent(level, self.break_string), obj)
+
+    dump_unicode = dump_str
 
     def dump_bool(self, obj, level=0, nextline=True):
         _DEBUG('dump_bool', obj)
@@ -478,8 +486,8 @@ class OneLineTxtDumper(TxtDumper):
         if level + 1 > self.max_depth:
             return " <%s...>" % type(obj).__class__
         else:
-            parent_dump = super(TxtDumper, self).dump_default(obj, level,
-                                                              nextline and self.break_default)
+            parent_dump = _AbstractDumper.dump_default(self, obj, level,
+                                                       nextline and self.break_default)
             return "{:s}::{!s}".format(type(obj).__name__, parent_dump)
 
 
@@ -505,10 +513,10 @@ def lightdump(obj, break_before_dict_key=True, break_before_dict_value=False):
     _DEBUG('dump_dict', obj)
     items = [
         "%s%s = %s%s," % (
-            TxtDumper._indent(0, TxtDumper.break_before_dict_key),
+            TxtDumper._indent(0, break_before_dict_key),
             str(k),
-            TxtDumper._indent(1, TxtDumper.break_before_dict_value),
+            TxtDumper._indent(1, break_before_dict_value),
             str(v)
-        ) for k, v in sorted(obj.items())
+        ) for k, v in sorted(obj.items(), key=lambda x: x[0])
     ]
     return ''.join(items)

@@ -8,15 +8,16 @@ Using the factory :func:`get` should provide a convenient way to register
 to an undetermined number of items hold by :class:`ObserverBoard` objects.
 """
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import copy
 
-from . import loggers
-logger = loggers.getLogger(__name__)
+from . import loggers, util
 
-from . import util
+#: No automatic export
+__all__ = []
+
+logger = loggers.getLogger(__name__)
 
 
 def get(**kw):

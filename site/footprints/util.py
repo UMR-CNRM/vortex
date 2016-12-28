@@ -5,15 +5,20 @@
 Utility functions of the :mod:`footprints` package.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import re
+import copy
+import glob
+from weakref import WeakSet
+from collections import deque
+import six
+
+from . import loggers
+
 #: No automatic export
 __all__ = []
 
-import re, copy, glob
-import types
-from weakref import WeakSet
-from collections import deque
-
-from . import loggers
 logger = loggers.getLogger(__name__)
 
 
@@ -35,9 +40,9 @@ def dictmerge(d1, d2):
     {'a': '1', 'i': {'b': '2', 'f': {'g': '5'}}, 'c': {'h': '6', 'e': '7', 'd': '3'}}
     """
 
-    for key, value in d2.iteritems():
-        if type(value) is types.DictType:
-            if key in d1 and type(d1[key])is types.DictType:
+    for key, value in six.iteritems(d2):
+        if isinstance(value, dict) and not value.__class__.__name__.startswith('FP'):
+            if key in d1 and isinstance(d1[key], dict) and not value.__class__.__name__.startswith('FP'):
                 dictmerge(d1[key], d2[key])
             else:
                 d1[key] = copy.deepcopy(value)
@@ -54,7 +59,7 @@ def list2dict(a, klist):
     """
 
     for k in klist:
-        if k in a and ( type(a[k]) is types.TupleType or type(a[k]) is types.ListType):
+        if k in a and isinstance(a[k], (list, tuple)):
             ad = dict()
             for item in a[k]:
                 ad.update(item)
@@ -79,7 +84,7 @@ class TimeInt(int):
     def __new__(cls, ti, tm=None):
         ti = str(ti)
         if not re.match(r'-?\d*(?::\d\d+)?$', ti):
-            return ValueError('{} is not a valid TimeInt'.format(ti))
+            raise ValueError('{} is not a valid TimeInt'.format(ti))
         if ti.startswith('-'):
             thesign = -1
             ti = ti[1:]
@@ -131,10 +136,19 @@ class TimeInt(int):
             return False
         return self.ti * 60 + self.tm == other.ti * 60 + other.tm
 
-    def __cmp__(self, other):
-        # This may fail if other is malformed, but maybe it's for the best...
+    def __lt__(self, other):
         other = self.__class__(other)
-        return cmp(self.ti * 60 + self.tm, other.ti * 60 + other.tm)
+        return self.ti * 60 + self.tm < other.ti * 60 + other.tm
+
+    def __le__(self, other):
+        return self.__lt__(other) or self.__eq__(other)
+
+    def __gt__(self, other):
+        other = self.__class__(other)
+        return self.ti * 60 + self.tm > other.ti * 60 + other.tm
+
+    def __ge__(self, other):
+        return self.__gt__(other) or self.__eq__(other)
 
     @staticmethod
     def __split_timedelta(dt):
@@ -146,33 +160,47 @@ class TimeInt(int):
             dt -= thesign * 60
         return ti, dt
 
-    def __add__(self, other):
-        # This may fail if other is malformed, but maybe it's for the best...
-        other = self.__class__(other)
-        timedelay = (self.ti + other.ti) * 60 + (self.tm + other.tm)
-        ti, tm = self.__split_timedelta(timedelay)
+    def __split_timedelta_and_reclass(self, dt):
+        ti, tm = self.__split_timedelta(dt)
         if tm:
-            signstr = '-' if timedelay < 0 else ''
+            signstr = '-' if dt < 0 else ''
             return self.__class__('{}{:d}:{:02d}'.format(signstr,
                                                          abs(ti), abs(tm)))
         else:
             return self.__class__(ti)
 
+    def __add__(self, other):
+        # This may fail if other is malformed, but maybe it's for the best...
+        other = self.__class__(other)
+        timedelay = (self.ti + other.ti) * 60 + (self.tm + other.tm)
+        return self.__split_timedelta_and_reclass(timedelay)
+
     def __radd__(self, other):
-        """Commutative add."""
+        """Swapped add."""
         return self.__add__(other)
 
     def __sub__(self, other):
         # This may fail if other is malformed, but maybe it's for the best...
         other = self.__class__(other)
         timedelay = (self.ti - other.ti) * 60 + (self.tm - other.tm)
-        ti, tm = self.__split_timedelta(timedelay)
-        if tm:
-            signstr = '-' if timedelay < 0 else ''
-            return self.__class__('{}{:d}:{:02d}'.format(signstr,
-                                                         abs(ti), abs(tm)))
-        else:
-            return self.__class__(ti)
+        return self.__split_timedelta_and_reclass(timedelay)
+
+    def __rsub__(self, other):
+        """Swapped sub."""
+        # This may fail if other is malformed, but maybe it's for the best...
+        other = self.__class__(other)
+        timedelay = (other.ti - self.ti) * 60 + (other.tm - self.tm)
+        return self.__split_timedelta_and_reclass(timedelay)
+
+    def __mul__(self, other):
+        # The result might be truncated since second/microseconds are not suported
+        other = self.__class__(other)
+        factor = other.ti * 60 + other.tm
+        me = self.ti * 60 + self.tm
+        return self.__split_timedelta_and_reclass((me * factor) // 60)
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
 
     @property
     def realtype(self):
@@ -232,9 +260,9 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
 
         signstep = int(realstep > 0) * 2 - 1
         pvalues = [ realstart ]
-        while cmp(pvalues[-1], realend) == - signstep:
+        while signstep * (pvalues[-1] - realend) < 0:
             pvalues.append(pvalues[-1] + realstep)
-        if cmp(pvalues[-1], realend) == signstep:
+        if signstep * (pvalues[-1] - realend) > 0:
             pvalues.pop()
 
         if all([ x.is_int() for x in pvalues ]):
@@ -268,7 +296,7 @@ def inplace(desc, key, value, globs=None):
     newd = copy.deepcopy(desc)
     newd[key] = value
     if globs:
-        for k in [ x for x in newd.keys() if (x != key and isinstance(newd[x], basestring) ) ]:
+        for k in [ x for x in newd.keys() if (x != key and isinstance(newd[x], six.string_types) ) ]:
             for g in globs.keys():
                 newd[k] = re.sub(r'\[glob:' + g + r'\]', globs[g], newd[k])
     return newd
@@ -303,7 +331,7 @@ def expand(desc):
         while ld:
             d = ld.popleft()
             somechanges = False
-            for k, v in d.iteritems():
+            for k, v in six.iteritems(d):
                 if v.__class__.__name__.startswith('FP'):
                     continue
                 if isinstance(v, list) or isinstance(v, tuple) or isinstance(v, set):
@@ -311,7 +339,7 @@ def expand(desc):
                     newld.extend([ inplace(d, k, x) for x in v ])
                     somechanges = True
                     break
-                if isinstance(v, str) and re.match(r'range\(\d+(,\d+)?(,\d+)?\)$', v, re.IGNORECASE):
+                if isinstance(v, six.string_types) and re.match(r'range\(\d+(,\d+)?(,\d+)?\)$', v, re.IGNORECASE):
                     logger.debug(' > Range expansion %s', v)
                     lv = [ int(x) for x in re.split(r'[\(\),]+', v) if re.match(r'\d+$', x) ]
                     if len(lv) < 2:
@@ -320,12 +348,12 @@ def expand(desc):
                     newld.extend([ inplace(d, k, x) for x in range(*lv) ])
                     somechanges = True
                     break
-                if isinstance(v, str) and re.search(r',', v):
+                if isinstance(v, six.string_types) and re.search(r',', v):
                     logger.debug(' > Coma separated string %s', v)
                     newld.extend([ inplace(d, k, x) for x in v.split(',') ])
                     somechanges = True
                     break
-                if isinstance(v, str) and re.search(r'{glob:', v):
+                if isinstance(v, six.string_types) and re.search(r'{glob:', v):
                     logger.debug(' > Globbing from string %s', v)
                     vglob = v
                     globitems = list()
@@ -349,8 +377,8 @@ def expand(desc):
                         m = re.search(r'^' + v + r'$', filename)
                         if m:
                             globmap = dict()
-                            for ig in range(len(globitems)):
-                                globmap[globitems[ig][0]] = m.group(ig + 1)
+                            for i, g in enumerate(globitems):
+                                globmap[g[0]] = m.group(i + 1)
                             repld.append(inplace(d, k, filename, globmap))
                     newld.extend(repld)
                     somechanges = True
@@ -390,17 +418,16 @@ class GetByTagMeta(type):
         realnew._tag_class.add(realnew)
         return realnew
 
-    def __call__(cls, *args, **kw):
-        return cls.__new__(cls, *args, **kw)
+    def __call__(self, *args, **kw):
+        return self.__new__(self, *args, **kw)
 
 
+@six.add_metaclass(GetByTagMeta)
 class GetByTag(object):
     """
     Utility to retrieve a new object by a special named argument ``tag``.
     If an object had already been created with that tag, return this object.
     """
-
-    __metaclass__ = GetByTagMeta
 
     _tag_default = 'default'
 
@@ -441,12 +468,12 @@ class GetByTag(object):
     @classmethod
     def tag_values(cls):
         """Return a non-ordered list of actual values of the objects instanciated."""
-        return cls._tag_table.values()
+        return list(cls._tag_table.values())
 
     @classmethod
     def tag_items(cls):
         """Proxy to the ``items`` method of the internal dictionary table of objects."""
-        return cls._tag_table.items()
+        return list(cls._tag_table.items())
 
     @classmethod
     def tag_focus(cls, select='default'):
@@ -557,7 +584,7 @@ class Catalog(object):
             yield c
 
     def __call__(self):
-        return self.items()
+        return list(self.items())
 
     def __len__(self):
         return len(self._items)
@@ -594,7 +621,7 @@ class SpecialDict(dict):
     def __init__(self, *kargs, **kwargs):
         tmpdict = dict(*kargs, **kwargs)
         # Check the dictionnary keys. If necessary change them
-        for k, v in [(k, v) for k, v in tmpdict.iteritems() if k != self.remap(k)]:
+        for k, v in [(k, v) for k, v in six.iteritems(tmpdict) if k != self.remap(k)]:
             del tmpdict[k]
             tmpdict[self.remap(k)] = v
         super(SpecialDict, self).__init__(tmpdict)
@@ -602,7 +629,7 @@ class SpecialDict(dict):
     def show(self, ljust=24):
         """Print the actual values of the dictionary."""
         for k in sorted(self.keys()):
-            print '+', k.ljust(ljust), '=', self.get(k)
+            print('+', k.ljust(ljust), '=', self.get(k))
 
     def update(self, *args, **kw):
         """Extended dictionary update with args as dict and extra keywords."""
@@ -651,8 +678,3 @@ class UpperCaseDict(SpecialDict):
     def remap(self, key):
         """Return a upper case value of the actual key."""
         return key.upper()
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()

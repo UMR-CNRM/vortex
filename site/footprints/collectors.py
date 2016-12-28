@@ -7,16 +7,18 @@ Module's usage is mostly dedicated to main footprints package.
 The footprints proxy could make some part of the interface visible as well.
 """
 
-#: No automatic export
-__all__ = []
-
-from . import loggers
-logger = loggers.getLogger(__name__)
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from weakref import WeakSet
 import collections
+import six
 
-from . import config, dump, priorities, reporting, util
+from . import config, dump, loggers, observers, priorities, reporting, util
+
+#: No automatic export
+__all__ = []
+
+logger = loggers.getLogger(__name__)
 
 
 # Module Interface
@@ -43,7 +45,7 @@ def items():
 
 # Base class
 
-class Collector(util.GetByTag, util.Catalog):
+class Collector(util.GetByTag, util.Catalog, observers.Observer):
     """
     A class collector is devoted to the gathering of class references that inherit
     from a given class (here a class with a footprint), according to some other optional criteria.
@@ -60,9 +62,9 @@ class Collector(util.GetByTag, util.Catalog):
         self.lreport_len = config.DFLT_MAXLEN_LIGHT_REPORTING
         self.report_auto = True
         self.report_tag = None
-        self.altreport = False
-        for bc in self.__class__.__bases__:
-            bc.__init__(self, **kw)
+        self.report_style = config.RAW_REPORTINGSTYLE
+        util.GetByTag.__init__(self)
+        util.Catalog.__init__(self, **kw)
         if self.report_tag is None:
             self.report_tag = 'footprint-' + self.tag
         r_maxlen = None if self.report == config.FULL_REPORTING else self.lreport_len
@@ -85,30 +87,26 @@ class Collector(util.GetByTag, util.Catalog):
         logger.debug('Notified {!r} del item {!r}'.format(self, item))
         self.instances.discard(item)
 
-    def updobsitem(self, item, info):
-        """Not yet specialised..."""
-        logger.debug('Notified {!r} upd item {!r}'.format(self, item))
-
     def filter_package(self, packname):
         """Find in current collector classes with name starting with ``packname``."""
-        return [ cl for cl in self.items() if cl.fullname().startswith(packname) ]
+        return [cl for cl in self.items() if cl.fullname().startswith(packname)]
 
     def discard_package(self, packname, verbose=True):
         """Discard from current collector classes with name starting with ``packname``."""
         for x in self.filter_package(packname):
             if verbose:
-                print 'Bye...', x
+                print('Bye...', x)
             self.discard(x)
 
     def filter_onflag(self, flagmethod, default=True):
         """Find in current collector classes with method ``flagmethod`` returning ``default``."""
-        return [ cl for cl in self.items() if hasattr(cl, flagmethod) and getattr(cl, flagmethod)() == default ]
+        return [cl for cl in self.items() if hasattr(cl, flagmethod) and getattr(cl, flagmethod)() == default]
 
     def discard_onflag(self, flagmethod, default=True, verbose=True):
-        """Discard from current collecflagmethodtor classes with method ``flagmethod`` returning ``default``."""
+        """Discard from current collector classes with method ``flagmethod`` returning ``default``."""
         for x in self.filter_onflag(flagmethod, default):
             if verbose:
-                print 'Bye...', x
+                print('Bye...', x)
             self.discard(x)
 
     def filter_higher_level(self, tag):
@@ -120,19 +118,19 @@ class Collector(util.GetByTag, util.Catalog):
         """Discard from current collector classes with priority level higher or equal to ``level``."""
         for x in self.filter_higher_level(tag):
             if verbose:
-                print 'Bye...', x
+                print('Bye...', x)
             self.discard(x)
 
     def filter_lower_level(self, tag):
         """Find in current collector classes with priority level lower than ``level``."""
         plevel = priorities.top.level(tag)
-        return [ cl for cl in self.items() if cl.footprint_pl() < plevel ]
+        return [cl for cl in self.items() if cl.footprint_pl() < plevel]
 
     def discard_lower_level(self, tag, verbose=True):
         """Discard from current collector classes with priority level lower than ``level``."""
         for x in self.filter_lower_level(tag):
             if verbose:
-                print 'Bye...', x
+                print('Bye...', x)
             self.discard(x)
 
     def reset_package_level(self, packname, tag):
@@ -157,7 +155,8 @@ class Collector(util.GetByTag, util.Catalog):
                     else:
                         if not (self._fasttrack_type[myattr] is myfp.attr[myattr].get('type', str) and
                                 self._fasttrack_typeargs[myattr] == myfp.attr[myattr].get('args', dict())):
-                            logger.warning("Inconsistent types for fasttrack attributes. Removing it from the fasttrack list.")
+                            logger.warning("Inconsistent types for fasttrack attributes. " +
+                                           "Removing it from the fasttrack list.")
                             attrerror.add(myattr)
                             continue
                     # Let's go...
@@ -183,10 +182,10 @@ class Collector(util.GetByTag, util.Catalog):
                     del self._fasttrack_trap[myattr]
 
     def _upd_fasttrack_delete(self, cls):
-        for values in self._fasttrack_index.itervalues():
-            for classes in values.itervalues():
+        for fvalues in six.itervalues(self._fasttrack_index):
+            for classes in six.itervalues(fvalues):
                 classes.discard(cls)
-        for classes in self._fasttrack_trap.itervalues():
+        for classes in six.itervalues(self._fasttrack_trap):
             classes.discard(cls)
 
     def _del_fasttrack(self):
@@ -215,7 +214,7 @@ class Collector(util.GetByTag, util.Catalog):
     def _fasttrack_subsetting(self, desc):
         if self._fasttrack_attr:
             objgroup_list = list()
-            for k, v in desc.iteritems():
+            for k, v in six.iteritems(desc):
                 if k in self._fasttrack_attr:
                     # Check if the key's value is in the index
                     if v in self._fasttrack_index[k]:
@@ -265,8 +264,8 @@ class Collector(util.GetByTag, util.Catalog):
         """Try to pickup inside the collector a item that could match the description."""
         logger.debug('Pick up a "{:s}" in description {!s} with collector {!r}'.format(self.tag, desc, self))
         mkstdreport = desc.pop('_report', self.report_auto)
-        mkaltreport = desc.pop('_altreport', self.altreport)
-        for hidden in [ x for x in desc.keys() if x.startswith('_') ]:
+        reportstyle = desc.pop('_report_style', self.report_style)
+        for hidden in [x for x in desc.keys() if x.startswith('_')]:
             logger.warning('Hidden argument "%s" ignored in pickup attributes', hidden)
             del desc[hidden]
         if self.tag in desc and desc[self.tag] is not None:
@@ -279,14 +278,21 @@ class Collector(util.GetByTag, util.Catalog):
             dumper = dump.get()
             logger.warning("No %s found in description \n%s", self.tag, dumper.cleandump(desc))
             if mkstdreport and self.report:
-                print "\n", self.report_log.info(), "\n"
-                self.report_last.lightdump()
-                if mkaltreport:
+                print("\n", self.report_log.info(), "\n")
+                if reportstyle == config.RAW_REPORTINGSTYLE:
+                    self.report_last.lightdump()
+                if reportstyle == config.FLAT_REPORTINGSTYLE:
                     altreport = self.report_last.as_flat()
-                    altreport.reshuffle(['why', 'attribute'], skip=False)
+                    altreport.reshuffle([str('why'), str('attribute')], skip=False)
                     altreport.fulldump()
-                    altreport.reshuffle(['only', 'attribute'], skip=False)
+                    altreport.reshuffle([str('only'), str('attribute')], skip=False)
                     altreport.fulldump()
+                if reportstyle == config.FACTORIZED1_REPORTINGSTYLE:
+                    altreport = self.report_sorted()
+                    altreport.orderedprint()
+                if reportstyle == config.FACTORIZED2_REPORTINGSTYLE:
+                    altreport = self.report_sorted()
+                    altreport.dumper()
         return desc
 
     def find_any(self, desc):
@@ -347,7 +353,7 @@ class Collector(util.GetByTag, util.Catalog):
         if len(candidates) > 1:
             dumper = dump.get()
             logger.warning("Multiple %s candidates \n%s", self.tag, dumper.cleandump(desc))
-            candidates.sort(key=lambda x: x[0].footprint_weight(x[2]), reverse=True)
+            candidates.sort(key=lambda x: x[0].footprint_weight(len(x[2])), reverse=True)
             for i, c in enumerate(candidates):
                 thisclass, u_resolved, theinput = c
                 logger.warning('no.%d in.%d is %s', i + 1, len(theinput), str(thisclass))
@@ -392,7 +398,7 @@ class Collector(util.GetByTag, util.Catalog):
             only = (only,)
         for c in self:
             fp = c.footprint_retrieve()
-            for k in [ ka for ka in fp.attr.keys() if ( only is None or ka in only ) ]:
+            for k in [ka for ka in fp.attr.keys() if only is None or ka in only]:
                 opt = ' [optional]' if fp.optional(k) else ''
                 alist = attrmap.setdefault(k + opt, list())
                 alist.append(dict(
@@ -411,12 +417,12 @@ class Collector(util.GetByTag, util.Catalog):
         """
         attrmap = self.build_attrmap(only=only)
         for a in sorted(attrmap.keys()):
-            print ' *', a + ':'
+            print(' *', a + ':')
             for info in sorted(attrmap[a], key=lambda x: x['name']):
-                print ' ' * 4, info['name'].ljust(22), '+', info['module']
+                print(' ' * 4, info['name'].ljust(22), '+', info['module'])
                 for k in [ x for x in info.keys() if x not in ('name', 'module') and info[x] ]:
-                    print ' ' * 29, '|', k, '=', str(info[k]).replace("'", '').replace('(', '').replace(')', '').strip(',')
-            print
+                    print(' ' * 29, '|', k, '=', str(info[k]).replace("'", '').replace('(', '').replace(')', '').strip(','))
+            print()
 
     def show_attrkeys(self, only=None):
         """
@@ -425,7 +431,7 @@ class Collector(util.GetByTag, util.Catalog):
         """
         attrmap = self.build_attrmap(only=only)
         for a in [ x.split() + [''] for x in sorted(attrmap.keys()) ]:
-            print ' *', a[0].ljust(24), a[1]
+            print(' *', a[0].ljust(24), a[1])
 
     def get_values(self, attrname):
         """Complete set of values which are explicitly authorized for a given attribute."""
@@ -458,7 +464,7 @@ class Collector(util.GetByTag, util.Catalog):
 
     def report_dumplast(self):
         """Print a nicelly formatted dump report as a dict."""
-        print dump.fulldump(self.report_last.as_dict())
+        print(dump.fulldump(self.report_last.as_dict()))
 
     def report_whynot(self, classname):
         """

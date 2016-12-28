@@ -6,10 +6,13 @@ Special derivated builtins to be used as attributes in footprints descriptions
 in order to avoid autompatic value expansion (for example).
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+from . import loggers
+
 #: Automatic export
 __all__ = ['FPDict', 'FPList', 'FPSet', 'FPTuple']
 
-from . import loggers
 logger = loggers.getLogger(__name__)
 
 

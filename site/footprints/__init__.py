@@ -1,17 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
-
 """
-A generic multi-purpose fabric for objects with parametrable footprints,
-i.e. some set of keys/values pairs that attributes (possibly optionals) could cover.
+A generic multi-purpose fabric for objects with tunable footprints,
+i.e. some set of keys/values pairs that attributes (possibly optional) could cover.
 """
 
-#: No automatic export
-__all__ = []
-
-__version__ = '1.0.1'
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import os
 import re
@@ -20,44 +15,40 @@ import copy
 import types
 import weakref
 import collections
+import six
+
+from . import access, collectors, config, doc, dump, loggers, observers
+from . import priorities, proxies, reporting, util
+from .stdtypes import *
+
+
+#: No automatic export
+__all__ = []
+
+__version__ = '1.0.1'
+
 
 # Default logging
-
-from . import loggers
 
 logger = loggers.getLogger('footprints')
 
 
-# Technical internal modules of the footprints package
-
-from . import util, reporting
-
-
 # Default setup
 
-from . import config
-
 setup = config.get(
-    docstrings = int(os.environ.get('FOOTPRINT_DOCSTRINGS', 0)),
-    shortnames = int(os.environ.get('FOOTPRINT_SHORTNAMES', 0))
+    docstrings=int(os.environ.get('FOOTPRINT_DOCSTRINGS', 0)),
+    shortnames=int(os.environ.get('FOOTPRINT_SHORTNAMES', 0))
 )
-
-
-# Internal modules of the footprints package
-
-from . import access, collectors, dump, doc, observers, priorities
-from .stdtypes import *
 
 
 # Default proxy
 
-from . import proxies
 proxy = proxies.get()
 
 
 # Predefined constants
 
-UNKNOWN  = '__unknown__'
+UNKNOWN = '__unknown__'
 replattr = re.compile(r'\[(\w+)(?::+(\w+))?(?:#(\w+))?(?:%(\w+))?\]')
 
 
@@ -88,7 +79,8 @@ class FootprintInvalidDefinition(FootprintException):
 def pickup(rd):
     """Find in current description the attributes that are collected under the ``tag`` name."""
     return collectors.get(tag=rd.pop('tag', 'garbage'),
-                          report=setup.report, lreport_len=setup.lreport_len).pickup(rd)
+                          report=setup.report, lreport_len=setup.lreport_len,
+                          report_style=setup.report_style).pickup(rd)
 
 
 def load(**kw):
@@ -97,7 +89,8 @@ def load(**kw):
     Return either ``None`` or an object compatible with the ``tag``.
     """
     return collectors.get(tag=kw.pop('tag', 'garbage'),
-                          report=setup.report, lreport_len=setup.lreport_len).load(**kw)
+                          report=setup.report, lreport_len=setup.lreport_len,
+                          report_style=setup.report_style).load(**kw)
 
 
 def default(**kw):
@@ -106,7 +99,8 @@ def default(**kw):
     a suitable candidate according to description.
     """
     return collectors.get(tag=kw.pop('tag', 'garbage'),
-                          report=setup.report, lreport_len=setup.lreport_len).default(**kw)
+                          report=setup.report, lreport_len=setup.lreport_len,
+                          report_style=setup.report_style).default(**kw)
 
 
 def grep(**kw):
@@ -128,7 +122,10 @@ def collected_classes():
 def collected_priorities(tag):
     """Print a table of collected classes with a priority level higher or equal to ``tag``."""
     plevel = priorities.top.level(tag)
-    for cl in sorted(set([c for cv in collectors.values() for c in cv.filter_higher_level(plevel)]), key=lambda z: z.fullname()):
+    for cl in sorted(set([c
+                          for cv in collectors.values()
+                          for c in cv.filter_higher_level(plevel)]),
+                     key=lambda z: z.fullname()):
         pl = cl.footprint_level()
         print(pl.rjust(10), '-', cl.fullname())
 
@@ -174,12 +171,12 @@ class Footprint(object):
             if adict is not None:
                 util.dictmerge(fp, adict)
                 if 'attr' in adict:
-                    for attr, attrdict in adict['attr'].iteritems():
+                    for attr, attrdict in adict['attr'].items():
                         if 'type' in attrdict:
                             typescheck[attr].append(attrdict['type'])
         # Check that the type of a given attribute is consistent among
         # footprints (warning only)
-        for attr, typelist in typescheck.iteritems():
+        for attr, typelist in typescheck.items():
             if len(typelist) > 1:
                 fine = True
                 for i in range(len(typelist) - 1, 0, -1):
@@ -195,7 +192,7 @@ class Footprint(object):
             fp['attr'][a].setdefault('doc_visibility', doc.visibility.DEFAULT)
             fp['attr'][a].setdefault('doc_zorder', 0)
             # doc_zorder is beetween -100 and 100
-            fp['attr'][a]['doc_zorder'], max(min(-100, fp['attr'][a]['doc_zorder']), 100)
+            fp['attr'][a]['doc_zorder'] = min(max(-100, fp['attr'][a]['doc_zorder']), 100)
             fp['attr'][a]['alias'] = set(fp['attr'][a].get('alias', set()))
             fp['attr'][a]['remap'] = dict(fp['attr'][a].get('remap', dict()))
             autoremap = fp['attr'][a]['remap'].pop('autoremap', None)
@@ -263,7 +260,7 @@ class Footprint(object):
     def track(self, desc):
         """Returns if the items of ``desc`` are found in the specified footstep ``fp``."""
         fpa = self._fp['attr']
-        attrs = fpa.keys()
+        attrs = list(fpa.keys())
         aliases = []
         for x in attrs:
             aliases.extend(fpa[x]['alias'])
@@ -284,7 +281,7 @@ class Footprint(object):
         guess = dict()
         param = setup.defaults
         inputattr = set()
-        for k, kdef in self.attr.iteritems():
+        for k, kdef in self.attr.items():
             kopt = kdef['optional']
             if k in desc and not (kopt and desc[k] is None):
                 guess[k] = desc[k]
@@ -339,7 +336,7 @@ class Footprint(object):
         suggested in the ``more`` dictionary which are not already defined
         in ``extras`` or the actual ``guess``.
         """
-        for k in more.iterkeys():
+        for k in more.keys():
             if k not in extras and k not in guess:
                 extras[k] = more[k]
 
@@ -374,7 +371,7 @@ class Footprint(object):
         changed = 1
         while changed:
             changed = 0
-            if isinstance(guessk, basestring):
+            if isinstance(guessk, six.string_types):
                 mobj = replattr.search(guessk)
                 if mobj:
                     replk = mobj.group(1)
@@ -428,7 +425,7 @@ class Footprint(object):
                                             attrcall = subattr()
                                         else:
                                             attrcall = subattr(guess, extras)
-                                    except StandardError as trouble:
+                                    except Exception as trouble:
                                         logger.critical(trouble)
                                         attrcall = '__SKIP__'
                                         changed = 0
@@ -442,7 +439,7 @@ class Footprint(object):
                             guessk = replattr.sub(myautofmt(extras[replk]), guessk, 1)
 
         if (guessk is not None and
-                isinstance(guessk, basestring) and
+                isinstance(guessk, six.string_types) and
                 replattr.search(guessk)):
             logger.debug(' > Requeue resolve < %s > : %s (npass=%d)', k, guessk, nbpass)
             todo.append(k)
@@ -482,7 +479,8 @@ class Footprint(object):
         if None in guess.values():
             todo = []
         else:
-            todo = attrs.keys()
+            todo = list(attrs.keys())
+
             for kfast in [ x for x in setup.fastkeys if x in todo ]:
                 todo.remove(kfast)
                 todo.insert(0, kfast)
@@ -594,7 +592,7 @@ class Footprint(object):
                 elif hasattr(checkvalue, 'match'):
                     checkflag = checkflag or bool(checkvalue.match(actualvalue))
                 else:
-                    checkflag = checkflag or not bool(cmp(actualvalue, checkvalue))
+                    checkflag = checkflag or actualvalue == checkvalue
 
             if not checkflag:
                 rd = False
@@ -658,13 +656,13 @@ class FootprintBaseMeta(type):
         """
         logger.debug('Base class for footprint usage "%s / %s", bc = (%s), internal = %s', cls, n, b, d)
         abstract = d.setdefault('_abstract', False)
-        mkshort  = d.setdefault('_mkshort', setup.shortnames)
+        mkshort = d.setdefault('_mkshort', setup.shortnames)
 
         # Footprint merging
-        fplocal  = d.get('_footprint', dict())
-        bcfp = [ c.__dict__.get('_footprint', dict()) for c in b ]
+        fplocal = d.get('_footprint', dict())
+        bcfp = [c.__dict__.get('_footprint', dict()) for c in b]
         bcfp.reverse()  # That way, footprint's inheritance is consistent with python's
-        if type(fplocal) is types.ListType:
+        if type(fplocal) is list:
             bcfp.extend(fplocal)
         else:
             bcfp.append(fplocal)
@@ -703,8 +701,10 @@ class FootprintBaseMeta(type):
         # Add all classes in collectors but take into accout the abstract key
         for cname in realcls._collector:
             if cname in thisfp.allkeys():
-                raise FootprintInvalidDefinition('A attribute or alias name is equal to collector tag: ' + cname)
-            thiscollector = collectors.get(tag=cname, report=setup.report, lreport_len=setup.lreport_len)
+                raise FootprintInvalidDefinition('A attribute or alias name is equal to collector tag: ' +
+                                                 cname)
+            thiscollector = collectors.get(tag=cname, report=setup.report, lreport_len=setup.lreport_len,
+                                           report_style=setup.report_style)
             thiscollector.add(realcls, abstract=abstract)
             if not abstract and thiscollector.register:
                 observers.get(tag=realcls.fullname()).register(thiscollector)
@@ -723,13 +723,12 @@ class FootprintBaseMeta(type):
 
 
 # noinspection PyUnresolvedReferences
+@six.add_metaclass(FootprintBaseMeta)
 class FootprintBase(object):
     """
     Base class for any other thematic class that would need to incorporate a :class:`Footprint`.
     Its metaclass is :class:`FootprintBaseMeta`.
     """
-
-    __metaclass__ = FootprintBaseMeta
 
     _footprint = Footprint()
     _abstract  = True
@@ -949,11 +948,10 @@ class FootprintBase(object):
         and then compare to my actual values.
         """
         fp = self.footprint
-        #resolved, u_inputattr, u_attr_seen = fp.resolve(rd, fatal=False, fast=False, report=None)
         resolved, u_inputattr, u_attr_seen = fp.resolve(rd, fatal=False, report=None)
         rc = resolved and None not in resolved.values()
         if rc:
-            for k in rd.keys():
+            for k in resolved.keys():
                 if self._attributes[k] != resolved[k]:
                     rc = False
                     break

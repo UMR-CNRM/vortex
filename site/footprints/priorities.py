@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import functools
+
 __all__ = [ 'top' ]
 
 
+@functools.total_ordering
 class PriorityLevel(object):
     """Single level to be used inside footprints."""
 
@@ -30,13 +35,18 @@ class PriorityLevel(object):
         """Actual order level in the current set of priorities."""
         return self.inset.levelindex(self.tag)
 
-    def __cmp__(self, other):
+    def __eq__(self, other):
+        if not isinstance(other, PriorityLevel):
+            try:
+                other = self.inset.level(str(other))
+            except (ValueError, TypeError):
+                return False
+        return self.rank == other.rank
+
+    def __gt__(self, other):
         if not isinstance(other, PriorityLevel):
             other = self.inset.level(str(other))
-        if other:
-            return cmp(self.rank, other.rank)
-        else:
-            return -1
+        return self.rank > other.rank
 
     def delete(self):
         """Removes itself from the priority set."""

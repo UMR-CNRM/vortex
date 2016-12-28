@@ -1,12 +1,18 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+Footprint's docstring generator
+"""
+
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import collections
 
 from . import dump, priorities
 
+__all__ = ['visibility', ]
 
-__all__ = [ 'visibility' ]
 
 # We just re-use the classes provided in priorities (it is exactly the feature we needed)
 
@@ -43,7 +49,7 @@ def _formating_sphinx_v1(fp):
     out.append("     * info: {0.info}".format(fp))
     out.append("     * priority: {}".format(dumper.dump(fp.level)))
     # Now, print out the rest (whatever is found)
-    for k, v in [(k, v) for k, v in fp._fp.iteritems()
+    for k, v in [(k, v) for k, v in fp.as_dict().items()
                  if k not in ['info', 'priority', 'attr'] and v]:
         out.append("     * {}: {}".format(k, dumper.dump(v)))
     out.append('')
@@ -52,11 +58,10 @@ def _formating_sphinx_v1(fp):
     out.append('   Automatic parameters from the footprint:\n')
     aliases = collections.OrderedDict()  # For later use
     # First sort alphabetically with respect to the attribute names
-    s_attrs = sorted(fp._fp['attr'].iteritems(), lambda a, b: cmp(a[0], b[0]))
+    s_attrs = sorted(fp.as_dict()['attr'].items(), key=lambda item: item[0])
     # Then use visibility and zorder
     s_attrs = sorted(s_attrs,
-                     lambda a, b: cmp(a[1]['doc_visibility'].rank * 200 - a[1]['doc_zorder'],
-                                      b[1]['doc_visibility'].rank * 200 - b[1]['doc_zorder']))
+                     key=lambda item: item[1]['doc_visibility'].rank * 200 - item[1]['doc_zorder'])
     for attr, desc in s_attrs:
         # Find out the type name
         t = desc.get('type', str)
@@ -71,15 +76,15 @@ def _formating_sphinx_v1(fp):
         if desc['optional']:
             subdesc.append('       * Optional. Default is {0:}.'.format(dumper.dump(desc['default'])))
         # The superstars
-        for k, v in [(k, desc[k]) for k in ['values', 'outcast'] if desc[k]]:
+        for k, v in [(i, desc[i]) for i in ['values', 'outcast'] if desc[i]]:
             subdesc.append('       * {0:}: {1:}'.format(k.capitalize(), dumper.dump(v)))
         # Now, print out the rest (whatever is found)
-        for k, v in [(k, v) for k, v in desc.iteritems()
-                     if k not in ['info', 'type', 'values', 'outcast', 'optional', 'alias',
+        for k, v in [(i, v) for i, v in desc.items()
+                     if i not in ['info', 'type', 'values', 'outcast', 'optional', 'alias',
                                   'default', 'access', 'doc_visibility', 'doc_zorder'] and v]:
             subdesc.append('       * {0:}: {1:}'.format(k.capitalize(), dumper.dump(v)))
         if subdesc:
-            out.extend(["\n", ] + subdesc + ["\n", ])
+            out.extend(['', ] + subdesc + ['', ])
         # Store aliases (they will be displayed later)
         if desc['alias']:
             for alias in desc['alias']:
@@ -90,7 +95,7 @@ def _formating_sphinx_v1(fp):
     if aliases:
         out.append("   Aliases of some parameters:")
         out.append('')
-        for k, v in aliases.iteritems():
+        for k, v in aliases.items():
             out.append("     * **{}** is an alias of {}.".format(k, v))
     out.append('')
 

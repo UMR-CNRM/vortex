@@ -5,13 +5,14 @@
 Footprint dynamic configuration.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+from . import loggers, reporting, util
+
 #: No automatic export
 __all__ = []
 
-from . import loggers
 logger = loggers.getLogger(__name__)
-
-from . import reporting, util
 
 
 # Module interface
@@ -53,6 +54,11 @@ ONERROR_REPORTING = 1
 LIGHT_REPORTING = 2
 FULL_REPORTING = 3
 
+RAW_REPORTINGSTYLE = 0
+FLAT_REPORTINGSTYLE = 1
+FACTORIZED1_REPORTINGSTYLE = 2
+FACTORIZED2_REPORTINGSTYLE = 3
+
 DFLT_MAXLEN_LIGHT_REPORTING = 100
 
 
@@ -65,18 +71,19 @@ class FootprintSetup(util.GetByTag):
                  fatal=True, shortnames=False, fastkeys=('kind',),
                  callback=None, defaults=None, proxies=None,
                  report=ONERROR_REPORTING, lreport_len=DFLT_MAXLEN_LIGHT_REPORTING,
-                 nullreport=reporting.NullReport()):
+                 report_style=RAW_REPORTINGSTYLE, nullreport=reporting.NullReport()):
         """Initialisation of a simple footprint setup driver."""
-        self._extended   = bool(extended)
-        self.docstrings  = docstrings
-        self.shortnames  = bool(shortnames)
-        self.fatal       = bool(fatal)
-        self.report      = report
-        self.lreport_len = lreport_len
-        self.nullreport  = nullreport
-        self.fastmode    = bool(fastmode)
-        self.fastkeys    = tuple(fastkeys)
-        self.callback    = callback
+        self._extended    = bool(extended)
+        self.docstrings   = docstrings
+        self.shortnames   = bool(shortnames)
+        self.fatal        = bool(fatal)
+        self.report       = report
+        self.lreport_len  = lreport_len
+        self.report_style = report_style
+        self.nullreport   = nullreport
+        self.fastmode     = bool(fastmode)
+        self.fastkeys     = tuple(fastkeys)
+        self.callback     = callback
 
         if proxies is None:
             self.proxies = set()
@@ -105,7 +112,7 @@ class FootprintSetup(util.GetByTag):
     def info(self):
         """Summary of actual settings."""
         for k, v in sorted(self.as_dict().items()):
-            print k.ljust(12), ':', v
+            print(k.ljust(12), ':', v)
 
     def add_proxy(self, obj, clear=False):
         """
