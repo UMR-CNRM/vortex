@@ -90,6 +90,8 @@ def vortex_delayed_init(t):
     # Load shell addons
     import vortex.tools.odb  # @UnusedImport
     vortex.proxy.addon(kind='odb', shell=t.sh)  # @UndefinedVariable
+    import vortex.tools.ddhpack  # @UnusedImport
+    vortex.proxy.addon(kind='ddhpack', shell=t.sh)  # @UndefinedVariable
 
 
 def actual_action(action, t, args):
