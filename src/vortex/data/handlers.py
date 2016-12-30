@@ -555,6 +555,31 @@ class Handler(object):
             logger.error('Could not get an incomplete rh %s', self)
         return rst
 
+    def insitu_quickget(self, alternate=False, **extras):
+        """This method attempts a straightforward insitu get.
+
+        It is designed to minimise the amount of outputs when everything goes
+        smoothly.
+        """
+        rst = False
+        if self.complete:
+            if self.options.get('insitu', False):  # This a second pass (or third, forth, ...)
+                cur_tracker = self._cur_context.localtracker
+                iotarget = self.container.iotarget()
+                # The localpath is here and listed in the tracker
+                if (self.container.exists() and
+                        cur_tracker.is_tracked_input(iotarget)):
+                    if cur_tracker[iotarget].match_rh('get', self):
+                        rst = True
+                        self.container.updfill(True)
+                        self._updstage('get', insitu=True)
+                    elif alternate:
+                        # Alternate is on and the local file exists: ignoring the error.
+                        rst = True
+            else:
+                logger.error('This method should not be called with insitu=False (rh %s)', self)
+        return rst
+
     def put(self, **extras):
         """Method to store data from the current container through the provider.
 

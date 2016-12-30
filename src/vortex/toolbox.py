@@ -8,6 +8,7 @@ Top level interface for accessing the VORTEX facilities.
 #: Automatic export of superstar interface.
 __all__ = [ 'rload', 'rget', 'rput' ]
 
+from contextlib import contextmanager
 import re
 
 import footprints
@@ -47,7 +48,7 @@ def show_toolbox_settings(ljust=24):
 def quickview(args, nb=0, indent=0):
     """Recursive call to any quick view of objects specified as arguments."""
     if not isinstance(args, list) and not isinstance(args, tuple):
-        args = ( args, )
+        args = (args, )
     for x in args:
         if nb:
             print
@@ -59,6 +60,10 @@ def quickview(args, nb=0, indent=0):
             print '{0:02d}. {1:s}'.format(nb, x)
 
 
+class VortexToolboxDescError(Exception):
+    pass
+
+
 def rload(*args, **kw):
     """
     Resource Loader.
@@ -66,17 +71,18 @@ def rload(*args, **kw):
     This function behaves as a factory for any possible pre-defined family
     of VORTEX object resources.
 
-    Arguments could be a mix of a list of dictionay-type objects and key/value
+    Arguments could be a mix of a list of dictionary-type objects and key/value
     parameters. Other type of arguments will be discarded.
 
-    An abstract resource descriptor is built as the agregation of these arguments
-    and then expanded according to rules defined in the :mod:`footprints.util` module.
-    For any expanded descriptor, the resources module will try to pickup the best
-    candidate (if any) that could match the description (ie: Resource,
-    Provider, Container, etc.)
+    An abstract resource descriptor is built as the aggregation of these
+    arguments and then expanded according to rules defined in the
+    :mod:`footprints.util` module. For any expanded descriptor, the resources
+    module will try to pickup the best candidate (if any) that could match the
+    description (ie: Resource, Provider, Container, etc.)
 
-    Finaly, a :class:`vortex.data.Handler` object is associated to this list of candidates.
-    The outcome of the rload function is therefore a list of resources.Handler objects.
+    Finally, a :class:`vortex.data.Handler` object is associated to this list
+    of candidates. The outcome of the rload function is therefore a list of
+    :class:`data.handlers.Handler` objects.
     """
     rd = dict()
     for a in args:
@@ -87,15 +93,20 @@ def rload(*args, **kw):
     rd.update(kw)
     if rd:
         history.append(rd.copy())
-    rx = [
-        proxy.containers.pickup(  # @UndefinedVariable
-            proxy.providers.pickup(  # @UndefinedVariable
-                proxy.resources.pickup(x)  # @UndefinedVariable
-            )
-        ) for x in footprints.util.expand(rd)
-    ]
-    logger.debug('Resource desc %s', rx)
-    return [ data.handlers.Handler(x) for x in rx ]
+    rhx = []
+    for x in footprints.util.expand(rd):
+        picked_up = proxy.containers.pickup(  # @UndefinedVariable
+                        proxy.providers.pickup(  # @UndefinedVariable
+                            proxy.resources.pickup(x)  # @UndefinedVariable
+                        )
+                    )
+        logger.debug('Resource desc %s', picked_up)
+        picked_rh = data.handlers.Handler(picked_up)
+        if not picked_rh.complete:
+            raise VortexToolboxDescError("The ResourceHandler is incomplete")
+        rhx.append(picked_rh)
+
+    return rhx
 
 
 def rh(*args, **kw):
@@ -140,6 +151,24 @@ def nicedump(msg, **kw):
     print
 
 
+@contextmanager
+def _tb_isolate(t, loglevel):
+    """Handle the context and logger (internal use only)."""
+    # Switch off autorecording of the current context
+    ctx = t.context
+    ctx.record_off()
+    # Possibly change the log level if necessary
+    if loglevel is not None:
+        oldlevel = t.loglevel
+        t.setloglevel(loglevel.upper())
+    try:
+        yield
+    finally:
+        if loglevel is not None:
+            t.setloglevel(oldlevel)
+        ctx.record_on()
+
+
 def add_section(section, args, kw):
     """Add a ``section`` type to the current sequence."""
 
@@ -150,6 +179,7 @@ def add_section(section, args, kw):
     loglevel  = kw.pop('loglevel', None)
     talkative = kw.pop('verbose', active_verbose)
     complete  = kw.pop('complete', False)
+    insitu    = kw.get('insitu', False)
 
     if complete:
         kw['fatal'] = False
@@ -161,83 +191,104 @@ def add_section(section, args, kw):
 
     # Third, collect arguments for triggering some hook
     hooks = dict()
-    for ahook in [ x for x in kw.keys() if x.startswith('hook_') ]:
+    for ahook in [x for x in kw.keys() if x.startswith('hook_')]:
         cbhook = footprints.util.mktuple(kw.pop(ahook))
         cbfunc = cbhook[0]
         if not callable(cbfunc):
             cbfunc = t.sh.import_function(cbfunc)
         hooks[ahook] = footprints.FPTuple((cbfunc, cbhook[1:]))
 
-    # Swich off autorecording of the current context
-    ctx = t.context
-    ctx.record_off()
-
-    # Possibily change the log level if necessary
-    oldlevel = t.loglevel
-    if loglevel is not None:
-        t.setloglevel(loglevel.upper())
-
-    # Distinguish between section arguments, and resource loader arguments
-    opts, kwclean = stripargs_section(**kw)
-
-    # Strip the metadatacheck option depending on active_metadatacheck
-    if not active_metadatacheck:
-        if kwclean.get('metadatacheck', False):
-            logger.info("The metadatacheck option is forced to False since active_metadatacheck=False.")
-            kwclean['metadatacheck'] = False
-
-    # Show the actual set of arguments
-    if talkative:
+    # Print the user inputs
+    def print_user_inputs():
         nicedump('New {0:s} section with options'.format(section), **opts)
         nicedump('Resource handler description', **kwclean)
         nicedump(
             'This command options',
-            complete = complete,
-            loglevel = loglevel,
-            now = now,
-            verbose  = talkative,
+            complete=complete,
+            loglevel=loglevel,
+            now=now,
+            verbose=talkative,
         )
         if hooks:
             nicedump('Hooks triggered', **hooks)
 
-    # Let the magic of footprints resolution operate...
-    kwclean.update(hooks)
-    rl = rload(*args, **kwclean)
-    rlok = list()
+    with _tb_isolate(t, loglevel):
 
-    # Prepare the references to the actual section method to perform
-    push = getattr(ctx.sequence, section)
-    doitmethod = sectionmap[section]
+        # Distinguish between section arguments, and resource loader arguments
+        opts, kwclean = stripargs_section(**kw)
 
-    # Create a section for each resource handler, and perform action on demand
-    for ir, rhandler in enumerate(rl):
-        newsections = push(rh=rhandler, **opts)
-        ok = bool(newsections)
-        if ok and now:
-            if talkative:
-                t.sh.subtitle('Resource no {0:02d}/{1:02d}'.format(ir + 1, len(rl)))
-                rhandler.quickview(nb=ir + 1, indent=0)
-                t.sh.header('Action ' + doitmethod)
-                logger.info('%s %s ...', doitmethod.upper(), rhandler.location())
-            ok = getattr(newsections[0], doitmethod)(**cmdopts)
-            if talkative:
-                t.sh.header('Result from ' + doitmethod)
-                logger.info('%s returns [%s]', doitmethod.upper(), ok)
-            if talkative and not ok:
-                logger.error('Could not %s resource %s', doitmethod, rhandler.container.localpath())
-                print t.line
-            if not ok:
-                if complete:
-                    logger.warning('Force complete for %s', rhandler.location())
-                    raise VortexForceComplete('Force task complete on resource error')
-            if t.sh.trace:
-                print
-        if ok:
-            rlok.append(rhandler)
+        # Strip the metadatacheck option depending on active_metadatacheck
+        if not active_metadatacheck and not insitu:
+            if kwclean.get('metadatacheck', False):
+                logger.info("The metadatacheck option is forced to False since " +
+                            "active_metadatacheck=False.")
+                kwclean['metadatacheck'] = False
 
-    if loglevel is not None:
-        t.setloglevel(oldlevel)
-    ctx.record_on()
+        # Show the actual set of arguments
+        if talkative and not insitu:
+            print_user_inputs()
+
+        # Let the magic of footprints resolution operate...
+        kwclean.update(hooks)
+        rl = rload(*args, **kwclean)
+        rlok = list()
+
+        # Prepare the references to the actual section method to perform
+        push = getattr(t.context.sequence, section)
+        doitmethod = sectionmap[section]
+
+        # Create a section for each resource handler
+        newsections = [push(rh=rhandler, **opts)[0] for rhandler in rl]
+
+        # If insitu and now, try a quiet get...
+        do_quick_insitu = section in ('input', 'executable') and insitu and now
+        if do_quick_insitu:
+            quickget = [sec.rh.insitu_quickget(**cmdopts) for sec in newsections]
+            if all(quickget):
+                if len(quickget) > 1:
+                    logger.info("The insitu get succeeded for all of the %d resource handlers.",
+                                len(rl))
+                else:
+                    logger.info("The insitu get succeeded for this resource handler.")
+                rlok = [sec.rh for sec in newsections]
+            else:
+                # Start again with the usual get sequence
+                print_user_inputs()
+
+        # If not insitu, not now, or if the quiet get failed
+        if not (do_quick_insitu and all(quickget)):
+            # Create a section for each resource handler, and perform action on demand
+            for ir, newsection in enumerate(newsections):
+                rhandler = newsection.rh
+                ok = True
+                if now:
+                    if talkative:
+                        t.sh.subtitle('Resource no {0:02d}/{1:02d}'.format(ir + 1,
+                                                                           len(rl)))
+                        rhandler.quickview(nb=ir + 1, indent=0)
+                        t.sh.header('Action ' + doitmethod)
+                        logger.info('%s %s ...',
+                                    doitmethod.upper(), rhandler.location())
+                    # If quick get was ok for this resource don't  call get again...
+                    ok = do_quick_insitu and quickget[ir]
+                    ok = ok or getattr(newsection, doitmethod)(**cmdopts)
+                    if talkative:
+                        t.sh.header('Result from ' + doitmethod)
+                        logger.info('%s returns [%s]', doitmethod.upper(), ok)
+                    if talkative and not ok:
+                        logger.error('Could not %s resource %s',
+                                     doitmethod, rhandler.container.localpath())
+                        print t.line
+                    if not ok:
+                        if complete:
+                            logger.warning('Force complete for %s',
+                                           rhandler.location())
+                            raise VortexForceComplete('Force task complete on resource error')
+                    if t.sh.trace:
+                        print
+                if ok:
+                    rlok.append(rhandler)
+
     return rlok
 
 
@@ -297,6 +348,7 @@ def promise(*args, **kw):
         now      = active_promise,
     )
     if not active_promise:
+        kw.setdefault('verbose', False)
         logger.warning('Promise flag is <%s> in that context', active_promise)
     return add_section('output', args, kw)
 
@@ -310,32 +362,22 @@ def executable(*args, **kw):
 def algo(*args, **kw):
     """Load an algo component and display the description provided."""
 
+    t = sessions.current()
+
     # First, retrieve arguments of the toolbox command itself
-    loglevel  = kw.pop('loglevel', None)
+    loglevel = kw.pop('loglevel', None)
     talkative = kw.pop('verbose', active_verbose)
 
-    # Swich off autorecording of the current context
-    t = sessions.current()
-    ctx = t.context
-    ctx.record_off()
+    with _tb_isolate(t, loglevel):
 
-    # Possibily change the log level if necessary
-    oldlevel = t.loglevel
-    if loglevel is not None:
-        t.setloglevel(loglevel.upper())
+        if talkative:
+            nicedump('Loading algo component with description:', **kw)
 
-    if talkative:
-        nicedump('Loading algo component with description:', **kw)
+        ok = proxy.component(**kw)  # @UndefinedVariable
+        if ok and talkative:
+            print t.line
+            ok.quickview(nb=1, indent=0)
 
-    ok = proxy.component(**kw)  # @UndefinedVariable
-    if ok and talkative:
-        print t.line
-        ok.quickview(nb=1, indent=0)
-
-    if loglevel is not None:
-        t.setloglevel(oldlevel)
-
-    ctx.record_on()
     return ok
 
 
@@ -394,7 +436,8 @@ def diff(*args, **kw):
         # Get the reference file
         rcget = rhandler.get()
         if not rcget:
-            logger.error('Cannot get the reference resource: %s', rhandler.locate())
+            logger.error('Cannot get the reference resource: %s',
+                         rhandler.locate())
             if fatal:
                 raise ValueError('Cannot get the reference resource')
         else:
@@ -403,7 +446,7 @@ def diff(*args, **kw):
         # What are the differences ?
         rc = rcget and t.sh.diff(comp_source.localpath(),
                                  rhandler.container.localpath(),
-                                 fmt = rhandler.container.actualfmt)
+                                 fmt=rhandler.container.actualfmt)
         # Delete the reference file
         lazzycontainer.clear()
 
@@ -450,16 +493,18 @@ def magic(localpath, **kw):
 
 def namespaces(**kw):
     """
-    Some kind of interactive help to find out quickly which namespaces are in used.
-    By default tracks ``stores`` and ``providers`` but one could give an ``only`` argument.
+    Some kind of interactive help to find out quickly which namespaces are in
+    used. By default tracks ``stores`` and ``providers`` but one could give an
+    ``only`` argument.
     """
-    rematch = re.compile('|'.join(kw.get('match', '.').split(',')), re.IGNORECASE)
+    rematch = re.compile('|'.join(kw.get('match', '.').split(',')),
+                         re.IGNORECASE)
     if 'only' in kw:
         usedcat = kw['only'].split(',')
     else:
         usedcat = ('provider', 'store')
     nameseen = dict()
-    for cat in [ footprints.collectors.get(tag=x) for x in usedcat ]:
+    for cat in [footprints.collectors.get(tag=x) for x in usedcat]:
         for cls in cat():
             fp = cls.footprint_retrieve().attr
             netattr = fp.get('namespace', None)
@@ -477,7 +522,7 @@ def print_namespaces(**kw):
     """Formatted print of current namespaces."""
     prefix = kw.pop('prefix', '+ ')
     nd = namespaces(**kw)
-    justify = max([ len(x) for x in nd.keys() ])
+    justify = max([len(x) for x in nd.keys()])
     linesep = ",\n" + ' ' * (justify + len(prefix) + 2)
     for k, v in sorted(nd.iteritems()):
         nice_v = linesep.join(v) if len(v) > 1 else v[0]
@@ -502,8 +547,8 @@ def clear_promises(clear=None, netloc='promise.cache.fr', scheme='vortex',
 def rescue(*files, **opts):
     """Action to be undertaken when things really went bad."""
 
-    t   = sessions.current()
-    sh  = t.sh
+    t = sessions.current()
+    sh = t.sh
     env = t.env
 
     # Force clearing of all promises
@@ -527,14 +572,14 @@ def rescue(*files, **opts):
     if rfilter is not None:
         logger.warning('Rescue filter <%s>', rfilter)
         select = '|'.join(re.split(r'[,;:]+', rfilter))
-        items = [ x for x in items if re.search(select, x, re.IGNORECASE) ]
+        items = [x for x in items if re.search(select, x, re.IGNORECASE)]
         logger.info('Rescue filter [%s]', select)
 
     rdiscard = opts.get('discard', env.VORTEX_RESCUE_DISCARD)
     if rdiscard is not None:
         logger.warning('Rescue discard <%s>', rdiscard)
         select = '|'.join(re.split(r'[,;:]+', rdiscard))
-        items = [ x for x in items if not re.search(select, x, re.IGNORECASE) ]
+        items = [x for x in items if not re.search(select, x, re.IGNORECASE)]
         logger.info('Rescue discard [%s]', select)
 
     if items:
