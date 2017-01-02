@@ -126,6 +126,15 @@ def olive_jobout(sh, env, output, localout=None):
     return rc
 
 
+def olive_enforce_oneshot(identifier):
+    """Return True only once. This is rather crude..."""
+    t = sessions.current()
+    flag = 'olive_oneshot_flag_{!s}'.format(identifier)
+    go = not t.sh.path.exists(flag)
+    t.sh.touch(flag)
+    return go
+
+
 def olive_gnam_hook_factory(nickname, nam_delta, env=None):
     '''Hook functions factory to apply namelist delta on a given ressource.'''
     if env is not None:
@@ -147,3 +156,22 @@ def olive_gnam_hook_factory(nickname, nam_delta, env=None):
         namrh.save()
 
     return olive_gnam_hook
+
+
+def olive_generic_hook_factory(body):
+    '''User-defined hook functions factory.'''
+    lines = body.split("\n")
+    # Remove a possibly blank first line
+    if re.match('^\s*$', lines[0]):
+        del lines[0]
+    # If the first line is indented, that's wrong => dedent
+    imatch = re.match('^(\s+)', lines[0])
+    ilen = len(imatch.group(1)) if imatch else 0
+    body = "\n".join([line[ilen:] for line in lines])
+    bytecode = compile(body, '<string>', 'exec')
+
+    def olive_generic_hook(t, rh):
+        jail = dict(t=t, rh=rh, sh=t.sh, env=t.env, )
+        exec bytecode in jail
+
+    return olive_generic_hook
