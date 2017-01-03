@@ -456,7 +456,8 @@ class NamelistBlock(object):
 
     def iteritems(self):
         """Iterate over the namelist lock's variables."""
-        return self._pool.iteritems()
+        for k in self._keys:
+            yield (k, self._pool[k])
 
     def update(self, dico):
         """Updates the pool of keys, and keeps as much as possible the initial order."""

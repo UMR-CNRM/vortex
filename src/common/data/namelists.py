@@ -51,7 +51,7 @@ class NamelistContent(AlmostDictContent):
 
     def add(self, addlist):
         """Add namelist blocks to current contents."""
-        for nam in filter(lambda x: x.isinstance(self._namblockcls), addlist):
+        for nam in filter(lambda x: isinstance(x, self._namblockcls), addlist):
             self._data[nam.name] = nam
 
     def toremove(self, bname):
@@ -70,6 +70,11 @@ class NamelistContent(AlmostDictContent):
         if name not in self._data:
             self._data[name] = self._namblockcls(name=name)
         return self._data[name]
+    
+    def mvblock(self, sourcename, destname): 
+        """Rename a block."""
+        assert destname not in self._data, " ".join(["Block", destname, "already exists."])
+        self.newblock(destname).update(self.pop(sourcename))
 
     def macros(self):
         """Returns the dictionary of macros already registered."""
@@ -123,6 +128,9 @@ class NamelistContent(AlmostDictContent):
         except (ValueError, IOError) as e:
             raise NamelistContentError('Could not parse container contents: {!s}'.format(e))
         self._data = namset.as_dict()
+        for macro, value in self._macros.items():
+            for namblock in filter(lambda x: macro in x.macros(), self.values()):
+                namblock.addmacro(macro, value)
 
     def rewrite(self, container):
         """Write the namelist contents in the specified container."""
