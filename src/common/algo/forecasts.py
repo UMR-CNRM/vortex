@@ -382,14 +382,14 @@ class FullPosBDAP(FullPos):
                 values  = ['fullpos', 'fp'],
                 remap   = dict(fp= 'fullpos' )
             ),
-        ),
-        outputid = dict(
-            info        = "The identifier for the encoding of post-processed fields.",
-            type        = str,
-            optional    = True,
-        ),
-        server_run = dict(
-            values   = [False, ],
+            outputid = dict(
+                info        = "The identifier for the encoding of post-processed fields.",
+                type        = str,
+                optional    = True,
+            ),
+            server_run = dict(
+                values   = [False, ],
+            ),
         ),
     )
 
