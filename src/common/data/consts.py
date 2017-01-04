@@ -592,6 +592,10 @@ class MatFilter(GenvStaticGeoResource):
     def realkind(self):
         return 'matfilter'
 
+    def footprint_export_scope(self):
+        """Return the ``geometry`` attribute as its id tag."""
+        return self.scope.tag
+
     def basename_info(self):
         """Generic information, radical = ``matfil``."""
         return dict(
