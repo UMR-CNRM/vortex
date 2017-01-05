@@ -6,6 +6,7 @@ __all__ = []
 
 import re
 
+from vortex.data import geometries
 from vortex.data.contents import JsonDictContent
 from vortex.data.flow import GeoFlowResource, FlowResource
 from vortex.syntax.stdattrs import term
@@ -75,11 +76,17 @@ class GridPoint(GeoFlowResource):
         else:
             source = 'forecast'
 
+        lgeo = self.geometry.area
+        if isinstance(self.geometry, geometries.GaussGeometry):
+            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
+        elif isinstance(self.geometry, geometries.ProjectedGeometry):
+            lgeo = [self.geometry.area, self.geometry.rnice]
+
         return dict(
             radical = 'grid',
             fmt     = self.nativefmt,
             src     = [self.model, source],
-            geo     = self.geometry.area,
+            geo     = lgeo,
             term    = self.term.fmthm
         )
 
