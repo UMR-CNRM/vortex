@@ -12,6 +12,7 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex import sessions
 from vortex.tools import env
 from vortex.tools.date import Time, Date
+from vortex.tools.fortran import NO_SORTING
 from vortex.data.outflow import ModelResource, NoDateResource
 from vortex.data.contents import AlmostDictContent, IndexedTable
 from vortex.syntax.stdattrs import binaries, term, cutoff
@@ -37,7 +38,7 @@ class NamelistContent(AlmostDictContent):
           * macros : pre-defined macros for all namelist blocks
           * remove : elements to remove from the contents
           * parser : a namelist parser object (a default one will be built otherwise)
-          * automkblock : give automaticaly a name to new blocks when not provided
+          * automkblock : give automatically a name to new blocks when not provided
           * namblockcls : class for new blocks
         """
         kw.setdefault('macros', {k: None for k in KNOWN_NAMELIST_MACROS})
@@ -86,9 +87,16 @@ class NamelistContent(AlmostDictContent):
             namblock.addmacro(item, value)
         self._macros[item] = value
 
-    def dumps(self):
-        """Returns the namelist contents as a string."""
-        return ''.join([self.get(x).dumps() for x in sorted(self.keys())])
+    def dumps(self, sorting=NO_SORTING):
+        """
+        Returns the namelist contents as a string.
+        Sorting option **sorting** (from vortex.tools.fortran):
+          NO_SORTING;
+          FIRST_ORDER_SORTING => sort all keys within blocks;
+          SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
+        """
+        return ''.join([self.get(x).dumps(sorting=sorting)
+                        for x in sorted(self.keys())])
 
     def merge(self, delta, rmkeys=None, rmblocks=None, clblocks=None):
         """Merge of the current namelist content with the set of namelist blocks provided."""
@@ -132,10 +140,16 @@ class NamelistContent(AlmostDictContent):
             for namblock in filter(lambda x: macro in x.macros(), self.values()):
                 namblock.addmacro(macro, value)
 
-    def rewrite(self, container):
-        """Write the namelist contents in the specified container."""
+    def rewrite(self, container, sorting=NO_SORTING):
+        """
+        Write the namelist contents in the specified container.
+        Sorting option **sorting** (from vortex.tools.fortran):
+          NO_SORTING;
+          FIRST_ORDER_SORTING => sort all keys within blocks;
+          SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
+        """
         container.close()
-        container.write(self.dumps())
+        container.write(self.dumps(sorting=sorting))
         container.close()
 
 
