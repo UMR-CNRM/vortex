@@ -17,7 +17,9 @@ DIRTYNAM = """\
 title = 'Coordinates/t=10',
 A= 25,30, ! This is a parameter
 x = 300.d0, y=628.318, z=0d0,
-c=(0,1), boz=B'11', stest=NBPROC
+B(10)=1,
+c=(0,1), boz=B'11', stest=NBPROC,
+B(2)=2,
 /
 """
 
@@ -28,6 +30,44 @@ CLEANEDNAM = """\
    X =300.,
    Y=628.318,
    Z=0.,
+   B(10)=1,
+   C=(0.,1.),
+   BOZ=3,
+   STEST=NBPROC,
+   B(2)=2,
+ /
+ &MYSECONDONE
+   C=.TRUE.,
+ /
+"""
+
+CLEANEDNAM_SORTED1 = """\
+ &MYNAMELISTTEST
+   A=25,30,
+   B(2)=2,
+   B(10)=1,
+   BOZ=3,
+   C=(0.,1.),
+   STEST=NBPROC,
+   TITLE ='Coordinates/t=10',
+   X =300.,
+   Y=628.318,
+   Z=0.,
+ /
+ &MYSECONDONE
+   C=.TRUE.,
+ /
+"""
+
+CLEANEDNAM_SORTED2 = """\
+ &MYNAMELISTTEST
+   TITLE ='Coordinates/t=10',
+   A=25,30,
+   X =300.,
+   Y=628.318,
+   Z=0.,
+   B(2)=2,
+   B(10)=1,
    C=(0.,1.),
    BOZ=3,
    STEST=NBPROC,
@@ -177,6 +217,10 @@ C='Trash',
         self.assertSetEqual(set(parse_res.iterkeys()),
                             set(['MyNamelistTest', 'MySecondOne']))
         self.assertEqual(parse_res.dumps(), CLEANEDNAM)
+        self.assertEqual(parse_res.dumps(sorting=fortran.FIRST_ORDER_SORTING),
+                         CLEANEDNAM_SORTED1)
+        self.assertEqual(parse_res.dumps(sorting=fortran.SECOND_ORDER_SORTING),
+                         CLEANEDNAM_SORTED2)
 
 
 class DummyNamContainer(object):
