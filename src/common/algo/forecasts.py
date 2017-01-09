@@ -92,9 +92,8 @@ class Forecast(IFSParallel):
                 if thisclim != thisname:
                     sh.symlink(thisclim, thisname)
 
-            for iaurh in [ x for x in  self.context.sequence.effective_inputs(
-                role = re.compile(r'IAU_\w')
-            )]:
+            for iaurh in [x for x in
+                          self.context.sequence.effective_inputs(role = re.compile(r'IAU_\w'))]:
                 self.grab(iaurh, comment='IAU files')
 
             # At least, expect the analysis to be there...
