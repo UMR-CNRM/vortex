@@ -27,6 +27,10 @@ Interface functions
 
 .. autofunction:: olive_gnam_hook_factory
 
+.. autofunction:: olive_generic_hook_factory
+
+.. autofunction:: olive_enforce_oneshot
+
 Classes
 -------
 

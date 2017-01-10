@@ -21,6 +21,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: CouplingLAM
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Prep
    :show-inheritance:
    :members:

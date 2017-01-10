@@ -71,8 +71,8 @@ class NamelistContent(AlmostDictContent):
         if name not in self._data:
             self._data[name] = self._namblockcls(name=name)
         return self._data[name]
-    
-    def mvblock(self, sourcename, destname): 
+
+    def mvblock(self, sourcename, destname):
         """Rename a block."""
         assert destname not in self._data, " ".join(["Block", destname, "already exists."])
         self.newblock(destname).update(self.pop(sourcename))
@@ -91,9 +91,11 @@ class NamelistContent(AlmostDictContent):
         """
         Returns the namelist contents as a string.
         Sorting option **sorting** (from vortex.tools.fortran):
-          NO_SORTING;
-          FIRST_ORDER_SORTING => sort all keys within blocks;
-          SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
+
+            * NO_SORTING;
+            * FIRST_ORDER_SORTING => sort all keys within blocks;
+            * SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
+
         """
         return ''.join([self.get(x).dumps(sorting=sorting)
                         for x in sorted(self.keys())])
@@ -144,9 +146,11 @@ class NamelistContent(AlmostDictContent):
         """
         Write the namelist contents in the specified container.
         Sorting option **sorting** (from vortex.tools.fortran):
-          NO_SORTING;
-          FIRST_ORDER_SORTING => sort all keys within blocks;
-          SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
+
+            * NO_SORTING;
+            * FIRST_ORDER_SORTING => sort all keys within blocks;
+            * SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
+
         """
         container.close()
         container.write(self.dumps(sorting=sorting))

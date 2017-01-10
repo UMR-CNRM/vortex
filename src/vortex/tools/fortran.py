@@ -524,9 +524,11 @@ class NamelistBlock(object):
         """
         Returns a string of the namelist block, readable by fortran parsers.
         Sorting option **sorting**:
-          NO_SORTING;
-          FIRST_ORDER_SORTING => sort keys;
-          SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
+
+            * NO_SORTING;
+            * FIRST_ORDER_SORTING => sort keys;
+            * SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
+
         """
         namout = " &{0:s}\n".format(self.name.upper())
         if literal is None:
@@ -603,9 +605,11 @@ class NamelistSet(object):
         """
         Join the fortran-strings dumped by each namelist block.
         Sorting option **sorting**:
-          NO_SORTING;
-          FIRST_ORDER_SORTING => sort all keys within blocks;
-          SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
+
+            * NO_SORTING;
+            * FIRST_ORDER_SORTING => sort all keys within blocks;
+            * SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
+
         """
         return ''.join([self._namset[x].dumps(sorting=sorting) for x in self.keys()])
 

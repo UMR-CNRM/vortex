@@ -16,6 +16,11 @@ of the :mod:`vortex` toolbox.
 Resource Loading
 ----------------
 
+.. autoclass:: VortexToolboxDescError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autofunction:: rload
 
 .. autofunction:: rh
