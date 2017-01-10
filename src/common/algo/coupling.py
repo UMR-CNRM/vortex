@@ -194,6 +194,25 @@ class Coupling(FullPos):
                     sh.rmall('ncf927', 'dirlst', 'NODE.[0123456789]*', 'std*')
 
 
+class CouplingLAM(Coupling):
+    """Coupling for LAM to LAM Models (useless beyond cy40)."""
+
+    _footprint = dict(
+        info = "Create coupling files for a Limited Area Model (useless beyond cy40).",
+        attr = dict(
+            kind = dict(
+                values   = ['lamcoupling'],
+            ),
+        )
+    )
+
+    def spawn_command_options(self):
+        """Dictionary provided for command line factory."""
+        opts = super(CouplingLAM, self).spawn_command_options()
+        opts['model'] = 'aladin'
+        return opts
+
+
 class Prep(BlindRun):
     """Coupling/Interpolation of Surfex files."""
 
