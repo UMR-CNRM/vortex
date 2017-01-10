@@ -129,6 +129,7 @@ NO_SORTING = 0
 FIRST_ORDER_SORTING = 1
 SECOND_ORDER_SORTING = 2
 
+
 class LiteralParser(object):
     """Object in charge of parsing litteral fortran expressions that could be found in a namelist."""
     def __init__(self,
@@ -538,7 +539,7 @@ class NamelistBlock(object):
                 split_k = []
                 for a in k_by_attr:
                     table = re.match(r'(?P<radic>\w+)\((?P<indexes>.+)\)', a)
-                    if table is None: # scalar
+                    if table is None:  # scalar
                         split_k.append(a)
                     else:
                         split_k.append(table.group('radic'))
@@ -558,15 +559,15 @@ class NamelistBlock(object):
                 tuples = [str2tup(k) for k in self._keys]
                 radics = [t[0] for t in tuples]
                 radics = sorted(list(set(radics)), key=lambda x: radics.index(x))
-                byradics = {r:sorted([{'indexes':tuples[i][1:], 'fullkey':self._keys[i]}
-                                      for i in range(len(self._keys)) if tuples[i][0] == r],
-                                     key=lambda x: x['indexes'])
+                byradics = {r: sorted([{'indexes': tuples[i][1:], 'fullkey': self._keys[i]}
+                                       for i in range(len(self._keys)) if tuples[i][0] == r],
+                                      key=lambda x: x['indexes'])
                             for r in radics}
                 keylist = []
                 for r in radics:
                     keylist.extend([b['fullkey'] for b in byradics[r]])
             else:
-                raise ValueError('unknown value for **sorting**:'+str(sorting))
+                raise ValueError('unknown value for **sorting**:' + str(sorting))
         else:
             keylist = self._keys
         for key in keylist:
@@ -702,7 +703,7 @@ class NamelistParser(object):
                 # Got a new entry in the namelist block
                 if current:
                     namelist.update({current: values})
-                current = self.entry.match(source).group(0)
+                current = self.entry.match(source).group(0).strip()
                 values = list()
                 source = self._namelist_clean(source[len(current):])
                 # Removes equal
