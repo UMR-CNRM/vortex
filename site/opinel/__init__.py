@@ -15,4 +15,4 @@ logger = footprints.loggers.getLogger(__name__)
 #: No automatic export
 __all__ = []
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
