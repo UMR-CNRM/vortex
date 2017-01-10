@@ -79,8 +79,12 @@ def _checkingfunction_dict(options):
     """
     rhdict = options.get('rhandler', None)
     if rhdict:
-        # If no nbsample id provided, this is fine...
+        # If no nbsample is provided, easy to achieve...
         nbsample = rhdict['resource'].get('nbsample', 0)
+        # ...and if no explicit minimum of resources, nbsample is the minimum
+        nbmin = int(options.get('min', [nbsample]).pop())
+        if nbsample < nbmin:
+            logger.warning('%d resources needed, %d required: sin of gluttony ?', nbsample, nbmin)
         checkrole = rhdict['resource'].get('checkrole', None)
         if not checkrole:
             raise FunctionStoreCallbackError('The resource must hold a non-empty checkrole attribute')
@@ -93,7 +97,7 @@ def _checkingfunction_dict(options):
         else:
             raise FunctionStoreCallbackError('checkrole is not properly formatted')
         try:
-            return helpers.colorfull_input_checker(nbsample, checklist, mandatory=mandatorylist)
+            return helpers.colorfull_input_checker(nbmin, checklist, mandatory=mandatorylist)
         except helpers.InputCheckerError as e:
             raise FunctionStoreCallbackError('The input checher failed ({!s})'.format(e))
     else:
