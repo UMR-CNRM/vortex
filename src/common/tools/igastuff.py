@@ -15,7 +15,8 @@ fuzzystr = dict(
         ),
     ),
     prefix = dict(
-        gridpoint = dict( oper = 'PE', dble = 'PA', mirr='PE' ),
+        # LFM 2016/12/30: It was dble='PA' but apparently it's wrong. No idea why...
+        gridpoint = dict( oper = 'PE', dble = 'PE', mirr='PE' ),
     ),
     suffix = dict(
         bgstderr = dict( input = 'in', output = 'out' )
