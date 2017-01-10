@@ -747,7 +747,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
         basedate = basedates.pop()
         # Setup BasicGangs
         basicmeta = AutoMetaGang()
-        basicmeta.autofill(bm, ('term', 'block', 'geometry'),
+        basicmeta.autofill(bm, ('term', 'safeblock', 'geometry'),
                            allowmissing=self.missinglimit, waitlimit=self.waitlimit)
         # Find out what are the terms, domains and blocks
         geometries = set()
@@ -755,7 +755,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
         blocks = collections.defaultdict(set)
         reverse = dict()
         for m in basicmeta.memberslist:
-            (geo, term, block) = (m.info['geometry'], m.info['term'], m.info['block'])
+            (geo, term, block) = (m.info['geometry'], m.info['term'], m.info['safeblock'])
             geometries.add(geo)
             terms[geo].add(term)
             blocks[geo].add(block)
