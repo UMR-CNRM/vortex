@@ -11,6 +11,7 @@ __all__ = []
 import re
 import collections
 from collections import namedtuple, defaultdict
+import pprint
 import weakref
 import json
 
@@ -612,14 +613,25 @@ class LocalTrackerEntry(object):
         else:
             return dict()
 
-    def match_rh(self, action, rh):
+    def match_rh(self, action, rh, verbose=False):
         """Check if an :class:`~vortex.data.handlers.Handler` object matches the one stored internally.
 
         :param action: Action that is considered
         :param rh: :class:`~vortex.data.handlers.Handler` object that will be checked
         """
         if self._check_action(action):
-            return self.latest_rhdict(action) == self._clean_rhdict(rh.as_dict())
+            cleaned = self._clean_rhdict(rh.as_dict())
+            latest = self.latest_rhdict(action)
+            res = latest == cleaned
+            if verbose and not res:
+                for key, item in latest.items():
+                    newitem = cleaned.get(key, None)
+                    if newitem != item:
+                        logger.error('Expected %s:', key)
+                        logger.error(pprint.pformat(item))
+                        logger.error('Got:')
+                        logger.error(pprint.pformat(newitem))
+            return res
         else:
             return False
 
