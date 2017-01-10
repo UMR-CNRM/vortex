@@ -24,7 +24,6 @@ _INFO_PRINT_FMT = ' > {:<16s}: {!s}'
 
 DEFAULT_JOB_FILE = 'create_job'
 
-
 def parse_command_line():
     description = "Create or modify vortex jobs for a specific application"
     parser = argparse.ArgumentParser(description=description)
@@ -33,20 +32,20 @@ def parse_command_line():
                'application (defaults to "%(default)s"). This file must have ' +
                'dict-like lines such as: name=jobname task=taskname')
     parser.add_argument('-f', '--file', help=helpstr, default=DEFAULT_JOB_FILE)
-    parser.add_argument('-n', '--name', help="Name of the job to handle " +
-                        "(must match the corresponding name in the 'jobs' file")
-    parser.add_argument('-j', '--job', nargs='+', help="Command line (dict-like string) containing " +
-                        "all informations to make a specific job, ex : \n 'name=jobname task=taskname'")
+    parser.add_argument('-n', '--name', nargs='+', help="Name of the job(s) to handle " +
+                        "(must match the corresponding name(s) in the 'jobs' file")
+    parser.add_argument('-j', '--job', help="Command line (dict-like string) containing " +
+                        "all informations to make one specific job, ex : \n 'name=jobname task=taskname'")
     parser.add_argument('-o', '--oper', action='store_true', help='Activate oper specifications ' +
                         'in the jobs (op_mail=True, ad.route_on(),... The default option is the test configuration')
-    parser.add_argument('-a', '--add', nargs='+', help='Add (and replace if necessary) argument to the ' +
+    parser.add_argument('-a', '--add', nargs='+', help='Add (and replace if necessary) argument(s) to the ' +
                         'description of all the jobs concerned.')
     parser.add_argument('-w', '--write', action='store_true', help="If -j option is activated, " +
                         "add the command line to the 'jobs' file")
     parser.add_argument('-l', '--list', action='store_true', help='Only list the name of the ' +
                         'jobs to handle, and exit')
-    parser.add_argument('-b', '--backup', action='store_true', help='Save old jobs before ' +
-                        'creating new ones with specified options')
+    parser.add_argument('-b', '--backup', nargs='?', const='.backup', help='Save old jobs with the given extension ' +
+                        '(default is ".backup") creating new ones with specified options')
     parser.add_argument('-v', '--verbose', help='verbose mode', action='store_true')
     parser.add_argument('-i', '--info', action='store_true', help='Full list of available ' +
                         'variables that can be used to make an OP job (according to the job template)')
@@ -102,10 +101,9 @@ def list_variables():
         for line in f:
             print(line)
 
-
-def add_report(report, jobname, oper, backup=False):
-    if backup:
-        report.append('Save the job ' + jobname + ' under ' + jobname + '_backup')
+def add_report(report, jobname, oper, backup=None):
+    if backup is not None:
+        report.append('Save the job ' + jobname + ' under ' + jobname + backup)
     else:
         configuration = 'oper' if oper else 'test' 
         report.append('Job ' + jobname + ' created in configuration ' + configuration)
@@ -191,8 +189,8 @@ if __name__ == "__main__":
     else:
         for job in jobs:
             jobname = job['name'] + '.py'
-            if os.path.isfile(jobname) and args.backup:
-                copyfile(jobname, jobname + '_backup')
+            if os.path.isfile(jobname) and args.backup is not None:
+                copyfile(jobname, jobname + args.backup)
                 report = add_report(report, jobname, args.oper, args.backup)
             makejob(job)
             report = add_report(report, jobname, args.oper)
