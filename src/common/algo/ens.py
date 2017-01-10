@@ -53,6 +53,7 @@ class Combi(BlindRun, grib.GribApiComponent):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(Combi, self).prepare(rh, opts)
+        self.export('drhook_not_mpi')
         self.gribapi_setup(rh, opts)
 
     def execute(self, rh, opts):
@@ -121,8 +122,6 @@ class CombiSV(CombiPert):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(CombiSV, self).prepare(rh, opts)
-
-        self.export('drhook_not_mpi')
 
         # Check the number of singular vectors and link them in succession
         nbVect = collections.OrderedDict()
