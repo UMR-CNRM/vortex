@@ -295,6 +295,14 @@ class CombiIC(Combi):
         logger.info("Add the NBPERT=%d coefficient to the NAMENS namelist entry.", nbPert)
         namsec[0].rh.contents['NAMENS']['NBPERT'] = nbPert
 
+        # symmectric perturbations ?
+        if nbPert < self.nbic - 1:
+            namsec[0].rh.contents['NAMENS']['LMIRROR'] = True
+            logger.info("Add LMIRROR=.TRUE. to the NAMENS namelist entry.")
+        elif nbPert != 1:  # 1 pert, 2 ic is possible without mirror adding the control
+            namsec[0].rh.contents['NAMENS']['LMIRROR'] = False
+            logger.info("Add LMIRROR=.FALSE. to the NAMENS namelist entry.")
+
         self._addNmod(namsec[0].rh, "final combination of the perturbations")
         namsec[0].rh.save()
 
