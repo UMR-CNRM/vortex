@@ -45,8 +45,6 @@ def parse_command_line():
                         "add the command line to the 'jobs' file")
     parser.add_argument('-l', '--list', action='store_true', help='Only list the name of the ' +
                         'jobs to handle, and exit')
-    parser.add_argument('-s', '--sms', action='store_true', help='Make a job in test ' +
-                        'configuration but that can be launched with sms.')
     parser.add_argument('-b', '--backup', action='store_true', help='Save old jobs before ' +
                         'creating new ones with specified options')
     parser.add_argument('-v', '--verbose', help='verbose mode', action='store_true')
@@ -80,8 +78,7 @@ def parse_command_line():
         for job in jobs:
             job.update(newparams)
 
-    dflt_profile = (('oper' if args.oper else 'test') +
-                    ('-sms' if not args.oper and args.sms else ''))
+    dflt_profile = 'oper' if args.oper else 'test'
     job.setdefault('profile', dflt_profile)
 
     return args, jobs, report
@@ -106,11 +103,11 @@ def list_variables():
             print(line)
 
 
-def add_report(report, jobname, oper, sms, backup=False):
+def add_report(report, jobname, oper, backup=False):
     if backup:
         report.append('Save the job ' + jobname + ' under ' + jobname + '_backup')
     else:
-        configuration = 'oper' if oper else ('test with sms' if sms else 'test without sms')
+        configuration = 'oper' if oper else 'test' 
         report.append('Job ' + jobname + ' created in configuration ' + configuration)
     return report
 
@@ -196,9 +193,9 @@ if __name__ == "__main__":
             jobname = job['name'] + '.py'
             if os.path.isfile(jobname) and args.backup:
                 copyfile(jobname, jobname + '_backup')
-                report = add_report(report, jobname, args.oper, args.sms, args.backup)
+                report = add_report(report, jobname, args.oper, args.backup)
             makejob(job)
-            report = add_report(report, jobname, args.oper, args.sms)
+            report = add_report(report, jobname, args.oper)
         display_report(report)
         if args.verbose:
             list_jobs(jobs)
