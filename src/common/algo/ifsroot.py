@@ -149,7 +149,7 @@ class IFSParallel(Parallel, grib.GribApiComponent):
                 namcontents.setmacro('FCSTOP', fcstop)
                 nam_updated = True
             else:
-                logger.error('No NAMARG block in %s. It will probably crash', namlocal)
+                logger.info('No NAMARG block in %s', namlocal)
 
         if self.member is not None:
             namcontents.setmacro('MEMBER', self.member)
