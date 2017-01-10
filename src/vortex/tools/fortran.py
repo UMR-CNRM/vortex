@@ -43,6 +43,7 @@ _RE_FLAGS = re.IGNORECASE + re.DOTALL
 _LETTER             = "[A-Z]"
 _DIGIT              = "[0-9]"
 _UNDERSCORE         = "[_]"
+_LETTER_UNDERSCORE  = "[A-Z_]"
 _SPECIAL_CHARACTERS = "[ =+-*/(),.':!\"%&;<>?$]"
 _OTHER_CHARACTERS   = "[^A-Z0-9_ =+-*/(),.':!\"%&;<>?$]"
 _GRAPHIC_CHARACTERS = ".|\n"
@@ -57,7 +58,7 @@ _STRDELIM_B = "(?P<STRB>[" + _QUOTE + _DQUOTE + "])"
 _STRDELIM_E = "(?(STRB)[" + _QUOTE + _DQUOTE + "])"
 _NAME       = _LETTER + _ALPHANUMERIC_CHARACTER + '*'
 _MACRONAME  = (_STRDELIM_B + r'?\$?' +
-               "(?P<NAME>" + _LETTER + _ALPHANUMERIC_CHARACTER + '*' + ")" +
+               "(?P<NAME>" + _LETTER_UNDERSCORE + _ALPHANUMERIC_CHARACTER + '*' + ")" +
                _STRDELIM_E)
 
 # Operators
@@ -123,6 +124,10 @@ _LITERAL_CONSTANT = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + _BOZ_LITERAL_CO
                     _SIGNED_REAL_LITERAL_CONSTANT + "|" + _COMPLEX_LITERAL_CONSTANT + "|" + \
                     _CHAR_LITERAL_CONSTANT + "|" + _LOGICAL_LITERAL_CONSTANT + ")"
 
+# Sorting
+NO_SORTING = 0
+FIRST_ORDER_SORTING = 1
+SECOND_ORDER_SORTING = 2
 
 class LiteralParser(object):
     """Object in charge of parsing litteral fortran expressions that could be found in a namelist."""
@@ -456,7 +461,8 @@ class NamelistBlock(object):
 
     def iteritems(self):
         """Iterate over the namelist lock's variables."""
-        return self._pool.iteritems()
+        for k in self._keys:
+            yield (k, self._pool[k])
 
     def update(self, dico):
         """Updates the pool of keys, and keeps as much as possible the initial order."""
@@ -513,14 +519,57 @@ class NamelistBlock(object):
         else:
             return literal.encode(item)
 
-    def dumps(self, literal=None):
-        """Returns a string of the namelist block, readable by fortran parsers."""
+    def dumps(self, literal=None, sorting=NO_SORTING):
+        """
+        Returns a string of the namelist block, readable by fortran parsers.
+        Sorting option **sorting**:
+          NO_SORTING;
+          FIRST_ORDER_SORTING => sort keys;
+          SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
+        """
         namout = " &{0:s}\n".format(self.name.upper())
         if literal is None:
             if self._literal is None:
                 self.__dict__['_literal'] = LiteralParser()
             literal = self._literal
-        for key in self._keys:
+        if sorting:
+            def str2tup(k):
+                k_by_attr = k.split('%')
+                split_k = []
+                for a in k_by_attr:
+                    table = re.match(r'(?P<radic>\w+)\((?P<indexes>.+)\)', a)
+                    if table is None: # scalar
+                        split_k.append(a)
+                    else:
+                        split_k.append(table.group('radic'))
+                        strindexes = table.group('indexes')
+                        if all([s in strindexes for s in (':', ',')]):
+                            raise NotImplementedError("both ':' and ',' in array indexes")
+                        elif ':' in strindexes:
+                            split_k.extend([int(i) for i in strindexes.split(':')])
+                        elif ',' in strindexes:
+                            split_k.extend([int(i) for i in strindexes.split(',')])
+                        else:
+                            split_k.append(int(strindexes))
+                return tuple(split_k)
+            if sorting == FIRST_ORDER_SORTING:
+                keylist = sorted(self._keys, key=str2tup)
+            elif sorting == SECOND_ORDER_SORTING:
+                tuples = [str2tup(k) for k in self._keys]
+                radics = [t[0] for t in tuples]
+                radics = sorted(list(set(radics)), key=lambda x: radics.index(x))
+                byradics = {r:sorted([{'indexes':tuples[i][1:], 'fullkey':self._keys[i]}
+                                      for i in range(len(self._keys)) if tuples[i][0] == r],
+                                     key=lambda x: x['indexes'])
+                            for r in radics}
+                keylist = []
+                for r in radics:
+                    keylist.extend([b['fullkey'] for b in byradics[r]])
+            else:
+                raise ValueError('unknown value for **sorting**:'+str(sorting))
+        else:
+            keylist = self._keys
+        for key in keylist:
             value_strings = [self.nice(value, literal) for value in self._pool[key]]
             namout += '   {0:s}={1:s},\n'.format(key, ','.join(value_strings))
         return namout + " /\n"
@@ -549,9 +598,15 @@ class NamelistSet(object):
         """Return the name of each namelist block stored in this set."""
         return sorted(self._namset.keys())
 
-    def dumps(self):
-        """Join the fortran-strings dumped by each namelist block."""
-        return ''.join([self._namset[x].dumps() for x in self.keys()])
+    def dumps(self, sorting=NO_SORTING):
+        """
+        Join the fortran-strings dumped by each namelist block.
+        Sorting option **sorting**:
+          NO_SORTING;
+          FIRST_ORDER_SORTING => sort all keys within blocks;
+          SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
+        """
+        return ''.join([self._namset[x].dumps(sorting=sorting) for x in self.keys()])
 
     def as_dict(self):
         """Return the actual namelist set as a dictionary."""
