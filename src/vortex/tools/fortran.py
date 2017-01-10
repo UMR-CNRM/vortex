@@ -294,7 +294,7 @@ class LiteralParser(object):
     @staticmethod
     def encode_real(value):
         """Returns the string form of the real ``value``."""
-        real = '{0:G}'.format(value).replace('E', 'D')
+        real = '{0:.15G}'.format(value).replace('E', 'D')
         if '.' not in real:
             real = re.sub('D', '.0D', real)
             if '.' not in real:

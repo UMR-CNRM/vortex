@@ -141,9 +141,13 @@ class UtFortran(TestCase):
     def test_encode(self):
         self._encode_tester(1, '1')
         self._encode_tester(1243523, '1243523')
+        self._encode_tester(1.0, '1.')
         self._encode_tester(1., '1.')
         self._encode_tester(1e-76, '1.0D-76')
         self._encode_tester(1e124, '1.0D+124')
+        self._encode_tester(222.5125, '222.5125')
+        self._encode_tester(1.2345432123454321e-06  , '1.23454321234543D-06')
+        self._encode_tester(0.0000012345432123454321, '1.23454321234543D-06')
         self._encode_tester(complex(1, 1), '(1.,1.)')
         self._encode_tester("machin", "'machin'")
         self._encode_tester("mach'in", '"mach\'in"')
