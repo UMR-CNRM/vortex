@@ -32,10 +32,10 @@ def parse_command_line():
                'application (defaults to "%(default)s"). This file must have ' +
                'dict-like lines such as: name=jobname task=taskname')
     parser.add_argument('-f', '--file', help=helpstr, default=DEFAULT_JOB_FILE)
-    parser.add_argument('-n', '--name', nargs='+', help="Name of the job(s) to handle " +
-                        "(must match the corresponding name(s) in the 'jobs' file")
-    parser.add_argument('-j', '--job', help="Command line (dict-like string) containing " +
-                        "all informations to make one specific job, ex : \n 'name=jobname task=taskname'")
+    parser.add_argument('-n', '--name', nargs='+', help="Name(s) of the job(s) to handle " +
+                        "(must match the corresponding name(s) in the 'create_job' file")
+    parser.add_argument('-j', '--job', nargs='+', help="Command line containing " +
+                        "all informations to make one specific job, ex : \n name=jobname task=taskname")
     parser.add_argument('-o', '--oper', action='store_true', help='Activate oper specifications ' +
                         'in the jobs (op_mail=True, ad.route_on(),... The default option is the test configuration')
     parser.add_argument('-a', '--add', nargs='+', help='Add (and replace if necessary) argument(s) to the ' +
