@@ -288,8 +288,8 @@ class Sequence(footprints.observers.Observer):
         inkind = list()
         if 'role' in kw and kw['role'] is not None:
             selectrole = mktuple(kw['role'])
-            inrole = [ x for x in sections if (self._fuzzy_match(x.role, selectrole) or
-                                               (x.alternate is not None and self._fuzzy_match(x.alternate, selectrole))) ]
+            inrole = [x for x in sections if ((x.role is not None and self._fuzzy_match(x.role, selectrole)) or
+                                              (x.alternate is not None and self._fuzzy_match(x.alternate, selectrole)))]
         if not inrole and 'kind' in kw:
             selectkind = mktuple(kw['kind'])
             inkind = [ x for x in sections if self._fuzzy_match(x.rh.resource.realkind, selectkind) ]
