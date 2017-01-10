@@ -30,8 +30,8 @@ doc:
 	$(MAKE) -C $(DOC_DIR)
 
 # Count the number of source code lines
-cloc    : ; $(CLOCPY) -p $(CLOCBIN) -d $(CLOCDEF) site src tests conf templates examples sphinx
-cloc_all: ; $(CLOCPY) -p $(CLOCBIN) -d $(CLOCDEF) .
+cloc        : ; $(CLOCPY) -p $(CLOCBIN) -d $(CLOCDEF) site src tests conf,templates examples sphinx
+cloc_all    : ; $(CLOCPY) -p $(CLOCBIN) -d $(CLOCDEF) .
 
 # Code quality analysis : pyflakes + pep8 + McCabe (cyclomatic complexity)
 flake8: ; flake8 --config=project/flake8.ini --statistics . > project/flake8_report.txt || true
