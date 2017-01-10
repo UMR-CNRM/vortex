@@ -61,8 +61,9 @@ def parse_command_line():
         report.append('Generation of the jobs defined in the file : {} \n'.format(args.file))
         with open(args.file, 'r') as fp:
             for line in fp.readlines():
-                if (args.name is None or args.name in line) and bool(line.rstrip()):
-                    job = make_cmdline(line.rstrip().split(' '))
+                if bool(line.rstrip()):
+                    job = make_cmdline(line.rstrip())
+                if args.name is None or job['name'] in args.name:
                     jobs.append(job)
 
     elif args.job:
@@ -78,8 +79,9 @@ def parse_command_line():
             job.update(newparams)
 
     dflt_profile = 'oper' if args.oper else 'test'
-    job.setdefault('profile', dflt_profile)
-
+    for job in jobs:
+        job.setdefault('profile', dflt_profile)
+ 
     return args, jobs, report
 
 
@@ -91,12 +93,14 @@ def list_jobs(jobs):
 
 def make_cmdline(description):
     t = vortex.ticket()
+    if type(description) is str:
+        description = description.split(' ')
     return t.sh.rawopts(description)
 
 
 def list_variables():
     t = vortex.ticket()
-    core = load_template(t, 'opjob-variables.tpl')
+    core = load_template(t, '@opjob-variables.tpl')
     with open(core.srcfile, 'r') as f:
         for line in f:
             print(line)
@@ -115,7 +119,7 @@ def display_report(report):
     t.sh.header('Review of actions taken')
     for item in report:
         print(item)
-    print
+    print()
 
 
 def makejob(job):
