@@ -213,6 +213,7 @@ class TimeSlots(object):
         return nbx
 
 
+@folder.folderize
 class OdbShell(folder.FolderShell):
     """
     Default interface to ODB commands.
@@ -227,28 +228,3 @@ class OdbShell(folder.FolderShell):
             ),
         )
     )
-
-    def odb_cp(self, source, destination, intent='in'):
-        """Extended copy for ODB repository."""
-        return super(OdbShell, self)._folder_cp(source, destination, intent)
-
-    def odb_mv(self, source, destination):
-        """Extended copy for ODB repository."""
-        return super(OdbShell, self)._folder_mv(source, destination)
-
-    def odb_ftget(self, source, destination, hostname=None, logname=None):
-        """Proceed direct ftp get on the specified target."""
-        return super(OdbShell, self)._folder_ftget(source, destination,
-                                                   hostname, logname)
-
-    def odb_ftput(self, source, destination, hostname=None, logname=None):
-        """Proceed direct ftp get on the specified target."""
-        return super(OdbShell, self)._folder_ftput(source, destination,
-                                                   hostname, logname)
-
-    def odb_rawftput(self, source, destination, hostname=None, logname=None):
-        """Proceed direct ftp get on the specified target."""
-        return super(OdbShell, self)._folder_rawftput(source, destination,
-                                                      hostname, logname)
-
-    odb_rawftget = odb_ftget

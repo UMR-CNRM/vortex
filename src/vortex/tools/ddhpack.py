@@ -10,6 +10,7 @@ logger = footprints.loggers.getLogger(__name__)
 from . import folder
 
 
+@folder.folderize
 class DdhPackShell(folder.FolderShell):
     """
     Default interface to DDHpack commands.
@@ -24,24 +25,3 @@ class DdhPackShell(folder.FolderShell):
             ),
         )
     )
-
-    def ddhpack_cp(self, source, destination, intent='in'):
-        """Extended copy for ODB repository."""
-        return super(DdhPackShell, self)._folder_cp(source, destination, intent)
-
-    def ddhpack_ftget(self, source, destination, hostname=None, logname=None):
-        """Proceed direct ftp get on the specified target."""
-        return super(DdhPackShell, self)._folder_ftget(source, destination,
-                                                       hostname, logname)
-
-    def ddhpack_ftput(self, source, destination, hostname=None, logname=None):
-        """Proceed direct ftp get on the specified target."""
-        return super(DdhPackShell, self)._folder_ftput(source, destination,
-                                                       hostname, logname)
-
-    def ddhpack_rawftput(self, source, destination, hostname=None, logname=None):
-        """Proceed direct ftp get on the specified target."""
-        return super(DdhPackShell, self)._folder_rawftput(source, destination,
-                                                          hostname, logname)
-
-    ddhpack_rawftget = ddhpack_ftget

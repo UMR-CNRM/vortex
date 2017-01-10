@@ -13,6 +13,12 @@ Package
 
 .. autodata:: __all__
 
+
+Decorator
+---------
+
+.. autofunction:: folderize
+
 Classes
 -------
 
