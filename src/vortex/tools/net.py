@@ -9,9 +9,12 @@ import urlparse
 import io, ftplib
 from netrc import netrc
 from datetime import datetime
+import socket
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
+
+from vortex.util.decorators import nicedeco
 
 
 #: No automatic export
@@ -59,21 +62,82 @@ def uriunparse(uridesc):
     return urlparse.urlunparse(uridesc)
 
 
+@nicedeco
+def _ensure_delayedlogin(method):
+    """Login if necessary."""
+    def opened_method(self, *kargs, **kwargs):
+        rc = self._delayedlogin()
+        if rc:
+            return method(self, *kargs, **kwargs)
+        else:
+            return rc
+    return opened_method
+
+
 class StdFtp(object):
     """
     Standard wrapper for the crude FTP object from :mod:`ftplib`.
     First argument of the constructor is the calling OS interface.
     """
 
-    def __init__(self, system, hostname):
+    def __init__(self, system, hostname, loginretries=3):
         logger.debug('FTP init <host:%s>', hostname)
-        self._system  = system
-        self._closed  = True
-        self._ftplib  = ftplib.FTP(hostname)
+        self._system = system
+        self._closed = True
+        self._hostname = hostname
+        self._internal_ftplib = None
         self._logname = None
+        self._cached_pwd = None
         self._created = datetime.now()
-        self._opened  = None
+        self._opened = None
         self._deleted = None
+        self._loginretries = loginretries
+        self._loginretries_sleep = 5
+
+    @property
+    def _ftplib(self):
+        """Delay the call to 'connect' as much as possible."""
+        if self._internal_ftplib is None:
+            retry = self._loginretries
+            while self._internal_ftplib is None and retry:
+                try:
+                    self._internal_ftplib = ftplib.FTP(self._hostname)
+                except socket.timeout:
+                    logger.warning('Timeout error occurred when connecting to the FTP server')
+                    retry -= 1
+                    if not retry:
+                        raise
+                    self.system.sleep(self._loginretries_sleep)
+        return self._internal_ftplib
+
+    @property
+    def host(self):
+        """Return the hostname."""
+        if self._internal_ftplib is None:
+            return self._hostname
+        else:
+            return self._ftplib.host
+
+    def _delayedlogin(self):
+        """Login if it was not already done."""
+        if self._closed:
+            if self._logname is None or self._cached_pwd is None:
+                logger.warning('FTP logname/password must be set first. Use the fastlogin method.')
+                return False
+            retry = self._loginretries
+            rc = False
+            while not rc and retry:
+                try:
+                    rc = self.login(self._logname, self._cached_pwd)
+                except (ftplib.error_temp, ftplib.error_proto) as e:
+                    logger.warning('An FTP error occurred: %s', str(e))
+                    retry -= 1
+                    if not retry:
+                        raise
+                    self.system.sleep(self._loginretries_sleep)
+            return rc
+        else:
+            return True
 
     def __str__(self):
         """
@@ -92,6 +156,9 @@ class StdFtp(object):
         actualattr = getattr(self._ftplib, key)
         if callable(actualattr):
             def osproxy(*args, **kw):
+                # For most of the native commands, we want autologin to be performed
+                if key not in ('set_debuglevel', 'connect'):
+                    self._delayedlogin()
                 cmd = [key]
                 cmd.extend(args)
                 cmd.extend([ '{0:s}={1:s}'.format(x, str(kw[x])) for x in kw.keys() ])
@@ -137,9 +204,11 @@ class StdFtp(object):
     def close(self):
         """Proxy to ftplib :meth:`ftplib.FTP.close`."""
         self.stderr('close')
+        rc = self._ftplib.close()
+        self._internal_ftplib = None
         self._closed = True
         self._deleted = datetime.now()
-        return self._ftplib.close()
+        return rc
 
     def login(self, *args):
         """Proxy to ftplib :meth:`ftplib.FTP.login`."""
@@ -148,18 +217,25 @@ class StdFtp(object):
         rc = self._ftplib.login(*args)
         if rc:
             self._closed = False
+            self._deleted = None
             self._opened = datetime.now()
         else:
             logger.warning('FTP could not login <args:%s>', str(args))
         return rc
 
-    def fastlogin(self, logname, password=None):
-        """Simple heuristic using actual attributes and/or netrc information to log in."""
+    def fastlogin(self, logname, password=None, delayed=True):
+        """
+        Simple heuristic using actual attributes and/or netrc information to find
+        login informations.
+
+        The actual login will be performed later (whenever necessary)
+        """
         self.stderr('fastlogin', logname)
         rc = False
         if logname and password:
             self._logname = logname
-            rc = self.login(logname, password)
+            self._cached_pwd = password
+            rc = True
         else:
             nrc = netrc()
             if nrc:
@@ -169,12 +245,16 @@ class StdFtp(object):
                     auth = nrc.authenticators(self.host.split('.')[0])
                 if auth:
                     self._logname = auth[0]
+                    self._cached_pwd = auth[2]
                     self.stderr('netrc', self._logname)
-                    rc = self.login(self._logname, auth[2])
+                    rc = True
                 else:
-                    self.stderr('fastlogin auth failed', str(auth))
+                    logger.warning('netrc lookup failed (%s)', str(auth))
             else:
-                self.stderr('fastlogin netrc failed')
+                logger.warning('unable to fetch .netrc file')
+        if not delayed and rc:
+            # If one really wants to login...
+            rc = self.login(self._logname, self._cached_pwd)
         return bool(rc)
 
     def netpath(self, remote):
@@ -188,6 +268,7 @@ class StdFtp(object):
         self.retrlines('LIST', callback=contents.append)
         return contents
 
+    @_ensure_delayedlogin
     def dir(self, *args):
         """Proxy to ftplib :meth:`ftplib.FTP.login`."""
         self.stderr('dir', *args)
