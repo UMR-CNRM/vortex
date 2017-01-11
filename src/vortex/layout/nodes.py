@@ -253,7 +253,7 @@ class Node(footprints.util.GetByTag, NiceLayout):
             namespace = self.conf.get('namespace', Namespace('vortex.cache.fr')),
         )
 
-        for optk in ('cutoff', 'geometry', 'cycle'):
+        for optk in ('cutoff', 'geometry', 'cycle', 'model'):
             if optk in self.conf:
                 toolbox.defaults[optk] = self.conf.get(optk)
 
@@ -373,7 +373,7 @@ class Task(Node):
 
         # Some attempt to find the current active steps
         if not self.steps:
-            if self.refill:
+            if self.env.OP_REFILL:
                 self.steps = ('refill',)
             elif self.play:
                 self.steps = (self.fetch, self.compute, self.backup)
