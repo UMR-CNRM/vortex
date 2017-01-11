@@ -10,7 +10,7 @@ COVER_PACK    = footprints,vortex,common,olive,gco,iga,taylorism
 COVER_OUT	  = coverage_report
 COVER_OPTS    = --no-byte-compile --with-coverage --cover-package=$(COVER_PACK) --cover-branch --cover-html --cover-html-dir=$(shell pwd)/$(COVER_OUT)
 
-PY3READY      = tests_footprints
+PY3READY      = tests_footprints tests_opinel
 
 all: check
 

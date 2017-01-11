@@ -8,6 +8,8 @@ of the Vortex package. Ideally, we would have chosen the name
 *swissknife* for this package but sadly we were pipped to the post.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import footprints.loggers
 
 logger = footprints.loggers.getLogger(__name__)
