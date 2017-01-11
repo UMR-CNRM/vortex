@@ -18,6 +18,7 @@ IMPORTANT BUT NOT NECESSARY MANDATORY VARIABLES :
     - rundate   : Date and time of the run ('yyyymmddhh' format), default=None. Leave it at None exept if you want to run your job on a specific date.
     - mail      : Switch mails on or off, default=False. You can change this value with otpion -o (switch to True) or -t (switch to False) of this script.
     - rootapp   : Only for test configurations. Determines the way the job will be launched (either with sms of a sbatch command).
+    - refill    : Bool that set the step to 'refill in the 'recextfiles' jobs (see vortex/layout/nodes.py for informations on the steps mecanism), default=False.
 
 OTHER VARIABLES :
     - python    : Python version, set by default as the one used by Vortex (see the python alias in the .bashrc file).
