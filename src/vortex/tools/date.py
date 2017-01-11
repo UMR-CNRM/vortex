@@ -295,7 +295,7 @@ class Period(datetime.timedelta):
             ld = [ 0, top ]
         elif isinstance(top, int) and len(args) == 2:
             ld = list(args)
-        elif isinstance(top, str):
+        elif isinstance(top, basestring):
             ld = [ 0, Period.parse(top) ]
         if not ld:
             raise ValueError("Initial Period value unknown")
@@ -377,7 +377,7 @@ class Date(datetime.datetime):
         top = args[0]
         deltas = []
         ld = list()
-        if isinstance(top, str) and top in local_date_functions:
+        if isinstance(top, basestring) and top in local_date_functions:
             try:
                 top = local_date_functions[top](**kw)
                 kw = dict()
@@ -390,7 +390,7 @@ class Date(datetime.datetime):
         elif isinstance(top, float):
             top = Date._origin + datetime.timedelta(0, top)
             ld = [ top.year, top.month, top.day, top.hour, top.minute, top.second ]
-        elif isinstance(top, str):
+        elif isinstance(top, basestring):
             s_top = top.split('/')
             top = s_top[0]
             top = re.sub('^YYYY', str(max(0, int(kw.pop('year', today().year)))), top.upper())
@@ -398,7 +398,7 @@ class Date(datetime.datetime):
             ld = [int(x) for x in re.split('[-:HTZ]+', mkisodate(top)) if re.match(r'\d+$', x)]
         else:
             ld = [int(x) for x in args
-                  if isinstance(x, (int, float)) or (isinstance(x, str) and re.match(r'\d+$', x)) ]
+                  if isinstance(x, (int, float)) or (isinstance(x, basestring) and re.match(r'\d+$', x)) ]
         if not ld:
             raise ValueError("Initial Date value unknown")
         newdate = datetime.datetime.__new__(cls, *ld)
@@ -730,12 +730,12 @@ class Time(object):
             self._hour, self._minute = top.hour, top.minute
         elif isinstance(top, float):
             self._hour, self._minute = int(top), int((top - int(top)) * 60)
-        elif isinstance(top, str):
+        elif isinstance(top, basestring):
             ld = [ int(x) for x in re.split('[-:hHTZ]+', top) if re.match(r'\d+$', x) ]
         else:
             ld = [ int(x) for x in args
                    if (type(x) in (int, float) or
-                       (isinstance(x, str) and re.match(r'\d+$', x))) ]
+                       (isinstance(x, basestring) and re.match(r'\d+$', x))) ]
         if ld:
             if len(ld) < 2:
                 ld.append(0)
@@ -876,7 +876,7 @@ class Month(object):
         else:
             # Try to generate a Date object
             mmod = None
-            if isinstance(top, str):
+            if isinstance(top, basestring):
                 mmod = re.search(':(next|prev|closest)$', top)
                 if mmod:
                     args[0] = re.sub(':(?:next|prev|closest)$', '', top)
@@ -995,7 +995,7 @@ class Month(object):
         """Compare two month values."""
         rc = 1
         try:
-            if isinstance(other, int) or ( isinstance(other, str) and len(other.lstrip('0')) < 3 ):
+            if isinstance(other, int) or ( isinstance(other, basestring) and len(other.lstrip('0')) < 3 ):
                 rc = cmp(self.month, Month(int(other), self.year).month)
             else:
                 if isinstance(other, tuple) or isinstance(other, list):
