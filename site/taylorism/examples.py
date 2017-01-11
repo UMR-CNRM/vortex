@@ -6,7 +6,7 @@ Basic examples of how to use the module.
 A more advanced example of use can be found in ``epygram``'s epy_conv.py tool.
 """
 
-from __future__ import absolute_import, print_function
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import time
 
@@ -34,8 +34,8 @@ class Sleeper(Worker):
                 optional=True,
                 access='rwx',
                 default=None)
-            )
         )
+    )
 
     def __init__(self, *args, **kwargs):
         super(Sleeper, self).__init__(*args, **kwargs)
@@ -51,17 +51,16 @@ class Sleeper(Worker):
         return ' '.join([self.wakeup_sentence, "Woke up after", str(self.sleeping_time), "s sleep."])
 
 
-
 def sleepers_example_program(verbose=True):
     """Example: how to run and control the Boss."""
 
     boss = run_as_server(common_instructions={},
-                         individual_instructions={'sleeping_time':[5, 10, 2, 1]},
+                         individual_instructions={'sleeping_time': [5, 10, 2, 1]},
                          scheduler=MaxThreadsScheduler(max_threads=3),
                          verbose=verbose)
     time.sleep(6)
     print(boss.get_report())
-    boss.set_instructions({}, individual_instructions={'sleeping_time':[3, ]})
+    boss.set_instructions({}, individual_instructions={'sleeping_time': [3, ]})
     boss.wait_till_finished()
     report = boss.get_report()
     for r in report['workers_report']:

@@ -69,7 +69,7 @@ Dependencies
 ``opinel`` (MF package)
 """
 
-from __future__ import absolute_import, print_function
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import multiprocessing as mpc
 import uuid
@@ -92,6 +92,7 @@ taylorism_log = footprints.loggers.getLogger(__name__)
 communications_timeout = 0.01
 
 __version__ = '1.0.3'
+
 
 #################
 ### FUNCTIONS ###
@@ -302,9 +303,9 @@ class Boss(object):
         instructions_sets = []
         if len(individual_instructions) > 0:
             # check their length is homogeneous
-            indiv_instr_num = len(individual_instructions[individual_instructions.keys()[0]])  # length of first instruction
+            indiv_instr_num = len(individual_instructions[list(individual_instructions.keys())[0]])  # length of first instruction
             assert all([len(instr) == indiv_instr_num for instr in individual_instructions.values()]), \
-                   "all *individual_instructions* must have the same length."
+                "all *individual_instructions* must have the same length."
             # gather common and individual
             for _ in range(indiv_instr_num):
                 instructions = copy.copy(common_instructions)
@@ -458,7 +459,7 @@ class Boss(object):
         report = []
 
         def stop_them_working():
-            for wname in workers.keys():
+            for wname in list(workers.keys()):
                 workers.pop(wname).stop_working()
 
         def hire_worker(instructions):
@@ -500,7 +501,7 @@ class Boss(object):
                                 stop = True
                                 if control == self.control_signals['STOP_RIGHTNOW']:
                                     stop_them_working()
-    
+
                     else:
                         # received new instructions
                         if not end:

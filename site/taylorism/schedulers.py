@@ -17,7 +17,7 @@ Other quantities, variables among execution, must be available within
 A set of basic schedulers is given.
 """
 
-from __future__ import absolute_import, print_function
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 
 class BaseScheduler(object):
