@@ -843,12 +843,16 @@ class FootprintBase(object):
             raise AttributeError("Can't set attribute without valid authorization")
         del self._attributes[attr]
 
-    def footprint_clone(self, full=False):
+    def footprint_clone(self, full=False, extra=None):
         """
         Return a deep copy of the current object as a brand new one.
         Only footprint attributes are carried around.
+        Attributes to be replaced or added can be specified in dict **extra**.
         """
-        objcp = self.__class__(**self._attributes)
+        attrs = self._attributes.copy()
+        if extra is not None:
+            attrs.update(extra)
+        objcp = self.__class__(**attrs)
         if full:
             for a in [ x for x in self.__dict__.keys() if not x.startswith('_') ]:
                 setattr(objcp, a, getattr(self, a))

@@ -295,12 +295,15 @@ class LiteralParser(object):
     @staticmethod
     def encode_real(value):
         """Returns the string form of the real ``value``."""
-        real = '{0:.15G}'.format(value).replace('E', 'D')
+        if value == 0.:
+            real = '0.'
+        else:
+            real = '{0:.15G}'.format(value).replace('E', 'D')
         if '.' not in real:
             real = re.sub('D', '.0D', real)
             if '.' not in real:
                 real += '.'
-        return real
+        return real.rstrip('0')
 
     def encode_complex(self, value):
         """Returns the string form of the complex ``value``."""
