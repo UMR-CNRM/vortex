@@ -12,6 +12,7 @@ import footprints
 from gco.tools import genv
 from vortex.tools import date
 from vortex.util.config import GenericConfigParser, load_template
+from vortex.sessions import getglove
 from gco.data.stores import GcoStoreConfig, GGET_DEFAULT_CONFIGFILE
 
 
@@ -69,6 +70,9 @@ def mkjob(t, **kw):
     
     # Fix actual options of the create process
     opts.setdefault('mkopts', str(kw))
+
+    if opts['refill']:
+        opts['partition'] = 'ft-oper'
 
     # Switch verbosity from boolean to plain string
     if isinstance(opts['verbose'], bool):
