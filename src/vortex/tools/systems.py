@@ -360,6 +360,10 @@ class System(footprints.FootprintBase):
             if xline:
                 print tchar * nbc
 
+    def usr_file(self, filename):
+        """Return weather the file belongs to the user or not."""
+        return passwd.getpwuid(os.stat(filename).st_uid).pw_name == self.getlogname()
+
     def xperm(self, filename, force=False):
         """Return whether a file exists and is executable or not."""
         if os.path.exists(filename):
@@ -1108,12 +1112,18 @@ class OSExtended(System):
                         self.remove(tmp_destination)  # Anyway, try to clean-up things
                     return rc
                 else:
-                    self.link(source, tmp_destination)
-                    self.readonly(tmp_destination)
-                    self.move(tmp_destination, destination)  # Move is atomic for a file
-                    return self.path.samefile(source, destination)
+                    if self.usr_file(source):
+                        self.link(source, tmp_destination)
+                        self.readonly(tmp_destination)
+                        self.move(tmp_destination, destination)  # Move is atomic for a file
+                        return self.path.samefile(source, destination)
+                    else:
+                        rc = self.rawcp(source, destination)
+                        if rc:
+                            self.readonly(destination)
+                        return rc
             else:
-                rc = self.rawcp(source, destination)  # Rawcp is atomic as much as possiblr
+                rc = self.rawcp(source, destination)  # Rawcp is atomic as much as possible
                 if rc:
                     if self.path.isdir(destination):
                         for copiedfile in self.ffind(destination):
