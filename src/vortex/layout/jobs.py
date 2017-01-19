@@ -77,6 +77,9 @@ def mkjob(t, **kw):
     # Fix actual options of the create process
     opts.setdefault('mkopts', str(kw))
 
+    if opts['refill']:
+        opts['partition'] = 'ft-oper'
+
     # Switch verbosity from boolean to plain string
     if isinstance(opts['verbose'], bool):
         opts['verbose'] = 'verbose' if opts['verbose'] else 'noverbose'
