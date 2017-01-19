@@ -19,11 +19,14 @@
 
 import os, sys, re
 
-op_jobname  = '$name'
 if 'DMT_PATH_EXEC' in os.environ:
     op_rootapp  = os.path.realpath(os.environ["DMT_PATH_EXEC"]).rstrip('/jobs')
 else:
     op_rootapp  = os.path.realpath(os.getcwd()).rstrip('/jobs')
+
+
+
+op_jobname  = '$name'
 op_xpid     = op_rootapp.split('/')[-3]
 op_vapp     = op_rootapp.split('/')[-2]
 op_vconf    = op_rootapp.split('/')[-1]
