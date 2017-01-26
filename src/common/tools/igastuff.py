@@ -12,14 +12,15 @@ fuzzystr = dict(
         historic = dict(
             pearp = 'prev', arome = 'AROM', arpege = 'arpe', arp_court = 'arpe',
             aladin = 'ALAD', surfex = 'SURF'
-        ),
+        )
     ),
     prefix = dict(
         # LFM 2016/12/30: It was dble='PA' but apparently it's wrong. No idea why...
         gridpoint = dict( oper = 'PE', dble = 'PE', mirr='PE' ),
     ),
     suffix = dict(
-        bgstderr = dict( input = 'in', output = 'out' )
+        bgstderr = dict( input = 'in', output = 'out' ),
+        historic=dict( surfex_arpege='.sfx' ),
     ),
     term0003 = dict(
         bgstderr = dict( input = '', output = '_assim' ),
@@ -56,9 +57,14 @@ fuzzystr = dict(
 arpcourt_vconf = ('courtfr', 'frcourt', 'court')
 
 
-def fuzzyname(entry, realkind, key):
+def fuzzyname(entry, realkind, key, default =None):
     """Returns any non-standard naming convention in the operational namespace."""
-    return fuzzystr[entry][realkind][key]
+    try:
+        return fuzzystr[entry][realkind][key]
+    except KeyError:
+        if default is not None:
+            return default
+        raise
 
 
 def archive_suffix(model, cutoff, date, vconf=None):

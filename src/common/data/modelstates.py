@@ -191,16 +191,13 @@ class Historic(GeoFlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        prefix = 'icmsh'
+        prefix = '(icmshfix:modelkey)'
         midfix = '(histfix:igakey)'
-        suffix = ''
+        termfix = '(termfix:modelkey)'
+        suffix = '(suffix:modelkey)'
         if self.geometry.lam and re.match('testms1|testmp1|testmp2', self.geometry.area):
             suffix = '.r' + archive_suffix(self.model, self.cutoff, self.date)
-
-        if re.match('aladin|arome|surfex', self.model):
-            prefix = prefix.upper()
-
-        return prefix + midfix + '+' + self.term.fmthour + suffix
+        return prefix + midfix + termfix + suffix
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
