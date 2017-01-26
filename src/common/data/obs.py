@@ -118,7 +118,7 @@ class ObsODB(Observations):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        stage_map = dict(screening='screen', build='split')
+        stage_map = dict(screening='screen', build='split', minim='min', canari='cans')
         mystage = stage_map.get(self.stage, self.stage)
         return '_'.join((self.layout, mystage, self.part)) + '.tar'
 
@@ -143,6 +143,8 @@ class ObsODB(Observations):
             return ('odb_traj.tar', '')
         elif re_fullmix.match(self.part) and self.stage == 'minim' and self.model == 'aladin':
             return ('odb_cpl.tar', '')
+        elif re_fullmix.match(self.part) and self.stage == 'minim':
+            return ('odb_min.tar', '')
         elif self.part == 'ground' and self.stage == 'canari':
             return 'odb_canari.tar'
         else:
