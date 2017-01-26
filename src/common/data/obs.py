@@ -122,18 +122,27 @@ class ObsODB(Observations):
         mystage = stage_map.get(self.stage, self.stage)
         return '_'.join((self.layout, mystage, self.part)) + '.tar'
 
-    def archive_basename(self):
-        """OP ARCHIVE specific naming convention."""
-        if self.part == 'full' and self.stage == 'void':
-            return 'ecmascr.tar'
-        elif self.part == 'full' and self.stage == 'screening':
-            return 'odb_screen.tar'
-        elif re.match(r'^(?:altitude|mix|full)$', self.part) and self.stage == 'traj':
-            return 'odb_traj.tar'
-        elif re.match(r'^(?:altitude|mix|full)$', self.part) and self.stage == 'minim' and self.model == 'aladin':
-            return 'odb_cpl.tar'
-        elif re.match(r'^(?:altitude|mix|full)$', self.part) and self.stage == 'complete':
-            return 'odb_cpl.tar'
+    @property
+    def _archive_mapping(self):
+        re_fullmix = re.compile(r'^(?:altitude|mix|full)$')
+        ecma_map = dict(void='ecmascr.tar',
+                        screening='odb_screen.tar',
+                        matchup='odb_cpl.tar', complete='odb_cpl.tar')
+        ecma_prefix = dict(matchup='BASE/', complete='BASE/')
+        if self.stage in ecma_map:
+            if re_fullmix.match(self.part):
+                return (ecma_map[self.stage], 'extract=all&format=unknown')
+            elif self.part == 'virtual':
+                return (ecma_map[self.stage],
+                        'extract={:s}ECMA&format=unknown'.format(ecma_prefix.get(self.stage, '')))
+            else:
+                return (ecma_map[self.stage],
+                        'extract={:s}ECMA.{:s}&format=unknown'.format(ecma_prefix.get(self.stage, ''),
+                                                                      self.part))
+        elif re_fullmix.match(self.part) and self.stage == 'traj':
+            return ('odb_traj.tar', '')
+        elif re_fullmix.match(self.part) and self.stage == 'minim' and self.model == 'aladin':
+            return ('odb_cpl.tar', '')
         elif self.part == 'ground' and self.stage == 'canari':
             return 'odb_canari.tar'
         else:
@@ -141,13 +150,15 @@ class ObsODB(Observations):
                 'No archive basename defined for such observations (format=%s, part=%s, stage=%s)',
                 self.nativefmt, self.part, self.stage
             )
+            return (None, None)
+
+    def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
+        return self._archive_mapping[0]
 
     def archive_urlquery(self):
         """OP ARCHIVE special query for odb case."""
-        if self.nativefmt.startswith('odb'):
-            return 'extract=all'
-        else:
-            return ''
+        return self._archive_mapping[1]
 
 
 class ObsRaw(Observations):
