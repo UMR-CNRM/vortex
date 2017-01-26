@@ -153,8 +153,10 @@ class IFSParallel(Parallel, grib.GribApiComponent):
 
         if self.member is not None:
             namcontents.setmacro('MEMBER', self.member)
+            namcontents.setmacro('PERTURB', self.member)
             nam_updated = True
             logger.info('Setup macro MEMBER=%s in %s', self.member, namlocal)
+            logger.info('Setup macro PERTURB=%s in %s', self.member, namlocal)
 
         return nam_updated
 
