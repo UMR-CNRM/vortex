@@ -4,7 +4,7 @@
 import argparse
 import sys
 
-from . import util, norms, listings
+from . import util, norms, jo_tables, listings
 
 
 def compare_files(file_test, file_ref,
@@ -13,7 +13,11 @@ def compare_files(file_test, file_ref,
                   # 'norms' arguments:
                   onlymaxdiff=False,
                   mode='first_and_last',
-                  printmode='standalone'):
+                  printmode='standalone',
+                  # 'Jo-tables' arguments:
+                  nthres=jo_tables.DEFAULT_N_THRESHOLD,
+                  jothres=jo_tables.DEFAULT_JO_THRESHOLD,
+                  bw=False):
     """
     Compare the output listings of two files.
     
@@ -25,6 +29,11 @@ def compare_files(file_test, file_ref,
       or 'first_and_last' (default) for the first and last only.
     - **printmode**: if 'standalone', prints the comparison to file;
                      if 'jobs_manager', return the worst digits comparison.
+                     
+    'Jo-tables' arguments:
+    - **nthres**: Alert threshold on the ObsCount
+    - **jothres**: Alert threshold on the Jo
+    - **bw**: Black & White flag
     """
 
     test = listings.OutputListing(file_test, pattern_type=pattern)
@@ -45,7 +54,10 @@ def compare_files(file_test, file_ref,
                                         out=out,
                                         mode=mode,
                                         onlymaxdiff=onlymaxdiff,
-                                        printmode=printmode)
+                                        printmode=printmode,
+                                        nthres=nthres,
+                                        jothres=jothres,
+                                        bw=bw)
         else:
             out.write(' '.join(['No', pattern, 'found in output.\n']))
             comp_out = None
