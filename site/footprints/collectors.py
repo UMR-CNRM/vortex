@@ -357,6 +357,14 @@ class Collector(util.GetByTag, util.Catalog):
     def load(self, **desc):
         """Return the value matching current collector's tag after pickup of attributes."""
         return self.pickup(desc).get(self.tag, None)
+    
+    def almost_clone(self, original, **extra):
+        """Return an almost clone, with some extra or different attributes."""
+        from . import FootprintBase
+        assert isinstance(original, FootprintBase)
+        attrs = original.footprint_as_dict()
+        attrs.update(extra)
+        return self.load(**attrs)
 
     def default(self, **kw):
         """
