@@ -269,14 +269,14 @@ class JoTable(object):
         _write_n(out, '=====================')
         if onlymaxdiff:
             maxdiff = self.maxdiff(ref)
-            _write_n(out, 'JO-table: %s' % self.name)
+            _write_n(out, 'Jo-table: %s' % self.name)
             _write_n(out, '(Worst differences)')
-            _write_n(out, 'Obscount: %15d (diff) %15.2f (reldiff)' % (maxdiff['n']['diff'],
-                                                                      maxdiff['n']['reldiff']))
-            _write_n(out, 'Jo: %15.2f (diff) %15.2f (reldiff)' % (maxdiff['jo']['diff'],
-                                                                  maxdiff['jo']['reldiff']))
-            _write_n(out, 'Jo/n: %15.2f (diff) %15.2f (reldiff)' % (maxdiff['jo/n']['diff'],
-                                                                    maxdiff['jo/n']['reldiff']))
+            _write_n(out, 'Obscount: {:10d} ({:5.2f}%)'.format(int(maxdiff['n']['diff']),
+                                                               100.*maxdiff['n']['reldiff']))
+            _write_n(out, 'Jo:       {:10.2f} ({:5.2f}%)'.format(maxdiff['jo']['diff'],
+                                                                 100.*maxdiff['jo']['reldiff']))
+            _write_n(out, 'Jo/n:     {:10.2f} ({:5.2f}%)'.format(maxdiff['jo/n']['diff'],
+                                                                 100.*maxdiff['jo/n']['reldiff']))
         else:
             _write_n(out, '=====================')
             _write_n(out, 'Begining of JO-table: %s' % self.name)

@@ -16,23 +16,30 @@ if __name__ == '__main__':
                         dest='out',
                         default=None,
                         help="Store the comparison in the given file name instead of standard output")
-    parser.add_argument('-p',
-                        dest='pattern',
-                        default='norms',
-                        help="Pattern: either 'norms' or 'Jo-tables'.")
+    pattern = parser.add_mutually_exclusive_group(required=True)
+    pattern.add_argument('-n',
+                         dest='pattern',
+                         action='store_const',
+                         const='norms',
+                         help='Compare norms')
+    pattern.add_argument('-j',
+                         dest='pattern',
+                         action='store_const',
+                         const='Jo-tables',
+                         help='Compare Jo-Tables')
     parser.add_argument('-m',
                         dest='mode',
                         default='first_and_last',
                         help="Mode (for pattern 'norms'): either 'all' to" \
                              + "compare norms for all steps found in listings," \
                              + "or 'first_and_last' (default) for the first and last only.")
-    parser.add_argument('--thres-n', '-n',
+    parser.add_argument('--n-threshold', '--nt',
                         dest='nthres',
                         action='store',
                         type=int,
                         default=arpifs_listings.jo_tables.DEFAULT_N_THRESHOLD,
                         help='Alert threshold for the ObsCount')
-    parser.add_argument('--thres-jo', '-j',
+    parser.add_argument('--jo-threshold', '--jot',
                         dest='jothres',
                         action='store',
                         type=float,

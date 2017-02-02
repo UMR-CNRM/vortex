@@ -362,7 +362,7 @@ if __name__ == '__main__':
     sorting.add_argument('-S',
                          action='store_true',
                          dest='firstorder_sorting',
-                         help='sort all keys within blocks.',
+                         help='first order sorting: sort all keys within blocks.',
                          default=False)
     sorting.add_argument('-s',
                          action='store_true',
