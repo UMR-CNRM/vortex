@@ -26,7 +26,7 @@ else:
 op_xpid     = op_rootapp.split('/')[-3]
 op_vapp     = op_rootapp.split('/')[-2]
 op_vconf    = op_rootapp.split('/')[-1]
-op_suitebg  = '$suitebg'
+op_suitebg  = $suitebg
 op_cutoff   = '$cutoff'
 op_rundate  = $rundate
 op_runtime  = $runtime

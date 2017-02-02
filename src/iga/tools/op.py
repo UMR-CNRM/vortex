@@ -97,6 +97,11 @@ def OpJobAssistant(JobAssistant):
         logger.info('Effective rundate = %s', t.env.OP_RUNDATE.ymdhm)
         logger.info('Effective time    = %s', t.env.OP_RUNTIME)
 
+        t.sh.header('Setting suitebg')
+
+        if not t.env.OP_SUITEBG:
+            t.env.OP_SUITEBG = t.env.get('OP_XPID', None)
+
         t.sh.header('Setting member')
 
         if not t.env.OP_MEMBER:
@@ -137,7 +142,7 @@ def OpJobAssistant(JobAssistant):
         t.sh.signal_intercept_on()
 
 
-    def report(t, try_ok=True, **kw):
+    def report(self, t, try_ok=True, **kw):
         """Report status of the OP session (input review, mail diffusion...)."""
         step    = kw.get('step', 'unknown_step')
         reseau  = t.env.getvar('OP_RUNDATE').hh
@@ -161,7 +166,7 @@ def OpJobAssistant(JobAssistant):
             mail_id = '{0:s}_fail'.format(step)
             ad.opmail(reseau=reseau, task=task, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
 
-    def complete(t, **kw):
+    def complete(self, t, **kw):
         """Exit from OP session."""
         ad = vortex.tools.actions.actiond
         ad.report(kind='dayfile', mode='FIN')
@@ -169,30 +174,19 @@ def OpJobAssistant(JobAssistant):
         t.sh.signal_intercept_off()
         t.close()
 
-    def simulate_complete(t, **kw):
+    def simulate_complete(self, t, **kw):
         """Exit from OP session after a crash but simulating a happy ending. Use only in a test environment."""
         ad = vortex.tools.actions.actiond
         ad.sms_abort()
         t.close()
 
-    def rescue(**kw):
+    def rescue(self, **kw):
         """Something goes wrong... so, do your best to save current state."""
         ad = vortex.tools.actions.actiond
         ad.report(kind='dayfile', mode='ERREUR')
         ad.sms_abort()
         print 'Bad luck...'
         super(JobAssistantPlugin, self).rescue()        
-
-    def oproute_hook_factory(kind, productid, sshhost, areafilter=None, soprano_target=None, routingkey=None):
-        """Hook functions factory to route files while the execution is running"""
-
-        def hook_route(t, rh):
-            if (areafilter is None) or (rh.resource.geometry.area in areafilter):
-                ad.route(kind=kind, productid=productid, sshhost=sshhost, domain=rh.resource.geometry.area, term=rh.resource.term, 
-                        filename=rh.container.basename, soprano_target=soprano_target, routingkey=routingkey)
-                print t.prompt, 'routing file = ', rh
-
-        return hook_route
 
 
 class InputReportContext(object):
@@ -224,4 +218,16 @@ class OutputReportContext(object):
         if isinstance(exc_value, StandardError):
             fulltraceback(dict(t=self._ticket))
         report(self._ticket, exc_type is None, task=self._task.tag, step='output')
+
+
+def oproute_hook_factory(kind, productid, sshhost, areafilter=None, soprano_target=None, routingkey=None):
+    """Hook functions factory to route files while the execution is running"""
+
+    def hook_route(t, rh):
+        if (areafilter is None) or (rh.resource.geometry.area in areafilter):
+            ad.route(kind=kind, productid=productid, sshhost=sshhost, domain=rh.resource.geometry.area, term=rh.resource.term,
+                    filename=rh.container.basename, soprano_target=soprano_target, routingkey=routingkey)
+            print t.prompt, 'routing file = ', rh
+
+    return hook_route
 

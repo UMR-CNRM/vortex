@@ -66,6 +66,7 @@ def mkjob(t, **kw):
         name      = 'autojob',
         home      = t.env.HOME,
         rundate   = None,
+        suitebg   = None,
         runtime   = None,
         member    = None,
         taskconf  = None,
@@ -137,6 +138,9 @@ def mkjob(t, **kw):
     tplconf.setdefault('vconf', opset.vconf)
 
     tplconf.update(opts)
+    
+    if tplconf['suitebg'] is not None:
+        tplconf['suitebg'] = "'" + tplconf['suitebg'] + "'"
 
     tplconf.setdefault('file', opts['name'] + '.py')
 
