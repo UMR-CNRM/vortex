@@ -855,7 +855,8 @@ class _DiagPICommons(FootprintCopier):
 
         # Check for input files to concatenate
         if self.gribcat:
-            srcsec = self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
+            srcsec = self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources',
+                                                                  'Preview', 'Previous'),
                                                             kind='gridpoint')
             cat_list_in = [sec for sec in srcsec if not sec.rh.is_expected()]
             outsec = self.context.sequence.effective_inputs(role='GridpointOutputPrepare')
