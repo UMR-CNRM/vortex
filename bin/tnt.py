@@ -362,12 +362,12 @@ if __name__ == '__main__':
     sorting.add_argument('-S',
                          action='store_true',
                          dest='firstorder_sorting',
-                         help='first order sorting: sort all keys within blocks.',
+                         help='First order sorting: sort all keys within blocks.',
                          default=False)
     sorting.add_argument('-s',
                          action='store_true',
                          dest='secondorder_sorting',
-                         help='second order sorting: sort only within indexes \
+                         help='Second order sorting: sort only within indexes \
                                or attributes of the same key within blocks.',
                          default=False)
     parser.add_argument('-r',
