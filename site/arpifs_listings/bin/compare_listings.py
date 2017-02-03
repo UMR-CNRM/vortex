@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import argparse
 import sys
 
 import arpifs_listings
+
 
 if __name__ == '__main__':
 
@@ -30,21 +33,21 @@ if __name__ == '__main__':
     parser.add_argument('-m',
                         dest='mode',
                         default='first_and_last',
-                        help="Mode (for pattern 'norms'): either 'all' to" \
-                             + "compare norms for all steps found in listings," \
-                             + "or 'first_and_last' (default) for the first and last only.")
+                        help=("Mode (for 'norms' comparison only): either 'all' to " +
+                              "compare norms for all steps found in listings, " +
+                              "or 'first_and_last' (default) for the first and last only."))
     parser.add_argument('--n-threshold', '--nt',
                         dest='nthres',
                         action='store',
                         type=int,
                         default=arpifs_listings.jo_tables.DEFAULT_N_THRESHOLD,
-                        help='Alert threshold for the ObsCount')
+                        help='Alert threshold for the ObsCount [default: %(default)s]')
     parser.add_argument('--jo-threshold', '--jot',
                         dest='jothres',
                         action='store',
                         type=float,
                         default=arpifs_listings.jo_tables.DEFAULT_JO_THRESHOLD,
-                        help='Alert threshold for the Jo')
+                        help='Alert threshold for the Jo [default: %(default)s]')
     parser.add_argument('--bw',
                         action='store_true',
                         help='Produce a black & white output (no red color)')

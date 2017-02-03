@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import argparse
 import sys
 
 from . import util, norms, jo_tables, listings
+
+__version__ = '1.0.0'
 
 
 def compare_files(file_test, file_ref,
@@ -18,22 +22,22 @@ def compare_files(file_test, file_ref,
                   nthres=jo_tables.DEFAULT_N_THRESHOLD,
                   jothres=jo_tables.DEFAULT_JO_THRESHOLD,
                   bw=False):
-    """
-    Compare the output listings of two files.
-    
+    """Compare the output listings of two files.
+
     **pattern**: the pattern to be compared, among ('norms', 'Jo-tables')
-    
+
     'norms' arguments:
-    - **onlymaxdiff**: only max difference is printed for each step.
-    - **mode**: either 'all' to compare norms for all steps found in listings,
-      or 'first_and_last' (default) for the first and last only.
-    - **printmode**: if 'standalone', prints the comparison to file;
-                     if 'jobs_manager', return the worst digits comparison.
-                     
+        * **onlymaxdiff**: only max difference is printed for each step.
+        * **mode**: either 'all' to compare norms for all steps found in listings,
+          or 'first_and_last' (default) for the first and last only.
+        * **printmode**: if 'standalone', prints the comparison to file;
+          if 'jobs_manager', return the worst digits comparison.
+
     'Jo-tables' arguments:
-    - **nthres**: Alert threshold on the ObsCount
-    - **jothres**: Alert threshold on the Jo
-    - **bw**: Black & White flag
+        * **nthres**: Alert threshold on the ObsCount
+        * **jothres**: Alert threshold on the Jo
+        * **bw**: Black & White flag
+
     """
 
     test = listings.OutputListing(file_test, pattern_type=pattern)
@@ -49,7 +53,7 @@ def compare_files(file_test, file_ref,
         out.write('*ref* (' + ref.filename + ') crashed before end !' + '\n')
 
     if test.end_is_reached and ref.end_is_reached:
-        if test.patterns_number > 0 and ref.patterns_number > 0:
+        if test.patterns_count > 0 and ref.patterns_count > 0:
             comp_out = listings.compare(test, ref,
                                         out=out,
                                         mode=mode,

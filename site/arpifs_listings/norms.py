@@ -1,20 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__all__ = ['Norms', 'Norm', 'NormComparison', 'compare_norms']
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
 import sys
 import collections
 
 from .util import diverging_digit, get_maxint, find_line_containing
 
+#: Automatic export
+__all__ = ['Norms', 'Norm', 'NormComparison', 'compare_norms']
 
-patterns = {'norms':'NORMS AT NSTEP CNT4',
-            'spectral norms':'SPECTRAL NORMS -',
-            'gpnorms partA':'GPNORM',
-            'gpnorms partB':'GPNORMS OF FIELDS TO BE WRITTEN OUT ON FILE :',
-            'fullpos gpnorms':'FULL-POS GPNORMS',
-            'Jo-tables':None
+patterns = {'norms': 'NORMS AT NSTEP CNT4',
+            'spectral norms': 'SPECTRAL NORMS -',
+            'gpnorms partA': 'GPNORM',
+            'gpnorms partB': 'GPNORMS OF FIELDS TO BE WRITTEN OUT ON FILE :',
+            'fullpos gpnorms': 'FULL-POS GPNORMS',
             }
 
 
@@ -22,23 +24,24 @@ class Norms(object):
     """
     Handling several Norm objects at different step/substep.
     """
-    
+
     def __init__(self, source):
         """
-        **source** may be either a filename or a list of lines.
+
+        :param source: may be either a filename or a list of lines.
         """
         self.norms = collections.OrderedDict()
         self._parse_listing(source)
-    
+
     def __getitem__(self, item):
         return self.norms[item]
-    
+
     def __len__(self):
         return len(self.norms)
-        
+
     def steps(self):
         return self.norms.keys()
-    
+
     def get_first_and_last_norms_indexes(self, **kw):
         """Return the first and last indexes of norms."""
         if len(self.norms) == 0:
@@ -56,27 +59,26 @@ class Norms(object):
             last = (last, [None])
         first_and_last = [first, last]
         return first_and_last
-    
+
     def _parse_listing(self, source):
         """
         Parse a listing (either given as its filename or already read as a
         list of lines) looking for norms.
         """
-        
+
         if isinstance(source, list):
             lines = source
-        elif isinstance(source, str):
-            with open(source, 'r') as f:
-                lines = f.readlines()
-            lines = [l[:-1] for l in lines]  # :-1 to remove trailing '\n'
-        
+        elif isinstance(source, six.string_types):
+            with open(source, 'r') as listfh:
+                lines = [l.rstrip("\n") for l in listfh]
+
         _indexes_of_found_norms = []
         for i in range(len(lines)):
             if patterns['norms'] in lines[i]:
                 _indexes_of_found_norms.append(i)
         _indexes_of_found_norms.append(-1)  # for last interval
-    
-        #loop on nstep+substep
+
+        # loop on nstep + substep
         for i in range(len(_indexes_of_found_norms) - 1):
             # extract of output in which to look for
             index = _indexes_of_found_norms[i]
@@ -91,7 +93,7 @@ class Norms(object):
                     substep = ss
                     break
             _norm = Norm(nstep, substep=substep)
-    
+
             # spectral norms
             def getspnorm(fld, extract):
                 val = None
@@ -110,8 +112,9 @@ class Norms(object):
                             raise NotImplementedError
                         else:
                             val = extract[idx + 1].split()[line.index(fld.split()[0])]  # .split()[0] necessary for KINETIC ENERGY
-    
+
                 return val
+
             # gridpoint norms
             def gpnorms_syntaxA():
                 start = 0
@@ -121,13 +124,14 @@ class Norms(object):
                     (idx, line) = find_line_containing(patterns['gpnorms partA'], sub_extract)
                     if idx is not None and line.split()[0] == patterns['gpnorms partA']:  # signature of part A
                         fld = line.split()[1]
-                        vals = {'average':sub_extract[idx + 1].split()[1],
-                                'minimum':sub_extract[idx + 1].split()[2],
-                                'maximum':sub_extract[idx + 1].split()[3]}
+                        vals = {'average': sub_extract[idx + 1].split()[1],
+                                'minimum': sub_extract[idx + 1].split()[2],
+                                'maximum': sub_extract[idx + 1].split()[3]}
                         start = idx + 1
                         _norm.gpnorms[fld] = vals
                     else:
                         break
+
             def gpnorms_syntaxB(pattern, colon_position):
                 start = 0
                 sub_extract = _extract
@@ -136,19 +140,19 @@ class Norms(object):
                     (idx, _) = find_line_containing(pattern, sub_extract)
                     if idx is not None:
                         idx += 2
-                        while len(sub_extract[idx]) > colon_position and \
-                              sub_extract[idx][colon_position] == ':':
+                        while (len(sub_extract[idx]) > colon_position and
+                               sub_extract[idx][colon_position] == ':'):
                             [fld, vals] = sub_extract[idx].split(':')
                             fld = fld.strip()
-                            vals = {'average':vals.split()[0],
-                                    'minimum':vals.split()[1],
-                                    'maximum':vals.split()[2]}
+                            vals = {'average': vals.split()[0],
+                                    'minimum': vals.split()[1],
+                                    'maximum': vals.split()[2]}
                             _norm.gpnorms[fld] = vals
                             idx += 1
                         start = idx
                     else:
                         break
-            
+
             # process
             for fld in ('LOG(PREHYDS)', 'OROGRAPHY', 'VORTICITY', 'DIVERGENCE',
                         'TEMPERATURE', 'KINETIC ENERGY', 'LOG(PRE/PREHYD)',
@@ -159,10 +163,10 @@ class Norms(object):
             gpnorms_syntaxA()
             gpnorms_syntaxB(patterns['gpnorms partB'], 18)
             gpnorms_syntaxB(patterns['fullpos gpnorms'], 26)
-    
+
             # save
             if _norm.nstep not in self.norms.keys():
-                self.norms[_norm.nstep] = {_norm.substep:_norm}
+                self.norms[_norm.nstep] = {_norm.substep: _norm}
             else:
                 self.norms[_norm.nstep][_norm.substep] = _norm
 
@@ -170,70 +174,74 @@ class Norms(object):
 class Norm(object):
     """
     Handling of fields norms at one time step.
-    
-    ex:
-    - Norm.spnorms: {'TEMPERATURE':'0.256351366366780E+03',
-                     ...}
-    - Norm.gpnorms: {'TEMPERATURE':{'average':'0.256351366366780E+03',
-                                    'minimum': ...}
-                     ...}
+
+    example:
+    ::
+
+        Norm.spnorms: {'TEMPERATURE':'0.256351366366780E+03',
+                       ...}
+        Norm.gpnorms: {'TEMPERATURE':{'average':'0.256351366366780E+03',
+                                      'minimum': ...}
+                       ...}
     """
     def __init__(self, nstep, substep=None):
         """
         **nstep**: number of the time step
-        
+
         **substep**: in case, PREDICTOR or CORRECTOR substep
         """
         self.nstep = nstep
         self.substep = substep
         self.spnorms = {}
         self.gpnorms = {}
-        
+
     def __eq__(self, other):
-        return all([self.__getattribute__(a) == other.__getattribute__(a)
+        return all([getattr(self, a) == getattr(other, a)
                     for a in ('nstep', 'substep', 'spnorms', 'gpnorms')])
+
 
 class NormComparison(object):
     """
     Handling of the differences between two Norm objects.
     """
-    
+
     def __init__(self, test_norm, ref_norm, only=None):
         """
+
         **test_norm** and **ref_norm** supposed to be of type Norm.
-        
+
         If **only** among ('spectral', 'gridpoint'), only compare the requested
         type of norms.
         """
         assert isinstance(test_norm, Norm)
         assert isinstance(ref_norm, Norm)
-        
+
         self.test_norm = test_norm
         self.ref_norm = ref_norm
         self.only = only
-        
+
         self._compare()
-        
+
     def _compare(self):
         """Compute comparisons."""
         self.sp_comp, self.gp_comp = compare_norms(self.test_norm,
                                                    self.ref_norm,
                                                    self.only)
-    
+
     def get_worst(self, ntype='both'):
         """
         Get the worst of either 'spectral' or 'gridpoint' norm comparison.
         Or worst of the worst of 'both'.
         """
         if ntype == 'both':
-            worst = get_maxint({'spectral':get_maxint(self.sp_comp),
-                                'gridpoint':get_maxint(self.gp_comp)})
+            worst = get_maxint({'spectral': get_maxint(self.sp_comp),
+                                'gridpoint': get_maxint(self.gp_comp)})
         elif ntype == 'spectral':
             worst = get_maxint(self.sp_comp)
         elif ntype == 'gridpoint':
             worst = get_maxint(self.gp_comp)
         return worst
-    
+
     def write(self, out=sys.stdout, onlymaxdiff=False):
         """Write the NormComparison to **out**."""
         if len(self.sp_comp) > 0:
@@ -260,12 +268,12 @@ class NormComparison(object):
 # INNER FUNCTIONS #############################################################
 ###################
 def compare_norms(test_norm, ref_norm, only=None):
-    """
-    Compare norms of two Norm objects.
+    """Compare norms of two Norm objects.
+
     If **only** among ('spectral', 'gridpoint'), only compare the requested
     type of norms.
     """
-    
+
     comp_spnorms = collections.OrderedDict()
     comp_gpnorms = collections.OrderedDict()
     if only != 'gridpoint':
@@ -273,14 +281,15 @@ def compare_norms(test_norm, ref_norm, only=None):
         common_flds = set(test_norm.spnorms.keys()).intersection(set(ref_norm.spnorms.keys()))
         for f in sorted(common_flds):
             comp_spnorms[f] = _compare_spnorm_for(f, test_norm, ref_norm)
-    
+
     if only != 'spectral':
         # gpnorms
         common_flds = set(test_norm.gpnorms.keys()).intersection(set(ref_norm.gpnorms.keys()))
         for f in sorted(common_flds):
             comp_gpnorms[f] = _compare_gpnorm_for(f, test_norm, ref_norm)
-    
+
     return (comp_spnorms, comp_gpnorms)
+
 
 def _compare_spnorm_for(field, test_norm, ref_norm):
     """Compare spectral norms of two Norm objects for **field**."""
@@ -288,6 +297,7 @@ def _compare_spnorm_for(field, test_norm, ref_norm):
     assert isinstance(ref_norm, Norm)
     return diverging_digit(test_norm.spnorms[field],
                            ref_norm.spnorms[field])
+
 
 def _compare_gpnorm_for(field, test_norm, ref_norm):
     """Compare gridpoint norms of two Norm objects for **field**."""
@@ -305,8 +315,9 @@ def _compare_gpnorm_for(field, test_norm, ref_norm):
         digit = min([v for v in norms.values() if v is not None])
     return digit
 
+
 def _write_normcomp_for_field(fieldname, digit, out=sys.stdout):
-    """Write **fieldname** and its degree of comparison **digit**."""
+    """Write **fieldname** and its degree of comparison *digit*."""
     fieldname_width = 30
     digits_len = 2
     arrow = ' --> '
@@ -315,18 +326,18 @@ def _write_normcomp_for_field(fieldname, digit, out=sys.stdout):
     fmt = arrow + idupto
     fmtlen = len(idupto.format('', width=digits_len))
     if digit is None:
-        out.write('{:>{width}}'.format(fieldname, width=fieldname_width) + \
+        out.write('{:>{width}}'.format(fieldname, width=fieldname_width) +
                   ' --> {:=<{width}}'.format('', width=fmtlen))
     elif digit == '?':
-        out.write('{:>{width}}'.format(fieldname, width=fieldname_width) + \
+        out.write('{:>{width}}'.format(fieldname, width=fieldname_width) +
                   ' --> {:<{width}}'.format(unable, width=len(unable)))
     else:
-        out.write('{:>{width}}'.format(fieldname, width=fieldname_width) + \
+        out.write('{:>{width}}'.format(fieldname, width=fieldname_width) +
                   fmt.format(str(digit), width=digits_len))
     out.write('\n')
+
 
 def _write_normcomp(comp_norm, out=sys.stdout):
     assert isinstance(comp_norm, dict)
     for f, d in comp_norm.items():
         _write_normcomp_for_field(f, d, out)
-
