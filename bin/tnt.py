@@ -4,7 +4,9 @@
 import os
 import sys
 import re
-import vortex, common
+import vortex
+import vortex.util.config
+import common
 import footprints
 
 tntlog = footprints.loggers.getLogger('tntlog')
@@ -14,15 +16,16 @@ _OTHER_KNM = set(['substr6', 'substrA', 'substrC', 'XMP_TYPE', 'XLOPT_SCALAR',
                   'XNCOMBFLEN', 'val_sitr', 'val_sipr', '_lbias_', '_lincr_'])
 KNOWN_NAMELIST_MACROS = common.data.namelists.KNOWN_NAMELIST_MACROS.union(_OTHER_KNM)
 
+
 #############
 # Functions #
 #############
 def add_blocks(nam, blocks):
     """
     Add a set of new blocks inside a NamelistContent object.
-    
+
     **nam**: NamelistContent
-    
+
     **blocks**: ['BLOCK1', 'BLOCK2', ...]
     """
     assert isinstance(nam, common.data.namelists.NamelistContent)
@@ -33,12 +36,13 @@ def add_blocks(nam, blocks):
             tntlog.info(" ".join(["block", b,
                                   "already present"]))
 
+
 def remove_blocks(nam, blocks):
     """
     Remove a set of blocks from a NamelistContent object.
-    
+
     **nam**: NamelistContent
-    
+
     **blocks**: ['BLOCK1', 'BLOCK2', ...]
     """
     assert isinstance(nam, common.data.namelists.NamelistContent)
@@ -49,12 +53,13 @@ def remove_blocks(nam, blocks):
             tntlog.info(" ".join(["block", b,
                                   "to be removed but already missing."]))
 
+
 def move_blocks(nam, blocks):
     """
     Move a set of blocks inside a NamelistContent object.
-    
+
     **nam**: NamelistContent
-    
+
     **blocks**: {'BLOCK_OLD':'BLOCK_NEW', ...}
     """
     assert isinstance(nam, common.data.namelists.NamelistContent)
@@ -69,13 +74,14 @@ def move_blocks(nam, blocks):
             tntlog.warning(" ".join(["block", old_b,
                                      "to be moved but missing from namelist: ignored."]))
 
+
 def _expand_keys(nam, keys, radics=False):
     """
     Find all entries corresponding to the given keys,
     due to attributes and/or indexes.
-    
+
     **keys**: [('BLOCK1','KEY1'), ('BLOCK2','KEY2'), ...]
-    
+
     If **radics**, add the radical in the tuples.
     """
     assert isinstance(nam, common.data.namelists.NamelistContent)
@@ -83,18 +89,19 @@ def _expand_keys(nam, keys, radics=False):
     for (b, k) in keys:
         if b in nam:
             ek = [(b, nk) for nk in nam[b].keys()
-                  if re.match(k.replace('(','\(').replace(')','\)') + r'(\(.+\)|%.+)*', nk)]
+                  if re.match(k.replace('(', r'\(').replace(')', r'\)') + r'(\(.+\)|%.+)*', nk)]
             if radics:
                 ek = [(b, k, nk) for (b, nk) in ek]
             expanded_keys.extend(ek)
     return set(expanded_keys)
 
+
 def remove_keys(nam, keys):
     """
     Remove a set of keys from a NamelistContent object.
-    
+
     **nam**: NamelistContent
-    
+
     **keys**: [('BLOCK1','KEY1'), ('BLOCK2','KEY2'), ...]
     """
     assert isinstance(nam, common.data.namelists.NamelistContent)
@@ -109,12 +116,13 @@ def remove_keys(nam, keys):
             tntlog.info(" ".join(["block", b,
                                   "missing: cannot remove its key", k]))
 
+
 def set_keys(nam, keys):
     """
     Set a set of keys inside a NamelistContent object.
-    
+
     **nam**: NamelistContent
-    
+
     **keys**: {('BLOCK','KEY'):value, ...}
     """
     assert isinstance(nam, common.data.namelists.NamelistContent)
@@ -125,16 +133,17 @@ def set_keys(nam, keys):
             raise KeyError(" ".join(["block", b,
                                      "missing: cannot set its key", k]))
 
+
 def move_keys(nam, keys):
     """
     Move a set of keys within a NamelistContent object.
-    
+
     **nam**: NamelistContent
-    
+
     **keys**: {('BLOCK_OLD','KEY_OLD'):('BLOCK_NEW','KEY_NEW'), ...}
     """
     assert isinstance(nam, common.data.namelists.NamelistContent)
-    
+
     origin_keys = _expand_keys(nam, keys.keys(), radics=True)
     expanded_keys = {}
     for (ob, o_r, ok) in origin_keys:
@@ -147,7 +156,7 @@ def move_keys(nam, keys):
                 remove_keys(nam, [(ob, ok)])
                 if nb in nam:
                     if nk not in nam[nb]:
-                        set_keys(nam, {(nb, nk):v})
+                        set_keys(nam, {(nb, nk): v})
                     else:
                         raise ValueError(" ".join(["key", nk,
                                                    "in block", nb,
@@ -166,24 +175,26 @@ def move_keys(nam, keys):
             tntlog.warning(" ".join(["block", ob,
                                      "missing: cannot move its key", ok]))
 
+
 def _all_macros(arg_macros):
-    macros = {k:None for k in KNOWN_NAMELIST_MACROS}
+    macros = {k: None for k in KNOWN_NAMELIST_MACROS}
     if arg_macros is not None:
         macros.update(arg_macros)
     return macros
+
 
 def check_blocks(nam, another, macros=None):
     """
     Check that the namelist **nam** contains the same set of blocks as
     **another**.
-    
-    **another can be either the filename of a namelist to be read, or a 
+
+    **another can be either the filename of a namelist to be read, or a
     NamelistContent instance.
-    
+
     If **macros** is not None, it can contain the macros a.k.a. values to be
     replaced, e.g.: {'NPROC':8, 'substrA':None} will replace all NPROC values
     by 8 and will let substrA untouched.
-    
+
     Return the set of blocks that differ.
     """
     macros = _all_macros(macros)
@@ -194,65 +205,39 @@ def check_blocks(nam, another, macros=None):
     assert isinstance(another, common.data.namelists.NamelistContent)
     return set(nam.keys()).symmetric_difference(set(another.keys()))
 
+
 def write_directives_template(out=sys.stdout):
     """Write out a directives template."""
+    t = vortex.ticket()
+    tplfile = vortex.util.config.load_template(t, 'tnt-directive.tpl')
     if isinstance(out, str):
         out = open(out, 'w')
-    lines = [
-    "#!/usr/bin/env python",
-    "# -*- coding: utf-8 -*",
-    "",
-    "# 1. Blocks to be added.",
-    "new_blocks = set(['NAMNEW',",
-    "                  ])",
-    "# 2. Blocks to be moved. If target block exists, raise an error.",
-    "blocks_to_move = {'NAMOLD':'NAMMOVED',",
-    "                  }",
-    "# 3. Keys to be moved. If target exists or target block is missing, raise an error.",
-    "# Blocks need to be consistent with above blocks movings.",
-    "keys_to_move = {('NAMOLD', 'KEYOLD'):('NAMNEW', 'KEYNEW'),  # change the key from block, and/or rename it",
-    "                }",
-    "# 4. Keys to be removed. Already missing keys are ignored.",
-    "# Blocks need to be consistent with above movings.",
-    "keys_to_remove = set([('NAMBLOCK', 'KEYTOREMOVE'),",
-    "                      ])",
-    "# 5. Keys to be set with a value (new or modified). If block is missing, raise an error.",
-    "# Blocks need to be consistent with above movings.",
-    "keys_to_set = {('NAMBLOCK1', 'KEY1'):46.5,",
-    "               ('NAMBLOCK2', 'KEY2(1:3)'):[5,6,7],",
-    "               ('NAMBLOCK3', 'KEY3(50)'):-50,",
-    "               }",
-    "# 6. Blocks to be removed. Already missing blocks are ignored.",
-    "blocks_to_remove = set(['NAMBLOCK',",
-    "                        ])",
-    "# 7. Macros: substitutions in the namelist's values. A *None* value ignores",
-    "# the substitution (keeps the keyword, to be substituted later on).",
-    "macros = {'VAL_TO_SUBSTITUTE':8,",
-    "          'VAL_TO_KEEP_AND_BE_SUBSTITUTED_LATER':None}"
-    ]
-    for l in lines:
-        out.write(l + "\n")
+    with open(tplfile.srcfile, 'r') as tplfh:
+        for line in tplfh:
+            out.write(line)
+
 
 def read_directives(filename):
     """
     Read directives in an external file (**filename**).
-    
+
     For a template of directives, call function *write_directives_template()*.
     """
     directives = set(['keys_to_remove', 'keys_to_set', 'keys_to_move',
                       'blocks_to_move', 'blocks_to_remove', 'new_blocks',
                       'macros'])
     if sys.version_info.major == 3 and sys.version_info.minor >= 4:
-        import importlib.util as imputil
+        import importlib.util as imputil  # @UnresolvedImport
         spec = imputil.spec_from_file_location(os.path.basename(filename),
                                                os.path.abspath(filename))
         m = imputil.module_from_spec(spec)
         spec.loader.exec_module(m)
     else:
-        import imp
+        import imp  # @UnresolvedImport
         m = imp.load_source(filename, os.path.abspath(filename))
 
-    return {k:v for k, v in m.__dict__.items() if k in directives}
+    return {k: v for k, v in m.__dict__.items() if k in directives}
+
 
 ########
 # MAIN #
@@ -272,32 +257,32 @@ def main(filename,
     """
     If **in_place** is True, the namelist is written back in the same file;
     else (default), the target namelist is suffixed with '.tnt'.
-    
+
     Sorting option **sorting** (from vortex.tools.fortran):
       NO_SORTING;
       FIRST_ORDER_SORTING => sort all keys within blocks;
       SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key, within blocks.
-    
+
     If **blocks_ref** is not None, defines the path for a reference namelist to
     which the set of blocks is asserted to be equal.
-    
+
     For the syntax of keys & blocks arguments, please refer to the according
     functions.
-    
+
     The order of processing is that of the arguments. As movings are done first,
     check consistency.
-    
+
     If **macros** is not None, it can contain the macros a.k.a. values to be
     replaced, e.g.: {'NPROC':8, 'substrA':None} will replace all NPROC values
     by 8 and will let substrA untouched.
     """
-    
+
     if verbose:
         print "==> " + filename
         tntlog.setLevel('INFO')
     else:
         tntlog.setLevel('WARNING')
-    
+
     # macros stuff
     macros = _all_macros(macros)
 
@@ -328,15 +313,14 @@ def main(filename,
         if len(cb) != 0:
             tntlog.warning('Set of blocks is different from reference: ' + blocks_ref)
             tntlog.warning('diff: ' + str(cb))
-    
+
     # write to file
     namelist.rewrite(target_container, sorting=sorting)
 
 
-
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description='TNT - The Namelist Tool: a namelist modificator.',
+    parser = argparse.ArgumentParser(description='TNT - The Namelist Tool: a namelist updater.',
                                      epilog='End of help for: %(prog)s')
     parser.add_argument('namelists',
                         type=str,
@@ -346,12 +330,12 @@ if __name__ == '__main__':
     directives.add_argument('-d',
                             dest='directives',
                             type=str,
-                            help='the file in which directives of modification are \
-                                  stored. Activate option -D instead of -d to generate a template.')
+                            help='the file in which update directives are stored. \
+                                  Activate option -D instead of -d to generate a template.')
     directives.add_argument('-D',
                             dest='generate_directives_template',
                             action='store_true',
-                            help="generate a directives template 'tmpl_directives.tnt'.")
+                            help="generates a directives template 'tmpl_directives.tnt'.")
     parser.add_argument('-i',
                         action='store_true',
                         dest='in_place',
