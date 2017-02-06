@@ -80,7 +80,7 @@ class StdFtp(object):
     First argument of the constructor is the calling OS interface.
     """
 
-    def __init__(self, system, hostname, loginretries=3):
+    def __init__(self, system, hostname, loginretries=5):
         logger.debug('FTP init <host:%s>', hostname)
         self._system = system
         self._closed = True
@@ -92,7 +92,7 @@ class StdFtp(object):
         self._opened = None
         self._deleted = None
         self._loginretries = loginretries
-        self._loginretries_sleep = 5
+        self._loginretries_sleep = 20
 
     @property
     def _ftplib(self):
@@ -104,10 +104,14 @@ class StdFtp(object):
                     self._internal_ftplib = ftplib.FTP(self._hostname)
                 except socket.timeout:
                     logger.warning('Timeout error occurred when connecting to the FTP server')
+                    self._internal_ftplib = None
                     retry -= 1
                     if not retry:
+                        logger.warning('The maximum number of retries (%d) was reached.', self._loginretries)
                         raise
+                    logger.warning('Sleeping %d sec. before the next attempt.', self._loginretries_sleep)
                     self.system.sleep(self._loginretries_sleep)
+            # self._internal_ftplib.set_debuglevel(2)
         return self._internal_ftplib
 
     @property
@@ -129,11 +133,14 @@ class StdFtp(object):
             while not rc and retry:
                 try:
                     rc = self.login(self._logname, self._cached_pwd)
-                except (ftplib.error_temp, ftplib.error_proto) as e:
+                except ftplib.all_errors as e:
                     logger.warning('An FTP error occurred: %s', str(e))
+                    rc = False
                     retry -= 1
                     if not retry:
+                        logger.warning('The maximum number of retries (%d) was reached.', self._loginretries)
                         raise
+                    logger.warning('Sleeping %d sec. before the next attempt.', self._loginretries_sleep)
                     self.system.sleep(self._loginretries_sleep)
             return rc
         else:
