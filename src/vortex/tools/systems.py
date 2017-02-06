@@ -492,6 +492,7 @@ class System(footprints.FootprintBase):
                 re.sub(r'^' + mroot + r'/', '', x)
                 for mroot in (g.siteroot + '/src', g.siteroot + '/site')
                 for x in self.ffind(mroot)
+                if self.path.isfile(self.path.join(self.path.dirname(x), '__init__.py'))
             ]
             return [
                 re.sub(r'(?:/__init__)?\.py$', '', x).replace('/', '.')

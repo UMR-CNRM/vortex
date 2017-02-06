@@ -364,6 +364,13 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
         """Return the value matching current collector's tag after pickup of attributes."""
         return self.pickup(desc).get(self.tag, None)
 
+    def almost_clone(self, original, **extra):
+        """Return an almost clone, with some extra or different attributes."""
+        assert hasattr(original, 'footprint_as_dict')
+        attrs = original.footprint_as_dict()
+        attrs.update(extra)
+        return self.load(**attrs)
+
     def default(self, **kw):
         """
         Try to find in existing instances tracked by the ``tag`` collector
