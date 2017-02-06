@@ -38,7 +38,7 @@ class BdpeProvider(Provider):
     The BDPE only knows about product ids, base datetime, and terms.
     A dedicated ini file describes the relation between such ids and
     Vortex resources. This link could be used to deduce the BDPE id
-    from the resource (à la footprints). For now, we only check that
+    from the resource (a la footprints). For now, we only check that
     the resource is compatible with the BDPE product description.
 
     Canvas of a complete url:
