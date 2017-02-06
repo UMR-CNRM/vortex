@@ -102,7 +102,7 @@ class OpArchive(Provider):
                     default  = '[suite].multi.fr',
                     values   = ['oper.archive.fr', 'dble.archive.fr',
                                 'oper.multi.fr', 'dble.multi.fr',
-                                'mirr.multi.fr', 'mirr.multi.fr', ],
+                                'mirr.archive.fr', 'mirr.multi.fr', ],
                 ),
                 suite = a_suite,
                 igakey = dict(
@@ -149,18 +149,18 @@ class OpArchive(Provider):
                 entry = mobj.group(1)
                 keyattr = mobj.group(2)
                 if entry == 'histfix':
-                    if ((self.block == 'coupling_fc') & (resource.model == 'arome')):
+                    if self.block == 'coupling_fc' and resource.model == 'arome':
                         fuzzy = self.block
                     else:
                         igakey = getattr(self, keyattr)
-                        if igakey in ('pearp','arpege','arp_court'):
-                            keyattr = getattr(self, keyattr)
+                        if igakey in ('pearp', 'arpege', 'arp_court', 'aearp'):
+                            keyattr = igakey
                         else:
                             keyattr = resource.model
                         fuzzy = fuzzyname(entry, resource.realkind, keyattr)
                 elif entry == 'icmshfix':
                     if keyattr == 'modelkey':
-                        if ((self.block == 'coupling_fc') & (resource.model == 'arome')):
+                        if self.block == 'coupling_fc' and resource.model == 'arome':
                             fuzzy = 'guess_'
                         else:
                             fuzzy = 'icmsh'
@@ -169,11 +169,17 @@ class OpArchive(Provider):
                                 fuzzy = fuzzy.upper()
                 elif entry == 'termfix':
                     fuzzy = '+' + resource.term.fmthour
-                    if ((keyattr == 'modelkey') & (self.block == 'coupling_fc')):
+                    if keyattr == 'modelkey' and self.block == 'coupling_fc':
                         fuzzy = ''
                 elif entry == 'suffix':
                     if keyattr == 'modelkey':
                         fuzzy = fuzzyname('suffix', resource.realkind, resource.model + '_' + self.igakey, default='')
+                        if (self.vapp == 'arpege' and self.vconf == 'aearp' and
+                                self.block == 'forecast' and resource.model != 'surfex'):
+                            fuzzy += '_noninfl'
+                        if (self.vapp == 'arpege' and self.vconf == 'aearp' and
+                                self.block == 'forecast_infl' and resource.model == 'surfex'):
+                            fuzzy += '_infl'
                 elif entry == 'gribfix':
                     rr = archive_suffix(resource.model, resource.cutoff,
                                         resource.date, vconf=self.vconf)
