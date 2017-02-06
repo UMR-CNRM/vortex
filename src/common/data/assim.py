@@ -133,7 +133,7 @@ class BackgroundErrorNorm(_BackgroundErrorInfo):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'srenorm.t.' + str(self.geometry.truncation)
+        return 'srenorm.' + str(self.geometry.truncation)
 
     def olive_basename(self):
         """OLIVE specific naming convention."""

@@ -5,6 +5,7 @@
 #: No automatic export
 __all__ = []
 
+import hashlib
 import re
 import ftplib
 
@@ -237,31 +238,49 @@ class OpArchiveStore(ArchiveStore):
         """File transfer: get from store."""
         targetpath = local
         cleanpath  = self.fullpath(remote)
-        extract    = remote['query'].get('extract', None)
+        extract = remote['query'].get('extract', None)
+        locfmt = remote['query'].get('format', options.get('fmt', 'unknown'))
         (dirname, basename) = self.system.path.split(cleanpath)
         if not extract and self.glue.containsfile(basename):
             extract = basename
             cleanpath, targetpath = self.glue.filemap(self.system, dirname, basename)
-        if cleanpath is None:
-            rc = False
-        else:
-            rc = self.system.smartftget(
-                cleanpath,
-                targetpath,
-                # ftp control
-                hostname = self.hostname(),
-                logname  = remote['username'],
-                fmt      = options.get('fmt'),
-            )
+        elif extract:
+            extract = extract[0]
+            targetpath = basename
+        targetstamp = targetpath + '.stamp' + hashlib.md5(cleanpath).hexdigest()
+        rc = False
+        if cleanpath is not None:
+            if extract and self.system.path.exists(targetpath):
+                if self.system.path.exists(targetstamp):
+                    logger.info("%s was already fetched. that's great !", targetpath)
+                    rc = True
+                else:
+                    self.system.rm(targetpath)
+                    self.system.rmall(targetpath + '.stamp*')
+            if not rc:
+                rc = self.system.smartftget(
+                    cleanpath,
+                    targetpath,
+                    # ftp control
+                    hostname = self.hostname(),
+                    logname  = remote['username'],
+                    fmt      = locfmt,
+                )
             if not rc:
                 logger.error('FTP could not get file %s', cleanpath)
             elif extract:
+                self.system.touch(targetstamp)
                 if extract == 'all':
                     rc = self.system.untar(targetpath, output=False)
                 else:
-                    rc = self.system.untar(targetpath, extract, output=False)
-                    if local != extract:
-                        rc = rc and self.system.mv(extract, local)
+                    heaven = 'a_very_safe_untar_heaven'
+                    fulltarpath = self.system.path.abspath(targetpath)
+                    with self.system.cdcontext('a_very_safe_untar_heaven', create=True):
+                        rc = self.system.untar(fulltarpath, extract, output=False)
+                    rc = rc and self.system.rm(local)
+                    rc = rc and self.system.mv(self.system.path.join(heaven, extract),
+                                               local)
+                    self.system.rm(heaven)  # Sadly this is a temporary heaven
         return rc
 
     def opput(self, local, remote, options):
