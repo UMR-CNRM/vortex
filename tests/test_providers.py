@@ -1,4 +1,5 @@
 
+from copy import deepcopy
 import unittest
 
 
@@ -12,8 +13,8 @@ from vortex.data import geometries
 class DummyRessource(object):
 
     def __init__(self, realkind='dummy', bname='dummyres', cutoff='assim',
-                 term=0):
-        self.model = 'arpege'
+                 term=0, model='arpege'):
+        self.model = model
         self.date = Date(2000, 1, 1, 0, 0, 0)
         self.term = Time(term)
         self.geometry = geometries.get(tag='glob25')
@@ -43,8 +44,7 @@ class DummyRessource(object):
             model=self.model,
             date=self.date,
             cutoff=self.cutoff,
-            geometry=self.geometry,
-            )
+            geometry=self.geometry,)
 
     def basename_info(self):
         return dict(radical=self._bname)
@@ -230,62 +230,94 @@ class TestProviderOpArchive(unittest.TestCase):
     def setUp(self):
         self.fp_defaults = dict(vapp='arpege',
                                 vconf='4dvar',
-                                experiment='oper',
-                                namespace='oper.archive.fr')
-        self.t_suites = ('oper', 'dbl', 'test', 'miroir')
+                                namespace='[suite].archive.fr')
+        self.t_suites = ('oper', 'dbl', 'miroir')
         self.t_res = DummyRessource()
+        self.s_remap = dict(dbl='dble', miroir='mirr')
+
+    def _get_provider(self, **kwargs):
+        fpd = deepcopy(self.fp_defaults)
+        fpd.update(kwargs)
+        return fp.proxy.provider(** fpd)
+
+    @staticmethod
+    def _get_historic(**kwargs):
+        return DummyRessource(
+            realkind='historic',
+            bname='(icmshfix:modelkey)(histfix:igakey)(termfix:modelkey)(suffix:modelkey)',
+            **kwargs
+        )
 
     def test_oparchive_basics(self):
         for ns in self.t_suites:
             pr = fp.proxy.provider(suite=ns, ** self.fp_defaults)
             self.assertEqual(pr.scheme(), 'op')
-            self.assertEqual(pr.netloc(), 'oper.archive.fr')
+            self.assertEqual(pr.netloc(), '{:s}.archive.fr'.format(self.s_remap.get(ns, ns)))
             self.assertIs(pr.member, None)
 
     def test_oparchive_strangenames(self):
         # Strange naming convention for historic files
-        t_res = DummyRessource(realkind='historic',
-                               bname='(histfix:igakey)_toto')
-        # PEARP special case
-        fpd = dict()
-        fpd.update(self.fp_defaults)
-        fpd['vconf'] = 'pearp'
-        pr = fp.proxy.provider(suite='oper', ** fpd)
-        self.assertEqual(pr.basename(t_res),
-                         'prev_toto')
-        # Others
-        pr = fp.proxy.provider(suite='oper', ** self.fp_defaults)
-        self.assertEqual(pr.basename(t_res),
-                         'arpe_toto')
+        # PEARP
+        pr = self._get_provider(suite='oper', vconf='pearp')
+        self.assertEqual(pr.basename(self._get_historic()), 'icmshprev+0000')
+        # Arpege 4D / Arpege Court
+        for vconf in ('4dvarfr', 'courtfr'):
+            pr = self._get_provider(suite='oper', vconf=vconf)
+            self.assertEqual(pr.basename(self._get_historic()),
+                             'icmsharpe+0000')
+            self.assertEqual(pr.basename(self._get_historic(model='surfex')),
+                             'icmsharpe+0000.sfx')
+        # AEARP
+        # no block
+        pr = self._get_provider(suite='oper', vconf='aearp')
+        self.assertEqual(pr.basename(self._get_historic()),
+                         'icmsharpe+0000')
+        self.assertEqual(pr.basename(self._get_historic(model='surfex')),
+                         'icmsharpe+0000.sfx')
+        # block=forecast_infl
+        pr = self._get_provider(suite='oper', vconf='aearp', block='forecast_infl')
+        self.assertEqual(pr.basename(self._get_historic()),
+                         'icmsharpe+0000')
+        self.assertEqual(pr.basename(self._get_historic(model='surfex')),
+                         'icmsharpe+0000.sfx_infl')
+        # block=forecast
+        pr = self._get_provider(suite='oper', vconf='aearp', block='forecast')
+        self.assertEqual(pr.basename(self._get_historic()),
+                         'icmsharpe+0000_noninfl')
+        self.assertEqual(pr.basename(self._get_historic(model='surfex')),
+                         'icmsharpe+0000.sfx')
+        # AROME 3D
+        pr = self._get_provider(suite='oper', vapp='arome', vconf='3dvarfr')
+        self.assertEqual(pr.basename(self._get_historic(model='arome')),
+                         'ICMSHAROM+0000')
+        self.assertEqual(pr.basename(self._get_historic(model='surfex')),
+                         'ICMSHSURF+0000')
+        pr = self._get_provider(suite='oper', vapp='arome', vconf='3dvarfr', block='coupling_fc')
+        self.assertEqual(pr.basename(self._get_historic(model='arome')),
+                         'guess_coupling_fc')
 
         # Strange naming convention for grib files
         t_res = DummyRessource(realkind='gridpoint',
                                bname='(gribfix:igakey)_toto')
         # PEARP special case
-        fpd = dict()
-        fpd.update(self.fp_defaults)
-        fpd['vconf'] = 'pearp'
-        pr = fp.proxy.provider(suite='oper', member=1, ** fpd)
+        pr = self._get_provider(suite='oper', vconf='pearp', member=1)
         self.assertEqual(pr.basename(t_res),
                          'fc_00_1_GLOB25_0000_toto')
         # Others
-        pr = fp.proxy.provider(suite='oper', ** self.fp_defaults)
+        pr = self._get_provider(suite='oper')
         self.assertEqual(pr.basename(t_res),
                          'PE00000GLOB25_toto')
-        # Even ugglier things for the production cutoff :-(
+        # Even uglier things for the production cutoff :-(
         t_res = DummyRessource(realkind='gridpoint', cutoff='production',
                                bname='(gribfix:igakey)_toto')
-        pr = fp.proxy.provider(suite='oper', ** self.fp_defaults)
+        pr = self._get_provider(suite='oper')
         self.assertEqual(pr.basename(t_res),
                          'PEAM000GLOB25_toto')
 
         # Strange naming convention for errgribvor
-        fpd = dict()
-        fpd.update(self.fp_defaults)
-        fpd['vconf'] = 'aearp'
         resini = dict(realkind='bgstderr', bname='(errgribfix:igakey)')
-        pr1 = fp.proxy.provider(suite='oper', ** self.fp_defaults)
-        pr2 = fp.proxy.provider(suite='oper', inout='out', ** fpd)
+        pr1 = self._get_provider(suite='oper')
+        pr2 = self._get_provider(suite='oper', vconf='aearp', inout='out')
         t_res = DummyRessource(term=3, ** resini)
         self.assertEqual(pr1.basename(t_res), 'errgribvor')
         self.assertEqual(pr2.basename(t_res), 'errgribvor_assim.out')
@@ -302,13 +334,13 @@ class TestProviderOpArchive(unittest.TestCase):
             self.assertEqual(pr.pathname(self.t_res),
                              'arpege/{}/assim/2000/01/01/r0'.format(ns))
             self.assertEqual(pr.uri(self.t_res),
-                             'op://' + self.fp_defaults['namespace'] +
+                             'op://{}.archive.fr'.format(self.s_remap.get(ns, ns)) +
                              '/arpege/{}/assim/2000/01/01/r0/dummyres'.format(ns))
             # username ?
             pr = fp.proxy.provider(suite=ns, username='toto',
                                    ** self.fp_defaults)
             self.assertEqual(pr.uri(self.t_res),
-                             'op://' + self.fp_defaults['namespace'] +
+                             'op://{}.archive.fr'.format(self.s_remap.get(ns, ns)) +
                              '/arpege/{}/assim/2000/01/01/r0/dummyres'.format(ns))
             # Member ?
             pr = fp.proxy.provider(suite=ns, member=1, ** self.fp_defaults)

@@ -11,7 +11,7 @@ fuzzystr = dict(
     histfix = dict(
         historic = dict(
             pearp = 'prev', arome = 'AROM', arpege = 'arpe', arp_court = 'arpe',
-            aladin = 'ALAD', surfex = 'SURF'
+            aearp='arpe', aladin = 'ALAD', surfex = 'SURF'
         )
     ),
     prefix = dict(
@@ -20,7 +20,7 @@ fuzzystr = dict(
     ),
     suffix = dict(
         bgstderr = dict( input = 'in', output = 'out' ),
-        historic=dict( surfex_arpege='.sfx' ),
+        historic=dict( surfex_arpege='.sfx', surfex_aearp='.sfx' ),
     ),
     term0003 = dict(
         bgstderr = dict( input = '', output = '_assim' ),
