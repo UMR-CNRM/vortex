@@ -43,7 +43,7 @@ class TestListingNorms(unittest.TestCase):
     def test_single(self):
         l1_n = norms.Norms(self._ingest('listing_screen_li1'))
         self.assertEqual(len(l1_n), 1)
-        self.assertListEqual(l1_n.steps(), [0, ])
+        self.assertListEqual(list(l1_n.steps()), [0, ])
         self.assertListEqual(l1_n.get_first_and_last_norms_indexes(),
                              [(0, [None]), (0, [None])])
         norm = l1_n[0]
@@ -73,11 +73,17 @@ class TestListingNorms(unittest.TestCase):
                                  u'SURFTEMPERATURE', u'SURFRESI.STO.MIN', u'SURFRESERV.EAU',
                                  u'SURFPROP.VEGETAT', u'SURFRESERV.NEIGE', u'SURFAEROS.LAND',
                                  u'SUNSHI. DURATION', u'PROFTEMPERATURE']))
+        # Empty equals
+        self.assertEqual(norms.Norms([]),
+                         norms.Norms([]))
+        self.assertTrue(norms.Norms([]).subset_equal(norms.Norms([])))
 
     def test_diff_easy(self):
         # Norm comparison
         l1_n = norms.Norms(_find_testfile('listing_screen_li1'))
         l2_n = norms.Norms(_find_testfile('listing_screen_li1'))
+        self.assertEqual(l1_n, l2_n)
+        self.assertTrue(l1_n.subset_equal(l2_n))
         self.assertEqual(l1_n[0][None], l2_n[0][None])
         # Rich comparison
         ncomp = norms.NormComparison(l1_n[0][None], l2_n[0][None])
@@ -93,6 +99,8 @@ class TestListingNorms(unittest.TestCase):
         # Norm comparison
         l1_n = norms.Norms(_find_testfile('listing_screen_li1'))
         l2_n = norms.Norms(_find_testfile('listing_screen_li2'))
+        self.assertNotEqual(l1_n, l2_n)
+        self.assertFalse(l1_n.subset_equal(l2_n))
         self.assertNotEqual(l1_n[0][None], l2_n[0][None])
         # Rich comparison
         ncomp = norms.NormComparison(l1_n[0][None], l2_n[0][None])

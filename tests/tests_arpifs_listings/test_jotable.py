@@ -54,7 +54,10 @@ Jo/n:           1.36 (999.90%)
         self.assertEqual(len(l1_conv), 7)
         slist = list(l1_conv.keys())
         l1_ships = l1_conv[slist[2]]
-        self.assertListEqual(l1_ships.keys(), ['U', 'H2', 'Z', 'T2', 'TS'])
+        self.assertListEqual(list(l1_ships.keys()), ['U', 'H2', 'Z', 'T2', 'TS'])
+        # Empty equals
+        self.assertEqual(jo_tables.JoTables("dummy1", []),
+                         jo_tables.JoTables("dummy2", []))
 
     def test_diff_easy(self):
         # Norm comparison
@@ -70,7 +73,6 @@ Jo/n:           1.36 (999.90%)
                 for osensor in otype.values():
                     for ovar in osensor.values():
                         self.assertDictEqual(ovar, nulldiff)
-        self.assertDictEqual(l2_j.maxdiff(l1_j), nulldiff)
         str_out = six.StringIO()
         l2_j.print_diff(l1_j, out=str_out, onlymaxdiff=True)
         str_out.seek(0)

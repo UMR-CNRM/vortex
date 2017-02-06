@@ -16,8 +16,7 @@ patterns = {'norms': 'NORMS AT NSTEP CNT4',
             'spectral norms': 'SPECTRAL NORMS -',
             'gpnorms partA': 'GPNORM',
             'gpnorms partB': 'GPNORMS OF FIELDS TO BE WRITTEN OUT ON FILE :',
-            'fullpos gpnorms': 'FULL-POS GPNORMS',
-            }
+            'fullpos gpnorms': 'FULL-POS GPNORMS', }
 
 
 class Norms(object):
@@ -39,13 +38,24 @@ class Norms(object):
     def __len__(self):
         return len(self.norms)
 
+    def __eq__(self, other):
+        return (list(self.norms.keys()) == list(other.norms.keys()) and
+                all([self[k] == other[k] for k in self.norms.keys()])
+                )
+
+    def subset_equal(self, other):
+        """Check if all of the steps in self are equals to the one in other."""
+        return (set(other.norms.keys()) >= set(self.norms.keys()) and
+                all([self[k] == other[k] for k in self.norms.keys()])
+                )
+
     def steps(self):
         return self.norms.keys()
 
     def get_first_and_last_norms_indexes(self, **kw):
         """Return the first and last indexes of norms."""
         if len(self.norms) == 0:
-            self.parse_norms(**kw)
+            self._parse_listing(**kw)
         if 'PREDICTOR' in self.norms[0].keys():
             first = (0, ['PREDICTOR'])
         else:
@@ -73,10 +83,69 @@ class Norms(object):
                 lines = [l.rstrip("\n") for l in listfh]
 
         _indexes_of_found_norms = []
-        for i in range(len(lines)):
-            if patterns['norms'] in lines[i]:
+        for i, line in enumerate(lines):
+            if patterns['norms'] in line:
                 _indexes_of_found_norms.append(i)
         _indexes_of_found_norms.append(-1)  # for last interval
+
+        # spectral norms
+        def getspnorm(fld, extract):
+            val = None
+            (idx, line) = find_line_containing(fld, extract)
+            line = line.split()
+            if fld in ('LOG(PREHYDS)', 'OROGRAPHY'):
+                # special case syntax
+                if idx is not None:  # fld is found
+                    try:
+                        val = line[line.index(fld) + 1]
+                    except ValueError:
+                        val = None
+            else:
+                if idx is not None:  # fld is found
+                    if extract[idx + 1].split()[0] != 'AVE':
+                        raise NotImplementedError
+                    else:
+                        val = extract[idx + 1].split()[line.index(fld.split()[0])]  # .split()[0] necessary for KINETIC ENERGY
+
+            return val
+
+        # gridpoint norms
+        def gpnorms_syntaxA(extract, norm):
+            start = 0
+            sub_extract = extract
+            while True:
+                sub_extract = sub_extract[start:]
+                (idx, line) = find_line_containing(patterns['gpnorms partA'], sub_extract)
+                if idx is not None and line.split()[0] == patterns['gpnorms partA']:  # signature of part A
+                    fld = line.split()[1]
+                    vals = {'average': sub_extract[idx + 1].split()[1],
+                            'minimum': sub_extract[idx + 1].split()[2],
+                            'maximum': sub_extract[idx + 1].split()[3]}
+                    start = idx + 1
+                    norm.gpnorms[fld] = vals
+                else:
+                    break
+
+        def gpnorms_syntaxB(extract, norm, pattern, colon_position):
+            start = 0
+            sub_extract = extract
+            while True:
+                sub_extract = sub_extract[start:]
+                (idx, _) = find_line_containing(pattern, sub_extract)
+                if idx is not None:
+                    idx += 2
+                    while (len(sub_extract[idx]) > colon_position and
+                           sub_extract[idx][colon_position] == ':'):
+                        [fld, vals] = sub_extract[idx].split(':')
+                        fld = fld.strip()
+                        vals = {'average': vals.split()[0],
+                                'minimum': vals.split()[1],
+                                'maximum': vals.split()[2]}
+                        norm.gpnorms[fld] = vals
+                        idx += 1
+                    start = idx
+                else:
+                    break
 
         # loop on nstep + substep
         for i in range(len(_indexes_of_found_norms) - 1):
@@ -94,65 +163,6 @@ class Norms(object):
                     break
             _norm = Norm(nstep, substep=substep)
 
-            # spectral norms
-            def getspnorm(fld, extract):
-                val = None
-                (idx, line) = find_line_containing(fld, extract)
-                line = line.split()
-                if fld in ('LOG(PREHYDS)', 'OROGRAPHY'):
-                    # special case syntax
-                    if idx is not None:  # fld is found
-                        try:
-                            val = line[line.index(fld) + 1]
-                        except ValueError:
-                            val = None
-                else:
-                    if idx is not None:  # fld is found
-                        if extract[idx + 1].split()[0] != 'AVE':
-                            raise NotImplementedError
-                        else:
-                            val = extract[idx + 1].split()[line.index(fld.split()[0])]  # .split()[0] necessary for KINETIC ENERGY
-
-                return val
-
-            # gridpoint norms
-            def gpnorms_syntaxA():
-                start = 0
-                sub_extract = _extract
-                while True:
-                    sub_extract = sub_extract[start:]
-                    (idx, line) = find_line_containing(patterns['gpnorms partA'], sub_extract)
-                    if idx is not None and line.split()[0] == patterns['gpnorms partA']:  # signature of part A
-                        fld = line.split()[1]
-                        vals = {'average': sub_extract[idx + 1].split()[1],
-                                'minimum': sub_extract[idx + 1].split()[2],
-                                'maximum': sub_extract[idx + 1].split()[3]}
-                        start = idx + 1
-                        _norm.gpnorms[fld] = vals
-                    else:
-                        break
-
-            def gpnorms_syntaxB(pattern, colon_position):
-                start = 0
-                sub_extract = _extract
-                while True:
-                    sub_extract = sub_extract[start:]
-                    (idx, _) = find_line_containing(pattern, sub_extract)
-                    if idx is not None:
-                        idx += 2
-                        while (len(sub_extract[idx]) > colon_position and
-                               sub_extract[idx][colon_position] == ':'):
-                            [fld, vals] = sub_extract[idx].split(':')
-                            fld = fld.strip()
-                            vals = {'average': vals.split()[0],
-                                    'minimum': vals.split()[1],
-                                    'maximum': vals.split()[2]}
-                            _norm.gpnorms[fld] = vals
-                            idx += 1
-                        start = idx
-                    else:
-                        break
-
             # process
             for fld in ('LOG(PREHYDS)', 'OROGRAPHY', 'VORTICITY', 'DIVERGENCE',
                         'TEMPERATURE', 'KINETIC ENERGY', 'LOG(PRE/PREHYD)',
@@ -160,9 +170,9 @@ class Norms(object):
                 _val = getspnorm(fld, _extract)
                 if _val is not None:
                     _norm.spnorms[fld] = _val
-            gpnorms_syntaxA()
-            gpnorms_syntaxB(patterns['gpnorms partB'], 18)
-            gpnorms_syntaxB(patterns['fullpos gpnorms'], 26)
+            gpnorms_syntaxA(_extract, _norm)
+            gpnorms_syntaxB(_extract, _norm, patterns['gpnorms partB'], 18)
+            gpnorms_syntaxB(_extract, _norm, patterns['fullpos gpnorms'], 26)
 
             # save
             if _norm.nstep not in self.norms.keys():

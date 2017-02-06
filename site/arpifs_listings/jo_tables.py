@@ -8,7 +8,7 @@ import sys
 from collections import OrderedDict
 
 #: Automatic export
-__all__ = ['Jo_tables', 'Jo_table']
+__all__ = ['JoTables', 'JoTable']
 
 # Default thresholds for the check
 DEFAULT_N_THRESHOLD = 0.0005
@@ -64,7 +64,7 @@ def _write_n(out, sthg):
 class _JoMixin(object):
     """Some internal method common to all of the Jo classes."""
 
-    _ChildClass = None  # Define the basic child class
+    _ChildClass = object  # Define the basic child class
     _re_begin = None
     _re_end = None
 
@@ -128,7 +128,7 @@ class _JoMixinPlus(_JoMixin):
 
     def _diff_superset(self, ref):
         """Union between elements of the reference and self list."""
-        keys = ref.keys()
+        keys = list(ref.keys())
         # New keys are appended to the reference list
         keys.extend([k for k in self.keys() if k not in keys])
         return keys
@@ -137,13 +137,12 @@ class _JoMixinPlus(_JoMixin):
 class JoVariable(object):
     """Object containing data on a given variable."""
 
-    def __init__(self, name, n=0, jo=0, jon=0, obserr=0, bgerr=0, dummy=False):
+    def __init__(self, name, n=0, jo=0, obserr=0, bgerr=0, dummy=False):
         '''
 
         :param name: Name of the variable
         :param n: Number of obs
         :param jo: Jo
-        :param jon: Jo/N
         :param obserr: Observation Error
         :param bgerr: Background Error
         '''
@@ -207,7 +206,7 @@ class JoVariable(object):
     def end_of_group(self, *kargs):
         pass
 
-    def parse_line(self, *kargs):
+    def parse_line(self, line):
         pass
 
 
@@ -217,7 +216,7 @@ class JoSensor(_JoMixinPlus):
     _re_begin = re.compile(r'^\s+([a-zA-Z0-9_]+)\s+' +
                            r'(\d+)\s+' +
                            r'([\d.E+]+)\s+' +
-                           r'([\d.E+-]+)\s+' +
+                           r'[\d.E+-]+\s+' +
                            r'([\d.E+-]+)\s+' +
                            r'([\d.E+-]+)\s*$')
     _re_end = re.compile(r'^\s*(Obs|Code)type')
@@ -244,7 +243,10 @@ class JoSensor(_JoMixinPlus):
 
     def compute_diff(self, ref):
         """Compute difference and relative difference for n, jo, jo/n."""
-        return {v: self[v].compute_diff(ref[v]) for v in self._diff_superset(ref)}
+        diff = OrderedDict()
+        for v in self._diff_superset(ref):
+            diff[v] = self[v].compute_diff(ref[v])
+        return diff
 
     def maxdiff(self, ref):
         """Compute and sort out the maximum difference."""
@@ -321,7 +323,10 @@ class JoObstype(_JoMixinPlus):
 
     def compute_diff(self, ref):
         """Compute difference and relative difference for n, jo, jo/n."""
-        return {s: self[s].compute_diff(ref[s]) for s in self._diff_superset(ref)}
+        diff = OrderedDict()
+        for s in self._diff_superset(ref):
+            diff[s] = self[s].compute_diff(ref[s])
+        return diff
 
     def maxdiff(self, ref):
         """Compute and sort out the maximum difference."""
@@ -359,14 +364,14 @@ class JoObstype(_JoMixinPlus):
                  _chk_diff(self.jo, ref.jo, jothres, bw))
         _write_n(out, '')
 
-    def end_of_group(self, ntotal, jo):
+    def end_of_group(self, *kargs):
         '''Record the obstype ObsCount and Jo.
 
         :param ntotal: obstype ObsCount
         :param jo: obstype Jo
         '''
-        self.ntotal = int(ntotal)
-        self.jo = float(jo)
+        self.ntotal = int(kargs[0])
+        self.jo = float(kargs[1])
 
 
 class JoTable(_JoMixinPlus):
@@ -376,6 +381,11 @@ class JoTable(_JoMixinPlus):
     _re_end = re.compile(r'^\s*ObsType\s+\d+\s+Total:\s+(\d+)\s+' +
                          r'([\d.E+-]+)\s+[\d.E+-]+\s*$')
     _ChildClass = JoObstype
+
+    def __init__(self, name):
+        super(JoTable, self).__init__(name)
+        self.ntotal = 0
+        self.jo = 0
 
     def __str__(self):
         ret = '=====================\n'
@@ -401,8 +411,11 @@ class JoTable(_JoMixinPlus):
 
     def compute_diff(self, ref):
         """Compute difference and relative difference for n, jo, jo/n."""
-        return {o: self[o].compute_diff(ref[o])
-                for o in self._diff_superset(ref) if len(self[o]) or len(ref[o])}
+        diff = OrderedDict()
+        for o in self._diff_superset(ref):
+            if len(self[o]) or len(ref[o]):
+                diff[o] = self[o].compute_diff(ref[o])
+        return diff
 
     def maxdiff(self, ref):
         """Compute and sort out the maximum difference."""
@@ -454,14 +467,14 @@ class JoTable(_JoMixinPlus):
                      _chk_diff(self.jo, ref.jo, jothres, bw))
         _write_n(out, '')
 
-    def end_of_group(self, ntotal, jo):
+    def end_of_group(self, *kargs):
         ''' Record the global ObsCount and Jo.
 
         :param ntotal: Global ObsCount
         :param jo: Global Jo
         '''
-        self.ntotal = int(ntotal)
-        self.jo = float(jo)
+        self.ntotal = int(kargs[0])
+        self.jo = float(kargs[1])
 
 
 class JoTables(_JoMixin):
@@ -518,7 +531,10 @@ class JoTables(_JoMixin):
     def compute_diff(self, ref):
         """Compute difference and relative difference for n, jo, jo/n."""
         self._allow_diff(ref)
-        return {t: self[t].compute_diff(ref[t]) for t in self.keys()}
+        diff = OrderedDict()
+        for t in self.keys():
+            diff[t] = self[t].compute_diff(ref[t])
+        return diff
 
     def maxdiff(self, ref):
         """Compute and sort out the maximum difference."""

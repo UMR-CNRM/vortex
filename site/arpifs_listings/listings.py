@@ -105,10 +105,11 @@ class OutputListing(object):
 def compare(test, ref, **kwargs):
     """Compare two output listings."""
     assert test.pattern_type == ref.pattern_type
+    result = None
     if test.pattern_type == 'norms':
         result = compare_norms(test, ref, **kwargs)
     elif test.pattern_type == 'Jo-tables':
-        result = compare_jo_tables(test, ref, **kwargs)
+        compare_jo_tables(test, ref, **kwargs)
     return result
 
 
@@ -162,6 +163,8 @@ def compare_norms(test, ref,
                 worstdigits.append(norm_comp.get_worst('both'))
     if printmode == 'jobs_manager':
         return worstdigits
+    else:
+        return None
 
 
 def compare_jo_tables(test, ref,

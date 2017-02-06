@@ -3,6 +3,8 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
+
 #: No automatic export
 __all__ = []
 
@@ -16,9 +18,9 @@ def find_line_containing(pattern, lines):
     """
     index = None
     line = ''
-    for i in range(len(lines)):
-        if pattern in lines[i]:
-            line = lines[i]
+    for i, in_line in enumerate(lines):
+        if pattern in in_line:
+            line = in_line
             index = i
             break
     return (index, line)
@@ -74,9 +76,9 @@ def get_maxint(a_dict, infinity=99):
     assert isinstance(a_dict, dict)
     digit = infinity
     for d in a_dict.values():
-        if type(d) == int:
+        if isinstance(d, int):
             digit = min(digit, d)
-        elif type(d) == str:
+        elif isinstance(d, six.string_types):
             digit = d
             break
         elif d is None:
