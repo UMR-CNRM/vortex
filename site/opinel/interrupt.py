@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import signal
 
 import footprints
+
 logger = footprints.loggers.getLogger(__name__)
 
 

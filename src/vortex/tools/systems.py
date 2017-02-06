@@ -1357,11 +1357,11 @@ class OSExtended(System):
 
     def is_tarname(self, objname):
         """Check if a ``objname`` is a string with ``.tar`` suffix."""
-        return isinstance(objname, str) and (objname.endswith('.tar') or
-                                             objname.endswith('.tar.gz') or
-                                             objname.endswith('.tgz') or
-                                             objname.endswith('.tar.bz2') or
-                                             objname.endswith('.tbz'))
+        return isinstance(objname, basestring) and (objname.endswith('.tar') or
+                                                    objname.endswith('.tar.gz') or
+                                                    objname.endswith('.tgz') or
+                                                    objname.endswith('.tar.bz2') or
+                                                    objname.endswith('.tbz'))
 
     def tarname_radix(self, objname):
         """Remove any ``.tar`` specific suffix."""

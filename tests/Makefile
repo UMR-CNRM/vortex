@@ -1,11 +1,16 @@
-PYTHON        = python
-NOSE          = nosetests
+PYTHON        = python2.7
+NOSE          = nosetests-2.7
+
+PYTHON3       = python3
+NOSE3         = nosetests-3.5
 
 NOSE_OPTS     = --verbosity=2 --no-byte-compile
 
 COVER_PACK    = footprints,vortex,common,olive,gco,iga,taylorism
 COVER_OUT	  = coverage_report
 COVER_OPTS    = --no-byte-compile --with-coverage --cover-package=$(COVER_PACK) --cover-branch --cover-html --cover-html-dir=$(shell pwd)/$(COVER_OUT)
+
+PY3READY      = tests_footprints tests_opinel test_taylorism
 
 all: check
 
@@ -18,6 +23,7 @@ check:
 
 # Run all test with nose
 tests:
+	$(NOSE3) $(NOSE_OPTS) $(PY3READY)
 	$(NOSE) $(NOSE_OPTS)
 
 # Run all tests with nose and coverage

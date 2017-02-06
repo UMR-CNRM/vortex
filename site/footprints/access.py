@@ -5,12 +5,15 @@
 Footprint descriptors for attributes access.
 """
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import weakref
 
 from . import loggers
+
+#: No automatic export
+__all__ = []
+
 logger = loggers.getLogger(__name__)
 
 
@@ -39,7 +42,8 @@ class FootprintAttrDescriptorRWD(FootprintAttrDescriptor):
             atype = fpdef.get('type', str)
             if fpdef.get('isclass', False):
                 if not issubclass(value, atype):
-                    raise ValueError('Attempt to set {0:s} as a non compatible subclass {1:s}'.format(self._attr, str(value)))
+                    raise ValueError('Attempt to set {0:s} as a non compatible subclass {1!s}'
+                                     .format(self._attr, value))
             elif not isinstance(value, atype) and value is not None:
                 logger.debug(' > Attr %s reclass(%s) as %s', self._attr, value, atype)
                 initargs = fpdef.get('args', dict())
@@ -47,11 +51,14 @@ class FootprintAttrDescriptorRWD(FootprintAttrDescriptor):
                     value = atype(value, **initargs)
                     logger.debug(' > Attr %s reclassed = %s', self._attr, value)
                 except (ValueError, TypeError):
-                    raise ValueError('Unable to reclass {0:s} as {1:s}'.format(str(value), str(atype)))
+                    raise ValueError('Unable to reclass {0!s} as {1!s}'
+                                     .format(value, atype))
             if fpdef['values'] and not fp.in_values(value, fpdef['values']):
-                raise ValueError('Value {0:s} not in range {1:s}'.format(str(value), str(list(fpdef['values']))))
+                raise ValueError('Value {0!s} not in range {1!s}'
+                                 .format(value, list(fpdef['values'])))
             if fpdef['outcast'] and fp.in_values(value, fpdef['outcast']):
-                raise ValueError('Value {0:s} excluded from range {1:s}'.format(str(value), str(list(fpdef['outcast']))))
+                raise ValueError('Value {0!s} excluded from range {1!s}'
+                                 .format(value, list(fpdef['outcast'])))
             if weak:
                 value = weakref.proxy(value)
             instance.footprint_setattr(self._attr, value, auth=self._auth)

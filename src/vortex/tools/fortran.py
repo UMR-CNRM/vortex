@@ -338,7 +338,7 @@ class LiteralParser(object):
             return self.encode_real(value)
         elif isinstance(value, complex):
             return self.encode_complex(value)
-        elif isinstance(value, str):
+        elif isinstance(value, basestring):
             return self.encode_character(value)
         else:
             raise ValueError("Type %s cannot be FORTRAN encoded" % type(value))
@@ -808,7 +808,7 @@ class NamelistParser(object):
         Parse a string or a file.
         Returns a dict of {namelist block title: namelist block object}.
         """
-        if isinstance(obj, str):
+        if isinstance(obj, basestring):
             if not self.block.search(obj):
                 obj = obj.strip()
                 iod = open(obj, 'r')

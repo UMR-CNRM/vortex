@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 # Fabrik for root logger instances
+
+import logging
 
 #: No automatic export
 __all__ = []
-
-import logging
 
 #: The actual set of pseudo-root loggers created
 roots = set()

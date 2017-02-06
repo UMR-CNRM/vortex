@@ -6,17 +6,17 @@ Hierarchical documents to store footprints information.
 StandardReport is derived from :class:`xml.dom.minidom.Document`.
 """
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from datetime import datetime
-
 import re
 import weakref
-import dump
 import collections
 
-from . import util
+from . import dump, util
+
+#: No automatic export
+__all__ = []
 
 REPORT_WHY_MISSING  = 'Missing value'
 REPORT_WHY_INVALID  = 'Invalid value'
@@ -28,19 +28,23 @@ REPORT_WHY_SUBCLASS = 'Not a subclass'
 REPORT_ONLY_NOTFOUND = 'No value found'
 REPORT_ONLY_NOTMATCH = 'Do not match'
 
+
 # Module Interface
 
 def get(**kw):
     """Return actual footprint log object matching description."""
     return FootprintLog(**kw)
 
+
 def keys():
     """Return the list of current entries names collected."""
     return FootprintLog.tag_keys()
 
+
 def values():
     """Return the list of current entries values collected."""
     return FootprintLog.tag_values()
+
 
 def items():
     """Return the items of the footprint logs table."""
@@ -119,7 +123,7 @@ class FootprintLogCollector(FootprintLogEntry):
 
     def __iter__(self):
         """Iterates on :class:`FootprintLogClass` items."""
-        for kid in sorted(self._items, lambda a, b: cmp(a.name, b.name)):
+        for kid in sorted(self._items, key=lambda item: item.name):
             yield kid
 
     def feed_xml(self, xmlnode):
@@ -138,7 +142,13 @@ class FootprintLogCollector(FootprintLogEntry):
 
     def as_tree(self, **kw):
         """Feed a :class:`FactorizedReport` according to the order specified."""
-        return FactorizedReport(**kw)
+        fr = FactorizedReport(**kw)
+        for kid in self:
+            for item in kid:
+                info = item.copy()
+                info['class'] = kid.name
+                fr.add(**info)
+        return fr
 
     def as_flat(self, **kw):
         """Feed a :class:`FlatReport` according to the order specified."""
@@ -174,7 +184,7 @@ class FootprintLogClass(FootprintLogEntry):
         """Insert in the specified ``xmlnode`` informations relative to attributes of the candidate class."""
         xmlnode.current(xmlnode.add('class', name=self.name))
         for kid in self._items:
-            kidstr = dict([ (k, str(v)) for k, v in kid.items() ])
+            kidstr = dict([(k, str(v)) for k, v in kid.items()])
             xmlnode.add('attribute', **kidstr)
 
     def as_dict(self):
@@ -189,13 +199,13 @@ class FootprintLogClass(FootprintLogEntry):
     def lightdump(self, indent='    ', attrjust=10):
         """Pseudo structured dump of the current class item report."""
         if self._items:
-            print indent, self.name
+            print(indent, self.name)
             for item in self._items:
                 info = item.copy()
-                print indent * 2, info.pop('name').ljust(attrjust), ':', info
+                print(indent * 2, info.pop('name').ljust(attrjust), ':', info)
         else:
-            print '=>'.rjust(len(indent)), self.name
-        print
+            print('=>'.rjust(len(indent)), self.name)
+        print()
 
 
 class FootprintLog(util.GetByTag):
@@ -322,14 +332,14 @@ class FootprintLog(util.GetByTag):
                 if stamp:
                     key += ' ' + item.stamp.isoformat()
                 else:
-                    key += '_{0:04d}'.format(i+1)
+                    key += '_{0:04d}'.format(i + 1)
                 self._dict[key] = item.as_dict()
             self._touch = False
         return self._dict
 
     def fulldump(self, stamp=False):
         """Shortcut to :mod:``dump`` facilities."""
-        print dump.fulldump(self.as_dict(force=True, stamp=stamp))
+        print(dump.fulldump(self.as_dict(force=True, stamp=stamp)))
 
 
 class StandardReport(object):
@@ -348,7 +358,7 @@ class StandardReport(object):
 
     def __call__(self):
         """Print the complete dump of the current report object."""
-        print self.dump_all()
+        print(self.dump_all())
 
     @property
     def doc(self):
@@ -398,10 +408,10 @@ class FlatReport(object):
     def __init__(self, sortlist=None):
         """By default the report is empty."""
         self._items = list()
-        self._tree  = dict()
+        self._tree = dict()
         if sortlist is None:
             sortlist = list()
-        self._sort  = list(sortlist)
+        self._sort = list(sortlist)
 
     def add(self, **kw):
         """Push the current key-value description as a new report entry."""
@@ -430,16 +440,16 @@ class FlatReport(object):
             if done or skip:
                 focus = info.pop('focus')
                 if info:
-                    current[focus] = ' / '.join([str(x)+': '+str(info[x]) for x in info.keys()])
+                    current[focus] = ' / '.join([str(x) + ': ' + str(info[x]) for x in info.keys()])
                 else:
                     current[focus] = None
 
     def fulldump(self):
         """Print out the internal tree."""
-        print '- ' * 5, "\n"
-        print self.__class__.__name__, 'shuffle', self._sort
-        print dump.fulldump(self._tree)
-        print
+        print('- ' * 5, "\n")
+        print(self.__class__.__name__, 'shuffle', self._sort)
+        print(dump.fulldump(self._tree))
+        print()
 
 
 class FactorizedReport(object):
@@ -448,14 +458,14 @@ class FactorizedReport(object):
             self,
             focus='class',
             indent='    ',
-            xordering = None,
-            ordering = (
-                ('name', ('kind', 'date', 'geometry')),
-                ('why', (REPORT_WHY_MISSING, REPORT_WHY_INVALID, REPORT_WHY_OUTSIDE,
-                         REPORT_WHY_OUTCAST, REPORT_WHY_RECLASS, REPORT_WHY_SUBCLASS)
-                ),
-                ('only', (REPORT_ONLY_NOTFOUND, REPORT_ONLY_NOTMATCH)),
-            ) ):
+            ordering=(
+                (('name', ), ('kind', )),
+                (('why', 'only'), (REPORT_WHY_MISSING, REPORT_WHY_INVALID,
+                                   REPORT_WHY_OUTSIDE, REPORT_WHY_OUTCAST,
+                                   REPORT_WHY_RECLASS, REPORT_WHY_SUBCLASS,
+                                   REPORT_ONLY_NOTFOUND, REPORT_ONLY_NOTMATCH)),
+            ),
+            renaming=(('name', 'attribute_name'),)):
         """
         Generates a report whose items are sorted using some parameters:
 
@@ -468,18 +478,21 @@ class FactorizedReport(object):
         * the selected-values is a tuple of values to focus on if encountered.
 
         """
-        self.focus   = focus
-        self._define = dict(ordering)
-        self._order  = [ x[0] for x in ordering ]
+        self.focus = focus
+        self._define = collections.OrderedDict(ordering)
+        self._renaming = dict(renaming)
         self._indent = indent
-        self._tree   = dict()
+        self._tree = dict()
+
+    def _depth_key(self, depth):
+        return list(self.keys())[depth]
 
     def get_order(self, dic, depth):
         order = list()
-        other = dic.keys()
-        for val in self.interestingValues(self.keys()[depth]):
+        other = list(dic.keys())
+        for val in self.interestingValues(list(self.keys())[depth]):
             for v in other:
-                if v.startswith(val):
+                if v[1].startswith(val):
                     order.append(v)
                     other.remove(v)
         order.extend(other)
@@ -488,6 +501,9 @@ class FactorizedReport(object):
     def keys(self):
         return self._define.keys()
 
+    def __len__(self):
+        return len(self._define)
+
     def interestingValues(self, key):
         return self._define[key]
 
@@ -495,55 +511,53 @@ class FactorizedReport(object):
         tagvalue = kw[self.focus]
         dic = self._tree
         for k in self.keys():
-            v = kw.get(k)
-            if v not in dic:
-                dic[v] = dict()
-            dic = dic[v]
-        info = kw.get('info', None)
-        dic[tagvalue] = info
+            for ki in k:
+                kj = self._renaming.get(ki, ki)
+                v = kw.get(ki, None)
+                if v is not None:
+                    if (kj, v) not in dic:
+                        dic[(kj, v)] = dict()
+                    dic = dic[(kj, v)]
+                    break
+            if v is None:
+                raise KeyError("Ordering key not found: {:s}".format(k))
+        info = kw.get('args', '')
+        dic[tagvalue] = str(info)
 
     def printer(self, dic, currentindent, depth, ordered=False):
-        if depth == len(self.keys()):
-            for tagValue in dic:
-                print currentindent, self.focus, ':', tagValue,
-                if dic[tagValue]:
-                    print '(' + dic[tagValue]+')'
-                else:
-                    print
+        if depth == len(self):
+            for tagValue in sorted(dic.keys()):
+                print(currentindent, self.focus, ':', tagValue,
+                      '(' + dic[tagValue] + ')')
         else:
             if ordered:
                 order = self.get_order(dic, depth)
             else:
                 order = dic
             for v in order:
-                print currentindent, self.keys()[depth], '=', v
-                self.printer(dic[v], currentindent+self._indent, depth+1, ordered)
+                print('{:s} {:s} = {:s}'.format(currentindent, *v))
+                self.printer(dic[v], currentindent + self._indent, depth + 1, ordered)
 
     def softprint(self):
         self.printer(self._tree, self._indent, 0)
 
     def orderedprint(self):
-        self.printer(self._tree, self._indent, 0, ordered = True)
+        self.printer(self._tree, self._indent, 0, ordered=True)
 
     def simpleprinter(self, dic, depth, msg=None, space=True):
-        if depth == len(self.keys()):
+        if depth == len(self):
             if space:
-                print
-            for tagValue in dic:
-                print self._indent, self.focus, ':', tagValue,
-                if dic[tagValue]:
-                    print '(' + dic[tagValue]+')'
-                else:
-                    print
+                print()
+            for tagValue in sorted(dic.keys()):
+                print(self._indent, self.focus, ':', tagValue,
+                      '(' + dic[tagValue] + ')')
             if msg:
-                print self._indent*3, msg
+                print(self._indent * 3, msg)
         else:
             for v in self.get_order(dic, depth):
-                if msg:
-                    newmsg = msg + ' | ' + self.keys()[depth] + ' = ' + v
-                else:
-                    newmsg = self.keys()[depth] + ' = ' + v
-                self.simpleprinter(dic[v], depth+1, newmsg)
+                newmsg = msg + ' | ' if msg else ''
+                newmsg += '{:s} = {:s}'.format(*v)
+                self.simpleprinter(dic[v], depth + 1, newmsg)
 
     def niceprinter(self, dic, depth, maxdepth, group, msg=None, separator='+'):
         if depth == maxdepth:
@@ -554,62 +568,17 @@ class FactorizedReport(object):
                 toprint = msg
                 msg = None
             if toprint:
-                if separator == '+':
-                    separator = '-'
-                elif separator == '-':
-                    separator = '~'
+                separator = {'+': '-', '-': '~'}.get(separator, separator)
             for v in self.get_order(dic, depth):
-                if msg:
-                    newmsg = msg + ' | ' + self.keys()[depth] + ' = ' + v
-                else:
-                    newmsg = self.keys()[depth] + ' = ' + v
-                self.niceprinter(dic[v], depth+1, maxdepth, group, newmsg, separator)
+                newmsg = msg + ' | ' if msg else ''
+                newmsg += '{:s} = {:s}'.format(*v)
+                self.niceprinter(dic[v], depth + 1, maxdepth, group, newmsg, separator)
                 if depth % group == 0:
-                    print self._indent+(separator*(40+5*len(self._indent)))
+                    print(self._indent + (separator * (40 + 5 * len(self._indent))))
             if toprint:
-                print self._indent*((maxdepth-depth)/group + 4), toprint
+                print(self._indent * ((maxdepth - depth) // group + 4), toprint)
 
     def dumper(self, maxdepth=1, group=1):
-        if maxdepth > len(self.keys()):
-            maxdepth = len(self.keys())
+        if maxdepth > len(self):
+            maxdepth = len(self)
         self.niceprinter(self._tree, 0, maxdepth, group)
-
-
-if __name__ == '__main__':
-    fr = FactorizedReport(
-        focus='classname',
-        ordering=(
-            ('name', ('kind', 'date', 'geometry')),
-            ('why', ('Missing value', 'Not Valid', 'Invalid'))
-        ),
-        indent = '   '
-    )
-
-    fr.add(classname='toto', name='kind', why='Not Valid', info='blabla')
-    fr.add(classname='tata', name='kind', why='Invalid')
-    fr.add(classname='tata2', name='kind', why='Invalid', info = 'idem')
-    fr.add(classname='grosMinet', name='date', why='Not in values : test', info='values = [today, 20130807]')
-    fr.add(classname='titi', name='date', why = 'Missing value')
-    fr.add(classname='tutu', name='bidon', why='Invalid')
-    fr.add(classname='tyty', name='aa', why='n\'importe quoi ' )
-
-    print
-    print '=======================raw Version========================'
-    print
-    print dump.fulldump(fr._tree)
-
-    print
-    print '=======================old Version========================'
-    print
-
-    fr.orderedprint()
-
-    print
-    print '=======================new Version========================'
-    print
-    fr.dumper()
-
-    print
-    print '=======================new Version bis========================'
-    print
-    fr.dumper(maxdepth=2)

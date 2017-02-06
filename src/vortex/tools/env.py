@@ -170,7 +170,7 @@ class Environment(object):
         self._mods.add(upvar)
         self.history.append(upvar, value, traceback.format_stack()[:-1])
         if self.osbound():
-            if isinstance(value, str):
+            if isinstance(value, basestring):
                 actualvalue = str(value)
             else:
                 actualvalue = json.dumps(value, cls=ShellEncoder)
@@ -352,7 +352,7 @@ class Environment(object):
     def native(self, varname):
         """Returns the native form this variable could have in a shell environment."""
         value = self._pool[varname]
-        if isinstance(value, str):
+        if isinstance(value, basestring):
             return str(value)
         else:
             return json.dumps(value, cls=ShellEncoder)
