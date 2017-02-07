@@ -22,7 +22,10 @@ STEPFILE_MAX_SIZE = 2097152  # 2Mb
 def olive_label(sh, env, target=None):
     """Return a nice label string for sms monitoring."""
 
-    label = env.PBS_JOBID or env.SLURM_JOB_ID
+    label = env.PBS_JOBID or env.SLURM_JOB_ID or 'localpid'
+
+    if (label=='localpid'):
+        label=str(sh.getpid())
 
     if env.MTOOL_STEP:
         depot = env.MTOOL_STEP_DEPOT or env.MTOOL_STEP_STORE
