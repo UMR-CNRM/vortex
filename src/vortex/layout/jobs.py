@@ -66,8 +66,8 @@ def mkjob(t, **kw):
         name      = 'autojob',
         home      = t.env.HOME,
         rundate   = None,
-        suitebg   = None,
         runtime   = None,
+        suitebg   = None,
         member    = None,
         taskconf  = None,
         wrap      = True,
@@ -78,8 +78,6 @@ def mkjob(t, **kw):
     # Fix actual options of the create process
     opts.setdefault('mkopts', str(kw))
 
-    if opts['refill']:
-        opts['partition'] = 'ft-oper'
 
     # Switch verbosity from boolean to plain string
     if isinstance(opts['verbose'], bool):
@@ -130,6 +128,9 @@ def mkjob(t, **kw):
         tplconf = dict()
 
     tplconf = tplconf.get(opts['profile'])
+
+    if opts.get('refill', False):
+        opts['partition'] = tplconf.get('refill_partition')
 
     opset = _guess_vapp_vconf_xpid(t)
 
@@ -294,9 +295,10 @@ class JobAssistant(footprints.FootprintBase):
         if filtered:
             t.sh.header('{:s} environment variables'.format(prefix if prefix else 'All'))
             maxlen = max([len(x) for x in filtered])
-            for var_name in sorted([x for x in t.env.keys() if x.startswith(prefix)]):
+            for var_name in filtered:
                 print(cls._P_ENVVAR_FMT.format(var_name.ljust(maxlen),
                                                t.env.native(var_name)))
+        return len(filtered)
 
     @_extendable
     def _add_specials(self, t, prefix=None, **kw):

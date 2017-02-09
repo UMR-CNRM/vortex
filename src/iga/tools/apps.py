@@ -31,10 +31,6 @@ class OpTask(Task):
         ad.opmail(reseau=reseau, task=self.tag, id ='execution_error', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf, xpid=xpid)
         raise
 
-    def register_cycle(self, cycle):
-        """Register a given GCO cycle."""
-        self.header('GCO cycle ' + cycle)
-        j_assist.register_cycle(self.ticket, cycle)
 
     def defaults(self, extras):
         """Set defaults for toolbox defaults, with priority to actual conf."""
@@ -56,16 +52,4 @@ class OpTaskMPI(OpTask):
     """
 
     _tag_topcls = False
-
-    def component_runner(self, tbalgo, tbx, **kwargs):
-        """Run the binaries listed in tbx using the tbalgo algo component."""
-        mpiopts = dict(nn = int(self.conf.nnodes),
-                       nnp = int(self.conf.ntasks), openmp = int(self.conf.openmp))
-        for binary in tbx:
-            try:
-                tbalgo.run(binary, mpiopts = mpiopts, **kwargs)
-            except (DelayedAlgoComponentError, ExecutionError,
-                    SignalInterruptError):
-                self.report_execution_error()
-                raise
 
