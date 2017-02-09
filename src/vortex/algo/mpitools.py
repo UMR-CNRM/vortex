@@ -473,7 +473,7 @@ class MpiRun(MpiTool):
     _footprint = dict(
         attr = dict(
             sysname = dict(
-                values  = ['Linux']
+                values  = ['Linux', 'Darwin']
             ),
             mpiname = dict(
                 values  = ['mpirun', 'mpiperso', 'default'],

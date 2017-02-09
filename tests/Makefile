@@ -2,7 +2,8 @@ PYTHON        = python2.7
 NOSE          = nosetests-2.7
 
 PYTHON3       = python3
-NOSE3         = nosetests-3.5
+NOSE3list     = nosetests-3.5 nosetests-3.4 nosetests3
+NOSE3         = $(shell for p in $(NOSE3list) ; do if which $$p >/dev/null 2>&1 ; then echo $$p ; break ; fi ; done)
 
 NOSE_OPTS     = --verbosity=2 --no-byte-compile
 
@@ -10,7 +11,7 @@ COVER_PACK    = footprints,vortex,common,olive,gco,iga,taylorism,arpifs_listings
 COVER_OUT	  = coverage_report
 COVER_OPTS    = --no-byte-compile --with-coverage --cover-package=$(COVER_PACK) --cover-branch --cover-html --cover-html-dir=$(shell pwd)/$(COVER_OUT)
 
-PY3READY      = tests_footprints tests_opinel test_taylorism
+PY3READY      = tests_footprints tests_arpifs_listings tests_opinel test_taylorism
 
 all: check
 
