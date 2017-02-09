@@ -236,6 +236,10 @@ def setenv(t, **kw):
     logger.info('Global op variables found: %d', nb_op)
 
     #--------------------------------------------------------------------------------------------------
+
+    t.env.setvar("OP_DISP_NAME", "_".join(t.env["SLURM_JOB_NAME"].split("_")[:-1]))    
+
+    #--------------------------------------------------------------------------------------------------
     t.sh.header('MPI Environment')
 
     mpi, rkw = swissknife.slurm_parameters(t, **kw)
