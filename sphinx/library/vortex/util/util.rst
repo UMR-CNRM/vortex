@@ -26,6 +26,7 @@ Modules
 * :mod:`vortex.util.helpers`
 * :mod:`vortex.util.introspection`
 * :mod:`vortex.util.names`
+* :mod:`vortex.util.netrc`
 * :mod:`vortex.util.patterns`
 * :mod:`vortex.util.roles`
 * :mod:`vortex.util.structs`

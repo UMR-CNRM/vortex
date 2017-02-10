@@ -6,19 +6,20 @@ Net tools.
 """
 
 import urlparse
-import io, ftplib
-from netrc import netrc
+import io
+import ftplib
 from datetime import datetime
 import socket
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.util.decorators import nicedeco
-
+from vortex.util.netrc import netrc
 
 #: No automatic export
 __all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 def uriparse(uristring):
@@ -168,7 +169,7 @@ class StdFtp(object):
                     self._delayedlogin()
                 cmd = [key]
                 cmd.extend(args)
-                cmd.extend([ '{0:s}={1:s}'.format(x, str(kw[x])) for x in kw.keys() ])
+                cmd.extend(['{0:s}={1:s}'.format(x, str(kw[x])) for x in kw.keys()])
                 self.stderr(*cmd)
                 return actualattr(*args, **kw)
             osproxy.func_name = key
@@ -203,7 +204,7 @@ class StdFtp(object):
         timelength = 0
         try:
             topnow = datetime.now() if self._deleted is None else self._deleted
-            timelength = ( topnow - self._opened ).total_seconds()
+            timelength = (topnow - self._opened).total_seconds()
         except TypeError:
             logger.warning('Could not evaluate connexion length %s', repr(self))
         return timelength
@@ -246,10 +247,17 @@ class StdFtp(object):
         else:
             nrc = netrc()
             if nrc:
-                auth = nrc.authenticators(self.host)
+                auth = nrc.authenticators(self.host, login=logname)
+                if not auth:
+                    # self.host may be a FQDN, try to guess only the hostname
+                    auth = nrc.authenticators(self.host.split('.')[0], login=logname)
+                # for backward compatibility: This might be removed one day
+                if not auth:
+                    auth = nrc.authenticators(self.host)
                 if not auth:
                     # self.host may be a FQDN, try to guess only the hostname
                     auth = nrc.authenticators(self.host.split('.')[0])
+                # End of backward compatibility section
                 if auth:
                     self._logname = auth[0]
                     self._cached_pwd = auth[2]
