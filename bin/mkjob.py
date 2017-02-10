@@ -45,7 +45,7 @@ def parse_command_line():
     parser.add_argument('-l', '--list', action='store_true', help='Only list the name of the ' +
                         'jobs to handle, and exit')
     parser.add_argument('-b', '--backup', nargs='?', const='.backup', help='Save old jobs with the given extension ' +
-                        '(default is ".backup") creating new ones with specified options')
+                        '(default is ".backup") before creating new ones with specified options')
     parser.add_argument('-v', '--verbose', help='verbose mode', action='store_true')
     parser.add_argument('-i', '--info', action='store_true', help='Full list of available ' +
                         'variables that can be used to make an OP job (according to the job template)')
