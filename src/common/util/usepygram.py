@@ -103,10 +103,13 @@ def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, ov
                     comprpack = datain.fieldscompression.get(fieldname)
                     if pack is not None:
                         comprpack.update(pack)
-                # Create the output field, change its name, fill it
-                fy = fx.clone({x: newfield for x in fx.fid.keys()})
+                    fy = fx.clone({x: newfield for x in fx.fid.keys()})
+                    if value is not None:
+                        fy.data.fill(value)
+                # If fy is re-used, change the field names
                 if value is not None:
-                    fy.data.fill(value)
+                    for fidk in fx.fid.keys():
+                        fy.fid[fidk] = newfield
                 # On the first append, open the output file
                 if addedfields == 0:
                     dataout.close()
@@ -127,6 +130,7 @@ def epy_env_prepare(t):
     if localenv.OMP_NUM_THREADS is None:
         localenv.OMP_NUM_THREADS = 1
     localenv.update(
+        LFI_HNDL_SPEC = ':1',
         DR_HOOK_SILENT  = 1,
         DR_HOOK_NOT_MPI = 1,
     )
