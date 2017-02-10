@@ -7,7 +7,7 @@ __all__ = []
 
 from vortex.data.flow import FlowResource
 from vortex.syntax.stdattrs import FmtInt
-from vortex.data.contents   import JsonDictContent
+from vortex.data.contents   import JsonDictContent, FormatAdapter
 
 
 class Listing(FlowResource):
@@ -31,7 +31,10 @@ class Listing(FlowResource):
                     optional = True,
                     default  = '[model]',
                 ),
-            )
+                clscontents = dict(
+                    default = FormatAdapter,
+                ),
+            ),
         )
     ]
 

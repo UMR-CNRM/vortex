@@ -16,6 +16,7 @@ Miscellaneous Tools
    fortran
    grib
    lfi
+   listings
    net
    odb
    parallelism
