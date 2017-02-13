@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+import os
 import tempfile
 from unittest import TestCase, main
 
@@ -23,7 +24,7 @@ class UtSession(TestCase):
         self.oldlog = self.rootsession.loglevel
         self.rootsession.error()  # Decrease loglevel
         self.sh = self.rootsession.system()
-        self.tmpdir = tempfile.mkdtemp(prefix='test_sessions_stuff_')
+        self.tmpdir = os.path.realpath(tempfile.mkdtemp(prefix='test_sessions_stuff_'))
         self.sh.cd(self.sh.path.dirname(self.tmpdir))
         self.oldpwd = self.sh.pwd()
         # Always create two new sessions for this test...
