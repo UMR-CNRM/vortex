@@ -146,13 +146,10 @@ class utDate(TestCase):
         rv = date.Date("20110831")
         td = timedelta(days=1)
 
-        vd2 = rv + td
-        self.assertTrue(isinstance(vd2, date.Date))
-        self.assertEqual(vd2.compact(), "20110901000000")
-
-        vd2 = rv + date.Period("P1D")
-        self.assertTrue(isinstance(vd2, date.Date))
-        self.assertEqual(vd2.compact(), "20110901000000")
+        for vd2 in (rv + td, rv + 'P1D',
+                    rv + date.Period("P1D"), 'P1D' + rv):
+            self.assertTrue(isinstance(vd2, date.Date))
+            self.assertEqual(vd2.compact(), "20110901000000")
 
     def test_date_substract(self):
         rv = date.Date("20110831")
@@ -399,11 +396,15 @@ class utTime(TestCase):
         t = date.Time(0)
         self.assertEqual(str(t), '00:00')
 
-        t = date.Time(128)
-        self.assertEqual(str(t), '128:00')
+        for pred in (128, '128:00',
+                     'T128', 'T128:00', 'T128:00Z', 'T128H00', 'T128H00Z',
+                     'PT128H', 'PT128H00M', 'P5DT8H'):
+            t = date.Time(pred)
+            self.assertEqual(str(t), '128:00')
 
-        t = date.Time(16.5)
-        self.assertEqual(str(t), '16:30')
+        for pred in (16.5, '16:30', 'T16:30', 'T16:30Z', 'T16H30', 'T16H30Z', 'PT16H30M'):
+            t = date.Time(pred)
+            self.assertEqual(str(t), '16:30')
 
         t = date.Time(16, 5)
         self.assertEqual(str(t), '16:05')
@@ -420,6 +421,9 @@ class utTime(TestCase):
         t = date.Time('7:45')
         self.assertEqual(str(t), '07:45')
 
+        t = date.Time('-7:45')
+        self.assertEqual(str(t), '-07:45')
+
         t = date.Time('0007:45')
         self.assertEqual(str(t), '07:45')
 
@@ -428,7 +432,16 @@ class utTime(TestCase):
         self.assertEqual(t.iso8601(), 'T18:30Z')
         self.assertEqual(t.fmth, '0018')
         self.assertEqual(t.fmthm, '0018:30')
+        self.assertEqual(t.fmthhmm, '1830')
         self.assertEqual(t.fmtraw, '001830')
+
+        t = date.Time(-18, -30)
+        self.assertEqual(t.isoformat(), '-18:30')
+        self.assertEqual(t.iso8601(), 'T-18:30Z')
+        self.assertEqual(t.fmth, '-0018')
+        self.assertEqual(t.fmthm, '-0018:30')
+        self.assertEqual(t.fmthhmm, '-1830')
+        self.assertEqual(t.fmtraw, '-001830')
 
         a = date.Time(48, 0)
         b = date.Time( 0, 48 * 60)
@@ -438,10 +451,15 @@ class utTime(TestCase):
         t = date.Time('07:45')
         t = t + date.Time(1, 22)
         self.assertEqual(str(t), '09:07')
+        t = date.Time('07:45')
+        t = '1:22' + t
+        self.assertEqual(str(t), '09:07')
         t = t - date.Time(0, 10)
         self.assertEqual(str(t), '08:57')
         t = t - date.Time(8, 55)
         self.assertEqual(str(t), '00:02')
+        t = '0:01' - t
+        self.assertEqual(str(t), '-00:01')
         t = date.Time(18, 45)
         self.assertEqual(int(t), 1125)
         t = date.Time(2, 45)
@@ -465,6 +483,43 @@ class utTime(TestCase):
         self.assertFalse(t < (6, 30))
         self.assertTrue(t < (6, 31))
         self.assertTrue(t > [6, 29])
+
+    def test_time_getattr(self):
+        rv = date.Time(12)
+        self.assertEqual(str(rv.addPT6H), "18:00")
+        self.assertEqual(str(rv.add6), "18:00")
+        self.assertEqual(str(rv.add6H00), "18:00")
+        self.assertEqual(rv.addPT6H_fmth, "0018")
+        self.assertEqual(str(rv.subPT6H), "06:00")
+        self.assertEqual(rv.subPT6H_fmthm, "0006:00")
+        with self.assertRaises(AttributeError):
+            rv.a_strange_attribute_that_does_not_exists
+        with self.assertRaises(AttributeError):
+            rv.subPT6H_
+        with self.assertRaises(AttributeError):
+            rv.subPT6H_aStrangeFormat
+        self.assertEqual(rv.addmachin_fmth(dict(machin=6), dict()),
+                         "0018")
+        self.assertEqual(rv.addmachin_fmth(dict(machin=date.Period('PT6H')), dict()),
+                         "0018")
+        self.assertEqual(rv.addmachin_fmth(dict(), dict(machin=date.Period('PT6H'))),
+                         "0018")
+        with self.assertRaises(KeyError):
+            rv.addadd_fmth(dict(), dict(toto=date.Period('PT6H')))
+        with self.assertRaises(KeyError):
+            rv.addterm_fmth(dict(), dict(toto=date.Period('PT6H')))
+        # Now look for very complex stuff
+        self.assertEqual(str(rv.addPT6H_subPT1H), "17:00")
+        self.assertEqual(str(rv.addPT6H_submachin_subPT1H(dict(machin='-PT2H'), dict())),
+                         "19:00")
+        self.assertEqual(rv.addPT6H_submachin_subPT1H_fmth(dict(machin='-PT2H'), dict()),
+                         "0019")
+        with self.assertRaises(KeyError):
+            rv.addPT6H_subterm_subPT1H_addtoto(dict(term='-PT2H'), dict())
+        self.assertEqual(str(rv.addPT6H_submachin_subPT1H_addtoto(dict(machin='-PT2H',
+                                                                       toto='PT1H'),
+                                                                  dict())),
+                         "20:00")
 
 
 # noinspection PyUnusedLocal

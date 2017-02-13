@@ -223,11 +223,11 @@ class Period(datetime.timedelta):
 
     _const_times = [
         # in a [0], there are [1] [2]
-        ('m',  60, 's'),
-        ('h',  60, 'm'),
-        ('D',  24, 'h'),
-        ('W',   7, 'D'),
-        ('M',  31, 'D'),
+        ('m', 60, 's'),
+        ('h', 60, 'm'),
+        ('D', 24, 'h'),
+        ('W', 7, 'D'),
+        ('M', 31, 'D'),
         ('Y', 365, 'D'),
     ]
 
@@ -359,15 +359,87 @@ class Period(datetime.timedelta):
 
     def time(self):
         """Return a :class:`Time` object."""
-        return Time(0, self.length / 60) + 0
+        return Time(0, int(self.total_seconds()) / 60)
 
 
-class Date(datetime.datetime):
+class _GetattrCalculatorMixin(object):
+    """This Mixin class adds the capability to do computations using fake methods.
+
+    This can be useful during the footprint's replacement process.
+    """
+
+    _getattr_re = re.compile(r'^(?P<basics>(?:(?:add|sub)[^_]+_?)+)(?:_(?P<fmt>[^_]+))?(?<!_)$')
+    _getattr_basic_re = re.compile(r'^(?P<op>add|sub)(?P<operand>[^_]+)')
+    _getattr_proxyclass = None
+
+    def _basic_calculator_proxy(self, name):
+        """Return something that may (or not) create a _getattr_proxyclass object.
+
+        The sign of the _getattr_proxyclass object depends on the chosen operation.
+        If _getattr_proxyclass is None, the current object's class is used.
+        """
+        # The match should always succeed because _getattr_re was called before
+        dmatch = self._getattr_basic_re.match(name).groupdict()
+        factor = dict(add=1, sub=-1)[dmatch['op']]
+        if self._getattr_proxyclass is None:
+            proxyclass = self.__class__
+        else:
+            proxyclass = self._getattr_proxyclass
+        # Determine if the operand is a valid period (like PT6H)
+        try:
+            p = proxyclass(dmatch['operand'])
+        except ValueError:
+            p = None
+        # The easy case: just return the appropriate object
+        if p is not None:
+            return factor * p
+        # Returns a function that looks up into guess and extras (given by footprints)
+        else:
+            def _calculator_op_proxy(guess, extra):
+                t = guess.get(dmatch['operand'], extra.get(dmatch['operand'], None))
+                if t is None:
+                    raise KeyError("'{}' was not found in guess nor in extra.".
+                                   format(dmatch['operand']))
+                return factor * proxyclass(t)
+            return _calculator_op_proxy
+
+    def __getattr__(self, name):
+        """Proxy to additions and subtractions (used in footprint's replacement).
+
+        :example:
+            * self.addPT6H is equivalent to (self + 'PT6H')
+            * self.addPT6H_ymdh is equivalent to (self + 'PT6H').ymdh
+            * self.addterm_ymdh is equivalent to (self + [term]).ymdh
+            * It is possible to combine several add and sub, like in:
+              self.addterm_subPT3H_ymdh
+        """
+        match = self._getattr_re.match(name)
+        if match is not None:
+            dmatch = match.groupdict()
+            basics = dmatch['basics'].rstrip('_').split('_')
+            fmt = dmatch['fmt']
+            proxies = [self._basic_calculator_proxy(basic) for basic in basics]
+            fancy = any([callable(proxy) for proxy in proxies])
+            if fancy:
+                def _combi_proxy(guess, extra):
+                    newobj = self
+                    for proxy in proxies:
+                        newobj += proxy(guess, extra) if callable(proxy) else proxy
+                    return newobj if fmt is None else getattr(newobj, fmt)
+                return _combi_proxy
+            else:
+                newobj = self + functools.reduce(operator.add, proxies)
+                return newobj if fmt is None else getattr(newobj, fmt)
+        else:
+            raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__,
+                                                                            name))
+
+
+class Date(datetime.datetime, _GetattrCalculatorMixin):
     """Standard date objects, extending :class:`datetime.datetime` features with iso8601 facilities."""
 
     _origin = datetime.datetime(1970, 1, 1, 0, 0, 0)
-    _getattr_re = re.compile(r'^(?P<basics>(?:(?:add|sub)[^_]+_?)+)(?:_(?P<fmt>[^_]+))?(?<!_)$')
-    _getattr_basic_re = re.compile(r'^(?P<op>add|sub)(?P<operand>[^_]+)')
+    _getattr_proxyclass = Period
 
     def __new__(cls, *args, **kw):
         if kw and not args:
@@ -427,63 +499,6 @@ class Date(datetime.datetime):
         newinstance = type(self)(self)
         memo[id(self)] = newinstance
         return newinstance
-
-    def _basic_period_proxy(self, name):
-        """Return something that may (or not) create a Period object.
-
-        The sign of the Period object depends on the chosen operation.
-        """
-        # The match should always succeed because _getattr_re was called before
-        dmatch = self._getattr_basic_re.match(name).groupdict()
-        factor = dict(add=1, sub=-1)[dmatch['op']]
-        # Determine if the operand is a valid period (like PT6H)
-        try:
-            p = Period(dmatch['operand'])
-        except ValueError:
-            p = None
-        # The easy case: just return the appropriate object
-        if p is not None:
-            return factor * p
-        # Returns a function that looks up into guess and extras (given by footprints)
-        else:
-            def _period_op_proxy(guess, extra):
-                t = guess.get(dmatch['operand'], extra.get(dmatch['operand'], None))
-                if t is None:
-                    raise KeyError("'{}' was not found in guess nor in extra.".
-                                   format(dmatch['operand']))
-                return factor * Period(t)
-            return _period_op_proxy
-
-    def __getattr__(self, name):
-        """Proxy to additions and subtractions (used in footprint's replacement).
-
-        :example:
-            * self.addPT6H is equivalent to (self + Period('PT6H'))
-            * self.addPT6H_ymdh is equivalent to (self + Period('PT6H')).ymdh
-            * self.addterm_ymdh is equivalent to (self + [term]).ymdh
-            * It is possible to combine several add and sub, like in:
-              self.addterm_subPT3H_ymdh
-        """
-        match = self._getattr_re.match(name)
-        if match is not None:
-            dmatch = match.groupdict()
-            basics = dmatch['basics'].rstrip('_').split('_')
-            fmt = dmatch['fmt']
-            proxies = [self._basic_period_proxy(basic) for basic in basics]
-            fancy = any([callable(proxy) for proxy in proxies])
-            if fancy:
-                def _date_combi_proxy(guess, extra):
-                    newobj = self
-                    for proxy in proxies:
-                        newobj += proxy(guess, extra) if callable(proxy) else proxy
-                    return newobj if fmt is None else getattr(newobj, fmt)
-                return _date_combi_proxy
-            else:
-                newobj = self + functools.reduce(operator.add, proxies)
-                return newobj if fmt is None else getattr(newobj, fmt)
-        else:
-            raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__,
-                                                                            name))
 
     @property
     def origin(self):
@@ -562,15 +577,14 @@ class Date(datetime.datetime):
         return Date(super(Date, self).__add__(datetime.timedelta(delta.days, delta.seconds)))
 
     def __radd__(self, delta):
-        """Commutative add."""
+        """Reversed add."""
         return self.__add__(delta)
 
     def __sub__(self, delta):
         """
-        Substract to a Date object the specified ``delta`` which could be either
+        Subtract to a Date object the specified ``delta`` which could be either
         a string or a :class:`datetime.timedelta` or an ISO 6801 Period.
         """
-
         if not isinstance(delta, datetime.datetime) and not isinstance(delta, datetime.timedelta):
             delta = guess(delta)
         substract = super(Date, self).__sub__(delta)
@@ -700,7 +714,7 @@ class Date(datetime.datetime):
         return out.ymd
 
 
-class Time(object):
+class Time(_GetattrCalculatorMixin):
     """
     Basic object to handle hh:mm information.
     Extended arithmetic is supported.
@@ -709,9 +723,12 @@ class Time(object):
     def __init__(self, *args, **kw):
         """
         Initial values include:
-            * a datetime.time object;
-            * a tuple containing at least (hour, minute) values;
             * a dictionary with this named values ;
+            * a tuple containing at least (hour, minute) values;
+            * a datetime.time object;
+            * a Time object
+            * a Period object
+            * a string that could be reshaped as a Period object.
             * a string that could be reshaped as an ISO 8601 date string.
         """
         if kw:
@@ -728,10 +745,18 @@ class Time(object):
             self._hour, self._minute = zz.hour, zz.minute
         elif isinstance(top, datetime.time) or isinstance(top, Time):
             self._hour, self._minute = top.hour, top.minute
+        elif isinstance(top, Period):
+            newtime = top.time()
+            self._hour, self._minute = newtime.hour, newtime.minute
         elif isinstance(top, float):
             self._hour, self._minute = int(top), int((top - int(top)) * 60)
         elif isinstance(top, basestring):
-            ld = [ int(x) for x in re.split('[-:hHTZ]+', top) if re.match(r'\d+$', x) ]
+            if re.match(r'^[+-]?P', top):  # This looks like a Period string...
+                newtime = Period(top).time()
+                self._hour, self._minute = newtime.hour, newtime.minute
+            else:
+                thesign = -2 * int(bool(re.match(r'^-', top))) + 1
+                ld = [ thesign * int(x) for x in re.split('[-:hHTZ]+', top) if re.match(r'\d+$', x) ]
         else:
             ld = [ int(x) for x in args
                    if (type(x) in (int, float) or
@@ -742,6 +767,12 @@ class Time(object):
             self._hour, self._minute = ld[0], ld[1]
         if self._hour is None or self._minute is None:
             raise ValueError("No way to build a Time value")
+        # If minute > 60 do something...
+        if abs(self._minute) >= 60:
+            thesign = int(self._minute > 0) * 2 - 1
+            while abs(self._minute) >= 60:
+                self._hour += thesign
+                self._minute -= thesign * 60
 
     @property
     def hour(self):
@@ -763,9 +794,13 @@ class Time(object):
         """String representation for dict or shell variable."""
         return self.__str__()
 
+    def _formatted_str(self, fmt):
+        thesign = '-' if int(self) < 0 else ''
+        return fmt.format(thesign, abs(self.hour), abs(self.minute))
+
     def __str__(self):
         """Standard hour-minute string."""
-        return '{0:02d}:{1:02d}'.format(self.hour, self.minute)
+        return self._formatted_str('{0:s}{1:02d}:{2:02d}')
 
     def __int__(self):
         """Convert to `int`, ie: returns hours * 60 + minutes."""
@@ -795,33 +830,44 @@ class Time(object):
 
     def __add__(self, delta):
         """
-        Add to a Date object the specified ``delta`` which could be either
-        a string or a :class:`datetime.timedelta` or an ISO 6801 Period.
+        Add to a Time object the specified ``delta`` which could be either
+        a string or a :class:`Period` object or an ISO 6801 Period.
         """
-        delta = Time(delta)
-        hour, minute = self.hour + delta.hour, self.minute + delta.minute
-        hour, minute = hour + int(minute / 60), minute % 60
-        return Time(hour, minute)
+        delta = self.__class__(delta)
+        me = int(self) + int(delta)
+        return self.__class__(0, me)
 
     def __radd__(self, delta):
-        """Commutative add."""
+        """Reversed add."""
         return self.__add__(delta)
 
     def __sub__(self, delta):
         """
-        Add to a Date object the specified ``delta`` which could be either
-        a string or a :class:`datetime.timedelta` or an ISO 6801 Period.
+        Subtract to a Time object the specified ``delta`` which could be either
+        a string or a :class:`Period` object or an ISO 6801 Period.
         """
-        delta = Time(delta)
-        hour, minute = self.hour - delta.hour, self.minute - delta.minute
-        if minute < 0:
-            minute += 60
-            hour   -= 1
-        return Time(hour, minute)
+        delta = self.__class__(delta)
+        me = int(self) - int(delta)
+        return self.__class__(0, me)
+
+    def __rsub__(self, delta):
+        """Reversed subtract."""
+        delta = self.__class__(delta)
+        me = int(delta) - int(self)
+        return self.__class__(0, me)
+
+    def __mul__(self, other):
+        # The result might be truncated since second/microseconds are not suported
+        other = self.__class__(other)
+        me = (int(self) * int(other)) / 60
+        return self.__class__(0, me)
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
 
     @property
     def fmth(self):
-        return '{0:04d}'.format(self.hour)
+        return self._formatted_str('{0:s}{1:04d}')
 
     @property
     def fmthour(self):
@@ -829,15 +875,15 @@ class Time(object):
 
     @property
     def fmthm(self):
-        return '{0:04d}:{1:02d}'.format(self.hour, self.minute)
+        return self._formatted_str('{0:s}{1:04d}:{2:02d}')
 
     @property
     def fmthhmm(self):
-        return '{0:02d}{1:02d}'.format(self.hour, self.minute)
+        return self._formatted_str('{0:s}{1:02d}{2:02d}')
 
     @property
     def fmtraw(self):
-        return '{0:04d}{1:02d}'.format(self.hour, self.minute)
+        return self._formatted_str('{0:s}{1:04d}{2:02d}')
 
     def isoformat(self):
         """Almost ISO representation."""
