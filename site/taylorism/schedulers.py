@@ -51,12 +51,17 @@ class MaxThreadsScheduler(BaseScheduler):
 
     def __init__(self, max_threads=mpc.cpu_count() / 2):
         """*max_threads* to be launched simultaneously."""
-        self.max_threads = max_threads
+        self.max_threads = int(max_threads)
+        self._all_tickets = set(range(0, self.max_threads))
 
     def launchable(self, pending_instructions, workers, report):
         available_threads = self.max_threads - len(workers)
         launchable = pending_instructions[0:max(available_threads, 0)]
         not_yet_launchable = pending_instructions[max(available_threads, 0):]
+        assigned_tickets = set([w.scheduler_ticket for w in workers.values()])
+        possible_tickets = sorted(self._all_tickets - assigned_tickets)
+        for instructions in launchable:
+            instructions['scheduler_ticket'] = possible_tickets.pop(0)
 
         return (launchable, not_yet_launchable)
 

@@ -167,7 +167,14 @@ class Worker(FootprintBase):
                 info="Name of the worker.",
                 optional=True,
                 default=None,
-                access='rwx')
+                access='rwx'
+            ),
+            scheduler_ticket=dict(
+                info="The slot number given by the scheduler (optional)",
+                optional=True,
+                default=None,
+                type=int
+            ),
         )
     )
 

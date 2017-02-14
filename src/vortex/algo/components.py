@@ -800,6 +800,18 @@ class ParaBlindRun(TaylorRun):
             engine = dict(
                 values = ['blind']
             ),
+            taskset = dict(
+                info = "Topology/Method to set up the CPU affinity of the child task.",
+                default = None,
+                optional = True,
+                values = ['raw', 'socketpacked', 'socketpacked_gomp']
+            ),
+            taskset_bsize = dict(
+                info        = 'The number of threads used by one task',
+                type        = int,
+                default     = 1,
+                optional    = True
+            ),
         )
     )
 
@@ -819,6 +831,8 @@ class ParaBlindRun(TaylorRun):
         ddict = super(ParaBlindRun, self)._default_common_instructions(rh, opts)
         ddict['progname'] = self.absexcutable(rh.container.localpath())
         ddict['progargs'] = footprints.FPList(self.spawn_command_line(rh))
+        ddict['progtaskset'] = self.taskset
+        ddict['progtaskset_bsize'] = self.taskset_bsize
         return ddict
 
 

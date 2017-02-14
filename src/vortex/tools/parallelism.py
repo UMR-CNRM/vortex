@@ -72,6 +72,17 @@ class VortexWorkerBlindRun(TaylorVortexWorker):
                 default = footprints.FPList(),
                 optional = True,
             ),
+            progtaskset = dict(
+                info = "Topology/Method to set up the CPU affinity of the child task.",
+                default = None,
+                optional = True,
+            ),
+            progtaskset_bsize = dict(
+                info = 'The number of threads used by one task',
+                type = int,
+                default = 1,
+                optional = True
+            )
         )
     )
 
@@ -91,10 +102,13 @@ class VortexWorkerBlindRun(TaylorVortexWorker):
         self.local_spawn_hook()
         self.system.target().spawn_hook(self.system)
         logger.info("The fa2grib stdout/err will be saved to %s", stdoutfile)
-        logger.info("Starting the following command: %s", " ".join([self.progname, ] +
-                                                                   self.progargs))
+        logger.info("Starting the following command: %s (taskset=%s, id=%d)",
+                    " ".join([self.progname, ] + self.progargs),
+                    str(self.progtaskset), self.scheduler_ticket)
         self.system.spawn([self.progname, ] + self.progargs, output=tmpio,
-                          fatal=True)
+                          fatal=True, taskset=self.progtaskset,
+                          taskset_id=self.scheduler_ticket,
+                          taskset_bsize=self.progtaskset_bsize)
 
 
 class ParallelSilencer(object):
