@@ -193,10 +193,14 @@ class FolderShell(addons.FtrawEnableAddon):
         if not destination.endswith('.tgz'):
             destination += '.tgz'
 
+        source = self.sh.path.abspath(source)
+        source_name = self.sh.path.basename(source)
+        source_dirname = self.sh.path.dirname(source)
+
         ftp = self.sh.ftp(hostname, logname)
         if ftp:
             p = self.sh.popen(
-                ['tar', 'cvfz', '-', source],
+                ['tar', '--directory', source_dirname, '-cz', source_name],
                 stdout  = True,
                 output  = False,
                 bufsize = 8192,
