@@ -127,12 +127,12 @@ class CombiSV(CombiPert):
         nbVect = collections.OrderedDict()
         svec_sections = self.context.sequence.effective_inputs(role='SingularVectors', kind='svector')
         for num, svecsec in enumerate(svec_sections):
-            componoms = re.split(r'[\.,\+]', svecsec.rh.container.localpath())
+            componoms = re.split(r'[.,+]', svecsec.rh.container.localpath())
             if len(componoms) < 3:
                 logger.critical("The SV name does not contain the information 'zone.numero': %s",
                                 svecsec.rh.container.actualpath())
             radical = componoms[0]
-            sufix = re.sub('^' + radical + r'[\+,\.]' + componoms[1] + r'[\+,\.]' + componoms[2],
+            sufix = re.sub('^' + radical + r'[+,.]' + componoms[1] + r'[+,.]' + componoms[2],
                            '', svecsec.rh.container.localpath())
             nbVect.setdefault(componoms[1], 0)
             nbVect[componoms[1]] += 1
