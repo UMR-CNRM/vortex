@@ -982,9 +982,10 @@ class Jeeves(BaseDaemon, HouseKeeping):
             thispool = pools.get(tag='in')
             if thispool.active:
                 self.debug('Processing', pool=thispool.tag, path=thispool.path)
-                while thispool.contents:
+
+                todo = thispool.contents
+                while todo:
                     tbusy = True
-                    todo = sorted(thispool.contents)
                     # ignore some files with an explicit name
                     for bad in [x for x in todo if 'ignore' in x]:
                         tp = self.migrate(thispool, bad, target='ignore')
@@ -995,9 +996,9 @@ class Jeeves(BaseDaemon, HouseKeeping):
                         self.process_request(thispool, cfg)
                         todo.remove(cfg)
                     # look for other input requests
-                    for req in todo[:]:
+                    for req in todo:
                         self.process_request(thispool, req)
-                        todo.remove(req)
+                    todo = thispool.contents
             else:
                 self.warning('Inactive', pool=thispool.tag, path=thispool.path)
 
@@ -1006,29 +1007,24 @@ class Jeeves(BaseDaemon, HouseKeeping):
             if thispool.active:
                 self.debug('Processing', pool=thispool.tag, path=thispool.path)
                 # look for previous retry requests
-                if thispool.contents:
-                    todo = sorted(thispool.contents)
-                    # look for previous retry requests
-                    stamp = datetime.now()
-                    for req in todo[:]:
-                        self.redo.setdefault(req, dict(first=stamp, last=stamp, delay=rtinit, nbt=0))
-                        rt = self.redo.get(req)
-                        rttotal = (stamp - rt['first']).total_seconds()
-                        rtlast  = (stamp - rt['last' ]).total_seconds()
-                        if rttotal > rtstop:
-                            tbusy = True
-                            self.warning('Abandonning retry', json=req, nbt=rt['nbt'], totaltime=rttotal)
-                            self.migrate(thispool, req, target='error')
-                            todo.remove(req)
-                            del self.redo[req]
-                        elif rtlast > rt['delay']:
-                            tbusy = True
-                            rt['nbt'] += 1
-                            rt['last'] = stamp
-                            rt['delay'] = min(rtceil, max(1, int(rt['delay'] * rtslow)))
-                            self.warning('Retry', json=req, nbt=rt['nbt'], nextdelay=rt['delay'])
-                            self.migrate(thispool, req)
-                            todo.remove(req)
+                todo = thispool.contents
+                stamp = datetime.now()
+                for req in todo:
+                    rt = self.redo.setdefault(req, dict(first=stamp, last=stamp, delay=rtinit, nbt=0))
+                    rttotal = (stamp - rt['first']).total_seconds()
+                    rtlast  = (stamp - rt['last' ]).total_seconds()
+                    if rttotal > rtstop:
+                        tbusy = True
+                        self.warning('Abandonning retry', json=req, nbt=rt['nbt'], totaltime=rttotal)
+                        self.migrate(thispool, req, target='error')
+                        del self.redo[req]
+                    elif rtlast > rt['delay']:
+                        tbusy = True
+                        rt['nbt'] += 1
+                        rt['last'] = stamp
+                        rt['delay'] = min(rtceil, max(1, int(rt['delay'] * rtslow)))
+                        self.warning('Retry', json=req, nbt=rt['nbt'], nextdelay=rt['delay'])
+                        self.migrate(thispool, req)
             else:
                 self.warning('Inactive', pool=thispool.tag, path=thispool.path)
 
