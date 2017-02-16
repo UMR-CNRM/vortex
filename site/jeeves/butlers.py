@@ -52,7 +52,7 @@ class GentleTalk(object):
 
     def clone(self, taskno):
         """Clone the actual logger with a different task number."""
-        return self.__class__(loglevel=self.loglevel, taskno=taskno)
+        return self.__class__(datefmt=self.datefmt, loglevel=self.loglevel, taskno=taskno)
 
     @property
     def levels(self):
@@ -106,9 +106,7 @@ class GentleTalk(object):
                 for k, v in kw.items()
             ])
             thisprocess = multiprocessing.current_process()
-            mutex = multiprocessing.Lock()
-            mutex.acquire()
-            print '{color}# [{0:s}][P{1:06d}][T{2:06d}][{3:13s}:{4:>8s}] {5:s}{endcolor}'.format(
+            msg = '{color}# [{0:s}][P{1:06d}][T{2:06d}][{3:13s}:{4:>8s}] {5:s}{endcolor}'.format(
                 datetime.now().strftime(self.datefmt),
                 thisprocess.pid,
                 self.taskno,
@@ -118,6 +116,9 @@ class GentleTalk(object):
                 color=getattr(self, level.upper()),
                 endcolor=self.ENDC
             )
+            mutex = multiprocessing.Lock()
+            mutex.acquire()
+            print msg
             mutex.release()
 
     def debug(self, msg, *args, **kw):
@@ -303,7 +304,7 @@ class PidFile(object):
             ['ps', '-o', 'comm', '-p', str(int(contents))],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        stdout, stderr = p.communicate()
+        stdout, u_stderr = p.communicate()
         if stdout == "COMM\n":
             return False
 
@@ -808,7 +809,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 self.critical('Callback', error=trouble, result=result)
             finally:
                 if pnum is not None and pnum in self.async:
-                    jpool, jfile, asyncr = self.async[pnum]
+                    jpool, jfile, u_asyncr = self.async[pnum]
                     poolbase = pools.get(tag=jpool)
                     pooltarget = None
                     if prc:
@@ -830,6 +831,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         rc = False
         self.ptask += 1
         pnum = '{0:06d}'.format(self.ptask)
+        # complete the json opts with the configuration defaults
         opts = ask.opts.copy()
         for extra in [x for x in acfg.get('options', tuple()) if x not in opts]:
             opts[extra] = acfg.get(extra, None)
@@ -1003,6 +1005,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
             thispool = pools.get(tag='retry')
             if thispool.active:
                 self.debug('Processing', pool=thispool.tag, path=thispool.path)
+                # look for previous retry requests
                 if thispool.contents:
                     todo = sorted(thispool.contents)
                     # look for previous retry requests
