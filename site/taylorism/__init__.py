@@ -78,17 +78,19 @@ import traceback
 import copy
 import os
 from pickle import PickleError
+import subprocess
 
 import footprints
 from footprints import FootprintBase, proxy as fpx
 from opinel import interrupt  # because subprocesses must be killable properly
+from opinel import cpus_tool
 
 from .schedulers import BaseScheduler, MaxThreadsScheduler
 
 interrupt.logger.setLevel('WARNING')
 taylorism_log = footprints.loggers.getLogger(__name__)
 
-#: timeout when polling for a Queue/Pipe communication
+# : timeout when polling for a Queue/Pipe communication
 communications_timeout = 0.01
 
 __version__ = '1.0.3'
@@ -241,6 +243,28 @@ class Worker(FootprintBase):
         Return the report to be sent back to the Boss.
         """
         raise RuntimeError("this method must be implemented in Worker's inheritant class !")
+
+
+class BindedWorker(Worker):
+    """Workers binded to a cpu core (Linux only)."""
+
+    _abstract = True
+
+    def _work_and_communicate(self):
+        """
+        After binding the process to a cpu, send the Worker to his task,
+        making sure he communicates with its boss.
+
+        From within this method down, everything is done in the subprocess
+        world !
+        """
+        with interrupt.SignalInterruptHandler():
+            if self.scheduler_ticket is not None:
+                cpus = cpus_tool.LinuxCpusInfo()
+                cpulist = list(cpus.socketpacked_cpulist())
+                binded_cpu = cpulist[self.scheduler_ticket % cpus.nvirtual_cores]
+                cpus_tool.set_affinity(binded_cpu, str(os.getpid()))
+            super(BindedWorker, self)._work_and_communicate()
 
 
 class Boss(object):

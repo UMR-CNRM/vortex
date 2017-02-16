@@ -6,12 +6,12 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import os
 import unittest
 
-import opinel.cpuinfo
+import opinel.cpus_tool
 
 DATADIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
 
 
-class LinuxCpusInfoTester(opinel.cpuinfo.LinuxCpusInfo):
+class LinuxCpusInfoTester(opinel.cpus_tool.LinuxCpusInfo):
 
     def __init__(self, finput):
         super(LinuxCpusInfoTester, self).__init__()
@@ -21,10 +21,10 @@ class LinuxCpusInfoTester(opinel.cpuinfo.LinuxCpusInfo):
 class TestLinuxCpusInfo(unittest.TestCase):
 
     def test_bascis_mine(self):
-        cpuinfo_file = opinel.cpuinfo.LinuxCpusInfo._INFOFILE
+        cpuinfo_file = opinel.cpus_tool.LinuxCpusInfo._INFOFILE
         if not os.path.exists(cpuinfo_file):
             raise self.skipTest("{:s} does not exists.".format(cpuinfo_file))
-        cinfo = opinel.cpuinfo.LinuxCpusInfo()
+        cinfo = opinel.cpus_tool.LinuxCpusInfo()
         # Just ensure that the file is parseable...
         self.assertEqual(cinfo.nvirtual_cores,
                          cinfo.nphysical_cores_per_socket *

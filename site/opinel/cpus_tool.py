@@ -17,6 +17,8 @@ from collections import namedtuple, defaultdict
 from functools import partial
 import re
 import six
+import os
+import subprocess
 
 import footprints
 
@@ -24,6 +26,8 @@ logger = footprints.loggers.getLogger(__name__)
 
 
 CpuInfo = namedtuple('CpuInfo', ('socket_id', 'core_id'))
+
+AFFINITY_CMD = 'taskset'
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -198,3 +202,33 @@ class LinuxCpusInfo(CpusInfo):
             if cpu_n is not None:
                             self._cpus[cpu_n] = CpuInfo(** cpu)
         return self._cpus
+
+
+def get_affinity(pid=None):
+    """Get the cpu affinity of a process. Returns None if no affinity is set."""
+    if pid is None:
+        pid = os.getpid()
+    list_of_cpus = None
+    _re_get_out = re.compile(r'.*:\s*(?P<binproc>\d|f)\n')
+    t_out = subprocess.check_output([AFFINITY_CMD, '-p', str(pid)])
+    binproc = re.match(_re_get_out, t_out).group('binproc')
+    if binproc != 'f':
+        binproc = bin(int(binproc))[2:][::-1]
+        list_of_cpus = [i for i, v in enumerate(binproc) if v == '1']
+    return list_of_cpus
+
+
+def set_affinity(cpus, pid=None):
+    """Set the cpu affinity of a process."""
+    if pid is None:
+        pid = os.getpid()
+    if isinstance(cpus, int):
+        cpus = [cpus]
+    cpus = ','.join([str(c) for c in cpus])
+    out = open('/dev/null', 'ab')  # FIXME: this is a bit dirty, isn'it ?
+    try:
+        subprocess.check_call([AFFINITY_CMD, '-p', '--cpu-list', cpus, str(pid)],
+                              stdout=out)
+    except Exception:
+        logger.error(out)
+        raise
