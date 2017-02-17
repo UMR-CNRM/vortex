@@ -78,3 +78,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: Ssh
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
