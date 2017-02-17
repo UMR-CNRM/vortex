@@ -10,13 +10,16 @@ it must deal with the data (given to realize the action) and the action
 to be processed: e.g. mail, routing, alarm.
 """
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.util.authorizations import is_authorized_user
+
+#: Export nothing
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Action(object):
@@ -25,6 +28,7 @@ class Action(object):
     which internally refers to the :meth:`execute` method.
     Such an action could be activated or not, and is basically driven by permissions settings.
     """
+
     def __init__(self, kind='foo', service=None, active=False, permanent=False):
         if service is None:
             service = 'send' + kind
@@ -125,6 +129,7 @@ class SendMail(Action):
     """
     Class responsible for sending emails.
     """
+
     def __init__(self, kind='mail', service='sendmail', active=True, quoteprintable=True):
         super(SendMail, self).__init__(kind=kind, active=active, service=service)
         if quoteprintable:
@@ -136,6 +141,7 @@ class Report(Action):
     """
     Class responsible for sending reports.
     """
+
     def __init__(self, kind='report', service='sendreport', active=True):
         super(Report, self).__init__(kind=kind, active=active, service=service)
 
@@ -144,6 +150,7 @@ class SSH(Action):
     """
     Class responsible for sending commands to an SSH proxy.
     """
+
     def __init__(self, kind='ssh', service='ssh', active=True):
         super(SSH, self).__init__(kind=kind, active=active, service=service)
 
@@ -152,6 +159,7 @@ class AskJeeves(Action):
     """
     Class responsible for posting requests to Jeeves daemon.
     """
+
     def __init__(self, kind='jeeves', service='askjeeves', active=True):
         super(AskJeeves, self).__init__(kind=kind, active=active, service=service)
 
@@ -171,6 +179,7 @@ class Prompt(Action):
     """
     Fake action that could be used for any real action.
     """
+
     def __init__(self, kind='prompt', service='prompt', active=True):
         super(Prompt, self).__init__(kind=kind, active=active, service=service)
 
@@ -187,7 +196,7 @@ class Prompt(Action):
 
     def foo(self, *args, **kw):
         """Yet an other foo method."""
-        print '#FOO', self.kind, '/ args:', args, '/ kw:', kw
+        print('#FOO', self.kind, '/ args:', args, '/ kw:', kw)
         return True
 
 
@@ -195,6 +204,7 @@ class SmsGateway(Action):
     """
     Child command to SMS server.
     """
+
     def __init__(self, kind='sms', service='sms', active=True, permanent=True):
         super(SmsGateway, self).__init__(kind=kind, active=active, service=service, permanent=permanent)
 
@@ -223,6 +233,7 @@ class SpooledActions(object):
     """
     Delayed action to be processed.
     """
+
     def __init__(self, kind=None, method=None, actions=None):
         """Store effective action and method to be processed."""
         self._kind = kind

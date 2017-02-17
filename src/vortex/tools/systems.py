@@ -103,8 +103,8 @@ class System(footprints.FootprintBase):
     Root class for any :class:`System` subclasses.
     """
 
-    _abstract  = True
-    _explicit  = False
+    _abstract = True
+    _explicit = False
     _collector = ('system',)
 
     _footprint = dict(
@@ -154,14 +154,14 @@ class System(footprints.FootprintBase):
           * output - as a default value for any external spawning command (default: True).
         """
         logger.debug('Abstract System init %s', self.__class__)
-        self.__dict__['_os']      = kw.pop('os', os)
-        self.__dict__['_rl']      = kw.pop('rlimit', resource)
-        self.__dict__['_sh']      = kw.pop('shutil', kw.pop('sh', shutil))
-        self.__dict__['_search']  = [self.__dict__['_os'], self.__dict__['_sh'], self.__dict__['_rl']]
-        self.__dict__['_xtrack']  = dict()
+        self.__dict__['_os'] = kw.pop('os', os)
+        self.__dict__['_rl'] = kw.pop('rlimit', resource)
+        self.__dict__['_sh'] = kw.pop('shutil', kw.pop('sh', shutil))
+        self.__dict__['_search'] = [self.__dict__['_os'], self.__dict__['_sh'], self.__dict__['_rl']]
+        self.__dict__['_xtrack'] = dict()
         self.__dict__['_history'] = History(tag='shell')
-        self.__dict__['_rclast']  = 0
-        self.__dict__['prompt']   = ''
+        self.__dict__['_rclast'] = 0
+        self.__dict__['prompt'] = ''
         for flag in ('trace', 'timer'):
             self.__dict__[flag] = kw.pop(flag, False)
         for flag in ('output',):
@@ -745,8 +745,8 @@ class OSExtended(System):
     def target(self, **kw):
         """Provide a default target according to system own attributes."""
         desc = dict(
-            hostname = self.hostname,
-            sysname  = self.sysname
+            hostname=self.hostname,
+            sysname=self.sysname
         )
         desc.update(kw)
         self._frozen_target = footprints.proxy.targets.default(**desc)
@@ -1561,7 +1561,7 @@ class Garbage(OSExtended, Python26):
         info = 'Garbage base system',
         attr = dict(
             sysname = dict(
-                outcast = [ 'Linux', 'Darwin' ]
+                outcast = ['Linux', 'Darwin']
             )
         ),
         priority = dict(
@@ -1609,7 +1609,7 @@ class Linux26(Linux, Python26):
         info = 'Linux base system with pretty old python version',
         attr = dict(
             python = dict(
-                values = [ '2.6.4', '2.6.5', '2.6.6' ]
+                values = ['2.6.4', '2.6.5', '2.6.6']
             )
         )
     )

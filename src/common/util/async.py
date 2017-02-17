@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.util.worker import VortexWorker
+
+#: No automatic export
+__all__ = []
 
 
 def system_ftput(pnum, ask, config, logger, **opts):
@@ -20,6 +22,7 @@ def system_ftput(pnum, ask, config, logger, **opts):
     with VortexWorker(logger=logger) as vwork:
         sh = vwork.vortex.sh()
         sh.trace = False
+
         data = vwork.get_dataset(ask)
         logger.info('FTPut host', hostname=data.hostname, logname=data.logname)
         logger.info('FTPut data', source=data.source, destination=data.destination)
@@ -39,4 +42,4 @@ def system_ftput(pnum, ask, config, logger, **opts):
                 value = dict(clear=sh.rm(data.source, fmt=data.fmt))
                 break
 
-    return (pnum, vwork.rc, value)
+    return pnum, vwork.rc, value
