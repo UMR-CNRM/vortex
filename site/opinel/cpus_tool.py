@@ -6,7 +6,7 @@ This module is in charge of getting informations on CPUs.
 
 Various concrete implementations may be provided since the mechanism to retrieve
 information on CPUs is not portable across platforms. At the present time, the
-only concrete implementaion is the :class:`LinuxCpusInfo` class that relies on
+only concrete implementation is the :class:`LinuxCpusInfo` class that relies on
 the /proc/cpuinfo virtual file.
 """
 
@@ -15,6 +15,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import abc
 from collections import namedtuple, defaultdict
 from functools import partial
+import locale
 import re
 import six
 import os
@@ -25,9 +26,15 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 
+#: Data about a given CPU
 CpuInfo = namedtuple('CpuInfo', ('socket_id', 'core_id'))
 
 AFFINITY_CMD = 'taskset'
+
+
+class CpusToolUnavailableError(Exception):
+    """Raised whenever the necessary commands and/or system files are missing."""
+    pass
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -162,10 +169,16 @@ class CpusInfo(object):
 class LinuxCpusInfo(CpusInfo):
     '''Provide various informations about CPUs based on the /proc/cpuinfo file.'''
 
+    _INFOFILE_CHECK = True
     _INFOFILE = '/proc/cpuinfo'
     _CPU_RE = re.compile(r'^processor\s*:\s*(\d+)\b')
     _PHYSID_RE = re.compile(r'^physical id\s*:\s*(\d+)\b')
     _COREID_RE = re.compile(r'^core id\s*:\s*(\d+)\b')
+
+    def __new__(cls):
+        if cls._INFOFILE_CHECK and not os.path.exists(cls._INFOFILE):
+            raise CpusToolUnavailableError('The {:s} file was not found'.format(cls._INFOFILE))
+        return super(LinuxCpusInfo, cls).__new__(cls)
 
     @property
     def cpus(self):
@@ -208,13 +221,19 @@ def get_affinity(pid=None):
     """Get the cpu affinity of a process. Returns None if no affinity is set."""
     if pid is None:
         pid = os.getpid()
-    list_of_cpus = None
-    _re_get_out = re.compile(r'.*:\s*(?P<binproc>\d|f)\n')
-    t_out = subprocess.check_output([AFFINITY_CMD, '-p', str(pid)])
-    binproc = re.match(_re_get_out, t_out).group('binproc')
-    if binproc != 'f':
-        binproc = bin(int(binproc))[2:][::-1]
-        list_of_cpus = [i for i, v in enumerate(binproc) if v == '1']
+    _re_get_out = re.compile(r'.*:\s*(?P<binproc>[0-9a-f]+)\s*$')
+    try:
+        t_out = subprocess.check_output([AFFINITY_CMD, '-p', str(pid)])
+    except OSError:
+        raise CpusToolUnavailableError('No {:s} command on this system.'.format(AFFINITY_CMD))
+    loc_cmd = locale.getdefaultlocale() or ('unknown', 'ascii')
+    uni_out = t_out.decode(loc_cmd[1], 'replace')  # Unicode stuff...
+    binproc = int(_re_get_out.match(uni_out).group('binproc'), 16)  # It's hexadeciaml
+    binlist = list()
+    while binproc:
+        binlist.append(binproc % 2)
+        binproc = binproc >> 1
+    list_of_cpus = [i for i, v in enumerate(binlist) if v]
     return list_of_cpus
 
 
@@ -225,10 +244,11 @@ def set_affinity(cpus, pid=None):
     if isinstance(cpus, int):
         cpus = [cpus]
     cpus = ','.join([str(c) for c in cpus])
-    out = open('/dev/null', 'ab')  # FIXME: this is a bit dirty, isn'it ?
     try:
-        subprocess.check_call([AFFINITY_CMD, '-p', '--cpu-list', cpus, str(pid)],
-                              stdout=out)
-    except Exception:
-        logger.error(out)
+        subprocess.check_output([AFFINITY_CMD, '-p', '--cpu-list', cpus, str(pid)], stderr=subprocess.STDOUT)
+    except OSError:
+        raise CpusToolUnavailableError('No {:s} command on this system.'.format(AFFINITY_CMD))
+    except subprocess.CalledProcessError as e:
+        logger.error(str(e))
+        logger.error("stdout/stderr: %s", e.output)
         raise

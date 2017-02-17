@@ -145,12 +145,14 @@ class UtTaylorism(TestCase):
 
     def test_binding(self):
         """Checks that the binding works."""
-
         boss = taylorism.run_as_server(common_instructions={'sentence':'',
                                                             'succeed':True},
                                        individual_instructions={'sleeping_time':[0.001, 0.001, 0.001]},
                                        scheduler=taylorism.MaxThreadsScheduler(max_threads=2))
-        boss.wait_till_finished()
+        try:
+            boss.wait_till_finished()
+        except cpus_tool.CpusToolUnavailableError as e:
+            raise self.skipTest(str(e))
         report = boss.get_report()
         self.assertEqual(len(report['workers_report']), 3, "3 instructions have been sent, which is not the size of report.")
         self.assertEqual(set([r['report'][1][0] for r in report['workers_report']]), set([0, 1]))

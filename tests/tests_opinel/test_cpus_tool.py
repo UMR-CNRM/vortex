@@ -13,6 +13,11 @@ DATADIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data')
 
 class LinuxCpusInfoTester(opinel.cpus_tool.LinuxCpusInfo):
 
+    _INFOFILE_CHECK = False
+
+    def __new__(cls, finput):
+        return super(LinuxCpusInfoTester, cls).__new__(cls)
+
     def __init__(self, finput):
         super(LinuxCpusInfoTester, self).__init__()
         self._INFOFILE = os.path.join(DATADIR, finput)
@@ -21,10 +26,10 @@ class LinuxCpusInfoTester(opinel.cpus_tool.LinuxCpusInfo):
 class TestLinuxCpusInfo(unittest.TestCase):
 
     def test_bascis_mine(self):
-        cpuinfo_file = opinel.cpus_tool.LinuxCpusInfo._INFOFILE
-        if not os.path.exists(cpuinfo_file):
-            raise self.skipTest("{:s} does not exists.".format(cpuinfo_file))
-        cinfo = opinel.cpus_tool.LinuxCpusInfo()
+        try:
+            cinfo = opinel.cpus_tool.LinuxCpusInfo()
+        except opinel.cpus_tool.CpusToolUnavailableError as e:
+            raise self.skipTest(str(e))
         # Just ensure that the file is parseable...
         self.assertEqual(cinfo.nvirtual_cores,
                          cinfo.nphysical_cores_per_socket *

@@ -12,6 +12,6 @@ Opinel : a collection of basic utilities
 
    opinel
  
-   cpuinfo  
+   cpus_tool  
    interrupt
   

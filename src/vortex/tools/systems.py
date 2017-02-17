@@ -31,7 +31,7 @@ from datetime import datetime
 
 import footprints
 from opinel.interrupt import SignalInterruptHandler, SignalInterruptError
-from opinel.cpuinfo import LinuxCpusInfo
+from opinel.cpus_tool import LinuxCpusInfo
 from vortex.gloves import Glove
 from vortex.tools import date
 from vortex.tools.env import Environment

@@ -220,6 +220,7 @@ class Worker(FootprintBase):
         with interrupt.SignalInterruptHandler():
             to_be_sent_back = {'name': self.name, 'report': None}
             try:
+                self._work_and_communicate_prehook()
                 to_be_sent_back = {'name': self.name, 'report': self._task()}
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -237,6 +238,10 @@ class Worker(FootprintBase):
                                        'traceback': 'Traceback missing'}
                     self._messenger.put(to_be_sent_back)
 
+    def _work_and_communicate_prehook(self):
+        """Some stuff executed before the "real" work_end_communicate takes place."""
+        pass
+
     def _task(self, **kwargs):
         """
         Actual task of the Worker to be implemented therein.
@@ -250,21 +255,13 @@ class BindedWorker(Worker):
 
     _abstract = True
 
-    def _work_and_communicate(self):
-        """
-        After binding the process to a cpu, send the Worker to his task,
-        making sure he communicates with its boss.
-
-        From within this method down, everything is done in the subprocess
-        world !
-        """
-        with interrupt.SignalInterruptHandler():
-            if self.scheduler_ticket is not None:
-                cpus = cpus_tool.LinuxCpusInfo()
-                cpulist = list(cpus.socketpacked_cpulist())
-                binded_cpu = cpulist[self.scheduler_ticket % cpus.nvirtual_cores]
-                cpus_tool.set_affinity(binded_cpu, str(os.getpid()))
-            super(BindedWorker, self)._work_and_communicate()
+    def _work_and_communicate_prehook(self):
+        """Bind the process to a cpu"""
+        if self.scheduler_ticket is not None:
+            cpus = cpus_tool.LinuxCpusInfo()
+            cpulist = list(cpus.socketpacked_cpulist())
+            binded_cpu = cpulist[self.scheduler_ticket % cpus.nvirtual_cores]
+            cpus_tool.set_affinity(binded_cpu, str(os.getpid()))
 
 
 class Boss(object):
