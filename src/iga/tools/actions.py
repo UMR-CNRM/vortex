@@ -82,4 +82,198 @@ class OpMail(Action):
         return rc
 
 
-actiond.add(SendAlarm(), Route(), DMTEvent(), OpMail())
+class OpPhase(Action):
+    """
+    Class responsible for phasing resources to a fall-back machine
+    or to a redundant filesystem, for crash recovery.
+    The configuration must be a section in the target-xxx.ini file.
+    """
+
+    def __init__(self, configuration, kind='phase', service=None, active=True):
+        super(OpPhase, self).__init__(kind=kind, active=active, service=service)
+        self._rhtodo = list()
+        self._rhdone = list()
+        self._sh = sessions.system()
+        self._parser = None
+        self._section = None
+        self.configure(configuration)
+
+    @staticmethod
+    def actions():
+        """Create Actions to handle the several Phase configurations
+           described in the configuration file target-xxx.ini."""
+        parser = sessions.system().target().config
+        active_actions = parser.getx(key='phase:active_actions', aslist=True)
+        return [OpPhase(action) for action in active_actions]
+
+    @property
+    def sh(self):
+        return self._sh
+
+    def configure(self, section, show=False):
+        """Check and set the configuration: a section in the target-xxx.ini file."""
+        target = self.sh.target()
+        self._parser = target.config
+        self._section = section
+        if section not in self._parser.sections():
+            raise KeyError('No section "{}" in "{}"'.format(section, self._parser.file))
+        if show:
+            self.show_config()
+
+    def show_config(self):
+        """Show the current configuration (for debugging purposes)."""
+        from pprint import pprint
+        print('\nPhase configuration:', self._section)
+        pprint(self._parser.as_dict()[self._section])
+        print()
+
+    def getx(self, key, *args, **kw):
+        """Shortcut to access our configuration."""
+        return self._parser.getx(key=self._section + ':' + key, *args, **kw)
+
+    @property
+    def immediate(self):
+        mode = self.getx('mode', default='immediate')
+        if mode == 'immediate':
+            return True
+        if mode == 'atend':
+            return False
+        logger.warn('Phase mode should be "immediate" or "atend", not "%s". '
+                    'Using "immediate".', mode)
+        return True
+
+    def execute(self, *args, **kw):
+        """Perform the action:
+
+            * Accepts lists of resource handlers (any iterable, nested ot not)
+            * In immediate mode (or if given flush=True), do it now.
+            * Else keep track of resources for a later call to flush()
+        """
+
+        def isiterable(item):
+            return (
+                isinstance(item, collections.Iterable)
+                and not isinstance(item, basestring)
+            )
+
+        def flatten(iterable):
+            """Recursively flattens an iterable.
+            >>> list(flatten(([[1], [2, 3]],)))
+            [1, 2, 3]
+            """
+            for item in iterable:
+                if isiterable(item):
+                    for p in flatten(item):
+                        yield p
+                else:
+                    yield item
+
+        rhs = {rh for rh in flatten(args) if isinstance(rh, Handler)}
+        sendnow = kw.pop('flush', False) or self.immediate
+        if sendnow:
+            return self._send(rhs, **kw)
+        else:
+            self._rhtodo.extend(rhs)
+            return True
+
+    def flush(self, **kw):
+        """Send resources accumulated by previous calls."""
+        if self._rhtodo:
+            self._send(self._rhtodo, **kw)
+            self._rhtodo = list()
+
+    def _send(self, rhlist, **opts):
+        """Send a list of resources.
+        The env variable OP_PHASE controls global de/activation.
+        """
+        t = sessions.current()
+        env = t.env
+
+        active = bool(env.get('OP_PHASE', 1))
+        if not active:
+            logger.warn('OpPhase is not active (e.OP_PHASE={})'.format(env.get('OP_PHASE', '<not set>')))
+            for r in rhlist:
+                logger.warn('-- Would phase: %s', str(r))
+            return True
+
+        rc = True
+        for rh in rhlist:
+            rc = rc and self._sendone(rh, **opts)
+            self._rhdone.append(rh)
+        return rc
+
+    def _sendone(self, rh, **opts):
+        """Ask Jeeves to phase a resource."""
+        sh = sessions.system()
+        rh_path = sh.path.abspath(rh.locate().split(';')[0])
+
+        protocol = self.getx('protocol', silent=False)
+        jname = self.getx('jname', silent=False)
+
+        # possibly change the destination prefix
+        basepaths = self.getx('basepaths', default='', aslist=True)
+        if basepaths:
+            src, dst = basepaths
+            if not rh_path.startswith(src):
+                dst, src = basepaths
+                if not rh_path.startswith(src):
+                    msg = "Basepaths are incompatible with resource path\n\tpath={}\n\tbasepaths={}".format(
+                        rh_path, basepaths)
+                    raise ValueError(msg)
+            if not src.endswith('/'):
+                src += '/'
+            lastpart = rh_path.replace(src, '')
+            destination = sh.path.join(dst, lastpart)
+        else:
+            destination = rh_path
+
+        jeeves_opts = dict(
+            jname=jname,
+            rhandler=rh.as_dict(),
+        )
+
+        # protocol-specific part
+        if protocol == 'scp':
+            phase_loginnode = self.getx('phase_loginnode', silent=False)
+            phase_transfernode = self.getx('phase_transfernode', silent=False)
+            jeeves_opts.update(
+                todo='phase_scp',
+                phase_loginnode=phase_loginnode,
+                phase_transfernode=phase_transfernode,
+                logname=self.getx('phase_logname', silent=False),
+            )
+
+        elif protocol == 'ftp':
+            phase_loginnode = self.getx('phase_loginnode', silent=False)
+            phase_transfernode = self.getx('phase_transfernode', silent=False)
+            jeeves_opts.update(
+                todo='phase_ftput',
+                phase_loginnode=phase_loginnode,
+                phase_transfernode=phase_transfernode,
+                logname=self.getx('phase_logname', silent=False),
+            )
+        elif protocol == 'cp':
+            if rh_path == destination:
+                msg = "Cannot locally phase file onto itself."
+                msg += "path={} basepaths={}".format(rh_path, basepaths)
+                raise ValueError(msg)
+            jeeves_opts.update(
+                todo='cp',
+            )
+        else:
+            raise ValueError('Phase: unknown protocol %s.', protocol)
+
+        # common part (create the hidden copy when config problems are over)
+        fmt = rh.container.actualfmt
+        hide = footprints.proxy.service(kind='hiddencache', asfmt=fmt)
+        jeeves_opts.update(
+            fmt=fmt,
+            source=hide(rh_path),
+            destination=destination,
+            **opts
+        )
+
+        return actiond.jeeves(**jeeves_opts)
+
+
+actiond.add(SendAlarm(), Route(), DMTEvent(), OpMail(), *OpPhase.actions())

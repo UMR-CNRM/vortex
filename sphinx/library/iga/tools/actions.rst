@@ -35,3 +35,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: OpPhase
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

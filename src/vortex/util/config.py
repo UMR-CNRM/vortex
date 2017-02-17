@@ -129,6 +129,52 @@ class GenericConfigParser(object):
                                  if k in self.parser._sections[section]}
         return dico
 
+    def getx(self, key, default=None, env_key=None, silent=False, aslist=False):
+        """
+        Return a value from several sources in turn:
+
+        - a shell environment variable
+        - this configuration handler (key = 'section:option')
+        - a default value
+
+        Unless silent is set, KeyError is raised if the value cannot be found.
+        Aslist forces the result into a list (be it with a unique element).
+               separators are spaces, commas, carriage returns or antislashes.
+               e.g. these notations are equivalent:
+                alist = val1 val2 val3 val4 val5
+                alist  = val1, val2 val3 \
+                         val4,
+                         val5
+        """
+        if env_key is not None:
+            env_key = env_key.upper()
+            value = sessions.system().env.get(env_key, None)
+        else:
+            value = None
+
+        if value is None:
+            if ':' not in key:
+                if silent:
+                    return None
+                msg = 'Configuration key should be "section:option" not "{}"'.format(key)
+                raise KeyError(msg)
+            section, option = key.split(':')
+            value = self.get(section, option, vars={key: default})
+
+        if value is None:
+            if silent:
+                return None
+            msg = 'Please define "{}" in "{}"'.format(key, self.file)
+            if env_key is not None:
+                msg += ' or "{}" in the environment.'.format(env_key)
+            logger.error(msg)
+            raise KeyError(msg)
+
+        if aslist:
+            value = value.replace('\n', ' ').replace('\\', ' ').replace(',', ' ').split()
+
+        return value
+
     def __getattr__(self, attr):
         if attr.startswith('__'):
             raise AttributeError
