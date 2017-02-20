@@ -15,7 +15,7 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex.data.stores import StoreGlue, IniStoreGlue, ArchiveStore, CacheStore, MultiStore
 
 rextract = re.compile('^extract=(.*)$')
-oparchivemap = IniStoreGlue('oparchive-glue.ini')
+oparchivemap = IniStoreGlue('@oparchive-glue.ini')
 
 
 class OliveArchiveStore(ArchiveStore):

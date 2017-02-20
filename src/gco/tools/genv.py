@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+import footprints
+
+import vortex
+from vortex.tools.env import Environment
+
 #: No automatic export
 __all__ = []
 
-from copy import copy
-
-import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-import vortex
+_DATASTORE_KIND = 'genv_registred_cycle'
 
 genvcmd, genvpath = (None, None)
 
@@ -29,25 +31,19 @@ def actualgenv():
 
 def handler():
     """Return default environment object storing genv items"""
-    return vortex.tools.env.param(tag='genvitems')
+    return vortex.sessions.current().datastore
 
 
 def register(**kw):
     """Set key - values for a given ``cycle`` recorded as an ``entry`` (parameters)."""
     p = handler()
     cycle = kw.pop('cycle', 'default')
-    entry = kw.pop('entry', None)
-    regcycle = [ x for x in p.keys() if p[x]['CYCLE'] == cycle ]
-    if not regcycle:
-        if entry:
-            nextcycle = entry
-        else:
-            nextcycle = 'CYCLE{0:03d}'.format(len(p) + 1)
-        logger.debug('Register a new genv cycle %s', nextcycle)
-        p[nextcycle] = dict(CYCLE = cycle)
-        regcycle = p[nextcycle]
+    if p.check(_DATASTORE_KIND, dict(cycle=cycle)):
+        regcycle = p.get(_DATASTORE_KIND, dict(cycle=cycle))
     else:
-        regcycle = p[regcycle.pop()]
+        logger.debug('Register a new genv cycle: %s', cycle)
+        regcycle = p.insert(_DATASTORE_KIND, dict(cycle=cycle),
+                            Environment(active=False, clear=True, history=False))
     if kw:
         regcycle.update(kw)
     return regcycle
@@ -57,13 +53,11 @@ def contents(**kw):
     """Return definition of a given ``cycle``."""
     p = handler()
     cycle = kw.setdefault('cycle', 'default')
-    regcycle = [ x for x in p.keys() if p[x]['CYCLE'] == cycle ]
-    if regcycle:
-        items = copy(p[regcycle.pop()])
-        del items['CYCLE']
-        return items
-    else:
-        return None
+    regcycle = None
+    if p.check(_DATASTORE_KIND, dict(cycle=cycle)):
+        regcycle = p.get(_DATASTORE_KIND, dict(cycle=cycle))
+        regcycle = regcycle.clone()
+    return regcycle
 
 
 def nicedump(**kw):
@@ -86,21 +80,22 @@ def as_rawstr(cycle):
 def cycles():
     """Return curretnly defined cycles."""
     p = handler()
-    return [ p[x]['CYCLE'] for x in p.keys() ]
+    grep = p.grep(_DATASTORE_KIND, dict())
+    return [k.cycle for k in grep.keys()]
 
 
 def clearall():
     """Flush the current environment object storing cycles."""
     p = handler()
-    p.clear()
+    p.grep_delete(_DATASTORE_KIND, dict(), force=True)
 
 
-def autofill(cycle, gcout=None, writes_dump=False):
+def autofill(cycle, gcout=None, writes_dump=False, cacheroot='.'):
     """Use the ``genv`` external tool to fill the specified cycle."""
     actualcycle = None
     if gcout is None:
         sh = vortex.sh()
-        cachefile = '{:s}_vortex_genv_cache'.format(cycle)
+        cachefile = sh.path.join(cacheroot, '{:s}_vortex_genv_cache'.format(cycle))
         if sh.path.isfile(cachefile):
             with open(cachefile, 'r') as genvfh:
                 gcout = [l.rstrip('\n') for l in genvfh.readlines()]
@@ -120,5 +115,5 @@ def autofill(cycle, gcout=None, writes_dump=False):
             gcdict[k] = v
         register(**gcdict)
     else:
-        logger.warning('Could not automaticaly fetch cycle %s contents', actualcycle)
+        logger.warning('Could not automatically fetch cycle %s contents', actualcycle)
     return contents(cycle=actualcycle)

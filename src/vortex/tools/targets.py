@@ -56,7 +56,7 @@ class Target(footprints.FootprintBase):
             ),
             inifile = dict(
                 optional = True,
-                default  = 'target-[hostname].ini',
+                default  = '@target-[hostname].ini',
             ),
             iniauto = dict(
                 type     = bool,

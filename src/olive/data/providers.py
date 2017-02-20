@@ -288,7 +288,7 @@ class RemoteBinset(RemoteGenericSet):
             config = dict(
                 type            = GenericConfigParser,
                 optional        = True,
-                default         = GenericConfigParser('binset-map-resources.ini'),
+                default         = GenericConfigParser('@binset-map-resources.ini'),
                 doc_visibility  = footprints.doc.visibility.GURU,
             )
         )

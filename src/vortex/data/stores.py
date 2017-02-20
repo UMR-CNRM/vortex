@@ -10,6 +10,8 @@ Store objects use the :mod:`footprints` mechanism.
 #: Export base class
 __all__ = ['Store']
 
+from collections import defaultdict
+import copy
 import ftplib
 import re
 import StringIO
@@ -24,9 +26,10 @@ from vortex.util import hash as hashutils
 from vortex.syntax.stdattrs import hashalgo, hashalgo_avail_list
 from vortex.tools import caches
 from vortex.tools import date
+from vortex.tools import net
 from vortex.tools.systems import ExecutionError
 from vortex.tools.actions import actiond as ad
-from vortex.syntax.stdattrs import Namespace
+from vortex.syntax.stdattrs import Namespace, FreeXPid
 from vortex.syntax.stdattrs import DelayedEnvValue
 
 
@@ -1022,21 +1025,23 @@ class VortexArchiveStore(ArchiveStore):
     def remap_write(self, remote, options):
         """Remap actual remote path to distant store path for intrusive actions."""
         if 'root' not in remote:
+            remote = copy.copy(remote)
             remote['root'] = self.storehead
+        return remote
 
     def vortexcheck(self, remote, options):
         """Remap and ftpcheck sequence."""
-        self.remap_read(remote, options)
+        remote = self.remap_read(remote, options)
         return self.ftpcheck(remote, options)
 
     def vortexlocate(self, remote, options):
         """Remap and ftplocate sequence."""
-        self.remap_read(remote, options)
+        remote = self.remap_read(remote, options)
         return self.ftplocate(remote, options)
 
     def vortexget(self, remote, local, options):
         """Remap and ftpget sequence."""
-        self.remap_read(remote, options)
+        remote = self.remap_read(remote, options)
         return self.ftpget(remote, local, options)
 
     def vortexput(self, local, remote, options):
@@ -1044,17 +1049,17 @@ class VortexArchiveStore(ArchiveStore):
         if not self.storetrue:
             logger.info("put deactivated for %s", str(local))
             return True
-        self.remap_write(remote, options)
+        remote = self.remap_write(remote, options)
         return self.ftpput(local, remote, options)
 
     def vortexdelete(self, remote, options):
         """Remap root dir and ftpdelete sequence."""
-        self.remap_write(remote, options)
+        remote = self.remap_write(remote, options)
         return self.ftpdelete(remote, options)
 
 
 class VortexStdArchiveStore(VortexArchiveStore):
-    """Archive for casual VORTEX experiments."""
+    """Archive for casual VORTEX experiments: Support for legacy XPIDs"""
 
     _footprint = dict(
         info = 'VORTEX archive access for casual experiments',
@@ -1070,10 +1075,156 @@ class VortexStdArchiveStore(VortexArchiveStore):
 
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
+        remote = copy.copy(remote)
         xpath = remote['path'].split('/')
         xpath[3:4] = list(xpath[3])
         xpath[:0] = [self.system.path.sep, self.storehead]
         remote['path'] = self.system.path.join(*xpath)
+        return remote
+
+
+class VortexFreeStdArchiveStore(VortexArchiveStore):
+    """Archive for casual VORTEX experiments: Support for Free XPIDs"""
+
+    #: Path to the vortex-free Store configuration file
+    _store_global_config = '@store-vortex-free.ini'
+
+    _footprint = dict(
+        info = 'VORTEX archive access for casual experiments',
+        attr = dict(
+            netloc = dict(
+                values   = ['vortex-free.archive.fr', ],
+            ),
+            storeroot = dict(
+                default  = None,
+            ),
+        )
+    )
+
+    @staticmethod
+    def _get_remote_config(store, url, container):
+        """Fetch a configuration file from **url** using **store**."""
+        rc = store.get(url, container.iotarget(), dict(fmt='ascii'))
+        if rc:
+            return config.GenericConfigParser(inifile=container.iotarget())
+        else:
+            return None
+
+    def _load_config(self, conf):
+        """Load the store configuration.
+
+        1. The global store's configuration file is read (see
+           ``self.__store_global_config``)
+        2. Given ``self.storage``, the proper section of the global configuration
+           file is read: it may contain localconf or remoteconfXXX options that
+           describe additional configuration files
+        3. Fist, the local configuration file is read
+        4. Then, the remote configuration files are read
+
+        The relevant content of the configuration file is stored in the ``conf``
+        dictionary.
+        """
+        logger.info("Some store configuration data is needed")
+
+        # Global configuration file
+        logger.info("Reading config file: %s", self._store_global_config)
+        maincfg = config.GenericConfigParser(inifile=self._store_global_config)
+        conf['host'] = dict(maincfg.items(self.hostname()))
+
+        # Look for a local configuration file
+        localcfg = conf['host'].get('localconf', None)
+        if localcfg is not None:
+            logger.info("Reading config file: %s", localcfg)
+            localcfg = config.GenericConfigParser(inifile=localcfg)
+            conf['locations'] = defaultdict(dict)
+            conf['locations']['generic'] = localcfg.defaults()
+            for section in localcfg.sections():
+                logger.debug("New location found: %s", section)
+                conf['locations'][section] = dict(localcfg.items(section))
+
+        # Look for remote configurations
+        remotecfgs = sorted([key for key in conf['host'].iterkeys()
+                             if key.startswith('remoteconf')])
+        for remotecfg in [conf['host'][k] for k in remotecfgs]:
+            logger.info("Reading config file: %s", remotecfg)
+            url = net.uriparse(remotecfg)
+            tempstore = footprints.proxy.store(scheme = url['scheme'], netloc = url['netloc'],
+                                               storetrack = False)
+            retry = False
+            # First, try with a temporary ShouldFly
+            try:
+                tempcontainer = footprints.proxy.container(shouldfly=True)
+                remotecfg_parser = self._get_remote_config(tempstore, url, tempcontainer)
+            except OSError:
+                # This may happen if the user has insufficient rights on
+                # the current directory
+                retry = True
+            finally:
+                self.system.remove(tempcontainer.filename)
+            # Is retry needed ? This time a completely virtual file is used.
+            if retry:
+                remotecfg_parser = self._get_remote_config(tempstore, url,
+                                                           footprints.proxy.container(incore=True))
+            # Update the configuration using the parser
+            if remotecfg_parser is not None:
+                for section in remotecfg_parser.sections():
+                    logger.debug("New location found: %s", section)
+                    conf['locations'][section].update(dict(remotecfg_parser.items(section)))
+            else:
+                raise IOError("The remote configuration {:s} couldn't be found."
+                              .format(remotecfg))
+
+    def _actual_fromconf(self, xpid, item):
+        """For a given **xpid**, Find the coresponding value of the **item** key
+        in the configuration data.
+
+        Access the session's datastore to get the configuration data. If
+        necessary, configuration data are read in using the :meth:`_load_config`
+        method
+        """
+        ds = sessions.current().datastore
+        conf = ds.get('store-vortex-free-conf', dict(storage=self.hostname()),
+                      default_payload=dict(), readonly=True)
+        if not conf:
+            # If the configuration is empty, do what it takes...
+            self._load_config(conf)
+        mylocation = xpid.location
+        st_root = None
+        if mylocation in conf['locations']:
+            st_root = conf['locations'][mylocation].get(item, None)
+        st_root = st_root or conf['locations']['generic'].get(item, None)
+        return st_root
+
+    def _actual_storeroot(self, xpid):
+        """For a given **xpid**, determine the proper storeroot."""
+        if self.storeroot is None:
+            # Read the sotreroot from the configuration data
+            st_root = self._actual_fromconf(xpid, 'storeroot')
+            if st_root is None:
+                raise IOError("No valid storeroot could be found.")
+            # The location may be an alias: find the real username
+            realname = self._actual_fromconf(xpid, 'realname')
+            if realname is None:
+                mylocation = xpid.location
+            else:
+                mylocation = realname
+            return st_root.format(location=mylocation)
+        else:
+            return self.storeroot
+
+    def remap_read(self, remote, options):
+        """Reformulates the remote path to compatible vortex namespace."""
+        remote = copy.copy(remote)
+        xpath = remote['path'].split('/')
+        f_xpid = FreeXPid(xpath[3])
+        xpath[3] = f_xpid.id
+        xpath[:0] = [self.storehead, ]
+        if 'root' not in remote:
+            remote['root'] = self._actual_storeroot(f_xpid)
+        remote['path'] = self.system.path.join(*xpath)
+        return remote
+
+    remap_write = remap_read
 
 
 class VortexOpArchiveStore(VortexArchiveStore):
@@ -1096,6 +1247,7 @@ class VortexOpArchiveStore(VortexArchiveStore):
 
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
+        remote = copy.copy(remote)
         xpath = remote['path'].split('/')
         vxdate = list(xpath[4])
         vxdate.insert(4, '/')
@@ -1104,6 +1256,7 @@ class VortexOpArchiveStore(VortexArchiveStore):
         xpath[4] = ''.join(vxdate)
         xpath[:0] = [self.system.path.sep, self.storehead]
         remote['path'] = self.system.path.join(*xpath)
+        return remote
 
     remap_write = remap_read
 
@@ -1316,6 +1469,7 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
         attr = dict(
             netloc = dict(
                 values  = ['vortex.cache.fr', 'vortex.cache-mt.fr',
+                           'vortex-free.cache.fr', 'vortex-free.cache-mt.fr',
                            'vsop.cache-mt.fr'],
             ),
             strategy = dict(
@@ -1391,7 +1545,7 @@ class VortexStore(MultiStore):
                 values  = ['vortex'],
             ),
             netloc = dict(
-                values  = ['vortex.multi.fr', 'vsop.multi.fr'],
+                values  = ['vortex.multi.fr', 'vortex-free.multi.fr', 'vsop.multi.fr'],
             ),
             refillstore = dict(
                 default = True,

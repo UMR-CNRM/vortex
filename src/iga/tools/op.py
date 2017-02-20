@@ -6,6 +6,7 @@ __all__ = []
 
 from tempfile import mkdtemp
 
+import vortex
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -14,403 +15,301 @@ import iga.tools.services
 from vortex.tools.actions import actiond as ad
 
 from iga.util import swissknife
+from vortex.layout.jobs import JobAssistant
 
 
-def setup(**kw):
-    """
-    Open a new vortex session with an op profile,
-    set behavior defaults and return the current ticket.
-    """
+class OpJobAssistantTest(JobAssistant):
 
-    opd = kw.get('actual', dict())
+    _footprint = dict(
+        info = 'Op Job assistant.',
+        attr = dict(
+            kind = dict(
+                values = ['op_test'],
+            ),
+        ),
+    )
 
-    import vortex
-    footprints.proxy.targets.discard_onflag('is_anonymous', verbose=False)
+    def _early_session_setup(self, t, **kw):
+        """Create a now session, set important things, ..."""
+        t.sh.header('Set a new glove')
+        opd = kw.get('actual', dict())      
+  
+        gl = vortex.sessions.getglove(
+            tag     = 'opid',
+            profile = opd.get('op_suite', 'oper')
+        )
 
-    t = vortex.sessions.get()
-    t.sh.subtitle('OP setup')
+        print gl.idcard()
 
-    #Symlink to job's last execution log in op's resul directory
-    if "SLURM_JOB_NAME" in t.env():
-        if t.sh.path.islink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf'):
-            t.sh.unlink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
+        #--------------------------------------------------------------------------------------------------
+        t.sh.header('Activate a new session with previous glove')
+
+        t  = vortex.sessions.get(
+            tag     = 'opview',
+            active  = True,
+            glove   = gl,
+            topenv  = vortex.rootenv,
+            prompt  = vortex.__prompt__
+        )
+
+        return super(OpJobAssistantTest, self)._early_session_setup(t, **kw)
+
+
+    def _env_setup(self, t, **kw):
+        """OP session's environment setup."""
+        super(OpJobAssistantTest, self)._env_setup(t, **kw)        
+
+        t.sh.subtitle('OP setup')
+
+        #Symlink to job's last execution log in op's resul directory
+        if "SLURM_JOB_NAME" in t.env():
+            if t.sh.path.islink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf'):
+                t.sh.unlink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
+            if "LOG_SBATCH" in t.env():
+                t.sh.softlink(t.env["LOG_SBATCH"], '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
+        
+        nb_slurm = self.print_somevariables(t, 'SLURM')
+        tg = vortex.sh().target()
+
+        # Set some more environment variables from the 'target*.ini' file 
+        if "LUSTRE_OPER" in t.env:
+            lustre_oper = "/" + t.env["LUSTRE_OPER"]
+            t.env.setvar("MTOOLDIR", lustre_oper + tg.get('op:MTOOLDIR'))
+            t.env.setvar("DATADIR", lustre_oper + tg.get('op:datadir'))
+            if t.env.OP_GCOCACHE is None:
+                t.env.setvar("OP_GCOCACHE", lustre_oper + tg.get('gco:gcocache'))
+        else:
+            logger.warning('No "LUSTRE_OPER" variable in the environment, unable to export MTOOLDIR and datadir')
+
         if "LOG_SBATCH" in t.env():
-            t.sh.softlink(t.env["LOG_SBATCH"], '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
-
-    t.sh.prompt = t.prompt
-    t.info()
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('Set a new glove')
-
-    gl = vortex.sessions.getglove(
-        tag     = 'opid',
-        profile = opd.get('op_suite', 'oper')
-    )
-
-    print gl.idcard()
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('Activate a new session with previous glove')
-
-    t  = vortex.sessions.get(
-        tag     = 'opview',
-        active  = True,
-        glove   = gl,
-        topenv  = vortex.rootenv,
-        prompt  = vortex.__prompt__
-    )
-
-    print t.idcard()
-
-    t.sh.prompt = t.prompt
-
-    gl.vapp  = kw.get('vapp',  opd.get('op_vapp',  None))
-    gl.vconf = kw.get('vconf', opd.get('op_vconf', None))
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('Toolbox description')
-
-    print '+ Root directory =', t.glove.siteroot
-    print '+ Path directory =', t.glove.sitesrc
-    print '+ Conf directory =', t.glove.siteconf
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('Op session')
-
-    print '+ Session Ticket =', t
-    print '+ Session Glove  =', t.glove
-    print '+ Session System =', t.sh
-    print '+ Session Env    =', t.env
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('This target')
-
-    tg = vortex.proxy.target(hostname = t.sh.hostname)
-    print '+ Target name    =', tg.hostname
-    print '+ Target system  =', tg.sysname
-    print '+ Target inifile =', tg.inifile
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('Verbosity settings')
-
-    t.sh.trace = True
-    t.env.verbose(True, t.sh)
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('Stack settings')
-
-    t.sh.setulimit('stack')
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('Add-ons to the shell')
-
-    import vortex.tools.lfi
-
-    shlfi = footprints.proxy.addon(kind='lfi', shell=t.sh)
-    print '+ Add-on LFI', shlfi
-
-    shio = footprints.proxy.addon(kind='iopoll', shell=t.sh)
-    print '+ Add-on IO POLL', shio
-
-    import vortex.tools.surfex
-    shsfx = footprints.proxy.addon(kind='sfx', shell=t.sh)
-    print '+ Add-on SFX', shsfx
-
-    import vortex.tools.grib
-    shgrib = footprints.proxy.addon(kind='grib', shell=t.sh)
-    print '+ Add-on GRIB', shgrib
-
-    import vortex.tools.odb
-    shodb = footprints.proxy.addon(kind='odb', shell=t.sh)
-    print '+ Add-on ODB', shodb
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('Actual running directory')
-
-    t.env.RUNDIR = kw.get('rundir', mkdtemp(prefix=t.glove.tag + '-'))
-    t.sh.cd(t.env.RUNDIR, create=True)
-    t.sh.chmod(t.env.RUNDIR, 0755)
-    t.rundir = t.sh.getcwd()
-    logger.info('Current rundir <%s>', t.rundir)
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('Toolbox module settings')
-
-    vortex.toolbox.active_verbose = True
-    vortex.toolbox.active_now     = True
-    vortex.toolbox.active_clear   = True
-
-    for activeattr in [ x for x in dir(vortex.toolbox) if x.startswith('active_') ]:
-        print '+', activeattr.ljust(16), '=', getattr(vortex.toolbox, activeattr)
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('External imports')
-
-    import common
-    import olive.data.providers
-    from iga.data import providers, stores
-    from previmar.data import consts, executables, resources
-
-    print '+ common               =', common.__file__
-    print '+ olive.data.providers =', olive.data.providers.__file__
-    print '+ iga.data.providers   =', providers.__file__
-    print '+ iga.data.stores      =', stores.__file__
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('Op Actions')
-    ad = vortex.tools.actions.actiond
-    ad.add(vortex.tools.actions.SmsGateway())
-
-    print '+ SMS candidates =', ad.candidates('sms')
-
-    vortex.toolbox.defaults(
-        jname = opd.get('op_jeeves', None)
-    )
-
-    print '+ JEEVES candidates =', ad.candidates('jeeves')
-    print '+ JEEVES default =', vortex.toolbox.defaults.get('jname')
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('START message to op MESSDAYF reporting file')
-    ad.report(kind='dayfile', mode='DEBUT')
-
-    #--------------------------------------------------------------------------------------------------
-
-    t.sh.header('SMS Settings')
-    ad.sms_info()
-
-    if t.env.SMSPASS is None:
-        ad.sms_off()
-
-    ad.sms_init(t.env.SLURM_JOBID)
-    t.sh.signal_intercept_on()
-
-    return t
-
-
-def setenv(t, **kw):
-    """Set up common environment for all oper execs"""
-
-    t.sh.subtitle('OP setenv')
-
-    import vortex
-    t.env.OP_VORTEX = vortex.__version__
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('SLURM Environment')
-
-    nb_slurm = 0
-    for envslurm in sorted([ x for x in t.env.keys() if x.startswith('SLURM') ]):
-        print '{0:s}="{1:s}"'.format(envslurm, t.env[envslurm])
-        nb_slurm += 1
-
-    logger.info('Batch variables found: %d', nb_slurm)
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('OP Environment')
-    opd = kw.get('actual', dict())
-    nb_op = 0
-    for opvar in sorted([ x for x in opd.keys() if x.startswith('op_') ]):
-        t.env.setvar(opvar, opd[opvar])
-        nb_op += 1
-    tg = vortex.sh().target()
-
-    # Set some more environment variables from the 'target*.ini' file 
-    if "LUSTRE_OPER" in t.env:
-        lustre_oper = "/" + t.env["LUSTRE_OPER"]
-        t.env.setvar("MTOOLDIR", lustre_oper + tg.get('op:MTOOLDIR'))
-        t.env.setvar("DATADIR", lustre_oper + tg.get('op:datadir'))
-        if t.env.OP_GCOCACHE is None:
-            t.env.setvar("OP_GCOCACHE", lustre_oper + tg.get('gco:gcocache'))
-    else:
-        logger.warning('No "LUSTRE_OPER" variable in the environment, unable to export MTOOLDIR and datadir')
-
-    if "LOG_SBATCH" in t.env():
-        t.env.setvar("LOG", t.env["LOG_SBATCH"])
-    elif nb_slurm > 0: 
-        t.env.setvar("LOG", t.env["SLURM_SUBMIT_DIR"] + '/slurm-' + t.env["SLURM_JOB_ID"] + '.out') 
-    else:
-        t.env.setvar("LOG", None) 
-
-    logger.info('Global op variables found: %d', nb_op)
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('MPI Environment')
-
-    mpi, rkw = swissknife.slurm_parameters(t, **kw)
-    t.env.OP_MPIOPTS = mpi
-
-    #--------------------------------------------------------------------------------------------------
-    t.sh.header('Setting rundate')
-
-    if t.env.OP_RUNDATE:
-        if not isinstance(t.env.OP_RUNDATE, vortex.tools.date.Date):
-            t.env.OP_RUNDATE = vortex.tools.date.Date(t.env.OP_RUNDATE)
-    else:
-        anydate = kw.get('rundate', t.env.get('DMT_DATE_PIVOT', None))
-        if anydate is None:
-            anytime = kw.get('runtime', t.env.get('OP_RUNTIME', None))
-            anystep = kw.get('runstep', t.env.get('OP_RUNSTEP', 6))
-            rundate = vortex.tools.date.synop(delta=kw.get('delta', '-PT2H'), time=anytime, step=anystep)
+            t.env.setvar("LOG", t.env["LOG_SBATCH"])
+        elif nb_slurm > 0:
+            t.env.setvar("LOG", t.env["SLURM_SUBMIT_DIR"] + '/slurm-' + t.env["SLURM_JOB_ID"] + '.out')
         else:
-            rundate = vortex.tools.date.Date(anydate)
-        t.env.OP_RUNDATE = rundate
+            t.env.setvar("LOG", None)
 
-    t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
-    logger.info('Effective rundate = %s', t.env.OP_RUNDATE.ymdhm)
-    logger.info('Effective time    = %s', t.env.OP_RUNTIME)
+        # Set a new variable for availability notifications
+        t.env.setvar("OP_DISP_NAME", "_".join(t.env["SLURM_JOB_NAME"].split("_")[:-1]))
 
-    t.sh.header('Setting member')
+        t.sh.header('MPI Environment')
 
-    if not t.env.OP_MEMBER:
-        t.env.OP_MEMBER = t.env.get('DMT_ECHEANCE', None)[-3:]
-    
-    logger.info('Effective member  = %s', t.env.OP_MEMBER)
+        mpi, rkw = swissknife.slurm_parameters(t, **kw)
+        t.env.OP_MPIOPTS = mpi
 
-    return t.env.clone()
+        t.sh.header('Setting rundate')
 
-
-def report(t, try_ok=True, **kw):
-    """Report status of the OP session (input review, mail diffusion...)."""
-
-    step    = kw.get('step', 'unknown_step')
-
-    reseau  = t.env.getvar('OP_RUNDATE').hh
-    task    = kw.get('task', 'unknown_task')
-    report  = t.context.sequence.inputs_report()
-    logpath = t.env.getvar('LOG')
-    rundir  = t.env.getvar('RUNDIR') + '/opview/' + task
-    model   = t.env.getvar('OP_VAPP').upper()
-    conf    = t.env.getvar('OP_VCONF').lower()
-    xpid    = t.env.getvar('OP_XPID').lower()
-    report.print_report(detailed=True)
-    if try_ok:
-        t.sh.header('Input review')
-        if any(report.active_alternates()):
-            t.sh.header('Input informations: active alternates were found')
-            ad.opmail(reseau=reseau, task=task, id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
+        if t.env.OP_RUNDATE:
+            if not isinstance(t.env.OP_RUNDATE, vortex.tools.date.Date):
+                t.env.OP_RUNDATE = vortex.tools.date.Date(t.env.OP_RUNDATE)
         else:
-            t.sh.header('Input informations: everything is ok')
-    else:
-        t.sh.header('Input informations: {0:s} fail'.format(step))
-        mail_id = '{0:s}_fail'.format(step)
-        ad.opmail(reseau=reseau, task=task, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
+            anydate = kw.get('rundate', t.env.get('DMT_DATE_PIVOT', None))
+            if anydate is None:
+                anytime = kw.get('runtime', t.env.get('OP_RUNTIME', None))
+                anystep = kw.get('runstep', t.env.get('OP_RUNSTEP', 6))
+                rundate = vortex.tools.date.synop(delta=kw.get('delta', '-PT2H'), time=anytime, step=anystep)
+            else:
+                rundate = vortex.tools.date.Date(anydate)
+            t.env.OP_RUNDATE = rundate
+        t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
+        logger.info('Effective rundate = %s', t.env.OP_RUNDATE.ymdhm)
+        logger.info('Effective time    = %s', t.env.OP_RUNTIME)
+
+        t.sh.header('Setting suitebg')
+
+        if t.env.OP_SUITEBG is None:
+            t.env.OP_SUITEBG = t.env.get('OP_XPID', None)
+
+        t.sh.header('Setting member')
+        if not t.env.OP_MEMBER and t.env.get('DMT_ECHEANCE'):
+            t.env.OP_MEMBER = t.env.get('DMT_ECHEANCE')[-3:]
+        logger.info('Effective member  = %s', t.env.OP_MEMBER)
 
 
-class InputReportContext(object):
+    def _extra_session_setup(self, t, **kw):
+        super(OpJobAssistantTest, self)._extra_session_setup(t, **kw)
+
+        t.sh.header('Actual running directory')
+
+        t.env.RUNDIR = kw.get('rundir', mkdtemp(prefix=t.glove.tag + '-'))
+        t.sh.cd(t.env.RUNDIR, create=True)
+        t.sh.chmod(t.env.RUNDIR, 0755)
+        t.rundir = t.sh.getcwd()
+        logger.info('Current rundir <%s>', t.rundir)
+
+    def _toolbox_setup(self, t, **kw):
+        super(OpJobAssistantTest, self)._toolbox_setup( t, **kw)
+        opd = kw.get('actual', dict())
+        vortex.toolbox.defaults(
+            jname = opd.get('op_jeeves', None),
+            smtpserver='smtp.meteo.fr',
+            sender='dt_dsi_op_iga_sc@meteo.fr',
+        )
+
+        
+        
+    def _actions_setup(self, t, **kw):
+        """Setup the OP action dispatcher."""
+        super(OpJobAssistantTest, self)._actions_setup(t, **kw)      
+        t.sh.header('Op Actions')
+
+        ad = vortex.tools.actions.actiond
+        ad.add(vortex.tools.actions.SmsGateway())
+
+        print '+ SMS candidates =', ad.candidates('sms')
+
+        print '+ JEEVES candidates =', ad.candidates('jeeves')
+        print '+ JEEVES default =', vortex.toolbox.defaults.get('jname')
+
+        #--------------------------------------------------------------------------------------------------
+        t.sh.header('START message to op MESSDAYF reporting file')
+        ad.report(kind='dayfile', mode='DEBUT')
+
+        #--------------------------------------------------------------------------------------------------
+
+        t.sh.header('SMS Settings')
+        ad.sms_info()
+
+        if t.env.SMSPASS is None:
+            ad.sms_off()
+
+        ad.sms_init(t.env.SLURM_JOBID)
+
+    def register_cycle(self, cycle):
+        """Load and register a GCO cycle contents."""
+        t = vortex.ticket()
+        from gco.tools import genv
+        if cycle in genv.cycles():
+            logger.info('Cycle %s already registred', cycle)
+        else:
+            if t.env.OP_GCOCACHE:
+                genvdef = t.sh.path.join(t.env.OP_GCOCACHE, 'genv', cycle + '.genv')
+            else:
+                logger.warning('OP context without OP_GCOCACHE variable')
+                genv.autofill(cycle)
+            if t.sh.path.exists(genvdef):
+                logger.info('Fill GCO cycle with file <%s>', genvdef)
+                genv.autofill(cycle, t.sh.cat(genvdef, output=True))
+            else:
+                logger.error('No contents defined for cycle %s or bad opcycle path %s', cycle, genvdef)
+                raise ValueError('Bad cycle value')
+            print genv.as_rawstr(cycle=cycle)
+
+    def complete(self):
+        """Exit from OP session."""
+        ad = vortex.tools.actions.actiond
+        ad.report(kind='dayfile', mode='FIN')
+        ad.sms_complete()
+        print 'Well done Denis !'
+        super(OpJobAssistantTest, self).complete()
+
+    def rescue(self):
+        """Exit from OP session after a crash but simulating a happy ending. Use only in a test environment."""
+        ad = vortex.tools.actions.actiond
+        ad.sms_abort()
+        print 'Bad luck...'
+        super(OpJobAssistantTest, self).rescue()
+
+
+    def finalise(self):
+        super(OpJobAssistantTest, self).finalise()
+        print 'Bye bye Op...'
+
+
+
+class OpJobAssistant(OpJobAssistantTest):
+
+    _footprint = dict(
+        info = 'Op Job assistant.',
+        attr = dict(
+            kind = dict( 
+                values = ['op_default'],
+            ),
+        ),
+    ) 
+
+    def finalise(self):
+        super(OpJobAssistant, self).finalise()
+        t = vortex.ticket()
+        if 'DMT_PATH_EXEC' in t.env():
+            option_insertion = '--id ' + t.env['SLURM_JOB_ID'] + ' --date-pivot=' + t.env['DMT_DATE_PIVOT'] + ' --job-path=' + re.sub(r'.*vortex/','',t.env['DMT_PATH_EXEC'] + '/' + t.env['DMT_JOB_NAME']) + ' --log=' + re.sub(r'.*oldres/','',t.env['LOG_SBATCH'] + ' --machine ' + t.env['CALCULATEUR'])
+            if 'DATA_OUTPUT_ARCH_PATH' in t.env:
+                option_insertion = option_insertion + ' --arch-path=' + t.env['DATA_OUTPUT_ARCH_PATH']
+            file = t.env['HOME'] + '/tempo/option_insertion.' + t.env['SLURM_JOB_ID'] + '.txt'
+            print file
+            print option_insertion
+            with open(file, "w") as f:
+                f.write(option_insertion)
+
+    def rescue(self):
+        """Something goes wrong... so, do your best to save current state."""
+        ad = vortex.tools.actions.actiond
+        ad.report(kind='dayfile', mode='ERREUR')
+        super(OpJobAssistant, self).rescue()
+
+
+class _ReportContext(object):
+    """Context manager that print a report."""
+
+    def __init__(self, task, ticket):
+        self._task = task
+        self._ticket = ticket
+        self._step = None
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if isinstance(exc_value, StandardError):
+            fulltraceback(dict(t=self._ticket))
+        self._report(self._ticket, exc_type is None, task=self._task.tag, step=self._step)
+
+
+    def _report(self, t, try_ok=True, **kw):
+        """Report status of the OP session (input review, mail diffusion...)."""
+        step    = kw.get('step', 'unknown_step')
+        reseau  = t.env.getvar('OP_RUNDATE').hh
+        task    = kw.get('task', 'unknown_task')
+        report  = t.context.sequence.inputs_report()
+        logpath = t.env.getvar('LOG')
+        rundir  = t.env.getvar('RUNDIR') + '/opview/' + task
+        model   = t.env.getvar('OP_VAPP').upper()
+        conf    = t.env.getvar('OP_VCONF').lower()
+        xpid    = t.env.getvar('OP_XPID').lower()
+        report.print_report(detailed=True)
+        if try_ok:
+            t.sh.header('Input review')
+            if any(report.active_alternates()):
+                t.sh.header('Input informations: active alternates were found')
+                ad.opmail(reseau=reseau, task=task, id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
+            else:
+                t.sh.header('Input informations: everything is ok')
+        else:
+            t.sh.header('Input informations: {0:s} fail'.format(step))
+            mail_id = '{0:s}_fail'.format(step)
+            ad.opmail(reseau=reseau, task=task, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
+
+class InputReportContext(_ReportContext):
     """Context manager that print a report on inputs."""
 
     def __init__(self, task, ticket):
-        self._task = task
-        self._ticket = ticket
+        super(InputReportContext, self).__init__(task, ticket)
+        self._step = 'input'
 
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        if isinstance(exc_value, StandardError):
-            fulltraceback(dict(t=self._ticket))
-        report(self._ticket, exc_type is None, task=self._task.tag, step='input')
-
-class OutputReportContext(object):
+class OutputReportContext(_ReportContext):
     """Context manager that print a report on outputs."""
 
     def __init__(self, task, ticket):
-        self._task = task
-        self._ticket = ticket
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        if isinstance(exc_value, StandardError):
-            fulltraceback(dict(t=self._ticket))
-        report(self._ticket, exc_type is None, task=self._task.tag, step='output')
+        super(OutputReportContext, self).__init__(task, ticket)
+        self._step = 'output'
 
 
-
-def complete(t, **kw):
-    """Exit from OP session."""
-    ad = vortex.tools.actions.actiond
-    ad.report(kind='dayfile', mode='FIN')
-    ad.sms_complete()
-    t.sh.signal_intercept_off()
-    t.close()
-
-def simulate_complete(t, **kw):
-    """Exit from OP session after a crash but simulating a happy ending. Use only in a test environment."""
-    ad = vortex.tools.actions.actiond
-    ad.sms_abort()
-    t.close()
-
-def register(t, cycle, dump=True):
-    """Load and register a GCO cycle contents."""
-    from gco.tools import genv
-    if cycle in genv.cycles():
-        logger.warning('Cycle %s already registred', cycle)
-    else:
-        if t.env.OP_GCOCACHE:
-            genvdef = t.sh.path.join(t.env.OP_GCOCACHE, 'genv', cycle + '.genv')
-        else:
-            logger.warning('OP context without OP_GCOCACHE variable')
-            genv.autofill(cycle)
-        if t.sh.path.exists(genvdef):
-            logger.info('Fill GCO cycle with file <%s>', genvdef)
-            genv.autofill(cycle, t.sh.cat(genvdef, output=True))
-        else:
-            logger.error('No contents defined for cycle %s or bad opcycle path %s', cycle, genvdef)
-            raise ValueError('Bad cycle value')
-        if dump:
-            print genv.as_rawstr(cycle=cycle)
-
-
-def rescue(**kw):
-    """Something goes wrong... so, do your best to save current state."""
-    ad = vortex.tools.actions.actiond
-    ad.report(kind='dayfile', mode='ERREUR')
-    ad.sms_abort()
-    print 'Bad luck...'
-    exit(1)
-
-def fulltraceback(localsd=None):
-    """Produce some nice traceback at the point of failure."""
-
-    if not localsd:
-        localsd = dict()
-
-    if 't' in localsd:
-        sh = localsd['t'].sh
-    else:
-        sh = None
-
-    if sh:
-        sh.title('Handling exception')
-    else:
-        print '-' * 100
-
-    import sys, traceback
-    (exc_type, exc_value, exc_traceback) = sys.exc_info()
-
-    print 'Exception type: ' + str(exc_type)
-    print 'Exception info: ' + str(localsd.get('trouble', None))
-    if sh:
-        sh.header('Traceback Error / BEGIN')
-    else:
-        print '-' * 100
-    print "\n".join(traceback.format_tb(exc_traceback))
-    if sh:
-        sh.header('Traceback Error / END')
-    else:
-        print '-' * 100
-
-
-def oproute_hook_factory(kind, productid, sshhost, areafilter=None):
+def oproute_hook_factory(kind, productid, sshhost, areafilter=None, soprano_target=None, routingkey=None):
     """Hook functions factory to route files while the execution is running"""
 
     def hook_route(t, rh):
         if (areafilter is None) or (rh.resource.geometry.area in areafilter):
-            ad.route(kind=kind, productid=productid, sshhost=sshhost, domain=rh.resource.geometry.area, term=rh.resource.term, filename=rh.container.basename) 
+            ad.route(kind=kind, productid=productid, sshhost=sshhost, domain=rh.resource.geometry.area, term=rh.resource.term,
+                    filename=rh.container.basename, soprano_target=soprano_target, routingkey=routingkey)
             print t.prompt, 'routing file = ', rh
 
     return hook_route

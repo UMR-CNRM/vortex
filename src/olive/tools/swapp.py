@@ -63,7 +63,7 @@ def _olive_jobout_sizecontrol(sh, stepfile, directory=None, extrasuffix=''):
     mysize = sh.size(fullstepfile + extrasuffix)
     if mysize > STEPFILE_MAX_SIZE:
         tpl = config.load_template(sessions.current(),
-                                   'olive-swapp-file2big.tpl')
+                                   '@olive-swapp-file2big.tpl')
         with open(fullstepfile + '.oversized' + extrasuffix, 'wb') as fd:
             fd.write(tpl.substitute(
                 filename = fullstepfile + extrasuffix,

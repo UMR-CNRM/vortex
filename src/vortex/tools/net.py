@@ -307,7 +307,7 @@ class StdFtp(object):
             raise
         except ftplib.all_errors as e:
             logger.error('FTP internal exception %s: %s', repr(source), str(e))
-            raise IOError('FTP could not get %s: %s', repr(source), str(e))
+            raise IOError('FTP could not get %s: %s' % (repr(source), str(e)))
         else:
             if xdestination:
                 target.seek(0, 2)
@@ -375,15 +375,17 @@ class StdFtp(object):
         self.stderr('rmkdir', destination)
         origin = self.pwd()
         if destination.startswith('/'):
-            path = ''
+            path_pre = '/'
+        elif destination.startswith('~'):
+            path_pre = ''
         else:
-            path = origin
+            path_pre = origin + '/'
 
         for subdir in self.system.path.dirname(destination).split('/'):
-            current = path + '/' + subdir
+            current = path_pre + subdir
             try:
                 self.cwd(current)
-                path = current
+                path_pre = current + '/'
             except ftplib.error_perm:
                 self.stderr('mkdir', current)
                 try:
@@ -392,7 +394,7 @@ class StdFtp(object):
                     if 'File exists' not in str(errmkd):
                         raise
                 self.cwd(current)
-            path = current
+            path_pre = current + '/'
         self.cwd(origin)
 
     def cd(self, destination):

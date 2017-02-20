@@ -20,8 +20,9 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.env import Environment
 
-from vortex        import gloves
-from vortex.tools  import date
+from vortex import gloves  # @UnusedImport
+from vortex.tools import date
+from vortex.util.structs import DataStore
 from vortex.layout import contexts
 
 
@@ -96,11 +97,12 @@ class Ticket(footprints.util.GetByTag):
     _tag_default = 'root'
 
     def __init__(self,
-                 active  = False,
-                 topenv  = None,
-                 glove   = None,
+                 active = False,
+                 topenv = None,
+                 glove = None,
                  context = None,
-                 prompt  = 'Vortex:'):
+                 datastore = None,
+                 prompt = 'Vortex:'):
         self.prompt = prompt
         self.line   = "\n" + '-' * 100 + "\n"
 
@@ -124,9 +126,12 @@ class Ticket(footprints.util.GetByTag):
 
         logger.debug('Open session %s %s', self.tag, self)
 
+        if datastore is None:
+            datastore = DataStore(default_picklefile='{:s}_session_datastore.pickled'.format(self.tag))
+        self._dstore = datastore
+
         if context is None:
             context = contexts.Context(tag=self.tag, topenv=self._topenv, path=self.path)
-
         self._last_context = context
 
         if active:
@@ -195,6 +200,10 @@ class Ticket(footprints.util.GetByTag):
             return contexts.current()
         else:
             return self._last_context
+
+    @property
+    def datastore(self):
+        return self._dstore
 
     def system(self, **kw):
         """

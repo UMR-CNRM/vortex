@@ -666,8 +666,8 @@ class Handler(object):
             self.history.append(self.container.actualpath(), 'clear', rst)
         return rst
 
-    def mkgetpr(self, pr_getter=None, tplfile=None, tplskip='sync-skip.tpl',
-                tplfetch='sync-fetch.tpl', py_exec=sys.executable, py_opts=''):
+    def mkgetpr(self, pr_getter=None, tplfile=None, tplskip='@sync-skip.tpl',
+                tplfetch='@sync-fetch.tpl', py_exec=sys.executable, py_opts=''):
         """Build a getter for the expected resource."""
         if tplfile is None:
             tplfile = tplfetch if self.is_expected() else tplskip

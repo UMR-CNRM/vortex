@@ -34,7 +34,7 @@ class Cache(footprints.FootprintBase):
             ),
             inifile = dict(
                 optional = True,
-                default  = 'cache-[storage].ini',
+                default  = '@cache-[storage].ini',
             ),
             iniauto = dict(
                 type     = bool,

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from vortex.layout import dataflow
 
 r"""
 This modules defines the physical layout.
@@ -163,7 +164,14 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         if localtracker:
             self._localtracker = localtracker
         else:
-            self._localtracker = dataflow.LocalTracker()
+            # Create the localtracker within the Session's datastore
+            if self.session.datastore.check('context_localtracker', dict(path=self.path)):
+                self._localtracker = self.session.datastore.get('context_localtracker',
+                                                                dict(path=self.path))
+            else:
+                self._localtracker = self.session.datastore.insert('context_localtracker',
+                                                                   dict(path=self.path),
+                                                                   dataflow.LocalTracker())
 
         footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
         footprints.observers.get(tag=_STORES_OBSBOARD).register(self)
@@ -380,7 +388,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         :param scheme: Scheme of the promise's cache store to clean up
         :param storeoptions: Option dictionary passed to the store (may be None)
         """
-        self.system.header('Clear promises for {}://{}'.format(scheme, netloc))
+        self.system.header('Clear promises for {}://{} in context {}'.format(scheme, netloc, self.path))
         skeleton = dict(scheme=scheme, netloc=netloc)
         promises = self.localtracker.grep_uri('put', skeleton)
         if promises:

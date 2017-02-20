@@ -84,7 +84,7 @@ class ServerSyncSimpleSocket(ServerSyncTool):
             ),
             tplname = dict(
                 optional    = True,
-                default     = 'servsync-simplesocket.tpl',
+                default     = '@servsync-simplesocket.tpl',
             ),
         )
     )

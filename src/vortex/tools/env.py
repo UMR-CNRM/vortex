@@ -14,7 +14,7 @@ import traceback
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.util.structs import History, ShellEncoder
+from vortex.util.structs import PrivateHistory, ShellEncoder
 
 
 #: No automatic export
@@ -25,35 +25,6 @@ vartrue  = re.compile(r'^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$', flags=re.IGNOREC
 
 #: Pre-compiled evaluation mostly used by :class:`Environment` method (false).
 varfalse = re.compile(r'^\s*(?:0|ko|off|false|no|n)\s*$', flags=re.IGNORECASE)
-
-
-def paramsmap(_paramsmap=dict()):
-    """Cached table of parameters sets currently available."""
-    return _paramsmap
-
-
-def paramstags():
-    """List of current tags defined as set of parameters."""
-    return paramsmap().keys()
-
-
-def param(tag='default', pmap=None):
-    """
-    Returns of defines an dedicated environment to store a set of parameters.
-    Different sets could be defined and accessed through specific tagnames.
-    """
-    if pmap is None:
-        pmap = paramsmap()
-    if tag not in pmap:
-        pmap[tag] = Environment(active=False, clear=True)
-    return pmap[tag]
-
-
-def share(**kw):
-    """Populate a special shared environment parameters set."""
-    shared = param(tag='shared')
-    shared.update(kw)
-    return shared
 
 
 def current():
@@ -86,9 +57,9 @@ class Environment(object):
 
     _current_active = None
 
-    def __init__(self, env=None, active=False, clear=False, verbose=False, 
-                 noexport=[], contextlock=None):
-        self.__dict__['_history'] = History(tag='env')
+    def __init__(self, env=None, active=False, clear=False, verbose=False,
+                 noexport=[], contextlock=None, history=True):
+        self.__dict__['_history'] = PrivateHistory() if history else None
         self.__dict__['_verbose'] = verbose
         self.__dict__['_frozen']  = collections.deque()
         self.__dict__['_pool']    = dict()
@@ -125,6 +96,10 @@ class Environment(object):
     @property
     def history(self):
         return self._history
+
+    def _record(self, var, value):
+        if self.history is not None:
+            self.history.append(var, value, traceback.format_stack()[:-1])
 
     def __str__(self):
         return '{0:s} | including {1:d} variables>'.format(repr(self).rstrip('>'), len(self))
@@ -168,7 +143,7 @@ class Environment(object):
         upvar = varname.upper() if enforce_uppercase else varname
         self._pool[upvar] = value
         self._mods.add(upvar)
-        self.history.append(upvar, value, traceback.format_stack()[:-1])
+        self._record(upvar, value)
         if self.osbound():
             if isinstance(value, basestring):
                 actualvalue = str(value)
@@ -224,8 +199,7 @@ class Environment(object):
             if self.verbose() and self._sh:
                 self._sh.stderr('unset', '{0:s}'.format(varname.upper()))
         if seen:
-            self.history.append(varname.upper(), '!!deleted!!',
-                                traceback.format_stack()[:-1])
+            self._record(varname.upper(), '!!deleted!!')
 
     def __delitem__(self, varname):
         self.delvar(varname)
@@ -376,12 +350,14 @@ class Environment(object):
         if args and type(args[0]) is bool:
             active = args[0]
         if previous_act and not active and self._os:
+            self._record('!!OS_BINDING!!', 'Broken...')
             self.__class__._current_active = self._os[-1]
             osrewind = self.__class__._current_active
         if not previous_act and active:
             if self.contextlock is not None and not self.contextlock.active:
                 raise RuntimeError("It's not allowed to switch to an Environment " +
                                    "that belongs to an inactive context")
+            self._record('!!OS_BINDING!!', 'Acquiring...')
             self.__class__._current_active = self
             osrewind = self.__class__._current_active
         if osrewind:
@@ -408,11 +384,12 @@ class Environment(object):
 
     def tracebacks(self):
         """Dump the stack of manipulations of the current environment."""
-        for count, stamp, action in self.history:
-            varname, value, stack = action
-            print "[", stamp, "]", varname, "=", value, "\n"
-            for xs in stack:
-                print xs
+        if self.history is not None:
+            for count, stamp, action in self.history:
+                varname, value, stack = action
+                print "[", stamp, "]", varname, "=", value, "\n"
+                for xs in stack:
+                    print xs
 
     def osdump(self):
         """Dump the actual values of the OS environment."""

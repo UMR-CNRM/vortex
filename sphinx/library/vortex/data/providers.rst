@@ -47,4 +47,9 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: VortexFreeStd
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
    

@@ -15,7 +15,7 @@ __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
 
-GGET_DEFAULT_CONFIGFILE = 'gget-key-specific-conf.ini'
+GGET_DEFAULT_CONFIGFILE = '@gget-key-specific-conf.ini'
 
 
 class GcoStoreConfig(GenericConfigParser):

@@ -34,7 +34,7 @@ def items():
     return Geometry.tag_items()
 
 
-def load(inifile='geometries.ini', refresh=False, verbose=True):
+def load(inifile='@geometries.ini', refresh=False, verbose=True):
     """Load a set of pre-defined geometries from a configuration file."""
     iniconf = GenericConfigParser(inifile)
     for item in iniconf.sections():

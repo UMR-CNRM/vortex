@@ -70,7 +70,7 @@ class BdpeProvider(Provider):
             config = dict(
                 optional = True,
                 type     = GenericConfigParser,
-                default  = GenericConfigParser('bdpe-map-resources.ini')
+                default  = GenericConfigParser('@bdpe-map-resources.ini')
             ),
         )
     )

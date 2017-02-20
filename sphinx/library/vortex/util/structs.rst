@@ -26,6 +26,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: PrivateHistory
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: History
    :show-inheritance:
    :members:
@@ -37,6 +42,16 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: ShellEncoder
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: _DataStoreEntryKey
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: DataStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
