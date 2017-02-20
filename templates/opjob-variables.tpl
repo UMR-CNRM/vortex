@@ -31,4 +31,3 @@ OTHER VARIABLES :
     - fullplay  : Execution mode : full execution if True, else only inputs are runned. Default=True. Leave it at True.
     - jeeves    : Name of the jeeves repository, default=async. Leave it at its default value.
     - package   : Name of the repository where the script to launch is located. Default=Tasks.
-

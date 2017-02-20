@@ -47,14 +47,22 @@ class IgaGEnvProvider(GEnv):
 
 class IgaCfgParser(GenericConfigParser):
 
-    def resolvedpath(self, resname, vapp, vconf):
+    def resolvedpath(self, resource, vapp, vconf, resname=None):
         """
         Shortcut to retrieve the ``resolvedpath`` entry in the ``resname`` section
         of the current config file.
         """
-        extended_resname = resname + '@' + vapp + vconf
-        if self.has_section(extended_resname): 
-            resname = extended_resname
+        if resname is None:
+            resname = resource.realkind
+        if hasattr(resource, 'cutoff'):
+            cutoff = resource.cutoff
+ 
+        extended_resname = resname + '@' + vapp
+
+        if self.has_section(extended_resname + vconf): 
+            resname = extended_resname + vconf
+        elif self.has_section(extended_resname + cutoff):
+            resname = extended_resname + cutoff
         return self.get(resname, 'resolvedpath')
 
 
@@ -143,12 +151,12 @@ class IgaProvider(Provider):
         if self.member is not None:
             suffix = 'RUN' + str(self.member)
             new_path = os.path.join(
-                self.config.resolvedpath(resource.realkind, self.vapp, self.vconf),
+                self.config.resolvedpath(resource, self.vapp, self.vconf),
                 suffix
             )
             return new_path
         else:
-            return self.config.resolvedpath(resource.realkind, self.vapp, self.vconf)
+            return self.config.resolvedpath(resource, self.vapp, self.vconf)
 
 
 class SopranoProvider(Provider):
@@ -223,4 +231,4 @@ class SopranoProvider(Provider):
             raise SopranoModelError('No such model: %s' % info['model'])
         logger.debug('sopranoprovider::pathname info %s', info)
         self.config.setall(info)
-        return self.config.resolvedpath('soprano', self.vapp, self.vconf)
+        return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')

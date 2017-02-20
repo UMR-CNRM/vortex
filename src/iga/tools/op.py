@@ -4,14 +4,15 @@
 #: No automatic export
 __all__ = []
 
+import re
 from tempfile import mkdtemp
 
-import vortex
+import vortex  # @UnusedImport
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 import vortex.tools.actions
-import iga.tools.services
+import iga.tools.services  # @UnusedImport
 from vortex.tools.actions import actiond as ad
 
 from iga.util import swissknife
@@ -32,8 +33,7 @@ class OpJobAssistantTest(JobAssistant):
     def _early_session_setup(self, t, **kw):
         """Create a now session, set important things, ..."""
         t.sh.header('Set a new glove')
-        opd = kw.get('actual', dict())      
-  
+        opd = kw.get('actual', dict())
         gl = vortex.sessions.getglove(
             tag     = 'opid',
             profile = opd.get('op_suite', 'oper')
@@ -41,7 +41,7 @@ class OpJobAssistantTest(JobAssistant):
 
         print gl.idcard()
 
-        #--------------------------------------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         t.sh.header('Activate a new session with previous glove')
 
         t  = vortex.sessions.get(
@@ -54,24 +54,23 @@ class OpJobAssistantTest(JobAssistant):
 
         return super(OpJobAssistantTest, self)._early_session_setup(t, **kw)
 
-
     def _env_setup(self, t, **kw):
         """OP session's environment setup."""
-        super(OpJobAssistantTest, self)._env_setup(t, **kw)        
+        super(OpJobAssistantTest, self)._env_setup(t, **kw)
 
         t.sh.subtitle('OP setup')
 
-        #Symlink to job's last execution log in op's resul directory
+        # Symlink to job's last execution log in op's resul directory
         if "SLURM_JOB_NAME" in t.env():
             if t.sh.path.islink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf'):
                 t.sh.unlink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
             if "LOG_SBATCH" in t.env():
                 t.sh.softlink(t.env["LOG_SBATCH"], '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
-        
+
         nb_slurm = self.print_somevariables(t, 'SLURM')
         tg = vortex.sh().target()
 
-        # Set some more environment variables from the 'target*.ini' file 
+        # Set some more environment variables from the 'target*.ini' file
         if "LUSTRE_OPER" in t.env:
             lustre_oper = "/" + t.env["LUSTRE_OPER"]
             t.env.setvar("MTOOLDIR", lustre_oper + tg.get('op:MTOOLDIR'))
@@ -124,7 +123,6 @@ class OpJobAssistantTest(JobAssistant):
             t.env.OP_MEMBER = t.env.get('DMT_ECHEANCE')[-3:]
         logger.info('Effective member  = %s', t.env.OP_MEMBER)
 
-
     def _extra_session_setup(self, t, **kw):
         super(OpJobAssistantTest, self)._extra_session_setup(t, **kw)
 
@@ -145,11 +143,9 @@ class OpJobAssistantTest(JobAssistant):
             sender='dt_dsi_op_iga_sc@meteo.fr',
         )
 
-        
-        
     def _actions_setup(self, t, **kw):
         """Setup the OP action dispatcher."""
-        super(OpJobAssistantTest, self)._actions_setup(t, **kw)      
+        super(OpJobAssistantTest, self)._actions_setup(t, **kw)
         t.sh.header('Op Actions')
 
         ad = vortex.tools.actions.actiond
@@ -160,12 +156,11 @@ class OpJobAssistantTest(JobAssistant):
         print '+ JEEVES candidates =', ad.candidates('jeeves')
         print '+ JEEVES default =', vortex.toolbox.defaults.get('jname')
 
-        #--------------------------------------------------------------------------------------------------
+        # ----------------------------------------------------------------------
         t.sh.header('START message to op MESSDAYF reporting file')
         ad.report(kind='dayfile', mode='DEBUT')
 
-        #--------------------------------------------------------------------------------------------------
-
+        # ----------------------------------------------------------------------
         t.sh.header('SMS Settings')
         ad.sms_info()
 
@@ -209,11 +204,9 @@ class OpJobAssistantTest(JobAssistant):
         print 'Bad luck...'
         super(OpJobAssistantTest, self).rescue()
 
-
     def finalise(self):
         super(OpJobAssistantTest, self).finalise()
         print 'Bye bye Op...'
-
 
 
 class OpJobAssistant(OpJobAssistantTest):
@@ -221,23 +214,27 @@ class OpJobAssistant(OpJobAssistantTest):
     _footprint = dict(
         info = 'Op Job assistant.',
         attr = dict(
-            kind = dict( 
+            kind = dict(
                 values = ['op_default'],
             ),
         ),
-    ) 
+    )
 
     def finalise(self):
         super(OpJobAssistant, self).finalise()
         t = vortex.ticket()
         if 'DMT_PATH_EXEC' in t.env():
-            option_insertion = '--id ' + t.env['SLURM_JOB_ID'] + ' --date-pivot=' + t.env['DMT_DATE_PIVOT'] + ' --job-path=' + re.sub(r'.*vortex/','',t.env['DMT_PATH_EXEC'] + '/' + t.env['DMT_JOB_NAME']) + ' --log=' + re.sub(r'.*oldres/','',t.env['LOG_SBATCH'] + ' --machine ' + t.env['CALCULATEUR'])
+            option_insertion = ('--id ' + t.env['SLURM_JOB_ID'] + ' --date-pivot=' +
+                                t.env['DMT_DATE_PIVOT'] + ' --job-path=' +
+                                re.sub(r'.*vortex/', '', t.env['DMT_PATH_EXEC'] + '/' + t.env['DMT_JOB_NAME']) +
+                                ' --log=' +
+                                re.sub(r'.*oldres/', '', t.env['LOG_SBATCH'] + ' --machine ' + t.env['CALCULATEUR']))
             if 'DATA_OUTPUT_ARCH_PATH' in t.env:
                 option_insertion = option_insertion + ' --arch-path=' + t.env['DATA_OUTPUT_ARCH_PATH']
-            file = t.env['HOME'] + '/tempo/option_insertion.' + t.env['SLURM_JOB_ID'] + '.txt'
-            print file
+            tfile = t.env['HOME'] + '/tempo/option_insertion.' + t.env['SLURM_JOB_ID'] + '.txt'
+            print tfile
             print option_insertion
-            with open(file, "w") as f:
+            with open(tfile, "w") as f:
                 f.write(option_insertion)
 
     def rescue(self):
@@ -263,7 +260,6 @@ class _ReportContext(object):
             fulltraceback(dict(t=self._ticket))
         self._report(self._ticket, exc_type is None, task=self._task.tag, step=self._step)
 
-
     def _report(self, t, try_ok=True, **kw):
         """Report status of the OP session (input review, mail diffusion...)."""
         step    = kw.get('step', 'unknown_step')
@@ -288,12 +284,14 @@ class _ReportContext(object):
             mail_id = '{0:s}_fail'.format(step)
             ad.opmail(reseau=reseau, task=task, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
 
+
 class InputReportContext(_ReportContext):
     """Context manager that print a report on inputs."""
 
     def __init__(self, task, ticket):
         super(InputReportContext, self).__init__(task, ticket)
         self._step = 'input'
+
 
 class OutputReportContext(_ReportContext):
     """Context manager that print a report on outputs."""
@@ -309,8 +307,7 @@ def oproute_hook_factory(kind, productid, sshhost, areafilter=None, soprano_targ
     def hook_route(t, rh):
         if (areafilter is None) or (rh.resource.geometry.area in areafilter):
             ad.route(kind=kind, productid=productid, sshhost=sshhost, domain=rh.resource.geometry.area, term=rh.resource.term,
-                    filename=rh.container.basename, soprano_target=soprano_target, routingkey=routingkey)
+                     filename=rh.container.basename, soprano_target=soprano_target, routingkey=routingkey)
             print t.prompt, 'routing file = ', rh
 
     return hook_route
-

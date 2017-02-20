@@ -24,6 +24,7 @@ _INFO_PRINT_FMT = ' > {:<16s}: {!s}'
 
 DEFAULT_JOB_FILE = 'create_job'
 
+
 def parse_command_line():
     description = "Create or modify vortex jobs for a specific application"
     parser = argparse.ArgumentParser(description=description)
@@ -81,7 +82,7 @@ def parse_command_line():
     dflt_profile = 'oper' if args.oper else 'test'
     for job in jobs:
         job.setdefault('profile', dflt_profile)
- 
+
     return args, jobs, report
 
 
@@ -105,11 +106,12 @@ def list_variables():
         for line in f:
             print(line)
 
+
 def add_report(report, jobname, oper, backup=None):
     if backup is not None:
         report.append('Save the job ' + jobname + ' under ' + jobname + backup)
     else:
-        configuration = 'oper' if oper else 'test' 
+        configuration = 'oper' if oper else 'test'
         report.append('Job ' + jobname + ' created in configuration ' + configuration)
     return report
 
