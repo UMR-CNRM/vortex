@@ -95,9 +95,9 @@ class GenericReadOnlyConfigParser(object):
         return 'file={!s}'.format(self.file)
 
     def setfile(self, inifile):
-        """Read the specified ``inifile`` as new configuration.
+        """Read the specified **inifile** as new configuration.
 
-        ``inifile`` may be:
+        **inifile** may be:
 
         * A File like object
         * A path to a file
@@ -183,14 +183,17 @@ class GenericReadOnlyConfigParser(object):
         - this configuration handler (key = 'section:option')
         - a default value
 
-        Unless silent is set, KeyError is raised if the value cannot be found.
-        Aslist forces the result into a list (be it with a unique element).
-               separators are spaces, commas, carriage returns or antislashes.
-               e.g. these notations are equivalent:
-                alist = val1 val2 val3 val4 val5
-                alist  = val1, val2 val3 \
-                         val4,
-                         val5
+        Unless **silent** is set, ``KeyError`` is raised if the value cannot be found.
+
+        **aslist** forces the result into a list (be it with a unique element).
+        separators are spaces, commas, carriage returns or antislashes.
+        e.g. these notations are equivalent::
+
+            alist = val1 val2 val3 val4 val5
+            alist  = val1, val2 val3 \\
+                     val4,
+                     val5
+
         """
         if env_key is not None:
             env_key = env_key.upper()

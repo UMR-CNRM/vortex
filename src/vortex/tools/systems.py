@@ -1770,9 +1770,9 @@ class Macosx(Linux, Python27):
 
 
 class Ssh(object):
-    """
-    Remote command execution via ssh.
-    Also handles reemote copy via scp or ssh, which is intimately linked
+    """Remote command execution via ssh.
+
+    Also handles remote copy via scp or ssh, which is intimately linked
     """
     def __init__(self, sh, hostname, logname=None):
         self._sh = sh
@@ -1814,12 +1814,15 @@ class Ssh(object):
 
     def execute(self, remote_command, sshopts=''):
         """Execute the command remotely.
-           Return the output of the command (list of lines),
-           or False on error.
-           Only the output sent to the log (when silent=False)
-           shows the difference between:
-              - a bad connection (e.g. wrong user)
-              - a remote command retcode != 0 (e.g. cmd='/bin/false')
+
+        Return the output of the command (list of lines), or False on error.
+
+        Only the output sent to the log (when silent=False) shows the difference
+        between:
+
+            - a bad connection (e.g. wrong user)
+            - a remote command retcode != 0 (e.g. cmd='/bin/false')
+
         """
         cmd = ' '.join([
             self._sshcmd,
@@ -1845,10 +1848,10 @@ class Ssh(object):
         return rc
 
     def remove(self, target):
-        """Remove the remote target, if present.
-           Return False on failure.
-           Does not fail when the target is missing, but does when it exists
-           and cannot be removed, which would make a final move also fail.
+        """Remove the remote target, if present. Return False on failure.
+
+        Does not fail when the target is missing, but does when it exists
+        and cannot be removed, which would make a final move also fail.
         """
         logger.debug('Removing remote target "%s"', target)
         cmd = 'rm -fr "{}"'.format(target)
@@ -1859,13 +1862,16 @@ class Ssh(object):
 
     def scp(self, source, destination, scpopts=''):
         """Send ``source`` to ``destination``.
-           ``source`` is a single file or a directory, not a pattern (no '*.grib').
-           ``destination`` is the remote name, unless it ends with '/', in which case
-           it is the containing directory, and the remote name is the basename of
-           ``source`` (like a real cp or scp):
-              - scp a/b.gif c/d.gif --> c/d.gif
-              - scp a/b.gif c/d/    --> c/d/b.gif
-           Return True for ok, False on error.
+
+        - ``source`` is a single file or a directory, not a pattern (no '\*.grib').
+        - ``destination`` is the remote name, unless it ends with '/', in
+          which case it is the containing directory, and the remote name is
+          the basename of ``source`` (like a real cp or scp):
+
+            - ``scp a/b.gif c/d.gif --> c/d.gif``
+            - ``scp a/b.gif c/d/    --> c/d/b.gif``
+
+        Return True for ok, False on error.
         """
         if not isinstance(source, basestring):
             msg = 'Source is not a plain file path: {!r}'.format(source)
@@ -1926,10 +1932,12 @@ class Ssh(object):
 
     def scp_stream(self, stream, destination, permissions=None, sshopts=''):
         """Send the ``stream`` to the ``destination``.
-           ``stream`` is a ``file`` (typically returned by open(),
-                      or the piped output of a spawned process).
-           ``destination`` is the remote file name.
-           Return True for ok, False on error.
+
+        - ``stream`` is a ``file`` (typically returned by open(),
+          or the piped output of a spawned process).
+        - ``destination`` is the remote file name.
+
+        Return True for ok, False on error.
         """
         if not isinstance(stream, file):
             msg = "stream is a {}, should be a <type 'file'>".format(type(stream))

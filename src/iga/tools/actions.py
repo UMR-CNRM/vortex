@@ -103,7 +103,10 @@ class OpPhase(Action):
         """Create Actions to handle the several Phase configurations
            described in the configuration file target-xxx.ini."""
         parser = sessions.system().target().config
-        active_actions = parser.getx(key='phase:active_actions', aslist=True)
+        if parser.has_section('phase'):
+            active_actions = parser.getx(key='phase:active_actions', aslist=True)
+        else:
+            active_actions = []
         return [OpPhase(action) for action in active_actions]
 
     @property

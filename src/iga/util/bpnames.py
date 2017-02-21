@@ -253,7 +253,6 @@ def histsurf_bnames(resource, provider):
         suffix = map_suffix[reseau]
         bname = 'ICMSH' + model_info + '+' + resource.term.fmthour + '.sfx.' + suffix
     else:
-        print '{:02d}'.format(reseau)
         bname = 'PREP.fa_' + '{:02d}'.format(reseau) + '.{:02d}'.format(resource.term.hour)
     return bname
 

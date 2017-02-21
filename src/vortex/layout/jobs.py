@@ -463,7 +463,7 @@ class JobAssistantPlugin(footprints.FootprintBase):
         # Check for potential conflicts
         for conflicting in self._conflicts:
             if conflicting in self.masterja.plugins:
-                raise RuntimeError('"{:s}" conflicts wit "{:s}"'.format(self.kind, conflicting))
+                raise RuntimeError('"{:s}" conflicts with "{:s}"'.format(self.kind, conflicting))
 
 
 class JobAssistantTmpdirPlugin(JobAssistantPlugin):

@@ -12,6 +12,11 @@
 Classes
 -------
 
+.. autoclass:: CpuInfo
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: CpusInfo
    :show-inheritance:
    :members:

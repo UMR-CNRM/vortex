@@ -4,7 +4,7 @@
 import os
 import sys
 import re
-import vortex
+import vortex  # @UnusedImport
 import vortex.util.config
 import common
 import footprints
@@ -209,7 +209,7 @@ def check_blocks(nam, another, macros=None):
 def write_directives_template(out=sys.stdout):
     """Write out a directives template."""
     t = vortex.ticket()
-    tplfile = vortex.util.config.load_template(t, 'tnt-directive.tpl')
+    tplfile = vortex.util.config.load_template(t, '@tnt-directive.tpl')
     if isinstance(out, str):
         out = open(out, 'w')
     with open(tplfile.srcfile, 'r') as tplfh:

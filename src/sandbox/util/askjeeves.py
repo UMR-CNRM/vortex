@@ -29,11 +29,14 @@ def test_foo(pnum, ask, config, logger, **kw):
 
 def test_bar(pnum, ask, config, logger, **kw):
     """Jeeves debugging access point.
-    Adding an entry in jeeves config is heavier than having
-    a simple selector here:
-      * slow_write: slowly writes to a file in jeeves directory.
-        To test the retry scheme, use "value = dict(rpool='retry')"
-      * stamp : write a timestamp to a file
+
+    Adding an entry in jeeves config is heavier than having a simple selector
+    here:
+
+        - slow_write: slowly writes to a file in jeeves directory.
+          To test the retry scheme, use "value = dict(rpool='retry')"
+        - stamp : write a timestamp to a file
+
     """
     import os
     logger.loglevel = 'info'
@@ -73,7 +76,8 @@ def test_bar(pnum, ask, config, logger, **kw):
 
 def test_vortex(pnum, ask, config, logger, **kw):
     """Jeeves debugging access point.
-       Activation of a vortex context.
+
+    Activation of a vortex context.
     """
     from vortex.util.worker import VortexWorker
     rc, value = True, 'Yo'
