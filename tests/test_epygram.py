@@ -93,11 +93,12 @@ class TestEpygramContents(_EpyTestBase):
                                                  actualfmt='fa')
         ct = vortex.data.contents.FormatAdapter(datafmt='fa')
         ct.slurp(fa_c)
-        self.assertEqual(ct.data.format, 'FA')
-        self.assertListEqual(['S090TEMPERATURE', 'SURFTEMPERATURE', ],
-                             ct.data.listfields())
-        self.assertItemsEqual({'date': Date(2016, 5, 30, 18, 0), 'term': Time(0, 0)},
-                              ct.metadata)
+        with ct:
+            self.assertEqual(ct.data.format, 'FA')
+            self.assertListEqual(['S090TEMPERATURE', 'SURFTEMPERATURE', ],
+                                 ct.data.listfields())
+            self.assertItemsEqual({'date': Date(2016, 5, 30, 18, 0), 'term': Time(0, 0)},
+                                  ct.metadata)
         # GRIB
         grib_c = vortex.data.containers.SingleFile(filename=self.demofile('fullpos.light.grib'),
                                                    actualfmt='grib')
@@ -130,24 +131,28 @@ class TestEpygramAdvanced(_EpyTestBase):
                    'historic.verylight.fa')
         rh1 = _FakeRH(self.demofile('historic.light.fa'), 'fa')
         rh2 = _FakeRH('historic.verylight.fa', 'fa')
-        f1_ref = rh1.contents.data.readfield('SURFTEMPERATURE').getdata()
+        with rh1.contents as rh1_ct:
+            f1_ref = rh1_ct.data.readfield('SURFTEMPERATURE').getdata()
         uepy.copyfield(self.t, rh2, rh1, 'SURFTEMPERATURE', 'SURFTEMPERATURE')
         # Check that the copy went fine
-        self.assertTrue(np.ma.allequal(rh2.contents.data.readfield('SURFTEMPERATURE').getdata(),
-                                       f1_ref))
+        with rh2.contents as rh2_ct:
+            self.assertTrue(np.ma.allequal(rh2_ct.data.readfield('SURFTEMPERATURE').getdata(),
+                                           f1_ref))
         # Overwrite but change compression
         uepy.overwritefield(self.t, rh2, rh1, 'SURFTEMPERATURE', None, dict(KNBPDG=12))
         # ...bits the result remain the same since we are increasing the number of bits
-        self.assertTrue(np.ma.allequal(rh2.contents.data.readfield('SURFTEMPERATURE').getdata(),
-                                       f1_ref))
+        with rh2.contents as rh2_ct:
+            self.assertTrue(np.ma.allequal(rh2_ct.data.readfield('SURFTEMPERATURE').getdata(),
+                                           f1_ref))
         # Addfield (add 2 fields at once)
         uepy.addfield(self.t, rh2,
                       ['SURFTEMPERATURE', ], ['SURFTOTO', 'SURFTITI', ],
                       0, dict(KNBPDG=2))
-        self.assertEqual(rh2.contents.data.readfield('SURFTOTO').quadmean(),
-                         0)
-        self.assertEqual(rh2.contents.data.readfield('SURFTOTO').quadmean(),
-                         0)
+        with rh2.contents as rh2_ct:
+            self.assertEqual(rh2_ct.data.readfield('SURFTOTO').quadmean(),
+                             0)
+            self.assertEqual(rh2_ct.data.readfield('SURFTITI').quadmean(),
+                             0)
 
     @staticmethod
     def _simplified_grib_fid(fid):
