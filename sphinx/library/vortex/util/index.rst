@@ -18,6 +18,7 @@ Utilities
    helpers
    introspection
    names
+   netrc
    patterns
    roles
    structs
