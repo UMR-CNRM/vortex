@@ -125,8 +125,8 @@ class UtSession(TestCase):
         self.assertIs(newsession.context.env, nsubenv)
         self.assertTrue(newsession.context.env.active())
         # The working directory was restored
-        self.assertEqual(self.sh.pwd(),
-                         self.sh.path.join(self.tmpdir, '{0:s}/scrontch/toto'.format(self.tag1)))
+        self.assertEqual(self.sh.path.realpath(self.sh.pwd()),
+                         self.sh.path.realpath(self.sh.path.join(self.tmpdir, '{0:s}/scrontch/toto'.format(self.tag1))))
 
 if __name__ == '__main__':
     main(verbosity=2)

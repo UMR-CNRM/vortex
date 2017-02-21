@@ -8,7 +8,8 @@ TEST_DIR	= tests
 SUBDIRS		= tests sphinx
 CLEANDIRS 	= $(SUBDIRS:%=clean-%)
 
-EXTRAPATH   = $$(pwd)/project:$$PYTHONPATH
+export PYTHONPATH  = $(PWD)/site:$(PWD)/src
+EXTRAPATH   = $$(pwd)/project:$(PYTHONPATH)
 
 .PHONY: check tests cover doc cloc cloc_all pylint flake8 clean $(CLEANDIRS)
 
