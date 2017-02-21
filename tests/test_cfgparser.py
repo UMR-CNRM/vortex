@@ -16,6 +16,12 @@ from iga.data.providers import IgaCfgParser
 DATAPATHTEST = '/'.join(__file__.split('/')[0:-1]) + '/data'
 
 
+class _FooResource(object):
+
+    def __init__(self, kind):
+        self.realkind = kind
+
+
 class UtGenericConfigParser(TestCase):
 
     def setUp(self):
@@ -202,7 +208,8 @@ class UtIgaCfgParser(TestCase):
         }
         resolvedpath = 'arpege/france/oper/data/autres'
         igacfgp.setall(kwargs)
-        self.assertTrue(igacfgp.resolvedpath('analysis', 'play', 'sandbox'),
+        res = _FooResource('analysis')
+        self.assertTrue(igacfgp.resolvedpath(res, 'play', 'sandbox'),
                         resolvedpath)
 
 

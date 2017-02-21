@@ -37,7 +37,7 @@ _RE_OPTIME = re.compile(r'_t?(?P<hh>\d{2})(?:[:h-]?(?P<mm>\d{2})?)', re.IGNORECA
 _RE_MEMBER = re.compile(r'_mb(?P<member>\d+)', re.IGNORECASE)
 
 
-_JobBasicConf = collections.namedtuple('_JobBasicConf', ['xpid', 'vapp', 'vconf'])
+_JobBasicConf = collections.namedtuple('_JobBasicConf', ['appbase', 'xpid', 'vapp', 'vconf'])
 
 
 def _guess_vapp_vconf_xpid(t, path=None):
@@ -50,7 +50,7 @@ def _guess_vapp_vconf_xpid(t, path=None):
     lpath = path.split('/')
     if lpath[-1] in ('demo', 'gco', 'genv', 'jobs', 'logs', 'src', 'tasks', 'vortex'):
         lpath.pop()
-    return _JobBasicConf(*lpath[-3:])
+    return _JobBasicConf('/'.join(lpath), *lpath[-3:])
 
 
 def mkjob(t, **kw):
@@ -78,7 +78,6 @@ def mkjob(t, **kw):
     # Fix actual options of the create process
     opts.setdefault('mkopts', str(kw))
 
-
     # Switch verbosity from boolean to plain string
     if isinstance(opts['verbose'], bool):
         opts['verbose'] = 'verbose' if opts['verbose'] else 'noverbose'
@@ -91,8 +90,8 @@ def mkjob(t, **kw):
     if opts['runtime'] is None and opts['rundate'] is None:
         vtxdate = _RE_VORTEXDATE.search(opts['name'])
         if vtxdate:
-            opts['rundate'] = str(date.Date(vtxdate.group('date') +
-                                            vtxdate.group('hh') + vtxdate.group('mm')))
+            opts['rundate'] = date.Date(vtxdate.group('date') +
+                                        vtxdate.group('hh') + vtxdate.group('mm')).ymdhm
             opts['runtime'] = str(date.Time('{:s}:{:s}'.format(vtxdate.group('hh'),
                                                                vtxdate.group('mm'))))
             if 'cutoff' not in opts:
@@ -134,27 +133,30 @@ def mkjob(t, **kw):
 
     opset = _guess_vapp_vconf_xpid(t)
 
+    tplconf.setdefault('appbase', opset.appbase)
     tplconf.setdefault('xpid', opset.xpid)
     tplconf.setdefault('vapp', opset.vapp)
     tplconf.setdefault('vconf', opset.vconf)
 
     tplconf.update(opts)
-    
-    if tplconf['suitebg'] is not None:
-        tplconf['suitebg'] = "'" + tplconf['suitebg'] + "'"
 
     tplconf.setdefault('file', opts['name'] + '.py')
 
     if tplconf['taskconf']:
-        jobconf = '../conf/{0:s}_{1:s}_{2:s}.ini'.format(tplconf['vapp'], tplconf['vconf'],
-                                                         tplconf['taskconf'])
+        jobconf = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(tplconf['appbase'],
+                                                            tplconf['vapp'], tplconf['vconf'],
+                                                            tplconf['taskconf'])
     else:
-        jobconf = '../conf/{0:s}_{1:s}.ini'.format(tplconf['vapp'], tplconf['vconf'])
+        jobconf = '{0:s}/conf/{1:s}_{2:s}.ini'.format(tplconf['appbase'],
+                                                      tplconf['vapp'], tplconf['vconf'])
 
     if t.sh.path.exists(jobconf):
         t.sh.header('Add ' + jobconf)
         jobparser = ExtendedReadOnlyConfigParser(inifile=jobconf)
         tplconf.update(jobparser.as_dict().get(opts['name'], dict()))
+
+    if tplconf['suitebg'] is not None:
+        tplconf['suitebg'] = "'" + tplconf['suitebg'] + "'"
 
     corejob = load_template(t, tplconf['template'])
     opts['tplfile'] = corejob.srcfile

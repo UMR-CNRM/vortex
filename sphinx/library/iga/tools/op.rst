@@ -17,27 +17,26 @@ Package
 Functions
 ---------
 
-.. autofunction:: setup
-
-.. autofunction:: setenv
-
-.. autofunction:: report
-
-.. autofunction:: complete
-
-.. autofunction:: simulate_complete
-
-.. autofunction:: register
-
-.. autofunction:: rescue
-
-.. autofunction:: fulltraceback
-
 .. autofunction:: oproute_hook_factory
 
 
 Classes
 -------
+
+.. autoclass:: OpJobAssistant
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OpJobAssistantTest
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: _ReportContext
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 .. autoclass:: InputReportContext
    :show-inheritance:

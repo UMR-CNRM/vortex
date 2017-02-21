@@ -11,8 +11,6 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex.layout.nodes import Task
 from vortex.tools.actions import actiond as ad
 
-from . import op
-
 
 class OpTask(Task):
     """Wrapper for setting up and performing a miscellaneous op task for a serial execution."""
@@ -30,7 +28,6 @@ class OpTask(Task):
         self.sh.header('Send a mail due to an execution error')
         ad.opmail(reseau=reseau, task=self.tag, id ='execution_error', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf, xpid=xpid)
         raise
-
 
     def defaults(self, extras):
         """Set defaults for toolbox defaults, with priority to actual conf."""
@@ -52,4 +49,3 @@ class OpTaskMPI(OpTask):
     """
 
     _tag_topcls = False
-

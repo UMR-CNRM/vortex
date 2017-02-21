@@ -17,7 +17,7 @@
 # Build opts: $mkopts
 
 import os, sys
-appbase = os.path.abspath('$pwd/..')
+appbase = os.path.abspath('$appbase')
 vortexbase = os.path.join(appbase, 'vortex')
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
@@ -40,7 +40,7 @@ rd_cutoff   = '$cutoff'
 rd_rundate  = vortex.tools.date.Date($rundate)
 rd_member   = $member
 rd_xpid     = '$xpid'
-rd_suitebg  = '$suite_bg'
+rd_suitebg  = $suitebg
 rd_refill   = $refill
 rd_jobname  = '$name'
 rd_iniconf  = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(appbase, 

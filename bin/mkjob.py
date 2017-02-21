@@ -10,7 +10,10 @@ import sys
 import tempfile
 
 # Export de la version de vortex à utiliser (celle de l'application concernee)
-vortex_path = os.path.join(os.path.realpath(os.getcwd()).rstrip('/jobs'), 'vortex')
+appbase = os.path.realpath(os.getcwd())
+for xpath in ('/jobs', '/conf', '/logs', '/tasks'):
+    appbase = appbase.rstrip(xpath)
+vortex_path = os.path.join(appbase, 'vortex')
 pathdirs    = [os.path.join(vortex_path, xpath) for xpath in ('site', 'src', )]
 for d in pathdirs:
     if os.path.isdir(d):
@@ -151,12 +154,19 @@ def makejob(job):
 
     def _wrap_launch(jobfile):
         '''Launch the **jobfile** script using **extra_wrapper*.'''
-        t.sh.spawn(tplconf.get('extra_wrapper').format(injob=jobfile,
-                                                       tstamp=vortex.tools.date.now().ymdhms,
-                                                       pwd=tplconf['pwd'],
-                                                       name=tplconf['name'],
-                                                       file=tplconf['file']),
-                   output=False, shell=True)
+        rundate = (re.sub(r"^'(.*)'$", r'\1', tplconf['rundate'])
+                   if isinstance(tplconf['rundate'], basestring) else '.')
+        cmd = tplconf.get('extra_wrapper').format(injob=jobfile,
+                                                  tstamp=vortex.tools.date.now().ymdhms,
+                                                  appbase=tplconf['appbase'],
+                                                  pwd=tplconf['pwd'],
+                                                  name=tplconf['name'],
+                                                  file=tplconf['file'],
+                                                  user=tplconf['mkuser'],
+                                                  rundate=rundate)
+        t.sh.header("Submitting the job through a wrapper command")
+        print(cmd)
+        t.sh.spawn(cmd, output=False, shell=True)
 
     if tplconf.get('extra_wrapper', None):
         # Launch the script with the designated wrapper

@@ -360,10 +360,6 @@ class System(footprints.FootprintBase):
             if xline:
                 print tchar * nbc
 
-    def usr_file(self, filename):
-        """Return weather the file belongs to the user or not."""
-        return passwd.getpwuid(os.stat(filename).st_uid).pw_name == self.getlogname()
-
     def xperm(self, filename, force=False):
         """Return whether a file exists and is executable or not."""
         if os.path.exists(filename):
@@ -765,6 +761,10 @@ class OSExtended(System):
         """Property shortcut to clear screen."""
         self.clear()
         return None
+
+    def usr_file(self, filename):
+        """Return whether or not a file belongs to the current user."""
+        return self._os.stat(filename).st_uid == self._os.getuid()
 
     def rawopts(self, cmdline=None, defaults=None, isnone=isnonedef, istrue=istruedef, isfalse=isfalsedef):
         """Parse a simple options command line as key=value."""

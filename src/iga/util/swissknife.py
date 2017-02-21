@@ -3,7 +3,6 @@
 
 from __future__ import print_function, absolute_import, division
 
-import collections
 import io
 import re
 
@@ -17,8 +16,6 @@ from gco.data.stores import GcoStoreConfig, GGET_DEFAULT_CONFIGFILE
 __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
-
-OpSetValues = collections.namedtuple('OpSetValues', ['xpid', 'vapp', 'vconf'])
 
 
 def bestdate(day=None, hh=None):

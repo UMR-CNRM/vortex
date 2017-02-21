@@ -32,7 +32,9 @@ class OpJobAssistantTest(JobAssistant):
 
     def _early_session_setup(self, t, **kw):
         """Create a now session, set important things, ..."""
-        t.sh.header('Set a new glove')
+
+        t.sh.subtitle('Setting up a new glove')
+
         opd = kw.get('actual', dict())
         gl = vortex.sessions.getglove(
             tag     = 'opid',
@@ -90,12 +92,12 @@ class OpJobAssistantTest(JobAssistant):
         # Set a new variable for availability notifications
         t.env.setvar("OP_DISP_NAME", "_".join(t.env["SLURM_JOB_NAME"].split("_")[:-1]))
 
-        t.sh.header('MPI Environment')
+        t.sh.header('Setting up the MPI Environment')
 
         mpi, rkw = swissknife.slurm_parameters(t, **kw)
         t.env.OP_MPIOPTS = mpi
 
-        t.sh.header('Setting rundate')
+        t.sh.header('Setting up the rundate')
 
         if t.env.OP_RUNDATE:
             if not isinstance(t.env.OP_RUNDATE, vortex.tools.date.Date):
@@ -113,12 +115,12 @@ class OpJobAssistantTest(JobAssistant):
         logger.info('Effective rundate = %s', t.env.OP_RUNDATE.ymdhm)
         logger.info('Effective time    = %s', t.env.OP_RUNTIME)
 
-        t.sh.header('Setting suitebg')
+        t.sh.header('Setting up suitebg')
 
         if t.env.OP_SUITEBG is None:
             t.env.OP_SUITEBG = t.env.get('OP_XPID', None)
 
-        t.sh.header('Setting member')
+        t.sh.header("Setting up the member's number")
         if not t.env.OP_MEMBER and t.env.get('DMT_ECHEANCE'):
             t.env.OP_MEMBER = t.env.get('DMT_ECHEANCE')[-3:]
         logger.info('Effective member  = %s', t.env.OP_MEMBER)
@@ -126,7 +128,7 @@ class OpJobAssistantTest(JobAssistant):
     def _extra_session_setup(self, t, **kw):
         super(OpJobAssistantTest, self)._extra_session_setup(t, **kw)
 
-        t.sh.header('Actual running directory')
+        t.sh.subtitle('Setting up the actual running directory')
 
         t.env.RUNDIR = kw.get('rundir', mkdtemp(prefix=t.glove.tag + '-'))
         t.sh.cd(t.env.RUNDIR, create=True)
@@ -146,7 +148,8 @@ class OpJobAssistantTest(JobAssistant):
     def _actions_setup(self, t, **kw):
         """Setup the OP action dispatcher."""
         super(OpJobAssistantTest, self)._actions_setup(t, **kw)
-        t.sh.header('Op Actions')
+
+        t.sh.subtitle('Setting up OP Actions')
 
         ad = vortex.tools.actions.actiond
         ad.add(vortex.tools.actions.SmsGateway())
@@ -256,8 +259,6 @@ class _ReportContext(object):
         pass
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if isinstance(exc_value, StandardError):
-            fulltraceback(dict(t=self._ticket))
         self._report(self._ticket, exc_type is None, task=self._task.tag, step=self._step)
 
     def _report(self, t, try_ok=True, **kw):

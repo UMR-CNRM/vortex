@@ -6,7 +6,7 @@
 # Build opts: $mkopts
 
 import os, sys
-appbase = os.path.abspath('$pwd/..')
+appbase = os.path.abspath('$appbase')
 vortexbase = os.path.join(appbase, 'vortex')
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))

@@ -54,14 +54,13 @@ class IgaCfgParser(GenericConfigParser):
         """
         if resname is None:
             resname = resource.realkind
-        if hasattr(resource, 'cutoff'):
-            cutoff = resource.cutoff
- 
+        cutoff = getattr(resource, 'cutoff', None)
+
         extended_resname = resname + '@' + vapp
 
-        if self.has_section(extended_resname + vconf): 
+        if self.has_section(extended_resname + vconf):
             resname = extended_resname + vconf
-        elif self.has_section(extended_resname + cutoff):
+        elif cutoff is not None and self.has_section(extended_resname + cutoff):
             resname = extended_resname + cutoff
         return self.get(resname, 'resolvedpath')
 
