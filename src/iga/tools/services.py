@@ -24,52 +24,50 @@ This module contains the services specifically needed by the operational suite.
   * formatted dayfile logging with :class:`DayfileReportService`
 """
 
-#: No automatic export
-__all__ = []
-
+import locale
 import logging
-from logging.handlers import SysLogHandler
-
+import random
 import re
 import socket
-import random
-import locale
 from StringIO import StringIO
+from logging.handlers import SysLogHandler
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
-from vortex.tools            import date
-from vortex.syntax.stdattrs  import a_term, a_domain
-from vortex.tools.services   import Service, FileReportService, TemplatedMailService
-from vortex.tools.schedulers import SMS
-from vortex.tools.actions    import actiond as ad
-
 from common.tools.agt import agt_actual_command
 from vortex.syntax.stdattrs import DelayedEnvValue
+from vortex.syntax.stdattrs import a_term, a_domain
+from vortex.tools import date
+from vortex.tools.actions import actiond as ad
+from vortex.tools.schedulers import SMS
+from vortex.tools.services import Service, FileReportService, TemplatedMailService
+
+#: Export nothing
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 # TODO devrait dépendre d'un objet TARGET
 LOGIN_NODES = [
     x + str(y)
-    for x in ('prolixlogin', 'beaufixlogin', )
+    for x in ('prolixlogin', 'beaufixlogin',)
     for y in range(6)
-]
+    ]
 
 # default Formatter for alarm logfile output
 DEFAULT_ALARMLOG_FORMATTER = logging.Formatter(
-    fmt     = '[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
-    datefmt = '%Y/%m/%d-%H:%M:%S',
+    fmt='[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
+    datefmt='%Y/%m/%d-%H:%M:%S',
 )
 
 # Syslog formatting *must* be compatible with RFC 5424., e.g.
 # SYSLOG_FORMATTER = logging.Formatter(
-#    fmt     = '%(asctime)s %(name)s: %(levelname)s %(message)s',
-#    datefmt = '%b %e %H:%M:%S',
+#    fmt='%(asctime)s %(name)s: %(levelname)s %(message)s',
+#    datefmt='%b %e %H:%M:%S',
 # )
 # or this one:
 SYSLOG_FORMATTER = logging.Formatter(
-    fmt     = '%(asctime)s [%(name)s][%(levelname)s]: %(message)s',
-    datefmt = '%Y/%m/%d T %H:%M:%S',
+    fmt='%(asctime)s [%(name)s][%(levelname)s]: %(message)s',
+    datefmt='%Y/%m/%d T %H:%M:%S',
 )
 
 
@@ -396,9 +394,9 @@ class RoutingService(Service):
     @property
     def aammjj(self):
         """Date from DMT_DATE_PIVOT or from the 'date' command (from mxpt001 scr/debut)."""
-        envkey  = 'DMT_DATE_PIVOT'
+        envkey = 'DMT_DATE_PIVOT'
         default = date.now().compact(),
-        stamp   = self.env.get(envkey, default)
+        stamp = self.env.get(envkey, default)
         return stamp[:8]
 
     def file_ok(self):
@@ -762,7 +760,10 @@ class DayfileReportService(FileReportService):
         """
         if self.sh.path.isabs(self.filename):
             return self.filename
-        name = self.sh.path.join(self.actual_value('resuldir', as_var='OP_RESULDIR', default='.'), self.filename)
+        name = self.sh.path.join(
+            self.actual_value('resuldir', as_var='OP_RESULDIR', default='.'),
+            self.filename
+        )
         return self.sh.path.abspath(name)
 
     def spooled_target(self):
@@ -780,8 +781,8 @@ class DayfileReportService(FileReportService):
         final = self.sh.path.join(
             self.actual_value(
                 'spooldir',
-                as_var  = 'OP_SPOOLDIR',
-                default = self.sh.path.join(self.env.HOME, 'spool_messdayf')
+                as_var='OP_SPOOLDIR',
+                default=self.sh.path.join(self.env.HOME, 'spool_messdayf')
             ),
             name
         )
@@ -916,11 +917,11 @@ class DMTEventService(Service):
 
     def get_dmtinfo(self):
         """The pair of usefull information to forward to monitor."""
-        return [ self.resource_name, str(self.resource_flag) ]
+        return [self.resource_name, str(self.resource_flag)]
 
     def get_cmdline(self):
         """Complete command line that runs the soprano command."""
-        for var in [ x for x in self.expectedvars if x not in self.env ]:
+        for var in [x for x in self.expectedvars if x not in self.env]:
             logger.warning('DMT missing variable %s', var)
         return ' '.join(
             self.env.mkautolist('SMS') + self.env.mkautolist('DMT_') + [
@@ -981,7 +982,7 @@ class OpMailService(TemplatedMailService):
         rc = super(OpMailService, self).__call__(*args)
         if not rc:
             ad.prompt(
-                comment = 'OpMailService: mail was not sent.',
+                comment='OpMailService: mail was not sent.',
                 **self._attributes
             )
         return rc

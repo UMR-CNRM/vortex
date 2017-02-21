@@ -104,8 +104,8 @@ class System(footprints.FootprintBase):
     Root class for any :class:`System` subclasses.
     """
 
-    _abstract  = True
-    _explicit  = False
+    _abstract = True
+    _explicit = False
     _collector = ('system',)
 
     _footprint = dict(
@@ -161,7 +161,7 @@ class System(footprints.FootprintBase):
         self.__dict__['_search'] = [self.__dict__['_os'], self.__dict__['_sh'], self.__dict__['_rl']]
         self.__dict__['_xtrack'] = dict()
         self.__dict__['_history'] = History(tag='shell')
-        self.__dict__['_rclast']  = 0
+        self.__dict__['_rclast'] = 0
         self.__dict__['_cpusinfo'] = None
         self.__dict__['prompt'] = ''
         for flag in ('trace', 'timer'):
@@ -573,7 +573,9 @@ class System(footprints.FootprintBase):
     def spawn(self, args, ok=None, shell=False, stdin=None, output=None,
               outmode='a', outsplit=True, silent=False, fatal=True,
               taskset=None, taskset_id=0, taskset_bsize=1):
-        """Subprocess call of ``args``."""
+        """Subprocess call of ``args``.
+           ``args`` can be a sequence or a string, preferably a string when shell=True.
+        """
         rc = False
         if ok is None:
             ok = [0]
@@ -587,14 +589,22 @@ class System(footprints.FootprintBase):
             taskset, taskset_cmd, taskset_env = self.cpus_affinity_get(taskset_id,
                                                                        taskset_bsize,
                                                                        *taskset_def)
-            if not taskset:
+            if taskset:
+                localenv.update(taskset_env)
+            else:
                 logger.warning("CPU binding is not available on this platform")
-        if taskset:
-            args[:0] = taskset_cmd
-            localenv.update(taskset_env)
-        if self.timer:
-            args[:0] = ['time']
-        self.stderr(*args)
+        if isinstance(args, basestring):
+            if taskset:
+                args = taskset_cmd + ' ' + args
+            if self.timer:
+                args = 'time ' + args
+            self.stderr(args)
+        else:
+            if taskset:
+                args[:0] = taskset_cmd
+            if self.timer:
+                args[:0] = ['time']
+            self.stderr(*args)
         if isinstance(output, bool):
             if output:
                 cmdout, cmderr = subprocess.PIPE, subprocess.PIPE
@@ -728,13 +738,15 @@ class System(footprints.FootprintBase):
     def cdcontext(self, path, create=False):
         return CdContext(self, path, create)
 
+    def ssh(self, hostname, logname=None):
+        return Ssh(self, hostname, logname)
+
     @property
     def cpus_info(self):
         return self._cpusinfo
 
     def cpus_affinity_get(self, taskid, blocksize=1, method='default', topology='raw'):
         """Get the necessary command/environment to set the CPUs affinity.
-
 
         :param int taskid: the task number
         :param int blocksize: the number of thread consumed by one task
@@ -777,8 +789,8 @@ class OSExtended(System):
     def target(self, **kw):
         """Provide a default target according to system own attributes."""
         desc = dict(
-            hostname = self.hostname,
-            sysname  = self.sysname
+            hostname=self.hostname,
+            sysname=self.sysname
         )
         desc.update(kw)
         self._frozen_target = footprints.proxy.targets.default(**desc)
@@ -891,7 +903,6 @@ class OSExtended(System):
 
     def ftserv_put(self, source, destination, hostname=None, logname=None, specialshell=None):
         """Asynchrone put of a file using FtServ."""
-        rc = False
         if isinstance(source, basestring) and isinstance(destination, basestring):
             if self.path.exists(source):
                 ftcmd = self.ftputcmd or 'ftput'
@@ -953,6 +964,15 @@ class OSExtended(System):
             return self.rawftget(source, destination, hostname=hostname, logname=logname, fmt=fmt)
         else:
             return self.ftget(source, destination, hostname=hostname, logname=logname, fmt=fmt)
+
+    @fmtshcmd
+    def scp(self, source, destination, hostname, logname=None):
+        """Perform an scp to the specified target."""
+
+        msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
+        self.stderr('scp', source, destination, msg)
+        ssh = self.ssh(hostname, logname)
+        return ssh.scp(source, destination)
 
     def softlink(self, source, destination):
         """Set a symbolic link if source is not destination."""
@@ -1603,7 +1623,7 @@ class Garbage(OSExtended, Python26):
         info = 'Garbage base system',
         attr = dict(
             sysname = dict(
-                outcast = [ 'Linux', 'Darwin' ]
+                outcast = ['Linux', 'Darwin']
             )
         ),
         priority = dict(
@@ -1683,7 +1703,7 @@ class Linux26(Linux, Python26):
         info = 'Linux base system with pretty old python version',
         attr = dict(
             python = dict(
-                values = [ '2.6.4', '2.6.5', '2.6.6' ]
+                values = ['2.6.4', '2.6.5', '2.6.6']
             )
         )
     )
@@ -1748,5 +1768,192 @@ class Macosx(Linux, Python27):
         """Address to use in logging.handler.SysLogHandler()."""
         return '/var/run/syslog'
 
-    def ftp(self, hostname, logname=None):
-        return super(Macosx, self).ftp(hostname, logname='lamboleyp')
+
+class Ssh(object):
+    """
+    Remote command execution via ssh.
+    Also handles reemote copy via scp or ssh, which is intimately linked
+    """
+    def __init__(self, sh, hostname, logname=None):
+        self._sh = sh
+        if logname:
+            self._remote = logname + '@' + hostname
+        else:
+            self._remote = hostname
+
+        parser = sh.target().config
+        self._sshcmd = parser.getx(key='services:sshcmd', default='ssh')
+        self._scpcmd = parser.getx(key='services:scpcmd', default='scp')
+        self._sshopts = ' '.join([
+            parser.getx(key='services:sshopts', default='-x'),
+            parser.getx(key='services:sshretryopts', default=''),
+        ])
+        self._scpopts = ' '.join([
+            parser.getx(key='services:scpopts', default='-Bp'),
+            parser.getx(key='services:scpretryopts', default=''),
+        ])
+
+    @property
+    def sh(self):
+        return self._sh
+
+    def check_ok(self):
+        """Is the connexion ok ?"""
+        return self.execute('true') is not False
+
+    @staticmethod
+    def quote(s):
+        """Quote a string so that it can be used as an argument in a posix shell."""
+        try:
+            # py3
+            from shlex import quote
+        except ImportError:
+            # py2
+            from pipes import quote
+        return quote(s)
+
+    def execute(self, remote_command, sshopts=''):
+        """Execute the command remotely.
+           Return the output of the command (list of lines),
+           or False on error.
+           Only the output sent to the log (when silent=False)
+           shows the difference between:
+              - a bad connection (e.g. wrong user)
+              - a remote command retcode != 0 (e.g. cmd='/bin/false')
+        """
+        cmd = ' '.join([
+            self._sshcmd,
+            self._sshopts,
+            sshopts,
+            self._remote,
+            self.quote(remote_command)
+        ])
+        return self.sh.spawn(cmd, shell=True, output=True, fatal=False)
+
+    def cocoon(self, destination):
+        """Create the remote directory to contain ``destination``.
+           Return False on failure.
+        """
+        remote_dir = self.sh.path.dirname(destination)
+        if remote_dir == '':
+            return True
+        logger.debug('Cocooning remote directory "%s"', remote_dir)
+        cmd = 'mkdir -p "{}"'.format(remote_dir)
+        rc = self.execute(cmd)
+        if not rc:
+            logger.error('Cannot cocoon on %s for %s', self._remote, destination)
+        return rc
+
+    def remove(self, target):
+        """Remove the remote target, if present.
+           Return False on failure.
+           Does not fail when the target is missing, but does when it exists
+           and cannot be removed, which would make a final move also fail.
+        """
+        logger.debug('Removing remote target "%s"', target)
+        cmd = 'rm -fr "{}"'.format(target)
+        rc = self.execute(cmd)
+        if not rc:
+            logger.error('Cannot remove from %s item "%s"', self._remote, target)
+        return rc
+
+    def scp(self, source, destination, scpopts=''):
+        """Send ``source`` to ``destination``.
+           ``source`` is a single file or a directory, not a pattern (no '*.grib').
+           ``destination`` is the remote name, unless it ends with '/', in which case
+           it is the containing directory, and the remote name is the basename of
+           ``source`` (like a real cp or scp):
+              - scp a/b.gif c/d.gif --> c/d.gif
+              - scp a/b.gif c/d/    --> c/d/b.gif
+           Return True for ok, False on error.
+        """
+        if not isinstance(source, basestring):
+            msg = 'Source is not a plain file path: {!r}'.format(source)
+            raise TypeError(msg)
+
+        if not isinstance(destination, basestring):
+            msg = 'Destination is not a plain file path: {!r}'.format(destination)
+            raise TypeError(msg)
+
+        if not self.sh.path.exists(source):
+            logger.error('No such file or directory: %s', source)
+            return False
+
+        # avoid special cases
+        source = self.sh.path.realpath(source)
+        if destination == '' or destination == '.':
+            destination = './'
+        else:
+            if destination.endswith('..'):
+                destination += '/'
+            if '../' in destination:
+                raise ValueError('"../" is not allowed in the destination path')
+
+        if destination.endswith('/'):
+            destination = self.sh.path.join(destination, self.sh.path.basename(source))
+
+        if not self.remove(destination):
+            return False
+
+        if not self.cocoon(destination):
+            return False
+
+        # transfer to a temporary place.
+        # when ``destination`` contains spaces, 2 rounds of quoting
+        # are necessary, to avoid an 'scp: ambiguous target' error.
+        isadir = self.sh.path.isdir(source)
+        if isadir:
+            scpopts = ' '.join([scpopts, '-r'])
+        cmd = ' '.join([
+            self._scpcmd,
+            self._scpopts,
+            scpopts,
+            self.quote(source),
+            self._remote + ':' + self.quote(self.quote(destination + '.tmp')),
+        ])
+        rc = self.sh.spawn(cmd, shell=True, output=False, fatal=False)
+        if rc:
+            # success, rename the tmp
+            rc = self.execute('mv "{0}.tmp" "{0}"'.format(destination))
+        return rc
+
+    def get_permissions(self, source):
+        """Convenience method to retrieve the permissions
+           of a file/dir (in a form suitable for chmod).
+        """
+        mode = self.sh.stat(source).st_mode
+        return stat.S_IMODE(mode)
+
+    def scp_stream(self, stream, destination, permissions=None, sshopts=''):
+        """Send the ``stream`` to the ``destination``.
+           ``stream`` is a ``file`` (typically returned by open(),
+                      or the piped output of a spawned process).
+           ``destination`` is the remote file name.
+           Return True for ok, False on error.
+        """
+        if not isinstance(stream, file):
+            msg = "stream is a {}, should be a <type 'file'>".format(type(stream))
+            raise TypeError(msg)
+
+        if not isinstance(destination, basestring):
+            msg = 'Destination is not a plain file path: {!r}'.format(destination)
+            raise TypeError(msg)
+
+        if not self.remove(destination):
+            return False
+
+        if not self.cocoon(destination):
+            return False
+
+        # transfer to a tmp, rename and set permissions in one go
+        remote_cmd = 'cat > {0}.tmp && mv {0}.tmp {0}'.format(self.quote(destination))
+        if permissions:
+            remote_cmd += ' && chmod -v {} {}'.format(oct(permissions), self.quote(destination))
+        cmd = ' '.join([
+            self._sshcmd,
+            self._sshopts,
+            sshopts,
+            self._remote,
+            self.quote(remote_cmd)
+        ])
+        return self.sh.spawn(cmd, shell=True, stdin=stream, output=False, fatal=False)

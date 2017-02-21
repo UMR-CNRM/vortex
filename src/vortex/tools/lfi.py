@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
-
 import io
 import re
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.util.structs import Tracker
-
 from . import addons
+
+#: Export nothing
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 def use_in_shell(sh, **kw):
@@ -31,7 +31,7 @@ class LFI_Status(object):
 
     def __init__(self, rc=0, ok=None, stdout=None, stderr=None, result=None):
         self._rc = rc
-        self._ok = ok or [ 0 ]
+        self._ok = ok or [0]
         self._stdout = stdout
         self._stderr = stderr
         self._result = result or list()
@@ -152,7 +152,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     def _std_table(self, lfifile, **kw):
         """
-        List of contents of a  lfi-file.
+        List of contents of a lfi-file.
 
         Mandatory args are:
           * lfifile : lfi file name
@@ -185,7 +185,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
           * skipfields : LFI fields not to be compared
           * skiplength : Offset at which the comparison starts for each LFI fields
         """
-        cmd = [ 'lfidiff', '--lfi-file-1', lfi1, '--lfi-file-2', lfi2 ]
+        cmd = ['lfidiff', '--lfi-file-1', lfi1, '--lfi-file-2', lfi2]
 
         maxprint = kw.pop('maxprint', 2)
         if maxprint:
@@ -202,7 +202,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         kw['output'] = True
 
         rawout = self._spawn(cmd, **kw)
-        fields = [ tuple(x.split(' ', 2)[-2:]) for x in rawout if re.match(r' (?:\!=|\+\+|\-\-)', x) ]
+        fields = [tuple(x.split(' ', 2)[-2:]) for x in rawout if re.match(r' (?:\!=|\+\+|\-\-)', x)]
 
         trfields = Tracker(
             deleted = [ x[1] for x in fields if x[0] == '--' ],
@@ -211,7 +211,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         )
 
         stlist = self.lfi_table(lfi1, output=True)
-        trfields.unchanged = set([ x[0] for x in stlist.result ]) - set(trfields)
+        trfields.unchanged = set([x[0] for x in stlist.result]) - set(trfields)
 
         return LFI_Status(
             rc     = int(bool(fields)),
@@ -230,7 +230,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
           * fa2 : The new empty file
 
         """
-        cmd = [ 'faempty', fa1, fa2 ]
+        cmd = ['faempty', fa1, fa2]
         self._spawn(cmd, **kw)
 
     def _pack_stream(self, source):
@@ -279,7 +279,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
                 rc = self.sh.ftserv_put(newsource, destination,
                                         hostname=hostname, logname=logname,
                                         specialshell=self.rawftshell)
-                self.sh.rm(newsource) # Delete the request file
+                self.sh.rm(newsource)  # Delete the request file
                 return rc
             else:
                 return self._std_ftput(source, destination, hostname, logname)
@@ -340,6 +340,23 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     lfi_mv = lfi_move = fa_mv = fa_move = _std_move
 
+    def _std_scp(self, source, destination, hostname, logname=None):
+        """On the fly packing and scp."""
+        if not self.is_xlfi(source):
+            rc = self.sh.scp(source, destination, hostname, logname)
+        else:
+            ssh = self.sh.ssh(hostname, logname)
+            permissions = ssh.get_permissions(source)
+            # remove the .d companion directory (scp_stream removes the destination)
+            # go on on failure : the .d lingers on, but the lfi will be self-contained
+            ssh.remove(destination + '.d')
+            p = self._pack_stream(source)
+            rc = ssh.scp_stream(p.stdout, destination, permissions=permissions)
+            self.sh.pclose(p)
+        return rc
+
+    fa_scp = lfi_scp = _std_scp
+
 
 class LFI_Tool_Py(LFI_Tool_Raw):
     """
@@ -388,24 +405,28 @@ class LFI_Tool_Py(LFI_Tool_Raw):
     def _cp_pack_read(self, source, destination):
         if self.warnpack:
             logger.warning('Suspicious packing <%s>', source)
-        rc = self._spawn(['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', destination], output=False)
+        rc = self._spawn(['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', destination],
+                         output=False)
         self.sh.chmod(destination, 0444)
         return rc
 
     def _cp_pack_write(self, source, destination):
         if self.warnpack:
             logger.warning('Suspicious packing <%s>', source)
-        rc = self._spawn(['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', destination], output=False)
+        rc = self._spawn(['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', destination],
+                         output=False)
         self.sh.chmod(destination, 0644)
         return rc
 
     def _cp_copy_read(self, source, destination):
-        rc = self._spawn(['lfi_alt_copy', '--lfi-file-in', source, '--lfi-file-out', destination], output=False)
+        rc = self._spawn(['lfi_alt_copy', '--lfi-file-in', source, '--lfi-file-out', destination],
+                         output=False)
         self.sh.chmod(destination, 0444)
         return rc
 
     def _cp_copy_write(self, source, destination):
-        rc = self._spawn(['lfi_alt_copy', '--lfi-file-in', source, '--lfi-file-out', destination], output=False)
+        rc = self._spawn(['lfi_alt_copy', '--lfi-file-in', source, '--lfi-file-out', destination],
+                         output=False)
         self.sh.chmod(destination, 0644)
         return rc
 
