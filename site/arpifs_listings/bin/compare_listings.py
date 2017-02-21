@@ -4,7 +4,12 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import argparse
+import os
 import sys
+
+# Automatically set the python path
+sitepath = os.path.dirname(os.path.realpath(__file__)).rstrip('/arpifs_listings/bin')
+sys.path.insert(0, sitepath)
 
 import arpifs_listings
 
