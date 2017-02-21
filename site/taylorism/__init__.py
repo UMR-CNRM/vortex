@@ -399,7 +399,7 @@ class Boss(object):
                 if final:
                     self._finalreport = received
                 if isinstance(received['workers_report'], Exception):
-                    taylorism_log.error("Error was catch in subprocesses with traceback:")
+                    taylorism_log.error("Error was caught in subprocesses with traceback:")
                     sys.stderr.writelines(received['traceback'])
                     raise received['workers_report']
             else:

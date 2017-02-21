@@ -92,11 +92,11 @@ class CdContext(object):
         self.newpath = self.sh.path.expanduser(newpath)
 
     def __enter__(self):
-        self.oldath = self.sh.getcwd()
+        self.oldpath = self.sh.getcwd()
         self.sh.cd(self.newpath, create=self.create)
 
     def __exit__(self, etype, value, traceback):
-        self.sh.cd(self.oldath)
+        self.sh.cd(self.oldpath)
 
 
 class System(footprints.FootprintBase):
@@ -1745,7 +1745,7 @@ class Macosx(Linux, Python27):
 
     @property
     def default_syslog(self):
-        """address to use in logging.handler.SysLogHandler()"""
+        """Address to use in logging.handler.SysLogHandler()."""
         return '/var/run/syslog'
 
     def ftp(self, hostname, logname=None):

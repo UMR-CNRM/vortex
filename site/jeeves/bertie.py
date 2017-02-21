@@ -59,12 +59,12 @@ def ask_mute(*args):
 
 
 def ask_on(*args):
-    """Swith on the specified actions."""
+    """Switch on the specified actions."""
     return ask(todo='seton', data=args)
 
 
 def ask_off(*args):
-    """Swith off the specified actions."""
+    """Switch off the specified actions."""
     return ask(todo='setoff', data=args)
 
 
@@ -81,5 +81,5 @@ def ask_sleep(duration=30):
 
 
 def ask_update(**kw):
-    """Wrapper for configuration display."""
+    """Wrapper for configuration update and display."""
     return ask(todo='update', data=kw)
