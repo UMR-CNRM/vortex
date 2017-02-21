@@ -31,6 +31,7 @@ from datetime import datetime
 
 import footprints
 from opinel.interrupt import SignalInterruptHandler, SignalInterruptError
+from opinel.cpus_tool import LinuxCpusInfo
 from vortex.gloves import Glove
 from vortex.tools import date
 from vortex.tools.env import Environment
@@ -154,14 +155,15 @@ class System(footprints.FootprintBase):
           * output - as a default value for any external spawning command (default: True).
         """
         logger.debug('Abstract System init %s', self.__class__)
-        self.__dict__['_os']      = kw.pop('os', os)
-        self.__dict__['_rl']      = kw.pop('rlimit', resource)
-        self.__dict__['_sh']      = kw.pop('shutil', kw.pop('sh', shutil))
-        self.__dict__['_search']  = [self.__dict__['_os'], self.__dict__['_sh'], self.__dict__['_rl']]
-        self.__dict__['_xtrack']  = dict()
+        self.__dict__['_os'] = kw.pop('os', os)
+        self.__dict__['_rl'] = kw.pop('rlimit', resource)
+        self.__dict__['_sh'] = kw.pop('shutil', kw.pop('sh', shutil))
+        self.__dict__['_search'] = [self.__dict__['_os'], self.__dict__['_sh'], self.__dict__['_rl']]
+        self.__dict__['_xtrack'] = dict()
         self.__dict__['_history'] = History(tag='shell')
         self.__dict__['_rclast']  = 0
-        self.__dict__['prompt']   = ''
+        self.__dict__['_cpusinfo'] = None
+        self.__dict__['prompt'] = ''
         for flag in ('trace', 'timer'):
             self.__dict__[flag] = kw.pop(flag, False)
         for flag in ('output',):
@@ -569,7 +571,8 @@ class System(footprints.FootprintBase):
             return False
 
     def spawn(self, args, ok=None, shell=False, stdin=None, output=None,
-              outmode='a', outsplit=True, silent=False, fatal=True):
+              outmode='a', outsplit=True, silent=False, fatal=True,
+              taskset=None, taskset_id=0, taskset_bsize=1):
         """Subprocess call of ``args``."""
         rc = False
         if ok is None:
@@ -578,6 +581,17 @@ class System(footprints.FootprintBase):
             output = self.output
         if stdin is True:
             stdin = subprocess.PIPE
+        localenv = os.environ.copy()
+        if taskset is not None:
+            taskset_def = taskset.split('_')
+            taskset, taskset_cmd, taskset_env = self.cpus_affinity_get(taskset_id,
+                                                                       taskset_bsize,
+                                                                       *taskset_def)
+            if not taskset:
+                logger.warning("CPU binding is not available on this platform")
+        if taskset:
+            args[:0] = taskset_cmd
+            localenv.update(taskset_env)
         if self.timer:
             args[:0] = ['time']
         self.stderr(*args)
@@ -592,7 +606,8 @@ class System(footprints.FootprintBase):
             cmdout, cmderr = output, output
         p = None
         try:
-            p = subprocess.Popen(args, stdin=stdin, stdout=cmdout, stderr=cmderr, shell=shell)
+            p = subprocess.Popen(args, stdin=stdin, stdout=cmdout, stderr=cmderr,
+                                 shell=shell, env=localenv)
             p_out, p_err = p.communicate()
         except ValueError as perr:
             logger.critical(
@@ -712,6 +727,23 @@ class System(footprints.FootprintBase):
 
     def cdcontext(self, path, create=False):
         return CdContext(self, path, create)
+
+    @property
+    def cpus_info(self):
+        return self._cpusinfo
+
+    def cpus_affinity_get(self, taskid, blocksize=1, method='default', topology='raw'):
+        """Get the necessary command/environment to set the CPUs affinity.
+
+
+        :param int taskid: the task number
+        :param int blocksize: the number of thread consumed by one task
+        :param str method: The binding method
+        :param str topology: The task distribution scheme
+        :return: A 3-elements tuple. (bool: BindingPossible,
+            list: Starting command prefix, dict: Environment update)
+        """
+        return (False, list(), dict())
 
 
 class OSExtended(System):
@@ -1606,10 +1638,42 @@ class Linux(OSExtended):
         logger.debug('Linux system init %s', self.__class__)
         self._psopts = kw.pop('psopts', ['-w', '-f', '-a'])
         super(Linux, self).__init__(*args, **kw)
+        self.__dict__['_cpusinfo'] = LinuxCpusInfo()
 
     @property
     def realkind(self):
         return 'linux'
+
+    def cpus_affinity_get(self, taskid, blocksize=1, topology='socketpacked', method='taskset'):
+        """Get the necessary command/environment to set the CPUs affinity.
+
+        :param int taskid: the task number
+        :param int blocksize: the number of thread consumed by one task
+        :param str method: The binding method
+        :param str topology: The task distribution scheme
+        :return: A 3-elements tuple. (bool: BindingPossible,
+            list: Starting command prefix, dict: Environment update)
+        """
+        if method not in ('taskset', 'gomp'):
+            raise ValueError('Unknown binding method ({:s}).'.format(method))
+        if method == 'taskset':
+            if not self.which('taskset'):
+                logger.warning("The taskset is program is missing. Going on without binding.")
+                return (False, list(), dict())
+        try:
+            cpulist = getattr(self.cpus_info, topology + '_cpulist')(blocksize)
+        except AttributeError:
+            raise ValueError('Unknown topology ({:s}).'.format(topology))
+        cpulist = list(cpulist)
+        cpus = [cpulist[(taskid * blocksize + i) % len(cpulist)]
+                for i in range(blocksize)]
+        cmdl = list()
+        env = dict()
+        if method == 'taskset':
+            cmdl += ['taskset', '--cpu-list', ','.join([str(c) for c in cpus])]
+        elif method == 'gomp':
+            env['GOMP_CPU_AFFINITY'] = ' '.join([str(c) for c in cpus])
+        return (True, cmdl, env)
 
 
 class Linux26(Linux, Python26):

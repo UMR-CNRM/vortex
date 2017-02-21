@@ -78,17 +78,19 @@ import traceback
 import copy
 import os
 from pickle import PickleError
+import subprocess
 
 import footprints
 from footprints import FootprintBase, proxy as fpx
 from opinel import interrupt  # because subprocesses must be killable properly
+from opinel import cpus_tool
 
 from .schedulers import BaseScheduler, MaxThreadsScheduler
 
 interrupt.logger.setLevel('WARNING')
 taylorism_log = footprints.loggers.getLogger(__name__)
 
-#: timeout when polling for a Queue/Pipe communication
+# : timeout when polling for a Queue/Pipe communication
 communications_timeout = 0.01
 
 __version__ = '1.0.3'
@@ -167,7 +169,14 @@ class Worker(FootprintBase):
                 info="Name of the worker.",
                 optional=True,
                 default=None,
-                access='rwx')
+                access='rwx'
+            ),
+            scheduler_ticket=dict(
+                info="The slot number given by the scheduler (optional)",
+                optional=True,
+                default=None,
+                type=int
+            ),
         )
     )
 
@@ -211,6 +220,7 @@ class Worker(FootprintBase):
         with interrupt.SignalInterruptHandler():
             to_be_sent_back = {'name': self.name, 'report': None}
             try:
+                self._work_and_communicate_prehook()
                 to_be_sent_back = {'name': self.name, 'report': self._task()}
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -228,12 +238,30 @@ class Worker(FootprintBase):
                                        'traceback': 'Traceback missing'}
                     self._messenger.put(to_be_sent_back)
 
+    def _work_and_communicate_prehook(self):
+        """Some stuff executed before the "real" work_end_communicate takes place."""
+        pass
+
     def _task(self, **kwargs):
         """
         Actual task of the Worker to be implemented therein.
         Return the report to be sent back to the Boss.
         """
         raise RuntimeError("this method must be implemented in Worker's inheritant class !")
+
+
+class BindedWorker(Worker):
+    """Workers binded to a cpu core (Linux only)."""
+
+    _abstract = True
+
+    def _work_and_communicate_prehook(self):
+        """Bind the process to a cpu"""
+        if self.scheduler_ticket is not None:
+            cpus = cpus_tool.LinuxCpusInfo()
+            cpulist = list(cpus.socketpacked_cpulist())
+            binded_cpu = cpulist[self.scheduler_ticket % cpus.nvirtual_cores]
+            cpus_tool.set_affinity(binded_cpu, str(os.getpid()))
 
 
 class Boss(object):

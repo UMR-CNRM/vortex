@@ -19,4 +19,5 @@ Package
 Modules
 -------
 
+* :mod:`opinel.cpus_tool`
 * :mod:`opinel.interrupt`

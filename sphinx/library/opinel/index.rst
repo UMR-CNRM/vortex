@@ -11,6 +11,7 @@ Opinel : a collection of basic utilities
    :maxdepth: 1
 
    opinel
-   
+ 
+   cpus_tool  
    interrupt
   
