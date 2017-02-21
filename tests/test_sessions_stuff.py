@@ -23,7 +23,7 @@ class UtSession(TestCase):
         self.oldlog = self.rootsession.loglevel
         self.rootsession.error()  # Decrease loglevel
         self.sh = self.rootsession.system()
-        self.tmpdir = tempfile.mkdtemp(prefix='test_sessions_stuff_')
+        self.tmpdir = self.sh.path.realpath(tempfile.mkdtemp(prefix='test_sessions_stuff_'))
         self.sh.cd(self.sh.path.dirname(self.tmpdir))
         self.oldpwd = self.sh.pwd()
         # Always create two new sessions for this test...
@@ -126,7 +126,7 @@ class UtSession(TestCase):
         self.assertTrue(newsession.context.env.active())
         # The working directory was restored
         self.assertEqual(self.sh.path.realpath(self.sh.pwd()),
-                         self.sh.path.realpath(self.sh.path.join(self.tmpdir, '{0:s}/scrontch/toto'.format(self.tag1))))
+                         self.sh.path.join(self.tmpdir, '{0:s}/scrontch/toto'.format(self.tag1)))
 
 if __name__ == '__main__':
     main(verbosity=2)

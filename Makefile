@@ -8,11 +8,10 @@ TEST_DIR	= tests
 SUBDIRS		= tests sphinx
 CLEANDIRS 	= $(SUBDIRS:%=clean-%)
 
-export PYTHONPATH  = $(PWD)/site:$(PWD)/src
-EXTRAPATH   = $$(pwd)/project:$(PYTHONPATH)
+EXTRAPATH   := $(PWD)/src:$(PWD)/site:$(PWD)/project:$(PYTHONPATH)
+export PYTHONPATH = $(EXTRAPATH)
 
 .PHONY: check tests cover doc cloc cloc_all pylint flake8 clean $(CLEANDIRS)
-
 
 # Run a minimal set of tests (should always succeed)
 check:
@@ -40,7 +39,6 @@ flake8: ; flake8 --config=project/flake8.ini --statistics . > project/flake8_rep
 # Code quality analysis : pylint
 pylint:
 	bin/tbinterface.py -a -c all -n 'common,gco,iga,mercator,olive,previmar,sandbox' -f json -o 'project/tbinterface'
-	PYTHONPATH=$(EXTRAPATH) \
 	pylint --rcfile=project/pylint.rc src/* site/* > project/pylint_global.txt || true
 
 
