@@ -417,10 +417,10 @@ class FullPosBDAP(FullPos):
         ) ]
         initrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
 
-        thesenames = list()
 
         for r in initrh:
             sh.subtitle('Loop on {0:s}'.format(r.resource.term.fmthm))
+            thesenames = list()
 
             thisdate = r.resource.date + r.resource.term
             thismonth = thisdate.month
@@ -431,8 +431,8 @@ class FullPosBDAP(FullPos):
             ) if x.rh.resource.month == thismonth ]:
                 thisclim = bdaprh.container.localpath()
                 thisname = 'const.clim.' + bdaprh.resource.geometry.area
-                thesenames.append(thisname)
                 if thisclim != thisname:
+                    thesenames.append(thisname)
                     sh.symlink(thisclim, thisname)
 
             # Set a local storage place
