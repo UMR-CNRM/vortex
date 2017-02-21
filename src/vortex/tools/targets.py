@@ -49,7 +49,7 @@ class Target(footprints.FootprintBase):
                 optional = True,
                 default  = platform.system(),
             ),
-            config = dict(
+            userconfig = dict(
                 type     = GenericConfigParser,
                 optional = True,
                 default  = None,
@@ -69,12 +69,17 @@ class Target(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         logger.debug('Abstract target computer init %s', self.__class__)
         super(Target, self).__init__(*args, **kw)
-        if not self.config:
-            self._attributes['config'] = GenericConfigParser(inifile=self.inifile, mkforce=self.iniauto)
+        self._actualconfig = self.userconfig
+        if self._actualconfig is None:
+            self._actualconfig = GenericConfigParser(inifile=self.inifile, mkforce=self.iniauto)
 
     @property
     def realkind(self):
         return 'target'
+
+    @property
+    def config(self):
+        return self._actualconfig
 
     def generic(self):
         """Generic name is inetname by default."""
@@ -139,4 +144,3 @@ class LocalTarget(Target):
             ),
         )
     )
-
