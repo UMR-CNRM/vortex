@@ -43,12 +43,17 @@ Functions
 Classes
 -------
 
+.. autoclass:: _GetattrCalculatorMixin
+   :show-inheritance:
+   :members: __getattr__
+   :member-order: alphabetical
+
 .. autoclass:: Date
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Month
+.. autoclass:: Time
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -58,7 +63,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Time
+.. autoclass:: Month
    :show-inheritance:
    :members:
    :member-order: alphabetical
