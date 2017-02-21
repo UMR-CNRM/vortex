@@ -52,7 +52,7 @@ class GentleTalk(object):
 
     def clone(self, taskno):
         """Clone the actual logger with a different task number."""
-        return self.__class__(loglevel=self.loglevel, taskno=taskno)
+        return self.__class__(datefmt=self.datefmt, loglevel=self.loglevel, taskno=taskno)
 
     @property
     def levels(self):
@@ -106,9 +106,7 @@ class GentleTalk(object):
                 for k, v in kw.items()
             ])
             thisprocess = multiprocessing.current_process()
-            mutex = multiprocessing.Lock()
-            mutex.acquire()
-            print '{color}# [{0:s}][P{1:06d}][T{2:06d}][{3:13s}:{4:>8s}] {5:s}{endcolor}'.format(
+            msg = '{color}# [{0:s}][P{1:06d}][T{2:06d}][{3:13s}:{4:>8s}] {5:s}{endcolor}'.format(
                 datetime.now().strftime(self.datefmt),
                 thisprocess.pid,
                 self.taskno,
@@ -118,6 +116,9 @@ class GentleTalk(object):
                 color=getattr(self, level.upper()),
                 endcolor=self.ENDC
             )
+            mutex = multiprocessing.Lock()
+            mutex.acquire()
+            print msg
             mutex.release()
 
     def debug(self, msg, *args, **kw):
@@ -303,7 +304,7 @@ class PidFile(object):
             ['ps', '-o', 'comm', '-p', str(int(contents))],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        stdout, stderr = p.communicate()
+        stdout, u_stderr = p.communicate()
         if stdout == "COMM\n":
             return False
 
@@ -544,14 +545,14 @@ class BaseDaemon(object):
         You should override this method when you subclass Daemon.
         It will be called after the process has been daemonized by start() or restart() and before run().
         """
-        pass
+        raise NotImplementedError
 
     def run(self):
         """
         You should override this method when you subclass Daemon.
         It will be called after the process has been daemonized by start() or restart() after setup().
         """
-        pass
+        raise NotImplementedError
 
 
 class HouseKeeping(object):
@@ -808,7 +809,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 self.critical('Callback', error=trouble, result=result)
             finally:
                 if pnum is not None and pnum in self.async:
-                    jpool, jfile, asyncr = self.async[pnum]
+                    jpool, jfile, u_asyncr = self.async[pnum]
                     poolbase = pools.get(tag=jpool)
                     pooltarget = None
                     if prc:
@@ -830,6 +831,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         rc = False
         self.ptask += 1
         pnum = '{0:06d}'.format(self.ptask)
+        # complete the json opts with the configuration defaults
         opts = ask.opts.copy()
         for extra in [x for x in acfg.get('options', tuple()) if x not in opts]:
             opts[extra] = acfg.get(extra, None)
@@ -980,9 +982,10 @@ class Jeeves(BaseDaemon, HouseKeeping):
             thispool = pools.get(tag='in')
             if thispool.active:
                 self.debug('Processing', pool=thispool.tag, path=thispool.path)
-                while thispool.contents:
+
+                todo = thispool.contents
+                while todo:
                     tbusy = True
-                    todo = sorted(thispool.contents)
                     # ignore some files with an explicit name
                     for bad in [x for x in todo if 'ignore' in x]:
                         tp = self.migrate(thispool, bad, target='ignore')
@@ -993,9 +996,9 @@ class Jeeves(BaseDaemon, HouseKeeping):
                         self.process_request(thispool, cfg)
                         todo.remove(cfg)
                     # look for other input requests
-                    for req in todo[:]:
+                    for req in todo:
                         self.process_request(thispool, req)
-                        todo.remove(req)
+                    todo = thispool.contents
             else:
                 self.warning('Inactive', pool=thispool.tag, path=thispool.path)
 
@@ -1003,29 +1006,25 @@ class Jeeves(BaseDaemon, HouseKeeping):
             thispool = pools.get(tag='retry')
             if thispool.active:
                 self.debug('Processing', pool=thispool.tag, path=thispool.path)
-                if thispool.contents:
-                    todo = sorted(thispool.contents)
-                    # look for previous retry requests
-                    stamp = datetime.now()
-                    for req in todo[:]:
-                        self.redo.setdefault(req, dict(first=stamp, last=stamp, delay=rtinit, nbt=0))
-                        rt = self.redo.get(req)
-                        rttotal = (stamp - rt['first']).total_seconds()
-                        rtlast  = (stamp - rt['last' ]).total_seconds()
-                        if rttotal > rtstop:
-                            tbusy = True
-                            self.warning('Abandonning retry', json=req, nbt=rt['nbt'], totaltime=rttotal)
-                            self.migrate(thispool, req, target='error')
-                            todo.remove(req)
-                            del self.redo[req]
-                        elif rtlast > rt['delay']:
-                            tbusy = True
-                            rt['nbt'] += 1
-                            rt['last'] = stamp
-                            rt['delay'] = min(rtceil, max(1, int(rt['delay'] * rtslow)))
-                            self.warning('Retry', json=req, nbt=rt['nbt'], nextdelay=rt['delay'])
-                            self.migrate(thispool, req)
-                            todo.remove(req)
+                # look for previous retry requests
+                todo = thispool.contents
+                stamp = datetime.now()
+                for req in todo:
+                    rt = self.redo.setdefault(req, dict(first=stamp, last=stamp, delay=rtinit, nbt=0))
+                    rttotal = (stamp - rt['first']).total_seconds()
+                    rtlast  = (stamp - rt['last' ]).total_seconds()
+                    if rttotal > rtstop:
+                        tbusy = True
+                        self.warning('Abandonning retry', json=req, nbt=rt['nbt'], totaltime=rttotal)
+                        self.migrate(thispool, req, target='error')
+                        del self.redo[req]
+                    elif rtlast > rt['delay']:
+                        tbusy = True
+                        rt['nbt'] += 1
+                        rt['last'] = stamp
+                        rt['delay'] = min(rtceil, max(1, int(rt['delay'] * rtslow)))
+                        self.warning('Retry', json=req, nbt=rt['nbt'], nextdelay=rt['delay'])
+                        self.migrate(thispool, req)
             else:
                 self.warning('Inactive', pool=thispool.tag, path=thispool.path)
 
