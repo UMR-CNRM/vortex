@@ -345,7 +345,7 @@ class Store(footprints.FootprintBase):
                 filtered = options['urifilter'](self, remote)
             if filtered:
                 rc = True
-                logger.info("This remote URI as been filtered out: we are skipping it.")
+                logger.info("This remote URI has been filtered out: we are skipping it.")
             else:
                 dryrun = False
                 if options is not None and 'dryrun' in options:
