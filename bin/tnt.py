@@ -89,7 +89,7 @@ def _expand_keys(nam, keys, radics=False):
     for (b, k) in keys:
         if b in nam:
             ek = [(b, nk) for nk in nam[b].keys()
-                  if re.match(k.replace('(', r'\(').replace(')', r'\)') + r'(\(.+\)|%.+)*', nk)]
+                  if re.match(k.replace('(', r'\(').replace(')', r'\)') + r'(\(.+\)|%.+)*$', nk)]
             if radics:
                 ek = [(b, k, nk) for (b, nk) in ek]
             expanded_keys.extend(ek)
