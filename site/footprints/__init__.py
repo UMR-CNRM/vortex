@@ -6,7 +6,7 @@ A generic multi-purpose fabric for objects with tunable footprints,
 i.e. some set of keys/values pairs that attributes (possibly optional) could cover.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import print_function, absolute_import, division
 
 import os
 import re

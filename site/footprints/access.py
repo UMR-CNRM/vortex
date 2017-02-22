@@ -5,7 +5,7 @@
 Footprint descriptors for attributes access.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import print_function, absolute_import, division
 
 import weakref
 

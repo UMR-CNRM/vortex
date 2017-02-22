@@ -11,10 +11,7 @@ import vortex  # @UnusedImport
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-import vortex.tools.actions
-import iga.tools.services  # @UnusedImport
 from vortex.tools.actions import actiond as ad
-
 from iga.util import swissknife
 from vortex.layout.jobs import JobAssistant
 
@@ -150,8 +147,9 @@ class OpJobAssistantTest(JobAssistant):
         super(OpJobAssistantTest, self)._actions_setup(t, **kw)
 
         t.sh.subtitle('Setting up OP Actions')
+        import iga.tools.services
+        import iga.tools.actions
 
-        ad = vortex.tools.actions.actiond
         ad.add(vortex.tools.actions.SmsGateway())
 
         print '+ SMS candidates =', ad.candidates('sms')
@@ -194,7 +192,6 @@ class OpJobAssistantTest(JobAssistant):
 
     def complete(self):
         """Exit from OP session."""
-        ad = vortex.tools.actions.actiond
         ad.report(kind='dayfile', mode='FIN')
         ad.sms_complete()
         print 'Well done Denis !'
@@ -202,7 +199,6 @@ class OpJobAssistantTest(JobAssistant):
 
     def rescue(self):
         """Exit from OP session after a crash but simulating a happy ending. Use only in a test environment."""
-        ad = vortex.tools.actions.actiond
         ad.sms_abort()
         print 'Bad luck...'
         super(OpJobAssistantTest, self).rescue()
@@ -242,7 +238,6 @@ class OpJobAssistant(OpJobAssistantTest):
 
     def rescue(self):
         """Something goes wrong... so, do your best to save current state."""
-        ad = vortex.tools.actions.actiond
         ad.report(kind='dayfile', mode='ERREUR')
         super(OpJobAssistant, self).rescue()
 
