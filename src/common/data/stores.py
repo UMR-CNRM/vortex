@@ -29,6 +29,11 @@ class BdpeStore(Store):
             netloc = dict(
                 values   = ['bdpe.archive.fr'],
             ),
+            store_compressed=dict(
+                optional=True,
+                default=None,
+                values=['bz2'],
+            ),
         ),
         priority = dict(
             level = footprints.priorities.top.DEFAULT
@@ -93,8 +98,34 @@ class BdpeStore(Store):
             if self.system.path.exists(diagfile):
                 logger.warning('The %s file is:', diagfile)
                 self.system.cat(diagfile)
+        elif self.store_compressed is not None:
+            # Deal with compressed files in the BDPE using the optional attribute store_compressed of the BDPE store.
+            tempfile = '.'.join([local,self.store_compressed])
+            rc = rc and self.system.mv(local, tempfile)
+            rc = rc and self._bdpeuncompressed(tempfile, local)
 
         if self.system.path.exists(diagfile):
             self.system.remove(diagfile)
+
+        return rc
+
+    def _bdpeuncompressed(self, tempfile, local):
+        """Function to uncompress the files coming from the BDPE if needed."""
+
+        if self.system.is_tarname(tempfile):
+            # Use smartuntar to deal with that file
+            rc = self.system.smartuntar(tempfile, local)
+        elif tempfile.endswith('.bz2'):
+            # Use bunzip2 to uncompressed the file
+            rc = (self.system.spawn('bunzip2 {file}'.format(file=tempfile), shell=True) and
+                  self.system.path.exists(local))
+        else:
+            # Compressed file not recognized yet
+            logger.warning('The format of the compressed file %s is not recognized. Nothing done.',
+                self.store_compressed)
+
+        rc = rc and self.system.path.exists(local)
+        if not rc:
+            logger.warning('Something went wrong while uncompressed the file %s.', tempfile)
 
         return rc
