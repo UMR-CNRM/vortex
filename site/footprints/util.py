@@ -5,7 +5,7 @@
 Utility functions of the :mod:`footprints` package.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import print_function, absolute_import, division
 
 import re
 import copy

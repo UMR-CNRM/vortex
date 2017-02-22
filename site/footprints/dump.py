@@ -6,7 +6,7 @@
 Data dumper... mostly used in objects' docstring with a footprint.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import print_function, absolute_import, division
 
 from xml.dom import minidom
 import re

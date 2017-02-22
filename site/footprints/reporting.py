@@ -6,7 +6,7 @@ Hierarchical documents to store footprints information.
 StandardReport is derived from :class:`xml.dom.minidom.Document`.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import print_function, absolute_import, division
 
 from datetime import datetime
 import re

@@ -61,12 +61,10 @@ ja = footprints.proxy.jobassistant(kind = 'op_default',
 
 
 import $package.$task as todo
-from vortex.tools.actions import actiond as ad
-from iga.tools import actions
-from iga.tools import services
 
 try:
     t, e, sh = ja.setup(actual=locals())
+    from vortex.tools.actions import actiond as ad
     ad.opmail_on()
     ad.route_on()
     opts = dict(jobassistant=ja, play=op_fullplay)

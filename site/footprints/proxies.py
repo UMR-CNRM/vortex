@@ -5,7 +5,7 @@
 Proxy objects to footprints catalogs.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import print_function, absolute_import, division
 
 from . import collectors, loggers, util
 
