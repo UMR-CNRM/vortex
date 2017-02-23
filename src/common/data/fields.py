@@ -43,7 +43,13 @@ class RawFields(NoDateResource):
         return 'rawfields'
 
     def olive_basename(self):
-        return self.fields + self.origin
+        if self.origin == 'nesdis' and self.fields == 'sst':
+            bname = '.'.join((self.fields, self.origin, 'bdap'))
+        elif self.fields == 'seaice':
+            bname = 'ice_concent'
+        else:
+            bname = '.'.join((self.fields, self.origin))
+        return bname
 
     def archive_basename(self):
         if self.origin == 'nesdis' and self.fields == 'sst':
