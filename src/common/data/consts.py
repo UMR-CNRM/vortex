@@ -526,6 +526,24 @@ class AtlasEmissivityPack(AtlasEmissivity):
     )
 
 
+class SeaIceLonLat(GenvStaticGeoResource):
+    """
+    Coordinates of the file containing sea ice observations.
+    Used to create the file ice_concent.
+    """
+    _footprint = dict(
+        info = 'Coordinates used for ice_concent creation.',
+        attr = dict(
+            kind = dict(
+                values = ['seaice_lonlat']
+            ),
+            gvar = dict(
+                default  = 'sea_ice_lonlat'
+            ),
+        )
+    )
+
+
 class ODBRaw(GenvModelResource):
     """
     Class for static ODB layouts RSTBIAS, COUNTRYRSTRHBIAS, SONDETYPERSTRHBIAS.

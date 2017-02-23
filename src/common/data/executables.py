@@ -194,6 +194,25 @@ class Lectbdap(BlackBox):
         )
 
 
+class IceGrb(BlackBox):
+    """Transform sea ice grib files into ascii files using the SeaIceLonLat file for coordinates."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Ice_grib executable to convert sea ice grib files into ascii files',
+            attr = dict(
+                gvar = dict(
+                    default = 'master_ice_grb'
+                ),
+                kind = dict(
+                    values = ['ice_grb']
+                )
+            )
+        )
+    ]
+
+
 class IOAssign(BlackBox):
     """A tool for ODB pools mapping."""
 
