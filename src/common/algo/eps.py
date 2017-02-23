@@ -252,10 +252,8 @@ class CombiIC(Combi):
         namsec = self.setlink(initrole='Namelist', initkind='namelist')
         nammod = namsec[0].rh.contents['NAMMOD']
 
-        # Dealing with initial conditions from the assimilation ensemble
-        nbPert = len(self.context.sequence.effective_inputs(role = ('AEPerturbedState',
-                                                                    'ModelState')))
-        nammod['LANAP'] = (nbPert != 0)
+        # The footprint's value is always preferred to the calculated one
+        nbPert = self.nbpert
 
         # Dealing with singular vectors
         sv_sections = self.context.sequence.effective_inputs(role='CoeffSV')
@@ -264,12 +262,11 @@ class CombiIC(Combi):
             logger.info("Add the SV coefficient to the NAMCOEFVS namelist entry.")
             namcoefvs = namsec[0].rh.contents.newblock('NAMCOEFVS')
             namcoefvs['RCOEFVS'] = sv_sections[0].rh.contents['rcoefvs']
-            nbPert = nbPert or len(self.context.sequence.effective_inputs(role = 'SVPerturbedState') or
-                                   [sec for sec in self.context.sequence.effective_inputs(role = 'PerturbedState')
-                                    if 'ICHR' in sec.rh.container.filename])
-
-        # The mean value may be present among the AE or SV inputs: subtract it
-        nbPert -= 1 if nbPert * 2 == self.nbic + 1 else 0
+            # The mean value may be present among the SV inputs: remove it
+            svsecs = [sec for sec in self.context.sequence.effective_inputs(role = 'SVPerturbedState') or
+                      [sec for sec in self.context.sequence.effective_inputs(role = 'PerturbedState')
+                       if 'ICHR' in sec.rh.container.filename] if sec.rh.resource.number]
+            nbPert = nbPert or len(svsecs)
 
         # Dealing with breeding method's inputs
         bd_sections = self.context.sequence.effective_inputs(role='CoeffBreeding')
@@ -287,8 +284,22 @@ class CombiIC(Combi):
                                 (nbBd == self.nbic and self.nbic % 2 != 0)
                                 else self.nbic / 2)
 
-        # The footprint's value is always preferred to the calculated one
-        nbPert = self.nbpert or nbPert
+        # Dealing with initial conditions from the assimilation ensemble
+        # the mean value may be present among the AE inputs: remove it
+        aesecs = [sec for sec in self.context.sequence.effective_inputs(
+            role = ('AEPerturbedState', 'ModelState')) if sec.rh.resource.number]
+        nammod['LANAP'] = bool(aesecs)
+        nbAe = len(aesecs)
+        nbPert = nbPert or nbAe
+        # If less AE members (but nor too less) than ic to build
+        if nbAe < nbPert and nbPert <= 2 * nbAe:
+            logger.info("%d AE perturbations needed, %d AE members available: the first ones are duplicated.",
+                        nbPert, nbAe)
+            prefix = aesecs[0].rh.container.filename.split('_')[0]
+            for num in range(nbAe, nbPert):
+                self.system.softlink(aesecs[num - nbAe].rh.container.filename,
+                                     prefix + '_{:03d}'.format(num + 1))
+
         logger.info("NAMMOD namelist summary: LANAP=%s, LVS=%s, LBRED=%s.",
                     * [nammod[k] for k in ('LANAP', 'LVS', 'LBRED')])
         logger.info("Add the NBPERT=%d coefficient to the NAMENS namelist entry.", nbPert)
@@ -518,7 +529,7 @@ class Addpearp(BlindRun):
 
         # Tweak the namelist
         namsec = self.setlink(initrole='Namelist', initkind='namelist')
-        logger.info("NAMIC added to NBE namelist entry: %d", self.nbpert)
+        logger.info("NBE added to NAMIC namelist entry: %d", self.nbpert)
         namsec[0].rh.contents['NAMIC']['NBPERT'] = self.nbpert
         namsec[0].rh.save()
         namsec[0].rh.container.cat()

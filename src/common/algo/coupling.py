@@ -342,4 +342,4 @@ class Prep(BlindRun):
 
             # Some cleaning
             sh.rmall('*.des', fmt = r.container.actualfmt)
-
+            sh.rmall('PREP1.*', fmt = r.container.actualfmt)

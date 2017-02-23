@@ -10,7 +10,8 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.providers import Provider, Remote
-from vortex.syntax.stdattrs import namespacefp, member, block, Namespace, a_suite
+from vortex.syntax.stdattrs import namespacefp, member, block, Namespace, a_suite,\
+    FmtInt
 from vortex.util.config import GenericConfigParser
 
 from common.tools.igastuff import archive_suffix, fuzzyname, arpcourt_vconf, IgakeyFactoryArchive
@@ -38,7 +39,11 @@ class Olive(Provider):
                     remap    = {
                         'multi.olive.fr': 'olive.multi.fr',
                     }
-                )
+                ),
+                member = dict(
+                    type    = FmtInt,
+                    args    = dict(fmt = '03'),
+                ),
             )
         )
     ]
@@ -59,6 +64,16 @@ class Olive(Provider):
         """Proxy to actual ``namespace`` value."""
         return self.namespace.netloc
 
+    def nice_member(self):
+        """Nice formatting view of the member number, if any."""
+        if re.match(r'pearp', self.vconf):
+            mb = 'fc_' + str(self.member) if self.member is not None else ''
+        elif re.match(r'aearp', self.vconf):
+            mb = 'member_' + str(self.member) if self.member is not None else ''
+        else:
+            mb = 'mb' + str(self.member) if self.member is not None else ''
+        return mb
+
     def basename(self, resource):
         """Add block information to resource mailbox... just in case..."""
         resource.mailbox.update(block=self.block)
@@ -74,11 +89,10 @@ class Olive(Provider):
             rdate = rdate.ymdh
             rdate = re.sub(r'(\d\d)$', r'H\1', rdate)
             rdate = rdate + rinfo.get('cutoff', 'n')[0].upper()
-        return '/'.join((
-            self.experiment,
-            rdate,
-            self.block
-        ))
+        elts = [self.experiment, rdate, self.block]
+        if self.member is not None:
+            elts.insert(2, self.nice_member())
+        return '/'.join(elts)
 
 
 class OpArchive(Provider):
@@ -196,6 +210,8 @@ class OpArchive(Provider):
                                            self.inout)
                     if getattr(self, keyattr) == 'aearp':
                         fuzzy += '.' + fuzzyname('suffix', resource.realkind, self.inout)
+                elif entry == 'memberfix':
+                    fuzzy = '{:03d}'.format(int(getattr(self, keyattr)))
                 else:
                     fuzzy = fuzzyname(entry, resource.realkind, getattr(self, keyattr))
                 bname = bname.replace(i, fuzzy)
@@ -207,12 +223,13 @@ class OpArchive(Provider):
     def pathname(self, resource):
         suite_map = dict(dble='dbl', mirr='miroir')
         rinfo = self.pathinfo(resource)
-        rdate = rinfo.get('date', '')
+        rdate = rinfo.get('date')
         suite = suite_map.get(self.suite, self.suite)
         yyyy = str(rdate.year)
         mm = '{0:02d}'.format(rdate.month)
         dd = '{0:02d}'.format(rdate.day)
         rr = 'r{0:d}'.format(rdate.hour)
+        rdir = rinfo.get('directory', '')
 
         if self.member is not None:
             run = 'RUN' + "%d" % self.member
@@ -222,7 +239,7 @@ class OpArchive(Provider):
                 return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr, run ))
         else:
             if re.match(r'arpege|arome|aearp', self.igakey):
-                return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr ))
+                return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr, rdir ))
             else:
                 if re.match(r'testms1|testmp1', self.igakey):
                     return '/'.join((self.igakey, dd, rr ))

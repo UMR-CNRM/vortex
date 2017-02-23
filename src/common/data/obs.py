@@ -265,8 +265,8 @@ class VarBC(FlowResource):
             stage = dict(
                 optional = True,
                 values   = ['void', 'merge', 'screen', 'screening', 'minim', 'traj'],
-                remap    = dict(screen = 'screening'),
-                default  = 'void'
+                remap    = dict(screen = 'screening', void = 'traj'),
+                default  = 'traj'
             ),
             mixmodel = dict(
                 optional = True,
@@ -295,7 +295,7 @@ class VarBC(FlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        if self.stage == 'void':
+        if self.stage == 'traj':
             bname = 'VARBC.cycle'
             if self.mixmodel is not None:
                 bname += '_'

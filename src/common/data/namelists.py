@@ -22,7 +22,7 @@ from gco.syntax.stdattrs import gvar
 KNOWN_NAMELIST_MACROS = set(['NPROC', 'NBPROC', 'NBPROC_IO', 'NCPROC', 'NDPROC',
                              'NBPROCIN', 'NBPROCOUT', 'IDAT', 'CEXP',
                              'TIMESTEP', 'FCSTOP', 'NMODVAL', 'NBE', 'SEED',
-                             'MEMBER', 'NUMOD', 'OUTPUTID','PERTURB'])
+                             'MEMBER', 'NUMOD', 'OUTPUTID', 'NRESX', 'PERTURB'])
 
 
 class NamelistContentError(ValueError):

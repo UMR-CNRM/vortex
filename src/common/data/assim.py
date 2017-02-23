@@ -31,7 +31,7 @@ class _BackgroundErrorInfo(GeoFlowResource):
                 term=dict(
                     optional=True,
                     values=[3, 6, 9, 12],
-                    default=6
+                    default=3
                 ),
                 nativefmt=dict(
                     default='grib',
@@ -61,6 +61,12 @@ class _BackgroundErrorInfo(GeoFlowResource):
 class BackgroundStdError(_BackgroundErrorInfo):
     """
     Background error standard deviation.
+    stage: - unbal/vor: unbalanced variables fields
+           - scr: obs. related fields
+           - profile: full variables global and latitude bands horizontal averages
+           - full: full variables fields
+    origin: - ens: diagnosed from an ensemble
+            - diag: diagnosed from randomized (a priori climatological) covariances
     """
 
     _footprint = [
@@ -68,16 +74,26 @@ class BackgroundStdError(_BackgroundErrorInfo):
             info='Background error standard deviation',
             attr=dict(
                 kind=dict(
-                    values=['bgstderr', 'bg_stderr'],
+                    values=['bgstderr', 'bg_stderr', 'bgerrstd'],
                     remap=dict(autoremap='first'),
                 ),
                 stage=dict(
                     optional=True,
-                    default='vor',
-                    values=['scr', 'vor'],
+                    default='unbal',
+                    values=['scr', 'vor', 'full', 'unbal', 'profile'],
+                    remap=dict(vor='unbal'),
+                ),
+                origin=dict(
+                    optional=True,
+                    values=['ens', 'diag'],
+                    default = 'ens',
                 ),
                 gvar = dict(
-                    default = 'errgrib_[stage]'
+                    default = 'errgrib_vor_monthly'
+                ),
+                nativefmt=dict(
+                    values=['grib', 'ascii'],
+                    default='grib',
                 ),
             ),
         )
@@ -91,34 +107,41 @@ class BackgroundStdError(_BackgroundErrorInfo):
         """Generic information for names fabric, with radical = ``bcor``."""
         infos = super(BackgroundStdError, self).basename_info()
         infos['src'].append(self.stage)
+        if self.stage != 'scr':
+            infos['src'].append(self.origin)
         return infos
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        if self.stage in ('vor',):
+        if self.stage in ('unbal',):
             return '(errgribfix:igakey)'
         else:
             return 'errgrib_' + self.stage
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        if self.stage in ('vor',):
+        if self.stage in ('unbal',):
             return 'errgribvor'
         else:
             return 'sigma_b'
 
+    def gget_basename(self):
+        """GGET specific naming convention."""
+        return '.m{:02d}'.format(self.date.month)
+
 
 class BackgroundErrorNorm(_BackgroundErrorInfo):
     """
-    Background error normalisation data.
+    Background error normalisation data for wavelet covariances.
     """
 
     _footprint = [
         dict(
-            info='Background standard error normalisation data',
+            info='Background error normalisation data for wavelet covariances',
             attr=dict(
                 kind=dict(
-                    values=['bgerrnorm', ],
+                    values=['bgstdrenorm', 'bgerrnorm'],
+                    remap=dict(autoremap='first'),
                 ),
                 gvar = dict(
                     default = 'srenorm_t[geometry:truncation]'
@@ -129,7 +152,7 @@ class BackgroundErrorNorm(_BackgroundErrorInfo):
 
     @property
     def realkind(self):
-        return 'bgerrnorm'
+        return 'bgstdrenorm'
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
@@ -137,18 +160,29 @@ class BackgroundErrorNorm(_BackgroundErrorInfo):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'srenorm.t.' + str(self.geometry.truncation)
+        return 'srenorm.t' + str(self.geometry.truncation)
+
+    def archive_pathinfo(self):
+        """OpArchive specific pathname needs."""
+        return dict(
+            nativefmt = self.nativefmt,
+            model     = self.model,
+            date      = self.date,
+            cutoff    = self.cutoff,
+            directory = 'wavelet',
+        )
 
 
 class Wavelet(GeoFlowResource):
     """
-    TODO.
+    Background error wavelet covariances.
     """
 
     _footprint = [
+        term,
         gvar,
         dict(
-            info = 'Wavelet... could be more talkative ?',
+            info = 'Background error wavelet covariances',
             attr = dict(
                 kind = dict(
                     values   = ['wavelet', 'waveletcv'],
@@ -156,6 +190,10 @@ class Wavelet(GeoFlowResource):
                 ),
                 gvar = dict(
                     default = 'wavelet_cv_t[geometry:truncation]'
+                ),
+                term=dict(
+                    optional=True,
+                    default=3
                 ),
             )
         )
@@ -172,6 +210,7 @@ class Wavelet(GeoFlowResource):
             geo     = [{'truncation': self.geometry.truncation}],
             fmt     = self.nativefmt,
             src     = [self.model],
+            term    = self.term.fmthm,
         )
 
     def archive_basename(self):
@@ -181,6 +220,16 @@ class Wavelet(GeoFlowResource):
     def olive_basename(self):
         """OLIVE specific naming convention."""
         return 'wavelet.cv.t' + str(self.geometry.truncation)
+
+    def archive_pathinfo(self):
+        """OpArchive specific pathname needs."""
+        return dict(
+            nativefmt = self.nativefmt,
+            model     = self.model,
+            date      = self.date,
+            cutoff    = self.cutoff,
+            directory = self.realkind,
+        )
 
 
 class RawControlVector(GeoFlowResource):

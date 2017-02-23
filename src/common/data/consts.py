@@ -614,12 +614,14 @@ class MatFilter(GenvStaticGeoResource):
 
 class Stabal(GenvStaticGeoResource):
     """
-    TODO.
+    Spectral covariance operators:
+     - bal: cross-variables balances
+     - cv: auto-correlations of the control variable
     A GenvKey can be given.
     """
 
     _footprint = dict(
-        info = 'Yeap... some info required for stabal coef.',
+        info = 'Spectral covariance operators',
         attr = dict(
             kind = dict(
                 values = ['stabal'],
@@ -646,12 +648,12 @@ class Stabal(GenvStaticGeoResource):
 
 class WaveletTable(GenvStaticGeoResource):
     """
-    TODO.
+    Wavelet covariance operators: auto-correlations of the control variable.
     A GenvKey can be given.
     """
 
     _footprint = dict(
-        info = 'Yeap... some info required for wavelet table coefs.',
+        info = 'Wavelet covariance operators',
         attr = dict(
             kind = dict(
                 values = ['wtable', 'wavelettable', 'wavelet_table', 'rtable', 'rtabwavelet'],
@@ -802,3 +804,55 @@ class GribAPIConfig(NoDateResource):
     @property
     def realkind(self):
         return 'gribapiconf'
+
+
+class StdPressure(GenvStaticGeoResource):
+    """
+    Standard pressure profile for standard error truncation extrapolation.
+    A GenvKey can be given.
+    """
+
+    _footprint = dict(
+        info = 'Standard pressure profile',
+        attr = dict(
+            kind = dict(
+                values = ['stdpressure'],
+            ),
+            level = dict(
+                type     = int,
+                optional = True,
+                default  = 60,
+                values   = [60],
+            ),
+            gvar = dict(
+                default  = 'std_pressure'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'stdpressure'
+
+
+class TruncObj(GenvStaticGeoResource):
+    """
+    Standard error truncation (spectral filtering).
+    A GenvKey can be given.
+    """
+
+    _footprint = dict(
+        info = 'Standard error truncation',
+        attr = dict(
+            kind = dict(
+                values = ['truncobj', 'stderr_trunc'],
+            ),
+            gvar = dict(
+                default  = 'trunc_obj'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'truncobj'
