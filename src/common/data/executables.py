@@ -150,6 +150,50 @@ class ProTool(BlackBox):
         return 'protool'
 
 
+class SstNetcdf(BlackBox):
+    """Change format of NetCDF sst files."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Tool to change the format of NetCDF sst files',
+            attr = dict(
+                gvar = dict(
+                    default = "master_sst_netcdf"
+                ),
+                kind = dict(
+                    values = ['sst_netcdf'],
+                )
+            )
+        )
+    ]
+
+
+class Lectbdap(BlackBox):
+    """Transform sst grib files from the BDAP into ascii files."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Tool to change the format of grib sst files',
+            attr = dict(
+                gvar = dict(
+                    default = "master_lectbdap"
+                ),
+                kind = dict(
+                    values = ['lectbdap'],
+                )
+            )
+        )
+    ]
+
+    def command_line(self, year, month, day, hour, lon, lat):
+        """Build the command line to launch the executable."""
+        return '-y{year} -m{month} -d{day} -r{hour} -o{lon} -a{lat}'.format(
+            year=year, month=month, day=day, hour=hour, lon=lon, lat=lat
+        )
+
+
 class IOAssign(BlackBox):
     """A tool for ODB pools mapping."""
 

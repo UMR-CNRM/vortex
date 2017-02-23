@@ -13,6 +13,7 @@ from vortex.tools import odb
 from vortex.tools.date import Date
 from vortex.algo.components import BlindRun, Parallel
 from .ifsroot import IFSParallel
+from vortex.syntax.stdattrs import a_date
 
 
 class MergeVarBC(Parallel):
@@ -518,3 +519,48 @@ class PseudoTrajectory(BlindRun):
         """Add some defaults env values for mpitool itself."""
         super(PseudoTrajectory, self).prepare(rh, opts)
         self.export('drhook_not_mpi')
+
+
+class LectBDAP(BlindRun):
+    """Transform sst grib files from the BDAP into ascii files"""
+    _footprint = dict(
+        info = 'Binary to change the format of sst BDAP files.',
+        attr = dict(
+            kind = dict(
+                values = ['lect_bdap'],
+            ),
+            date = a_date,
+            nlat = dict(
+                default = 0,
+            ),
+            nlon = dict(
+                default = 0,
+            )
+        )
+    )
+
+    def prepare(self, rh, opts):
+        """Add namelist delta, prepare the environment and build the arguments needed."""
+        super(LectBDAP,self).prepare(rh,opts)
+        for namrh in [x.rh for x in self.context.sequence.effective_inputs(role='Namelist',
+                                                                   kind='namelist', )]:
+            namc = namrh.contents
+            try:
+                namc.newblock('NAMFILE')
+                namc['NAMFILE'].NBFICH = 1
+                namc['NAMFILE']['CCNFICH(1)'] = 'GRIB_SST'
+                namc.rewrite(namrh.container)
+            except Exception:
+                logger.critical('Could not fix NAMFILE in %s', namrh.container.actualpath())
+                raise
+
+    def spawn_command_options(self):
+        """Build the dictionnary to provide arguments to the binary."""
+        return dict(
+            year = self.date.year,
+            month = self.date.month,
+            day = self.date.day,
+            hour = self.date.hour,
+            lon = self.nlon,
+            lat = self.nlat,
+        )
