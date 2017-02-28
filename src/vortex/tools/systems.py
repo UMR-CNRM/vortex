@@ -1748,7 +1748,7 @@ class LinuxDebug(Linux27):
         return 'linuxdebug'
 
 
-class Macosx(Linux, Python27):
+class Macosx(OSExtended, Python27):
     """Mac under MacOSX."""
 
     _footprint = dict(
@@ -1762,6 +1762,21 @@ class Macosx(Linux, Python27):
             level = footprints.priorities.top.TOOLBOX
         )
     )
+
+    def __init__(self, *args, **kw):
+        """
+        Before going through parent initialisation, pickle this attributes:
+          * psopts - as default option for the ps command (default: ``-w -f -a``).
+        """
+        logger.debug('Darwin system init %s', self.__class__)
+        self._psopts = kw.pop('psopts', ['-w', '-f', '-a'])
+        super(Macosx, self).__init__(*args, **kw)
+        # nothing like that on Darwin
+        self.__dict__['_cpusinfo'] = None
+
+    @property
+    def realkind(self):
+        return 'darwin'
 
     @property
     def default_syslog(self):
