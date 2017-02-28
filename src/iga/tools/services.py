@@ -824,8 +824,8 @@ class DayfileReportService(FileReportService):
         self.sh.filecocoon(target)
         with open(target, 'a') as fp:
             fp.write(self.infos)
-            if not self.filename:
-                self.sh.mv(target, final)
+        if not self.filename:
+            self.sh.mv(target, final)
 
         return True
 
