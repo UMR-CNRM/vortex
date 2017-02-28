@@ -254,11 +254,18 @@ class Store(footprints.FootprintBase):
         if self.readonly:
             raise IOError('This store is in readonly mode')
 
+    @staticmethod
+    def _verbose_log(options, level, *kargs, **kwargs):
+        slevel = kwargs.pop('slevel', 'debug')
+        if options is not None and options.get('silent', False):
+            level = slevel
+        getattr(logger, level)(*kargs, **kwargs)
+
     def check(self, remote, options=None):
         """Proxy method to dedicated check method according to scheme."""
         logger.debug('Store check from %s', remote)
         if options is not None and options.get('incache', False) and not self.use_cache():
-            logger.warning('Skip this store because a cache is requested')
+            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
             rc = False
         else:
             rc = getattr(self, self.scheme + 'check', self.notyet)(remote, options)
@@ -269,7 +276,7 @@ class Store(footprints.FootprintBase):
         """Proxy method to dedicated locate method according to scheme."""
         logger.debug('Store locate %s', remote)
         if options is not None and options.get('incache', False) and not self.use_cache():
-            logger.warning('Skip this store because a cache is requested')
+            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
             return None
         else:
             return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
@@ -283,7 +290,7 @@ class Store(footprints.FootprintBase):
         options['auto_dirextract'] = False
         return options
 
-    def _hash_get_check(self, remote, local, options=None):
+    def _hash_get_check(self, callback, remote, local, options=None):
         """Update default options when fetching hash files."""
         if (self.storehash is None) or (remote['path'].endswith('.' + self.storehash)):
             return True
@@ -293,7 +300,7 @@ class Store(footprints.FootprintBase):
         remote['query'].pop('extract', None)  # Ignore any extract request
         # fetch the hash file (in a virtual file)
         tmplocal = StringIO.StringIO()
-        rc = getattr(self, self.scheme + 'get', self.notyet)(remote, tmplocal, options)
+        rc = callback(remote, tmplocal, options)
         # check the hash key
         hadapt = hashutils.HashAdapter(self.storehash)
         rc = rc and hadapt.filecheck(local, tmplocal)
@@ -307,7 +314,7 @@ class Store(footprints.FootprintBase):
         """Proxy method to dedicated get method according to scheme."""
         logger.debug('Store get from %s to %s', remote, local)
         if options is not None and options.get('incache', False) and not self.use_cache():
-            logger.warning('Skip this store because a cache is requested')
+            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
             return False
         else:
             if (options is None or (not options.get('insitu', False)) or
@@ -319,7 +326,7 @@ class Store(footprints.FootprintBase):
                 logger.error('Only cache stores can be used when insitu is True.')
                 return False
 
-    def _hash_put(self, local, remote, options=None):
+    def _hash_put(self, callback, local, remote, options=None):
         """Put a hash file next to the 'real' file."""
         if (self.storehash is None) or (remote['path'].endswith('.' + self.storehash)):
             return True
@@ -330,14 +337,14 @@ class Store(footprints.FootprintBase):
         hadapt = hashutils.HashAdapter(self.storehash)
         tmplocal = hadapt.file2hash_fh(local)
         # Write it whereever the original store wants to.
-        return getattr(self, self.scheme + 'put', self.notyet)(tmplocal, remote, options)
+        return callback(tmplocal, remote, options)
 
     def put(self, local, remote, options=None):
         """Proxy method to dedicated put method according to scheme."""
         logger.debug('Store put from %s to %s', local, remote)
         self.enforce_readonly()
         if options is not None and options.get('incache', False) and not self.use_cache():
-            logger.warning('Skip this store because a cache is requested')
+            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
             return True
         else:
             filtered = False
@@ -359,7 +366,7 @@ class Store(footprints.FootprintBase):
         logger.debug('Store delete from %s', remote)
         self.enforce_readonly()
         if options is not None and options.get('incache', False) and not self.use_cache():
-            logger.warning('Skip this store because a cache is requested')
+            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
             rc = True
         else:
             rc = getattr(self, self.scheme + 'delete', self.notyet)(remote, options)
@@ -485,10 +492,12 @@ class MultiStore(footprints.FootprintBase):
         logger.debug('Multistore get from %s to %s', remote, local)
         rc = False
         refill_in_progress = True
+        get_options = copy.copy(options) if options is not None else dict()
+        get_options['silent'] = True
         while refill_in_progress:
             for num, sto in enumerate(self.openedstores):
                 logger.debug('Multistore get at %s', sto)
-                rc = sto.get(remote.copy(), local, options)
+                rc = sto.get(remote.copy(), local, get_options)
                 # Are we trying a refill ? -> find the previous writeable store
                 restores = []
                 if rc and self.refillstore and num > 0:
@@ -513,6 +522,10 @@ class MultiStore(footprints.FootprintBase):
                 # Whatever the refill's outcome, that's fine
                 if rc:
                     break
+        if not rc:
+            self._verbose_log(options, 'warning'
+                              "None of the opened store succeeded... that's too bad !",
+                              slevel='info')
         return rc
 
     def put(self, local, remote, options=None):
@@ -743,7 +756,7 @@ class Finder(Store):
         if 'intent' in options and options['intent'] == dataflow.intent.IN:
             logger.info('Ignore intent <in> for remote input %s', rpath)
         rc = self.system.cp(rpath, local, fmt=options.get('fmt'), intent=dataflow.intent.INOUT)
-        rc = rc and self._hash_get_check(remote, local, options)
+        rc = rc and self._hash_get_check(self.fileget, remote, local, options)
         if rc:
             self._localtarfix(local)
         return rc
@@ -753,7 +766,7 @@ class Finder(Store):
         rpath = self.fullpath(remote)
         logger.info('fileput to %s (from: %s)', rpath, local)
         rc = self.system.cp(local, rpath, fmt=options.get('fmt'))
-        return rc and self._hash_put(local, remote, options)
+        return rc and self._hash_put(self.fileput, local, remote, options)
 
     def filedelete(self, remote, options):
         """Delegates to ``system`` the removing of ``remote``."""
@@ -821,7 +834,7 @@ class Finder(Store):
             logname  = remote['username'],
             fmt      = options.get('fmt'),
         )
-        rc = rc and self._hash_get_check(remote, local, options)
+        rc = rc and self._hash_get_check(self.ftpget, remote, local, options)
         if rc:
             self._localtarfix(local)
         return rc
@@ -838,7 +851,7 @@ class Finder(Store):
             logname  = remote['username'],
             fmt      = options.get('fmt'),
         )
-        return rc and self._hash_put(local, remote, options)
+        return rc and self._hash_put(self.ftpput, local, remote, options)
 
     def ftpdelete(self, remote, options):
         """Delegates to ``system`` a distant remove."""
@@ -905,6 +918,9 @@ class ArchiveStore(Store):
     def realkind(self):
         return 'archivestore'
 
+    def _str_more(self):
+        return 'hostname={:s}'.format(self.hostname())
+
     def hostname(self):
         """Returns the current :attr:`storage` or the value from the configuration file."""
         if self.storage is None:
@@ -952,7 +968,7 @@ class ArchiveStore(Store):
             logname  = remote['username'],
             fmt      = options.get('fmt'),
         )
-        return rc and self._hash_get_check(remote, local, options)
+        return rc and self._hash_get_check(self.ftpget, remote, local, options)
 
     def ftpput(self, local, remote, options):
         """Delegates to ``system.ftp`` the put action."""
@@ -976,7 +992,7 @@ class ArchiveStore(Store):
                 destination = rpath,
             )
             rc = ad.jeeves(**put_opts)
-        return rc and self._hash_put(local, remote, options)
+        return rc and self._hash_put(self.ftpput, local, remote, options)
 
     def ftpdelete(self, remote, options):
         """Delegates to ``system`` a distant remove."""
@@ -992,6 +1008,133 @@ class ArchiveStore(Store):
                 logger.error('Try to remove a non-existing resource <%s>',
                              self._ftpformatpath(remote))
         return rc
+
+
+class ConfigurableArchiveStore(object):
+    """Generic Archive Store with the ability to read a configuration file.
+
+    This is a mixin class...
+    """
+
+    #: Path to the Store configuration file (please overwrite !)
+    _store_global_config = None
+    _datastore_id = None
+
+    @staticmethod
+    def _get_remote_config(store, url, container):
+        """Fetch a configuration file from **url** using **store**."""
+        rc = store.get(url, container.iotarget(), dict(fmt='ascii'))
+        if rc:
+            return config.GenericConfigParser(inifile=container.iotarget())
+        else:
+            return None
+
+    def _load_config(self, conf):
+        """Load the store configuration.
+
+        1. The global store's configuration file is read (see
+           ``self.__store_global_config``)
+        2. Given ``self.storage``, the proper section of the global configuration
+           file is read: it may contain localconf or remoteconfXXX options that
+           describe additional configuration files
+        3. Fist, the local configuration file is read
+        4. Then, the remote configuration files are read
+
+        The relevant content of the configuration file is stored in the ``conf``
+        dictionary.
+        """
+        logger.info("Some store configuration data is needed (for %s://%s",
+                    self.scheme, self.netloc)
+
+        # Because _store_global_config and _datastore_id must be overwritten...
+        assert self._store_global_config is not None
+        assert self._datastore_id is not None
+
+        # Global configuration file
+        logger.info("Reading config file: %s", self._store_global_config)
+        maincfg = config.GenericConfigParser(inifile=self._store_global_config)
+        conf['host'] = dict(maincfg.items(self.hostname()))
+
+        # Look for a local configuration file
+        localcfg = conf['host'].get('localconf', None)
+        if localcfg is not None:
+            logger.info("Reading config file: %s", localcfg)
+            localcfg = config.GenericConfigParser(inifile=localcfg)
+            conf['locations'] = defaultdict(dict)
+            conf['locations']['generic'] = localcfg.defaults()
+            for section in localcfg.sections():
+                logger.debug("New location found: %s", section)
+                conf['locations'][section] = dict(localcfg.items(section))
+
+        # Look for remote configurations
+        remotecfgs = sorted([key for key in conf['host'].iterkeys()
+                             if key.startswith('remoteconf')])
+        for remotecfg in [conf['host'][k] for k in remotecfgs]:
+            logger.info("Reading config file: %s", remotecfg)
+            url = net.uriparse(remotecfg)
+            tempstore = footprints.proxy.store(scheme = url['scheme'], netloc = url['netloc'],
+                                               storetrack = False)
+            retry = False
+            # First, try with a temporary ShouldFly
+            try:
+                tempcontainer = footprints.proxy.container(shouldfly=True)
+                remotecfg_parser = self._get_remote_config(tempstore, url, tempcontainer)
+            except OSError:
+                # This may happen if the user has insufficient rights on
+                # the current directory
+                retry = True
+            finally:
+                self.system.remove(tempcontainer.filename)
+            # Is retry needed ? This time a completely virtual file is used.
+            if retry:
+                remotecfg_parser = self._get_remote_config(tempstore, url,
+                                                           footprints.proxy.container(incore=True))
+            # Update the configuration using the parser
+            if remotecfg_parser is not None:
+                for section in remotecfg_parser.sections():
+                    logger.debug("New location found: %s", section)
+                    conf['locations'][section].update(dict(remotecfg_parser.items(section)))
+            else:
+                raise IOError("The remote configuration {:s} couldn't be found."
+                              .format(remotecfg))
+
+    def _actual_fromconf(self, uuid, item):
+        """For a given **uuid**, Find the corresponding value of the **item** key
+        in the configuration data.
+
+        Access the session's datastore to get the configuration data. If
+        necessary, configuration data are read in using the :meth:`_load_config`
+        method
+        """
+        ds = sessions.current().datastore
+        conf = ds.get(self._datastore_id, dict(storage=self.hostname()),
+                      default_payload=dict(), readonly=True)
+        if not conf:
+            # If the configuration is empty, do what it takes...
+            self._load_config(conf)
+        mylocation = uuid.location
+        st_root = None
+        if mylocation in conf['locations']:
+            st_root = conf['locations'][mylocation].get(item, None)
+        st_root = st_root or conf['locations']['generic'].get(item, None)
+        return st_root
+
+    def _actual_storeroot(self, uuid):
+        """For a given **uuid**, determine the proper storeroot."""
+        if self.storeroot is None:
+            # Read the sotreroot from the configuration data
+            st_root = self._actual_fromconf(uuid, 'storeroot')
+            if st_root is None:
+                raise IOError("No valid storeroot could be found.")
+            # The location may be an alias: find the real username
+            realname = self._actual_fromconf(uuid, 'realname')
+            if realname is None:
+                mylocation = uuid.location
+            else:
+                mylocation = realname
+            return st_root.format(location=mylocation)
+        else:
+            return self.storeroot
 
 
 class VortexArchiveStore(ArchiveStore):
@@ -1083,11 +1226,12 @@ class VortexStdArchiveStore(VortexArchiveStore):
         return remote
 
 
-class VortexFreeStdArchiveStore(VortexArchiveStore):
+class VortexFreeStdArchiveStore(VortexArchiveStore, ConfigurableArchiveStore):
     """Archive for casual VORTEX experiments: Support for Free XPIDs"""
 
     #: Path to the vortex-free Store configuration file
     _store_global_config = '@store-vortex-free.ini'
+    _datastore_id = 'store-vortex-free-conf'
 
     _footprint = dict(
         info = 'VORTEX archive access for casual experiments',
@@ -1095,122 +1239,8 @@ class VortexFreeStdArchiveStore(VortexArchiveStore):
             netloc = dict(
                 values   = ['vortex-free.archive.fr', ],
             ),
-            storeroot = dict(
-                default  = None,
-            ),
         )
     )
-
-    @staticmethod
-    def _get_remote_config(store, url, container):
-        """Fetch a configuration file from **url** using **store**."""
-        rc = store.get(url, container.iotarget(), dict(fmt='ascii'))
-        if rc:
-            return config.GenericConfigParser(inifile=container.iotarget())
-        else:
-            return None
-
-    def _load_config(self, conf):
-        """Load the store configuration.
-
-        1. The global store's configuration file is read (see
-           ``self.__store_global_config``)
-        2. Given ``self.storage``, the proper section of the global configuration
-           file is read: it may contain localconf or remoteconfXXX options that
-           describe additional configuration files
-        3. Fist, the local configuration file is read
-        4. Then, the remote configuration files are read
-
-        The relevant content of the configuration file is stored in the ``conf``
-        dictionary.
-        """
-        logger.info("Some store configuration data is needed")
-
-        # Global configuration file
-        logger.info("Reading config file: %s", self._store_global_config)
-        maincfg = config.GenericConfigParser(inifile=self._store_global_config)
-        conf['host'] = dict(maincfg.items(self.hostname()))
-
-        # Look for a local configuration file
-        localcfg = conf['host'].get('localconf', None)
-        if localcfg is not None:
-            logger.info("Reading config file: %s", localcfg)
-            localcfg = config.GenericConfigParser(inifile=localcfg)
-            conf['locations'] = defaultdict(dict)
-            conf['locations']['generic'] = localcfg.defaults()
-            for section in localcfg.sections():
-                logger.debug("New location found: %s", section)
-                conf['locations'][section] = dict(localcfg.items(section))
-
-        # Look for remote configurations
-        remotecfgs = sorted([key for key in conf['host'].iterkeys()
-                             if key.startswith('remoteconf')])
-        for remotecfg in [conf['host'][k] for k in remotecfgs]:
-            logger.info("Reading config file: %s", remotecfg)
-            url = net.uriparse(remotecfg)
-            tempstore = footprints.proxy.store(scheme = url['scheme'], netloc = url['netloc'],
-                                               storetrack = False)
-            retry = False
-            # First, try with a temporary ShouldFly
-            try:
-                tempcontainer = footprints.proxy.container(shouldfly=True)
-                remotecfg_parser = self._get_remote_config(tempstore, url, tempcontainer)
-            except OSError:
-                # This may happen if the user has insufficient rights on
-                # the current directory
-                retry = True
-            finally:
-                self.system.remove(tempcontainer.filename)
-            # Is retry needed ? This time a completely virtual file is used.
-            if retry:
-                remotecfg_parser = self._get_remote_config(tempstore, url,
-                                                           footprints.proxy.container(incore=True))
-            # Update the configuration using the parser
-            if remotecfg_parser is not None:
-                for section in remotecfg_parser.sections():
-                    logger.debug("New location found: %s", section)
-                    conf['locations'][section].update(dict(remotecfg_parser.items(section)))
-            else:
-                raise IOError("The remote configuration {:s} couldn't be found."
-                              .format(remotecfg))
-
-    def _actual_fromconf(self, xpid, item):
-        """For a given **xpid**, Find the coresponding value of the **item** key
-        in the configuration data.
-
-        Access the session's datastore to get the configuration data. If
-        necessary, configuration data are read in using the :meth:`_load_config`
-        method
-        """
-        ds = sessions.current().datastore
-        conf = ds.get('store-vortex-free-conf', dict(storage=self.hostname()),
-                      default_payload=dict(), readonly=True)
-        if not conf:
-            # If the configuration is empty, do what it takes...
-            self._load_config(conf)
-        mylocation = xpid.location
-        st_root = None
-        if mylocation in conf['locations']:
-            st_root = conf['locations'][mylocation].get(item, None)
-        st_root = st_root or conf['locations']['generic'].get(item, None)
-        return st_root
-
-    def _actual_storeroot(self, xpid):
-        """For a given **xpid**, determine the proper storeroot."""
-        if self.storeroot is None:
-            # Read the sotreroot from the configuration data
-            st_root = self._actual_fromconf(xpid, 'storeroot')
-            if st_root is None:
-                raise IOError("No valid storeroot could be found.")
-            # The location may be an alias: find the real username
-            realname = self._actual_fromconf(xpid, 'realname')
-            if realname is None:
-                mylocation = xpid.location
-            else:
-                mylocation = realname
-            return st_root.format(location=mylocation)
-        else:
-            return self.storeroot
 
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
@@ -1342,6 +1372,7 @@ class CacheStore(Store):
                 headdir     = self.headdir,
                 rtouch      = self.rtouch,
                 rtouchskip  = self.rtouchskip,
+                readonly    = self.readonly
             )
             self._caches_object_stack.add(self._cache)
         return self._cache
@@ -1356,6 +1387,9 @@ class CacheStore(Store):
         self._cache = None
 
     cache = property(_get_cache, _set_cache, _del_cache)
+
+    def _str_more(self):
+        return 'entry={:s}'.format(self.cache.entry)
 
     def incachecheck(self, remote, options):
         """Returns a stat-like object if the ``remote`` exists in the current cache."""
@@ -1382,8 +1416,9 @@ class CacheStore(Store):
             tarextract          = options.get('auto_tarextract', False),
             dirextract          = options.get('auto_dirextract', False),
             uniquelevel_ignore  = options.get('uniquelevel_ignore', True),
+            silent              = options.get('silent', False),
         )
-        return rc and self._hash_get_check(remote, local, options)
+        return rc and self._hash_get_check(self.incacheget, remote, local, options)
 
     def incacheput(self, local, remote, options):
         """Simple copy from ``local`` to the current cache in readonly mode."""
@@ -1396,7 +1431,7 @@ class CacheStore(Store):
             fmt    = options.get('fmt'),
             info   = options.get('rhandler', None),
         )
-        return rc and self._hash_put(local, remote, options)
+        return rc and self._hash_put(self.incacheput, local, remote, options)
 
     def incachedelete(self, remote, options):
         """Simple removing of the remote resource in cache."""

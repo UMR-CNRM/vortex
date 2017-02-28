@@ -769,8 +769,8 @@ class LocalTracker(defaultdict):
             if isinstance(lpath, basestring):
                 self[lpath].update_store(info, clean_uri)
             else:
-                logger.info("The iotarget isn't a basestring: It will be skipped in %s",
-                            self.__class__)
+                logger.debug("The iotarget isn't a basestring: It will be skipped in %s",
+                             self.__class__)
 
     def is_tracked_input(self, local):
         """Check if the given `local` container is listed as an input and associated with a valid :class:`~vortex.data.handlers.Handler`.

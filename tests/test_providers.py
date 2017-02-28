@@ -85,8 +85,8 @@ class TestProviderRemote(unittest.TestCase):
     def test_remote_basics(self):
         pr = fp.proxy.provider(remote='/home/machin/dummy',
                                ** self.fp_defaults)
-        self.assertEqual(pr.scheme(), 'file')
-        self.assertEqual(pr.netloc(), 'localhost')
+        self.assertEqual(pr.scheme(None), 'file')
+        self.assertEqual(pr.netloc(None), 'localhost')
         self.assertEqual(pr.pathname(self.t_res),
                          '/home/machin')
         self.assertEqual(pr.basename(self.t_res),
@@ -101,16 +101,16 @@ class TestProviderRemote(unittest.TestCase):
         for proto in self.t_protocol:
             pr = fp.proxy.provider(tube=proto, remote='/home/machin/dummy',
                                    ** self.fp_defaults)
-            self.assertEqual(pr.scheme(), proto)
+            self.assertEqual(pr.scheme(None), proto)
             # hostname ?
             pr = fp.proxy.provider(tube=proto, remote='/home/machin/dummy',
                                    hostname='superserver',
                                    ** self.fp_defaults)
-            self.assertEqual(pr.netloc(), 'superserver')
+            self.assertEqual(pr.netloc(None), 'superserver')
             pr = fp.proxy.provider(tube=proto, remote='/home/machin/dummy',
                                    hostname='superserver', username='toto',
                                    ** self.fp_defaults)
-            self.assertEqual(pr.netloc(), 'toto@superserver')
+            self.assertEqual(pr.netloc(None), 'toto@superserver')
             self.assertEqual(pr.uri(self.t_res),
                              '{}://toto@superserver/home/machin/dummy'.format(proto))
 
@@ -135,8 +135,8 @@ class TestProviderVortexStd(unittest.TestCase):
             # Namespace only
             fpd['namespace'] = ns
             pr = fp.proxy.provider(** fpd)
-            self.assertEqual(pr.scheme(), 'vortex')
-            self.assertEqual(pr.netloc(), ns)
+            self.assertEqual(pr.scheme(None), 'vortex')
+            self.assertEqual(pr.netloc(None), ns)
             self.assertIs(pr.member, None)
             self.assertEqual(pr.nice_member(), '')
             # Member
@@ -147,7 +147,7 @@ class TestProviderVortexStd(unittest.TestCase):
             # Expected
             fpd['expected'] = True
             pr = fp.proxy.provider(** fpd)
-            self.assertEqual(pr.scheme(), 'xvortex')
+            self.assertEqual(pr.scheme(None), 'xvortex')
 
     def test_vortexstd_paths(self):
         pr = fp.proxy.provider(** self.fp_defaults)
@@ -184,7 +184,7 @@ class TestProviderVortexOp(unittest.TestCase):
             fpd.update(self.fp_defaults)
             fpd['experiment'] = ns
             pr = fp.proxy.provider(** fpd)
-            self.assertEqual(pr.netloc(), 'vsop.cache.fr')
+            self.assertEqual(pr.netloc(None), 'vsop.cache.fr')
 
 
 class TestProviderOlive(unittest.TestCase):
@@ -207,8 +207,8 @@ class TestProviderOlive(unittest.TestCase):
             # Namespace only
             fpd['namespace'] = ns
             pr = fp.proxy.provider(** fpd)
-            self.assertEqual(pr.scheme(), 'olive')
-            self.assertEqual(pr.netloc(), ns)
+            self.assertEqual(pr.scheme(None), 'olive')
+            self.assertEqual(pr.netloc(None), ns)
             self.assertIs(pr.member, None)
 
     def test_olive_paths(self):
@@ -251,8 +251,8 @@ class TestProviderOpArchive(unittest.TestCase):
     def test_oparchive_basics(self):
         for ns in self.t_suites:
             pr = fp.proxy.provider(suite=ns, ** self.fp_defaults)
-            self.assertEqual(pr.scheme(), 'op')
-            self.assertEqual(pr.netloc(), '{:s}.archive.fr'.format(self.s_remap.get(ns, ns)))
+            self.assertEqual(pr.scheme(None), 'op')
+            self.assertEqual(pr.netloc(None), '{:s}.archive.fr'.format(self.s_remap.get(ns, ns)))
             self.assertIs(pr.member, None)
 
     def test_oparchive_strangenames(self):
@@ -370,8 +370,8 @@ class TestProviderOpArchiveCourt(unittest.TestCase):
         for ns in self.t_suites:
             for nc in self.t_vconfs:
                 pr = fp.proxy.provider(suite=ns, vconf=nc, ** self.fp_defaults)
-                self.assertEqual(pr.scheme(), 'op')
-                self.assertEqual(pr.netloc(), 'oper.archive.fr')
+                self.assertEqual(pr.scheme(None), 'op')
+                self.assertEqual(pr.netloc(None), 'oper.archive.fr')
                 self.assertEqual(pr.pathname(self.t_res),
                                  'arpege/{}/court/2000/01/01/r0'.format(ns))
 

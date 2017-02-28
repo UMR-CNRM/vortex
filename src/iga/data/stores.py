@@ -92,7 +92,7 @@ class IgaFinder(Finder):
         """Delegates to ``system`` the copy of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
         rc = self.system.cp(rpath, local, intent=options.get('intent'), fmt=options.get('fmt'))
-        return rc and self._hash_get_check(remote, local, dict())
+        return rc and self._hash_get_check(self.fileget, remote, local, dict())
 
 
 class SopranoStore(Store):
@@ -163,7 +163,7 @@ class SopranoStore(Store):
         if ftp:
             rc = ftp.get(self.fullpath(remote), local)
             ftp.close()
-            rc = rc and self._hash_get_check(remote, local, options)
+            rc = rc and self._hash_get_check(self.ftpget, remote, local, options)
             extract = remote['query'].get('extract', None)
             if extract:
                 if extract == 'all':
@@ -183,4 +183,4 @@ class SopranoStore(Store):
             logname  = remote['username'],
             fmt      = options.get('fmt')
         )
-        return rc and self._hash_put(local, remote, options)
+        return rc and self._hash_put(self.ftpput, local, remote, options)

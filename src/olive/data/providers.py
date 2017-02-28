@@ -51,11 +51,11 @@ class Olive(Provider):
         logger.debug('Olive experiment provider init %s', self.__class__)
         super(Olive, self).__init__(*args, **kw)
 
-    def scheme(self):
+    def scheme(self, resource):
         """Default scheme is ``olive``."""
         return 'olive'
 
-    def netloc(self):
+    def netloc(self, resource):
         """Proxy to actual ``namespace`` value."""
         return self.namespace.netloc
 
@@ -132,11 +132,11 @@ class OpArchive(Provider):
     def realkind(self):
         return 'archive'
 
-    def scheme(self):
+    def scheme(self, resource):
         """Return the actual tube as scheme."""
         return self.tube
 
-    def netloc(self):
+    def netloc(self, resource):
         """Proxy to actual ``namespace`` value."""
         return self.namespace.netloc
 
