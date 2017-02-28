@@ -599,7 +599,7 @@ def rescue(*files, **opts):
         if bkupdir is None:
             logger.error('No rescue directory defined.')
         else:
-            logger.info('Backup directory defined by user <%s>', bkupdir)
+            logger.info('Backup directory defined by user < %s >', bkupdir)
             items.sort()
             logger.info('Rescue items %s', str(items))
             sh.mkdir(bkupdir)
