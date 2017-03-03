@@ -87,7 +87,12 @@ class OpJobAssistantTest(JobAssistant):
             t.env.setvar("LOG", None)
 
         # Set a new variable for availability notifications
-        t.env.setvar("OP_DISP_NAME", "_".join(t.env["SLURM_JOB_NAME"].split("_")[:-1]))
+        
+      
+        if "SLURM_JOB_NAME" in t.env:
+            t.env.setvar("OP_DISP_NAME", "_".join(t.env["SLURM_JOB_NAME"].split("_")[:-1]))
+        else:
+            t.env.setvar("OP_DISP_NAME", None)
 
         t.sh.header('Setting up the MPI Environment')
 
