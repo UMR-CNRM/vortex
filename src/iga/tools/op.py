@@ -306,9 +306,15 @@ def oproute_hook_factory(kind, productid, sshhost, areafilter=None, soprano_targ
     """Hook functions factory to route files while the execution is running"""
 
     def hook_route(t, rh):
+        kwargs= dict(kind=kind, productid=productid, sshhost=sshhost,
+                    filename=rh.container.basename, soprano_target=soprano_target, routingkey=routingkey)
+        if hasattr(rh.resource, 'geometry'):
+            kwargs['domain'] = rh.resource.geometry.area
+        if hasattr(rh.resource, 'term'):
+            kwargs['term'] = rh.resource.term
+
         if (areafilter is None) or (rh.resource.geometry.area in areafilter):
-            ad.route(kind=kind, productid=productid, sshhost=sshhost, domain=rh.resource.geometry.area, term=rh.resource.term,
-                     filename=rh.container.basename, soprano_target=soprano_target, routingkey=routingkey)
+            ad.route(** kwargs)
             print t.prompt, 'routing file = ', rh
 
     return hook_route
