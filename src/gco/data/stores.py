@@ -368,7 +368,7 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
     Uget archive store
     """
 
-    _eltid_cleaner = re.compile(r'^(.*)\.\d+($|\..*$)')
+    _eltid_cleaner = re.compile(r'^(.*)\.\d+[a-zA-Z_-]*($|\.\D*$)')
 
     #: Path to the uget Store configuration file
     _store_global_config = '@store-uget.ini'
@@ -398,6 +398,9 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
                 optional = True,
                 default = GcoStoreConfig(GGET_DEFAULT_CONFIGFILE),
             ),
+            readonly = dict(
+                default = True,
+            )
         )
     )
 

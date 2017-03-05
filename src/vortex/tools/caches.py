@@ -193,6 +193,15 @@ class Cache(footprints.FootprintBase):
         self.addrecord('DELETE', item, status=rc, info=info, fmt=fmt)
         return rc
 
+    def catalog(self):
+        """List all files present in this cache.
+
+        NB: It might be quite slow...
+        """
+        entry = self.sh.path.expanduser(self.entry)
+        files = self.sh.ffind(entry)
+        return [f[len(entry):] for f in files]
+
     def flush(self, dumpfile=None):
         """Flush actual history to the specified ``dumpfile`` if record is on."""
         if dumpfile is None:

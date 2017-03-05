@@ -395,7 +395,11 @@ class MultiStore(footprints.FootprintBase):
                     type     = bool,
                     optional = True,
                     default  = False,
-                )
+                ),
+                storage = dict(
+                    optional = True,
+                    default  = None,
+                ),
             ),
         )
     ]
@@ -416,6 +420,13 @@ class MultiStore(footprints.FootprintBase):
     def system(self):
         """Shortcut to current system interface."""
         return self._sh
+
+    @staticmethod
+    def _verbose_log(options, level, *kargs, **kwargs):
+        slevel = kwargs.pop('slevel', 'debug')
+        if options is not None and options.get('silent', False):
+            level = slevel
+        getattr(logger, level)(*kargs, **kwargs)
 
     def loadstores(self):
         """
@@ -447,7 +458,8 @@ class MultiStore(footprints.FootprintBase):
         while loading alternates stores.
         """
         return [
-            dict(system=self.system, storehash=self.storehash, scheme=x, netloc=y)
+            dict(system=self.system, storehash=self.storehash, storage=self.storage,
+                 scheme=x, netloc=y)
             for x in self.alternates_scheme()
             for y in self.alternates_netloc()
         ]
@@ -523,7 +535,7 @@ class MultiStore(footprints.FootprintBase):
                 if rc:
                     break
         if not rc:
-            self._verbose_log(options, 'warning'
+            self._verbose_log(options, 'warning',
                               "None of the opened store succeeded... that's too bad !",
                               slevel='info')
         return rc
@@ -1043,7 +1055,7 @@ class ConfigurableArchiveStore(object):
         The relevant content of the configuration file is stored in the ``conf``
         dictionary.
         """
-        logger.info("Some store configuration data is needed (for %s://%s",
+        logger.info("Some store configuration data is needed (for %s://%s)",
                     self.scheme, self.netloc)
 
         # Because _store_global_config and _datastore_id must be overwritten...
