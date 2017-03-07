@@ -40,7 +40,7 @@ from vortex.tools import date
 from vortex.tools.actions import actiond as ad
 from vortex.tools.schedulers import SMS
 from vortex.tools.services import Service, FileReportService, TemplatedMailService
-
+from vortex.tools.date import Time
 #: Export nothing
 __all__ = []
 
@@ -560,7 +560,11 @@ class BdpeService(RoutingService):
                 optional = True,
                 default  = 'agt_pe_cmd',
             ),
-            term = a_term,
+             term = dict(
+                optional = True,
+                type     = Time,
+                default  = '0',
+            ),
         )
     )
 
@@ -635,6 +639,8 @@ class BdpeOperationsService(BdpeService):
             'bdpe.gironde':        10130,
             'e_transmet_fac':      10212,
             'bdpe.e_transmet_fac': 10116,
+            'bdpe.synopsis_preprod': 10433,
+
         }
         default = '{0.productid}{0.term.fmtraw}'.format(self)
         return rules.get(self.routingkey.lower(), default)
