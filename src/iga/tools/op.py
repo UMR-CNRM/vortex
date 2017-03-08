@@ -68,7 +68,8 @@ class OpJobAssistantTest(JobAssistant):
 
         nb_slurm = self.print_somevariables(t, 'SLURM')
         tg = vortex.sh().target()
-
+        # Set trace
+        self.add_extra_traces(t)
         # Set some more environment variables from the 'target*.ini' file
         if "LUSTRE_OPER" in t.env:
             lustre_oper = "/" + t.env["LUSTRE_OPER"]
