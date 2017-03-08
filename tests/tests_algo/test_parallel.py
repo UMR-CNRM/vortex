@@ -76,16 +76,16 @@ class TestParallel(unittest.TestCase):
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
         self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, np=8, openmp=10)))
+        self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
         # Strange stuff: ask for a total of only 7 tasks (not recommended !)
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, np=7)))
-        self.assertCmdl('{base:s} --mpi-allow-odd-dist --nn 2 --np 7 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
-        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
-        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, np=7)))
-        self.assertCmdl('{base:s} --mpi-allow-odd-dist --nn 2 --np 7 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
+        self.assertCmdl('{base:s} --mpi-allow-odd-dist --nn 2 --nnp 4 --np 7 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
         with self.assertRaises(MpiException):
             algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
-            _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=7)))
+            _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=7, np=1)))
         # mpiauto prefix command...
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10,
@@ -104,7 +104,7 @@ class TestParallel(unittest.TestCase):
         # Strange stuff: ask for a total of only 7 tasks (not recommended !)
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(np=7)))
-        self.assertCmdl('{base:s} --mpi-allow-odd-dist --nn 2 --np 7 --openmp 10 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
+        self.assertCmdl('{base:s} --mpi-allow-odd-dist --nn 2 --nnp 4 --np 7 --openmp 10 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
         # Tweaking mpiname
         algo = self._fix_algo(fp.proxy.component(engine='parallel'))
         self.locenv.VORTEX_MPI_NAME = 'mpiauto'

@@ -51,15 +51,14 @@ class MpiAuto(mpitools.MpiTool):
     def _hook_binary_mpiopts(self, options):
         tuned = options.copy()
         # Regular MPI tasks count (the usual...)
-        if (('nnp' in options and 'nn' in options) and
-                options['nn'] * options['nnp'] == options['np']):
-            # Remove harmless options
-            del tuned['np']
-            tuned.pop('allowodddist', None)
-        # that's the strange MPI distribution...
-        elif ('np' in options and 'nn' in options):
-            tuned.pop('nnp', None)  # Useless in this case
-            tuned['allowodddist'] = None  # With this, let mpiauto determine its own partitioning
+        if 'nnp' in options and 'nn' in options:
+            if options['nn'] * options['nnp'] == options['np']:
+                # Remove harmlful options
+                del tuned['np']
+                tuned.pop('allowodddist', None)
+                # that's the strange MPI distribution...
+            else:
+                tuned['allowodddist'] = None  # With this, let mpiauto determine its own partitioning
         else:
             msg = ("The provided mpiopts are insufficient to build the command line: {!s}"
                    .format(options))
