@@ -27,6 +27,7 @@ class Coupling(FullPos):
             basedate = dict(
                 info     = "The run date of the coupling generating process",
                 type     = date.Date,
+                optional = True
             ),
         )
     )
@@ -160,7 +161,10 @@ class Coupling(FullPos):
             if (len(posfile) > 1):
                 logger.critical('Many ' + outprefix + ' files, do not know how to adress that')
             posfile = posfile[0]
-            actualterm = (actualdate - self.basedate).time()
+            if self.basedate is None:
+                actualterm = r.resource.term
+            else:
+                actualterm = (actualdate - self.basedate).time()
             actualname = (re.sub(r'^.+?((?:_\d+)?)(?:\+[:\d]+)?$', r'CPLOUT\1+', r.container.localpath()) +
                           actualterm.fmthm)
             if isMany:
