@@ -10,6 +10,7 @@ from collections import defaultdict
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
+from vortex.algo.components import AlgoComponentError
 from vortex.tools.date import Time
 from vortex.util.structs import ShellEncoder
 from .ifsroot import IFSParallel
@@ -386,6 +387,9 @@ class FullPosBDAP(FullPos):
                 values  = ['fullpos', 'fp'],
                 remap   = dict(fp= 'fullpos' )
             ),
+            fcterm = dict(
+                values = [0, ],
+            ),
             outputid = dict(
                 info        = "The identifier for the encoding of post-processed fields.",
                 type        = str,
@@ -396,6 +400,12 @@ class FullPosBDAP(FullPos):
             ),
         ),
     )
+
+    def prepare(self, rh, opts):
+        """Some additional checks."""
+        if self.system.path.exists('xxt00000000'):
+            raise AlgoComponentError('There should be no file named xxt00000000 in the working directory')
+        super(FullPosBDAP, self).prepare(rh, opts)
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
@@ -416,7 +426,6 @@ class FullPosBDAP(FullPos):
             kind = 'historic',
         ) ]
         initrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
-
 
         for r in initrh:
             sh.subtitle('Loop on {0:s}'.format(r.resource.term.fmthm))
@@ -491,8 +500,10 @@ class FullPosBDAP(FullPos):
         """Post processing cleaning."""
         sh = self.system
 
-        for fpfile in [ x for x in sh.glob('RUNOUT*/PF{0:s}*'.format(self.xpname)) if sh.path.isfile(x) ]:
-            sh.move(fpfile, sh.path.basename(fpfile), fmt='lfi')
+        for fpfile in [x for x in (sh.glob('RUNOUT*/PF{0:s}*'.format(self.xpname)) +
+                                   sh.glob('RUNOUT*/GRIBPF{0:s}*+*'.format(self.xpname))) if sh.path.isfile(x)]:
+            sh.move(fpfile, sh.path.basename(fpfile),
+                    fmt = 'grib' if fpfile.startswith('GRIB') else 'lfi')
         sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')
 
         super(FullPosBDAP, self).postfix(rh, opts)

@@ -382,7 +382,7 @@ class NamelistSelect(NamelistTerm):
         if myenv.true('VORTEX_XXT_DEF'):
             return 'extract=' + self.incoming_xxt_fixup('source', 'select')
         else:
-            return 'extract=' + self.incoming_namelist_fixup('source', 'select')
+            return 'extract={:s}'.format(self.source)
 
 
 class NamelistFullPos(NamelistTerm):
