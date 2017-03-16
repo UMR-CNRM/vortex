@@ -27,7 +27,7 @@ class _SshTestBase(unittest.TestCase):
     _localssh = dict()
 
     def setUp(self):
-        # Check if SSH is availlable on this system
+        # Check if SSH is available on this system
         if not self._localssh:
             try:
                 subprocess.check_output(['ssh', test_host, 'true'], stderr=subprocess.STDOUT)
@@ -36,7 +36,7 @@ class _SshTestBase(unittest.TestCase):
             else:
                 self._localssh['checked_out'] = True
         if not self._localssh['checked_out']:
-            raise self.skipTest('It is not possible to connect to localhost using SSH.')
+            raise self.skipTest('It is not possible to connect to {} using SSH.'.format(test_host))
         # Generate a temporary directory
         self.t = vortex.sessions.current()
         self.sh = self.t.system()
@@ -86,6 +86,7 @@ class TestSsh(_SshTestBase):
         self.assertEqual(self.ssh.remote, '{:s}@{:s}'.format(self.user, test_host))
         self.assertTrue(self.ssh.check_ok())
         self.assertFalse(self.ssh.execute(False))
+        self.assertFalse(self.ssh.execute('false'))
         self.assertEqual(self.ssh.execute('hostname'), [self.sh.hostname, ])
         self.assertTrue(self.ssh.cocoon(''))
         cocoonbase = self.sh.path.join(self.tmpdir, 'cocoon')
@@ -98,24 +99,41 @@ class TestSsh(_SshTestBase):
         self.assertFalse(self.sh.path.isdir(cocoonbase))
 
     def test_scpput(self):
+        # copy to a subdir
         dest_cp1 = self.sh.path.join(self.tmpdir, 'subcp1')
         self.assertTrue(self.ssh.scpput(self.ref1, dest_cp1 + '/'))
         self.assertIsCopy1(self.sh.path.join(dest_cp1, self.sh.path.basename(self.ref1)))
+
+        # same with a relative path for the source
+        dest_cp1bis = self.sh.path.join(self.tmpdir, 'subrel1')
+        self.assertTrue(self.ssh.scpput(self.sh.path.basename(self.ref1), dest_cp1bis + '/'))
+        self.assertIsCopy1(self.sh.path.join(dest_cp1bis, self.sh.path.basename(self.ref1)))
+
+        # copy a file to a file
         dest_cp2 = self.sh.path.join(self.tmpdir, 'toto')
         self.assertTrue(self.ssh.scpput(self.ref1, dest_cp2))
         self.assertIsCopy1(dest_cp2)
+
         # Forbidden
         with self.assertRaises(ValueError):
             self.ssh.scpput(self.ref1, self.sh.path.join(self.tmpdir, '..', 'failer'))
+
         # Directory copy
         dest_cp3 = self.sh.path.join(self.tmpdir, 'subcp3')
         self.assertTrue(self.ssh.scpput(dest_cp1, dest_cp3))
         self.assertIsCopy1(self.sh.path.join(dest_cp3, self.sh.path.basename(self.ref1)))
+
+        # same to a subdirectory
+        dest_cp3bis = self.sh.path.join(self.tmpdir, 'subcp3/')
+        self.assertTrue(self.ssh.scpput(dest_cp1, dest_cp3bis))
+        self.assertIsCopy1(self.sh.path.join(dest_cp3bis, self.sh.path.basename(self.ref1)))
+
         # Streaming !
         with open(self.ref2, 'r') as fh2:
             self.assertTrue(self.ssh.scpput_stream(fh2, dest_cp2, permissions=0400))
         self.assertIsCopy2(dest_cp2)
         self.assertEqual(stat.S_IMODE(self.sh.stat(dest_cp2).st_mode), 0400)
+
         # Nasty characters
         dest_cp5 = self.sh.path.join(self.tmpdir, 'toto+titi')
         self.assertTrue(self.ssh.scpput(self.ref1, dest_cp5))
