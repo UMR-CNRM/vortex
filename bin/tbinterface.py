@@ -7,11 +7,13 @@ import argparse
 import importlib
 import json
 import os
+import re
 import sys
 from xml.dom import minidom
 
 # Automatically set the python path
-vortexbase = os.path.dirname(os.path.realpath(__file__)).rstrip('/bin')
+vortexbase = re.sub(os.path.sep + 'bin$', '',
+                    os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 

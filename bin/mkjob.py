@@ -10,9 +10,8 @@ import sys
 import tempfile
 
 # Export de la version de vortex à utiliser (celle de l'application concernee)
-appbase = os.path.realpath(os.getcwd())
-for xpath in ('/jobs', '/conf', '/logs', '/tasks'):
-    appbase = appbase.rstrip(xpath)
+appbase = re.sub(os.path.sep + '(jobs|conf|logs|tasks)$', '',
+                 os.path.realpath(os.getcwd()))
 vortex_path = os.path.join(appbase, 'vortex')
 pathdirs    = [os.path.join(vortex_path, xpath) for xpath in ('site', 'src', )]
 for d in pathdirs:
