@@ -96,6 +96,7 @@ class OpPhase(Action):
         self._sh = sessions.system()
         self._parser = None
         self._section = None
+        self._tuning = dict()
         self.configure(configuration)
 
     @staticmethod
@@ -113,6 +114,17 @@ class OpPhase(Action):
     def sh(self):
         return self._sh
 
+    @property
+    def section(self):
+        return self._section
+
+    def tune(self, section=None, **kw):
+        """Add options to override the .ini file configuration.
+           ``section`` is a specific section name, or ``None`` for all.
+        """
+        if section is None or section == self._section:
+            self._tuning.update(kw)
+
     def configure(self, section, show=False):
         """Check and set the configuration: a section in the target-xxx.ini file."""
         target = self.sh.target()
@@ -126,12 +138,21 @@ class OpPhase(Action):
     def show_config(self):
         """Show the current configuration (for debugging purposes)."""
         from pprint import pprint
-        print('\nPhase configuration:', self._section)
+        print('\n=== Phase configuration:', self._section)
         pprint(self._parser.as_dict()[self._section])
+        if self._tuning:
+            print('\n+++ Fine tuning:')
+            pprint(self._tuning)
+            print('\n+++ Real configuration:')
+            final_dict = dict(self._parser.as_dict()[self._section])
+            final_dict.update(self._tuning)
+            pprint(final_dict)
         print()
 
     def getx(self, key, *args, **kw):
-        """Shortcut to access our configuration."""
+        """Shortcut to access the configuration overridden by the tuning."""
+        if key in self._tuning:
+            return self._tuning[key]
         return self._parser.getx(key=self._section + ':' + key, *args, **kw)
 
     @property
