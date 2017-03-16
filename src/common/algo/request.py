@@ -80,7 +80,7 @@ class GetBDAPResource(TaylorRun):
 
             if not rc:
                 logger.exception('Problem during the BDAP request of %s.', query_file)
-                if self.system.isfile():
+                if self.system.path.isfile('DIAG_BDAP'):
                     raise BDAPRequestConfigurationError
                 else:
                     raise BDAPGetError
