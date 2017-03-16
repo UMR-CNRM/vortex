@@ -738,8 +738,8 @@ class System(footprints.FootprintBase):
     def cdcontext(self, path, create=False):
         return CdContext(self, path, create)
 
-    def ssh(self, hostname, logname=None):
-        return Ssh(self, hostname, logname)
+    def ssh(self, hostname, logname=None, *args, **kw):
+        return Ssh(self, hostname, logname, *args, **kw)
 
     @property
     def cpus_info(self):
@@ -1760,7 +1760,7 @@ class Ssh(object):
 
     Also handles remote copy via scp or ssh, which is intimately linked
     """
-    def __init__(self, sh, hostname, logname=None):
+    def __init__(self, sh, hostname, logname=None, sshopts=None, scpopts=None):
         self._sh = sh
         if logname:
             self._remote = logname + '@' + hostname
@@ -1773,15 +1773,20 @@ class Ssh(object):
         self._sshopts = ' '.join([
             parser.getx(key='services:sshopts', default='-x'),
             parser.getx(key='services:sshretryopts', default=''),
+            sshopts or '',
         ])
         self._scpopts = ' '.join([
             parser.getx(key='services:scpopts', default='-Bp'),
             parser.getx(key='services:scpretryopts', default=''),
+            scpopts or '',
         ])
 
     @property
     def sh(self):
         return self._sh
+
+    def remote(self):
+        return self._remote
 
     def check_ok(self):
         """Is the connexion ok ?"""
