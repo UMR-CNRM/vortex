@@ -23,10 +23,12 @@ from __future__ import print_function, absolute_import, division
 
 import argparse
 import os
+import re
 import sys
 
 # Automatically set the python path
-vortexbase = os.path.dirname(os.path.realpath(__file__)).rstrip('/bin')
+vortexbase = re.sub(os.path.sep + 'bin$', '',
+                    os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
@@ -78,10 +80,10 @@ def parse_command_line():
                     args.cycles.extend(line.partition('#')[0].strip().split())
 
     # remove ".genv" extensions (to ease copy-paste)
-    args.cycles = {c.strip('.genv') for c in args.cycles}
+    args.cycles = {re.sub(r'\.genv$', '', c) for c in args.cycles}
 
     if args.remove:
-        args.remove = args.remove.strip('.genv')
+        args.remove = re.sub(r'\.genv$', '', args.remove)
 
     # check consistency
     if args.remove in args.cycles:

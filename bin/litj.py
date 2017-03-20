@@ -7,10 +7,12 @@ A basic launching interface to Jeeves' services !
 """
 
 import os
+import re
 import sys
 import argparse
 
-vortexbase = os.path.dirname(os.path.realpath(__file__)).rstrip('/bin')
+vortexbase = re.sub(os.path.sep + 'bin$', '',
+                    os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 

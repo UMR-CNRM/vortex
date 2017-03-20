@@ -260,7 +260,7 @@ def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopat
 
     # except if used by another cycle
     with sh.cdcontext(genvpath):
-        for cycle in [x.strip('.genv') for x in sh.glob('*.genv')]:
+        for cycle in [re.sub(r'\.genv$', '', x) for x in sh.glob('*.genv')]:
             if cycle != delcycle:
                 delitems -= genv_contents(cycle)
 
