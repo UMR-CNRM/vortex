@@ -21,3 +21,5 @@ Functions
 .. autofunction:: checkingfunction
 
 .. autofunction:: safedrawingfunction
+
+.. autofunction:: unsafedrawingfunction

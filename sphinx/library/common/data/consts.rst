@@ -176,4 +176,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+     
+.. autoclass:: StdPressure
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+      
+.. autoclass:: TruncObj
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

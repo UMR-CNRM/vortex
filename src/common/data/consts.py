@@ -615,8 +615,9 @@ class MatFilter(GenvStaticGeoResource):
 class Stabal(GenvStaticGeoResource):
     """
     Spectral covariance operators:
-     - bal: cross-variables balances
-     - cv: auto-correlations of the control variable
+        *  bal: cross-variables balances
+        * cv: auto-correlations of the control variable
+
     A GenvKey can be given.
     """
 

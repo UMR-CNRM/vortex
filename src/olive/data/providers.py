@@ -239,7 +239,7 @@ class OpArchive(Provider):
                 return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr, run ))
         else:
             if re.match(r'arpege|arome|aearp', self.igakey):
-                return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr, rdir ))
+                return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr, rdir )).rstrip('/')
             else:
                 if re.match(r'testms1|testmp1', self.igakey):
                     return '/'.join((self.igakey, dd, rr ))

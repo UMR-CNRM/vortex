@@ -14,7 +14,8 @@ Data resources
    climfiles
    consts
    diagnostics
-   ens
+   eda
+   eps
    executables
    fields
    gridfiles

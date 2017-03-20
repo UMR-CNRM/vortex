@@ -20,6 +20,7 @@ Miscellaneous Tools
    net
    odb
    parallelism
+   rawfiles
    schedulers
    services
    surfex

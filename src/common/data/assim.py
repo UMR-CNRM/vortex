@@ -59,14 +59,18 @@ class _BackgroundErrorInfo(GeoFlowResource):
 
 
 class BackgroundStdError(_BackgroundErrorInfo):
-    """
-    Background error standard deviation.
-    stage: - unbal/vor: unbalanced variables fields
-           - scr: obs. related fields
-           - profile: full variables global and latitude bands horizontal averages
-           - full: full variables fields
-    origin: - ens: diagnosed from an ensemble
-            - diag: diagnosed from randomized (a priori climatological) covariances
+    """Background error standard deviation.
+
+    stage: 
+        * unbal/vor: unbalanced variables fields
+        * scr: obs. related fields
+        * profile: full variables global and latitude bands horizontal averages
+        * full: full variables fields
+
+    origin: 
+        * ens: diagnosed from an ensemble
+        * diag: diagnosed from randomized (a priori climatological) covariances
+
     """
 
     _footprint = [

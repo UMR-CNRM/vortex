@@ -1,7 +1,7 @@
-:mod:`common.data.ens` --- Common ensemble related resources
+:mod:`common.data.eps` --- Common ensemble related resources
 ============================================================
 
-.. automodule:: common.data.ens
+.. automodule:: common.data.eps
    :synopsis: Resources specific to ensemble configurations
 
 .. moduleauthor:: The Vortex Team
