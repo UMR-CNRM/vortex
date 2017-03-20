@@ -66,6 +66,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ConfigurableArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: VortexArchiveStore
    :show-inheritance:
    :members:
