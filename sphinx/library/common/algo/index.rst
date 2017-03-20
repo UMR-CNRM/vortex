@@ -16,4 +16,5 @@ Algo components
    forecasts
    mpitools
    odbtools
+   request
    stdpost

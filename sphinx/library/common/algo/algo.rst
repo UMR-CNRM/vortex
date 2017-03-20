@@ -23,5 +23,6 @@ Included Modules
 * :mod:`common.algo.ifsroot`
 * :mod:`common.algo.mpitools`
 * :mod:`common.algo.odbtools`
+* :mod:`common.algo.request`
 * :mod:`common.algo.stdpost`
 

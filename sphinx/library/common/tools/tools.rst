@@ -17,5 +17,6 @@ Modules
 -------
 
 * :mod:`common.tools.agt`
+* :mod:`common.tools.bdap`
 * :mod:`common.tools.grib`
 * :mod:`common.tools.igastuff`
