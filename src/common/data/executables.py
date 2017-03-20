@@ -150,7 +150,7 @@ class ProTool(BlackBox):
         return 'protool'
 
 
-class SstNetcdf(BlackBox):
+class SstNetcdf2Ascii(BlackBox):
     """Change format of NetCDF sst files."""
 
     _footprint = [
@@ -169,7 +169,7 @@ class SstNetcdf(BlackBox):
     ]
 
 
-class Lectbdap(BlackBox):
+class SstGrb2Ascii(BlackBox):
     """Transform sst grib files from the BDAP into ascii files."""
 
     _footprint = [
@@ -194,7 +194,7 @@ class Lectbdap(BlackBox):
         )
 
 
-class IceGrb(BlackBox):
+class IceGrb2Ascii(BlackBox):
     """Transform sea ice grib files into ascii files using the SeaIceLonLat file for coordinates."""
 
     _footprint = [

@@ -521,7 +521,7 @@ class PseudoTrajectory(BlindRun):
         self.export('drhook_not_mpi')
 
 
-class LectBDAP(BlindRun):
+class SstGrb2Ascii(BlindRun):
     """Transform sst grib files from the BDAP into ascii files"""
     _footprint = dict(
         info = 'Binary to change the format of sst BDAP files.',
@@ -541,9 +541,9 @@ class LectBDAP(BlindRun):
 
     def prepare(self, rh, opts):
         """Add namelist delta, prepare the environment and build the arguments needed."""
-        super(LectBDAP,self).prepare(rh,opts)
+        super(SstGrb2Ascii, self).prepare(rh, opts)
         for namrh in [x.rh for x in self.context.sequence.effective_inputs(role='Namelist',
-                                                                   kind='namelist', )]:
+                                                                           kind='namelist', )]:
             namc = namrh.contents
             try:
                 namc.newblock('NAMFILE')

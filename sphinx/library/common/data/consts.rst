@@ -107,6 +107,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: SeaIceLonLat
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ODBRaw
    :show-inheritance:
    :members:

@@ -529,7 +529,7 @@ class AtlasEmissivityPack(AtlasEmissivity):
 class SeaIceLonLat(GenvStaticGeoResource):
     """
     Coordinates of the file containing sea ice observations.
-    Used to create the file ice_concent.
+    It is used to create the ice_content file.
     """
     _footprint = dict(
         info = 'Coordinates used for ice_concent creation.',

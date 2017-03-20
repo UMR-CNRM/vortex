@@ -29,10 +29,10 @@ class BdpeStore(Store):
             netloc = dict(
                 values   = ['bdpe.archive.fr'],
             ),
-            store_compressed=dict(
-                optional=True,
-                default=None,
-                values=['bz2'],
+            store_compressed = dict(
+                optional = True,
+                default  = None,
+                values   = ['bz2'],
             ),
         ),
         priority = dict(
@@ -100,7 +100,7 @@ class BdpeStore(Store):
                 self.system.cat(diagfile)
         elif self.store_compressed is not None:
             # Deal with compressed files in the BDPE using the optional attribute store_compressed of the BDPE store.
-            tempfile = '.'.join([local,self.store_compressed])
+            tempfile = '.'.join([local, self.store_compressed])
             rc = rc and self.system.mv(local, tempfile)
             rc = rc and self._bdpeuncompressed(tempfile, local)
 
@@ -122,7 +122,7 @@ class BdpeStore(Store):
         else:
             # Compressed file not recognized yet
             logger.warning('The format of the compressed file %s is not recognized. Nothing done.',
-                self.store_compressed)
+                           self.store_compressed)
 
         rc = rc and self.system.path.exists(local)
         if not rc:
