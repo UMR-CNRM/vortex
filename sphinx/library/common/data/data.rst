@@ -30,6 +30,7 @@ Included Modules
 * :mod:`common.data.namelists`
 * :mod:`common.data.obs`
 * :mod:`common.data.providers`
+* :mod:`common.data.query`
 * :mod:`common.data.stores`
 * :mod:`common.data.surfex`
 

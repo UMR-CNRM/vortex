@@ -23,5 +23,6 @@ Data resources
    namelists
    obs
    providers
+   query
    stores
    surfex

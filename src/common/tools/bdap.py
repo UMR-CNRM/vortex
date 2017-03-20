@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 from __future__ import print_function, absolute_import, division
 
+"""
+Utility classes and function to work with the BDAP database.
+"""
 
-from vortex.tools.date import Date, Time
+#: No automatic export
+__all__ = []
 
 
 class BDAPError(Exception):
@@ -23,7 +26,7 @@ class BDAPGetError(BDAPError):
     pass
 
 
-def BDAPrequest_actual_command(command, date, term, query, extraenv=False):
+def BDAPrequest_actual_command(command, date, term, query, int_extraenv=False):
     """Build the command able to execute a BDAP request.
 
     The context, the execution path and the command name are
@@ -35,17 +38,16 @@ def BDAPrequest_actual_command(command, date, term, query, extraenv=False):
     :param date: the date of the file requested
     :param term: the term of the file requested
     :param query: the query file used for the request
-    :param extraenv: boolean to know if the integration BDAP is used or not
-                     (an additional environment variable has to be exporte in this case).
+    :param int_extraenv: boolean to know if the integration BDAP is used or not
+                         (an additional environment variable has to be exported in this case).
     """
 
     # Environment variable to specify the date of the file
     context = ' ; '.join(["export {}={}".format('dmt_date_pivot'.upper(), date.ymdhms)])
     # Extra environment variables (integration BDAP)
-    if extraenv:
+    if int_extraenv:
         context = ' ; '.join([context] +
                              ["export {}={}".format('db_file_bdap'.upper(),
                                                     '/usr/local/sopra/neons_db_bdap.intgr')])
     # Return the command to be launched
     return '{} ; {} {} {}'.format(context, command, term.fmtraw, query)
-
