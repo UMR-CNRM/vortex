@@ -74,7 +74,7 @@ class GetBDAPResource(AlgoComponent):
                                                             int_extraenv = int_bdap)
                 logger.info(' '.join(['BDAP extract command:', actual_command]))
                 logger.info('The %s directive file contains:', query_file)
-                self.system.cat(query_file)
+                self.system.cat(query_file, ouptut=False)
                 # Launch the BDAP request
                 rc = self.system.spawn([actual_command, ], shell = True, output = False, fatal = False)
 
