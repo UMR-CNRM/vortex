@@ -68,7 +68,8 @@ class OpJobAssistantTest(JobAssistant):
 
         nb_slurm = self.print_somevariables(t, 'SLURM')
         tg = vortex.sh().target()
-
+        # Set trace
+        self.add_extra_traces(t)
         # Set some more environment variables from the 'target*.ini' file
         if "LUSTRE_OPER" in t.env:
             lustre_oper = "/" + t.env["LUSTRE_OPER"]
@@ -87,7 +88,12 @@ class OpJobAssistantTest(JobAssistant):
             t.env.setvar("LOG", None)
 
         # Set a new variable for availability notifications
-        t.env.setvar("OP_DISP_NAME", "_".join(t.env["SLURM_JOB_NAME"].split("_")[:-1]))
+        
+      
+        if "SLURM_JOB_NAME" in t.env:
+            t.env.setvar("OP_DISP_NAME", "_".join(t.env["SLURM_JOB_NAME"].split("_")[:-1]))
+        else:
+            t.env.setvar("OP_DISP_NAME", None)
 
         t.sh.header('Setting up the MPI Environment')
 
@@ -301,9 +307,15 @@ def oproute_hook_factory(kind, productid, sshhost, areafilter=None, soprano_targ
     """Hook functions factory to route files while the execution is running"""
 
     def hook_route(t, rh):
+        kwargs= dict(kind=kind, productid=productid, sshhost=sshhost,
+                    filename=rh.container.basename, soprano_target=soprano_target, routingkey=routingkey)
+        if hasattr(rh.resource, 'geometry'):
+            kwargs['domain'] = rh.resource.geometry.area
+        if hasattr(rh.resource, 'term'):
+            kwargs['term'] = rh.resource.term
+
         if (areafilter is None) or (rh.resource.geometry.area in areafilter):
-            ad.route(kind=kind, productid=productid, sshhost=sshhost, domain=rh.resource.geometry.area, term=rh.resource.term,
-                     filename=rh.container.basename, soprano_target=soprano_target, routingkey=routingkey)
+            ad.route(** kwargs)
             print t.prompt, 'routing file = ', rh
 
     return hook_route
