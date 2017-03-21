@@ -60,6 +60,8 @@ gource:
 clean: $(CLEANDIRS)
 	rm -f project/{flake8_report,pylint_global}.txt
 	rm -f project/tbinterface_*.json
+	find . -name "*.pyc"       -print0 | xargs -0r rm
+	find . -name "__pycache__" -print0 | xargs -0r rm -r
 
 $(CLEANDIRS):
 	$(MAKE) -C $(@:clean-%=%) clean

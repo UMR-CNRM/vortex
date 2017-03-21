@@ -738,8 +738,8 @@ class System(footprints.FootprintBase):
     def cdcontext(self, path, create=False):
         return CdContext(self, path, create)
 
-    def ssh(self, hostname, logname=None):
-        return Ssh(self, hostname, logname)
+    def ssh(self, hostname, logname=None, *args, **kw):
+        return Ssh(self, hostname, logname, *args, **kw)
 
     @property
     def cpus_info(self):
@@ -1574,22 +1574,6 @@ class OSExtended(System):
             raise ValueError('{} is not a regular file'.format(filename))
 
 
-class Python26(object):
-    """Old fashion features before Python 2.7."""
-
-    def import_module(self, modname):
-        """Import the module named ``modname`` with :mod:`imp` package."""
-        import imp
-        path = None
-        buildname = ''
-        for mod in modname.split('.'):
-            mfile, mpath, minfo = imp.find_module(mod, path)
-            path = [mpath]
-            buildname = buildname + mod
-            imp.load_module(buildname, mfile, mpath, minfo)
-            buildname += '.'
-
-
 class Python27(object):
     """Python features starting at version 2.7."""
 
@@ -1619,7 +1603,7 @@ class Python27(object):
         return thisfunc
 
 
-class Garbage(OSExtended, Python26):
+class Garbage(OSExtended, Python27):
     """
     Default system class for weird systems.
     Hopefully an extended system will be loaded later on.
@@ -1702,24 +1686,11 @@ class Linux(OSExtended):
         return (True, cmdl, env)
 
 
-class Linux26(Linux, Python26):
-    """Specific Linux system with python version < 2.7"""
-
-    _footprint = dict(
-        info = 'Linux base system with pretty old python version',
-        attr = dict(
-            python = dict(
-                values = ['2.6.4', '2.6.5', '2.6.6']
-            )
-        )
-    )
-
-
 class Linux27(Linux, Python27):
     """Specific Linux system with python version >= 2.7"""
 
     _footprint = dict(
-        info = 'Linux base system with pretty new python version',
+        info = 'Linux base system with aging python version',
         attr = dict(
             python = dict(
                 values = ['2.7.' + str(x) for x in range(3, 15)]
@@ -1754,7 +1725,7 @@ class LinuxDebug(Linux27):
         return 'linuxdebug'
 
 
-class Macosx(Linux, Python27):
+class Macosx(OSExtended, Python27):
     """Mac under MacOSX."""
 
     _footprint = dict(
@@ -1769,6 +1740,21 @@ class Macosx(Linux, Python27):
         )
     )
 
+    def __init__(self, *args, **kw):
+        """
+        Before going through parent initialisation, pickle this attributes:
+          * psopts - as default option for the ps command (default: ``-w -f -a``).
+        """
+        logger.debug('Darwin system init %s', self.__class__)
+        self._psopts = kw.pop('psopts', ['-w', '-f', '-a'])
+        super(Macosx, self).__init__(*args, **kw)
+        # nothing like that on Darwin
+        self.__dict__['_cpusinfo'] = None
+
+    @property
+    def realkind(self):
+        return 'darwin'
+
     @property
     def default_syslog(self):
         """Address to use in logging.handler.SysLogHandler()."""
@@ -1780,7 +1766,7 @@ class Ssh(object):
 
     Also handles remote copy via scp or ssh, which is intimately linked
     """
-    def __init__(self, sh, hostname, logname=None):
+    def __init__(self, sh, hostname, logname=None, sshopts=None, scpopts=None):
         self._sh = sh
         if logname:
             self._remote = logname + '@' + hostname
@@ -1793,15 +1779,20 @@ class Ssh(object):
         self._sshopts = ' '.join([
             parser.getx(key='services:sshopts', default='-x'),
             parser.getx(key='services:sshretryopts', default=''),
+            sshopts or '',
         ])
         self._scpopts = ' '.join([
             parser.getx(key='services:scpopts', default='-Bp'),
             parser.getx(key='services:scpretryopts', default=''),
+            scpopts or '',
         ])
 
     @property
     def sh(self):
         return self._sh
+
+    def remote(self):
+        return self._remote
 
     def check_ok(self):
         """Is the connexion ok ?"""
