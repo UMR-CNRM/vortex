@@ -1,8 +1,8 @@
-:mod:`common.algo.ens` --- Algo components for ensemble processing
-==================================================================
+:mod:`common.algo.eps` --- Algo components for ensemble forecasts processing
+============================================================================
 
-.. automodule:: common.algo.ens
-   :synopsis: Generic algo components usefull to process ensembles
+.. automodule:: common.algo.eps
+   :synopsis: Generic algo components useful to process ensemble forecasts
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

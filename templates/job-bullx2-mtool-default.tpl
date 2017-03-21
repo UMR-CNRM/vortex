@@ -62,9 +62,10 @@ rd_iniconf  = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(appbase,
 ja = footprints.proxy.jobassistant(kind = 'generic',
                                    modules = footprints.stdtypes.FPSet((
                                        'common', 'gco', 'olive',
-                                       'vortex.tools.lfi', 'vortex.tools.odb',
+                                       'vortex.tools.lfi', 'vortex.tools.odb', 'vortex.tools.grib',
+                                       'vortex.tools.surfex', 'vortex.tools.rawfiles',
                                        'common.util.usepygram')),
-                                   addons = footprints.stdtypes.FPSet(('lfi', 'iopoll', 'odb')),
+                                   addons = footprints.stdtypes.FPSet(('lfi', 'iopoll', 'odb', 'sfx', 'grib', 'rawfiles')),
                                    special_prefix='rd_',
                                    )
 ja.add_plugin('mtool', step='[this:number]', stepid='[this:id]')

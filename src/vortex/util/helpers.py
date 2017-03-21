@@ -70,9 +70,11 @@ def generic_input_checker(grouping_keys, min_items, *rhandlers, **kwargs):
 
     # Check call
     outputlist = list()
+    # Is the check real or a delusion ?
+    fakecheck = kwargs.pop('fakecheck', False)
     #  The keys are sorted so that results remains reproducible
     for grouping_values in sorted(rhgroups.iterkeys()):
-        mychecks = [(rh, rh.check()) for rh in rhgroups[grouping_values]]
+        mychecks = [(rh, fakecheck or rh.check()) for rh in rhgroups[grouping_values]]
         groupid = fp.stdtypes.FPDict({k: v for k, v in zip(grouping_keys, grouping_values)})
         if all([acheck[1] for acheck in mychecks]):
             outputlist.append(groupid)

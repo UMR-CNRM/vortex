@@ -2,7 +2,7 @@
 import unittest
 
 import footprints as fp
-import common.data.ens  # @UnusedImport
+import common.data.eps  # @UnusedImport
 from vortex.data import geometries
 from vortex.tools.date import Date
 from vortex.util.names import VortexNameBuilder

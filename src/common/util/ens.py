@@ -97,7 +97,8 @@ def _checkingfunction_dict(options):
         else:
             raise FunctionStoreCallbackError('checkrole is not properly formatted')
         try:
-            return helpers.colorfull_input_checker(nbmin, checklist, mandatory=mandatorylist)
+            return helpers.colorfull_input_checker(nbmin, checklist, mandatory=mandatorylist,
+                                                   fakecheck = options.get('fakecheck', False))
         except helpers.InputCheckerError as e:
             raise FunctionStoreCallbackError('The input checher failed ({!s})'.format(e))
     else:
@@ -136,6 +137,18 @@ def safedrawingfunction(options):
 
     See the documentation of these two functions for more details.
     """
+    checkedlist = _checkingfunction_dict(options)
+    options['rhandler']['resource']['population'] = checkedlist
+    return drawingfunction(options)
+
+
+def unsafedrawingfunction(options):
+    """Combined called to :func:`checkingfunction` and :func:`drawingfunction`...
+    but with a big lie on the checking: no real check, all the resources are assumed ok.
+
+    See the documentation of these two functions for more details.
+    """
+    options['fakecheck'] = True
     checkedlist = _checkingfunction_dict(options)
     options['rhandler']['resource']['population'] = checkedlist
     return drawingfunction(options)

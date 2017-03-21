@@ -100,6 +100,12 @@ class Raw2ODB(OdbProcess):
                 optional = True,
                 default  = False,
             ),
+            member = dict(
+                info            = ("The current member's number " +
+                                   "(may be omitted in deterministic configurations)."),
+                optional        = True,
+                type            = int,
+            ),
         )
     )
 
@@ -278,6 +284,12 @@ class Raw2ODB(OdbProcess):
             for lamvar in ('BATOR_LAMFLAG', 'BATODB_LAMFLAG'):
                 logger.info('Setting env %s = %d', lamvar, 1)
                 self.env[lamvar] = 1
+
+        if self.member is not None:
+            for nam in self.context.sequence.effective_inputs(kind=('namelist', 'namelistfp')):
+                nam.rh.contents.setmacro('MEMBER', self.member)
+                logger.info('Setup macro MEMBER=%s in %s', self.member, nam.rh.container.actualpath())
+                nam.rh.save()
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""

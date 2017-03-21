@@ -191,7 +191,6 @@ class TestProviderOlive(unittest.TestCase):
 
     def setUp(self):
         self.fp_defaults = dict(vapp='arpege',
-                                vconf='4dvar',
                                 block='dummy',
                                 experiment='VOID',
                                 namespace='olive.cache.fr')
@@ -212,17 +211,30 @@ class TestProviderOlive(unittest.TestCase):
             self.assertIs(pr.member, None)
 
     def test_olive_paths(self):
-        pr = fp.proxy.provider(** self.fp_defaults)
+        pr = fp.proxy.provider(vconf='4dvar', ** self.fp_defaults)
         self.assertEqual(pr.pathname(self.t_res),
                          'VOID/20000101H00A/dummy')
         self.assertEqual(pr.uri(self.t_res),
                          'olive://' + self.fp_defaults['namespace'] +
                          '/VOID/20000101H00A/dummy/dummyres')
         # username ?
-        pr = fp.proxy.provider(username='toto', ** self.fp_defaults)
+        pr = fp.proxy.provider(username='toto', vconf='4dvar', ** self.fp_defaults)
         self.assertEqual(pr.uri(self.t_res),
                          'olive://' + self.fp_defaults['namespace'] +
                          '/VOID/20000101H00A/dummy/dummyres')
+        # member ?
+        pr = fp.proxy.provider(member=1, vconf='4dvar', ** self.fp_defaults)
+        self.assertEqual(pr.uri(self.t_res),
+                         'olive://' + self.fp_defaults['namespace'] +
+                         '/VOID/20000101H00A/mb001/dummy/dummyres')
+        pr = fp.proxy.provider(member=1, vconf='pearp', ** self.fp_defaults)
+        self.assertEqual(pr.uri(self.t_res),
+                         'olive://' + self.fp_defaults['namespace'] +
+                         '/VOID/20000101H00A/fc_001/dummy/dummyres')
+        pr = fp.proxy.provider(member=1, vconf='aearp', ** self.fp_defaults)
+        self.assertEqual(pr.uri(self.t_res),
+                         'olive://' + self.fp_defaults['namespace'] +
+                         '/VOID/20000101H00A/member_001/dummy/dummyres')
 
 
 class TestProviderOpArchive(unittest.TestCase):

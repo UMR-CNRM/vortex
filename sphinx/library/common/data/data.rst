@@ -21,7 +21,8 @@ Included Modules
 * :mod:`common.data.climfiles`
 * :mod:`common.data.consts`
 * :mod:`common.data.diagnostics`
-* :mod:`common.data.ens`
+* :mod:`common.data.eda`
+* :mod:`common.data.eps`
 * :mod:`common.data.executables`
 * :mod:`common.data.fields`
 * :mod:`common.data.gridfiles`
