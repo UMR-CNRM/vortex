@@ -140,7 +140,7 @@ class MpiNWPIO(mpitools.MpiBinaryIOServer):
         ioserv_filelist = set()
         ioserv_prefixes = set()
         logfmt = '%24s: %32s %s'
-        iofile_re = re.compile(r'((ICMSH|PF|GRIBPF).*\+\d+(?:\:\d+)?)(?:\..*)?$')
+        iofile_re = re.compile(r'((ICMSH|PF|GRIBPF).*\+\d+(?:\:\d+)?(?:\.sfx)?)(?:\..+)?$')
         for iodir in self.iodirs():
             self.system.subtitle('Parallel io directory {0:s}'.format(iodir))
             for iofile in self.system.listdir(iodir):

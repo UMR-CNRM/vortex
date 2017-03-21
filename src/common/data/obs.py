@@ -146,7 +146,7 @@ class ObsODB(Observations):
         elif re_fullmix.match(self.part) and self.stage == 'minim':
             return ('odb_min.tar', '')
         elif self.part == 'ground' and self.stage == 'canari':
-            return 'odb_canari.tar'
+            return ('odb_canari.tar', '')
         else:
             logger.error(
                 'No archive basename defined for such observations (format=%s, part=%s, stage=%s)',
