@@ -61,13 +61,13 @@ class _BackgroundErrorInfo(GeoFlowResource):
 class BackgroundStdError(_BackgroundErrorInfo):
     """Background error standard deviation.
 
-    stage: 
+    stage:
         * unbal/vor: unbalanced variables fields
         * scr: obs. related fields
         * profile: full variables global and latitude bands horizontal averages
         * full: full variables fields
 
-    origin: 
+    origin:
         * ens: diagnosed from an ensemble
         * diag: diagnosed from randomized (a priori climatological) covariances
 
@@ -173,7 +173,7 @@ class BackgroundErrorNorm(_BackgroundErrorInfo):
             model     = self.model,
             date      = self.date,
             cutoff    = self.cutoff,
-            directory = 'wavelet',
+            arpege_aearp_directory = 'wavelet',
         )
 
 
@@ -232,7 +232,7 @@ class Wavelet(GeoFlowResource):
             model     = self.model,
             date      = self.date,
             cutoff    = self.cutoff,
-            directory = self.realkind,
+            arpege_aearp_directory = self.realkind,
         )
 
 

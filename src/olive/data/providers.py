@@ -229,7 +229,8 @@ class OpArchive(Provider):
         mm = '{0:02d}'.format(rdate.month)
         dd = '{0:02d}'.format(rdate.day)
         rr = 'r{0:d}'.format(rdate.hour)
-        rdir = rinfo.get('directory', '')
+        rdir = rinfo.get('{0.vapp:s}_{0.vconf:s}_directory'.format(self),
+                         rinfo.get('directory', ''))
 
         if self.member is not None:
             run = 'RUN' + "%d" % self.member

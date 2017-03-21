@@ -265,8 +265,8 @@ class VarBC(FlowResource):
             stage = dict(
                 optional = True,
                 values   = ['void', 'merge', 'screen', 'screening', 'minim', 'traj'],
-                remap    = dict(screen = 'screening', void = 'traj'),
-                default  = 'traj'
+                remap    = dict(screen = 'screening'),
+                default  = 'void'
             ),
             mixmodel = dict(
                 optional = True,
@@ -290,12 +290,12 @@ class VarBC(FlowResource):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        olivestage_map = {'screening': 'screen',}
+        olivestage_map = {'screening': 'screen', }
         return self.realkind.upper() + "." + olivestage_map.get(self.stage, self.stage)
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        if self.stage == 'traj':
+        if self.stage in ('void', 'traj'):
             bname = 'VARBC.cycle'
             if self.mixmodel is not None:
                 bname += '_'
