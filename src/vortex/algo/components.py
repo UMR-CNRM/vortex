@@ -551,11 +551,6 @@ class AlgoComponent(footprints.FootprintBase):
         """Sequence for execution : prepare / execute / postfix."""
         self._status = True
 
-        # Before trying to do anything, check the executable
-        if not self.valid_executable(rh):
-            logger.warning('Resource %s is not a valid executable', rh.resource)
-            return False
-
         # Get instance shorcuts to context and system objects
         self.ticket  = vortex.sessions.current()
         self.context = self.ticket.context
@@ -563,6 +558,11 @@ class AlgoComponent(footprints.FootprintBase):
         self.target  = kw.pop('target', None)
         if self.target is None:
             self.target = self.system.target()
+
+        # Before trying to do anything, check the executable
+        if not self.valid_executable(rh):
+            logger.warning('Resource %s is not a valid executable', rh.resource)
+            return False
 
         # A cloned environment will be bound to the OS
         self.env = self.context.env.clone()
@@ -633,6 +633,25 @@ class ExecutableAlgoComponent(AlgoComponent):
         of the resource handler provided.
         """
         return rh is not None
+
+
+class xExecutableAlgoComponent(ExecutableAlgoComponent):
+    """Component in charge of running executable resources."""
+
+    _abstract  = True
+
+    def valid_executable(self, rh):
+        """
+        Return a boolean value according to the effective executable nature
+        of the resource handler provided.
+        """
+        rc = super(xExecutableAlgoComponent, self).valid_executable(rh)
+        if rc:
+            # Ensure that the input file is executable
+            xrh = rh if isinstance(rh, (list, tuple)) else [rh, ]
+            for arh in xrh:
+                self.system.xperm(arh.container.localpath(), force=True)
+        return rc
 
 
 class TaylorRun(AlgoComponent):
@@ -756,7 +775,7 @@ class Expresso(ExecutableAlgoComponent):
         self.spawn(args, opts)
 
 
-class BlindRun(ExecutableAlgoComponent):
+class BlindRun(xExecutableAlgoComponent):
     """
     Run any executable resource in the current environment. Mandatory argument is:
      * engine ( values =  blind )
@@ -824,7 +843,13 @@ class ParaBlindRun(TaylorRun):
         Return a boolean value according to the effective executable nature
         of the resource handler provided.
         """
-        return rh is not None
+        rc = rh is not None
+        if rc:
+            # Ensure that the input file is executable
+            xrh = rh if isinstance(rh, (list, tuple)) else [rh, ]
+            for arh in xrh:
+                self.system.xperm(arh.container.localpath(), force=True)
+        return rc
 
     def _default_common_instructions(self, rh, opts):
         '''Create a common instruction dictionary that will be used by the workers.'''
@@ -836,7 +861,7 @@ class ParaBlindRun(TaylorRun):
         return ddict
 
 
-class Parallel(ExecutableAlgoComponent):
+class Parallel(xExecutableAlgoComponent):
     """
     Run a binary launched with MPI support.
     """

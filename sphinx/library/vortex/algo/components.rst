@@ -45,6 +45,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: xExecutableAlgoComponent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: TaylorRun
    :show-inheritance:
    :members:
