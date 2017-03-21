@@ -1066,7 +1066,7 @@ class OSExtended(System):
             else:
                 return bool(self.size(source) == self.size(destination))
 
-    def hybridcp(self, source, destination):
+    def hybridcp(self, source, destination, silent=False):
         """
         Copy the ``source`` file to a safe ``destination``.
 
@@ -1076,6 +1076,10 @@ class OSExtended(System):
         """
         self.stderr('hybridcp', source, destination)
         if isinstance(source, basestring):
+            if not self.path.exists(source):
+                if not silent:
+                    logger.error('Missing source %s', source)
+                return False
             source = io.open(self.path.expanduser(source), 'rb')
             xsource = True
         else:
@@ -1116,7 +1120,7 @@ class OSExtended(System):
         st2 = self.stat(self.path.dirname(self.path.realpath(path2)))
         return st1.st_dev == st2.st_dev and not self.path.islink(path1)
 
-    def smartcp(self, source, destination):
+    def smartcp(self, source, destination, silent=False):
         """
         Hard link the ``source`` file to a safe ``destination`` if possible.
         Otherwise, let the standard copy do the job.
@@ -1129,7 +1133,8 @@ class OSExtended(System):
             return self.hybridcp(source, destination)
         source = self.path.expanduser(source)
         if not self.path.exists(source):
-            logger.error('Missing source %s', source)
+            if not silent:
+                logger.error('Missing source %s', source)
             return False
         if self.filecocoon(destination):
             destination = self.path.expanduser(destination)
@@ -1190,7 +1195,7 @@ class OSExtended(System):
             return False
 
     @fmtshcmd
-    def cp(self, source, destination, intent='inout', smartcp=True):
+    def cp(self, source, destination, intent='inout', smartcp=True, silent=False):
         """Copy the ``source`` file to a safe ``destination``.
 
         It relies on :meth:`hybridcp`, :meth:`smartcp` or :meth:`rawcp`
@@ -1198,12 +1203,13 @@ class OSExtended(System):
         """
         self.stderr('cp', source, destination)
         if not isinstance(source, basestring) or not isinstance(destination, basestring):
-            return self.hybridcp(source, destination)
+            return self.hybridcp(source, destination, silent=silent)
         if not self.path.exists(source):
-            logger.error('Missing source %s', source)
+            if not silent:
+                logger.error('Missing source %s', source)
             return False
         if smartcp and intent == 'in':
-            return self.smartcp(source, destination)
+            return self.smartcp(source, destination, silent=silent)
         if self.filecocoon(destination):
             return self.rawcp(source, destination)
         else:

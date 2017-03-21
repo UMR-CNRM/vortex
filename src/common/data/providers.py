@@ -83,11 +83,11 @@ class BdpeProvider(Provider):
     def realkind(self):
         return 'bdpe'
 
-    def scheme(self):
+    def scheme(self, resource):
         """A dedicated scheme."""
         return 'bdpe'
 
-    def netloc(self):
+    def netloc(self, resource):
         """The actual netloc is the ``namespace`` attribute of the current provider."""
         return self.namespace.netloc
 

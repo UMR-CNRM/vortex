@@ -54,11 +54,11 @@ class Provider(footprints.FootprintBase):
     def realkind(self):
         return 'provider'
 
-    def scheme(self):
+    def scheme(self, resource):
         """Abstract method."""
         pass
 
-    def netloc(self):
+    def netloc(self, resource):
         """Abstract method."""
         pass
 
@@ -93,15 +93,15 @@ class Provider(footprints.FootprintBase):
         """
         logger.debug(
             'scheme %s netloc %s normpath %s urlquery %s',
-            self.scheme(),
-            self.netloc(),
+            self.scheme(resource),
+            self.netloc(resource),
             os.path.normpath(self.pathname(resource) + '/' + self.basename(resource)),
             self.urlquery(resource)
         )
 
         return net.uriunparse((
-            self.scheme(),
-            self.netloc(),
+            self.scheme(resource),
+            self.netloc(resource),
             os.path.normpath(self.pathname(resource) + '/' + self.basename(resource)),
             None,
             self.urlquery(resource),
@@ -190,11 +190,11 @@ class Remote(Provider):
         """Additional information to print representation."""
         return 'path=\'{0:s}\''.format(self.remote)
 
-    def scheme(self):
+    def scheme(self, resource):
         """The Remote scheme is its tube."""
         return self.tube
 
-    def netloc(self):
+    def netloc(self, resource):
         """Fully qualified network location."""
         if self.username:
             return self.username + '@' + self.hostname
@@ -283,11 +283,11 @@ class Vortex(Provider):
         except AttributeError:
             return super(Vortex, self)._str_more()
 
-    def scheme(self):
+    def scheme(self, resource):
         """Default: ``vortex``."""
         return 'x' + self.realkind if self.expected else self.realkind
 
-    def netloc(self):
+    def netloc(self, resource):
         """Returns the current ``namespace``."""
         return self.namespace.netloc
 
@@ -346,7 +346,7 @@ class VortexFreeStd(Vortex):
         ),
     ]
 
-    def netloc(self):
+    def netloc(self, resource):
         """Vortex Free scheme (for archiving data)"""
         return 'vortex-free.' + self.namespace.domain
 
@@ -367,7 +367,7 @@ class VortexOp(Vortex):
         ),
     ]
 
-    def netloc(self):
+    def netloc(self, resource):
         """Vortex Special OP scheme, aka VSOP !"""
         return 'vsop.' + self.namespace.domain
 

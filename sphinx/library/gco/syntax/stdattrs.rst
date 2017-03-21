@@ -26,7 +26,17 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+      
+.. autoclass:: GgetId
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+      
+.. autoclass:: UgetId
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ArpIfsSimplifiedCycle
    :show-inheritance:
    :members:

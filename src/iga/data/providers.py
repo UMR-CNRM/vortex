@@ -119,11 +119,11 @@ class IgaProvider(Provider):
     def realkind(self):
         return 'iga'
 
-    def scheme(self):
+    def scheme(self, resource):
         """The actual scheme is the ``tube`` attribute of the current provider."""
         return self.tube
 
-    def netloc(self):
+    def netloc(self, resource):
         """The actual netloc is the ``namespace`` attribute of the current provider."""
         return self.namespace
 
@@ -196,11 +196,11 @@ class SopranoProvider(Provider):
     def realkind(self):
         return 'soprano'
 
-    def scheme(self):
+    def scheme(self, resource):
         """The actual scheme is the ``tube`` attribute of the current provider."""
         return self.tube
 
-    def netloc(self):
+    def netloc(self, resource):
         """The actual netloc is the ``namespace`` attribute of the current provider."""
         return self.namespace.netloc
 

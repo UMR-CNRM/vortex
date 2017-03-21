@@ -156,7 +156,7 @@ class Cache(footprints.FootprintBase):
         self.addrecord('INSERT', item, status=rc, info=info, fmt=fmt, intent=intent)
         return rc
 
-    def retrieve(self, item, local, intent='in', fmt='foo', info=None,
+    def retrieve(self, item, local, intent='in', fmt='foo', info=None, silent=False,
                  dirextract=False, tarextract=False, uniquelevel_ignore=True):
         """Retrieve an item from the current cache."""
         source = self.fullpath(item)
@@ -173,7 +173,7 @@ class Cache(footprints.FootprintBase):
                 rc = rc and self.sh.touch(local)
         # The usual case: just copy source
         else:
-            rc = self.sh.cp(source, local, intent=intent, fmt=fmt)
+            rc = self.sh.cp(source, local, intent=intent, fmt=fmt, silent=silent)
             # If auto_tarextract, a potential tar file is extracted
             if (rc and tarextract and not self.sh.path.isdir(local) and
                     self.sh.is_tarname(local) and self.sh.is_tarfile(local)):
@@ -192,6 +192,15 @@ class Cache(footprints.FootprintBase):
         rc = self.sh.remove(self.fullpath(item), fmt=fmt)
         self.addrecord('DELETE', item, status=rc, info=info, fmt=fmt)
         return rc
+
+    def catalog(self):
+        """List all files present in this cache.
+
+        NB: It might be quite slow...
+        """
+        entry = self.sh.path.expanduser(self.entry)
+        files = self.sh.ffind(entry)
+        return [f[len(entry):] for f in files]
 
     def flush(self, dumpfile=None):
         """Flush actual history to the specified ``dumpfile`` if record is on."""
@@ -300,3 +309,36 @@ class Op2ResearchCache(Cache):
         else:
             cache = self.actual_rootdir
         return self.sh.path.join(cache, self.actual_headdir)
+
+
+class HackerCache(Cache):
+    """A dirty cache where users can hack things."""
+
+    _footprint = dict(
+        info = 'A place to hack things...',
+        attr = dict(
+            kind = dict(
+                values   = ['hack'],
+            ),
+            rootdir = dict(
+                optional = True,
+                default  = 'auto'
+            ),
+            readonly = dict(
+                default = True,
+            ),
+        )
+    )
+
+    @property
+    def entry(self):
+        """Tries to figure out what could be the actual entry point for cache space."""
+        sh = self.sh
+        if self.rootdir == 'auto':
+            gl = sessions.current().glove
+            sweethome = sh.path.join(gl.configrc, 'hack')
+            sh.mkdir(sweethome)
+            logger.debug('Using %s hack cache: %s', self, sweethome)
+        else:
+            sweethome = self.actual_rootdir
+        return sh.path.join(sweethome, self.actual_headdir)

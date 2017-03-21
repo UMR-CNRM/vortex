@@ -318,7 +318,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     lfi_rm = lfi_remove = fa_rm = fa_remove = _std_remove
 
-    def _std_copy(self, source, destination, intent='in', pack=False):
+    def _std_copy(self, source, destination, intent='in', pack=False, silent=False):
         """Extended copy for (possibly) multi lfi file."""
         st = self._std_prepare(source, destination, intent)
         if st.rc == 0:
@@ -447,7 +447,7 @@ class LFI_Tool_Py(LFI_Tool_Raw):
             'read' if intent == 'in' else 'write',
         )
 
-    def _std_copy(self, source, destination, intent='in', pack=False):
+    def _std_copy(self, source, destination, intent='in', pack=False, silent=False):
         """Extended copy for (possibly) multi lfi file."""
         st = LFI_Status()
         if not self.sh.path.exists(source):

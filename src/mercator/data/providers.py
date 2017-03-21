@@ -25,10 +25,10 @@ class MercatorArchive(Provider):
     def realkind(self):
         return 'mercator'
 
-    def scheme(self):
+    def scheme(self, resource):
         return 'mercator'
 
-    def netloc(self):
+    def netloc(self, resource):
         return self.namespace
 
     def pathname(self, resource):

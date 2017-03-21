@@ -88,7 +88,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
 
     grib_rm = grib_remove = _std_remove
 
-    def _std_copy(self, source, destination, intent='in', pack=False):
+    def _std_copy(self, source, destination, intent='in', pack=False, silent=False):
         """Extended copy for (possibly) multi GRIB file."""
         # Might be multipart
         if self.is_xgrib(source):

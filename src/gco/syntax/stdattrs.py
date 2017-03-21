@@ -78,7 +78,7 @@ class ArpIfsSimplifiedCycle(object):
 
     It can be used in a footprint specification.
     """
-    _cy_re = re.compile(r'(?:cy|al)(\d+)(?:t(\d{1,3}))?(?:_.*?(?:op(\d{1,3}))?(:?\.\d+)?)?$')
+    _cy_re = re.compile(r'(?:u(?:env|get):)?(?:cy|al)(\d+)(?:t(\d{1,3}))?(?:_.*?(?:op(\d{1,3}))?(:?\.\d+)?)?')
     _hash_shift = 10000
 
     def __init__(self, cyclestr):
@@ -130,3 +130,42 @@ a_arpifs_cycle = dict(info     = "An Arpege/IFS cycle name",
 #: Usual definition of the ``cycle`` attribute.
 arpifs_cycle = footprints.Footprint(info = 'An abstract arpifs_cycle in GCO convention',
                                     attr = dict(cycle = a_arpifs_cycle))
+
+
+uget_sloppy_id_regex = re.compile(r'(?P<shortuget>(?P<id>\S+)@(?P<location>\w+))')
+uget_id_regex = r'(?P<fulluget>u(?:get|env):' + uget_sloppy_id_regex.pattern + ')'
+uget_id_regex_only = re.compile('^' + uget_id_regex + '$')
+uget_id_regex = re.compile(r'\b' + uget_id_regex + r'\b')
+
+
+class GgetId(str):
+    """Basestring wrapper for Gget Ids."""
+    def __new__(cls, value):
+        if uget_id_regex_only.match(value):
+            raise ValueError('A GgetId cannot look like a UgetId !')
+        return str.__new__(cls, value)
+
+
+class UgetId(str):
+    """Basestring wrapper for Uget Ids."""
+
+    def __new__(cls, value):
+        vmatch = uget_id_regex_only.match(value)
+        if not vmatch:
+            raise ValueError('Invalid UgetId (got "{:s}")'.format(value))
+        me = str.__new__(cls, value)
+        me._id = vmatch.group('id')
+        me._location = vmatch.group('location')
+        return me
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def location(self):
+        return self._location
+
+    @property
+    def short(self):
+        return self._id + '@' + self._location

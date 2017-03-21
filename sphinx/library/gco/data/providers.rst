@@ -32,3 +32,14 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: UGetProvider
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: UEnvProvider
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   

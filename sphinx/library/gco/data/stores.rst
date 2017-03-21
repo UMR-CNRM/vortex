@@ -37,3 +37,23 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: UgetHackCacheStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: UgetMtCacheStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: UgetArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: UgetStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

@@ -94,15 +94,31 @@ class Resource(footprints.FootprintBase):
         """Duck typing: return an empty string by default."""
         return ''
 
-    def genv_basename(self):
+    def uget_basename(self):
         """Proxy to :meth:`gget_basename`."""
+        return self.gget_basename()
+
+    def genv_basename(self):
+        """Just retrieve a potential gvar attribute."""
         return getattr(self, 'gvar', '')
+
+    def uenv_basename(self):
+        """Proxy to :meth:`genv_basename`."""
+        return self.genv_basename()
 
     def gget_urlquery(self):
         """Duck typing: return an empty string by default."""
         return ''
 
+    def uget_urlquery(self):
+        """Proxy to :meth:`gget_urlquery`."""
+        return self.gget_urlquery()
+
     def genv_urlquery(self):
+        """Proxy to :meth:`gget_urlquery`."""
+        return self.gget_urlquery()
+
+    def uenv_urlquery(self):
         """Proxy to :meth:`gget_urlquery`."""
         return self.gget_urlquery()
 

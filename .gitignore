@@ -25,6 +25,9 @@ flake8_report.txt
 pylint_global.txt
 tbinterface_*.json
 
+# Temporary notebook checkpoints
+.ipynb_checkpoints
+
 # RST file generated on the fly
 checkreport.rst
 geometries.rst

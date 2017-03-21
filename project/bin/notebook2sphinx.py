@@ -152,6 +152,18 @@ def _crawl_notebooks():
     return files
 
 
+def _crawl_images():
+    '''Lists the images.'''
+    files = list()
+    for (dirpath, _, filenames) in os.walk('.'):
+        if os.path.basename(dirpath) in _DIR_DISCARD:
+            continue
+        files.extend([os.path.join(dirpath, f)
+                      for f in filenames
+                      if os.path.splitext(f)[1] in ('.png')])
+    return files
+
+
 def _tar_notebooks(tarname, files):
     '''Create a tar file that contains all the notebook files.'''
     logger.info("Output tar file is: %s", tarname)
@@ -244,8 +256,11 @@ def main():
     files = _crawl_notebooks()
     logger.info("%d notebook found.", len(files))
 
+    images = _crawl_images()
+    logger.info("%d images found.", len(images))
+
     # Create a tar with temp
-    _tar_notebooks(os.path.join(abs_outputdir, args.tarname), files)
+    _tar_notebooks(os.path.join(abs_outputdir, args.tarname), files + images)
 
     # Find the packaging class
     packager = globals().get(args.packaging + 'Packaging')()
@@ -255,6 +270,12 @@ def main():
     # Export the notebooks
     for a_file in files:
         exporter(abs_outputdir, a_file)
+
+    # Copy images
+    for a_file in images:
+        dest = os.path.join(abs_outputdir, a_file)
+        os.makedirs(os.path.dirname(dest))
+        shutil.copyfile(a_file, dest)
 
     # Create the indexes (index.rst)
     _index_auto_generate(abs_outputdir, files)
