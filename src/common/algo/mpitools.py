@@ -27,6 +27,11 @@ class MpiAuto(mpitools.MpiTool):
             optprefix = dict(
                 default = '--'
             ),
+            optmap = dict(
+                default  = footprints.FPDict(nn='nn', nnp='nnp', openmp='openmp',
+                                             np='np', prefixcommand='prefix-command',
+                                             allowodddist='mpi-allow-odd-dist')
+            ),
             timeoutrestart = dict(
                 info            = 'The number of attempts made by mpiauto',
                 optional        = True,
@@ -42,6 +47,23 @@ class MpiAuto(mpitools.MpiTool):
         options = super(MpiAuto, self)._reshaped_mpiopts()
         options['init-timeout-restart'] = self.timeoutrestart
         return options
+
+    def _hook_binary_mpiopts(self, options):
+        tuned = options.copy()
+        # Regular MPI tasks count (the usual...)
+        if 'nnp' in options and 'nn' in options:
+            if options['nn'] * options['nnp'] == options['np']:
+                # Remove harmlful options
+                del tuned['np']
+                tuned.pop('allowodddist', None)
+                # that's the strange MPI distribution...
+            else:
+                tuned['allowodddist'] = None  # With this, let mpiauto determine its own partitioning
+        else:
+            msg = ("The provided mpiopts are insufficient to build the command line: {!s}"
+                   .format(options))
+            raise mpitools.MpiException(msg)
+        return tuned
 
 
 class MpiNWP(mpitools.MpiBinaryBasic):

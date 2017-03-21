@@ -209,6 +209,10 @@ class MpiTool(footprints.FootprintBase):
                 raise MpiException('Badly shaped mpi option around %s', optdef)
         return options
 
+    def _hook_binary_mpiopts(self, options):
+        """A nasty hook to modify binaries' mpiopts on the fly."""
+        return options
+
     def mkcmdline(self, args):
         """Builds the MPI command line.
 
@@ -227,7 +231,7 @@ class MpiTool(footprints.FootprintBase):
             if len(bin_obj.expanded_options()):
                 if effective > 0 and self.binsep:
                     cmdl.append(self.binsep)
-                e_options = bin_obj.expanded_options()
+                e_options = self._hook_binary_mpiopts(bin_obj.expanded_options())
                 for k in sorted(e_options.keys()):
                     if k in self.optmap:
                         cmdl.append(self.optprefix + str(self.optmap[k]))

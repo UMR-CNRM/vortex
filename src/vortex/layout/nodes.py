@@ -366,15 +366,32 @@ class Node(footprints.util.GetByTag, NiceLayout):
 
         This is a helper method that maybe useful (its use is not mandatory).
         """
-        with self.env.delta_context(OMP_NUM_THREADS=int(self.conf.get('openmp', 1))):
-            mpiopts = dict(nn = int(self.conf.nnodes),
-                           nnp = int(self.conf.ntasks), openmp = int(self.conf.openmp))
-            # When multiple list of binaries are given...
-            if tbx and isinstance(tbx[0], (list, tuple)):
-                tbx = zip(tbx)
+        # it may be necessary to setup a default value for OpenMP...
+        env_update = dict()
+        if ('openmp' not in self.conf or
+                ('openmp' in self.conf and
+                 not isinstance(self.conf.openmp, (list, tuple)))):
+            env_update['OMP_NUM_THREADS'] = int(self.conf.get('openmp', 1))
+        # If some mpiopts are in the config file, use them...
+        mpiotps = dict()
+        mpiopts_map = dict(nnodes='nn', ntasks='nnp', nprocs='np', proc='np')
+        for stuff in [s for s in ('proc', 'nprocs', 'nnodes', 'ntasks', 'openmp',
+                                  'prefixcommand') if s in self.conf]:
+                mpiotps[mpiopts_map.get(stuff, stuff)] = self.conf[stuff]
+        # Ensure that some of the mpiopts are integers
+        for stuff in [s for s in ('nn', 'nnp', 'openmp', 'np') if s in mpiotps]:
+            if isinstance(mpiotps[stuff], (list, tuple)):
+                mpiotps[stuff] = [int(v) for v in mpiotps[stuff]]
+            else:
+                mpiotps[stuff] = int(mpiotps[stuff])
+        # When multiple list of binaries are given (i.e several binaries are launched
+        # by the same MPI command).
+        if tbx and isinstance(tbx[0], (list, tuple)):
+            tbx = zip(tbx)
+        with self.env.delta_context(**env_update):
             for binary in tbx:
                 try:
-                    tbalgo.run(binary, mpiopts = mpiopts, **kwargs)
+                    tbalgo.run(binary, mpiopts = mpiotps, **kwargs)
                 except Exception:
                     self.report_execution_error()
                     raise
