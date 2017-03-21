@@ -20,15 +20,15 @@ class TestFieldsRawFields(unittest.TestCase):
         fpcommon = dict(date=Date(1970, 1, 1, 1, 0, 0), cutoff='assim',
                         kind='rawfields')
         res = fp.proxy.resource(origin='ostia', fields='sst', ** fpcommon)
-        self.assertEqual(res.olive_basename(), 'sstostia')
+        self.assertEqual(res.olive_basename(), 'sst.ostia')
         self.assertEqual(res.archive_basename(), 'sst.ostia')
         self.assertEqual(self.vb.pack(res.basename_info()), 'sst.ostia')
         res = fp.proxy.resource(origin='nesdis', fields='sst', ** fpcommon)
-        self.assertEqual(res.olive_basename(), 'sstnesdis')
+        self.assertEqual(res.olive_basename(), 'sst.nesdis.bdap')
         self.assertEqual(res.archive_basename(), 'sst.nesdis.bdap')
         self.assertEqual(self.vb.pack(res.basename_info()), 'sst.nesdis')
         res = fp.proxy.resource(origin='bdm', fields='seaice', ** fpcommon)
-        self.assertEqual(res.olive_basename(), 'seaicebdm')
+        self.assertEqual(res.olive_basename(), 'ice_concent')
         self.assertEqual(res.archive_basename(), 'ice_concent')
         self.assertEqual(self.vb.pack(res.basename_info()), 'seaice.bdm')
 

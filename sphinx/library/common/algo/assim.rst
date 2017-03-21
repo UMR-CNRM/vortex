@@ -51,6 +51,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: SstGrb2Ascii
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: SeaIceAnalysis
    :show-inheritance:
    :members:

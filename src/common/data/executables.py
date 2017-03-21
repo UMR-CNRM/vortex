@@ -150,6 +150,69 @@ class ProTool(BlackBox):
         return 'protool'
 
 
+class SstNetcdf2Ascii(BlackBox):
+    """Change format of NetCDF sst files."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Tool to change the format of NetCDF sst files',
+            attr = dict(
+                gvar = dict(
+                    default = "master_sst_netcdf"
+                ),
+                kind = dict(
+                    values = ['sst_netcdf'],
+                )
+            )
+        )
+    ]
+
+
+class SstGrb2Ascii(BlackBox):
+    """Transform sst grib files from the BDAP into ascii files."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Tool to change the format of grib sst files',
+            attr = dict(
+                gvar = dict(
+                    default = "master_lectbdap"
+                ),
+                kind = dict(
+                    values = ['lectbdap'],
+                )
+            )
+        )
+    ]
+
+    def command_line(self, year, month, day, hour, lon, lat):
+        """Build the command line to launch the executable."""
+        return '-y{year} -m{month} -d{day} -r{hour} -o{lon} -a{lat}'.format(
+            year=year, month=month, day=day, hour=hour, lon=lon, lat=lat
+        )
+
+
+class IceGrb2Ascii(BlackBox):
+    """Transform sea ice grib files into ascii files using the SeaIceLonLat file for coordinates."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Ice_grib executable to convert sea ice grib files into ascii files',
+            attr = dict(
+                gvar = dict(
+                    default = 'master_ice_grb'
+                ),
+                kind = dict(
+                    values = ['ice_grb']
+                )
+            )
+        )
+    ]
+
+
 class IOAssign(BlackBox):
     """A tool for ODB pools mapping."""
 
