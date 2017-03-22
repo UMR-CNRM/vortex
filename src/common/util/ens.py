@@ -69,6 +69,8 @@ def drawingfunction(options):
                    resource_kind = rhdict['resource'].get('kind', None),
                    drawing = tirage,
                    population = population)
+    if rhdict['provider'].get('experiment', None) is not None:
+        outdict['experiment'] = rhdict['provider']['experiment']
     return StringIO(json.dumps(outdict, indent=4))
 
 
@@ -129,6 +131,8 @@ def checkingfunction(options):
                    date = rhdict['resource'].get('date', None),
                    resource_kind = rhdict['resource'].get('kind', None),
                    population = avail_list)
+    if rhdict['provider'].get('experiment', None) is not None:
+        outdict['experiment'] = rhdict['provider']['experiment']
     return StringIO(json.dumps(outdict, indent=4))
 
 

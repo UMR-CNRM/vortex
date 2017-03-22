@@ -111,27 +111,34 @@ class Provider(footprints.FootprintBase):
 
 class Magic(Provider):
 
-    _footprint = dict(
-        info = 'Magic provider that always returns the same URI.',
-        attr = dict(
-            fake = dict(
-                info     = "Enable this magic provider.",
-                alias    = ('nowhere', 'noprovider'),
-                type     = bool,
-                optional = True,
-                default  = True,
-            ),
-            magic = dict(
-                info     = "The URI returned by this provider."
-            ),
-            vapp = dict(
-                doc_visibility  = footprints.doc.visibility.GURU,
-            ),
-            vconf = dict(
-                doc_visibility  = footprints.doc.visibility.GURU,
-            ),
+    _footprint = [
+        xpid,
+        dict(
+            info = 'Magic provider that always returns the same URI.',
+            attr = dict(
+                fake = dict(
+                    info     = "Enable this magic provider.",
+                    alias    = ('nowhere', 'noprovider'),
+                    type     = bool,
+                    optional = True,
+                    default  = True,
+                ),
+                magic = dict(
+                    info     = "The URI returned by this provider."
+                ),
+                experiment = dict(
+                    optional = True,
+                    doc_visibility  = footprints.doc.visibility.ADVANCED,
+                ),
+                vapp = dict(
+                    doc_visibility  = footprints.doc.visibility.GURU,
+                ),
+                vconf = dict(
+                    doc_visibility  = footprints.doc.visibility.GURU,
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):

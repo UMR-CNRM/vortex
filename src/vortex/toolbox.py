@@ -431,16 +431,21 @@ def diff(*args, **kw):
             logger.error('Incomplete Resource Handler for diff [%s]', rhandler)
             if fatal:
                 raise ValueError('Incomplete Resource Handler for diff')
-        comp_source = rhandler.container
+
+        source_container = rhandler.container
+        # Get the local file content (if sensible)
+        if rhandler.resource.clscontents.is_diffable():
+            source_contents = rhandler.resource.contents_handler(datafmt=source_container.actualfmt)
+            source_contents.slurp(source_container)
 
         # Create a new container to hold the reference file
         lazzycontainer = footprints.proxy.container(shouldfly=True,
-                                                    actualfmt=comp_source.actualfmt)
+                                                    actualfmt=source_container.actualfmt)
         # Swapp the original container with the lazzy one
         rhandler.container = lazzycontainer
         # Get the reference file
-        rcget = rhandler.get()
-        if not rcget:
+        rc = rhandler.get()
+        if not rc:
             logger.error('Cannot get the reference resource: %s',
                          rhandler.locate())
             if fatal:
@@ -448,10 +453,20 @@ def diff(*args, **kw):
         else:
             logger.info('The reference file is stored under: %s',
                         rhandler.container.localpath())
+        # Get the reference's content (if sensible)
+        if rhandler.resource.clscontents.is_diffable():
+            ref_contents = rhandler.contents
+
         # What are the differences ?
-        rc = rcget and t.sh.diff(comp_source.localpath(),
-                                 rhandler.container.localpath(),
-                                 fmt=rhandler.container.actualfmt)
+        if rc:
+            # priority is given to the diff implemented in the DataContent
+            if rhandler.resource.clscontents.is_diffable():
+                rc = source_contents.diff(ref_contents)
+            else:
+                rc = t.sh.diff(source_container.localpath(),
+                               rhandler.container.localpath(),
+                               fmt=rhandler.container.actualfmt)
+
         # Delete the reference file
         lazzycontainer.clear()
 

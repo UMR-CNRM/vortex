@@ -4,6 +4,8 @@
 #: No automatic export
 __all__ = []
 
+import copy
+
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -221,6 +223,13 @@ class SampleContent(JsonDictContent):
         thedate = Date(self.date(g, x))
         period = (targetdate + targetterm) - thedate
         return str(period.time())
+
+    def _actual_diff(self, ref):
+        me = copy.copy(self.data)
+        other = copy.copy(ref.data)
+        me.pop('experiment', None)  # Do not compare the experiment ID (if present)
+        other.pop('experiment', None)
+        return me == other
 
 
 class PopulationList(FlowResource):

@@ -16,6 +16,8 @@ from vortex.util.structs import ReadOnlyDict
 class DataContent(object):
     """Root class for data contents used by resources."""
 
+    _diffable = False
+
     def __init__(self, **kw):
         self._datafmt   = None
         self._data      = None
@@ -107,6 +109,22 @@ class DataContent(object):
         """
         raise NotImplementedError("Merge is not implemented for this content.")
 
+    @classmethod
+    def is_diffable(cls):
+        """Is the diff operation implemented for this content class ?"""
+        return cls._diffable
+
+    def diff(self, ref):
+        """Compare the present content with the ``ref`` content."""
+        if not self.is_diffable():
+            raise NotImplementedError("Diff is not implemented for this content")
+        else:
+            return self._actual_diff(ref)
+
+    def _actual_diff(self, ref):
+        """A very simple kind of comparison... but it might work !"""
+        return self.data == ref.data
+
     def rewrite(self, container):
         """Abstract method."""
         pass
@@ -119,6 +137,9 @@ class UnknownContent(DataContent):
 
 class AlmostDictContent(DataContent):
     """Implement some dictionary-like functions."""
+
+    # The very simple diff method form DataContent should do the job.
+    _diffable = True
 
     def __init__(self, **kw):
         super(AlmostDictContent, self).__init__(**kw)
@@ -226,6 +247,9 @@ class AlmostListContent(DataContent):
     The argument maxprint is used for the maximum number of lines
     to display through the str function.
     """
+
+    # The very simple diff method form DataContent should do the job.
+    _diffable = True
 
     def __init__(self, **kw):
         self._maxprint = kw.pop('maxprint', 20)
@@ -360,6 +384,7 @@ class DataRaw(AlmostListContent):
 
 class FormatAdapter(DataContent):
     """Adapter to objects that could manage a dedicated format."""
+
     def __init__(self, **kw):
         super(FormatAdapter, self).__init__(**kw)
         if self._data is None and footprints.proxy.dataformats is None:

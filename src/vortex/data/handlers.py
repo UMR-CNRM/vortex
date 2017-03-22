@@ -90,6 +90,7 @@ class Handler(object):
             oldhash = self.simplified_hashkey
             self._resource = value
             self._notifyhash(oldhash)
+            self.reset_contents()
         else:
             raise ValueError('This value is not a plain Resource <%s>', value)
 
@@ -105,6 +106,7 @@ class Handler(object):
             oldhash = self.simplified_hashkey
             self._provider = value
             self._notifyhash(oldhash)
+            self.reset_contents()
         else:
             raise ValueError('This value is not a plain Provider <%s>', value)
 
@@ -304,7 +306,7 @@ class Handler(object):
             if obj:
                 print '{0}  {1:10s}: {2:s}'.format(tab, subobj.capitalize(), str(obj))
 
-    def wide_key_lookup(self, key, exports=False):
+    def wide_key_lookup(self, key, exports=False, fatal=True):
         """Return the *key* attribute if it exists in the provider or resource.
 
         If *exports* is True, the footprint_export() or the export_dict() function
@@ -322,7 +324,10 @@ class Handler(object):
             try:
                 a_value = getattr(self.resource, key)
             except AttributeError:
-                raise AttributeError('The {:s} attribute could not be found in {!r}'.format(key, self))
+                if fatal:
+                    raise AttributeError('The {:s} attribute could not be found in {!r}'.format(key, self))
+                else:
+                    a_value = None
         if exports:
             if hasattr(a_value, 'footprint_export'):
                 a_value = a_value.footprint_export()

@@ -64,7 +64,7 @@ def generic_input_checker(grouping_keys, min_items, *rhandlers, **kwargs):
     for rh in flat_rhlist:
         keylist = list()
         for key in grouping_keys:
-            value = rh.wide_key_lookup(key, exports=True)
+            value = rh.wide_key_lookup(key, exports=True, fatal=False)
             keylist.append(value)
         rhgroups[tuple(keylist)].append(rh)
 
@@ -75,7 +75,9 @@ def generic_input_checker(grouping_keys, min_items, *rhandlers, **kwargs):
     #  The keys are sorted so that results remains reproducible
     for grouping_values in sorted(rhgroups.iterkeys()):
         mychecks = [(rh, fakecheck or rh.check()) for rh in rhgroups[grouping_values]]
-        groupid = fp.stdtypes.FPDict({k: v for k, v in zip(grouping_keys, grouping_values)})
+        groupid = fp.stdtypes.FPDict({k: v
+                                      for k, v in zip(grouping_keys, grouping_values)
+                                      if v is not None})
         if all([acheck[1] for acheck in mychecks]):
             outputlist.append(groupid)
             logger.info("Group (%s): All the input files are accounted for.", str(groupid))
@@ -108,7 +110,7 @@ def colorfull_input_checker(min_items, *rhandlers, **kwargs):
     This is a shortcut for the generic_input_checher: it returns a list of
     dictionaries that described the available data.
     """
-    return generic_input_checker(('vapp', 'vconf', 'cutoff', 'date', 'member'),
+    return generic_input_checker(('vapp', 'vconf', 'experiment', 'cutoff', 'date', 'member'),
                                  min_items, *rhandlers, **kwargs)
 
 
