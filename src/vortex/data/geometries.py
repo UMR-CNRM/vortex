@@ -322,5 +322,15 @@ class CurvlinearGeometry(UnstructuredGeometry):
             fmts = 'kind={0:s}, r={1:s}, global, ni={3!s}, nj={4!s}'
         return fmts.format(self.kind, self.rnice, self.area, self.nlon, self.nlat)
 
+class MassifGeometry(UnstructuredGeometry):
+
+    _tag_topcls = False
+
+    def _check_attributes(self):
+        super(MassifGeometry, self)._check_attributes()
+        self.kind = 'massif'
+        if self.nmassif is None:
+            raise AttributeError("Some mandatory arguments are missing")
+
 # Load default geometries
 load(verbose=False)

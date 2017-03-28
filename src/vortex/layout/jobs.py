@@ -146,9 +146,11 @@ def mkjob(t, **kw):
         jobconf = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(tplconf['appbase'],
                                                             tplconf['vapp'], tplconf['vconf'],
                                                             tplconf['taskconf'])
+        tplconf['taskconf'] = '_' + tplconf['taskconf']
     else:
         jobconf = '{0:s}/conf/{1:s}_{2:s}.ini'.format(tplconf['appbase'],
                                                       tplconf['vapp'], tplconf['vconf'])
+        tplconf['taskconf'] = ''
 
     if t.sh.path.exists(jobconf):
         t.sh.header('Add ' + jobconf)
