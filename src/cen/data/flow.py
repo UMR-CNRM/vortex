@@ -115,8 +115,9 @@ class Forcing(GeoFlowResource):
                     values = ['analysis', 'forcing', 'interpolation', 'interp'],
                 ),
                 nativefmt = dict(
-                    values  = ['netcdf'],
+                    values  = ['netcdf', 'nc'],
                     default = 'netcdf',
+                    remap    = dict(netcdf = 'nc') 
                 ),
                 model = dict(
                     values = ['safran'],
@@ -140,6 +141,7 @@ class Forcing(GeoFlowResource):
             geo     = self.geometry.area,
             src     = self.model,
             term    = self.term,
+            fmt     = self.nativefmt,
         )
 
 
