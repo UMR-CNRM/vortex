@@ -186,7 +186,7 @@ class OceanographicModel(Binary):
         return ''
 
 
-class NivologyModel(Binary):
+class SurfaceModel(Binary):
 
     _abstract  = True
     _footprint = dict(
