@@ -980,7 +980,7 @@ class OpMailService(TemplatedMailService):
 
     def trailer(self):
         """String appended to the message body."""
-        return '\n--\nEnvoi automatique par Vortex {}' \
+        return '\n--\nEnvoi automatique par Vortex {} ' \
                'pour <{}@{}>\n'.format(
             vortex.__version__,
             self.env.user,
