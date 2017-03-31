@@ -117,7 +117,6 @@ class Forcing(GeoFlowResource):
                 nativefmt = dict(
                     values  = ['netcdf', 'nc'],
                     default = 'netcdf',
-                    remap    = dict(netcdf = 'nc') 
                 ),
                 model = dict(
                     values = ['safran'],
@@ -135,13 +134,17 @@ class Forcing(GeoFlowResource):
     def realkind(self):
         return 'forcing'
 
+    @property
+    def format_extension(self):
+        return 'nc'
+
     def basename_info(self):
         return dict(
             radical = self.realkind,
             geo     = self.geometry.area,
             src     = self.model,
             term    = self.term,
-            fmt     = self.nativefmt,
+            fmt     = self.format_extension,
         )
 
 
