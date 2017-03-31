@@ -140,11 +140,11 @@ class SafranWorker(VortexWorkerBlindRun):
         # Generate the 'OPxxxxx' files containing links for the safran execution.
         for op_file in _OP_files_common[self.vconf]:
             with open(op_file, 'w') as f:
-                f.write(self.rundir + '@')
+                f.write(self.rundir + '@\n')
 
         for op_file in _OP_files_individual:
             with open(op_file, 'w') as f:
-                f.write(self.thisdir + '@')
+                f.write(self.thisdir + '@\n')
 
         if os.path.isfile('sapfich'):
             os.remove('sapfich')
@@ -159,6 +159,8 @@ class SafranWorker(VortexWorkerBlindRun):
         sapdat = 'sapdat'
         if os.path.isfile(sapdat):
             os.remove(sapdat)
+
+        # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
         with open(sapdat, 'w') as d:
             d.write('{},{},{},{}\n'.format(year, month, day, hour))
             d.write('0,0,0\n')
@@ -241,8 +243,10 @@ class SyrmrrWorker(SafranWorker):
 
         for ech in self.days: 
             if os.path.isfile('SAPLUI5' + str(ech)):
-                self.system.cp('SAPLUI5' + str(ech), 'fort.11')
-                self.system.cp('SAPLUI5' + str(ech), 'fort.12')
+                self.system.unlink('fort.11')
+                self.system.unlink('fort.12')
+                self.system.symlink('SAPLUI5' + str(ech), 'fort.11')
+                self.system.symlink('SAPLUI5' + str(ech), 'fort.12')
             else:
                 self.rdict['rc'] = InputCheckerError("Some of the mandatory flow resources are missing.")
             self.sapdat(self.days[ech][-1])
@@ -279,20 +283,24 @@ class SytistWorker(SafranWorker):
 
         for ech in self.days: 
             if os.path.isfile('SAPLUI5' + str(ech)):
-                self.system.cp('SAPLUI5' + str(ech), 'SAPLUI5')
+                self.system.unlink('SAPLUI5')
+                self.system.symlink('SAPLUI5' + str(ech), 'SAPLUI5')
             else:
                 self.rdict['rc'] = InputCheckerError("Some of the mandatory flow resources are missing.")
             if os.path.isfile('SAPLUI5_ARP' + str(ech)):
-                self.system.cp('SAPLUI5_ARP' + str(ech), 'SAPLUI5_ARP')
+                self.system.unlink('SAPLUI5_ARP')
+                self.system.symlink('SAPLUI5_ARP' + str(ech), 'SAPLUI5_ARP')
             else:
                 self.rdict['rc'] = InputCheckerError("Some of the mandatory flow resources are missing.")
             if os.path.isfile('SAPLUI5_ANA' + str(ech)):
-                self.system.cp('SAPLUI5_ANA' + str(ech), 'SAPLUI5_ANA')
+                self.system.unlink('SAPLUI5_ANA')
+                self.system.symlink('SAPLUI5_ANA' + str(ech), 'SAPLUI5_ANA')
             else:
                 self.rdict['rc'] = InputCheckerError("Some of the mandatory flow resources are missing.")
             for i,echeance in enumerate(self.days[ech]):
                 if os.path.isfile('SAF' + str(echeance)):
-                    self.system.cp('SAF' + str(echeance), 'SAFRAN' + str(i+1))
+                    self.system.unlink('SAFRAN' + str(i+1))
+                    self.system.symlink('SAF' + str(echeance), 'SAFRAN' + str(i+1))
                 else:
                     self.rdict['rc'] = InputCheckerError("Some of the mandatory flow resources are missing.")
             self.sapdat(self.days[ech][-1])
