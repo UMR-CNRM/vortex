@@ -37,7 +37,7 @@ op_fullplay = $fullplay
 op_refill   = $refill
 op_mail     = $mail
 op_jeeves   = '$jeeves'
-
+op_phase    = $phase
 
 sys.stderr = sys.stdout
 
@@ -69,6 +69,7 @@ try:
     from vortex.tools.actions import actiond as ad
     ad.opmail_on()
     ad.route_off()
+    ad.phase_on()
     opts = dict(jobassistant=ja, play=op_fullplay)
     driver = todo.setup(t, **opts)
     driver.setup()
