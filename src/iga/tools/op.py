@@ -228,6 +228,7 @@ class OpJobAssistant(OpJobAssistantTest):
     def finalise(self):
         super(OpJobAssistant, self).finalise()
         t = vortex.ticket()
+        ad.phase_flush()
         if 'DMT_PATH_EXEC' in t.env():
             option_insertion = ('--id ' + t.env['SLURM_JOB_ID'] + ' --date-pivot=' +
                                 t.env['DMT_DATE_PIVOT'] + ' --job-path=' +
