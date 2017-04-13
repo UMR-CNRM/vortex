@@ -81,30 +81,6 @@ class DelayedEnvValue(object):
         return self.footprint_value()
 
 
-class DelayedInit(object):
-    """
-    Delays the proxied object creation until it's actually accessed.
-    """
-
-    def __init__(self, proxied, initializer):
-        self.__proxied = proxied
-        self.__initializer = initializer
-
-    def __getattr__(self, name):
-        if self.__proxied is None:
-            self.__proxied = self.__initializer()
-        return getattr(self.__proxied, name)
-
-    def __repr__(self):
-        orig = re.sub('^<(.*)>$', r'\1', super(DelayedInit, self).__repr__())
-        return '<{:s} | proxied={:s}>'.format(orig,
-                                              'Not yet Initialised' if self.__proxied is None
-                                              else repr(self.__proxied))
-
-    def __str__(self):
-        return repr(self) if self.__proxied is None else str(self.__proxied)
-
-
 class FmtInt(int):
     """Formated integer."""
 

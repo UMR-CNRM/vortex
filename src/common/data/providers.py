@@ -7,8 +7,10 @@ import footprints
 
 from vortex.data.providers import Provider
 from vortex.util.config import GenericConfigParser
-from vortex.syntax.stdattrs import Namespace, DelayedEnvValue
+from vortex.syntax.stdattrs import Namespace, DelayedEnvValue, FmtInt, a_suite
 from vortex.tools.date import Time
+import os
+from footprints.stdtypes import FPList
 
 #: No automatic export
 __all__ = []
@@ -83,11 +85,11 @@ class BdpeProvider(Provider):
     def realkind(self):
         return 'bdpe'
 
-    def scheme(self, resource):
+    def scheme(self):
         """A dedicated scheme."""
         return 'bdpe'
 
-    def netloc(self, resource):
+    def netloc(self):
         """The actual netloc is the ``namespace`` attribute of the current provider."""
         return self.namespace.netloc
 
@@ -124,3 +126,79 @@ class BdpeProvider(Provider):
                 raise BdpeMismatchError(fmt.format(k, rsrcdict[k], v))
 
         return super(BdpeProvider, self).uri(resource)
+
+
+class BdapProvider(Provider):
+    """
+    Provider to resources stored in the BDAP database.
+
+    Canvas of a complete url:
+        bdap://bdap.archive.fr/vapp/vconf/oper/date/mb[member]/GRID_[geometry]+[term]
+    """
+
+    _footprint = dict(
+        info = 'BDAP provider',
+        attr = dict(
+            namespace = dict(
+                type     = Namespace,
+                optional = True,
+                default  = Namespace('bdap.cache.fr'),
+                values   = ['bdap.multi.fr', 'bdap.cache.fr', 'bdap.archive.fr'],
+            ),
+            member = dict(
+                type    = FmtInt,
+                args    = dict(fmt = '03'),
+                optional = True,
+            ),
+            suite = a_suite,
+            quantity = dict(
+                type    = FPList,
+            ),
+            level_kind = dict(
+                type    = str,
+                optional = True,
+                default  = 'isobare',
+            ),
+            level = dict(
+                type    = FPList,
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('BDAP provider init %s', self.__class__)
+        super(BdapProvider, self).__init__(*args, **kw)
+
+    @property
+    def realkind(self):
+        return 'bdap'
+
+    def scheme(self):
+        """Default: ``bdap``."""
+        return self.realkind
+
+    def netloc(self):
+        """Returns the current ``namespace``."""
+        return self.namespace.netloc
+
+    def nice_member(self):
+        """Nice formatting view of the member number, if any."""
+        return 'mb' + str(self.member) if self.member is not None else ''
+
+    def pathname(self, resource):
+        rinfo = self.pathinfo(resource)
+        rdate = rinfo.get('date', '')
+        if rdate:
+            rdate = rdate.vortex(rinfo.get('cutoff', 'X'))
+        rpath = [
+            self.vapp,
+            self.vconf,
+            self.suite,
+            rdate
+        ]
+        if self.member is not None:
+            rpath.append(self.nice_member())
+        return os.path.join(*rpath)
+
+    def basename(self, resource):
+        return 'GRID_' + resource.geometry.area + '+' + resource.term.fmth

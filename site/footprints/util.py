@@ -555,6 +555,11 @@ class GetByTag(object):
         return list(cls._tag_table.items())
 
     @classmethod
+    def tag_check(cls, tag):
+        """Check if the tag is in list of actual keys of the objects instanciated."""
+        return (tag in cls._tag_table.keys())
+
+    @classmethod
     def tag_focus(cls, select='default'):
         """Return the tag value of the actual object with focus according to the ``select`` value."""
         return cls._tag_focus[select]
