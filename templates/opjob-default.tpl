@@ -68,6 +68,7 @@ try:
     from vortex.tools.actions import actiond as ad
     ad.opmail_on()
     ad.route_on()
+    ad.phase_tune(jname='{0}_phase'.format(op_xpid))
     ad.phase_on()
     opts = dict(jobassistant=ja, play=op_fullplay)
     driver = todo.setup(t, **opts)
