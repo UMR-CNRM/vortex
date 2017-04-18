@@ -342,6 +342,10 @@ class RoutingService(Service):
             filename = dict(
                 access   = 'rwd',
             ),
+            targetname = dict(
+                optional = True,
+                default  = None
+            ),
             productid = dict(
                 type     = int,
             ),
@@ -400,6 +404,10 @@ class RoutingService(Service):
         stamp = self.env.get(envkey, default)
         return stamp[:8]
 
+    @property
+    def routing_name(self):
+        return self.targetname or self.filename
+
     def file_ok(self):
         """Check that the file exists, send an alarm if not."""
         if not self.sh.path.exists(self.filename):
@@ -414,14 +422,22 @@ class RoutingService(Service):
 
         self.filename = self.sh.path.abspath(self.filename)
 
+        if not self.file_ok():
+            return False
+
+        if self.targetname:
+            if self.sh.path.exists(self.targetname):
+                raise ValueError("Won't overwrite file '{}'".format(self.targetname))
+            self.sh.cp(self.filename, self.targetname, intent='in')
+
         cmdline = self.get_cmdline()
         if cmdline is None:
             return False
 
-        if not self.file_ok():
-            return False
-
         rc = ad.ssh(cmdline, hostname=self.sshhost, nodetype='transfer')
+
+        if self.targetname:
+            self.sh.remove(self.targetname)
 
         logfile = 'routage.' + date.today().ymd
         ad.report(kind='dayfile', mode='RAW', message=self.get_logline(),
@@ -469,7 +485,7 @@ class RoutingUpstreamService(RoutingService):
         """Complete command line that runs the Transfer Agent."""
         # The only mode implemented is "tables usage": "productid -R"
         # The "addresses" mode is unused: "-L client [client...]"
-        options = "{0.filename} {0.productid} {mode}".format(self, mode="-R")
+        options = "{0.routing_name} {0.productid} {mode}".format(self, mode="-R")
         return agt_actual_command(self.sh, self.agt_pa_cmd, options)
 
 
@@ -607,7 +623,7 @@ class BdpeService(RoutingService):
         """Complete command line that runs the Transfer Agent."""
         if self.actual_routingkey is None:
             return None
-        options = "{0.filename} {0.actual_routingkey} -p {0.producer}" \
+        options = "{0.routing_name} {0.actual_routingkey} -p {0.producer}" \
                   " -n {0.productid} -e {0.term.fmtraw} -d {0.dmt_date_pivot}" \
                   " -q {0.quality} -r {0.soprano_target}".format(self)
         return agt_actual_command(self.sh, self.agt_pe_cmd, options)
