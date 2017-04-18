@@ -68,9 +68,16 @@ def test_route():
     sh.title('Routing services')
 
     resuldir = rundir
+
+    # agt_fake_cmd is defined in target-xxx.ini to be 'router_fake.sh',
+    # a script installed along with the real route_p[ae].bin binaries,
+    # but that logs commands instead of executing them.
+    # To see what happenned, use:
+    #    cat $TMPDIR/vortex/router_fake.log
     toolbox.defaults(
         resuldir       = resuldir,
-        agt_pa_cmd     = 'router_fake.sh',
+        agt_pa_cmd     = 'agt_fake_cmd',
+        agt_pe_cmd     = 'agt_fake_cmd',
         soprano_target = 'piccolo',
     )
 
@@ -87,11 +94,13 @@ def test_route():
     print "md5 =", hashlib.md5(contents).hexdigest()
 
     sh.subtitle('BDAP')
-    ad.route(kind='bdap', filename='tempo.dta', productid=147, domain='ATOUR10', term=84)
+    ad.route(kind='bdap', filename='tempo.dta', productid=147, domain='ATOUR10', term=84,
+             targetname='exemple_bdap.dta')
 
     # This BDPE call should succeed (to piccolo, not to piccolo-int).
     sh.subtitle('BDPE')
-    ad.route(kind='bdpe', filename='tempo.dta', productid=43, routingkey='bdpe', term=36)
+    ad.route(kind='bdpe', filename='tempo.dta', productid=43, routingkey='bdpe', term=36,
+             targetname='exemple_bdpe.dta')
 
     sh.subtitle('BDM')
     ad.route(kind='bdm', filename='tempo.dta', productid=4242)
