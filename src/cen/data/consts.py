@@ -20,7 +20,8 @@ class List(GenvStaticGeoResource):
         info = 'Namelist file used by  Safran.',
         attr = dict(
             kind = dict(
-                values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml', 'rsclim', 'icrccm'],
+                values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml', 
+                          'rsclim', 'icrccm', 'NORELot', 'NORELmt'],
             ),
             nativefmt = dict(
                 values  = ['ascii'],
