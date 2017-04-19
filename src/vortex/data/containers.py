@@ -63,7 +63,7 @@ class Container(footprints.FootprintBase):
     def __getattr__(self, key):
         """Gateway to undefined method or attributes if present in internal io descriptor."""
         # It avoids to call self.iodesc() when footprint_export is called...
-        if key.startswith('footprint_export') or key == 'export_dict':
+        if key.startswith('footprint_export') or key == 'export_dict' or key == '_iod':
             raise AttributeError('Could not get an io descriptor')
         # Normal processing
         iod = self.iodesc()
@@ -142,6 +142,24 @@ class Container(footprints.FootprintBase):
                 return iod.read(n)
             else:
                 raise DataSizeTooBig('Input is more than {0:d} bytes.'.format(self.maxreadsize))
+        else:
+            return None
+
+    def head(self, nlines):
+        """Read in one *nlines* of the data as long as the data is not too big."""
+        iod = self.iodesc()
+        if iod:
+            self.rewind()
+            nread = 0
+            lines = list()
+            lsize = 0
+            while nread < nlines:
+                lines.append(iod.readline())
+                lsize += len(lines[-1])
+                if lsize > self.maxreadsize:
+                    raise DataSizeTooBig('Input is more than {0:d} bytes.'.format(self.maxreadsize))
+                nread += 1
+            return lines
         else:
             return None
 

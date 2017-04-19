@@ -250,43 +250,53 @@ class AlmostListContent(DataContent):
 
     # The very simple diff method form DataContent should do the job.
     _diffable = True
+    # Delayed slurp
+    _delayed_slurp = False
 
     def __init__(self, **kw):
         self._maxprint = kw.pop('maxprint', 20)
         super(AlmostListContent, self).__init__(**kw)
+        self._do_delayed_slurp = None
         if self._data is None:
             self._data = list()
 
+    @property
+    def data(self):
+        """The internal data encapsulated."""
+        if self._do_delayed_slurp is not None:
+            self._actual_slurp(self._do_delayed_slurp)
+        return self._data
+
     def __delitem__(self, idx):
-        del(self._data[idx])
+        del(self.data[idx])
 
     def __delslice__(self, istart, iend):
-        del(self._data[istart:iend])
+        del(self.data[istart:iend])
 
     def __setitem__(self, idx, value):
-        self._data[idx] = value
+        self.data[idx] = value
 
     def __setslice__(self, istart, iend, value):
-        self._data[istart:iend] = value
+        self.data[istart:iend] = value
 
     def __getitem__(self, idx):
-        return self._data[idx]
+        return self.data[idx]
 
     def __getslice__(self, istart, iend):
-        return self._data[istart:iend]
+        return self.data[istart:iend]
 
     def __sizeof__(self):
-        return self._data.__sizeof__()
+        return self.data.__sizeof__()
 
     def __len__(self):
-        return len(self._data)
+        return len(self.data)
 
     def __iter__(self):
-        for t in self._data:
+        for t in self.data:
             yield t
 
     def __call__(self):
-        return self._data
+        return self.data
 
     def _get_maxprint(self):
         return self._maxprint
@@ -303,12 +313,19 @@ class AlmostListContent(DataContent):
     def clear(self):
         """Clear all internal data contents."""
         self._data[:] = []
+        self._do_delayed_slurp = None
+
+    def _actual_slurp(self, container):
+        self._data.extend(container.readlines())
+        self._size = container.totalsize
+        self._do_delayed_slurp = None
 
     def slurp(self, container):
         """Get data from the ``container``."""
-        container.rewind()
-        self.extend(container.readlines())
-        self._size = container.totalsize
+        if self._delayed_slurp:
+            self._do_delayed_slurp = container
+        else:
+            self._actual_slurp(container)
 
     def rewrite(self, container):
         """Write the list contents in the specified container."""
@@ -320,7 +337,7 @@ class AlmostListContent(DataContent):
         """Merge several data contents into one."""
         self._merge_checkclass(*kargs)
         for obj in kargs:
-            self._data.extend(obj.data)
+            self.data.extend(obj.data)
             self._size += obj.size
 
 
@@ -341,10 +358,10 @@ class TextContent(AlmostListContent):
             catlist = self[:]
         return '\n'.join([ str(x) for x in catlist ])
 
-    def slurp(self, container):
-        """Get data from the ``container``."""
-        container.rewind()
-        self.extend([ x.split() for x in container if not x.startswith('#') ])
+    def _actual_slurp(self, container):
+        self._data.extend([ x.split() for x in container if not x.startswith('#') ])
+        self._size = container.totalsize
+        self._do_delayed_slurp = None
 
     def formatted_data(self, item):
         """Return a formatted string according to optional internal fmt."""
@@ -371,8 +388,7 @@ class DataRaw(AlmostListContent):
             data = collections.deque(maxlen=window)
         super(DataRaw, self).__init__(data=data, window=window, fmt=fmt)
 
-    def slurp(self, container):
-        """Get data from the ``container``."""
+    def _actual_slurp(self, container):
         container.rewind()
         end = False
         while not end:
@@ -380,6 +396,7 @@ class DataRaw(AlmostListContent):
             self._data.append(data)
             if self._window and len(self._data) >= self._window:
                 end = True
+        self._do_delayed_slurp = None
 
 
 class FormatAdapter(DataContent):
