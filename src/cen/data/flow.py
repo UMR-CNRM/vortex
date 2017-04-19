@@ -9,14 +9,11 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.flow import GeoFlowResource
 from common.data.obs import Observations
-from vortex.syntax.stdattrs import term, a_date
+from vortex.syntax.stdattrs import term
 from vortex.data.geometries import MassifGeometry
 
-_domain_map = dict(alp='_al', pyr='_py', cor='_co')
 
-
-
-class Ebauche(GeoFlowResource):
+class SafranEbauche(GeoFlowResource):
     """Class for the ebauche file (P ou E file) that is used by SAFRAN."""
 
     _footprint = [
@@ -32,39 +29,33 @@ class Ebauche(GeoFlowResource):
                     default = 'ascii',
                 ),
                 model = dict(
-                    values = ['pearp', 'arpege', 'cep'],
+                    values = ['pearp', 'arpege', 'ifs'],
                     optional = True,
                 ),
                 geometry = dict(
-                info = "The resource's massif geometry.",
-                type = MassifGeometry,
+                    info = "The resource's massif geometry.",
+                    type = MassifGeometry,
                 ),
             )
 
         )
     ]
 
-
     @property
     def realkind(self):
         return 'ebauche'
-
-    @property
-    def path_suffixe(self):
-        return _domain_map[self.geometry.area]
 
     def basename_info(self):
         return dict(
             radical = self.realkind,
             geo     = self.geometry.area,
             src     = self.model,
-            term    = self.term,
-            date    = self.date,
+            term    = self.term.fmthm,
         )
 
 
 # TO be continued...
-class RadioSondages(Observations):
+class SafranRadioSondages(Observations):
     """Alti files (A files)"""
 
     _footprint = dict(
@@ -98,12 +89,13 @@ class RadioSondages(Observations):
 
     def basename_info(self):
         return dict(
-            radical = 'A' + self.date.yymdh,
+            radical = self.realkind,
+            src = '.'.join(self.stage, self.part),
+            fmt = self.nativefmt,
         )
 
 
-
-class Forcing(GeoFlowResource):
+class SurfaceForcing(GeoFlowResource):
     """Class for the safrane output files."""
 
     _footprint = [
@@ -117,38 +109,36 @@ class Forcing(GeoFlowResource):
                 nativefmt = dict(
                     values  = ['netcdf', 'nc'],
                     default = 'netcdf',
+                    remap = dict(autoremap = 'first'),
                 ),
                 model = dict(
                     values = ['safran'],
                 ),
                 geometry = dict(
-                info = "The resource's massif geometry.",
-                type = MassifGeometry,
+                    info = "The resource's massif geometry.",
+                    type = MassifGeometry,
                 ),
             )
         )
     ]
 
+    _extension_remap = dict(netcdf='nc')
 
     @property
     def realkind(self):
         return 'forcing'
-
-    @property
-    def format_extension(self):
-        return 'nc'
 
     def basename_info(self):
         return dict(
             radical = self.realkind,
             geo     = self.geometry.area,
             src     = self.model,
-            term    = self.term,
-            fmt     = self.format_extension,
+            term    = self.term.fmthm,
+            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
 
-class Met(GeoFlowResource):
+class MetFiles(GeoFlowResource):
     """Class for the met, metcli or MET files produced by SAFRAN."""
 
     _footprint = [
@@ -167,8 +157,8 @@ class Met(GeoFlowResource):
                     values = ['safran'],
                 ),
                 geometry = dict(
-                info = "The resource's massif geometry.",
-                type = MassifGeometry,
+                    info = "The resource's massif geometry.",
+                    type = MassifGeometry,
                 ),
             )
         )
@@ -178,18 +168,11 @@ class Met(GeoFlowResource):
     def realkind(self):
         return 'met'
 
-    @property
-    def path_suffixe(self):
-        return _domain_map[self.geometry.area]
-
-    def vortex_basename(self):
-        return self.realkind + self.path_suffixe + '.tar.xz'
-
     def basename_info(self):
         return dict(
             radical = self.realkind,
             geo     = self.geometry.area,
             src     = self.model,
-            term    = self.term,
+            term    = self.term.fmthm,
+            fmt     = self.nativefmt,
         )
-

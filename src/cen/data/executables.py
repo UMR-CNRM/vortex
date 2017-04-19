@@ -7,9 +7,7 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.data.executables import Script, SurfaceModel 
-from gco.syntax.stdattrs import gdomain, GenvKey
-from vortex.tools.date import Date
+from vortex.data.executables import Script, SurfaceModel
 
 
 class Safran(SurfaceModel):
@@ -29,10 +27,6 @@ class Safran(SurfaceModel):
                 gvar = dict(
                     optional = True,
                     default = '[kind]',
-                ),
-                rundir = dict(
-                    optional = True,
-                    outcast  = '',
                 ),
             )
         )
@@ -60,11 +54,10 @@ class Safrane(Safran):
         )
     ]
 
-
-
     @property
     def realkind(self):
         return 'safrane'
+
 
 class Syrpluie(Safran):
     """Base class for the Syrpluie executable."""
@@ -80,7 +73,6 @@ class Syrpluie(Safran):
         )
     ]
 
-
     @property
     def realkind(self):
         return 'syrpluie'
@@ -95,11 +87,10 @@ class Syrmrr(Safran):
             attr = dict(
                 kind = dict(
                     values = ['syrmrr']
-                ), 
+                ),
             )
         )
     ]
-
 
     @property
     def realkind(self):
@@ -115,19 +106,18 @@ class Sytist(Safran):
             attr = dict(
                 kind = dict(
                     values = ['sytist']
-                ), 
+                ),
             )
         )
     ]
 
-
     @property
     def realkind(self):
-        return 'sytist'   
+        return 'sytist'
 
- 
-class GribFiltering(Script):
-    """Base class for the creation of P files used by SAFRAN."""    
+
+class SafranGribFiltering(Script):
+    """Base class for the creation of P files used by SAFRAN."""
 
     _footprint = [
         dict(
@@ -150,4 +140,3 @@ class GribFiltering(Script):
     @property
     def realkind(self):
         return 'gribfiltering'
-

@@ -27,7 +27,7 @@ __all__ = [
 models = set([
     'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro',
     'aearp', 'pearp', 'mocage', 'mesonh', 'surfex', 'hycom', 'psy4',
-    'safran',
+    'safran', 'ifs',
 ])
 
 #: Default values for the most common binaries.

@@ -4,20 +4,10 @@
 #: No automatic export
 __all__ = []
 
-import os
-
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.util.config     import GenericConfigParser
-from vortex.syntax.stdattrs import a_suite, member, namespacefp
-from iga.data.providers  import SopranoProvider
 from gco.data.providers import GEnv
-
-from common.tools.igastuff import IgakeyFactoryInline
-
-import iga.util.bpnames as bp
-
 
 
 class CenGEnvProvider(GEnv):
@@ -32,5 +22,3 @@ class CenGEnvProvider(GEnv):
             ),
         )
     )
-
-

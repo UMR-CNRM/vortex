@@ -8,7 +8,6 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.data.stores     import Store, Finder
 from vortex.syntax.stdattrs import DelayedEnvValue
 
 from iga.data.stores import IgaGcoCacheStore
@@ -29,5 +28,3 @@ class CenGcoCacheStore(IgaGcoCacheStore):
 
         )
     )
-
-

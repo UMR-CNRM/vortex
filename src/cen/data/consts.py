@@ -8,10 +8,6 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from common.data.consts import GenvStaticGeoResource
-from vortex.syntax.stdattrs import term, a_date
-
-_domain_map = dict(alp='_al', pyr='_py', cor='_co')
-
 
 
 class List(GenvStaticGeoResource):
@@ -20,7 +16,7 @@ class List(GenvStaticGeoResource):
         info = 'Namelist file used by  Safran.',
         attr = dict(
             kind = dict(
-                values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml', 
+                values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml',
                           'rsclim', 'icrccm', 'NORELot', 'NORELmt'],
             ),
             nativefmt = dict(
@@ -33,8 +29,6 @@ class List(GenvStaticGeoResource):
         )
     )
 
-    @property    
+    @property
     def realkind(self):
         return 'safran_namelist'
-
-

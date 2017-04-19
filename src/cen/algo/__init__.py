@@ -4,5 +4,4 @@
 #: No automatic export
 __all__ = []
 
-#import resources, providers, stores, executables
 import components
