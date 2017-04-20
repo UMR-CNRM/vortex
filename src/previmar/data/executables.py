@@ -31,7 +31,23 @@ class MasterSurges(OceanographicModel):
                     value = ['hycom', ],
                 ),
                 rundir = dict(
-                    outcast  = '',
+                   type  = str,
+                   outcast  = '',
+                ),
+                coupling_exec = dict(
+                   type  = str,
+                   optional = True,
+                   default  = '',
+                ),
+                coupling_nprocs = dict(
+                   type  = int,
+                   optional = True,
+                   default  = 0,
+                ),
+                num_exp = dict(
+                   type     = int,
+                   optional = True,
+                   default  = 0,
                 ),
             )
         )
@@ -41,11 +57,14 @@ class MasterSurges(OceanographicModel):
     def realkind(self):
         return 'binary_surges'
 
-    def command_line(self, **opts):
-        name_simu_arg = [self.rundir] * 3
-        name_simu_arg += "0"
+    def command_line(self, **opts):       
+        if self.coupling_exec:
+            name_simu_arg = [self.rundir, self.coupling_exec, str(self.coupling_nprocs)]     
+        else:
+            name_simu_arg = [self.rundir] * 3
+        name_simu_arg += str( self.num_exp )
         cmd = ' '.join(name_simu_arg)
-        return cmd
+        return cmd  
 
 
 class IniZeroSurges(BlackBox):
@@ -62,7 +81,6 @@ class IniZeroSurges(BlackBox):
                 default  = 'master_[model]_inizero',
             ),
             binopts = dict(
-                optional = False,
                 type     = Date,
             ),
         )
@@ -121,3 +139,71 @@ class ConversionGrib2Taux(BlackBox):
     @property
     def realkind(self):
         return 'grib2taux'
+
+
+class WW3writeSurges(BlackBox):
+    """"""
+    _footprint = [
+        gdomain,
+        dict(
+            info = 'Binary executables for writing Hycom results on WW3 grid',
+            attr = dict(
+                kind = dict(
+                    values = ['WW3writeSurges']
+                ),
+                gvar = dict(
+                    type     = GenvKey,
+                    optional = True,
+                    default  = 'master_[model]_ww3write_main_[gdomain]',
+                ),
+                rundir = dict(
+                    type  = str,
+                    outcast = '',
+                ),
+                num_exp = dict(
+                   type     = int,
+                   optional = True,
+                   default  = 0,
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'WW3writeSurges'
+
+    def command_line(self, **opts):
+        name_simu_arg = [self.rundir] * 1
+        name_simu_arg += str( self.num_exp )
+        cmd = ' '.join(name_simu_arg)
+        return cmd     
+
+
+class SurScriptSurges(BlackBox):
+    """"""
+    _footprint = [
+        dict(
+            info = 'SurScript Surges used on \
+            double binaries execution and for guess generation',
+            attr = dict(
+                kind = dict(
+                    values = [ 'SurScriptBinary'],
+                ),
+                gvar = dict(
+                    type     = GenvKey,
+                    optional = True,
+                    default  = 'master_[model]_[param]',
+                ),
+                param = dict(
+                    optional = True,
+                    default = 'surscript',
+                    values = [ 'surscript','surscript_red'],
+                ),  
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'SurScriptBinary'
