@@ -205,9 +205,7 @@ class AlgoComponent(footprints.FootprintBase):
 
     def absexcutable(self, xfile):
         """Retuns the absolute pathname of the ``xfile`` executable."""
-        sh = self.system
-        absx = sh.path.abspath(xfile)
-        sh.xperm(absx, force=True)
+        absx = self.system.path.abspath(xfile)
         return absx
 
     def flyput_method(self):
@@ -775,6 +773,46 @@ class Expresso(ExecutableAlgoComponent):
         self.spawn(args, opts)
 
 
+class ParaExpresso(TaylorRun):
+    """
+    Run any script in the current environment.
+
+    This abstract class includes helpers to use the taylorism package in order
+    to introduce an external parallelisation. It is designed to work well with a
+    taylorism Worker class that inherits from
+    :class:`vortex.tools.parallelism.VortexWorkerBlindRun`.
+    """
+
+    _abstract = True
+    _footprint = dict(
+        info = 'AlgoComponent that simply runs a script using the taylorism package.',
+        attr = dict(
+            interpreter = dict(
+                info   = 'The interpreter needed to run the script.',
+                values = ['awk', 'ksh', 'bash', 'perl', 'python']
+            ),
+            engine = dict(
+                values = ['exec', 'launch']
+            ),
+        )
+    )
+
+    def valid_executable(self, rh):
+        """
+        Return a boolean value according to the effective executable nature
+        of the resource handler provided.
+        """
+        return rh is not None
+
+    def _default_common_instructions(self, rh, opts):
+        '''Create a common instruction dictionary that will be used by the workers.'''
+        ddict = super(ParaExpresso, self)._default_common_instructions(rh, opts)
+        ddict['progname'] = self.interpreter
+        ddict['progargs'] = footprints.FPList([self.absexcutable(rh.container.localpath()), ] +
+                                              self.spawn_command_line(rh))
+        return ddict
+
+
 class BlindRun(xExecutableAlgoComponent):
     """
     Run any executable resource in the current environment. Mandatory argument is:
@@ -833,10 +871,6 @@ class ParaBlindRun(TaylorRun):
             ),
         )
     )
-
-    def __init__(self, *kargs, **kwargs):
-        super(ParaBlindRun, self).__init__(*kargs, **kwargs)
-        self._boss = None
 
     def valid_executable(self, rh):
         """

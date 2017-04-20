@@ -11,6 +11,7 @@ import footprints
 from footprints import loggers
 import taylorism
 import vortex
+from vortex.tools.systems import ExecutionError
 
 logger = loggers.getLogger(__name__)
 
@@ -101,7 +102,7 @@ class VortexWorkerBlindRun(TaylorVortexWorker):
         self.system.softlink('/dev/null', 'core')
         self.local_spawn_hook()
         self.system.target().spawn_hook(self.system)
-        logger.info("The fa2grib stdout/err will be saved to %s", stdoutfile)
+        logger.info("The program stdout/err will be saved to %s", stdoutfile)
         logger.info("Starting the following command: %s (taskset=%s, id=%d)",
                     " ".join([self.progname, ] + self.progargs),
                     str(self.progtaskset), self.scheduler_ticket)
@@ -109,6 +110,15 @@ class VortexWorkerBlindRun(TaylorVortexWorker):
                           fatal=True, taskset=self.progtaskset,
                           taskset_id=self.scheduler_ticket,
                           taskset_bsize=self.progtaskset_bsize)
+
+    def delayed_error_local_spawn(self, stdoutfile, rcdict):
+        """local_spawn wrapped in a try/except in order to trigger delayed exceptions."""
+        try:
+            self.local_spawn(stdoutfile)
+        except ExecutionError as e:
+            logger.error("The execution failed.")
+            rcdict['rc'] = e
+        return rcdict
 
 
 class ParallelSilencer(object):

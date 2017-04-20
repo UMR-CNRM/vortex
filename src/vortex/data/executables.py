@@ -194,7 +194,8 @@ class SurfaceModel(Binary):
         attr = dict(
             model = a_model,
             kind  = dict(
-                values = ['snowmodel']
+                values = ['surfacemodel', 'snowmodel'],
+                remap = dict(autoremap = 'first'),
             ),
         ),
     )
