@@ -169,3 +169,6 @@ class UgetId(str):
     @property
     def short(self):
         return self._id + '@' + self._location
+
+    def monthlyshort(self, month):
+        return self._id + '.m{:02d}'.format(month) + '@' + self._location
