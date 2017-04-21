@@ -22,7 +22,7 @@ None
 Included Modules
 ----------------
 
-* :mod:`previmar.util.DataGeneration`
+* :mod:`previmar.util.FileGeneration`
 
 Classes
 -------

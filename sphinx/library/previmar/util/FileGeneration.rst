@@ -1,22 +1,18 @@
-:mod:`previmar.util.DataGeneration` --- PreviMAR's directive files generation
+:mod:`previmar.util.FileGeneration` --- PreviMAR's directive files generation
 =============================================================================
 
-.. automodule:: previmar.util.DataGeneration
-   :synopsis: Functions that generates directives files for PreviMAR's binaries 
+.. automodule:: previmar.util.FileGeneration
+   :synopsis: Functions that generates directives files for PreviMAR's binaries
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.9.27
+.. versionadded:: 1.1.1
 
 Package
 -------
 
 .. autodata:: __all__
 
-Classes
--------
-
-None
 
 Functions
 ---------

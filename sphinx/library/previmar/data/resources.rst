@@ -21,6 +21,26 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: SolutionMaxGrid
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CouplingWw3Write
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SurgesResultNative
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: BufrPoint
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ForcingOutData
    :show-inheritance:
    :members:
