@@ -10,7 +10,7 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource, GeoFlowResource
 from common.data.modelstates import InitialCondition
-from vortex.tools.date import Date, Time
+from vortex.tools.date import Date, Time, Period
 
 
 class SolutionPoint(FlowResource):
@@ -114,7 +114,7 @@ class CouplingWw3Write(GeoFlowResource):
     def basename_info(self):
         return dict(
             radical = self.fields,
-            geo     = [self.geometry.area, self.geometry.rnice],
+            geo     = self.geometry.area,
         )
 
 
@@ -150,7 +150,7 @@ class SurgesResultNative(GeoFlowResource):
     def basename_info(self):
         return dict(
             radical = self.fields,
-            geo     = [self.geometry.area, self.geometry.rnice],
+            geo     = self.geometry.area,
         )
 
 
@@ -169,7 +169,7 @@ class BufrPoint(FlowResource):
             ),
             timeslot = dict(
                 type = Time,
-                default = '000',
+                default = 0,
             ),
         )
     )
@@ -179,12 +179,10 @@ class BufrPoint(FlowResource):
         return 'bufr'
 
     def basename_info(self):
-        time1 = '{:03d}'.format(self.timeslot.hour)
-        time2 = '{:03d}'.format(int(self.timeslot.hour) + 24)
-        period = '.' + str(time1) + ':' + str(time2) + 'h'
         return dict(
             radical = self.realkind,
-            term    = period,
+            period  = dict(begintime=self.timeslot,
+                           endtime=self.timeslot + Period('PT24H')),
             src     = self.model,
         )
 
