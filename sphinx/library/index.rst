@@ -24,6 +24,7 @@ List of modules.
    
    vortex/index
    
+   cen/index
    common/index
    gco/index
    iga/index
