@@ -32,8 +32,8 @@ rd_xpid     = '$xpid'
 rd_suitebg  = $suitebg
 rd_refill   = $refill
 rd_jobname  = '$name'
-rd_iniconf  = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(appbase, 
-                                                        rd_vapp, rd_vconf, '$taskconf')
+rd_iniconf  = '{0:s}/conf/{1:s}_{2:s}{3:s}.ini'.format(appbase, 
+                                                       rd_vapp, rd_vconf, '$taskconf')
 
 ja = footprints.proxy.jobassistant(kind = 'generic',
                                    modules = footprints.stdtypes.FPSet((
