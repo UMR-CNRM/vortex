@@ -7,6 +7,7 @@ import footprints as fp
 
 import vortex
 from vortex.tools.net import uriparse
+from gco.data.stores import UgetArchiveStore
 from gco.tools import genv, uenv
 from gco.syntax.stdattrs import UgetId, GgetId
 
@@ -217,6 +218,28 @@ class TestUgetUenv(unittest.TestCase):
         self.assertEqual(provider.pathname(resource), 'data')
         self.assertEqual(provider.basename(resource), 'rrtm.const.02b.tgz.m01@huguette')
         self.assertEqual(provider.urlquery(resource), 'extract=toto')
+
+    def test_uget_archive_hashes(self):
+        expected = [('demo.constant.01', 'a'),
+                    ('demo.constant.02', 'a'),
+                    ('demo.constant.02toto', 'a'),
+                    ('rrtm.const.02.tgz', '8'),
+                    ('rrtm.const.02blip.tgz', '8'),
+                    ('rrtm.const.02Blip.tgz', '8'),
+                    ('rrtm.const.02bl-ip.tgz', '8'),
+                    ('rrtm.const.02bl_ip.tgz', '8'),
+                    ('rrtm.const.03.tgz', '8'),
+                    ('rrtm.const.03.toto.tgz', 'f'),
+                    ('mat.filter.glob05.06', 'd'),
+                    ('mat.filter.glob05.06.m01', 'd'),
+                    ('mat.filter.glob05.06lf.m01', 'd'),
+                    ('mat.filter.glob05.06lf.mtoto', '7'),
+                    ('mat.filter.glob05.06.gz', '3'),
+                    ('mat.filter.glob05.06.gz.m01', '3'),
+                    ('mat.filter.glob05.06lf.gz.m01', '3'),
+                    ]
+        for eltid, hashletter in expected:
+            self.assertEqual(UgetArchiveStore._hashdir(eltid), hashletter)
 
 
 if __name__ == "__main__":
