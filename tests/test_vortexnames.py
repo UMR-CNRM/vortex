@@ -4,6 +4,13 @@ import unittest
 from vortex.util.names import VortexNameBuilder, VortexNameBuilderError
 
 
+class FakeTime(object):
+
+    @property
+    def fmthm(self):
+        return '0006:00'
+
+
 class TestNameBuilder(unittest.TestCase):
 
     def testDefaults(self):
@@ -73,10 +80,21 @@ class TestNameBuilder(unittest.TestCase):
         self.assertEqual(vb.pack(dict(compute=[{'mpi': 12},
                                                {'openmp': 2}])),
                          'dummy.n0012-omp02')
-        # suffix option: already tested in testDefaults:
-        # other options
+        # term option
         self.assertEqual(vb.pack(dict(term=6)),
                          'dummy+6')
+        self.assertEqual(vb.pack(dict(term=dict(time=6))),
+                         'dummy+6')
+        self.assertEqual(vb.pack(dict(term=dict(time=FakeTime()))),
+                         'dummy+0006:00')
+        # period option
+        self.assertEqual(vb.pack(dict(term=6, period=12)),
+                         'dummy+6')
+        self.assertEqual(vb.pack(dict(period=dict(begintime=FakeTime(),
+                                                  endtime=FakeTime()))),
+                         'dummy+0006:00-0006:00')
+        # suffix option: already tested in testDefaults:
+        # other options
         self.assertEqual(vb.pack(dict(fmt='fa')),
                          'dummy.fa')
         # number option
