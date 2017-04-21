@@ -104,7 +104,7 @@ class ConfSurgesModel(GenvModelResource):
                     default = '[model]_[param]_[gdomain]',
                 ),
                 param = dict(
-                    values  = ['pts', 'savefield', 'ports', 'blkdat', \
+                    values  = ['pts', 'savefield', 'ports', 'blkdat',
                                'blkdat_cmo', 'patch', 'run', 'run_red'],
                 ),
             )
@@ -153,7 +153,7 @@ class ConfCouplingOasisSurges(GenvModelResource):
                     Mesh grid file description for ww3 model',
             attr = dict(
                 kind = dict(
-                    values  = ['meshWW3grid','ConfCouplingOasisSurges'],
+                    values  = ['meshWW3grid', 'ConfCouplingOasisSurges'],
                 ),
                 gvar = dict(
                     default = '[model]_[param]_[gdomain]',
@@ -171,7 +171,7 @@ class ConfCouplingOasisSurges(GenvModelResource):
 
 
 class CouplingGridOasis(GenvModelResource):
-    """Coupling grid file information for Oasis, for binaries coupled execution  
+    """Coupling grid file information for Oasis, for binaries coupled execution
     A Genvkey can be given.
     """
     _footprint = [
@@ -180,7 +180,7 @@ class CouplingGridOasis(GenvModelResource):
             info = 'Coupling grid file information for Oasis, for binaries coupled execution',
             attr = dict(
                 kind = dict(
-                    values  = ['InterpWW3Model','CouplingGridOasis'],
+                    values  = ['InterpWW3Model', 'CouplingGridOasis'],
                 ),
                 gvar = dict(
                     default = '[model]_[param]_[gdomain]_tgz',

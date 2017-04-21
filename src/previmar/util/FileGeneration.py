@@ -18,86 +18,86 @@ def EchoData(options):
     rhdict = options.get('rhandler', None)
     if rhdict:
 
-        ## recuperation date, reseau
+        # recuperation date, reseau
         date = "{}".format(rhdict.get('resource', {}).get('date', ''))
         run = Date(date).hh
-        term = "{}".format(Time(rhdict.get('options', {}).get('term', ''))) 
-        term_hh = str(term)[:-3] 
-        chaine = "{}".format(rhdict.get('options', {}).get('chaine_utilise', '')).upper()[:1]        
+        term = "{}".format(Time(rhdict.get('options', {}).get('term', '')))
+        term_hh = str(term)[:-3]
+        chaine = "{}".format(rhdict.get('options', {}).get('chaine_utilise', '')).upper()[:1]
 
-        ### recuperation info conf
+        # recuperation info conf
         forcage = "{}".format(rhdict.get('provider', {}).get('vconf', '')).upper()[-3:]
-        forcage_mode = "{}".format(rhdict.get('provider', {}).get('vconf', '')).upper()  
+        forcage_mode = "{}".format(rhdict.get('provider', {}).get('vconf', '')).upper()
 
         if forcage_mode[-3:] in 'RED':
             forcage_mode = forcage_mode[-3:]
-        else: 
+        else:
             forcage_mode = forcage_mode[-5:-3]
-                
-        Initial_w = "{}".format(rhdict.get('options', {}).get('initial_w', ''))        
+
+        Initial_w = "{}".format(rhdict.get('options', {}).get('initial_w', ''))
         Bufr_48h = "{}".format(rhdict.get('options', {}).get('maintien_bufr', ''))
         write_wind_txt = "{}".format(rhdict.get('options', {}).get('reecriture_vent', ''))
-        freq_grib = "{}".format(rhdict.get('options', {}).get('freq_grib', ''))   
-        freq_forcage = "{}".format(rhdict.get('options', {}).get('freq_forcage', ''))   
+        freq_grib = "{}".format(rhdict.get('options', {}).get('freq_grib', ''))
+        freq_forcage = "{}".format(rhdict.get('options', {}).get('freq_forcage', ''))
 
         deb_res   = 0
         mod = 'PR'
         if forcage_mode in 'AN':
             mod = 'AA'
-            fin_res   = int(term_hh) - 1  
-            
-        if forcage_mode in {'FC','PE'}:
+            fin_res   = int(term_hh) - 1
+
+        if forcage_mode in {'FC', 'PE'}:
             mod = 'PR'
-            fin_res   = int(term_hh)    
+            fin_res   = int(term_hh)
 
         Initial   = Initial_w
         if forcage in {'ARP', 'ARO', 'CEP'}:
             red_maree = 'NON'
-            Initial   = Initial_w      
+            Initial   = Initial_w
         elif forcage in 'RED':
             red_maree = 'OUI'
             Initial   = 0
             deb_res   = -1
             fin_res   = deb_res
 
-        ## Nom du modele
-        outstr += forcage + "\n"	
-  
-        ## Chaine redemarrage maree seule ==> OUI
+        # Nom du modele
+        outstr += forcage + "\n"
+
+        # Chaine redemarrage maree seule ==> OUI
         outstr += red_maree + "\n"
 
-        ## Echeance simulation
+        # Echeance simulation
         outstr += str(term_hh) + "\n"
-        
-        ## initial initial_w : Echeance pour Generation des fichiers guess (h). En general initial_w et initial sont identiques;
-        outstr += str(Initial) + "  " + str(Initial_w) + "\n"  
+
+        # initial initial_w : Echeance pour Generation des fichiers guess (h). En general initial_w et initial sont identiques;
+        outstr += str(Initial) + "  " + str(Initial_w) + "\n"
 
         # PR (Prevision) ou AA (Analyse)
         outstr += mod + "\n"
 
         # Date (mais date du fichier guess prioritaire)
         #   outstr += Date(date).ymdhm + "\n"
-        outstr += "200402090000\n"       
+        outstr += "200402090000\n"
 
-        ## Echeance resultat debut et fin (h)
+        # Echeance resultat debut et fin (h)
         outstr += str(deb_res) + "  " + str(fin_res) + "\n"
 
-        ## frequence forcage (min) 
+        # frequence forcage (min)
         outstr += freq_forcage + "\n"
 
-        ## frequence resultat (min) sortie grib
+        # frequence resultat (min) sortie grib
         outstr += freq_grib + "\n"
-        
-        ## Reseau
+
+        # Reseau
         outstr += "{}\n".format(run)
-        
-        ## Chaine utilisee (Oper ou Double) !! si D alors change le code_modele ASURWARPD par ex
+
+        # Chaine utilisee (Oper ou Double) !! si D alors change le code_modele ASURWARPD par ex
         outstr += chaine + "\n"
- 
-        ## Chaine maintien BUFR sur 48hmax
+
+        # Chaine maintien BUFR sur 48hmax
         outstr += Bufr_48h + "\n"
-        
-        ## Reecriture vent
+
+        # Reecriture vent
         outstr += write_wind_txt
 
     # NB: The result have to be a file like object !

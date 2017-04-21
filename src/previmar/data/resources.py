@@ -9,13 +9,12 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource, GeoFlowResource
-from common.data.modelstates import InitialCondition, Historic
+from common.data.modelstates import InitialCondition
 from vortex.tools.date import Date, Time
 
 
-
 class SolutionPoint(FlowResource):
-    """Class for point solutions of the model HYCOM i.e s*pts (ascii file)."""
+    """Class for point solutions of the HYCOM model i.e s*pts (ascii file)."""
     _footprint = dict(
         info = 'Surges model point solution',
         attr = dict(
@@ -65,7 +64,7 @@ class SolutionMaxGrid(GeoFlowResource):
                 default = 'ascii',
             ),
             fields = dict(
-                values = ['s_max', 's_uvpmax', 'surcote_max','uvp_max'],
+                values = ['s_max', 's_uvpmax', 'surcote_max', 'uvp_max'],
                 remap = {
                     'surcote_max': 's_max',
                     'uvp_max': 's_uvpmax',
@@ -80,14 +79,14 @@ class SolutionMaxGrid(GeoFlowResource):
 
     def basename_info(self):
         return dict(
-            geo     = [self.geometry.area, self.geometry.rnice],
             radical = self.fields,
+            geo     = [self.geometry.area, self.geometry.rnice],
             fmt     = self.nativefmt,
         )
 
 
 class CouplingWw3Write(GeoFlowResource):
-    """Class for Nested solutions of the model HYCOM (coupling file)."""
+    """Class for Nested solutions of the HYCOM model (coupling file)."""
     _footprint = dict(
         info = 'Coupling Surges model (H, u, v) solution on WW3 grid (binary data file)',
         attr = dict(
@@ -95,11 +94,11 @@ class CouplingWw3Write(GeoFlowResource):
                 values = ['SurgesWw3coupling'],
             ),
             nativefmt = dict(
-                values  = ['foo','unknown','netcdf'],
+                values  = ['foo', 'unknown', 'netcdf'],
                 default = 'foo',
             ),
             fields = dict(
-                values = ['Hauteur', 'UV_current', 'level.ww3','current.ww3'],
+                values = ['Hauteur', 'UV_current', 'level.ww3', 'current.ww3'],
                 remap = {
                     'Hauteur': 'level.ww3',
                     'UV_current': 'current.ww3',
@@ -114,13 +113,13 @@ class CouplingWw3Write(GeoFlowResource):
 
     def basename_info(self):
         return dict(
-            geo     = [self.geometry.area, self.geometry.rnice],
             radical = self.fields,
+            geo     = [self.geometry.area, self.geometry.rnice],
         )
 
 
 class SurgesResultNative(GeoFlowResource):
-    """Class for grid solutions of the model HYCOM (netcdf file)."""
+    """Class for grid solutions of the HYCOM model (netcdf file)."""
     _footprint = dict(
         info = '(H, u, v) parameters data projected in native geometry grid HYCOM with/without forcing (netcdf data file)',
         attr = dict(
@@ -150,16 +149,16 @@ class SurgesResultNative(GeoFlowResource):
 
     def basename_info(self):
         return dict(
-            geo     = [self.geometry.area, self.geometry.rnice],
             radical = self.fields,
+            geo     = [self.geometry.area, self.geometry.rnice],
         )
 
 
 class BufrPoint(FlowResource):
-    """Class for point solutions of the model HYCOM i.e bufr."""
+    """Class for point solutions of the HYCOM model i.e bufr."""
     _footprint = dict(
-        info = 'Surges model temporal solution bufr (for 24h period) (2d current (u,v) \
-                Pmer, U10, V10, surcote and (Hauteur d eau Maree SHOM for ATL))',
+        info = ('Surges model temporal solution bufr (for 24h period) (2d current (u,v) ' +
+                'Pmer, U10, V10, surcote and (Hauteur d eau Maree SHOM for ATL))'),
         attr = dict(
             kind = dict(
                 values = ['bufr_surges'],
@@ -171,7 +170,7 @@ class BufrPoint(FlowResource):
             timeslot = dict(
                 type = Time,
                 default = '000',
-            ),  
+            ),
         )
     )
 
@@ -183,7 +182,7 @@ class BufrPoint(FlowResource):
         time1 = '{:03d}'.format(self.timeslot.hour)
         time2 = '{:03d}'.format(int(self.timeslot.hour) + 24)
         period = '.' + str(time1) + ':' + str(time2) + 'h'
-        return dict(    
+        return dict(
             radical = self.realkind,
             term    = period,
             src     = self.model,
