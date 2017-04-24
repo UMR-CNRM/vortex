@@ -124,8 +124,10 @@ class HorizontalGeometry(Geometry):
             ni = None,
             nj = None,
             resolution = 0.,
+            runit = None,
             truncation = None,
             stretching = None,
+            nmassif = None,
             lam = True,
         )
         desc.update(kw)
@@ -137,7 +139,7 @@ class HorizontalGeometry(Geometry):
                 self.__dict__[k] = True
             if isinstance(v, basestring) and re.match('false', v, re.IGNORECASE):
                 self.__dict__[k] = False
-        for item in ('nlon', 'nlat', 'ni', 'nj', 'truncation'):
+        for item in ('nlon', 'nlat', 'ni', 'nj', 'nmassif', 'truncation'):
             cv = getattr(self, item)
             if cv is not None:
                 setattr(self, item, int(cv))
@@ -158,11 +160,14 @@ class HorizontalGeometry(Geometry):
 
     @property
     def rnice(self):
-        if self.runit == 'km':
-            res = '{0:05.2f}'.format(self.resolution)
+        if self.runit is not None:
+            if self.runit == 'km':
+                res = '{0:05.2f}'.format(self.resolution)
+            else:
+                res = '{0:06.3f}'.format(self.resolution)
+            return re.sub(r'\.', self.runit, res, 1)
         else:
-            res = '{0:06.3f}'.format(self.resolution)
-        return re.sub(r'\.', self.runit, res, 1)
+            return 'Unknown Resolution'
 
     def anonymous_info(self, *args):
         """Try to build a meaningful information from an anonymous geometry."""
@@ -189,7 +194,8 @@ class HorizontalGeometry(Geometry):
         )).format(indent, self, self.info, str(self.lam))
         # Optional infos
         for attr in [k for k in ('area', 'resolution', 'truncation',
-                                 'stretching', 'nlon', 'nlat', 'ni', 'nj')
+                                 'stretching', 'nlon', 'nlat', 'ni', 'nj',
+                                 'nmassif')
                      if getattr(self, k, False)]:
             card += "\n{0}{0}{1:10s} : {2!s}".format(indent, attr.title(),
                                                      getattr(self, attr))
@@ -308,9 +314,12 @@ class CurvlinearGeometry(UnstructuredGeometry):
 
     _tag_topcls = False
 
+    def __init__(self, *args, **kw):
+        super(CurvlinearGeometry, self).__init__(**kw)
+        self.kind = 'curvlinear'
+
     def _check_attributes(self):
         super(CurvlinearGeometry, self)._check_attributes()
-        self.kind = 'curvlinear'
         if self.ni is None or self.nj is None:
             raise AttributeError("Some mandatory arguments are missing")
 
@@ -321,6 +330,25 @@ class CurvlinearGeometry(UnstructuredGeometry):
         else:
             fmts = 'kind={0:s}, r={1:s}, global, ni={3!s}, nj={4!s}'
         return fmts.format(self.kind, self.rnice, self.area, self.nlon, self.nlat)
+
+
+class MassifGeometry(UnstructuredGeometry):
+
+    _tag_topcls = False
+
+    def __init__(self, *args, **kw):
+        super(MassifGeometry, self).__init__(**kw)
+        self.kind = 'massif'
+
+    def _check_attributes(self):
+        super(MassifGeometry, self)._check_attributes()
+        if self.nmassif is None:
+            raise AttributeError("Some mandatory arguments are missing")
+
+    def doc_export(self):
+        """Relevant informations to print in the documentation."""
+        fmts = 'kind={0:s}, area={1:s}, massif count={2!s}'
+        return fmts.format(self.kind, self.area, self.nmassif)
 
 # Load default geometries
 load(verbose=False)

@@ -184,3 +184,18 @@ class OceanographicModel(Binary):
     def command_line(self, **opts):
         """Abstract method."""
         return ''
+
+
+class SurfaceModel(Binary):
+
+    _abstract  = True
+    _footprint = dict(
+        info = 'Model used for the Safran-Surfex-Mepra chain.',
+        attr = dict(
+            model = a_model,
+            kind  = dict(
+                values = ['surfacemodel', 'snowmodel'],
+                remap = dict(autoremap = 'first'),
+            ),
+        ),
+    )

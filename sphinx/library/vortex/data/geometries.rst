@@ -77,3 +77,7 @@ Classes
    :members:
    :member-order: alphabetical
    
+.. autoclass:: MassifGeometry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

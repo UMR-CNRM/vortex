@@ -70,6 +70,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ParaExpresso
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Parallel
    :show-inheritance:
    :members:

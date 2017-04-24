@@ -532,6 +532,14 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return self.strftime('%Y%m%d')
 
     @property
+    def yymd(self):
+        return self.strftime('%y%m%d')
+
+    @property
+    def yymdh(self):
+        return self.strftime('%y%m%d%H')
+
+    @property
     def ymdh(self):
         return self.strftime('%Y%m%d%H')
 
