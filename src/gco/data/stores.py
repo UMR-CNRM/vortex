@@ -368,7 +368,8 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
     Uget archive store
     """
 
-    _eltid_cleaner = re.compile(r'^(.*)\.\d+[a-zA-Z_-]*($|\.\D*$)')
+    _eltid_cleaner0 = re.compile(r'\.m\d+$')
+    _eltid_cleaner1 = re.compile(r'^(.*)\.\d+[a-zA-Z_-]*($|\.\D*$)')
 
     #: Path to the uget Store configuration file
     _store_global_config = '@store-uget.ini'
@@ -411,7 +412,8 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
 
     @classmethod
     def _hashdir(cls, eltid):
-        cleaned = cls._eltid_cleaner.sub(r'\1\2', eltid)
+        cleaned = cls._eltid_cleaner0.sub('', eltid)
+        cleaned = cls._eltid_cleaner1.sub(r'\1\2', cleaned)
         return hashlib.md5(cleaned).hexdigest()[0]
 
     def _universal_remap(self, remote):

@@ -123,6 +123,9 @@ class UGetShell(cmd.Cmd):
     _complete_basics = ['env', 'data']
     _complete_basics_plus = _complete_basics + ['genv', 'gdata']
 
+    _push_res_fmt = "{:9s}: {:s}"
+    _push_res_mfmt = "{:9s}: {:s} for month: {:02d}"
+
     def __init__(self, *kargs, **kwargs):
         cmd.Cmd.__init__(self, *kargs, **kwargs)
         self._config = ConfigParser.SafeConfigParser()
@@ -283,6 +286,13 @@ class UGetShell(cmd.Cmd):
         """Auto-completion for the *check* command."""
         return self._complete_basics(text, line, begidx, endidx)
 
+    def _single_check(self, shortname):
+        res = ''
+        for stname, st in self._storelist:
+            if st.check(self._uri(st, ('data', shortname))):
+                res += stname + ', '
+        return res.rstrip(', ') or 'MISSING'
+
     @ugetid_doc
     def do_check(self, line):
         """
@@ -314,15 +324,24 @@ class UGetShell(cmd.Cmd):
                 myenv = uenv.contents('uget:' + mline['shortuget'],
                                       scheme='uget', netloc='uget.weak.fr')
                 for k, v in myenv.items():
+                    monthchecked = list()
                     if isinstance(v, UgetId):
-                        res = ''
-                        for stname, st in self._storelist:
-                            if st.check(self._uri(st, ('data', v.short))):
-                                res += stname + ', '
-                        res = res.rstrip(', ') or 'MISSING'
+                        res = self._single_check(v.short)
+                        if res == 'MISSING':
+                            # Go for monthly check
+                            monthchecked = list()
+                            for m in range(1, 13):
+                                monthchecked.append(self._single_check(v.monthlyshort(m)))
+                            if all([m == 'MISSING' for m in monthchecked]):
+                                monthchecked = list()
                     else:
                         res = 'unchecked'
-                    print('  {:36s}: {:14s} ({:s})'.format(k, res, v))
+                    if monthchecked:
+                        for m in range(1, 13):
+                            print('  {:36s}: {:14s} ({:s} for month: {:02d})'.
+                                  format(k, monthchecked[m - 1], v, m))
+                    else:
+                        print('  {:36s}: {:14s} ({:s})'.format(k, res, v))
                 uenv.clearall()
             print()
 
@@ -402,7 +421,7 @@ class UGetShell(cmd.Cmd):
           described by UgetId.
         * UGETID_DOC
 
-        While uploading an environement file, its content will be scanned and
+        While uploading an environment file, its content will be scanned and
         new UgetId will also be uploaded.
         """
         mline = self._valid_syntax(self._valid_push, line)
@@ -425,13 +444,48 @@ class UGetShell(cmd.Cmd):
                     if isinstance(v, UgetId):
                         # If the element is a Uget data available in the Hack store: upload it
                         if self._storehack.check(self._uri(self._storehack, ('data', v.short))):
-                            print("Uploading: {:s}".format(v))
+                            print(self._push_res_fmt.format("Uploading", v))
                             rc = self._single_push('data', v.short)
                             if rc is not True:
                                 return rc
                         else:
-                            rstuff_uri = self._uri(self._storearch, ('data', v.short))
-                            print("{:9s}: {:s}".format(self._check_remap(self._storearch.check(rstuff_uri)), v))
+                            # Look for any monthly data
+                            monthfound = list()
+                            for m in range(1, 13):
+                                myshort = v.monthlyshort(m)
+                                if self._storehack.check(self._uri(self._storehack, ('data', myshort))):
+                                    monthfound.append(myshort)
+                            if monthfound:
+                                # Great, this is monthly, push and check for all months
+                                for m in range(1, 13):
+                                    myshort = v.monthlyshort(m)
+                                    if myshort in monthfound:
+                                        print(self._push_res_mfmt.format("Uploading", v, m))
+                                        rc = self._single_push('data', myshort)
+                                        if rc is not True:
+                                            return rc
+                                    else:
+                                        rstuff_uri = self._uri(self._storearch, ('data', myshort))
+                                        print(self._push_res_mfmt.format(self._check_remap(self._storearch.check(rstuff_uri)), v, m))
+                            else:
+                                # Oops: nothing to upload
+                                rstuff_uri = self._uri(self._storearch, ('data', v.short))
+                                usualchecked = self._storearch.check(rstuff_uri)
+                                monthchecked = list()
+                                if usualchecked:
+                                    # This is a usual data
+                                    print(self._push_res_fmt.format(self._check_remap(usualchecked), v))
+                                else:
+                                    # Check for a monthly data
+                                    for m in range(1, 13):
+                                        rstuff_uri = self._uri(self._storearch, ('data', v.monthlyshort(m)))
+                                        monthchecked.append(self._storearch.check(rstuff_uri))
+                                    if any(monthchecked):
+                                        for m in range(1, 13):
+                                            print(self._push_res_mfmt.format(self._check_remap(monthchecked[m - 1]), v, m))
+                                    else:
+                                        # Nope, it definitely doesn't exist
+                                        print(self._push_res_fmt.format(self._check_remap(usualchecked), v))
                     else:
                         print("Unchecked: {:s}".format(v))
                 uenv.clearall()
@@ -504,9 +558,9 @@ class UGetShell(cmd.Cmd):
                 else:
                     # The source is a genv cycle
                     if mline['what'] == 'env':
-                        mygenv = genv.autofill(mline['baseshort'])
+                        mygenv = genv.autofill(mline['baseid'])
                         if not mygenv:
-                            self._error("Could not get genv < {:s} >".format(mline['baseshort']))
+                            self._error("Could not get genv < {:s} >".format(mline['baseid']))
                             return False
                         with open(tfile, 'w') as tfilefh:
                             tfilefh.writelines(['{:s}={:s}\n'.format(k, v)
@@ -516,12 +570,12 @@ class UGetShell(cmd.Cmd):
                         ghost = tg.get('gco:ggetarchive', 'hendrix.meteo.fr')
                         gtool = sh.path.join(tg.get('gco:ggetpath', ''), tg.get('gco:ggetcmd', 'gget'))
                         with sh.cdcontext(tdir):
-                            rc = sh.spawn([gtool, '-host', ghost, mline['baseshort']],
+                            rc = sh.spawn([gtool, '-host', ghost, mline['baseid']],
                                           output=False, fatal=False)
                             if not rc:
-                                self._error("Could not get gget data < {:s} >".format(mline['baseshort']))
+                                self._error("Could not get gget data < {:s} >".format(mline['baseid']))
                                 return False
-                            sh.mv(mline['baseshort'], tfile)
+                            sh.mv(mline['baseid'], tfile)
                 # That went great ! Store the retrived ressource inthe hack store !
                 self._storehackrw.put(tfile, dest_uri, dict())
                 # Give write permissions to the user (that's kind of dirty for a cache but that's hacking !)
