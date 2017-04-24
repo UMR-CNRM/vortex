@@ -994,6 +994,6 @@ class OpMailService(TemplatedMailService):
         if not rc:
             ad.prompt(
                 comment='OpMailService: mail was not sent.',
-                **self._attributes
+                **self.footprint_as_shallow_dict()
             )
         return rc

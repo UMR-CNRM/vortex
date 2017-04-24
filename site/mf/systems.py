@@ -12,53 +12,6 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.targets import Target
-from vortex.tools.systems import OSExtended, Linux27
-
-
-class SuperUX(OSExtended):
-    """NEC Operating System."""
-
-    _footprint = dict(
-        info = 'NEC operating system',
-        attr = dict(
-            sysname = dict(
-                values = [ 'SUPER-UX' ]
-            )
-        )
-    )
-
-    def __init__(self, *args, **kw):
-        logger.debug('SuperUX system init %s', self.__class__)
-        self._psopts = kw.pop('psopts', ['-f'])
-        super(SuperUX, self).__init__(*args, **kw)
-        if self.hostname == 'unix':
-            hl = self.spawn(['hostname'])
-            if len(hl) > 0:
-                self._attributes['hostname'] = hl[0]
-
-    def rawcp(self, source, destination):
-        """NEC SX raw copy is a spawn of the shell cp."""
-        self.spawn(['cp', source, destination], output=False)
-        return bool(self.path.isfile(destination) and self.size(source) == self.size(destination))
-
-
-class NECSX9(Target):
-    """NEC Vector Computer."""
-
-    _footprint = dict(
-        info = 'NEC vector computer SX9',
-        attr = dict(
-            hostname = dict(
-                values = [ 'unix' ] + [ x + '0' + str(y) for x in ('yuki', 'kumo') for y in range(10) ]
-            ),
-            sysname = dict(
-                values = [ 'SUPER-UX' ]
-            ),
-            inifile = dict(
-                default = '@target-necsx9.ini',
-            )
-        )
-    )
 
 
 class MeteoBull(Target):

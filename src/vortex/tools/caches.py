@@ -83,8 +83,9 @@ class Cache(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         logger.debug('Abstract cache init %s', self.__class__)
         super(Cache, self).__init__(*args, **kw)
-        if not self.config:
-            self._attributes['config'] = GenericConfigParser(inifile=self.inifile, mkforce=self.iniauto)
+        self._actual_config = self.config
+        if self._actual_config is None:
+            self._actual_config = GenericConfigParser(inifile=self.inifile, mkforce=self.iniauto)
         self._history = History(tag=self.entry)
 
     @property
@@ -101,10 +102,10 @@ class Cache(footprints.FootprintBase):
 
     def actual(self, attr):
         """Return the actual attribute, either defined in config or plain attribute."""
-        thisattr = self._attributes.get(attr, 'conf')
+        thisattr = getattr(self, attr, 'conf')
         if thisattr == 'conf':
-            if self.config.has_option(self.kind, attr):
-                thisattr = self.config.get(self.kind, attr)
+            if self._actual_config.has_option(self.kind, attr):
+                thisattr = self._actual_config.get(self.kind, attr)
             else:
                 raise AttributeError('Could not find default ' + attr + ' in config.')
         return thisattr

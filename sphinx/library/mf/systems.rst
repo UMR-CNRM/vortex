@@ -51,16 +51,3 @@ SOPRANO Servers
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-Old NEC system and targets
---------------------------
-
-.. autoclass:: SuperUX
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: NECSX9
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
