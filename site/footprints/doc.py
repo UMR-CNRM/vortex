@@ -8,6 +8,7 @@ Footprint's docstring generator
 from __future__ import print_function, absolute_import, division
 
 import collections
+import re
 
 from . import dump, priorities
 
@@ -44,14 +45,19 @@ def _formating_sphinx_v1(fp):
     dumper.reset()
     out = ['', '']
 
+    def _sphinx_secured_dump(todump):
+        d = dumper.dump(todump)
+        # Escape trailing _ (it might be mistaken with an internal link)
+        return re.sub(r'(?<=\w)(_)\b', r'\\_', d, count=0)
+
     # Footprint's level attributes
     out.append(".. note:: This class is managed by footprint.\n")
     out.append("     * info: {0.info}".format(fp))
-    out.append("     * priority: {}".format(dumper.dump(fp.level)))
+    out.append("     * priority: {}".format(_sphinx_secured_dump(fp.level)))
     # Now, print out the rest (whatever is found)
     for k, v in [(k, v) for k, v in fp.as_dict().items()
                  if k not in ['info', 'priority', 'attr'] and v]:
-        out.append("     * {}: {}".format(k, dumper.dump(v)))
+        out.append("     * {}: {}".format(k, _sphinx_secured_dump(v)))
     out.append('')
 
     # Now the attributes...
@@ -74,15 +80,15 @@ def _formating_sphinx_v1(fp):
         subdesc = list()
         # Is it optional ?
         if desc['optional']:
-            subdesc.append('       * Optional. Default is {0:}.'.format(dumper.dump(desc['default'])))
+            subdesc.append('       * Optional. Default is {0:}.'.format(_sphinx_secured_dump(desc['default'])))
         # The superstars
         for k, v in [(i, desc[i]) for i in ['values', 'outcast'] if desc[i]]:
-            subdesc.append('       * {0:}: {1:}'.format(k.capitalize(), dumper.dump(v)))
+            subdesc.append('       * {0:}: {1:}'.format(k.capitalize(), _sphinx_secured_dump(v)))
         # Now, print out the rest (whatever is found)
         for k, v in [(i, v) for i, v in desc.items()
                      if i not in ['info', 'type', 'values', 'outcast', 'optional', 'alias',
                                   'default', 'access', 'doc_visibility', 'doc_zorder'] and v]:
-            subdesc.append('       * {0:}: {1:}'.format(k.capitalize(), dumper.dump(v)))
+            subdesc.append('       * {0:}: {1:}'.format(k.capitalize(), _sphinx_secured_dump(v)))
         if subdesc:
             out.extend(['', ] + subdesc + ['', ])
         # Store aliases (they will be displayed later)
