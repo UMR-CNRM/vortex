@@ -8,7 +8,7 @@ import footprints as fp
 import vortex
 from vortex.tools.net import uriparse
 from gco.tools import genv, uenv
-from gco.syntax.stdattrs import UgetId, GgetId
+from gco.syntax.stdattrs import UgetId, GgetId, ArpIfsSimplifiedCycle
 
 DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -218,6 +218,80 @@ class TestUgetUenv(unittest.TestCase):
         self.assertEqual(provider.basename(resource), 'rrtm.const.02b.tgz.m01@huguette')
         self.assertEqual(provider.urlquery(resource), 'extract=toto')
 
+
+class TestArpIfsSimplifiedCycle(unittest.TestCase):
+
+    def assertInvalid(self, cycle):
+        with self.assertRaises(ValueError):
+            ArpIfsSimplifiedCycle(cycle)
+
+    def assertDetect(self, cycle, s_cycle):
+        self.assertEqual(str(ArpIfsSimplifiedCycle(cycle)),
+                         s_cycle)
+
+    def test_arpifs_cycles_basics(self):
+        s_cycle = ArpIfsSimplifiedCycle('cy42_op2.23')
+        self.assertEqual(s_cycle, ArpIfsSimplifiedCycle('cy42_op2'))
+        self.assertEqual(s_cycle, 'cy42_op2')
+        self.assertNotEqual(s_cycle, 'toto')
+        self.assertLess(s_cycle, ArpIfsSimplifiedCycle('cy42t1'))
+        self.assertLess(s_cycle, 'cy42t1')
+        self.assertLess(s_cycle, 'cy43_op3')
+        self.assertGreater(s_cycle, ArpIfsSimplifiedCycle('cy42'))
+        self.assertGreater(s_cycle, 'cy42')
+        self.assertGreater(s_cycle, 'cy41t6')
+
+    def test_arpifs_cycles_reallife(self):
+        # Failures
+        wrongnames = ['toto', 'cya42', 'notcy42_op2.23',
+                      # No cycle number
+                      'cy', 'cyABC-op1.12', 'uget:cy', 'uget:cyABC-op1.12',
+                      # Strange cycle
+                      'cy42blop', 'cy42blop_op1', 'cy42blop_op1.02',
+                      ]
+        for cycle in wrongnames:
+            self.assertInvalid(cycle)
+
+        # No OP
+        self.assertDetect('cy42_main.23', 'cy42')
+        self.assertDetect('uget:cy42_main.06@huguette', 'cy42')
+        self.assertDetect('uget:cy42_notop2Ican_write_whatever_i_want', 'cy42')
+        self.assertDetect('al42_aromeop2.11', 'cy42')  # op should always be preceded with _ or -
+        # No OP + t
+        self.assertDetect('cy42t6_main.23', 'cy42t6')
+        self.assertDetect('uget:cy42t6_main.06@huguette', 'cy42t6')
+        self.assertDetect('uget:cy42t6_notop2Ican_write_whatever_i_want', 'cy42t6')
+        self.assertDetect('al42t6_aromeop2.11', 'cy42t6')  # op should always be preceded with _ or -
+        # OP
+        self.assertDetect('cy42_op2.23', 'cy42_op2')
+        self.assertDetect('uget:cy42_op2.06@huguette', 'cy42_op2')
+        self.assertDetect('uget:cy42_op2Ican_write_whatever_i_want', 'cy42_op2')
+        self.assertDetect('uget:cy42_coucou_op2Ican_write_whatever_i_want', 'cy42_op2')
+        self.assertDetect('uget:cy42_coucou-op2Ican_write_whatever_i_want', 'cy42_op2')
+        self.assertDetect('al42_arome-op2.11', 'cy42_op2')
+        self.assertDetect('al42_-op2.11', 'cy42_op2')  # That's ugly but ok
+        # OP + t
+        self.assertDetect('cy42t1_op2.23', 'cy42t1_op2')
+        self.assertDetect('uget:cy42t1_op2.06@huguette', 'cy42t1_op2')
+        self.assertDetect('cy42t1_op2_IbelieveIcanFly', 'cy42t1_op2')
+        self.assertDetect('cy42t1_op2_IbelieveIcanFlyWith_op3', 'cy42t1_op2')
+        self.assertDetect('cy42t1_myfirst-op2_IbelieveIcanFlyWith_op3', 'cy42t1_op2')
+        self.assertDetect('uget:cy42t1_op2Ican_write_whatever_i_want', 'cy42t1_op2')
+        self.assertDetect('uget:cy42t1_coucou_op2Ican_write_whatever_i_want', 'cy42t1_op2')
+        self.assertDetect('al42t1_arome-op2.11', 'cy42t1_op2')
+        self.assertDetect('al42t1_-op2.11', 'cy42t1_op2')  # That's ugly but ok
+        # Realistic
+        self.assertDetect('cy42t1_op2.23', 'cy42t1_op2')
+        self.assertDetect('al42t1_arome-op2.11', 'cy42t1_op2')
+        self.assertDetect('al42_arome-op2.11', 'cy42_op2')
+        self.assertDetect('al42_arome@pe-op2.03', 'cy42_op2')
+        self.assertDetect('al42_arome@polynesie-op2.01', 'cy42_op2')
+        self.assertDetect('cy42_peace-op2.05', 'cy42_op2')
+        self.assertDetect('cy42_pacourt-op2.04', 'cy42_op2')
+        self.assertDetect('al42_cpl-op2.02', 'cy42_op2')
+        self.assertDetect('al41t1_reunion-op2.17', 'cy41t1_op2')
+        self.assertDetect('cy42_assimens-op2.05', 'cy42_op2')
+        self.assertDetect('al41t1_arome@asscom1-op2.01', 'cy41t1_op2')
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

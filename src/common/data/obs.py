@@ -129,7 +129,7 @@ class ObsODB(Observations):
                         screening='odb_screen.tar',
                         matchup='odb_cpl.tar', complete='odb_cpl.tar')
         ecma_prefix = dict(matchup='BASE/', complete='BASE/')
-        if self.stage in ecma_map:
+        if self.stage in ecma_map and self.layout == 'ecma':
             if re_fullmix.match(self.part):
                 return (ecma_map[self.stage], 'extract=all&format=unknown')
             elif self.part == 'virtual':
@@ -139,6 +139,8 @@ class ObsODB(Observations):
                 return (ecma_map[self.stage],
                         'extract={:s}ECMA.{:s}&format=unknown'.format(ecma_prefix.get(self.stage, ''),
                                                                       self.part))
+        elif self.stage == 'screening' and self.layout == 'ccma':
+            return ('odb_ccma_screen.tar', '')
         elif re_fullmix.match(self.part) and self.stage == 'traj':
             return ('odb_traj.tar', '')
         elif re_fullmix.match(self.part) and self.stage == 'minim' and self.model == 'aladin':
