@@ -49,11 +49,6 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Linux26
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: Linux27
    :show-inheritance:
    :members:
@@ -65,11 +60,6 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: Macosx
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Python26
    :show-inheritance:
    :members:
    :member-order: alphabetical
