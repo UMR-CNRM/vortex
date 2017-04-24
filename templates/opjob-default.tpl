@@ -35,8 +35,8 @@ op_iniconf  = '{0:s}/conf/{1:s}_{2:s}.ini'.format(op_rootapp, op_vapp, op_vconf)
 op_fullplay = $fullplay
 op_refill   = $refill
 op_mail     = $mail
-op_jeeves   = '$jeeves'
-
+op_jeeves   = '{0}_$jeeves'.format(op_xpid)
+op_phase    = $phase
 
 sys.stderr = sys.stdout
 
@@ -68,6 +68,8 @@ try:
     from vortex.tools.actions import actiond as ad
     ad.opmail_on()
     ad.route_on()
+    ad.phase_tune(jname='{0}_phase'.format(op_xpid))
+    ad.phase_on()
     opts = dict(jobassistant=ja, play=op_fullplay)
     driver = todo.setup(t, **opts)
     driver.setup()

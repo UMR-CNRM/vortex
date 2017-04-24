@@ -228,6 +228,7 @@ class OpJobAssistant(OpJobAssistantTest):
     def finalise(self):
         super(OpJobAssistant, self).finalise()
         t = vortex.ticket()
+        ad.phase_flush()
         if 'DMT_PATH_EXEC' in t.env():
             option_insertion = ('--id ' + t.env['SLURM_JOB_ID'] + ' --date-pivot=' +
                                 t.env['DMT_DATE_PIVOT'] + ' --job-path=' +
@@ -310,6 +311,9 @@ def oproute_hook_factory(kind, productid, sshhost, areafilter=None, soprano_targ
         kwargs= dict(kind=kind, productid=productid, sshhost=sshhost,
                     filename=rh.container.basename, soprano_target=soprano_target, routingkey=routingkey)
         if hasattr(rh.resource, 'geometry'):
+            if isinstance(productid, dict):
+                productidt = productid[rh.resource.geometry.area]
+                kwargs['productid'] = productidt                   
             kwargs['domain'] = rh.resource.geometry.area
         if hasattr(rh.resource, 'term'):
             kwargs['term'] = rh.resource.term

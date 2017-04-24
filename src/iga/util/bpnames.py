@@ -474,4 +474,7 @@ def global_snames(resource, provider):
         logger.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
     if resource.realkind == 'historic':
         bname = 'toto'
+    if resource.realkind == 'obsmap':
+        suff = map_suffix[(cutoff, resource.date.hour)]
+        bname = 'bm_' + vapp.upper() + '_' + resource.scope + '.' + suff + '.' + resource.date.ymd
     return bname
