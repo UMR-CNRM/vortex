@@ -7,13 +7,11 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 from gco.syntax.stdattrs import gdomain
-
 from common.data.consts import GenvModelResource
 
 
 class TidalHarmonic(GenvModelResource):
     """Class of Tidal Constant: Fortran binary data (unformatted).
-
     A Genvkey can be given.
     """
     _footprint = [
@@ -38,7 +36,6 @@ class TidalHarmonic(GenvModelResource):
 
 class CteMaree(GenvModelResource):
     """Class of Tidal Characteristic: ascii list file.
-
     A Genvkey can be given.
     """
     _footprint = [
@@ -61,24 +58,26 @@ class CteMaree(GenvModelResource):
         return 'cteMaree'
 
 
-class SurgesForcingData(GenvModelResource):
+class SurgesNativeGrid(GenvModelResource):
     """
-    Class of a grid  'depth' : grille mere  ; 'grid' : grille fille ; 'angle' : angle local;
+    Class of a grid  'depth' : grille bathy  ; 'grid' : grille modele ; 'angle' : angle local;
     on HYCOM curvilinear grid , Fortran binary data (unformatted) (*.a).
     & (Ascii file) min max values (*.b)
-
     A Genvkey can be given.
     """
     _footprint = [
         gdomain,
         dict(
-            info = 'Static forcing data for a surges model',
+            info = 'Static grid forcing for a surges model and BottomFriction if variable',
             attr = dict(
                 kind = dict(
-                    values  = ['SurgesForcingData']
+                    values  = [ 'SurgesNativeGrid', 'SurgesForcingData', 'BottomFriction'],
                 ),
                 gvar = dict(
-                    default = '[model]_regional_[gdomain]_tgz',
+                    default = '[model]_[fields]_[gdomain]_tgz',
+                ),
+                fields = dict(
+                    values  = ['regional', 'cb'],
                 ),
             )
         )
@@ -86,40 +85,11 @@ class SurgesForcingData(GenvModelResource):
 
     @property
     def realkind(self):
-        return 'ForcingInData'
-
-
-class BlkdatData(GenvModelResource):
-    """
-    Class of a grid  'depth' : grille mere  ; 'grid' : grille fille ; 'angle' : angle local;
-    on HYCOM curvilinear grid , Fortran binary data (unformatted) (*.a).
-    & (Ascii file) min max values (*.b)
-
-    A Genvkey can be given.
-    """
-    _footprint = [
-        gdomain,
-        dict(
-            info = 'Set of ...',
-            attr = dict(
-                kind = dict(
-                    values  = ['BlkdatData']
-                ),
-                gvar = dict(
-                    default = '[model]_blkdat_[gdomain]_tgz',
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'BlkdatData'
+        return 'NativeGrid'
 
 
 class ConfSurgesModel(GenvModelResource):
-    """Surges model static parameters file. (Ascii file).
-
+    """Surges model static parameters on input file. (Ascii file).
     A Genvkey can be given.
     """
     _footprint = [
@@ -128,38 +98,14 @@ class ConfSurgesModel(GenvModelResource):
             info = 'Surges model parameters files',
             attr = dict(
                 kind = dict(
-                    values  = ['ConfigSurges'],
+                    values  = ['ConfigSurges', 'ConfigRunSurges', 'BlkdatData'],
                 ),
                 gvar = dict(
                     default = '[model]_[param]_[gdomain]',
                 ),
                 param = dict(
-                    values  = ['pts', 'savefield', 'ports', 'patch'],
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'ConfigSurgesModel'
-
-
-class ConfRunSurgesModel(GenvModelResource):
-    """Surges model run input for forecast and restart. (Ascii file).
-
-    A Genvkey can be given.
-    """
-    _footprint = [
-        gdomain,
-        dict(
-            info = 'Surges model run input for forecast and restart',
-            attr = dict(
-                kind = dict(
-                    values  = ['ConfigRunSurges'],
-                ),
-                gvar = dict(
-                    default = '[model]_run_[gdomain]_tgz',
+                    values  = ['pts', 'savefield', 'ports', 'blkdat',
+                               'blkdat_cmo', 'patch', 'run', 'run_red'],
                 ),
             )
         )
@@ -174,7 +120,6 @@ class BinProjSurges(GenvModelResource):
     """
     Interpolation factor file between Hycom curvilinear grid and MF regular grid
     format for BDAP archiving. Fortran binary data (unformatted).
-
     A Genvkey can be given.
     """
     _footprint = [
@@ -183,7 +128,7 @@ class BinProjSurges(GenvModelResource):
             info = 'Interpolation factor file (from the surges model grid)',
             attr = dict(
                 kind = dict(
-                    values  = ['BinHycomBdap']
+                    values  = ['SurgesInterpFactor', 'BinHycomBdap']
                 ),
                 gvar = dict(
                     default  = '[model]_indices_mf_[gdomain]',
@@ -194,24 +139,27 @@ class BinProjSurges(GenvModelResource):
 
     @property
     def realkind(self):
-        return 'BinHycomBdap'
+        return 'SurgesInterpFactor'
 
 
-class CbData(GenvModelResource):
-    """Bottom Friction file (fortran binary data) on HYCOM curvilinear grid.
-
+class ConfCouplingOasisSurges(GenvModelResource):
+    """Coupling description of OASIS between Hycom and WW3
     A Genvkey can be given.
     """
     _footprint = [
         gdomain,
         dict(
-            info = 'Bottom Friction file on HYCOM curvilinear grid',
+            info = 'Coupling description of OASIS between Hycom and WW3, \
+                    Mesh grid file description for ww3 model',
             attr = dict(
                 kind = dict(
-                    values  = ['BottomFriction']
+                    values  = ['meshWW3grid', 'ConfCouplingOasisSurges'],
                 ),
                 gvar = dict(
-                    default = '[model]_cb_[gdomain]_tgz',
+                    default = '[model]_[param]_[gdomain]',
+                ),
+                param = dict(
+                    values  = ['namcouple', 'ww3_mesh', 'oasis_info'],
                 ),
             )
         )
@@ -219,4 +167,31 @@ class CbData(GenvModelResource):
 
     @property
     def realkind(self):
-        return 'BottomFriction'
+        return 'ConfCouplingOasisSurges'
+
+
+class CouplingGridOasis(GenvModelResource):
+    """Coupling grid file information for Oasis, for binaries coupled execution
+    A Genvkey can be given.
+    """
+    _footprint = [
+        gdomain,
+        dict(
+            info = 'Coupling grid file information for Oasis, for binaries coupled execution',
+            attr = dict(
+                kind = dict(
+                    values  = ['InterpWW3Model', 'CouplingGridOasis'],
+                ),
+                gvar = dict(
+                    default = '[model]_[param]_[gdomain]_tgz',
+                ),
+                param = dict(
+                    values  = ['grid', 'interpo'],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'CouplingGridOasis'

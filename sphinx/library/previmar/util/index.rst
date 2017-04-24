@@ -9,4 +9,4 @@ Miscellaneous utilities for PreviMAR
 
    util
    
-   DataGeneration
+   FileGeneration

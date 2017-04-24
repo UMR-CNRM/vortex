@@ -26,12 +26,7 @@ Classes
    :members:
    :member-order: alphabetical
    
-.. autoclass:: SurgesForcingData
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-   
-.. autoclass:: BlkdatData
+.. autoclass:: SurgesNativeGrid
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -41,17 +36,17 @@ Classes
    :members:
    :member-order: alphabetical
    
-.. autoclass:: ConfRunSurgesModel
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-   
 .. autoclass:: BinProjSurges
    :show-inheritance:
    :members:
    :member-order: alphabetical
    
-.. autoclass:: CbData
+.. autoclass:: ConfCouplingOasisSurges
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: CouplingGridOasis
    :show-inheritance:
    :members:
    :member-order: alphabetical

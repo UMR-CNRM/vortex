@@ -9,14 +9,12 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource, GeoFlowResource
-
 from common.data.modelstates import InitialCondition
-from vortex.tools.date import Date
+from vortex.tools.date import Date, Time, Period
 
 
 class SolutionPoint(FlowResource):
-    """Class for point solutions of the model HYCOM i.e s*pts (ascii file)."""
-
+    """Class for point solutions of the HYCOM model i.e s*pts (ascii file)."""
     _footprint = dict(
         info = 'Surges model point solution',
         attr = dict(
@@ -53,11 +51,147 @@ class SolutionPoint(FlowResource):
         )
 
 
-class ForcingOutData(InitialCondition):
-    """Class of a Stress, wind and pressure interpolated file min max values."""
-
+class SolutionMaxGrid(GeoFlowResource):
+    """Class for solutions interpolated on MF grid, i.e s*max (ascii file)."""
     _footprint = dict(
-        info = 'Set of ...',
+        info = 'Surges model 24h - max solution',
+        attr = dict(
+            kind = dict(
+                values = ['surges_max'],
+            ),
+            nativefmt = dict(
+                values  = ['ascii'],
+                default = 'ascii',
+            ),
+            fields = dict(
+                values = ['s_max', 's_uvpmax', 'surcote_max', 'uvp_max'],
+                remap = {
+                    'surcote_max': 's_max',
+                    'uvp_max': 's_uvpmax',
+                },
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'smax'
+
+    def basename_info(self):
+        return dict(
+            radical = self.fields,
+            geo     = [self.geometry.area, self.geometry.rnice],
+            fmt     = self.nativefmt,
+        )
+
+
+class CouplingWw3Write(GeoFlowResource):
+    """Class for Nested solutions of the HYCOM model (coupling file)."""
+    _footprint = dict(
+        info = 'Coupling Surges model (H, u, v) solution on WW3 grid (binary data file)',
+        attr = dict(
+            kind = dict(
+                values = ['SurgesWw3coupling'],
+            ),
+            nativefmt = dict(
+                values  = ['foo', 'unknown', 'netcdf'],
+                default = 'foo',
+            ),
+            fields = dict(
+                values = ['Hauteur', 'UV_current', 'level.ww3', 'current.ww3'],
+                remap = {
+                    'Hauteur': 'level.ww3',
+                    'UV_current': 'current.ww3',
+                },
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'SurgesWw3coupling'
+
+    def basename_info(self):
+        return dict(
+            radical = self.fields,
+            geo     = self.geometry.area,
+        )
+
+
+class SurgesResultNative(GeoFlowResource):
+    """Class for grid solutions of the HYCOM model (netcdf file)."""
+    _footprint = dict(
+        info = '(H, u, v) parameters data projected in native geometry grid HYCOM with/without forcing (netcdf data file)',
+        attr = dict(
+            kind = dict(
+                values = ['SurgesResultNative'],
+            ),
+            nativefmt = dict(
+                values  = ['netcdf'],
+                default = 'netcdf',
+            ),
+            fields = dict(
+                values = ['HUV_tideonly_forcing', 'lssh_global_ms.nc',
+                          'HUV_tide_wind_forcing', 'lssh_global_full.nc',
+                          'HUV_MED_tideonly_forcing', 'ssh_global_full.nc'],
+                remap = {
+                    'HUV_tideonly_forcing': 'lssh_global_ms.nc',
+                    'HUV_tide_wind_forcing': 'lssh_global_full.nc',
+                    'HUV_MED_tideonly_forcing': 'ssh_global_full.nc',
+                },
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'SurgesResultNative'
+
+    def basename_info(self):
+        return dict(
+            radical = self.fields,
+            geo     = self.geometry.area,
+        )
+
+
+class BufrPoint(FlowResource):
+    """Class for point solutions of the HYCOM model i.e bufr."""
+    _footprint = dict(
+        info = ('Surges model temporal solution bufr (for 24h period) (2d current (u,v) ' +
+                'Pmer, U10, V10, surcote and (Hauteur d eau Maree SHOM for ATL))'),
+        attr = dict(
+            kind = dict(
+                values = ['bufr_surges'],
+            ),
+            nativefmt = dict(
+                values  = ['bufr'],
+                default = 'bufr',
+            ),
+            timeslot = dict(
+                type = Time,
+                default = 0,
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'bufr'
+
+    def basename_info(self):
+        return dict(
+            radical = self.realkind,
+            period  = dict(begintime=self.timeslot,
+                           endtime=self.timeslot + Period('PT24H')),
+            src     = self.model,
+        )
+
+
+class ForcingOutData(InitialCondition):
+    """Class of a Stress, wind and pressure forcing interpolated on native grid Hycom
+    and min max values."""
+    _footprint = dict(
+        info = 'Stress, wind and pressure forcing interpolated on native grid Hycom and min max values.',
         attr = dict(
             kind = dict(
                 values  = ['ForcingOut']
@@ -87,7 +221,6 @@ class ForcingOutData(InitialCondition):
 
 class ConfigData(Resource):
     """Class of a simple file that contains configuration data for HYCOM."""
-
     _footprint = dict(
         info = 'Configuration data for HYCOM',
         attr = dict(
@@ -97,11 +230,6 @@ class ConfigData(Resource):
             ),
             kind = dict(
                 values = ['dataconf'],
-            ),
-            mod = dict(
-                optional = True,
-                default = 'PR',
-                values = ['PR', 'AA'],
             ),
             date = dict(
                 optional = True,
@@ -113,7 +241,6 @@ class ConfigData(Resource):
 
 class Rules_fileGrib(Resource):
     """Class of a simple file that contains Rules for grib_api's grib_filter."""
-
     _footprint = dict(
         info = 'Rules_files for grib_filter (grib_api)',
         attr = dict(
@@ -128,7 +255,7 @@ class Rules_fileGrib(Resource):
 
 
 class TarResult(GeoFlowResource):
-
+    """Class of tarfile for surges result"""
     _footprint = dict(
         info = 'tarfile archive with all members directories of HYCOM',
         attr = dict(

@@ -25,6 +25,7 @@ class VortexNameBuilder(object):
             src        = None,
             fmt        = None,
             term       = None,
+            period     = None,
             geo        = None,
             suffix     = None,
             nativefmt  = None,
@@ -94,6 +95,13 @@ class VortexNameBuilder(object):
         """Packing of the geometry's filtering value."""
         return 'f' + str(value)
 
+    def pack_std_item_time(self, value):
+        """Packing of a Time object."""
+        return value.fmthm if hasattr(value, 'fmthm') else str(value)
+
+    pack_std_item_begintime = pack_std_item_time
+    pack_std_item_endtime = pack_std_item_time
+
     def pack_std_item_cutoff(self, value):
         """Abbreviate the cutoff name."""
         cutoff_map = dict(production='prod')
@@ -136,7 +144,10 @@ class VortexNameBuilder(object):
             name = name + '.' + '-'.join(self.pack_std_items(d['compute']))
 
         if d['term'] is not None:
-            name = name + '+' + str(d['term'])
+            name = name + '+' + '-'.join(self.pack_std_items(d['term']))
+        else:
+            if d['period'] is not None:
+                name = name + '+' + '-'.join(self.pack_std_items(d['period']))
 
         if d['number'] is not None:
             name = name + '.' + str(d['number'])

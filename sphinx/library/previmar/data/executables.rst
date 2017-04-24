@@ -35,4 +35,14 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: WW3writeSurges
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: SurScriptSurges
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
    
