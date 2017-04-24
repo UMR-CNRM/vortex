@@ -1251,6 +1251,9 @@ class VortexFreeStdArchiveStore(VortexArchiveStore, ConfigurableArchiveStore):
             netloc = dict(
                 values   = ['vortex-free.archive.fr', ],
             ),
+            storeroot = dict(
+                default  = None,  # That way it will be read from the config file
+            ),
         )
     )
 
