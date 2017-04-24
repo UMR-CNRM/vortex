@@ -228,16 +228,22 @@ class ObsRaw(Observations):
 
 class VarBCContent(AlmostListContent):
 
+    # The VarBC file is too big: revert to the good old diff
+    _diffable = False
+    # Do a delayed init to avoid crashes on big VarBC files
+    _delayed_slurp = True
+
     def slurp(self, container):
         """Get data from the ``container`` and find the metadata."""
         super(VarBCContent, self).slurp(container)
+        tmpdata = container.head(2)
         mdata = {}
         # First we look for the version of the VarBC file
-        mobj = re.match(r'\w+\.version(\d+)', self.data[0])
+        mobj = re.match(r'\w+\.version(\d+)', tmpdata[0])
         if mobj:
             mdata['version'] = int(mobj.group(1))
             # Then we fetch the date of the file
-            mobj = re.match(r'\s*\w+\s+(\d{8})\s+(\d+)', self.data[1])
+            mobj = re.match(r'\s*\w+\s+(\d{8})\s+(\d+)', tmpdata[1])
             if mobj:
                 mdata['date'] = Date('{:s}{:06d}'.format(mobj.group(1),
                                                          int(mobj.group(2))))
@@ -374,8 +380,8 @@ class BlackList(FlowResource):
     def archive_map(self):
         """OP ARCHIVE specific naming convention."""
         return {
-            'local'  : 'LISTE_LOC',
-            'global' : 'LISTE_NOIRE_DIAP',
+            'local': 'LISTE_LOC',
+            'global': 'LISTE_NOIRE_DIAP',
         }
 
     def archive_basename(self):
@@ -393,13 +399,12 @@ class ObsRefContent(TextContent):
 
     def append(self, item):
         """Append the specified ``item`` to internal data contents."""
-        self._data.append(ObsRefItem(*item))
+        self.data.append(ObsRefItem(*item))
 
-    def slurp(self, container):
-        """Get data from the ``container``."""
-        container.rewind()
-        self.extend([ ObsRefItem(*x.split()[:5]) for x in container if not x.startswith('#') ])
+    def _actual_slurp(self, container):
+        self._data.extend([ ObsRefItem(*x.split()[:5]) for x in container if not x.startswith('#') ])
         self._size = container.totalsize
+        self._do_delayed_slurp = None
 
     @classmethod
     def formatted_data(self, item):
@@ -483,6 +488,8 @@ class ObsMapContent(TextContent):
     * ``discard=FPSet(('conv:t[ea]', ))`` -> Discard the data file starting
       with *te* or *ta* that would usualy be inserted in the *conv* database.
     """
+
+    _delayed_slurp = False
 
     @property
     def discarded(self):
@@ -678,4 +685,3 @@ class Bcor(FlowResource):
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
         return 'bcor_' + self.satbias + '.dat'
-
