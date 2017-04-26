@@ -333,12 +333,31 @@ class AlmostListContent(DataContent):
         for xline in self:
             container.write(xline)
 
-    def merge(self, *kargs):
+    def sort(self, **sort_opts):
+        """Sort the current object."""
+        self._data.sort(**sort_opts)
+
+    def merge(self, *kargs, **kwargs):
         """Merge several data contents into one."""
+        unique = kwargs.get('unique', False)
         self._merge_checkclass(*kargs)
         for obj in kargs:
             self.data.extend(obj.data)
             self._size += obj.size
+        # Check if the item are unique, raise an error if not (option unique = True)
+        if unique == True:
+            arg_elements = collections.Counter(kargs)
+            single_elements = sorted(arg_elements)
+            repeated_elements = [element for element in single_elements if arg_elements[element] > 1]
+            if len(repeated_elements) > 0:
+                logger.exception('Repeated argument are present. It should not. Stop.\
+                    The list of the repeated elements follows: %s', repeated_elements)
+                raise ContentError
+
+
+class ContentError(Exception):
+    """General content error."""
+    pass
 
 
 class TextContent(AlmostListContent):

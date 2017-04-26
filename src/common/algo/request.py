@@ -260,8 +260,11 @@ class GetBDMBufr(Expresso):
             content.append(content_tmp)
         out_content = ObsMapContent()
         out_content.merge(unique = True, *content)
+        out_content.sort()
         out_container = footprints.proxy.container(local = obsmap_filename)
         out_content.rewrite(out_container)
+        out_container.close()
+        logger.info('Content of the batormap:')
         self.system.cat(out_container.filename, output = False)
 
         # Listing concatenation
@@ -406,11 +409,11 @@ class GetBDMOulan(BlindRun):
             for element in glob_files:
                 temp_files.append(element)
         # Initialize the resulting batormap file
-        obsmap_file = '_'.join(['OBSMAP', self.date.ymdhms])
+        obsmap_filename = '_'.join(['OBSMAP', self.date.ymdhms])
         content = []
         # Check if a batormap is already present in the directory (from BUFR extract)
-        if self.system.path.isfile(obsmap_file):
-            temp_files.append(obsmap_file)
+        if self.system.path.isfile(obsmap_filename):
+            temp_files.append(obsmap_filename)
         # Loop over the directories to concatenate the batormap
         for file in temp_files:
             file_container = footprints.proxy.container(local = file)
@@ -419,8 +422,11 @@ class GetBDMOulan(BlindRun):
             content.append(content_tmp)
         out_content = ObsMapContent()
         out_content.merge( unique = True, *content)
-        out_container = footprints.proxy.container(local = obsmap_file)
+        out_content.sort()
+        out_container = footprints.proxy.container(local = obsmap_filename)
         out_content.rewrite(out_container)
+        out_container.close()
+        logger.info('Content of the batormap:')
         self.system.cat(out_container.filename, output = False)
 
         # Listing concatenation

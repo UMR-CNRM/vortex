@@ -67,7 +67,7 @@ class Script(Executable):
             ),
             language = dict(
                 info     = "The programming language",
-                values   = ['perl', 'python', 'ksh', 'bash', 'sh'],
+                values   = ['perl', 'python', 'ksh', 'bash', 'sh', 'awk'],
             ),
             kind = dict(
                 optional = True,
