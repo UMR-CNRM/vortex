@@ -125,6 +125,8 @@ class SafranWorker(VortexWorkerBlindRun):
             self.system.symlink(self.system.path.join(rundir, 'SORTIES'), 'SORTIES')
         if not self.system.path.exists('MELANGE'):
             self.system.symlink(self.system.path.join(rundir, 'MELANGE'), 'MELANGE')
+        if not self.system.path.exists('IMPRESS'):
+            self.system.symlink(self.system.path.join(rundir, 'IMPRESS'), 'IMPRESS')
 
         # Generate the 'OPxxxxx' files containing links for the safran execution.
         for op_file in _OP_files_common[self.vconf]:
