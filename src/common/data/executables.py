@@ -599,3 +599,27 @@ class BDMExecutableBUFR(Script):
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
         return 'extract=' + self.source
+
+
+class BDMExecutableOulan(BlackBox):
+    """An executable to extract BDM files using Oulan."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Executable to extract BDM BUFR files',
+            attr = dict(
+                kind = dict(
+                    values   = ['bdm_oulan_extract', ],
+                ),
+                gvar=dict(
+                    values=['master_oulan'],
+                    default='master_oulan',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'bdm_bufr_extract'

@@ -9,10 +9,10 @@ from __future__ import division, print_function, absolute_import
 
 
 import footprints
-from vortex.algo.components import AlgoComponent, Expresso
+from vortex.algo.components import AlgoComponent, Expresso, BlindRun
 from vortex.syntax.stdattrs import a_date, a_term
 from common.tools.bdap import BDAPrequest_actual_command, BDAPGetError, BDAPRequestConfigurationError
-from common.tools.bdm import BDMGetError, BDMRequestConfigurationError
+from common.tools.bdm import BDMGetError, BDMRequestConfigurationError, BDMError
 from common.data.obs import ObsMapContent
 
 #: No automatic export
@@ -283,3 +283,161 @@ class GetBDMBufr(Expresso):
 
         # Do the standard postfix
         super(GetBDMBufr, self).postfix(rh, opts)
+
+
+class GetBDMOulan(BlindRun):
+    """Algo component to get BDM files using Oulan."""
+
+    _footprint = dict(
+        info = "Algo component to get BDM files using Oulan.",
+        attr = dict(
+            kind = dict(
+                values = ['get_bdm_oulan'],
+            ),
+            date = a_date,
+            db_file = dict(
+                default = '/usr/local/sopra/neons_db',
+                values = ['/usr/local/sopra/neons_db'],
+                optional = True,
+            ),
+            pwd_file = dict(
+                default = '/usr/local/sopra/neons_pwd',
+                values = ['/usr/local/sopra/neons_pwd'],
+                optional = True,
+            ),
+            fatal = dict(
+                default = False,
+                values = [True, False],
+                optional = True
+            ),
+        ),
+    )
+
+    def _local_directory(self, namelist_filename):
+        return '_'.join(['Oulan', namelist_filename, self.date.ymdhms])
+
+    def prepare(self, rh, opts):
+        """Prepare the execution of the Oulan extraction binary."""
+        # Do the standard pre-treatment
+        super(GetBDMOulan, self).prepare(rh, opts)
+
+        # Export additional variables
+        self.env.setvar('DB_FILE', self.db_file)
+        logger.info('Setting environment variable DB_FILE = %s', self.db_file)
+        self.env.setvar('PWD_FILE', self.pwd_file)
+        logger.info('Setting environment variable PWD_FILE = %s', self.pwd_file)
+        self.env.setvar('DMT_DATE_PIVOT', self.date.ymdhms)
+        logger.info('Setting environment variable DMT_DATE_PIVOT = %s', self.date.ymdhms)
+
+        # Check if namelists are present
+        input_namelists = self.context.sequence.effective_inputs(
+            role = 'NamelistOulan',
+            kind = 'namutil',
+        )
+        if len(input_namelists)<1:
+            logger.error('No Oulan namelist found. Stop.')
+            raise BDMError
+
+    def execute(self, rh, opts):
+        """Run the binary for each namelist."""
+        # Look for the input namelists
+        input_namelists = self.context.sequence.effective_inputs(
+            role = 'NamelistOulan',
+            kind = 'namutil',
+        )
+        # Iitialize some variables
+        rc_all = True
+        namelist_lc_filename = 'NAMELIST'
+        binary_filename = rh.container.filename
+        binary_abspath = rh.container.abspath
+
+        # Loop over the input namelists
+        for input_namelist in input_namelists:
+            namelist_abspath = input_namelist.rh.container.abspath
+            namelist_filename = input_namelist.rh.container.filename
+            local_directory_name = self._local_directory(namelist_filename)
+            # Launch an execution for each input namelist in a dedicated directory
+            # (to check that the files do not overwrite one another)
+            with self.system.cdcontext(local_directory_name, create=True):
+                # Make needed links
+                self.system.symlink(namelist_abspath, namelist_lc_filename)
+                self.system.cp(binary_abspath, binary_filename)
+                # Cat the namelist content
+                logger.info('The %s directive file contains:', namelist_lc_filename)
+                self.system.cat(namelist_lc_filename, output = False)
+                # Launch the Oulan extraction
+                args = [self.absexcutable(binary_filename)]
+                args.extend(self.spawn_command_line(rh))
+                logger.debug('BlindRun executable resource %s', args)
+                rc = self.spawn(args, opts)
+                # Delete the links
+                self.system.rm(namelist_lc_filename)
+                self.system.rm(binary_filename)
+                self.system.dir(output = False, fatal = False)
+
+            if not rc:
+                logger.error('Problem during the Oulan BDM request of %s.',
+                                 namelist_filename)
+                if self.fatal == True:
+                    raise BDMGetError
+
+            rc_all = rc_all and rc
+
+        if not rc_all:
+            logger.error('Problem during the Oulan BDM request.')
+            if self.fatal == True:
+                raise BDMGetError
+
+        return rc_all
+
+    def postfix(self, rh, opts):
+        """Concatenate the batormap from the different tasks and check if there is no duplicated entries."""
+        # BATORMAP concatenation
+        # Determine the name of the batormap produced by the execution in the different directories
+        input_namelists = self.context.sequence.effective_inputs(
+            role='NamelistOulan',
+            kind='namutil',
+        )
+        local_dir = [self._local_directory(input_namelist.rh.container.filename)
+                    for input_namelist in input_namelists]
+        temp_files = []
+        for directory in local_dir:
+            glob_files = self.system.glob('/'.join([directory, '*batormap*']))
+            for element in glob_files:
+                temp_files.append(element)
+        # Initialize the resulting batormap file
+        obsmap_file = '_'.join(['OBSMAP', self.date.ymdhms])
+        content = []
+        # Check if a batormap is already present in the directory (from BUFR extract)
+        if self.system.path.isfile(obsmap_file):
+            temp_files.append(obsmap_file)
+        # Loop over the directories to concatenate the batormap
+        for file in temp_files:
+            file_container = footprints.proxy.container(local = file)
+            content_tmp = ObsMapContent()
+            content_tmp.slurp(file_container, nofilter = True)
+            content.append(content_tmp)
+        out_content = ObsMapContent()
+        out_content.merge( unique = True, *content)
+        out_container = footprints.proxy.container(local = obsmap_file)
+        out_content.rewrite(out_container)
+        self.system.cat(out_container.filename, output = False)
+
+        # Listing concatenation
+        # Initialize the resulting file
+        listing_file = 'OULOUTPUT'
+        listing_files = []
+        for directory in local_dir:
+            glob_files = self.system.glob('/'.join([directory, listing_file]))
+            for element in glob_files:
+                listing_files.append(element)
+        # Check if a listing is already present and has to be merged with the other
+        if self.system.path.isfile(listing_file):
+            temp_listing = '.'.join([listing_file, 'tmp'])
+            self.system.mv(listing_file, temp_listing)
+            listing_files.append(temp_listing)
+        # Concatenate the listings
+        self.system.cat(*listing_files, output = listing_file)
+
+        # Do the standard postfix
+        super(GetBDMOulan, self).postfix(rh, opts)
