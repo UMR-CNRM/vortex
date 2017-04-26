@@ -563,3 +563,39 @@ class AddPearp(BlackBox):
     @property
     def realkind(self):
         return 'addpearp'
+
+
+class BDMExecutableBUFR(Script):
+    """An executable to extract BDM BUFR files."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Executable to extract BDM files using Oulan',
+            attr = dict(
+                source = dict(
+                    values  = ['alim.awk', 'alim_olive.awk'],
+                ),
+                kind = dict(
+                    values   = ['bdm_bufr_extract', ],
+                ),
+                gvar=dict(
+                    values=['extract_stuff'],
+                    default='extract_stuff',
+                ),
+                language = dict(
+                    default = 'awk',
+                    values = ['awk'],
+                    optional = True,
+                )
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'bdm_bufr_extract'
+
+    def gget_urlquery(self):
+        """GGET specific query : ``extract``."""
+        return 'extract=' + self.source
