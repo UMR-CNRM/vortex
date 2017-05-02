@@ -7,4 +7,4 @@ __all__ = []
 # Recursive inclusion of packages with potential FootprintBase classes
 import boundaries, climfiles, consts, diagnostics, executables, fields
 import assim, gridfiles, logs, modelstates, namelists, obs, surfex, eps, eda
-import providers, stores, query
+import providers, stores, query, monitoring
