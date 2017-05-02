@@ -58,6 +58,7 @@ class SafranWorker(VortexWorkerBlindRun):
             vconf = dict(),
             day_begins_at = dict(
                 type = int,
+                optional = True,
                 default = 6
             ),
             subdir = dict(
@@ -92,15 +93,20 @@ class SafranWorker(VortexWorkerBlindRun):
                 del new_dates[0]
 
             self._days = defaultdict(list)
+            remain_terms = len(new_terms)
+            create_new_day = True
             for date, term in zip(new_dates, new_terms):
                 length = (date - new_dates[0]).length  # duration in seconds since the beginning
                 current_day = length // 86400
-                # Assign the term to the current
-                self._days[current_day + 1].append(term)
                 # If the term is exactly the upper bound of the previous day, save it
                 if current_day > 0 and length % 86400 == 0:
                     self._days[current_day].append(term)
-
+                    # Begin a new day only if there is more than 5 other terms
+                    if remain_terms < 5:
+                        create_new_day = False
+                if create_new_day:
+                    self._days[current_day + 1].append(term)
+                remain_terms = remain_terms - 1
             if not len(self._days):
                 logger.warning('No terms to process, doing nothing.')
 
@@ -139,9 +145,9 @@ class SafranWorker(VortexWorkerBlindRun):
 
         self.system.remove('sapfich')
 
-        self._safran_task(self, rundir, thisdir, rdict)
+        self._safran_task(rundir, thisdir, rdict)
 
-    def _safran_task(self, rundir, thisdir, rdict, days):
+    def _safran_task(self, rundir, thisdir, rdict):
         """The piece of code specific to a Safran submodule does here."""
         raise NotImplementedError()
 
@@ -209,11 +215,11 @@ class SyrpluieWorker(SafranWorker):
         )
     )
 
-    def safran_task(self, rundir, thisdir, rdict):
+    def _safran_task(self, rundir, thisdir, rdict):
         for day, dterms in self.days.items():
             logger.info('Running day : %s', str(day))
             self.sapdat(dterms[-1])
-            list_name = self.system.path.join(self.thisdir, 'listpluie' + str(day))
+            list_name = self.system.path.join(thisdir, 'listpluie' + str(day))
             self.local_spawn(list_name)
             self.mv_if_exists('fort.21', 'SAPLUI5' + str(day))
 
@@ -228,13 +234,13 @@ class SyrmrrWorker(SafranWorker):
         )
     )
 
-    def safran_task(self, rundir, thisdir, rdict):
+    def _safran_task(self, rundir, thisdir, rdict):
         for day, dterms in self.days.items():
             logger.info('Running day : %s', str(day))
             if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day), ]):
                 self.link_in('SAPLUI5' + str(day), 'fort.12')
                 self.sapdat(dterms[-1])
-                list_name = self.system.path.join(self.thisdir, 'listrr' + str(day))
+                list_name = self.system.path.join(thisdir, 'listrr' + str(day))
                 self.local_spawn(list_name)
                 self.mv_if_exists('fort.13', 'SAPLUI5' + str(day))
                 self.mv_if_exists('fort.14', 'SAPLUI5_ARP' + str(day))
@@ -251,21 +257,21 @@ class SytistWorker(SafranWorker):
         )
     )
 
-    def safran_task(self, rundir, thisdir, rdict):
+    def _safran_task(self, rundir, thisdir, rdict):
         for day, dterms in self.days.items():
             logger.info('Running day : %s', str(day))
             if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day),
                                                       'SAPLUI5_ARP' + str(day),
                                                       'SAPLUI5_ANA' + str(day)
                                                       ] +
-                                                     ['SAF' + str(t) for t in dterms]):
+                                                     ['SAF' + str(t.hour) for t in dterms]):
                 self.link_in('SAPLUI5' + str(day), 'SAPLUI5')
                 self.link_in('SAPLUI5_ARP' + str(day), 'SAPLUI5_ARP')
                 self.link_in('SAPLUI5_ANA' + str(day), 'SAPLUI5_ANA')
                 for i, term in enumerate(dterms):
                     self.link_in('SAF' + str(term.hour), 'SAFRAN' + str(i + 1))
                 self.sapdat(dterms[-1])
-                list_name = self.system.path.join(self.thisdir, 'listist' + str(day))
+                list_name = self.system.path.join(thisdir, 'listist' + str(day))
                 self.local_spawn(list_name)
 
 

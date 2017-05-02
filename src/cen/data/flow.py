@@ -13,23 +13,27 @@ from vortex.syntax.stdattrs import term
 from vortex.data.geometries import MassifGeometry
 
 
-class SafranEbauche(GeoFlowResource):
-    """Class for the ebauche file (P ou E file) that is used by SAFRAN."""
+class SafranGuess(GeoFlowResource):
+    """Class for the guess file (P ou E file) that is used by SAFRAN."""
 
     _footprint = [
         term,
         dict(
-            info = 'Safran ebauche',
+            info = 'Safran guess',
             attr = dict(
                 kind = dict(
-                    values = ['ebauche'],
+                    values = ['guess'],
                 ),
                 nativefmt = dict(
                     values  = ['ascii'],
                     default = 'ascii',
                 ),
                 model = dict(
-                    values = ['pearp', 'arpege', 'ifs'],
+                    values = ['safran'],
+                    optional = True,
+                ),
+                source_app = dict(
+                    values = ['arpege', 'arome', 'ifs', 'pearp', 'pearome'],
                     optional = True,
                 ),
                 geometry = dict(
@@ -43,13 +47,13 @@ class SafranEbauche(GeoFlowResource):
 
     @property
     def realkind(self):
-        return 'ebauche'
+        return 'guess'
 
     def basename_info(self):
         return dict(
             radical = self.realkind,
             geo     = self.geometry.area,
-            src     = self.model,
+            src     = self.source_app,
             term    = self.term.fmthm,
         )
 

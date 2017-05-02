@@ -126,7 +126,7 @@ class SafranGribFiltering(Script):
                 kind = dict(
                     values = ['filtering_grib']
                 ),
-                cpl_model = dict(
+                cpl_vconf = dict(
                     values = ['pearp', 'pearome', 'arpege', 'arome'],
                     optional = True,
                 ),
