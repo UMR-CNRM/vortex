@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, division
+
 #: Automatic export of Observations class
 __all__ = [ 'Observations' ]
 
@@ -224,6 +226,32 @@ class ObsRaw(Observations):
                 'No archive basename defined for such observations (format=%s, part=%s, stage=%s)',
                 self.nativefmt, self.part, self.stage
             )
+
+
+class ObsFlags(FlowResource):
+    """Class for observations flags."""
+
+    _footprint = dict(
+        info = 'Observations flags',
+        attr = dict(
+            kind = dict(
+                values = ['obsflag'],
+            ),
+            part = dict(),
+        ),
+    )
+
+    def basename_info(self):
+        """Generic information for names fabric, with radical = ``varbc``."""
+        return dict(
+            radical = self.kind,
+            src     = [self.part],
+        )
+
+    def olive_basename(self):
+        """OLIVE specific naming convention."""
+
+        return 'BDM_CQ'
 
 
 class VarBCContent(AlmostListContent):
