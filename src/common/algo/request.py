@@ -116,7 +116,7 @@ class GetBDMBufr(Expresso):
             ),
             extra_env_opt = dict(
                 values = ['RECHERCHE', 'OPERATIONNEL', 'OPER'],
-                default = 'RECHERCHE',
+                default = 'OPER',
                 optional = True,
             ),
             pwd_file = dict(
