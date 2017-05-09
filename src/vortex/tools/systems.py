@@ -848,7 +848,7 @@ class OSExtended(System):
                 logname = self.glove.user
             else:
                 raise ValueError("Either a logname or a glove must be set-up")
-        rc = ftpbox.fastlogin(logname)
+        rc = ftpbox.fastlogin(logname, delayed=False)
         if rc:
             return ftpbox
         else:
