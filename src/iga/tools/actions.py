@@ -229,7 +229,7 @@ class OpPhase(Action):
     def _sendone(self, rh, **opts):
         """Ask Jeeves to phase a resource."""
         sh = sessions.system()
-        paths_in_cache = rh.locate(incache=True) or ''
+        paths_in_cache = rh.locate(incache=True, inpromise=False) or ''
         first_path = paths_in_cache.split(';')[0]
         if first_path is '':
             raise ValueError('No access from a cache to the resource')
