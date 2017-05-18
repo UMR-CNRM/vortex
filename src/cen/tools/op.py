@@ -34,27 +34,20 @@ class CenJobAssistant(JobAssistant):
         headdir = '/home/ext/dsi/mtti/vernaym/dev/'
         t.env.setvar("MTOOLDIR", '/scratch/vernaym/mtool')
         t.env.setvar("DATADIR", headdir + 'opdata')
-        t.env.setvar("RD_GCOCACHE", headdir)
 
 
 
     def register_cycle(self, cycle):
-        """Load and register a GCO cycle contents."""
-        t = vortex.ticket()
-        from gco.tools import genv
-        if cycle in genv.cycles():
-            logger.info('Cycle %s already registred', cycle)
+        """Load and register a cycle contents."""
+        from gco.syntax.stdattrs import UgetId
+        try:
+            cycle = UgetId(cycle)
+        except ValueError:
+            return
+        from gco.tools import uenv
+        if cycle in uenv.cycles():
+            logger.info('Cycle %s already registered', cycle)
         else:
-            if t.env.RD_GCOCACHE:
-                genvdef = t.sh.path.join(t.env.RD_GCOCACHE, 'genv', cycle + '.genv')
-            else:
-                logger.warning('CEN context without RD_GCOCACHE variable')
-                genv.autofill(cycle)
-            if t.sh.path.exists(genvdef):
-                logger.info('Fill GCO cycle with file <%s>', genvdef)
-                genv.autofill(cycle, t.sh.cat(genvdef, output=True))
-            else:
-                logger.error('No contents defined for cycle %s or bad opcycle path %s', cycle, genvdef)
-                raise ValueError('Bad cycle value')
-            print genv.as_rawstr(cycle=cycle)
+            uenv.autofill(cycle)
+            print(genv.as_rawstr(cycle=cycle))
 
