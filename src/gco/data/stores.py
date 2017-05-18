@@ -491,6 +491,10 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
         xpath = remote['path'].split('/')
         f_uuid = UgetId('uget:' + xpath[2])
         remote['path'] = self.system.path.join(f_uuid.location, xpath[1], f_uuid.id)
+        extract = remote['query'].get('extract', None)
+        if extract:
+            remote['path'] = self.system.path.join(remote['path'], extract[0])
+            logger.info('Extend remote path with extract value <%s>', remote['path'])
         return remote
 
     def ugetcheck(self, remote, options):
