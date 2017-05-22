@@ -241,6 +241,10 @@ class ObsFlags(FlowResource):
         ),
     )
 
+    @property
+    def realkind(self):
+        return 'obsflags'
+
     def basename_info(self):
         """Generic information for names fabric, with radical = ``varbc``."""
         return dict(
@@ -250,7 +254,6 @@ class ObsFlags(FlowResource):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-
         return 'BDM_CQ'
 
 

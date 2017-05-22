@@ -624,7 +624,7 @@ class FlagsCompute(OdbProcess):
             role = 'ECMA',
             kind = 'observations',
         )
-        # Check that there is only one database
+        # Check that there is at least one database
         if len(input_databases) < 1:
             logger.exception('No database in input. Stop.')
             raise AttributeError
@@ -645,7 +645,6 @@ class FlagsCompute(OdbProcess):
             ecma = input_database.rh
             ecma_filename = ecma.container.filename
             ecma_part = ecma.resource.part
-            self.layout_matchup  = ecma.resource.layout
             ecma_abspath = ecma.container.abspath
             self.env.ODB_SRCPATH_ECMA  = ecma_abspath
             logger.info('Variable %s set to %s.', 'ODB_SRCPATH_ECMA', ecma_abspath)
