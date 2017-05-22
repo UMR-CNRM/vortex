@@ -25,6 +25,10 @@ class Query(NoDateResource):
         )
     ]
 
+    def gget_urlquery(self):
+        """GGET specific query : ``extract``."""
+        return 'extract=' + self.source
+
 
 class BDAPQuery(Query):
     """Class to deal with BDAP queries."""
@@ -53,10 +57,6 @@ class BDAPQuery(Query):
     def realkind(self):
         return 'bdap_query'
 
-    def gget_urlquery(self):
-        """GGET specific query : ``extract``."""
-        return 'extract=' + self.source
-
 
 class BDMQuery(Query):
     """Class to deal with BDM queries."""
@@ -81,8 +81,4 @@ class BDMQuery(Query):
 
     @property
     def realkind(self):
-        return 'bdap_query'
-
-    def gget_urlquery(self):
-        """GGET specific query : ``extract``."""
-        return 'extract=' + self.source
+        return 'bdm_query'

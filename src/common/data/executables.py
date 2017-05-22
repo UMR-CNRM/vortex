@@ -600,6 +600,16 @@ class BDMExecutableBUFR(Script):
         """GGET specific query : ``extract``."""
         return 'extract=' + self.source
 
+    def command_line(self, **opts):
+        """Returns optional attribute :attr:`rawopts`."""
+        args = []
+        if 'query' in opts:
+            args.append(opts['query'])  # The query name
+        superraw = super(BDMExecutableBUFR, self).command_line(**opts)
+        if superraw:
+            args.append(superraw)  # Other arguments provided by the user
+        return ' '.join(args)
+
 
 class BDMExecutableOulan(BlackBox):
     """An executable to extract BDM files using Oulan."""
@@ -622,4 +632,4 @@ class BDMExecutableOulan(BlackBox):
 
     @property
     def realkind(self):
-        return 'bdm_bufr_extract'
+        return 'bdm_obsoul_extract'

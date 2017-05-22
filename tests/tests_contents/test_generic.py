@@ -102,10 +102,16 @@ class UtJsonContent(_BaseDataContentTest):
 ALMOST_LIST_E = ['1\n', '#Truc\n', 'toto\n']
 ALMOST_LIST_T = ''.join(ALMOST_LIST_E)
 
+ALMOST_LIST_E1 = ['2\n', ]
+ALMOST_LIST_T1 = ''.join(ALMOST_LIST_E1)
+
+ALMOST_LIST_E2 = ['1\n', ]
+ALMOST_LIST_T2 = ''.join(ALMOST_LIST_E2)
+
 
 class UtAlmostListContent(_BaseDataContentTest):
 
-    _data = (ALMOST_LIST_T, )
+    _data = (ALMOST_LIST_T, "2\n", "1\n")
 
     def test_almostlistcontent_basic(self):
         ct = contents.AlmostListContent()
@@ -139,6 +145,22 @@ class UtAlmostListContent(_BaseDataContentTest):
         ct.merge(ct2)
         self.assertEqual(ct.size, len(self.data[0] * 2))
         self.assertEqual(ct.data, ALMOST_LIST_E + ALMOST_LIST_E)
+        # Sort
+        ct.sort()
+        self.assertEqual(ct.data, sorted(ALMOST_LIST_E + ALMOST_LIST_E))
+        # Unique merge
+        ct = contents.AlmostListContent()
+        ct.slurp(self.insample[0])
+        ct2 = contents.AlmostListContent()
+        ct2.slurp(self.insample[1])
+        # Should work
+        ct.merge(ct2, unique=True)
+        self.assertEqual(ct.data, ALMOST_LIST_E + ALMOST_LIST_E1)
+        # Should fail
+        ct3 = contents.AlmostListContent()
+        ct3.slurp(self.insample[2])
+        with self.assertRaises(contents.DataContentError):
+            ct.merge(ct3, unique=True)
 
 
 TEXT_E = [['1', 'blop', '3.5'], ['5', 'toto', '10.5']]

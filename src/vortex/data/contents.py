@@ -13,6 +13,11 @@ from vortex import sessions
 from vortex.util.structs import ReadOnlyDict
 
 
+class DataContentError(ValueError):
+    """General content error."""
+    pass
+
+
 class DataContent(object):
     """Root class for data contents used by resources."""
 
@@ -99,7 +104,7 @@ class DataContent(object):
     def _merge_checkclass(self, *kargs):
         """Utility method to check that all the kargs objects are compatible self."""
         if not all([isinstance(obj, self.__class__) for obj in kargs]):
-            raise ValueError("The object's types are not compatible with self")
+            raise DataContentError("The object's types are not compatible with self")
 
     def merge(self, *kargs):
         """Merge several DataContents into one.
@@ -345,19 +350,14 @@ class AlmostListContent(DataContent):
             self.data.extend(obj.data)
             self._size += obj.size
         # Check if the item are unique, raise an error if not (option unique = True)
-        if unique == True:
-            arg_elements = collections.Counter(kargs)
-            single_elements = sorted(arg_elements)
-            repeated_elements = [element for element in single_elements if arg_elements[element] > 1]
+        if unique:
+            arg_elements = collections.Counter(self.data)
+            repeated_elements = [element for element, count in arg_elements.items() if count > 1]
             if len(repeated_elements) > 0:
-                logger.exception('Repeated argument are present. It should not. Stop.\
-                    The list of the repeated elements follows: %s', repeated_elements)
-                raise ContentError
-
-
-class ContentError(Exception):
-    """General content error."""
-    pass
+                logger.exception('Repeated argument are present. It should not. Stop.' +
+                                 'The list of the repeated elements follows: %s',
+                                 str(sorted(repeated_elements)))
+                raise DataContentError('Repeated argument are present. It should not.')
 
 
 class TextContent(AlmostListContent):

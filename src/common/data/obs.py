@@ -491,6 +491,10 @@ class ObsMapContent(TextContent):
 
     _delayed_slurp = False
 
+    def __init__(self, **kw):
+        kw.setdefault('discarded', set())
+        super(ObsMapContent, self).__init__(**kw)
+
     @property
     def discarded(self):
         """Set of *odb:data* pairs that will be discarded."""
@@ -500,14 +504,11 @@ class ObsMapContent(TextContent):
         """Append the specified ``item`` to internal data contents."""
         self._data.append(ObsMapItem(*item))
 
-    def slurp(self, container, nofilter = False):
+    def slurp(self, container):
         """Get data from the ``container``."""
         container.rewind()
-        if nofilter == True:
-            filters = []
-        else:
-            filters = [re.compile(d if ':' in d else d + ':')
-                        for d in self.discarded]
+        filters = [re.compile(d if ':' in d else d + ':')
+                   for d in self.discarded]
         self.extend(
             itertools.ifilter(
                 lambda o: not any([f.match(':'.join([o.odb, o.data]))
