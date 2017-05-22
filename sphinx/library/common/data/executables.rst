@@ -126,3 +126,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: BDMExecutableBUFR
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: BDMExecutableOulan
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
