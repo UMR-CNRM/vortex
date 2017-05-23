@@ -115,6 +115,7 @@ class _GetBDMCommons(FootprintCopier):
                 optional = True,
             ),
             fatal = dict(
+                type = bool,
                 default = False,
                 values = [True, False],
                 optional = True,
@@ -122,13 +123,10 @@ class _GetBDMCommons(FootprintCopier):
             defaut_queryname = dict(
                 default = 'vortexdefault_query_name',
                 doc_visibility = footprints.doc.visibility.GURU,
+                optional = True,
             )
         )
     )
-
-    @staticmethod
-    def _local_directory(self, query_filename):
-        return '_'.join(['TMPQUERY', query_filename, self.date.ymdhms])
 
     @staticmethod
     def _verbose_env_export(self, varname, value):
@@ -164,12 +162,13 @@ class _GetBDMCommons(FootprintCopier):
         for input_query in input_queries:
             # Find out the temporary directory name
             query_filename = input_query.rh.container.filename
+            query_abspath = input_query.rh.container.abspath
             loc_dir = self._local_directory(query_filename)
             # Launch an execution for each input queries in a dedicated directory
             # (to check that the files do not overwrite one another)
             with self.system.cdcontext(loc_dir, create = True):
                 # Make the links needed
-                self.system.symlink(input_query.rh.container.abspath,
+                self.system.symlink(query_abspath,
                                     self.defaut_queryname)
                 # Cat the query content
                 logger.info('The %s directive file contains:', query_filename)
@@ -280,6 +279,9 @@ class GetBDMBufr(Expresso):
         )
     )
 
+    def _local_directory(self, query_filename):
+        return '_'.join(['BUFR', query_filename, self.date.ymdhms])
+
     def _get_input_queries(self):
         """Returns the list of queries to process."""
         return self.context.sequence.effective_inputs(
@@ -329,6 +331,9 @@ class GetBDMOulan(BlindRun):
             ),
         )
     )
+
+    def _local_directory(self, query_filename):
+        return '_'.join(['Oulan', query_filename, self.date.ymdhms])
 
     def _get_input_queries(self):
         """Returns the list of namelists to process."""
