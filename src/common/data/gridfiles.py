@@ -73,6 +73,11 @@ class GridPoint(GeoFlowResource):
                 source = 'forecast'
             else:
                 source = 'sumo'
+        elif self.model == 'hycom':
+            if self.origin == 'ana':
+                source = 'analysis'
+            else:
+                source = 'forecast'        
         else:
             source = 'forecast'
 
@@ -223,7 +228,7 @@ class GridPointExport(GridPoint):
         name = None
         if re.match('aladin|arome', self.model):
             name = 'GRID' + self.geometry.area + 'r' + str(self.date.hour) + '_' + self.term.fmthour
-        elif re.match('arp', self.model):
+        elif re.match('arp|hycom|surcotes', self.model):
             name = '(gribfix:igakey)'
 
         if name is None:

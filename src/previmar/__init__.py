@@ -6,3 +6,4 @@ __all__ = []
 
 import data
 import util
+import algo

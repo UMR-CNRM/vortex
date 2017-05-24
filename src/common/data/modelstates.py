@@ -68,6 +68,8 @@ class Analysis(GeoFlowResource):
                 ananame = 'analyse_surf'
             elif self.model == 'surfex':
                 ananame = 'analyse'
+            elif self.model == 'hycom':
+                ananame = '(histfix:igakey)'    
             else:
                 ananame = 'analyse_surface1'
 

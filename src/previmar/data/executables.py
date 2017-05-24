@@ -70,6 +70,7 @@ class IniZeroSurges(BlackBox):
     """Preparation step to launch a surges model without Atmospheric forcing"""
     _footprint = [
         gvar,
+        gdomain,
         dict(
             info = 'ini_zero Restart',
             attr = dict(
@@ -77,7 +78,7 @@ class IniZeroSurges(BlackBox):
                     values = ['InizeroSurges']
                 ),
                 gvar = dict(
-                    default  = 'master_[model]_inizero',
+                    default  = 'master_[model]_inizero_[gdomain]',
                 ),
                 binopts = dict(
                     type     = Date,

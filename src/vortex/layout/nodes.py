@@ -378,6 +378,13 @@ class Node(footprints.util.GetByTag, NiceLayout):
         for stuff in [s for s in ('proc', 'nprocs', 'nnodes', 'ntasks', 'openmp',
                                   'prefixcommand') if s in self.conf]:
                 mpiotps[mpiopts_map.get(stuff, stuff)] = self.conf[stuff]
+                
+        if not mpiotps.has_key('prefixcommand'):    
+             for sec in self.ticket.context.sequence.effective_inputs(role =re.compile('Prefixcommand')):
+	        logger.info('sec %s', sec)
+	        ## verif unique
+                mpiotps['prefixcommand']= sec.rh.container.actualpath()   
+                
         # Ensure that some of the mpiopts are integers
         for stuff in [s for s in ('nn', 'nnp', 'openmp', 'np') if s in mpiotps]:
             if isinstance(mpiotps[stuff], (list, tuple)):
