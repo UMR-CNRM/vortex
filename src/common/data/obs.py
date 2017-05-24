@@ -237,6 +237,11 @@ class ObsFlags(FlowResource):
             kind = dict(
                 values = ['obsflag'],
             ),
+            nativefmt=dict(
+                values=['ascii', 'txt'],
+                default='txt',
+                remap=dict(ascii='txt'),
+            ),
             part = dict(),
         ),
     )
@@ -250,6 +255,7 @@ class ObsFlags(FlowResource):
         return dict(
             radical = self.kind,
             src     = [self.part],
+            fmt     = self.nativefmt,
         )
 
     def olive_basename(self):
