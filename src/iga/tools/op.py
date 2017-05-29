@@ -331,3 +331,14 @@ def oproute_hook_factory(kind, productid, sshhost, areafilter=None, soprano_targ
             print t.prompt, 'routing file = ', rh
 
     return hook_route
+
+def opphase_hook_factory(areafilter=None, termfilter=None):
+    """Hook functions factory to phase files while the execution is running"""
+
+    def hook_phase(t, rh):
+        if (areafilter is None) or (rh.resource.geometry.area in areafilter):
+            if (termfilter is None) or (rh.resource.term in termfilter):
+                ad.phase(rh)
+                print t.prompt, 'phasing file = ', rh
+
+    return hook_phase
