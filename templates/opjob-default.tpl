@@ -67,6 +67,7 @@ try:
     t, e, sh = ja.setup(actual=locals())
     from vortex.tools.actions import actiond as ad
     ad.opmail_on()
+    ad.dmt_on()
     ad.route_on()
     ad.phase_tune(jname='{0}_phase'.format(op_xpid))
     ad.phase_on()
