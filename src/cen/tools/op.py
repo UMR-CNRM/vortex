@@ -27,16 +27,6 @@ class CenJobAssistant(JobAssistant):
     )
 
 
-    def _env_setup(self, t, **kw):
-        """OP session's environment setup."""
-        super(CenJobAssistant, self)._env_setup(t, **kw)
-
-        headdir = '/home/ext/dsi/mtti/vernaym/dev/'
-        t.env.setvar("MTOOLDIR", '/scratch/vernaym/mtool')
-        t.env.setvar("DATADIR", headdir + 'opdata')
-
-
-
     def register_cycle(self, cycle):
         """Load and register a cycle contents."""
         from gco.syntax.stdattrs import UgetId
