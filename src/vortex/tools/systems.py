@@ -1365,11 +1365,10 @@ class OSExtended(System):
         self.stderr('ldirs', *rl)
         return [x for x in self.glob(*rl) if self.path.isdir(x)]
 
-    def unzip(self, *args, **kw):
-        """Simple Unzip a file archive (always c-something)'"""
+    def gunzip(self, *args, **kw):
+        """Simple gunzip a gzip-compressed file (always c-something)'"""
         cmd = ['gunzip', args[0]]
         cmd.extend(args[1:])
-        print cmd
         return self.spawn(cmd, **kw)
 
     def is_tarfile(self, filename):

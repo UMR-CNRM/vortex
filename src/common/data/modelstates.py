@@ -69,7 +69,7 @@ class Analysis(GeoFlowResource):
             elif self.model == 'surfex':
                 ananame = 'analyse'
             elif self.model == 'hycom':
-                ananame = '(histfix:igakey)'    
+                ananame = '(histfix:igakey)'
             else:
                 ananame = 'analyse_surface1'
 
@@ -84,7 +84,7 @@ class Analysis(GeoFlowResource):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        olivename_map = { 'atm':  'TRAJ' + self.model[:4].upper() + '+0000',
+        olivename_map = { 'atm': 'TRAJ' + self.model[:4].upper() + '+0000',
                           'surf': 'surfanalyse',
                           'full': 'analyse'}
         if self.model != 'arpege':

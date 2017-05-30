@@ -15,6 +15,7 @@ List of modules.
 
    previmar
 
+   algo/index
    data/index
    util/index
 

@@ -213,16 +213,15 @@ def analysis_bnames(resource, provider):
         else:
             return 'ICMSHARPEINIT.' + suffix + '.sfx'
     elif resource.model == 'hycom' and resource.filling == 'surf':
-        region_map = dict(atl= '_', med='_MED_', oin='_OIN_')      
+        region_map = dict(atl= '_', med='_MED_', oin='_OIN_')
         mode_map = dict(fc= 'pre', an='ana')
         region = region_map.get(provider.vconf[:3], provider.vconf[:3])
-        mode = mode_map.get(provider.vconf[4:][:2])
-        if mode == None:
-            # 'restart'      
+        mode = mode_map.get(provider.vconf[4:][:2], None)
+        if mode is None:
+            # 'restart'
             config = provider.vconf[4:]
         else:
             config = provider.vconf[-3:] + region + mode
-        hh='{:02d}'.format(resource.term.hour)
         return 's_init_sort_' + config + '.' + str(resource.date.ymdh)
     else:
         anabase = 'ICMSH' + model_info + 'INIT'

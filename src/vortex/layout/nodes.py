@@ -378,13 +378,17 @@ class Node(footprints.util.GetByTag, NiceLayout):
         for stuff in [s for s in ('proc', 'nprocs', 'nnodes', 'ntasks', 'openmp',
                                   'prefixcommand') if s in self.conf]:
                 mpiotps[mpiopts_map.get(stuff, stuff)] = self.conf[stuff]
-                
-        if not mpiotps.has_key('prefixcommand'):    
-             for sec in self.ticket.context.sequence.effective_inputs(role =re.compile('Prefixcommand')):
-	        logger.info('sec %s', sec)
-	        ## verif unique
-                mpiotps['prefixcommand']= sec.rh.container.actualpath()   
-                
+
+        # if the prefix command is missing in the configuration file, look in the input sequence
+        if 'prefixcommand' not in mpiotps:
+            prefixes = self.ticket.context.sequence.effective_inputs(role =re.compile('Prefixcommand'))
+            if len(prefixes) > 1:
+                raise RuntimeError("Only one prefix command can be used...")
+            for sec in prefixes:
+                prefixpath = sec.rh.container.actualpath()
+                logger.info('The following MPI prefix command will be used: %s', prefixpath)
+                mpiotps['prefixcommand'] = prefixpath
+
         # Ensure that some of the mpiopts are integers
         for stuff in [s for s in ('nn', 'nnp', 'openmp', 'np') if s in mpiotps]:
             if isinstance(mpiotps[stuff], (list, tuple)):

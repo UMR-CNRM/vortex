@@ -77,7 +77,7 @@ class GridPoint(GeoFlowResource):
             if self.origin == 'ana':
                 source = 'analysis'
             else:
-                source = 'forecast'        
+                source = 'forecast'
         else:
             source = 'forecast'
 

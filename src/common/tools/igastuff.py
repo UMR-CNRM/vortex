@@ -161,7 +161,7 @@ class IgakeyFactoryArchive(_BaseIgakeyFactory):
                          'atl@fcarp': 'surcotes',
                          'med@fcarp': 'surcotes',
                          'oin@ancep': 'surcotes_oi',
-                         'oin@fcaro': 'surcotes_oi',},
+                         'oin@fcaro': 'surcotes_oi', },
                }
 
 
@@ -188,7 +188,7 @@ class IgakeyFactoryInline(_BaseIgakeyFactory):
                'hycom': {'atl@anarp': 'surcotes',
                          'med@anarp': 'surcotes',
                          'atl@fcarp': 'surcotes',
-                         'med@fcarp': 'surcotes', 
+                         'med@fcarp': 'surcotes',
                          'oin@ancep': 'surcotes_oi',
-                         'oin@fcaro': 'surcotes_oi',},
+                         'oin@fcaro': 'surcotes_oi', },
                }
