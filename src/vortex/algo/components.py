@@ -555,7 +555,7 @@ class AlgoComponent(footprints.FootprintBase):
         self.system  = self.context.system
         self.target  = kw.pop('target', None)
         if self.target is None:
-            self.target = self.system.target()
+            self.target = self.system.default_target
 
         # Before trying to do anything, check the executable
         if not self.valid_executable(rh):

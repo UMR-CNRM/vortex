@@ -89,7 +89,7 @@ class Service(footprints.FootprintBase):
         if not value:
             if as_conf is None:
                 as_conf = 'services:' + key.lower()
-            value = self.sh.target().get(as_conf, default)
+            value = self.sh.default_target.get(as_conf, default)
         return value
 
     def __call__(self, *args):
@@ -206,8 +206,8 @@ class MailService(Service):
                 import mimetypes
                 ctype, encoding = mimetypes.guess_type(xtra)
                 if ctype is None or encoding is not None:
-                    # No guess could be made, or the file is encoded (compressed), so
-                    # use a generic bag-of-bits type.
+                    # No guess could be made, or the file is encoded
+                    # (compressed), so use a generic bag-of-bits type.
                     ctype = 'application/octet-stream'
                 maintype, subtype = ctype.split('/', 1)
                 mimemap = self.get_mimemap()
@@ -245,7 +245,7 @@ class MailService(Service):
             msg = self.as_multipart(msg)
         self.set_headers(msg)
         msgcorpus = msg.as_string()
-        if self.sh.target().generic().endswith('cn'):
+        if not self.sh.default_target.isnetworknode:
             import tempfile
             count, tmpmsgfile = tempfile.mkstemp(prefix='mailx_')
             with open(tmpmsgfile, 'w') as fd:
@@ -255,7 +255,7 @@ class MailService(Service):
                 ' '.join(self.to.split()),
                 tmpmsgfile
             )
-            ad.ssh(mailcmd, hostname='node', nodetype='login')
+            ad.ssh(mailcmd, hostname='node', nodetype='network')
             self.sh.remove(tmpmsgfile)
         else:
             import smtplib
@@ -316,8 +316,8 @@ class SSHProxy(Service):
     will be built on the basis of attributes, :attr:`genericnode`,
     :attr:`nodebase`, :attr:`nodetype` and :attr:`noderange`.
 
-    In this case, if :attr:`genericnode` is defined it will be used. If not, the
-    configuration file will be checked for a configuration key named
+    In this case, if :attr:`genericnode` is defined it will be used. If not,
+    the configuration file will be checked for a configuration key named
     ``'{}node'.format(self.nodetype)`` in the services section.
 
     If none of the :attr:`genericnode` attribute or its configuration file
@@ -347,8 +347,9 @@ class SSHProxy(Service):
             ),
             nodetype = dict(
                 optional = True,
-                values   = ['login', 'transfer', 'transfert'],
-                default  = 'login',
+                values   = ['login', 'transfer', 'transfert', 'network',
+                            'agt', 'syslog'],
+                default  = 'network',
                 remap    = dict(transfer = 'transfert'),
             ),
             noderange = dict(
@@ -400,23 +401,17 @@ class SSHProxy(Service):
 
     def _build_targets(self):
         """Build a list of candidate target hostnames."""
-        targets = [ self.hostname.strip().lower() ]
+        targets = [self.hostname.strip().lower(), ]
         if targets[0] == 'node':
-            genericnode = self.genericnode or self.actual_value(self.nodetype + 'node',)
-            if genericnode and genericnode != 'no_generic':
-                targets = [ genericnode, ]
+            if self.genericnode is not None and self.genericnode != 'no_generic':
+                targets = [self.genericnode, ]
+            elif (self.nodebase is not None) and (self.noderange is not None):
+                targets = [self.nodebase.format(x) for x in self.noderange]
             else:
-                nodebase  = self.nodebase  or self.actual_value('ssh' + self.nodetype + 'base', default=self.sh.target().inetname)
-                noderange = self.noderange or self.actual_value('ssh' + self.nodetype + 'range')
-                if noderange is None:
-                    noderange = ('',)
-                else:
-                    if isinstance(noderange, basestring):
-                        noderange = [ x.strip() for x in noderange.split(',') ]
-                    if self.permut:
-                        noderange = list(noderange)
-                        random.shuffle(noderange)
-                targets = [ nodebase + self.nodetype + str(x) for x in noderange ]
+                # From the target configuration...
+                targets = self.sh.default_target.specialproxies[self.nodetype]
+            if self.permut:
+                random.shuffle(targets)
         return targets
 
     def _get_target(self, targets):
@@ -429,10 +424,10 @@ class SSHProxy(Service):
             logger.debug('SSH connect try number ' + str(ntry))
             for guess in targets:
                 try:
-                    thecmd = [' '.join([ self.actual_value('sshcmd'), ] +
+                    thecmd = [' '.join([self.actual_value('sshcmd'), ] +
                                        self._actual_sshopts('sshopts') +
                                        self._actual_sshopts('sshretryopts') +
-                                       [ guess, 'echo >/dev/null 2>&1'])]
+                                       [guess, 'echo >/dev/null 2>&1'])]
                     self.sh.spawn(thecmd, shell=True, output=False, silent=True)
                 except StandardError:
                     pass

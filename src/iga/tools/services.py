@@ -47,13 +47,6 @@ __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
 
-# TODO devrait dépendre d'un objet TARGET
-LOGIN_NODES = [
-    x + str(y)
-    for x in ('prolixlogin', 'beaufixlogin',)
-    for y in range(6)
-    ]
-
 # default Formatter for alarm logfile output
 DEFAULT_ALARMLOG_FORMATTER = logging.Formatter(
     fmt='[%(asctime)s][%(name)s][%(levelname)s]: %(message)s',
@@ -200,8 +193,10 @@ class AlarmProxyService(AlarmService):
     _footprint = dict(
         info = 'Alarm Proxy Service',
         attr = dict(
-            hostname = dict(
-                outcast = LOGIN_NODES,
+            issyslognode = dict(
+                values = [False, ],
+                default = '[systemtarget:issyslognode]',
+                type = bool,
             ),
         )
     )
@@ -251,7 +246,7 @@ class AlarmProxyService(AlarmService):
             self.facility.name(),
             self.priority(self.level),
             message)
-        rc = ad.ssh(command, hostname=self.sshhost, nodetype='login')
+        rc = ad.ssh(command, hostname=self.sshhost, nodetype='syslog')
         if not rc:
             logger.warning("Remote execution failed: " + command)
         return rc
@@ -271,8 +266,10 @@ class AlarmLogService(AlarmService):
                 default  = None,
                 access   = 'rwx',
             ),
-            hostname = dict(
-                values = LOGIN_NODES,
+            issyslognode = dict(
+                values   = [True, ],
+                default  = '[systemtarget:issyslognode]',
+                type     = bool,
             ),
         )
     )
@@ -306,8 +303,10 @@ class AlarmRemoteService(AlarmService):
                 optional = True,
                 default  = socket.SOCK_DGRAM,
             ),
-            hostname = dict(
-                values = LOGIN_NODES,
+            issyslognode = dict(
+                values   = [True, ],
+                default  = '[systemtarget:issyslognode]',
+                type     = bool,
             ),
         )
     )
@@ -434,7 +433,7 @@ class RoutingService(Service):
         if cmdline is None:
             return False
 
-        rc = ad.ssh(cmdline, hostname=self.sshhost, nodetype='transfer')
+        rc = ad.ssh(cmdline, hostname=self.sshhost, nodetype='agt')
 
         if self.targetname:
             self.sh.remove(self.targetname)
@@ -577,7 +576,7 @@ class BdpeService(RoutingService):
                 optional = True,
                 default  = 'agt_pe_cmd',
             ),
-             term = dict(
+            term = dict(
                 optional = True,
                 type     = Time,
                 default  = '0',
@@ -959,8 +958,8 @@ class DMTEventService(Service):
         """Set some global variables, then launch the soprano command."""
         cmdline = self.get_cmdline()
         logger.info('DMT Event <%s>', cmdline)
-        if self.sh.target().generic().endswith('cn'):
-            rc = ad.ssh(cmdline, hostname='node', nodetype='login')
+        if not self.sh.default_target.isnetworknode:
+            rc = ad.ssh(cmdline, hostname='node', nodetype='network')
         else:
             rc = self.sh.spawn(cmdline, shell=True, output=True)
         return rc
@@ -1000,7 +999,7 @@ class OpMailService(TemplatedMailService):
                'pour <{}@{}>\n'.format(
             vortex.__version__,
             self.env.user,
-            self.sh.target().inetname
+            self.sh.default_target.inetname
         )
 
     def __call__(self, *args):

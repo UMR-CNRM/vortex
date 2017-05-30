@@ -80,7 +80,7 @@ class Addon(footprints.FootprintBase):
                     self.path = self.sh.env.get(kpath)
                     break
             if self.path is None and self.cfginfo is not None:
-                tg = self.sh.target()
+                tg = self.sh.default_target
                 addon_rootdir = self.sh.env.get(
                     self.cfginfo + 'root',
                     tg.get(self.cfginfo + ':rootdir', None)
@@ -204,5 +204,5 @@ class FtrawEnableAddon(Addon):
         super(FtrawEnableAddon, self).__init__(*args, **kw)
         # If needed, look in the config file for the rawftshell
         if self.rawftshell is None:
-            tg = self.sh.target()
+            tg = self.sh.default_target
             self.rawftshell = tg.get(self.cfginfo + ':rawftshell', None)

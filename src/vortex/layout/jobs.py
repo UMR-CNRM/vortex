@@ -280,7 +280,7 @@ class JobAssistant(footprints.FootprintBase):
 
         t.sh.header('Target description')
 
-        tg = t.sh.target()
+        tg = t.sh.default_target
         locprint('Target name', tg.hostname)
         locprint('Target system', tg.sysname)
         locprint('Target inifile', tg.inifile)

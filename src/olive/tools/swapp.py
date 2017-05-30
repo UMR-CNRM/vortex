@@ -100,7 +100,7 @@ def olive_jobout(sh, env, output, localout=None):
     else:
         localout = _olive_jobout_sizecontrol(sh, localout, directory='~')
 
-    localhost = sh.target().inetname
+    localhost = sh.default_target.inetname
     _, swapp_host, swapp_port = env.VORTEX_OUTPUT_ID.split(':')
     user = env.VORTEX_TARGET_LOGNAME or env.TARGET_LOGNAME or env.SWAPP_USER or sh.getlogin()
 

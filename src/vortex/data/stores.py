@@ -937,7 +937,7 @@ class ArchiveStore(Store):
         """Returns the current :attr:`storage` or the value from the configuration file."""
         if self.storage is None:
             return self.system.env.get('VORTEX_DEFAULT_STORAGE',
-                                       self.system.target().get('stores:storage', 'hendrix.meteo.fr'))
+                                       self.system.default_target.get('stores:storage', 'hendrix.meteo.fr'))
         else:
             return self.storage
 
@@ -1366,7 +1366,7 @@ class CacheStore(Store):
     @property
     def hostname(self):
         """Returns the current :attr:`storage`."""
-        tg = self.system.target()
+        tg = self.system.default_target
         return tg.inetname if self.storage is None else self.storage
 
     def use_cache(self):
@@ -1580,7 +1580,7 @@ class VortexVsopCacheStore(MultiStore):
         todo = ['vsop.cache-mt.fr', ]  # The MTOOL Cache remains a must :-)
         if self.glovekind != 'opuser':
             for loc in ('primary', 'secondary'):
-                if int(self.system.target().get('stores:vsop_cache_op{}'.format(loc), '0')):
+                if int(self.system.default_target.get('stores:vsop_cache_op{}'.format(loc), '0')):
                     todo.append('vsop.cache-{}.fr'.format(loc))
         return todo
 

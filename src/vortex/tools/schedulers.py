@@ -77,7 +77,7 @@ class SMS(Scheduler):
         logger.debug('SMS scheduler client init %s', self)
         super(SMS, self).__init__(*args, **kw)
         if self.rootdir is None:
-            thistarget = self.sh.target()
+            thistarget = self.sh.default_target
             guesspath  = self.env.SMS_INSTALL_ROOT or thistarget.get('sms:rootdir')
             if guesspath is None:
                 logger.warning('SMS service could not guess install location [%s]', str(guesspath))

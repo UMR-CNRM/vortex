@@ -84,7 +84,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     Use ``force=True`` to continue in spite of errors.
     """
     sh = t.sh
-    tg = sh.target()
+    tg = sh.default_target
     defs = genv.autofill(cycle)
     # Configuration handler (untar specific options)
     ggetconfig = GcoStoreConfig(GGET_DEFAULT_CONFIGFILE)

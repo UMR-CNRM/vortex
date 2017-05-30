@@ -103,7 +103,7 @@ class OpPhase(Action):
     def actions():
         """Create Actions to handle the several Phase configurations
            described in the configuration file target-xxx.ini."""
-        parser = sessions.system().target().config
+        parser = sessions.system().default_target.config
         if parser.has_section('phase'):
             active_actions = parser.getx(key='phase:active_actions', aslist=True)
         else:
@@ -127,7 +127,7 @@ class OpPhase(Action):
 
     def configure(self, section, show=False):
         """Check and set the configuration: a section in the target-xxx.ini file."""
-        target = self.sh.target()
+        target = self.sh.default_target
         self._parser = target.config
         self._section = section
         if section not in self._parser.sections():

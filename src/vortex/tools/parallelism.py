@@ -101,7 +101,7 @@ class VortexWorkerBlindRun(TaylorVortexWorker):
         self.system.remove('core')
         self.system.softlink('/dev/null', 'core')
         self.local_spawn_hook()
-        self.system.target().spawn_hook(self.system)
+        self.system.default_target.spawn_hook(self.system)
         logger.info("The program stdout/err will be saved to %s", stdoutfile)
         logger.info("Starting the following command: %s (taskset=%s, id=%d)",
                     " ".join([self.progname, ] + self.progargs),

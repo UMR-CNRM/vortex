@@ -300,8 +300,8 @@ class Op2ResearchCache(Cache):
     @property
     def entry(self):
         if self.rootdir == 'auto':
-            fs = self.sh.target().get('op:' + self.kind[5:] + 'fs', '')
-            mt = self.sh.target().get('op:mtooldir', None)
+            fs = self.sh.default_target.get('op:' + self.kind[5:] + 'fs', '')
+            mt = self.sh.default_target.get('op:mtooldir', None)
             if mt is None:
                 raise ValueError("The %s cache can't be initialised since op:mtooldir is missing",
                                  self.kind)

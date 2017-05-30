@@ -24,13 +24,13 @@ def agt_actual_command(sh, binary_name, args, extraenv=None):
     :param args: Argument to the AGT binary
     :param extraenv: Additional environnement variables to export (dictionnary)
     """
-    config = sh.target().config
+    config = sh.default_target.config
     if not config.has_section('agt'):
         fmt = 'Missing section "agt" in configuration file\n"{}"'
         raise AgtConfigurationError(fmt.format(config.file))
 
-    agt_path = sh.target().get('agt_path', default=None)
-    agt_bin = sh.target().get(binary_name, default=None)
+    agt_path = sh.default_target.get('agt_path', default=None)
+    agt_bin = sh.default_target.get(binary_name, default=None)
     if not all([agt_path, agt_bin]):
         fmt = 'Missing key "agt_path" or "{}" in configuration file\n"{}"'
         raise AgtConfigurationError(fmt.format(binary_name, config.file))

@@ -67,7 +67,7 @@ class OpJobAssistantTest(JobAssistant):
                 t.sh.softlink(t.env["LOG_SBATCH"], '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
 
         nb_slurm = self.print_somevariables(t, 'SLURM')
-        tg = vortex.sh().target()
+        tg = vortex.sh().default_target
         # Set trace
         self.add_extra_traces(t)
         # Set some more environment variables from the 'target*.ini' file

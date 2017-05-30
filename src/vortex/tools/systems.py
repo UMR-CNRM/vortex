@@ -38,6 +38,7 @@ from vortex.tools.env import Environment
 from vortex.tools.net import StdFtp
 from vortex.util.decorators import nicedeco
 from vortex.util.structs import History
+from vortex.syntax.stdattrs import DelayedInit
 
 #: No automatic export
 __all__ = []
@@ -256,7 +257,7 @@ class System(footprints.FootprintBase):
     def getfqdn(self, name=None):
         """Return a fully qualified domain name for ``name``. Default is to check for current ``hostname``."""
         if name is None:
-            name = self.target().inetname
+            name = self.default_target.inetname
         return socket.getfqdn(name)
 
     def pythonpath(self, output=None):
@@ -781,6 +782,7 @@ class OSExtended(System):
         self.ftgetcmd = kw.pop('ftgetcmd', None)
         # Some internal variables used by particular methods
         self._ftspool_cache = None
+        self._frozen_target = None
         # Go for the superclass' constructor
         super(OSExtended, self).__init__(*args, **kw)
         # Intialiase the signal handler object
@@ -795,6 +797,11 @@ class OSExtended(System):
         desc.update(kw)
         self._frozen_target = footprints.proxy.targets.default(**desc)
         return self._frozen_target
+
+    @property
+    def default_target(self):
+        """Returns the latest frozen target."""
+        return DelayedInit(self._frozen_target, self.target)
 
     def clear(self):
         """Clear screen."""
@@ -1779,7 +1786,7 @@ class Ssh(object):
         else:
             self._remote = hostname
 
-        parser = sh.target().config
+        parser = sh.default_target.config
         self._sshcmd = parser.getx(key='services:sshcmd', default='ssh')
         self._scpcmd = parser.getx(key='services:scpcmd', default='scp')
         self._sshopts = ' '.join([

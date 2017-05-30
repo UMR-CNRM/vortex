@@ -128,7 +128,7 @@ class GcoCentralStore(Store):
 
     def _actualgget(self, rpath):
         """Return actual (gtool, garchive, tampon, gname)."""
-        tg = self.system.target()
+        tg = self.system.default_target
 
         l = rpath.lstrip('/').split('/')
         gname = l.pop()

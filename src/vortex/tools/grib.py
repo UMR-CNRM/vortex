@@ -270,7 +270,7 @@ class GRIBAPI_Tool(addons.Addon):
         super(GRIBAPI_Tool, self).__init__(*args, **kw)
         # Additionaly, check for the GRIB_API_ROOTDIR key in the config file
         if self.path is None and self.cfginfo is not None:
-            tg = self.sh.target()
+            tg = self.sh.default_target
             addon_rootdir = tg.get(self.cfginfo + ':grib_api_rootdir', None)
             if addon_rootdir is not None:
                 self.path = addon_rootdir

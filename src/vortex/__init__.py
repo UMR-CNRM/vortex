@@ -79,8 +79,10 @@ del rs
 
 def vortexfpdefaults():
     """Return actual glove, according to current environment."""
+    cur_session = sessions.current()
     return dict(
-        glove = sessions.current().glove
+        glove=cur_session.glove,
+        systemtarget=cur_session.sh.default_target
     )
 
 footprints.setup.callback = vortexfpdefaults

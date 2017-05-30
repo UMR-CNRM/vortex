@@ -21,7 +21,7 @@ def actualgenv():
     global genvpath
     global genvcmd
     if genvcmd is None or genvpath is None:
-        tg = vortex.sh().target()
+        tg = vortex.sh().default_target
         if genvpath is None:
             genvpath = tg.get('gco:genvpath', '')
         if genvcmd is None:
