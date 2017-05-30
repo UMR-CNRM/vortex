@@ -11,7 +11,8 @@ from vortex.data.flow import GeoFlowResource
 from common.data.obs import Observations
 from vortex.syntax.stdattrs import term
 from vortex.data.geometries import MassifGeometry
-
+from common.data.modelstates import Historic, InitialCondition
+from vortex.syntax.stdattrs import a_date
 
 class SafranGuess(GeoFlowResource):
     """Class for the guess file (P ou E file) that is used by SAFRAN."""
@@ -142,23 +143,25 @@ class SurfaceForcing(GeoFlowResource):
         )
 
 
-class MetFiles(GeoFlowResource):
-    """Class for the met, metcli or MET files produced by SAFRAN."""
+class Prep(InitialCondition):
+    """Class for the SURFEX-Crocus initialisation of the snowpack state."""
 
     _footprint = [
         term,
         dict(
-            info = 'Safran analysis',
+            info = 'Instant SURFEX-Crocus Snowpack state',
             attr = dict(
                 kind = dict(
-                    values = ['met', 'MET', 'metcli'],
+                values  = ['SnowpackState'],
                 ),
                 nativefmt = dict(
-                    values  = ['grib', 'netcdf', 'unknown'],
-                    default = 'grib',
+                    values = ['netcdf', 'nc'],
+                    default = 'netcdf',
+                    remap = dict(autoremap = 'first'),
                 ),
-                model = dict(
-                    values = ['safran'],
+                origin = dict(
+                    default = None,
+                    optional = True,
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
@@ -168,15 +171,61 @@ class MetFiles(GeoFlowResource):
         )
     ]
 
+    _extension_remap = dict(netcdf='nc')
+
     @property
     def realkind(self):
-        return 'met'
+        return 'snowpackstate'
 
     def basename_info(self):
         return dict(
             radical = self.realkind,
             geo     = self.geometry.area,
-            src     = self.model,
-            term    = self.term.fmthm,
-            fmt     = self.nativefmt,
+            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
+
+
+class Pro(Historic):
+    """Class for the SURFEX-Crocus simulated snowpack."""
+
+    _footprint = [
+        term,
+        dict(
+            info = 'SURFEX-Crocus Snowpack simulation',
+            attr = dict(
+                kind = dict(
+                values  = ['SnowpackSimulation', 'pro'],
+                ),
+                nativefmt = dict(
+                    values = ['netcdf', 'nc'],
+                    default = 'netcdf',
+                    remap = dict(autoremap = 'first'),
+                ),
+                origin = dict(
+                    default = None,
+                    optional = True,
+                ),
+                geometry = dict(
+                    info = "The resource's massif geometry.",
+                    type = MassifGeometry,
+                ),
+                startdate = a_date,
+                enddate   = a_date,
+            )
+        )
+    ]
+
+    _extension_remap = dict(netcdf='nc')
+
+    @property
+    def realkind(self):
+        return 'snowpack'
+
+    def basename_info(self):
+        return dict(
+            radical = self.realkind,
+            geo     = self.geometry.area,
+            term    = self.term.fmthm,
+            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
+        )
+
