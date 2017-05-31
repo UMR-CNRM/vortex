@@ -25,8 +25,15 @@ class TestTargetsResearch(unittest.TestCase):
                          'hendrix.meteo.fr')
         self.assertEqual(self.tg.get('stores:fakekey1'),
                          'tourist')
+        self.assertEqual(self.tg.get('fakekey1'),
+                         'tourist')
+        self.assertSetEqual(set(self.tg.sections()),
+                            set(('stores', 'generic_nodes')))
         self.assertSetEqual(set(self.tg.options('stores')),
                             set(('storage', 'fakekey1')))
+        self.assertDictEqual(self.tg.items('stores'),
+                             dict(storage='hendrix.meteo.fr',
+                                  fakekey1='tourist'))
 
     def test_target_nodes(self):
         self.assertListEqual(self.tg.loginnodes,
@@ -73,8 +80,27 @@ class TestTargetsOp(unittest.TestCase):
                          'hendrixg2.meteo.fr')
         self.assertEqual(self.tg.get('stores:fakekey1'),
                          '1')
+        self.assertSetEqual(set(self.tg.sections()),
+                            set(('stores', 'generic_nodes', 'toto')))
         self.assertSetEqual(set(self.tg.options('stores')),
                             set(('storage', 'fakekey1', 'fakekey2')))
+        self.assertDictEqual(self.tg.items('stores'),
+                             dict(storage='hendrixg2.meteo.fr',
+                                  fakekey1='1', fakekey2='2'))
+        # getx works ?
+        self.assertEqual(self.tg.getx('toto:ltest', env_key='glurps', aslist=True),
+                         ['1', '3', 'abc', 'd'])
+        with self.assertRaises(KeyError):
+            self.tg.getx('toto:donotexist')
+        with self.assertRaises(KeyError):
+            self.tg.getx('fakekey1')
+        self.assertEqual(self.tg.getx('toto:donotexist', silent=True),
+                         None)
+        self.assertEqual(self.tg.getx('toto:donotexist', default='toto'),
+                         'toto')
+        with sessions.current().env.delta_context(glurps='1'):
+            self.assertEqual(self.tg.getx('toto:ltest', env_key='glurps', aslist=True),
+                             ['1', ])
 
     def test_target_nodes(self):
         self.assertListEqual(self.tg.loginproxies, ['unittestoper-int'])

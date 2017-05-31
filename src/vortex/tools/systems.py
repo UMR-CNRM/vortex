@@ -1786,17 +1786,17 @@ class Ssh(object):
         else:
             self._remote = hostname
 
-        parser = sh.default_target.config
-        self._sshcmd = parser.getx(key='services:sshcmd', default='ssh')
-        self._scpcmd = parser.getx(key='services:scpcmd', default='scp')
+        target = sh.default_target
+        self._sshcmd = target.get(key='services:sshcmd', default='ssh')
+        self._scpcmd = target.get(key='services:scpcmd', default='scp')
         self._sshopts = ' '.join([
-            parser.getx(key='services:sshopts', default='-x'),
-            parser.getx(key='services:sshretryopts', default=''),
+            target.get(key='services:sshopts', default='-x'),
+            target.get(key='services:sshretryopts', default=''),
             sshopts or '',
         ])
         self._scpopts = ' '.join([
-            parser.getx(key='services:scpopts', default='-Bp'),
-            parser.getx(key='services:scpretryopts', default=''),
+            target.get(key='services:scpopts', default='-Bp'),
+            target.get(key='services:scpretryopts', default=''),
             scpopts or '',
         ])
 

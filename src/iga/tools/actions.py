@@ -94,7 +94,6 @@ class OpPhase(Action):
         self._rhtodo = list()
         self._rhdone = list()
         self._sh = sessions.system()
-        self._parser = None
         self._section = None
         self._tuning = dict()
         self.configure(configuration)
@@ -103,9 +102,9 @@ class OpPhase(Action):
     def actions():
         """Create Actions to handle the several Phase configurations
            described in the configuration file target-xxx.ini."""
-        parser = sessions.system().default_target.config
-        if parser.has_section('phase'):
-            active_actions = parser.getx(key='phase:active_actions', aslist=True)
+        target = sessions.system().default_target
+        if 'phase' in target.sections():
+            active_actions = target.getx(key='phase:active_actions', aslist=True)
         else:
             active_actions = []
         return [OpPhase(action) for action in active_actions]
@@ -113,6 +112,10 @@ class OpPhase(Action):
     @property
     def sh(self):
         return self._sh
+
+    @property
+    def shtarget(self):
+        return self.sh.default_target
 
     @property
     def section(self):
@@ -127,11 +130,9 @@ class OpPhase(Action):
 
     def configure(self, section, show=False):
         """Check and set the configuration: a section in the target-xxx.ini file."""
-        target = self.sh.default_target
-        self._parser = target.config
         self._section = section
-        if section not in self._parser.sections():
-            raise KeyError('No section "{}" in "{}"'.format(section, self._parser.file))
+        if section not in self.shtarget.sections():
+            raise KeyError('No section "{}" in "{}"'.format(section, self.shtarget.config.file))
         if show:
             self.show_config()
 
@@ -139,12 +140,12 @@ class OpPhase(Action):
         """Show the current configuration (for debugging purposes)."""
         from pprint import pprint
         print('\n=== Phase configuration:', self._section)
-        pprint(self._parser.as_dict()[self._section])
+        pprint(self.shtarget.items(self._section))
         if self._tuning:
             print('\n+++ Fine tuning:')
             pprint(self._tuning)
             print('\n+++ Real configuration:')
-            final_dict = dict(self._parser.as_dict()[self._section])
+            final_dict = dict(self.shtarget.items(self._section))
             final_dict.update(self._tuning)
             pprint(final_dict)
         print()
@@ -153,7 +154,7 @@ class OpPhase(Action):
         """Shortcut to access the configuration overridden by the tuning."""
         if key in self._tuning:
             return self._tuning[key]
-        return self._parser.getx(key=self._section + ':' + key, *args, **kw)
+        return self.shtarget.getx(key=self._section + ':' + key, *args, **kw)
 
     @property
     def immediate(self):

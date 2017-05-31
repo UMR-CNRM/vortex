@@ -12,14 +12,14 @@ __all__ = []
 import re
 import platform
 
-import footprints
-logger = footprints.loggers.getLogger(__name__)
+import footprints as fp
+logger = fp.loggers.getLogger(__name__)
 
 from vortex.util.config import GenericConfigParser
 from vortex import sessions
 
 
-class Target(footprints.FootprintBase):
+class Target(fp.FootprintBase):
     """Root class for any :class:`Target` subclasses.
 
     Target classes are used to define specific settings and/or behaviour for a
@@ -69,6 +69,7 @@ class Target(footprints.FootprintBase):
     _re_nodes_property = re.compile(r'(\w+)(nodes)$')
     _re_proxies_property = re.compile(r'(\w+)(proxies)$')
     _re_isnode_property = re.compile(r'is(\w+)node$')
+    _re_glove_rk_id = re.compile(r'^(.*)@\w+$')
 
     def __init__(self, *args, **kw):
         logger.debug('Abstract target computer init %s', self.__class__)
@@ -113,7 +114,6 @@ class Target(footprints.FootprintBase):
         return 'operations'.
         """
         my_glove_rk = '@' + sessions.current().glove.realkind
-        glove_rk_id = re.compile(r'^.*@\w+$')
         if ':' in key:
             section, option = [x.strip() for x in key.split(':', 1)]
             # Check if an override section exists
@@ -123,25 +123,95 @@ class Target(footprints.FootprintBase):
             option = key
             # First look in override sections, then in default one
             sections = ([s for s in self.config.sections() if s.endswith(my_glove_rk)] +
-                        [s for s in self.config.sections() if not glove_rk_id.match(s)])
+                        [s for s in self.config.sections() if not self._re_glove_rk_id.match(s)])
         # Return the first matching section/option
         for section in [x for x in sections if self.config.has_option(x, option)]:
             return self.config.get(section, option)
         return default
 
+    def getx(self, key, default=None, env_key=None, silent=False, aslist=False):
+        """
+        Return a value from several sources in turn:
+
+        - a shell environment variable
+        - this configuration handler (key = 'section:option') (see the :meth:`get` method)
+        - a default value
+
+        Unless **silent** is set, ``KeyError`` is raised if the value cannot be found.
+
+        **aslist** forces the result into a list (be it with a unique element).
+        separators are spaces, commas, carriage returns or antislashes.
+        e.g. these notations are equivalent::
+
+            alist = val1 val2 val3 val4 val5
+            alist  = val1, val2 val3 \\
+                     val4,
+                     val5
+
+        """
+        if env_key is not None:
+            env_key = env_key.upper()
+            value = sessions.system().env.get(env_key, None)
+        else:
+            value = None
+
+        if value is None:
+            if ':' not in key:
+                if silent:
+                    return None
+                msg = 'Configuration key should be "section:option" not "{}"'.format(key)
+                raise KeyError(msg)
+            value = self.get(key, default)
+
+        if value is None:
+            if silent:
+                return None
+            msg = 'Please define "{}" in "{}"'.format(key, self.config.file)
+            if env_key is not None:
+                msg += ' or "{}" in the environment.'.format(env_key)
+            logger.error(msg)
+            raise KeyError(msg)
+
+        if aslist:
+            value = value.replace('\n', ' ').replace('\\', ' ').replace(',', ' ').split()
+
+        return value
+
+    def sections(self):
+        """Returns the list of sections contained in the config file."""
+        my_glove_rk = '@' + sessions.current().glove.realkind
+        return sorted(set([self._re_glove_rk_id.sub(r'\1', x)
+                           for x in self.config.sections()
+                           if ((not self._re_glove_rk_id.match(x)) or
+                               x.endswith(my_glove_rk))]))
+
     def options(self, key):
         """For a given section, returns the list of available options.
 
-        The results may depends on the current glove (see the :meth:`get` method
-        documentation).
+        The results may depends on the current glove (see the :meth:`get`
+        method documentation).
         """
         my_glove_rk = '@' + sessions.current().glove.realkind
-        sections = [x for x in (key + my_glove_rk, key)
+        sections = [x for x in (key, key + my_glove_rk)
                     if x in self.config.sections()]
         options = set()
         for section in sections:
             options.update(self.config.options(section))
-        return list(options)
+        return sorted(options)
+
+    def items(self, key):
+        """For a given section, returns a dict that contains all options.
+
+        The results may depends on the current glove (see the :meth:`get`
+        method documentation).
+        """
+        my_glove_rk = '@' + sessions.current().glove.realkind
+        sections = [x for x in (key, key + my_glove_rk)
+                    if x in self.config.sections()]
+        items = dict()
+        for section in sections:
+            items.update(self.config.items(section))
+        return items
 
     @classmethod
     def is_anonymous(cls):
@@ -244,10 +314,10 @@ class Target(footprints.FootprintBase):
         """
         kmatch = self._re_nodes_property.match(key)
         if kmatch is not None:
-            return footprints.stdtypes.FPList(self.specialnodes.get(kmatch.group(1), []))
+            return fp.stdtypes.FPList(self.specialnodes.get(kmatch.group(1), []))
         kmatch = self._re_proxies_property.match(key)
         if kmatch is not None:
-            return footprints.stdtypes.FPList(self.specialproxies.get(kmatch.group(1), []))
+            return fp.stdtypes.FPList(self.specialproxies.get(kmatch.group(1), []))
         kmatch = self._re_isnode_property.match(key)
         if kmatch is not None:
             return ((kmatch.group(1) not in self.specialnodes) or
@@ -266,4 +336,3 @@ class LocalTarget(Target):
             ),
         )
     )
-
