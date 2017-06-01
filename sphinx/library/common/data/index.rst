@@ -21,6 +21,7 @@ Data resources
    gridfiles
    logs
    modelstates
+   monitoring
    namelists
    obs
    providers

@@ -28,6 +28,7 @@ Included Modules
 * :mod:`common.data.gridfiles`
 * :mod:`common.data.logs`
 * :mod:`common.data.modelstates`
+* :mod:`common.data.monitoring`
 * :mod:`common.data.namelists`
 * :mod:`common.data.obs`
 * :mod:`common.data.providers`

@@ -309,6 +309,10 @@ class TestAppConfigDecoder(TestCase):
                          [{'01': [1, 26, 25], '02': 2}, 1])
         self.assertEqual(self.cd._value_expand('dict(01:1,None,25 02:2),1', int),
                          [{'01': [1, None, 25], '02': 2}, 1])
+        self.assertEqual(self.cd._value_expand('dict(01:1,True,25 02:2),false', int),
+                         [{'01': [1, True, 25], '02': 2}, False])
+        self.assertEqual(self.cd._value_expand('dict(01:1,False,25 02:2),true', int),
+                         [{'01': [1, False, 25], '02': 2}, True])
 
     def test_decode(self):
         # Easy

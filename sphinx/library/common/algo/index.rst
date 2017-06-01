@@ -14,6 +14,7 @@ Algo components
    eda
    eps
    ifsroot
+   monitoring
    forecasts
    mpitools
    odbtools
