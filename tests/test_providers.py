@@ -226,7 +226,7 @@ class TestProviderOlive(unittest.TestCase):
         pr = fp.proxy.provider(member=1, vconf='4dvar', ** self.fp_defaults)
         self.assertEqual(pr.uri(self.t_res),
                          'olive://' + self.fp_defaults['namespace'] +
-                         '/VOID/20000101H00A/mb001/dummy/dummyres')
+                         '/VOID/20000101H00A/dummy/dummyres')
         pr = fp.proxy.provider(member=1, vconf='pearp', ** self.fp_defaults)
         self.assertEqual(pr.uri(self.t_res),
                          'olive://' + self.fp_defaults['namespace'] +

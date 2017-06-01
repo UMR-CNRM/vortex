@@ -66,12 +66,12 @@ class Olive(Provider):
 
     def nice_member(self):
         """Nice formatting view of the member number, if any."""
-        if re.match(r'pearp', self.vconf):
-            mb = 'fc_' + str(self.member) if self.member is not None else ''
-        elif re.match(r'aearp', self.vconf):
-            mb = 'member_' + str(self.member) if self.member is not None else ''
-        else:
-            mb = 'mb' + str(self.member) if self.member is not None else ''
+        mb = None
+        if self.member is not None:
+            if re.match(r'pearp', self.vconf):
+                mb = 'fc_' + str(self.member) if self.member is not None else ''
+            if re.match(r'aearp', self.vconf):
+                mb = 'member_' + str(self.member) if self.member is not None else ''
         return mb
 
     def basename(self, resource):
@@ -90,8 +90,9 @@ class Olive(Provider):
             rdate = re.sub(r'(\d\d)$', r'H\1', rdate)
             rdate = rdate + rinfo.get('cutoff', 'n')[0].upper()
         elts = [self.experiment, rdate, self.block]
-        if self.member is not None:
-            elts.insert(2, self.nice_member())
+        n_member = self.nice_member()
+        if n_member is not None:
+            elts.insert(2, n_member)
         return '/'.join(elts)
 
 
