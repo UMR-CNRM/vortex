@@ -606,6 +606,10 @@ class AppConfigStringDecoder(object):
         # None ?
         if value == 'None':
             value = None
+        if re.match('true$',value,flags=re.IGNORECASE):
+            value = True
+        if re.match('false$',value,flags=re.IGNORECASE):
+            value = False
         # Usual values...
         if isinstance(value, basestring):
             value = remap(value)

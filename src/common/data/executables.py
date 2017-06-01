@@ -563,3 +563,22 @@ class AddPearp(BlackBox):
     @property
     def realkind(self):
         return 'addpearp'
+
+
+class ExecMonitoring(BlackBox):
+    """Compute monitoring statistics."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Executable to compute monitoring statistics',
+            attr = dict(
+                gvar = dict(
+                    default = "master_monitoring"
+                ),
+                kind = dict(
+                    values = ['exec_monitoring'],
+                )
+            )
+        )
+    ]
