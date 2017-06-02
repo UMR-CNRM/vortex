@@ -12,16 +12,14 @@ import re
 import traceback
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
 from vortex.util.structs import PrivateHistory, ShellEncoder
-
 
 #: No automatic export
 __all__ = []
+logger = footprints.loggers.getLogger(__name__)
 
 #: Pre-compiled evaluation mostly used by :class:`Environment` method (true).
-vartrue  = re.compile(r'^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$', flags=re.IGNORECASE)
+vartrue = re.compile(r'^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$', flags=re.IGNORECASE)
 
 #: Pre-compiled evaluation mostly used by :class:`Environment` method (false).
 varfalse = re.compile(r'^\s*(?:0|ko|off|false|no|n)\s*$', flags=re.IGNORECASE)
@@ -385,7 +383,7 @@ class Environment(object):
     def tracebacks(self):
         """Dump the stack of manipulations of the current environment."""
         if self.history is not None:
-            for count, stamp, action in self.history:
+            for u_count, stamp, action in self.history:
                 varname, value, stack = action
                 print "[", stamp, "]", varname, "=", value, "\n"
                 for xs in stack:
@@ -403,7 +401,7 @@ class Environment(object):
 
     def mkautolist(self, prefix):
         """Return a list of variable settings for actual env values."""
-        return [ var + '="' + self.get(var, '') + '"' for var in self.keys() if var.startswith(prefix) ]
+        return [var + '="' + self.get(var, '') + '"' for var in self.keys() if var.startswith(prefix)]
 
     def trueshell(self):
         """Extract the actual shell name according to env variable SHELL."""
@@ -456,7 +454,7 @@ class EnvironmentDeltaContext():
         self._delta = kw
 
     def __enter__(self):
-        self._env.delta(** self._delta)
+        self._env.delta(**self._delta)
 
     def __exit__(self, exc_type, exc_value, traceback):
         self._env.rewind()

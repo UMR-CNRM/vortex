@@ -1,22 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from vortex.layout import dataflow
 
-r"""
+"""
 This modules defines the physical layout.
 """
 
-#: No automatic export.
-__all__ = []
-
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
+from vortex.tools.env import Environment
 from vortex.util.structs import Tracker
-from vortex.tools.env    import Environment
-
 from . import dataflow
 
+#: No automatic export.
+__all__ = []
+logger = footprints.loggers.getLogger(__name__)
 
 _RHANDLERS_OBSBOARD = 'Resources-Handlers'
 _STORES_OBSBOARD = 'Stores-Activity'
@@ -271,7 +267,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         """Return the session bound to the current virtual context path."""
         if self._session is None:
             from vortex import sessions
-            self._session = sessions.get(tag = [ x for x in self.path.split('/') if x ][0])
+            self._session = sessions.get(tag=[x for x in self.path.split('/') if x][0])
         return self._session
 
     def _get_rundir(self):
@@ -326,7 +322,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
     def subcontexts(self):
         """The current contexts virtually included in the current one."""
         rootpath = self.path + '/'
-        return [ x for x in self.__class__.tag_values() if x.path.startswith(rootpath) ]
+        return [x for x in self.__class__.tag_values() if x.path.startswith(rootpath)]
 
     def newcontext(self, name, focus=False):
         """
@@ -369,7 +365,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         self.system.trace = False
         fscheck = Tracker(self._fstore[stamp], ffinded)
         stroot = self.system.stat(stamp)
-        fscheck.updated = [ f for f in fscheck.unchanged if self.system.stat(f).st_mtime > stroot.st_mtime ]
+        fscheck.updated = [f for f in fscheck.unchanged if self.system.stat(f).st_mtime > stroot.st_mtime]
         self.system.trace = bkuptrace
         return fscheck
 

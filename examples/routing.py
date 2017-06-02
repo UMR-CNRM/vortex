@@ -47,7 +47,7 @@ def list_actions():
     sh.subtitle('action -> handlers')
     for act in ad.actions:
         handlers = ad.candidates(act)
-        status   = [ h.status() for h in handlers ]
+        status = [h.status() for h in handlers]
         print act, ':', pprint.pformat(zip(status, handlers))
     print
 
@@ -72,7 +72,7 @@ def test_route():
     # agt_fake_cmd is defined in target-xxx.ini to be 'router_fake.sh',
     # a script installed along with the real route_p[ae].bin binaries,
     # but that logs commands instead of executing them.
-    # To see what happenned, use:
+    # To see what happened, use:
     #    cat $TMPDIR/vortex/router_fake.log
     toolbox.defaults(
         resuldir       = resuldir,
