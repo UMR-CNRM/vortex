@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, division
+
 #: No automatic export
 __all__ = []
 
@@ -299,6 +301,25 @@ class Odbtools(BlackBox):
         if date is not None:
             cmdline = cmdline + ' -B' + date.ymdh
         return cmdline
+
+
+class FcqODB(BlackBox):
+    """A tool to calculate flags on observations."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Flags calculation program',
+            attr = dict(
+                kind = dict(
+                    values = ['fcqodb'],
+                ),
+                gvar = dict(
+                    default = 'master_fcqodb'
+                )
+            ),
+        )
+    ]
 
 
 class VarBCTool(BlackBox):

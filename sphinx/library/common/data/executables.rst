@@ -77,6 +77,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: FcqODB
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: VarBCTool
    :show-inheritance:
    :members:
