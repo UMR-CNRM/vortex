@@ -230,7 +230,7 @@ class JsonDictContent(AlmostDictContent):
         """Get data from the ``container``."""
         t = sessions.current()
         container.rewind()
-        self._data = t.sh.json_load(container.localpath())
+        self._data = t.sh.json_load(container.iotarget())
         self._data = self._unicode2str(self._data)
         self._size = container.totalsize
 
@@ -238,7 +238,10 @@ class JsonDictContent(AlmostDictContent):
         """Write the list contents in the specified container."""
         t = sessions.current()
         container.close()
-        t.sh.json_dump(self.data, container.localpath(), indent=4)
+        mode = container.set_wmode(container.mode)
+        iod = container.iodesc(mode)
+        t.sh.json_dump(self.data, iod, indent=4)
+        container.updfill(True)
 
 
 class AlmostListContent(DataContent):
