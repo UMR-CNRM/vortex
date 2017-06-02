@@ -963,7 +963,7 @@ class ArchiveStore(Store):
     def ftplocate(self, remote, options):
         """Delegates to ``system.ftp`` the path evaluation."""
         rc = None
-        ftp = self.system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'], delayed=True)
         if ftp:
             rc = ftp.netpath(self._ftpformatpath(remote))
             ftp.close()

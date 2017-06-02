@@ -840,7 +840,7 @@ class OSExtended(System):
             isinstance(iocandidate, StringIO.StringIO)
         )
 
-    def ftp(self, hostname, logname=None):
+    def ftp(self, hostname, logname=None, delayed=False):
         """Returns an open ftp session on the specified target."""
         ftpbox = StdFtp(self, hostname)
         if logname is None:
@@ -848,7 +848,7 @@ class OSExtended(System):
                 logname = self.glove.user
             else:
                 raise ValueError("Either a logname or a glove must be set-up")
-        rc = ftpbox.fastlogin(logname, delayed=False)
+        rc = ftpbox.fastlogin(logname, delayed=delayed)
         if rc:
             return ftpbox
         else:
