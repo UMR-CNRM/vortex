@@ -1739,7 +1739,16 @@ class PromiseStore(footprints.FootprintBase):
     def locate(self, remote, options=None):
         """Go through internal opened stores and locate the expected resource for each of them."""
         logger.debug('Promise locate %s', remote)
-        return self.promise.locate(remote.copy(), options) + ';' + self.other.locate(remote.copy(), options)
+
+        inpromise = True
+        if options:
+            inpromise = options.get('inpromise', True)
+
+        locate_other = self.other.locate(remote.copy(), options)
+        if inpromise:
+            locate_promised = self.promise.locate(remote.copy(), options)
+            return locate_promised + ';' + locate_other
+        return locate_other
 
     def get(self, remote, local, options=None):
         """Go through internal opened stores for the first available resource."""
