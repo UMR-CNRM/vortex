@@ -654,3 +654,22 @@ class BDMExecutableOulan(BlackBox):
     @property
     def realkind(self):
         return 'bdm_obsoul_extract'
+
+
+class ExecMonitoring(BlackBox):
+    """Compute monitoring statistics."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Executable to compute monitoring statistics',
+            attr = dict(
+                gvar = dict(
+                    default = "master_monitoring"
+                ),
+                kind = dict(
+                    values = ['exec_monitoring'],
+                )
+            )
+        )
+    ]

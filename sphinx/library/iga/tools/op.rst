@@ -19,6 +19,7 @@ Functions
 
 .. autofunction:: oproute_hook_factory
 
+.. autofunction:: opphase_hook_factory
 
 Classes
 -------
