@@ -190,12 +190,12 @@ class FolderShell(addons.FtrawEnableAddon):
 
         A file 1 byte bigger than this estimation might be rejected,
         hence the conservative options:
-        - tar adds 10% with a minimum of 1024 bytes
+        - tar adds 1% with a minimum of 1 Mbytes
         - compression gain is 0%
         """
         dir_size = self.sh.treesize(source)
-        tar_mini = 1024
-        tar_loss = 10
+        tar_mini = 1024 * 1024  # 1 Mbytes
+        tar_loss = 1  # 1%
         zip_gain = 0
         tar_size = dir_size + max(tar_mini, (dir_size * tar_loss) // 100)
         return (tar_size * (100 - zip_gain)) // 100
