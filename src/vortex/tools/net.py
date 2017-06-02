@@ -5,14 +5,13 @@
 Net tools.
 """
 
-import urlparse
-import io
 import ftplib
-from datetime import datetime
+import io
 import socket
+import urlparse
+from datetime import datetime
 
 import footprints
-
 from vortex.util.decorators import nicedeco
 from vortex.util.netrc import netrc
 
@@ -66,12 +65,14 @@ def uriunparse(uridesc):
 @nicedeco
 def _ensure_delayedlogin(method):
     """Login if necessary."""
+
     def opened_method(self, *kargs, **kwargs):
         rc = self._delayedlogin()
         if rc:
             return method(self, *kargs, **kwargs)
         else:
             return rc
+
     return opened_method
 
 
@@ -172,6 +173,7 @@ class StdFtp(object):
                 cmd.extend(['{0:s}={1:s}'.format(x, str(kw[x])) for x in kw.keys()])
                 self.stderr(*cmd)
                 return actualattr(*args, **kw)
+
             osproxy.func_name = key
             osproxy.func_doc = actualattr.__doc__
             setattr(self, key, osproxy)
@@ -221,7 +223,8 @@ class StdFtp(object):
     def login(self, *args):
         """Proxy to ftplib :meth:`ftplib.FTP.login`."""
         self.stderr('login', args[0])
-        logger.debug('FTP login <args:%s>', str(args))
+        # kept for debugging, but this exposes the user's password!
+        # logger.debug('FTP login <args:%s>', str(args))
         rc = self._ftplib.login(*args)
         if rc:
             self._closed = False
@@ -318,7 +321,7 @@ class StdFtp(object):
             raise IOError('FTP could not get %s: %s' % (repr(source), str(e)))
         else:
             if xdestination:
-                target.seek(0, 2)
+                target.seek(0, io.SEEK_END)
                 if self.size(source) == target.tell():
                     rc = True
                 else:
@@ -333,21 +336,33 @@ class StdFtp(object):
                     self.system.remove(destination)
         return rc
 
-    def put(self, source, destination):
-        """Store a local `source` file object to a remote `destination`."""
+    def put(self, source, destination, size=None, exact=False):
+        """Store a local `source` file object to a remote `destination`.
+
+           When `size` is known, it is sent to the ftp server with the ALLO
+           command. It is mesured in this method for real files, but should
+           be given for other (non-seekeable) sources such as pipes.
+
+           When `exact` is True, the size is checked against the size of the
+           destination, and a mismatch is considered a failure.
+        """
         self.stderr('put', source, destination)
         if isinstance(source, basestring):
             inputsrc = io.open(source, 'rb')
             xsource = True
         else:
             inputsrc = source
-            try:
-                inputsrc.seek(0)
-            except AttributeError:
-                logger.warning('Could not rewind <source:%s>', str(source))
-            except IOError:
-                logger.debug('Seek trouble <source:%s>', str(source))
             xsource = False
+        try:
+            inputsrc.seek(0, io.SEEK_END)
+            size = inputsrc.tell()
+            exact = True
+            inputsrc.seek(0)
+        except AttributeError:
+            logger.warning('Could not rewind <source:%s>', str(source))
+        except IOError:
+            logger.debug('Seek trouble <source:%s>', str(source))
+
         self.rmkdir(destination)
         try:
             self.delete(destination)
@@ -358,21 +373,35 @@ class StdFtp(object):
                 ftplib.error_proto, ftplib.error_reply, ftplib.error_temp) as e:
             logger.critical('Serious delete trouble <file:%s> <error:%s>',
                             str(destination), str(e))
+
         logger.info('FTP <put:%s>', str(destination))
         rc = False
+
+        # PLPL debug
+        self.set_debuglevel(2)
+
+        if size is not None:
+            try:
+                self.voidcmd('ALLO {:d}'.format(size))
+            except ftplib.error_perm:
+                pass
+
         try:
             self.storbinary('STOR ' + destination, inputsrc)
         except (ValueError, IOError, TypeError, ftplib.all_errors) as e:
             logger.error('FTP could not put %s: %s', repr(source), str(e))
         else:
-            if xsource:
-                inputsrc.seek(0, 2)
-                if self.size(destination) == inputsrc.tell():
+            if exact:
+                if self.size(destination) == size:
                     rc = True
                 else:
-                    logger.error('FTP incomplete put %s', repr(source))
+                    logger.error('FTP incomplete put %s (%d / %d bytes)', repr(source),
+                                 self.size(destination), size)
             else:
                 rc = True
+                if self.size(destination) != size:
+                    logger.info('FTP put %s: estimated %s bytes, real %s bytes',
+                                repr(source), str(size), self.size(destination))
         finally:
             if xsource:
                 inputsrc.close()

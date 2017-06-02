@@ -131,6 +131,15 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         cmd.extend(self._std_grib_index_get(source))
         return self.sh.popen(cmd, stdout=stdout, bufsize=8192)
 
+    def _packed_size(self, source):
+        total = 0
+        for filepath in self._std_grib_index_get(source):
+            size = self.sh.size(filepath)
+            if size == -1:
+                return None
+            total += size
+        return total
+
     def xgrib_pack(self, source, destination, intent='in'):
         """Manually pack a multi GRIB."""
         if isinstance(destination, basestring):
@@ -158,8 +167,9 @@ class GRIB_Tool(addons.FtrawEnableAddon):
 
             ftp = self.sh.ftp(hostname, logname)
             if ftp:
+                packed_size = self._packed_size(source)
                 p = self._pack_stream(source)
-                rc = ftp.put(p.stdout, destination)
+                rc = ftp.put(p.stdout, destination, size=packed_size, exact=True)
                 self.sh.pclose(p)
                 ftp.close()
             else:
