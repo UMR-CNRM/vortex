@@ -133,9 +133,10 @@ class SurgesResultNative(GeoFlowResource):
             fields = dict(
                 values = ['HUV_tideonly_forcing', 'lssh_global_ms.nc',
                           'HUV_tide_wind_forcing', 'lssh_global_full.nc',
-                          'HUV_MED_tideonly_forcing', 'ssh_global_full.nc'],
+                          'HUV_MED_tideonly_forcing', 'ssh_global_full.nc','ssh_global_ms.nc'],
                 remap = {
                     'HUV_tideonly_forcing': 'lssh_global_ms.nc',
+                    'HUV_tideonly_forcing': 'ssh_global_ms.nc',
                     'HUV_tide_wind_forcing': 'lssh_global_full.nc',
                     'HUV_MED_tideonly_forcing': 'ssh_global_full.nc',
                 },
