@@ -329,10 +329,30 @@ class S2M_component(ParaBlindRun):
             ),
         )
     )
+    
+    def find_namelists(self, opts=None):
+        """Find any namelists candidates in actual context inputs."""
+        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind=('namelist_surfex'))]
+        self.system.subtitle('Namelist candidates')
+        for nam in namcandidates:
+            nam.quickview()
+        return namcandidates
+    
+    def _default_pre_execute(self, rh, opts):
+        '''Various initialisations. In particular it creates the task scheduler (Boss).'''
+        # Start the task scheduler
+        print 'DBUG2'
+        print self.find_namelists()
+        for namelist in self.find_namelists():
+            # Update the contents of the namelist (date and location)
+            # Location taken in the FORCING file.
+            namelist.clscontents(self.date)
+        super(S2M_component, self)._default_common_instructions(rh, opts)
+
 
     def _default_common_instructions(self, rh, opts):
         '''Create a common instruction dictionary that will be used by the workers.'''
-        ddict = super(Safran, self)._default_common_instructions(rh, opts)
+        ddict = super(S2M_component, self)._default_common_instructions(rh, opts)
         ddict['date']  = self.date  # Note: The date could be auto-detected using the sequence
         ddict['vconf'] = self.vconf
         ddict['terms'] = self.terms  # Note: The list of terms could be auto-detected using the sequence
@@ -340,6 +360,7 @@ class S2M_component(ParaBlindRun):
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
+        print 'DBUG'
         self._default_pre_execute(rh, opts)
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)
