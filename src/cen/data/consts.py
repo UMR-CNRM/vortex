@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 #: No automatic export
@@ -8,6 +8,13 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from common.data.consts import GenvStaticGeoResource
+from common.data.namelists import Namelist, NamelistContent
+from snowtools.Model.update_namelist import update_surfex_namelist
+
+
+class SurfexNamelistUpdate(update_surfex_namelist, NamelistContent):
+     """Fake DataContent subclass."""
+     pass
 
 
 class List(GenvStaticGeoResource):
@@ -32,3 +39,24 @@ class List(GenvStaticGeoResource):
     @property
     def realkind(self):
         return 'safran_namelist'
+
+
+class NamelistSurfex(Namelist):
+    _footprint = [
+        dict(
+            info = 'Namelist for SURFEX',
+            attr = dict(
+                kind = dict(
+                    values   = ['namelist_surfex']
+                ),
+                clscontents = dict(
+                    default  = SurfexNamelistUpdate
+                ),
+            )
+        )
+    ]
+    
+    def contents_handler(self,**kw):
+        
+        self.clscontents(self.date)
+        

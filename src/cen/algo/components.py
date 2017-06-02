@@ -304,13 +304,13 @@ class Grib2Safran(ParaExpresso):
         self._default_post_execute(rh, opts)
 
 
-class Safran(ParaBlindRun):
+class S2M_component(ParaBlindRun):
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['safrane', 'syrpluie', 'syrmrr', 'sytist'],
+                values = ['safrane', 'syrpluie', 'syrmrr', 'sytist', 'PREP', 'PGD', 'OFFLINE'],
             ),
             date   = a_date,
             members = dict(
