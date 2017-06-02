@@ -1,4 +1,4 @@
-#/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 #: No automatic export
@@ -55,7 +55,7 @@ class NamelistSurfex(Namelist):
             )
         )
     ]
-    
+       
     def contents_handler(self,**kw):
         
         self.clscontents(self.date)
