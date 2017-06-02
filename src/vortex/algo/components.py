@@ -762,12 +762,20 @@ class Expresso(ExecutableAlgoComponent):
         )
     )
 
+    def _interpreter_args_fix(self, rh, opts):
+        absexec = self.absexcutable(rh.container.localpath())
+        if self.interpreter == 'awk':
+            return ['-f', absexec]
+        else:
+            return [absexec, ]
+
     def execute_single(self, rh, opts):
         """
         Run the specified resource handler through the current interpreter,
         using the resource command_line method as args.
         """
-        args = [self.interpreter, rh.container.localpath()]
+        args = [self.interpreter, ]
+        args.extend(self._interpreter_args_fix(rh, opts))
         args.extend(self.spawn_command_line(rh))
         logger.debug('Run script %s', args)
         self.spawn(args, opts)

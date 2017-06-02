@@ -1,32 +1,34 @@
-:mod:`common.algo.request` --- A set of AlgoComponents interrogating various databases
+:mod:`common.tools.bdm` --- Utility classes and function to work with the BDM database
 ======================================================================================
 
-.. automodule:: common.algo.request
-   :synopsis: A set of AlgoComponents interrogating various databases.
+.. automodule:: common.tools.bdm
+   :synopsis: Utility classes and function to work with the BDM database
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 1.1.1
+.. versionadded:: 1.1.3
+
 
 Package
 -------
 
 .. autodata:: __all__
 
-Classes
--------
 
-.. autoclass:: GetBDAPResource
+Exceptions
+----------
+
+.. autoclass:: BDMError
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: GetBDMBufr
+.. autoclass:: BDMRequestConfigurationError
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: GetBDMOulan
+.. autoclass:: BDMGetError
    :show-inheritance:
    :members:
    :member-order: alphabetical

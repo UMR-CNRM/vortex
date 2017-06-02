@@ -25,3 +25,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: BDMQuery
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

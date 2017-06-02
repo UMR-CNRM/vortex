@@ -584,3 +584,73 @@ class AddPearp(BlackBox):
     @property
     def realkind(self):
         return 'addpearp'
+
+
+class BDMExecutableBUFR(Script):
+    """An executable to extract BDM BUFR files."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Executable to extract BDM files using Oulan',
+            attr = dict(
+                source = dict(
+                    values  = ['alim.awk', 'alim_olive.awk'],
+                ),
+                kind = dict(
+                    values   = ['bdm_bufr_extract', ],
+                ),
+                gvar=dict(
+                    values=['extract_stuff'],
+                    default='extract_stuff',
+                ),
+                language = dict(
+                    default = 'awk',
+                    values = ['awk'],
+                    optional = True,
+                )
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'bdm_bufr_extract'
+
+    def gget_urlquery(self):
+        """GGET specific query : ``extract``."""
+        return 'extract=' + self.source
+
+    def command_line(self, **opts):
+        """Returns optional attribute :attr:`rawopts`."""
+        args = []
+        if 'query' in opts:
+            args.append(opts['query'])  # The query name
+        superraw = super(BDMExecutableBUFR, self).command_line(**opts)
+        if superraw:
+            args.append(superraw)  # Other arguments provided by the user
+        return ' '.join(args)
+
+
+class BDMExecutableOulan(BlackBox):
+    """An executable to extract BDM files using Oulan."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Executable to extract BDM BUFR files',
+            attr = dict(
+                kind = dict(
+                    values   = ['bdm_oulan_extract', ],
+                ),
+                gvar=dict(
+                    values=['master_oulan'],
+                    default='master_oulan',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'bdm_obsoul_extract'

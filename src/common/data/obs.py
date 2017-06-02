@@ -528,6 +528,10 @@ class ObsMapContent(TextContent):
 
     _delayed_slurp = False
 
+    def __init__(self, **kw):
+        kw.setdefault('discarded', set())
+        super(ObsMapContent, self).__init__(**kw)
+
     @property
     def discarded(self):
         """Set of *odb:data* pairs that will be discarded."""
