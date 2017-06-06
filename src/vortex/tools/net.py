@@ -377,9 +377,6 @@ class StdFtp(object):
         logger.info('FTP <put:%s>', str(destination))
         rc = False
 
-        # PLPL debug
-        self.set_debuglevel(2)
-
         if size is not None:
             try:
                 self.voidcmd('ALLO {:d}'.format(size))
