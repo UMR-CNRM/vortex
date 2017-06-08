@@ -7,7 +7,9 @@ import six
 import sys
 import collections
 
-from .util import diverging_digit, get_maxint, find_line_containing
+from .util import (number_of_different_digits,
+                   find_line_containing,
+                   ParsingError)
 
 #: Automatic export
 __all__ = ['Norms', 'Norm', 'NormComparison', 'compare_norms']
@@ -17,6 +19,7 @@ patterns = {'norms': 'NORMS AT NSTEP CNT4',
             'gpnorms partA': 'GPNORM',
             'gpnorms partB': 'GPNORMS OF FIELDS TO BE WRITTEN OUT ON FILE :',
             'fullpos gpnorms': 'FULL-POS GPNORMS', }
+PARSING_ERROR_CODE = 999
 
 
 class Norms(object):
@@ -56,18 +59,21 @@ class Norms(object):
         """Return the first and last indexes of norms."""
         if len(self.norms) == 0:
             self._parse_listing(**kw)
-        if 'PREDICTOR' in self.norms[0].keys():
-            first = (0, ['PREDICTOR'])
+        if len(self.norms) == 1:
+            first_and_last = [('_', [None])]
         else:
-            first = (0, [None])
-        last = max(self.norms.keys())
-        if 'CORRECTOR' in self.norms[last].keys():
-            last = (last, ['CORRECTOR'])
-        elif 'PREDICTOR' in self.norms[last].keys():
-            last = (last, ['PREDICTOR'])
-        else:
-            last = (last, [None])
-        first_and_last = [first, last]
+            if 'PREDICTOR' in self.norms[0].keys():
+                first = (0, ['PREDICTOR'])
+            else:
+                first = (0, [None])
+            last = max(self.norms.keys())
+            if 'CORRECTOR' in self.norms[last].keys():
+                last = (last, ['CORRECTOR'])
+            elif 'PREDICTOR' in self.norms[last].keys():
+                last = (last, ['PREDICTOR'])
+            else:
+                last = (last, [None])
+            first_and_last = [first, last]
         return first_and_last
 
     def _parse_listing(self, source):
@@ -83,29 +89,40 @@ class Norms(object):
                 lines = [l.rstrip("\n") for l in listfh]
 
         _indexes_of_found_norms = []
+        first_if_empty = None
         for i, line in enumerate(lines):
             if patterns['norms'] in line:
                 _indexes_of_found_norms.append(i)
+            if len(_indexes_of_found_norms) == 0 and patterns['spectral norms'] in line:
+                first_if_empty = i
         _indexes_of_found_norms.append(-1)  # for last interval
+        if len(_indexes_of_found_norms) == 1:
+            # no "NORMS AT NSTEP CNT4" found
+            if first_if_empty is not None:
+                _indexes_of_found_norms.insert(0, first_if_empty)
 
         # spectral norms
         def getspnorm(fld, extract):
             val = None
-            (idx, line) = find_line_containing(fld, extract)
-            line = line.split()
-            if fld in ('LOG(PREHYDS)', 'OROGRAPHY'):
-                # special case syntax
-                if idx is not None:  # fld is found
-                    try:
-                        val = line[line.index(fld) + 1]
-                    except ValueError:
-                        val = None
-            else:
-                if idx is not None:  # fld is found
-                    if extract[idx + 1].split()[0] != 'AVE':
-                        raise NotImplementedError
-                    else:
-                        val = extract[idx + 1].split()[line.index(fld.split()[0])]  # .split()[0] necessary for KINETIC ENERGY
+            # check that the header for spectral norms is found
+            if find_line_containing(patterns['spectral norms'], extract)[0] is not None:
+                (idx, line) = find_line_containing(fld, extract)
+                line = line.split()
+                if fld in ('LOG(PREHYDS)', 'OROGRAPHY'):
+                    # special case syntax
+                    if idx is not None:  # fld is found
+                        try:
+                            val = line[line.index(fld) + 1]
+                        except ValueError:
+                            val = None
+                else:
+                    if idx is not None:  # fld is found
+                        if extract[idx + 1].split()[0] != 'AVE':
+                            print(extract[idx])
+                            print(extract[idx + 1])
+                            raise NotImplementedError
+                        else:
+                            val = extract[idx + 1].split()[line.index(fld.split()[0])]  # .split()[0] necessary for KINETIC ENERGY
 
             return val
 
@@ -134,7 +151,8 @@ class Norms(object):
                 (idx, _) = find_line_containing(pattern, sub_extract)
                 if idx is not None:
                     idx += 2
-                    while (len(sub_extract[idx]) > colon_position and
+                    while (idx < len(sub_extract) and
+                           len(sub_extract[idx]) > colon_position and
                            sub_extract[idx][colon_position] == ':'):
                         [fld, vals] = sub_extract[idx].split(':')
                         fld = fld.strip()
@@ -153,23 +171,30 @@ class Norms(object):
             index = _indexes_of_found_norms[i]
             index_p_1 = _indexes_of_found_norms[i + 1]  # last interval finishes at index -1
             _extract = lines[index:index_p_1]
-            # pattern line has syntax: "NORMS AT NSTEP CNT4 (<substep>)    <nstep>"
-            # get nstep and substep
-            nstep = int(lines[index].split()[-1])
-            substep = None
-            for ss in ('PREDICTOR', 'CORRECTOR'):
-                if ss in lines[index]:
-                    substep = ss
-                    break
+            if patterns['norms'] in lines[index]:
+                # pattern line has syntax: "NORMS AT NSTEP CNT4 (<substep>)    <nstep>"
+                # get nstep and substep
+                nstep = int(lines[index].split()[-1])
+                substep = None
+                for ss in ('PREDICTOR', 'CORRECTOR'):
+                    if ss in lines[index]:
+                        substep = ss
+                        break
+            else:
+                # special case, norms print without any "NORMS AT NSTEP CNT4"
+                nstep = '_'
+                substep = None
             _norm = Norm(nstep, substep=substep)
 
             # process
+            # a: spectral
             for fld in ('LOG(PREHYDS)', 'OROGRAPHY', 'VORTICITY', 'DIVERGENCE',
                         'TEMPERATURE', 'KINETIC ENERGY', 'LOG(PRE/PREHYD)',
                         'd4 = VERT DIV + X'):
                 _val = getspnorm(fld, _extract)
                 if _val is not None:
                     _norm.spnorms[fld] = _val
+            # b: gridpoint
             gpnorms_syntaxA(_extract, _norm)
             gpnorms_syntaxB(_extract, _norm, patterns['gpnorms partB'], 18)
             gpnorms_syntaxB(_extract, _norm, patterns['fullpos gpnorms'], 26)
@@ -244,12 +269,12 @@ class NormComparison(object):
         Or worst of the worst of 'both'.
         """
         if ntype == 'both':
-            worst = get_maxint({'spectral': get_maxint(self.sp_comp),
-                                'gridpoint': get_maxint(self.gp_comp)})
+            worst = max(self.sp_comp.values() + self.gp_comp.values())
         elif ntype == 'spectral':
-            worst = get_maxint(self.sp_comp)
+            worst = max(self.sp_comp.values())
         elif ntype == 'gridpoint':
-            worst = get_maxint(self.gp_comp)
+            worst = max(self.gp_comp.values())
+
         return worst
 
     def write(self, out=sys.stdout, onlymaxdiff=False):
@@ -263,7 +288,7 @@ class NormComparison(object):
                 _write_normcomp_for_field('Worst norm comparison',
                                           self.get_worst('spectral'),
                                           out)
-        if len(self.sp_comp) > 0:
+        if len(self.gp_comp) > 0:
             out.write('### GRIDPOINT NORMS ###\n')
             out.write('######################\n')
             if not onlymaxdiff:
@@ -290,13 +315,19 @@ def compare_norms(test_norm, ref_norm, only=None):
         # spnorms
         common_flds = set(test_norm.spnorms.keys()).intersection(set(ref_norm.spnorms.keys()))
         for f in sorted(common_flds):
-            comp_spnorms[f] = _compare_spnorm_for(f, test_norm, ref_norm)
+            try:
+                comp_spnorms[f] = _compare_spnorm_for(f, test_norm, ref_norm)
+            except ParsingError:
+                comp_spnorms[f] = PARSING_ERROR_CODE
 
     if only != 'spectral':
         # gpnorms
         common_flds = set(test_norm.gpnorms.keys()).intersection(set(ref_norm.gpnorms.keys()))
         for f in sorted(common_flds):
-            comp_gpnorms[f] = _compare_gpnorm_for(f, test_norm, ref_norm)
+            try:
+                comp_gpnorms[f] = _compare_gpnorm_for(f, test_norm, ref_norm)
+            except ParsingError:
+                comp_gpnorms[f] = PARSING_ERROR_CODE
 
     return (comp_spnorms, comp_gpnorms)
 
@@ -305,8 +336,8 @@ def _compare_spnorm_for(field, test_norm, ref_norm):
     """Compare spectral norms of two Norm objects for **field**."""
     assert isinstance(test_norm, Norm)
     assert isinstance(ref_norm, Norm)
-    return diverging_digit(test_norm.spnorms[field],
-                           ref_norm.spnorms[field])
+    return number_of_different_digits(test_norm.spnorms[field],
+                                      ref_norm.spnorms[field])
 
 
 def _compare_gpnorm_for(field, test_norm, ref_norm):
@@ -315,14 +346,9 @@ def _compare_gpnorm_for(field, test_norm, ref_norm):
     assert isinstance(ref_norm, Norm)
     norms = {}
     for s in ('average', 'minimum', 'maximum'):
-        norms[s] = diverging_digit(test_norm.gpnorms[field][s],
-                                   ref_norm.gpnorms[field][s])
-    if all([v is None for v in norms.values()]):
-        digit = None
-    elif '?' in norms.values():
-        digit = '?'
-    else:
-        digit = min([v for v in norms.values() if v is not None])
+        norms[s] = number_of_different_digits(test_norm.gpnorms[field][s],
+                                              ref_norm.gpnorms[field][s])
+    digit = max(norms.values())
     return digit
 
 
@@ -331,14 +357,14 @@ def _write_normcomp_for_field(fieldname, digit, out=sys.stdout):
     fieldname_width = 30
     digits_len = 2
     arrow = ' --> '
-    idupto = 'identical up to {:>{width}} digits'
+    diffdigits = '{:>{width}} last digits differ'
     unable = '??? unable to compare, check manually ???'
-    fmt = arrow + idupto
-    fmtlen = len(idupto.format('', width=digits_len))
-    if digit is None:
+    fmt = arrow + diffdigits
+    fmtlen = len(diffdigits.format('', width=digits_len))
+    if digit is None or digit == 0:
         out.write('{:>{width}}'.format(fieldname, width=fieldname_width) +
                   ' --> {:=<{width}}'.format('', width=fmtlen))
-    elif digit == '?':
+    elif digit == PARSING_ERROR_CODE:
         out.write('{:>{width}}'.format(fieldname, width=fieldname_width) +
                   ' --> {:<{width}}'.format(unable, width=len(unable)))
     else:

@@ -15,28 +15,28 @@ def compare_files(file_test, file_ref,
                   out=sys.stdout,
                   pattern='norms',
                   # 'norms' arguments:
+                  mode='standalone',
                   onlymaxdiff=False,
-                  mode='first_and_last',
-                  printmode='standalone',
+                  which='first_and_last',
                   # 'Jo-tables' arguments:
                   nthres=jo_tables.DEFAULT_N_THRESHOLD,
                   jothres=jo_tables.DEFAULT_JO_THRESHOLD,
                   bw=False):
     """Compare the output listings of two files.
 
-    **pattern**: the pattern to be compared, among ('norms', 'Jo-tables')
+    :param pattern: the pattern to be compared, among ('norms', 'Jo-tables')
 
     'norms' arguments:
-        * **onlymaxdiff**: only max difference is printed for each step.
-        * **mode**: either 'all' to compare norms for all steps found in listings,
-          or 'first_and_last' (default) for the first and last only.
-        * **printmode**: if 'standalone', prints the comparison to file;
-          if 'jobs_manager', return the worst digits comparison.
+        :param onlymaxdiff: only max difference is printed for each step.
+        :param which: either 'all' to compare norms for all steps found in listings,
+                      or 'first_and_last' (default) for the first and last only.
+        :param mode: if 'standalone', prints the comparison to file;
+                     if 'get_worst', return the worst digits comparison.
 
     'Jo-tables' arguments:
-        * **nthres**: Alert threshold on the ObsCount
-        * **jothres**: Alert threshold on the Jo
-        * **bw**: Black & White flag
+        :param nthres: Alert threshold on the ObsCount
+        :param jothres: Alert threshold on the Jo
+        :param bw: Black & White flag
 
     """
 
@@ -55,10 +55,10 @@ def compare_files(file_test, file_ref,
     if test.end_is_reached and ref.end_is_reached:
         if test.patterns_count > 0 and ref.patterns_count > 0:
             comp_out = listings.compare(test, ref,
-                                        out=out,
                                         mode=mode,
+                                        out=out,
+                                        which=which,
                                         onlymaxdiff=onlymaxdiff,
-                                        printmode=printmode,
                                         nthres=nthres,
                                         jothres=jothres,
                                         bw=bw)

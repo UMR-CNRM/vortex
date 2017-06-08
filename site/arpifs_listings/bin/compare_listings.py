@@ -37,10 +37,10 @@ if __name__ == '__main__':
                          action='store_const',
                          const='Jo-tables',
                          help='Compare Jo-Tables')
-    parser.add_argument('-m',
-                        dest='mode',
+    parser.add_argument('-w',
+                        dest='which',
                         default='first_and_last',
-                        help=("Mode (for 'norms' comparison only): either 'all' to " +
+                        help=("(for 'norms' comparison only): either 'all' to " +
                               "compare norms for all steps found in listings, " +
                               "or 'first_and_last' (default) for the first and last only."))
     parser.add_argument('--n-threshold', '--nt',
@@ -71,9 +71,10 @@ if __name__ == '__main__':
         out = open(args.out, 'w')
 
     arpifs_listings.compare_files(args.listings[0], args.listings[1],
+                                  mode='standalone',
                                   out=out,
                                   pattern=args.pattern,
-                                  mode=args.mode,
+                                  which=args.which,
                                   onlymaxdiff=args.onlymaxdiff,
                                   nthres=args.nthres,
                                   jothres=args.jothres,

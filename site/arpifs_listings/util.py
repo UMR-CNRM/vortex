@@ -4,9 +4,17 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
+import re
 
 #: No automatic export
 __all__ = []
+
+# regular expressions tools
+_sign = '(?P<sign>(\-|0))'
+_dot = '\.'
+_digits = '(?P<digits>\d+)'
+_exp = 'E?(?P<exp>(\+|\-)\d{2,3})'
+re_for_fortran_scientific_format = re.compile(_sign + _dot + _digits + _exp + '$')
 
 
 def find_line_containing(pattern, lines):
@@ -28,56 +36,118 @@ def find_line_containing(pattern, lines):
 
 def diverging_digit(t, r):
     """
-    Get the index of the first diverging digit between two floats
-    **t** (test) and **r** (ref), given as scientific format strings !
+    Get the index (starting from 0) of the first diverging digit between two
+    floats **t** (test) and **r** (ref), given as scientific format strings !
 
-    **t** and **r** syntax example: '0.256351366366780E+03'
+    **t** and **r** syntax examples:
+    '0.256351366366780E-03'
+    '-.256351366366780E+03'
+    '0.256351366366780-305' (misformatted E-305)
 
-    If both are identical, return *None*.
-    If comparison is not possible (due to formatting reason), return '?'.
+    If comparison is not possible (due to formatting reason),
+    raises ParsingError.
     """
 
-    ts = t.split('E')
-    rs = r.split('E')
-    exponents_are_OK = (len(ts) == len(rs) == 2)
     if t == r:
         digit = None
     else:
-        if exponents_are_OK:
-            [t_digits, t_exp] = ts[:]
-            [r_digits, r_exp] = rs[:]
-            if t_exp == r_exp:
-                # identical exponents
-                for i in range(len(r_digits[2:])):
-                    if r_digits[2:][i] != t_digits[2:][i]:
-                        digit = i
-                        break
-            else:
-                # exponents differ
-                exponent = int(r_exp)
-                d = float(t) - float(r)
-                d = d * (10 ** -exponent)
-                diff = str(d)
-                for i in range(len(diff)):
-                    if diff[2:][i] != '0':  # look for non-0
-                        digit = i
-                        break
+        digit = number_of_different_digits(t, r)
+        if digit == 0:
+            digit = None
         else:
-            digit = '?'
+            r_re = re_for_fortran_scientific_format.match(r)
+            digits_len = len(r_re.group('digits'))
+            digit = digits_len - digit
     return digit
 
 
-def get_maxint(a_dict, infinity=99):
+class ParsingError(ValueError):
+    """Error class while parsing a float in scientific format."""
+    pass
+
+
+def number_of_different_digits(t, r):
     """
-    Get the max value of a dict, assuming its values are int.
+    Get the number of different digits between two floats
+    **t** (test) and **r** (ref), given as scientific format strings !
+
+    **t** and **r** syntax examples:
+    '0.256351366366780E-03'
+    '-.256351366366780E+03'
+    '0.256351366366780-305' (misformatted E-305)
+
+    If comparison is not possible (due to formatting reason),
+    raises ParsingError.
+    """
+
+    if t == r:
+        digit = 0
+    else:
+        t_re = re_for_fortran_scientific_format.match(t)
+        r_re = re_for_fortran_scientific_format.match(r)
+        if t_re and r_re:
+            t_sign = t_re.group('sign')
+            r_sign = r_re.group('sign')
+            t_digits = t_re.group('digits')
+            r_digits = r_re.group('digits')
+            t_exp = t_re.group('exp')
+            r_exp = r_re.group('exp')
+            digits_len = len(r_digits)
+            digit = digits_len
+            if t_exp == r_exp:
+                # identical exponents
+                if t_sign != r_sign:
+                    # different signs: find the first non-zero digit
+                    for i in range(digits_len):
+                        if r_digits[i] != '0' or t_digits[i] != '0':
+                            digit = i
+                            break
+                else:
+                    # identical signs
+                    for i in range(digits_len):
+                        if r_digits[i] != t_digits[i]:
+                            digit = i
+                            break
+            else:
+                # exponents differ
+                exponent = int(r_exp)
+                t = float(t_sign + '.' + t_digits + 'E' + t_exp)
+                r = float(r_sign + '.' + r_digits + 'E' + r_exp)
+                d = float(t) - float(r)
+                d = d * (10 ** -exponent)
+                diff = '{:+.{nd}F}'.format(d, nd=digits_len)
+                # diff has format '+n.nnnnnnnnnnnnnnnn'
+                for i in range(len(diff) - 3):
+                    if diff[1] != '0':
+                        digit = 0
+                        break
+                    if diff[3:][i] != '0':  # look for non-0
+                        digit = i
+                        break
+            digit = digits_len - digit
+        else:
+            if not t_re:
+                raise ParsingError('unable to parse test float: ' + t_re)
+            if not r_re:
+                raise ParsingError('unable to parse ref float: ' + r_re)
+    return digit
+
+
+def get_maxint(container, infinity=-999):
+    """
+    Get the max value of a dict or a list, assuming its values are int.
     None values are ignored, str values come out as max.
     """
 
-    assert isinstance(a_dict, dict)
+    assert (isinstance(container, dict) or
+            isinstance(container, list) or
+            isinstance(container, tuple))
     digit = infinity
-    for d in a_dict.values():
+    if isinstance(container, dict):
+        container = list(container.values())
+    for d in container:
         if isinstance(d, int):
-            digit = min(digit, d)
+            digit = max(digit, d)
         elif isinstance(d, six.string_types):
             digit = d
             break

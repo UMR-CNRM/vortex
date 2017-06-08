@@ -4,12 +4,15 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import sys
+import six
 
 from .norms import Norms, NormComparison
 from . import jo_tables
 
 #: No automatic export
 __all__ = []
+
+CRASHED_JOB_ERROR_CODE = -1
 
 
 class OutputListing(object):
@@ -34,7 +37,7 @@ class OutputListing(object):
 
         # read listing in file
         with open(self.filename, 'r') as f:
-            self.lines = [l.rstrip("\n") for l in f]  # to remove trailing '\n'
+            self.lines = [six.u(l).rstrip("\n") for l in f]  # to remove trailing '\n'
 
     def __len__(self):
         return len(self.lines)
@@ -114,54 +117,57 @@ def compare(test, ref, **kwargs):
 
 
 def compare_norms(test, ref,
-                  mode='first_and_last',
+                  mode,
+                  which='first_and_last',
                   out=sys.stdout,
                   onlymaxdiff=False,
-                  printmode='standalone',
                   **ignored_kwargs):
     """Compare two 'norms' pattern-type output listings.
 
-    :param mode: either 'all' to compare norms for all steps found in listings,
-                 or 'first_and_last' (default) for the first and last only.
+    :param which: either 'all' to compare norms for all steps found in listings,
+                  or 'first_and_last' (default) for the first and last only.
 
     :param onlymaxdiff: only max difference is printed for each step.
-    :param printmode: if 'standalone', prints the comparison to file;
-                      if 'jobs_manager', return the worst digits comparison.
+    :param mode: if 'standalone', prints the comparison to file;
+                 if 'get_worst_by_step', get worst digits for each step;
+                 if 'get_worst' get worst of worst digits comparison.
     """
 
     assert ref.end_is_reached
     assert test.end_is_reached
     assert len(ref.norms) > 0
     assert len(test.norms) > 0
+    assert mode in ('standalone', 'get_worst', 'get_worst_by_step')
 
-    if mode == 'first_and_last':
+    if which == 'first_and_last':
         ref_set = ref.norms.get_first_and_last_norms_indexes()
         test_set = test.norms.get_first_and_last_norms_indexes()
-    elif mode == 'all':
+    elif which == 'all':
         ref_set = [(nstep, sorted(ref.norms[nstep].keys(), reverse=True))
                    for nstep in sorted(ref.norms.steps())]
         test_set = [(nstep, sorted(test.norms[nstep].keys(), reverse=True))
                     for nstep in sorted(test.norms.steps())]
     assert ref_set == test_set, "set of norms differ between ref and test."
 
-    if printmode == 'jobs_manager':
+    if 'get_worst' in mode:
         worstdigits = []
     for (nstep, subsets) in ref_set:
         for subset in subsets:
             norm_comp = NormComparison(test.norms[nstep][subset],
                                        ref.norms[nstep][subset])
-            if printmode == 'standalone':
+            if mode == 'standalone':
                 nstepline = 'NSTEP = ' + str(nstep)
                 if subset is not None:
                     nstepline += ' (' + subset + ')'
                 out.write(nstepline + '\n')
                 norm_comp.write(out, onlymaxdiff)
                 out.write('-' * 80 + '\n')
-            elif printmode == 'jobs_manager':
-                assert mode == 'first_and_last'
+            elif 'get_worst' in mode:
                 assert onlymaxdiff is True
                 worstdigits.append(norm_comp.get_worst('both'))
-    if printmode == 'jobs_manager':
+    if mode == 'get_worst':
+        return max(worstdigits)
+    elif mode == 'get_worst_by_step':
         return worstdigits
     else:
         return None
