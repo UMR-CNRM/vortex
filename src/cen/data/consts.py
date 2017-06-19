@@ -9,7 +9,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 from common.data.consts import GenvStaticGeoResource
 from common.data.namelists import Namelist, NamelistContent
-from snowtools.Model.update_namelist import update_surfex_namelist
+from snowtools.update_namelist import update_surfex_namelist
 
 
 class SurfexNamelistUpdate(update_surfex_namelist, NamelistContent):
