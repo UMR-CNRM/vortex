@@ -346,10 +346,10 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     lfi_mv = lfi_move = fa_mv = fa_move = _std_move
 
-    def _std_scp(self, source, destination, hostname, logname=None):
+    def _std_scpput(self, source, destination, hostname, logname=None):
         """On the fly packing and scp."""
         if not self.is_xlfi(source):
-            rc = self.sh.scp(source, destination, hostname, logname)
+            rc = self.sh.scpput(source, destination, hostname, logname)
         else:
             ssh = self.sh.ssh(hostname, logname)
             permissions = ssh.get_permissions(source)
@@ -357,11 +357,11 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             # go on on failure : the .d lingers on, but the lfi will be self-contained
             ssh.remove(destination + '.d')
             p = self._pack_stream(source)
-            rc = ssh.scp_stream(p.stdout, destination, permissions=permissions)
+            rc = ssh.scpput_stream(p.stdout, destination, permissions=permissions)
             self.sh.pclose(p)
         return rc
 
-    fa_scp = lfi_scp = _std_scp
+    fa_scpput = lfi_scpput = _std_scpput
 
 
 class LFI_Tool_Py(LFI_Tool_Raw):

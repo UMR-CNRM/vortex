@@ -15,6 +15,7 @@ import os
 import pickle
 import platform
 import pwd as passwd
+import random
 import re
 import resource
 import shutil
@@ -35,7 +36,7 @@ from opinel.cpus_tool import LinuxCpusInfo
 from vortex.gloves import Glove
 from vortex.tools import date
 from vortex.tools.env import Environment
-from vortex.tools.net import StdFtp
+from vortex.tools.net import StdFtp, AssistedSsh, LinuxNetstats
 from vortex.util.decorators import nicedeco
 from vortex.util.structs import History
 from vortex.syntax.stdattrs import DelayedInit
@@ -164,6 +165,7 @@ class System(footprints.FootprintBase):
         self.__dict__['_history'] = History(tag='shell')
         self.__dict__['_rclast'] = 0
         self.__dict__['_cpusinfo'] = None
+        self.__dict__['_netstatsinfo'] = None
         self.__dict__['prompt'] = ''
         for flag in ('trace', 'timer'):
             self.__dict__[flag] = kw.pop(flag, False)
@@ -740,7 +742,7 @@ class System(footprints.FootprintBase):
         return CdContext(self, path, create)
 
     def ssh(self, hostname, logname=None, *args, **kw):
-        return Ssh(self, hostname, logname, *args, **kw)
+        return AssistedSsh(self, hostname, logname, *args, **kw)
 
     @property
     def cpus_info(self):
@@ -757,6 +759,20 @@ class System(footprints.FootprintBase):
             list: Starting command prefix, dict: Environment update)
         """
         return (False, list(), dict())
+
+    @property
+    def netstatsinfo(self):
+        return self._netstatsinfo
+
+    def available_localport(self):
+        if self.netstatsinfo is None:
+            raise NotImplementedError('This function is not implemented on this system.')
+        return self.netstatsinfo.available_localport()
+
+    def check_localport(self, port):
+        if self.netstatsinfo is None:
+            raise NotImplementedError('This function is not implemented on this system.')
+        return self.netstatsinfo.check_localport(port)
 
 
 class OSExtended(System):
@@ -973,13 +989,28 @@ class OSExtended(System):
             return self.ftget(source, destination, hostname=hostname, logname=logname, fmt=fmt)
 
     @fmtshcmd
-    def scp(self, source, destination, hostname, logname=None):
+    def scpput(self, source, destination, hostname, logname=None):
         """Perform an scp to the specified target."""
-
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
-        self.stderr('scp', source, destination, msg)
         ssh = self.ssh(hostname, logname)
-        return ssh.scp(source, destination)
+        if isinstance(source, basestring):
+            self.stderr('scpput', source, destination, msg)
+            return ssh.scpput(source, destination)
+        else:
+            self.stderr('scpput_stream', source, destination, msg)
+            return ssh.scpput_stream(source, destination)
+
+    @fmtshcmd
+    def scpget(self, source, destination, hostname, logname=None):
+        """Perform an scp to the specified source."""
+        msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
+        ssh = self.ssh(hostname, logname)
+        if isinstance(destination, basestring):
+            self.stderr('scpget', source, destination, msg)
+            return ssh.scpget(source, destination)
+        else:
+            self.stderr('scpget_stream', source, destination, msg)
+            return ssh.scpget_stream(source, destination)
 
     def softlink(self, source, destination):
         """Set a symbolic link if source is not destination."""
@@ -1662,6 +1693,7 @@ class Linux(OSExtended):
         self._psopts = kw.pop('psopts', ['-w', '-f', '-a'])
         super(Linux, self).__init__(*args, **kw)
         self.__dict__['_cpusinfo'] = LinuxCpusInfo()
+        self.__dict__['_netstatsinfo'] = LinuxNetstats()
 
     @property
     def realkind(self):
@@ -1772,206 +1804,3 @@ class Macosx(OSExtended, Python27):
     def default_syslog(self):
         """Address to use in logging.handler.SysLogHandler()."""
         return '/var/run/syslog'
-
-
-class Ssh(object):
-    """Remote command execution via ssh.
-
-    Also handles remote copy via scp or ssh, which is intimately linked
-    """
-    def __init__(self, sh, hostname, logname=None, sshopts=None, scpopts=None):
-        self._sh = sh
-        if logname:
-            self._remote = logname + '@' + hostname
-        else:
-            self._remote = hostname
-
-        target = sh.default_target
-        self._sshcmd = target.get(key='services:sshcmd', default='ssh')
-        self._scpcmd = target.get(key='services:scpcmd', default='scp')
-        self._sshopts = ' '.join([
-            target.get(key='services:sshopts', default='-x'),
-            target.get(key='services:sshretryopts', default=''),
-            sshopts or '',
-        ])
-        self._scpopts = ' '.join([
-            target.get(key='services:scpopts', default='-Bp'),
-            target.get(key='services:scpretryopts', default=''),
-            scpopts or '',
-        ])
-
-    @property
-    def sh(self):
-        return self._sh
-
-    def remote(self):
-        return self._remote
-
-    def check_ok(self):
-        """Is the connexion ok ?"""
-        return self.execute('true') is not False
-
-    @staticmethod
-    def quote(s):
-        """Quote a string so that it can be used as an argument in a posix shell."""
-        try:
-            # py3
-            from shlex import quote
-        except ImportError:
-            # py2
-            from pipes import quote
-        return quote(s)
-
-    def execute(self, remote_command, sshopts=''):
-        """Execute the command remotely.
-
-        Return the output of the command (list of lines), or False on error.
-
-        Only the output sent to the log (when silent=False) shows the difference
-        between:
-
-            - a bad connection (e.g. wrong user)
-            - a remote command retcode != 0 (e.g. cmd='/bin/false')
-
-        """
-        cmd = ' '.join([
-            self._sshcmd,
-            self._sshopts,
-            sshopts,
-            self._remote,
-            self.quote(remote_command)
-        ])
-        return self.sh.spawn(cmd, shell=True, output=True, fatal=False)
-
-    def cocoon(self, destination):
-        """Create the remote directory to contain ``destination``.
-           Return False on failure.
-        """
-        remote_dir = self.sh.path.dirname(destination)
-        if remote_dir == '':
-            return True
-        logger.debug('Cocooning remote directory "%s"', remote_dir)
-        cmd = 'mkdir -p "{}"'.format(remote_dir)
-        rc = self.execute(cmd)
-        if not rc:
-            logger.error('Cannot cocoon on %s for %s', self._remote, destination)
-        return rc
-
-    def remove(self, target):
-        """Remove the remote target, if present. Return False on failure.
-
-        Does not fail when the target is missing, but does when it exists
-        and cannot be removed, which would make a final move also fail.
-        """
-        logger.debug('Removing remote target "%s"', target)
-        cmd = 'rm -fr "{}"'.format(target)
-        rc = self.execute(cmd)
-        if not rc:
-            logger.error('Cannot remove from %s item "%s"', self._remote, target)
-        return rc
-
-    def scp(self, source, destination, scpopts=''):
-        """Send ``source`` to ``destination``.
-
-        - ``source`` is a single file or a directory, not a pattern (no '\*.grib').
-        - ``destination`` is the remote name, unless it ends with '/', in
-          which case it is the containing directory, and the remote name is
-          the basename of ``source`` (like a real cp or scp):
-
-            - ``scp a/b.gif c/d.gif --> c/d.gif``
-            - ``scp a/b.gif c/d/    --> c/d/b.gif``
-
-        Return True for ok, False on error.
-        """
-        if not isinstance(source, basestring):
-            msg = 'Source is not a plain file path: {!r}'.format(source)
-            raise TypeError(msg)
-
-        if not isinstance(destination, basestring):
-            msg = 'Destination is not a plain file path: {!r}'.format(destination)
-            raise TypeError(msg)
-
-        if not self.sh.path.exists(source):
-            logger.error('No such file or directory: %s', source)
-            return False
-
-        # avoid special cases
-        source = self.sh.path.realpath(source)
-        if destination == '' or destination == '.':
-            destination = './'
-        else:
-            if destination.endswith('..'):
-                destination += '/'
-            if '../' in destination:
-                raise ValueError('"../" is not allowed in the destination path')
-
-        if destination.endswith('/'):
-            destination = self.sh.path.join(destination, self.sh.path.basename(source))
-
-        if not self.remove(destination):
-            return False
-
-        if not self.cocoon(destination):
-            return False
-
-        # transfer to a temporary place.
-        # when ``destination`` contains spaces, 2 rounds of quoting
-        # are necessary, to avoid an 'scp: ambiguous target' error.
-        isadir = self.sh.path.isdir(source)
-        if isadir:
-            scpopts = ' '.join([scpopts, '-r'])
-        cmd = ' '.join([
-            self._scpcmd,
-            self._scpopts,
-            scpopts,
-            self.quote(source),
-            self._remote + ':' + self.quote(self.quote(destination + '.tmp')),
-        ])
-        rc = self.sh.spawn(cmd, shell=True, output=False, fatal=False)
-        if rc:
-            # success, rename the tmp
-            rc = self.execute('mv "{0}.tmp" "{0}"'.format(destination))
-        return rc
-
-    def get_permissions(self, source):
-        """Convenience method to retrieve the permissions
-           of a file/dir (in a form suitable for chmod).
-        """
-        mode = self.sh.stat(source).st_mode
-        return stat.S_IMODE(mode)
-
-    def scp_stream(self, stream, destination, permissions=None, sshopts=''):
-        """Send the ``stream`` to the ``destination``.
-
-        - ``stream`` is a ``file`` (typically returned by open(),
-          or the piped output of a spawned process).
-        - ``destination`` is the remote file name.
-
-        Return True for ok, False on error.
-        """
-        if not isinstance(stream, file):
-            msg = "stream is a {}, should be a <type 'file'>".format(type(stream))
-            raise TypeError(msg)
-
-        if not isinstance(destination, basestring):
-            msg = 'Destination is not a plain file path: {!r}'.format(destination)
-            raise TypeError(msg)
-
-        if not self.remove(destination):
-            return False
-
-        if not self.cocoon(destination):
-            return False
-
-        # transfer to a tmp, rename and set permissions in one go
-        remote_cmd = 'cat > {0}.tmp && mv {0}.tmp {0}'.format(self.quote(destination))
-        if permissions:
-            remote_cmd += ' && chmod -v {} {}'.format(oct(permissions), self.quote(destination))
-        cmd = ' '.join([
-            self._sshcmd,
-            self._sshopts,
-            sshopts,
-            self._remote,
-            self.quote(remote_cmd)
-        ])
-        return self.sh.spawn(cmd, shell=True, stdin=stream, output=False, fatal=False)

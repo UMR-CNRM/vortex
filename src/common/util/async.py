@@ -118,8 +118,8 @@ def system_scp(pnum, ask, config, logger, **opts):
         logger.info('scp host', hostname=data.hostname, logname=data.logname)
         logger.info('scp data', source=data.source, destination=data.destination)
         try:
-            putrc = sh.scp(data.source, data.destination, hostname=data.hostname,
-                           logname=data.logname, fmt=data.fmt)
+            putrc = sh.scpput(data.source, data.destination, hostname=data.hostname,
+                              logname=data.logname, fmt=data.fmt)
         except StandardError as e:
             logger.warning('scp failed', error=e)
             putrc = False

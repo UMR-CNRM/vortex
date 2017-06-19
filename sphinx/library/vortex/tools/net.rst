@@ -32,3 +32,39 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: Ssh
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ActiveSshTunnel
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: AssistedSsh
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: AbstractNetstats
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: TcpConnectionStatus
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: UdpConnectionStatus
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: LinuxNetstats
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+ 
