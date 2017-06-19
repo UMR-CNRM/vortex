@@ -135,7 +135,8 @@ class SafranWorker(VortexWorkerBlindRun):
             self.system.symlink(self.system.path.join(rundir, 'IMPRESS'), 'IMPRESS')
 
         # Generate the 'OPxxxxx' files containing links for the safran execution.
-        for op_file in _OP_files_common[self.vconf]:
+        vconf = self.vconf.split('@')[0]
+        for op_file in _OP_files_common[vconf]:
             with open(op_file, 'w') as f:
                 f.write(rundir + '@\n')
 
@@ -205,6 +206,27 @@ class SafraneWorker(SafranWorker):
             self.local_spawn(list_name)
 
 
+class SypluieWorker(SafranWorker):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['sypluie']
+            ),
+        )
+    )
+
+    def _safran_task(self, rundir, thisdir, rdict):
+        for day, dterms in self.days.items():
+            logger.info('Running day : %s', str(day))
+            self.sapdat(dterm[-1])
+            # Creation of the 'sapfich' file containing the name of the output file
+            with open('sapfich', 'w') as f:
+                f.write('SAPLUI5' + str(day))
+            list_name = self.system.path.join(thisdir, 'listpluie' + str(term.hour))
+            self.local_spawn(list_name)
+
+
 class SyrpluieWorker(SafranWorker):
 
     _footprint = dict(
@@ -223,6 +245,47 @@ class SyrpluieWorker(SafranWorker):
             self.local_spawn(list_name)
             self.mv_if_exists('fort.21', 'SAPLUI5' + str(day))
 
+
+class SyvaprWorker(SafranWorker):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['syvapr']
+            ),
+        )
+    )
+
+    def _safran_task(self, rundir, thisdir, rdict):
+        for day, dterms in self.days.items():
+            logger.info('Running day : %s', str(day))
+            if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day), ]):
+                self.sapdat(dterms[-1])
+                list_name = self.system.path.join(thisdir, 'listpr' + str(day))
+                self.local_spawn(list_name)
+                self.mv_if_exists('fort.13', 'SAPLUI5' + str(day))
+                self.mv_if_exists('fort.14', 'SAPLUI5_ARP' + str(day))
+                self.mv_if_exists('fort.15', 'SAPLUI5_ANA' + str(day))
+
+
+class SyvafiWorker(SafranWorker):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['syvafi']
+            ),
+        )
+    )
+
+    def _safran_task(self, rundir, thisdir, rdict):
+        for day, dterms in self.days.items():
+            logger.info('Running day : %s', str(day))
+            #if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day), ]):
+            self.sapdat(dterms[-1])
+            list_name = self.system.path.join(thisdir, 'listfi' + str(day))
+            self.local_spawn(list_name)
+                         
 
 class SyrmrrWorker(SafranWorker):
 
@@ -275,6 +338,8 @@ class SytistWorker(SafranWorker):
                 self.local_spawn(list_name)
 
 
+
+
 class Grib2Safran(ParaExpresso):
 
     _footprint = dict(
@@ -310,7 +375,8 @@ class S2M_component(ParaBlindRun):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['safrane', 'syrpluie', 'syrmrr', 'sytist', 'PREP', 'PGD', 'OFFLINE'],
+                values = ['safrane', 'syrpluie', 'syrmrr', 'sytist', 'syplui', 'syvapr',
+                          'syvafi', 'PREP', 'PGD', 'OFFLINE'],
             ),
             date   = a_date,
             members = dict(
@@ -329,7 +395,8 @@ class S2M_component(ParaBlindRun):
             ),
         )
     )
-    
+
+
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
         namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind=('namelist_surfex'))]
@@ -337,18 +404,15 @@ class S2M_component(ParaBlindRun):
         for nam in namcandidates:
             nam.quickview()
         return namcandidates
-    
+
     def _default_pre_execute(self, rh, opts):
         '''Various initialisations. In particular it creates the task scheduler (Boss).'''
         # Start the task scheduler
-        print 'DBUG2'
-        print self.find_namelists()
+        super(S2M_component, self)._default_pre_execute(rh, opts)
         for namelist in self.find_namelists():
             # Update the contents of the namelist (date and location)
             # Location taken in the FORCING file.
-            namelist.clscontents(self.date)
-        super(S2M_component, self)._default_common_instructions(rh, opts)
-
+            namelist.resource.clscontents(self.date)
 
     def _default_common_instructions(self, rh, opts):
         '''Create a common instruction dictionary that will be used by the workers.'''
@@ -360,7 +424,6 @@ class S2M_component(ParaBlindRun):
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
-        print 'DBUG'
         self._default_pre_execute(rh, opts)
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)

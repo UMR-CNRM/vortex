@@ -115,6 +115,82 @@ class Sytist(Safran):
         return 'sytist'
 
 
+class Syvapr(Safran):
+    """Base class for the Sytist executable."""
+
+    _footprint = [
+        dict(
+            info = 'Syvapr executable',
+            attr = dict(
+                kind = dict(
+                    values = ['syvapr']
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'syvapr'
+   
+   
+class Syrper(Safran):
+    """Base class for the Sytist executable."""
+
+    _footprint = [
+        dict(
+            info = 'Syrper executable',
+            attr = dict(
+                kind = dict(
+                    values = ['syrper']
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'syrper'
+    
+    
+class Syvafi(Safran):
+    """Base class for the Sytist executable."""
+
+    _footprint = [
+        dict(
+            info = 'Syvafi executable',
+            attr = dict(
+                kind = dict(
+                    values = ['syvafi']
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'syvafi'  
+
+
+class Sypluie(Safran):
+    """Base class for the Sytist executable."""
+
+    _footprint = [
+        dict(
+            info = 'Sypluie executable',
+            attr = dict(
+                kind = dict(
+                    values = ['sypluie']
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'sypluie'
+
+
 class SafranGribFiltering(Script):
     """Base class for the creation of P files used by SAFRAN."""
 

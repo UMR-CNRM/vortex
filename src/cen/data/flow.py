@@ -7,12 +7,11 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.data.flow import GeoFlowResource
-from common.data.obs import Observations
-from vortex.syntax.stdattrs import term
-from vortex.data.geometries import MassifGeometry
+from vortex.data.flow        import GeoFlowResource
+from common.data.obs         import ObsRaw
+from vortex.data.geometries  import MassifGeometry
 from common.data.modelstates import Historic, InitialCondition
-from vortex.syntax.stdattrs import a_date
+from vortex.syntax.stdattrs  import a_date, term
 
 class SafranGuess(GeoFlowResource):
     """Class for the guess file (P ou E file) that is used by SAFRAN."""
@@ -58,46 +57,51 @@ class SafranGuess(GeoFlowResource):
             term    = self.term.fmthm,
         )
 
+    def origin_basename(self):
+        origin_date = self.date.replace(hour=0)
+        # guess files are named PYYMMDDHH_hh where YYMMDDHH is the creation date and hh the echeance
+        return 'P' + origin_date.yymdh + '_{0:02d}'.format(self.term.hour + 6)
+ 
 
 # TO be continued...
-class SafranRadioSondages(Observations):
-    """Alti files (A files)"""
-
-    _footprint = dict(
-        info = 'Safran Alti',
-        attr = dict(
-            kind = dict(
-                values = ['alti', 'altitude', 'radiosondage', 'RS'],
-            ),
-            nativefmt = dict(
-                values  = ['ascii'],
-                default = 'ascii',
-            ),
-            part = dict(
-                info     = 'The name of this subset of observations.',
-                optional = True,
-                values   = ['full', 'all'],
-                default  = 'all',
-            ),
-            stage = dict(
-                info     = 'The processing stage for this subset of observations.',
-                optional = True,
-                stage    = ['safrane', 'analysis'],
-                default  = 'analysis',
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'radiosondage'
-
-    def basename_info(self):
-        return dict(
-            radical = self.realkind,
-            src = '.'.join(self.stage, self.part),
-            fmt = self.nativefmt,
-        )
+# class SafranRadioSondages(Observations):
+#     """Alti files (A files)"""
+# 
+#     _footprint = dict(
+#         info = 'Safran Alti',
+#         attr = dict(
+#             kind = dict(
+#                 values = ['alti', 'altitude', 'radiosondage', 'RS'],
+#             ),
+#             nativefmt = dict(
+#                 values  = ['ascii'],
+#                 default = 'ascii',
+#             ),
+#             part = dict(
+#                 info     = 'The name of this subset of observations.',
+#                 optional = True,
+#                 values   = ['full', 'all'],
+#                 default  = 'all',
+#             ),
+#             stage = dict(
+#                 info     = 'The processing stage for this subset of observations.',
+#                 optional = True,
+#                 stage    = ['safrane', 'analysis'],
+#                 default  = 'analysis',
+#             ),
+#         )
+#     )
+# 
+#     @property
+#     def realkind(self):
+#         return 'radiosondage'
+# 
+#     def basename_info(self):
+#         return dict(
+#             radical = self.realkind,
+#             src = '.'.join(self.stage, self.part),
+#             fmt = self.nativefmt,
+#         )
 
 
 class SurfaceForcing(GeoFlowResource):
@@ -228,4 +232,108 @@ class Pro(Historic):
             term    = self.term.fmthm,
             fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
+
+class Synop(ObsRaw):
+
+    _footprint = [
+        dict(
+            info = 'SAFRAN S-files (SYNOP observations)',
+            attr = dict(
+                kind = dict(
+                values  = ['synop'],
+                ),
+            ),
+        ),
+    ]
+    
+    @property
+    def realkind(self):
+        return 'synop'
+    
+    def origin_basename(self):
+        return 'S' + self.date.yymdh
+       
+        
+class Precipitation(ObsRaw):
+
+    _footprint = [
+        dict(
+            info = 'SAFRAN R-files (precipitation observations)',
+            attr = dict(
+                kind = dict(
+                values  = ['precipitation'],
+                ),
+            ),
+        ),
+    ]
+    
+    @property
+    def realkind(self):
+        return 'precipitation'
+    
+    def origin_basename(self):
+        return 'R' + self.date.yymdh
+        
+        
+class HourlyObs(ObsRaw):
+
+    _footprint = [
+        dict(
+            info = 'SAFRAN T-files (hourly observations)',
+            attr = dict(
+                kind = dict(
+                values  = ['hourlyobs'],
+                ),
+            ),
+        ),
+    ]
+    
+    @property
+    def realkind(self):
+        return 'hourlyobs'
+    
+    def origin_basename(self):
+        return 'T' + self.date.yymdh
+    
+        
+class RadioSondage(ObsRaw):
+
+    _footprint = [
+        dict(
+            info = 'SAFRAN A-files (radiosondages)',
+            attr = dict(
+                kind = dict(
+                values  = ['radiosondage'],
+                ),
+            ),
+        ),
+    ]
+    
+    @property
+    def realkind(self):
+        return 'radiosondage'
+    
+    def origin_basename(self):
+        return 'A' + self.date.yymdh
+    
+
+class Nebulosity(ObsRaw):
+
+    _footprint = [
+        dict(
+            info = 'SAFRAN N-files (nebulosity)',
+            attr = dict(
+                kind = dict(
+                values  = ['nebulosity'],
+                ),
+            ),
+        ),
+    ]
+    
+    @property
+    def realkind(self):
+        return 'nebulosity'
+    
+    def origin_basename(self):
+        return 'N' + self.date.yymdh
 
