@@ -70,6 +70,7 @@ class IniZeroSurges(BlackBox):
     """Preparation step to launch a surges model without Atmospheric forcing"""
     _footprint = [
         gvar,
+        gdomain,
         dict(
             info = 'ini_zero Restart',
             attr = dict(
@@ -77,7 +78,7 @@ class IniZeroSurges(BlackBox):
                     values = ['InizeroSurges']
                 ),
                 gvar = dict(
-                    default  = 'master_[model]_inizero',
+                    default  = 'master_[model]_inizero_[gdomain]',
                 ),
                 binopts = dict(
                     type     = Date,
@@ -153,7 +154,7 @@ class WW3writeSurges(BlackBox):
                     values = ['WW3writeSurges']
                 ),
                 gvar = dict(
-                    default  = 'master_[model]_ww3write_main_[gdomain]',
+                    default  = 'master_[model]_ww3write_[gdomain]',
                 ),
                 rundir = dict(
                     type  = str,
@@ -184,19 +185,13 @@ class SurScriptSurges(BlackBox):
     _footprint = [
         gvar,
         dict(
-            info = ('SurScript Surges used on double binaries execution and ' +
-                    'for guess generation'),
+            info = ('SurScript Surges used on double binaries execution'),
             attr = dict(
                 kind = dict(
                     values = [ 'SurScriptBinary'],
                 ),
                 gvar = dict(
-                    default  = 'master_[model]_[param]',
-                ),
-                param = dict(
-                    optional = True,
-                    default = 'surscript',
-                    values = [ 'surscript', 'surscript_red'],
+                    default  = '[model]_shell_select_binary',
                 ),
             )
         )

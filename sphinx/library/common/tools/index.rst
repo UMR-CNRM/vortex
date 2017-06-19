@@ -11,5 +11,6 @@ Common tools
 
    agt
    bdap
+   bdm
    grib
    igastuff

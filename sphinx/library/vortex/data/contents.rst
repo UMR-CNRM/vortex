@@ -15,6 +15,15 @@ Package
 .. autodata:: __all__
 
 
+Exceptions
+----------
+
+.. autoclass:: DataContentError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+
 Classes
 -------
 

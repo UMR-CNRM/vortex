@@ -93,6 +93,10 @@ def vortex_delayed_init(t):
     vortex.proxy.addon(kind='odb', shell=t.sh)  # @UndefinedVariable
     import vortex.tools.ddhpack  # @UnusedImport
     vortex.proxy.addon(kind='ddhpack', shell=t.sh)  # @UndefinedVariable
+    import vortex.tools.obslocationpack  # @UnusedImport
+    vortex.proxy.addon(kind='obslocationpack', shell=t.sh)  # @UndefinedVariable
+    import vortex.tools.rawfiles  # @UnusedImport
+    vortex.proxy.addon(kind='rawfiles', shell=t.sh)  # @UndefinedVariable
 
 
 def actual_action(action, t, args):

@@ -502,7 +502,7 @@ class Clustering(BlindRun, grib.GribApiComponent):
                 mycontent.data['drawing'][-1]['cluster_size'] = cluster_size
             # Create a clustering output file
             new_container = footprints.proxy.container(filename='clustering_output.json',
-                                                       mode='w', actualfmt='json')
+                                                       actualfmt='json')
             mycontent.rewrite(new_container)
 
         super(Clustering, self).postfix(rh, opts)

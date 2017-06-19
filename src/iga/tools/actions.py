@@ -216,24 +216,36 @@ class OpPhase(Action):
         active = bool(env.get('OP_PHASE', 1))
         if not active:
             logger.warn('OpPhase is not active (e.OP_PHASE={})'.format(env.get('OP_PHASE', '<not set>')))
-            for r in rhlist:
-                logger.warn('-- Would phase: %s', str(r))
-            return True
 
         rc = True
         for rh in rhlist:
-            rc = rc and self._sendone(rh, **opts)
+            rc = rc and self._sendone(rh, active, **opts)
             self._rhdone.append(rh)
         return rc
 
-    def _sendone(self, rh, **opts):
-        """Ask Jeeves to phase a resource."""
-        sh = sessions.system()
-        paths_in_cache = rh.locate(incache=True) or ''
+    def _sendone(self, rh, active, **opts):
+        """Ask Jeeves to phase a resource.
+
+        Several paths are involved, possibly different:
+
+        - incache_path: the path to the resource in a cache. The resource may not be
+          present here yet, since hooks are called **before** the put(), but this
+          should be where to phase on the remote machine.
+        - effective_path: where the resource exists. Might be incache_path, or the
+          container's local path.
+        - remote_path: the path to use on the remote machine. This is incache_path,
+          but possibly modified according the the basepaths configuration.)
+        """
+        paths_in_cache = rh.locate(incache=True, inpromise=False) or ''
         first_path = paths_in_cache.split(';')[0]
         if first_path is '':
             raise ValueError('No access from a cache to the resource')
-        rh_path = sh.path.abspath(first_path)
+        incache_path = self.sh.path.abspath(first_path)
+
+        if self.sh.path.exists(incache_path):
+            effective_path = incache_path
+        else:
+            effective_path = self.sh.path.abspath(rh.container.localpath())
 
         protocol = self.getx('protocol', silent=False)
         jname = self.getx('jname', silent=False)
@@ -242,18 +254,24 @@ class OpPhase(Action):
         basepaths = self.getx('basepaths', default='', aslist=True)
         if basepaths:
             src, dst = basepaths
-            if not rh_path.startswith(src):
+            if not incache_path.startswith(src):
                 dst, src = basepaths
-                if not rh_path.startswith(src):
+                if not incache_path.startswith(src):
                     msg = "Basepaths are incompatible with resource path\n\tpath={}\n\tbasepaths={}".format(
-                        rh_path, basepaths)
+                        incache_path, basepaths)
                     raise ValueError(msg)
             if not src.endswith('/'):
                 src += '/'
-            lastpart = rh_path.replace(src, '')
-            destination = sh.path.join(dst, lastpart)
+            lastpart = incache_path.replace(src, '')
+            remote_path = self.sh.path.join(dst, lastpart)
         else:
-            destination = rh_path
+            remote_path = incache_path
+
+        # Phase is inactive : tell what would be done
+        if not active:
+            logger.warn('-- Would phase: %s', effective_path)
+            logger.warn('            to: %s', remote_path)
+            return True
 
         jeeves_opts = dict(
             jname=jname,
@@ -281,9 +299,9 @@ class OpPhase(Action):
                 logname=self.getx('phase_logname', silent=False),
             )
         elif protocol == 'cp':
-            if rh_path == destination:
+            if effective_path == remote_path:
                 msg = "Cannot locally phase file onto itself."
-                msg += "path={} basepaths={}".format(rh_path, basepaths)
+                msg += "path={} basepaths={}".format(effective_path, basepaths)
                 raise ValueError(msg)
             jeeves_opts.update(
                 todo='cp',
@@ -296,8 +314,8 @@ class OpPhase(Action):
         hide = footprints.proxy.service(kind='hiddencache', asfmt=fmt)
         jeeves_opts.update(
             fmt=fmt,
-            source=hide(rh_path),
-            destination=destination,
+            source=hide(effective_path),
+            destination=remote_path,
             **opts
         )
 

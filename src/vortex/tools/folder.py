@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import division
+
 import tempfile
 
 import footprints
@@ -10,7 +12,6 @@ from . import addons
 __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
-
 
 _folder_exposed_methods = set(['cp', 'mv', 'ftget', 'rawftget', 'ftput', 'rawftput'])
 
@@ -184,6 +185,21 @@ class FolderShell(addons.FtrawEnableAddon):
         else:
             return self._folder_ftget(source, destination, hostname, logname)
 
+    def _packed_size(self, source):
+        """Size of the final file, must be exact or be an overestimation.
+
+        A file 1 byte bigger than this estimation might be rejected,
+        hence the conservative options:
+        - tar adds 1% with a minimum of 1 Mbytes
+        - compression gain is 0%
+        """
+        dir_size = self.sh.treesize(source)
+        tar_mini = 1024 * 1024  # 1 Mbytes
+        tar_loss = 1  # 1%
+        zip_gain = 0
+        tar_size = dir_size + max(tar_mini, (dir_size * tar_loss) // 100)
+        return (tar_size * (100 - zip_gain)) // 100
+
     def _folder_ftput(self, source, destination, hostname=None, logname=None):
         """Proceed direct ftp put on the specified target."""
         hostname, logname = self._folder_credentials(hostname, logname)
@@ -199,13 +215,14 @@ class FolderShell(addons.FtrawEnableAddon):
 
         ftp = self.sh.ftp(hostname, logname)
         if ftp:
+            packed_size = self._packed_size(source)
             p = self.sh.popen(
                 ['tar', '--directory', source_dirname, '-cz', source_name],
                 stdout  = True,
                 output  = False,
                 bufsize = 8192,
             )
-            rc = ftp.put(p.stdout, destination)
+            rc = ftp.put(p.stdout, destination, size=packed_size, exact=False)
             self.sh.pclose(p)
             ftp.close()
             return rc

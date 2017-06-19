@@ -42,7 +42,8 @@ knownfmt = set([
     'auto', 'autoconfig', 'unknown', 'foo', 'arpifslist',
     'ascii', 'txt', 'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib',
     'bufr', 'hdf5', 'obsoul', 'odb', 'ecma', 'ccma',
-    'bullx', 'sx', 'ddhpack', 'tar', 'rawfiles',
+    'bullx', 'sx', 'ddhpack', 'tar', 'rawfiles', 'binary', 'bin',
+    'obspointpack'
 ])
 
 # Special classes

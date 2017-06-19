@@ -5,4 +5,4 @@
 __all__ = []
 
 # Recursive inclusion of packages with potential FootprintBase classes
-import forecasts, coupling, mpitools, odbtools, stdpost, assim, eps, eda, request
+import forecasts, coupling, mpitools, odbtools, stdpost, assim, eps, eda, request, monitoring

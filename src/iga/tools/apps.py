@@ -25,9 +25,15 @@ class OpTask(Task):
         model   = self.env.getvar('OP_VAPP').upper()
         conf    = self.env.getvar('OP_VCONF').lower()
         xpid    = self.env.getvar('OP_XPID').lower()
-        self.sh.header('Send a mail due to an execution error')
-        ad.opmail(reseau=reseau, task=self.tag, id ='execution_error', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf, xpid=xpid)
-        raise
+        member  = self.env.getvar('OP_MEMBER')
+        if member:
+            self.sh.header('Send a mail due to an execution error')
+            ad.opmail(reseau=reseau, task=self.tag, member=member, id ='execution_error_member', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf, xpid=xpid)
+            raise
+        else:
+            self.sh.header('Send a mail due to an execution error')
+            ad.opmail(reseau=reseau, task=self.tag, id ='execution_error', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf, xpid=xpid)
+            raise
 
     def defaults(self, extras):
         """Set defaults for toolbox defaults, with priority to actual conf."""

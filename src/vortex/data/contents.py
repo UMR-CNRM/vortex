@@ -13,6 +13,11 @@ from vortex import sessions
 from vortex.util.structs import ReadOnlyDict
 
 
+class DataContentError(ValueError):
+    """General content error."""
+    pass
+
+
 class DataContent(object):
     """Root class for data contents used by resources."""
 
@@ -99,7 +104,7 @@ class DataContent(object):
     def _merge_checkclass(self, *kargs):
         """Utility method to check that all the kargs objects are compatible self."""
         if not all([isinstance(obj, self.__class__) for obj in kargs]):
-            raise ValueError("The object's types are not compatible with self")
+            raise DataContentError("The object's types are not compatible with self")
 
     def merge(self, *kargs):
         """Merge several DataContents into one.
@@ -230,7 +235,7 @@ class JsonDictContent(AlmostDictContent):
         """Get data from the ``container``."""
         t = sessions.current()
         container.rewind()
-        self._data = t.sh.json_load(container.localpath())
+        self._data = t.sh.json_load(container.iotarget())
         self._data = self._unicode2str(self._data)
         self._size = container.totalsize
 
@@ -238,7 +243,10 @@ class JsonDictContent(AlmostDictContent):
         """Write the list contents in the specified container."""
         t = sessions.current()
         container.close()
-        t.sh.json_dump(self.data, container.localpath(), indent=4)
+        mode = container.set_wmode(container.mode)
+        iod = container.iodesc(mode)
+        t.sh.json_dump(self.data, iod, indent=4)
+        container.updfill(True)
 
 
 class AlmostListContent(DataContent):
@@ -333,12 +341,26 @@ class AlmostListContent(DataContent):
         for xline in self:
             container.write(xline)
 
-    def merge(self, *kargs):
+    def sort(self, **sort_opts):
+        """Sort the current object."""
+        self._data.sort(**sort_opts)
+
+    def merge(self, *kargs, **kwargs):
         """Merge several data contents into one."""
+        unique = kwargs.get('unique', False)
         self._merge_checkclass(*kargs)
         for obj in kargs:
             self.data.extend(obj.data)
             self._size += obj.size
+        # Check if the item are unique, raise an error if not (option unique = True)
+        if unique:
+            arg_elements = collections.Counter(self.data)
+            repeated_elements = [element for element, count in arg_elements.items() if count > 1]
+            if len(repeated_elements) > 0:
+                logger.exception('Repeated argument are present. It should not. Stop.' +
+                                 'The list of the repeated elements follows: %s',
+                                 str(sorted(repeated_elements)))
+                raise DataContentError('Repeated argument are present. It should not.')
 
 
 class TextContent(AlmostListContent):

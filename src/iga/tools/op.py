@@ -274,19 +274,27 @@ class _ReportContext(object):
         model   = t.env.getvar('OP_VAPP').upper()
         conf    = t.env.getvar('OP_VCONF').lower()
         xpid    = t.env.getvar('OP_XPID').lower()
+        member  = t.env.getvar('OP_MEMBER')
         report.print_report(detailed=True)
         if try_ok:
             t.sh.header('Input review')
             if any(report.active_alternates()):
-                t.sh.header('Input informations: active alternates were found')
-                ad.opmail(reseau=reseau, task=task, id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
+                if member:
+                    t.sh.header('Input informations: active alternates were found')
+                    ad.opmail(reseau=reseau, task=task, member=member, id='mode_secours_member', report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
+                else: 
+                    t.sh.header('Input informations: active alternates were found')
+                    ad.opmail(reseau=reseau, task=task, id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
             else:
                 t.sh.header('Input informations: everything is ok')
         else:
             t.sh.header('Input informations: {0:s} fail'.format(step))
-            mail_id = '{0:s}_fail'.format(step)
-            ad.opmail(reseau=reseau, task=task, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
-
+            if member:
+                mail_id = '{0:s}_fail_member'.format(step)
+                ad.opmail(reseau=reseau, task=task, member=member, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
+            else:
+                mail_id = '{0:s}_fail'.format(step)
+                ad.opmail(reseau=reseau, task=task, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
 
 class InputReportContext(_ReportContext):
     """Context manager that print a report on inputs."""
@@ -323,3 +331,14 @@ def oproute_hook_factory(kind, productid, sshhost, areafilter=None, soprano_targ
             print t.prompt, 'routing file = ', rh
 
     return hook_route
+
+def opphase_hook_factory(areafilter=None, termfilter=None):
+    """Hook functions factory to phase files while the execution is running"""
+
+    def hook_phase(t, rh):
+        if (areafilter is None) or (rh.resource.geometry.area in areafilter):
+            if (termfilter is None) or (rh.resource.term in termfilter):
+                ad.phase(rh)
+                print t.prompt, 'phasing file = ', rh
+
+    return hook_phase

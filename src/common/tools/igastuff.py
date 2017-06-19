@@ -16,11 +16,13 @@ fuzzystr = dict(
     ),
     prefix = dict(
         # LFM 2016/12/30: It was dble='PA' but apparently it's wrong. No idea why...
-        gridpoint = dict( oper = 'PE', dble = 'PE', mirr='PE' ),
+        gridpoint = dict( oper = 'PE', dble = 'PE', mirr='PE', hycom_grb='vent' ),
+        historic = dict( hycom_gss='s_init0_' ),
     ),
     suffix = dict(
         bgstderr = dict( input = 'in', output = 'out' ),
-        historic=dict( surfex_arpege='.sfx', surfex_aearp='.sfx' ),
+        historic=dict( surfex_arpege='.sfx', surfex_aearp='.sfx', hycom_gss = 'gz' ),
+        gridpoint=dict( hycom_grb= 'grb' ),
     ),
     term0003 = dict(
         bgstderr = dict( input = '', output = '_assim' ),
@@ -154,6 +156,12 @@ class IgakeyFactoryArchive(_BaseIgakeyFactory):
                           'nc': 'caledonie',
                           'polynesie': 'polynesie',
                           'reunion': 'reunion', },
+               'hycom': {'atl@anarp': 'surcotes',
+                         'med@anarp': 'surcotes',
+                         'atl@fcarp': 'surcotes',
+                         'med@fcarp': 'surcotes',
+                         'oin@ancep': 'surcotes_oi',
+                         'oin@fcaro': 'surcotes_oi', },
                }
 
 
@@ -180,5 +188,7 @@ class IgakeyFactoryInline(_BaseIgakeyFactory):
                'hycom': {'atl@anarp': 'surcotes',
                          'med@anarp': 'surcotes',
                          'atl@fcarp': 'surcotes',
-                         'med@fcarp': 'surcotes', },
+                         'med@fcarp': 'surcotes',
+                         'oin@ancep': 'surcotes_oi',
+                         'oin@fcaro': 'surcotes_oi', },
                }

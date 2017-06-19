@@ -4,7 +4,7 @@
 Le package « footprints »
 *************************
 
-Cette section présente les principales fonctionalités d'un package totalement indépendant de VORTEX en tant que tel,
+Cette section présente les principales fonctionnalités d'un package totalement indépendant de VORTEX en tant que tel,
 mais qui fournit l'assise des principales classes d'objets utilisées dans VORTEX.
 
 Une arlésienne de la programmation objet est que l'on aimerait bien le plus souvent ne pas avoir
@@ -27,7 +27,7 @@ entre différents ensembles logiciels pourvus qu'ils respectent des conventions 
 
 L'idée en est très simple. C'est une variante un tantinet élaborée du *Pattern* de la fabrique.
 Au lieu de décrire précisément un objet dans toutes ses caractéristiques (et notamment en fournissant sa classe),
-on va prendre le problème à l'envers et tenter de répondre à la question : quelle classe serait suceptible
+on va prendre le problème à l'envers et tenter de répondre à la question : quelle classe serait susceptible
 de s'instancier dans un objet qui aurait des caractéristiques compatibles avec celles dont j'ai connaissance a priori ?
 
 Dit autrement, vous vous baladez dans un chemin forestier, et vous voyer des bouts d'empreintes mélangées,
@@ -211,7 +211,7 @@ candidates ne peut être sélectionnée, et pour une bonne raison visiblement (s
 nous pouvons déjà faire quelques remarques :
 
   * à aucun moment il n'est nécessaire de faire d'hypothèse sur le nombres de classes éligibles ;
-  * la connaissance *a priori* des attributs qui correspondent (ou pas) à telle ou telle classe est facultative, le mécanisme de résolution des valuers acceptables, fera le tri naturellement ;
+  * la connaissance *a priori* des attributs qui correspondent (ou pas) à telle ou telle classe est facultative, le mécanisme de résolution des valeurs acceptables, fera le tri naturellement ;
   * il a suffit qu'une classe définisse une valeur à sa variable de classe :envvar:`_collector` pour qu'un tel collecteur existe ;
   * les classes peuvent être définies n'importe où dans l'arborescence de votre package, ou dans un package extérieur que vous importeriez pour qu'automatiquement les classes héritant de footprints.FootprintBase soient collectées.
 
@@ -233,7 +233,7 @@ Tout ceci est bel et bon, me direz-vous, mais que se passe-t-il si l'on demande 
 
 Vous récoltez un magnifique avertissement car plusieurs choix sont possibles. Ce n'est pas forcément un souci.
 Dans la vie courante, si vous demandez une chaise, c'est probablement pour vous assoir,
-peu importe qu'elle soit en plastique ou en bois. Ici dans notre exemple-jeu, la confusion entre couleur extérieur du fruit et de sa
+peu importe qu'elle soit en plastique ou en bois. Ici dans notre exemple-jeu, la confusion entre couleur extérieure du fruit et de sa
 chair est plus délicate. Mais nous ferons avec. La question est : que faire si il faut pouvoir distinguer. Ou
 plus exactement et plus généralement : selon quels critères des empreintes compatibles seront distinguées ?
 
@@ -373,11 +373,11 @@ par défaut est dans ce cas affectée à l'attribut::
 Héritage
 ========
 
-En jetant dès maintenant un coup d'oeil par dessus notre épaule, nous pouvons voir que les classes que nous
+En jetant dès maintenant un coup d'œil par dessus notre épaule, nous pouvons voir que les classes que nous
 voulons rendre éligible au mécanisme d'instanciation par empreintes doivent donc hériter d'une classe de base
 nommée :class:`footprints.FootprintBase` et définir leur empreinte via la variable de classe **_footprint**.
 
-En fait même si nous avons défini ce **_footprint** comme une struture python de base (dict),
+En fait même si nous avons défini ce **_footprint** comme une structure python de base (dict),
 il est automatiquement transformé en un objet de classe :class:`footprints.Footprint`. lors de la création
 de la classe par l'interpréteur python (en fait par la méta-classe utilisée pour instancier cette classe, mais
 cela nous emmènerait un peu trop profondément dans les soutes magiques du package).
@@ -396,15 +396,15 @@ la méthode de classe :meth:`~footprints.FootprintBase.footprint_retrive`::
     >>> fruits.Pomme.footprint_retrieve()
     <footprints.Footprint object at 0x7f9ef0bf19d0>
 
-Nous verrons plus tard les méthodes qui s'applique à cet objet pour les plus curieux. Mais ce qui nous intéresse
-c'est de savoir comme cette double intrication (la classe et son objet footprint) se comporte en cas d'héritage.
+Nous verrons plus tard les méthodes qui s'appliquent à cet objet pour les plus curieux. Mais ce qui nous intéresse
+c'est de savoir comment cette double intrication (la classe et son objet footprint) se comporte en cas d'héritage.
 
 Héritage de classe
 ------------------
 
 En terme d'héritage pythonesque classique, il n'y a rien de neuf apporté par les classes dérivées
 de :class:`footprints.FootprintBase` : en l'absence de toute nouvelle redéfinition de leur footprint,
-elles "récupèrenté" un footprint identique à celui de la classe parente.
+elles "récupèrent" un footprint identique à celui de la classe parente.
 
 **Attention:** identique signifie qu'il en a toutes les qualités et propriétés mais sans être le même objet !
 Comme on peut le constater dans ce court exemple::
@@ -417,7 +417,7 @@ Comme on peut le constater dans ce court exemple::
 Par construction, une telle classe a donc la même empreinte que sa classe parente, et elle sera donc en toute
 occasion "concurrente" de sa classe parente dans les mécanismes d'instanciation qui suivront. Pourquoi pas. On
 peut par exemple s'intéresser uniquement à la redéfinition ou l'extension de ses méthodes de classe.
-Mais il est bien plus probable que l'on souhaite plutôt modifier sont empreinte dans le même processus d'héritage.
+Mais il est bien plus probable que l'on souhaite plutôt modifier son empreinte dans le même processus d'héritage.
 
 Surcharge du footprint
 ----------------------
@@ -469,9 +469,9 @@ la carte des attributs possibles::
          GrannySmith            + verger
          Pomme                  + fruits
 
-Il ya donc une sorte de "merge" des footprints dans l'ordre d'héritage des classes. Ce qui est à la fois totalement
+Il y a donc une sorte de "merge" des footprints dans l'ordre d'héritage des classes. Ce qui est à la fois totalement
 intuitif et très puissant. Ajoutons enfin que les empreintes peuvent être définies directement par un objet ou une liste
-d'objets. Construisons par exemple une voiture comme assemblage d'un moteur et d'une carosserie::
+d'objets. Construisons par exemple une voiture comme assemblage d'un moteur et d'une carrosserie::
 
     traction = fp.Footprint(
         attr = dict(
@@ -534,7 +534,7 @@ Nous allons maintenant passer en revue les différentes caractéristiques qui pe
 Typage
 ------
 
-On considère qu'un attribut est par défaut une chaîne de caractères, mais cela peut être absoluement n'importe
+On considère qu'un attribut est par défaut une chaîne de caractères, mais cela peut être absolument n'importe
 quelle autre classe, que ce soit un type de base de python ou classe utilisateur.
 
 Imaginons que nous voulions maintenant, pour chaque fruit, lui attribuer un calibre, représenté par un entier
@@ -604,7 +604,7 @@ Mais cela peut permettre aussi de particulariser temporairement un traitement (�
 ou de déverminage par exemple).
 
 La seule chose complémentaire à savoir est que les valeurs spécifiées sont automatiquement retypées dans le type
-spécifié pour l'attribut courant. Dans le cas du calibre par exemple, nous aurions pu donner des valeurs obligatoires
+spécifié pour l'attribut courant. Dans le cas du calibre par exemple, nous aurions pu donner des valeurs obligatoires.
 
 Valeurs prohibées
 -----------------
@@ -612,10 +612,10 @@ Valeurs prohibées
 Tout aussi commode, il est possible de spécifier les valeurs absolument prohibées. Dit autrement, un objet de cette
 classe ne pourrait pas avoir laissé une empreinte de cette ou de ces valeurs. La classe n'est donc plus éligible
 pour le processus d'instanciation. C'est la clé **outcast** qui permet de spécifier les valeurs prohibées.
-Tout commes les valeurs associées à la clé **values** est sont automatiquement retypées dans le type spécifié pour
+Tout comme les valeurs associées à la clé **values** est sont automatiquement retypées dans le type spécifié pour
 l'attribut courant.
 
-Voici un exemple avec un fruit qui ne pourrait raisonablement pas pousser sous certaines latitudes::
+Voici un exemple avec un fruit qui ne pourrait raisonnablement pas pousser sous certaines latitudes::
 
     class Ananas(Fruit):
         _footprint = dict(
@@ -681,19 +681,19 @@ Et nous pouvons vérifier qu'une "simple" pomme ne faisait pas l'affaire::
     >>> fp.proxy.fruits.report_whynot('fruits.Pomme')
     {'fruits.Pomme': {'couleur': {'args': 'vert', 'why': 'Not in values'}}}
 
-Inutile d'épiloguer plus longuement sur l'incroyable souplesse que permet cette fonctionalité.
+Inutile d'épiloguer plus longuement sur l'incroyable souplesse que permet cette fonctionnalité.
 
 Alias de noms d'attributs
 -------------------------
 
-Une autre façon  de particulariser une empreinte est d'autoriser différentes façon de nommer un attribut identique.
+Une autre façon  de particulariser une empreinte est d'autoriser différentes façons de nommer un attribut identique.
 Dans le cas de nos fruits, on aurait pu imaginer que l'aspect soit un synonyme pour la couleur par exemple, et le
-mettre dans la classe générique de base. Dans ce cas, il ne s'agirait que d'une façon commode de nommer une qualités
+mettre dans la classe générique de base. Dans ce cas, il ne s'agirait que d'une façon commode de nommer une qualité
 de tous les fruits. C'est déjà quelque chose de très pratique, ne serait-ce qu'en terme d'évolution d'un ensemble logiciel
 dont on peut au fur et à mesure permettre les associations de noms.
 
-Mais cela s'avère aussi une façon élégante de discréminer entre empreintes identiques. Imaginons que cette alias de nom
-ne soit poser que sur les fraises. Seule cette classe de fruit serait alors éligible si nous utilisons l'attribut *aspect*.
+Mais cela s'avère aussi une façon élégante de discriminer entre empreintes identiques. Imaginons que cet alias de nom
+ne soit posé que sur les fraises. Seule cette classe de fruit serait alors éligible si nous utilisons l'attribut *aspect*.
 
 .. code-block:: python
 
@@ -746,7 +746,7 @@ et leur déclinaison avec références "molles" (auquel cas les valeurs stockée
     * 'rwx-weak' (read - write)
     * 'rwd-weak' (read - write - delete)
 
-On peut ainsi imaginer que des ananas d'Irlande change d'origine lors de leur passage en douane, histoire
+On peut ainsi imaginer que des ananas d'Irlande changent d'origine lors de leur passage en douane, histoire
 de se conformer aux exigences locales::
 
     class Ananas(Fruit):
@@ -785,7 +785,7 @@ Arguments pour le type d'attribut
 Par souci d'exhaustivité, signalons la dernière clé possible dans la description d'un attribut d'empreinte, à savoir
 les arguments qui seront passés lors du typage automatique de la valeur. Nous entrons là dans des subtilités dont
 il est difficile de percevoir d'emblée l'utilité, mais disons pour faire simple, que si nous "typons" automatiquement
-tout attribut, cela signifie que nous appelons le constructeur pour un type donnée (ie: une classe donnée), et qu'il
+tout attribut, cela signifie que nous appelons le constructeur pour un type donné (i.e. une classe donnée), et qu'il
 serait dommage de s'interdire de pouvoir passer au dernier moment certains attributs. Nous avons de très rares cas
 de figure dans le VORTEX... que nous commenterons... ou pas !
 
@@ -832,8 +832,8 @@ Et à l'usage::
 Classe ou objet
 ---------------
 
-Et que se passe-t-il quand le type attendu d'un attribut est non un objet, mais une classe. Bien entendu, en python,
-les classes elles-mêmes sont des objets. Mais il faut pourtant pouvoir distinguer entre un type fournit dans le but
+Et que se passe-t-il quand le type attendu d'un attribut est non un objet, mais une classe ? Bien entendu, en python,
+les classes elles-mêmes sont des objets. Mais il faut pourtant pouvoir distinguer entre un type fourni dans le but
 d'instancier une valeur d'attribut et le fait que l'on veut que l'attribut lui-même reste une classe. Ce n'est pas une
 rareté dès que l'on pense en terme de collaboration de classes, ou de composition. Moralité, une clé optionnelle est
 évaluée lors de la résolution des footprints, la clé *isclass*.
@@ -844,10 +844,10 @@ par la clé *type*, mais on vérifie simplement que l'attribut est une sous-clas
 .. todo:: exemple ?
 
 ====================
-Affiner la séléction
+Affiner la sélection
 ====================
 
-En plus des éléments *attr*, *info* et *priority* que nous avons croisé plus haut, il y a un autre élément
+En plus des éléments *attr*, *info* et *priority* que nous avons croisés plus haut, il y a un autre élément
 de caractérisation de l'empreinte qui joue un rôle important dans le mécanisme de résolution des footprints.
 Il s'agit du composant *only* du footprint.
 
@@ -946,7 +946,7 @@ Sélection par intervalles
 Pour un paramètre (ou attribut), il est possible de d'étendre le filtre *only* avec les modificateurs
 *before_* et *after_*.
 
-Nous pouvons avoir ainsi une vision futuristes des pommes Zorg::
+Nous pouvons avoir ainsi une vision futuriste des pommes Zorg::
 
     class Zorg(fruits.Pomme):
         _footprint = dict(
@@ -974,7 +974,7 @@ Mécanismes de substitution
 ==========================
 
 Toutes les valeurs servant à la résolution des empreintes de classes n'ont pas besoin d'être
-toutes explicites. Il est possbile de se référer aux valeurs que prennent certaines de ces valeurs
+toutes explicites. Il est possible de se référer aux valeurs que prennent certaines de ces valeurs
 pour en renseigner d'autres.
 
 .. warning::
@@ -1002,7 +1002,7 @@ Pour ne reprendre que le début de la classe de base des fruits, nous aurions pu
         _collector = ('fruit', 'nourriture')
         ...
 
-Et nos apétissantes pommes ou fraises, pourraient alors tout aussi bien être obtenues par une demande
+Et nos appétissantes pommes ou fraises, pourraient alors tout aussi bien être obtenues par une demande
 de nourriture::
 
     >>> fp.collectors.keys()
@@ -1018,7 +1018,7 @@ Instancier des objets n'est pas forcément dispendieux. Mais il est des cas où 
 déjà venus au monde, dans la mesure où leurs caractéristiques seraient compatibles avec ce que l'on spécifierait
 par ailleurs au mécanisme de chargement de base.
 
-Cette fonctionalité existe: au lieu d'utiliser la méthode :meth:`~footprints.collectors.Collector.load`
+Cette fonctionnalité existe: au lieu d'utiliser la méthode :meth:`~footprints.collectors.Collector.load`
 du collecteur, on va utiliser la méthode :meth:`~footprints.collectors.Collector.default` qui a exactement
 la même interface. Si un objet compatible (au sens de la résolution des footprints) a déjà été créé, il nous
 le renvoie, sinon, il est créé.
@@ -1032,7 +1032,7 @@ de notre fruit préféré::
     >>> p_adam is p_eve
     True
 
-La compatibilité est une notion assez... permissive en fait, car on ne repasse toute valeur non explicitement
+La compatibilité est une notion assez... permissive en fait, car toute valeur non explicitement
 rejetée peut faire l'affaire. Et nous aurions aussi bien pu demander pour la seconde pomme::
 
     >>> p_eve = fp.default(tag='fruit')
@@ -1040,7 +1040,7 @@ rejetée peut faire l'affaire. Et nous aurions aussi bien pu demander pour la se
     True
 
 Si l'on regarde le catalogue de toutes les instances de fruits créées (car le collecteur garde aussi la trace
-des objets qu'il a instancié), il n'y a qu'un seul fruit, la pomme::
+des objets qu'il a instanciés), il n'y a qu'un seul fruit, la pomme::
 
     >>> fp.proxy.fruits.instances()
     [<fruits.Pomme object at 0x7f350a22a490>]
@@ -1057,7 +1057,7 @@ Instanciation directe
 ---------------------
 
 Nous avons vu que la façon la plus simple d'obtenir un objet le plus adapté à ce que nous savons de ses
-caractéristiques (en tout cas celle qui sont accessibles via l'empreinte) est de faire d'invoquer
+caractéristiques (en tout cas celle qui sont accessibles via l'empreinte) est d'invoquer
 la commande :meth:`~footprints.collectors.Collector.load`, ou plus élégamment encore, de passer par le proxy
 du package.
 
@@ -1070,7 +1070,7 @@ une classe, à la dure, pourrait-on dire. Reprenons nos pommes::
     >>> print p.calibre
     2
 
-Nous disposons tout de même, à titre graçieux en quelque sorte, de tous les mécanismes de résolution
+Nous disposons tout de même, à titre gracieux en quelque sorte, de tous les mécanismes de résolution
 de footprints exposées précédemment: typage, *remap* de valeur, vérification des valeurs autorisées ou exclues, etc.
 
 Explicite ou implicite
@@ -1230,16 +1230,16 @@ Mais il sera également possible de spécifier une ressource extérieure sous la
 d'un fichier :file:`.ini` ou :file:`.json`., rendant le code encore plus indépendant des formes
 effectives que peuvent prendre les définitions d'empreintes ou leurs valeurs d'attributs.
 
-Methodes des collecteurs
+Méthodes des collecteurs
 ------------------------
 
-Mécanismes de filtre, d'élimination d'éléments du collectuer, gestion des instances, etc.
+Mécanismes de filtre, d'élimination d'éléments du collecteur, gestion des instances, etc.
 
 .. todo:: documentation à compléter...
 
-=====================
-Autres fonctionalités
-=====================
+======================
+Autres fonctionnalités
+======================
 
 En interne le package footprint s'appuie sur quelques utilitaires ou implémente quelques *patterns* qu'il est
 tout à fait possible d'utiliser en dehors des classes de type :class:`footprints.FootprintBase`.
@@ -1268,14 +1268,14 @@ La classe :class:`~footprints.util.GetByTag` implémente ce mécanisme avec beau
 (que nous n'avons pas le temps de détailler ici). Qu'il suffise de dire que c'est de cette classe
 que dérivent par exemple les :class:`~footprints.collectors.Collector`, les :class:`~footprints.observers.ObserverBoard`,
 le ou les :class:`~footprints.setup.FootprintSetup`, le ou les :class:`~footprints.proxies.FootprintProxy` et
-les :class:`~footprints.loggers.FootprintLog` pour ne s'en tenir package footprints.
+les :class:`~footprints.loggers.FootprintLog` pour ne s'en tenir qu'au package footprints.
 Mais il se trouve qu'il en est fait aussi un usage relativement important dans VORTEX, et dans la construction
-des tâche opérationnelles par exemple.
+des tâches opérationnelles par exemple.
 
 Mécanismes d'expansion
 ----------------------
 
-Puisque la résolution d'empreintes de classes se fait sur la base d'une desciption prenant la forme
+Puisque la résolution d'empreintes de classes se fait sur la base d'une description prenant la forme
 d'une liste de clés/valeurs, il est plus que raisonnable d'imaginer que l'on souhaite pouvoir effectuer
 quelques mécanismes d'expansion de ladite liste en fonction de certaines des valeurs proposées.
 

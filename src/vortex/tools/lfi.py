@@ -5,7 +5,6 @@ import io
 import re
 
 import footprints
-
 from vortex.util.structs import Tracker
 from . import addons
 
@@ -98,8 +97,8 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
     LFI_HNDL_SPEC   = ':1'
     DR_HOOK_SILENT  = 1
     DR_HOOK_NOT_MPI = 1
-    OMP_STACKSIZE         = '32M'
-    KMP_STACKSIZE         = '32M'
+    OMP_STACKSIZE   = '32M'
+    KMP_STACKSIZE   = '32M'
     KMP_MONITOR_STACKSIZE = '32M'
 
     _footprint = dict(
@@ -159,15 +158,12 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
         """
         cmd = ['lfilist', lfifile]
-
         kw['output'] = True
-
         rawout = self._spawn(cmd, **kw)
-
         return LFI_Status(
             rc     = 0,
             stdout = rawout,
-            result = [ tuple(eval(x)[0]) for x in rawout if x.startswith('[') ]
+            result = [tuple(eval(x)[0]) for x in rawout if x.startswith('[')]
         )
 
     fa_table = lfi_table = _std_table
@@ -205,9 +201,9 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         fields = [tuple(x.split(' ', 2)[-2:]) for x in rawout if re.match(r' (?:\!=|\+\+|\-\-)', x)]
 
         trfields = Tracker(
-            deleted = [ x[1] for x in fields if x[0] == '--' ],
-            created = [ x[1] for x in fields if x[0] == '++' ],
-            updated = [ x[1] for x in fields if x[0] == '!=' ],
+            deleted=[x[1] for x in fields if x[0] == '--'],
+            created=[x[1] for x in fields if x[0] == '++'],
+            updated=[x[1] for x in fields if x[0] == '!='],
         )
 
         stlist = self.lfi_table(lfi1, output=True)
@@ -239,6 +235,14 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
                                 inpipe  = True,
                                 bufsize = 8192)
 
+    def _packed_size(self, source):
+        out = self._spawn_wrap('size', [source, ], output=True, inpipe=False)
+        try:
+            return int(out[0])
+        except ValueError:
+            pass
+        return None
+
     def _std_ftput(self, source, destination, hostname=None, logname=None):
         """On the fly packing and ftp."""
         if self.is_xlfi(source):
@@ -255,12 +259,14 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
             ftp = self.sh.ftp(hostname, logname)
             if ftp:
+                packed_size = self._packed_size(source)
                 p = self._pack_stream(source)
-                st.rc = ftp.put(p.stdout, destination)
+                st.rc = ftp.put(p.stdout, destination, size=packed_size, exact=True)
                 self.sh.pclose(p)
                 st.result = [destination]
                 st.stdout = [
                     'Connection time   : {0:f}'.format(ftp.length),
+                    'Packed source size: {0:d}'.format(packed_size),
                     'Actual target size: {0:d}'.format(ftp.size(destination))
                 ]
                 ftp.close()
@@ -502,8 +508,8 @@ class IO_Poll(addons.Addon):
     LFI_HNDL_SPEC   = ':1'
     DR_HOOK_SILENT  = 1
     DR_HOOK_NOT_MPI = 1
-    OMP_STACKSIZE         = '32M'
-    KMP_STACKSIZE         = '32M'
+    OMP_STACKSIZE   = '32M'
+    KMP_STACKSIZE   = '32M'
     KMP_MONITOR_STACKSIZE = '32M'
 
     _footprint = dict(

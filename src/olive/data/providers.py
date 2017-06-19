@@ -66,12 +66,12 @@ class Olive(Provider):
 
     def nice_member(self):
         """Nice formatting view of the member number, if any."""
-        if re.match(r'pearp', self.vconf):
-            mb = 'fc_' + str(self.member) if self.member is not None else ''
-        elif re.match(r'aearp', self.vconf):
-            mb = 'member_' + str(self.member) if self.member is not None else ''
-        else:
-            mb = 'mb' + str(self.member) if self.member is not None else ''
+        mb = None
+        if self.member is not None:
+            if re.match(r'pearp', self.vconf):
+                mb = 'fc_' + str(self.member) if self.member is not None else ''
+            if re.match(r'aearp', self.vconf):
+                mb = 'member_' + str(self.member) if self.member is not None else ''
         return mb
 
     def basename(self, resource):
@@ -90,8 +90,9 @@ class Olive(Provider):
             rdate = re.sub(r'(\d\d)$', r'H\1', rdate)
             rdate = rdate + rinfo.get('cutoff', 'n')[0].upper()
         elts = [self.experiment, rdate, self.block]
-        if self.member is not None:
-            elts.insert(2, self.nice_member())
+        n_member = self.nice_member()
+        if n_member is not None:
+            elts.insert(2, n_member)
         return '/'.join(elts)
 
 
@@ -156,6 +157,14 @@ class OpArchive(Provider):
 
     def basename(self, resource):
         bname = resource.basename(self.realkind)
+
+        if resource.model == 'hycom':
+            region_map = dict(atl= '_', med='_MED_', oin='_OIN_')
+            mode_map = dict(fc= 'pre', an='ana' )
+            region = region_map.get(self.vconf[:3], self.vconf[:3])
+            mode = mode_map.get(self.vconf[4:][:2], self.vconf[4:][:2])
+            config = self.vconf[-3:] + region + mode
+
         for i in re.findall(r'\(\w+\:\w+\)|\(\w+\)', bname):
             s1 = re.sub(r'\(|\)', '', i)
             mobj = re.match(r'(\w+):(\w+)', s1)
@@ -165,6 +174,10 @@ class OpArchive(Provider):
                 if entry == 'histfix':
                     if self.block == 'coupling_fc' and resource.model == 'arome':
                         fuzzy = self.block
+                    elif resource.model == 'hycom':
+                        fuzzy = (fuzzyname('prefix', 'historic', 'hycom_gss') +
+                                 '.'.join((config, resource.date.ymdh[4:],
+                                           fuzzyname('suffix', 'historic', 'hycom_gss'))))
                     else:
                         igakey = getattr(self, keyattr)
                         if igakey in ('pearp', 'arpege', 'arp_court', 'aearp'):
@@ -199,6 +212,9 @@ class OpArchive(Provider):
                                         resource.date, vconf=self.vconf)
                     if getattr(self, keyattr) == 'pearp':
                         fuzzy = '_'.join(('fc', rr, str(self.member), resource.geometry.area, resource.term.fmthour))
+                    elif getattr(self, keyattr) in ('surcotes', 'surcotes_oi'):
+                        fuzzy = '.'.join((fuzzyname('prefix', 'gridpoint', 'hycom_grb'), config,
+                                          resource.date.ymdh[4:], fuzzyname('suffix', 'gridpoint', 'hycom_grb')))
                     else:
                         t = '{0:03d}'.format(resource.term.hour)
                         fuzzy = fuzzyname('prefix', 'gridpoint', self.suite) + rr + t + resource.geometry.area
@@ -246,6 +262,8 @@ class OpArchive(Provider):
                     return '/'.join((self.igakey, dd, rr ))
                 elif re.match(r'mocage', self.igakey):
                     return '/'.join((self.igakey, dd))
+                elif re.match(r'surcotes', self.igakey):
+                    return '/'.join((self.igakey, suite, dd, rr )).rstrip('/')
                 else:
                     return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr ))
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, division
+
 #: No automatic export
 __all__ = []
 
@@ -590,3 +592,69 @@ class OdbMatchup(OdbProcess):
             date     = self.date,
             fcma     = self.layout_compressed,
         )
+
+
+class FlagsCompute(OdbProcess):
+    """Compute observations flags."""
+
+    _footprint = dict(
+        info = 'Computation of observations flags.',
+        attr = dict(
+            kind = dict(
+                values = ['flagscomp'],
+            ),
+            ioassign = dict(),
+            iomethod = dict(
+                type = int,
+                default = 1,
+                optional = True,
+            ),
+            npool = dict(
+                default = 1,
+                type = int,
+                optional = True,
+            ),
+        ),
+    )
+
+    def prepare(self, rh, opts):
+        """Prepare the execution."""
+        # Look for the input databases
+        input_databases = self.context.sequence.effective_inputs(
+            role = 'ECMA',
+            kind = 'observations',
+        )
+        # Check that there is at least one database
+        if len(input_databases) < 1:
+            logger.exception('No database in input. Stop.')
+            raise AttributeError
+        self.odb.ioassign_create(
+            npool=self.npool,
+        )
+        # Let ancesters handling most of the env setting
+        super(FlagsCompute, self).prepare(rh, opts)
+
+    def spawn(self, args, opts):
+        """Spawn the binary."""
+        # Look for the input databases
+        input_databases = self.context.sequence.effective_inputs(
+            role = 'ECMA',
+            kind = 'observations',
+        )
+        for input_database in input_databases:
+            ecma = input_database.rh
+            ecma_filename = ecma.container.filename
+            ecma_part = ecma.resource.part
+            ecma_abspath = ecma.container.abspath
+            self.env.ODB_SRCPATH_ECMA  = ecma_abspath
+            logger.info('Variable %s set to %s.', 'ODB_SRCPATH_ECMA', ecma_abspath)
+            self.env.ODB_DATAPATH_ECMA = ecma_abspath
+            logger.info('Variable %s set to %s.', 'ODB_DATAPATH_ECMA', ecma_abspath)
+            self.env.setvar('ODB_ECMA', ecma_filename)
+            logger.info('Variable %s set to %s.', 'ODB_ECMA', ecma_filename)
+            if not self.system.path.exists('IOASSIGN'):
+                self.system.cp('/'.join([ecma_filename, 'IOASSIGN']), 'IOASSIGN')
+            # Let ancesters handling most of the env setting
+            super(FlagsCompute, self).spawn(args, opts)
+            # Rename the output file according to the name of the part of the observations treated
+            self.system.mv('BDM_CQ', '_'.join(['BDM_CQ', ecma_part]))

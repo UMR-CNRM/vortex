@@ -32,7 +32,8 @@ export FOOTPRINT_DOCSTRINGS
 
 all: html
 
-.PHONY: all full-check miss-check $(CHECKREPORT) html clean clean-$(NOTEBOOKS) $(XMLEXPORTDIR)
+.PHONY: all full-check miss-check $(CHECKREPORT) html clean $(NOTEBOOKS) \
+        clean-$(NOTEBOOKS) $(XMLEXPORTDIR)
 
 
 # Create rst files for new modules and check all of the aspects

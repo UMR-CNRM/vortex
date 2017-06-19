@@ -361,6 +361,7 @@ class InCore(Virtual):
             )
             for data in iomem:
                 self._iod.write(data)
+            self._iod.flush()
             iomem.close()
 
     def unroll(self):

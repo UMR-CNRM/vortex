@@ -20,3 +20,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: GetBDMBufr
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GetBDMOulan
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

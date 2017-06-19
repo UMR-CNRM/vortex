@@ -77,6 +77,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: FcqODB
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: VarBCTool
    :show-inheritance:
    :members:
@@ -123,6 +128,21 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: AddPearp
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: BDMExecutableBUFR
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: BDMExecutableOulan
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ExecMonitoring
    :show-inheritance:
    :members:
    :member-order: alphabetical

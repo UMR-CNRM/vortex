@@ -25,6 +25,7 @@ Package
 * :mod:`vortex.tools.lfi`
 * :mod:`vortex.tools.listings`
 * :mod:`vortex.tools.net`
+* :mod:`vortex.tools.obslocationpack`
 * :mod:`vortex.tools.odb`
 * :mod:`vortex.tools.parallelism`
 * :mod:`vortex.tools.rawfiles`

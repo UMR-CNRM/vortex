@@ -274,7 +274,11 @@ def main():
     # Copy images
     for a_file in images:
         dest = os.path.join(abs_outputdir, a_file)
-        os.makedirs(os.path.dirname(dest))
+        try:
+            os.makedirs(os.path.dirname(dest))
+        except OSError:
+            # directory already exists
+            pass
         shutil.copyfile(a_file, dest)
 
     # Create the indexes (index.rst)
