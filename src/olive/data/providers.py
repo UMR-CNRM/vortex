@@ -158,7 +158,7 @@ class OpArchive(Provider):
     def basename(self, resource):
         bname = resource.basename(self.realkind)
 
-        if resource.model == 'hycom':
+        if hasattr(resource, 'model') and resource.model == 'hycom':
             region_map = dict(atl= '_', med='_MED_', oin='_OIN_')
             mode_map = dict(fc= 'pre', an='ana' )
             region = region_map.get(self.vconf[:3], self.vconf[:3])
