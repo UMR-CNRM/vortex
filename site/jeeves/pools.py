@@ -277,10 +277,7 @@ class Deposit(footprints.util.GetByTag):
             return
 
         items = self.contents
-        if len(items) < self.maxitems:
-            return
         self.logger.debug('cleaning', path=self.path, len=len(items), maxtime=self.maxtime)
-
         justnow = datetime.now()
         oldfiles = list()
         for askfile in items:
@@ -290,7 +287,7 @@ class Deposit(footprints.util.GetByTag):
                 self.logger.error('Bad request format', item=askfile)
                 os.remove(os.path.join(self.path, askfile))
             else:
-                if (justnow - askdate).total_seconds() / 3600 > self.maxtime:
+                if justnow.day > askdate.day:
                     oldfiles.append(askfile)
         if oldfiles:
             zipname = os.path.join(
