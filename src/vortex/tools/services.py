@@ -255,7 +255,8 @@ class MailService(Service):
                 ' '.join(self.to.split()),
                 tmpmsgfile
             )
-            ad.ssh(mailcmd, hostname='node', nodetype='network')
+            sshobj = self.sh.ssh(hostname='network', virtualnode=True)
+            sshobj.execute(mailcmd)
             self.sh.remove(tmpmsgfile)
         else:
             import smtplib
@@ -314,17 +315,14 @@ class SSHProxy(Service):
 
     If ``node`` is the specified :attr:`hostname` value, some target hostname
     will be built on the basis of attributes, :attr:`genericnode`,
-    :attr:`nodebase`, :attr:`nodetype` and :attr:`noderange`.
+    and :attr:`nodetype`.
 
     In this case, if :attr:`genericnode` is defined it will be used. If not,
-    the configuration file will be checked for a configuration key named
-    ``'{}node'.format(self.nodetype)`` in the services section.
+    the configuration file will be checked for a configuration key matching
+    the :attr:`nodetype`.
 
-    If none of the :attr:`genericnode` attribute or its configuration file
-    counterpart is defined, then ``hostname = self.nodebase + self.nodetype + nodenumber``.
-    When several ``nodenumber`` are available (they are values of the
-    :attr:`noderange` attribute with random permutation or not), the first
-    responding ``hostname`` will be selected.
+    When several nodes are available, the first responding ``hostname`` will be
+    selected.
     """
 
     _footprint = dict(
@@ -340,22 +338,12 @@ class SSHProxy(Service):
                 default  = None,
                 access   = 'rwx',
             ),
-            nodebase = dict(
-                optional = True,
-                default  = None,
-                access   = 'rwx',
-            ),
             nodetype = dict(
                 optional = True,
                 values   = ['login', 'transfer', 'transfert', 'network',
                             'agt', 'syslog'],
                 default  = 'network',
                 remap    = dict(transfer = 'transfert'),
-            ),
-            noderange = dict(
-                optional = True,
-                type     = footprints.FPList,
-                default  = None,
             ),
             permut = dict(
                 type     = bool,
@@ -367,16 +355,7 @@ class SSHProxy(Service):
                 optional = True,
                 default  = 2,
             ),
-            sshcmd = dict(
-                optional = True,
-                default  = None,
-            ),
             sshopts = dict(
-                optional = True,
-                type     = footprints.FPList,
-                default  = None,
-            ),
-            sshretryopts = dict(
                 optional = True,
                 type     = footprints.FPList,
                 default  = None,
@@ -387,69 +366,31 @@ class SSHProxy(Service):
     def __init__(self, *args, **kw):
         logger.debug('Remote command proxy init %s', self.__class__)
         super(SSHProxy, self).__init__(*args, **kw)
-        self._retries = None
+        hostname, virtualnode = self._actual_hostname()
+        extra_sshopts = None if self.sshopts is None else ' '.join(self.sshopts)
+        self._sshobj = self.sh.ssh(hostname, sshopts=extra_sshopts,
+                                   maxtries=self.maxtries, virtualnode=virtualnode,
+                                   permut=self.permut)
 
-    def _actual_sshopts(self, key):
-        act = self.actual_value(key)
-        if not isinstance(act, (list, tuple)):
-            act = act.split()
-        return act
+    def _actual_hostname(self):
+        """Build a list of candidate target hostnames."""
+        myhostname = self.hostname.strip().lower()
+        virtualnode = False
+        if myhostname == 'node':
+            if self.genericnode is not None and self.genericnode != 'no_generic':
+                myhostname = self.genericnode
+            else:
+                myhostname = self.nodetype
+                virtualnode = True
+        return myhostname, virtualnode
 
     @property
     def retries(self):
-        return self._retries
-
-    def _build_targets(self):
-        """Build a list of candidate target hostnames."""
-        targets = [self.hostname.strip().lower(), ]
-        if targets[0] == 'node':
-            if self.genericnode is not None and self.genericnode != 'no_generic':
-                targets = [self.genericnode, ]
-            elif (self.nodebase is not None) and (self.noderange is not None):
-                targets = [self.nodebase.format(x) for x in self.noderange]
-            else:
-                # From the target configuration...
-                targets = self.sh.default_target.specialproxies[self.nodetype]
-            if self.permut:
-                random.shuffle(targets)
-        return targets
-
-    def _get_target(self, targets):
-        """Node name to use for this kind of remote execution."""
-        target = None
-        ntry = 0
-        while target is None and ntry < self.maxtries:
-            ntry += 1
-            self._retries = ntry
-            logger.debug('SSH connect try number ' + str(ntry))
-            for guess in targets:
-                try:
-                    thecmd = [' '.join([self.actual_value('sshcmd'), ] +
-                                       self._actual_sshopts('sshopts') +
-                                       self._actual_sshopts('sshretryopts') +
-                                       [guess, 'echo >/dev/null 2>&1'])]
-                    self.sh.spawn(thecmd, shell=True, output=False, silent=True)
-                except StandardError:
-                    pass
-                else:
-                    target = guess
-                    break
-        return target
+        return self._sshobj.retries
 
     def __call__(self, *args):
         """Remote execution."""
-        targets = self._build_targets()
-        if len(targets) > 1:
-            thistarget = self._get_target(targets)
-            if thistarget is None:
-                logger.error('Could not find any valid SSH target in %s', str(targets))
-                return False
-        else:
-            thistarget = targets[0]
-
-        logger.info('Remote command on target [%s] <%s>', targets[0], str(args))
-        thecmd = [ self.actual_value('sshcmd') ] + self._actual_sshopts('sshopts') + [ thistarget ] + list(args)
-        return self.sh.spawn(thecmd, shell=False, output=True)
+        return self._sshobj.execute(' '.join(args))
 
 
 class JeevesService(Service):

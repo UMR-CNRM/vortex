@@ -485,11 +485,9 @@ class Ssh(object):
         self._scpcmd = target.get(key='services:scpcmd', default='scp')
         self._sshopts = (
             target.get(key='services:sshopts', default='-x').split() +
-            target.get(key='services:sshretryopts', default='').split() +
             (sshopts or '').split())
         self._scpopts = (
             target.get(key='services:scpopts', default='-Bp').split() +
-            target.get(key='services:scpretryopts', default='').split() +
             (scpopts or '').split())
 
     @property
@@ -743,7 +741,7 @@ class Ssh(object):
         return self.sh.spawn(cmd, output=stream, fatal=False)
 
     def tunnel(self, finaldestination, finalport, entranceport=None,
-               maxwait=5., checkdelay=0.25):
+               maxwait=3., checkdelay=0.25):
         """Create an SSH tunnel and check that it actually starts.
 
         :param str finaldestination: the destination hostname (i.e the machine
@@ -801,7 +799,7 @@ class Ssh(object):
 class ActiveSshTunnel(object):
     """Hold an opened SSH tunnel."""
 
-    def __init__(self, sh, activeprocess, entraceport, finaldestination, finalport):
+    def __init__(self, sh, activeprocess, entranceport, finaldestination, finalport):
         """
         :param Popen activeprocess: The active tunnel process.
         :param int entraceport: Tunnel's entrance port.
@@ -813,7 +811,7 @@ class ActiveSshTunnel(object):
         """
         self._sh = sh
         self.activeprocess = activeprocess
-        self.entraceport = entraceport
+        self.entranceport = entranceport
         self.finaldestination = finaldestination
         self.finalport = finalport
 
@@ -831,6 +829,8 @@ class ActiveSshTunnel(object):
             if self.opened:
                 logger.debug("Tunnel termination failed: issuing SIGKILL")
                 self.activeprocess.kill()
+            logger.info('SSH tunnel closed (entrance: %d, dest: %s:%d).',
+                        self.entranceport, self.finaldestination, self.finalport)
 
     @property
     def opened(self):

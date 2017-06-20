@@ -135,7 +135,6 @@ class AlarmService(Service):
             ),
             sshhost=dict(
                 optional = True,
-                default  = 'node',
             ),
         )
     )
@@ -246,7 +245,11 @@ class AlarmProxyService(AlarmService):
             self.facility.name(),
             self.priority(self.level),
             message)
-        rc = ad.ssh(command, hostname=self.sshhost, nodetype='syslog')
+        if self.sshhost is None:
+            sshobj = self.sh.ssh(hostname='syslog', virtualnode=True)
+        else:
+            sshobj = self.sh.ssh(hostname=self.sshhost)
+        rc = sshobj.execute(command)
         if not rc:
             logger.warning("Remote execution failed: " + command)
         return rc
@@ -358,7 +361,6 @@ class RoutingService(Service):
             ),
             sshhost   = dict(
                 optional = True,
-                default  = 'node',
             ),
         )
     )
@@ -433,7 +435,15 @@ class RoutingService(Service):
         if cmdline is None:
             return False
 
-        rc = ad.ssh(cmdline, hostname=self.sshhost, nodetype='agt')
+        if self.sshhost is None:
+            if self.sh.default_target.isagtnode:
+                rc = self.sh.spawn(cmdline, shell=True, output=True)
+            else:
+                sshobj = self.sh.ssh(hostname='agt', virtualnode=True)
+                rc = sshobj.execute(cmdline)
+        else:
+            sshobj = self.sh.ssh(hostname=self.sshhost)
+            rc = sshobj.execute(cmdline)
 
         if self.targetname:
             self.sh.remove(self.targetname)
@@ -924,7 +934,7 @@ class DMTEventService(Service):
             soprano_host = dict(
                 optional = True,
                 alias    = ('soprahost', 'host'),
-                default  = DelayedEnvValue('DMT_SERVER_HOST','piccolo'),
+                default  = DelayedEnvValue('DMT_SERVER_HOST', 'piccolo'),
             ),
             expectedvars = dict(
                 type     = footprints.FPTuple,
@@ -959,7 +969,8 @@ class DMTEventService(Service):
         cmdline = self.get_cmdline()
         logger.info('DMT Event <%s>', cmdline)
         if not self.sh.default_target.isnetworknode:
-            rc = ad.ssh(cmdline, hostname='node', nodetype='network')
+            sshobj = self.sh.ssh(hostname='network', virtualnode=True)
+            rc = sshobj.execute(cmdline)
         else:
             rc = self.sh.spawn(cmdline, shell=True, output=True)
         return rc
@@ -996,11 +1007,10 @@ class OpMailService(TemplatedMailService):
     def trailer(self):
         """String appended to the message body."""
         return '\n--\nEnvoi automatique par Vortex {} ' \
-               'pour <{}@{}>\n'.format(
-            vortex.__version__,
-            self.env.user,
-            self.sh.default_target.inetname
-        )
+               'pour <{}@{}>\n'.format(vortex.__version__,
+                                       self.env.user,
+                                       self.sh.default_target.inetname
+                                       )
 
     def __call__(self, *args):
         """Main action as inherited, and prompts.
