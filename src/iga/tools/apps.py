@@ -18,21 +18,26 @@ class OpTask(Task):
     _tag_topcls = False
 
     def report_execution_error(self):
-        reseau  = self.conf.rundate.hh
-        logpath = self.env.LOG
-        rundir  = self.env.getvar('RUNDIR') + '/opview/' + self.tag
-        listing = rundir + '/NODE.001_01'
-        model   = self.env.getvar('OP_VAPP').upper()
-        conf    = self.env.getvar('OP_VCONF').lower()
-        xpid    = self.env.getvar('OP_XPID').lower()
-        member  = self.env.getvar('OP_MEMBER')
-        if member:
+        reseau    = self.conf.rundate.hh
+        logpath   = self.env.LOG
+        rundir    = self.env.getvar('RUNDIR') + '/opview/' + self.tag
+        listing   = rundir + '/NODE.001_01'
+        vapp      = self.env.getvar('OP_VAPP').upper()
+        vconf     = self.env.getvar('OP_VCONF').lower()
+        xpid      = self.env.getvar('OP_XPID').lower()
+        hasmember = self.env.getvar('OP_HASMEMBER')
+        if hasmember:
+            member    = self.env.getvar('OP_MEMBER')
             self.sh.header('Send a mail due to an execution error')
-            ad.opmail(reseau=reseau, task=self.tag, member=member, id ='execution_error_member', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf, xpid=xpid)
+            subject = "{0:s} {1:s} {2:s} : Problème d'execution ({3:s} du membre {4:s} pour le réseau de {5:s}h).".format(xpid.upper(),vapp,vconf,self.tag,str(member),reseau)
+            msg     = "L'exécution de la tâche {0:s} du membre {1:s} du réseau {2:s}h du modèle {3:s}-{4:s} a échoué".format(self.tag, str(member), reseau, vapp, vconf)  
+            ad.opmail(subjetc=subject, msg=msg, report="", reseau=reseau, task=self.tag, member=str(member), id ='error', log=logpath, rundir=rundir, listing=listing, vapp=vapp, vconf=vconf, xpid=xpid)
             raise
         else:
             self.sh.header('Send a mail due to an execution error')
-            ad.opmail(reseau=reseau, task=self.tag, id ='execution_error', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf, xpid=xpid)
+            subject = "{0:s} {1:s} {2:s} : Problème d'execution ({3:s} du réseau {4:s}h).".format(xpid.upper(),vapp,vconf,self.tag,reseau)
+            msg     = "L'exécution de la tâche {0:s} pour le réseau {1:s}h du modèle {2:s}-{3:s} a échoué".format(self.tag, reseau, vapp, vconf)
+            ad.opmail(subject=subject, msg=msg, report="", reseau=reseau, task=self.tag, id ='error', log=logpath, rundir=rundir, listing=listing, vapp=vapp, vconf=vconf, xpid=xpid)
             raise
 
     def defaults(self, extras):

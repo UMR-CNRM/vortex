@@ -94,6 +94,7 @@ class OpJobAssistantTest(JobAssistant):
             t.env.setvar("OP_DISP_NAME", "_".join(t.env["SLURM_JOB_NAME"].split("_")[:-1]))
         else:
             t.env.setvar("OP_DISP_NAME", None)
+        
 
         t.sh.header('Setting up the MPI Environment')
 
@@ -265,44 +266,62 @@ class _ReportContext(object):
 
     def _report(self, t, try_ok=True, **kw):
         """Report status of the OP session (input review, mail diffusion...)."""
-        step    = kw.get('step', 'unknown_step')
-        reseau  = t.env.getvar('OP_RUNDATE').hh
-        task    = kw.get('task', 'unknown_task')
-        report  = t.context.sequence.inputs_report()
-        logpath = t.env.getvar('LOG')
-        rundir  = t.env.getvar('RUNDIR') + '/opview/' + task
-        model   = t.env.getvar('OP_VAPP').upper()
-        conf    = t.env.getvar('OP_VCONF').lower()
-        xpid    = t.env.getvar('OP_XPID').lower()
-        member  = t.env.getvar('OP_MEMBER')
+        step      = kw.get('step', 'unknown_step')
+        reseau    = t.env.getvar('OP_RUNDATE').hh
+        task      = kw.get('task', 'unknown_task')
+        report    = t.context.sequence.inputs_report()
+        logpath   = t.env.getvar('LOG')
+        rundir    = t.env.getvar('RUNDIR') + '/opview/' + task
+        vapp      = t.env.getvar('OP_VAPP').upper()
+        vconf     = t.env.getvar('OP_VCONF').lower()
+        xpid      = t.env.getvar('OP_XPID').lower()
+        hasmember = t.env.getvar('OP_HASMEMBER')
+        
+
         report.print_report(detailed=True)
         if try_ok:
             t.sh.header('Input review')
             if any(report.active_alternates()):
-                if member:
+
+                if hasmember:
+                    member = t.env.getvar('OP_MEMBER')
                     t.sh.header('Input informations: active alternates were found')
-                    ad.opmail(reseau=reseau, task=task, member=member, id='mode_secours_member', report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
+                    subject = "{0:s} {1:s} {2:s} : Utilisation de la tâche alternative {3:s} pour le membre {4:s} du réseau {5:s}h.".format(xpid.upper(),vapp,vconf,task,str(member),reseau)
+                    ad.opmail(subject=subject, reseau=reseau, task=task, member=str(member), id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir, vapp=vapp, vconf=vconf, xpid=xpid)
                 else: 
                     t.sh.header('Input informations: active alternates were found')
-                    ad.opmail(reseau=reseau, task=task, id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
+                    subject = "{0:s} {1:s} {2:s} : Utilisation de la tâche alternative {3:s} pour le réseau {4:s}h.".format(xpid.upper(),vapp,vconf,task,reseau)
+                    ad.opmail(reseau=reseau, task=task, id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir, vapp=vapp, vconf=vconf, xpid=xpid)
             else:
                 t.sh.header('Input informations: everything is ok')
         else:
-            t.sh.header('Input informations: {0:s} fail'.format(step))
-            if member:
-                mail_id = '{0:s}_fail_member'.format(step)
-                ad.opmail(reseau=reseau, task=task, member=member, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
+            t.sh.header('Input informations: {0:s} fail'.format(step)) 
+            mail_id = 'error'
+            
+            if hasmember:
+                member    = t.env.getvar('OP_MEMBER')   
+                if step == 'input':
+                    msg       = "La récupération des inputs de la tâche {0:s} du membre {1:s}".format(task,str(member)) 
+                    subject   = "{0:s} {1:s} {2:s} : Problème de récupération des inputs de la tâche {3:s} du membre {4:s} pour le réseau {5:s}h".format(xpid.upper(),vapp,vconf,task,str(member),reseau)
+                elif step == 'output':
+                    msg     = "L'archivage des outputs de la tâche {0:s} du membre {1:s}".format(task,str(member))
+                    subject = "{0:s} {1:s} {2:s} : Problème d'archivage des outputs de la tâche {0:s} du membre {1:s} pour le réseau {2:s}h.".format(xpid.upper(),vapp,vconf,task,str(member),reseau)
+                ad.opmail(subject=subject, reseau=reseau, msg=msg, task=task, member=str(member), id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, vapp=vapp, vconf=vconf, xpid=xpid)
             else:
-                mail_id = '{0:s}_fail'.format(step)
-                ad.opmail(reseau=reseau, task=task, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
+                if step == 'input':
+                    msg        = "La récupération des inputs de la tâche {0:s}".format(task)
+                    subject = "{0:s} {1:s} {2:s} : Problème de récupération des inputs de la tâche {3:s} du réseau {4:s}h".format(xpid.upper(),vapp,vconf,task,reseau)
+                elif step == 'output':
+                    msg     = "L'archivage des outputs de la tâche {0:s}".format(task)
+                    subject = "{0:s} {1:s} {2:s} : Problème d'archivage des outputs de la tâche {0:s} du réseau {1:s}h.".format(xpid.upper(),vapp,vconf,task,reseau)
+                ad.opmail(subject=subject, reseau=reseau, msg=msg, task=task, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, vapp=vapp, vconf=vconf, xpid=xpid)
 
 class InputReportContext(_ReportContext):
     """Context manager that print a report on inputs."""
 
-    def __init__(self, task, ticket):
+    def __init__(self,task, ticket):
         super(InputReportContext, self).__init__(task, ticket)
         self._step = 'input'
-
 
 class OutputReportContext(_ReportContext):
     """Context manager that print a report on outputs."""
