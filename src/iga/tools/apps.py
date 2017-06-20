@@ -31,7 +31,7 @@ class OpTask(Task):
             self.sh.header('Send a mail due to an execution error')
             subject = "{0:s} {1:s} {2:s} : Problème d'execution ({3:s} du membre {4:s} pour le réseau de {5:s}h).".format(xpid.upper(),vapp,vconf,self.tag,str(member),reseau)
             msg     = "L'exécution de la tâche {0:s} du membre {1:s} du réseau {2:s}h du modèle {3:s}-{4:s} a échoué".format(self.tag, str(member), reseau, vapp, vconf)  
-            ad.opmail(subjetc=subject, msg=msg, report="", reseau=reseau, task=self.tag, member=str(member), id ='error', log=logpath, rundir=rundir, listing=listing, vapp=vapp, vconf=vconf, xpid=xpid)
+            ad.opmail(subject=subject, msg=msg, report="", reseau=reseau, task=self.tag, member=str(member), id ='error', log=logpath, rundir=rundir, listing=listing, vapp=vapp, vconf=vconf, xpid=xpid)
             raise
         else:
             self.sh.header('Send a mail due to an execution error')
