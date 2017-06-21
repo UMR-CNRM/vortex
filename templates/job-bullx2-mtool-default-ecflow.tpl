@@ -65,9 +65,19 @@ ja = footprints.proxy.jobassistant(kind = 'generic',
                                    special_prefix='rd_',
                                    )
 ja.add_plugin('mtool', step='[this:number]', stepid='[this:id]', lastid='backup', mtoolid='[this:count]')
+ja.add_plugin('flow', backend='ecflow', jobidlabels=True, mtoolmeters=True)
+
+flowscheduler = dict(
+    ECF_TRYNO=int('%ECF_TRYNO%'),
+    ECF_HOST='%ECF_FQDN%',
+    ECF_PORT='%ECF_PORT%',
+    ECF_VERSION='%ECF_VERSION%',
+    ECF_PASS='%ECF_PASS%',
+    ECF_NAME='%ECF_NAME%',
+)
 
 try:
-    t, e, sh = ja.setup(actual=locals())
+    t, e, sh = ja.setup(actual=locals(), flowscheduler=flowscheduler)
     sh.ftraw = True # To activate ftserv
 
     opts = dict(jobassistant=ja, steps=ja.mtool_steps,

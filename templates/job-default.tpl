@@ -36,12 +36,8 @@ rd_iniconf  = '{0:s}/conf/{1:s}_{2:s}{3:s}.ini'.format(appbase,
                                                        rd_vapp, rd_vconf, '$taskconf')
 
 ja = footprints.proxy.jobassistant(kind = 'generic',
-                                   modules = footprints.stdtypes.FPSet((
-                                       'common', 'gco', 'olive',
-                                       'vortex.tools.lfi', 'vortex.tools.odb', 'vortex.tools.grib',
-                                       'vortex.tools.surfex', 'vortex.tools.rawfiles',
-                                       'common.util.usepygram')),
-                                   addons = footprints.stdtypes.FPSet(('lfi', 'iopoll', 'odb', 'sfx', 'grib', 'rawfiles')),
+                                   modules = footprints.stdtypes.FPSet(($loadedmods)),
+                                   addons = footprints.stdtypes.FPSet(($loadedaddons)),
                                    special_prefix='rd_',
                                    )
 ja.add_plugin('tmpdir')

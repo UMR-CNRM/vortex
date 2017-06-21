@@ -136,6 +136,7 @@ def mkjob(t, **kw):
     tplconf.setdefault('python', t.sh.which('python'))
     tplconf.setdefault('pyopts', '-u')
     tplconf.setdefault('appbase', opset.appbase)
+    tplconf.setdefault('target_appbase', opset.appbase)
     tplconf.setdefault('xpid', opset.xpid)
     tplconf.setdefault('vapp', opset.vapp)
     tplconf.setdefault('vconf', opset.vconf)
@@ -161,6 +162,10 @@ def mkjob(t, **kw):
 
     if tplconf['suitebg'] is not None:
         tplconf['suitebg'] = "'" + tplconf['suitebg'] + "'"
+
+    for explist in ('loadedmods', 'loadedaddons'):
+        if explist in tplconf:
+            tplconf[explist] = ','.join(["'{:s}'".format(x) for x in re.split(r'\s*,\s*', tplconf[explist])])
 
     corejob = load_template(t, tplconf['template'])
     opts['tplfile'] = corejob.srcfile
@@ -526,7 +531,8 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
 
     @property
     def mtool_steps(self):
-        steps_map = {'fetch': ('early-fetch', ),
+        steps_map = {'transfer': ('early-fetch', 'fetch', 'backup', 'late-backup'),
+                     'fetch': ('early-fetch', ),
                      'compute': ('early-fetch', 'fetch', 'compute', 'backup'),
                      'backup': ('backup', 'late-backup'), }
         try:

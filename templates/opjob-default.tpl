@@ -51,12 +51,8 @@ import vortex.layout.jobs
 import iga.tools.op
 
 ja = footprints.proxy.jobassistant(kind = 'op_default',
-                                   modules = footprints.stdtypes.FPSet((
-                                       'common', 'gco', 'previmar', 'iga',
-                                       'vortex.tools.lfi', 'vortex.tools.odb', 'vortex.tools.grib',
-                                       'vortex.tools.surfex', 'vortex.tools.rawfiles',
-                                       'common.util.usepygram')),
-                                   addons = footprints.stdtypes.FPSet(('lfi', 'iopoll', 'odb', 'sfx', 'grib', 'rawfiles')),
+                                   modules = footprints.stdtypes.FPSet(($loadedmods)),
+                                   addons = footprints.stdtypes.FPSet(($loadedaddons)),
                                    special_prefix='op_',
                                    )
 
