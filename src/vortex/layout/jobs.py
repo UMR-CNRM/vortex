@@ -22,6 +22,8 @@ from footprints.stdtypes import FPSet
 
 import vortex
 from vortex.tools import date
+from vortex.tools.actions import actiond as ad
+from vortex.tools.actions import FlowSchedulerGateway
 from vortex.util.config import ExtendedReadOnlyConfigParser, load_template
 from vortex.util.decorators import nicedeco
 
@@ -56,8 +58,6 @@ def _guess_vapp_vconf_xpid(t, path=None):
 def mkjob(t, **kw):
     """Build a complete job file according to a template and some parameters."""
     opts = dict(
-        python    = t.sh.which('python'),
-        pyopts    = '-u',
         profile   = 'void',
         inifile   = '@job-default.ini',
         create    = date.at_second().iso8601(),
@@ -133,6 +133,8 @@ def mkjob(t, **kw):
 
     opset = _guess_vapp_vconf_xpid(t)
 
+    tplconf.setdefault('python', t.sh.which('python'))
+    tplconf.setdefault('pyopts', '-u')
     tplconf.setdefault('appbase', opset.appbase)
     tplconf.setdefault('xpid', opset.xpid)
     tplconf.setdefault('vapp', opset.vapp)
@@ -504,10 +506,21 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
                 values = ['mtool', ]
             ),
             step = dict(
+                info="The number of the current MTOOL step.",
                 type=int,
             ),
-            stepid = dict(
+            stepid=dict(
+                info="The name (id) of the current MTOOL step.",
             ),
+            lastid = dict(
+                info="The name (id) of the last effective MTOOL step.",
+                optional=True,
+            ),
+            mtoolid = dict(
+                info="The MTOOL's job number",
+                type=int,
+                optional=True,
+            )
         ),
     )
 
@@ -561,3 +574,105 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
         """
         t.sh.cd(t.env.MTOOL_STEP_SPOOL)
         vortex.toolbox.rescue(bkupdir=t.env.MTOOL_STEP_ABORT)
+
+
+class JobAssistantFlowSchedPlugin(JobAssistantPlugin):
+
+    _footprint = dict(
+        info = 'JobAssistant Flow Scheduler Plugin',
+        attr = dict(
+            kind = dict(
+                values = ['flow', ]
+            ),
+            backend = dict(
+                values = ['ecflow', 'sms']
+            ),
+            jobidlabels = dict(
+                info="Update the task's jobid label.",
+                default=False,
+                optional=True,
+                type=bool,
+            ),
+            mtoolmeters  = dict(
+                info="Update the MTOOL's work meter.",
+                default=False,
+                optional=True,
+                type=bool,
+            )
+        ),
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        super(JobAssistantFlowSchedPlugin, self).__init__(*kargs, **kwargs)
+        self._flow_sched_saved_mtplug = 0
+
+    @property
+    def _flow_sched_mtool_plugin(self):
+        """Return the MTOOL plugin (if present)."""
+        if self._flow_sched_saved_mtplug == 0:
+            self._flow_sched_saved_mtplug = None
+            for p in self.masterja.plugins:
+                if p.kind == 'mtool':
+                    self._flow_sched_saved_mtplug = p
+        return self._flow_sched_saved_mtplug
+
+    def _flow_sched_ids(self, t):
+        """Return the jobid and RID."""
+        # Simple heuristic to find a job id
+        jid = t.env.PBS_JOBID or t.env.SLURM_JOB_ID or 'localpid'
+        if jid == 'localpid':
+            jid = t.sh.getpid()
+        # Find a suitable RID
+        mtplug = self._flow_sched_mtool_plugin
+        if mtplug is None:
+            rid = jid
+        else:
+            if mtplug.mtoolid is None:
+                raise RuntimeError("mtplug.mtoolid must be defined")
+            rid = mtplug.mtoolid
+        return jid, rid
+
+    def plugable_actions_setup(self, t, **kw):
+        """Setup the flow action dispatcher."""
+        ad.add(FlowSchedulerGateway(service=self.backend))
+
+        # Configure the action
+        jid, rid = self._flow_sched_ids(t)
+        label = "{:s}".format(jid)
+        confdict = kw.get('flowscheduler', dict())
+        confdict.setdefault('ECF_RID', rid)
+        ad.flow_conf(confdict)
+
+        t.sh.header('Flow Scheduler ({:s}) Settings'.format(self.backend))
+        ad.flow_info()
+        print('')
+        print('Flow scheduler client path: {:s}'.format(ad.flow_path()))
+
+        # Initialise the flow scheduler
+        mtplug = self._flow_sched_mtool_plugin
+        if mtplug is None:
+            ad.flow_init(rid)
+        else:
+            if mtplug.step == 1:
+                ad.flow_init(rid)
+            label = "{:s} (mtoolid={!s})".format(label, mtplug.mtoolid)
+            if self.mtoolmeters:
+                ad.flow_meter('work', 1 + (mtplug.step - 1) * 2)
+        if self.jobidlabels:
+            ad.flow_label('jobid', label)
+
+    def plugable_complete(self, t):
+        """Should be called when a job finishes successfully."""
+        mtplug = self._flow_sched_mtool_plugin
+        if mtplug is None:
+            ad.flow_complete()
+        else:
+            if self.mtoolmeters:
+                ad.flow_meter('work', 2 + (mtplug.step - 1) * 2)
+            # With MTOOL, complete only at the end of the last step...
+            if mtplug.stepid == mtplug.lastid:
+                ad.flow_complete()
+
+    def plugable_rescue(self, t):
+        """Called at the end of a job when something went wrong."""
+        ad.flow_abort("An exception was caught")

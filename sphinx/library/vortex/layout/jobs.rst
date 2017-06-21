@@ -40,3 +40,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: JobAssistantFlowSchedPlugin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

@@ -200,33 +200,56 @@ class Prompt(Action):
         return True
 
 
-class SmsGateway(Action):
+class FlowSchedulerGateway(Action):
     """
-    Child command to SMS server.
+    Send a child command to any ECMWF's workfow scheduler.
     """
 
-    def __init__(self, kind='sms', service='sms', active=True, permanent=True):
-        super(SmsGateway, self).__init__(kind=kind, active=active, service=service, permanent=permanent)
+    _KNOWN_CMD = dict(sms=['abort', 'complete', 'event', 'init', 'label', 'meter', 'msg', 'variable'],
+                      ecflow=['abort', 'complete', 'event', 'init', 'label', 'meter', 'msg'])
+
+    def __init__(self, kind='flow', service=None, active=True, permanent=True):
+        """
+        The `service` attribute must be specified (it can be either sms or ecflow).
+        """
+        if service is None:
+            raise ValueError('The service name must be provided')
+        super(FlowSchedulerGateway, self).__init__(kind=kind, active=active,
+                                                   service=service, permanent=permanent)
 
     def gateway(self, *args, **kw):
-        """Ask SMS to run any miscellaneous (but known) command."""
+        """Ask the Scheduler to run any (but known) command."""
         rc = None
         service = self.get_active_service(**kw)
-        if service and self._smscmd is not None:
-            rc = getattr(service, self._smscmd)(*args)
-        self._smscmd = None
+        if service and self._schedcmd is not None:
+            rc = getattr(service, self._schedcmd)(*args)
+        self._schedcmd = None
         return rc
 
     def __getattr__(self, attr):
         if attr.startswith('_'):
             raise AttributeError
-        if attr in ('clear', 'conf', 'info', 'mute', 'path', 'play', 'abort',
-                    'complete', 'event', 'init', 'label', 'meter', 'msg', 'variable'):
-            self._smscmd = attr
+        if attr in (['conf', 'info', 'clear', 'mute', 'play', 'path', ] +
+                    self._KNOWN_CMD[self.service]):
+            self._schedcmd = attr
             return self.gateway
         else:
-            self._smscmd = None
+            self._schedcmd = None
             return None
+
+
+class SmsGateway(FlowSchedulerGateway):
+    """Send a child command to an SMS server."""
+
+    def __init__(self, kind='sms', service='sms', active=True, permanent=True):
+        super(SmsGateway, self).__init__(kind=kind, active=active, service=service, permanent=permanent)
+
+
+class EcflowGateway(FlowSchedulerGateway):
+    """Send a child command to an Ecflow server."""
+
+    def __init__(self, kind='ecflow', service='ecflow', active=True, permanent=True):
+        super(EcflowGateway, self).__init__(kind=kind, active=active, service=service, permanent=permanent)
 
 
 class SpooledActions(object):

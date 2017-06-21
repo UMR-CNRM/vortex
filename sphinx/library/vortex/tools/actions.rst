@@ -48,11 +48,21 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: FlowSchedulerGateway
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
 .. autoclass:: SmsGateway
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
+.. autoclass:: EcflowGateway
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
 .. autoclass:: SpooledActions
    :show-inheritance:
    :members:

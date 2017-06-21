@@ -7,6 +7,8 @@ Interface to SMS commands.
 
 __all__ = []
 
+import functools
+
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -20,12 +22,6 @@ class Scheduler(Service):
     _footprint = dict(
         info = 'Scheduling service class',
         attr = dict(
-            rootdir = dict(
-                optional = True,
-                default  = None,
-                alias    = ('install',),
-                access   = 'rwx',
-            ),
             muteset = dict(
                 optional = True,
                 default  = footprints.FPSet(),
@@ -59,7 +55,90 @@ class Scheduler(Service):
         self.muteset.clear()
 
 
-class SMS(Scheduler):
+class EcmwfLikeScheduler(Scheduler):
+    """Abstract class for any ECMWF scheduling systems (SMS, Ecflow)."""
+
+    _abstract  = True
+    _footprint = dict(
+        attr = dict(
+            env_pattern = dict(
+                info = 'Scheduler configuration variables start with...',
+            ),
+        )
+    )
+
+    _KNOWN_CMD = ()
+
+    def conf(self, kwenv):
+        """Possibly export the provided variables and return a dictionary of positioned variables."""
+        if kwenv:
+            for schedvar in [ x.upper() for x in kwenv.keys() if x.upper().startswith(self.env_pattern) ]:
+                self.env[schedvar] = str(kwenv[schedvar])
+        subenv = dict()
+        for schedvar in [ x for x in self.env.keys() if x.startswith(self.env_pattern) ]:
+            subenv[schedvar] = self.env.get(schedvar)
+        return subenv
+
+    def info(self):
+        """Dump current defined variables."""
+        for schedvar, schedvalue in self.conf(dict()).iteritems():
+            print '{0:s}="{1:s}"'.format(schedvar, str(schedvalue))
+
+    def __call__(self, *args):
+        """By default call the :meth:`info` method."""
+        return self.info()
+
+    def setup_default(self, *args):
+        """Fake method for any missing callback, ie: setup_init, setup_abort, etc."""
+        return True
+
+    def close_default(self, *args):
+        """Fake method for any missing callback, ie: close_init, close_abort, etc."""
+        return True
+
+    def wrap_in(self):
+        """Last minute wrap before binary child command."""
+        return True
+
+    def wrap_out(self):
+        """Restore execution state as before :meth:`wrap_in`."""
+        pass
+
+    def child(self, cmd, *options):
+        """Miscellaneous sms/ecflow child sub-command."""
+        rc  = None
+        cmd = self.cmd_rename(cmd)
+        if cmd in self.muteset:
+            logger.warning('%s mute command [%s]', self.kind, cmd)
+        else:
+            if getattr(self, 'setup_' + cmd, self.setup_default)(*options):
+                rc = self.wrap_in()
+                if rc:
+                    try:
+                        rc = self._actual_child(cmd, options)
+                    finally:
+                        self.wrap_out()
+                        getattr(self, 'close_' + cmd, self.close_default)(*options)
+                else:
+                    logger.warning('Actual [%s %s] command wrap_in failed', self.kind, cmd)
+            else:
+                logger.warning('Actual [%s %s] command skipped due to setup action',
+                               self.kind, cmd)
+        return rc
+
+    def _actual_child(self, cmd, options):
+        """The actual child command implementation."""
+        raise NotImplementedError("This an abstract method.")
+
+    def __getattr__(self, name):
+        """Deal with any known commands."""
+        if name in self._KNOWN_CMD:
+            return functools.partial(self.child, name)
+        else:
+            return super(EcmwfLikeScheduler, self).__getattr__(name)
+
+
+class SMS(EcmwfLikeScheduler):
     """
     Client interface to SMS scheduling and monitoring system.
     """
@@ -70,13 +149,25 @@ class SMS(Scheduler):
             kind = dict(
                 values   = ['sms'],
             ),
+            rootdir = dict(
+                optional = True,
+                default  = None,
+                alias    = ('install',),
+            ),
+            env_pattern = dict(
+                default  = 'SMS',
+                optional = True,
+            )
         )
     )
+
+    _KNOWN_CMD = ('abort', 'complete', 'event', 'init', 'label', 'meter', 'msg', 'variable')
 
     def __init__(self, *args, **kw):
         logger.debug('SMS scheduler client init %s', self)
         super(SMS, self).__init__(*args, **kw)
-        if self.rootdir is None:
+        self._actual_rootdir = self.rootdir
+        if self._actual_rootdir is None:
             thistarget = self.sh.default_target
             guesspath  = self.env.SMS_INSTALL_ROOT or thistarget.get('sms:rootdir')
             if guesspath is None:
@@ -86,11 +177,11 @@ class SMS(Scheduler):
                 if generictarget is None:
                     logger.warning('SMS service could not guess target name [%s]', generictarget)
                 else:
-                    self.rootdir = guesspath + '/' + generictarget
+                    self._actual_rootdir = guesspath + '/' + generictarget
         if self.sh.path.exists(self.cmdpath('init')):
-            self.env.setbinpath(self.rootdir)
+            self.env.setbinpath(self._actual_rootdir)
         else:
-            logger.warning('No SMS client found at init time [rootdir:%s]>', self.rootdir)
+            logger.warning('No SMS client found at init time [rootdir:%s]>', self._actual_rootdir)
 
     def cmd_rename(self, cmd):
         """Remap command name. Strip any sms prefix."""
@@ -99,105 +190,34 @@ class SMS(Scheduler):
             cmd = cmd[3:]
         return cmd
 
-    def conf(self, kwenv):
-        """Possibly export the provided sms variables and return a dictionary of positioned variables."""
-        if kwenv:
-            for smsvar in [ x.upper() for x in kwenv.keys() if x.upper().startswith('SMS') ]:
-                self.env[smsvar] = str(kwenv[smsvar])
-        subenv = dict()
-        for smsvar in [ x for x in self.env.keys() if x.startswith('SMS') ]:
-            subenv[smsvar] = self.env.get(smsvar)
-        return subenv
-
-    def info(self):
-        """Dump current defined sms variables."""
-        for smsvar, smsvalue in self.conf(dict()).iteritems():
-            print '{0:s}="{1:s}"'.format(smsvar, str(smsvalue))
-
-    def __call__(self, *args):
-        """By default call the :meth:`info` method."""
-        return self.info()
-
     def cmdpath(self, cmd):
         """Return a complete binary path to cmd."""
         cmd = 'sms' + self.cmd_rename(cmd)
-        if self.rootdir:
-            return self.sh.path.join(self.rootdir, cmd)
+        if self._actual_rootdir:
+            return self.sh.path.join(self._actual_rootdir, cmd)
         else:
             return cmd
 
     def path(self):
         """Return actual binary path to SMS commands."""
-        return self.rootdir
+        return self._actual_rootdir
 
     def wrap_in(self):
         """Last minute wrap before binary child command."""
-        self.env.SMSACTUALPATH = self.rootdir
+        rc = super(SMS, self).wrap_in()
+        self.env.SMSACTUALPATH = self._actual_rootdir
+        return rc
 
     def wrap_out(self):
         """Restaure execution state as before :meth:`wrap_in`."""
         del self.env.SMSACTUALPATH
+        super(SMS, self).wrap_out()
 
-    def setup_default(self, *args):
-        """Fake method for any missing callback, ie: setup_init, setup_abort, etc."""
-        return True
-
-    def close_default(self, *args):
-        """Fake method for any missing callback, ie: close_init, close_abort, etc."""
-        return True
-
-    def child(self, cmd, options):
+    def _actual_child(self, cmd, options):
         """Miscellaneous smschild subcommand."""
-        rc  = None
-        cmd = self.cmd_rename(cmd)
-        if cmd in self.muteset:
-            logger.warning('SMS mute command [%s]', cmd)
-        else:
-            args = [self.cmdpath(cmd)]
-            if isinstance(options, (tuple, list)):
-                args.extend(options)
-            else:
-                args.append(options)
-            if getattr(self, 'setup_' + cmd, self.setup_default)(*options):
-                self.wrap_in()
-                rc = self.sh.spawn(args, output=False)
-                self.wrap_out()
-                getattr(self, 'close_' + cmd, self.close_default)(*options)
-            else:
-                logger.warning('Actual [sms%s] command skipped due to setup action', cmd)
-        return rc
-
-    def abort(self, *opts):
-        """Gateway to :meth:`child` abort method."""
-        return self.child('abort', opts)
-
-    def complete(self, *opts):
-        """Gateway to :meth:`child` complete method."""
-        return self.child('complete', opts)
-
-    def event(self, *opts):
-        """Gateway to :meth:`child` event method."""
-        return self.child('event', opts)
-
-    def init(self, *opts):
-        """Gateway to :meth:`child` init method."""
-        return self.child('init', opts)
-
-    def label(self, *opts):
-        """Gateway to :meth:`child` label method."""
-        return self.child('label', opts)
-
-    def meter(self, *opts):
-        """Gateway to :meth:`child` meter method."""
-        return self.child('meter', opts)
-
-    def msg(self, *opts):
-        """Gateway to :meth:`child` msg method."""
-        return self.child('msg', opts)
-
-    def variable(self, *opts):
-        """Gateway to :meth:`child` variable method."""
-        return self.child('variable', opts)
+        args = [self.cmdpath(cmd)]
+        args.extend(options)
+        return self.sh.spawn(args, output=False)
 
 
 class SMSColor(SMS):
@@ -216,5 +236,105 @@ class SMSColor(SMS):
 
     def wrap_in(self):
         """Last minute wrap before binary child command."""
-        super(SMSColor, self).wrap_in()
+        rc = super(SMSColor, self).wrap_in()
         print "SMS COLOR"
+        return rc
+
+
+class EcFlow(EcmwfLikeScheduler):
+    """
+    Client interface to the ecFlow scheduling and monitoring system.
+    """
+
+    _footprint = dict(
+        info = 'SMS client service',
+        attr = dict(
+            kind = dict(
+                values   = ['ecflow'],
+            ),
+            clientpath = dict(
+                info     = ("Path to the ecFlow client binary (if omitted, " +
+                            "it's read in the configuration file)"),
+                optional = True,
+                default  = None,
+            ),
+            env_pattern = dict(
+                default  = 'ECF_',
+                optional = True,
+            )
+        )
+    )
+
+    _KNOWN_CMD = ('abort', 'complete', 'event', 'init', 'label', 'meter', 'msg')
+
+    def __init__(self, *args, **kw):
+        logger.debug('EcFlow scheduler client init %s', self)
+        super(EcFlow, self).__init__(*args, **kw)
+        self._actual_clientpath = self.clientpath
+        self._tunnel = None
+
+    def path(self):
+        """Return the actual binary path to the EcFlow client."""
+        if self._actual_clientpath is None:
+            thistarget = self.sh.default_target
+            guesspath = self.env.ECF_CLIENT_PATH or thistarget.get('ecflow:clientpath')
+            ecfversion = self.env.get('ECF_VERSION', 'default')
+            guesspath = guesspath.format(version=ecfversion)
+            if guesspath is None:
+                logger.warning('ecFlow service could not guess the install location [%s]', str(guesspath))
+            else:
+                self._actual_clientpath = guesspath
+        if not self.sh.path.exists(self._actual_clientpath):
+            logger.warning('No ecFlow client found at init time [path:%s]>', self.self._actual_clientpath)
+        return self._actual_clientpath
+
+    def wrap_in(self):
+        """When running on an node without network access create an SSH tunnel."""
+        rc = super(EcFlow, self).wrap_in()
+        if not self.sh.default_target.isnetworknode:
+            # Build up an SSH tunnel to convey the EcFlow command
+            ecconf = self.conf(dict())
+            echost = ecconf.get('{:s}HOST'.format(self.env_pattern), None)
+            ecport = ecconf.get('{:s}PORT'.format(self.env_pattern), None)
+            if not (echost and ecport):
+                rc = False
+            else:
+                sshobj = self.sh.ssh('network', virtualnode=True)
+                self._tunnel = sshobj.tunnel(echost, int(ecport))
+                if not self._tunnel:
+                    rc = False
+                else:
+                    newvars = {'{:s}HOST'.format(self.env_pattern): 'localhost',
+                               '{:s}PORT'.format(self.env_pattern): self._tunnel.entranceport}
+                    self.env.delta(** newvars)
+                    rc = True
+        return rc
+
+    def wrap_out(self):
+        """Close the tunnel and restore the environment."""
+        if self._tunnel:
+            self._tunnel.close()
+            self._tunnel = None
+            self.env.rewind()
+        super(EcFlow, self).wrap_out()
+
+    def _actual_child(self, cmd, options):
+        """Miscellaneous ecFlow sub-command."""
+        args = [self.path(), ]
+        if options:
+            args.append('--{:s}={!s}'.format(cmd, options[0]))
+            if len(options) > 1:
+                args.extend(options[1:])
+        else:
+            args.append('--{:s}'.format(cmd))
+        args = [str(a) for a in args]
+        logger.info('Issuing the ecFlow command: %s', ' '.join(args[1:]))
+        return self.sh.spawn(args, output=False)
+
+    def abort(self, *opts):
+        """Gateway to :meth:`child` abort method."""
+        actual_opts = list(opts)
+        if not actual_opts:
+            # For backward compatibility with SMS
+            actual_opts.append("No abort reason provided")
+        return self.child('abort', *actual_opts)

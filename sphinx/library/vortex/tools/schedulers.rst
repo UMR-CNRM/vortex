@@ -21,12 +21,22 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: SMS
+.. autoclass:: EcmwfLikeScheduler
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
+.. autoclass:: SMS
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
 .. autoclass:: SMSColor
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: EcFlow
    :show-inheritance:
    :members:
    :member-order: alphabetical

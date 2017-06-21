@@ -1,4 +1,4 @@
-#!/opt/softs/python/2.7.5/bin/python
+#!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
@@ -14,7 +14,7 @@ appbase = re.sub(os.path.sep + '(jobs|conf|logs|tasks)$', '',
                  os.path.realpath(os.getcwd()))
 vortex_path = os.path.join(appbase, 'vortex')
 if not os.path.exists(vortex_path):
-    vortex_path =os.path.dirname(os.path.dirname(sys.argv[0]))
+    vortex_path = os.path.dirname(os.path.dirname(sys.argv[0]))
 
 pathdirs    = [os.path.join(vortex_path, xpath) for xpath in ('site', 'src', )]
 
@@ -133,8 +133,7 @@ def display_report(report):
 def makejob(job):
     t = vortex.ticket()
 
-    defaults = dict(python=t.sh.which('python'))
-    opts = dict(defaults.items() + job.items())
+    opts = dict(job.items())
 
     t.sh.header(' '.join(('Vortex', vortex.__version__, 'job builder')))
 
