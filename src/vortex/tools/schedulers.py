@@ -285,7 +285,7 @@ class EcFlow(EcmwfLikeScheduler):
             else:
                 self._actual_clientpath = guesspath
         if not self.sh.path.exists(self._actual_clientpath):
-            logger.warning('No ecFlow client found at init time [path:%s]>', self.self._actual_clientpath)
+            logger.warning('No ecFlow client found at init time [path:%s]>', self._actual_clientpath)
         return self._actual_clientpath
 
     def wrap_in(self):
