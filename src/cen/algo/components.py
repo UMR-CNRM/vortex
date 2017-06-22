@@ -16,8 +16,8 @@ from vortex.syntax.stdattrs import a_date
 from vortex.algo.components import ParaBlindRun, ParaExpresso
 from vortex.tools.parallelism import VortexWorkerBlindRun
 
-_OP_files_common = dict(alp=['OPlisteo', 'OPlistem', 'OPlisteml', 'OPclim', 'OPNOmt'],
-                        pyr=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt'],)
+_OP_files_common = dict(alp=['OPlisteo', 'OPlistem', 'OPlisteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat'],
+                        pyr=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat'],)
 _OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSAP', 'OPSAN']
 
 
@@ -169,7 +169,8 @@ class SafranWorker(VortexWorkerBlindRun):
     def link_in(self, local, dest):
         """Link a file (the target is cleaned first)."""
         self.system.remove(dest)
-        self.system.symlink(local, dest)
+        if self.system.path.isfile(local):
+            self.system.symlink(local, dest)
 
     def sapdat(self, term):
         # Creation of the 'sapdat' file containing the exact date of the file to be processed.
@@ -204,6 +205,7 @@ class SafraneWorker(SafranWorker):
                 f.write('SAF' + str(term.hour))
             list_name = self.system.path.join(thisdir, 'listsaf' + str(term.hour))
             self.local_spawn(list_name)
+            # A FAIRE : gérer le fichier fort.79 (mv dans $list/day.$day ?, rejet)
 
 
 class SypluieWorker(SafranWorker):
@@ -218,13 +220,13 @@ class SypluieWorker(SafranWorker):
 
     def _safran_task(self, rundir, thisdir, rdict):
         for day, dterms in self.days.items():
-            logger.info('Running day : %s', str(day))
-            self.sapdat(dterm[-1])
+            self.sapdat(dterms[-1])
             # Creation of the 'sapfich' file containing the name of the output file
             with open('sapfich', 'w') as f:
-                f.write('SAPLUI5' + str(day))
-            list_name = self.system.path.join(thisdir, 'listpluie' + str(term.hour))
+                f.write('SAPLUI5')
+            list_name = self.system.path.join(thisdir, 'listpluie')
             self.local_spawn(list_name)
+            # A FAIRE : gérer le fichier fort.78 (mv dans $list/day.$day ?, rejet) 
 
 
 class SyrpluieWorker(SafranWorker):
@@ -258,10 +260,11 @@ class SyvaprWorker(SafranWorker):
 
     def _safran_task(self, rundir, thisdir, rdict):
         for day, dterms in self.days.items():
-            logger.info('Running day : %s', str(day))
-            if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day), ]):
+            if self.check_mandatory_resources(rdict, ['SAF' + str(t.hour) for t in dterms]):
+                for i, term in enumerate(dterms):
+                    self.link_in('SAF' + str(term.hour), 'SAFRAN' + str(i + 1))
                 self.sapdat(dterms[-1])
-                list_name = self.system.path.join(thisdir, 'listpr' + str(day))
+                list_name = self.system.path.join(thisdir, 'listpr')
                 self.local_spawn(list_name)
                 self.mv_if_exists('fort.13', 'SAPLUI5' + str(day))
                 self.mv_if_exists('fort.14', 'SAPLUI5_ARP' + str(day))
@@ -280,11 +283,11 @@ class SyvafiWorker(SafranWorker):
 
     def _safran_task(self, rundir, thisdir, rdict):
         for day, dterms in self.days.items():
-            logger.info('Running day : %s', str(day))
             #if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day), ]):
             self.sapdat(dterms[-1])
-            list_name = self.system.path.join(thisdir, 'listfi' + str(day))
+            list_name = self.system.path.join(thisdir, 'listfi')
             self.local_spawn(list_name)
+            self.mv_if_exists('fort.90', 'TAL' + str(day)) 
                          
 
 class SyrmrrWorker(SafranWorker):
@@ -323,14 +326,12 @@ class SytistWorker(SafranWorker):
     def _safran_task(self, rundir, thisdir, rdict):
         for day, dterms in self.days.items():
             logger.info('Running day : %s', str(day))
-            if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day),
-                                                      'SAPLUI5_ARP' + str(day),
-                                                      'SAPLUI5_ANA' + str(day)
-                                                      ] +
-                                                     ['SAF' + str(t.hour) for t in dterms]):
-                self.link_in('SAPLUI5' + str(day), 'SAPLUI5')
-                self.link_in('SAPLUI5_ARP' + str(day), 'SAPLUI5_ARP')
-                self.link_in('SAPLUI5_ANA' + str(day), 'SAPLUI5_ANA')
+            if self.system.path.isfile('SAPLUI5' + str(day)) and not self.path.isfile('SAPLUI5'):
+                self.system.symlink('SAPLUI5' + str(day), 'SAPLUI5')
+            # REVOIR LA GESTION DES LIENS POUR L'ANALYSE
+            self.link_in('SAPLUI5_ARP' + str(day), 'SAPLUI5_ARP')
+            self.link_in('SAPLUI5_ANA' + str(day), 'SAPLUI5_ANA')
+            if self.check_mandatory_resources(rdict, ['SAPLUI5'] + ['SAF' + str(t.hour) for t in dterms]):
                 for i, term in enumerate(dterms):
                     self.link_in('SAF' + str(term.hour), 'SAFRAN' + str(i + 1))
                 self.sapdat(dterms[-1])
@@ -375,7 +376,7 @@ class S2M_component(ParaBlindRun):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['safrane', 'syrpluie', 'syrmrr', 'sytist', 'syplui', 'syvapr',
+                values = ['safrane', 'syrpluie', 'syrmrr', 'sytist', 'sypluie', 'syvapr',
                           'syvafi', 'PREP', 'PGD', 'OFFLINE'],
             ),
             date   = a_date,
