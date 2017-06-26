@@ -69,6 +69,11 @@ Class attributes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: DelayedInit
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: FmtInt
    :show-inheritance:
    :members:
