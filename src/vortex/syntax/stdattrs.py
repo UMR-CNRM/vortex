@@ -376,6 +376,14 @@ hashalgo = footprints.Footprint(info = 'Abstract Hash Algo', attr = dict(storeha
 
 hashalgo_avail_list = hashutils.HashAdapter.algorithms()
 
+a_compressionpipeline = dict(
+    info = "The compression pipeline used for this store",
+    optional = True,
+)
+
+compressionpipeline = footprints.Footprint(info = 'Abstract Compression Pipeline',
+                                           attr = dict(store_compressed = a_compressionpipeline))
+
 
 def show():
     """Returns available items and their type."""

@@ -7,6 +7,7 @@ from __future__ import print_function, absolute_import
 import footprints
 
 from vortex.data.stores import Store
+from vortex.syntax.stdattrs import compressionpipeline
 from vortex.tools import date
 
 from common.tools.agt import agt_actual_command
@@ -20,25 +21,23 @@ logger = footprints.loggers.getLogger(__name__)
 class BdpeStore(Store):
     """Access items stored in the BDPE database (get only)."""
 
-    _footprint = dict(
-        info = 'Access the BDPE database',
-        attr = dict(
-            scheme = dict(
-                values   = ['bdpe'],
+    _footprint = [
+        compressionpipeline,
+        dict(
+            info = 'Access the BDPE database',
+            attr = dict(
+                scheme = dict(
+                    values   = ['bdpe'],
+                ),
+                netloc = dict(
+                    values   = ['bdpe.archive.fr'],
+                ),
             ),
-            netloc = dict(
-                values   = ['bdpe.archive.fr'],
-            ),
-            store_compressed = dict(
-                optional = True,
-                default  = None,
-                values   = ['bz2'],
+            priority = dict(
+                level = footprints.priorities.top.DEFAULT
             ),
         ),
-        priority = dict(
-            level = footprints.priorities.top.DEFAULT
-        )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -98,34 +97,17 @@ class BdpeStore(Store):
             if self.system.path.exists(diagfile):
                 logger.warning('The %s file is:', diagfile)
                 self.system.cat(diagfile)
-        elif self.store_compressed is not None:
-            # Deal with compressed files in the BDPE using the optional attribute store_compressed of the BDPE store.
-            tempfile = '.'.join([local, self.store_compressed])
+        elif self._actual_cpipeline:
+            # Deal with compressed files in the BDPE using the optional attribute
+            # store_compressed of the BDPE store.
+            tempfile = local + self._actual_cpipeline.suffix
             rc = rc and self.system.mv(local, tempfile)
-            rc = rc and self._bdpeuncompressed(tempfile, local)
+            self._actual_cpipeline.file2uncompress(tempfile, local)
+            rc = rc and self.system.path.exists(local)
+            if not rc:
+                logger.warning('Something went wrong while uncompressing the file %s.', tempfile)
 
         if self.system.path.exists(diagfile):
             self.system.remove(diagfile)
-
-        return rc
-
-    def _bdpeuncompressed(self, tempfile, local):
-        """Function to uncompress the files coming from the BDPE if needed."""
-
-        if self.system.is_tarname(tempfile):
-            # Use smartuntar to deal with that file
-            rc = self.system.smartuntar(tempfile, local)
-        elif tempfile.endswith('.bz2'):
-            # Use bunzip2 to uncompressed the file
-            rc = (self.system.spawn('bunzip2 {file}'.format(file=tempfile), shell=True) and
-                  self.system.path.exists(local))
-        else:
-            # Compressed file not recognized yet
-            logger.warning('The format of the compressed file %s is not recognized. Nothing done.',
-                           self.store_compressed)
-
-        rc = rc and self.system.path.exists(local)
-        if not rc:
-            logger.warning('Something went wrong while uncompressed the file %s.', tempfile)
 
         return rc

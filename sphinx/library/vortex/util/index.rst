@@ -17,6 +17,7 @@ Utilities
    hash
    helpers
    introspection
+   iosponge
    names
    netrc
    patterns

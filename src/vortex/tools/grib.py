@@ -155,9 +155,12 @@ class GRIB_Tool(addons.FtrawEnableAddon):
             self.sh.pclose(p)
             return True
 
-    def _std_ftput(self, source, destination, hostname=None, logname=None):
+    def _std_ftput(self, source, destination, hostname=None, logname=None,
+                   cpipeline=None):
         """On the fly packing and ftp."""
         if self.is_xgrib(source):
+            if cpipeline is not None:
+                raise IOError("It's not allowed to compress xgrib files.")
             if hostname is None:
                 hostname = self.sh.env.VORTEX_ARCHIVE_HOST
             if hostname is None:
@@ -176,11 +179,15 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                 rc = False
             return rc
         else:
-            return self.sh.ftput(source, destination, hostname=hostname, logname=logname)
+            return self.sh.ftput(source, destination, hostname=hostname,
+                                 logname=logname, cpipeline=cpipeline)
 
-    def _std_rawftput(self, source, destination, hostname=None, logname=None):
+    def _std_rawftput(self, source, destination, hostname=None, logname=None,
+                      cpipeline=None):
         """Use ftserv as much as possible."""
         if self.is_xgrib(source):
+            if cpipeline is not None:
+                raise IOError("It's not allowed to compress xgrib files.")
             if self.sh.ftraw and self.rawftshell is not None:
                 # Copy the GRIB pieces individually
                 pieces = self.xgrib_index_get(source)
@@ -198,7 +205,8 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                 return self._std_ftput(source, destination,
                                        hostname=hostname, logname=logname)
         else:
-            return self.sh.rawftput(source, destination, hostname=hostname, logname=logname)
+            return self.sh.rawftput(source, destination, hostname=hostname,
+                                    logname=logname, cpipeline=cpipeline)
 
     grib_ftput = _std_ftput
     grib_rawftput = _std_rawftput

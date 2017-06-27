@@ -243,9 +243,12 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             pass
         return None
 
-    def _std_ftput(self, source, destination, hostname=None, logname=None):
+    def _std_ftput(self, source, destination, hostname=None, logname=None,
+                   cpipeline=None):
         """On the fly packing and ftp."""
         if self.is_xlfi(source):
+            if cpipeline is not None:
+                raise IOError("It's not allowed to compress xlfi files.")
             st = LFI_Status()
             if hostname is None:
                 hostname = self.sh.env.VORTEX_ARCHIVE_HOST
@@ -275,11 +278,15 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
                 st.result = ['Could not connect to ' + hostname + ' as user ' + logname]
             return st
         else:
-            return self.sh.ftput(source, destination, hostname=hostname, logname=logname)
+            return self.sh.ftput(source, destination, hostname=hostname,
+                                 logname=logname, cpipeline=cpipeline)
 
-    def _std_rawftput(self, source, destination, hostname=None, logname=None):
+    def _std_rawftput(self, source, destination, hostname=None, logname=None,
+                      cpipeline=None):
         """Use ftserv as much as possible."""
         if self.is_xlfi(source):
+            if cpipeline is not None:
+                raise IOError("It's not allowed to compress xlfi files.")
             if self.sh.ftraw and self.rawftshell is not None:
                 newsource = self.sh.copy2ftspool(source, fmt='lfi')
                 rc = self.sh.ftserv_put(newsource, destination,
@@ -290,7 +297,8 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             else:
                 return self._std_ftput(source, destination, hostname, logname)
         else:
-            return self.sh.rawftput(source, destination, hostname=hostname, logname=logname)
+            return self.sh.rawftput(source, destination, hostname=hostname,
+                                    logname=logname, cpipeline=cpipeline)
 
     fa_ftput = lfi_ftput = _std_ftput
     fa_rawftput = lfi_rawftput = _std_rawftput
