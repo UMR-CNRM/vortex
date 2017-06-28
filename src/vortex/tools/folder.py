@@ -7,6 +7,7 @@ import tempfile
 
 import footprints
 from . import addons
+from vortex.util.iosponge import IoSponge
 
 #: No automatic export
 __all__ = []
@@ -230,7 +231,8 @@ class FolderShell(addons.FtrawEnableAddon):
         if ftp:
             packed_size = self._packed_size(source)
             p = self._folder_pack_stream(source)
-            rc = ftp.put(p.stdout, destination, size=packed_size, exact=False)
+            sponge = IoSponge(p.stdout, guessed_size=packed_size)
+            rc = ftp.put(sponge, destination, size=sponge.size, exact=False)
             self.sh.pclose(p)
             ftp.close()
             return rc
