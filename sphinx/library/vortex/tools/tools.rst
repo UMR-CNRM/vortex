@@ -16,6 +16,7 @@ Package
 * :mod:`vortex.tools.actions`
 * :mod:`vortex.tools.addons`
 * :mod:`vortex.tools.caches`
+* :mod:`vortex.tools.compression`
 * :mod:`vortex.tools.date`
 * :mod:`vortex.tools.ddhpack`
 * :mod:`vortex.tools.env`

@@ -25,6 +25,7 @@ Modules
 * :mod:`vortex.util.hash`
 * :mod:`vortex.util.helpers`
 * :mod:`vortex.util.introspection`
+* :mod:`vortex.util.iosponge`
 * :mod:`vortex.util.names`
 * :mod:`vortex.util.netrc`
 * :mod:`vortex.util.patterns`

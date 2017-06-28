@@ -59,10 +59,12 @@ def system_ftput(pnum, ask, config, logger, **opts):
             try:
                 if rawftput:
                     putrc = sh.rawftput(data.source, data.destination, hostname=data.hostname,
-                                        logname=data.logname, fmt=data.fmt)
+                                        logname=data.logname, cpipeline=data.cpipeline,
+                                        fmt=data.fmt)
                 else:
                     putrc = sh.ftput(data.source, data.destination, hostname=data.hostname,
-                                     logname=data.logname, fmt=data.fmt)
+                                     logname=data.logname, cpipeline=data.cpipeline,
+                                     fmt=data.fmt)
             except StandardError as e:
                 logger.warning('FTPut failed', attempt=trynum, error=e)
                 putrc = False

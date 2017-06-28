@@ -9,6 +9,7 @@ Miscellaneous Tools
    actions
    addons
    caches
+   compression
    date
    ddhpack
    env

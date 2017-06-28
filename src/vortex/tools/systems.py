@@ -37,6 +37,7 @@ from vortex.gloves import Glove
 from vortex.tools import date
 from vortex.tools.env import Environment
 from vortex.tools.net import StdFtp, AssistedSsh, LinuxNetstats
+from vortex.tools.compression import CompressionPipeline
 from vortex.util.decorators import nicedeco
 from vortex.util.structs import History
 from vortex.syntax.stdattrs import DelayedInit
@@ -859,6 +860,7 @@ class OSExtended(System):
         """Check if actual candidate is a valid filename or io stream."""
         return iocandidate is not None and (
             (isinstance(iocandidate, basestring) and self.path.exists(iocandidate)) or
+            isinstance(iocandidate, file) or
             isinstance(iocandidate, io.IOBase) or
             isinstance(iocandidate, StringIO.StringIO)
         )
@@ -879,26 +881,43 @@ class OSExtended(System):
             return None
 
     @fmtshcmd
-    def ftget(self, source, destination, hostname=None, logname=None):
-        """Proceed direct ftp get on the specified target."""
+    def ftget(self, source, destination, hostname=None, logname=None, cpipeline=None):
+        """Proceed direct ftp get on the specified target.
+
+        cpipeline is possibly a :class:`CompressionPipeline` object that will be
+        used to uncompress the data during the file transfer.
+        """
         if isinstance(destination, basestring):  # destination may be Virtual
             self.rm(destination)
         ftp = self.ftp(hostname, logname)
         if ftp:
-            rc = ftp.get(source, destination)
+            if cpipeline is None:
+                rc = ftp.get(source, destination)
+            else:
+                with cpipeline.stream2uncompress(destination) as cdestination:
+                    rc = ftp.get(source, cdestination)
             ftp.close()
             return rc
         else:
             return False
 
     @fmtshcmd
-    def ftput(self, source, destination, hostname=None, logname=None):
-        """Proceed direct ftp put on the specified target."""
+    def ftput(self, source, destination, hostname=None, logname=None, cpipeline=None):
+        """Proceed direct ftp put on the specified target.
+
+        cpipeline is possibly a :class:`CompressionPipeline` object that will be
+        used to compress the data during the file transfer.
+        """
         rc = False
         if self.is_iofile(source):
             ftp = self.ftp(hostname, logname)
             if ftp:
-                rc = ftp.put(source, destination)
+                if cpipeline is None:
+                    rc = ftp.put(source, destination)
+                else:
+                    with cpipeline.compress2stream(source, iosponge=True) as csource:
+                        # csource is an IoSponge consequently the size attribute exists
+                        rc = ftp.put(csource, destination, size=csource.size)
                 ftp.close()
         else:
             raise IOError('No such file or directory: {!r}'.format(source))
@@ -965,28 +984,43 @@ class OSExtended(System):
         return rc
 
     @fmtshcmd
-    def rawftput(self, source, destination, hostname=None, logname=None):
+    def rawftput(self, source, destination, hostname=None, logname=None, cpipeline=None):
         """Proceed with some external ftput command on the specified target."""
-        return self.ftserv_put(source, destination, hostname, logname)
+        if cpipeline is not None:
+            if cpipeline.compress2rawftp(source):
+                return self.ftserv_put(source, destination, hostname, logname,
+                                       specialshell=cpipeline.compress2rawftp(source))
+            else:
+                return self.ftput(source, destination, hostname, logname, cpipeline=cpipeline)
+        else:
+            return self.ftserv_put(source, destination, hostname, logname)
 
-    def smartftput(self, source, destination, hostname=None, logname=None, fmt=None):
+    def smartftput(self, source, destination, hostname=None, logname=None,
+                   cpipeline=None, fmt=None):
         """Proceed some ftput or rawftput."""
         if self.ftraw and isinstance(source, basestring) and isinstance(destination, basestring):
-            return self.rawftput(source, destination, hostname=hostname, logname=logname, fmt=fmt)
+            return self.rawftput(source, destination, hostname=hostname, logname=logname,
+                                 cpipeline=cpipeline, fmt=fmt)
         else:
-            return self.ftput(source, destination, hostname=hostname, logname=logname, fmt=fmt)
+            return self.ftput(source, destination, hostname=hostname, logname=logname,
+                              cpipeline=cpipeline, fmt=fmt)
 
     @fmtshcmd
-    def rawftget(self, source, destination, hostname=None, logname=None):
+    def rawftget(self, source, destination, hostname=None, logname=None, cpipeline=None):
         """Proceed with some external ftget command on the specified target."""
         return self.ftserv_get(source, destination, hostname, logname)
 
-    def smartftget(self, source, destination, hostname=None, logname=None, fmt=None):
+    def smartftget(self, source, destination, hostname=None, logname=None,
+                   cpipeline=None, fmt=None):
         """Proceed some ftget or rawftget."""
-        if self.ftraw and isinstance(source, basestring) and isinstance(destination, basestring):
-            return self.rawftget(source, destination, hostname=hostname, logname=logname, fmt=fmt)
+        if (self.ftraw and cpipeline is None and
+                isinstance(source, basestring) and isinstance(destination, basestring)):
+            # FtServ is uninteresting when dealing with compression
+            return self.rawftget(source, destination, hostname=hostname, logname=logname,
+                                 cpipeline=cpipeline, fmt=fmt)
         else:
-            return self.ftget(source, destination, hostname=hostname, logname=logname, fmt=fmt)
+            return self.ftget(source, destination, hostname=hostname, logname=logname,
+                              cpipeline=cpipeline, fmt=fmt)
 
     @fmtshcmd
     def scpput(self, source, destination, hostname, logname=None):
@@ -1616,6 +1650,35 @@ class OSExtended(System):
             return libs
         else:
             raise ValueError('{} is not a regular file'.format(filename))
+
+    def generic_compress(self, pipelinedesc, source, destination=None):
+        """Compress a file using the :class:`CompressionPipeline` class.
+
+        :example: "generic_compress('bzip2', 'toto')" will create a toto.bz2 file.
+        """
+        cp = CompressionPipeline(self, pipelinedesc)
+        if destination is None:
+            if isinstance(source, basestring):
+                destination = source + cp.suffix
+            else:
+                raise ValueError("If destination is omitted, source must be a filename.")
+        return cp.compress2file(source, destination)
+
+    def generic_uncompress(self, pipelinedesc, source, destination=None):
+        """Uncompress a file using the :class:`CompressionPipeline` class.
+
+        :example: "generic_uncompress('bzip2', 'toto.bz2')" will create a toto file.
+        """
+        cp = CompressionPipeline(self, pipelinedesc)
+        if destination is None:
+            if isinstance(source, basestring):
+                if source.endswith(cp.suffix):
+                    destination = source[:-len(cp.suffix)]
+                else:
+                    raise ValueError("Source do not exhibit the appropriate suffix ({:s})".format(cp.suffix))
+            else:
+                raise ValueError("If destination is omitted, source must be a filename.")
+        return cp.file2uncompress(source, destination)
 
 
 class Python27(object):

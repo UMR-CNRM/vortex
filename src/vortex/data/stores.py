@@ -23,8 +23,9 @@ from vortex import sessions
 from vortex.layout import dataflow
 from vortex.util import config
 from vortex.util import hash as hashutils
-from vortex.syntax.stdattrs import hashalgo, hashalgo_avail_list
+from vortex.syntax.stdattrs import hashalgo, hashalgo_avail_list, compressionpipeline
 from vortex.tools import caches
+from vortex.tools import compression
 from vortex.tools import date
 from vortex.tools import net
 from vortex.tools.systems import ExecutionError
@@ -209,6 +210,7 @@ class Store(footprints.FootprintBase):
         self._sh = sh
         self._observer = observer_board()
         self._observer.notify_new(self, dict())
+        self._cpipeline = False
         self.delayed = False
 
     def __del__(self):
@@ -260,6 +262,18 @@ class Store(footprints.FootprintBase):
         if options is not None and options.get('silent', False):
             level = slevel
         getattr(logger, level)(*kargs, **kwargs)
+
+    @property
+    def _actual_cpipeline(self):
+        """Check if the current store has a CompressionPipeline."""
+        if self._cpipeline is False:
+            cpipeline_desc = getattr(self, 'store_compressed', None)
+            if cpipeline_desc is not None:
+                self._cpipeline = compression.CompressionPipeline(self.system,
+                                                                  cpipeline_desc)
+            else:
+                self._cpipeline = None
+        return self._cpipeline
 
     def check(self, remote, options=None):
         """Proxy method to dedicated check method according to scheme."""
@@ -380,6 +394,7 @@ class MultiStore(footprints.FootprintBase):
     _abstract  = True
     _collector = ('store',)
     _footprint = [
+        compressionpipeline,
         hashalgo,
         dict(
             info = 'Multi store',
@@ -459,6 +474,7 @@ class MultiStore(footprints.FootprintBase):
         """
         return [
             dict(system=self.system, storehash=self.storehash, storage=self.storage,
+                 store_compressed=self.store_compressed,
                  scheme=x, netloc=y)
             for x in self.alternates_scheme()
             for y in self.alternates_netloc()
@@ -884,43 +900,46 @@ class ArchiveStore(Store):
     """Generic Archive Store."""
 
     _abstract = True
-    _footprint = dict(
-        info = 'Generic archive store',
-        attr = dict(
-            scheme = dict(
-                values   = ['ftp', 'ftserv'],
-            ),
-            netloc = dict(
-                values   = ['open.archive.fr'],
-            ),
-            storehash = dict(
-                values = hashalgo_avail_list,
-            ),
-            storage = dict(
-                optional = True,
-                default  = None,
-            ),
-            storeroot = dict(
-                optional = True,
-                default  = '/tmp',
-            ),
-            storehead = dict(
-                optional = True,
-                default  = 'sto',
-            ),
-            storesync = dict(
-                alias    = ('archsync', 'synchro'),
-                type     = bool,
-                optional = True,
-                default  = True,
-            ),
-            storetrue = dict(
-                type     = bool,
-                optional = True,
-                default  = True,
-            ),
-        )
-    )
+    _footprint = [
+        compressionpipeline,
+        dict(
+            info = 'Generic archive store',
+            attr = dict(
+                scheme = dict(
+                    values   = ['ftp', 'ftserv'],
+                ),
+                netloc = dict(
+                    values   = ['open.archive.fr'],
+                ),
+                storehash = dict(
+                    values = hashalgo_avail_list,
+                ),
+                storage = dict(
+                    optional = True,
+                    default  = None,
+                ),
+                storeroot = dict(
+                    optional = True,
+                    default  = '/tmp',
+                ),
+                storehead = dict(
+                    optional = True,
+                    default  = 'sto',
+                ),
+                storesync = dict(
+                    alias    = ('archsync', 'synchro'),
+                    type     = bool,
+                    optional = True,
+                    default  = True,
+                ),
+                storetrue = dict(
+                    type     = bool,
+                    optional = True,
+                    default  = True,
+                ),
+            )
+        ),
+    ]
 
     def __init__(self, *args, **kw):
         logger.debug('Archive store init %s', self.__class__)
@@ -942,10 +961,13 @@ class ArchiveStore(Store):
             return self.storage
 
     def _ftpformatpath(self, remote):
-        return self.system.path.join(
+        formatted = self.system.path.join(
             remote.get('root', self.storeroot),
             remote['path'].lstrip(self.system.path.sep)
         )
+        if self._actual_cpipeline is not None:
+            formatted += self._actual_cpipeline.suffix
+        return formatted
 
     def ftpcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
@@ -976,9 +998,10 @@ class ArchiveStore(Store):
         rc = self.system.smartftget(
             rpath, local,
             # ftp control
-            hostname = self.hostname(),
-            logname  = remote['username'],
-            fmt      = options.get('fmt'),
+            hostname  = self.hostname(),
+            logname   = remote['username'],
+            cpipeline = self._actual_cpipeline,
+            fmt       = options.get('fmt'),
         )
         return rc and self._hash_get_check(self.ftpget, remote, local, options)
 
@@ -986,9 +1009,10 @@ class ArchiveStore(Store):
         """Delegates to ``system.ftp`` the put action."""
         put_sync = options.get('synchro', not options.get('delayed', not self.storesync))
         put_opts = dict(
-            hostname = self.hostname(),
-            logname  = remote['username'],
-            fmt      = options.get('fmt'),
+            hostname  = self.hostname(),
+            logname   = remote['username'],
+            cpipeline = self._actual_cpipeline,
+            fmt       = options.get('fmt'),
         )
         rpath = self._ftpformatpath(remote)
         if put_sync:

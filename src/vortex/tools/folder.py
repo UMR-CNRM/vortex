@@ -126,8 +126,11 @@ class FolderShell(addons.FtrawEnableAddon):
             self.sh.cd(loccwd)
             self.sh.rm(loctmp)
 
-    def _folder_ftget(self, source, destination, hostname=None, logname=None):
+    def _folder_ftget(self, source, destination, hostname=None, logname=None,
+                      cpipeline=None):
         """Proceed direct ftp get on the specified target."""
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
         hostname, logname = self._folder_credentials(hostname, logname)
         if hostname is None:
             return False
@@ -164,8 +167,11 @@ class FolderShell(addons.FtrawEnableAddon):
         else:
             return False
 
-    def _folder_rawftget(self, source, destination, hostname=None, logname=None):
+    def _folder_rawftget(self, source, destination, hostname=None, logname=None,
+                         cpipeline=None):
         """Use ftserv as much as possible."""
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
         if self.sh.ftraw and self.rawftshell is not None:
             source, destination = self._folder_preftget(source, destination)
             loccwd = self.sh.getcwd()
@@ -200,8 +206,11 @@ class FolderShell(addons.FtrawEnableAddon):
         tar_size = dir_size + max(tar_mini, (dir_size * tar_loss) // 100)
         return (tar_size * (100 - zip_gain)) // 100
 
-    def _folder_ftput(self, source, destination, hostname=None, logname=None):
+    def _folder_ftput(self, source, destination, hostname=None, logname=None,
+                      cpipeline=None):
         """Proceed direct ftp put on the specified target."""
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
         hostname, logname = self._folder_credentials(hostname, logname)
         if hostname is None:
             return False
@@ -229,8 +238,11 @@ class FolderShell(addons.FtrawEnableAddon):
         else:
             return False
 
-    def _folder_rawftput(self, source, destination, hostname=None, logname=None):
+    def _folder_rawftput(self, source, destination, hostname=None, logname=None,
+                         cpipeline=None):
         """Use ftserv as much as possible."""
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
         if self.sh.ftraw and self.rawftshell is not None:
             if not destination.endswith('.tgz'):
                 destination += '.tgz'
