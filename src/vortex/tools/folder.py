@@ -13,7 +13,8 @@ __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
 
-_folder_exposed_methods = set(['cp', 'mv', 'ftget', 'rawftget', 'ftput', 'rawftput'])
+_folder_exposed_methods = set(['cp', 'mv', 'ftget', 'rawftget', 'ftput', 'rawftput',
+                               'scpget', 'scpput'])
 
 
 def folderize(cls):
@@ -95,6 +96,32 @@ class FolderShell(addons.FtrawEnableAddon):
 
         return (hostname, logname)
 
+    def _folder_pack_stream(self, source, stdout=True):
+        source_name = self.sh.path.basename(source)
+        source_dirname = self.sh.path.dirname(source)
+        cmd = ['tar', '--directory', source_dirname, '-cz', source_name]
+        return self.sh.popen(cmd, stdout=stdout, bufsize=8192)
+
+    def _folder_unpack_stream(self, stdin=True, options='xvf'):
+        return self.sh.popen(
+            # the z option is omitted consequently it also works if the file is not compressed
+            ['tar', options, '-'], stdin = stdin, bufsize = 8192, )
+
+    def _packed_size(self, source):
+        """Size of the final file, must be exact or be an overestimation.
+
+        A file 1 byte bigger than this estimation might be rejected,
+        hence the conservative options:
+        - tar adds 1% with a minimum of 1 Mbytes
+        - compression gain is 0%
+        """
+        dir_size = self.sh.treesize(source)
+        tar_mini = 1024 * 1024  # 1 Mbytes
+        tar_loss = 1  # 1%
+        zip_gain = 0
+        tar_size = dir_size + max(tar_mini, (dir_size * tar_loss) // 100)
+        return (tar_size * (100 - zip_gain)) // 100
+
     def _folder_preftget(self, source, destination):
         """Prepare source and destination"""
         if not (source.endswith('.tgz') or source.endswith('.tar')):
@@ -143,13 +170,7 @@ class FolderShell(addons.FtrawEnableAddon):
             self.sh.cd(loctmp)
             try:
                 if self.pipeget:
-                    p = self.sh.popen(
-                        # the z option is omitted consequently it also works if the file is not compressed
-                        ['tar', 'xvf', '-'],
-                        stdin   = True,
-                        output  = False,
-                        bufsize = 8192,
-                    )
+                    p = self._folder_unpack_stream()
                     rc = ftp.get(source, p.stdin)
                     self.sh.pclose(p)
                 else:
@@ -191,21 +212,6 @@ class FolderShell(addons.FtrawEnableAddon):
         else:
             return self._folder_ftget(source, destination, hostname, logname)
 
-    def _packed_size(self, source):
-        """Size of the final file, must be exact or be an overestimation.
-
-        A file 1 byte bigger than this estimation might be rejected,
-        hence the conservative options:
-        - tar adds 1% with a minimum of 1 Mbytes
-        - compression gain is 0%
-        """
-        dir_size = self.sh.treesize(source)
-        tar_mini = 1024 * 1024  # 1 Mbytes
-        tar_loss = 1  # 1%
-        zip_gain = 0
-        tar_size = dir_size + max(tar_mini, (dir_size * tar_loss) // 100)
-        return (tar_size * (100 - zip_gain)) // 100
-
     def _folder_ftput(self, source, destination, hostname=None, logname=None,
                       cpipeline=None):
         """Proceed direct ftp put on the specified target."""
@@ -219,18 +225,11 @@ class FolderShell(addons.FtrawEnableAddon):
             destination += '.tgz'
 
         source = self.sh.path.abspath(source)
-        source_name = self.sh.path.basename(source)
-        source_dirname = self.sh.path.dirname(source)
 
         ftp = self.sh.ftp(hostname, logname)
         if ftp:
             packed_size = self._packed_size(source)
-            p = self.sh.popen(
-                ['tar', '--directory', source_dirname, '-cz', source_name],
-                stdout  = True,
-                output  = False,
-                bufsize = 8192,
-            )
+            p = self._folder_pack_stream(source)
             rc = ftp.put(p.stdout, destination, size=packed_size, exact=False)
             self.sh.pclose(p)
             ftp.close()
@@ -259,3 +258,38 @@ class FolderShell(addons.FtrawEnableAddon):
             return rc
         else:
             return self._folder_ftput(source, destination, hostname, logname)
+
+    def _folder_scpget(self, source, destination, hostname, logname=None, cpipeline=None):
+        """Retrieve a folder using scp."""
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
+
+        source, destination = self._folder_preftget(source, destination)
+        ssh = self.sh.ssh(hostname, logname)
+        rc = False
+        loccwd = self.sh.getcwd()
+        loctmp = tempfile.mkdtemp(prefix='folder_', dir=loccwd)
+        self.sh.cd(loctmp)
+        try:
+            p = self._folder_unpack_stream(options='xvzf')
+            rc = ssh.scpget_stream(source, p.stdin)
+            self.sh.pclose(p)
+        finally:
+            self._folder_postftget(destination, loccwd, loctmp)
+        return rc
+
+    def _folder_scpput(self, source, destination, hostname, logname=None, cpipeline=None):
+        """Upload a folder using scp."""
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
+
+        if not destination.endswith('.tgz'):
+            destination += '.tgz'
+
+        source = self.sh.path.abspath(source)
+
+        ssh = self.sh.ssh(hostname, logname)
+        p = self._folder_pack_stream(source)
+        rc = ssh.scpput_stream(p.stdout, destination)
+        self.sh.pclose(p)
+        return rc

@@ -211,6 +211,26 @@ class GRIB_Tool(addons.FtrawEnableAddon):
     grib_ftput = _std_ftput
     grib_rawftput = _std_rawftput
 
+    def _std_scpput(self, source, destination, hostname, logname=None, cpipeline=None):
+        """On the fly packing and scp."""
+        if self.is_xgrib(source):
+            if cpipeline is not None:
+                raise IOError("It's not allowed to compress xgrib files.")
+            ssh = self.sh.ssh(hostname, logname)
+            permissions = ssh.get_permissions(source)
+            # remove the .d companion directory (scp_stream removes the destination)
+            # go on on failure : the .d lingers on, but the grib will be self-contained
+            ssh.remove(destination + '.d')
+            p = self._pack_stream(source)
+            rc = ssh.scpput_stream(p.stdout, destination, permissions=permissions)
+            self.sh.pclose(p)
+            return rc
+        else:
+            return self.sh.scpput(source, destination, hostname,
+                                  logname=logname, cpipeline=cpipeline)
+
+    grib_scpput = _std_scpput
+
 
 class GribApiComponent(object):
     """Extend Algo Components with GribApi features."""

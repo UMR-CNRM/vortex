@@ -354,11 +354,13 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     lfi_mv = lfi_move = fa_mv = fa_move = _std_move
 
-    def _std_scpput(self, source, destination, hostname, logname=None):
+    def _std_scpput(self, source, destination, hostname, logname=None, cpipeline=None):
         """On the fly packing and scp."""
         if not self.is_xlfi(source):
-            rc = self.sh.scpput(source, destination, hostname, logname)
+            rc = self.sh.scpput(source, destination, hostname, logname, cpipeline)
         else:
+            if cpipeline is not None:
+                raise IOError("It's not allowed to compress xlfi files.")
             ssh = self.sh.ssh(hostname, logname)
             permissions = ssh.get_permissions(source)
             # remove the .d companion directory (scp_stream removes the destination)

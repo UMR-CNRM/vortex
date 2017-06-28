@@ -15,7 +15,6 @@ import os
 import pickle
 import platform
 import pwd as passwd
-import random
 import re
 import resource
 import shutil
@@ -1023,28 +1022,44 @@ class OSExtended(System):
                               cpipeline=cpipeline, fmt=fmt)
 
     @fmtshcmd
-    def scpput(self, source, destination, hostname, logname=None):
-        """Perform an scp to the specified target."""
+    def scpput(self, source, destination, hostname, logname=None, cpipeline=None):
+        """Perform an scp to the specified target.
+
+        cpipeline is possibly a :class:`CompressionPipeline` object that will be
+        used to compress the data during the file transfer.
+        """
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
-        if isinstance(source, basestring):
+        if isinstance(source, basestring) and cpipeline is None:
             self.stderr('scpput', source, destination, msg)
             return ssh.scpput(source, destination)
         else:
             self.stderr('scpput_stream', source, destination, msg)
-            return ssh.scpput_stream(source, destination)
+            if cpipeline is None:
+                return ssh.scpput_stream(source, destination)
+            else:
+                with cpipeline.compress2stream(source) as csource:
+                    return ssh.scpput_stream(csource, destination)
 
     @fmtshcmd
-    def scpget(self, source, destination, hostname, logname=None):
-        """Perform an scp to the specified source."""
+    def scpget(self, source, destination, hostname, logname=None, cpipeline=None):
+        """Perform an scp to the specified source.
+
+        cpipeline is possibly a :class:`CompressionPipeline` object that will be
+        used to uncompress the data during the file transfer.
+        """
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
-        if isinstance(destination, basestring):
+        if isinstance(destination, basestring) and cpipeline is None:
             self.stderr('scpget', source, destination, msg)
             return ssh.scpget(source, destination)
         else:
             self.stderr('scpget_stream', source, destination, msg)
-            return ssh.scpget_stream(source, destination)
+            if cpipeline is None:
+                return ssh.scpget_stream(source, destination)
+            else:
+                with cpipeline.stream2uncompress(destination) as cdestination:
+                    return ssh.scpget_stream(source, cdestination)
 
     def softlink(self, source, destination):
         """Set a symbolic link if source is not destination."""
