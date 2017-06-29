@@ -1365,6 +1365,12 @@ class OSExtended(System):
         self.stderr('ldirs', *rl)
         return [x for x in self.glob(*rl) if self.path.isdir(x)]
 
+    def gzip(self, *args, **kw):
+        """Simple gzip compression of a file'"""
+        cmd = ['gzip', '-vf', args[0]]
+        cmd.extend(args[1:])
+        return self.spawn(cmd, **kw)
+
     def gunzip(self, *args, **kw):
         """Simple gunzip a gzip-compressed file (always c-something)'"""
         cmd = ['gunzip', args[0]]
