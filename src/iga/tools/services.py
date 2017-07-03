@@ -413,6 +413,7 @@ class RoutingService(Service):
         if not self.sh.path.exists(self.filename):
             msg = "{0.taskname} routage {0.realkind} du numero {0.productid}" \
                   " impossible - fichier {0.filename} inexistant".format(self)
+            logger.warning(msg)
             ad.alarm(level='critical', message=msg, sshhost=self.sshhost)
             return False
         return True
@@ -450,6 +451,7 @@ class RoutingService(Service):
             else:
                 term = ''
             text = "{0.taskname} Pb envoi {0.realkind} id {0.productid}{term}".format(self, term=term)
+            logger.warning(text)
             ad.alarm(level='critical', message=text, sshhost=self.sshhost)
             return False
 
