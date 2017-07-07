@@ -11,7 +11,7 @@ __all__ = []
 
 def _double_ssh(sh, loginnode, transfernode):
     """Applies a double ssh to retrieve the effective name of a machine.
-       This tricks enables the load balancing and node crash recovery
+       This trick enables the load balancing and node crash recovery
        capabilities handled by the network teams through DNS names.
        May return None when network problems occur.
     """

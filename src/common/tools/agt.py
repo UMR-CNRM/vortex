@@ -20,9 +20,9 @@ def agt_actual_command(sh, binary_name, args, extraenv=None):
     The resulting command should be executed on a transfer node.
 
     :param sh: The vortex shell that will be used
-    :param binary_name: Key in the configuration file that holds the ninary name
+    :param binary_name: Key in the configuration file that holds the binary name
     :param args: Argument to the AGT binary
-    :param extraenv: Additional environnement variables to export (dictionnary)
+    :param extraenv: Additional environnement variables to export (dictionary)
     """
     config = sh.default_target.config
     if not config.has_section('agt'):

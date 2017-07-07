@@ -470,10 +470,8 @@ class Ssh(object):
         :param System sh: The :class:`System` object that is to be used.
         :param str hostname: The target hostname(s).
         :param logname: The logname for the Ssh commands.
-        :param str sshopts: Extra SSH options (in addition of the configuration
-                            file ones).
-        :param str scpopts: Extra SCP options (in addition of the configuration
-                            file ones).
+        :param str sshopts: Extra SSH options (in addition to the configuration file ones).
+        :param str scpopts: Extra SCP options (in addition to the configuration file ones).
         """
         self._sh = sh
 
@@ -747,7 +745,7 @@ class Ssh(object):
         :param str finaldestination: the destination hostname (i.e the machine
                                      at the far end of the tunnel)
         :param int finalport: the destination port
-        :param int entranceport: the port number of the tunnel entrace (if None,
+        :param int entranceport: the port number of the tunnel entrance (if None,
                                  which is the default, it is automatically
                                  assigned)
         :param float maxwait: The maximum time to wait for the entrance port to
@@ -872,7 +870,7 @@ def _check_fatal(func):
 
 @nicedeco
 def _tryagain(func):
-    """decorator: whenever the return code != True, several are made according to self._maxtries.
+    """decorator: whenever the return code != True, several attempts are made according to self._maxtries.
 
     This decorator is very specialised and should be used solely with the AssistedSsh
     class since it relies on several attributes (_retry_in_progress, _retries, _maxtries).
@@ -882,7 +880,7 @@ def _tryagain(func):
         if self._retry_in_progress:
             return func(self, *args[1:], **kwargs)
         else:
-            # This trick ensure that only one retry loop is attempted
+            # This trick ensures that only one retry loop is attempted
             self._retry_in_progress = True
             trycount = 1
             try:
@@ -935,7 +933,7 @@ class AssistedSsh(Ssh):
 
     - retries capabilities
     - support for multiple hostnames (a hostname is picked up in the hostnames
-      list, it is tested and if the test succeed it is chosen. If not, the next
+      list, it is tested and if the test succeeds it is chosen. If not, the next
       hostname is tested, ... and so on).
     - virtual nodes support (i.e. the real hostnames associated with a virtual
       node name are read in the configuration file).
@@ -958,10 +956,8 @@ class AssistedSsh(Ssh):
         :param hostname: The target hostname(s).
         :type hostname: str or list
         :param logname: The logname for the Ssh commands.
-        :param str sshopts: Extra SSH options (in addition of the configuration
-                            file ones).
-        :param str scpopts: Extra SCP options (in addition of the configuration
-                            file ones).
+        :param str sshopts: Extra SSH options (in addition to the configuration file ones).
+        :param str scpopts: Extra SCP options (in addition to the configuration file ones).
         :param int maxtries: The maximum number of retries.
         :param int triesdelay: The delay in seconds between retries.
         :param bool virtualnode: If True, the *hostname* is considered to be a
@@ -1081,7 +1077,7 @@ class AbstractNetstats(object):
 
 
 class LinuxNetstats(AbstractNetstats):
-    """A Netstats implemenetation for Linux (based on the /proc/net data)."""
+    """A Netstats implementation for Linux (based on the /proc/net data)."""
 
     def __init__(self):
         self.__unprivileged_ports = None
