@@ -330,34 +330,74 @@ class OutputReportContext(_ReportContext):
         super(OutputReportContext, self).__init__(task, ticket)
         self._step = 'output'
 
+def get_resource_value(r,key):
+    """ this function returns the resource value """
+    try:
+        kw = dict(area=lambda r:r.resource.geometry.area, term=lambda r:r.resource.term, fields=lambda r:r.resource.fields)
+        return kw[key](r)
+    except AttributeError as e:
+        logger.error(e)
+    
+def filteractive(r,dic):
+    """ this function returns the filter status """
+    filter_active = True
+    for k,w in dic.iteritems():
+        if not get_resource_value(r,k) in w:
+            logger.info('filter not active : {} = {} actual value : {}'.format(k, w, get_resource_value(r,k)))
+            filter_active=False
+    return filter_active    
 
-def oproute_hook_factory(kind, productid, sshhost, areafilter=None, soprano_target=None, routingkey=None):
+def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_target=None, routingkey=None, selkeyproductid=None):
     """Hook functions factory to route files while the execution is running"""
+        
+
+    """
+        :param kind: str kind use to route
+        :param productid: str or dictionary (use selkeyproductid to define the dictionary key)
+        :param sshhost: tranfertnode
+        :param optfilter: dictionary (used to allow routing)
+        :param soprano_target: str (piccolo or piccolo-int)
+        :param routingkey : str
+        :param selkeyproductid :str (example: area, term, fields ...) 
+    """
 
     def hook_route(t, rh):
         kwargs= dict(kind=kind, productid=productid, sshhost=sshhost,
-                    filename=rh.container.basename, soprano_target=soprano_target, routingkey=routingkey)
-        if hasattr(rh.resource, 'geometry'):
+                    filename=rh.container.abspath, soprano_target=soprano_target, routingkey=routingkey)
+        route_active = True
+        if selkeyproductid:
             if isinstance(productid, dict):
-                productidt = productid[rh.resource.geometry.area]
-                kwargs['productid'] = productidt                   
+                kwargs['productid'] = productid[get_resource_value(rh,selkeyproductid)]
+                logger.info('productid key : %s ',get_resource_value(rh,selkeyproductid))
+            else:
+                logger.warning('productid is not a dict : %s', productid)
+
+        if hasattr(rh.resource, 'geometry'):
             kwargs['domain'] = rh.resource.geometry.area
         if hasattr(rh.resource, 'term'):
             kwargs['term'] = rh.resource.term
 
-        if (areafilter is None) or (rh.resource.geometry.area in areafilter):
+        if optfilter:
+            route_active = filteractive(rh,optfilter)
+
+        if route_active:
             ad.route(** kwargs)
             print t.prompt, 'routing file = ', rh
 
     return hook_route
 
-def opphase_hook_factory(areafilter=None, termfilter=None):
+def opphase_hook_factory(optfilter=None):
     """Hook functions factory to phase files while the execution is running"""
 
+    """ :param optfilter: dictionary (used to allow routing) """
+
     def hook_phase(t, rh):
-        if (areafilter is None) or (rh.resource.geometry.area in areafilter):
-            if (termfilter is None) or (rh.resource.term in termfilter):
-                ad.phase(rh)
-                print t.prompt, 'phasing file = ', rh
+        route_active = True
+        if optfilter:
+            route_active = filteractive(rh,optfilter)
+
+        if route_active:
+            ad.phase(rh)
+            print t.prompt, 'phasing file = ', rh
 
     return hook_phase
