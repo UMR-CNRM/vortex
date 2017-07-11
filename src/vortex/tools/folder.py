@@ -315,3 +315,23 @@ class ObsLocationPackShell(FolderShell):
             ),
         )
     )
+
+
+available_foldershells = [e.footprint_values('kind')[0] for e in locals().values()
+                          if (isinstance(e, type) and issubclass(e, FolderShell) and
+                              not e.footprint_abstract())]
+
+
+class FolderShellsGroup(addons.AddonGroup):
+    """The whole bunch of folder shells."""
+
+    _footprint = dict(
+        info = 'The whole bunch of folder shells',
+        attr = dict(
+            kind = dict(
+                values = ['allfolders', ],
+            ),
+        )
+    )
+
+    _addonslist = available_foldershells

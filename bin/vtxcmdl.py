@@ -89,14 +89,10 @@ def vortex_delayed_init(t):
     '''Setup footprints'''
     import common, olive, gco  # @UnusedImport
     # Load shell addons
-    import vortex.tools.odb  # @UnusedImport
-    vortex.proxy.addon(kind='odb', shell=t.sh)  # @UndefinedVariable
-    import vortex.tools.ddhpack  # @UnusedImport
-    vortex.proxy.addon(kind='ddhpack', shell=t.sh)  # @UndefinedVariable
-    import vortex.tools.obslocationpack  # @UnusedImport
-    vortex.proxy.addon(kind='obslocationpack', shell=t.sh)  # @UndefinedVariable
-    import vortex.tools.rawfiles  # @UnusedImport
-    vortex.proxy.addon(kind='rawfiles', shell=t.sh)  # @UndefinedVariable
+    import vortex.tools.folder  # @UnusedImport
+    import vortex.tools.grib  # @UnusedImport
+    vortex.proxy.addon(kind='allfolders', shell=t.sh)  # @UndefinedVariable
+    vortex.proxy.addon(kind='grib', shell=t.sh)  # @UndefinedVariable
 
 
 def actual_action(action, t, args):
