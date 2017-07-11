@@ -247,3 +247,71 @@ class FolderShell(addons.FtrawEnableAddon):
             return rc
         else:
             return self._folder_ftput(source, destination, hostname, logname)
+
+
+@folderize
+class OdbShell(FolderShell):
+    """
+    Default interface to ODB commands.
+    These commands extend the shell.
+    """
+
+    _footprint = dict(
+        info = 'Default ODB system interface',
+        attr = dict(
+            kind = dict(
+                values   = ['odb'],
+            ),
+        )
+    )
+
+
+@folderize
+class DdhPackShell(FolderShell):
+    """
+    Default interface to DDHpack commands.
+    These commands extend the shell.
+    """
+
+    _footprint = dict(
+        info = 'Default DDHpack system interface',
+        attr = dict(
+            kind = dict(
+                values   = ['ddhpack'],
+            ),
+        )
+    )
+
+
+@folderize
+class RawFilesShell(FolderShell):
+    """
+    Default interface to rawfiles commands.
+    These commands extend the shell.
+    """
+
+    _footprint = dict(
+        info = 'Default (g)RRRRawfiles system interface',
+        attr = dict(
+            kind = dict(
+                values   = ['rawfiles'],
+            ),
+        )
+    )
+
+
+@folderize
+class ObsLocationPackShell(FolderShell):
+    """
+    Default interface to  Obs Location packs commands.
+    These commands extend the shell.
+    """
+
+    _footprint = dict(
+        info = 'Default Obs Location packs system interface',
+        attr = dict(
+            kind = dict(
+                values   = ['obslocationpack'],
+            ),
+        )
+    )
