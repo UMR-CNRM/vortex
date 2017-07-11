@@ -658,6 +658,9 @@ class BdpeOperationsService(BdpeService):
             'bdpe.gironde':        10130,
             'e_transmet_fac':      10212,
             'bdpe.e_transmet_fac': 10116,
+            'bdpe.airmer' :        10121,
+            'bdpe.gironde.airmer' : 10429,
+            'difmet_dico' :        10379,
             'bdpe.synopsis_preprod': 10433,
 
         }
@@ -687,24 +690,28 @@ class BdpeIntegrationService(BdpeService):
     @property
     def actual_routingkey(self):
         """Actuel route key to use for integration."""
-        if self.routingkey.lower() == 'bdpe':
-            return 10001
+        rules = {
+            'bdpe':                10001,
+            'bdpe.airmer' :        10332,
+            'difmet_dico' :        10305,
+            'bdpe.synopsis_preprod': 10435,
+        }
+        default = '10001'
 
         rule = r'.*8124.*|.*8123.*|.*8119.*|.*7148.*|11161.*|11162.*|11163.*|10413.*|10414.*|10415.*'
         # ou bien:
         # rule = r'.*(8124|8123|8119|7148).*|(11161|11162|11163|10413|10414|10415).*'
         # ou encore (mais avec re.search):
         # rule = r'8124|8123|8119|7148|^11161|^11162|^11163|^10413|^10414|^10415'
-        if not re.match(rule, str(self.productid)):
-            return 10001
+        if re.match(rule, str(self.productid)):
+            msg = 'Pas de routage du produit {productid} en integration ({filename})'.format(
+                productid=self.productid,
+                filename=self.filename,
+            )
+            logger.info(msg)
+            return None
 
-        msg = 'Pas de routage du produit {productid} en integration ({filename})'.format(
-            productid=self.productid,
-            filename=self.filename,
-        )
-        logger.info(msg)
-        return None
-
+        return rules.get(self.routingkey.lower(), default)
 
 class DayfileReportService(FileReportService):
     """
