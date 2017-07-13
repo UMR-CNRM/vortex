@@ -161,6 +161,11 @@ class PrivateHistory(object):
     def last(self):
         return self._history[-1][-1] if self.count else None
 
+    def reset(self):
+        """Clear the current history."""
+        self._history.clear()
+        self._count = 0
+
     def merge(self, *others):
         """Merge current history with other history objects."""
         pass

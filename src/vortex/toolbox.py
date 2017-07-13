@@ -469,6 +469,7 @@ def diff(*args, **kw):
 
             # Now proceed with the result
             logger.info('Diff return %s', str(rc))
+            t.context.diff_history.append_record(rc, source_container, rhandler)
             try:
                 logger.info('Diff result %s', str(rc.result))
             except AttributeError:
@@ -569,10 +570,15 @@ def rescue(*files, **opts):
     sh = t.sh
     env = t.env
 
+    # Summarise diffs...
+    if len(t.context.diff_history):
+        sh.header('Summary of automatic toolbox diffs')
+        t.context.diff_history.show()
+
     # Force clearing of all promises
     clear_promises(clear=True)
 
-    sh.subtitle('Rescue current dir')
+    sh.header('Rescuing current dir')
     sh.dir(output=False, fatal=False)
 
     logger.info('Rescue files %s', files)
