@@ -12,7 +12,7 @@ import sys
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
-
+from vortex.tools.date import Date, Time
 
 _arpcourt_vconf = ('courtfr', 'frcourt', 'court')
 _arome_vconf    = ('3dvarfr',)
@@ -213,16 +213,16 @@ def analysis_bnames(resource, provider):
         else:
             return 'ICMSHARPEINIT.' + suffix + '.sfx'
     elif resource.model == 'hycom' and resource.filling == 'surf':
-        region_map = dict(atl= '_', med='_MED_', oin='_OIN_')
+        region_map = dict(atl= '', med='_MED', oin='_OIN')
         mode_map = dict(fc= 'pre', an='ana')
         region = region_map.get(provider.vconf[:3], provider.vconf[:3])
         mode = mode_map.get(provider.vconf[4:][:2], None)
-        if mode is None:
-            # 'restart'
-            config = provider.vconf[4:]
-        else:
-            config = provider.vconf[-3:] + region + mode
-        return 's_init_sort_' + config + '.' + str(resource.date.ymdh)
+        
+        config = provider.vconf[-3:] + region + '_' + mode
+        if mode is 'ana':
+            suffix=resource.date.ymdh         
+    # s_init_sort_cep_OIN_ana.2017070900     (T0)   
+        return 's_init_sort_' + config + '.' + str(suffix)
     else:
         anabase = 'ICMSH' + model_info + 'INIT'
         if resource.filling == 'surf':
@@ -236,10 +236,79 @@ def historic_bnames(resource, provider):
         return histsurf_bnames(resource, provider)
     model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
                                  vapp=provider.vapp, vconf=provider.vconf)
+    
+# s_init_aro_OIN_pre.2017070812.012  
+# s_init_red_OIN.2017070406.102 ((24h apres T0) + 72h + (6/12/18h)
+    if resource.model == 'hycom':
+        region_map = dict(atl= '', med='_MED', oin='_OIN')
+        mode_map = dict(fc= 'pre', an='ana')
+        region = region_map.get(provider.vconf[:3], provider.vconf[:3])
+        mode = mode_map.get(provider.vconf[4:][:2], None)
+
+        logger.info('resource.date %s', resource.date)
+        logger.info('resource.term %s', resource.term)
+
+        if mode is None:
+            term0 = resource.term.hour
+            delta = 'PT' + str(term0) + 'H'
+            date_val = (resource.date + delta).ymdh
+            config = provider.vconf[4:] + region
+        else:
+            date_val=(resource.date + resource.term).ymdh
+            config = provider.vconf[-3:] + region + '_' + mode
+
+        logger.info('date_val %s', date_val)
+
+        prefix = 's_init'
+        if resource.term == 6 or (resource.term == 24 and mode is None):
+            prefix = 's_init_sort'
+            suffix = ''
+        else:
+            if mode is None:
+                deltatime=Time(72)
+                suffix='.{0:03d}'.format( (resource.term + deltatime).hour )
+            else:
+                suffix='.{0:03d}'.format(resource.term.hour)
+        return '{0:s}_{1:s}.{2:s}{3:s}'.format(prefix, config, date_val, suffix)
+
+    
     if provider.vconf == 'pearp':
         return 'ICMSHPREV' + '+' + resource.term.fmthour + '.' + suffix
     else:
         return 'ICMSH' + model_info + '+' + resource.term.fmthour + '.' + suffix
+
+
+def pts_bnames(resource, provider):
+    """docstring for _bnames"""
+# s_ddpts_aro_OIN_pre
+# s_ddpts_cep_OIN_ana
+    if resource.model == 'hycom':
+        region_map = dict(atl= '_', med='_MED_', oin='_OIN_')
+        mode_map = dict(fc= 'pre', an='ana')
+        region = region_map.get(provider.vconf[:3], provider.vconf[:3])
+        mode = mode_map.get(provider.vconf[4:][:2], None)
+        if mode is None:
+            # 'restart'
+            config = provider.vconf[4:]
+        else:
+            config = provider.vconf[-3:] + region + mode 
+        return resource.fields + '_' + config
+
+
+
+def bufr_bnames(resource, provider):
+    """docstring for _bnames"""
+# prv_000_aro_0_OIN.bfr
+# prv_024_aro_0_OIN.bfr
+# ana_000_cep_0_OIN.bfr
+    if resource.model == 'hycom':
+        region_map = dict(atl= '', med='_MED', oin='_OIN')
+        mode_map = dict(fc= 'prv', an='ana')
+        region = region_map.get(provider.vconf[:3], provider.vconf[:3])
+        mode = mode_map.get(provider.vconf[4:][:2], None)
+        config = provider.vconf[-3:] + region + mode
+        return '{0:s}_{1:03d}_{2:s}_{3:d}{4:s}.bfr'.format(mode, resource.timeslot.hour, provider.vconf[-3:], int(resource.date.hh), region)
+
 
 
 def histsurf_bnames(resource, provider):
@@ -286,6 +355,18 @@ def gridpoint_bnames(resource, provider):
             prefix, suffix = gribNames(cutoff, reseau, model, provider.member,
                                        vapp=provider.vapp, vconf=provider.vconf)
             localname = prefix + resource.geometry.area + suffix + resource.term.fmthour
+        elif resource.model == 'hycom':            
+          #  prv_aro_18_OIN.037.grb
+          #  ana_cep_18_OIN.003.grb
+            region_map = dict(atl= '', med='_MED', oin='_OIN')
+            mode_map = dict(fc= 'prv', an='ana')
+            region = region_map.get(provider.vconf[:3], provider.vconf[:3])
+            mode = mode_map.get(provider.vconf[4:][:2], None)
+            config = provider.vconf[-3:] + region + mode 
+            
+            localname = '{0:s}_{1:s}_{2:02d}{3:s}.{4:03d}.grb'.format(mode, provider.vconf[-3:], int(resource.date.hh), region, resource.term.hour)
+            logger.info('donne : %s', '{0:s}_{1:s}_{2:02d}{3:s}.{4:03d}.grb'.format(mode, provider.vconf[-3:], int(resource.date.hh), region, resource.term.hour))
+            return localname      
         else:
             return None
     else:

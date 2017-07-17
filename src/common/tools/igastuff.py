@@ -190,5 +190,6 @@ class IgakeyFactoryInline(_BaseIgakeyFactory):
                          'atl@fcarp': 'surcotes',
                          'med@fcarp': 'surcotes',
                          'oin@ancep': 'surcotes_oi',
-                         'oin@fcaro': 'surcotes_oi', },
+                         'oin@fcaro': 'surcotes_oi', 
+                         'oin@red'  : 'surcotes_oi', },
                }
