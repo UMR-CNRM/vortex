@@ -462,7 +462,8 @@ class FormatAdapter(DataContent):
                 # Look for a metadatareader object
                 if self._data is not None and footprints.proxy.metadatareaders is not None:
                     mreader = footprints.proxy.metadatareader(
-                        format     = container.actualfmt.upper(),
+                        format        = container.actualfmt.upper(),
+                        _emptywarning = False,
                     )
                     if mreader is not None:
                         mreader.content_init(self._data)
