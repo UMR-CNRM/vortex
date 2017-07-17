@@ -18,5 +18,6 @@ Included Modules
 
 * :mod:`common.util.async`
 * :mod:`common.util.beacon`
+* :mod:`common.util.diffpygram`
 * :mod:`common.util.ens`
 * :mod:`common.util.useepygram`

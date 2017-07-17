@@ -128,8 +128,10 @@ class ContextObserverRecorder(footprints.observers.Observer):
 
 
 class DiffHistory(PrivateHistory):
+    """Keep track of all the toolbox.diff made in this Context."""
 
     def append_record(self, rc, localcontainer, remotehandler):
+        """Adds a new diff record in the current DiffHistory."""
         rcmap = {True: 'PASS', False: 'FAIL'}
         containerstr = (str(localcontainer) if localcontainer.is_virtual()
                         else localcontainer.localpath())

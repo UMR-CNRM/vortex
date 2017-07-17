@@ -75,7 +75,7 @@ class HGeoLibrary(object):
         self._geolist = list()
 
     def register(self, hgeo_desc):
-        """Check if an :class:`HGeoDesc is already in the library.
+        """Check if an :class:`HGeoDesc` object is already in the library.
 
         If the *hgeo_desc* object is not already in the library it is inserted.
         In any case, the index of the *hgeo_desc* geometry within the library is
@@ -101,7 +101,7 @@ class HGeoLibrary(object):
 
 
 class FieldDesc(object):
-    """Holds various informations about an Epygram field."""
+    """Holds various information about an Epygram field."""
 
     def __init__(self, hgeoid, vgeo, datadesc, fid, valid):
         self.hgeoid = hgeoid
@@ -126,7 +126,7 @@ class FieldDesc(object):
                 fidscore)
 
     def ranking_summary(self, other):
-        """Returns detailed comparison informations (including the ranking)."""
+        """Returns detailed comparison information (including the ranking)."""
         return (self.datadesc == other.datadesc,
                 self.valid == other.valid,
                 self.hgeoid == other.hgeoid and self.vgeo == other.vgeo,
@@ -206,7 +206,7 @@ class FieldBundles(object):
 
 
 class EpyGribDiff(FieldBundles):
-    """A specialised version of :class:`FieldBundles` that deal with GRIB files."""
+    """A specialised version of :class:`FieldBundles` that deals with GRIB files."""
 
     _FMT_COUNTER = '[{:04d}] '
     _HEAD_COUNTER = ' ' * len(_FMT_COUNTER.format(0))

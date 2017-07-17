@@ -289,7 +289,7 @@ class GRIBAPI_Tool(addons.Addon):
 
     def grib_diff(self, grib1, grib2, skipkeys=('generatingProcessIdentifier',), **kw):
         """
-        Difference between two grib-file (using the GRIB-API)
+        Difference between two GRIB files (using the GRIB-API)
 
         :param grib1: first file to compare
         :param grib2: second file to compare

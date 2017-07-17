@@ -11,5 +11,6 @@ Common utilities
 
    async
    beacon
+   diffpygram
    ens
    usepygram

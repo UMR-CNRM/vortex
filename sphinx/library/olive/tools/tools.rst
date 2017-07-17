@@ -13,6 +13,8 @@ Package
 
 .. autodata:: __all__
 
-Classes
--------
+Included Modules
+----------------
 
+* :mod:`olive.tools.addons`
+* :mod:`olive.tools.swapp`

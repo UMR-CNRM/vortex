@@ -209,7 +209,11 @@ class FtrawEnableAddon(Addon):
 
 
 class AddonGroup(footprints.FootprintBase):
-    """Root class for any :class:`AddonGroup` system subclasses."""
+    """Root class for any :class:`AddonGroup` system subclasses.
+
+    An AddonGroup is not really an Addon... it just loads a bunch of other
+    Addons or AddonGroups into the current shell.
+    """
 
     _abstract  = True
     _collector = ('addon',)

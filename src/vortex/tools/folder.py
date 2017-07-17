@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Various shell addons that handle formats relying on a folder structure.
+
+In any kind of cache directories, the folder structure is kept as is. When
+data are sent using FTP or SSH, a tar file is created on the fly.
+"""
+
 from __future__ import division
 
 import tempfile

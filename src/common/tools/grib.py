@@ -9,7 +9,6 @@ from vortex import sessions
 from vortex.algo.components import AlgoComponentError
 from vortex.layout.contexts import Context
 from vortex.tools.grib import GRIBAPI_Tool
-from __builtin__ import int
 
 #: No automatic export
 __all__ = []
@@ -268,6 +267,7 @@ def grib_inplace_cat(t, rh):
 
 
 class _GRIBDIFF_Plus_St(object):
+    """Status of the GRIB comparison."""
 
     def __init__(self, rc, result):
         self.rc = rc
@@ -278,6 +278,7 @@ class _GRIBDIFF_Plus_St(object):
 
     @property
     def result(self):
+        """Indicates whether the diff succeeded or not."""
         return self._result
 
     def __nonzero__(self):
@@ -285,6 +286,7 @@ class _GRIBDIFF_Plus_St(object):
 
 
 class _GRIBDIFF_Plus_Res(object):
+    """Detailed result of the GRIB comparison."""
 
     def __init__(self, gapi, epydiff, epydiff_res):
         self._gapi = gapi
@@ -296,6 +298,7 @@ class _GRIBDIFF_Plus_Res(object):
                 format(repr(self).rstrip('>'), self._gapi, self._epydiff))
 
     def differences(self):
+        """Print detailed informations about the diff."""
         print self._epydiff_res
 
 
@@ -308,6 +311,7 @@ class GRIBDIFF_Plus(GRIBAPI_Tool):
         info = 'Default GRIBAPI system interface',
         attr = dict(
             maxepydiff = dict(
+                info = 'Epygram diffs are costfull, they will run only maxepydiff times',
                 type = int,
                 default = 2,
                 optional = True,

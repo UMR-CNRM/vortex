@@ -9,5 +9,6 @@ Olive tools
 
    tools
 
+   addons
    swapp
 
