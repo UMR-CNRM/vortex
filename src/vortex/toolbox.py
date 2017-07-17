@@ -15,7 +15,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions, data, proxy, VortexForceComplete
-from vortex.layout.dataflow import stripargs_section
+from vortex.layout.dataflow import stripargs_section, intent, ixo, Section
 from vortex.util.structs import History
 
 #: Shortcut to footprint env defaults
@@ -408,91 +408,85 @@ def diff(*args, **kw):
         logger.warning('Skip diff because of undefined argument(s)')
         return rlok
 
-    # Swich off autorecording of the current context
     t = sessions.current()
-    ctx = t.context
-    ctx.record_off()
 
-    # Possibily change the log level if necessary
-    oldlevel = t.loglevel
-    if loglevel is not None:
-        t.setloglevel(loglevel.upper())
+    # Swich off autorecording of the current context + deal with loggging
+    with _tb_isolate(t, loglevel):
 
-    # Do not track the reference files
-    kwclean['storetrack'] = False
+        # Do not track the reference files
+        kwclean['storetrack'] = False
 
-    # Let the magic of footprints resolution operate...
-    for ir, rhandler in enumerate(rload(*args, **kwclean)):
-        if talkative:
-            print t.line
-            rhandler.quickview(nb=ir + 1, indent=0)
-            print t.line
-        if not rhandler.complete:
-            logger.error('Incomplete Resource Handler for diff [%s]', rhandler)
-            if fatal:
-                raise ValueError('Incomplete Resource Handler for diff')
+        # Let the magic of footprints resolution operate...
+        for ir, rhandler in enumerate(rload(*args, **kwclean)):
+            if talkative:
+                print t.line
+                rhandler.quickview(nb=ir + 1, indent=0)
+                print t.line
+            if not rhandler.complete:
+                logger.error('Incomplete Resource Handler for diff [%s]', rhandler)
+                if fatal:
+                    raise ValueError('Incomplete Resource Handler for diff')
 
-        source_container = rhandler.container
-        # Get the local file content (if sensible)
-        if rhandler.resource.clscontents.is_diffable():
-            source_contents = rhandler.resource.contents_handler(datafmt=source_container.actualfmt)
-            source_contents.slurp(source_container)
-
-        # Create a new container to hold the reference file
-        lazzycontainer = footprints.proxy.container(shouldfly=True,
-                                                    actualfmt=source_container.actualfmt)
-        # Swapp the original container with the lazzy one
-        rhandler.container = lazzycontainer
-        # Get the reference file
-        rc = rhandler.get()
-        if not rc:
-            logger.error('Cannot get the reference resource: %s',
-                         rhandler.locate())
-            if fatal:
-                raise ValueError('Cannot get the reference resource')
-        else:
-            logger.info('The reference file is stored under: %s',
-                        rhandler.container.localpath())
-        # Get the reference's content (if sensible)
-        if rhandler.resource.clscontents.is_diffable():
-            ref_contents = rhandler.contents
-
-        # What are the differences ?
-        if rc:
-            # priority is given to the diff implemented in the DataContent
+            source_container = rhandler.container
+            # Get the local file content (if sensible)
             if rhandler.resource.clscontents.is_diffable():
-                rc = source_contents.diff(ref_contents)
+                source_contents = rhandler.resource.contents_handler(datafmt=source_container.actualfmt)
+                source_contents.slurp(source_container)
+
+            # Create a new container to hold the reference file
+            lazzycontainer = footprints.proxy.container(shouldfly=True,
+                                                        actualfmt=source_container.actualfmt)
+            # Swapp the original container with the lazzy one
+            rhandler.container = lazzycontainer
+
+            # Get the reference file through a Section so that intent + fatal
+            # is properly dealt with... The section is discarded afterwards.
+            rc = Section(rh=rhandler, kind=ixo.INPUT, intent=intent.IN, fatal=False).get()
+            if not rc:
+                logger.error('Cannot get the reference resource: %s',
+                             rhandler.locate())
+                if fatal:
+                    raise ValueError('Cannot get the reference resource')
             else:
-                rc = t.sh.diff(source_container.localpath(),
-                               rhandler.container.localpath(),
-                               fmt=rhandler.container.actualfmt)
+                logger.info('The reference file is stored under: %s',
+                            rhandler.container.localpath())
+            # Get the reference's content (if sensible)
+            if rhandler.resource.clscontents.is_diffable():
+                ref_contents = rhandler.contents
 
-        # Delete the reference file
-        lazzycontainer.clear()
+            # What are the differences ?
+            if rc:
+                # priority is given to the diff implemented in the DataContent
+                if rhandler.resource.clscontents.is_diffable():
+                    rc = source_contents.diff(ref_contents)
+                else:
+                    rc = t.sh.diff(source_container.localpath(),
+                                   rhandler.container.localpath(),
+                                   fmt=rhandler.container.actualfmt)
 
-        # Now proceed with the result
-        logger.info('Diff return %s', str(rc))
-        try:
-            logger.info('Diff result %s', str(rc.result))
-        except AttributeError:
-            pass
-        if not rc:
-            logger.warning('Some diff occurred with %s', rhandler.locate())
+            # Delete the reference file
+            lazzycontainer.clear()
+
+            # Now proceed with the result
+            logger.info('Diff return %s', str(rc))
+            t.context.diff_history.append_record(rc, source_container, rhandler)
             try:
-                rc.result.differences()
-            except StandardError:
+                logger.info('Diff result %s', str(rc.result))
+            except AttributeError:
                 pass
-            if fatal:
-                logger.critical('Difference in resource comparison is fatal')
-                raise ValueError('Fatal diff')
-        if t.sh.trace:
-            print
-        rlok.append(rc)
+            if not rc:
+                logger.warning('Some diff occurred with %s', rhandler.locate())
+                try:
+                    rc.result.differences()
+                except StandardError:
+                    pass
+                if fatal:
+                    logger.critical('Difference in resource comparison is fatal')
+                    raise ValueError('Fatal diff')
+            if t.sh.trace:
+                print
+            rlok.append(rc)
 
-    if loglevel is not None:
-        t.setloglevel(oldlevel)
-
-    ctx.record_on()
     return rlok
 
 
@@ -576,10 +570,15 @@ def rescue(*files, **opts):
     sh = t.sh
     env = t.env
 
+    # Summarise diffs...
+    if len(t.context.diff_history):
+        sh.header('Summary of automatic toolbox diffs')
+        t.context.diff_history.show()
+
     # Force clearing of all promises
     clear_promises(clear=True)
 
-    sh.subtitle('Rescue current dir')
+    sh.header('Rescuing current dir')
     sh.dir(output=False, fatal=False)
 
     logger.info('Rescue files %s', files)

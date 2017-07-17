@@ -16,6 +16,7 @@ Package
 Modules
 -------
 
+* :mod:`common.tools.addons`
 * :mod:`common.tools.agt`
 * :mod:`common.tools.bdap`
 * :mod:`common.tools.bdm`

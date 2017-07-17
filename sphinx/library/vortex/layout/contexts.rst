@@ -32,7 +32,12 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
+.. autoclass:: DiffHistory
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Context
    :show-inheritance:
    :members:

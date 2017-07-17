@@ -8,10 +8,6 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.9.24
 
-Package
--------
-
-.. autodata:: __all__
 
 Classes
 -------

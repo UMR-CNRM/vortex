@@ -308,9 +308,16 @@ class GRIBAPI_Tool(addons.Addon):
         cmd[0] = 'bin' + self.sh.path.sep + cmd[0]
         return super(GRIBAPI_Tool, self)._spawn_wrap(cmd, **kw)
 
+    def _actual_diff(self, grib1, grib2, skipkeys, **kw):
+        """Run the actual GRIBAPI command."""
+        cmd = [ 'grib_compare', '-r', '-b', ','.join(skipkeys), grib1, grib2 ]
+        kw['fatal'] = False
+        kw['output'] = False
+        return self._spawn_wrap(cmd, **kw)
+
     def grib_diff(self, grib1, grib2, skipkeys=('generatingProcessIdentifier',), **kw):
         """
-        Difference between two grib-file (using the GRIB-API
+        Difference between two GRIB files (using the GRIB-API)
 
         :param grib1: first file to compare
         :param grib2: second file to compare
@@ -334,12 +341,7 @@ class GRIBAPI_Tool(addons.Addon):
                 grib2 = grib2_ori + '_diffcat' + self.sh.safe_filesuffix()
                 self.sh.xgrib_pack(grib2_ori, grib2)
 
-        cmd = [ 'grib_compare', '-r', '-b', ','.join(skipkeys), grib1, grib2 ]
-
-        kw['fatal'] = False
-        kw['output'] = False
-
-        rc = self._spawn_wrap(cmd, **kw)
+        rc = self._actual_diff(grib1, grib2, skipkeys, **kw)
 
         if xgrib_support and grib1 != grib1_ori:
             self.sh.grib_rm(grib1)

@@ -9,6 +9,7 @@ Common tools
 
    tools
 
+   addons
    agt
    bdap
    bdm

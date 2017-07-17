@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Various shell addons that handle formats relying on a folder structure.
+
+In any kind of cache directories, the folder structure is kept as is. When
+data are sent using FTP or SSH, a tar file is created on the fly.
+"""
+
 from __future__ import division
 
 import tempfile
@@ -295,3 +302,91 @@ class FolderShell(addons.FtrawEnableAddon):
         rc = ssh.scpput_stream(p.stdout, destination)
         self.sh.pclose(p)
         return rc
+
+
+@folderize
+class OdbShell(FolderShell):
+    """
+    Default interface to ODB commands.
+    These commands extend the shell.
+    """
+
+    _footprint = dict(
+        info = 'Default ODB system interface',
+        attr = dict(
+            kind = dict(
+                values   = ['odb'],
+            ),
+        )
+    )
+
+
+@folderize
+class DdhPackShell(FolderShell):
+    """
+    Default interface to DDHpack commands.
+    These commands extend the shell.
+    """
+
+    _footprint = dict(
+        info = 'Default DDHpack system interface',
+        attr = dict(
+            kind = dict(
+                values   = ['ddhpack'],
+            ),
+        )
+    )
+
+
+@folderize
+class RawFilesShell(FolderShell):
+    """
+    Default interface to rawfiles commands.
+    These commands extend the shell.
+    """
+
+    _footprint = dict(
+        info = 'Default (g)RRRRawfiles system interface',
+        attr = dict(
+            kind = dict(
+                values   = ['rawfiles'],
+            ),
+        )
+    )
+
+
+@folderize
+class ObsLocationPackShell(FolderShell):
+    """
+    Default interface to  Obs Location packs commands.
+    These commands extend the shell.
+    """
+
+    _footprint = dict(
+        info = 'Default Obs Location packs system interface',
+        attr = dict(
+            kind = dict(
+                values   = ['obslocationpack'],
+            ),
+        )
+    )
+
+
+available_foldershells = [e.footprint_values('kind')[0] for e in locals().values()
+                          if (isinstance(e, type) and issubclass(e, FolderShell) and
+                              not e.footprint_abstract())]
+
+
+class FolderShellsGroup(addons.AddonGroup):
+    """The whole bunch of folder shells."""
+
+    _footprint = dict(
+        info = 'The whole bunch of folder shells',
+        attr = dict(
+            kind = dict(
+                values = ['allfolders', ],
+            ),
+        )
+    )
+
+    _addonslist = available_foldershells

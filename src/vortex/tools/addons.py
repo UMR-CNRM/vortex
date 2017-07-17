@@ -206,3 +206,54 @@ class FtrawEnableAddon(Addon):
         if self.rawftshell is None:
             tg = self.sh.default_target
             self.rawftshell = tg.get(self.cfginfo + ':rawftshell', None)
+
+
+class AddonGroup(footprints.FootprintBase):
+    """Root class for any :class:`AddonGroup` system subclasses.
+
+    An AddonGroup is not really an Addon... it just loads a bunch of other
+    Addons or AddonGroups into the current shell.
+    """
+
+    _abstract  = True
+    _collector = ('addon',)
+    _footprint = dict(
+        info = 'Default add-on group',
+        attr = dict(
+            kind = dict(),
+            sh = dict(
+                type     = OSExtended,
+                alias    = ('shell',),
+            ),
+            env = dict(
+                type     = Environment,
+                optional = True,
+                default  = None,
+                doc_visibility = footprints.doc.visibility.ADVANCED,
+            ),
+            cycle = dict(
+                optional = True,
+                default  = None,
+            ),
+        )
+    )
+
+    _addonslist = None
+
+    def __init__(self, *args, **kw):
+        """Abstract Addon initialisation."""
+        logger.debug('Abstract Addon init %s', self.__class__)
+        super(AddonGroup, self).__init__(*args, **kw)
+        self._addons_load()
+
+    def _addons_load(self):
+        if self._addonslist is None:
+            raise RuntimeError("the _addonslist classe variable must be overriden.")
+        self._load_addons_from_list(self._addonslist)
+
+    def _load_addons_from_list(self, addons):
+        logger.info("Loading the %s Addons group.", self.kind)
+        for addon in addons:
+            _shadd = footprints.proxy.addon(kind=addon, sh=self.sh, env=self.env,
+                                            cycle=self.cycle)
+            logger.info("%s Addon is: %s", addon, repr(_shadd))

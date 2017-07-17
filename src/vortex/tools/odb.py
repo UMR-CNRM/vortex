@@ -213,18 +213,5 @@ class TimeSlots(object):
         return nbx
 
 
-@folder.folderize
-class OdbShell(folder.FolderShell):
-    """
-    Default interface to ODB commands.
-    These commands extend the shell.
-    """
-
-    _footprint = dict(
-        info = 'Default ODB system interface',
-        attr = dict(
-            kind = dict(
-                values   = ['odb'],
-            ),
-        )
-    )
+# For backward compatibility
+OdbShell = folder.OdbShell

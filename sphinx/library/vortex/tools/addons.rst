@@ -8,6 +8,7 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.8.19
 
+
 Package
 -------
 
@@ -25,3 +26,9 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: AddonGroup
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   

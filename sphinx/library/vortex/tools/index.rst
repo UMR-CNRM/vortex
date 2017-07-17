@@ -19,7 +19,6 @@ Miscellaneous Tools
    lfi
    listings
    net
-   obslocationpack
    odb
    parallelism
    rawfiles

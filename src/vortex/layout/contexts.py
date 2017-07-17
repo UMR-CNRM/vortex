@@ -7,7 +7,7 @@ This modules defines the physical layout.
 
 import footprints
 from vortex.tools.env import Environment
-from vortex.util.structs import Tracker
+from vortex.util.structs import Tracker, PrivateHistory
 from . import dataflow
 
 #: No automatic export.
@@ -127,6 +127,24 @@ class ContextObserverRecorder(footprints.observers.Observer):
             context.localtracker.append(self._tracker_recorder)
 
 
+class DiffHistory(PrivateHistory):
+    """Keep track of all the toolbox.diff made in this Context."""
+
+    def append_record(self, rc, localcontainer, remotehandler):
+        """Adds a new diff record in the current DiffHistory."""
+        rcmap = {True: 'PASS', False: 'FAIL'}
+        containerstr = (str(localcontainer) if localcontainer.is_virtual()
+                        else localcontainer.localpath())
+        self.append('{:s}: {:s} (Ref: {!s})'.format(rcmap[bool(rc)], containerstr,
+                                                    remotehandler.provider))
+
+    def datastore_inplace_overwrite(self, other):
+        """Used by a DataStore object to refill a DiffHistory."""
+        self.reset()
+        self._history.extend(other.get())
+        self._count = other.count
+
+
 class Context(footprints.util.GetByTag, footprints.observers.Observer):
     """Physical layout of a session or task, etc."""
 
@@ -168,6 +186,15 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
                 self._localtracker = self.session.datastore.insert('context_localtracker',
                                                                    dict(path=self.path),
                                                                    dataflow.LocalTracker())
+
+        # Create the localtracker within the Session's datastore
+        if self.session.datastore.check('context_diffhistory', dict(path=self.path)):
+            self._dhistory = self.session.datastore.get('context_diffhistory',
+                                                        dict(path=self.path))
+        else:
+            self._dhistory = self.session.datastore.insert('context_diffhistory',
+                                                           dict(path=self.path),
+                                                           DiffHistory())
 
         footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
         footprints.observers.get(tag=_STORES_OBSBOARD).register(self)
@@ -317,6 +344,10 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
     def localtracker(self):
         """Return the :class:`~vortex.layout.dataflow.LocalTracker` object associated to that context."""
         return self._localtracker
+
+    @property
+    def diff_history(self):
+        return self._dhistory
 
     @property
     def subcontexts(self):
