@@ -8,14 +8,14 @@ import sys
 
 from . import util, norms, jo_tables, listings
 
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 
 def compare_files(file_test, file_ref,
                   out=sys.stdout,
                   pattern='norms',
                   # 'norms' arguments:
-                  mode='standalone',
+                  mode='text',
                   onlymaxdiff=False,
                   which='first_and_last',
                   # 'Jo-tables' arguments:
@@ -30,7 +30,8 @@ def compare_files(file_test, file_ref,
         :param onlymaxdiff: only max difference is printed for each step.
         :param which: either 'all' to compare norms for all steps found in listings,
                       or 'first_and_last' (default) for the first and last only.
-        :param mode: if 'standalone', prints the comparison to file;
+        :param mode: if 'text', prints the comparison to file;
+                     if 'plot', plots the comparison (pattern='norms');
                      if 'get_worst', return the worst digits comparison.
 
     'Jo-tables' arguments:

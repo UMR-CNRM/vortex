@@ -10,11 +10,16 @@ import re
 __all__ = []
 
 # regular expressions tools
-_sign = '(?P<sign>(\-|0))'
+_sign = '(\-|0)'
 _dot = '\.'
-_digits = '(?P<digits>\d+)'
+_digits = '\d+'
+_exp = 'E?(\+|\-)\d{2,3}'
+re_for_fortran_scientific_format = re.compile(_sign + _dot + _digits + _exp)
+
+_sign = '(?P<sign>' + _sign + ')'
+_digits = '(?P<digits>' + _digits + ')'
 _exp = 'E?(?P<exp>(\+|\-)\d{2,3})'
-re_for_fortran_scientific_format = re.compile(_sign + _dot + _digits + _exp + '$')
+re_for_fortran_scientific_format_groups = re.compile(_sign + _dot + _digits + _exp + '$')
 
 
 def find_line_containing(pattern, lines):
@@ -55,7 +60,7 @@ def diverging_digit(t, r):
         if digit == 0:
             digit = None
         else:
-            r_re = re_for_fortran_scientific_format.match(r)
+            r_re = re_for_fortran_scientific_format_groups.match(r)
             digits_len = len(r_re.group('digits'))
             digit = digits_len - digit
     return digit
@@ -83,8 +88,8 @@ def number_of_different_digits(t, r):
     if t == r:
         digit = 0
     else:
-        t_re = re_for_fortran_scientific_format.match(t)
-        r_re = re_for_fortran_scientific_format.match(r)
+        t_re = re_for_fortran_scientific_format_groups.match(t)
+        r_re = re_for_fortran_scientific_format_groups.match(r)
         if t_re and r_re:
             t_sign = t_re.group('sign')
             r_sign = r_re.group('sign')

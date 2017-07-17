@@ -18,13 +18,13 @@ from vortex.tools import listings
 DATADIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
 
 _NODIFFS = """\
-Norms   check succeeded for steps: 0
+Norms   check succeeded for steps: (NSIM4D=None, subroutine=OPENFA, NSTEP=None),(NSIM4D=None, subroutine=STEPO, NSTEP=0, CDCONF=T00000000),(NSIM4D=None, subroutine=STEPO, NSTEP=30, CDCONF=AAAA0VDAA),(NSIM4D=None, subroutine=OPENFA, NSTEP=60),(NSIM4D=0, subroutine=CNT4, NSTEP=0),(NSIM4D=0, subroutine=STEPO, NSTEP=0, CDCONF=A00000000)
 JoTable check succeeded for: SCREENING JOB    T1198 NCONF=     1 NSIM4D=     0 NUPTRA=     0
 """
 
 _BIGDIFFS = """\
-Norms   check succeeded for steps: 
-Norms   check FAILED    for steps: 0
+Norms   check succeeded for steps: (NSIM4D=None, subroutine=OPENFA, NSTEP=None),(NSIM4D=None, subroutine=STEPO, NSTEP=0, CDCONF=T00000000),(NSIM4D=None, subroutine=OPENFA, NSTEP=60),(NSIM4D=0, subroutine=CNT4, NSTEP=0)
+Norms   check FAILED    for steps: (NSIM4D=None, subroutine=STEPO, NSTEP=30, CDCONF=AAAA0VDAA),(NSIM4D=0, subroutine=STEPO, NSTEP=0, CDCONF=A00000000)
 JoTable check FAILED    for: SCREENING JOB    T1198 NCONF=     1 NSIM4D=     0 NUPTRA=     0
   > SYNOP, Land stations and ships   > French RADOME                    > U    : d_n=-1         d_jo=-1.000000
   > SYNOP, Land stations and ships   > French RADOME                    > U10  : d_n=-1         d_jo=-3.000000
@@ -79,8 +79,8 @@ class TestArpIfsIntegration(unittest.TestCase):
                                             format='ARPIFSLIST')
         self.assertEqual(len(adapt), L1SIZE)
         self.assertTrue(adapt.end_is_reached)
-        self.assertIsInstance(adapt.norms, arpifs_listings.norms.Norms)
-        self.assertEqual(len(adapt.norms), 1)
+        self.assertIsInstance(adapt.normset, arpifs_listings.norms.NormsSet)
+        self.assertEqual(len(adapt.normset), 7)
         self.assertIsInstance(adapt.jotables, arpifs_listings.jo_tables.JoTables)
         self.assertEqual(len(adapt.jotables), 1)
 
