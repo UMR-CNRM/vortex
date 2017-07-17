@@ -11,6 +11,7 @@ from __future__ import print_function, absolute_import, division
 
 from weakref import WeakSet
 import collections
+import logging
 import six
 
 from . import config, dump, loggers, observers, priorities, reporting, util
@@ -49,6 +50,10 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
     """
     A class collector is devoted to the gathering of class references that inherit
     from a given class (here a class with a footprint), according to some other optional criteria.
+
+    :param int non_ambiguous_loglevel: The loglevel used in the find_best method when
+        several choices are possible but the priority of the various candidates
+        makes the choice easy (default: logging.INFO).
     """
 
     _tag_default = 'garbage'
@@ -63,6 +68,7 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
         self.report_auto = True
         self.report_tag = None
         self.report_style = config.RAW_REPORTINGSTYLE
+        self.non_ambiguous_loglevel = logging.INFO
         util.GetByTag.__init__(self)
         util.Catalog.__init__(self, **kw)
         if self.report_tag is None:
@@ -263,6 +269,7 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
     def pickup(self, desc):
         """Try to pickup inside the collector a item that could match the description."""
         logger.debug('Pick up a "{:s}" in description {!s} with collector {!r}'.format(self.tag, desc, self))
+        emptywarning = desc.pop('_emptywarning', True)
         mkstdreport = desc.pop('_report', self.report_auto)
         reportstyle = desc.pop('_report_style', self.report_style)
         for hidden in [x for x in desc.keys() if x.startswith('_')]:
@@ -274,7 +281,7 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
             desc[self.tag] = self.find_best(desc)
         if desc[self.tag] is not None:
             desc = desc[self.tag].footprint_cleanup(desc)
-        else:
+        elif emptywarning:
             dumper = dump.get()
             logger.warning("No %s found in description \n%s", self.tag, dumper.cleandump(desc))
             if mkstdreport and self.report:
@@ -308,7 +315,7 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
             if self.report and report_log is not None:
                 report_log.add(collector=self)
             for item in self._fasttrack_subsetting(desc):
-                resolved, u_input = item.footprint_couldbe(desc, report=report_log)
+                resolved, u_input = item.footprint_couldbe(desc, report=report_log)  # @UnusedVariable
                 if resolved:
                     return item(resolved, checked=True)
             if (self.report == config.ONERROR_REPORTING and
@@ -351,13 +358,15 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
         if not candidates:
             return None
         if len(candidates) > 1:
-            dumper = dump.get()
-            logger.warning("Multiple %s candidates \n%s", self.tag, dumper.cleandump(desc))
             candidates.sort(key=lambda x: x[0].footprint_weight(len(x[2])), reverse=True)
+            ambiguous = candidates[0][0].footprint_pl() == candidates[1][0].footprint_pl()
+            loglevel = logging.WARNING if ambiguous else self.non_ambiguous_loglevel
+            dumper = dump.get()
+            logger.log(loglevel, "Multiple %s candidates \n%s", self.tag, dumper.cleandump(desc))
             for i, c in enumerate(candidates):
-                thisclass, u_resolved, theinput = c
-                logger.warning('no.%d in.%d is %s', i + 1, len(theinput), str(thisclass))
-        topcl, topr, u_topinput = candidates[0]
+                thisclass, u_resolved, theinput = c  # @UnusedVariable
+                logger.log(loglevel, 'no.%d in.%d is %s', i + 1, len(theinput), str(thisclass))
+        topcl, topr, u_topinput = candidates[0]  # @UnusedVariable
         return topcl(topr, checked=True)
 
     def load(self, **desc):

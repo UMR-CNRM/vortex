@@ -9,6 +9,7 @@ hosting a specific execution.Target objects use the :mod:`footprints` mechanism.
 #: No automatic export
 __all__ = []
 
+import logging
 import re
 import platform
 
@@ -336,3 +337,9 @@ class LocalTarget(Target):
             ),
         )
     )
+
+
+# Disable priority warnings on the target collector
+fcollect = fp.collectors.get(tag='target')
+fcollect.non_ambiguous_loglevel = logging.DEBUG
+del fcollect
