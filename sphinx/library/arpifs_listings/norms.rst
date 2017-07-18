@@ -21,17 +21,17 @@ Functions
 Classes
 -------
 
+.. autoclass:: NormsSet
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Norms
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Norm
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: NormComparison
+.. autoclass:: NormsComparison
    :show-inheritance:
    :members:
    :member-order: alphabetical

@@ -17,7 +17,7 @@ def compare_files(file_test, file_ref,
                   # 'norms' arguments:
                   mode='text',
                   onlymaxdiff=False,
-                  which='first_and_last',
+                  which='first_and_last_spectral',
                   # 'Jo-tables' arguments:
                   nthres=jo_tables.DEFAULT_N_THRESHOLD,
                   jothres=jo_tables.DEFAULT_JO_THRESHOLD,
@@ -29,7 +29,7 @@ def compare_files(file_test, file_ref,
     'norms' arguments:
         :param onlymaxdiff: only max difference is printed for each step.
         :param which: either 'all' to compare norms for all steps found in listings,
-                      or 'first_and_last' (default) for the first and last only.
+                      or 'first_and_last_spectral' (default) for the first and last only.
         :param mode: if 'text', prints the comparison to file;
                      if 'plot', plots the comparison (pattern='norms');
                      if 'get_worst', return the worst digits comparison.

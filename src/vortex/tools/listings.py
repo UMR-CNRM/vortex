@@ -42,11 +42,13 @@ class ArpIfsListingDiff_Result(object):
         """Print a summary of the listing comparison."""
         print
         if self._norms_eq:
-            print("Norms   check succeeded for steps: {:s}".format(
-                ",".join([str(k) for k, v in self._norms_eq.items() if v])))
-            if not all(self._norms_eq.values()):
-                print("Norms   check FAILED    for steps: {:s}".format(
-                    ",".join([str(k) for k, v in self._norms_eq.items() if not v])))
+            if all(self._norms_eq.values()):
+                print("Norms   check succeeded for all steps.")
+            else:
+                print("Norms   check succeeded for steps:\n  {:s}".format(
+                    "\n  ".join([str(k) for k, v in self._norms_eq.items() if v])))
+                print("Norms   check FAILED    for steps:\n  {:s}".format(
+                    "\n  ".join([str(k) for k, v in self._norms_eq.items() if not v])))
         else:
             print("Norms steps do not match. The check FAILED.")
         print
@@ -124,13 +126,15 @@ class ArpIfsListingsTool(addons.Addon):
         # The reference listing may contain more norms compared to the second one
         norms_eq = OrderedDict()
         if not l2_normset.steps_equal(l1_normset):
-            if set(l1_normset.steps()) >= set(l2_normset.steps()):
-                for n2 in l2_normset:
-                    k = n2.format_step()
-                    for n1 in l1_normset:
-                        if n1.step == n2.step:
-                            norms_eq[k] = n1 == n2
-                            break
+            l1_tdict = OrderedDict()
+            for n in l1_normset:
+                l1_tdict[n.format_step()] = n
+            l2_tdict = OrderedDict()
+            for n in l2_normset:
+                l2_tdict[n.format_step()] = n
+            ikeys = set(l1_tdict.keys()) & set(l2_tdict.keys())
+            for k in ikeys:
+                norms_eq[k] = l1_tdict[k] == l2_tdict[k]
         else:
             for i, n in enumerate(l2_normset):
                 k = n.format_step()

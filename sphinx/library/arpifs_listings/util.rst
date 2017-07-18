@@ -13,6 +13,14 @@ Package
 
 .. autodata:: __all__
 
+Exceptions
+----------
+
+.. autoclass:: ParsingError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Functions
 ---------
 
@@ -21,3 +29,5 @@ Functions
 .. autofunction:: diverging_digit
 
 .. autofunction:: find_line_containing
+
+.. autofunction:: number_of_different_digits

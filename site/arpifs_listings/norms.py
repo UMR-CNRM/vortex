@@ -34,16 +34,16 @@ _re_cdconf = '(?P<cdconf>\w+)'
 _re_pcstep = '(\((?P<pc_step>(PREDICTOR)|(CORRECTOR))\)\s+)?'
 _re_dfi = '(?P<dfi>DFI STEP)'
 _re_dfistep = '(?P<dfi_step>(\+|\-)\d+\/\s*\d+)'
-CNT_steps = {'openfa_info':'\s*' + _re_openfa + ':' + _re_comment + '\s*$',
-             'openfa':'\s*' + _re_openfa + ':\s+' + _re_unit + '\s+' + _re_filename + '\s*$',
-             'nstep_stepo':'\s*NSTEP =\s+' + _re_nstep + '\s+' + _re_stepo + '\s+' + _re_cdconf + '\s*$',
-             'nstep_scan2m':'\s*NSTEP =\s+' + _re_nstep + '\s+' + _re_scan2m + '\s+' + _re_cdconf + '\s*$',
-             'norms_at_nstep':'\s*NORMS AT NSTEP\s+' + _re_cnt34 + '\s+' + _re_pcstep + _re_nstep + '\s*$',
-             'start_cnt4_nsim4d':'\s*START\s+' + _re_cnt34 + ', NSIM4D=\s+' + _re_nsim4d + '\s*$',
-             'end_cnt3':'\s*END\s+' + _re_cnt34 + '\s*$',
-             'dfi_step':'\s*(\d|:)*\s+' + _re_dfi + '\s+' + _re_dfistep + '\s*\+CPU=.*\s*$',
+CNT_steps = {'openfa_info': '\s*' + _re_openfa + ':' + _re_comment + '\s*$',
+             'openfa': '\s*' + _re_openfa + ':\s+' + _re_unit + '\s+' + _re_filename + '\s*$',
+             'nstep_stepo': '\s*NSTEP =\s+' + _re_nstep + '\s+' + _re_stepo + '\s+' + _re_cdconf + '\s*$',
+             'nstep_scan2m': '\s*NSTEP =\s+' + _re_nstep + '\s+' + _re_scan2m + '\s+' + _re_cdconf + '\s*$',
+             'norms_at_nstep': '\s*NORMS AT NSTEP\s+' + _re_cnt34 + '\s+' + _re_pcstep + _re_nstep + '\s*$',
+             'start_cnt4_nsim4d': '\s*START\s+' + _re_cnt34 + ', NSIM4D=\s+' + _re_nsim4d + '\s*$',
+             'end_cnt3': '\s*END\s+' + _re_cnt34 + '\s*$',
+             'dfi_step': '\s*(\d|:)*\s+' + _re_dfi + '\s+' + _re_dfistep + '\s*\+CPU=.*\s*$',
              }
-CNT_steps = {k:re.compile(v) for k, v in CNT_steps.items()}
+CNT_steps = {k: re.compile(v) for k, v in CNT_steps.items()}
 
 
 class NormsSet(object):
@@ -270,9 +270,9 @@ class Norms(object):
                     re_ok = re_pattern.match(sub_extract[idx])
                     if re_ok:
                         fld = re_ok.group('fldname').rstrip()
-                        vals = {'average':re_ok.group('ave'),
-                                'minimum':re_ok.group('min'),
-                                'maximum':re_ok.group('max')}
+                        vals = {'average': re_ok.group('ave'),
+                                'minimum': re_ok.group('min'),
+                                'maximum': re_ok.group('max')}
                         self.gpnorms[fld] = vals
                         idx += 1
                     else:

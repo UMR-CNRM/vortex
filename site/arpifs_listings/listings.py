@@ -9,7 +9,6 @@ from collections import OrderedDict
 
 from .norms import NormsSet, NormsComparison
 from . import jo_tables
-from . import TLAD
 
 #: No automatic export
 __all__ = []
@@ -28,8 +27,8 @@ class OutputListing(object):
         :param filename: name of the file to read in
         :param pattern_type: type of pattern to compare, among ('norms', 'Jo-tables')
         """
-        assert pattern_type in ('norms', 'Jo-tables', 'adjoint-test'), \
-               "unknown pattern: " + pattern_type
+        assert pattern_type in ('norms', 'Jo-tables', ), \
+            "unknown pattern: " + pattern_type
 
         # init
         self.filename = filename
@@ -73,8 +72,6 @@ class OutputListing(object):
             self.parse_norms(flush_after_reading=flush_after_reading)
         elif self.pattern_type == 'Jo-tables':
             self.parse_jo_tables(flush_after_reading=flush_after_reading)
-        elif self.pattern_type == 'adjoint-test':
-            self.parse_adjoint_test(flush_after_reading=flush_after_reading)
 
     def flush_listing(self):
         """Get rid of the text listing that may consume some memory."""
@@ -102,17 +99,6 @@ class OutputListing(object):
         If **flush_after_reading**, get rid of listing after reading Jo-tables.
         """
         self.jo_tables = jo_tables.JoTables(self.filename, self.lines)
-        if flush_after_reading:
-            self.flush_listing()
-
-    # Test of the Adjoint
-    def parse_adjoint_test(self, flush_after_reading=False):
-        """
-        Look for and read test of the adjoint.
-
-        If **flush_after_reading**, get rid of listing after reading the test.
-        """
-        self.adjoint_test = TLAD.AdjointTest(self.lines)
         if flush_after_reading:
             self.flush_listing()
 
@@ -157,6 +143,7 @@ def compare_norms(test, ref,
     assert len(ref.normset) > 0
     assert len(test.normset) > 0
     assert mode in ('text', 'get_worst', 'get_worst_by_step', 'plot')
+    assert which in ('first_and_last_spectral', 'all')
 
     if not test.normset.steps_equal(ref.normset):
         st = set([n.format_step() for n in test.normset])
@@ -167,7 +154,7 @@ def compare_norms(test, ref,
         for off, i in enumerate(test_rm):
             test.normset.pop(i - off)
         ref_rm = [i for i in range(len(ref.normset))
-                   if ref.normset[i].format_step() not in stepset]
+                  if ref.normset[i].format_step() not in stepset]
         for off, i in enumerate(ref_rm):
             ref.normset.pop(i - off)
         assert test.normset.steps_equal(ref.normset)
@@ -211,7 +198,7 @@ def compare_norms(test, ref,
         for n in normsout.values():
             fldset.extend(n.keys())
         fldset = sorted(set(fldset))
-        tab_f = {f:[n.get(f, None) for n in normsout.values()] for f in fldset}
+        tab_f = {f: [n.get(f, None) for n in normsout.values()] for f in fldset}
         xlabels = [(i, f) for i, f in enumerate(normsout.keys())]
         xlen = len(xlabels)
         tn = 5
