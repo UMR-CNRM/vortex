@@ -347,7 +347,7 @@ def filteractive(r,dic):
             filter_active=False
     return filter_active    
 
-def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_target=None, routingkey=None, selkeyproductid=None):
+def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_target=None, routingkey=None, selkeyproductid=None, targetname=None, transmet=None):
     """Hook functions factory to route files while the execution is running"""
         
 
@@ -359,11 +359,13 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
         :param soprano_target: str (piccolo or piccolo-int)
         :param routingkey : str
         :param selkeyproductid :str (example: area, term, fields ...) 
+        :param targetname : str
+        :param transmet : dict
     """
 
     def hook_route(t, rh):
         kwargs= dict(kind=kind, productid=productid, sshhost=sshhost,
-                    filename=rh.container.abspath, soprano_target=soprano_target, routingkey=routingkey)
+                    filename=rh.container.abspath, soprano_target=soprano_target, routingkey=routingkey, targetname=targetname, transmet=transmet)
         route_active = True
         if selkeyproductid:
             if isinstance(productid, dict):
