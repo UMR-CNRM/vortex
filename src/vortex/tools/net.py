@@ -838,7 +838,7 @@ class ActiveSshTunnel(object):
         return self.activeprocess.poll() is None
 
     def __enter__(self):
-        pass
+        return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()

@@ -193,9 +193,9 @@ class AlarmProxyService(AlarmService):
         info = 'Alarm Proxy Service',
         attr = dict(
             issyslognode = dict(
-                values = [False, ],
+                values = [str(False), ],
                 default = '[systemtarget:issyslognode]',
-                type = bool,
+                optional = True
             ),
         )
     )
@@ -270,9 +270,9 @@ class AlarmLogService(AlarmService):
                 access   = 'rwx',
             ),
             issyslognode = dict(
-                values   = [True, ],
+                values   = [str(True), ],
                 default  = '[systemtarget:issyslognode]',
-                type     = bool,
+                optional = True
             ),
         )
     )
@@ -307,9 +307,9 @@ class AlarmRemoteService(AlarmService):
                 default  = socket.SOCK_DGRAM,
             ),
             issyslognode = dict(
-                values   = [True, ],
+                values   = [str(True), ],
                 default  = '[systemtarget:issyslognode]',
-                type     = bool,
+                optional = True
             ),
         )
     )
