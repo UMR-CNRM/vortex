@@ -425,11 +425,15 @@ class GetByTagMeta(type):
 @six.add_metaclass(GetByTagMeta)
 class GetByTag(object):
     """
-    Utility to retrieve a new object by a special named argument ``tag``.
+    Utility to retrieve a new/existing object by a special named argument ``tag``.
     If an object had already been created with that tag, return this object.
     """
 
     _tag_default = 'default'
+
+    #: If set to False, unless new=True is specified, it won't be allowed to
+    #: create new objects (a RuntimeError will be thrown).
+    _tag_implicit_new = True
 
     def __new__(cls, *args, **kw):
         """Check for an existing object with same tag."""
@@ -445,11 +449,19 @@ class GetByTag(object):
         if not new and tag in cls._tag_table:
             newobj = cls._tag_table[tag]
         else:
+            if not cls._tag_implicit_new and not new:
+                cls._tag_implicit_new_error(tag)
             newobj = super(GetByTag, cls).__new__(cls)
             newobj._tag = tag
             cls._tag_table[tag] = newobj
             newobj.__init__(*args, **kw)
         return newobj
+
+    @classmethod
+    def _tag_implicit_new_error(cls, tag):
+        """Called whenever a tag does not exists and _tag_implicit_new = False."""
+        raise RuntimeError(("It's not allowed to create a new {:s} object (new tag={:s}) "
+                            "without an explicit new=True argument.").format(cls.__name__, tag))
 
     @property
     def tag(self):
@@ -462,12 +474,12 @@ class GetByTag(object):
 
     @classmethod
     def tag_keys(cls):
-        """Return an alphabetic ordered list of actual keys of the objects instanciated."""
+        """Return an alphabetic ordered list of actual keys of the objects instantiated."""
         return sorted(cls._tag_table.keys())
 
     @classmethod
     def tag_values(cls):
-        """Return a non-ordered list of actual values of the objects instanciated."""
+        """Return a non-ordered list of actual values of the objects instantiated."""
         return list(cls._tag_table.values())
 
     @classmethod
