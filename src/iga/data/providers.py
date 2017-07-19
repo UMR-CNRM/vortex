@@ -21,7 +21,7 @@ import iga.util.bpnames as bp
 
 #: TODO move in config file
 ATM_LIST_ONE = {'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie',
-                'polynesie', 'restart_cep', 'reunion', 'ssmice', 'varpack'}
+                'polynesie', 'restart_cep', 'reunion', 'ssmice', 'varpack', 'mfwam'}
 
 #: TODO move in config file
 ATM_LIST_TWO = {'perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim', 'mocvolc'}
@@ -141,7 +141,7 @@ class IgaProvider(Provider):
         if ('fmt' in info and
                 resource.realkind == 'boundary' and
                 self.igakey != 'reunion'):
-            info['fmt'] = 'fic_day'
+            info['fmt'] = 'fic_day'          
         if not hasattr(resource, 'model') or resource.model == 'surfex':
             info['model'] = self.vapp
         self.config.setall(info)

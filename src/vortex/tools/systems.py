@@ -924,7 +924,7 @@ class OSExtended(System):
         return rc
 
     def ftserv_get(self, source, destination, hostname=None, logname=None):
-        """Get a file using FtServ."""
+        """Get a file using FtServ."""     
         if isinstance(source, basestring) and isinstance(destination, basestring):
             if self.filecocoon(destination):
                 destination = self.path.expanduser(destination)
@@ -1365,8 +1365,14 @@ class OSExtended(System):
         self.stderr('ldirs', *rl)
         return [x for x in self.glob(*rl) if self.path.isdir(x)]
 
+    def gzip(self, *args, **kw):
+        """Simple gzip compression of a file'"""
+        cmd = ['gzip', '-vf', args[0]]
+        cmd.extend(args[1:])
+        return self.spawn(cmd, **kw)
+
     def gunzip(self, *args, **kw):
-        """Simple gunzip a gzip-compressed file (always c-something)'"""
+        """Simple gunzip a gzip-compressed file'"""
         cmd = ['gunzip', args[0]]
         cmd.extend(args[1:])
         return self.spawn(cmd, **kw)
