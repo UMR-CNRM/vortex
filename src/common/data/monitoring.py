@@ -112,19 +112,19 @@ class MntCumulStat(Monitoring):
         return 'accumulated_stats'
 
     def basename_info(self):
-        d = super(MntCumulStat, self).basename()
+        d = super(MntCumulStat, self).basename_info()
         d['period'] = self.periodicity
         return d
 
 
-class MntDailyStat(Monitoring):
-    """Daily statistics file."""
+class MntStat(Monitoring):
+    """Monitoring statistics file."""
 
     _footprint = dict(
-        info='Daily statistics',
+        info='Monitoring statistics',
         attr=dict(
             kind=dict(
-                values=['daily_stats']
+                values=['monitoring_stats']
             ),
             nativefmt=dict(
                 values=['ascii', 'txt'],
@@ -140,10 +140,10 @@ class MntDailyStat(Monitoring):
 
     @property
     def realkind(self):
-        return 'daily_stats'
+        return 'monitoring_stats'
 
     def basename_info(self):
-        d = super(MntCumulStat, self).basename()
+        d = super(MntStat, self).basename_info()
         d['src'].append(self.monitor)
         return d
 
