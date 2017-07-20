@@ -47,7 +47,7 @@ if __name__ == '__main__':
                         dest='mode',
                         default='text',
                         help=("(for 'norms' comparison only): " +
-                              "either 'plot' (default) or 'text': " +
+                              "either 'text' (default) or 'plot': " +
                               "how the norm comparison is shown."))
     parser.add_argument('--n-threshold', '--nt',
                         dest='nthres',

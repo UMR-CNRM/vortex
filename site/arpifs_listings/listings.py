@@ -215,7 +215,7 @@ def compare_norms(test, ref,
             axes[j].plot(tab_f[f], color='DarkMagenta')
             axes[j].scatter(0, tab_f[f][0], c='DarkMagenta', s=50, marker='o')
             axes[j].set_xlim(0, xlen)
-            axes[j].scatter(xlen, tab_f[f][xlen - 1], c='DarkMagenta', s=20, marker='o', edgecolors='face')
+            axes[j].scatter(xlen - 1, tab_f[f][xlen - 1], c='DarkMagenta', s=20, marker='o', edgecolors='face')
             axes[j].set_xticks([x[0] for x in xlabels])
             axes[j].set_xticklabels([])
             axes[j].set_ylim(0, 15)
