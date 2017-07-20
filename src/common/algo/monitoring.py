@@ -39,6 +39,11 @@ class OdbMonitoring(OdbProcess):
                 default = True,
                 optional = True,
             ),
+            extend = dict(
+                type = bool,
+                default = False,
+                optional = True,
+            ),
             stage = dict(
                 values = ['can', 'surf', 'surface', 'atm', 'atmospheric'],
                 remap = dict(can='surf', surface='surf', atmospheric='atm'),
@@ -68,7 +73,7 @@ class OdbMonitoring(OdbProcess):
 
         obssurf = [
             x for x in self.input_obs()
-            if x.resource.stage.startswith('canari') and x.resource.part == 'surf'
+            if x.resource.stage.startswith('canari') and (x.resource.part == 'surf' or x.resource.part == 'ground')
         ]
 
         # One database at a time
@@ -93,9 +98,10 @@ class OdbMonitoring(OdbProcess):
         # Force to start a new accumulated statistics file if first day and first hour of the month
         mnt_start = self.start
 
-        if not mnt_start and (int(self.date.day) == 1 and int(self.date.hh) == 0):
+        if not mnt_start and int(self.date.day) == 1 and int(self.date.hh) == 0 and not self.extend:
             logger.info('First day and first hour of the month : force start attribute to True.')
             mnt_start = True
+
         mnt_cumul = self.cumul
         if self.cutoff == 'production':
             mnt_cumul = False
@@ -159,13 +165,21 @@ class OdbMonitoring(OdbProcess):
         namrh.container.cat()
 
     def postfix(self, rh, opts):
-        """Find out if any special resources have been produced."""
+        """Remove all empty files and find out if any special resources have been produced."""
 
         sh = self.system
+        self.system.dir(output = False, fatal=False)
+        allfiles = sh.ls()
+        for f in allfiles:
+            if self.system.path.getsize(f) == 0:
+                logger.info('Remove %s because size of %s is zero.', f, f)
+                sh.remove(f)
+
         obspoint_out = sh.ls('point.*')
         if obspoint_out:
-            dest = 'obspointpack'
-            logger.info('Creating an OBS POINT pack: %s', dest)
+            dest = 'obslocationpack'
+            logger.info('Creating an OBSLOCATION pack: %s', dest)
             sh.mkdir(dest)
             for fname in obspoint_out:
                 sh.mv(fname, dest)
+        self.system.dir(output=False, fatal=False)

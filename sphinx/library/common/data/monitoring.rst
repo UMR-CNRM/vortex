@@ -31,7 +31,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MntDailyStat
+.. autoclass:: MntStat
    :show-inheritance:
    :members:
    :member-order: alphabetical
