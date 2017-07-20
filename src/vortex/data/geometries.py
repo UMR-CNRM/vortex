@@ -85,7 +85,7 @@ class Geometry(footprints.util.GetByTag):
     @classmethod
     def _tag_implicit_new_error(cls, tag):
         """Called whenever a tag does not exists and _tag_implicit_new = False."""
-        raise RuntimeError('The "{:s}" {:s} object does not exists yet...'.
+        raise RuntimeError('The "{:s}" {:s} object does not exist yet...'.
                            format(tag, cls.__name__))
 
     @classmethod
