@@ -48,8 +48,12 @@ def load(inifile='@geometries.ini', refresh=False, verbose=True):
         if verbose:
             print '+ Load', item.ljust(16), 'as', thisclass
         if refresh:
-            gdesc['new'] = True
-        thisclass(tag=item, **gdesc)
+            # Always recreate the Geometry...
+            thisclass(tag=item, new=True, **gdesc)
+        else:
+            # Only create new geometries
+            if item not in Geometry.tag_keys():
+                thisclass(tag=item, new=True, **gdesc)
 
 
 def grep(**kw):
@@ -69,12 +73,20 @@ def grep(**kw):
 class Geometry(footprints.util.GetByTag):
     """Abstract geometry."""
 
+    _tag_implicit_new = False
+
     def __init__(self, **kw):
         self.info    = 'anonymous'
         self.inifile = None
         self.__dict__.update(kw)
         self.kind    = 'abstract'
         logger.debug('Abstract Geometry init kw=%s', str(kw))
+
+    @classmethod
+    def _tag_implicit_new_error(cls, tag):
+        """Called whenever a tag does not exists and _tag_implicit_new = False."""
+        raise RuntimeError('The "{:s}" {:s} object does not exist yet...'.
+                           format(tag, cls.__name__))
 
     @classmethod
     def tag_clean(self, tag):
