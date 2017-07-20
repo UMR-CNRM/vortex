@@ -91,15 +91,13 @@ class VortexWorker(object):
         else:
             self.reset_loggers(self.logger)
         sh = vortex.sh()
-        import vortex.tools.lfi
-        import vortex.tools.odb
-        import vortex.tools.grib
-        import vortex.tools.ddhpack
+        import vortex.tools.lfi  # @UnusedImport
+        import vortex.tools.grib  # @UnusedImport
+        import vortex.tools.folder  # @UnusedImport
         import footprints as fp
         self.shlfi = fp.proxy.addon(kind='lfi', shell=sh)
-        self.shodb = fp.proxy.addon(kind='odb', shell=sh)
         self.shgrb = fp.proxy.addon(kind='grib', shell=sh)
-        self.shddh = fp.proxy.addon(kind='ddhpack', shell=sh)
+        self.shddh = fp.proxy.addon(kind='allfolders', shell=sh)
         self.logger.warning('VORTEX enter ' + str(self.modules))
         for modname in self.modules:
             sh.import_module(modname)

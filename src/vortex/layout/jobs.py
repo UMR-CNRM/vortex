@@ -165,7 +165,9 @@ def mkjob(t, **kw):
 
     for explist in ('loadedmods', 'loadedaddons'):
         if explist in tplconf:
-            tplconf[explist] = ','.join(["'{:s}'".format(x) for x in re.split(r'\s*,\s*', tplconf[explist])])
+            tplconf[explist] = ','.join(["'{:s}'".format(x)
+                                         for x in re.split(r'\s*,\s*', tplconf[explist])
+                                         if len(x)]) + ','  # Always ends with a ,
 
     corejob = load_template(t, tplconf['template'])
     opts['tplfile'] = corejob.srcfile

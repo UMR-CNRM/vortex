@@ -53,7 +53,7 @@ class CompressionPipeline(object):
 
         :param str unit: The kind of the compression tool (see  :class:`CompressionUnit`
             subclases
-        :param **kwargs: Options that will be used during the compression tool
+        :param kwargs: Options that will be used during the compression tool
             initialisation
         """
         c_unit = footprints.proxy.compression_unit(kind=unit, **kwargs)

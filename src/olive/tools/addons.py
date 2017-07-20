@@ -5,7 +5,7 @@ from vortex.tools.addons import AddonGroup
 
 # Load the proper Addon modules...
 import common.tools.addons  # @UnusedImport
-import common.tools.grib  # @UnusedImport
+import common.tools.gribdiff  # @UnusedImport
 
 #: No automatic export
 __all__ = []

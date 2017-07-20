@@ -18,11 +18,11 @@ class TestConfigSet(unittest.TestCase):
                      'default(dict(toto:titi tata:titi))'):
             cs.tdict2_map = dmap
             self.assertDictEqual(cs.tdict2, {'toto': 'titi', 'tata': 'titi'})
-        for geo in ('globalsp', 'geometry(globalsp)', 'GEOMETRY(globalsp)'):
+        for geo in ('global798', 'geometry(global798)', 'GEOMETRY(global798)'):
             cs.tgeometry = geo
-            self.assertEqual(cs.tgeometry, geometries.get(tag='globalsp'))
-        cs.tgeometries = 'globalsp,globalsp2'
-        self.assertListEqual(cs.tgeometries, [geometries.get(tag='globalsp'),
+            self.assertEqual(cs.tgeometry, geometries.get(tag='global798'))
+        cs.tgeometries = 'global798,globalsp2'
+        self.assertListEqual(cs.tgeometries, [geometries.get(tag='global798'),
                                               geometries.get(tag='globalsp2')])
         cs.tr_range = 'int(1,5,2)'
         self.assertListEqual(cs.tr, [1, 3, 5])

@@ -21,4 +21,5 @@ Modules
 * :mod:`common.tools.bdap`
 * :mod:`common.tools.bdm`
 * :mod:`common.tools.grib`
+* :mod:`common.tools.gribdiff`
 * :mod:`common.tools.igastuff`

@@ -14,4 +14,5 @@ Common tools
    bdap
    bdm
    grib
+   gribdiff
    igastuff

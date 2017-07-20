@@ -13,9 +13,10 @@ import tempfile
 __all__ = []
 
 #: The list of addons to be loaded
-_IVORTEX_ADDONS = [('odb', ('odb',)),
-                   ('ddhpack', ('ddhpack',)),
-                   ('grib', ('grib', 'gribapi')), ]
+_IVORTEX_ADDONS = [('vortex.tools.folder', ('allfolders',)),
+                   ('vortex.tools.grib', ('grib', )),
+                   ('common.tools.gribdiff', ('gribapi', )),
+                   ('vortex.tools.listings', ('arpifs_listings')), ]
 #: The path to the default basedir
 _IVORTEX_BASEDIR_DEFAULT = os.path.join(os.environ.get('HOME', '/tmp'),
                                         'vortex-workdir')
@@ -63,6 +64,7 @@ class VortexMagics(Magics):
             import footprints
             import vortex
             import common  # @UnusedImport
+            import olive  # @UnusedImport
             fpx = footprints.proxy
             self._version = vortex.__version__
             self._session = vortex.ticket()

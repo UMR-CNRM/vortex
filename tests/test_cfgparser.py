@@ -321,10 +321,10 @@ class TestAppConfigDecoder(TestCase):
         tdict = 'dict(toto:titi tata:titi)'
         self.assertDictEqual(self.cd(tdict), {'toto': 'titi', 'tata': 'titi'})
         # Remap ?
-        tgeometry = 'geometry(globalsp)'
-        self.assertEqual(self.cd(tgeometry), geometries.get(tag='globalsp'))
-        tgeometries = 'geometry(globalsp,globalsp2)'
-        self.assertListEqual(self.cd(tgeometries), [geometries.get(tag='globalsp'),
+        tgeometry = 'geometry(global798)'
+        self.assertEqual(self.cd(tgeometry), geometries.get(tag='global798'))
+        tgeometries = 'geometry(global798,globalsp2)'
+        self.assertListEqual(self.cd(tgeometries), [geometries.get(tag='global798'),
                                                     geometries.get(tag='globalsp2')])
         tdict2 = 'int(dict(toto:1 tata:2))'
         self.assertDictEqual(self.cd(tdict2), {'toto': 1, 'tata': 2})

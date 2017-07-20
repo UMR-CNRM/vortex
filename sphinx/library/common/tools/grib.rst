@@ -30,8 +30,4 @@ Classes
    :show-inheritance:
    :members: add_filters, __len__, __call__
    :member-order: alphabetical
-   
-.. autoclass:: GRIBDIFF_Plus
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
+  
