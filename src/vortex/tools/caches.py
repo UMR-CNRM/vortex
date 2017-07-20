@@ -339,7 +339,7 @@ class HackerCache(Cache):
             gl = sessions.current().glove
             sweethome = sh.path.join(gl.configrc, 'hack')
             sh.mkdir(sweethome)
-            logger.debug('Using %s hack cache: %s', self, sweethome)
+            logger.info('Using %s hack cache: %s', self, sweethome)
         else:
             sweethome = self.actual_rootdir
         return sh.path.join(sweethome, self.actual_headdir)
