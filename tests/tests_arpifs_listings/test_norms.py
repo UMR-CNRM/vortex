@@ -21,18 +21,15 @@ class TestListingNorms(unittest.TestCase):
 
     NODIFFS_STR = """### SPECTRAL NORMS ###
 ######################
-         Worst norm comparison --> =========================
+         Worst norm comparison --> =====================
 ### GRIDPOINT NORMS ###
 ######################
-         Worst norm comparison --> =========================
+         Worst norm comparison --> =====================
 """
 
-    GPDIFFS_STR = """### SPECTRAL NORMS ###
+    GPDIFFS_STR = """### GRIDPOINT NORMS ###
 ######################
-         Worst norm comparison --> =========================
-### GRIDPOINT NORMS ###
-######################
-         Worst norm comparison --> identical up to  0 digits
+         Worst norm comparison --> 15 last digits differ
 """
 
     @staticmethod
@@ -41,22 +38,23 @@ class TestListingNorms(unittest.TestCase):
             return [l.rstrip("\n") for l in fh]
 
     def test_single(self):
-        l1_n = norms.Norms(self._ingest('listing_screen_li1'))
-        self.assertEqual(len(l1_n), 1)
-        self.assertListEqual(list(l1_n.steps()), [0, ])
-        self.assertListEqual(l1_n.get_first_and_last_norms_indexes(),
-                             [(0, [None]), (0, [None])])
-        norm = l1_n[0]
-        norm = norm[None]
-        self.assertEqual(norm.nstep, 0)
-        self.assertEqual(norm.substep, None)
+        l1_n = norms.NormsSet(self._ingest('listing_screen_li1'))
+        self.assertEqual(len(l1_n), 7)
+        self.assertDictEqual(l1_n.steps()[5], {u'subroutine': u'CNT4',
+                                               u'nstep': u'0',
+                                               u'pc_step': None,
+                                               u'line': u' NORMS AT NSTEP CNT4    0',
+                                               u'nsim4d': u'0'})
+
+        norm = l1_n[5]
         self.assertDictEqual(norm.spnorms,
                              {u'VORTICITY': u'0.113257252552245E-04',
                               u'DIVERGENCE': u'0.963028513994313E-05',
                               u'LOG(PREHYDS)': u'0.127233694092756E-03',
                               u'TEMPERATURE': u'0.183611192189494E+00',
                               u'KINETIC ENERGY': u'0.197980105386348E+00'})
-        self.assertEqual(len(norm.gpnorms), 568)
+        norm = l1_n[6]
+        self.assertEqual(len(norm.gpnorms), 562)
         skeys = set([re.sub(r'^S\d+', '', k) for k in norm.gpnorms.keys()])
         self.assertSetEqual(skeys,
                             set([u'PROFRESERV.EAU', u'SURFC.OF.OZONE', u'SURFRESERV.GLACE',
@@ -64,7 +62,7 @@ class TestListingNorms(unittest.TestCase):
                                  u'SURFZ0.FOIS.G', u'SURFAEROS.SOOT', u'PROFRESERV.GLACE',
                                  u'SURFIND.VEG.DOMI', u'SURFAEROS.DESERT', u'SURFIND.FOLIAIRE',
                                  u'SURFGZ0.THERM', u'TKE', u'LIQUID_WATER', u'SURFIND.TERREMER',
-                                 u'SURFB.OF.OZONE', u'CV_PREC_FLUX', u'SURFALBEDO NEIGE',
+                                 u'SURFB.OF.OZONE', u'SURFALBEDO NEIGE',
                                  u'SURFPROP.SABLE', u'SURFEPAIS.SOL', u'SOLID_WATER',
                                  u'SURFRESERV.INTER', u'SURFPROP.ARGILE', u'SURFVAR.GEOP.DIR',
                                  u'SNOW', u'SURFRES.EVAPOTRA', u'RAIN', u'SURFALBEDO HISTO',
@@ -74,22 +72,24 @@ class TestListingNorms(unittest.TestCase):
                                  u'SURFPROP.VEGETAT', u'SURFRESERV.NEIGE', u'SURFAEROS.LAND',
                                  u'SUNSHI. DURATION', u'PROFTEMPERATURE']))
         # Empty equals
-        self.assertEqual(norms.Norms([]),
-                         norms.Norms([]))
-        self.assertTrue(norms.Norms([]).subset_equal(norms.Norms([])))
+        self.assertEqual(norms.NormsSet([]),
+                         norms.NormsSet([]))
+        self.assertTrue(norms.NormsSet([]).steps_equal(norms.NormsSet([])))
 
     def test_diff_easy(self):
         # Norm comparison
-        l1_n = norms.Norms(_find_testfile('listing_screen_li1'))
-        l2_n = norms.Norms(_find_testfile('listing_screen_li1'))
+        l1_n = norms.NormsSet(_find_testfile('listing_screen_li1'))
+        l2_n = norms.NormsSet(_find_testfile('listing_screen_li1'))
         self.assertEqual(l1_n, l2_n)
-        self.assertTrue(l1_n.subset_equal(l2_n))
-        self.assertEqual(l1_n[0][None], l2_n[0][None])
+        self.assertTrue(l1_n.steps_equal(l2_n))
+        self.assertEqual(l1_n[0], l2_n[0])
         # Rich comparison
-        ncomp = norms.NormComparison(l1_n[0][None], l2_n[0][None])
-        self.assertIs(ncomp.get_worst(), None)
-        self.assertSetEqual(set(ncomp.sp_comp.values()), set([None, ]))
-        self.assertSetEqual(set(ncomp.gp_comp.values()), set([None, ]))
+        ncomp = norms.NormsComparison(l1_n[5], l2_n[5])
+        print(set(ncomp.sp_comp.values()))
+        print(set(ncomp.gp_comp.values()))
+        self.assertIs(ncomp.get_worst(), 0)
+        self.assertSetEqual(set(ncomp.sp_comp.values()), set([0, ]))
+        self.assertSetEqual(set(ncomp.gp_comp.values()), set([0, ]))
         str_out = six.StringIO()
         ncomp.write(str_out, onlymaxdiff=True)
         str_out.seek(0)
@@ -97,19 +97,20 @@ class TestListingNorms(unittest.TestCase):
 
     def test_diff_blurp(self):
         # Norm comparison
-        l1_n = norms.Norms(_find_testfile('listing_screen_li1'))
-        l2_n = norms.Norms(_find_testfile('listing_screen_li2'))
+        l1_n = norms.NormsSet(_find_testfile('listing_screen_li1'))
+        l2_n = norms.NormsSet(_find_testfile('listing_screen_li2'))
         self.assertNotEqual(l1_n, l2_n)
-        self.assertFalse(l1_n.subset_equal(l2_n))
-        self.assertNotEqual(l1_n[0][None], l2_n[0][None])
+        self.assertTrue(l1_n.steps_equal(l2_n))
+        self.assertNotEqual(l1_n[0], l2_n[0])
         # Rich comparison
-        ncomp = norms.NormComparison(l1_n[0][None], l2_n[0][None])
+        ncomp = norms.NormsComparison(l1_n[5], l2_n[5])
         self.assertEqual(ncomp.get_worst(), 0)
-        self.assertSetEqual(set(ncomp.sp_comp.values()), set([None, ]))
-        self.assertSetEqual(set(ncomp.gp_comp.values()), set([None, 1, 0]))
-        self.assertEqual(ncomp.gp_comp['S080TKE'], 1)
-        self.assertEqual(ncomp.gp_comp['S087LIQUID_WATER'], 0)
-        self.assertEqual(ncomp.gp_comp['SURFIND.VEG.DOMI'], 0)
+        self.assertSetEqual(set(ncomp.sp_comp.values()), set([0, ]))
+        self.assertSetEqual(set(ncomp.gp_comp.values()), set([0, ]))
+        ncomp = norms.NormsComparison(l1_n[6], l2_n[6])
+        self.assertEqual(ncomp.gp_comp['S080TKE'], 14)
+        self.assertEqual(ncomp.gp_comp['S087LIQUID_WATER'], 15)
+        self.assertEqual(ncomp.gp_comp['SURFIND.VEG.DOMI'], 15)
         str_out = six.StringIO()
         ncomp.write(str_out, onlymaxdiff=True)
         str_out.seek(0)

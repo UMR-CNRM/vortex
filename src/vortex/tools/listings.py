@@ -42,11 +42,13 @@ class ArpIfsListingDiff_Result(object):
         """Print a summary of the listing comparison."""
         print
         if self._norms_eq:
-            print("Norms   check succeeded for steps: {:s}".format(
-                ",".join([str(k) for k, v in self._norms_eq.items() if v])))
-            if not all(self._norms_eq.values()):
-                print("Norms   check FAILED    for steps: {:s}".format(
-                    ",".join([str(k) for k, v in self._norms_eq.items() if not v])))
+            if all(self._norms_eq.values()):
+                print("Norms   check succeeded for all steps.")
+            else:
+                print("Norms   check succeeded for steps:\n  {:s}".format(
+                    "\n  ".join([str(k) for k, v in self._norms_eq.items() if v])))
+                print("Norms   check FAILED    for steps:\n  {:s}".format(
+                    "\n  ".join([str(k) for k, v in self._norms_eq.items() if not v])))
         else:
             print("Norms steps do not match. The check FAILED.")
         print
@@ -94,10 +96,10 @@ class ArpIfsListingsTool(addons.Addon):
     """Interface to arpifs_listings (designed as a shell Addon)."""
 
     _footprint = dict(
-        info = 'Default arpifs_listings interface',
-        attr = dict(
-            kind = dict(
-                values   = ['arpifs_listings'],
+        info='Default arpifs_listings interface',
+        attr=dict(
+            kind=dict(
+                values=['arpifs_listings'],
             ),
         )
     )
@@ -116,20 +118,27 @@ class ArpIfsListingsTool(addons.Addon):
             l1_slurp = [l.rstrip("\n") for l in fh1]
         with open(listing2, 'r') as fh2:
             l2_slurp = [l.rstrip("\n") for l in fh2]
-        l1_norms = norms.Norms(l1_slurp)
-        l2_norms = norms.Norms(l2_slurp)
+        l1_normset = norms.NormsSet(l1_slurp)
+        l2_normset = norms.NormsSet(l2_slurp)
         l1_jos = jo_tables.JoTables(listing1, l1_slurp)
         l2_jos = jo_tables.JoTables(listing2, l2_slurp)
 
         # The reference listing may contain more norms compared to the second one
         norms_eq = OrderedDict()
-        if not l2_norms.subset_equal(l1_norms):
-            if set(l1_norms.steps()) >= set(l2_norms.steps()):
-                for k in l2_norms.steps():
-                    norms_eq[k] = l1_norms[k] == l2_norms[k]
+        if not l2_normset.steps_equal(l1_normset):
+            l1_tdict = OrderedDict()
+            for n in l1_normset:
+                l1_tdict[n.format_step()] = n
+            l2_tdict = OrderedDict()
+            for n in l2_normset:
+                l2_tdict[n.format_step()] = n
+            ikeys = set(l1_tdict.keys()) & set(l2_tdict.keys())
+            for k in ikeys:
+                norms_eq[k] = l1_tdict[k] == l2_tdict[k]
         else:
-            for k in l2_norms.steps():
-                norms_eq[k] = True
+            for i, n in enumerate(l2_normset):
+                k = n.format_step()
+                norms_eq[k] = n == l1_normset[i]
 
         jos_eq = OrderedDict()
         jos_diff = OrderedDict()
@@ -163,24 +172,24 @@ class ArpifsListingsFormatAdapter(footprints.FootprintBase):
 
     _collector = ('dataformat',)
     _footprint = dict(
-        attr = dict(
-            filename = dict(
-                info = "Path to the Arpege/IFSlisting file.",
+        attr=dict(
+            filename=dict(
+                info="Path to the Arpege/IFSlisting file.",
             ),
-            openmode = dict(
-                info = "File open-mode.",
-                values = ['r', ],
-                default = 'r',
-                optional = True,
+            openmode=dict(
+                info="File open-mode.",
+                values=['r', ],
+                default='r',
+                optional=True,
             ),
-            fmtdelayedopen = dict(
-                info = "Delay the opening of the listing file.",
-                type = bool,
-                default = True,
-                optional = True,
+            fmtdelayedopen=dict(
+                info="Delay the opening of the listing file.",
+                type=bool,
+                default=True,
+                optional=True,
             ),
-            format = dict(
-                values = ['ARPIFSLIST', ],
+            format=dict(
+                values=['ARPIFSLIST', ],
             ),
         )
     )
@@ -188,11 +197,11 @@ class ArpifsListingsFormatAdapter(footprints.FootprintBase):
     def __init__(self, *kargs, **kwargs):
         super(ArpifsListingsFormatAdapter, self).__init__(*kargs, **kwargs)
         self._lines = None
-        self._norms = None
+        self._normset = None
         self._jotables = None
         self._end_is_reached = None
         if not self.fmtdelayedopen:
-            self.norms
+            self.normset
             self.jotables
 
     @property
@@ -215,11 +224,11 @@ class ArpifsListingsFormatAdapter(footprints.FootprintBase):
         return self._end_is_reached
 
     @property
-    def norms(self):
-        """Return a :class:`arpifs_listings.norms.Norms` object."""
-        if self._norms is None:
-            self._norms = norms.Norms(self.lines)
-        return self._norms
+    def normset(self):
+        """Return a :class:`arpifs_listings.norms.NormsSet` object."""
+        if self._normset is None:
+            self._normset = norms.NormsSet(self.lines)
+        return self._normset
 
     @property
     def jotables(self):

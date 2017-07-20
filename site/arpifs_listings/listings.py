@@ -2,14 +2,18 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import sys
+from collections import OrderedDict
 
-from .norms import Norms, NormComparison
+from .norms import NormsSet, NormsComparison
 from . import jo_tables
 
 #: No automatic export
 __all__ = []
+
+CRASHED_JOB_ERROR_CODE = -1
 
 
 class OutputListing(object):
@@ -23,18 +27,19 @@ class OutputListing(object):
         :param filename: name of the file to read in
         :param pattern_type: type of pattern to compare, among ('norms', 'Jo-tables')
         """
-        assert pattern_type in ('norms', 'Jo-tables')
+        assert pattern_type in ('norms', 'Jo-tables', ), \
+            "unknown pattern: " + pattern_type
 
         # init
         self.filename = filename
         self.pattern_type = pattern_type
         self.end_is_reached = False
-        self.norms = None
+        self.normset = None
         self.jo_tables = None
 
         # read listing in file
         with open(self.filename, 'r') as f:
-            self.lines = [l.rstrip("\n") for l in f]  # to remove trailing '\n'
+            self.lines = [six.u(l).rstrip("\n") for l in f]  # to remove trailing '\n'
 
     def __len__(self):
         return len(self.lines)
@@ -50,9 +55,11 @@ class OutputListing(object):
     @property
     def patterns_count(self):
         if self.pattern_type == 'norms':
-            n = len(self.norms)
+            n = len(self.normset)
         elif self.pattern_type == 'Jo-tables':
             n = len(self.jo_tables)
+        elif self.pattern_type == 'adjoint-test':
+            n = 1
         return n
 
     def parse_patterns(self, flush_after_reading=False):
@@ -74,13 +81,10 @@ class OutputListing(object):
     def parse_norms(self, flush_after_reading=False):
         """
         Look for and read each norms instance.
-        The recognition of Norms patterns and parsing of their values is the
-        most tricky part of this class.
-        The most subject to maintenance too...
 
         If **flush_after_reading**, get rid of listing after reading norms.
         """
-        self.norms = Norms(self.lines)
+        self.normset = NormsSet(self.lines)
         if flush_after_reading:
             self.flush_listing()
 
@@ -114,54 +118,125 @@ def compare(test, ref, **kwargs):
 
 
 def compare_norms(test, ref,
-                  mode='first_and_last',
+                  mode,
+                  which='first_and_last_spectral',
                   out=sys.stdout,
                   onlymaxdiff=False,
-                  printmode='standalone',
                   **ignored_kwargs):
     """Compare two 'norms' pattern-type output listings.
 
-    :param mode: either 'all' to compare norms for all steps found in listings,
-                 or 'first_and_last' (default) for the first and last only.
+    :param which: either 'all' to compare norms for all steps found in listings,
+                  or 'first_and_last_spectral' (default) for the first and last
+                  spectral norms only.
 
     :param onlymaxdiff: only max difference is printed for each step.
-    :param printmode: if 'standalone', prints the comparison to file;
-                      if 'jobs_manager', return the worst digits comparison.
+    :param mode: - if 'text', prints the comparison to file;
+                 - if 'get_worst_by_step', get worst (among fields) digits
+                   comparison for each step;
+                 - if 'get_worst' get worst of worst (among fields) digits
+                   comparison.
+                 - if 'plot', plot a graph of differences (spectral norms only)
     """
 
     assert ref.end_is_reached
     assert test.end_is_reached
-    assert len(ref.norms) > 0
-    assert len(test.norms) > 0
+    assert len(ref.normset) > 0
+    assert len(test.normset) > 0
+    assert mode in ('text', 'get_worst', 'get_worst_by_step', 'plot')
+    assert which in ('first_and_last_spectral', 'all')
 
-    if mode == 'first_and_last':
-        ref_set = ref.norms.get_first_and_last_norms_indexes()
-        test_set = test.norms.get_first_and_last_norms_indexes()
-    elif mode == 'all':
-        ref_set = [(nstep, sorted(ref.norms[nstep].keys(), reverse=True))
-                   for nstep in sorted(ref.norms.steps())]
-        test_set = [(nstep, sorted(test.norms[nstep].keys(), reverse=True))
-                    for nstep in sorted(test.norms.steps())]
-    assert ref_set == test_set, "set of norms differ between ref and test."
+    if not test.normset.steps_equal(ref.normset):
+        st = set([n.format_step() for n in test.normset])
+        sr = set([n.format_step() for n in ref.normset])
+        stepset = st.intersection(sr)
+        test_rm = [i for i in range(len(test.normset))
+                   if test.normset[i].format_step() not in stepset]
+        for off, i in enumerate(test_rm):
+            test.normset.pop(i - off)
+        ref_rm = [i for i in range(len(ref.normset))
+                  if ref.normset[i].format_step() not in stepset]
+        for off, i in enumerate(ref_rm):
+            ref.normset.pop(i - off)
+        assert test.normset.steps_equal(ref.normset)
+    if which == 'first_and_last_spectral':
+        for i in range(len(test.normset)):
+            if len(test.normset[i].spnorms) > 0:
+                steps = (i, None)
+                break
+        for i in sorted(range(len(test.normset)), reverse=True):
+            if len(test.normset[i].spnorms) > 0:
+                steps = (steps[0], i)
+                break
+        if steps[0] == steps[1]:
+            steps = (steps[0],)
+    elif which == 'all':
+        steps = list(range(len(test.normset)))
 
-    if printmode == 'jobs_manager':
+    if 'get_worst' in mode:
         worstdigits = []
-    for (nstep, subsets) in ref_set:
-        for subset in subsets:
-            norm_comp = NormComparison(test.norms[nstep][subset],
-                                       ref.norms[nstep][subset])
-            if printmode == 'standalone':
-                nstepline = 'NSTEP = ' + str(nstep)
-                if subset is not None:
-                    nstepline += ' (' + subset + ')'
-                out.write(nstepline + '\n')
-                norm_comp.write(out, onlymaxdiff)
-                out.write('-' * 80 + '\n')
-            elif printmode == 'jobs_manager':
-                assert mode == 'first_and_last'
-                assert onlymaxdiff is True
-                worstdigits.append(norm_comp.get_worst('both'))
-    if printmode == 'jobs_manager':
+    elif mode == 'plot':
+        normsout = OrderedDict()
+    for i in steps:
+        norm_comp = NormsComparison(test.normset[i],
+                                    ref.normset[i])
+        if mode == 'text':
+            out.write(test.normset.norms_at_each_step[i].format_step() + '\n')
+            norm_comp.write(out, onlymaxdiff)
+            out.write('-' * 80 + '\n')
+        elif 'get_worst' in mode:
+            assert onlymaxdiff is True
+            worstdigits.append(norm_comp.get_worst('both'))
+        elif mode == 'plot':
+            norm_comp = NormsComparison(test.normset.norms_at_each_step[i],
+                                        ref.normset.norms_at_each_step[i],
+                                        only='spectral')
+            if len(norm_comp.sp_comp) > 0:
+                normsout[test.normset[i].format_step()] = norm_comp.sp_comp
+    if mode == 'plot':
+        import matplotlib.pyplot as plt
+        fldset = []
+        for n in normsout.values():
+            fldset.extend(n.keys())
+        fldset = sorted(set(fldset))
+        tab_f = {f: [n.get(f, None) for n in normsout.values()] for f in fldset}
+        xlabels = [(i, f) for i, f in enumerate(normsout.keys())]
+        xlen = len(xlabels)
+        tn = 5
+        if xlen > tn:
+            xstep = xlen // tn
+            xlast = xlabels[-1]
+            xlabels = xlabels[::xstep]
+            if (xlast[0] - xlabels[-1][0]) < xstep / 2:
+                xlabels[-1] = xlast
+            else:
+                xlabels.append(xlast)
+        fig, axes = plt.subplots(len(fldset), 1, figsize=(12, 8))
+        for j, f in enumerate(fldset):
+            axes[j].plot(tab_f[f], color='DarkMagenta')
+            axes[j].scatter(0, tab_f[f][0], c='DarkMagenta', s=50, marker='o')
+            axes[j].set_xlim(0, xlen)
+            axes[j].scatter(xlen - 1, tab_f[f][xlen - 1], c='DarkMagenta', s=20, marker='o', edgecolors='face')
+            axes[j].set_xticks([x[0] for x in xlabels])
+            axes[j].set_xticklabels([])
+            axes[j].set_ylim(0, 15)
+            axes[j].set_yticks([0, 5, 10, 15])
+            axes[j].set_yticklabels([0, 5, 10, 15])
+            axes[j].set_ylabel(f, rotation=45., horizontalalignment='right')
+            axes[j].grid()
+        xlabels = [x[1].split() for x in xlabels]
+        for x in xlabels:
+            if len(x) > 2:
+                x.insert(2, '\n')
+        axes[-1].set_xticklabels([''.join(x) for x in xlabels],
+                                 rotation=45., horizontalalignment='right')
+        axes[0].set_title('Norms: number of # digits')
+        pngname = 'norms_diff.png'
+        print('=> Output in: ' + pngname)
+        fig.savefig(pngname, bbox_inches='tight', dpi=300)
+
+    if mode == 'get_worst':
+        return max(worstdigits)
+    elif mode == 'get_worst_by_step':
         return worstdigits
     else:
         return None

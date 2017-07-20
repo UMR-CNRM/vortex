@@ -37,12 +37,18 @@ if __name__ == '__main__':
                          action='store_const',
                          const='Jo-tables',
                          help='Compare Jo-Tables')
+    parser.add_argument('-w',
+                        dest='which',
+                        default='first_and_last_spectral',
+                        help=("(for 'norms' comparison only, 'text' mode): either 'all' to " +
+                              "compare norms for all steps found in listings, " +
+                              "or 'first_and_last_spectral' (default) for the first and last spectral norms only."))
     parser.add_argument('-m',
                         dest='mode',
-                        default='first_and_last',
-                        help=("Mode (for 'norms' comparison only): either 'all' to " +
-                              "compare norms for all steps found in listings, " +
-                              "or 'first_and_last' (default) for the first and last only."))
+                        default='text',
+                        help=("(for 'norms' comparison only): " +
+                              "either 'text' (default) or 'plot': " +
+                              "how the norm comparison is shown."))
     parser.add_argument('--n-threshold', '--nt',
                         dest='nthres',
                         action='store',
@@ -62,7 +68,8 @@ if __name__ == '__main__':
                         dest='onlymaxdiff',
                         action='store_true',
                         default=False,
-                        help="Only max difference (for pattern 'norms') is printed for each step.")
+                        help=("(for 'norms' comparison only, 'text' mode): " +
+                              "only max difference is printed for each step."))
     args = parser.parse_args()
 
     if args.out is None:
@@ -71,9 +78,10 @@ if __name__ == '__main__':
         out = open(args.out, 'w')
 
     arpifs_listings.compare_files(args.listings[0], args.listings[1],
+                                  mode=args.mode,
                                   out=out,
                                   pattern=args.pattern,
-                                  mode=args.mode,
+                                  which=args.which,
                                   onlymaxdiff=args.onlymaxdiff,
                                   nthres=args.nthres,
                                   jothres=args.jothres,

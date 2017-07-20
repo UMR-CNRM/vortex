@@ -216,7 +216,7 @@ class JoSensor(_JoMixinPlus):
     _re_begin = re.compile(r'^\s+([a-zA-Z0-9_]+)\s+' +
                            r'(\d+)\s+' +
                            r'([\d.E+]+)\s+' +
-                           r'[\d.E+-]+\s+' +
+                           r'[*\d.E+-]+\s+' +
                            r'([\d.E+-]+)\s+' +
                            r'([\d.E+-]+)\s*$')
     _re_end = re.compile(r'^\s*(Obs|Code)type')
