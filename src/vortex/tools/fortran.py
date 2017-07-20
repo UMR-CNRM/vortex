@@ -60,6 +60,9 @@ _NAME       = _LETTER + _ALPHANUMERIC_CHARACTER + '*'
 _MACRONAME  = (_STRDELIM_B + r'?\$?' +
                "(?P<NAME>" + _LETTER_UNDERSCORE + _ALPHANUMERIC_CHARACTER + '*' + ")" +
                _STRDELIM_E)
+_FREEMACRONAME  = (_STRDELIM_B + r'?' + _UNDERSCORE + r'{2}' +
+                   "(?P<NAME>" + _LETTER + _ALPHANUMERIC_CHARACTER + '*' + ")" +
+                   _UNDERSCORE + r'{2}' + _STRDELIM_E)
 
 # Operators
 _POWER_OP  = "[*][*]"
@@ -353,6 +356,8 @@ class NamelistBlock(object):
     Values should be an iterable of FORTRAN compatible data.
     """
 
+    _RE_FREEMACRO = re.compile(r'^' + _UNDERSCORE + r'{2}(.*)' + _UNDERSCORE + r'{2}$')
+
     def __init__(self, name='UNKNOWN'):
         self.__dict__['_name'] = name
         self.__dict__['_keys'] = list()
@@ -360,6 +365,7 @@ class NamelistBlock(object):
         self.__dict__['_mods'] = set()
         self.__dict__['_dels'] = set()
         self.__dict__['_subs'] = dict()
+        self.__dict__['_declared_subs'] = set()
         self.__dict__['_literal'] = None
 
     @property
@@ -494,12 +500,31 @@ class NamelistBlock(object):
         """Returns list of used macros in this block."""
         return self._subs.keys()
 
+    def declaredmacros(self):
+        """Returns list of old-style declared macros in this block."""
+        return self._declared_subs
+
     def addmacro(self, macro, value=None):
         """Add a new macro to this definition block, and/or set a value."""
         self._subs[macro] = value
 
+    def add_declaredmacro(self, macro, value=None):
+        """Add a new old-style declared macro to this definition block, and/or set a value."""
+        self.addmacro(macro, value)
+        self._declared_subs.add(macro)
+
+    def _possible_macroname(self, item):
+        """Find wether *item* is a macro or not."""
+        if item in self._declared_subs:
+            return item
+        elif isinstance(item, basestring) and self._RE_FREEMACRO.match(item):
+            itemized = self._RE_FREEMACRO.sub(r'\1', item)
+            if itemized in self._subs:
+                return itemized
+        return None
+
     def nice(self, item, literal=None):
-        """Nice encoded value of the item, possibly substitue with macros."""
+        """Nice encoded value of the item, possibly substitute with macros."""
         if literal is None:
             if self._literal is None:
                 self._literal = LiteralParser()
@@ -515,11 +540,12 @@ class NamelistBlock(object):
                 itemli = itemli[1:]
         else:
             itemli = item
-        if itemli in self._subs:
-            if self._subs[itemli] is None:
+        macroname = self._possible_macroname(itemli)
+        if macroname is not None:
+            if self._subs[macroname] is None:
                 return item
             else:
-                return literal.encode(self._subs[itemli])
+                return literal.encode(self._subs[macroname])
         else:
             return literal.encode(item)
 
@@ -589,6 +615,7 @@ class NamelistBlock(object):
         # Preserve macros
         for skey in delta.macros():
             self._subs[skey] = delta._subs[skey]
+            self._declared_subs.update(delta._declared_subs)
 
 
 class NamelistSet(object):
@@ -633,25 +660,29 @@ class NamelistParser(object):
                  re_flags = None,
                  re_clean = r"^(\s+|![^\n]*\n)",
                  re_block = r'&.*/',
+                 re_endblock = r"^/(end)?",
                  re_bname = _NAME,
                  re_entry = _LETTER + r'[ A-Z0-9_,\%\(\):]*' + r"(?=\s*=)",
                  re_macro = _MACRONAME,
+                 re_freemacro = _FREEMACRONAME,
                  re_endol = r"(?=\s*(,|/|\n))",
                  re_comma = r"\s*,"):
         self._literal = literal
         if macros:
-            self.macros = set(macros)
+            self._declaredmacros = set(macros)
         else:
-            self.macros = set()
+            self._declaredmacros = set()
         if re_flags:
             self._re_flags = re_flags
         else:
             self._re_flags = literal._re_flags
         self._re_clean = re_clean
         self._re_block = re_block
+        self._re_endblock = re_endblock
         self._re_bname = re_bname
         self._re_entry = re_entry
         self._re_macro = re_macro
+        self._re_freemacro = re_freemacro
         self._re_endol = re_endol
         self._re_comma = re_comma
         self.recompile()
@@ -660,15 +691,24 @@ class NamelistParser(object):
         """Recompile regexps according to internal characters strings by namelist entity."""
         self.clean = re.compile(self._re_clean, self._re_flags)
         self.block = re.compile(self._re_block, self._re_flags)
+        self.endblock = re.compile(self._re_endblock, self._re_flags)
         self.bname = re.compile(self._re_bname, self._re_flags)
         self.entry = re.compile(self._re_entry, self._re_flags)
-        self.macro = re.compile(self._re_macro, self._re_flags)
-        self.endol = re.compile(self._re_endol, self._re_flags)
+        self.macro_eol = re.compile(self._re_macro + self._re_endol, self._re_flags)
+        self.freemacro_eol = re.compile(self._re_freemacro + self._re_endol, self._re_flags)
         self.comma = re.compile(self._re_comma, self._re_flags)
+        self.deladd = re.compile(r'\-+' + self._re_endol, self._re_flags)
+        # Element matching, ...
+        self._SIGNED_INT_LCRE = re.compile(_SIGNED_INT_LITERAL_CONSTANT + self._re_endol, self._re_flags)
+        self._BOZ_LCRE = re.compile(_BOZ_LITERAL_CONSTANT + self._re_endol, self._re_flags)
+        self._SIGNED_REAL_LCRE = re.compile(_SIGNED_REAL_LITERAL_CONSTANT + self._re_endol, self._re_flags)
+        self._COMPLEX_LCRE = re.compile(_COMPLEX_LITERAL_CONSTANT + self._re_endol, self._re_flags)
+        self._CHAR_LCRE = re.compile(_CHAR_LITERAL_CONSTANT + self._re_endol, self._re_flags)
+        self._LOGICAL_LCRE = re.compile(_LOGICAL_LITERAL_CONSTANT + self._re_endol, self._re_flags)
 
     def addmacro(self, macro):
-        """Add an extra macro name (without associated value)."""
-        self.macros.add(macro)
+        """Add an extra declared macro name (without associated value)."""
+        self._declaredmacros.add(macro)
 
     @property
     def literal(self):
@@ -688,10 +728,10 @@ class NamelistParser(object):
 
     def _namelist_clean(self, dirty_source):
         """Removes spaces and comments before data."""
-        cleaner_source = re.sub(self._re_clean, '', dirty_source, self._re_flags)
+        cleaner_source = self.clean.sub('', dirty_source)
         while cleaner_source != dirty_source:
             dirty_source = cleaner_source
-            cleaner_source = re.sub(self._re_clean, '', dirty_source, self._re_flags)
+            cleaner_source = self.clean.sub('', dirty_source)
         return cleaner_source
 
     def _namelist_block_parse(self, source):
@@ -717,7 +757,7 @@ class NamelistParser(object):
                 source = self._namelist_clean(source[1:])
                 continue
 
-            elif re.match(r"^/(end)?", source, self._re_flags):
+            elif self.endblock.match(source):
                 if current:
                     namelist.update({current: values})
                 source = source[1:]
@@ -725,9 +765,8 @@ class NamelistParser(object):
                     source = source[3:]
                 break
 
-            elif re.match(r'\-+' + self._re_endol, source, self._re_flags):
-                item = re.match(r'\-+' + self._re_endol,
-                                source, self._re_flags).group(0)
+            elif self.deladd.match(source):
+                item = self.deladd.match(source).group(0)
                 namelist.todelete(current)
                 current = None
                 source = self._namelist_clean(source[len(item):])
@@ -735,67 +774,62 @@ class NamelistParser(object):
                     source = self._namelist_clean(self.comma.sub('', source, 1))
                 continue
 
-            elif re.match(self._re_macro + self._re_endol,
-                          source, self._re_flags):
-                rmatch = re.match(self._re_macro + self._re_endol,
-                                  source, self._re_flags)
-                if rmatch.group('NAME') in self.macros:
-                    namelist.addmacro(rmatch.group('NAME'), None)
+            elif self.freemacro_eol.match(source):
+                rmatch = self.freemacro_eol.match(source)
+                namelist.addmacro(rmatch.group('NAME'), None)
+                values.append(rmatch.group(0))
+                source = self._namelist_clean(source[len(rmatch.group(0)):])
+                if self.comma.match(source):
+                    source = self._namelist_clean(self.comma.sub('', source, 1))
+                continue
+
+            elif self.macro_eol.match(source):
+                rmatch = self.macro_eol.match(source)
+                if rmatch.group('NAME') in self._declaredmacros:
+                    namelist.add_declaredmacro(rmatch.group('NAME'), None)
                     values.append(rmatch.group(0))
                     source = self._namelist_clean(source[len(rmatch.group(0)):])
                     if self.comma.match(source):
                         source = self._namelist_clean(self.comma.sub('', source, 1))
                     continue
 
-            if re.match(_SIGNED_INT_LITERAL_CONSTANT + self._re_endol,
-                        source, self._re_flags):
-                item = re.match(_SIGNED_INT_LITERAL_CONSTANT + self._re_endol,
-                                source, self._re_flags).group(0)
+            if self._SIGNED_INT_LCRE.match(source):
+                item = self._SIGNED_INT_LCRE.match(source).group(0)
                 values.append(self.literal.parse_integer(item))
                 source = self._namelist_clean(source[len(item):])
                 if self.comma.match(source):
                     source = self._namelist_clean(self.comma.sub('', source, 1))
 
-            elif re.match(_BOZ_LITERAL_CONSTANT + self._re_endol,
-                          source, self._re_flags):
-                item = re.match(_BOZ_LITERAL_CONSTANT + self._re_endol,
-                                source, self._re_flags).group(0)
+            elif self._BOZ_LCRE.match(source):
+                item = self._BOZ_LCRE.match(source).group(0)
                 values.append(self.literal.parse_boz(item))
                 source = self._namelist_clean(source[len(item):])
                 if self.comma.match(source):
                     source = self._namelist_clean(self.comma.sub('', source, 1))
 
-            elif re.match(_SIGNED_REAL_LITERAL_CONSTANT + self._re_endol,
-                          source, self._re_flags):
-                item = re.match(_SIGNED_REAL_LITERAL_CONSTANT + self._re_endol,
-                                source, self._re_flags).group(0)
+            elif self._SIGNED_REAL_LCRE.match(source):
+                item = self._SIGNED_REAL_LCRE.match(source).group(0)
                 values.append(self.literal.parse_real(item))
                 source = self._namelist_clean(source[len(item):])
                 if self.comma.match(source):
                     source = self._namelist_clean(self.comma.sub('', source, 1))
 
-            elif re.match(_COMPLEX_LITERAL_CONSTANT + self._re_endol,
-                          source, self._re_flags):
-                item = re.match(_COMPLEX_LITERAL_CONSTANT + self._re_endol,
-                                source, self._re_flags).group(0)
+            elif self._COMPLEX_LCRE.match(source):
+                item = self._COMPLEX_LCRE.match(source).group(0)
                 values.append(self.literal.parse_complex(item))
                 source = self._namelist_clean(source[len(item):])
                 if self.comma.match(source):
                     source = self._namelist_clean(self.comma.sub('', source, 1))
 
-            elif re.match(_CHAR_LITERAL_CONSTANT + self._re_endol,
-                          source, self._re_flags):
-                item = re.match(_CHAR_LITERAL_CONSTANT + self._re_endol,
-                                source, self._re_flags).group(0)
+            elif self._CHAR_LCRE.match(source):
+                item = self._CHAR_LCRE.match(source).group(0)
                 values.append(self.literal.parse_character(item))
                 source = self._namelist_clean(source[len(item):])
                 if self.comma.match(source):
                     source = self._namelist_clean(self.comma.sub('', source, 1))
 
-            elif re.match(_LOGICAL_LITERAL_CONSTANT + self._re_endol,
-                          source, self._re_flags):
-                item = re.match(_LOGICAL_LITERAL_CONSTANT + self._re_endol,
-                                source, self._re_flags).group(0)
+            elif self._LOGICAL_LCRE.match(source):
+                item = self._LOGICAL_LCRE.match(source).group(0)
                 values.append(self.literal.parse_logical(item))
                 source = self._namelist_clean(source[len(item):])
                 if self.comma.match(source):

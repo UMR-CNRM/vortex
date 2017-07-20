@@ -50,6 +50,7 @@ class NamelistContent(AlmostDictContent):
             import vortex.tools.fortran
             kw['namblockcls'] = vortex.tools.fortran.NamelistBlock
         super(NamelistContent, self).__init__(**kw)
+        self._declaredmacros = set(self._macros.keys())
 
     def add(self, addlist):
         """Add namelist blocks to current contents."""
@@ -112,7 +113,10 @@ class NamelistContent(AlmostDictContent):
                     newblock[dk] = namblock[dk]
                 # Also copy the macro and delete information
                 for mn in namblock.macros():
-                    newblock.addmacro(mn, None)
+                    if mn in namblock.declaredmacros():
+                        newblock.add_declaredmacro(mn, None)
+                    else:
+                        newblock.addmacro(mn, None)
                 for dn in namblock.rmkeys():
                     newblock.todelete(dn)
                 self[namblock.name] = newblock
@@ -133,15 +137,19 @@ class NamelistContent(AlmostDictContent):
         container.rewind()
         if not self._parser:
             import vortex.tools.fortran
-            self._parser = vortex.tools.fortran.NamelistParser(macros=self._macros.keys())
+            self._parser = vortex.tools.fortran.NamelistParser(macros=self._declaredmacros)
         try:
             namset = self._parser.parse(container.read())
         except (ValueError, IOError) as e:
             raise NamelistContentError('Could not parse container contents: {!s}'.format(e))
         self._data = namset.as_dict()
         for macro, value in self._macros.items():
-            for namblock in filter(lambda x: macro in x.macros(), self.values()):
-                namblock.addmacro(macro, value)
+            if macro in self._declaredmacros:
+                for namblock in filter(lambda x: macro in x.macros(), self.values()):
+                    namblock.add_declaredmacro(macro, value)
+            else:
+                for namblock in filter(lambda x: macro in x.macros(), self.values()):
+                    namblock.addmacro(macro, value)
 
     def rewrite(self, container, sorting=NO_SORTING):
         """
