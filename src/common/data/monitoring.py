@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 import footprints
 
-
 from vortex.data.flow     import FlowResource
-from vortex.tools.date    import Month
 from common.data.consts import GenvModelResource
 
 #: Automatic export of Observations class

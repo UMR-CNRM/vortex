@@ -40,9 +40,9 @@ class OdbMonitoring(OdbProcess):
                 optional = True,
             ),
             extend = dict(
-                type=bool,
-                default=False,
-                optional=True,
+                type = bool,
+                default = False,
+                optional = True,
             ),
             stage = dict(
                 values = ['can', 'surf', 'surface', 'atm', 'atmospheric'],
@@ -73,13 +73,13 @@ class OdbMonitoring(OdbProcess):
 
         obssurf = [
             x for x in self.input_obs()
-            if x.resource.stage.startswith('canari') and ( x.resource.part == 'surf' or x.resource.part == 'ground')
+            if x.resource.stage.startswith('canari') and (x.resource.part == 'surf' or x.resource.part == 'ground')
         ]
 
         # One database at a time
         if not obsmatchup and self.stage == 'atm':
             raise ValueError('Could not find any ODB matchup input')
-        if not obssurf and ( self.stage == 'surf'):
+        if not obssurf and self.stage == 'surf':
             raise ValueError('Could not find any ODB surface input')
 
         # Set actual ODB paths
@@ -98,7 +98,7 @@ class OdbMonitoring(OdbProcess):
         # Force to start a new accumulated statistics file if first day and first hour of the month
         mnt_start = self.start
 
-        if not mnt_start and (int(self.date.day) == 1 and int(self.date.hh) == 0) and not self.extend :
+        if not mnt_start and int(self.date.day) == 1 and int(self.date.hh) == 0 and not self.extend:
             logger.info('First day and first hour of the month : force start attribute to True.')
             mnt_start = True
 
@@ -165,14 +165,13 @@ class OdbMonitoring(OdbProcess):
         namrh.container.cat()
 
     def postfix(self, rh, opts):
-
-        """Remove all empty files and find out if any special resources have been produced """
+        """Remove all empty files and find out if any special resources have been produced."""
 
         sh = self.system
         self.system.dir(output = False, fatal=False)
         allfiles = sh.ls()
         for f in allfiles:
-            if self.system.path.getsize(f) == 0 :
+            if self.system.path.getsize(f) == 0:
                 logger.info('Remove %s because size of %s is zero.', f, f)
                 sh.remove(f)
 
@@ -184,7 +183,3 @@ class OdbMonitoring(OdbProcess):
             for fname in obspoint_out:
                 sh.mv(fname, dest)
         self.system.dir(output=False, fatal=False)
-
-
-
-
