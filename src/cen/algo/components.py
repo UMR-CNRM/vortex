@@ -21,29 +21,6 @@ _OP_files_common = dict(alp=['OPlisteo', 'OPlistem', 'OPlisteml', 'OPclim', 'OPN
 _OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSAP', 'OPSAN']
 
 
-class Grib2SafranWorker(VortexWorkerBlindRun):
-
-    _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = [ 'grib2safran', 'pearp2safran' ],
-                remap = dict(autoremap = 'first'),
-            ),
-            subdir = dict(
-                info = 'work in this particular subdirectory',
-                optional = True
-            ),
-        )
-    )
-
-    def vortex_task(self, **kw):
-        rdict = dict(rc=True)
-        if self.subdir is not None:
-            with self.system.cdcontext(self.subdir, create=True):
-                self.local_spawn('stdout.listing')
-        else:
-            self.local_spawn('stdout.listing')
-        return rdict
 
 
 class SafranWorker(VortexWorkerBlindRun):
@@ -326,7 +303,9 @@ class SytistWorker(SafranWorker):
     def _safran_task(self, rundir, thisdir, rdict):
         for day, dterms in self.days.items():
             logger.info('Running day : %s', str(day))
-            if self.system.path.isfile('SAPLUI5' + str(day)) and not self.path.isfile('SAPLUI5'):
+            if self.system.path.isfile('SAPLUI5' + str(day)):
+                if self.system.path.isfile('SAPLUI5'):
+                    self.system.remove('SAPLUI5')
                 self.system.symlink('SAPLUI5' + str(day), 'SAPLUI5')
             # REVOIR LA GESTION DES LIENS POUR L'ANALYSE
             self.link_in('SAPLUI5_ARP' + str(day), 'SAPLUI5_ARP')
@@ -339,6 +318,32 @@ class SytistWorker(SafranWorker):
                 self.local_spawn(list_name)
 
 
+class Grib2SafranWorker(VortexWorkerBlindRun):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = [ 'grib2safran', 'pearp2safran', 'arpege2safran' ],
+                remap = dict(autoremap = 'first'),
+            ),
+            subdir = dict(
+                info = 'work in this particular subdirectory',
+                optional = True
+            ),
+        )
+    )
+
+    def vortex_task(self, **kw):
+        rdict = dict(rc=True)
+        print 'DBUG'
+        print self.subdir
+        if self.subdir is not None:
+            with self.system.cdcontext(self.subdir, create=True):
+                self.local_spawn('stdout.listing')
+        else:
+            self.local_spawn('stdout.listing')
+        return rdict
+
 
 
 class Grib2Safran(ParaExpresso):
@@ -347,7 +352,7 @@ class Grib2Safran(ParaExpresso):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = [ 'grib2safran', 'pearp2safran' ],
+                values = [ 'grib2safran', 'pearp2safran', 'arpege2safran' ],
                 remap = dict(autoremap = 'first'),
             ),
             members = dict(

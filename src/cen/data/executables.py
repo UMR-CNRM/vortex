@@ -199,14 +199,15 @@ class SafranGribFiltering(Script):
             info = 'Prepare the input files for SAFRAN',
             attr = dict(
                 kind = dict(
-                    values = ['filtering_grib']
+                    values = ['s2m_filtering_grib']
                 ),
                 cpl_vconf = dict(
                     values = ['pearp', 'pearome', 'arpege', 'arome'],
                     optional = True,
                 ),
                 gvar = dict(
-                    default = 's2m_[kind]',
+                    optional = True,
+                    default = '[kind]',
                 ),
             )
         )
