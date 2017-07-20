@@ -842,7 +842,7 @@ class Finder(Store):
 
     def ftplocate(self, remote, options):
         """Delegates to ``system`` qualified name creation."""
-        ftp = self.system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'], delayed=True)
         if ftp:
             rloc = ftp.netpath(self.fullpath(remote))
             ftp.close()

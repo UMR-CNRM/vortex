@@ -200,7 +200,7 @@ class OpArchiveStore(ArchiveStore):
 
     def oplocate(self, remote, options):
         """Delegates to ``system`` a distant check."""
-        ftp = self.system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(self.hostname(), remote['username'], delayed=True)
         if ftp:
             extract = remote['query'].get('extract', None)
             cleanpath = self.fullpath(remote)
