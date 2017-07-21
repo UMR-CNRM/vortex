@@ -42,6 +42,7 @@ from vortex.tools.actions import actiond as ad
 from vortex.tools.schedulers import SMS
 from vortex.tools.services import Service, FileReportService, TemplatedMailService
 from vortex.tools.date import Time
+from vortex.util.config import ExtendedReadOnlyConfigParser
 #: Export nothing
 __all__ = []
 
@@ -343,6 +344,7 @@ class RoutingService(Service):
                 access   = 'rwd',
             ),
             targetname = dict(
+                access   = 'rwd',
                 optional = True,
                 default  = None
             ),
@@ -413,6 +415,7 @@ class RoutingService(Service):
         if not self.sh.path.exists(self.filename):
             msg = "{0.taskname} routage {0.realkind} du numero {0.productid}" \
                   " impossible - fichier {0.filename} inexistant".format(self)
+            logger.warning(msg)
             ad.alarm(level='critical', message=msg, sshhost=self.sshhost)
             return False
         return True
@@ -426,6 +429,7 @@ class RoutingService(Service):
             return False
 
         if self.targetname:
+            self.targetname = self.sh.path.join(self.sh.path.dirname(self.filename),self.targetname)
             if self.sh.path.exists(self.targetname):
                 raise ValueError("Won't overwrite file '{}'".format(self.targetname))
             self.sh.cp(self.filename, self.targetname, intent='in')
@@ -450,6 +454,7 @@ class RoutingService(Service):
             else:
                 term = ''
             text = "{0.taskname} Pb envoi {0.realkind} id {0.productid}{term}".format(self, term=term)
+            logger.warning(text)
             ad.alarm(level='critical', message=text, sshhost=self.sshhost)
             return False
 
@@ -554,12 +559,14 @@ class BdpeService(RoutingService):
     This class should not be called directly.
     """
 
-    _abstract = True
     _footprint = dict(
-        info = 'Bdpe abstract service class',
+        info = 'Bdpe service class',
         attr = dict(
             kind = dict(
                 values   = ['bdpe'],
+            ),
+            soprano_target = dict(
+                values   = ['piccolo', 'piccolo-int'],
             ),
             producer = dict(
                 optional = True,
@@ -582,17 +589,37 @@ class BdpeService(RoutingService):
                 type     = Time,
                 default  = '0',
             ),
+            transmet = dict(
+                optional = True,
+                type     = dict,
+
+            )
+
         )
     )
 
     def __init__(self, *args, **kw):
         logger.debug('BdpeService init %s', self.__class__)
         super(BdpeService, self).__init__(*args, **kw)
+        self.inifile = '@opbdpe.ini'
+        self.iniparser = ExtendedReadOnlyConfigParser(self.inifile)
 
     @property
     def actual_routingkey(self):
         """Return the actual routing key to use for the 'router_pe' call."""
-        raise NotImplementedError()
+
+        rule = self.iniparser.get(self.soprano_target, 'rule_exclude')
+        if re.match(rule, str(self.productid)):
+            msg = 'Pas de routage du produit {productid} sur {soprano_target} ({filename})'.format(
+                productid=self.productid,
+                filename=self.filename,
+                soprano_target=self.soprano_target,
+            )
+            logger.info(msg)
+            return None
+
+        default = '{0.productid}{0.term.fmtraw}'.format(self)
+        return self.iniparser.get(self.soprano_target, self.routingkey.lower(), default)
 
     def __call__(self):
         """The actual call to the service."""
@@ -627,81 +654,6 @@ class BdpeService(RoutingService):
                   " -n {0.productid} -e {0.term.fmtraw} -d {0.dmt_date_pivot}" \
                   " -q {0.quality} -r {0.soprano_target}".format(self)
         return agt_actual_command(self.sh, self.agt_pe_cmd, options)
-
-
-class BdpeOperationsService(BdpeService):
-    """
-    Class handling BDPE routing for operations
-    This class should not be called directly.
-    """
-
-    _footprint = dict(
-        info = 'Bdpe service class for operations',
-        attr = dict(
-            soprano_target = dict(
-                values   = ('piccolo',),
-            )
-        )
-    )
-
-    def __init__(self, *args, **kw):
-        logger.debug('BdpeOperationsService init %s', self.__class__)
-        super(BdpeOperationsService, self).__init__(*args, **kw)
-
-    @property
-    def actual_routingkey(self):
-        """Actual route key to use for operations."""
-        rules = {
-            'bdpe':                10001,
-            'bdpe.gironde':        10130,
-            'e_transmet_fac':      10212,
-            'bdpe.e_transmet_fac': 10116,
-            'bdpe.synopsis_preprod': 10433,
-
-        }
-        default = '{0.productid}{0.term.fmtraw}'.format(self)
-        return rules.get(self.routingkey.lower(), default)
-
-
-class BdpeIntegrationService(BdpeService):
-    """
-    Class handling BDPE routing for integration
-    This class should not be called directly.
-    """
-
-    _footprint = dict(
-        info = 'Bdpe service class for integration',
-        attr = dict(
-            soprano_target = dict(
-                values   = ('piccolo-int',),
-            )
-        )
-    )
-
-    def __init__(self, *args, **kw):
-        logger.debug('BdpeIntegrationService init %s', self.__class__)
-        super(BdpeIntegrationService, self).__init__(*args, **kw)
-
-    @property
-    def actual_routingkey(self):
-        """Actuel route key to use for integration."""
-        if self.routingkey.lower() == 'bdpe':
-            return 10001
-
-        rule = r'.*8124.*|.*8123.*|.*8119.*|.*7148.*|11161.*|11162.*|11163.*|10413.*|10414.*|10415.*'
-        # ou bien:
-        # rule = r'.*(8124|8123|8119|7148).*|(11161|11162|11163|10413|10414|10415).*'
-        # ou encore (mais avec re.search):
-        # rule = r'8124|8123|8119|7148|^11161|^11162|^11163|^10413|^10414|^10415'
-        if not re.match(rule, str(self.productid)):
-            return 10001
-
-        msg = 'Pas de routage du produit {productid} en integration ({filename})'.format(
-            productid=self.productid,
-            filename=self.filename,
-        )
-        logger.info(msg)
-        return None
 
 
 class DayfileReportService(FileReportService):
