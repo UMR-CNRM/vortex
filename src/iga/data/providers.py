@@ -141,7 +141,7 @@ class IgaProvider(Provider):
         if ('fmt' in info and
                 resource.realkind == 'boundary' and
                 self.igakey != 'reunion'):
-            info['fmt'] = 'fic_day'          
+            info['fmt'] = 'fic_day'
         if not hasattr(resource, 'model') or resource.model == 'surfex':
             info['model'] = self.vapp
         self.config.setall(info)

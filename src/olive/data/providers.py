@@ -157,7 +157,7 @@ class OpArchive(Provider):
 
     def basename(self, resource):
         bname = resource.basename(self.realkind)
-        
+
         if resource.model == 'hycom':
             region_map = dict(atl= '_', med='_MED_', oin='_OIN_')
             mode_map = dict(fc= 'pre', an='ana' )
@@ -208,7 +208,7 @@ class OpArchive(Provider):
                                 self.block == 'forecast_infl' and resource.model == 'surfex'):
                             fuzzy += '_infl'
                     elif getattr(self, keyattr) in ('surcotes', 'surcotes_oi'):
-                        fuzzy = resource.fields + '_' + config     
+                        fuzzy = resource.fields + '_' + config
                 elif entry == 'gribfix':
                     rr = archive_suffix(resource.model, resource.cutoff,
                                         resource.date, vconf=self.vconf)
@@ -217,13 +217,13 @@ class OpArchive(Provider):
                     elif getattr(self, keyattr) in ('surcotes', 'surcotes_oi'):
                         if getattr(self, keyattr) == 'surcotes' and self.vconf[-3:] == 'aro' and re.search('001', resource.geometry.tag):
                             fuzzy = '.'.join((fuzzyname('prefix', 'gridpoint', 'hycom_grb') + 'hr', config,
-                                          resource.date.ymdh[4:], fuzzyname('suffix', 'gridpoint', 'hycom_grb'))) 
-                        elif getattr(self, keyattr) == 'surcotes' and self.vconf[-3:] == 'aro' and re.search('01', resource.geometry.tag):   
+                                              resource.date.ymdh[4:], fuzzyname('suffix', 'gridpoint', 'hycom_grb')))
+                        elif getattr(self, keyattr) == 'surcotes' and self.vconf[-3:] == 'aro' and re.search('01', resource.geometry.tag):
                             fuzzy = '.'.join((fuzzyname('prefix', 'gridpoint', 'hycom_grb') + 'lr', config,
-                                          resource.date.ymdh[4:], fuzzyname('suffix', 'gridpoint', 'hycom_grb'))) 
+                                              resource.date.ymdh[4:], fuzzyname('suffix', 'gridpoint', 'hycom_grb')))
                         else:
                             fuzzy = '.'.join((fuzzyname('prefix', 'gridpoint', 'hycom_grb'), config,
-                                          resource.date.ymdh[4:], fuzzyname('suffix', 'gridpoint', 'hycom_grb')))
+                                              resource.date.ymdh[4:], fuzzyname('suffix', 'gridpoint', 'hycom_grb')))
                     else:
                         t = '{0:03d}'.format(resource.term.hour)
                         fuzzy = fuzzyname('prefix', 'gridpoint', self.suite) + rr + t + resource.geometry.area
