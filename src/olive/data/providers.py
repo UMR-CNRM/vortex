@@ -157,7 +157,7 @@ class OpArchive(Provider):
 
     def basename(self, resource):
         bname = resource.basename(self.realkind)
-
+        
         if resource.model == 'hycom':
             region_map = dict(atl= '_', med='_MED_', oin='_OIN_')
             mode_map = dict(fc= 'pre', an='ana' )
@@ -207,13 +207,22 @@ class OpArchive(Provider):
                         if (self.vapp == 'arpege' and self.vconf == 'aearp' and
                                 self.block == 'forecast_infl' and resource.model == 'surfex'):
                             fuzzy += '_infl'
+                    elif getattr(self, keyattr) in ('surcotes', 'surcotes_oi'):
+                        fuzzy = resource.fields + '_' + config     
                 elif entry == 'gribfix':
                     rr = archive_suffix(resource.model, resource.cutoff,
                                         resource.date, vconf=self.vconf)
                     if getattr(self, keyattr) == 'pearp':
                         fuzzy = '_'.join(('fc', rr, str(self.member), resource.geometry.area, resource.term.fmthour))
                     elif getattr(self, keyattr) in ('surcotes', 'surcotes_oi'):
-                        fuzzy = '.'.join((fuzzyname('prefix', 'gridpoint', 'hycom_grb'), config,
+                        if getattr(self, keyattr) == 'surcotes' and self.vconf[-3:] == 'aro' and re.search('001', resource.geometry.tag):
+                            fuzzy = '.'.join((fuzzyname('prefix', 'gridpoint', 'hycom_grb') + 'hr', config,
+                                          resource.date.ymdh[4:], fuzzyname('suffix', 'gridpoint', 'hycom_grb'))) 
+                        elif getattr(self, keyattr) == 'surcotes' and self.vconf[-3:] == 'aro' and re.search('01', resource.geometry.tag):   
+                            fuzzy = '.'.join((fuzzyname('prefix', 'gridpoint', 'hycom_grb') + 'lr', config,
+                                          resource.date.ymdh[4:], fuzzyname('suffix', 'gridpoint', 'hycom_grb'))) 
+                        else:
+                            fuzzy = '.'.join((fuzzyname('prefix', 'gridpoint', 'hycom_grb'), config,
                                           resource.date.ymdh[4:], fuzzyname('suffix', 'gridpoint', 'hycom_grb')))
                     else:
                         t = '{0:03d}'.format(resource.term.hour)
@@ -262,7 +271,7 @@ class OpArchive(Provider):
                     return '/'.join((self.igakey, dd, rr ))
                 elif re.match(r'mocage', self.igakey):
                     return '/'.join((self.igakey, dd))
-                elif re.match(r'surcotes', self.igakey):
+                elif re.match(r'surcotes|surcotes_oi', self.igakey):
                     return '/'.join((self.igakey, suite, dd, rr )).rstrip('/')
                 else:
                     return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr ))
