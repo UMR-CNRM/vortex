@@ -88,8 +88,7 @@ class OpJobAssistantTest(JobAssistant):
             t.env.setvar("LOG", None)
 
         # Set a new variable for availability notifications
-        
-      
+
         if "SLURM_JOB_NAME" in t.env:
             t.env.setvar("OP_DISP_NAME", "_".join(t.env["SLURM_JOB_NAME"].split("_")[:-1]))
         else:
@@ -255,90 +254,138 @@ class _ReportContext(object):
     def __init__(self, task, ticket):
         self._task = task
         self._ticket = ticket
-        self._step = None
 
     def __enter__(self):
         pass
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self._report(self._ticket, exc_type is None, task=self._task.tag, step=self._step)
+        self._report(self._ticket, exc_type is None)
 
-    def _report(self, t, try_ok=True, **kw):
+    def _report(self, t, try_ok=True):
         """Report status of the OP session (input review, mail diffusion...)."""
-        step    = kw.get('step', 'unknown_step')
-        reseau  = t.env.getvar('OP_RUNDATE').hh
-        task    = kw.get('task', 'unknown_task')
-        report  = t.context.sequence.inputs_report()
-        logpath = t.env.getvar('LOG')
-        rundir  = t.env.getvar('RUNDIR') + '/opview/' + task
-        model   = t.env.getvar('OP_VAPP').upper()
-        conf    = t.env.getvar('OP_VCONF').lower()
-        xpid    = t.env.getvar('OP_XPID').lower()
-        member  = t.env.getvar('OP_MEMBER')
-        report.print_report(detailed=True)
-        if try_ok:
-            t.sh.header('Input review')
-            if any(report.active_alternates()):
-                if member:
-                    t.sh.header('Input informations: active alternates were found')
-                    ad.opmail(reseau=reseau, task=task, member=member, id='mode_secours_member', report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
-                else: 
-                    t.sh.header('Input informations: active alternates were found')
-                    ad.opmail(reseau=reseau, task=task, id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
-            else:
-                t.sh.header('Input informations: everything is ok')
-        else:
-            t.sh.header('Input informations: {0:s} fail'.format(step))
-            if member:
-                mail_id = '{0:s}_fail_member'.format(step)
-                ad.opmail(reseau=reseau, task=task, member=member, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
-            else:
-                mail_id = '{0:s}_fail'.format(step)
-                ad.opmail(reseau=reseau, task=task, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, model=model, conf=conf, xpid=xpid)
+        raise NotImplementedError("To be overwritten...")
+
 
 class InputReportContext(_ReportContext):
     """Context manager that print a report on inputs."""
 
-    def __init__(self, task, ticket):
+    def __init__(self, task, ticket,
+                 alternate_tplid='mode_secours',
+                 nonfatal_tplid='input_nonfatal_error',
+                 fatal_tplid='input_error'):
         super(InputReportContext, self).__init__(task, ticket)
-        self._step = 'input'
+        self._alternate_tplid = alternate_tplid
+        self._nonfatal_tplid = nonfatal_tplid  # Pas encore utilise : voir TODO dans la methode suivante...
+        self._fatal_tplid = fatal_tplid
+
+    def _report(self, t, try_ok=True, **kw):
+        """Report status of the OP session (input review, mail diffusion...)."""
+        report = t.context.sequence.inputs_report()
+        t.sh.header('Input review')
+        report.print_report(detailed=True)
+        if try_ok:
+            if any(report.active_alternates()):
+                t.sh.header('Input informations: active alternates were found')
+                if self._alternate_tplid:
+                    ad.opmail(task=self._task.tag, id=self._alternate_tplid, report=report.synthetic_report())
+            # elif any(report.missing_resources()):
+                # TODO: Ici envoyer un mail dans le cas ou une ressource avec fatal=False est manquante
+                # Voir ticket Redmine #748
+                # Cela se substitura avantageusement a la modification faite dans compi.py pour controler
+                # le nombre de vecteurs singuliers (ceci dit en passant, je ne pense pas que cela fonctionne...)
+            else:
+                t.sh.header('Input informations: everything is ok')
+        else:
+            t.sh.header('Input informations: one of the input failed')
+            if self._fatal_tplid:
+                ad.opmail(task=self._task.tag, id=self._fatal_tplid, report=report.synthetic_report())
 
 
 class OutputReportContext(_ReportContext):
     """Context manager that print a report on outputs."""
 
-    def __init__(self, task, ticket):
+    def __init__(self, task, ticket, fatal_tplid='output_error'):
         super(OutputReportContext, self).__init__(task, ticket)
-        self._step = 'output'
+        self._fatal_tplid = fatal_tplid
+
+    def _report(self, t, try_ok=True, **kw):
+        """Report status of the OP session (input review, mail diffusion...)."""
+        if try_ok:
+            t.sh.header('Output informations: everything is ok')
+        else:
+            t.sh.header('Output informations: one of the output failed')
+            ad.opmail(task=self._task.tag, id=self._fatal_tplid)
 
 
-def oproute_hook_factory(kind, productid, sshhost, areafilter=None, soprano_target=None, routingkey=None):
-    """Hook functions factory to route files while the execution is running"""
+def get_resource_value(r, key):
+    """ this function returns the resource value """
+    try:
+        kw = dict(area=lambda r: r.resource.geometry.area,
+                  term=lambda r: r.resource.term,
+                  fields=lambda r: r.resource.fields)
+        return kw[key](r)
+    except AttributeError as e:
+        logger.error(e)
+
+
+def filteractive(r, dic):
+    """ this function returns the filter status """
+    filter_active = True
+    if dic is not None:
+        for k, w in dic.iteritems():
+            if not get_resource_value(r, k) in w:
+                logger.info('filter not active : {} = {} actual value : {}'.
+                            format(k, w, get_resource_value(r, k)))
+                filter_active = False
+    return filter_active
+
+
+def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_target=None, routingkey=None, selkeyproductid=None, targetname=None, transmet=None):
+    """Hook functions factory to route files while the execution is running.
+
+    :param str kind: kind use to route
+    :param str or dict productid: (use selkeyproductid to define the dictionary key)
+    :param str shhost: tranfertnode
+    :param dict optfilter: dictionary (used to allow routing)
+    :param str soprano_target: str (piccolo or piccolo-int)
+    :param str routingkey : the BD routing key
+    :param str selkeyproductid : (example: area, term, fields ...)
+    :param str targetname :
+    :param str transmet :
+    """
 
     def hook_route(t, rh):
-        kwargs= dict(kind=kind, productid=productid, sshhost=sshhost,
-                    filename=rh.container.basename, soprano_target=soprano_target, routingkey=routingkey)
-        if hasattr(rh.resource, 'geometry'):
+        kwargs = dict(kind=kind, productid=productid, sshhost=sshhost,
+                      filename=rh.container.abspath, soprano_target=soprano_target,
+                      routingkey=routingkey, targetname=targetname, transmet=transmet)
+
+        if selkeyproductid:
             if isinstance(productid, dict):
-                productidt = productid[rh.resource.geometry.area]
-                kwargs['productid'] = productidt                   
+                kwargs['productid'] = productid[get_resource_value(rh, selkeyproductid)]
+                logger.info('productid key : %s ', get_resource_value(rh, selkeyproductid))
+            else:
+                logger.warning('productid is not a dict : %s', productid)
+
+        if hasattr(rh.resource, 'geometry'):
             kwargs['domain'] = rh.resource.geometry.area
         if hasattr(rh.resource, 'term'):
             kwargs['term'] = rh.resource.term
 
-        if (areafilter is None) or (rh.resource.geometry.area in areafilter):
+        if filteractive(rh, optfilter):
             ad.route(** kwargs)
             print t.prompt, 'routing file = ', rh
 
     return hook_route
 
-def opphase_hook_factory(areafilter=None, termfilter=None):
-    """Hook functions factory to phase files while the execution is running"""
+
+def opphase_hook_factory(optfilter=None):
+    """Hook functions factory to phase files while the execution is running.
+
+    :param dict optfilter: (used to allow routing) """
 
     def hook_phase(t, rh):
-        if (areafilter is None) or (rh.resource.geometry.area in areafilter):
-            if (termfilter is None) or (rh.resource.term in termfilter):
-                ad.phase(rh)
-                print t.prompt, 'phasing file = ', rh
+        if filteractive(rh, optfilter):
+            ad.phase(rh)
+            print t.prompt, 'phasing file = ', rh
 
     return hook_phase

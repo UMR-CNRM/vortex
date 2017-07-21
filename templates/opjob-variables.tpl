@@ -16,6 +16,7 @@ IMPORTANT BUT NOT NECESSARY MANDATORY VARIABLES :
     - time      : SBATCH variable. Time limit for the job, default=00:20:00. Put it in the conf file if necessary.
     - rundate   : Date and time of the run ('yyyymmddhh' format), default=None. Leave it at None exept if you want to run your job at a specific date.
     - mail      : Switch mails on or off. This value is automatically set at True with otpion -o and at False in any other case.
+    - hasmember : Pick the template with the members. This value is automatically set at False in all cases. If your task uses member, you should switch on True this variable.
     - suitebg   : Backgroud of the application (defines in which environment it takes its resources). If suitebg=None (default mode) it is then set to 'xpid' so if 'xpid' is not oper or dble, suitebg has to be specified with option -a.
     - refill    : Bool that set the step to 'refill' in the 'recextfiles' jobs (see vortex/layout/nodes.py for informations on the steps mecanism), default=False.
     - partition : SBATCH variable. Default=oper, automatically set to ft-oper if refill=True.

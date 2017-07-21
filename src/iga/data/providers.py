@@ -21,7 +21,7 @@ import iga.util.bpnames as bp
 
 #: TODO move in config file
 ATM_LIST_ONE = {'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie',
-                'polynesie', 'restart_cep', 'reunion', 'ssmice', 'varpack'}
+                'polynesie', 'restart_cep', 'reunion', 'ssmice', 'varpack', 'mfwam'}
 
 #: TODO move in config file
 ATM_LIST_TWO = {'perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim', 'mocvolc'}

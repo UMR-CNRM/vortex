@@ -18,22 +18,11 @@ class OpTask(Task):
     _tag_topcls = False
 
     def report_execution_error(self):
-        reseau  = self.conf.rundate.hh
-        logpath = self.env.LOG
-        rundir  = self.env.getvar('RUNDIR') + '/opview/' + self.tag
-        listing = rundir + '/NODE.001_01'
-        model   = self.env.getvar('OP_VAPP').upper()
-        conf    = self.env.getvar('OP_VCONF').lower()
-        xpid    = self.env.getvar('OP_XPID').lower()
-        member  = self.env.getvar('OP_MEMBER')
-        if member:
-            self.sh.header('Send a mail due to an execution error')
-            ad.opmail(reseau=reseau, task=self.tag, member=member, id ='execution_error_member', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf, xpid=xpid)
-            raise
-        else:
-            self.sh.header('Send a mail due to an execution error')
-            ad.opmail(reseau=reseau, task=self.tag, id ='execution_error', log=logpath, rundir=rundir, listing=listing, model=model, conf=conf, xpid=xpid)
-            raise
+        """Report any execution error."""
+        listing   = self.env.getvar('RUNDIR') + '/opview/' + self.tag + '/NODE.001_01'
+        self.sh.header('Send a mail due to an execution error')
+        ad.opmail(task=self.tag, id ='execution_error', listing=listing)
+        raise
 
     def defaults(self, extras):
         """Set defaults for toolbox defaults, with priority to actual conf."""

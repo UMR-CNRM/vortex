@@ -94,7 +94,7 @@ class CouplingWw3Write(GeoFlowResource):
                 values = ['SurgesWw3coupling'],
             ),
             nativefmt = dict(
-                values  = ['foo', 'unknown', 'netcdf'],
+                values  = ['foo', 'unknown'],
                 default = 'foo',
             ),
             fields = dict(
@@ -131,14 +131,15 @@ class SurgesResultNative(GeoFlowResource):
                 default = 'netcdf',
             ),
             fields = dict(
-                values = ['HUV_tideonly_forcing', 'lssh_global_ms.nc',
-                          'HUV_tide_wind_forcing', 'lssh_global_full.nc',
-                          'HUV_MED_tideonly_forcing', 'ssh_global_full.nc','ssh_global_ms.nc'],
+                values = ['HUV_ltideonly_forcing', 'lssh_global_ms.nc',
+                          'HUV_ltide_wind_forcing', 'lssh_global_full.nc',
+                          'HUV_tideonly_forcing', 'HUV_tide_wind_forcing',
+                          'ssh_global_full.nc', 'ssh_global_ms.nc'],
                 remap = {
-                    'HUV_tideonly_forcing': 'lssh_global_ms.nc',
+                    'HUV_ltideonly_forcing': 'lssh_global_ms.nc',
                     'HUV_tideonly_forcing': 'ssh_global_ms.nc',
-                    'HUV_tide_wind_forcing': 'lssh_global_full.nc',
-                    'HUV_MED_tideonly_forcing': 'ssh_global_full.nc',
+                    'HUV_ltide_wind_forcing': 'lssh_global_full.nc',
+                    'HUV_tide_wind_forcing': 'ssh_global_full.nc',
                 },
             ),
         )

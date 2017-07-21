@@ -24,20 +24,21 @@ if 'DMT_PATH_EXEC' in os.environ:
     op_rootapp  = os.path.dirname(os.environ["DMT_PATH_EXEC"])
 else:
     op_rootapp  = os.path.dirname(os.getcwd())
-op_xpid     = op_rootapp.split('/')[-3]
-op_vapp     = op_rootapp.split('/')[-2]
-op_vconf    = op_rootapp.split('/')[-1]
-op_suitebg  = $suitebg
-op_cutoff   = '$cutoff'
-op_rundate  = $rundate
-op_runtime  = $runtime
-op_runstep  = $runstep
-op_iniconf  = '{0:s}/conf/{1:s}_{2:s}.ini'.format(op_rootapp, op_vapp, op_vconf)
-op_fullplay = $fullplay
-op_refill   = $refill
-op_mail     = $mail
-op_jeeves   = '{0}_$jeeves'.format(op_xpid)
-op_phase    = $phase
+op_xpid      = op_rootapp.split('/')[-3]
+op_vapp      = op_rootapp.split('/')[-2]
+op_vconf     = op_rootapp.split('/')[-1]
+op_suitebg   = $suitebg
+op_cutoff    = '$cutoff'
+op_rundate   = $rundate
+op_runtime   = $runtime
+op_runstep   = $runstep
+op_iniconf   = '{0:s}/conf/{1:s}_{2:s}.ini'.format(op_rootapp, op_vapp, op_vconf)
+op_fullplay  = $fullplay
+op_refill    = $refill
+op_mail      = $mail
+op_jeeves    = '{0}_$jeeves'.format(op_xpid)
+op_phase     = $phase
+op_hasmember = $hasmember
 
 sys.stderr = sys.stdout
 
