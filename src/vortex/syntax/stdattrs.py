@@ -83,7 +83,7 @@ class DelayedEnvValue(object):
 
 class DelayedInit(object):
     """
-    This delays the object proxied object creation until it's actually accessed.
+    Delays the proxied object creation until it's actually accessed.
     """
 
     def __init__(self, proxied, initializer):

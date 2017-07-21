@@ -189,7 +189,7 @@ class Target(fp.FootprintBase):
     def options(self, key):
         """For a given section, returns the list of available options.
 
-        The results may depends on the current glove (see the :meth:`get`
+        The result may depend on the current glove (see the :meth:`get`
         method documentation).
         """
         my_glove_rk = '@' + sessions.current().glove.realkind
@@ -203,7 +203,7 @@ class Target(fp.FootprintBase):
     def items(self, key):
         """For a given section, returns a dict that contains all options.
 
-        The results may depends on the current glove (see the :meth:`get`
+        The result may depend on the current glove (see the :meth:`get`
         method documentation).
         """
         my_glove_rk = '@' + sessions.current().glove.realkind
@@ -229,7 +229,7 @@ class Target(fp.FootprintBase):
         and specialproxies lists.
 
         To define a node list, the XXXnodes configuration key must be
-        specified. It can an hardcoded coma-separated list or the
+        specified. It can be an hardcoded coma-separated list, or the
         *generic_nodes* keyword. In such a case, the node list will be
         auto-generated using the XXXrange and XXXbase configuration keys.
         """
