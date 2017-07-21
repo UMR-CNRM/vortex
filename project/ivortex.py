@@ -3,11 +3,13 @@ from __future__ import print_function
 
 import atexit
 import importlib
-from IPython.core.magic import (Magics, magics_class, line_magic)
+import logging
 import os
 import shlex
 import shutil
 import tempfile
+
+from IPython.core.magic import (Magics, magics_class, line_magic)
 
 #: No automatic export
 __all__ = []
@@ -39,8 +41,9 @@ class VortexMagics(Magics):
     def _load_addons(fpx, sh, module, addons):
         """Internal: load a given module and the associated addons."""
         importlib.import_module(module)
+        fpx.addons.non_ambiguous_loglevel = logging.DEBUG
         for addon in addons:
-            fpx.addon(kind=addon, shell=sh)
+            fpx.addon(kind=addon, shell=sh, verboseload=False)
 
     @line_magic
     def vortex(self, line):

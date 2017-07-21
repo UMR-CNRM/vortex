@@ -235,6 +235,11 @@ class AddonGroup(footprints.FootprintBase):
                 optional = True,
                 default  = None,
             ),
+            verboseload = dict(
+                optional = True,
+                default  = True,
+                type     = bool,
+            ),
         )
     )
 
@@ -252,8 +257,10 @@ class AddonGroup(footprints.FootprintBase):
         self._load_addons_from_list(self._addonslist)
 
     def _load_addons_from_list(self, addons):
-        logger.info("Loading the %s Addons group.", self.kind)
+        if self.verboseload:
+            logger.info("Loading the %s Addons group.", self.kind)
         for addon in addons:
             _shadd = footprints.proxy.addon(kind=addon, sh=self.sh, env=self.env,
-                                            cycle=self.cycle)
-            logger.info("%s Addon is: %s", addon, repr(_shadd))
+                                            cycle=self.cycle, verboseload=self.verboseload)
+            if self.verboseload:
+                logger.info("%s Addon is: %s", addon, repr(_shadd))

@@ -97,8 +97,9 @@ class VortexWorker(object):
         import footprints as fp
         self.shlfi = fp.proxy.addon(kind='lfi', shell=sh)
         self.shgrb = fp.proxy.addon(kind='grib', shell=sh)
-        self.shddh = fp.proxy.addon(kind='allfolders', shell=sh)
-        self.logger.warning('VORTEX enter ' + str(self.modules))
+        self.shddh = fp.proxy.addon(kind='allfolders', shell=sh, verboseload=False)
+        self.logger.warning('VORTEX enter modules=%s addons=%s',
+                            str(self.modules), str(sh.loaded_addons()))
         for modname in self.modules:
             sh.import_module(modname)
         return self
