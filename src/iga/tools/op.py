@@ -88,13 +88,11 @@ class OpJobAssistantTest(JobAssistant):
             t.env.setvar("LOG", None)
 
         # Set a new variable for availability notifications
-        
-      
+
         if "SLURM_JOB_NAME" in t.env:
             t.env.setvar("OP_DISP_NAME", "_".join(t.env["SLURM_JOB_NAME"].split("_")[:-1]))
         else:
             t.env.setvar("OP_DISP_NAME", None)
-        
 
         t.sh.header('Setting up the MPI Environment')
 
@@ -276,7 +274,6 @@ class _ReportContext(object):
         vconf     = t.env.getvar('OP_VCONF').lower()
         xpid      = t.env.getvar('OP_XPID').lower()
         hasmember = t.env.getvar('OP_HASMEMBER')
-        
 
         report.print_report(detailed=True)
         if try_ok:
@@ -288,7 +285,7 @@ class _ReportContext(object):
                     t.sh.header('Input informations: active alternates were found')
                     subject = "{0:s} {1:s} {2:s} : Utilisation de la tâche alternative {3:s} pour le membre {4:s} du réseau {5:s}h.".format(xpid.upper(),vapp,vconf,task,str(member),reseau)
                     ad.opmail(subject=subject, reseau=reseau, task=task, member=str(member), id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir, vapp=vapp, vconf=vconf, xpid=xpid)
-                else: 
+                else:
                     t.sh.header('Input informations: active alternates were found')
                     subject = "{0:s} {1:s} {2:s} : Utilisation de la tâche alternative {3:s} pour le réseau {4:s}h.".format(xpid.upper(),vapp,vconf,task,reseau)
                     ad.opmail(reseau=reseau, task=task, id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir, vapp=vapp, vconf=vconf, xpid=xpid)
@@ -297,9 +294,8 @@ class _ReportContext(object):
         else:
             t.sh.header('Input informations: {0:s} fail'.format(step)) 
             mail_id = 'error'
-            
             if hasmember:
-                member    = t.env.getvar('OP_MEMBER')   
+                member    = t.env.getvar('OP_MEMBER')
                 if step == 'input':
                     msg       = "La récupération des inputs de la tâche {0:s} du membre {1:s}".format(task,str(member)) 
                     subject   = "{0:s} {1:s} {2:s} : Problème de récupération des inputs de la tâche {3:s} du membre {4:s} pour le réseau {5:s}h".format(xpid.upper(),vapp,vconf,task,str(member),reseau)
@@ -316,12 +312,14 @@ class _ReportContext(object):
                     subject = "{0:s} {1:s} {2:s} : Problème d'archivage des outputs de la tâche {0:s} du réseau {1:s}h.".format(xpid.upper(),vapp,vconf,task,reseau)
                 ad.opmail(subject=subject, reseau=reseau, msg=msg, task=task, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, vapp=vapp, vconf=vconf, xpid=xpid)
 
+
 class InputReportContext(_ReportContext):
     """Context manager that print a report on inputs."""
 
-    def __init__(self,task, ticket):
+    def __init__(self, task, ticket):
         super(InputReportContext, self).__init__(task, ticket)
         self._step = 'input'
+
 
 class OutputReportContext(_ReportContext):
     """Context manager that print a report on outputs."""
@@ -330,47 +328,53 @@ class OutputReportContext(_ReportContext):
         super(OutputReportContext, self).__init__(task, ticket)
         self._step = 'output'
 
-def get_resource_value(r,key):
+
+def get_resource_value(r, key):
     """ this function returns the resource value """
     try:
-        kw = dict(area=lambda r:r.resource.geometry.area, term=lambda r:r.resource.term, fields=lambda r:r.resource.fields)
+        kw = dict(area=lambda r: r.resource.geometry.area,
+                  term=lambda r: r.resource.term,
+                  fields=lambda r: r.resource.fields)
         return kw[key](r)
     except AttributeError as e:
         logger.error(e)
-    
-def filteractive(r,dic):
+
+
+def filteractive(r, dic):
     """ this function returns the filter status """
     filter_active = True
-    for k,w in dic.iteritems():
-        if not get_resource_value(r,k) in w:
-            logger.info('filter not active : {} = {} actual value : {}'.format(k, w, get_resource_value(r,k)))
-            filter_active=False
-    return filter_active    
+    if dic is not None:
+        for k, w in dic.iteritems():
+            if not get_resource_value(r, k) in w:
+                logger.info('filter not active : {} = {} actual value : {}'.
+                            format(k, w, get_resource_value(r, k)))
+                filter_active = False
+    return filter_active
+
 
 def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_target=None, routingkey=None, selkeyproductid=None, targetname=None, transmet=None):
-    """Hook functions factory to route files while the execution is running"""
-        
+    """Hook functions factory to route files while the execution is running.
 
-    """
-        :param kind: str kind use to route
-        :param productid: str or dictionary (use selkeyproductid to define the dictionary key)
-        :param sshhost: tranfertnode
-        :param optfilter: dictionary (used to allow routing)
-        :param soprano_target: str (piccolo or piccolo-int)
-        :param routingkey : str
-        :param selkeyproductid :str (example: area, term, fields ...) 
-        :param targetname : str
-        :param transmet : dict
+    :param str kind: kind use to route
+    :param str or dict productid: (use selkeyproductid to define the dictionary key)
+    :param str shhost: tranfertnode
+    :param dict optfilter: dictionary (used to allow routing)
+    :param str soprano_target: str (piccolo or piccolo-int)
+    :param str routingkey : the BD routing key
+    :param str selkeyproductid : (example: area, term, fields ...)
+    :param str targetname :
+    :param str transmet :
     """
 
     def hook_route(t, rh):
-        kwargs= dict(kind=kind, productid=productid, sshhost=sshhost,
-                    filename=rh.container.abspath, soprano_target=soprano_target, routingkey=routingkey, targetname=targetname, transmet=transmet)
-        route_active = True
+        kwargs = dict(kind=kind, productid=productid, sshhost=sshhost,
+                      filename=rh.container.abspath, soprano_target=soprano_target,
+                      routingkey=routingkey, targetname=targetname, transmet=transmet)
+
         if selkeyproductid:
             if isinstance(productid, dict):
-                kwargs['productid'] = productid[get_resource_value(rh,selkeyproductid)]
-                logger.info('productid key : %s ',get_resource_value(rh,selkeyproductid))
+                kwargs['productid'] = productid[get_resource_value(rh, selkeyproductid)]
+                logger.info('productid key : %s ', get_resource_value(rh, selkeyproductid))
             else:
                 logger.warning('productid is not a dict : %s', productid)
 
@@ -379,26 +383,20 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
         if hasattr(rh.resource, 'term'):
             kwargs['term'] = rh.resource.term
 
-        if optfilter:
-            route_active = filteractive(rh,optfilter)
-
-        if route_active:
+        if filteractive(rh, optfilter):
             ad.route(** kwargs)
             print t.prompt, 'routing file = ', rh
 
     return hook_route
 
-def opphase_hook_factory(optfilter=None):
-    """Hook functions factory to phase files while the execution is running"""
 
-    """ :param optfilter: dictionary (used to allow routing) """
+def opphase_hook_factory(optfilter=None):
+    """Hook functions factory to phase files while the execution is running.
+
+    :param dict optfilter: (used to allow routing) """
 
     def hook_phase(t, rh):
-        route_active = True
-        if optfilter:
-            route_active = filteractive(rh,optfilter)
-
-        if route_active:
+        if filteractive(rh, optfilter):
             ad.phase(rh)
             print t.prompt, 'phasing file = ', rh
 

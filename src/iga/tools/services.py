@@ -42,7 +42,7 @@ from vortex.tools.actions import actiond as ad
 from vortex.tools.schedulers import SMS
 from vortex.tools.services import Service, FileReportService, TemplatedMailService
 from vortex.tools.date import Time
-from vortex.util.config import ExtendedReadOnlyConfigParser
+from vortex.util.config import GenericReadOnlyConfigParser
 #: Export nothing
 __all__ = []
 
@@ -341,10 +341,8 @@ class RoutingService(Service):
         info = 'Routing services abstract class',
         attr = dict(
             filename = dict(
-                access   = 'rwd',
             ),
             targetname = dict(
-                access   = 'rwd',
                 optional = True,
                 default  = None
             ),
@@ -369,6 +367,7 @@ class RoutingService(Service):
     def __init__(self, *args, **kw):
         logger.debug('RoutingService init %s', self.__class__)
         super(RoutingService, self).__init__(*args, **kw)
+        self._actual_filename = self.sh.path.abspath(self.filename)
 
     def get_cmdline(self):
         """Complete command line that runs the Transfer Agent."""
@@ -407,12 +406,20 @@ class RoutingService(Service):
         return stamp[:8]
 
     @property
+    def _actual_targetname(self):
+        if self.targetname is not None:
+            return self.sh.path.join(self.sh.path.dirname(self._actual_filename),
+                                     self.targetname)
+        else:
+            return None
+
+    @property
     def routing_name(self):
-        return self.targetname or self.filename
+        return self._actual_targetname or self._actual_filename
 
     def file_ok(self):
         """Check that the file exists, send an alarm if not."""
-        if not self.sh.path.exists(self.filename):
+        if not self.sh.path.exists(self._actual_filename):
             msg = "{0.taskname} routage {0.realkind} du numero {0.productid}" \
                   " impossible - fichier {0.filename} inexistant".format(self)
             logger.warning(msg)
@@ -423,16 +430,13 @@ class RoutingService(Service):
     def __call__(self):
         """Actual service execution."""
 
-        self.filename = self.sh.path.abspath(self.filename)
-
         if not self.file_ok():
             return False
 
-        if self.targetname:
-            self.targetname = self.sh.path.join(self.sh.path.dirname(self.filename),self.targetname)
-            if self.sh.path.exists(self.targetname):
-                raise ValueError("Won't overwrite file '{}'".format(self.targetname))
-            self.sh.cp(self.filename, self.targetname, intent='in')
+        if self._actual_targetname:
+            if self.sh.path.exists(self._actual_targetname):
+                raise ValueError("Won't overwrite file '{}'".format(self._actual_targetname))
+            self.sh.cp(self._actual_filename, self._actual_targetname, intent='in')
 
         cmdline = self.get_cmdline()
         if cmdline is None:
@@ -440,8 +444,8 @@ class RoutingService(Service):
 
         rc = ad.ssh(cmdline, hostname=self.sshhost, nodetype='transfer')
 
-        if self.targetname:
-            self.sh.remove(self.targetname)
+        if self._actual_targetname:
+            self.sh.remove(self._actual_targetname)
 
         logfile = 'routage.' + date.today().ymd
         ad.report(kind='dayfile', mode='RAW', message=self.get_logline(),
@@ -584,7 +588,7 @@ class BdpeService(RoutingService):
                 optional = True,
                 default  = 'agt_pe_cmd',
             ),
-             term = dict(
+            term = dict(
                 optional = True,
                 type     = Time,
                 default  = '0',
@@ -602,7 +606,7 @@ class BdpeService(RoutingService):
         logger.debug('BdpeService init %s', self.__class__)
         super(BdpeService, self).__init__(*args, **kw)
         self.inifile = '@opbdpe.ini'
-        self.iniparser = ExtendedReadOnlyConfigParser(self.inifile)
+        self.iniparser = GenericReadOnlyConfigParser(self.inifile)
 
     @property
     def actual_routingkey(self):
