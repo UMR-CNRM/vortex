@@ -818,7 +818,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                         except StandardError:
                             pass
                     else:
-                        pooltarget = 'error'
+                        pooltarget = 'retry'
                     self.migrate(poolbase, jfile, target=pooltarget)
                     del self.async[pnum]
                 else:
