@@ -37,7 +37,7 @@ op_refill    = $refill
 op_mail      = $mail
 op_jeeves    = '{0}_$jeeves'.format(op_xpid)
 op_phase     = $phase
-op_hasmember = False
+op_hasmember = $hasmember
 
 sys.stderr = sys.stdout
 

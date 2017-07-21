@@ -944,6 +944,33 @@ class OpMailService(TemplatedMailService):
         """Tells if opmail is deactivated : OP_MAIL set to 0"""
         return not bool(self.env.get('OP_MAIL', 1))
 
+    def substitution_dictionary(self, add_ons=None):
+        sdict = super(OpMailService, self).substitution_dictionary(add_ons=add_ons)
+        if 'OP_RUNDATE' in sdict:
+            sdict.setdefault('RESEAU', sdict['OP_RUNDATE'].hh)
+        if 'LOG' in sdict:
+            sdict.setdefault('LOGPATH', sdict['LOG'])
+        if 'RUNDIR' in sdict and 'task' in sdict:
+            sdict.setdefault('RUNDIR', sdict['RUNDIR'] + '/opview/' + sdict['task'])
+        if 'OP_VAPP' in sdict:
+            sdict.setdefault('VAPP', sdict['OP_VAPP'].upper())
+        if 'OP_VCONF' in sdict:
+            sdict.setdefault('VCONF', sdict['OP_VCONF'].lower())
+        if 'OP_XPID' in sdict:
+            sdict.setdefault('XPID', sdict['OP_XPID'].lower())
+        if sdict.get('OP_HASMEMBER', False) and 'OP_MEMBER' in sdict:
+            sdict.setdefault('MEMBER_S1_FR_FR', ' du membre {:d}'.format(int(sdict['OP_MEMBER'])))
+        else:
+            sdict.setdefault('MEMBER_S1_FR_FR', '')
+        return sdict
+
+    def _template_name_rewrite(self, tplguess):
+        if not tplguess.startswith('@opmails/'):
+            tplguess = '@opmails/' + tplguess
+        if not tplguess.endswith('.tpl'):
+            tplguess += '.tpl'
+        return tplguess
+
     def header(self):
         """String prepended to the message body."""
         locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
@@ -952,12 +979,10 @@ class OpMailService(TemplatedMailService):
 
     def trailer(self):
         """String appended to the message body."""
-        return '\n--\nEnvoi automatique par Vortex {} ' \
-               'pour <{}@{}>\n'.format(
-            vortex.__version__,
-            self.env.user,
-            self.sh.target().inetname
-        )
+        return ('\n--\nEnvoi automatique par Vortex {} ' +
+                'pour <{}@{}>\n').format(vortex.__version__,
+                                         self.env.user,
+                                         self.sh.target().inetname)
 
     def __call__(self, *args):
         """Main action as inherited, and prompts.

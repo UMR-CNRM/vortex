@@ -62,8 +62,8 @@ class OpMail(Action):
 
     def __init__(self, kind='opmail', service='opmail', active=True, directory=None, catalog=None):
         super(OpMail, self).__init__(kind=kind, active=active, service=service)
-        self.directory = directory or Directory('@address-book.ini')
-        self.catalog = catalog or GenericConfigParser('@inventory.ini')
+        self.directory = directory or Directory('@opmail-address-book.ini')
+        self.catalog = catalog or GenericConfigParser('@opmail-inventory.ini')
 
     def service_info(self, **kw):
         """Kindly propose the permanent directory and catalog to the final service"""

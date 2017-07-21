@@ -254,79 +254,67 @@ class _ReportContext(object):
     def __init__(self, task, ticket):
         self._task = task
         self._ticket = ticket
-        self._step = None
 
     def __enter__(self):
         pass
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self._report(self._ticket, exc_type is None, task=self._task.tag, step=self._step)
+        self._report(self._ticket, exc_type is None)
 
-    def _report(self, t, try_ok=True, **kw):
+    def _report(self, t, try_ok=True):
         """Report status of the OP session (input review, mail diffusion...)."""
-        step      = kw.get('step', 'unknown_step')
-        reseau    = t.env.getvar('OP_RUNDATE').hh
-        task      = kw.get('task', 'unknown_task')
-        report    = t.context.sequence.inputs_report()
-        logpath   = t.env.getvar('LOG')
-        rundir    = t.env.getvar('RUNDIR') + '/opview/' + task
-        vapp      = t.env.getvar('OP_VAPP').upper()
-        vconf     = t.env.getvar('OP_VCONF').lower()
-        xpid      = t.env.getvar('OP_XPID').lower()
-        hasmember = t.env.getvar('OP_HASMEMBER')
-
-        report.print_report(detailed=True)
-        if try_ok:
-            t.sh.header('Input review')
-            if any(report.active_alternates()):
-
-                if hasmember:
-                    member = t.env.getvar('OP_MEMBER')
-                    t.sh.header('Input informations: active alternates were found')
-                    subject = "{0:s} {1:s} {2:s} : Utilisation de la tâche alternative {3:s} pour le membre {4:s} du réseau {5:s}h.".format(xpid.upper(),vapp,vconf,task,str(member),reseau)
-                    ad.opmail(subject=subject, reseau=reseau, task=task, member=str(member), id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir, vapp=vapp, vconf=vconf, xpid=xpid)
-                else:
-                    t.sh.header('Input informations: active alternates were found')
-                    subject = "{0:s} {1:s} {2:s} : Utilisation de la tâche alternative {3:s} pour le réseau {4:s}h.".format(xpid.upper(),vapp,vconf,task,reseau)
-                    ad.opmail(reseau=reseau, task=task, id='mode_secours', report=report.synthetic_report(), log=logpath, rundir=rundir, vapp=vapp, vconf=vconf, xpid=xpid)
-            else:
-                t.sh.header('Input informations: everything is ok')
-        else:
-            t.sh.header('Input informations: {0:s} fail'.format(step)) 
-            mail_id = 'error'
-            if hasmember:
-                member    = t.env.getvar('OP_MEMBER')
-                if step == 'input':
-                    msg       = "La récupération des inputs de la tâche {0:s} du membre {1:s}".format(task,str(member)) 
-                    subject   = "{0:s} {1:s} {2:s} : Problème de récupération des inputs de la tâche {3:s} du membre {4:s} pour le réseau {5:s}h".format(xpid.upper(),vapp,vconf,task,str(member),reseau)
-                elif step == 'output':
-                    msg     = "L'archivage des outputs de la tâche {0:s} du membre {1:s}".format(task,str(member))
-                    subject = "{0:s} {1:s} {2:s} : Problème d'archivage des outputs de la tâche {0:s} du membre {1:s} pour le réseau {2:s}h.".format(xpid.upper(),vapp,vconf,task,str(member),reseau)
-                ad.opmail(subject=subject, reseau=reseau, msg=msg, task=task, member=str(member), id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, vapp=vapp, vconf=vconf, xpid=xpid)
-            else:
-                if step == 'input':
-                    msg        = "La récupération des inputs de la tâche {0:s}".format(task)
-                    subject = "{0:s} {1:s} {2:s} : Problème de récupération des inputs de la tâche {3:s} du réseau {4:s}h".format(xpid.upper(),vapp,vconf,task,reseau)
-                elif step == 'output':
-                    msg     = "L'archivage des outputs de la tâche {0:s}".format(task)
-                    subject = "{0:s} {1:s} {2:s} : Problème d'archivage des outputs de la tâche {0:s} du réseau {1:s}h.".format(xpid.upper(),vapp,vconf,task,reseau)
-                ad.opmail(subject=subject, reseau=reseau, msg=msg, task=task, id=mail_id, report=report.synthetic_report(), log=logpath, rundir=rundir, vapp=vapp, vconf=vconf, xpid=xpid)
+        raise NotImplementedError("To be overwritten...")
 
 
 class InputReportContext(_ReportContext):
     """Context manager that print a report on inputs."""
 
-    def __init__(self, task, ticket):
+    def __init__(self, task, ticket,
+                 alternate_tplid='mode_secours',
+                 nonfatal_tplid='input_nonfatal_error',
+                 fatal_tplid='input_error'):
         super(InputReportContext, self).__init__(task, ticket)
-        self._step = 'input'
+        self._alternate_tplid = alternate_tplid
+        self._nonfatal_tplid = nonfatal_tplid  # Pas encore utilise : voir TODO dans la methode suivante...
+        self._fatal_tplid = fatal_tplid
+
+    def _report(self, t, try_ok=True, **kw):
+        """Report status of the OP session (input review, mail diffusion...)."""
+        report = t.context.sequence.inputs_report()
+        t.sh.header('Input review')
+        report.print_report(detailed=True)
+        if try_ok:
+            if any(report.active_alternates()):
+                t.sh.header('Input informations: active alternates were found')
+                if self._alternate_tplid:
+                    ad.opmail(task=self._task.tag, id=self._alternate_tplid, report=report.synthetic_report())
+            # elif any(report.missing_resources()):
+                # TODO: Ici envoyer un mail dans le cas ou une ressource avec fatal=False est manquante
+                # Voir ticket Redmine #748
+                # Cela se substitura avantageusement a la modification faite dans compi.py pour controler
+                # le nombre de vecteurs singuliers (ceci dit en passant, je ne pense pas que cela fonctionne...)
+            else:
+                t.sh.header('Input informations: everything is ok')
+        else:
+            t.sh.header('Input informations: one of the input failed')
+            if self._fatal_tplid:
+                ad.opmail(task=self._task.tag, id=self._fatal_tplid, report=report.synthetic_report())
 
 
 class OutputReportContext(_ReportContext):
     """Context manager that print a report on outputs."""
 
-    def __init__(self, task, ticket):
+    def __init__(self, task, ticket, fatal_tplid='output_error'):
         super(OutputReportContext, self).__init__(task, ticket)
-        self._step = 'output'
+        self._fatal_tplid = fatal_tplid
+
+    def _report(self, t, try_ok=True, **kw):
+        """Report status of the OP session (input review, mail diffusion...)."""
+        if try_ok:
+            t.sh.header('Output informations: everything is ok')
+        else:
+            t.sh.header('Output informations: one of the output failed')
+            ad.opmail(task=self._task.tag, id=self._fatal_tplid)
 
 
 def get_resource_value(r, key):

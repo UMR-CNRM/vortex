@@ -77,6 +77,11 @@ def test_opmail():
 
     if e.USER == 'lamboleyp':
         me = 'pascal.lamboley@meteo.fr'
+    elif e.USER == 'meunierlf':
+        me = 'louis-francois.meunier@meteo.fr'
+        if e.HOST == 'lxgmap45':
+            smtpserver = 'smtp.meteo.fr'
+            toolbox.defaults(smtpserver = smtpserver)
 
     try:
         me
@@ -116,5 +121,5 @@ ad.mail_on()
 ad.opmail_on()
 
 list_actions()
-logger = more_debug(['iga',])
+logger = more_debug(['iga', ])
 test_opmail()

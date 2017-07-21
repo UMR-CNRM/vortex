@@ -772,6 +772,13 @@ class TemplatedMailService(MailService):
             tpl = Template(result)
         return result
 
+    def _template_name_rewrite(self, tplguess):
+        if not tplguess.startswith('@'):
+            tplguess = '@' + tplguess
+        if not tplguess.endswith('.tpl'):
+            tplguess += '.tpl'
+        return tplguess
+
     def get_message(self, tpldict):
         """Contents:
 
@@ -782,10 +789,7 @@ class TemplatedMailService(MailService):
         tpl = self.message
         if tpl == '':
             tplfile = self.section.get('template', self.id)
-            if not tplfile.startswith('@opmail-'):
-                tplfile = '@opmail-' + tplfile
-            if not tplfile.endswith('.tpl'):
-                tplfile += '.tpl'
+            tplfile = self._template_name_rewrite(tplfile)
             try:
                 tpl = load_template(self.ticket, tplfile)
             except ValueError as exc:

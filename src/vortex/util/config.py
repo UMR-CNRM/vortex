@@ -17,7 +17,7 @@ __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
 
-_RE_AUTO_TPL = re.compile(r'^@([^/]+\.tpl)$')
+_RE_AUTO_TPL = re.compile(r'^@([^/].*\.tpl)$')
 
 
 def load_template(t, tplfile):
