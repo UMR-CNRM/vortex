@@ -42,6 +42,7 @@ class CompressionPipeline(object):
         """
         self._units = list()
         self._sh = system
+        self.description_string = compression
         for c in [c for c in compression.split('|') if c]:
             c_raw = c.split('&')
             ckind = c_raw.pop(0)

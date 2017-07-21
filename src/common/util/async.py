@@ -4,6 +4,7 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.util.worker import VortexWorker
+from vortex.tools import compression
 
 #: No automatic export
 __all__ = []
@@ -50,6 +51,9 @@ def system_ftput(pnum, ask, config, logger, **opts):
             if data.hostname is None:
                 return pnum, vwork.rc, value
 
+        cpipeline = (None if not hasattr(data, 'cpipeline') or not data.cpipeline
+                     else compression.CompressionPipeline(sh, data.cpipeline))
+
         logger.info('FTPut host', hostname=data.hostname, logname=data.logname)
         logger.info('FTPut data', source=data.source, destination=data.destination)
         while trynum < nbtries:
@@ -59,11 +63,11 @@ def system_ftput(pnum, ask, config, logger, **opts):
             try:
                 if rawftput:
                     putrc = sh.rawftput(data.source, data.destination, hostname=data.hostname,
-                                        logname=data.logname, cpipeline=data.cpipeline,
+                                        logname=data.logname, cpipeline=cpipeline,
                                         fmt=data.fmt)
                 else:
                     putrc = sh.ftput(data.source, data.destination, hostname=data.hostname,
-                                     logname=data.logname, cpipeline=data.cpipeline,
+                                     logname=data.logname, cpipeline=cpipeline,
                                      fmt=data.fmt)
             except StandardError as e:
                 logger.warning('FTPut failed', attempt=trynum, error=e)

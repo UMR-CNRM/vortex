@@ -1026,6 +1026,8 @@ class ArchiveStore(Store):
                 rhandler    = options.get('rhandler', None),
                 source      = tempo(local),
                 destination = rpath,
+                cpipeline   = ('' if self._actual_cpipeline is None
+                               else self._actual_cpipeline.description_string)
             )
             rc = ad.jeeves(**put_opts)
         return rc and self._hash_put(self.ftpput, local, remote, options)

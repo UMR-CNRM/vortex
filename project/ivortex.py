@@ -16,7 +16,7 @@ __all__ = []
 _IVORTEX_ADDONS = [('vortex.tools.folder', ('allfolders',)),
                    ('vortex.tools.grib', ('grib', )),
                    ('common.tools.gribdiff', ('gribapi', )),
-                   ('vortex.tools.listings', ('arpifs_listings')), ]
+                   ('vortex.tools.listings', ('arpifs_listings', )), ]
 #: The path to the default basedir
 _IVORTEX_BASEDIR_DEFAULT = os.path.join(os.environ.get('HOME', '/tmp'),
                                         'vortex-workdir')
@@ -38,7 +38,7 @@ class VortexMagics(Magics):
     @staticmethod
     def _load_addons(fpx, sh, module, addons):
         """Internal: load a given module and the associated addons."""
-        importlib.import_module('vortex.tools.' + module)
+        importlib.import_module(module)
         for addon in addons:
             fpx.addon(kind=addon, shell=sh)
 
