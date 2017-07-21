@@ -67,16 +67,6 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: BdpeOperationsService
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: BdpeIntegrationService
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: DayfileReportService
    :show-inheritance:
    :members:

@@ -51,3 +51,11 @@ Functions
 .. autofunction:: global_bnames
 
 .. autofunction:: global_snames
+
+.. autofunction:: SurgesWw3coupling_bnames
+
+.. autofunction:: pts_bnames
+
+.. autofunction:: SurgesResultNative_bnames
+
+.. autofunction:: bufr_bnames
