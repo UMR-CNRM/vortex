@@ -2,16 +2,17 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-import six
 
 import sys
 import collections
 import re
 
-from .util import (number_of_different_digits,
+from .util import (read_listing,
+                   number_of_different_digits,
                    find_line_containing,
                    re_for_fortran_scientific_format,
-                   ParsingError)
+                   ParsingError,
+                   PARSING_ERROR_CODE)
 
 #: Automatic export
 __all__ = ['Norms', 'Norm', 'NormsComparison', 'compare_norms']
@@ -20,7 +21,6 @@ patterns = {'spectral norms': 'SPECTRAL NORMS -',
             'gpnorms partA': 'GPNORM',
             'gpnorms partB': 'GPNORMS OF FIELDS TO BE WRITTEN OUT ON FILE :',
             'fullpos gpnorms': 'FULL-POS GPNORMS', }
-PARSING_ERROR_CODE = 999
 _re_openfa = '(?P<subroutine>OPENFA)'
 _re_cnt34 = '(?P<subroutine>CNT[3-4]((TL)|(AD))*)'
 _re_comment = '(?P<comment>(\s\w+)+)'
@@ -94,12 +94,7 @@ class NormsSet(object):
         Parse a listing (either given as its filename or already read as a
         list of lines) looking for norms.
         """
-        # get list of lines
-        if isinstance(source, list):
-            lines = source
-        elif isinstance(source, six.string_types):
-            with open(source, 'r') as listfh:
-                lines = [six.u(l).rstrip("\n") for l in listfh]
+        lines = read_listing(source)
         # find CNT steps
         steps = []
         for i, l in enumerate(lines):
@@ -168,6 +163,8 @@ class Norms(object):
                     line += ', CDCONF={})'.format(self.step['cdconf'])
                 elif 'pc_step' in self.step.keys():
                     line += ' ({}))'.format(self.step['pc_step'])
+                elif 'filename' in self.step.keys():
+                    line += ', FILENAME={})'.format(self.step['filename'])
                 else:
                     line += ')'
         return line

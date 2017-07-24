@@ -93,7 +93,7 @@ taylorism_log = footprints.loggers.getLogger(__name__)
 # : timeout when polling for a Queue/Pipe communication
 communications_timeout = 0.01
 
-__version__ = '1.0.4'
+__version__ = '1.0.5'
 
 
 #################
@@ -395,7 +395,7 @@ class Boss(object):
 
         def _getreport():
             if final or received_a_report():
-                received = self.control_messenger_out.recv()
+                received = self._recv_report(splitmode=True)
                 if final:
                     self._finalreport = received
                 if isinstance(received['workers_report'], Exception):
@@ -438,6 +438,45 @@ class Boss(object):
 # boss subprocess internal methods
 ##################################
 
+    def _send_report(self, report, splitmode=True):
+        """
+        report must have keys 'workers_report', 'status' and optionally others.
+        """
+        if not splitmode:
+            self.control_messenger_in.send(report)
+        else:
+            rkeys = list(report.keys())
+            rkeys.pop(rkeys.index('workers_report'))
+            rkeys.pop(rkeys.index('status'))
+            for k in rkeys:
+                self.control_messenger_in.send((k, report[k]))
+            if not isinstance(report['workers_report'], Exception):
+                for wr in report['workers_report']:
+                    self.control_messenger_in.send(wr)
+            else:
+                self.control_messenger_in.send(report['workers_report'])
+            self.control_messenger_in.send(('status', report['status']))
+
+    def _recv_report(self, splitmode=True):
+        """
+        report must have keys 'workers_report', 'status' and optionally others.
+        """
+        if not splitmode:
+            report = self.control_messenger_out.recv()
+        else:
+            report = {'workers_report':[]}
+            while True:
+                r = self.control_messenger_out.recv()
+                if isinstance(r, tuple):
+                    report[r[0]] = r[1]
+                    if r[0] == 'status':
+                        break
+                elif isinstance(r, dict):
+                    report['workers_report'].append(r)
+                elif isinstance(r, Exception):
+                    report['workers_report'] = r
+        return report
+
     def _listen_and_communicate(self):
         """
         Interface routine, to catch exceptions and communicate.
@@ -459,16 +498,20 @@ class Boss(object):
             except (Exception, KeyboardInterrupt) as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 tb = traceback.format_exception(exc_type, exc_value, exc_traceback)
-                report = {'workers_report': e, 'traceback': tb}
+                report = {'workers_report': e,
+                          'status':'workers exception',
+                          'traceback': tb}
             finally:
                 try:
-                    self.control_messenger_in.send(report)
-                except ValueError as e:
+                    self._send_report(report, splitmode=True)
+                except (ValueError, IOError) as e:
                     # ValueError = to_be_sent_back too big.
                     # We are sure that a PickleError won't occur since data were already pickled once (by the workers)
                     taylorism_log.error("The report is too big to be sent back :-(")
-                    report = {'workers_report': e, 'traceback': 'Traceback missing'}
-                    self.control_messenger_in.send(report)
+                    report = {'workers_report': e,
+                              'status':'transmission exception',
+                              'traceback': 'Traceback missing'}
+                    self._send_report(report, splitmode=True)
 
     def _listen(self):
         """
@@ -509,8 +552,10 @@ class Boss(object):
                     if control in self.control_signals.values():
                         # received a control signal
                         if control == self.control_signals['SEND_REPORT']:
+                            report = {'workers_report': report,
+                                      'status': 'interim'}
                             try:
-                                self.control_messenger_in.send({'workers_report': report, 'status': 'interim'})
+                                self._send_report(report, splitmode=True)
                             except ValueError:
                                 # ValueError = report too big.
                                 # We are sure that a PickleError won't occur since data were already pickled once (by the workers)

@@ -7,13 +7,13 @@ import six
 import sys
 from collections import OrderedDict
 
+from .util import PARSING_ERROR_CODE
 from .norms import NormsSet, NormsComparison
-from . import jo_tables
+from .jo_tables import JoTables, DEFAULT_N_THRESHOLD, DEFAULT_JO_THRESHOLD
+from .TLAD import ADTest, TLTest
 
 #: No automatic export
 __all__ = []
-
-CRASHED_JOB_ERROR_CODE = -1
 
 
 class OutputListing(object):
@@ -25,17 +25,21 @@ class OutputListing(object):
         """
 
         :param filename: name of the file to read in
-        :param pattern_type: type of pattern to compare, among ('norms', 'Jo-tables')
+        :param pattern_type: type of pattern to compare, among
+                             ('norms', 'Jo-tables', 'AD-test', 'TL-test')
         """
-        assert pattern_type in ('norms', 'Jo-tables', ), \
-            "unknown pattern: " + pattern_type
+        assert pattern_type in ('norms', 'Jo-tables', 'AD-test', 'TL-test'), \
+               "unknown pattern: " + pattern_type
 
         # init
         self.filename = filename
         self.pattern_type = pattern_type
         self.end_is_reached = False
+
         self.normset = None
         self.jo_tables = None
+        self.ad_test = None
+        self.tl_test = None
 
         # read listing in file
         with open(self.filename, 'r') as f:
@@ -58,7 +62,9 @@ class OutputListing(object):
             n = len(self.normset)
         elif self.pattern_type == 'Jo-tables':
             n = len(self.jo_tables)
-        elif self.pattern_type == 'adjoint-test':
+        elif self.pattern_type == 'AD-test':
+            n = 1
+        elif self.pattern_type == 'TL-test':
             n = 1
         return n
 
@@ -72,6 +78,10 @@ class OutputListing(object):
             self.parse_norms(flush_after_reading=flush_after_reading)
         elif self.pattern_type == 'Jo-tables':
             self.parse_jo_tables(flush_after_reading=flush_after_reading)
+        elif self.pattern_type == 'AD-test':
+            self.parse_AD_test(flush_after_reading=flush_after_reading)
+        elif self.pattern_type == 'TL-test':
+            self.parse_TL_test(flush_after_reading=flush_after_reading)
 
     def flush_listing(self):
         """Get rid of the text listing that may consume some memory."""
@@ -98,7 +108,29 @@ class OutputListing(object):
 
         If **flush_after_reading**, get rid of listing after reading Jo-tables.
         """
-        self.jo_tables = jo_tables.JoTables(self.filename, self.lines)
+        self.jo_tables = JoTables(self.filename, self.lines)
+        if flush_after_reading:
+            self.flush_listing()
+
+    # Test of the Adjoint
+    def parse_AD_test(self, flush_after_reading=False):
+        """
+        Look for and read test of the adjoint.
+
+        If **flush_after_reading**, get rid of listing after reading the test.
+        """
+        self.ad_test = ADTest(self.lines)
+        if flush_after_reading:
+            self.flush_listing()
+
+    # Test of the tangent linear
+    def parse_TL_test(self, flush_after_reading=False):
+        """
+        Look for and read test of the tangent linear.
+
+        If **flush_after_reading**, get rid of listing after reading the test.
+        """
+        self.tl_test = TLTest(self.lines)
         if flush_after_reading:
             self.flush_listing()
 
@@ -114,6 +146,10 @@ def compare(test, ref, **kwargs):
         result = compare_norms(test, ref, **kwargs)
     elif test.pattern_type == 'Jo-tables':
         compare_jo_tables(test, ref, **kwargs)
+    elif test.pattern_type == 'AD-test':
+        result = compare_AD_tests(test, ref, **kwargs)
+    elif test.pattern_type == 'TL-test':
+        result = compare_TL_tests(test, ref, **kwargs)
     return result
 
 
@@ -128,18 +164,24 @@ def compare_norms(test, ref,
     :param which: either 'all' to compare norms for all steps found in listings,
                   or 'first_and_last_spectral' (default) for the first and last
                   spectral norms only.
-
+    :param out: output open file or stdout
     :param onlymaxdiff: only max difference is printed for each step.
     :param mode: - if 'text', prints the comparison to file;
                  - if 'get_worst_by_step', get worst (among fields) digits
                    comparison for each step;
                  - if 'get_worst' get worst of worst (among fields) digits
                    comparison.
-                 - if 'plot', plot a graph of differences (spectral norms only)
+                 - if 'plot', plot a graph of differences
     """
 
-    assert ref.end_is_reached
-    assert test.end_is_reached
+    assert ref.look_for_end()
+    assert test.look_for_end()
+    assert ref.pattern_type == 'norms'
+    assert test.pattern_type == 'norms'
+    if not hasattr(ref, 'normset'):
+        ref.parse_norms()
+    if not hasattr(test, 'normset'):
+        test.parse_norms()
     assert len(ref.normset) > 0
     assert len(test.normset) > 0
     assert mode in ('text', 'get_worst', 'get_worst_by_step', 'plot')
@@ -244,12 +286,13 @@ def compare_norms(test, ref,
 
 def compare_jo_tables(test, ref,
                       out=sys.stdout,
-                      nthres=jo_tables.DEFAULT_N_THRESHOLD,
-                      jothres=jo_tables.DEFAULT_JO_THRESHOLD,
+                      nthres=DEFAULT_N_THRESHOLD,
+                      jothres=DEFAULT_JO_THRESHOLD,
                       bw=False,
                       onlymaxdiff=False,
                       **ignored_kwargs):
-    """Compare two 'Jo-tables' pattern-type output listings.
+    """
+    Compare two 'Jo-tables' pattern-type output listings.
 
     :param test: Test listing object (to be compared)
     :param ref: Reference listing object (to be compared to)
@@ -259,8 +302,14 @@ def compare_jo_tables(test, ref,
     :param onlymaxdiff: Only max difference is printed for each table
     """
 
-    assert ref.end_is_reached
-    assert test.end_is_reached
+    assert ref.look_for_end()
+    assert test.look_for_end()
+    assert ref.pattern_type == 'Jo-tables'
+    assert test.pattern_type == 'Jo-tables'
+    if not hasattr(ref, 'jo_tables'):
+        ref.parse_jo_tables()
+    if not hasattr(test, 'jo_tables'):
+        test.parse_jo_tables()
     assert len(ref.jo_tables) > 0
     assert len(test.jo_tables) > 0
 
@@ -270,3 +319,85 @@ def compare_jo_tables(test, ref,
                               jothres=jothres,
                               bw=bw,
                               onlymaxdiff=onlymaxdiff)
+
+
+def compare_AD_tests(test, ref,
+                     mode='text',
+                     out=sys.stdout,
+                     **ignored_kwargs):
+    """
+    Compare two adjoint tests, return the absolute difference of both scores.
+
+    :param test: Test listing object (to be compared)
+    :param ref: Reference listing object (to be compared to)
+    :param mode: - if 'text', prints the comparison to out;
+                 - if 'get_worst' get worst of worst (among fields) digits
+                   comparison.
+    :param out: output open file or stdout
+    """
+    assert ref.look_for_end()
+    assert test.look_for_end()
+    assert ref.pattern_type == 'AD-test'
+    assert test.pattern_type == 'AD-test'
+    if not hasattr(ref, 'ad_test'):
+        ref.parse_AD_test()
+    if not hasattr(test, 'ad_test'):
+        test.parse_AD_test()
+
+    if mode == 'get_worst':
+        if PARSING_ERROR_CODE in (test.ad_test.score, ref.ad_test.score):
+            comp = PARSING_ERROR_CODE
+        elif test.ad_test.zero_overflow in (test.ad_test.score, ref.ad_test.score):
+            comp = test.ad_test.zero_overflow
+        else:
+            comp = abs(test.ad_test.score - ref.ad_test.score)
+        return comp
+    elif mode == 'text':
+        out.write(test.filename + ':\n')
+        out.write(test.ad_test.format() + '\n')
+        out.write(ref.filename + ':\n')
+        out.write(ref.ad_test.format() + '\n')
+
+
+def compare_TL_tests(test, ref,
+                     mode='plot',
+                     out='TL-tests.png',
+                     ** ignored_kwargs):
+    """
+    Compare two tangent linear tests, return the absolute difference of both
+    scores.
+
+    :param test: Test listing object (to be compared)
+    :param ref: Reference listing object (to be compared to)
+    :param mode: - if 'get_worst' get worst of worst (among fields) digits
+                   comparison.
+                 - if 'plot', plot a graph of differences
+    :param out: (mode=='plot' only) output filename (.png) or None for
+                interactive display
+    """
+    assert ref.look_for_end()
+    assert test.look_for_end()
+    assert ref.pattern_type == 'TL-test'
+    assert test.pattern_type == 'TL-test'
+    if not hasattr(ref, 'tl_test'):
+        ref.parse_AD_test()
+    if not hasattr(test, 'tl_test'):
+        test.parse_AD_test()
+
+    if mode == 'get_worst':
+        if PARSING_ERROR_CODE in (test.tl_test.score, ref.tl_test.score):
+            comp = PARSING_ERROR_CODE
+        else:
+            comp = abs(test.tl_test.score - ref.tl_test.score)
+        return comp
+    elif mode == 'plot':
+        import matplotlib.pyplot as plt
+        fig, axes = plt.subplots(2, 1, figsize=(12, 16))
+        fig, _ = test.tl_test.plot(over=(fig, axes[0]), title='\n'.join(["TL-test",
+                                                                         test.filename]))
+        fig, _ = ref.tl_test.plot(over=(fig, axes[1]), title='\n'.join(["TL-test",
+                                                                        ref.filename]))
+        if out is None:
+            fig.show()
+        else:
+            fig.savefig(out, bbox_inches='tight')

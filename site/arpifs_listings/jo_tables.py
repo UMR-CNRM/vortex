@@ -7,6 +7,8 @@ import re
 import sys
 from collections import OrderedDict
 
+from .util import read_listing
+
 #: Automatic export
 __all__ = ['JoTables', 'JoTable']
 
@@ -496,8 +498,7 @@ class JoTables(_JoMixin):
         self.filename = filename
 
         if fcontent is None:
-            with open(self.filename, 'r') as listfh:
-                lines = [l.rstrip("\n") for l in listfh]
+            lines = read_listing(self.filename)
         else:
             lines = fcontent
 
