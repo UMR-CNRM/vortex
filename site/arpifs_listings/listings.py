@@ -19,7 +19,9 @@ __all__ = []
 class OutputListing(object):
     """Handling of a model configuration output listing."""
 
-    patterns = {'end_is_reached': '*** END CNT0 ***', }
+    patterns = {'end_is_reached': ['*** END CNT0 ***',
+                                   '| PGD ENDS CORRECTLY |'],
+                }
 
     def __init__(self, filename, pattern_type):
         """
@@ -51,7 +53,7 @@ class OutputListing(object):
     def look_for_end(self):
         """Is the end reached in listing ?"""
         for line in self.lines:
-            if self.patterns['end_is_reached'] in line:
+            if any([p in line for p in self.patterns['end_is_reached']]):
                 self.end_is_reached = True
                 break
         return self.end_is_reached

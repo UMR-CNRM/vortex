@@ -218,7 +218,7 @@ class ArpifsListingsFormatAdapter(footprints.FootprintBase):
         if self._end_is_reached is None:
             self._end_is_reached = False
             for line in self.lines:
-                if listings.OutputListing.patterns['end_is_reached'] in line:
+                if any([p in line for p in listings.OutputListing.patterns['end_is_reached']]):
                     self._end_is_reached = True
                     break
         return self._end_is_reached
