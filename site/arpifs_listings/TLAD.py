@@ -22,9 +22,9 @@ class ADTest(object):
     Handle results of the test of the adjoint from a listing.
 
     The resulting attribute *score* is close to a "number of different digits"
-    in the comparison of < F(X) , Y > and < X , F*(Y) >, so the closest to 0 is
-    the best.
-    It is actually computed as the log10(|< F(X) , Y >-< X , F*(Y) >|/epsilon)
+    in the comparison of :literal:`< F(X) , Y >` and :literal:`< X , F*(Y) >`, so the
+    closest to 0 is the best.
+    It is actually computed as the :literal:`log10(|< F(X) , Y >-< X , F*(Y) >|/epsilon)`
     where epsilon is the zero of the machine.
     """
 
@@ -94,8 +94,8 @@ class TLTest(object):
     fields.
     Then, the largest the score, the best the test is .
 
-    Scores are actually computed as int(round(-log10(|1.0-RAT|))) where RAT is the
-    ratio computed in the TL test, RAT = (M(x+dx)-M(x))/M'(dx).
+    Scores are actually computed as :literal:`int(round(-log10(|1.0-RAT|)))`
+    where RAT is the ratio computed in the TL test, :literal:`RAT = (M(x+dx)-M(x))/M'(dx)`.
     """
 
     signature = 'TEST OF THE TANGENT LINEAR'
@@ -106,8 +106,10 @@ class TLTest(object):
     p_ratio = re.compile(p_ratio)
 
     def __init__(self, source):
-        """:param source: may be either a filename or a list of lines."""
-        self.ratios = {la:{} for la in range(-10, 1)}
+        """
+        :param source: may be either a filename or a list of lines.
+        """
+        self.ratios = {la: {} for la in range(-10, 1)}
         self.ratios_per_id = {}
         self.scores_per_id = {}
         self.best_score_per_id = {}
@@ -138,7 +140,7 @@ class TLTest(object):
                         if fld in ratios.keys():
                             ratios[fld][gridpoint] = ratio
                         else:
-                            ratios[fld] = {gridpoint:ratio}
+                            ratios[fld] = {gridpoint: ratio}
                         j += 1
                     else:  # end of ratios prints
                         break
@@ -147,14 +149,14 @@ class TLTest(object):
         # a) sort
         lambdas = sorted(self.ratios.keys())
         flds = self.ratios[lambdas[0]].keys()
-        gridpoints = {f:[] for f in flds}
+        gridpoints = {f: [] for f in flds}
         for f in flds:
             gridpoints[f] = self.ratios[lambdas[0]][f].keys()
         ids = []
         for f in flds:
             for g in gridpoints[f]:
                 ids.append((f, g))
-        self.ratios_per_id = {i:{} for i in ids}
+        self.ratios_per_id = {i: {} for i in ids}
         for i in ids:
             for l in lambdas:
                 self.ratios_per_id[i][l] = self.ratios[l][i[0]][i[1]]
@@ -166,11 +168,11 @@ class TLTest(object):
             else:
                 s = max(0., -math.log(abs(1. - float(x)), 10))
             return s
-        self.scores_per_id = {i:{l:score(self.ratios_per_id[i][l])
-                                 for l in lambdas}
+        self.scores_per_id = {i: {l: score(self.ratios_per_id[i][l])
+                                  for l in lambdas}
                               for i in ids}
 
-        self.best_score_per_id = {i:max(self.scores_per_id[i].values())
+        self.best_score_per_id = {i: max(self.scores_per_id[i].values())
                                   for i in ids}
         self.score = min(self.score,
                          min([s for s in self.best_score_per_id.values()
@@ -184,8 +186,8 @@ class TLTest(object):
                   'yellow', 'salmon', 'black']
         linestyles = ['-', '--', '-.', ':']
         variables = sorted(set([i[0] for i in self.scores_per_id.keys()]))
-        cmap = {v:colors[i] for i, v in enumerate(variables)}
-        gridpoints = {v:[i[1] for i in self.scores_per_id.keys() if i[0] == v]
+        cmap = {v: colors[i] for i, v in enumerate(variables)}
+        gridpoints = {v: [i[1] for i in self.scores_per_id.keys() if i[0] == v]
                       for v in variables}
         labels = [(k, v[0]) for k, v in gridpoints.items()]
         M = 0
@@ -193,7 +195,7 @@ class TLTest(object):
             x = sorted(self.scores_per_id[i].keys())
             y = [self.scores_per_id[i][l]for l in x]
             M = int(math.ceil(max(M, max(y))))
-            plot_kwargs = {'color':cmap[i[0]]}
+            plot_kwargs = {'color': cmap[i[0]]}
             if i in labels:
                 plot_kwargs['label'] = i[0]
             ax.plot(x, y, **plot_kwargs)

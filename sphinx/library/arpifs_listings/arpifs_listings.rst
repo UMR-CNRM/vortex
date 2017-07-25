@@ -8,6 +8,11 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 1.0.2
 
+Modules
+-------
+
+* :mod:`arpifs_listings.TLAD`
+
 Included Modules
 ----------------
 
@@ -20,3 +25,5 @@ Function
 --------
 
 .. autofunction:: compare_files
+
+.. autofunction:: show_TL_test

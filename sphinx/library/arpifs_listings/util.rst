@@ -31,3 +31,7 @@ Functions
 .. autofunction:: find_line_containing
 
 .. autofunction:: number_of_different_digits
+
+.. autofunction:: read_listing
+
+.. autofunction:: set_figax
