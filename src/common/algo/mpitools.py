@@ -68,12 +68,13 @@ class MpiAuto(mpitools.MpiTool):
     def setup(self, opts=None):
         """Ensure that the prefixcommand has the execution rights."""
         super(MpiAuto, self).setup(opts)
-        prefix_c = self._reshaped_mpiopts().get('prefixcommand', None)
-        if prefix_c is not None:
-            if self.system.path.exists(prefix_c):
-                self.system.xperm(prefix_c, force=True)
-            else:
-                raise IOError('The prefixcommand do not exists.')
+        for bin_obj in self.binaries:
+            prefix_c = bin_obj.options.get('prefixcommand', None)
+            if prefix_c is not None:
+                if self.system.path.exists(prefix_c):
+                    self.system.xperm(prefix_c, force=True)
+                else:
+                    raise IOError('The prefixcommand do not exists.')
 
 
 class MpiNWP(mpitools.MpiBinaryBasic):
