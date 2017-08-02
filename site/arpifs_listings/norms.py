@@ -317,7 +317,8 @@ class NormsComparison(object):
         Or worst of the worst of 'both'.
         """
         if ntype == 'both':
-            worst = max(self.sp_comp.values() + self.gp_comp.values())
+            worst = max(list(self.sp_comp.values()) +
+                        list(self.gp_comp.values()))
         elif ntype == 'spectral':
             worst = max(self.sp_comp.values())
         elif ntype == 'gridpoint':
