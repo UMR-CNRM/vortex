@@ -17,9 +17,11 @@ Contents
 .. toctree::
    :maxdepth: 1
 
+   Getting Started <gettingstarted>
    User Guide (in French) <french/index>
    Technical Documentation <technical/index>
-   Standard Library <library/index>
+   Site Packages Standard Libraries <library/siteindex>
+   The Vortex Standard Library <library/index>
    Glossary <dico>
 
 Extras
@@ -29,7 +31,6 @@ Extras
    :maxdepth: 1
 
    List of default geometries <geometries>
-   table
    checkreport
    notebooks/index
    Vortex-Help <_static/vortex-help/index.html#http://>

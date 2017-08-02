@@ -1,4 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-__all__ = [ 'resources' ]
+import algo
+import data
+
+__all__ = []

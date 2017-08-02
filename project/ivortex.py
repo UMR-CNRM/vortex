@@ -7,6 +7,7 @@ import logging
 import os
 import shlex
 import shutil
+import sys
 import tempfile
 
 from IPython.core.magic import (Magics, magics_class, line_magic)
@@ -66,6 +67,11 @@ class VortexMagics(Magics):
         if self._session is None:
             import footprints
             import vortex
+            try:
+                # Reset the flush interval to a value compatible by IPython
+                sys.stdout.flush_interval = 2
+            except AttributeError:
+                sys.stderr.write('Unable to set an unbuffered stdout stream.')
             import common  # @UnusedImport
             import olive  # @UnusedImport
             fpx = footprints.proxy
