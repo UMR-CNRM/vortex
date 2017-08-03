@@ -211,10 +211,6 @@ class Handler(object):
             self.container.write('')
             self._empty = False
         if self.complete:
-            print 'DBUG'
-            print self.container.filled
-            print self.stage
-            print self._contents
             if self.container.filled or self.stage == 'put':
                 if self._contents is None:
                     self._contents = self.resource.contents_handler(datafmt=self.container.actualfmt)
