@@ -21,7 +21,33 @@ _OP_files_common = dict(alp=['OPlisteo', 'OPlistem', 'OPlisteml', 'OPclim', 'OPN
 _OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSAP', 'OPSAN']
 
 
+class SurfexWorker(VortexWorkerBlindRun):
 
+    _abstract  = True
+    _footprint = dict(
+        attr = dict(
+            date = a_date,
+            terms = dict(
+                type = footprints.FPList,
+            ),
+            vconf = dict(),
+            subdir = dict(
+                info = 'work in this particular subdirectory',
+                optional = True
+            ),
+        )
+    )
+
+
+class OfflineWorker(SurfexWorker):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['OFFLINE']
+            ),
+        )
+    )
 
 class SafranWorker(VortexWorkerBlindRun):
 
