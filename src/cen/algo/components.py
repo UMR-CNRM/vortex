@@ -432,7 +432,8 @@ class S2M_component(ParaBlindRun):
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
         namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind=('namelist_surfex'))]
-        print self.context.sequence.effective_inputs()
+        for x in self.context.sequence.effective_inputs():
+            print dir(x.rh)
         self.system.subtitle('Namelist candidates')
         print namcandidates
         for nam in namcandidates:
