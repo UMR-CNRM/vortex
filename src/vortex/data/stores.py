@@ -1026,6 +1026,7 @@ class ArchiveStore(Store):
                 rhandler    = options.get('rhandler', None),
                 source      = tempo(local),
                 destination = rpath,
+                original    = self.system.path.abspath(local),
                 cpipeline   = ('' if self._actual_cpipeline is None
                                else self._actual_cpipeline.description_string)
             )
@@ -1110,8 +1111,11 @@ class ConfigurableArchiveStore(object):
         for remotecfg in [conf['host'][k] for k in remotecfgs]:
             logger.info("Reading config file: %s", remotecfg)
             url = net.uriparse(remotecfg)
-            tempstore = footprints.proxy.store(scheme = url['scheme'], netloc = url['netloc'],
-                                               storetrack = False)
+            tempstore = footprints.proxy.store(
+                scheme=url['scheme'],
+                netloc=url['netloc'],
+                storetrack=False,
+            )
             retry = False
             # First, try with a temporary ShouldFly
             try:
@@ -1407,13 +1411,13 @@ class CacheStore(Store):
     def _get_cache(self):
         if not self._cache:
             self._cache = footprints.proxy.caches.default(
-                kind        = self.underlying_cache_kind,
-                storage     = self.hostname,
-                rootdir     = self.rootdir,
-                headdir     = self.headdir,
-                rtouch      = self.rtouch,
-                rtouchskip  = self.rtouchskip,
-                readonly    = self.readonly
+                kind       = self.underlying_cache_kind,
+                storage    = self.hostname,
+                rootdir    = self.rootdir,
+                headdir    = self.headdir,
+                rtouch     = self.rtouch,
+                rtouchskip = self.rtouchskip,
+                readonly   = self.readonly
             )
             self._caches_object_stack.add(self._cache)
         return self._cache
@@ -1451,13 +1455,13 @@ class CacheStore(Store):
         rc = self.cache.retrieve(
             remote['path'],
             local,
-            intent              = options.get('intent', _CACHE_GET_INTENT_DEFAULT),
-            fmt                 = options.get('fmt'),
-            info                = options.get('rhandler', None),
-            tarextract          = options.get('auto_tarextract', False),
-            dirextract          = options.get('auto_dirextract', False),
-            uniquelevel_ignore  = options.get('uniquelevel_ignore', True),
-            silent              = options.get('silent', False),
+            intent             = options.get('intent', _CACHE_GET_INTENT_DEFAULT),
+            fmt                = options.get('fmt'),
+            info               = options.get('rhandler', None),
+            tarextract         = options.get('auto_tarextract', False),
+            dirextract         = options.get('auto_dirextract', False),
+            uniquelevel_ignore = options.get('uniquelevel_ignore', True),
+            silent             = options.get('silent', False),
         )
         return rc and self._hash_get_check(self.incacheget, remote, local, options)
 
@@ -1709,9 +1713,9 @@ class PromiseStore(footprints.FootprintBase):
 
         # Find a store for the promised resources
         self.promise = footprints.proxy.store(
-            scheme = self.proxyscheme,
-            netloc = self.prstorename,
-            storetrack = self.storetrack,
+            scheme=self.proxyscheme,
+            netloc=self.prstorename,
+            storetrack=self.storetrack,
         )
         if self.promise is None:
             logger.critical('Could not find store scheme <%s> netloc <%s>',
@@ -1720,9 +1724,9 @@ class PromiseStore(footprints.FootprintBase):
 
         # Find the other "real" store (could be a multi-store)
         self.other = footprints.proxy.store(
-            scheme = self.proxyscheme,
-            netloc = self.netloc,
-            storetrack = self.storetrack,
+            scheme=self.proxyscheme,
+            netloc=self.netloc,
+            storetrack=self.storetrack,
         )
         if self.other is None:
             logger.critical('Could not find store scheme <%s> netloc <%s>', self.proxyscheme, self.netloc)
