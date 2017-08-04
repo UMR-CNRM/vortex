@@ -72,7 +72,7 @@ class SurfexWorker(VortexWorkerBlindRun):
         #A MODIFIER
         liste_massifs = infomassifs().dicArea["alpes"]
         
-        f = forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, xrange(0,9), [0, 20, 40])
+        f = forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, [0, 20, 40], xrange(0,9))
         
         for namelist in self.find_namelists():
             # Update the contents of the namelist (date and location)
