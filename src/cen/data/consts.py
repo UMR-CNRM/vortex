@@ -60,9 +60,6 @@ class NamelistSurfex(Namelist):
     def realkind(self):
         return 'surfex_namelist'
        
-    def realkind(self):
-        return 'surfex_namelist'
-       
     def contents_handler(self,**kw):
         self.clscontents(self.date)
         
