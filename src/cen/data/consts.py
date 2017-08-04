@@ -63,3 +63,25 @@ class NamelistSurfex(Namelist):
     def contents_handler(self,**kw):
         self.clscontents(self.date)
         
+        
+class PGD(GenvStaticGeoResource):
+    
+    _footprint = dict(
+        info = 'Ground description file used by  SURFEX.',
+        attr = dict(
+            kind = dict(
+                values = [ 'pgd', 'PGD' ],
+            ),
+            nativefmt = dict(
+                values  = ['ascii'],
+                default = 'ascii',
+            ),
+            gvar = dict(
+                default = '[kind]',
+            ),
+        )
+    )
+    
+    @property   
+    def realkind(self):
+        return 'PGD'

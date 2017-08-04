@@ -188,6 +188,9 @@ class Prep(InitialCondition):
             fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
+    def origin_basename(self):
+        return 'prep' + self.date.yymdh
+
 
 class Pro(Historic):
     """Class for the SURFEX-Crocus simulated snowpack."""
