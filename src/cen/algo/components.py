@@ -40,7 +40,9 @@ class SurfexWorker(VortexWorkerBlindRun):
         )
     )
 
-
+    def __init__(self, *kargs, **kwargs):
+        super(SurfexWorker, self).__init__(*kargs, **kwargs)
+        
     def vortex_task(self, **kw):
         rdict = dict(rc=True)
         rundir = self.system.getcwd()
