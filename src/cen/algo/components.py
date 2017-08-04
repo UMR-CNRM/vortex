@@ -63,6 +63,8 @@ class SurfexWorker(VortexWorkerBlindRun):
             self.system.symlink(self.system.path.join(rundir, 'PGD.txt'), 'PGD.txt')
         if not self.system.path.exists('PREP.txt'):
             self.system.symlink(self.system.path.join(rundir, 'PREP.txt'), 'PREP.txt')
+        if not self.system.path.exists('METADAT.xml'):
+            self.system.symlink(self.system.path.join(rundir, 'METADAT.xml'), 'METADAT.xml')
         
         for namelist in self.find_namelists():
             # Update the contents of the namelist (date and location)
