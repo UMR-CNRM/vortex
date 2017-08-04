@@ -50,7 +50,9 @@ class SopranoDevProvider(Provider):
                     values   = ['scp', 'rcp', 'ftp'],
                     default  = 'ftp'
                 ),
-                suite = a_suite,
+                suite = dict(
+                    optional = True,
+                ),
                 config = dict(
                     type     = CenCfgParser,
                     optional = True,
@@ -98,6 +100,8 @@ class SopranoDevProvider(Provider):
             info['level_two']   = 'neb/n' + season + suffix
         elif resource.realkind == 'guess':
             info['level_two']   = 'p' + season + suffix
+        elif resource.realkind == 'prep':
+            info['level_two']   = 'prep' + season + suffix
         
         info['level_three'] = resource.date.ymd           
  
