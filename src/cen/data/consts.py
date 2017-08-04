@@ -47,7 +47,7 @@ class NamelistSurfex(Namelist):
             info = 'Namelist for SURFEX',
             attr = dict(
                 kind = dict(
-                    values   = ['namelist_surfex']
+                    values   = ['surfex_namelist']
                 ),
                 clscontents = dict(
                     default  = SurfexNamelistUpdate
@@ -56,7 +56,9 @@ class NamelistSurfex(Namelist):
         )
     ]
        
+    def realkind(self):
+        return 'surfex_namelist'
+       
     def contents_handler(self,**kw):
-        
         self.clscontents(self.date)
         
