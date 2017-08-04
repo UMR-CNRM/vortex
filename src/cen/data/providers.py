@@ -42,8 +42,7 @@ class SopranoDevProvider(Provider):
             attr = dict(
                 namespace = dict(
                     values   = ['guppy.meteo.fr', 'dev.soprano.fr'],
-                    optinal  = False,
-                    #default  = 'dev.soprano.fr'
+                    optio7nal  = False,
                 ),
                 tube = dict(
                     optional = True,
@@ -100,7 +99,7 @@ class SopranoDevProvider(Provider):
             info['level_two']   = 'neb/n' + season + suffix
         elif resource.realkind == 'guess':
             info['level_two']   = 'p' + season + suffix
-        elif resource.realkind == 'prep':
+        elif resource.realkind == 'snowpackstate':
             info['level_two']   = 'prep' + season + suffix
         
         info['level_three'] = resource.date.ymd           
