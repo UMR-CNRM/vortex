@@ -7,6 +7,8 @@ from __future__ import division
 __all__ = []
 
 from collections import defaultdict
+from shutil import copyfile
+
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -39,6 +41,54 @@ class SurfexWorker(VortexWorkerBlindRun):
     )
 
 
+    def vortex_task(self, **kw):
+        rdict = dict(rc=True)
+        rundir = self.system.getcwd()
+
+        if self.subdir is not None:
+            thisdir = self.system.path.join(rundir, self.subdir)
+            with self.system.cdcontext(self.subdir, create=True):
+                self._surfex_commons(rundir, thisdir, rdict)
+        else:
+            thisdir = rundir
+            self._surfex_commons(rundir, thisdir, rdict)
+
+        return rdict
+    
+    
+    def _surfex_commons(self, rundir, thisdir, rdict):
+        if not self.system.path.exists('OPTIONS.nam'):
+            # Copy the NAMELIST as it is to be updated
+            copyfile(self.system.path.join(rundir, 'OPTIONS.nam'), 'OPTIONS.nam')
+        if not self.system.path.exists('PGD.txt'):
+            self.system.symlink(self.system.path.join(rundir, 'PGD.txt'), 'PGD.txt')
+        if not self.system.path.exists('PREP.txt'):
+            self.system.symlink(self.system.path.join(rundir, 'PREP.txt'), 'PREP.txt')
+        
+        for namelist in self.find_namelists():
+            # Update the contents of the namelist (date and location)
+            # Location taken in the FORCING file.
+            namelist.resource.clscontents(self.date)
+            
+        self._surfex_task(rundir, thisdir, rdict)
+
+
+    def check_mandatory_resources(self, rdict, filenames):
+        pass 
+    
+    def _surfex_task(self, rundir, thisdir, rdict):
+        """The piece of code specific to a SURFEX submodule does here."""
+        raise NotImplementedError() 
+    
+    def find_namelists(self, opts=None):
+        """Find any namelists candidates in actual context inputs."""
+        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind=('namelist', 'surfex_namelist'))]
+        self.system.subtitle('Namelist candidates')
+        for nam in namcandidates:
+            nam.quickview()
+        return namcandidates
+
+
 class OfflineWorker(SurfexWorker):
 
     _footprint = dict(
@@ -48,6 +98,12 @@ class OfflineWorker(SurfexWorker):
             ),
         )
     )
+
+
+    def _surfex_task(self, rundir, thisdir, rdict):
+        list_name = self.system.path.join(thisdir, 'offline.out')
+        self.local_spawn(list_name)
+
 
 class SafranWorker(VortexWorkerBlindRun):
 
@@ -428,23 +484,6 @@ class S2M_component(ParaBlindRun):
         )
     )
 
-
-    def find_namelists(self, opts=None):
-        """Find any namelists candidates in actual context inputs."""
-        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind=('namelist', 'surfex_namelist'))]
-        self.system.subtitle('Namelist candidates')
-        for nam in namcandidates:
-            nam.quickview()
-        return namcandidates
-
-    def _default_pre_execute(self, rh, opts):
-        '''Various initialisations. In particular it creates the task scheduler (Boss).'''
-        # Start the task scheduler
-        super(S2M_component, self)._default_pre_execute(rh, opts)
-        for namelist in self.find_namelists():
-            # Update the contents of the namelist (date and location)
-            # Location taken in the FORCING file.
-            namelist.resource.clscontents(self.date)
 
     def _default_common_instructions(self, rh, opts):
         '''Create a common instruction dictionary that will be used by the workers.'''
