@@ -159,9 +159,8 @@ class Prep(InitialCondition):
                 values  = ['SnowpackState'],
                 ),
                 nativefmt = dict(
-                    values = ['netcdf', 'nc'],
+                    values = ['ascii', 'netcdf', 'nc'],
                     default = 'netcdf',
-                    remap = dict(autoremap = 'first'),
                 ),
                 origin = dict(
                     default = None,
@@ -175,7 +174,7 @@ class Prep(InitialCondition):
         )
     ]
 
-    _extension_remap = dict(netcdf='nc')
+    _extension_remap = dict(netcdf='nc', ascii='txt')
 
     @property
     def realkind(self):
@@ -185,7 +184,7 @@ class Prep(InitialCondition):
         return dict(
             radical = self.realkind,
             geo     = self.geometry.area,
-            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
+            fmt     = self._extension_remap.get(self.nativefmt),
         )
 
     def origin_basename(self):

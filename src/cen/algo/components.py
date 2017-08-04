@@ -39,17 +39,14 @@ class SurfexWorker(VortexWorkerBlindRun):
             ),
         )
     )
-
-    def __init__(self, *kargs, **kwargs):
-        super(SurfexWorker, self).__init__(*kargs, **kwargs)
         
     def vortex_task(self, **kw):
         rdict = dict(rc=True)
         rundir = self.system.getcwd()
-
         if self.subdir is not None:
             thisdir = self.system.path.join(rundir, self.subdir)
             with self.system.cdcontext(self.subdir, create=True):
+                print self.context
                 self._surfex_commons(rundir, thisdir, rdict)
         else:
             thisdir = rundir
@@ -84,7 +81,7 @@ class SurfexWorker(VortexWorkerBlindRun):
     
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
-        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind=('namelist', 'surfex_namelist'))]
+        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind='surfex_namelist')]
         self.system.subtitle('Namelist candidates')
         for nam in namcandidates:
             nam.quickview()
@@ -100,7 +97,6 @@ class OfflineWorker(SurfexWorker):
             ),
         )
     )
-
 
     def _surfex_task(self, rundir, thisdir, rdict):
         list_name = self.system.path.join(thisdir, 'offline.out')
@@ -419,7 +415,6 @@ class Grib2SafranWorker(VortexWorkerBlindRun):
 
     def vortex_task(self, **kw):
         rdict = dict(rc=True)
-        print 'DBUG'
         print self.subdir
         if self.subdir is not None:
             with self.system.cdcontext(self.subdir, create=True):
