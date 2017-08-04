@@ -17,10 +17,13 @@ from vortex.tools.date import Time
 from vortex.syntax.stdattrs import a_date
 from vortex.algo.components import ParaBlindRun, ParaExpresso
 from vortex.tools.parallelism import VortexWorkerBlindRun
+from snowtools.tools.change_forcing import forcinput_select
+from snowtools.utils.infomassifs import infomassifs
 
 _OP_files_common = dict(alp=['OPlisteo', 'OPlistem', 'OPlisteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat'],
                         pyr=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat'],)
 _OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSAP', 'OPSAN']
+
 
 
 class SurfexWorker(VortexWorkerBlindRun):
@@ -63,8 +66,13 @@ class SurfexWorker(VortexWorkerBlindRun):
             self.system.symlink(self.system.path.join(rundir, 'PGD.txt'), 'PGD.txt')
         if not self.system.path.exists('PREP.txt'):
             self.system.symlink(self.system.path.join(rundir, 'PREP.txt'), 'PREP.txt')
-        if not self.system.path.exists('METADAT.xml'):
-            self.system.symlink(self.system.path.join(rundir, 'METADAT.xml'), 'METADAT.xml')
+        if not self.system.path.exists('METADATA.xml'):
+            self.system.symlink(self.system.path.join(rundir, 'METADATA.xml'), 'METADATA.xml')
+        
+        #A MODIFIER
+        liste_massifs = infomassifs().dicArea["alpes"]
+        
+        f = forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, xrange(0,9), [0, 20, 40])
         
         for namelist in self.find_namelists():
             # Update the contents of the namelist (date and location)
