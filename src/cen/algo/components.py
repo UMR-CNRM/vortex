@@ -431,21 +431,16 @@ class S2M_component(ParaBlindRun):
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
-        namcandidates = [x.rh for x in self.context.sequence.effective_inputs()]
-        namselect=list()
+        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind='surfex_namelist')]
         self.system.subtitle('Namelist candidates')
-        print namcandidates
         for nam in namcandidates:
-            if nam.resource.kind == 'namelist_surfex':
-                nam.quickview()
-                namselect.append(nam)
-        return namselect
+            nam.quickview()
+        return namcandidates
 
     def _default_pre_execute(self, rh, opts):
         '''Various initialisations. In particular it creates the task scheduler (Boss).'''
         # Start the task scheduler
         super(S2M_component, self)._default_pre_execute(rh, opts)
-        print 'DBUG2'
         for namelist in self.find_namelists():
             # Update the contents of the namelist (date and location)
             # Location taken in the FORCING file.
@@ -461,7 +456,6 @@ class S2M_component(ParaBlindRun):
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
-        print 'DBUG1'
         self._default_pre_execute(rh, opts)
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)
