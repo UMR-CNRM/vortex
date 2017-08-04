@@ -42,7 +42,7 @@ class SopranoDevProvider(Provider):
             attr = dict(
                 namespace = dict(
                     values   = ['guppy.meteo.fr', 'dev.soprano.fr'],
-                    optio7nal  = False,
+                    optional  = False,
                 ),
                 tube = dict(
                     optional = True,
