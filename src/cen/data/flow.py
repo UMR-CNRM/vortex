@@ -62,7 +62,7 @@ class SafranGuess(GeoFlowResource):
         #origin_date = self.date.replace(hour=0)
         #return 'P' + origin_date.yymdh + '_{0:02d}'.format(self.term.hour + 6)
         # guess files are named PYYMMDDHH
-        return 'P' + date.yymdh
+        return 'P' + self.date.yymdh
  
 
 # TO be continued...
