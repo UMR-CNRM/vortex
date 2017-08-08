@@ -79,6 +79,7 @@ import copy
 import os
 from pickle import PickleError
 import subprocess
+from multiprocessing.queues import Empty
 
 import footprints
 from footprints import FootprintBase, proxy as fpx
@@ -541,7 +542,7 @@ class Boss(object):
                 # B. listen to workers
                 try:
                     reported = self.workers_messenger.get(timeout=communications_timeout)
-                except mpc.queues.Empty:
+                except Empty:
                     pass
                 else:
                     # got a new message from workers !
