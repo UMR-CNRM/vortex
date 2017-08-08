@@ -101,9 +101,7 @@ class SopranoDevProvider(Provider):
             info['level_two']   = 'p' + season + suffix
         elif resource.realkind == 'snowpackstate':
             info['level_two']   = 'prep' + season + suffix
-        
-        info['level_three'] = resource.date.ymd           
- 
+         
         logger.debug('sopranodevprovider::pathname info %s', info)
         self.config.setall(info)
         return self.config.resolvedpath(resource, self.vapp, self.vconf, 'guppy')

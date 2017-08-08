@@ -58,9 +58,11 @@ class SafranGuess(GeoFlowResource):
         )
 
     def origin_basename(self):
-        origin_date = self.date.replace(hour=0)
-        # guess files are named PYYMMDDHH_hh where YYMMDDHH is the creation date and hh the echeance
-        return 'P' + origin_date.yymdh + '_{0:02d}'.format(self.term.hour + 6)
+        # guess files could be named PYYMMDDHH_hh where YYMMDDHH is the creation date and hh the echeance
+        #origin_date = self.date.replace(hour=0)
+        #return 'P' + origin_date.yymdh + '_{0:02d}'.format(self.term.hour + 6)
+        # guess files are named PYYMMDDHH
+        return 'P' + date.yymdh
  
 
 # TO be continued...
