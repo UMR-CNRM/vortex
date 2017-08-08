@@ -200,7 +200,7 @@ class Pro(Historic):
             info = 'SURFEX-Crocus Snowpack simulation',
             attr = dict(
                 kind = dict(
-                values  = ['SnowpackSimulation', 'pro'],
+                    values  = ['SnowpackSimulation', 'pro'],
                 ),
                 nativefmt = dict(
                     values = ['netcdf', 'nc'],
@@ -242,8 +242,9 @@ class Synop(ObsRaw):
             info = 'SAFRAN S-files (SYNOP observations)',
             attr = dict(
                 kind = dict(
-                values  = ['synop'],
+                    values  = ['synop'],
                 ),
+                realdate = a_date,
             ),
         ),
     ]
@@ -253,7 +254,7 @@ class Synop(ObsRaw):
         return 'synop'
     
     def origin_basename(self):
-        return 'S' + self.date.yymdh
+        return 'S' + self.realdate.yymdh
        
         
 class Precipitation(ObsRaw):
@@ -284,7 +285,7 @@ class HourlyObs(ObsRaw):
             info = 'SAFRAN T-files (hourly observations)',
             attr = dict(
                 kind = dict(
-                values  = ['hourlyobs'],
+                    values  = ['hourlyobs'],
                 ),
             ),
         ),
@@ -305,8 +306,9 @@ class RadioSondage(ObsRaw):
             info = 'SAFRAN A-files (radiosondages)',
             attr = dict(
                 kind = dict(
-                values  = ['radiosondage'],
+                    values  = ['radiosondage'],
                 ),
+                realdate = a_date,
             ),
         ),
     ]
@@ -316,7 +318,7 @@ class RadioSondage(ObsRaw):
         return 'radiosondage'
     
     def origin_basename(self):
-        return 'A' + self.date.yymdh
+        return 'A' + self.realdate.yymdh
     
 
 class Nebulosity(ObsRaw):
@@ -326,7 +328,7 @@ class Nebulosity(ObsRaw):
             info = 'SAFRAN N-files (nebulosity)',
             attr = dict(
                 kind = dict(
-                values  = ['nebulosity'],
+                    values  = ['nebulosity'],
                 ),
             ),
         ),
