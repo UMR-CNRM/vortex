@@ -31,7 +31,7 @@ class List(GenvStaticGeoResource):
                 default = 'ascii',
             ),
             gvar = dict(
-                default = '[kind]',
+                default = '[kind]_[vconf]',
             ),
         )
     )
