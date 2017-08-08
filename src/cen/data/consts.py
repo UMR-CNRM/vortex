@@ -33,6 +33,9 @@ class List(GenvStaticGeoResource):
             gvar = dict(
                 default = '[kind]_[vconf]',
             ),
+            vconf = dict(
+                values = ['alp', 'pyr', 'cor']
+            ),
         )
     )
 
