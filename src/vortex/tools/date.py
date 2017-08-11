@@ -540,12 +540,12 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return self.strftime('%y%m%d%H')
     
     @property
-    def yymd6h(self):
-        return self(hour=6).strftime('%y%m%d%H')
-
-    @property
     def ymdh(self):
         return self.strftime('%Y%m%d%H')
+
+    @property
+    def ymd6h(self):
+        return self(hours=6).strftime('%Y%m%d%H')
 
     @property
     def ymdhm(self):
