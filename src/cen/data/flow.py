@@ -13,6 +13,12 @@ from vortex.data.geometries  import MassifGeometry
 from common.data.modelstates import Historic, InitialCondition
 from vortex.syntax.stdattrs  import a_date, term
 
+
+class DateError(ValueError):
+    """General content error."""
+    pass
+
+
 class SafranGuess(GeoFlowResource):
     """Class for the guess file (P ou E file) that is used by SAFRAN."""
 
@@ -62,48 +68,10 @@ class SafranGuess(GeoFlowResource):
         #origin_date = self.date.replace(hour=0)
         #return 'P' + origin_date.yymdh + '_{0:02d}'.format(self.term.hour + 6)
         # guess files are named PYYMMDDHH
-        return 'P' + self.date.yymdh
- 
-
-# TO be continued...
-# class SafranRadioSondages(Observations):
-#     """Alti files (A files)"""
-# 
-#     _footprint = dict(
-#         info = 'Safran Alti',
-#         attr = dict(
-#             kind = dict(
-#                 values = ['alti', 'altitude', 'radiosondage', 'RS'],
-#             ),
-#             nativefmt = dict(
-#                 values  = ['ascii'],
-#                 default = 'ascii',
-#             ),
-#             part = dict(
-#                 info     = 'The name of this subset of observations.',
-#                 optional = True,
-#                 values   = ['full', 'all'],
-#                 default  = 'all',
-#             ),
-#             stage = dict(
-#                 info     = 'The processing stage for this subset of observations.',
-#                 optional = True,
-#                 stage    = ['safrane', 'analysis'],
-#                 default  = 'analysis',
-#             ),
-#         )
-#     )
-# 
-#     @property
-#     def realkind(self):
-#         return 'radiosondage'
-# 
-#     def basename_info(self):
-#         return dict(
-#             radical = self.realkind,
-#             src = '.'.join(self.stage, self.part),
-#             fmt = self.nativefmt,
-#         )
+        if self.realtime.hours in [0, 6, 12, 18]:
+            return 'P' + self.date.yymdh
+        else:
+            raise DateError('SAFRAN guess are synoptic, therefore the hour must be 0, 6, 12 or 18')
 
 
 class SurfaceForcing(GeoFlowResource):
@@ -256,8 +224,10 @@ class Synop(ObsRaw):
         return 'synop'
     
     def origin_basename(self):
-        return 'S' + self.realdate.yymdh
-       
+        if self.realtime.hours in [0, 6, 12, 18]:
+            return 'S' + self.realdate.yymdh
+        else:
+            raise DateError('SAFRAN S-files are synoptic, therefore the hour must be 0, 6, 12 or 18')
         
 class Precipitation(ObsRaw):
 
@@ -277,8 +247,10 @@ class Precipitation(ObsRaw):
         return 'precipitation'
     
     def origin_basename(self):
-        return 'R' + self.date.yymdh
-        
+        if self.realtime.hours == 6:
+            return 'R' + self.date.yymdh
+        else:
+            raise DateError('SAFRAN R-files are daily, therefore the hour must be 6')
         
 class HourlyObs(ObsRaw):
 
@@ -298,7 +270,10 @@ class HourlyObs(ObsRaw):
         return 'hourlyobs'
     
     def origin_basename(self):
-        return 'T' + self.date.yymdh
+        if self.realtime.hours == 6:
+            return 'T' + self.date.yymdh
+        else:
+            raise DateError('SAFRAN T-files are daily, therefore the hour must be 6')
     
         
 class RadioSondage(ObsRaw):
@@ -320,7 +295,10 @@ class RadioSondage(ObsRaw):
         return 'radiosondage'
     
     def origin_basename(self):
-        return 'A' + self.realdate.yymdh
+        if self.realtime.hours in [0, 6, 12, 18]:
+            return 'A' + self.realdate.yymdh
+        else:
+            raise DateError('SAFRAN A-files are synoptic, therefore the hour must be 0, 6, 12 or 18')
     
 
 class Nebulosity(ObsRaw):
@@ -341,5 +319,9 @@ class Nebulosity(ObsRaw):
         return 'nebulosity'
     
     def origin_basename(self):
-        return 'N' + self.date.yymdh
+        if self.realtime.hours == 6:
+            return 'N' + self.date.yymdh
+        else:
+            raise DateError('SAFRAN N-files are daily, therefore the hour must be 6')
+        
 
