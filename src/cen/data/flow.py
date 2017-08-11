@@ -68,7 +68,7 @@ class SafranGuess(GeoFlowResource):
         #origin_date = self.date.replace(hour=0)
         #return 'P' + origin_date.yymdh + '_{0:02d}'.format(self.term.hour + 6)
         # guess files are named PYYMMDDHH
-        if self.realtime.hours in [0, 6, 12, 18]:
+        if self.date.hours in [0, 6, 12, 18]:
             return 'P' + self.date.yymdh
         else:
             raise DateError('SAFRAN guess are synoptic, therefore the hour must be 0, 6, 12 or 18')
@@ -224,7 +224,7 @@ class Synop(ObsRaw):
         return 'synop'
     
     def origin_basename(self):
-        if self.realtime.hours in [0, 6, 12, 18]:
+        if self.realdate.hours in [0, 6, 12, 18]:
             return 'S' + self.realdate.yymdh
         else:
             raise DateError('SAFRAN S-files are synoptic, therefore the hour must be 0, 6, 12 or 18')
@@ -247,7 +247,7 @@ class Precipitation(ObsRaw):
         return 'precipitation'
     
     def origin_basename(self):
-        if self.realtime.hours == 6:
+        if self.date.hours == 6:
             return 'R' + self.date.yymdh
         else:
             raise DateError('SAFRAN R-files are daily, therefore the hour must be 6')
@@ -270,7 +270,7 @@ class HourlyObs(ObsRaw):
         return 'hourlyobs'
     
     def origin_basename(self):
-        if self.realtime.hours == 6:
+        if self.date.hours == 6:
             return 'T' + self.date.yymdh
         else:
             raise DateError('SAFRAN T-files are daily, therefore the hour must be 6')
@@ -295,7 +295,7 @@ class RadioSondage(ObsRaw):
         return 'radiosondage'
     
     def origin_basename(self):
-        if self.realtime.hours in [0, 6, 12, 18]:
+        if self.realdate.hours in [0, 6, 12, 18]:
             return 'A' + self.realdate.yymdh
         else:
             raise DateError('SAFRAN A-files are synoptic, therefore the hour must be 0, 6, 12 or 18')
@@ -319,7 +319,7 @@ class Nebulosity(ObsRaw):
         return 'nebulosity'
     
     def origin_basename(self):
-        if self.realtime.hours == 6:
+        if self.date.hours == 6:
             return 'N' + self.date.yymdh
         else:
             raise DateError('SAFRAN N-files are daily, therefore the hour must be 6')
