@@ -21,10 +21,11 @@ from snowtools.tools.change_forcing import forcinput_select
 from snowtools.utils.infomassifs import infomassifs
 
 _OP_files_common = dict(alp=['OPlisteo', 'OPlistem', 'OPlisteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat'],
-                        pyr=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat'],)
+                        pyr=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat'],
+                        cor=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat'],)
 _OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSAP', 'OPSAN']
 
-
+_dic_area = dict(alp="alpes", pyr="pyrenees", cor="corse")
 
 class SurfexWorker(VortexWorkerBlindRun):
 
@@ -69,8 +70,8 @@ class SurfexWorker(VortexWorkerBlindRun):
         if not self.system.path.exists('METADATA.xml'):
             self.system.symlink(self.system.path.join(rundir, 'METADATA.xml'), 'METADATA.xml')
         
-        #A MODIFIER
-        liste_massifs = infomassifs().dicArea["alpes"]
+        area = _dict_area[self.vconf.split('@')[0]]
+        liste_massifs = infomassifs().dicArea[area]
         
         f = forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, ["0", "20", "40"], xrange(0,9))
         
