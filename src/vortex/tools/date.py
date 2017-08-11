@@ -545,7 +545,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
 
     @property
     def ymd6h(self):
-        return self(hours=6).strftime('%Y%m%d%H')
+        return self.replace(hour=6).strftime('%Y%m%d%H')
 
     @property
     def ymdhm(self):
