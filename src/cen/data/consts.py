@@ -24,7 +24,7 @@ class List(GenvStaticGeoResource):
         attr = dict(
             kind = dict(
                 values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml',
-                          'rsclim', 'icrccm', 'NORELot', 'NORELmt'],
+                          'rsclim', 'icrccm', 'NORELot', 'NORELmt', 'blacklist'],
             ),
             nativefmt = dict(
                 values  = ['ascii'],
