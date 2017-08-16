@@ -10,8 +10,9 @@ from __future__ import division, print_function, absolute_import
 
 import footprints
 from vortex.algo.components import AlgoComponent, Expresso, BlindRun
-from vortex.syntax.stdattrs import a_date, a_term
+from vortex.syntax.stdattrs import a_date
 from vortex.tools.systems import ExecutionError
+from vortex.tools.date import Time
 from vortex.util.structs import FootprintCopier
 from common.tools.bdap import BDAPrequest_actual_command, BDAPGetError, BDAPRequestConfigurationError
 from common.tools.bdm import BDMGetError, BDMRequestConfigurationError, BDMError
@@ -38,7 +39,10 @@ class GetBDAPResource(AlgoComponent):
                 optional = True,
                 values = ['OPER', 'INTE'],
             ),
-            term = a_term,
+            terms = dict(
+                info = "A forecast term or a list of terms (rangex will be used to expand the string)",
+                alias = ('term', )
+            ),
             command = dict(
                 default = 'dap3',
                 optional =True,
@@ -66,32 +70,34 @@ class GetBDAPResource(AlgoComponent):
         rc_all = True
 
         for input_query in input_queries:
-            # Launch each input queries in a dedicated file
-            # (to check that the files do not overwrite each other)
-            query_file = input_query.rh.container.abspath
-            local_directory = '_'.join([query_file, self.date.ymdhms, self.term.fmtraw])
+            for term in [Time(t) for t in footprints.util.rangex(self.terms)]:
 
-            with self.system.cdcontext(local_directory, create=True):
-                # Determine the command to be launched
-                actual_command = BDAPrequest_actual_command(command = self.command,
-                                                            date = self.date,
-                                                            term = self.term,
-                                                            query = query_file,
-                                                            int_extraenv = int_bdap)
-                logger.info(' '.join(['BDAP extract command:', actual_command]))
-                logger.info('The %s directive file contains:', query_file)
-                self.system.cat(query_file, output=False)
-                # Launch the BDAP request
-                rc = self.system.spawn([actual_command, ], shell = True, output = False, fatal = False)
+                # Launch each input queries in a dedicated file
+                # (to check that the files do not overwrite each other)
+                query_file = input_query.rh.container.abspath
+                local_directory = '_'.join([query_file, self.date.ymdhms, term.fmtraw])
 
-            if not rc:
-                logger.exception('Problem during the BDAP request of %s.', query_file)
-                if self.system.path.isfile('DIAG_BDAP'):
-                    raise BDAPRequestConfigurationError
-                else:
-                    raise BDAPGetError
+                with self.system.cdcontext(local_directory, create=True):
+                    # Determine the command to be launched
+                    actual_command = BDAPrequest_actual_command(command = self.command,
+                                                                date = self.date,
+                                                                term = term,
+                                                                query = query_file,
+                                                                int_extraenv = int_bdap)
+                    logger.info(' '.join(['BDAP extract command:', actual_command]))
+                    logger.info('The %s directive file contains:', query_file)
+                    self.system.cat(query_file, output=False)
+                    # Launch the BDAP request
+                    rc = self.system.spawn([actual_command, ], shell = True, output = False, fatal = False)
 
-            rc_all = rc_all and rc
+                if not rc:
+                    logger.exception('Problem during the BDAP request of %s.', query_file)
+                    if self.system.path.isfile('DIAG_BDAP'):
+                        raise BDAPRequestConfigurationError
+                    else:
+                        raise BDAPGetError
+
+                rc_all = rc_all and rc
 
         if not rc_all:
             logger.exception('Problem during the BDAP request.')
