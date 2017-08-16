@@ -47,9 +47,7 @@ class BDAPQuery(Query):
                 values  = ['bdap'],
                 optional = True
             ),
-            source = dict(
-                values   = ['dir_sea_ice', 'dir_SST'],
-            ),
+            source = dict(),
         )
     )
 
