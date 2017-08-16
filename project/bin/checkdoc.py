@@ -69,6 +69,8 @@ def rstcreate(rstf, modname):
         '-------',
         '',
     ]
+    if not os.path.exists(os.path.dirname(rstf)):
+        os.makedirs(os.path.dirname(rstf))
     with open(rstf, 'w') as fdoc:
         for docline in newdoc:
             fdoc.write(docline + "\n")
