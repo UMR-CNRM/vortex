@@ -25,6 +25,7 @@ _OP_files_common = dict(alp=['OPlisteo', 'OPlistem', 'OPlisteml', 'OPclim', 'OPN
                         cor=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat', 'OPnoir'],)
 _OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSAP', 'OPSAN']
 
+_dic_area = dict(alp="alpes", pyr="pyrenees", cor="corse")
 
 class SurfexWorker(VortexWorkerBlindRun):
 
@@ -69,7 +70,7 @@ class SurfexWorker(VortexWorkerBlindRun):
         if not self.system.path.exists('METADATA.xml'):
             self.system.symlink(self.system.path.join(rundir, 'METADATA.xml'), 'METADATA.xml')
         
-        area = self.vconf
+        area = _dic_area[self.vconf]
         liste_massifs = infomassifs().dicArea[area]
         
         f = forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, ["0", "20", "40"], xrange(0,9))
