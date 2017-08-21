@@ -8,7 +8,7 @@ __all__ = []
 
 from collections import defaultdict
 from shutil import copyfile
-
+import sys
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -41,6 +41,9 @@ class SurfexWorker(VortexWorkerBlindRun):
                 info = 'work in this particular subdirectory',
                 optional = True
             ),
+            name = dict(
+                default = '[kind]',
+            ),
         )
     )
         
@@ -50,10 +53,14 @@ class SurfexWorker(VortexWorkerBlindRun):
         if self.subdir is not None:
             thisdir = self.system.path.join(rundir, self.subdir)
             with self.system.cdcontext(self.subdir, create=True):
+                sys.stdout = open(self.name + ".out", "a", buffering=0)
+                sys.stderr = open(self.name + "_error.out", "a", buffering=0)
                 print self.context
                 self._surfex_commons(rundir, thisdir, rdict)
         else:
             thisdir = rundir
+            sys.stdout = open(self.name + ".out", "a", buffering=0)
+            sys.stderr = open(self.name + "_error.out", "a", buffering=0)
             self._surfex_commons(rundir, thisdir, rdict)
 
         return rdict
@@ -69,7 +76,11 @@ class SurfexWorker(VortexWorkerBlindRun):
             self.system.symlink(self.system.path.join(rundir, 'PREP.txt'), 'PREP.txt')
         if not self.system.path.exists('METADATA.xml'):
             self.system.symlink(self.system.path.join(rundir, 'METADATA.xml'), 'METADATA.xml')
-        
+        if not self.system.path.exists("ecoclimapI_covers_param.bin"):
+            self.system.symlink(self.system.path.join(rundir, "ecoclimapI_covers_param.bin"), "ecoclimapI_covers_param.bin")
+        if not self.system.path.exists("ecoclimapII_eu_covers_param.bin"):
+            self.system.symlink(self.system.path.join(rundir, "ecoclimapII_eu_covers_param.bin"), "ecoclimapII_eu_covers_param.bin")
+            
         area = _dic_area[self.vconf]
         liste_massifs = infomassifs().dicArea[area]
         
@@ -92,7 +103,7 @@ class SurfexWorker(VortexWorkerBlindRun):
     
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
-        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind='surfex_namelist')]
+        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind='OPTIONS.nam')]
         self.system.subtitle('Namelist candidates')
         for nam in namcandidates:
             nam.quickview()
@@ -133,14 +144,18 @@ class SafranWorker(VortexWorkerBlindRun):
                 info = 'work in this particular subdirectory',
                 optional = True
             ),
+            name = dict(
+                default = '[kind]',
+            ),
         )
     )
 
     def __init__(self, *kargs, **kwargs):
         super(SafranWorker, self).__init__(*kargs, **kwargs)
         self._actual_terms = None
-        self._days = None
+        self._days = None    
 
+            
     @property
     def actual_terms(self):
         if self._actual_terms is None:
@@ -187,9 +202,13 @@ class SafranWorker(VortexWorkerBlindRun):
         if self.subdir is not None:
             thisdir = self.system.path.join(rundir, self.subdir)
             with self.system.cdcontext(self.subdir, create=True):
+                sys.stdout = open(self.name + ".out", "a", buffering=0)
+                sys.stderr = open(self.name + "_error.out", "a", buffering=0)
                 self._safran_commons(rundir, thisdir, rdict)
         else:
             thisdir = rundir
+            sys.stdout = open(self.name + ".out", "a", buffering=0)
+            sys.stderr = open(self.name + "_error.out", "a", buffering=0)
             self._safran_commons(rundir, thisdir, rdict)
 
         return rdict
