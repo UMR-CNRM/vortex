@@ -34,6 +34,7 @@ Extras
    checkreport
    notebooks/index
    Vortex-Help <_static/vortex-help/index.html#http://>
+   Developer Training (in French) <training_dev_fr> 
 
 .. toctree::
    :maxdepth: 1

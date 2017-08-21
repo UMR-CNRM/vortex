@@ -56,11 +56,11 @@ export FOOTPRINT_DOCSTRINGS
 # -------------
 # Build targets
 
-all: html  # HTML documentation is obviously the default
+all: trainings $(NOTEBOOKS) html  # HTML documentation is obviously the default
 
 # No dependency check for the following targets (always execute them)
-.PHONY: all full-check miss-check $(CHECKREPORT) html clean \
-        clean-$(NOTEBOOKS) $(XMLEXPORTDIR)
+.PHONY: all full-check miss-check $(CHECKREPORT) trainings html \
+        clean clean-$(NOTEBOOKS) clean-trainings $(XMLEXPORTDIR)
 
 
 # Create rst files for new modules and check all of the aspects
@@ -81,25 +81,33 @@ $(CHECKREPORT):
 $(GEOLIST): $(GEOLIST_DEP)
 	$(PYTHON) $(GENEDOC) --geometry $(GEOLIST)
 
-# Build the notebooks export
-$(NOTEBOOKS): $(NOTEBOOKS_DEP)
-	rm -rf $(NOTEBOOKS)
-	$(NBOOKEXPORT) -v -o $(NOTEBOOKS) $(NOTEBOOKS_IN)
-
 # Do the Footprint's XML export (used in vortex-help)
 $(XMLEXPORTDIR):
 	mkdir -p $(XMLEXPORTDIR)
 	$(PYTHON) $(XMLEXPORT) -a -f xml -o $(XMLEXPORTDIR)/tbinterface
 
+# Build the notebooks export
+$(NOTEBOOKS): $(NOTEBOOKS_DEP)
+	rm -rf $(NOTEBOOKS)
+	$(NBOOKEXPORT) -v -o $(NOTEBOOKS) $(NOTEBOOKS_IN)
+
+# Build the training material
+trainings:
+	$(MAKE) -C training_dev_fr all
+
 # Build the html documentation
-html: $(CHECKREPORT) $(GEOLIST) $(NOTEBOOKS) $(XMLEXPORTDIR)
+html: $(CHECKREPORT) $(GEOLIST) $(XMLEXPORTDIR)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+
+# Clean the training material
+clean-trainings:
+	$(MAKE) -C training_dev_fr clean
 
 # Clean the notebooks
 clean-$(NOTEBOOKS):
 	rm -rf $(NOTEBOOKS)
 
 # Clean the build directory and the automatically generated rst files. 
-clean: clean-$(NOTEBOOKS)
+clean: clean-$(NOTEBOOKS) clean-trainings
 	rm -rf $(BUILDDIR) $(XMLEXPORTDIR)
 	rm -f $(CHECKREPORT) $(GEOLIST)
