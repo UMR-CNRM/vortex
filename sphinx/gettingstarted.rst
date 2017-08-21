@@ -7,7 +7,7 @@ Introduction
 ************
 
 Vortex (**V**\ersatile **O**\bjects **R**\ounded-up in a **T**\oolbox for **E**\nvironmental e **X**\periments)
-is a software package designed ti run simple to complex numerical workloads an a
+is a software package designed to run simple to complex numerical workloads an a
 large variety of systems. 
 
 
@@ -33,6 +33,10 @@ Vortex can help with:
 * Running complex programs (but also very simple scripts);
 * Communicating with the outside world (by providing tools acting as gateways to external services);
 * Creating tasks and jobs using a templating system.
+
+Although Vortex has initially been created to run Numerical Weather Prediction
+on a super-computer, it is generic enough to be used with other kinds of workloads
+and servers.
 
 In the following five sub-sections, we will have a closer look to each of these
 key features. 
@@ -105,7 +109,7 @@ Recording what's been done and more generally session management
 ================================================================
 
 Inside the toolbox, it is often useful to know which files have been fetched
-(to act accordingly), which file have been sent (too avoid sending it
+(to act accordingly), which file have been sent (to avoid sending it
 twice), which environment variables are currently being used (in order to make temporary
 changes), ... Moreover, it's frequently needed to access basic system functions, 
 to check user permissions and so on.
@@ -136,8 +140,8 @@ The :class:`~vortex.sessions.Ticket` object gives access to many interesting obj
   like object methods without worrying of the underlying Operating System.
 * The current active :class:`vortex.layout.contexts.Context` object (accessible
   through the :attr:`~vortex.sessions.Ticket.context` property). Within a 
-  session, several :class:`~vortex.layout.contexts.Context` object might exist
-  (since Contexts may have sub-Contexts) but there only one active Context at
+  session, several :class:`~vortex.layout.contexts.Context` objects might exist
+  (since Contexts may have sub-Contexts) but there is only one active Context at
   a time.
 
 The main purpose of the :class:`~vortex.layout.contexts.Context` objects is to
@@ -184,10 +188,6 @@ usually enough:
    lxgmap45
    >>> ctx = t.context  # Getting the active context
    >>> print 'There are {:d} environment variables in the current env'.format(len(ctx.env))
-   There are 117 environment variables in the current env
-   >>> # The current active environment can also be accessed directly from the session's ticket
-   ... # (This is just a shortcut) 
-   ... print 'There are {:d} environment variables in the current env'.format(len(t.env))
    There are 117 environment variables in the current env
 
 .. seealso::
@@ -281,8 +281,7 @@ Here is a short introduction to this management tool :
   :class:`~vortex.layout.jobs.JobAssistant` will be used to setup the session,
   actions, and the system that will subsequently be used to do the actual
   work. It is also in charge of handling Python's exception that may be raised
-  during the execution. The :class:`~vortex.layout.jobs.JobAssistant` class
-  behaviour can be altered using plugins (deriving from :class:`vortex.layout.jobs.JobAssistantPlugin`).
+  during the execution.
 * Once the :class:`~vortex.layout.jobs.JobAssistant`'s setup is done, a 
   :class:`vortex.layout.nodes.Driver` object will be created. It is in charge
   of running sequentially one or more "tasks" (or "families" of tasks).
@@ -390,14 +389,28 @@ is used to create Resource, Provider, Container and AlgoComponent objects.
 .. seealso::
 
    * A user documentation in french: :ref:`overview-footprints`
+   * In Vortex, the footprint's catalogue of available *resources*, *providers*, *containers*
+     and *algo-componnents* is browsable with `Vortex-Help <_static/vortex-help/index.html#http://>`_
 
 .. _getting-started-example:
 
 Introductory example
 ********************
 
-This example is presented in an IPython notebook (the presentation looks more 
-appealing), please follow this link: :ref:`nbook-00_getting_started`.
+This is a first example of a Python’s script using Vortex :
+
+* It doesn't use the Vortex job management system (it would be to complex 
+  for a first example);
+* The explanations above are not enough to understand every bits of this 
+  script: try not to focus to much on the technicalities but instead look for
+  the general concepts;
+* It should run on any workstation with Vortex installed and a configured FTP
+  access to Meteo-France’s mass archive (``.netrc`` file with a
+  ``hendrix.meteo.fr`` entry):
+* For clarity sake, this example is presented in a Jupyter's notebook. 
+  However, it should also run in a raw Python’s script
+
+Please follow this link to view the example's Notebook: :ref:`nbook-00_getting_started`.
 
 Migrating to Vortex
 *******************
