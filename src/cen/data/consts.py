@@ -44,13 +44,13 @@ class List(GenvStaticGeoResource):
         return 'safran_namelist'
 
 
-class NamelistSurfex(Namelist):
+class Metadata(Namelist):
     _footprint = [
         dict(
             info = 'Namelist for SURFEX',
             attr = dict(
                 kind = dict(
-                    values   = ['surfex_namelist']
+                    values   = ['metadata', 'metadata.xml', 'METADATA', 'METADATA.xml']
                 ),
                 clscontents = dict(
                     default  = SurfexNamelistUpdate
@@ -61,8 +61,28 @@ class NamelistSurfex(Namelist):
     
     @property
     def realkind(self):
-        return 'surfex_namelist'
-       
+        return 'METADATA.xml'
+    
+    
+class Options(Namelist):
+    _footprint = [
+        dict(
+            info = 'Namelist for SURFEX',
+            attr = dict(
+                kind = dict(
+                    values   = ['options', 'options.nam', 'OPTIONS', 'OPTIONS.nam']
+                ),
+                clscontents = dict(
+                    default  = SurfexNamelistUpdate
+                ),
+            )
+        )
+    ]
+    
+    @property
+    def realkind(self):
+        return 'OPTIONS.nam'
+    
     def contents_handler(self,**kw):
         self.clscontents(self.date)
         
@@ -88,3 +108,25 @@ class PGD(GenvStaticGeoResource):
     @property   
     def realkind(self):
         return 'PGD'
+    
+    
+class Ecoclimap(GenvStaticGeoResource):
+    
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = [ "ecoclimapI",  "ecoclimapII"],
+            ),
+            nativefmt = dict(
+                values  = ['bin'],
+                default = 'bin',
+            ),
+            gvar = dict(
+                default = '[kind]',
+            ),
+        )
+    )
+    
+    @property   
+    def realkind(self):
+        return 'ecoclimap'
