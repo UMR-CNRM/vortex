@@ -250,7 +250,7 @@ class SafranWorker(VortexWorkerBlindRun):
             d.write((self.date + term).strftime('%y,%m,%d,%H\n'))
             d.write('0,0,0\n')
             d.write('3,1,3,3\n')
-            d.write('0\n')
+            d.write('1\n')
             d.write('1,1,0,0,1\n')
 
 
