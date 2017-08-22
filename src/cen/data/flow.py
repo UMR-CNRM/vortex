@@ -112,7 +112,7 @@ class SurfaceForcing(GeoFlowResource):
             radical = self.realkind,
             geo     = self.geometry.area,
             src     = self.model,
-            term    = self.term.fmthm,
+            term    = self.term.fmthour,
             fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
