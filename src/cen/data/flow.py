@@ -60,7 +60,7 @@ class SafranGuess(GeoFlowResource):
             radical = self.realkind,
             geo     = self.geometry.area,
             src     = self.source_app,
-            term    = self.term.fmthm,
+            term    = self.term.fmthour,
         )
 
     def origin_basename(self):
@@ -201,7 +201,7 @@ class Pro(Historic):
         return dict(
             radical = self.realkind,
             geo     = self.geometry.area,
-            term    = self.term.fmthm,
+            term    = self.term.fmthour,
             fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
