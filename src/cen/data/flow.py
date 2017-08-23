@@ -31,7 +31,7 @@ class SafranGuess(GeoFlowResource):
                     values = ['guess'],
                 ),
                 nativefmt = dict(
-                    values  = ['ascii'],
+                    values  = ['ascii', 'txt'],
                     default = 'ascii',
                 ),
                 model = dict(
@@ -50,7 +50,9 @@ class SafranGuess(GeoFlowResource):
 
         )
     ]
-
+    
+    _extension_remap = dict(ascii='txt')
+    
     @property
     def realkind(self):
         return 'guess'
@@ -61,6 +63,7 @@ class SafranGuess(GeoFlowResource):
             geo     = self.geometry.area,
             src     = self.source_app,
             term    = self.term.fmthour,
+            fmt     = self._extension_remap.get(self.nativefmt),
         )
 
     def origin_basename(self):
