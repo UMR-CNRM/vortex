@@ -511,6 +511,11 @@ class S2M_component(ParaBlindRun):
         )
     )
 
+    def prepare(self, rh, opts):
+        """Set some variables according to target definition."""
+        super(S2M_component, self).prepare(rh, opts)
+        self.env.DR_HOOK_NOT_MPI = 1
+
 
     def _default_common_instructions(self, rh, opts):
         '''Create a common instruction dictionary that will be used by the workers.'''
