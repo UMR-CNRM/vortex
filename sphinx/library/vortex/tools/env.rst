@@ -8,9 +8,8 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.1
 
-.. todo::
+.. seealso:: :ref:`env-interface` (detailed description + some examples).
 
-      Nothing written for :mod:`vortex.tools.env` handling yet !
 
 Module data
 -----------
@@ -30,11 +29,6 @@ Interface functions
 
 Classes
 -------
-
-.. autoclass:: ShellEncoder
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
 .. autoclass:: Environment
    :show-inheritance:

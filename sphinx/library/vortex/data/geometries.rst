@@ -8,11 +8,14 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.2.2
 
+.. seealso:: :ref:`geo_list`
+
 
 Package
 -------
 
 .. autodata:: __all__
+
 
 Module interface
 ----------------
@@ -25,32 +28,11 @@ Module interface
 
 .. autofunction:: items
 
-.. autofunction:: load
-
 .. autofunction:: grep
 
-Classes
--------
 
-.. autoclass:: Geometry
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: CombinedGeometry
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: HorizontalGeometry
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: VerticalGeometry
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
+Concrete geometry classes
+-------------------------
 
 .. autoclass:: GaussGeometry
    :show-inheritance:
@@ -66,18 +48,52 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
-.. autoclass:: UnstructuredGeometry
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-   
+
 .. autoclass:: CurvlinearGeometry
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: MassifGeometry
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+
+Abstract geometry classes
+-------------------------
+
+.. autoclass:: Geometry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: HorizontalGeometry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VerticalGeometry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: UnstructuredGeometry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+
+Currently unused geometry classes
+---------------------------------
+
+.. autoclass:: CombinedGeometry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+Utility function
+----------------
+
+.. autofunction:: load
+   

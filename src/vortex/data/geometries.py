@@ -1,21 +1,81 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
+"""
+This module contains the definition of all the Geometry objects widely in
+Vortex's resources description. Geometry objects rely on the
+:class:`footprints.util.GetByTag` class.
+
+When this module is first imported, pre-defined geometries are automatically
+created using:
+
+    * The ``geometries.ini`` file from the Vortex's distribution ``conf`` directory
+    * The ``geometries.ini`` file located in the user's configuration directory
+      (usually ``$HOME/.vortexrc``). (This file may be missing)
+
+Additional Geometry objects can be manually created by the user provided that
+the ``new=True`` argument is given to the desired class constructor (otherwise
+an exception will be raised).
+
+To retrieve and browse an already defined geometry, please use the module's
+interface methods, :func:`get`, :func:`keys`, :func:`values` and :func:`items`::
+
+    >>> from vortex.data import geometries
+    >>> print geometries.get(tag="global798")
+    <vortex.data.geometries.GaussGeometry | tag='global798' id='ARPEGE T798 stretched-rotated geometry' t=798 c=2.4>
+
+It is also possible to retrieve an existing geometry using the :class:`Geometry`
+class constructor::
+
+    >>> print geometries.Geometry("global798")
+    <vortex.data.geometries.GaussGeometry | tag='global798' id='ARPEGE T798 stretched-rotated geometry' t=798 c=2.4>
+
+To build a new geometry, you need to pick the concrete geometry class that fits
+your needs. Currently available concrete geometries are:
+
+    * :class:`GaussGeometry` (Global gaussian grid)
+    * :class:`ProjectedGeometry` (Any grid defined by a geographical projection, e.g. lambert, ...)
+    * :class:`LonlatGeometry` (That's pretty obvious)
+    * :class:`CurvlinearGeometry` (Curvlinear grid)
+    * :class:`MassifGeometry` (Partition of a mountain range in massifs)
+
+For example, let's build a new gaussian grid::
+
+    >>> geometries.GaussGeometry(tag='global2198',  # The geometry's nickname #doctest: +ELLIPSIS
+    ...                          info='My own gaussian geometry',
+    ...                          truncation=2198,  # The linear truncation
+    ...                          stretching=2.1, area='France',  # 2.1 stretching over France
+    ...                          new=True)  # Mandatory to create new geometries
+    <vortex.data.geometries.GaussGeometry object at 0x...>
+    >>> print geometries.Geometry("global2198")
+    <vortex.data.geometries.GaussGeometry | tag='global2198' id='My own gaussian geometry' t=2198 c=2.1>
+
+(From that moment on, the new geometry is available globally in Vortex)
+
+Each geometry has its own attributes: please refers to each of the concrete
+class documentation for more details.
+"""
+
 
 import re
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.util.config import GenericConfigParser
 
+logger = footprints.loggers.getLogger(__name__)
+
+#: No automatic export
+__all__ = []
+
+
 # Module Interface
 
-
 def get(**kw):
-    """Return actual geometry object matching description."""
+    """Return actual geometry object matching description.
+
+    :param str tag: The name of the wanted geometry
+    """
     return Geometry(**kw)
 
 
@@ -34,28 +94,6 @@ def items():
     return Geometry.tag_items()
 
 
-def load(inifile='@geometries.ini', refresh=False, verbose=True):
-    """Load a set of pre-defined geometries from a configuration file."""
-    iniconf = GenericConfigParser(inifile)
-    for item in iniconf.sections():
-        gdesc = dict(iniconf.items(item))
-        gkind = gdesc.get('kind')
-        try:
-            thisclass = [x for x in Geometry.tag_classes()
-                         if x.__name__.lower().startswith(gkind.lower())].pop()
-        except IndexError:
-            raise AttributeError('Kind={:s} is unknown (for geometry [{:s}])'.format(gkind, item))
-        if verbose:
-            print '+ Load', item.ljust(16), 'as', thisclass
-        if refresh:
-            # Always recreate the Geometry...
-            thisclass(tag=item, new=True, **gdesc)
-        else:
-            # Only create new geometries
-            if item not in Geometry.tag_keys():
-                thisclass(tag=item, new=True, **gdesc)
-
-
 def grep(**kw):
     """Grep items that match the set of attributes given as named arguments."""
     okmatch = list()
@@ -70,12 +108,21 @@ def grep(**kw):
     return okmatch
 
 
+# Abstract geometry classes
+
 class Geometry(footprints.util.GetByTag):
     """Abstract geometry."""
 
     _tag_implicit_new = False
 
     def __init__(self, **kw):
+        """
+        :param str tag: The geometry's name (if no **tag** attributes is provided,
+            the first positional attribute is considered to be the tag name)
+        :param str info: A free description of the geometry
+
+        .. note:: This is an abstract class, do not instantiate.
+        """
         self.info    = 'anonymous'
         self.inifile = None
         self.__dict__.update(kw)
@@ -98,25 +145,19 @@ class Geometry(footprints.util.GetByTag):
         return 'kind={:s}'.format(self.kind)
 
 
-class CombinedGeometry(Geometry):
-    """Combine horizontal and vertical geometry."""
-
-    _tag_topcls = False
-
-    def __init__(self, **kw):
-        self.hgeo = None
-        self.vgeo = None
-        super(CombinedGeometry, self).__init__(**kw)
-        self.kind = 'combined'
-        logger.debug('Combined Geometry init %s %s', str(self), str(kw))
-
-
 class VerticalGeometry(Geometry):
-    """Handle vertical geometry description."""
+    """Handle vertical geometry description (not used at the present time)."""
 
     _tag_topcls = False
 
     def __init__(self, **kw):
+        """
+        :param str tag: The geometry's name (if no **tag** attributes is provided,
+            the first positional attribute is considered to be the tag name)
+        :param str info: A free description of the geometry
+
+        .. note:: This is an abstract class, do not instantiate.
+        """
         super(VerticalGeometry, self).__init__(**kw)
         self.kind = 'vertical'
         logger.debug('Abstract Vertical Geometry init %s %s', str(self), str(kw))
@@ -128,6 +169,14 @@ class HorizontalGeometry(Geometry):
     _tag_topcls = False
 
     def __init__(self, **kw):
+        """
+        :param str tag: The geometry's name (if no **tag** attributes is provided,
+            the first positional attribute is considered to be the tag name)
+        :param str info: A free description of the geometry
+        :param bool lam: Is it a limited area geometry (as opposed to global)
+
+        .. note:: This is an abstract class, do not instantiate.
+        """
         desc = dict(
             info = 'anonymous',
             area = None,
@@ -168,10 +217,12 @@ class HorizontalGeometry(Geometry):
 
     @property
     def gam(self):
+        """Is it a global geometry ?"""
         return not self.lam
 
     @property
     def rnice(self):
+        """Returns a string with a nice representation of the resolution (if sensible)."""
         if self.runit is not None:
             if self.runit == 'km':
                 res = '{0:05.2f}'.format(self.resolution)
@@ -181,9 +232,9 @@ class HorizontalGeometry(Geometry):
         else:
             return 'Unknown Resolution'
 
-    def anonymous_info(self, *args):
+    def anonymous_info(self, *args):  # @UnusedVariable
         """Try to build a meaningful information from an anonymous geometry."""
-        return '{0:s}, {1:s}'.format(self.area, self.rnice)
+        return '{0!s}, {1:s}'.format(self.area, self.rnice)
 
     def __str__(self):
         """Very short presentation."""
@@ -214,7 +265,7 @@ class HorizontalGeometry(Geometry):
         return card
 
     def strheader(self):
-        """Return beginning of formatted print representation."""
+        """Return the beginning of the formatted print representation."""
         header = '{0:s}.{1:s} | tag=\'{2}\' id=\'{3:s}\''.format(
             self.__module__,
             self.__class__.__name__,
@@ -226,12 +277,46 @@ class HorizontalGeometry(Geometry):
         return header
 
 
+# Combined geometry (not used at the present time)
+
+class CombinedGeometry(Geometry):
+    """Combine horizontal and vertical geometry (not used at the present time)."""
+
+    _tag_topcls = False
+
+    def __init__(self, **kw):
+        """
+        :param str tag: The geometry's name (if no **tag** attributes is provided,
+            the first positional attribute is considered to be the tag name)
+        :param str info: A free description of the geometry
+        :param HorizontalGeometry hgeo: An horizontal geometry
+        :param VerticalGeometry vgeo: A vertical geometry
+        """
+        self.hgeo = None
+        self.vgeo = None
+        super(CombinedGeometry, self).__init__(**kw)
+        self.kind = 'combined'
+        logger.debug('Combined Geometry init %s %s', str(self), str(kw))
+
+
+# Concrete geometry classes
+
 class GaussGeometry(HorizontalGeometry):
     """Gaussian grid (stretched or not, rotated or not)."""
 
     _tag_topcls = False
 
     def __init__(self, **kw):
+        """
+        :param str tag: The geometry's name (if no **tag** attributes is provided,
+            the first positional attribute is considered to be the tag name)
+        :param str info: A free description of the geometry
+        :param int truncation: The linear truncation
+        :param float stretching: The stretching factor (1. for an unstretched grid)
+        :param str area: The location of the pole of interest (when stretching > 1.)
+
+        .. note:: Gaussian grids are always global grids.
+        """
         super(GaussGeometry, self).__init__(**kw)
         self.kind = 'gauss'
         logger.debug('Gauss Geometry init %s', str(self))
@@ -260,6 +345,15 @@ class ProjectedGeometry(HorizontalGeometry):
     _tag_topcls = False
 
     def __init__(self, **kw):
+        """
+        :param str tag: The geometry's name (if no **tag** attributes is provided,
+            the first positional attribute is considered to be the tag name)
+        :param str info: A free description of the geometry
+        :param bool lam: Is it a limited area grid (*True* by default)
+        :param int|float resolution: The grid's resolution
+        :param str runit: The unit of the resolution (km, ...) (km by default)
+        :param str area: The grid location (needed if **lam** is *True*)
+        """
         kw.setdefault('runit', 'km')
         super(ProjectedGeometry, self).__init__(**kw)
         self.kind = 'projected'
@@ -289,6 +383,17 @@ class LonlatGeometry(HorizontalGeometry):
     _tag_topcls = False
 
     def __init__(self, **kw):
+        """
+        :param str tag: The geometry's name (if no **tag** attributes is provided,
+            the first positional attribute is considered to be the tag name)
+        :param str info: A free description of the geometry
+        :param bool lam: Is it a limited area grid (*True* by default)
+        :param int|float resolution: The grid's resolution
+        :param str runit: The unit of the resolution (deg, ...) (deg by default)
+        :param int nlon: The number of longitude points in the grid
+        :param int nlat: The number of latitude points in the grid
+        :param str area: The grid location (needed if **lam** is *True*)
+        """
         kw.setdefault('runit', 'dg')
         super(LonlatGeometry, self).__init__(**kw)
         self.kind = 'lonlat'
@@ -312,7 +417,15 @@ class UnstructuredGeometry(HorizontalGeometry):
 
     _tag_topcls = False
 
-    def __init__(self, *args, **kw):
+    def __init__(self, *args, **kw):  # @UnusedVariable
+        """
+        :param str tag: The geometry's name (if no **tag** attributes is provided,
+            the first positional attribute is considered to be the tag name)
+        :param str info: A free description of the geometry
+        :param bool lam: Is it a limited area geometry (as opposed to global)
+
+        .. note:: This is an abstract class, do not instantiate.
+        """
         super(UnstructuredGeometry, self).__init__(**kw)
         self.kind = 'unstructured'
         logger.debug('Unstructured Geometry init %s', str(self))
@@ -323,10 +436,20 @@ class UnstructuredGeometry(HorizontalGeometry):
 
 
 class CurvlinearGeometry(UnstructuredGeometry):
+    """Curvlinear grid."""
 
     _tag_topcls = False
 
-    def __init__(self, *args, **kw):
+    def __init__(self, *args, **kw):  # @UnusedVariable
+        """
+        :param str tag: The geometry's name (if no **tag** attributes is provided,
+            the first positional attribute is considered to be the tag name)
+        :param str info: A free description of the geometry
+        :param bool lam: Is it a limited area grid (*True* by default)
+        :param int ni: The number of longitude points in the grid
+        :param int nj: The number of latitude points in the grid
+        :param str area: The grid location (needed if **lam** is *True*)
+        """
         super(CurvlinearGeometry, self).__init__(**kw)
         self.kind = 'curvlinear'
 
@@ -345,10 +468,18 @@ class CurvlinearGeometry(UnstructuredGeometry):
 
 
 class MassifGeometry(UnstructuredGeometry):
+    """Grid describing the partition of a mountain range in massifs."""
 
     _tag_topcls = False
 
-    def __init__(self, *args, **kw):
+    def __init__(self, *args, **kw):  # @UnusedVariable
+        """
+        :param str tag: The geometry's name (if no **tag** attributes is provided,
+            the first positional attribute is considered to be the tag name)
+        :param str info: A free description of the geometry
+        :param int nmassif: The number of massifs in this grid
+        :param str area: The grid location
+        """
         super(MassifGeometry, self).__init__(**kw)
         self.kind = 'massif'
 
@@ -362,5 +493,32 @@ class MassifGeometry(UnstructuredGeometry):
         fmts = 'kind={0:s}, area={1:s}, massif count={2!s}'
         return fmts.format(self.kind, self.area, self.nmassif)
 
-# Load default geometries
+
+# Load default geometries when the module is first imported
+
+def load(inifile='@geometries.ini', refresh=False, verbose=True):
+    """Load a set of pre-defined geometries from a configuration file.
+
+    The class that will be instantiated depends on the "kind" keyword..
+    """
+    iniconf = GenericConfigParser(inifile)
+    for item in iniconf.sections():
+        gdesc = dict(iniconf.items(item))
+        gkind = gdesc.get('kind')
+        try:
+            thisclass = [x for x in Geometry.tag_classes()
+                         if x.__name__.lower().startswith(gkind.lower())].pop()
+        except IndexError:
+            raise AttributeError('Kind={:s} is unknown (for geometry [{:s}])'.format(gkind, item))
+        if verbose:
+            print '+ Load', item.ljust(16), 'as', thisclass
+        if refresh:
+            # Always recreate the Geometry...
+            thisclass(tag=item, new=True, **gdesc)
+        else:
+            # Only create new geometries
+            if item not in Geometry.tag_keys():
+                thisclass(tag=item, new=True, **gdesc)
+
+
 load(verbose=False)

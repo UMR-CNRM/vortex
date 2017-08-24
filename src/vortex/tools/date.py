@@ -2,17 +2,24 @@
 # -*- coding:Utf-8 -*-
 
 """
-Date interface.
+Classes and functions form this module are dedicated to the manipulation of
+date and time quantities.
 
 Formats hypothesis:
 
-1. the arguments representing a date must follow the following convention
-   yyyymmdd[hh[mn[ss]]] with yyyy as the year in 4 numbers, mm as the month
-   in 2 numbers, dd as the day in 2 numbers, hh as the hours (0-24), mn as the
-   minutes and ss as the seconds.
+1. Ideally dates and times should be represented as a valid ISO 8601 strings.
+   Here are a few exemples:
 
-2. so as to add or substract a duration to a date expressed in the preceding
-   format (yyyymmdd[hh[mn[ss]]]) the arguments must follow:
+       * 2016-01-01 or 20160101 (for a date)
+       * 12:00, 1200, 12:00:00 or 120000 (for a time)
+       * A combination of both: 2016-01-01T12:00
+       * Optionally the time zone indicator: 2016-01-01T12:00Z
+
+2. For a date, the following will also be accepted yyyymmdd[hh[mn[ss]]] with
+   yyyy as the year in 4 numbers, mm as the month in 2 numbers, dd as the
+   day in 2 numbers, hh as the hours (0-24), mn as the minutes and ss as the seconds.
+
+3. For time periods, the following convention applies:
 
       * P starts an ISO 8601 Period definition
       * nY, the number of years (n positive integer),
@@ -23,22 +30,16 @@ Formats hypothesis:
       * nM, the number of minutes (n positive integer),
       * nS, the number of seconds (n positive integer)
 
-   Example::
+   Examples:
 
-      P1Y <=> is a 1 year period
-      P20D <=> is a 20 days period
-      PT15H10M55S <=> is a 15 hours, 10 minutes and 55 seconds period
+      * P1Y <=> is a 1 year period
+      * P20D <=> is a 20 days period
+      * PT15H10M55S <=> is a 15 hours, 10 minutes and 55 seconds period
 
-The available methods in the Date class are:
+Obviously the main classes of this module are :class:`Date`, :class:`Period`,
+:class:`Time` and :class:`Month`.
 
-   * create a date in regard to the desired format (yyyymmddhhmnss,...,yyyy)
-   * convert from usual date to julian date
-   * deliver the minutes of a date if available
-   * add/substract a duration to a date (y, m, d, h, mn, s)
-   * deliver the number of days of a month
-   * determine if a year is a leap year
-   * deliver the time gap between two dates and the result is expressed
-     in hours, minutes and seconds.
+Some helper functions are also provided (to get the current date, ...).
 
 """
 
@@ -49,6 +50,104 @@ import datetime
 import calendar
 import functools
 import operator
+
+
+def today():
+    """Return the date of the day, at 0 hour, 0 minute."""
+    td = datetime.datetime.today()
+    return Date(td.year, td.month, td.day, 0, 0)
+
+
+def yesterday(base=None):
+    """Return the date of yesterday (relative to today or specified ``base`` date)."""
+    if not base:
+        base = today()
+    return base - Period(days=1)
+
+
+def tomorrow(base=None):
+    """Return the date of tomorrow (relative to today or specified ``base`` date)."""
+    if not base:
+        base = today()
+    return base + Period(days=1)
+
+
+def now():
+    """Return the date just now, with hours, minutes, seconds and microseconds."""
+    td = datetime.datetime.now()
+    return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
+
+
+def at_second():
+    """Return the date just now, with only hours, minutes and seconds."""
+    td = datetime.datetime.now()
+    return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, 0)
+
+
+def at_hour():
+    """Return the date just now, with only hours."""
+    td = datetime.datetime.now()
+    return Date(td.year, td.month, td.day, td.hour, 0, 0, 0)
+
+
+def lastround(rh=1, delta=0, base=None):
+    """Return the date just before ``base`` with a plain hour multiple of ``rh``."""
+    if not base:
+        base = now()
+    if delta:
+        base += Period(delta)
+    return Date(base.year, base.month, base.day, base.hour - base.hour % rh, 0)
+
+
+def synop(delta=0, base=None, time=None, step=6):
+    """Return the date associated to the last synoptic hour."""
+    synopdate = lastround(step, delta, base)
+    if time is not None:
+        time = Time(time)
+        if time in [ Time(x) for x in range(0, 24, step) ]:
+            dt = Period('PT' + str(step) + 'H')
+            while synopdate.time() != time:
+                synopdate = synopdate - dt
+        else:
+            raise ValueError('Not a synoptic hour: ' + str(time))
+    return synopdate
+
+
+def stamp():
+    """Return a date up to microseconds as a tuple."""
+    td = datetime.datetime.now()
+    return (td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
+
+
+def easter(year=None):
+    """Return the date for easter of the given year
+
+    >>> dates = [2013, 2014, 2015, 2016, 2017, 2018]
+    >>> [easter(d).ymd for d in dates]
+    ['20130331', '20140420', '20150405', '20160327', '20170416', '20180401']
+    """
+    if not year:
+        year = today().year
+    g = year % 19
+    c = year / 100
+    h = (c - c / 4 - (8 * c + 13) / 25 + 19 * g + 15) % 30
+    i = h - (h / 28) * (1 - (29 / (h + 1)) * ((21 - g) / 11))
+    j = (year + year / 4 + i + 2 - c + c / 4) % 7
+    l = i - j
+    month = 3 + (l + 40) / 44
+    day = l + 28 - 31 * (month / 4)
+    return Date(year, month, day)
+
+
+#: The list of helper date functions
+local_date_functions = dict([
+    (x.__name__, x)
+    for x in locals().values()
+    if hasattr(x, 'func_name') and x.__doc__.startswith('Return the date')
+])
+
+# noinspection PyUnboundLocalVariable
+del x
 
 
 def mkisodate(datestr):
@@ -69,102 +168,6 @@ def mkisodate(datestr):
     if len(l) > 13 and l[-1] != 'Z':
         l.append('Z')
     return ''.join(l)
-
-
-def today():
-    """Return date of the day, at 0 hour, 0 minute."""
-    td = datetime.datetime.today()
-    return Date(td.year, td.month, td.day, 0, 0)
-
-
-def yesterday(base=None):
-    """Return date of yesterday (relative to today or specified ``base`` date)."""
-    if not base:
-        base = today()
-    return base - Period(days=1)
-
-
-def tomorrow(base=None):
-    """Return date of tomorrow (relative to today or specified ``base`` date)."""
-    if not base:
-        base = today()
-    return base + Period(days=1)
-
-
-def now():
-    """Return date just now, with hours, minutes, seconds and microseconds."""
-    td = datetime.datetime.now()
-    return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
-
-
-def at_second():
-    """Return date just now, with only hours, minutes and seconds."""
-    td = datetime.datetime.now()
-    return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, 0)
-
-
-def at_hour():
-    """Return date just now, with only hours."""
-    td = datetime.datetime.now()
-    return Date(td.year, td.month, td.day, td.hour, 0, 0, 0)
-
-
-def lastround(rh=1, delta=0, base=None):
-    """Return date just before ``base`` with a plain hour multiple of ``rh``."""
-    if not base:
-        base = now()
-    if delta:
-        base += Period(delta)
-    return Date(base.year, base.month, base.day, base.hour - base.hour % rh, 0)
-
-
-def synop(delta=0, base=None, time=None, step=6):
-    """Return date associated to the last synoptic hour."""
-    synopdate = lastround(step, delta, base)
-    if time is not None:
-        time = Time(time)
-        if time in [ Time(x) for x in range(0, 24, step) ]:
-            dt = Period('PT' + str(step) + 'H')
-            while synopdate.time() != time:
-                synopdate = synopdate - dt
-        else:
-            raise ValueError('Not a synoptic hour: ' + str(time))
-    return synopdate
-
-
-def stamp():
-    """Return date up to microseconds as a tuple."""
-    td = datetime.datetime.now()
-    return (td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
-
-
-def easter(year=None):
-    """Return date for easter of the given year
-
-    >>> dates = [2013, 2014, 2015, 2016, 2017, 2018]
-    >>> [easter(d).ymd for d in dates]
-    ['20130331', '20140420', '20150405', '20160327', '20170416', '20180401']
-    """
-    if not year:
-        year = today().year
-    g = year % 19
-    c = year / 100
-    h = (c - c / 4 - (8 * c + 13) / 25 + 19 * g + 15) % 30
-    i = h - (h / 28) * (1 - (29 / (h + 1)) * ((21 - g) / 11))
-    j = (year + year / 4 + i + 2 - c + c / 4) % 7
-    l = i - j
-    month = 3 + (l + 40) / 44
-    day = l + 28 - 31 * (month / 4)
-    return Date(year, month, day)
-
-local_date_functions = dict([
-    (x.__name__, x)
-    for x in locals().values()
-    if hasattr(x, 'func_name') and x.__doc__.startswith('Return date')
-])
-
-# noinspection PyUnboundLocalVariable
-del x
 
 
 def stardates():
@@ -205,7 +208,10 @@ def daterange(start, end=None, step='P1D'):
 
 
 class Period(datetime.timedelta):
-    """Standard period objects, extending :class:`datetime.timedelta` features with iso8601 facilities."""
+    """
+    Standard period objects, extending :class:`datetime.timedelta` features
+    with iso8601 capabilities.
+    """
 
     _my_re  = re.compile(
         r'(?P<X>[+-]?P)(?P<Y>[0-9]+([,.][0-9]+)?Y)?'
@@ -218,7 +224,7 @@ class Period(datetime.timedelta):
     )
 
     @staticmethod
-    def period_regex(s):
+    def _period_regex(s):
         return Period._my_re.match(s)
 
     _const_times = [
@@ -242,14 +248,14 @@ class Period(datetime.timedelta):
             raise KeyError("Unknown key in Period string: %s" % key)
 
     @staticmethod
-    def parse(string):
+    def _parse(string):
         """Find out time duration that could be extracted from string argument."""
         if not isinstance(string, basestring):
             raise TypeError("Expected string input")
         if len(string) < 2:
             raise ValueError("Badly formed short string %s" % string)
 
-        match = Period.period_regex(string)
+        match = Period._period_regex(string)
         if not match:
             raise ValueError("Badly formed string %s" % string)
 
@@ -275,11 +281,43 @@ class Period(datetime.timedelta):
 
     def __new__(cls, *args, **kw):
         """
-        Initial values include:
-            * a datetime object;
-            * a tuple containing at least (year, month, day) values;
-            * a dictionary with this named values ;
-            * a string that could be reshaped as an ISO 8601 date string.
+        The object can be constructed from:
+            * a standard :class:`datetime.timedelta` object;
+            * named attributes compatible with the :class:`datetime.timedelta` class;
+            * a Vortex's :class:`Time` or :class:`Period` object;
+            * a string that could be reshaped as an ISO 8601 date string
+              (see the description of the ISO 8601 convention at the top of
+              this page);
+            * one integer or float (number of seconds)
+            * two integers (number of days, number of seconds)
+
+        These four objects are identical::
+
+            >>> Period(days=2, hours=1, seconds=30)
+            Period(2, 3630)
+            >>> Period('P2DT1H30S')
+            Period(2, 3630)
+            >>> Period(176430)
+            Period(2, 3630)
+            >>> Period(2, 3630)
+            Period(2, 3630)
+
+        Addition and subtraction are implemented (if the other operand is not a
+        :class:`Period` object, a conversion is attempted)::
+
+            >>> Period('PT6H') + Period('PT6H')
+            Period(0, 43200)
+            >>> Period('PT6H') + 'PT6H'
+            Period(0, 43200)
+            >>> Period('PT6H') + 43200
+            Period(0, 64800)
+
+        Multiplication (by an integer) is implemented::
+
+            >>> Period('PT6H') * 2
+            Period(0, 43200)
+
+        Comparison operators are all available.
         """
         if kw:
             args = (datetime.timedelta(**kw),)
@@ -296,7 +334,7 @@ class Period(datetime.timedelta):
         elif isinstance(top, int) and len(args) == 2:
             ld = list(args)
         elif isinstance(top, basestring):
-            ld = [ 0, Period.parse(top) ]
+            ld = [ 0, Period._parse(top) ]
         if not ld:
             raise ValueError("Initial Period value unknown")
         return datetime.timedelta.__new__(cls, *ld)
@@ -436,7 +474,10 @@ class _GetattrCalculatorMixin(object):
 
 
 class Date(datetime.datetime, _GetattrCalculatorMixin):
-    """Standard date objects, extending :class:`datetime.datetime` features with iso8601 facilities."""
+    """
+    Standard date objects, extending :class:`datetime.datetime` features with
+    iso8601 capabilities.
+    """
 
     _origin = datetime.datetime(1970, 1, 1, 0, 0, 0)
     _getattr_proxyclass = Period
@@ -478,14 +519,98 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
             newdate += sum([Period(d) for d in deltas], Period(0))
         return newdate
 
-    def __init__(self, *args, **kw):
+    def __init__(self, *args, **kw):  # @UnusedVariable
         """
-        Initial values include:
-            * a datetime object;
-            * a tuple containing at least (year, month, day) values;
-            * a dictionary with this named values ;
+        The object can be constructed from:
+            * a standard :`datetime.datetime` object;
+            * named attributes compatible with the :class:`datetime.datetime` class;
+            * a Vortex's :class:`Date` object;
+            * a tuple containing at least (year, month, day) values (optionally hours);
             * a string that could be reshaped as an ISO 8601 date string.
             * a string with one or more time deltas (e.g. 201509010600/-PT1H/-PT2H)
+            * the name of one of the helper date functions (see below)
+            * a float representing a number of seconds since the epoch time
+
+        Here are a few equivalent examples::
+
+            Date(2017, 1, 1, 12, 0)
+            >>> Date(2017, 1, 1, 12)
+            Date(2017, 1, 1, 12, 0)
+            >>> Date([2017, 1, 1, 12])
+            Date(2017, 1, 1, 12, 0)
+            >>> Date('2017-01-01T12:00')
+            Date(2017, 1, 1, 12, 0)
+            >>> Date('2017010112')
+            Date(2017, 1, 1, 12, 0)
+
+        Helper functions can be used::
+
+            >>> Date('now') # doctest: +SKIP
+            Date(2017, 8, 21, 19, 33, 46)
+            >>> Date('easter') # doctest: +SKIP
+            Date(2017, 4, 16, 0, 0)
+
+        Let's do some calculations on the fly::
+
+            >>> Date('20170101/PT12H')
+            Date(2017, 1, 1, 12, 0)
+            >>> Date('2017010212/-P1D')
+            Date(2017, 1, 1, 12, 0)
+            >>> Date('2017010200/-P1D/PT12H')
+            Date(2017, 1, 1, 12, 0)
+
+        The addition is defined (if the operand is not a :class:`Period` object,
+        a conversion is attempted)::
+
+            >>> Date('2017010100') + Period('PT12H')
+            Date(2017, 1, 1, 12, 0)
+            >>> Date('2017010100') + Time(12, 00)
+            Date(2017, 1, 1, 12, 0)
+            >>> Date('2017010100') + 'PT12H'
+            Date(2017, 1, 1, 12, 0)
+            >>> Date('2017010100') + 43200
+            Date(2017, 1, 1, 12, 0)
+
+        The subtraction is also defined (the operand can be either a :class:`Period`
+        object or a :class:`Date` object)::
+
+            >>> Date('2017010100') - Period('PT12H')
+            Date(2016, 12, 31, 12, 0)
+            >>> Date('2017010100') - 'PT12H'
+            Date(2016, 12, 31, 12, 0)
+            >>> Date('2017010100') - Date('2017010212')
+            Period(-2, 43200)
+            >>> Date('2017010100') - '2017010212'
+            Period(-2, 43200)
+
+        Comparison operators are all available.
+
+        The :class:`Date` also have the ability to generate dynamic properties
+        on the fly (because it inherits the :class:`_GetattrCalculatorMixin`
+        mix in). Such dynamic properties can be very useful when used with
+        :mod:`footprints` package substitution mechanism. It allows to do
+        calculations on the fly::
+
+            >>> date = Date('easter')
+            >>> date
+            Date(2017, 4, 16, 0, 0)
+            >>> date.addPT6H
+            Date(2017, 4, 16, 6, 0)
+            >>> date.subP1D
+            Date(2017, 4, 15, 0, 0)
+            >>> date.subP1D_addPT6H
+            Date(2017, 4, 15, 6, 0)
+            >>> date.subP1D_ymdh
+            '2017041500'
+
+        The following will also work::
+
+            >>> date.addterm_ymdh(dict(term=Time(6, 0)), dict())
+            '2017041606'
+
+        In such a documentation, this looks horrible. However, in the context of
+        :mod:`footprints` substitutions, it works like a charm (to compute the
+        validity date of a a resource that defines a *term*).
         """
         super(Date, self).__init__()
         delta_o = self - Date._origin
@@ -529,38 +654,46 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
 
     @property
     def ymd(self):
+        """YYYYMMDD formated string."""
         return self.strftime('%Y%m%d')
 
     @property
     def yymd(self):
+        """YYMMDD formated string."""
         return self.strftime('%y%m%d')
 
     @property
-    def yymdh(self):
-        return self.strftime('%y%m%d%H')
-
-    @property
     def ymdh(self):
+        """YYYYMMDDHH formated string."""
         return self.strftime('%Y%m%d%H')
 
     @property
+    def yymdh(self):
+        """YYMMDDHH formated string."""
+        return self.strftime('%y%m%d%H')
+
+    @property
     def ymdhm(self):
+        """YYYYMMDDHHMM formated string."""
         return self.strftime('%Y%m%d%H%M')
 
     @property
     def ymdhms(self):
+        """YYYYMMDDHHMMSS formated string."""
         return self.strftime('%Y%m%d%H%M%S')
 
     @property
     def hm(self):
+        """HHMM formated string."""
         return self.strftime('%H%M')
 
     @property
     def hh(self):
+        """HH formated string."""
         return self.strftime('%H')
 
     def compact(self):
-        """Compact concatenation of date values, up to the second."""
+        """Compact concatenation of date values, up to the second (YYYYMMDDHHSS)."""
         return self.ymdhms
 
     def vortex(self, cutoff='P'):
@@ -691,7 +824,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return calendar.monthrange(year, month)[1]
 
     def time(self):
-        """Return a :class:`Time` object."""
+        """Return a :class:`Time` object built from the present object hours and minutes."""
         return Time(self.hour, self.minute)
 
     def bounds(self):
@@ -723,21 +856,81 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
 
 
 class Time(_GetattrCalculatorMixin):
-    """
-    Basic object to handle hh:mm information.
+    """Basic object to handle hh:mm information.
+
     Extended arithmetic is supported.
     """
 
     def __init__(self, *args, **kw):
         """
-        Initial values include:
-            * a dictionary with this named values ;
-            * a tuple containing at least (hour, minute) values;
-            * a datetime.time object;
-            * a Time object
-            * a Period object
-            * a string that could be reshaped as a Period object.
-            * a string that could be reshaped as an ISO 8601 date string.
+        The object can be constructed from:
+            * a standard :class:`datetime.time` object;
+            * a :class:`Time` object
+            * a :class:`Period` object
+            * named attributes compatible with the :class:`datetime.time` class;
+            * a string that could be reshaped as a :class:`Period` object.
+            * a string that could be reshaped as an ISO 8601 time string.
+            * two integers (hours, minutes)
+            * a tuple containing (hour, minute) values;
+
+         Here are a few equivalent examples::
+
+            >>> Time('18:05')
+            Time(18, 5)
+            >>> Time('18h05')
+            Time(18, 5)
+            >>> Time('18-05')
+            Time(18, 5)
+            >>> Time('T18:05Z')
+            Time(18, 5)
+            >>> Time(18, 5)
+            Time(18, 5)
+            >>> Time((18, 5))
+            Time(18, 5)
+            >>> Time('PT18H05M')
+            Time(18, 5)
+            >>> Time(hour=18, minute=5)
+            Time(18, 5)
+
+        When constructed from strings, the :class:`Time` object can handle
+        negative values::
+
+            >>> Time('-18:05')
+            Time(-18, -5)
+            >>> Time('-PT18H05M')
+            Time(-18, -5)
+
+        The addition and subtraction is defined (if the operand is not a
+        :class:`Time` object, a conversion is attempted)::
+
+            >>> Time('12:00') + Time('06:30')
+            Time(18, 30)
+            >>> Time('12:00') + '06:30'
+            Time(18, 30)
+            >>> Time('12:00') + 'PT06H30M'
+            Time(18, 30)
+            >>> Time('12:00') - 'PT06H30M'
+            Time(5, 30)
+
+        Comparison operators are all available.
+
+        The :class:`Time` also have the ability to generate dynamic properties
+        on the fly (because it inherits the :class:`_GetattrCalculatorMixin`
+        mix in). Such dynamic properties can be very useful when used with
+        :mod:`footprints` package substitution mechanism.
+
+        It allows to do calculations on the fly::
+
+            >>> atime = Time('12:00')
+            >>> atime.add06h30
+            Time(18, 30)
+            >>> atime.addPT6H30M
+            Time(18, 30)
+            >>> atime.addPT6H30M_fmthm
+            '0018:30'
+            >>> atime.subPT18H30M_fmthm
+            '-0006:30'
+
         """
         if kw:
             kw.setdefault('hour', 0)
@@ -784,14 +977,16 @@ class Time(_GetattrCalculatorMixin):
 
     @property
     def hour(self):
+        """The number of hours"""
         return self._hour
 
     @property
     def minute(self):
+        """The number of minutes"""
         return self._minute
 
-    def __deepcopy__(self, memo):
-        """Clone the current Time object."""
+    def __deepcopy__(self, memo):  # @UnusedVariable
+        """Clone of the current :class:`Time` object."""
         return Time(self.hour, self.minute)
 
     def __repr__(self):
@@ -807,7 +1002,7 @@ class Time(_GetattrCalculatorMixin):
         return fmt.format(thesign, abs(self.hour), abs(self.minute))
 
     def __str__(self):
-        """Standard hour-minute string."""
+        """Standard hour-minute string (like HH:MM)."""
         return self._formatted_str('{0:s}{1:02d}:{2:02d}')
 
     def __int__(self):
@@ -875,26 +1070,31 @@ class Time(_GetattrCalculatorMixin):
 
     @property
     def fmth(self):
+        """HHHH formated string."""
         return self._formatted_str('{0:s}{1:04d}')
 
     @property
     def fmthour(self):
+        """HHHH formated string."""
         return self.fmth
 
     @property
     def fmthm(self):
+        """HHHH:MM formated string."""
         return self._formatted_str('{0:s}{1:04d}:{2:02d}')
 
     @property
     def fmthhmm(self):
+        """HH:MM formated string."""
         return self._formatted_str('{0:s}{1:02d}{2:02d}')
 
     @property
     def fmtraw(self):
+        """HHHH:MM formated string."""
         return self._formatted_str('{0:s}{1:04d}{2:02d}')
 
     def isoformat(self):
-        """Almost ISO representation."""
+        """Almost ISO representation (HH:MM)."""
         return str(self)
 
     def iso8601(self):
@@ -902,14 +1102,82 @@ class Time(_GetattrCalculatorMixin):
         return 'T' + self.isoformat() + 'Z'
 
     def nice(self, t):
-        """Return the specified value formatted as self should be."""
+        """Kept for backward compatibility. Plesae do not use."""
         return '{0:04d}'.format(t)
 
 
 class Month(object):
-    """Basic class for handling a month number, according to an explicit or implicit year."""
+    """
+    Basic class for handling a month number, according to an explicit or
+    implicit year.
+    """
 
     def __init__(self, *args, **kw):
+        """
+        The object can be constructed from:
+            * a standard :`datetime.datetime` object or a :class:`Date` object;
+            * a :class:`Month` object;
+            * named attributes compatible with the :class:`datetime.datetime` class;
+            * a unique integer representing the Month number (in such a case,
+              the year is assumed to be the current year);
+            * a tuple containing two integer representing (month, year) values;
+            * any string supported by the :class:`Date` object;
+
+        Here are a few equivalent examples::
+
+            >>> Month(year=2016, month=1, day=1)
+            Month(01, year=2016)
+            >>> Month('2016010100')
+            Month(01, year=2016)
+            >>> Month(1, 2016)
+            Month(01, year=2016)
+
+        The *year* may not be specified (in such a case the current year is used)::
+
+            >>> Month(1) # doctest: +SKIP
+            Month(01, year=2017)
+
+        When initialising the object with a string, some nice helpers are provided::
+
+            >>> Month('2016010100:prev')
+            Month(12, year=2015)
+            >>> Month('2016010100:next')
+            Month(02, year=2016)
+            >>> Month('2016011500:closest')
+            Month(12, year=2015)
+            >>> Month('2016011600:closest')
+            Month(02, year=2016)
+
+        Concerted to an integer, this object returns the month number::
+
+            >>> int(Month('2016010100'))
+            1
+
+        The addition and subtraction is defined (the operand can be an integer,
+        a :class:`Period` object, or a string that can be converted to a
+        :class:`Period` object)::
+
+            >>> Month('2016010100') + 1
+            Month(02, year=2016)
+            >>> Month('2016010100') + Period('P2M')
+            Month(03, year=2016)
+            >>> Month('2016010100') + 'P2M'
+            Month(03, year=2016)
+            >>> Month('2016010100') - 'P2M'
+            Month(10, year=2015)
+
+        Some kind of comparisons are possible::
+
+            >>> Month('2016010100') == 1
+            True
+            >>> Month('2016010100') < 2
+            True
+            >>> Month('2016010100') > 1
+            False
+            >>> Month('2016010100') > Month('2015100100')
+            True
+
+        """
         delta = kw.pop('delta', 0)
         try:
             args = (datetime.datetime(**kw),)
@@ -961,18 +1229,22 @@ class Month(object):
 
     @property
     def year(self):
+        """The year number."""
         return self._year
 
     @property
     def month(self):
+        """The month number."""
         return self._month
 
     @property
     def fmtym(self):
+        """YYYY-MM formated string."""
         return '{0:04d}-{1:02d}'.format(self._year, self._month)
 
     @property
     def fmtraw(self):
+        """YYYYMM formated string."""
         return '{0:04d}{1:02d}'.format(self._year, self._month)
 
     def export_dict(self):
@@ -1000,8 +1272,9 @@ class Month(object):
 
     def __add__(self, delta):
         """
-        Add to a Date object the specified ``delta`` which could be either
-        a string or a :class:`datetime.timedelta` or an ISO 6801 Period.
+        Add to a Month object the specified ``delta`` which could be either
+        an integer (number of months), a :class:`Period` object, or a string
+        that can be converted to a :class:`Period` object.
         """
         if isinstance(delta, int):
             if delta < 0:
@@ -1032,8 +1305,9 @@ class Month(object):
 
     def __sub__(self, delta):
         """
-        Substract to a Date object the specified ``delta`` which could be either
-        a string or a :class:`datetime.timedelta` or an ISO 6801 Period.
+        Subtract to a Month object the specified ``delta`` which could be either
+        an integer (number of months), a :class:`Period` object , or a string
+        that can be converted to a :class:`Period` object
         """
 
         if isinstance(delta, int):

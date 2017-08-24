@@ -77,10 +77,11 @@ class utImport(TestCase):
                                           root='footprint',
                                           rootattr={'class': '{:s}.{:s}'.format(cls.__module__,
                                                                                 cls.__name__)})
+                    trashstr = trashstr.toprettyxml(indent='  ', encoding='utf-8')
                 except:
                     print("\n> xdump.dump: clsfp.as_dict() is:\n", clsfp.as_dict())
                     raise
-                trashstr = trashstr.toprettyxml(indent='  ', encoding='utf-8')
+
 
 if __name__ == '__main__':
     main()

@@ -60,6 +60,7 @@ class GenericReadOnlyConfigParser(object):
     that satisfies the interface) to access the configuration data.
 
     :param str inifile: Path to a configuration file or a configuration file name
+        (see the :meth:`setfile` method for more details)
     :param ConfigParser.SafeConfigParser parser: an existing configuration parser
         object the will be used to access the configuration
     :param bool mkforce: If the configuration file doesn't exists. Create an empty

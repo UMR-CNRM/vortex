@@ -11,7 +11,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 
 def use_in_shell(sh, **kw):
-    """Extend current shell with the LFI interface defined by optional arguments."""
+    """Extend current shell with the sfxtools interface defined by optional arguments."""
     kw['shell'] = sh
     return footprints.proxy.addon(**kw)
 

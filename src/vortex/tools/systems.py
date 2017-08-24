@@ -4,6 +4,22 @@
 """
 This package handles system interfaces objects that are in charge of
 system interaction. Systems objects use the :mod:`footprints` mechanism.
+
+The current active System object should be retrieved using the session's Ticket
+(*i.e.* System classes should not be instantiated directly) ::
+
+    t = vortex.ticket()
+    sh = t.sh
+
+The System retrieved by this property will always be an instance of subclasses of
+:class:`OSExtended`. Consequently, you can safely assume that all attributes,
+properties and methods available in :class:`OSExtended` ad :class:`System` are
+available to you.
+
+When working with System objects, preferentialy use high-level methods such as
+:meth:`~OSExtended.cp`, :meth:`~OSExtended.mv`, :meth:`~OSExtended.rm`,
+:meth:`~OSExtended.smartftput`, :meth:`~OSExtended.smartftget`, ...
+
 """
 
 import filecmp
@@ -37,7 +53,7 @@ from vortex.tools import date
 from vortex.tools.env import Environment
 from vortex.tools.net import StdFtp, AssistedSsh, LinuxNetstats
 from vortex.tools.compression import CompressionPipeline
-from vortex.util.decorators import nicedeco
+from vortex.util.decorators import nicedeco_plusdoc
 from vortex.util.structs import History
 from vortex.syntax.stdattrs import DelayedInit
 
@@ -56,23 +72,55 @@ istruedef = re.compile(r'on|true|ok', re.IGNORECASE)
 isfalsedef = re.compile(r'off|false|ko', re.IGNORECASE)
 
 
-@nicedeco
-def fmtshcmd(func):
-    """This decorator give a try to the equivalent formatted command."""
+_fmtshcmd_docbonus = """
 
+        This method is decorated by :func:`fmtshcmd`, consequently it accepts
+        an additional **fmt** attribute that might alter this method behaviour
+        (*i.e.* if a ``thefmt_{name:s}`` method exists (where ``thefmt`` is the
+        value of the **ftm** attribute), it will be executed instead of the
+        present one).
+"""
+
+
+@nicedeco_plusdoc(_fmtshcmd_docbonus)
+def fmtshcmd(func):
+    """This decorator gives a try to the equivalent formatted command.
+
+    Example: let ``decomethod`` be a method decorated with the present decorator,
+    if a user calls ``decomethod(..., fmt='toto')``, the decorator with look for
+    a method called ``toto_decomethod`` : if it exists, it will be used (otherwise,
+    the original method is used).
+    """
     def formatted_method(self, *args, **kw):
+        print "What the ???"
         fmt = kw.pop('fmt', None)
         fmtcall = getattr(self, str(fmt).lower() + '_' + func.func_name, func)
         if getattr(fmtcall, 'func_extern', False):
             return fmtcall(*args, **kw)
         else:
             return fmtcall(self, *args, **kw)
-
     return formatted_method
 
 
+def _kw2spawn(func):
+    """This decorator justs update the docstring of a class...
+
+    It will state that all **kw** arguments will be passed directly to the
+    ```spawn`` method.
+
+    (Because laziness is good and cut&paste is bad)
+    """
+    func.__doc__ += """
+
+        At some point, all of the **kw** arguments will be passed directly to the
+        :meth:`spawn` method. Please see refer to the :meth:`spawn` method
+        documentation for more details.
+    """
+    return func
+
+
 class ExecutionError(RuntimeError):
-    """Go through exception for internal :meth:`spawn` errors."""
+    """Go through exception for internal :meth:`OSExtended.spawn` errors."""
     pass
 
 
@@ -97,13 +145,15 @@ class CdContext(object):
         self.oldpath = self.sh.getcwd()
         self.sh.cd(self.newpath, create=self.create)
 
-    def __exit__(self, etype, value, traceback):
+    def __exit__(self, etype, value, traceback):  # @UnusedVariable
         self.sh.cd(self.oldpath)
 
 
 class System(footprints.FootprintBase):
-    """
-    Root class for any :class:`System` subclasses.
+    """Abstract root class for any :class:`System` subclasses.
+
+    It contains basic generic methods and redefinition of some of the usual
+    Python's system methods.
     """
 
     _abstract = True
@@ -111,36 +161,43 @@ class System(footprints.FootprintBase):
     _collector = ('system',)
 
     _footprint = dict(
-        info = 'Default information system',
+        info = 'Default system interface',
         attr = dict(
             hostname = dict(
+                info = "The computer's network name",
                 optional = True,
                 default  = platform.node(),
                 alias    = ('nodename',)
             ),
             sysname = dict(
+                info = "The underlying system/OS name (e.g. Linux, Darwin, ...)",
                 optional = True,
                 default  = platform.system(),
             ),
             arch = dict(
+                info = "The underlying machine type (e.g. i386, x86_64, ...)",
                 optional = True,
                 default  = platform.machine(),
                 alias    = ('machine',)
             ),
             release = dict(
+                info = "The underlying system's release, (e.g. 2.2.0, NT, ...)",
                 optional = True,
                 default  = platform.release()
             ),
             version = dict(
+                info = "The underlying system's release version",
                 optional = True,
                 default  = platform.version()
             ),
             python = dict(
+                info = "The Python's version (e.g 2.7.5)",
                 optional = True,
                 default  = re.sub(r'^(\d+\.\d+\.\d+).*$', r'\1',
                                   platform.python_version())
             ),
             glove = dict(
+                info = "The session's Glove object",
                 optional = True,
                 type     = Glove,
             )
@@ -149,12 +206,51 @@ class System(footprints.FootprintBase):
 
     def __init__(self, *args, **kw):
         """
-        Before going through parent initialisation, pickle this attributes:
-          * os - as an alternativer to :mod:`os`.
-          * sh - as an alternativer to :mod:`shutil`.
-          * prompt - as a starting comment line in :meth:`title` like methods.
-          * trace - as a boolean to mimic ``set -x`` behavior (default: False).
-          * output - as a default value for any external spawning command (default: True).
+        In addition to footprint's attributes,  the following attribute may be added:
+
+            * **prompt** - as a starting comment line in :meth:`title` like methods.
+            * **trace** - as a boolean to mimic ``set -x`` behaviour (default: *False*).
+            * **timer** - time all the calls to external commands (default: *False*).
+            * **output** - as a default value for any external spawning command (default: *True*).
+
+        The following attributes are also picked from ``kw`` (by default the
+        usual Python's modules are used):
+
+            * **os** - as an alternative to :mod:`os`.
+            * **rlimit** - as an alternative to :mod:`resource`.
+            * **sh** or **shutil** - as an alternative to :mod:`shutil`.
+
+        **The proxy concept:**
+
+        The :class:`System` class acts as a proxy for the :mod:`os`, :mod:`resource`
+        and :mod:`shutil` modules. *i.e.* if a method or attribute
+        is not defined in the :class:`System` class, the   :mod:`os`, :mod:`resource`
+        and :mod:`shutil` modules are looked-up (in turn): if one of them has
+        the desired attribute/method, it is returned.
+
+        Example: let ``sh`` be an object of class :class:`System`, calling
+        ``sh.path.exists`` is equivalent to calling ``os.path.exists`` since
+        ``path`` is not redefined in the :class:`System` class.
+
+        In vortex, it is mandatory to use the :class:`System` class (and not the
+        official Python modules) even for attributes/methods that are not
+        redefined. This is not pointless since, in the future, we may decide to
+        to redefine a given attribute/method either globally or for a specific
+        architecture.
+
+        **Addons:**
+
+        Using the :meth:`extend` method, a :class:`System` object can be extended
+        by any object. This mechanism is used by classes deriving from
+        :class:`vortex.tools.addons.Addon`.
+
+        Example: let ``sh`` be an object of class :class:`System` and ``MyAddon``
+        a subclass of :class:`~vortex.tools.addons.Addon` (of kind 'myaddon') that
+        defines the  ``greatstuff`` attribute; creating an object of class
+        ``MyAddon`` using ``footprints.proxy.addon(kind='myaddon', shell=sh)``
+        will extend the ``sh`` with the ``greatstuff`` attribute (*e.g.* any
+        user will be able to call ``sh.greatstuff``).
+
         """
         logger.debug('Abstract System init %s', self.__class__)
         self.__dict__['_os'] = kw.pop('os', os)
@@ -164,9 +260,7 @@ class System(footprints.FootprintBase):
         self.__dict__['_xtrack'] = dict()
         self.__dict__['_history'] = History(tag='shell')
         self.__dict__['_rclast'] = 0
-        self.__dict__['_cpusinfo'] = None
-        self.__dict__['_netstatsinfo'] = None
-        self.__dict__['prompt'] = ''
+        self.__dict__['prompt'] = kw.pop('prompt', '')
         for flag in ('trace', 'timer'):
             self.__dict__[flag] = kw.pop(flag, False)
         for flag in ('output',):
@@ -175,18 +269,27 @@ class System(footprints.FootprintBase):
 
     @property
     def realkind(self):
+        """The object/class realkind."""
         return 'system'
 
     @property
     def history(self):
+        """The :class:`History` object associated with all :class:`System` objects."""
         return self._history
 
     @property
     def rclast(self):
+        """The last return-code (for external commands)."""
         return self._rclast
 
     @property
     def search(self):
+        """A list of Python's modules that are looked up when an attribute is not found.
+
+        At startup, mod:`os`, :mod:`resource` and :mod:`shutil` are looked up but
+        additional Addon classes may be added to this list (see the :meth:`extend`
+        method).
+        """
         return self._search
 
     @property
@@ -195,7 +298,7 @@ class System(footprints.FootprintBase):
         return '/dev/log'
 
     def extend(self, obj=None):
-        """Extend the current external attribute resolution to ``obj`` (module or object)."""
+        """Extend the current external attribute resolution to **obj** (module or object)."""
         if obj is not None:
             if hasattr(obj, 'kind'):
                 for k, v in self._xtrack.iteritems():
@@ -209,18 +312,26 @@ class System(footprints.FootprintBase):
         return len(self.search)
 
     def loaded_addons(self):
+        """
+        Kind of all the loaded :class:`~vortex.tools.addons.Addon objects
+        (*i.e.* :class:`~vortex.tools.addons.Addon objects previously
+        loaded with the :meth:`extend` method).
+        """
         return [addon.kind for addon in self.search if hasattr(addon, 'kind')]
 
     def external(self, key):
-        """Return effective module object reference if any, or None."""
+        """Return effective module object reference if any, or *None*."""
         try:
-            z = getattr(self, key)
+            z = getattr(self, key)  # @UnusedVariable
         except AttributeError:
             pass
         return self._xtrack.get(key, None)
 
     def __getattr__(self, key):
-        """Gateway to undefined method or attributes if present in ``_os`` or ``_sh`` internals."""
+        """Gateway to undefined method or attributes.
+
+        This is the place where the ``self.search`` list is looked for...
+        """
         actualattr = None
         for shxobj in self.search:
             if hasattr(shxobj, key):
@@ -246,7 +357,7 @@ class System(footprints.FootprintBase):
             return actualattr
 
     def stderr(self, *args):
-        """Write a formatted message to standard error."""
+        """Write a formatted message to standard error (if ``self.trace == True``)."""
         count, justnow, = self.history.append(*args)
         if self.trace:
             sys.stderr.write(
@@ -256,73 +367,17 @@ class System(footprints.FootprintBase):
                 )
             )
 
-    def getfqdn(self, name=None):
-        """Return a fully qualified domain name for ``name``. Default is to check for current ``hostname``."""
-        if name is None:
-            name = self.default_target.inetname
-        return socket.getfqdn(name)
-
-    def pythonpath(self, output=None):
-        """Return or print actual ``sys.path``."""
-        if output is None:
-            output = self.output
-        self.stderr('pythonpath')
-        if output:
-            return sys.path[:]
-        else:
-            self.subtitle('Python PATH')
-            for pypath in sys.path:
-                print pypath
-            return True
-
-    def pwd(self, output=None):
-        """Current working directory."""
-        if output is None:
-            output = self.output
-        self.stderr('pwd')
-        realpwd = self._os.getcwd()
-        if output:
-            return realpwd
-        else:
-            print realpwd
-            return True
-
-    def cd(self, pathtogo, create=False):
-        """Change directory to ``pathtogo``."""
-        pathtogo = self.path.expanduser(pathtogo)
-        self.stderr('cd', pathtogo, create)
-        if create:
-            self.mkdir(pathtogo)
-        self._os.chdir(pathtogo)
-        return True
-
-    def ffind(self, *args):
-        """Recursive file find. Arguments are starting paths."""
-        if not args:
-            args = ['*']
-        else:
-            args = [self.path.expanduser(x) for x in args]
-        files = []
-        self.stderr('ffind', *args)
-        for pathtogo in self.glob(*args):
-            if self.path.isfile(pathtogo):
-                files.append(pathtogo)
-            else:
-                for root, u_dirs, filenames in self._os.walk(pathtogo):
-                    files.extend([self.path.join(root, f) for f in filenames])
-        return sorted(files)
-
-    @property
-    def env(self):
-        """Returns the current active environment."""
-        return Environment.current()
-
     def echo(self, args):
-        """Joined args are echoed."""
+        """Joined **args** are echoed."""
         print '>>>', ' '.join(args)
 
     def title(self, textlist, tchar='=', autolen=96):
-        """Formated title output."""
+        """Formated title output.
+
+        :param list|str testlist: A list of strings that contains the title's text
+        :param str tchar: The character used to frame the title text
+        :param int autolen: The title width
+        """
         if isinstance(textlist, basestring):
             textlist = (textlist,)
         if autolen:
@@ -337,7 +392,12 @@ class System(footprints.FootprintBase):
         print ''
 
     def subtitle(self, text='', tchar='-', autolen=96):
-        """Formated subtitle output."""
+        """Formated subtitle output.
+
+        :param str text: The subtitle's text
+        :param str tchar: The character used to frame the title text
+        :param int autolen: The title width
+        """
         if autolen:
             nbc = autolen
         else:
@@ -348,7 +408,14 @@ class System(footprints.FootprintBase):
             print tchar * (nbc + 4)
 
     def header(self, text='', tchar='-', autolen=False, xline=True, prompt=None):
-        """Formated subtitle output."""
+        """Formated header output.
+
+        :param str text: The subtitle's text
+        :param str tchar: The character used to frame the title text
+        :param bool autolen: If True the header width will match the text width (10. otherwise)
+        :param bool xline: Adds a line of **tchar** after the header text
+        :param str prompt: A customised prompt (otherwise ``self.prompt`` is used)
+        """
         if autolen:
             nbc = len(prompt + text) + 1
         else:
@@ -365,132 +432,29 @@ class System(footprints.FootprintBase):
             if xline:
                 print tchar * nbc
 
-    def xperm(self, filename, force=False):
-        """Return whether a file exists and is executable or not."""
-        if os.path.exists(filename):
-            is_x = bool(os.stat(filename).st_mode & 1)
-            if not is_x and force:
-                self.chmod(filename, os.stat(filename).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-                is_x = True
-            return is_x
+    def pythonpath(self, output=None):
+        """Return or print actual ``sys.path``."""
+        if output is None:
+            output = self.output
+        self.stderr('pythonpath')
+        if output:
+            return sys.path[:]
         else:
-            return False
+            self.subtitle('Python PATH')
+            for pypath in sys.path:
+                print pypath
+            return True
 
-    def wperm(self, filename, force=False):
-        """Return whether a file exists and is writable by owner or not."""
-        if os.path.exists(filename):
-            st = os.stat(filename).st_mode
-            is_w = bool(st & stat.S_IWUSR)
-            if not is_w and force:
-                self.chmod(filename, st | stat.S_IWUSR)
-                is_w = True
-            return is_w
-        else:
-            return False
-
-    def wpermtree(self, objpath, force=False):
-        """Return whether all items are owner-writeable in a hierarchy."""
-        rc = self.wperm(objpath, force)
-        for dirpath, dirnames, filenames in self.walk(objpath):
-            for item in filenames + dirnames:
-                rc = self.wperm(self.path.join(dirpath, item), force) and rc
-        return rc
-
-    def which(self, command):
-        """Clone of the unix command."""
-        self.stderr('which', command)
-        if command.startswith('/'):
-            if self.xperm(command):
-                return command
-        else:
-            for xpath in self.env.path.split(':'):
-                fullcmd = os.path.join(xpath, command)
-                if self.xperm(fullcmd):
-                    return fullcmd
-
-    def touch(self, filename):
-        """Clone of the unix command."""
-        filename = self.path.expanduser(filename)
-        self.stderr('touch', filename)
-        rc = True
-        if self.path.exists(filename):
-            # Note: "filename" might as well be a directory...
-            try:
-                os.utime(filename, None)
-            except StandardError:
-                rc = False
-        else:
-            fh = file(filename, 'a')
-            fh.close()
-        return rc
-
-    @fmtshcmd
-    def remove(self, objpath):
-        """Unlink the specified object (file or directory)."""
-        objpath = self.path.expanduser(objpath)
-        if os.path.exists(objpath):
-            self.stderr('remove', objpath)
-            if os.path.isdir(objpath):
-                self.rmtree(objpath)
-            else:
-                self.unlink(objpath)
-        else:
-            self.stderr('clear', objpath)
-        return not os.path.exists(objpath)
-
-    @fmtshcmd
-    def rm(self, objpath):
-        """Shortcut to :meth:`remove` method (file or directory)."""
-        return self.remove(objpath)
-
-    def ps(self, opts=None, search=None, pscmd=None):
-        """
-        Performs a standard process inquiry through :class:`subprocess.Popen`
-        and filter the output if a ``search`` expression is provided.
-        """
-        if not pscmd:
-            pscmd = ['ps']
-        if opts is None:
-            opts = []
-        pscmd.extend(self._psopts)
-        pscmd.extend(opts)
-        self.stderr(*pscmd)
-        psall = subprocess.Popen(pscmd, stdout=subprocess.PIPE).communicate()[0].split('\n')
-        if search:
-            psall = filter(lambda x: re.search(search, x), psall)
-        return [x.strip() for x in psall]
-
-    def readonly(self, inodename):
-        """Set permissions of the ``filename`` object to read-only."""
-        inodename = self.path.expanduser(inodename)
-        self.stderr('readonly', inodename)
-        rc = None
-        if os.path.exists(inodename):
-            if os.path.isdir(inodename):
-                rc = self.chmod(inodename, 0555)
-            else:
-                st = self.stat(inodename).st_mode
-                if st & stat.S_IWUSR or st & stat.S_IWGRP or st & stat.S_IWOTH:
-                    rc = self.chmod(inodename, st & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH))
-                else:
-                    rc = True
-        return rc
-
-    def readonlytree(self, objpath):
-        """Recursively set permissions of the ``dirname`` object to read-only."""
-        rc = self.readonly(objpath)
-        for dirpath, dirnames, filenames in self.walk(objpath):
-            for item in filenames + dirnames:
-                rc = self.readonly(self.path.join(dirpath, item)) and rc
-        return rc
-
-    def sleep(self, nbsecs):
-        """Clone of the unix command."""
-        self.stderr('sleep', nbsecs)
-        time.sleep(nbsecs)
+    @property
+    def env(self):
+        """Returns the current active environment."""
+        return Environment.current()
 
     def vortex_modules(self, only='.'):
-        """Return a filtered list of modules in the vortex package."""
+        """Return a filtered list of modules in the vortex package.
+
+        :param str only: The regex used to filter the modules list.
+        """
         if self.glove is not None:
             g = self.glove
             mfiles = [
@@ -510,7 +474,10 @@ class System(footprints.FootprintBase):
             raise RuntimeError("A glove must be defined")
 
     def vortex_loaded_modules(self, only='.', output=None):
-        """Check loaded modules, producing either a dump or a list of tuple (status, modulename)."""
+        """Check loaded modules, producing either a dump or a list of tuple (status, modulename).
+
+        :param str only: The regex used to filter the modules list.
+        """
         checklist = list()
         if output is None:
             output = self.output
@@ -536,8 +503,149 @@ class System(footprints.FootprintBase):
                     logger.critical('systems_reload: cannot import module %s (%s)' % (modname, str(err)))
         return extras
 
-    def popen(self, args, stdin=None, stdout=None, stderr=None, shell=False, output=False, bufsize=0):
-        """Return an open pipe on output of args command."""
+    # Redefinition of methods of the resource package...
+
+    def numrlimit(self, r_id):
+        """
+        Convert actual resource id (**r_id**) in some acceptable *int* for the
+        :mod:`resource` module.
+        """
+        if type(r_id) is not int:
+            r_id = r_id.upper()
+            if not r_id.startswith('RLIMIT_'):
+                r_id = 'RLIMIT_' + r_id
+            r_id = getattr(self._rl, r_id, None)
+        if r_id is None:
+            raise ValueError('Invalid resource specified')
+        return r_id
+
+    def setrlimit(self, r_id, r_limits):
+        """Proxy to :mod:`resource` function of the same name."""
+        self.stderr('setrlimit', r_id, r_limits)
+        try:
+            r_limits = tuple(r_limits)
+        except TypeError:
+            r_limits = (r_limits, r_limits)
+        return self._rl.setrlimit(self.numrlimit(r_id), r_limits)
+
+    def getrlimit(self, r_id):
+        """Proxy to :mod:`resource` function of the same name."""
+        self.stderr('getrlimit', r_id)
+        return self._rl.getrlimit(self.numrlimit(r_id))
+
+    def getrusage(self, pid=None):
+        """Proxy to :mod:`resource` function of the same name with current process as defaut."""
+        if pid is None:
+            pid = self._rl.RUSAGE_SELF
+        self.stderr('getrusage', pid)
+        return self._rl.getrusage(pid)
+
+
+class OSExtended(System):
+    """Abstract extended base system.
+
+    It contains many useful Vortex's additions to the usual Python's shell.
+    """
+
+    _abstract = True
+    _footprint = dict(
+        info = 'Abstract extended base system'
+    )
+
+    def __init__(self, *args, **kw):
+        """
+        Before going through parent initialisation (see :class:`System`),
+        pickle this attributes:
+
+            * **rmtreemin** - as the minimal depth needed for a :meth:`rmsafe`.
+            * **cmpaftercp** - as a boolean for activating full comparison after plain cp (default: *True*).
+            * **ftraw** - allows ``smartft*`` methods to use the raw FTP commands
+              (e.g. ftget, ftput) instead of the internal Vortex's FTP client
+              (default: *False*).
+            * **ftputcmd** - The name of the raw FTP command for the "put" action
+              (default: ftput).
+            * **ftgetcmd** - The name of the raw FTP command for the "get" action
+              (default: ftget).
+        """
+        logger.debug('Abstract System init %s', self.__class__)
+        self._rmtreemin = kw.pop('rmtreemin', 3)
+        self._cmpaftercp = kw.pop('cmpaftercp', True)
+        # Switches for rawft* methods
+        self.ftraw = kw.pop('ftraw', False)
+        self.ftputcmd = kw.pop('ftputcmd', None)
+        self.ftgetcmd = kw.pop('ftgetcmd', None)
+        # Some internal variables used by particular methods
+        self._ftspool_cache = None
+        self._frozen_target = None
+        # Go for the superclass' constructor
+        super(OSExtended, self).__init__(*args, **kw)
+        # Initialise possibly missing objects
+        self.__dict__['_cpusinfo'] = None
+        self.__dict__['_netstatsinfo'] = None
+        # Initialise the signal handler object
+        self._signal_intercept_init()
+
+    def target(self, **kw):
+        """
+        Provide a default :class:`~vortex.tools.targets.Target` according
+        to System's own attributes.
+
+        * Extra or alternative attributes may still be provided using **kw**.
+        * The object returned by this method will be used in subsequent calls
+          to ::attr:`default_target` (this is the concept of frozen target).
+        """
+        desc = dict(
+            hostname=self.hostname,
+            sysname=self.sysname
+        )
+        desc.update(kw)
+        self._frozen_target = footprints.proxy.targets.default(**desc)
+        return self._frozen_target
+
+    @property
+    def default_target(self):
+        """Return the latest frozen target."""
+        return DelayedInit(self._frozen_target, self.target)
+
+    def popen(self, args, stdin=None, stdout=None, stderr=None, shell=False,
+              output=False, bufsize=0):  # @UnusedVariable
+        """Return an open pipe for the **args** command.
+
+        :param str|list args: The command (+ its command-line arguments) to be
+            executed. When **shell** is *False* it should be a list. When **shell**
+            is *True*, it should be a string.
+        :param stdin: Specify the input stream characteristics:
+
+            * If *None*, the standard input stream will be opened.
+            * If *True*, a pipe is created and data may be sent to the process
+              using the :meth:`~subprocess.Popen.communicate` method of the
+              returned object.
+            * If a File-like object is provided, it will be used as an input stream
+
+        :param stdout: Specify the output stream characteristics:
+
+            * If *None*, the standard output stream is used.
+            * If *True*, a pipe is created and standard outputs may be retrieved
+              using the :meth:`~subprocess.Popen.communicate` method of the
+              returned object.
+            * If a File-like object is provided, standard outputs will be written there.
+
+        :param stderr: Specify the error stream characteristics:
+
+            * If *None*, the standard error stream is used.
+            * If *True*, a pipe is created and standard errors may be retrieved
+              using the :meth:`~subprocess.Popen.communicate` method of the
+              returned object.
+            * If a File-like object is provided, standard errors will be written there.
+
+        :param bool shell: If *True*, the specified command will be executed
+            through the system shell. (It is usually considered a security hazard:
+            see the :mod:`subprocess` documentation for more details).
+        :param bool output: unused (kept for backward compatibility).
+        :param int bufsize: The default buffer size for new pipes (``0`` means unbuffered)
+        :return subprocess.Popen: A Python's :class:`~subprocess.Popen` object
+            handling the process.
+        """
         self.stderr(*args)
         if stdout is True:
             stdout = subprocess.PIPE
@@ -548,7 +656,14 @@ class System(footprints.FootprintBase):
         return subprocess.Popen(args, bufsize=bufsize, stdin=stdin, stdout=stdout, stderr=stderr, shell=shell)
 
     def pclose(self, p, ok=None):
-        """Do its best to nicely opened pipe command linked to arg ``p``."""
+        """Do its best to nicely shutdown the process started by **p**.
+
+        :param subprocess.Popen p: The process to be shutdown
+        :param list ok: The shell return codes considered as successful
+            (if *None*, only 0 is considered successful)
+        :return bool: Returns *True* if the process return code is within the
+            **ok** list.
+        """
         if p.stdin is not None:
             p.stdin.close()
         p.wait()
@@ -576,8 +691,59 @@ class System(footprints.FootprintBase):
     def spawn(self, args, ok=None, shell=False, stdin=None, output=None,
               outmode='a', outsplit=True, silent=False, fatal=True,
               taskset=None, taskset_id=0, taskset_bsize=1):
-        """Subprocess call of ``args``.
-           ``args`` can be a sequence or a string, preferably a string when shell=True.
+        """Subprocess call of **args**.
+
+        :param str|list args: The command (+ its command-line arguments) to be
+            executed. When **shell** is *False* it should be a list. When **shell**
+            is *True*, it should be a string.
+        :param list ok: The shell return codes considered as successful
+            (if *None*, only 0 is considered successful)
+        :param bool shell: If *True*, the specified command will be executed
+            through the system shell. (It is usually considered a security hazard:
+            see the :mod:`subprocess` documentation for more details).
+        :param stdin: Specify the input stream characteristics:
+
+            * If *None*, the standard input stream will be opened.
+            * If *True*, no standard input will be sent.
+            * If a File-like object is provided, it will be used as an input stream.
+
+        :param output: Specify the standard and error stream characteristics:
+
+            * If *None*, ``self.output`` (that defaults to *True*) will be used.
+            * If *True*, *stderr* and *stdout* will be captured and *stdout*
+              will be returned by the method if the execution goes well
+              according to the **ok** list. (see the **outsplit** argument).
+            * If *False*, the standard output and error streams will be used.
+            * If a File-like object is provided, outputs will be written there.
+            * If a string is provided, it's considered to be a filename. The
+              file will be opened (see the **outmode** argument) and used to
+              redirect *stdout* and *stderr*
+
+        :param str outmode: The open mode of the file output file
+            (meaningful only when **output** is a filename).
+        :param bools outsplit: It *True*, the captured standard output will be split
+            on line-breaks and a list of lines will be returned (with all the
+            line-breaks stripped out). Otherwise, the raw standard output text
+            is returned. (meaningful only when **output** is *True*).
+        :param bool silent: If *True*, in case a bad return-code is encountered
+            (according to the **ok** list), the standard error strem is not printed
+            out.
+        :param bool fatal: It *True*, exceptions will be raised in case of failures
+            (more precisely, if a bad return-code is detected (according to the
+            **ok** list), an :class:`ExecutionError` is raised). Otherwise, the
+            method just returns *False*.
+        :param str taskset: If *None*, process will not be binded to a specific
+            CPU core (this is usually what we want). Otherwise, **taskset** can be
+            a string describing the wanted *topology* and the *method* used to
+            bind the process (the string should looks like ``topology_method``).
+            (see the :meth:`cpus_affinity_get` method and the
+            :mod:`opinel.cpu_tool` module for more details).
+        :param int taskset_id: The task id for this process
+        :param int taskset_bsize: The number of CPU that will be used (usually 1,
+            but possibly more when using threaded programs).
+        :note: When a signal is caught by the Python script, the TERM signal is
+            sent to the spawned process and then the signal Exception is re-raised
+            (the **fatal** argument has no effect on that).
         """
         rc = False
         if ok is None:
@@ -690,62 +856,231 @@ class System(footprints.FootprintBase):
 
         return rc
 
-    def numrlimit(self, r_id):
-        """Convert actual resource id in some acceptable int for module :mod:`resource`."""
-        if type(r_id) is not int:
-            r_id = r_id.upper()
-            if not r_id.startswith('RLIMIT_'):
-                r_id = 'RLIMIT_' + r_id
-            r_id = getattr(self._rl, r_id, None)
-        if r_id is None:
-            raise ValueError('Invalid resource specified')
-        return r_id
+    def getlogname(self):
+        """Be sure to get the actual login name."""
+        return passwd.getpwuid(self._os.getuid())[0]
 
-    def setrlimit(self, r_id, r_limits):
-        """Proxy to :mod:`resource` function of the same name."""
-        self.stderr('setrlimit', r_id, r_limits)
-        try:
-            r_limits = tuple(r_limits)
-        except TypeError:
-            r_limits = (r_limits, r_limits)
-        return self._rl.setrlimit(self.numrlimit(r_id), r_limits)
+    def getfqdn(self, name=None):
+        """
+        Return a fully qualified domain name for **name**. Default is to
+        check for current *hostname**
+        """
+        if name is None:
+            name = self.default_target.inetname
+        return socket.getfqdn(name)
+
+    def pwd(self, output=None):
+        """Current working directory."""
+        if output is None:
+            output = self.output
+        self.stderr('pwd')
+        realpwd = self._os.getcwd()
+        if output:
+            return realpwd
+        else:
+            print realpwd
+            return True
+
+    def cd(self, pathtogo, create=False):
+        """Change the current working directory to **pathtogo**."""
+        pathtogo = self.path.expanduser(pathtogo)
+        self.stderr('cd', pathtogo, create)
+        if create:
+            self.mkdir(pathtogo)
+        self._os.chdir(pathtogo)
+        return True
+
+    def cdcontext(self, path, create=False):
+        """
+        Returns a new :class:`CdContext` context manager initialised with the
+        **path** and **create** arguments.
+        """
+        return CdContext(self, path, create)
+
+    def ffind(self, *args):
+        """Recursive file find. Arguments are starting paths."""
+        if not args:
+            args = ['*']
+        else:
+            args = [self.path.expanduser(x) for x in args]
+        files = []
+        self.stderr('ffind', *args)
+        for pathtogo in self.glob(*args):
+            if self.path.isfile(pathtogo):
+                files.append(pathtogo)
+            else:
+                for root, u_dirs, filenames in self._os.walk(pathtogo):  # @UnusedVariable
+                    files.extend([self.path.join(root, f) for f in filenames])
+        return sorted(files)
+
+    def xperm(self, filename, force=False):
+        """Return whether a **filename** exists and is executable or not.
+
+        If **force** is set to *True*, the file's permission will be modified
+        so that the file becomes executable.
+        """
+        if os.path.exists(filename):
+            is_x = bool(os.stat(filename).st_mode & 1)
+            if not is_x and force:
+                self.chmod(filename, os.stat(filename).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+                is_x = True
+            return is_x
+        else:
+            return False
+
+    def wperm(self, filename, force=False):
+        """Return whether a **filename** exists and is writable by owner or not.
+
+        If **force** is set to *True*, the file's permission will be modified
+        so that the file becomes writable.
+        """
+        if os.path.exists(filename):
+            st = os.stat(filename).st_mode
+            is_w = bool(st & stat.S_IWUSR)
+            if not is_w and force:
+                self.chmod(filename, st | stat.S_IWUSR)
+                is_w = True
+            return is_w
+        else:
+            return False
+
+    def wpermtree(self, objpath, force=False):
+        """Return whether all items are owner-writeable in a hierarchy.
+
+        If **force** is set to *True*, the file's permission of all files in the
+        hierarchy will be modified so that they writable.
+        """
+        rc = self.wperm(objpath, force)
+        for dirpath, dirnames, filenames in self.walk(objpath):
+            for item in filenames + dirnames:
+                rc = self.wperm(self.path.join(dirpath, item), force) and rc
+        return rc
+
+    def readonly(self, inodename):
+        """Set permissions of the ``inodename`` object to read-only."""
+        inodename = self.path.expanduser(inodename)
+        self.stderr('readonly', inodename)
+        rc = None
+        if os.path.exists(inodename):
+            if os.path.isdir(inodename):
+                rc = self.chmod(inodename, 0555)
+            else:
+                st = self.stat(inodename).st_mode
+                if st & stat.S_IWUSR or st & stat.S_IWGRP or st & stat.S_IWOTH:
+                    rc = self.chmod(inodename, st & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH))
+                else:
+                    rc = True
+        return rc
+
+    def readonlytree(self, objpath):
+        """Recursively set permissions of the **objpath** object to read-only."""
+        rc = self.readonly(objpath)
+        for dirpath, dirnames, filenames in self.walk(objpath):
+            for item in filenames + dirnames:
+                rc = self.readonly(self.path.join(dirpath, item)) and rc
+        return rc
+
+    def usr_file(self, filename):
+        """Return whether or not **filename** belongs to the current user."""
+        return self._os.stat(filename).st_uid == self._os.getuid()
+
+    def which(self, command):
+        """Clone of the eponymous unix command."""
+        self.stderr('which', command)
+        if command.startswith('/'):
+            if self.xperm(command):
+                return command
+        else:
+            for xpath in self.env.path.split(':'):
+                fullcmd = os.path.join(xpath, command)
+                if self.xperm(fullcmd):
+                    return fullcmd
+
+    def touch(self, filename):
+        """Clone of the eponymous unix command."""
+        filename = self.path.expanduser(filename)
+        self.stderr('touch', filename)
+        rc = True
+        if self.path.exists(filename):
+            # Note: "filename" might as well be a directory...
+            try:
+                os.utime(filename, None)
+            except StandardError:
+                rc = False
+        else:
+            fh = file(filename, 'a')
+            fh.close()
+        return rc
+
+    @fmtshcmd
+    def remove(self, objpath):
+        """Unlink the specified object (file, directory or directory tree).
+
+        :param str objpath: Path to the object to unlink
+        """
+        objpath = self.path.expanduser(objpath)
+        if os.path.exists(objpath):
+            self.stderr('remove', objpath)
+            if os.path.isdir(objpath):
+                self.rmtree(objpath)
+            else:
+                self.unlink(objpath)
+        else:
+            self.stderr('clear', objpath)
+        return not os.path.exists(objpath)
+
+    @fmtshcmd
+    def rm(self, objpath):
+        """Shortcut to :meth:`remove` method.
+
+        :param str objpath: Path to the object to unlink
+        """
+        return self.remove(objpath)
+
+    def ps(self, opts=None, search=None, pscmd=None):
+        """
+        Performs a standard process inquiry through :class:`subprocess.Popen`
+        and filter the output if a **search** expression is provided (regular
+        expressions are used).
+        """
+        if not pscmd:
+            pscmd = ['ps']
+        if opts is None:
+            opts = []
+        pscmd.extend(self._psopts)
+        pscmd.extend(opts)
+        self.stderr(*pscmd)
+        psall = subprocess.Popen(pscmd, stdout=subprocess.PIPE).communicate()[0].split('\n')
+        if search:
+            psall = filter(lambda x: re.search(search, x), psall)
+        return [x.strip() for x in psall]
+
+    def sleep(self, nbsecs):
+        """Clone of the unix eponymous command."""
+        self.stderr('sleep', nbsecs)
+        time.sleep(nbsecs)
 
     def setulimit(self, r_id):
-        """Set an unlimited value to resource specified."""
+        """Set an unlimited value to the specified resource (**r_id**)."""
         self.stderr('setulimit', r_id)
         soft, hard = self.getrlimit(r_id)
         soft = min(hard, max(soft, self._rl.RLIM_INFINITY))
         return self.setrlimit(r_id, (soft, hard))
-
-    def getrlimit(self, r_id):
-        """Proxy to :mod:`resource` function of the same name."""
-        self.stderr('getrlimit', r_id)
-        return self._rl.getrlimit(self.numrlimit(r_id))
-
-    def getrusage(self, pid=None):
-        """Proxy to :mod:`resource` function of the same name with current process as defaut."""
-        if pid is None:
-            pid = self._rl.RUSAGE_SELF
-        self.stderr('getrusage', pid)
-        return self._rl.getrusage(pid)
 
     def ulimit(self):
         """Dump the user limits currently defined."""
         for limit in [r for r in dir(self._rl) if r.startswith('RLIMIT_')]:
             print ' ', limit.ljust(16), ':', self._rl.getrlimit(getattr(self._rl, limit))
 
-    def getlogname(self):
-        """Be sure to get actual login name."""
-        return passwd.getpwuid(self._os.getuid())[0]
-
-    def cdcontext(self, path, create=False):
-        return CdContext(self, path, create)
-
-    def ssh(self, hostname, logname=None, *args, **kw):
-        return AssistedSsh(self, hostname, logname, *args, **kw)
-
     @property
     def cpus_info(self):
+        """Return an object of a subclass of  :class:`opinel.cpu_tool.CpusInfo`.
+
+        Such objects are designed to get informations on the platform's CPUs.
+
+        :note: *None* might be returned on some platforms (if cpufinfo is not
+            implemented)
+        """
         return self._cpusinfo
 
     def cpus_affinity_get(self, taskid, blocksize=1, method='default', topology='raw'):
@@ -762,79 +1097,58 @@ class System(footprints.FootprintBase):
 
     @property
     def netstatsinfo(self):
+        """Return an object of a subclass of :class:`vortex;tools;net.AbstractNetstats`.
+
+        Such objects are designed to get informations on the platform's network
+        connection (both TCP and UDP)
+
+        :note: *None* might be returned on some platforms (if netstat is not
+            implemented)
+        """
         return self._netstatsinfo
 
     def available_localport(self):
+        """Returns an available port number for a new TCP or UDP connection.
+
+        :note: The ``NotImplementedError`` might be raised on some platforms since
+            netstat may not be implemented.
+        """
         if self.netstatsinfo is None:
             raise NotImplementedError('This function is not implemented on this system.')
         return self.netstatsinfo.available_localport()
 
     def check_localport(self, port):
+        """Check if a **port** number is currently being used.
+
+        :note: The ``NotImplementedError`` might be raised on some platforms since
+            netstat may not be implemented.
+        """
         if self.netstatsinfo is None:
             raise NotImplementedError('This function is not implemented on this system.')
         return self.netstatsinfo.check_localport(port)
 
-
-class OSExtended(System):
-
-    _abstract = True
-    _footprint = dict(
-        info = 'Extended base system'
-    )
-
-    def __init__(self, *args, **kw):
-        """
-        Before going through parent initialisation, pickle this attributes:
-
-          * rmtreemin - as the minimal depth needed for a :meth:`rmsafe`.
-          * cmpaftercp - as a boolean for activating full comparison after plain cp (default: True).
-        """
-        logger.debug('Abstract System init %s', self.__class__)
-        self._rmtreemin = kw.pop('rmtreemin', 3)
-        self._cmpaftercp = kw.pop('cmpaftercp', True)
-        # Switches for rawft* methods
-        self.ftraw = kw.pop('ftraw', False)
-        self.ftputcmd = kw.pop('ftputcmd', None)
-        self.ftgetcmd = kw.pop('ftgetcmd', None)
-        # Some internal variables used by particular methods
-        self._ftspool_cache = None
-        self._frozen_target = None
-        # Go for the superclass' constructor
-        super(OSExtended, self).__init__(*args, **kw)
-        # Intialiase the signal handler object
-        self._signal_intercept_init()
-
-    def target(self, **kw):
-        """Provide a default target according to system own attributes."""
-        desc = dict(
-            hostname=self.hostname,
-            sysname=self.sysname
-        )
-        desc.update(kw)
-        self._frozen_target = footprints.proxy.targets.default(**desc)
-        return self._frozen_target
-
-    @property
-    def default_target(self):
-        """Returns the latest frozen target."""
-        return DelayedInit(self._frozen_target, self.target)
-
     def clear(self):
-        """Clear screen."""
+        """Clone of the unix eponymous command."""
         self._os.system('clear')
 
     @property
     def cls(self):
-        """Property shortcut to clear screen."""
+        """Property shortcut to :meth:`clear` screen."""
         self.clear()
         return None
 
-    def usr_file(self, filename):
-        """Return whether or not a file belongs to the current user."""
-        return self._os.stat(filename).st_uid == self._os.getuid()
+    def rawopts(self, cmdline=None, defaults=None,
+                isnone=isnonedef, istrue=istruedef, isfalse=isfalsedef):
+        """Parse a simple options command line that looks like `` key=value``.
 
-    def rawopts(self, cmdline=None, defaults=None, isnone=isnonedef, istrue=istruedef, isfalse=isfalsedef):
-        """Parse a simple options command line as key=value."""
+        :param str cmdline: The command line to be processed (if *None*, ``sys.argv``
+            is used to get the script's command line)
+        :param dict defaults: defaults values for any missing option.
+        :param re.sre_compile isnone: Regex that detects ``None`` values.
+        :param re.sre_compile isnone: Regex that detects ``True`` values.
+        :param re.sre_compile isnone: Regex that detects ``False`` values.
+        :return dict: a dictionary that contains the parsed options (or their defaults)
+        """
         opts = dict()
         if defaults:
             try:
@@ -856,7 +1170,7 @@ class OSExtended(System):
         return opts
 
     def is_iofile(self, iocandidate):
-        """Check if actual candidate is a valid filename or io stream."""
+        """Check if actual **iocandidate** is a valid filename or io stream."""
         return iocandidate is not None and (
             (isinstance(iocandidate, basestring) and self.path.exists(iocandidate)) or
             isinstance(iocandidate, file) or
@@ -865,7 +1179,15 @@ class OSExtended(System):
         )
 
     def ftp(self, hostname, logname=None, delayed=False):
-        """Returns an open ftp session on the specified target."""
+        """Return an :class:`~vortex.tools.net.StdFtp` object.
+
+        :param str hostname: the remote host's name for FTP.
+        :param str logname: the logname on the remote host.
+        :param bool delayed: delay the actual connection attempt as much as possible.
+
+        See the :class:`~vortex.tools.net.StdFtp` class documentation for
+        more information.
+        """
         ftpbox = StdFtp(self, hostname)
         if logname is None:
             if self.glove is not None:
@@ -881,10 +1203,18 @@ class OSExtended(System):
 
     @fmtshcmd
     def ftget(self, source, destination, hostname=None, logname=None, cpipeline=None):
-        """Proceed direct ftp get on the specified target.
+        """Proceed to a direct ftp get on the specified target (using Vortex's FTP client).
 
-        cpipeline is possibly a :class:`CompressionPipeline` object that will be
-        used to uncompress the data during the file transfer.
+        :param str source: the remote path to get data
+        :param destination: The destination of data (either a path to file or a
+            File-like object)
+        :type destination: str or File-like object
+        :param str hostname: The target hostname (default: *None*, see the
+            :class:`~vortex.tools.net.StdFtp` class to get the effective default)
+        :param str logname: the target logname (default: *None*, see the
+            :class:`~vortex.tools.net.StdFtp` class to get the effective default)
+        :param CompressionPipeline cpipeline: If not *None*, the object used to
+            uncompress the data during the file transfer (default: *None*).
         """
         if isinstance(destination, basestring):  # destination may be Virtual
             self.rm(destination)
@@ -902,10 +1232,18 @@ class OSExtended(System):
 
     @fmtshcmd
     def ftput(self, source, destination, hostname=None, logname=None, cpipeline=None):
-        """Proceed direct ftp put on the specified target.
+        """Proceed to a direct ftp put on the specified target (using Vortex's FTP client).
 
-        cpipeline is possibly a :class:`CompressionPipeline` object that will be
-        used to compress the data during the file transfer.
+        :param source: The source of data (either a path to file or a
+            File-like object)
+        :type source: str or File-like object
+        :param str destination: The path where to upload the data.
+        :param str hostname: The target hostname (default: *None*, see the
+            :class:`~vortex.tools.net.StdFtp` class to get the effective default)
+        :param str logname: the target logname (default: *None*, see the
+            :class:`~vortex.tools.net.StdFtp` class to get the effective default)
+        :param CompressionPipeline cpipeline: If not *None*, the object used to
+            compress the data during the file transfer (default: *None*).
         """
         rc = False
         if self.is_iofile(source):
@@ -929,7 +1267,7 @@ class OSExtended(System):
         return self._ftspool_cache
 
     def copy2ftspool(self, source, nest=False, **kwargs):
-        """Make a copy of **source** to the FtSpool directory."""
+        """Make a copy of **source** to the FtSpool cache."""
         h = hashlib.new('md5')
         h.update(source)
         outputname = 'vortex_{:s}_P{:06d}_{:s}'.format(date.now().strftime('%Y%m%d%H%M%S-%f'),
@@ -943,7 +1281,7 @@ class OSExtended(System):
             return False
 
     def ftserv_put(self, source, destination, hostname=None, logname=None, specialshell=None):
-        """Asynchrone put of a file using FtServ."""
+        """Asynchronous put of a file using FtServ."""
         if isinstance(source, basestring) and isinstance(destination, basestring):
             if self.path.exists(source):
                 ftcmd = self.ftputcmd or 'ftput'
@@ -984,7 +1322,15 @@ class OSExtended(System):
 
     @fmtshcmd
     def rawftput(self, source, destination, hostname=None, logname=None, cpipeline=None):
-        """Proceed with some external ftput command on the specified target."""
+        """Proceed with some external ftput command on the specified target.
+
+        :param str source: Path to the source filename
+        :param str destination: The path where to upload the data.
+        :param str hostname: The target hostname  (default: *None*).
+        :param str logname: the target logname  (default: *None*).
+        :param CompressionPipeline cpipeline: If not *None*, the object used to
+            compress the data during the file transfer (default: *None*).
+        """
         if cpipeline is not None:
             if cpipeline.compress2rawftp(source):
                 return self.ftserv_put(source, destination, hostname, logname,
@@ -996,7 +1342,26 @@ class OSExtended(System):
 
     def smartftput(self, source, destination, hostname=None, logname=None,
                    cpipeline=None, fmt=None):
-        """Proceed some ftput or rawftput."""
+        """Select the best alternative between ``ftput`` and ``rawftput``.
+
+        :param source: The source of data (either a path to file or a
+            File-like object)
+        :type source: str or File-like object
+        :param str destination: The path where to upload the data.
+        :param str hostname: The target hostname (see :class:`~vortex.tools.net.StdFtp`
+            for the default)
+        :param str logname: the target logname (see :class:`~vortex.tools.net.StdFtp`
+            for the default)
+        :param CompressionPipeline cpipeline: If not *None*, the object used to
+            compress the data during the file transfer.
+        :param str fmt: The format of data.
+
+        ``rawftput`` will be used if all of the following conditions are met:
+
+            * ``self.ftraw`` is *True*
+            * **source** is a string (as opposed to a File like object)
+            * **destination** is a string (as opposed to a File like object)
+        """
         if self.ftraw and isinstance(source, basestring) and isinstance(destination, basestring):
             return self.rawftput(source, destination, hostname=hostname, logname=logname,
                                  cpipeline=cpipeline, fmt=fmt)
@@ -1006,12 +1371,39 @@ class OSExtended(System):
 
     @fmtshcmd
     def rawftget(self, source, destination, hostname=None, logname=None, cpipeline=None):
-        """Proceed with some external ftget command on the specified target."""
+        """Proceed with some external ftget command on the specified target.
+
+        :param str source: The remote path to get data
+        :param str destination: Path to the filename where to put the data.
+        :param str hostname: The target hostname  (default: *None*).
+        :param str logname: the target logname  (default: *None*).
+        :param CompressionPipeline cpipeline: Unusued (kept for compatibility)
+        """
         return self.ftserv_get(source, destination, hostname, logname)
 
     def smartftget(self, source, destination, hostname=None, logname=None,
                    cpipeline=None, fmt=None):
-        """Proceed some ftget or rawftget."""
+        """Select the best alternative between ``ftget`` and ``rawftget``.
+
+        :param str source: the remote path to get data
+        :param destination: The destination of data (either a path to file or a
+            File-like object)
+        :type destination: str or File-like object
+        :param str hostname: The target hostname (see :class:`~vortex.tools.net.StdFtp`
+            for the default)
+        :param str logname: the target logname (see :class:`~vortex.tools.net.StdFtp`
+            for the default)
+        :param CompressionPipeline cpipeline: If not *None*, the object used to
+            uncompress the data during the file transfer.
+        :param str fmt: The format of data.
+
+        ``rawftget`` will be used if all of the following conditions are met:
+
+            * ``self.ftraw`` is *True*
+            * **cpipeline** is None
+            * **source** is a string (as opposed to a File like object)
+            * **destination** is a string (as opposed to a File like object)
+        """
         if (self.ftraw and cpipeline is None and
                 isinstance(source, basestring) and isinstance(destination, basestring)):
             # FtServ is uninteresting when dealing with compression
@@ -1021,12 +1413,32 @@ class OSExtended(System):
             return self.ftget(source, destination, hostname=hostname, logname=logname,
                               cpipeline=cpipeline, fmt=fmt)
 
+    def ssh(self, hostname, logname=None, *args, **kw):
+        """Return an :class:`~vortex.tools.net.AssistedSsh` object.
+
+        :param str hostname: the remote host's name for SSH
+        :param str logname: the logname on the remote host
+
+        Parameters provided with **args** or **kw** will be passed diorectly to the
+        :class:`~vortex.tools.net.AssistedSsh`  constructor.
+
+        See the :class:`~vortex.tools.net.AssistedSsh` class documentation for
+        more information.
+        """
+        return AssistedSsh(self, hostname, logname, *args, **kw)
+
     @fmtshcmd
     def scpput(self, source, destination, hostname, logname=None, cpipeline=None):
         """Perform an scp to the specified target.
 
-        cpipeline is possibly a :class:`CompressionPipeline` object that will be
-        used to compress the data during the file transfer.
+        :param source: The source of data (either a path to file or a
+            File-like object)
+        :type source: str or File-like object
+        :param str destination: The path where to upload the data.
+        :param str hostname: The target hostname.
+        :param str logname: the target logname (default: current user)
+        :param CompressionPipeline cpipeline: If not *None*, the object used to
+            compress the data during the file transfer (default: *None*).
         """
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
@@ -1043,10 +1455,16 @@ class OSExtended(System):
 
     @fmtshcmd
     def scpget(self, source, destination, hostname, logname=None, cpipeline=None):
-        """Perform an scp to the specified source.
+        """Perform an scp to get the specified source.
 
-        cpipeline is possibly a :class:`CompressionPipeline` object that will be
-        used to uncompress the data during the file transfer.
+        :param str source: the remote path to get data
+        :param destination: The destination of data (either a path to file or a
+            File-like object)
+        :type destination: str or File-like object
+        :param str hostname: The target hostname.
+        :param str logname: the target logname (default: current user)
+        :param CompressionPipeline cpipeline: If not *None*, the object used to
+            uncompress the data during the file transfer (default: *None*).
         """
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
@@ -1062,19 +1480,15 @@ class OSExtended(System):
                     return ssh.scpget_stream(source, cdestination)
 
     def softlink(self, source, destination):
-        """Set a symbolic link if source is not destination."""
+        """Set a symbolic link if **source** is not **destination**."""
         self.stderr('softlink', source, destination)
         if source == destination:
             return False
         else:
             return self.symlink(source, destination)
 
-    def filecocoon(self, destination):
-        """Normalizes path name of the ``destination`` and creates this directory."""
-        return self.mkdir(self.path.dirname(self.path.expanduser(destination)))
-
     def size(self, filepath):
-        """Returns the actual size in bytes of the specified ``filepath``."""
+        """Returns the actual size in bytes of the specified **filepath**."""
         filepath = self.path.expanduser(filepath)
         self.stderr('size', filepath)
         try:
@@ -1083,10 +1497,12 @@ class OSExtended(System):
             return -1
 
     def treesize(self, objpath):
-        """Size in byte of the whole directory (or file).
-           Links are not followed, and directory sizes are taken
-           into account: should return the same as ``du -sb``.
-           Raises OSError if objpath does not exist.
+        """Size in byte of the whole **objpath** directory (or file).
+
+        Links are not followed, and directory sizes are taken into account:
+        should return the same as ``du -sb``.
+
+        Raises ``OSError`` if **objpath** does not exist.
         """
         objpath = self.path.expanduser(objpath)
         if self.path.isdir(objpath):
@@ -1098,7 +1514,7 @@ class OSExtended(System):
         return self.lstat(objpath).st_size
 
     def mkdir(self, dirpath, fatal=True):
-        """Normalizes path name and recursively creates this directory."""
+        """Normalises path name of **dirpath** and recursively creates this directory."""
         normdir = self.path.normpath(self.path.expanduser(dirpath))
         if normdir and not self.path.isdir(normdir):
             logger.debug('Cocooning directory %s', normdir)
@@ -1115,13 +1531,17 @@ class OSExtended(System):
         else:
             return True
 
+    def filecocoon(self, destination):
+        """Normalises path name of ``destination`` and creates **destination**'s directory."""
+        return self.mkdir(self.path.dirname(self.path.expanduser(destination)))
+
     def safe_filesuffix(self):
-        """return a file suffix that should be unique across the system"""
+        """Returns a file suffix that should be unique across the system."""
         return '.'.join((datetime.now().strftime('_%Y%m%d_%H%M%S_%f'),
                          self.hostname, 'p{0:06d}'.format(os.getpid()),))
 
     def rawcp(self, source, destination):
-        """Perform a simple ``copyfile`` or ``copytree`` command.
+        """Perform a simple ``copyfile`` or ``copytree`` command depending on **source**.
 
         When copying a file, the operation is atomic. When copying a directory
         it is not (although the non-atomic portion is very limited).
@@ -1154,11 +1574,11 @@ class OSExtended(System):
                 return bool(self.size(source) == self.size(destination))
 
     def hybridcp(self, source, destination, silent=False):
-        """
-        Copy the ``source`` file to a safe ``destination``.
+        """Copy the **source** file to a safe **destination**.
 
-        ``source`` and/or ``destination`` may be File-like objects. If
-        ``destination`` is a realword file name (i.e. not e File-like object),
+        **source** and/or **destination** may be File-like objects.
+
+        If **destination** is a real-word file name (i.e. not e File-like object),
         the operation is atomic.
         """
         self.stderr('hybridcp', source, destination)
@@ -1202,15 +1622,17 @@ class OSExtended(System):
         return rc
 
     def is_samefs(self, path1, path2):
-        """Check whether two paths are on the same filesystem."""
+        """Check whether two paths are located on the same filesystem."""
         st1 = self.stat(path1)
         st2 = self.stat(self.path.dirname(self.path.realpath(path2)))
         return st1.st_dev == st2.st_dev and not self.path.islink(path1)
 
     def smartcp(self, source, destination, silent=False):
         """
-        Hard link the ``source`` file to a safe ``destination`` if possible.
+        Hard link the **source** file to a safe **destination** (if possible).
         Otherwise, let the standard copy do the job.
+
+        **source** and/or **destination** may be File-like objects.
 
         When working on a file, the operation is atomic. When working on a
         directory some restrictions apply (see :meth:`rawcp`)
@@ -1283,10 +1705,23 @@ class OSExtended(System):
 
     @fmtshcmd
     def cp(self, source, destination, intent='inout', smartcp=True, silent=False):
-        """Copy the ``source`` file to a safe ``destination``.
+        """Copy the **source** file to a safe **destination**.
+
+        :param source: The source of data (either a path to file or a
+            File-like object)
+        :type source: str or File-like object
+        :param destination: The destination of data (either a path to file or a
+            File-like object)
+        :type destination: str or File-like object
+        :param str intent: 'in' for a read-only copy. 'inout' for a read-write copy
+            (default: 'inout').
+        :param bool smartcp: use :meth:`smartcp` as much as possible (default: *True*)
+        :param bool silent: do not complain on error (default: *False*).
 
         It relies on :meth:`hybridcp`, :meth:`smartcp` or :meth:`rawcp`
-        depending on ``source``, ``destination`` and ``intent``.
+        depending on **source**, **destination** and **intent**.
+
+        The fastest option should be used...
         """
         self.stderr('cp', source, destination)
         if not isinstance(source, basestring) or not isinstance(destination, basestring):
@@ -1314,7 +1749,7 @@ class OSExtended(System):
         return entries
 
     def rmall(self, *args, **kw):
-        """Unlink the specified `args` objects with globbing."""
+        """Unlink the specified **args** objects with globbing."""
         rc = True
         for pname in args:
             for objpath in self.glob(pname):
@@ -1322,7 +1757,7 @@ class OSExtended(System):
 
     def safepath(self, thispath, safedirs):
         """
-        Boolean to check if :var:``thispath`` is a subpath of a safedir
+        Boolean to check if **thispath** is a subpath of a **safedirs**
         with sufficient depth (or not a subpath at all)
         """
         safe = True
@@ -1335,12 +1770,15 @@ class OSExtended(System):
                 rp = self.path.relpath(thispath, safedir)
                 if not rp.startswith('..'):
                     if len(rp.split(os.sep)) < d:
-                        logger.warning('Unsafe acces to %s relative to %s', thispath, safedir)
+                        logger.warning('Unsafe access to %s relative to %s', thispath, safedir)
                         safe = False
         return safe
 
     def rmsafe(self, pathlist, safedirs):
-        """Recursive unlinks the specified `args` objects if safe."""
+        """
+        Recursive unlinks of the specified **pathlist** objects (if safe according
+        to :meth:`safepath`).
+        """
         ok = True
         if isinstance(pathlist, basestring):
             pathlist = [pathlist]
@@ -1365,16 +1803,19 @@ class OSExtended(System):
             kw.setdefault('ok', [0])
             return self.spawn(cmd, **kw)
 
+    @_kw2spawn
     def wc(self, *args, **kw):
         """Word count on globbed files."""
         return self._globcmd(['wc'], args, **kw)
 
+    @_kw2spawn
     def ls(self, *args, **kw):
-        """Globbing and optional files or directories listing."""
+        """Clone of the eponymous unix command."""
         return self._globcmd(['ls'], args, **kw)
 
+    @_kw2spawn
     def ll(self, *args, **kw):
-        """Globbing and optional files or directories listing."""
+        """Clone of the eponymous unix alias (ls -l)."""
         kw['output'] = True
         llresult = self._globcmd(['ls', '-l'], args, **kw)
         if llresult:
@@ -1383,28 +1824,36 @@ class OSExtended(System):
         else:
             return False
 
+    @_kw2spawn
     def dir(self, *args, **kw):
         """Proxy to ``ls('-l')``."""
         return self._globcmd(['ls', '-l'], args, **kw)
 
+    @_kw2spawn
     def cat(self, *args, **kw):
-        """Globbing and optional files or directories listing."""
+        """Clone of the eponymous unix command."""
         return self._globcmd(['cat'], args, **kw)
 
     @fmtshcmd
+    @_kw2spawn
     def diff(self, *args, **kw):
-        """Globbing and optional files or directories listing."""
+        """Clone of the eponymous unix command."""
         kw.setdefault('ok', [0, 1])
         kw.setdefault('output', False)
         return self._globcmd(['cmp'], args, **kw)
 
+    @_kw2spawn
     def rmglob(self, *args, **kw):
-        """Wrapper of the ``rm`` command through the globcmd."""
+        """Wrapper of the shell's ``rm`` command through the :meth:`globcmd` method."""
         return self._globcmd(['rm'], args, **kw)
 
     @fmtshcmd
     def move(self, source, destination):
-        """Move the ``source`` file or directory."""
+        """Move the ``source`` file or directory (using shutil).
+
+        :param str source: The source object (file, directory, ...)
+        :param str destination: The destination object (file, directory, ...)
+        """
         self.stderr('move', source, destination)
         try:
             self._sh.move(source, destination)
@@ -1416,7 +1865,11 @@ class OSExtended(System):
 
     @fmtshcmd
     def mv(self, source, destination):
-        """Shortcut to :meth:`move` method (file or directory)."""
+        """Move the ``source`` file or directory (using shutil or hybridcp).
+
+        :param source: The source object (file, directory, File-like object, ...)
+        :param destination: The destination object (file, directory, File-like object, ...)
+        """
         self.stderr('mv', source, destination)
         if not isinstance(source, basestring) or not isinstance(destination, basestring):
             self.hybridcp(source, destination)
@@ -1425,8 +1878,9 @@ class OSExtended(System):
         else:
             return self.move(source, destination)
 
+    @_kw2spawn
     def mvglob(self, *args):
-        """Wrapper of the ``mv`` command through the globcmd."""
+        """Wrapper of the shell's ``mv`` command through the :meth:`globcmd` method."""
         return self._globcmd(['mv'], args)
 
     def listdir(self, *args):
@@ -1436,8 +1890,12 @@ class OSExtended(System):
         self.stderr('listdir', *args)
         return self._os.listdir(self.path.expanduser(args[0]))
 
-    def l(self, *args):
-        """Proxy to globbing after removing any option. A bit like :meth:`ls` method."""
+    def l(self, *args):  # @IgnorePep8
+        """
+        Proxy to globbing after removing any option. A bit like the
+        :meth:`ls` method except that that shell's ``ls`` command is not actually
+        called.
+        """
         rl = [x for x in args if not x.startswith('-')]
         if not rl:
             rl.append('*')
@@ -1445,27 +1903,33 @@ class OSExtended(System):
         return self.glob(*rl)
 
     def ldirs(self, *args):
-        """Proxy to directories globbing after removing any option. A bit like :meth:`ls` method."""
+        """
+        Proxy to directories globbing after removing any option. A bit like the
+        :meth:`ls` method except that that shell's ``ls`` command is not actually
+        called.
+        """
         rl = [x for x in args if not x.startswith('-')]
         if not rl:
             rl.append('*')
         self.stderr('ldirs', *rl)
         return [x for x in self.glob(*rl) if self.path.isdir(x)]
 
+    @_kw2spawn
     def gzip(self, *args, **kw):
         """Simple gzip compression of a file."""
         cmd = ['gzip', '-vf', args[0]]
         cmd.extend(args[1:])
         return self.spawn(cmd, **kw)
 
+    @_kw2spawn
     def gunzip(self, *args, **kw):
-        """Simple gunzip a gzip-compressed file."""
+        """Simple gunzip of a gzip-compressed file."""
         cmd = ['gunzip', args[0]]
         cmd.extend(args[1:])
         return self.spawn(cmd, **kw)
 
     def is_tarfile(self, filename):
-        """Return a boolean according to the tar status of the ``filename``."""
+        """Return a boolean according to the tar status of the **filename**."""
         return tarfile.is_tarfile(self.path.expanduser(filename))
 
     def taropts(self, tarfile, opts, verbose=True, autocompress=True):
@@ -1486,22 +1950,40 @@ class OSExtended(System):
                 zopt.discard('j')
         return ''.join(zopt)
 
+    @_kw2spawn
     def tar(self, *args, **kw):
-        """Create a file archive (always c-something)"""
+        """Create a file archive (always c-something).
+
+        :example: ``self.tar('destination.tar', 'directory1', 'directory2')``
+        """
         opts = self.taropts(args[0], 'cf', kw.pop('verbose', True), kw.pop('autocompress', True))
         cmd = ['tar', opts, args[0]]
         cmd.extend(self.glob(*args[1:]))
         return self.spawn(cmd, **kw)
 
+    @_kw2spawn
     def untar(self, *args, **kw):
-        """Unpack a file archive (always x-something)'"""
+        """Unpack a file archive (always x-something).
+
+        :example: ``self.untar('source.tar')``
+        :example: ``self.untar('source.tar', 'to_untar1', 'to_untar2')``
+        """
         opts = self.taropts(args[0], 'xf', kw.pop('verbose', True), kw.pop('autocompress', True))
         cmd = ['tar', opts, args[0]]
         cmd.extend(args[1:])
         return self.spawn(cmd, **kw)
 
     def smartuntar(self, source, destination, **kw):
-        """Unpack a file archive in the appropriate directory."""
+        """Unpack a file archive in the appropriate directory.
+
+        If **uniquelevel_ignore** is *True* (default: *False*) and the tar file
+        contains only one directory, it will be extracted and renamed to
+        **destination**. Otherwise, **destination** will be created and the tar's
+        content will be extracted inside it.
+
+        This is done in a relatively safe way since it is checked that no existing
+        files/directories are overwritten.
+        """
         uniquelevel_ignore = kw.pop('uniquelevel_ignore', False)
         fullsource = self.path.realpath(source)
         self.mkdir(destination)
@@ -1541,7 +2023,7 @@ class OSExtended(System):
         return radix
 
     def tarfix_in(self, source, destination):
-        """Untar the ``destination`` if ``source`` is a tarfile."""
+        """Automatically untar **source** if **source** is a tarfile and **destination** is not."""
         ok = True
         if self.is_tarname(source) and not self.is_tarname(destination):
             logger.info('Untar from get <%s>', source)
@@ -1560,7 +2042,9 @@ class OSExtended(System):
         return (ok, source, destination)
 
     def tarfix_out(self, source, destination):
-        """Tar the ``source`` input."""
+        """
+        Automatically tar the **source** input if **destination** is a tarfile and
+        **source** is not."""
         ok = True
         if not self.is_tarname(source) and self.is_tarname(destination):
             logger.info('Tar before put <%s>', source)
@@ -1576,7 +2060,7 @@ class OSExtended(System):
 
     def blind_dump(self, gateway, obj, destination, **opts):
         """
-        Use ``gateway`` for a blind dump of the ``obj`` in file ``destination``,
+        Use **gateway** for a blind dump of the **obj** in file **destination**,
         (either a file descriptor or a filename).
         """
         rc = None
@@ -1590,21 +2074,21 @@ class OSExtended(System):
 
     def pickle_dump(self, obj, destination, **opts):
         """
-        Dump a pickled representation of specified ``obj`` in file ``destination``,
+        Dump a pickled representation of specified **obj** in file **destination**,
         (either a file descriptor or a filename).
         """
         return self.blind_dump(pickle, obj, destination, **opts)
 
     def json_dump(self, obj, destination, **opts):
         """
-        Dump a json representation of specified ``obj`` in file ``destination``,
+        Dump a json representation of specified **obj** in file **destination**,
         (either a file descriptor or a filename).
         """
         return self.blind_dump(json, obj, destination, **opts)
 
     def blind_load(self, source, gateway=None):
         """
-        Use ``gateway`` for a blind load the representation stored in file ``source``,
+        Use **gateway** for a blind load the representation stored in file **source**,
         (either a file descriptor or a filename).
         """
         if hasattr(source, 'read'):
@@ -1616,20 +2100,20 @@ class OSExtended(System):
 
     def pickle_load(self, source):
         """
-        Load from a pickled representation stored in file ``source``,
+        Load from a pickled representation stored in file **source**,
         (either a file descriptor or a filename).
         """
         return self.blind_load(source, gateway=pickle)
 
     def json_load(self, source):
         """
-        Load from a json representation stored in file ``source``,
+        Load from a json representation stored in file **source**,
         (either a file descriptor or a filename).
         """
         return self.blind_load(source, gateway=json)
 
     def pickle_clone(self, obj):
-        """Clone an object through pickling / unpickling."""
+        """Clone an object (**obj**) through pickling / unpickling."""
         return pickle.loads(pickle.dumps(obj))
 
     def utlines(self, *args):
@@ -1648,19 +2132,25 @@ class OSExtended(System):
         self._sighandler = SignalInterruptHandler()
 
     def signal_intercept_on(self):
-        """Activate the signal catching."""
+        """Activate the signal's catching.
+
+        See :class:`opinel.interrupt.SignalInterruptHandler` documentation.
+        """
         self._sighandler.activate()
 
     def signal_intercept_off(self):
-        """Deactivate the signal catching."""
+        """Deactivate the signal's catching.
+
+        See :class:`opinel.interrupt.SignalInterruptHandler` documentation.
+        """
         self._sighandler.deactivate()
 
     _LDD_REGEX = re.compile(r'^\s*([^\s]+)\s+=>\s*([^\s]+)\s+\(0x.+\)$')
 
     def ldd(self, filename):
-        """Call ldd on a file.
+        """Call ldd on **filename**.
 
-        Return the mapping between the library name and its physical path
+        Return the mapping between the library name and its physical path.
         """
         if self.path.isfile(filename):
             ldd_out = self.spawn(('ldd', filename))
@@ -1675,6 +2165,8 @@ class OSExtended(System):
     def generic_compress(self, pipelinedesc, source, destination=None):
         """Compress a file using the :class:`CompressionPipeline` class.
 
+        See the :class:`CompressionPipeline` class documentation for more details.
+
         :example: "generic_compress('bzip2', 'toto')" will create a toto.bz2 file.
         """
         cp = CompressionPipeline(self, pipelinedesc)
@@ -1687,6 +2179,8 @@ class OSExtended(System):
 
     def generic_uncompress(self, pipelinedesc, source, destination=None):
         """Uncompress a file using the :class:`CompressionPipeline` class.
+
+        See the :class:`CompressionPipeline` class documentation for more details.
 
         :example: "generic_uncompress('bzip2', 'toto.bz2')" will create a toto file.
         """
@@ -1703,10 +2197,10 @@ class OSExtended(System):
 
 
 class Python27(object):
-    """Python features starting at version 2.7."""
+    """Python features starting from version 2.7."""
 
     def import_module(self, modname):
-        """Import the module named ``modname`` with :mod:`importlib` package."""
+        """Import the module named **modname** with :mod:`importlib` package."""
         try:
             import importlib
         except ImportError:
@@ -1720,7 +2214,7 @@ class Python27(object):
         return sys.modules.get(modname)
 
     def import_function(self, funcname):
-        """Import the function named ``funcname`` qualified by a proper module name package."""
+        """Import the function named **funcname** qualified by a proper module name package."""
         thisfunc = None
         if '.' in funcname:
             thismod = self.import_module('.'.join(funcname.split('.')[:-1]))
@@ -1734,7 +2228,8 @@ class Python27(object):
 class Garbage(OSExtended, Python27):
     """
     Default system class for weird systems.
-    Hopefully an extended system will be loaded later on.
+
+    Hopefully an extended system will be loaded later on...
     """
 
     _footprint = dict(
@@ -1756,11 +2251,11 @@ class Garbage(OSExtended, Python27):
 
 
 class Linux(OSExtended):
-    """Default system class for most linux based systems."""
+    """Abstract default system class for most Linux based systems."""
 
     _abstract = True
     _footprint = dict(
-        info = 'Linux base system',
+        info = 'Abstract Linux base system',
         attr = dict(
             sysname = dict(
                 values = ['Linux']
@@ -1770,8 +2265,10 @@ class Linux(OSExtended):
 
     def __init__(self, *args, **kw):
         """
-        Before going through parent initialisation, pickle this attributes:
-          * psopts - as default option for the ps command (default: ``-w -f -a``).
+        Before going through parent initialisation (see :class:`OSExtended`),
+        pickle this attributes:
+
+            * **psopts** - as default option for the ps command (default: ``-w -f -a``).
         """
         logger.debug('Linux system init %s', self.__class__)
         self._psopts = kw.pop('psopts', ['-w', '-f', '-a'])
@@ -1816,20 +2313,20 @@ class Linux(OSExtended):
 
 
 class Linux27(Linux, Python27):
-    """Specific Linux system with python version >= 2.7"""
+    """Linux system with python version >= 2.7"""
 
     _footprint = dict(
-        info = 'Linux base system with aging python version',
+        info = 'Linux based system with aging Python version',
         attr = dict(
             python = dict(
-                values = ['2.7.' + str(x) for x in range(3, 15)]
+                values = ['2.7.' + str(x) for x in range(3, 50)]
             )
         )
     )
 
 
 class LinuxDebug(Linux27):
-    """Special system class for crude debugging on linux based systems."""
+    """Special system class for crude debugging on Linux based systems."""
 
     _footprint = dict(
         info = 'Linux debug system',
@@ -1858,7 +2355,7 @@ class Macosx(OSExtended, Python27):
     """Mac under MacOSX."""
 
     _footprint = dict(
-        info = 'Apple Mac computer under Macosx',
+        info = 'Apple Mac computer under Macosx with aging Python version',
         attr = dict(
             sysname = dict(
                 values = ['Darwin']
@@ -1871,14 +2368,14 @@ class Macosx(OSExtended, Python27):
 
     def __init__(self, *args, **kw):
         """
-        Before going through parent initialisation, pickle this attributes:
-          * psopts - as default option for the ps command (default: ``-w -f -a``).
+        Before going through parent initialisation (see :class:`OSExtended`),
+        pickle this attributes:
+
+            * **psopts** - as default option for the ps command (default: ``-w -f -a``).
         """
         logger.debug('Darwin system init %s', self.__class__)
         self._psopts = kw.pop('psopts', ['-w', '-f', '-a'])
         super(Macosx, self).__init__(*args, **kw)
-        # nothing like that on Darwin
-        self.__dict__['_cpusinfo'] = None
 
     @property
     def realkind(self):
