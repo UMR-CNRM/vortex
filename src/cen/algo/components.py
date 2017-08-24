@@ -41,9 +41,6 @@ class SurfexWorker(VortexWorkerBlindRun):
                 info = 'work in this particular subdirectory',
                 optional = True
             ),
-            name = dict(
-                default = '[kind]',
-            ),
         )
     )
         
@@ -144,9 +141,6 @@ class SafranWorker(VortexWorkerBlindRun):
                 info = 'work in this particular subdirectory',
                 optional = True
             ),
-            name = dict(
-                default = '[kind]',
-            ),
         )
     )
 
@@ -210,7 +204,7 @@ class SafranWorker(VortexWorkerBlindRun):
             sys.stdout = open(self.name + ".out", "a", buffering=0)
             sys.stderr = open(self.name + "_error.out", "a", buffering=0)
             self._safran_commons(rundir, thisdir, rdict)
-
+            
         return rdict
 
     def _safran_commons(self, rundir, thisdir, rdict):
