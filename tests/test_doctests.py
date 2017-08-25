@@ -4,6 +4,8 @@
 import unittest
 import doctest
 
+from footprints import util
+
 from vortex.data import geometries
 from vortex.tools import date
 
@@ -18,6 +20,7 @@ class utDocTests(unittest.TestCase):
     def test_doctests(self):
         self.assert_doctests(date)
         self.assert_doctests(geometries)
+        self.assert_doctests(util)
 
 
 if __name__ == '__main__':

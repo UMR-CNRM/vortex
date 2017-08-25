@@ -28,16 +28,18 @@ def dictmerge(d1, d2):
     dictionaries of dictionaries). The result is in d1.
     If keys exist in d1 and d2, d1 keys are replaced by d2 keys.
 
-    >>> a = {'name':'clim','attr':{'model':{'values':('arpege','arome')}}}
-    >>> b = {'name':'clim model','attr':{'truncation':{'type':'int','optional':'False'}}}
-    >>> dictmerge(a, b)
-    {'name': 'clim model', 'attr': {'model': {'values': ('arpege', 'arome')}, 'truncation': {'type': 'int', 'optional': 'False'}}}
+    Examples::
 
-    >>> dictmerge({'a':'1'},{'b':'2'})
-    {'a': '1', 'b': '2'}
+        >>> a = {'name':'clim','attr':{'model':{'values':('arpege','arome')}}}
+        >>> b = {'name':'clim model','attr':{'truncation':{'type':'int','optional':'False'}}}
+        >>> dictmerge(a, b)
+        {'name': 'clim model', 'attr': {'model': {'values': ('arpege', 'arome')}, 'truncation': {'type': 'int', 'optional': 'False'}}}
 
-    >>> dictmerge({'a':'1','c':{'d':'3','e':'4'},'i':{'b':'2','f':{'g':'5'}}}, {'c':{'h':'6', 'e':'7'}})
-    {'a': '1', 'i': {'b': '2', 'f': {'g': '5'}}, 'c': {'h': '6', 'e': '7', 'd': '3'}}
+        >>> dictmerge({'a':'1'},{'b':'2'})
+        {'a': '1', 'b': '2'}
+
+        >>> dictmerge({'a':'1','c':{'d':'3','e':'4'},'i':{'b':'2','f':{'g':'5'}}}, {'c':{'h':'6', 'e':'7'}})
+        {'a': '1', 'i': {'b': '2', 'f': {'g': '5'}}, 'c': {'h': '6', 'e': '7', 'd': '3'}}
     """
 
     for key, value in six.iteritems(d2):
@@ -54,8 +56,8 @@ def dictmerge(d1, d2):
 
 def list2dict(a, klist):
     """
-    Reshape any entry of ``a`` specified in ``klist`` as a dictionary of the iterable contents
-    of these entry.
+    Reshape any entry of ``a`` specified in ``klist`` as a dictionary of the
+    iterable contentsof these entry.
     """
 
     for k in klist:
@@ -76,9 +78,9 @@ def mktuple(obj):
 
 
 class TimeInt(int):
-    """
-    Extended integer able to handle simple integers or integer plus minutes.
-    In the later case, the first integer is not limitated to 24.
+    """Extended integer able to handle simple integers or integer plus minutes.
+
+    In the later case, the first integer is not limited to 24.
     """
 
     def __new__(cls, ti, tm=None):
@@ -212,10 +214,47 @@ class TimeInt(int):
 
 
 def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
-    """
-    Extended range expansion.
-    When ``start`` is already a complex definition (as a string), ``end`` and ``step`` only apply
-    as default when the sub-definition in ``start`` does not contain any ``end`` or ``step`` value.
+    """Extended range expansion.
+
+    When ``start`` is already a complex definition (as a string), ``end`` and
+    ``step`` only apply as default when the sub-definition in ``start`` does not
+    contain any ``end`` or ``step`` value.
+
+    Basic examples::
+
+        >>> rangex(0, 12, 3)
+        [0, 3, 6, 9, 12]
+        >>> rangex('0-12-3')
+        [0, 3, 6, 9, 12]
+        >>> rangex('0-12-3', shift=24)
+        [24, 27, 30, 33, 36]
+        >>> rangex(0, 12, 3, shift=24)
+        [24, 27, 30, 33, 36]
+        >>> rangex('0-12-3', shift=24, fmt='%03d')
+        ['024', '027', '030', '033', '036']
+
+    Hour/Minutes examples::
+
+        >>> rangex(0, 3, '0:30')
+        ['0000:00', '0000:30', '0001:00', '0001:30', '0002:00', '0002:30', '0003:00']
+        >>> rangex('0:00', '3:00', '0:30')
+        ['0000:00', '0000:30', '0001:00', '0001:30', '0002:00', '0002:30', '0003:00']
+        >>> rangex(0, 3, '0:30', shift=24)
+        ['0024:00', '0024:30', '0025:00', '0025:30', '0026:00', '0026:30', '0027:00']
+
+    It also works with negative values::
+
+        >>> rangex(3, 0,'-0:30')
+        ['0000:00', '0000:30', '0001:00', '0001:30', '0002:00', '0002:30', '0003:00']
+        >>> rangex(-3, 0,'0:30')
+        ['-0000:30', '-0001:00', '-0001:30', '-0002:00', '-0002:30', '-0003:00', '0000:00']
+        >>> rangex(-3, 0, 1)
+        [-3, -2, -1, 0]
+
+    With complex strings::
+
+        >>> rangex('0-12-3,18-36-6,48')
+        [0, 3, 6, 9, 12, 18, 24, 30, 36, 48]
     """
     rangevalues = list()
 
@@ -287,11 +326,13 @@ def inplace(desc, key, value, globs=None):
     """
     Redefined the ``key`` value in a deep copy of the description ``desc``.
 
-    >>> inplace({'test':'alpha'}, 'ajout', 'beta')
-    {'test': 'alpha', 'ajout': 'beta'}
+    Examples::
 
-    >>> inplace({'test':'alpha', 'recurs':{'a':1, 'b':2}}, 'ajout', 'beta')
-    {'test': 'alpha', 'ajout': 'beta', 'recurs': {'a': 1, 'b': 2}}
+        >>> inplace({'test':'alpha'}, 'ajout', 'beta')
+        {'test': 'alpha', 'ajout': 'beta'}
+
+        >>> inplace({'test':'alpha', 'recurs':{'a':1, 'b':2}}, 'ajout', 'beta')
+        {'test': 'alpha', 'ajout': 'beta', 'recurs': {'a': 1, 'b': 2}}
     """
     newd = copy.deepcopy(desc)
     newd[key] = value
@@ -306,15 +347,41 @@ def expand(desc):
     """
     Expand the given description according to iterable or expandable arguments.
 
-    >>> expand( {'test': 'alpha'} )
-    [{'test': 'alpha'}]
+    List expansion::
 
-    >>> expand( { 'test': 'alpha', 'niv2': [ 'a', 'b', 'c' ] } )
-    [{'test': 'alpha', 'niv2': 'a'}, {'test': 'alpha', 'niv2': 'b'}, {'test': 'alpha', 'niv2': 'c'}]
+        >>> expand( {'test': 'alpha'} )
+        [{'test': 'alpha'}]
 
-    >>> expand({'test': 'alpha', 'niv2': 'x,y,z'})
-    [{'test': 'alpha', 'niv2': 'x'}, {'test': 'alpha', 'niv2': 'y'}, {'test': 'alpha', 'niv2': 'z'}]
+        >>> expand( { 'test': 'alpha', 'niv2': [ 'a', 'b', 'c' ] } )
+        [{'test': 'alpha', 'niv2': 'a'}, {'test': 'alpha', 'niv2': 'b'}, {'test': 'alpha', 'niv2': 'c'}]
 
+        >>> expand({'test': 'alpha', 'niv2': 'x,y,z'})
+        [{'test': 'alpha', 'niv2': 'x'}, {'test': 'alpha', 'niv2': 'y'}, {'test': 'alpha', 'niv2': 'z'}]
+
+        >>> expand({'test': 'alpha', 'niv2': 'range(1,3)'})
+        [{'test': 'alpha', 'niv2': 1}, {'test': 'alpha', 'niv2': 2}, {'test': 'alpha', 'niv2': 3}]
+        >>> expand({'test': 'alpha', 'niv2': 'range(0,6,3)'})
+        [{'test': 'alpha', 'niv2': 0}, {'test': 'alpha', 'niv2': 3}, {'test': 'alpha', 'niv2': 6}]
+
+    List expansion + dictionary matching::
+
+        >>> expand({'test': 'alpha', 'niv2': ['x', 'y'], 'niv3': {'niv2': {'x': 'niv2 is x', 'y': 'niv2 is y'}}})
+        [{'test': 'alpha', 'niv3': 'niv2 is x', 'niv2': 'x'}, {'test': 'alpha', 'niv3': 'niv2 is y', 'niv2': 'y'}]
+
+    Globbing::
+
+        >>> # Let's assume that the following files are present in the current working directory: # doctest: +SKIP
+        ... # - testfile_abc_1
+        ... # - testfile_abc_2
+        ... # - testfile_def_2
+        ... # - testfile_def_3
+        ... # - testfile_a_trap
+        >>> expand({'fname': 'testfile_{glob:i:\w+}_{glob:n:\d+}', 'id':'[glob:i]', 'n':'[glob:n]'}) # doctest: +SKIP
+        [{'id': 'abc', 'fname': 'testfile_abc_1', 'n': '1'}, {'id': 'def', 'fname': 'testfile_def_2', 'n': '2'}, {'id': 'def', 'fname': 'testfile_def_3', 'n': '3'}, {'id': 'abc', 'fname': 'testfile_abc_2', 'n': '2'}]
+
+    Explanation: The files currently in the working directory are matched using regular
+    expressions. If the filename matches, and some parts of the filename may
+    be re-used to fill other keys in the dictionary.
     """
 
     ld = deque([ desc, ])
@@ -402,8 +469,8 @@ def expand(desc):
 
 
 class GetByTagMeta(type):
-    """
-    Meta class constructor for :class:`GetByTag`.
+    """Meta class constructor for :class:`GetByTag`.
+
     The purpose is quite simple : to set a dedicated shared table
     in the new class in construction.
     """
@@ -554,8 +621,8 @@ class GetByTag(object):
 
 
 class Catalog(object):
-    """
-    Abstract class for managing a collection of *items*.
+    """Abstract class for managing a collection of *items*.
+
     The interface is very light : :meth:`clear` and :meth:`refill` !
     Of course a catalog is an iterable object. It is also callable,
     and then returns a copy of the list of its items.

@@ -154,7 +154,7 @@ require(
         Reveal.initialize({
             controls: true,
             progress: true,
-            history: false,
+            history: true,
             slideNumber: true,
 
             theme: Reveal.getQueryHash().theme, // available themes are in /css/theme

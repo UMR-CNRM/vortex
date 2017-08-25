@@ -92,7 +92,6 @@ def fmtshcmd(func):
     the original method is used).
     """
     def formatted_method(self, *args, **kw):
-        print "What the ???"
         fmt = kw.pop('fmt', None)
         fmtcall = getattr(self, str(fmt).lower() + '_' + func.func_name, func)
         if getattr(fmtcall, 'func_extern', False):
