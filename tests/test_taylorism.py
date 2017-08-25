@@ -157,6 +157,28 @@ class UtTaylorism(TestCase):
         self.assertEqual(len(report['workers_report']), 3, "3 instructions have been sent, which is not the size of report.")
         self.assertEqual(set([r['report'][1][0] for r in report['workers_report']]), set([0, 1]))
 
+    def test_redundant_workers_name(self):
+        """
+        Checks that a clear error is raised if several workers wear the same
+        name.
+        """
+        with self.assertRaises(ValueError):
+            boss = taylorism.run_as_server(common_instructions={},
+                                           individual_instructions={'name':['alfred', 'alfred'],
+                                                                    'sleeping_time':[60, 60],
+                                                                    'succeed':[True, True]},
+                                           scheduler=taylorism.MaxThreadsScheduler(max_threads=2))
+            boss.wait_till_finished()
+
+    def test_expansion_workers_name(self):
+        """Checks that expansion in workers name works fine."""
+        boss = taylorism.run_as_server(common_instructions={'name':'jean-pierre_[sleeping_time]'},
+                                       individual_instructions={'sleeping_time':[0.001, 0.01]},
+                                       scheduler=taylorism.MaxThreadsScheduler(max_threads=2))
+        boss.wait_till_finished()
+        report = boss.get_report()
+        self.assertEqual(len(report['workers_report']), 2, "2 instructions have been sent, which is not the size of report.")
+
 
 if __name__ == '__main__':
     main(verbosity=2)
