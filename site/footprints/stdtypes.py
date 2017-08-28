@@ -3,7 +3,7 @@
 
 """
 Special derivated builtins to be used as attributes in footprints descriptions
-in order to avoid autompatic value expansion (for example).
+in order to avoid automatic value expansion (for example).
 """
 
 from __future__ import print_function, absolute_import, division

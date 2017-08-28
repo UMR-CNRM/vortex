@@ -3,7 +3,7 @@
 
 """
 Handling of footprints collectors.
-Module's usage is mostly dedicated to main footprints package.
+Module's usage is mostly dedicated to the main footprints package.
 The footprints proxy could make some part of the interface visible as well.
 """
 
@@ -267,7 +267,7 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
         self._upd_fasttrack_delete(bye)
 
     def pickup(self, desc):
-        """Try to pickup inside the collector a item that could match the description."""
+        """Try to pickup inside the collector an item that could match the description."""
         logger.debug('Pick up a "{:s}" in description {!s} with collector {!r}'.format(self.tag, desc, self))
         emptywarning = desc.pop('_emptywarning', True)
         mkstdreport = desc.pop('_report', self.report_auto)
@@ -350,8 +350,8 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
 
     def find_best(self, desc):
         """
-        Returns the best of the items returned byt the :meth:`find_all` method
-        according to potential priorities rules.
+        Returns the best of the items returned by the :meth:`find_all` method
+        according to potential priority rules.
         """
         logger.debug('Search best %s in collector %s', str(desc), str(self._items))
         candidates = self.find_all(desc)
@@ -442,7 +442,7 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
 
     def show_attrkeys(self, only=None):
         """
-        Show the list of attributes names that could be found in classes
+        Show the list of attribute names that could be found in classes
         collected by the current collector.
         """
         attrmap = self.build_attrmap(only=only)
@@ -479,12 +479,12 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
         return self.report_last.as_tree(**kw)
 
     def report_dumplast(self):
-        """Print a nicelly formatted dump report as a dict."""
+        """Print a nicely formatted dump report as a dict."""
         print(dump.fulldump(self.report_last.as_dict()))
 
     def report_whynot(self, classname):
         """
-        Report why any class mathching the ``classname`` pattern
-        had not been selected through the last evaluation.
+        Report why any class matching the ``classname`` pattern
+        has not been selected through the last evaluation.
         """
         return self.report_log.whynot(classname)

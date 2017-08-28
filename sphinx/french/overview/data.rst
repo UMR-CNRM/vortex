@@ -47,10 +47,10 @@ Considérons aussi une opération "inverse", de sauvegarde d'un résultat d'exé
 
     % cp ICMSHFCST+0006 /home/toto/data/forecast.06
 
-Même question que précédemment : *quid* si fichier LFI éclaté ? Et ai-je besoin de le copier ou de faire un *hard-link* ?
+Même question que précédemment : *quid* en cas de fichier LFI éclaté ? Et ai-je besoin de le copier ou de faire un *hard-link* ?
 Sommes-nous sur le même *filesystem* ? Et si l'on veut sauvegarder cette ressource en ligne, sur le disque, mais aussi
 sur la machine d'archivage. Ou sur un autre système distant. Ou sur le disque en ligne ET la machine d'archivage ?
-Ou sur le disque en ligne ET la machine d'archivage ET un autre système distant ? Et si dans le transfert vers l'archivage
+Ou sur le disque en ligne ET la machine d'archivage ET un autre système distant ? Et si pour un transfert vers l'archivage
 il faut d'abord "compacter" la ressource ?
 
 Et puis, comment savoir que la ressource est vraiment dans :file:`/home/toto/data` ?
@@ -58,38 +58,38 @@ Est-ce que cela peut changer ? Que faire si la ressource n'est pas disponible ?
 
 Pour simple que soit la commande shell elle mélange complètement plusieurs niveaux conceptuels.
 Le plus contraignant et le plus inextricable à tous points de vue est quelle fusionne la *ressource logique*
-(quelle est le type de la ressource et sa description) et la *ressource physique* (ici, quelle fichier contient
+(quel est le type de la ressource et sa description) et la *ressource physique* (ici, quel fichier contient
 ladite ressource logique).
 
-Par exemple, ici la ressource logique est par exemple : un état analysé de l'atmosphère
-(altitude et surface) produit par un modèle arpege sur une géométrie tl798c2.4/l70, dans le format modèle,
-le 18 juin 2015 sur le réseau de production de 06H.
+Par exemple, la ressource logique est ici un état analysé de l'atmosphère
+(altitude et surface), produit par un modèle arpege, sur une géométrie tl798c2.4/l70, dans le format modèle,
+le 18 juin 2015, sur le réseau de production de 06H.
 
-La ressource physique dans laquelle l'on souhaiterait "ranger" notre ressource logique est ici un simple fichier,
+La ressource physique dans laquelle on souhaiterait "ranger" notre ressource logique est ici un simple fichier,
 dénommé :file:`ICMSHFCSTINIT`, et on suppose que c'est le petit nom sympa sous lequel le modèle qui s'exécutera ensuite
-souhaitera le trouver (question en passant: et si ce n'est pas ou plus le cas?).
+souhaitera le trouver (question en passant: et si ce n'est pas ou plus le cas ?).
 
-Mais peut-être souhaitons nous juste inspecter le contenu de se fichier en nous souciant peu de savoir où il sera
+Mais peut-être souhaitons nous juste inspecter le contenu de ce fichier en nous souciant peu de savoir où il sera
 "rangé" (un fichier temporaire et volatile ferait alors parfaitement l'affaire). Mieux encore, nous pourrions récupérer
 un "petit" fichier de configuration que nous souhaiterions manipuler en mémoire pour gagner du temps et ne pas polluer
 l'espace de fichiers local. Bref, un fichier, c'est bien, mais ce n'est pas forcément la seule possibilité.
 
 Nous comprenons donc maintenant que nous avons manipulé implicitement dans notre simple commande shell au moins
-deux entités : la resource logique (ou resource métier proprement dite, c'est là qu'est la *science*) et la resource
+deux entités : la ressource logique (ou ressource métier proprement dite, c'est là qu'est la *science*) et la ressource
 physique ou *conteneur* (elle contient, dans un certain format, la ressource logique).
 
-Mais ce n'est pas tout: nous avons bien dit que la resource logique était un état analysé d'un modèle, et nous
+Mais ce n'est pas tout: nous avons bien dit que la ressource logique était un état analysé d'un modèle, et nous
 avons caractérisé sa date, son cutoff, sa géométrie, etc. Mais de quelle occurrence du modèle s'agit-il exactement ?
 Celle tournée sur votre coin de table ce week-end, celle en opérations, celle en évaluation, celle en test ?
 Pour le dire autrement : qui vous *fournit* un moyen de savoir quelle est la ressource que vous pouvez utiliser dans
-l'immensité des ressources logiques de caractéristiques identiques (ou presque) ? Car il doit y en avoir plusieurs,
+l'immensité des ressources logiques de caractéristiques identiques (ou presque) ? Car il peut y en avoir plusieurs,
 dans des espaces de noms éventuellement totalement différents...
 
 Et une fois que vous avez ce *fournisseur* d'informations permettant de localiser une ressource, qui est en charge
 de stocker physiquement cette ressource ? Il doit bien y avoir un espace de stockage (votre disque / répertoire,
 la machine d'archivage, etc.) qui fait ce boulot.
 
-Nous venons de faire l'analyse minimaliste qui va permettre, sur la base d'un peu modèle descriptif compatible
+Nous venons de faire l'analyse minimaliste qui va permettre, sur la base d'un modèle descriptif compatible
 avec l'utilisation des footprints, de définir une première topologie d'objets en charge de ces aspects.
 
 Soyons explicites
@@ -103,7 +103,7 @@ Nous appellerons *container* ce qui correspond à une ressource physique. La cla
 
 Nous appellerons *provider* ce qui correspond à un fournisseur d'accès. La classe de base sera :class:`~vortex.data.providers.Provider`.
 
-Nous appellerons *store* ce qui correspond à espace de stockage. La classe de base sera :class:`~vortex.data.stores.Store`.
+Nous appellerons *store* ce qui correspond à un espace de stockage. La classe de base sera :class:`~vortex.data.stores.Store`.
 
 Toutes ces classes sont des classes abstraites qui héritent de :class:`footprints.FootprintBase`, elles sont donc
 instanciables via le mécanisme de résolution des empreintes, au travers par exemple de *footprints.proxy*.
@@ -132,7 +132,7 @@ Si l'on regarde le catalogue de ressources, la récolte est maigre::
     >>> fpx.resources()
     [<class 'vortex.data.executables.Script'>, <class 'vortex.data.resources.Unknown'>, <class 'vortex.data.executables.BlackBox'>]
 
-Deux resources exécutables et une resource de type *Unknown* dont on devine confusément qu'elle ne risque pas d'enrichir
+Deux ressources exécutables et une ressource de type *Unknown* dont on devine confusément qu'elle ne risque pas d'enrichir
 notre vocabulaire descriptif d'analyse::
 
     >>> fpx.resource()
@@ -289,7 +289,7 @@ Ce qui doit commencer à évoquer quelque chose pour certains d'entre vous.
 Le Resource Handler
 ===================
 
-Dans la mesure où ces trois éléments sont presques toujours associées les uns aux autres et collaborent mutullement
+Dans la mesure où ces trois éléments sont presque toujours associés les uns aux autres et collaborent mutuellement
 deux à deux, il était tout naturel de les composer dans un autre objet, le :class:`~vortex.data.Handler` de ressource.
 Il peut être instancié directement, mais il est bien plus commode de passer par l'interface fournie
 dans le module :mod:`~vortex.toolbox` où nous pourrons allègrement mélanger les empreintes de *resources*,
@@ -329,7 +329,7 @@ dans le module :mod:`~vortex.toolbox` où nous pourrons allègrement mélanger l
         Realkind   : container
         Attributes : {'actualfmt': 'fa', 'cwdtied': False, 'mode': 'rb', 'maxreadsize': 67108864, 'filename': 'ICMSHFCSTINIT'}
 
-Nous pouvons maintenant accéder directement à son URL de locatisation::
+Nous pouvons maintenant accéder directement à son URL de localisation::
 
     >>> r.location()
     'vortex://vortex.cache.fr/arpege/france/X001/20150618T0600P/canari/analysis.full-arpege.tl798-c24.fa'
@@ -416,7 +416,7 @@ sont le *scheme* et le *netloc* issus du parsage de l'URL produite par le provid
 rapport entre les deux, mais totalement indirect puisque que médiatisé par la résolution des footprints
 des *stores*.
 
-Un des arguments les plus décisif devient donc dans ce contexte l'espace de nom (ou domaine du *netloc*).
+Un des arguments les plus décisifs devient donc dans ce contexte l'espace de nom (ou domaine du *netloc*).
 Le module :mod:`~vortex.toolbox` nous fournit une commande pour visualiser ceux définis par défaut
 dans les footprints de classes *Store* ou *Provider*::
 

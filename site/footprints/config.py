@@ -155,7 +155,7 @@ class FootprintSetup(util.GetByTag):
 
     def extras(self):
         """
-        Return a dictionary of extra keys-values pair
+        Return a dictionary of extra key-value pairs
         according to a callback function given as an attribute.
         """
         if self.callback:

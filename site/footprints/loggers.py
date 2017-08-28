@@ -75,7 +75,7 @@ def setLogMethods(logger, methods=('debug', 'info', 'warning', 'error', 'critica
 
 
 class SlurpHandler(logging.Handler):
-    """A strange Handler that accumulate the log-records in a lists.
+    """A strange Handler that accumulates the log-records in a list.
 
     We try to make sure that each individual record is pickable.
     """

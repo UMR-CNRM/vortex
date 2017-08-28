@@ -3,14 +3,13 @@
 
 """
 A generic multi-purpose fabric for objects with tunable footprints,
-i.e. some set of keys/values pairs that attributes (possibly optional) could cover.
+i.e. some set of key/value pairs that attributes (possibly optional) could cover.
 """
 
 from __future__ import print_function, absolute_import, division
 
 import os
 import re
-import time
 import copy
 import types
 import weakref
@@ -240,7 +239,7 @@ class Footprint(object):
     def as_copy(self):
         """
         Returns a deep copy of the internal footprint structure as a pure dictionary.
-        Be aware that some objects such as compiled regular expressions remains identical
+        Be aware that some objects such as compiled regular expressions remain identical
         through this indeep copy operation.
         """
         return copy.deepcopy(self._fp)
@@ -267,8 +266,7 @@ class Footprint(object):
         return [ a for a in desc if a in attrs or a in aliases ]
 
     def optional(self, a):
-        """Returns whether the given attribute ``a`` is optional or not in the current
-        footprint."""
+        """Returns whether the given attribute ``a`` is optional or not in the current footprint."""
         return self._fp['attr'][a]['optional']
 
     def mandatory(self):
@@ -351,7 +349,7 @@ class Footprint(object):
           * '[key-name:attr-name]' or '[key-name::attr-name]'
           * '[key-name:meth-name]' or '[key-name::meth-name]'
 
-        If the ``key-name`` could not be found in actual ``guess`` or ``extras`` dictionaries
+        If the ``key-name`` could not be found in the actual ``guess`` or ``extras`` dictionaries
         the method raises an :exception:`FootprintUnreachableAttr`.
 
         Additional flags can be added:
@@ -450,7 +448,7 @@ class Footprint(object):
             return True
 
     def in_values(self, item, values):
-        """Check that item is inside ``values`` or compare as equal to one of these values."""
+        """Check that item is inside ``values`` or compares as equal to one of these values."""
         if item in values:
             return True
         else:
@@ -561,7 +559,7 @@ class Footprint(object):
         return (guess, attr_input, attr_seen)
 
     def checkonly(self, rd, report=setup.nullreport):
-        """Be sure that the resolved description also match at least one item per ``only`` feature."""
+        """Ensure that the resolved description also matches at least one item per ``only`` feature."""
 
         params = setup.defaults
         for k, v in self.only.items():
@@ -627,7 +625,7 @@ class Footprint(object):
 
     @property
     def only(self):
-        """Read-only property. Direct access to internal footprint restrictions rules."""
+        """Read-only property. Direct access to internal footprint restriction rules."""
         return self._fp['only']
 
     @property
@@ -786,7 +784,7 @@ class FootprintBase(object):
 
     @classmethod
     def footprint_reusable(cls):
-        """Return a boolean if the current class could be used for default loading."""
+        """Returns whether the current class could be used for default loading."""
         return cls._reusable
 
     @classmethod
@@ -796,7 +794,7 @@ class FootprintBase(object):
 
     @classmethod
     def fullname(cls):
-        """Returns a nicely formated name of the current class (dump usage)."""
+        """Returns a nicely formatted name of the current class (dump usage)."""
         return '{0:s}.{1:s}'.format(cls.__module__, cls.__name__)
 
     def SUPER(self):

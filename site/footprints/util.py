@@ -57,7 +57,7 @@ def dictmerge(d1, d2):
 def list2dict(a, klist):
     """
     Reshape any entry of ``a`` specified in ``klist`` as a dictionary of the
-    iterable contentsof these entry.
+    iterable contents of these entries.
     """
 
     for k in klist:
@@ -154,7 +154,7 @@ class TimeInt(int):
 
     @staticmethod
     def __split_timedelta(dt):
-        """Format a timedelta expressed in minutes, in a valid hhhh:mm expression"""
+        """Format a timedelta expressed in minutes, in a valid hhhh:mm expression."""
         thesign = int(dt > 0) * 2 - 1
         ti = 0
         while abs(dt) >= 60:
@@ -324,7 +324,7 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
 
 def inplace(desc, key, value, globs=None):
     """
-    Redefined the ``key`` value in a deep copy of the description ``desc``.
+    Redefine the ``key`` value in a deep copy of the description ``desc``.
 
     Examples::
 
@@ -380,8 +380,8 @@ def expand(desc):
         [{'id': 'abc', 'fname': 'testfile_abc_1', 'n': '1'}, {'id': 'def', 'fname': 'testfile_def_2', 'n': '2'}, {'id': 'def', 'fname': 'testfile_def_3', 'n': '3'}, {'id': 'abc', 'fname': 'testfile_abc_2', 'n': '2'}]
 
     Explanation: The files currently in the working directory are matched using regular
-    expressions. If the filename matches, and some parts of the filename may
-    be re-used to fill other keys in the dictionary.
+    expressions. If the filename matches, some matching parts may be re-used to fill
+    other keys in the dictionary.
     """
 
     ld = deque([ desc, ])
@@ -492,7 +492,7 @@ class GetByTagMeta(type):
 @six.add_metaclass(GetByTagMeta)
 class GetByTag(object):
     """
-    Utility to retrieve a new/existing object by a special named argument ``tag``.
+    Utility to retrieve a new/existing object by a special argument named ``tag``.
     If an object had already been created with that tag, return this object.
     """
 
@@ -526,7 +526,7 @@ class GetByTag(object):
 
     @classmethod
     def _tag_implicit_new_error(cls, tag):
-        """Called whenever a tag does not exists and _tag_implicit_new = False."""
+        """Called whenever a tag does not exist and _tag_implicit_new = False."""
         raise RuntimeError(("It's not allowed to create a new {:s} object (new tag={:s}) "
                             "without an explicit new=True argument.").format(cls.__name__, tag))
 
@@ -541,7 +541,7 @@ class GetByTag(object):
 
     @classmethod
     def tag_keys(cls):
-        """Return an alphabetic ordered list of actual keys of the objects instantiated."""
+        """Return an alphabetically ordered list of actual keys of the objects instantiated."""
         return sorted(cls._tag_table.keys())
 
     @classmethod
@@ -611,7 +611,7 @@ class GetByTag(object):
     def focus_gain_allow(self):
         """This method is called on the target object prior to any focus change.
 
-        It might be useful if one wants to perform chacks and raise an exception.
+        It might be useful if one wants to perform checks and raise an exception.
         """
         pass
 
@@ -640,21 +640,21 @@ class Catalog(object):
 
     @classmethod
     def fullname(cls):
-        """Returns a nicely formated name of the current class (dump usage)."""
+        """Returns a nicely formatted name of the current class (dump usage)."""
         return '{0:s}.{1:s}'.format(cls.__module__, cls.__name__)
 
     @property
     def filled(self):
-        """Boolean value, true if at least one item in the catalog."""
+        """Boolean value, true if there is at least one item in the catalog."""
         return bool(self._items)
 
     @property
     def weak(self):
-        """Boolean value, true if catalog built with weaked references."""
+        """Boolean value, true if the catalog is built with weak references."""
         return self._weak
 
     def items(self):
-        """A list copy of catalog items."""
+        """A list, copy of the catalog items."""
         return list(self._items)
 
     def __iter__(self):
@@ -727,7 +727,7 @@ class SpecialDict(dict):
         return key
 
     def __getitem__(self, key):
-        """Force remapped key retrieve."""
+        """Force remapped key retrieval."""
         return dict.__getitem__(self, self.remap(key))
 
     def __setitem__(self, key, value):
@@ -739,7 +739,7 @@ class SpecialDict(dict):
         dict.__delitem__(self, self.remap(key))
 
     def __contains__(self, key):
-        """Force remapped key ``in`` check."""
+        """Force remapped key ``in`` checking."""
         return dict.__contains__(self, self.remap(key))
 
 

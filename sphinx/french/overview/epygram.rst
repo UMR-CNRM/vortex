@@ -4,22 +4,22 @@
 VORTEX et EPyGrAM
 *****************
 
-Un développement indépendant de VORTEX enrichi considérablement la capacité de manipulation des ressources
-météorologiques de celui-ci : il s'agit du package *EPyGrAM*. 
+Un développement indépendant de VORTEX enrichit considérablement la capacité de manipulation des ressources
+météorologiques de celui-ci : il s'agit du package *EPyGrAM*.
 
-Nous allons voir que la puissance de collaboration entre les deux package vient de leur usage commun des footprints.
+Nous allons voir que la puissance de collaboration entre les deux packages vient de leur usage commun des footprints.
 
 ========================
 L'installation d'EPyGrAM
 ========================
 
 Les informations de cette section sont issues d'un courrier d'Alexandre Mary en date du 24 mars 2016.
-La documentation peut avoir évoluer par ailleurs. 
+La documentation peut avoir évolué par ailleurs.
 
-.. todo:: faire le point égulièrement avec Alex.
+.. todo:: faire le point régulièrement avec Alex.
 
 Il vous faut tout d'abord vérifier que vous disposez d'une installation locale du package **epygram**.
-C'est très simple pour tous les PC CNRM et sur les supercalculateurs *beaufix* et *prolix*. 
+C'est très simple pour tous les PC CNRM et sur les supercalculateurs *beaufix* et *prolix*.
 
 Installation sur PC
 -------------------
@@ -27,10 +27,10 @@ Installation sur PC
   * Des versions pré-installées sont disponibles sous :file:`/home/common/epygram`
   * Lire les rapides instructions de :file:`/home/common/epygram/EPyGrAM.current/_install/INSTALL_README_cnrm_bull.txt` (et nettoyer l'ancienne installation, le cas échéant)
 
-.. note:: si le répertoire `/home/common/epygram` n'aparaît pas sur votre PC, contacter E. Escalière et/ou CTI.
+.. note:: si le répertoire `/home/common/epygram` n'apparaît pas sur votre PC, contacter E. Escalière et/ou CTI.
 
-Installation sur supercalculateurs
-----------------------------------
+Installation sur supercalculateur
+---------------------------------
 
   * EPyGrAM est également disponible sur *beaufix* et *prolix*, avec un jeu réduit d'outils (tout ce qui n'est pas graphique).
   * Lire les rapides instructions de :file:`/home/gmap/mrpe/mary/public/EPyGrAM.0.6.7/_install/INSTALL_README_cnrm_bull.txt`
@@ -39,7 +39,7 @@ Installation sur supercalculateurs
 Usage générique
 ---------------
 
-  * Un certains nombre d'outils se lancent depuis votre shell courant, ils sont disponibles sous :file:`$EPYGRAM_INSTALL_DIR/apptools` (inclus dans le :envvar:`PATH`) ;
+  * Un certain nombre d'outils se lancent depuis votre shell courant, ils sont disponibles sous :file:`$EPYGRAM_INSTALL_DIR/apptools` (inclus dans le :envvar:`PATH`) ;
   * Pour chaque outil, l'option ``-h`` (ou ``--help``) vous renseignera sur la syntaxe et les options (parfois nombreuses) de l'outil en question.
   * Pour utiliser EPyGrAM dans vos scripts et librairies Python, effectuer une commande *import epygram*.
   * La documentation de la librairie est sous :file:`/home/common/epygram/EPyGrAM.current/epygram/doc_sphinx/index.html`.
@@ -53,14 +53,14 @@ Encore une fois : les footprints
 --------------------------------
 
 La grande chance de VORTEX est que le package EPyGrAM fait un usage raisonné et judicieux des *footprints*
-pour définir les classes de base en charge de la gestion des différents formats de données. 
+pour définir les classes de base en charge de la gestion des différents formats de données.
 
-Cela signifie notamment que dès qu'un import du package a été effectué : 
+Cela signifie notamment que dès qu'un import du package a été effectué :
 
-  * Il existe un collecteur de format de données : celui-ci se nomme *dataformats* ;
-  * Tout un chacun peut instancier un gestionnaire de format de donnée par le mécanisme usuel de chargement de :mod:`footprints`, en particulier via *footprints.proxy*, par exemple la commande :func:`footprints.proxy.dataformat` ;
+  * Il existe un collecteur de formats de données : celui-ci se nomme *dataformats* ;
+  * Tout un chacun peut instancier un gestionnaire de format de données par le mécanisme usuel de chargement de :mod:`footprints`, en particulier via *footprints.proxy*, par exemple la commande :func:`footprints.proxy.dataformat` ;
   * Le fait que telle ou telle classe soit sélectionnée pour l'instanciation se fera comme d'habitude sur la base de la correspondance entre le descriptif fourni et les valeurs d'attributs compatibles ;
-  * Mais cela veut également dire que tout développeur peut proposer des extensions de ces gestionnaires de format de données, ou même en proposer d'autres. 
+  * Mais cela veut également dire que tout développeur peut proposer des extensions de ces gestionnaires de format de données, ou même en proposer d'autres.
   * Comme toujours avec l'usage des footprints, la résolution sera dynamique et ne dépendra que des classes effectivement chargées et disponibles dans le collecteur au moment de l'instanciation.
 
 
@@ -74,8 +74,8 @@ qui est en fait une *property* : l'attribut *contents* qui a les caractéristiqu
 et qui va jouer un rôle central dans l'interfaçage d'EPyGrAM avec VORTEX :
 
   * L'attribut ne peut être renseigné que si le *Resource Handler* est complet (*resource*, *container* et *provider* définis) et que le container a été rempli, c'est-à-dire qu'un *get(...)* a été effectué ou que, inversement on est déjà à l'étape *put* ;
-  * La résolution de la propriété (ie: l'invocation de *rh.contents*) essaye d'instancier un object spécial en charge de la gestion du contenu de la ressource, en se basant sur une classe de base fournie par la ressource elle-même. Cette classe est renseignée par l'attribut du footprint de l'objet *resource* sous le nom de *clscontents*.
-  * Dans la mesure où cette classe de base dérive de la classe :class:`~vortex.data.contents.FormatAdapter` définie dans le module :mod:`vortex.data.contents`, deux comportements seront possibles : 
+  * La résolution de la propriété (ie: l'invocation de *rh.contents*) essaye d'instancier un objet spécial en charge de la gestion du contenu de la ressource, en se basant sur une classe de base fournie par la ressource elle-même. Cette classe est renseignée par l'attribut du footprint de l'objet *resource* sous le nom de *clscontents*.
+  * Dans la mesure où cette classe de base dérive de la classe :class:`~vortex.data.contents.FormatAdapter` définie dans le module :mod:`vortex.data.contents`, deux comportements seront possibles :
     * soit le module *epygram* a été chargé précédemment, et alors la résolution se fait sur la base d'une correspondance valide avec les empreintes des classes du collecteur *footprints.proxy.dataformats* ;
     * soit le module *epygram* n'a pas été chargé, et c'est alors une classe par défaut quelconque qui fera aussi office de gestionnaire de contenu, mais évidemment sans aucune des fonctionnalités fournies par les classes objets d'EPyGrAM.
 
@@ -105,7 +105,7 @@ Nous ne faisons pas d'autre hypothèque que l'existence du fichier local::
     >>> a.container
     <vortex.data.containers.File object at 0x31f8dd0>
     >>> a.provider
-    <vortex.data.providers.Remote object at 0x31f8c10>    
+    <vortex.data.providers.Remote object at 0x31f8c10>
     >>> a.complete
     True
 
@@ -173,7 +173,7 @@ Nous allons maintenant sélectionner à titre d'exemple un champ sympa, la temp�
     [[284.2541355549939 284.26027062824346 284.184966711169 ..., -- -- --]
     [283.9433296258083 283.98361476953704 283.94618387395 ..., -- -- --]
     [283.69276584372915 283.6249512584526 283.60180457889146 ..., -- -- --]
-    ..., 
+    ...,
     [286.69922743467566 287.1151548821877 287.4599432750657 ..., -- -- --]
     [287.1682963136163 287.3482373729095 287.3944778656557 ..., -- -- --]
     [287.1040234538394 287.14781708051885 287.15390700824224 ..., -- -- --]],
@@ -181,7 +181,7 @@ Nous allons maintenant sélectionner à titre d'exemple un champ sympa, la temp�
     [[False False False ...,  True  True  True]
     [False False False ...,  True  True  True]
     [False False False ...,  True  True  True]
-    ..., 
+    ...,
     [False False False ...,  True  True  True]
     [False False False ...,  True  True  True]
     [False False False ...,  True  True  True]],
@@ -202,7 +202,7 @@ Sans mode graphique
 -------------------
 
 Il peut être utile de désactiver toute interaction avec le DISPLAY de l'utilisateur,
-et éviter le chargement de libraries dynamiques de visualisation. Pour cela,
+et éviter le chargement de librairies dynamiques de visualisation. Pour cela,
 avant l'utilisation d'autres modules, on peut spécifier à ''matplotlib'' de ne pas utiliser X11 comme *backend* graphique::
 
     >>> import matplotlib

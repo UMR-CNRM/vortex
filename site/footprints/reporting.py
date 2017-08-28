@@ -88,7 +88,7 @@ class FootprintLogEntry(object):
     Could be :
 
       * a collector item
-      * a candidate item (ie: a class)
+      * a candidate item (i.e.: a class)
     """
     def __init__(self, node, **kw):
         self.context = 'void'
@@ -188,7 +188,7 @@ class FootprintLogClass(FootprintLogEntry):
             xmlnode.add('attribute', **kidstr)
 
     def as_dict(self):
-        """Convenient method for retrieving an handy dictionary."""
+        """Convenient method for retrieving a handy dictionary."""
         dico = dict()
         for item in self._items:
             info = item.copy()
@@ -225,7 +225,7 @@ class FootprintLog(util.GetByTag):
 
     @property
     def weak(self):
-        """Boolean value, true if log built with weaked references (default)."""
+        """Boolean value, true if the log was built with weak references (default)."""
         return self._weak
 
     def __len__(self):
@@ -244,7 +244,7 @@ class FootprintLog(util.GetByTag):
         self._log = list()
 
     def reduce_to_last(self):
-        """Restrain the current log history to the last collector resolution attempt."""
+        """Remove from the current log history all but the last collector resolution attempt."""
         self._log[0:-1] = []
 
     @property
@@ -258,13 +258,13 @@ class FootprintLog(util.GetByTag):
         return self._current
 
     def add_collector(self, node, **kw):
-        """Insert a collector entry to the log."""
+        """Insert a collector entry into the log."""
         self._current = FootprintLogCollector(node, **kw)
         self._log.append(self._current)
         self._touch = True
 
     def add_candidate(self, node, **kw):
-        """Insert a class entry to the log."""
+        """Insert a class entry into the log."""
         if self._current is not None and isinstance(self._current, FootprintLogClass):
             self._current = self._current.parent
         if self._current is None or not isinstance(self._current, FootprintLogCollector):
@@ -273,7 +273,7 @@ class FootprintLog(util.GetByTag):
         self._touch = True
 
     def add_attribute(self, name, **kw):
-        """Insert an attribute resolution information entry to the log."""
+        """Insert an attribute resolution information entry into the log."""
         if self._current is None or not isinstance(self._current, FootprintLogClass):
             raise FootprintBadLogEntry('Current log context is either empty or not a class candidate')
         kw['name'] = name
@@ -282,8 +282,8 @@ class FootprintLog(util.GetByTag):
 
     def add(self, **kw):
         """
-        Miscellaneous entry to the current log.
-        One of these argument should be provided:
+        Add an entry to the current log.
+        One of these arguments should be provided:
 
           * collector
           * candidate
@@ -303,7 +303,7 @@ class FootprintLog(util.GetByTag):
     def whynot(self, select):
         """
         Diagnostic method for retrieving valuable information on the reason why some class candidates
-        had failed. The ``select`` argument is used as a pattern matching on full class names
+        have failed. The ``select`` argument is used as a pattern matching on full class names
         (case insensitive).
         """
         if self.last:
@@ -365,7 +365,7 @@ class StandardReport(object):
         return self._doc
 
     def add(self, key, **kw):
-        """Add a information node to the ``base`` or current note."""
+        """Add a information node to the ``base`` or to the current node."""
         base = kw.pop('base', self.current())
         entry = self.doc.createElement(key)
         for k, v in kw.items():
@@ -379,7 +379,7 @@ class StandardReport(object):
         return self.add(key, **kw)
 
     def current(self, node=None):
-        """Return current active node of the document."""
+        """Return the current active node of the document."""
         if node:
             self._current = node
         return self._current
@@ -469,10 +469,10 @@ class FactorizedReport(object):
         """
         Generates a report whose items are sorted using some parameters:
 
-        * ``tag`` is the end-level entry that have to be sorted
-        * ``ordering`` describes the sorting options. It must be a
+        * ``tag`` is the end-level entry that has to be sorted
+        * ``ordering`` describes the sorting options.
 
-        list of pair (key-name, selected-values) where:
+        Ordering must be a list of pair (key-name, selected-values) where:
 
         * the order of the list defines the priority order for sorting
         * the selected-values is a tuple of values to focus on if encountered.
