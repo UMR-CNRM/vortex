@@ -322,7 +322,7 @@ class Vortex(Provider):
     def basename(self, resource):
         """
         Constructs basename according to current ``namebuild`` factory
-        and resource :func:`basname_info`.
+        and resource :func:`~vortex.data.resources.Resource.basename_info`.
         """
         return self.namebuild.pack(resource.basename_info())
 
