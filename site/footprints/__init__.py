@@ -24,7 +24,7 @@ from .stdtypes import *
 #: No automatic export
 __all__ = []
 
-__version__ = '1.1.4'
+__version__ = '1.1.5'
 
 
 # Default logging
