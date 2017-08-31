@@ -8,9 +8,26 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.1
 
-This module does not provides any class, constant, or any nice object.
-It defines a very basic interface to some (possibly) powefull capacities
-of the :mod:`vortex` toolbox.
+
+Toolbox settings
+----------------
+
+These are switch that you can change at will. they will modify the overall
+behaviour of the present toolbox module.
+
+.. autodata:: active_now
+
+.. autodata:: active_insitu
+
+.. autodata:: active_verbose
+
+.. autodata:: active_promise
+
+.. autodata:: active_clear
+
+.. autodata:: active_metadatacheck
+
+.. autodata:: active_incache
 
 
 Resource Loading
@@ -37,23 +54,21 @@ Standard Get and Put
 Sections handling
 -----------------
 
-.. autofunction:: add_section
-
-.. autofunction:: algo
-
-.. autofunction:: diff
+.. autofunction:: input
 
 .. autofunction:: executable
 
-.. autofunction:: input
-
 .. autofunction:: inputs
 
-.. autofunction:: magic
+.. autofunction:: algo
 
 .. autofunction:: output
 
 .. autofunction:: outputs
+
+.. autofunction:: add_section
+
+.. autofunction:: diff
 
 
 Promises
@@ -67,22 +82,28 @@ Promises
 Informations
 ------------
 
-.. autofunction:: namespaces
-
-.. autofunction:: print_namespaces
-
-.. autofunction:: quickview
-
 .. autofunction:: show_inputs
 
 .. autofunction:: show_outputs
 
 .. autofunction:: show_toolbox_settings
 
-.. autofunction:: nicedump
+.. autofunction:: namespaces
+
+.. autofunction:: print_namespaces
+
+.. autofunction:: quickview
 
 
 Misc
 ----
 
 .. autofunction:: rescue
+
+.. autofunction:: magic
+
+
+Internal methods (more or less)
+-------------------------------
+
+.. autofunction:: nicedump

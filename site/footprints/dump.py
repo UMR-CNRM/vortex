@@ -186,10 +186,10 @@ class JsonableDumper(_AbstractDumper):
 
 
 class XmlDomDumper(JsonableDumper):
-    """Return a dump as a XML DOM object (instance of :class:`xml.minidom.Document`).
+    """Return a dump as an XML DOM object (instance of :class:`xml.minidom.Document`).
 
-    :param tuple named_nodes: List of XML nodes that supports a `name` attribute.
-        For such nodes, a dictionary will be converted as follow :
+    :param tuple named_nodes: List of XML nodes that support a `name` attribute.
+        For such nodes, a dictionary will be converted as follows :
         ``attr=dict(toto="BlaBla",titi="BlaBla")`` becomes
         ``<attr name="toto">BlaBla</attr><attr name="titi">BlaBla</attr>``
     """

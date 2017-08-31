@@ -8,6 +8,8 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.4.0
 
+.. seealso:: :ref:`env-interface` (detailed description + some examples).
+
 
 Interface functions
 -------------------

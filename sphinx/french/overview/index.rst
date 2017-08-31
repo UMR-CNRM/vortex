@@ -31,6 +31,10 @@ et que la caractéristique fondamentale du VORTEX est d'être un système « ou
    data
    epygram
    algo
+
+.. toctree::
+   :hidden:
+
    tools
    olive
    opjobs

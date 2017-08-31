@@ -13,6 +13,8 @@ Meta decorator
 
 .. autofunction:: nicedeco
 
+.. autofunction:: nicedeco_plusdoc
+
 Function decorators
 -------------------
 

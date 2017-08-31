@@ -24,9 +24,6 @@ encoder; python integers will be converted into a FORTRAN integer,
 hence the only way to produce a FORTRAN boz is to use encode_boz
 directly.
 
-Running the module itself performs a set of tests with, I hope,
-every situation that may happen.
-
 Inital author: Joris Picot (2010-12-08 / CERFACS)
 """
 

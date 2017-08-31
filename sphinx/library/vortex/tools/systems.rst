@@ -21,13 +21,12 @@ Exceptions
 .. autoclass:: ExecutionError
    :show-inheritance:
 
+
 Classes
 -------
 
-.. autoclass:: CdContext
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
+Generic system objects
+**********************
 
 .. autoclass:: System
    :show-inheritance:
@@ -38,6 +37,9 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+OS specific system objects: Linux
+*********************************
 
 .. autoclass:: Garbage
    :show-inheritance:
@@ -59,12 +61,27 @@ Classes
    :members:
    :member-order: alphabetical
 
+OS specific system objects: Darwin (MacOS)
+******************************************
+
 .. autoclass:: Macosx
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
+Some Python's version specific extra features
+*********************************************
+
 .. autoclass:: Python27
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+
+Utility Classes
+---------------
+   
+.. autoclass:: CdContext
    :show-inheritance:
    :members:
    :member-order: alphabetical

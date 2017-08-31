@@ -65,9 +65,9 @@ de vos commandes, l'expansion automatique, la sauvegarde de l'historique, etc.
 Nous faisons ensuite en fait deux blocs :keyword:`try`:
 un pour le chargement du package :mod:`footprints`, un autre pour celui du package :mod:`vortex`.
 
-Par pur comfort, nous rendons également dispobibles deux modules super-stars:
+Par pur confort, nous rendons également disponibles deux modules super-stars:
 
-  * l'interface procédurale nommée :mod:`~vortex.toolbox` qui permet de charger rapidement des *handlers* de resources ou de générer directement des sections *input*, *output*, *algo*, *promise*, etc. -- tout ceci sera détaillé par après.
+  * l'interface procédurale nommée :mod:`~vortex.toolbox` qui permet de charger rapidement des *handlers* de ressources ou de générer directement des sections *input*, *output*, *algo*, *promise*, etc. -- tout ceci sera détaillé par après.
   * le module :mod:`~vortex.tools.date`, qui l'on peut s'en douter est un n-ième outil de manipulation de dates, qui étend celui de python ;
 
 Histoire de tout de suite pouvoir manipuler des ressources dans ces formats spécifiques, nous chargeons

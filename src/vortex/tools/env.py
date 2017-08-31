@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Advanced environment settings.
+Advanced environment variables management tools.
 """
 
 import collections
@@ -16,6 +16,7 @@ from vortex.util.structs import PrivateHistory, ShellEncoder
 
 #: No automatic export
 __all__ = []
+
 logger = footprints.loggers.getLogger(__name__)
 
 #: Pre-compiled evaluation mostly used by :class:`Environment` method (true).
@@ -26,28 +27,23 @@ varfalse = re.compile(r'^\s*(?:0|ko|off|false|no|n)\s*$', flags=re.IGNORECASE)
 
 
 def current():
-    """Return current binded :class:`Environment` object."""
+    """Return the current active :class:`Environment` object."""
     return Environment.current()
 
 
 class Environment(object):
     """
     Advanced handling of environment features. Either for binding to the system
-    or to store and broadcast parameters. Creating an ``active`` environment results
+    or to store and broadcast parameters. Activating an environment results
     in the fact that this new environment is binded to the system environment.
 
     New objects could be instantiated from an already existing ``env`` and could be
-    active or not according to the flag given at initialisation time.
+    active or not according to the ``active`` flag given at initialisation time.
 
-    The ``clear`` boolean flag implies the creation of an empty environment. In that case
-    the new environment is by default not active.
+    An :class:`Environment` could be manipulated as an dictionary for the following
+    mechanisms:
 
-    The ``noexport`` list defines the variables names that would not be broadcasted to the
-    system environment.
-
-    An :class:`Environment` could be manipulated as an dictionary for the following mechanisms:
-
-    * key acces / contains
+    * key access / contains
     * len / keys / values
     * iteration
     * callable
@@ -57,6 +53,22 @@ class Environment(object):
 
     def __init__(self, env=None, active=False, clear=False, verbose=False,
                  noexport=[], contextlock=None, history=True):
+        """
+        :param Environment env: An existing Environment used to initialise this object.
+        :param bool active: Is this new environment activated when created.
+        :param bool clear: To create an empty environment. (In
+            that case the new environment is by default not active).
+        :param verbose clear: Activate the verbose mode (every variable exported
+            to the system environment will be signalled on stderr).
+        :param list noexport: A list of variable names that will never be
+            broadcasted to the system environment variables list.
+        :param ~vortex.layout.contexts.Context contextlock: The Context
+            this environment is associated to. This implies that the
+            environment won't activate unless this associated Context is active.
+        :param bool history: Record every changes in an
+            :class:`~vortex.util.structs.PrivateHistory` object that will be
+            accessible through the :attr:`history` property.
+        """
         self.__dict__['_history'] = PrivateHistory() if history else None
         self.__dict__['_verbose'] = verbose
         self.__dict__['_frozen']  = collections.deque()
@@ -93,6 +105,10 @@ class Environment(object):
 
     @property
     def history(self):
+        """
+        This environment's :class:`~vortex.util.structs.PrivateHistory`
+        object (may be ``None``).
+        """
         return self._history
 
     def _record(self, var, value):
@@ -107,7 +123,7 @@ class Environment(object):
 
     @classmethod
     def current(cls):
-        """Return current binded environment object."""
+        """Return the current active environment object."""
         return cls._current_active
 
     def osstack(self):
@@ -116,11 +132,14 @@ class Environment(object):
 
     @property
     def contextlock(self):
-        """The context this environment is bound to (this might return None)."""
+        """
+        The :class:`~vortex.layout.contexts.Context` this environment is bound
+        to (this might return None).
+        """
         return self._contextlock
 
     def dumps(self, value):
-        """Dump the specified ``value`` as a string."""
+        """Dump the specified ``value`` as a string (utility function)."""
         if isinstance(value, basestring):
             obj = value
         elif hasattr(value, 'export_dict'):
@@ -134,8 +153,10 @@ class Environment(object):
         return str(obj)
 
     def setvar(self, varname, value, enforce_uppercase=True):
-        """
-        Set uppercase ``varname`` to value.
+        """Set uppercase ``varname`` to ``value``.
+
+        :param bool enforce_uppercase: All variable names are changed to upper case (default).
+
         Also used as internal for attribute access or dictionary access.
         """
         upvar = varname.upper() if enforce_uppercase else varname
@@ -160,8 +181,8 @@ class Environment(object):
         return self.setvar(varname, value)
 
     def getvar(self, varname):
-        """
-        Get ``varname`` value (this is not case sensitive).
+        """Get ``varname`` value (this is not case sensitive).
+
         Also used as internal for attribute access or dictionary access.
         """
         if varname in self._pool:
@@ -183,6 +204,7 @@ class Environment(object):
     def delvar(self, varname):
         """
         Delete ``varname`` from current environment (this is not case sensitive).
+
         Also used as internal for attribute access or dictionary access.
         """
         seen = 0
@@ -216,8 +238,8 @@ class Environment(object):
         return item in self._pool or item.upper() in self._pool
 
     def has_key(self, item):
-        """
-        Returns whether ``varname`` value is defined or not.
+        """Returns whether ``item`` is defined or not.
+
         Also used as internal for dictionary access.
         """
         return item in self
@@ -261,7 +283,10 @@ class Environment(object):
                 self.setvar(var, value)
 
     def delta(self, **kw):
-        """Temporarily set a collection of variables that could be reversed."""
+        """
+        Temporarily set a collection of variables that could be reversed using
+        the :meth:`rewind` method.
+        """
         upditems, newitems = (dict(), collections.deque())
         for var, value in kw.iteritems():
             if var in self:
@@ -272,7 +297,7 @@ class Environment(object):
         self._frozen.append((upditems, newitems))
 
     def rewind(self):
-        """Come back on last environment delta changes."""
+        """Come back on last environment delta changes (see the :meth:`delta` method)."""
         if self._frozen:
             upditems, newitems = self._frozen.pop()
             while newitems:
@@ -283,7 +308,10 @@ class Environment(object):
             raise RuntimeError("No more delta to be rewinded...")
 
     def delta_context(self, **kw):
-        """Create a context that will automatically create a delta then rewind it when exiting."""
+        """
+        Create a context that will automatically create a delta then rewind it
+        when exiting.
+        """
         return EnvironmentDeltaContext(self, **kw)
 
     def default(self, *args, **kw):
@@ -296,7 +324,10 @@ class Environment(object):
                     self.setvar(var, value)
 
     def merge(self, mergenv):
-        """Incorporates key-values from ``mergenv`` into current environment."""
+        """Incorporates key-values from ``mergenv`` into current environment.
+
+        :param Environment mergeenv: The object to be merged in.
+        """
         self.update(mergenv.pool())
 
     def clear(self):
@@ -313,12 +344,12 @@ class Environment(object):
         return eclone
 
     def __enter__(self):
-        """Activate the environment when entering the context."""
+        """Activate the environment when entering a context."""
         self.active(True)
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        """De-activate the environment on exit."""
+    def __exit__(self, exc_type, exc_value, traceback):  # @UnusedVariable
+        """De-activate the environment on context's exit."""
         self.active(False)
 
     def native(self, varname):
@@ -339,8 +370,10 @@ class Environment(object):
 
     def active(self, *args):
         """
-        Bind or unbind current environment to the shell environment according to a boolean flag
-        given as first argument. Returns current active status after update.
+        Bind or unbind current environment to the shell environment according to
+        a boolean flag given as first argument.
+
+        Returns current active status after update.
         """
         previous_act = self.osbound()
         osrewind = None
@@ -400,7 +433,7 @@ class Environment(object):
             print '{0:s}="{1:s}"'.format(k, str(self._pool[k]))
 
     def mkautolist(self, prefix):
-        """Return a list of variable settings for actual env values."""
+        """Return a list of variable starting with the ``prefix`` string."""
         return [var + '="' + self.get(var, '') + '"' for var in self.keys() if var.startswith(prefix)]
 
     def trueshell(self):
@@ -420,7 +453,12 @@ class Environment(object):
             return bool(varfalse.match(str(xvar)))
 
     def setgenericpath(self, var, value, pos=None):
-        """Insert a new path value to a PATH like variable at a given position."""
+        """Insert a new path value to a PATH like variable at a given position.
+
+        :param str var: The environment's variable to modify (case insensitive)
+        :param str value: The value that will be inserted in the path
+        :param int pos: Where in the path, to insert ``value`` (by default, at the end)
+        """
         mypath = self.getvar(var).split(':') if self.getvar(var) else []
         value = str(value)
         while value in mypath:
@@ -431,18 +469,24 @@ class Environment(object):
         self.setvar(var, ':'.join(mypath))
 
     def rmgenericpath(self, var, value):
-        """Remove the specified value from a PATH like variable."""
+        """Remove the specified ``value`` from a PATH like variable."""
         mypath = self.getvar(var).split(':') if self.getvar(var) else []
         while value in mypath:
             mypath.remove(value)
         self.setvar(var, ':'.join(mypath))
 
     def setbinpath(self, value, pos=None):
-        """Insert a new path value to the bin search path at given position."""
+        """
+        Insert a new path ``value`` to the bin search path (i.e. the PATH
+        environment variable) at given position.
+        """
         self.setgenericpath('PATH', value, pos)
 
     def rmbinpath(self, value):
-        """Remove the specified value from bin path."""
+        """
+        Remove the specified ``value`` from the bin path (i.e. the PATH
+        environment variable).
+        """
         self.rmgenericpath('PATH', value)
 
 
@@ -450,11 +494,15 @@ class EnvironmentDeltaContext():
     """Context that will apply a delta on the Environnement and rewind it on exit."""
 
     def __init__(self, env, **kw):
+        """
+        This object should not be created manually (use the
+        :meth:`Environment.delta_context` method instead).
+        """
         self._env = env
         self._delta = kw
 
     def __enter__(self):
         self._env.delta(**self._delta)
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback):  # @UnusedVariable
         self._env.rewind()

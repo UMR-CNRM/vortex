@@ -85,7 +85,7 @@ class DefaultExporter(object):
 
     def _add_automatic_ref(self, rst, myname):
         '''Add an automatic reference in the export.'''
-        return '.. _nbook-{:s}:\n\n{:s}'.format(myname, rst)
+        return '.. _nbook-{:s}:\n\n{:s}'.format(myname, rst.encode('utf-8'))
 
     def _add_download(self, rst, a_file):
         '''Add a download link in the export.'''

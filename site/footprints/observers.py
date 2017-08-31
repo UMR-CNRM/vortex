@@ -46,7 +46,7 @@ def items():
 class Observer(object):
     """
     Pseudo-Interface class.
-    These three methods should be implemented by any Observer object.
+    The three public methods should be implemented by any Observer object.
     """
 
     def _debuglogging(self, msg, *kargs):
@@ -135,7 +135,7 @@ class SecludedObserverBoard(object):
 
 class ObserverBoard(SecludedObserverBoard, util.GetByTag):
     """
-    Like a :class:`SecludedObserverBoard` but using the  :class:`footprints.util.GetByTag`
+    Like a :class:`SecludedObserverBoard` but using the :class:`footprints.util.GetByTag`
     class to provide an easy access to existing boards.
     """
 

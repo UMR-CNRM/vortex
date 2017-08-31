@@ -6,7 +6,7 @@ Cartographie de la boîte à outils
 
 Comme annoncé dans la présentation des principes de base, VORTEX est une boîte à outils.
 
-Ce n'est donc pas, en soi, une application (à l'exception du daemon de traitement asynchrone, voir plus bas).
+Ce n'est donc pas, en soi, une application (à l'exception du daemon destiné aux traitements asynchrones, voir plus bas).
 La boîte à outils vous servira à construire des applications, des scripts, des outils de contrôle, etc.,
 mais il n'y a rien dedans qui dispense de réfléchir à ce que l'on veut effectivement faire.
 Par contre, ce que l'on veut faire, on doit pouvoir le faire de façon plus rationnelle et, espérons-le,
@@ -16,7 +16,7 @@ Cela signifie aussi qu'il sera toujours possible de faire évoluer cette boîte 
 Si un outil manque, on l'ajoute. Si un autre est usé, on le remplace.
 Si un autre encore est obsolète, on s'en débarrasse.
 
-Pour tout de suite bien prendre de cette dimension « boîte à outils », le mieux est donc d'en faire une cartographie,
+Pour tout de suite bien prendre les dimensions de cette « boîte à outils », le mieux est d'en faire une cartographie,
 sous l'angle de son organisation comme ensemble logiciel, et sous celui de ses principales modalités d'utilisation.
 
 
@@ -24,7 +24,7 @@ sous l'angle de son organisation comme ensemble logiciel, et sous celui de ses p
 Organisation des sources
 ========================
 
-Jetons un coup d'oeil au répertoire principal...
+Jetons un coup d'œil au répertoire principal...
 
 .. code-block:: bash
 
@@ -45,7 +45,7 @@ Jetons un coup d'oeil au répertoire principal...
 Installation de site
 --------------------
 
-Sont regroupés dans ce répertoire les packages développés indépendemment de VORTEX. Il est donc possible
+Sont regroupés dans ce répertoire les packages développés indépendamment de VORTEX. Il est donc possible
 par exemple de pointer :envvar:`PYTHONPATH` uniquement sur ce répertoire.
 
 .. code-block:: bash
@@ -84,7 +84,7 @@ Répertoire bin
 
 Le répertoire :file:`bin`, sans surprise, contient quelques exécutables, des utilitaires d'une importance relativement
 marginale par rapport à la conception d'expériences de prévision numérique, ce qui ne veut pas dire que l'on pourrait
-sans passer facilement:
+s'en passer facilement:
 
   * ggetall.py : récupération d'un jeu complet de composants versionnés par GCO ;
   * mkjob.py : génération de jobs opérationnels sur base d'un template ;
@@ -97,7 +97,7 @@ Répertoire conf
 ---------------
 
 Il contient tous les fichiers au format *ini* de python qui pourraient éventuellement servir en cours d'exécution
-et dont l'usage sera détaillé par après en fonction de la mise en oeuvre de tel ou tel composant de la toolbox.
+et dont l'usage sera détaillé par après en fonction de la mise en œuvre de tel ou tel composant de la toolbox.
 
 .. code-block:: bash
 
@@ -136,12 +136,12 @@ des maquettes de courrier, des outils de synchronisation au fil de l'eau, etc.
 Répertoire examples
 -------------------
 
-Les exemples sont le plus souvent pris dans le sens de bac à sable. Il sont maintenus avec plus ou moins
+Les exemples sont le plus souvent pris dans le sens de bac à sable. Ils sont maintenus avec plus ou moins
 de régularité en phase avec les développements. La plus grande prudence est donc de mise sur ce que l'on
 peut déduire (ou pas) de l'exécution d'un des exemples.
 
 La rationalisation des exemples et leur phasage sur la dernière *release* est une proposition toujours
-renouvellée, et pour laquelle il manque toujours un-e volontaire ;-)
+renouvelée, et pour laquelle il manque toujours un-e volontaire ;-)
 
 Répertoire tests
 ----------------
@@ -154,7 +154,7 @@ de nom "recherche" ou "oper".
 Les modes d'utilisation
 =======================
 
-Ils sont au nombre de quatre: l'interactif, l'usage indiférencié de l'API dans un
+Ils sont au nombre de quatre: l'interactif, l'usage indifférencié de l'API dans un
 développement quelconque, le scriptage automatique OLIVE, le layout de jobs/tasks de l'OPER.
 
 Mode interactif

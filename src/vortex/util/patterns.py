@@ -15,7 +15,7 @@ __all__ = [ 'Borg', 'Singleton' ]
 
 
 class Borg(object):
-    """A base class for sharing a common state by differents objects."""
+    """A base class for sharing a common state by different objects."""
     __state = {}
 
     def __new__(cls, *args, **kw):

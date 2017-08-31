@@ -2,7 +2,7 @@
 # -*- coding:Utf-8 -*-
 
 """
-Some general pupose decorators.
+Some general purpose decorators.
 """
 
 #: Automatic export of most convenient decorators.
@@ -15,7 +15,10 @@ logger = footprints.loggers.getLogger(__name__)
 
 
 def nicedeco(decorator):
-    """This decorator enforces that the resulting decorated functions looks like the original one."""
+    """
+    This decorator enforces that the resulting decorated functions looks
+    like the original one.
+    """
     def new_decorator(f):
         g = decorator(f)
         g.__name__ = f.__name__
@@ -23,6 +26,23 @@ def nicedeco(decorator):
         g.__dict__.update(f.__dict__)
         return g
     return new_decorator
+
+
+def nicedeco_plusdoc(doc_bonus):
+    def nicedeco_doc(decorator):
+        """
+        This decorator enforces that the resulting decorated functions looks
+        like the original one but an extra bit of documentation is added.
+        """
+        def new_decorator(f):
+            g = decorator(f)
+            g.__name__ = f.__name__
+            g.__doc__ = (f.__doc__ +
+                         doc_bonus.format(name=f.__name__))
+            g.__dict__.update(f.__dict__)
+            return g
+        return new_decorator
+    return nicedeco_doc
 
 
 @nicedeco

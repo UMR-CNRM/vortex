@@ -192,7 +192,9 @@ def main():
     group.add_argument("--geometry", dest="geometry", action="store_true",
                        help="Generates the documentation for the geometries.")
     group.add_argument("--default", dest="default", action="store",
-                       help="Generates the documentation for any config file (default formating).")
+                       help=("Generates the documentation for any config file (default formating). " +
+                             "The path (relative or absolute) to the config file has to be specified " +
+                             "as this argument's option."))
     parser.add_argument("output_file", action="store",
                         help="The path to the output file.")
     args = parser.parse_args()
@@ -215,5 +217,6 @@ def main():
     if args.default:
         default_rst(args.default, args.output_file, verbose=args.verbose)
 
+
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

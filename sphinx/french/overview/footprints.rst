@@ -18,19 +18,19 @@ où on ne manipule que des classes et jamais des objets.
 C'est un peu ce rôle de dispensateur d'objets, sur la base de la simple description
 de caractéristiques de classe, que le package :mod:`footprints` se propose d'assumer.
 C'est cela, et un peu plus, puisqu'il va permettre (à ce stade de la présentation il faut un peu faire acte de foi)
-d'assurer la maintenabilité (dans le temps ou vis-à-vis de modifications de comportement
-de tels ou tels « classes d'objets » qui ne s'imposeraient pas
+d'assurer la maintenabilité (dans le temps, ou vis-à-vis de modifications de comportement
+de telles ou telles « classes d'objets » qui ne s'imposeraient pas
 immédiatement à l'esprit de leur créateur au moment de leur conception)
 et surtout l'extensibilité de tout ensemble logiciel qui prendrait le package « footprints » comme fondement
 de son développement. Cerise sur le gâteau, nous verrons qu'il assure même l’interopérabilité
-entre différents ensembles logiciels pourvus qu'ils respectent des conventions purement formelles.
+entre différents ensembles logiciels, pourvu qu'ils respectent des conventions purement formelles.
 
 L'idée en est très simple. C'est une variante un tantinet élaborée du *Pattern* de la fabrique.
 Au lieu de décrire précisément un objet dans toutes ses caractéristiques (et notamment en fournissant sa classe),
 on va prendre le problème à l'envers et tenter de répondre à la question : quelle classe serait susceptible
 de s'instancier dans un objet qui aurait des caractéristiques compatibles avec celles dont j'ai connaissance a priori ?
 
-Dit autrement, vous vous baladez dans un chemin forestier, et vous voyer des bouts d'empreintes mélangées,
+Dit autrement, vous vous baladez dans un chemin forestier, et vous voyez des bouts d'empreintes mélangées,
 dans la boue par exemple, ou parfois masquées par une flaque, ou des feuilles d'arbre arrachées, etc.,
 et vous vous demandez : « quelle est donc la ou les bestiole-s qui ont pu laisser de telles empreintes » ?
 Et si jamais il y a au moins une réponse à cette question eh bien, j'aimerai la connaître et en disposer
@@ -47,7 +47,7 @@ On peut considérer ce composant de base sous différents angles :
 celui de l'utilisateur de couches supérieures de la boîte à outils
 qui ne s'apercevra pas de son existence (si tout va bien), ou celui du développeur
 qui voudra pleinement profiter de l'extensibilité offerte par l'usage des « footprints » comme fabrique objet.
-Et entre les deux, toutes une variété d'utilisations. A vous de faire le tri !
+Et entre les deux, toute une variété d'utilisations. À vous de faire le tri !
 
 L'importation du package n'active pour le moment absolument rien::
 
@@ -210,7 +210,7 @@ candidates ne peut être sélectionnée, et pour une bonne raison visiblement (s
 À ce stade très rudimentaire de l'exposition du mécanisme d'instanciation par « footprints »,
 nous pouvons déjà faire quelques remarques :
 
-  * à aucun moment il n'est nécessaire de faire d'hypothèse sur le nombres de classes éligibles ;
+  * à aucun moment il n'est nécessaire de faire d'hypothèse sur le nombre de classes éligibles ;
   * la connaissance *a priori* des attributs qui correspondent (ou pas) à telle ou telle classe est facultative, le mécanisme de résolution des valeurs acceptables, fera le tri naturellement ;
   * il a suffit qu'une classe définisse une valeur à sa variable de classe :envvar:`_collector` pour qu'un tel collecteur existe ;
   * les classes peuvent être définies n'importe où dans l'arborescence de votre package, ou dans un package extérieur que vous importeriez pour qu'automatiquement les classes héritant de footprints.FootprintBase soient collectées.
@@ -235,7 +235,7 @@ Vous récoltez un magnifique avertissement car plusieurs choix sont possibles. C
 Dans la vie courante, si vous demandez une chaise, c'est probablement pour vous assoir,
 peu importe qu'elle soit en plastique ou en bois. Ici dans notre exemple-jeu, la confusion entre couleur extérieure du fruit et de sa
 chair est plus délicate. Mais nous ferons avec. La question est : que faire si il faut pouvoir distinguer. Ou
-plus exactement et plus généralement : selon quels critères des empreintes compatibles seront distinguées ?
+plus exactement et plus généralement : selon quels critères des empreintes compatibles seront-elles distinguées ?
 
 Les empreintes usent dans ce cas d'une heuristique assez intuitive : le tri s'opère en fonction du niveau
 de priorité et du nombre d'attributs reconnus dans l'empreinte.
@@ -261,7 +261,7 @@ nommé :envvar:`top` avec quelques niveaux par défaut::
     >>> print fp.priorities.top.levels
     ('NONE', 'DEFAULT', 'TOOLBOX', 'DEBUG')
 
-accessibles directement, et ordonnés les uns les autres::
+accessibles directement, et ordonnés les uns par rapport aux autres::
 
     >>> top = fp.priorities.top
     >>> print top.DEFAULT
@@ -308,13 +308,13 @@ Il y a toujours un message d'avertissement car, de fait, il y a plusieurs fruits
 immanquablement la compétition !
 
 Mais nous avions dit également que le nombre d'attributs correspondant à une empreinte donnée serait pris en compte.
-Ceci n'est possible que si l'on peut ou non renseigner un attribut. Autrement, si une classe dispose d'attributs
+Ceci n'est possible que si l'on peut ou non renseigner un attribut. Autrement dit, si une classe dispose d'attributs
 optionnels dans son footprint.
 
 Attributs optionnels
 --------------------
 
-Nous allons maintenant doter la pomme d'un attribut optionnel à savoir le nom du producteur. Les fraises, c'est bien connu,
+Nous allons maintenant doter la pomme d'un attribut optionnel, à savoir le nom du producteur. Les fraises, c'est bien connu,
 sont produites en Espagne, hors sol, par des sociétés anonymes, et n'auront donc pas un tel attribut. La déclaration complète
 a donc maintenant cette allure::
 
@@ -382,7 +382,7 @@ il est automatiquement transformé en un objet de classe :class:`footprints.Foot
 de la classe par l'interpréteur python (en fait par la méta-classe utilisée pour instancier cette classe, mais
 cela nous emmènerait un peu trop profondément dans les soutes magiques du package).
 
-En trichant quelque peu avec les règles d'accès aux attributs "cachés" de la classe (ie: précédé par un underscore),
+En trichant quelque peu avec les règles d'accès aux attributs "cachés" de la classe (ie: précédés par un underscore),
 c'est quelque chose que l'on peut aisément vérifier::
 
     >>> fruits.Pomme
@@ -535,7 +535,7 @@ Typage
 ------
 
 On considère qu'un attribut est par défaut une chaîne de caractères, mais cela peut être absolument n'importe
-quelle autre classe, que ce soit un type de base de python ou classe utilisateur.
+quelle autre classe, que ce soit un type de base de python ou une classe utilisateur.
 
 Imaginons que nous voulions maintenant, pour chaque fruit, lui attribuer un calibre, représenté par un entier
 compris en 1 et 6, valant par défaut 2. Il suffit rétroactivement de modifier la classe de base de la façon
@@ -563,7 +563,7 @@ Reprenons ce que nous savons être une pomme::
     >>> print p.calibre
     2
 
-Essayons maintenant une autre numérique exprimée comme basestring::
+Essayons maintenant une autre valeur numérique exprimée comme basestring::
 
     >>> p = fp.proxy.fruit(couleur='verte', calibre='04')
     >>> print p.calibre
@@ -612,7 +612,7 @@ Valeurs prohibées
 Tout aussi commode, il est possible de spécifier les valeurs absolument prohibées. Dit autrement, un objet de cette
 classe ne pourrait pas avoir laissé une empreinte de cette ou de ces valeurs. La classe n'est donc plus éligible
 pour le processus d'instanciation. C'est la clé **outcast** qui permet de spécifier les valeurs prohibées.
-Tout comme les valeurs associées à la clé **values** est sont automatiquement retypées dans le type spécifié pour
+Tout comme les valeurs associées à la clé **values**, elles sont automatiquement retypées dans le type spécifié pour
 l'attribut courant.
 
 Voici un exemple avec un fruit qui ne pourrait raisonnablement pas pousser sous certaines latitudes::
@@ -653,7 +653,7 @@ Changement de valeur à la volée
 Il peut être utile de repositionner une valeur, soit que l'on veuille permettre une certaine approximation, soit que l'on
 veuille restreindre les valeurs réellement manipulées par la suite par les différents objets instanciées, tout en laissant
 une certaine latitude de choix à l'utilisateur. Il faut néanmoins déclarer ces valeurs "alternatives"
-dans les valeurs autorisées (si il y en a de définies explicitement).
+dans les valeurs autorisées (si il y en a qui sont définies explicitement).
 
 Reprenons par exemple le cas des Granny Smith::
 
@@ -686,7 +686,7 @@ Inutile d'épiloguer plus longuement sur l'incroyable souplesse que permet cette
 Alias de noms d'attributs
 -------------------------
 
-Une autre façon  de particulariser une empreinte est d'autoriser différentes façons de nommer un attribut identique.
+Une autre façon de particulariser une empreinte est d'autoriser différentes façons de nommer un attribut identique.
 Dans le cas de nos fruits, on aurait pu imaginer que l'aspect soit un synonyme pour la couleur par exemple, et le
 mettre dans la classe générique de base. Dans ce cas, il ne s'agirait que d'une façon commode de nommer une qualité
 de tous les fruits. C'est déjà quelque chose de très pratique, ne serait-ce qu'en terme d'évolution d'un ensemble logiciel
@@ -729,7 +729,7 @@ ce moment. Il n'est donc pas raisonnable de les changer. De nouvelles valeurs au
 d'une autre classe.
 
 Néanmoins, il ne faut pas être trop dogmatique. Certaines valeurs d'attributs sont tellement larges, ou simplement
-non restreinte par la clé *values*, que l'on peut s'autoriser de les modifier.
+non restreinte par la clé *values*, que l'on peut s'autoriser à les modifier.
 
 En fait, pour chaque attribut de l'empreinte, un descripteur (ou accesseur) est défini dans le code python (il n'est
 pas obligatoire de comprendre cela, surtout si vous n'avez pas de notion des *descriptors* de python). Le package
@@ -834,7 +834,7 @@ Classe ou objet
 
 Et que se passe-t-il quand le type attendu d'un attribut est non un objet, mais une classe ? Bien entendu, en python,
 les classes elles-mêmes sont des objets. Mais il faut pourtant pouvoir distinguer entre un type fourni dans le but
-d'instancier une valeur d'attribut et le fait que l'on veut que l'attribut lui-même reste une classe. Ce n'est pas une
+d'instancier une valeur d'attribut et le fait que l'on veuille que l'attribut lui-même reste une classe. Ce n'est pas une
 rareté dès que l'on pense en terme de collaboration de classes, ou de composition. Moralité, une clé optionnelle est
 évaluée lors de la résolution des footprints, la clé *isclass*.
 
@@ -905,7 +905,7 @@ Si l'on ne change rien à nos tentatives précédentes, peu de chance de récup�
             recolte    : {'only': 'No value found', 'args': 'recolte'}
 
 Définissons maintenant, pour l'ensemble du package footprints, une date de récolte par défaut
-(le mécanisme en sera expliqué détaillé sera expliqué plus tard),
+(le mécanisme en sera expliqué plus tard),
 mais qui ne corresponde pas à notre filtre *only*::
 
     >>> fp.setup.defaults(recolte=2014)
@@ -943,7 +943,7 @@ Et si maintenant nous disons que la récolte par défaut est celle de 2007::
 Sélection par intervalles
 -------------------------
 
-Pour un paramètre (ou attribut), il est possible de d'étendre le filtre *only* avec les modificateurs
+Pour un paramètre (ou attribut), il est possible d'étendre le filtre *only* avec les modificateurs
 *before_* et *after_*.
 
 Nous pouvons avoir ainsi une vision futuriste des pommes Zorg::
@@ -973,7 +973,7 @@ de spécifier une intersection non vide si il veut que sa classe soit instancié
 Mécanismes de substitution
 ==========================
 
-Toutes les valeurs servant à la résolution des empreintes de classes n'ont pas besoin d'être
+Les valeurs servant à la résolution des empreintes de classes n'ont pas besoin d'être
 toutes explicites. Il est possible de se référer aux valeurs que prennent certaines de ces valeurs
 pour en renseigner d'autres.
 
@@ -1222,7 +1222,7 @@ les valeurs autorisées, etc. Voir la documentation en ligne de la classe :class
 Formats de footprints
 ---------------------
 
-La plupart des exemples présentées, et l'usage courant de VORTEX en l'occurrence, se sert de simples dictionnaires
+La plupart des exemples présentés, et l'usage courant de VORTEX en l'occurrence, se sert de simples dictionnaires
 pour définir les empreintes. On a vu aussi qu'il est possible d'utiliser en tout ou en partie
 des objets :class:`~footprints.Footprint` prédéfinis.
 

@@ -7,7 +7,7 @@ Composants algorithmiques
 Liste des composants
 --------------------
 
-Comment toujours, interrogeons le collecteur dédié aux composants algorithmiques::
+Comme toujours, interrogeons le collecteur dédié aux composants algorithmiques::
 
     >>> pprint.pprint(fpx.components())
     [<class 'common.algo.coupling.Coupling'>,

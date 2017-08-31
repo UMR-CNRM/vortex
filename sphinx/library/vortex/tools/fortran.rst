@@ -8,9 +8,7 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.6
 
-.. todo::
-
-      Nothing written for :mod:`vortex.tools.fortran` handling yet !
+.. seealso:: :ref:`fortran-usage` (technical documentation)
 
 
 Package

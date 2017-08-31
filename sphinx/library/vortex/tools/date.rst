@@ -8,52 +8,11 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.1
 
-Functions
----------
-
-.. autofunction:: at_hour
-
-.. autofunction:: at_second
-
-.. autofunction:: daterange
-
-.. autofunction:: easter
-
-.. autofunction:: guess
-
-.. autofunction:: lastround
-
-.. autofunction:: mkisodate
-
-.. autofunction:: now
-
-.. autofunction:: stamp
-
-.. autofunction:: stardates
-
-.. autofunction:: synop
-
-.. autofunction:: today
-
-.. autofunction:: tomorrow
-
-.. autofunction:: yesterday
-
 
 Classes
 -------
 
-.. autoclass:: _GetattrCalculatorMixin
-   :show-inheritance:
-   :members: __getattr__
-   :member-order: alphabetical
-
 .. autoclass:: Date
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Time
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -63,7 +22,57 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Time
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Month
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+
+Utility class
+-------------
+
+.. autoclass:: _GetattrCalculatorMixin
+   :show-inheritance:
+   :members: __getattr__
+   :member-order: alphabetical
+
+
+Helper functions
+----------------
+
+.. autofunction:: now
+
+.. autofunction:: at_hour
+
+.. autofunction:: at_second
+
+.. autofunction:: lastround
+
+.. autofunction:: synop
+
+.. autofunction:: today
+
+.. autofunction:: tomorrow
+
+.. autofunction:: yesterday
+
+.. autofunction:: easter
+
+
+Utility functions
+-----------------
+
+.. autofunction:: stardates
+
+.. autofunction:: stamp
+
+.. autofunction:: mkisodate
+
+.. autofunction:: guess
+
+.. autofunction:: daterange

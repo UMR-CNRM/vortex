@@ -5,7 +5,7 @@
 # 09/02/2017
 # Original version: Python 3.5
 #                   Copyright 2001-2017 Python Software Foundation; All Rights Reserved
-# Proposed patched applied: https://bugs.python.org/issue11416
+# Proposed patch applied: https://bugs.python.org/issue11416
 # LFM: netrc._passwd_clean regex introduced to remove matching quotes
 
 from __future__ import print_function, absolute_import, unicode_literals, division

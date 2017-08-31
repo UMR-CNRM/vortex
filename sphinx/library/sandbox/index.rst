@@ -15,5 +15,7 @@ List of modules.
 
    sandbox
 
+   algo/index
+   data/index
    util/index
 

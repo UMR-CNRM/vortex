@@ -17,7 +17,10 @@ logger = footprints.loggers.getLogger(__name__)
 
 
 class OdbDriver(object):
-    """A dedicated class for handling some ODB settings."""
+    """A dedicated class for handling some ODB settings.
+
+    To be used in AlgoComponnents through the :class:`OdbComponent` mix in class.
+    """
 
     def __init__(self, sh=None, env=None, target=None):
         """A quite challenging initialisation since sh, env and target should be provided."""
@@ -106,7 +109,7 @@ class OdbDriver(object):
 
 
 class OdbComponent(object):
-    """Extend Algo Components with ODB features."""
+    """Extend Algo Components with ODB features (this is a mix in class)."""
 
     @property
     def odb(self):

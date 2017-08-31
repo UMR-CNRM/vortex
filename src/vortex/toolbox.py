@@ -3,6 +3,10 @@
 
 """
 Top level interface for accessing the VORTEX facilities.
+
+This module does not provides any class, constant, or any nice object.
+It defines a very basic interface to some (possibly) powefull capacities
+of the :mod:`vortex` toolbox.
 """
 
 #: Automatic export of superstar interface.
@@ -23,19 +27,34 @@ defaults = footprints.setup.defaults
 
 sectionmap = {'input': 'get', 'output': 'put', 'executable': 'get'}
 
+
+# Toolbox defaults
+
+#: Default value for the **now** attribute of :func:`input`, :func:`executable`
+#: and :func:`output` functions
 active_now              = False
+#: Default value for the **insitu** attribute of the :func:`input` and
+#: :func:`executable` functions
 active_insitu           = False
+#: If *False*, drastically reduces the amount of messages printed by the
+#: toolbox module
 active_verbose          = True
+#: If *False*, do not try to create/make any promise
 active_promise          = True
+#: If *False*, this makes the :func:`clear_promises` function inactive
 active_clear            = False
+#: If *False*, this will reset to *False* any ``metadatacheck`` attribute
+#: passed to the :func:`input` or :func:`executable` functions
 active_metadatacheck    = True
+#: If *True*, archive stores will not be used at all (only cache stores will
+#: be used)
 active_incache          = False
 
 #: History recording
 history = History(tag='rload')
 
-# Most commonly used functions
 
+# Most commonly used functions
 
 def show_toolbox_settings(ljust=24):
     """Print the current settings of the toolbox."""
@@ -71,20 +90,24 @@ def rload(*args, **kw):
     Resource Loader.
 
     This function behaves as a factory for any possible pre-defined family
-    of VORTEX object resources.
+    of VORTEX resources (described by an aggregation of Resource, Provider and
+    Container objects).
 
     Arguments could be a mix of a list of dictionary-type objects and key/value
     parameters. Other type of arguments will be discarded.
 
     An abstract resource descriptor is built as the aggregation of these
-    arguments and then expanded according to rules defined in the
-    :mod:`footprints.util` module. For any expanded descriptor, the resources
-    module will try to pickup the best candidate (if any) that could match the
-    description (ie: Resource, Provider, Container, etc.)
+    arguments and then expanded according to rules defined by the
+    :func:`footprints.util.expand` function.
 
-    Finally, a :class:`vortex.data.Handler` object is associated to this list
-    of candidates. The outcome of the rload function is therefore a list of
-    :class:`data.handlers.Handler` objects.
+    For each expanded descriptor, the ``rload`` method will try to pickup the
+    best candidates (if any) that could match the description (*i.e.* Resource,
+    Provider, Container). If no match is found for one of the Resource, Provider
+    or Container objects, a :class:`VortexToolboxDescError` exception is raised.
+    Otherwise,the resource's :class:`~vortex.data.handlers.Handler` built from
+    those three objects is added to the result's list.
+
+    :return: A list of :class:`vortex.data.handlers.Handler` objects.
     """
     rd = dict()
     for a in args:
@@ -113,20 +136,16 @@ def rload(*args, **kw):
 
 def rh(*args, **kw):
     """
-    This function selects the first complete resource handler as returned
-    by the *rload* function.
+    This function selects the first resource's handler as returned by the
+    :func:`rload` function.
     """
-    rl = filter(lambda x: x.complete, rload(*args, **kw))
-    if rl:
-        return rl[0]
-    else:
-        return None
+    return rload(*args, **kw)[0]
 
 
 def rget(*args, **kw):
     """
     This function calls the :meth:`get` method on any resource handler returned
-    by the *rload* function.
+    by the :func:`rload` function.
     """
     loc_incache = kw.pop('incache', active_incache)
     rl = rload(*args, **kw)
@@ -138,7 +157,7 @@ def rget(*args, **kw):
 def rput(*args, **kw):
     """
     This function calls the :meth:`put` method on any resource handler returned
-    by the *rload* function.
+    by the :func:`rload` function.
     """
     loc_incache = kw.pop('incache', active_incache)
     rl = rload(*args, **kw)
@@ -148,7 +167,7 @@ def rput(*args, **kw):
 
 
 def nicedump(msg, **kw):
-    """Simple dump of the dict contents with ``msg`` as header."""
+    """Simple dump the **kw** dict content with ``msg`` as header."""
     print '#', msg, ':'
     for k, v in sorted(kw.iteritems()):
         print '+', k.ljust(12), '=', str(v)
@@ -174,7 +193,41 @@ def _tb_isolate(t, loglevel):
 
 
 def add_section(section, args, kw):
-    """Add a ``section`` type to the current sequence."""
+    """
+    Add a :class:`~vortex.layout.dataflow.Section` object (of kind **section**)
+    to the current sequence.
+
+    1. The **kw** dictionary may contain keys that influence this function
+       behaviour (such attributes are popped from **kw** before going further):
+
+        * **now**: If *True*, call the appropriate action (``get()`` or ``put()``)
+          on each added :class:`~vortex.layout.dataflow.Section`. (The default
+          is given by :data:`active_now`).
+        * **loglevel**: The logging facility verbosity level that will be used
+          during the :class:`~vortex.layout.dataflow.Section` creation process.
+          If *None*, nothing is done (i.e. the current verbosity level is
+          preserved). (default: *None*).
+        * **verbose**: If *True*, print some informations on the standard output
+          (The default is given by :data:`active_verbose`).
+        * **complete**: If *True*, force the task to complete (the
+          :class:`VortexForceComplete` exception is raised) whenever an error
+          occurs. (default: False).
+        * **insitu**: It *True*, before actually getting data, we first check
+          if the data is already there (in the context of a multi-step job,
+          it might have been fetched during a previous step). (default: *False*).
+        * **incache**: It *True*, archive stores will not be used at all (only cache
+          stores will be used). (The default is given by :data:`active_incache`).
+
+    2. **kw** is then looked for items relevant to the
+       :class:`~vortex.layout.dataflow.Section` constructor (``role``, ``intent``,
+       ...). (such items are popped from kw before going further).
+
+    3. The remaining **kw** items are passed directly to the :func:`rload`
+       function in order to create the resource's
+       :class:`~vortex.data.handlers.Handler`.
+
+    :return: A list of :class:`vortex.data.handlers.Handler` objects.
+    """
 
     t = sessions.current()
 
@@ -299,13 +352,31 @@ def add_section(section, args, kw):
 
 # noinspection PyShadowingBuiltins
 def input(*args, **kw):  # @ReservedAssignment
-    """Add an input section to the current sequence."""
+    """Add input :class:`~vortex.layout.dataflow.Section` objects to the current sequence.
+
+    Relies on the :func:`add_section` function (see its documentation), with:
+
+        * It's ``section`` attribute is automatically set to 'input';
+        * The ``kw``'s *insitu* item is set to :data:`active_insitu` by default.
+
+    :return: A list of :class:`vortex.data.handlers.Handler` objects (associated
+        with the newly created class:`~vortex.layout.dataflow.Section` objects).
+    """
     kw.setdefault('insitu', active_insitu)
     return add_section('input', args, kw)
 
 
 def inputs(ticket=None, context=None):
-    """Return effective inputs in specified context."""
+    """Return effective inputs for the specified context.
+
+    It actually returns both *inputs* and *executables*.
+
+    :param ~vortex.sessions.Ticket ticket: A session's Ticket. If set to *None*,
+        the current active session will be used (default: *None*)
+    :param ~vortex.layout.contexts.Context context: A context object. If set to *None*,
+        the current active context will be used (default: *None*)
+    :return: A list of :class:`~vortex.layout.dataflow.Section` objects.
+    """
     if context is None:
         if ticket is None:
             ticket = sessions.current()
@@ -314,7 +385,11 @@ def inputs(ticket=None, context=None):
 
 
 def show_inputs(context=None):
-    """Dump a summary of inputs sections."""
+    """Dump a summary of inputs (+ executables) sections.
+
+    :param ~vortex.layout.contexts.Context context: A context object. If set to *None*,
+        the current active context will be used (default: *None*)
+    """
     t = sessions.current()
     for csi in inputs(ticket=t):
         t.sh.header('Input ' + str(csi))
@@ -323,12 +398,27 @@ def show_inputs(context=None):
 
 
 def output(*args, **kw):
-    """Add an output section to the current sequence."""
+    """Add output :class:`~vortex.layout.dataflow.Section` objects to the current sequence.
+
+    Relies on the :func:`add_section` function (see its documentation), with:
+
+        * It's ``section`` attribute is automatically set to 'output';
+
+    :return: A list of :class:`vortex.data.handlers.Handler` objects (associated
+        with the newly created class:`~vortex.layout.dataflow.Section` objects).
+    """
     return add_section('output', args, kw)
 
 
 def outputs(ticket=None, context=None):
-    """Return effective outputs in specified context."""
+    """Return effective outputs in specified context.
+
+    :param ~vortex.sessions.Ticket ticket: A session's Ticket. If set to *None*,
+        the current active session will be used (default: *None*)
+    :param ~vortex.layout.contexts.Context context: A context object. If set to *None*,
+        the current active context will be used (default: *None*)
+    :return: A list of :class:`~vortex.layout.dataflow.Section` objects.
+    """
     if context is None:
         if ticket is None:
             ticket = sessions.current()
@@ -337,7 +427,11 @@ def outputs(ticket=None, context=None):
 
 
 def show_outputs(context=None):
-    """Dump a summary of outputs sections."""
+    """Dump a summary of outputs sections.
+
+    :param ~vortex.layout.contexts.Context context: A context object. If set to *None*,
+        the current active context will be used (default: *None*)
+    """
     t = sessions.current()
     for cso in outputs(ticket=t):
         t.sh.header('Output ' + str(cso))
@@ -346,7 +440,18 @@ def show_outputs(context=None):
 
 
 def promise(*args, **kw):
-    """Log a promise before execution."""
+    """Log promises before execution.
+
+    Relies on the :func:`add_section` function (see its documentation), with:
+
+        * It's ``section`` attribute is automatically set to 'output';
+        * The ``kw``'s *promised* item is set to *True*;
+        * The ``kw``'s *force* item is set to *True*;
+        * The ``kw``'s *now* item is set to :data:`active_promise`.
+
+    :return: A list of :class:`vortex.data.handlers.Handler` objects (associated
+        with the newly created class:`~vortex.layout.dataflow.Section` objects).
+    """
     kw.update(
         promised = True,
         force    = True,
@@ -359,13 +464,38 @@ def promise(*args, **kw):
 
 
 def executable(*args, **kw):
-    """Add an executable section to the current sequence."""
+    """Add executable :class:`~vortex.layout.dataflow.Section` objects to the current sequence.
+
+    Relies on the :func:`add_section` function (see its documentation), with:
+
+        * It's ``section`` attribute is automatically set to 'executable';
+        * The ``kw``'s *insitu* item is set to :data:`active_insitu` by default.
+
+    :return: A list of :class:`vortex.data.handlers.Handler` objects (associated
+        with the newly created class:`~vortex.layout.dataflow.Section` objects).
+    """
     kw.setdefault('insitu', active_insitu)
     return add_section('executable', args, kw)
 
 
 def algo(*args, **kw):
-    """Load an algo component and display the description provided."""
+    """Load an algo component and display its description (if **verbose**).
+
+    1. The **kw** dictionary may contain keys that influence this function
+       behaviour (such attributes are popped from **kw** before going further):
+
+        * **loglevel**: The logging facility verbosity level that will be used
+          during the :class:`~vortex.layout.dataflow.Section` creation process.
+          If *None*, nothing is done (i.e. the current verbosity level is
+          preserved). (default: *None*).
+        * **verbose**: If *True*, print some informations on the standard output
+          (The default is given by :data:`active_verbose`).
+
+    2. The remaining **kw** items are passed directly to the "algo" footprint's
+        proxy in order to create the AlgoComponent object.
+
+    :return: an object that is a subtype of :class:`vortex.algo.components.AlgoComponent`
+    """
 
     t = sessions.current()
 
@@ -387,7 +517,34 @@ def algo(*args, **kw):
 
 
 def diff(*args, **kw):
-    """Perform a diff with a resource with the same local name."""
+    """Perform a diff with a resource with the same local name.
+
+    1. The **kw** dictionary may contain keys that influence this function
+       behaviour (such attributes are popped from **kw** before going further):
+
+        * **fatal**: If *True*, a :class:`ValueError` exception will be raised
+          whenever the "diff" detects differences.
+        * **loglevel**: The logging facility verbosity level that will be used
+          during the :class:`~vortex.layout.dataflow.Section` creation process.
+          If *None*, nothing is done (i.e. the current verbosity level is
+          preserved). (default: *None*).
+        * **verbose**: If *True*, print some informations on the standard output
+          (The default is given by :data:`active_verbose`).
+
+    2. The remaining **kw** items are passed directly to the :func:`rload`
+       function in order to create the resource's
+       :class:`~vortex.data.handlers.Handler` objects for the reference files.
+
+    3. The reference files resource's :class:`~vortex.data.handlers.Handler` objects
+       are altered so that the reference files are stored in temporary Containers.
+
+    4. The reference files are fetched.
+
+    5. The diff between the containers described in the resource's description
+       and the reference files is computed.
+
+    :return: A list of *diff* results.
+    """
 
     # First, retrieve arguments of the toolbox command itself
     fatal     = kw.pop('fatal', True)
@@ -493,7 +650,7 @@ def diff(*args, **kw):
 def magic(localpath, **kw):
     """
     Return a minimal resource handler build with an unknown resource,
-    a file container and an anonymous provider described with its url.
+    a file container and an anonymous provider described with its URL.
     """
     kw.update(
         unknown  = True,
@@ -545,7 +702,7 @@ def print_namespaces(**kw):
 
 def clear_promises(clear=None, netloc='promise.cache.fr', scheme='vortex',
                    storeoptions=None):
-    """Remove all promises that have been made in the current python context.
+    """Remove all promises that have been made in the current session.
 
     :param netloc: Netloc of the promise's cache store to clean up
     :param scheme: Scheme of the promise's cache store to clean up

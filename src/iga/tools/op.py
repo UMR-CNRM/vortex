@@ -348,10 +348,10 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
     :param str shhost: tranfertnode
     :param dict optfilter: dictionary (used to allow routing)
     :param str soprano_target: str (piccolo or piccolo-int)
-    :param str routingkey : the BD routing key
-    :param str selkeyproductid : (example: area, term, fields ...)
-    :param str targetname :
-    :param str transmet :
+    :param str routingkey: the BD routing key
+    :param str selkeyproductid: (example: area, term, fields ...)
+    :param str targetname:
+    :param str transmet:
     """
 
     def hook_route(t, rh):
