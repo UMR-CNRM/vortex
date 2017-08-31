@@ -96,9 +96,8 @@ communications_timeout = 0.01
 __version__ = '1.0.5'
 
 
-#################
-### FUNCTIONS ###
-#################
+# FUNCTIONS
+###########
 def run_as_server(common_instructions, individual_instructions,
                   scheduler=MaxThreadsScheduler(),
                   verbose=False):
@@ -110,17 +109,14 @@ def run_as_server(common_instructions, individual_instructions,
     appended, or the subprocess will continue to live alone (until
     destruction of the Boss instance).
 
-    Args:\n
-    - *common_instructions*: to be passed to the workers
-    - *individual_instructions*: to be passed to the workers
-    - *scheduler*: scheduler to rule scheduling of workers/threads
-    - *verbose*: is the Boss verbose or not.
+    :param dict common_instructions: to be passed to the workers
+    :param dict individual_instructions: to be passed to the workers
+    :param scheduler: scheduler to rule scheduling of workers/threads
+    :param bool verbose: is the Boss verbose or not.
     """
-
     boss = Boss(verbose=verbose, scheduler=scheduler)
     boss.set_instructions(common_instructions, individual_instructions)
     boss.make_them_work()
-
     return boss
 
 
@@ -133,7 +129,6 @@ def batch_main(common_instructions, individual_instructions,
 
     Args and kwargs are those of run_as_server() function.
     """
-
     boss = run_as_server(common_instructions, individual_instructions,
                          scheduler=scheduler,
                          verbose=verbose)
@@ -151,9 +146,8 @@ def batch_main(common_instructions, individual_instructions,
                 print(r['report'])
 
 
-####################
-### MAIN CLASSES ###
-####################
+# MAIN CLASSES
+##############
 class Worker(FootprintBase):
     """
     Template for workers.
@@ -181,7 +175,6 @@ class Worker(FootprintBase):
     )
 
     def __init__(self, *args, **kwargs):
-        """Constructor. See its footprint for arguments."""
         super(Worker, self).__init__(*args, **kwargs)
         if self.name is None:
             self.name = str(uuid.uuid4())
@@ -224,8 +217,12 @@ class Worker(FootprintBase):
                 to_be_sent_back = {'name': self.name, 'report': self._task()}
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
-                tb = traceback.format_exception(exc_type, exc_value, exc_traceback)
-                to_be_sent_back = {'name': self.name, 'report': e, 'traceback': tb}
+                tb = traceback.format_exception(exc_type,
+                                                exc_value,
+                                                exc_traceback)
+                to_be_sent_back = {'name': self.name,
+                                   'report': e,
+                                   'traceback': tb}
             finally:
                 try:
                     self._messenger.put(to_be_sent_back)
@@ -239,7 +236,9 @@ class Worker(FootprintBase):
                     self._messenger.put(to_be_sent_back)
 
     def _work_and_communicate_prehook(self):
-        """Some stuff executed before the "real" work_end_communicate takes place."""
+        """
+        Some stuff executed before the "real" work_end_communicate takes place.
+        """
         pass
 
     def _task(self, **kwargs):
@@ -291,8 +290,10 @@ class Boss(object):
                        'STOP_RIGHTNOW': 'Stop workers immediately and stop\
                                          listening.'}
 
-    def __init__(self, scheduler=MaxThreadsScheduler(), name=None, verbose=False):
-
+    def __init__(self,
+                 scheduler=MaxThreadsScheduler(),
+                 name=None,
+                 verbose=False):
         assert isinstance(scheduler, BaseScheduler)
         self.scheduler = scheduler
         self.name = name
@@ -316,24 +317,36 @@ class Boss(object):
         self.control_messenger_out.close()
         self.workers_messenger.close()
 
-    def set_instructions(self, common_instructions={}, individual_instructions={}):
+    def set_instructions(self,
+                         common_instructions={},
+                         individual_instructions={},
+                         fatal=True):
         """
         Set instructions to be distributed to workers.
 
-        - *common_instructions* are a series of arguments shared by each
-          worker, to be passed to the Worker factory.
-        - *individual_instructions* are a series of arguments proper to each
-          worker, hence all individual instructions must have the same length
+        :param dict common_instructions: are a series of arguments shared by
+                                         each worker, to be passed to the Worker
+                                         factory.
+        :param dict individual_instructions: are a series of arguments proper to
+                                             each worker, hence all individual
+                                             instructions must have the same
+                                             length
+        :param bool fatal: if True, an error in parsing instructions will stop
+                           the workers already running and the boss internal
+                           subprocess
         """
-
         # parse instructions
         individual_instructions = copy.deepcopy(individual_instructions)
         instructions_sets = []
         if len(individual_instructions) > 0:
             # check their length is homogeneous
-            indiv_instr_num = len(individual_instructions[list(individual_instructions.keys())[0]])  # length of first instruction
-            assert all([len(instr) == indiv_instr_num for instr in individual_instructions.values()]), \
-                "all *individual_instructions* must have the same length."
+            _i0 = sorted(individual_instructions.keys())[0]
+            indiv_instr_num = len(individual_instructions[_i0])  # length of first instruction
+            if not all([len(instr) == indiv_instr_num
+                        for instr in individual_instructions.values()]):
+                if fatal:
+                    self.stop_them_working()
+                raise AssertionError("all *individual_instructions* must have the same length.")
             # gather common and individual
             for _ in range(indiv_instr_num):
                 instructions = copy.copy(common_instructions)
@@ -359,16 +372,18 @@ class Boss(object):
     def make_them_work(self, terminate=False, stop_listening=False):
         """
         Order the workers to work.
-        If *terminate*, no other instructions could be appended later.
-        If *stop_listening*, alive workers go on their jobs, but they are not
-        listened to anymore; this is a bit tricky but might be used ?
-        """
 
+        :param bool terminate: if True, no other instructions could be appended
+                               later.
+        :param bool stop_listening: if True, alive workers go on their jobs,
+                                    but they are not listened to anymore;
+                                    this is a bit tricky but might be useful ?
+        """
         self.control_messenger_out.send(self.control_signals['RESUME'])
         if stop_listening:
             self.control_messenger_out.send(self.control_signals['STOP_LISTENING'])
         if terminate:
-            self.terminate()
+            self.end()
 
     def stop_them_working(self):
         """Stop the workers."""
@@ -377,6 +392,7 @@ class Boss(object):
     def get_report(self, interim=True):
         """
         Get report of the work executed.
+
         If *interim*, ask for an interim report if no report is available,
         i.e. containing the work done by the time of calling.
         """
@@ -385,12 +401,14 @@ class Boss(object):
     def _internal_get_report(self, interim=True, final=False):
         """
         Get report of the work executed.
-        If *interim*, ask for an interim report if no report is available,
-        i.e. containing the work done by the time of calling.
-        If *final*, the report is saved in an internal variable and the saved
-        report will be returned whenever get_report is called.
-        """
 
+        :param bool interim: if True, ask for an interim report if no report is
+                             available, i.e. containing the work done by the
+                             time of calling.
+        :param bool final: if True, the report is saved in an internal variable
+                           and the saved report will be returned whenever
+                           get_report is called.
+        """
         received_a_report = self.control_messenger_out.poll
 
         def _getreport():
@@ -484,7 +502,6 @@ class Boss(object):
         From within this method down, everything is done in the subprocess
         world !
         """
-
         with interrupt.SignalInterruptHandler():
             try:
                 (workers_report, pending_instructions) = self._listen()
@@ -497,7 +514,9 @@ class Boss(object):
                               'pending': pending_instructions}
             except (Exception, KeyboardInterrupt) as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
-                tb = traceback.format_exception(exc_type, exc_value, exc_traceback)
+                tb = traceback.format_exception(exc_type,
+                                                exc_value,
+                                                exc_traceback)
                 report = {'workers_report': e,
                           'status':'workers exception',
                           'traceback': tb}
@@ -506,7 +525,8 @@ class Boss(object):
                     self._send_report(report, splitmode=True)
                 except (ValueError, IOError) as e:
                     # ValueError = to_be_sent_back too big.
-                    # We are sure that a PickleError won't occur since data were already pickled once (by the workers)
+                    # We are sure that a PickleError won't occur since data were
+                    # already pickled once (by the workers)
                     taylorism_log.error("The report is too big to be sent back :-(")
                     report = {'workers_report': e,
                               'status':'transmission exception',
@@ -524,7 +544,6 @@ class Boss(object):
           - C. assign work to workers
           - D. exit loop if any reason for
         """
-
         workers = {}
         pending_instructions = []
         report = []
@@ -536,9 +555,13 @@ class Boss(object):
         def hire_worker(instructions):
             w = fpx.worker(**instructions)
             if w is None:
-                raise AttributeError("no adequate Worker was found with these instructions:" + str(instructions))
+                raise AttributeError("no adequate Worker was found with these instructions: " +
+                                     str(instructions))
             w._messenger = self.workers_messenger
-            workers[w.name] = w
+            if w.name not in workers.keys():
+                workers[w.name] = w
+            else:
+                raise ValueError('several workers wear the same name: ' + w.name)
             return w
 
         halt = False
@@ -558,19 +581,24 @@ class Boss(object):
                                 self._send_report(report, splitmode=True)
                             except ValueError:
                                 # ValueError = report too big.
-                                # We are sure that a PickleError won't occur since data were already pickled once (by the workers)
+                                # We are sure that a PickleError won't occur
+                                # since data were already pickled once (by the
+                                # workers)
                                 taylorism_log.error("The report is too big to be sent back :-(")
                                 raise
                         elif control == self.control_signals['HALT']:
                             halt = True
                         elif control == self.control_signals['RESUME']:
                             halt = False
-                        elif (control in [self.control_signals[k] for k in self.control_signals.keys() if 'STOP' in k] or
+                        elif (control in [self.control_signals[k]
+                                          for k in self.control_signals.keys()
+                                          if 'STOP' in k] or
                               control == self.control_signals['END']):
                             end = True
                             if control == self.control_signals['STOP_LISTENING']:
                                 break  # leave out the infinite loop
-                            elif control in (self.control_signals['STOP'], self.control_signals['STOP_RIGHTNOW']):
+                            elif control in (self.control_signals['STOP'],
+                                             self.control_signals['STOP_RIGHTNOW']):
                                 stop = True
                                 if control == self.control_signals['STOP_RIGHTNOW']:
                                     stop_them_working()
@@ -578,7 +606,8 @@ class Boss(object):
                     else:
                         # received new instructions
                         if not end:
-                            # if an END or STOP signal has been received, new instructions are not listened to
+                            # if an END or STOP signal has been received,
+                            # new instructions are not listened to
                             if isinstance(control, list):
                                 pending_instructions.extend(control)
                             elif isinstance(control, dict):
@@ -593,10 +622,14 @@ class Boss(object):
                     report.append(reported)
                     if isinstance(reported['report'], Exception):
                         # worker got an exception
-                        taylorism_log.error("error encountered with worker " + reported['name'] + " with traceback:")
+                        taylorism_log.error("error encountered with worker " +
+                                            reported['name'] +
+                                            " with traceback:")
                         sys.stderr.writelines(reported['traceback'])
                         sys.stderr.write("Instructions of guilty worker:\n")
-                        w = [repr(a) + '\n' for a in sorted(workers[reported['name']].footprint_as_dict().items()) if a]
+                        w = [repr(a) + '\n'
+                             for a in sorted(workers[reported['name']].footprint_as_dict().items())
+                             if a]
                         sys.stderr.writelines(w)
                         stop_them_working()
                         raise reported['report']
@@ -607,16 +640,26 @@ class Boss(object):
                     workers.pop(reported['name']).bye()
                 # C. there is work to do and no STOP signal has been received: re-launch
                 if len(pending_instructions) > 0 and not stop and not halt:
-                    (launchable, not_yet_launchable) = self.scheduler.launchable(pending_instructions, workers=workers, report=report)
+                    (launchable,
+                     not_yet_launchable) = self.scheduler.launchable(pending_instructions,
+                                                                     workers=workers,
+                                                                     report=report)
                     for instructions in launchable:
-                        w = hire_worker(instructions)
+                        try:
+                            w = hire_worker(instructions)
+                        except (AttributeError, ValueError):
+                            stop_them_working()
+                            raise
                         w.work()
                         if self.verbose:
-                            taylorism_log.info(' '.join(['Worker', w.name, 'started.']))
+                            taylorism_log.info(' '.join(['Worker',
+                                                         w.name,
+                                                         'started.']))
                     pending_instructions = not_yet_launchable
                 # D. should we stop now ?
                 if end and (len(workers) == len(pending_instructions) == 0):
-                    # a STOP signal has been received, all workers are done and no more pending instructions remain:
+                    # a STOP signal has been received, all workers are done and
+                    # no more pending instructions remain:
                     # we can leave out infinite loop
                     stop = True
                 if stop:
