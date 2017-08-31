@@ -76,7 +76,7 @@ if __name__ == '__main__':
         out = sys.stdout
     else:
         out = open(args.out, 'w')
-
+    # TODO: add TL/AD comparisons
     arpifs_listings.compare_files(args.listings[0], args.listings[1],
                                   mode=args.mode,
                                   out=out,

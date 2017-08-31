@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
-import argparse
 import sys
 
-from . import util, norms, jo_tables, listings
+__version__ = '1.0.4'
 
-__version__ = '1.0.3'
+from . import util, norms, jo_tables, listings
 
 
 def compare_files(file_test, file_ref,
@@ -24,7 +24,8 @@ def compare_files(file_test, file_ref,
                   bw=False):
     """Compare the output listings of two files.
 
-    :param pattern: the pattern to be compared, among ('norms', 'Jo-tables')
+    :param pattern: the pattern to be compared, among
+                    ('norms', 'Jo-tables', 'AD-test', 'TL-test')
 
     'norms' arguments:
         :param onlymaxdiff: only max difference is printed for each step.
@@ -67,3 +68,14 @@ def compare_files(file_test, file_ref,
             out.write(' '.join(['No', pattern, 'found in output.\n']))
             comp_out = None
     return comp_out
+
+
+def show_TL_test(filename, outputname='TL-test.png'):
+    """Show a graphical interpretation of the TL-test."""
+    l = listings.OutputListing(filename, pattern_type='TL-test')
+    l.parse_TL_test()
+    fig, _ = l.tl_test.plot()
+    if outputname is None:
+        fig.show()
+    else:
+        fig.savefig(outputname)

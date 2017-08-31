@@ -85,8 +85,6 @@ class TestListingNorms(unittest.TestCase):
         self.assertEqual(l1_n[0], l2_n[0])
         # Rich comparison
         ncomp = norms.NormsComparison(l1_n[5], l2_n[5])
-        print(set(ncomp.sp_comp.values()))
-        print(set(ncomp.gp_comp.values()))
         self.assertIs(ncomp.get_worst(), 0)
         self.assertSetEqual(set(ncomp.sp_comp.values()), set([0, ]))
         self.assertSetEqual(set(ncomp.gp_comp.values()), set([0, ]))
@@ -101,7 +99,8 @@ class TestListingNorms(unittest.TestCase):
         l2_n = norms.NormsSet(_find_testfile('listing_screen_li2'))
         self.assertNotEqual(l1_n, l2_n)
         self.assertTrue(l1_n.steps_equal(l2_n))
-        self.assertNotEqual(l1_n[0], l2_n[0])
+        self.assertEqual(l1_n[2], l2_n[2])
+        self.assertNotEqual(l1_n[3], l2_n[3])
         # Rich comparison
         ncomp = norms.NormsComparison(l1_n[5], l2_n[5])
         self.assertEqual(ncomp.get_worst(), 0)

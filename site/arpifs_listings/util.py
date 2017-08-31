@@ -20,6 +20,8 @@ _sign = '(?P<sign>' + _sign + ')'
 _digits = '(?P<digits>' + _digits + ')'
 _exp = 'E?(?P<exp>(\+|\-)\d{2,3})'
 re_for_fortran_scientific_format_groups = re.compile(_sign + _dot + _digits + _exp + '$')
+PARSING_ERROR_CODE = 999
+CRASHED_JOB_ERROR_CODE = -1
 
 
 def find_line_containing(pattern, lines):
@@ -161,3 +163,38 @@ def get_maxint(container, infinity=-999):
     if digit == infinity:
         digit = None
     return digit
+
+
+def read_listing(source):
+    """
+    Read a listing, given its (either given as its filename or already read as a
+    list of lines).
+    """
+    if isinstance(source, list):
+        lines = source
+    elif isinstance(source, six.string_types):
+        with open(source, 'r') as listfh:
+            lines = [six.u(l).rstrip("\n") for l in listfh]
+    return lines
+
+
+def set_figax(figure, ax, figsize=(12, 8)):
+    """
+    Given existing matplotlib *figure* and an *ax* (or None),
+    check consistency or generate a consistent (figure, ax) duet.
+    """
+    import matplotlib.pyplot as plt
+
+    if ax is not None and figure is None:
+        figure = ax.figure
+    elif ax is None and figure is not None:
+        if len(figure.axes) > 0:
+            ax = figure.axes[0]
+        else:
+            ax = figure.gca()
+    elif ax is not None and figure is not None:
+        assert ax in figure.axes, '*over*: inconsistency between given fig and ax'
+    elif figure is ax is None:
+        figure, ax = plt.subplots(1, 1, figsize=figsize)
+
+    return (figure, ax)

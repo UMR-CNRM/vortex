@@ -50,4 +50,4 @@ def BDAPrequest_actual_command(command, date, term, query, int_extraenv=False):
                              ["export {}={}".format('db_file_bdap'.upper(),
                                                     '/usr/local/sopra/neons_db_bdap.intgr')])
     # Return the command to be launched
-    return '{} ; {} {} {}'.format(context, command, term.fmtraw, query)
+    return '{} ; {} {:d} {}'.format(context, command, term.hour, query)

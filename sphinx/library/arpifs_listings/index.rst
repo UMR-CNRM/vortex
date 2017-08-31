@@ -15,4 +15,5 @@ List of modules.
    jo_tables
    listings
    norms
+   TLAD
    util

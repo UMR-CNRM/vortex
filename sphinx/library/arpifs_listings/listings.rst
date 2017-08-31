@@ -22,6 +22,10 @@ Functions
 
 .. autofunction:: compare_jo_tables
 
+.. autofunction:: compare_TL_tests
+
+.. autofunction:: compare_AD_tests
+
 Classes
 -------
 
