@@ -610,11 +610,14 @@ class Ssh(object):
         if not self.cocoon(destination):
             return False
 
-        isadir = self.sh.path.isdir(source)
-        if isadir:
-            if not self.remove(destination):
-                return False
+        if not self.remove(destination):
+            return False
+
+        if self.sh.path.isdir(source):
             scpopts += ' -r'
+
+        if not self.remove(destination + '.tmp'):
+            return False
 
         # transfer to a temporary place.
         # when ``destination`` contains spaces, 1 round of quoting
