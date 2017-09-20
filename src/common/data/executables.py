@@ -673,3 +673,30 @@ class ExecMonitoring(BlackBox):
             )
         )
     ]
+
+class ExecReverser(BlackBox):
+    """Compute the initial state for Ctpini."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info='Executable to compute initial state for Ctpini',
+            attr=dict(
+                gvar=dict(
+                    default="master_involive_km"
+                ),
+                kind=dict(
+                    values=['exec_reverser'],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'exec_reverser'
+
+    def command_line(self, **opts):
+        """Build command line for execution as a single string."""
+        cmdline = '-eFPOS -c001 -vmeteo -asli -fh0 -t10.82'
+        return cmdline
