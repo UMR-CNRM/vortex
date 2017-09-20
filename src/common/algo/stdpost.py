@@ -8,6 +8,7 @@ import collections
 import json
 import re
 import time
+from string import Template
 
 from bronx.datagrip.namelist  import NamelistBlock
 import footprints
@@ -1097,3 +1098,115 @@ class Fa2GaussGrib(BlindRun):
 
             # Some cleaning
             self.system.rmall(self.fortinput)
+
+class Reverser(BlindRun):
+    """Compute the initial state for Ctpini."""
+    _footprint = dict(
+        info = "Compute initial state for Ctpini.",
+        attr = dict(
+            kind = dict(
+                values  = ['reverser'],
+            ),
+            param_iter = dict(
+                type = int,
+            ),
+            condlim = dict(
+                type = int,
+            ),
+            ano_type = dict(
+                type = int,
+            ),
+        )
+    )
+
+    def _replace_keys(self, rh, keyvaluedict):
+        """Generic function to replace a key by a value in ascii files."""
+        asciifilename = rh.container.abspath
+        tempasciifilename = '.'.join([asciifilename, 'tmp'])
+        self.system.mv(asciifilename, tempasciifilename)
+        logger.info('Content of the initial ascii file %s', rh.container.filename)
+        self.system.cat(tempasciifilename, output = False)
+        with open(tempasciifilename) as tmpasciifile:
+            content = tmpasciifile.read()
+            content = Template(content)
+            content = content.substitute(keyvaluedict)
+        with open(asciifilename, 'w') as asciifile:
+            asciifile.write(content)
+        logger.info('Content of the modified ascii file %s', rh.container.filename)
+        self.system.cat(asciifilename, output = False)
+
+    def prepare(self, rh, opts):
+        # Get info about the directives files directory
+        directives = self.context.sequence.effective_inputs(role='Directives',
+                                                        kind='ctpini_directives_directory')
+        if len(directives) < 1:
+            logger.error("No directive directory found. Stop")
+            raise ValueError("No directive directory found.")
+        if len(directives) > 1:
+            logger.warning("Multiple directive directory found. The first %s is taken.",
+                           directives[0].rh.container.filename)
+        directives = directives[0].rh
+        directives_directory_name = directives.container.filename
+        # Move the directives file into the execution directory
+        if self.system.is_tarname(directives_directory_name):
+            # The included files are put in the execution directory when get
+            #directives_directory_name = self.system.glob(r'tsr*')
+            #files_list = self.system.ls(directives_directory_name)
+            #for f in files_list:
+            #    self.system.mv('/'.join([directives_directory_name,f]),f)
+            pass
+        else:
+            files_list = self.system.ls(directives_directory_name)
+            for f in files_list:
+                self.system.mv('/'.join([directives_directory_name,f]),f)
+        # Make the different links if needed
+        glob_directives = self.system.glob(r'P*.*.*')
+        dictfilelink = dict()
+        dictfilelink[r"(PS|PX)\.Z850HPA"] = 'ZAVANT.geo'
+        dictfilelink[r"(PS|PX)\.T850HPA"] = 'TAVANT.geo'
+        dictfilelink[r"(PS|PX)\.Z15PVU"] = 'TROPOAVANT.geo'
+        dictfilelink[r"(PS|PX)\.PMERSOL"] = 'PAVANT.geo'
+        dictfilelink[r"PTSR[0-9]*\.Z850HPA"] = 'ZAPRES.geo'
+        dictfilelink[r"PTSR[0-9]*\.T850HPA"] = 'TAPRES.geo'
+        dictfilelink[r"PTSR[0-9]*\.Z15PVU"] = 'TROPOAPRES.geo'
+        dictfilelink[r"PTSR[0-9]*\.PMERSOL"] = 'PAPRES.geo'
+        for directive in glob_directives:
+            for (key, value) in dictfilelink.items():
+                if ((re.compile(key).match(directive) is not None)
+                    and not(self.system.path.exists(value))):
+                    self.system.softlink(directive, value)
+        # Subsitute values in the simili namelist
+        param = self.context.sequence.effective_inputs(role='Param')
+        if len(param) < 1:
+            logger.error("No parameter file found. Stop")
+            raise ValueError("No parameter file found.")
+        elif len(param) > 1:
+            logger.warning("Multiple files for parameter, the first %s if taken",
+                            param[0].rh.container.filename)
+        param = param[0].rh
+        dictkeyvalue = dict()
+        dictkeyvalue[r'param_iter'] = str(self.param_iter)
+        dictkeyvalue[r'condlim'] = str(self.condlim)
+        dictkeyvalue[r'ano_type'] = str(self.ano_type)
+        self._replace_keys(param, dictkeyvalue)
+        # Define an environment variable
+        self.env.DR_HOOK_NOT_MPI = 1
+        logger.info("Set environment variable DR_HOOK_NOT_MPI=1.")
+        # Call the parent's prepare
+        super(Reverser, self).prepare(rh, opts)
+
+    def postfix(self, rh, opts):
+        """Regroup the directive files in a single directory"""
+        # Find the files to be put in the directives file
+        glob_directives = self.system.glob(r'P*.*.*')
+        possible_directive_files = ['TROPOAPRES.geo', 'PAPRES.geo', 'TAPRES.geo',
+                                    'TROPOAPRES_AVANT.geo', 'TANO.geo', 'TANCIEN850.geo']
+        for f in possible_directive_files:
+            if self.system.path.exists(f):
+                glob_directives.append(f)
+        # Move those files in a single directory
+        self.system.mkdir("infoctpini")
+        for f in glob_directives:
+            self.system.mv(f,"infoctpini")
+        # Call the parent's postfix
+        super(Reverser, self).postfix(rh, opts)
