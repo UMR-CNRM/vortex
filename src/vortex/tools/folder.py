@@ -371,6 +371,22 @@ class ObsLocationPackShell(FolderShell):
         )
     )
 
+@folderize
+class CtpiniDirPackShell(FolderShell):
+    """
+    Default interface to  Obs Location packs commands.
+    These commands extend the shell.
+    """
+
+    _footprint = dict(
+        info = 'Default Ctpini directory packs system interface',
+        attr = dict(
+            kind = dict(
+                values   = ['ctpinidirpack'],
+            ),
+        )
+    )
+
 
 available_foldershells = [e.footprint_values('kind')[0] for e in locals().values()
                           if (isinstance(e, type) and issubclass(e, FolderShell) and
