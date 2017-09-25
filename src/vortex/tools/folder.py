@@ -374,7 +374,7 @@ class ObsLocationPackShell(FolderShell):
 @folderize
 class CtpiniDirPackShell(FolderShell):
     """
-    Default interface to  Obs Location packs commands.
+    Default interface to  Ctpini Location packs commands.
     These commands extend the shell.
     """
 
