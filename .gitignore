@@ -1,4 +1,5 @@
 *.py[co~]
+*.ini[~]
 
 # Packages
 *.egg
@@ -44,6 +45,9 @@ _ExportXML
 .settings
 .project
 .pydevproject
+
+# Kate unwanted file
+*.kate-swp
 
 # Pascal unwanted files
 playground

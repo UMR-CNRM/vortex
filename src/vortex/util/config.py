@@ -5,7 +5,7 @@
 Configuration management through ini files.
 """
 
-from ConfigParser import SafeConfigParser, NoOptionError, InterpolationDepthError
+from ConfigParser import SafeConfigParser, NoOptionError, NoSectionError, InterpolationDepthError
 import itertools
 import re
 
@@ -182,7 +182,7 @@ class GenericReadOnlyConfigParser(object):
                                               'has_section', 'has_option'):
             return getattr(self.parser, attr)
         else:
-            raise AttributeError
+            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" + str(attr) + "'")
 
     def footprint_export(self):
         return self.file
@@ -216,7 +216,9 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
         and ``base2``. In case of a conflict, ``base1`` takes precedence over ``base2``.
     """
 
-    _re_validate = re.compile(r'([\w-]+)[ \t]*:?')
+    _RE_VALIDATE = re.compile(r'([\w-]+)[ \t]*:?')
+    _RE_KEYC     = re.compile(r"%\(([^)]+)\)s")
+
     _max_interpolation_depth = 20
 
     def _get_section_list(self, zend_section):
@@ -247,24 +249,24 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
 
         while depth:  # Loop through this until it's done
             depth -= 1
-            if value and self._KEYCRE.match(value):
-                value = self._KEYCRE.sub(_interpolation_replace, value)
+            if value and self._RE_KEYC.match(value):
+                value = self._RE_KEYC.sub(_interpolation_replace, value)
             else:
                 break
-        if value and self._KEYCRE.match(value):
+        if value and self._RE_KEYC.match(value):
             raise InterpolationDepthError(self.options(section), section, rawval)
         return value
 
-    _KEYCRE = re.compile(r"%\(([^)]+)\)s")
-
     def get(self, section, option, raw=False, myvars=None):
         """Behaves like the GenericConfigParser's ``get`` method."""
-        expanded = self._get_section_list(section)
+        expanded = [ s for s in self._get_section_list(section) if s is not None ]
+        if not expanded:
+            raise NoSectionError(section)
         expanded.reverse()
         acc_result = None
         acc_except = None
         mydefault = self.defaults().get(option, None)
-        for isection in [s for s in expanded if s is not None]:
+        for isection in expanded:
             try:
                 tmp_result = self.parser.get(isection, option, raw=True, vars=myvars)
                 if tmp_result is not mydefault:
@@ -283,7 +285,7 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
     def sections(self):
         """Behaves like the Python ConfigParser's ``section`` method."""
         seen = set()
-        for section_m in [self._re_validate.match(s) for s in self.parser.sections()]:
+        for section_m in [self._RE_VALIDATE.match(s) for s in self.parser.sections()]:
             if section_m is not None:
                 seen.add(section_m.group(1))
         return list(seen)
@@ -315,7 +317,7 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
         if attr in ('defaults', ):
             return getattr(self.parser, attr)
         else:
-            raise AttributeError
+            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" + str(attr) + "'")
 
     def as_dict(self, merged=True):
         """Export the configuration file as a dictionary."""
@@ -371,7 +373,7 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
     def __getattr__(self, attr):
         # Give access to all of the parser's methods
         if attr.startswith('__'):
-            raise AttributeError
+            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" + str(attr) + "'")
         return getattr(self.parser, attr)
 
 
@@ -582,3 +584,38 @@ class AppConfigStringDecoder(object):
             # Process the values recursively
             value = self._value_expand(value, remap)
         return value
+
+
+class IniConf(footprints.FootprintBase):
+    """
+    Generic Python configuration file.
+    """
+    _collector = ('iniconf',)
+    _abstract  = True
+    _footprint = dict(
+        info='Python Inifile',
+        attr=dict(
+            kind = dict(
+                values   = [ 'generic', ],
+            ),
+            clsconfig = dict(
+                type     = GenericReadOnlyConfigParser,
+                isclass  = True,
+                optional = True,
+                default  = GenericReadOnlyConfigParser,
+            ),
+            inifile = dict(
+                optional = True,
+                default  = '[kind].ini',
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('Ini Conf %s', self.__class__)
+        super(IniConf, self).__init__(*args, **kw)
+        self._config = self.clsconfig(inifile=self.inifile)
+
+    @property
+    def config(self):
+        return self._config

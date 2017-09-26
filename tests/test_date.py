@@ -54,6 +54,21 @@ class utDate(TestCase):
         rv = date.Date("20110726T12")
         self.assertEqual(rv.compact(), "20110726120000")
 
+        rv = date.Date("20110726 010203")
+        self.assertEqual(rv.compact(), "20110726010203")
+
+        rv = date.Date("20110726H010203")
+        self.assertEqual(rv.compact(), "20110726010203")
+
+        rv = date.Date("2011-07-26 010203 UTC")
+        self.assertEqual(rv.compact(), "20110726010203")
+
+        rv = date.Date("2011-07-26 010203 GMT")
+        self.assertEqual(rv.compact(), "20110726010203")
+
+        rv = date.Date("2011-07-26 01:02:03")
+        self.assertEqual(rv.compact(), "20110726010203")
+
         rv = date.Date("yesterday", base=date.Date("20110726T12"))
         self.assertEqual(rv.compact(), "20110725120000")
 
@@ -240,6 +255,9 @@ class utDate(TestCase):
         self.assertEqual(date.tomorrow(rv), "20110727121314")
         rv = date.at_second()
         self.assertEqual(rv.microsecond, 0)
+        rv = date.at_minute()
+        self.assertEqual(rv.microsecond, 0)
+        self.assertEqual(rv.second, 0)
         rv = date.at_hour()
         self.assertEqual(rv.microsecond, 0)
         self.assertEqual(rv.second, 0)
