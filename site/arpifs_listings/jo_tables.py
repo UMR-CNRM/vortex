@@ -7,8 +7,6 @@ import re
 import sys
 from collections import OrderedDict
 
-from .util import read_listing
-
 #: Automatic export
 __all__ = ['JoTables', 'JoTable']
 
@@ -32,7 +30,7 @@ def _compute_diff(exp, ref):
     if ref != 0:
         reldiff = float(diff) / float(ref)
     else:
-        reldiff = 9.999
+        reldiff = 0
     return diff, reldiff
 
 
@@ -71,7 +69,7 @@ class _JoMixin(object):
     _re_end = None
 
     def __init__(self, name):
-        self.name = name
+        self.name = name.upper()
         self._content = OrderedDict()
         self._cur_child = None
 
@@ -110,7 +108,7 @@ class _JoMixin(object):
                 self._cur_child.end_of_group(* mres.groups())
                 self._cur_child = None
             else:
-                self._cur_child.parse_line(line)
+                self._cur_child.parse_line(line)            
         # Look for the start of a new child object
         mres = self._re_begin.match(line)
         if mres:
@@ -148,7 +146,7 @@ class JoVariable(object):
         :param obserr: Observation Error
         :param bgerr: Background Error
         '''
-        self.name = name
+        self.name = name.upper()
         self.n = int(n)
         self.jo = float(jo)
         self.obserr = float(obserr)
@@ -177,7 +175,11 @@ class JoVariable(object):
                 'jo': dict(zip(('diff', 'reldiff'),
                                _compute_diff(self.jo, ref.jo))),
                 'jo/n': dict(zip(('diff', 'reldiff'),
-                                 _compute_diff(self.jon, ref.jon)))}
+                                 _compute_diff(self.jon, ref.jon))),
+                'nref':ref.n,
+                'nxp':self.n,
+                'jo/nref': 0 if (ref.n==0) else ref.jo/ref.n,
+                'jo/nxp': 0 if (self.n==0) else self.jo/self.n,}
 
     def _item_write(self, ref, out, bw, item, item_l, item_t=0, item_f='%15.6g'):
         _write_n(out,
@@ -323,9 +325,27 @@ class JoObstype(_JoMixinPlus):
         """Jo/N"""
         return self.jo / float(self.ntotal) if self.ntotal else 0
 
+    def compute_general(self,ref):
+        """Compute difference and relative difference for n, jo, jo/n for the whole obstype."""
+        diff = OrderedDict()
+        ndiff,nreldiff=_compute_diff(self.ntotal,ref.ntotal) 
+        jodiff,joreldiff=_compute_diff(self.jo,ref.jo)
+        jondiff,jonreldiff=_compute_diff(self.jon,ref.jon)
+        diff["GLOBAL"]={
+                'n': {'diff':ndiff,'reldiff':nreldiff,},
+                'jo': {'diff':jodiff,'reldiff':joreldiff,},
+                'jo/n': {'diff':jondiff,'reldiff':jonreldiff,},
+                'nref':ref.ntotal,
+                'nxp':self.ntotal,
+                'jo/nref': 0 if (ref.ntotal==0) else ref.jo/ref.ntotal,
+                'jo/nxp': 0 if (self.ntotal==0) else self.jo/self.ntotal,}
+
+        return diff
+
     def compute_diff(self, ref):
         """Compute difference and relative difference for n, jo, jo/n."""
         diff = OrderedDict()
+        diff[self.name] = self.compute_general(ref) 
         for s in self._diff_superset(ref):
             diff[s] = self[s].compute_diff(ref[s])
         return diff
