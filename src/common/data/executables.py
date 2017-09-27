@@ -695,8 +695,3 @@ class ExecReverser(BlackBox):
     @property
     def realkind(self):
         return 'exec_reverser'
-
-    def command_line(self, **opts):
-        """Build command line for execution as a single string."""
-        cmdline = '-eFPOS -c001 -vmeteo -asli -fh0 -t10.82'
-        return cmdline

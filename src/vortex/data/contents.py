@@ -5,6 +5,7 @@
 __all__ = []
 
 import collections
+from string import Template
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -419,6 +420,32 @@ class DataRaw(AlmostListContent):
             if self._window and len(self._data) >= self._window:
                 end = True
         self._do_delayed_slurp = None
+
+
+class DataTemplate(AlmostListContent):
+    """
+    Multi-lines data which fits to a template.
+    Behave mostly as a list.
+    """
+
+    def __init__(self,**kw):
+        kw.setdefault('fmt', None)
+        super(DataTemplate,self).__init__(**kw)
+
+    def _actual_slurp(self, container):
+        container.rewind()
+        data = container.read()
+        self._data.append(data)
+        self._do_delayed_slurp = None
+
+    def setitems(self, keyvaluedict):
+        """
+        Substitute the different keys contained in a dictionnary into
+        the data content using a template.
+        :param keyvaluedict: keys-values dictionnary to be substituted.
+        """
+        data_tmp = Template(self.data[0])
+        self.data[0] = data_tmp.substitute(keyvaluedict)
 
 
 class FormatAdapter(DataContent):
