@@ -77,6 +77,10 @@ def now():
     td = datetime.datetime.now()
     return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
 
+def utcnow():
+    """Return the date and UTC time just now, with hours, minutes, seconds and microseconds."""
+    td = datetime.datetime.utcnow()
+    return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
 
 def at_second():
     """Return the date just now, with only hours, minutes and seconds."""
