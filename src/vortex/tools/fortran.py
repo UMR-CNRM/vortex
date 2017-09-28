@@ -380,14 +380,24 @@ class NamelistBlock(object):
     def __str__(self):
         return self.dumps()
 
-    def setvar(self, varname, value):
-        """Insert or change a namelist block key."""
+    def setvar(self, varname, value, index=None):
+        """
+        Insert or change a namelist block key.
+
+        :param index: if given, set the key to the given index in block.
+        """
         varname = varname.upper()
         if not isinstance(value, list):
             value = [value, ]
         self._pool[varname] = value
         if varname not in self._keys:
-            self._keys.append(varname)
+            if index is None:
+                self._keys.append(varname)
+            else:
+                self._keys.insert(index, varname)
+        elif index is not None:
+            self._keys.remove(varname)
+            self._keys.insert(index, varname)
         self._mods.add(varname)
         self._dels.discard(varname)
 
