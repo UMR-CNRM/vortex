@@ -14,7 +14,6 @@ from collections import defaultdict
 import copy
 import ftplib
 import re
-import StringIO
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -312,16 +311,26 @@ class Store(footprints.FootprintBase):
         remote = remote.copy()
         remote['path'] = remote['path'] + '.' + self.storehash  # Name of the hash file
         remote['query'].pop('extract', None)  # Ignore any extract request
-        # fetch the hash file (in a virtual file)
-        tmplocal = StringIO.StringIO()
-        rc = callback(remote, tmplocal, options)
-        # check the hash key
-        hadapt = hashutils.HashAdapter(self.storehash)
-        rc = rc and hadapt.filecheck(local, tmplocal)
-        if rc:
-            logger.info("%s hash sanity check succeeded.", self.storehash)
-        else:
-            logger.warning("%s hash sanity check failed.", self.storehash)
+        try:
+            # First, try to fetch the sum in a real file
+            # (in order to potentially use ftserv...)
+            tempcontainer = footprints.proxy.container(shouldfly=True)
+            try:
+                rc = callback(remote, tempcontainer.iotarget(), options)
+            except (OSError, IOError):
+                # This may happen if the user has insufficient rights on
+                # the current directory
+                tempcontainer = footprints.proxy.container(incore=True)
+                rc = callback(remote, tempcontainer.iotarget(), options)
+            # check the hash key
+            hadapt = hashutils.HashAdapter(self.storehash)
+            rc = rc and hadapt.filecheck(local, tempcontainer)
+            if rc:
+                logger.info("%s hash sanity check succeeded.", self.storehash)
+            else:
+                logger.warning("%s hash sanity check failed.", self.storehash)
+        finally:
+            tempcontainer.clear()
         return rc
 
     def get(self, remote, local, options=None):
@@ -854,7 +863,7 @@ class Finder(Store):
         """Delegates to ``system`` the file transfer of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
         logger.info('ftpget on ftp://%s/%s (to: %s)', self.hostname(), rpath, local)
-        rc = self.system.ftget(
+        rc = self.system.rawftget(
             rpath,
             local,
             # ftp control
@@ -871,7 +880,7 @@ class Finder(Store):
         """Delegates to ``system`` the file transfer of ``local`` to ``remote``."""
         rpath = self.fullpath(remote)
         logger.info('ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
-        rc = self.system.ftput(
+        rc = self.system.rawftput(
             local,
             rpath,
             # ftp control
@@ -1117,7 +1126,7 @@ class ConfigurableArchiveStore(object):
             try:
                 tempcontainer = footprints.proxy.container(shouldfly=True)
                 remotecfg_parser = self._get_remote_config(tempstore, url, tempcontainer)
-            except OSError:
+            except (OSError, IOError):
                 # This may happen if the user has insufficient rights on
                 # the current directory
                 retry = True
