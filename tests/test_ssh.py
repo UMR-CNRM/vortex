@@ -22,21 +22,27 @@ fake_host = 'this-hostname-should-not-exist-in-your-network'
 DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
 
 
+def check_localssh():
+    """Check if it's possible to connect to SSH using a key based authentication."""
+    try:
+        subprocess.check_output(['ssh', '-x',
+                                 '-oNumberOfPasswordPrompts=0',
+                                 '-oConnectTimeout=1',
+                                 test_host, 'true'], stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError:
+        return False
+    else:
+        return True
+
+
+LOCALSSH_OK = check_localssh()
+
+
+@unittest.skipUnless(LOCALSSH_OK,
+                     'It is not possible to connect to localhost using SSH.')
 class _SshTestBase(unittest.TestCase):
 
-    _localssh = dict()
-
     def setUp(self):
-        # Check if SSH is availlable on this system
-        if not self._localssh:
-            try:
-                subprocess.check_output(['ssh', test_host, 'true'], stderr=subprocess.STDOUT)
-            except subprocess.CalledProcessError:
-                self._localssh['checked_out'] = False
-            else:
-                self._localssh['checked_out'] = True
-        if not self._localssh['checked_out']:
-            raise self.skipTest('It is not possible to connect to localhost using SSH.')
         # Generate a temporary directory
         self.t = vortex.sessions.current()
         self.sh = self.t.system()
