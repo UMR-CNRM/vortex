@@ -67,6 +67,8 @@ def duration_to_hours(value):
     25
     >>> duration_to_hours('3d')
     72
+    >>> duration_to_hours('30m')
+    0.5
     >>> duration_to_hours('3w')
     Traceback (most recent call last):
      ...
@@ -79,6 +81,9 @@ def duration_to_hours(value):
         if value.endswith('d'):
             value = value.rstrip('d')
             value = int(value) * 24
+        elif value.endswith('m'):
+            value = value.rstrip('m')
+            value = float(value) / 60
         else:
             value = int(value)
     return value
@@ -110,6 +115,16 @@ def parent_mkdir(path, mode=0755):
     except OSError:
         pass
     return False
+
+
+def delta_current_hour(time):
+    """ return delta time between current time and paramter 'time'.
+    the result in hours
+
+    :param time: object datetime
+    :return: delta hours
+    """
+    return (datetime.now() - time).total_seconds() / 3600
 
 
 class Request(object):
@@ -188,15 +203,22 @@ class Deposit(footprints.util.GetByTag):
     _tag_default = 'foo'
 
     def __init__(self, logger=None, path=None, active=False, target=None,
-                 cleaning=True, maxitems=128, maxtime='24H', keepzip='10d'):
-        self._logger   = logger
-        self._target   = target
-        self._path     = self.tag if path is None else path
-        self.active    = active
-        self._cleaning = cleaning
-        self.maxitems  = maxitems
-        self.maxtime   = maxtime
-        self.keepzip   = keepzip
+                 cleaning=True, maxitems=128, maxtime='24H', keepzip='10d',
+                 periodclean='15m', minclean='48H'):
+        self._logger      = logger
+        self._target      = target
+        self._path        = self.tag if path is None else path
+        self.active       = active
+        self._cleaning    = cleaning
+        self.maxitems     = maxitems
+        self.maxtime      = maxtime
+        self.keepzip      = keepzip
+        self.periodclean  = periodclean
+        self._tryclean    = None
+        self._lastclean   = None
+        self.minclean     = minclean
+        self._first_clean = True
+
 
     @property
     def logger(self):
@@ -267,6 +289,39 @@ class Deposit(footprints.util.GetByTag):
 
     _keepzip = property(_get_keepzip, _set_keepzip)
 
+    def _get_periodclean(self):
+        return self._periodclean
+
+    def _set_periodclean(self, value):
+        self._periodclean = duration_to_hours(value)
+
+    periodclean = property(_get_periodclean, _set_periodclean)
+
+    def _get_minclean(self):
+        return self._minclean
+
+    def _set_minclean(self, value):
+        self._minclean = duration_to_hours(value)
+
+    minclean = property(_get_minclean, _set_minclean)
+
+    def cleaning_condition(self, value, ref):
+        if self._first_clean:
+            _do_clean = True
+            self._lastclean = datetime.now()
+            self._first_clean = False
+        else:
+            _do_clean = delta_current_hour(self._lastclean) > self.minclean
+
+        if len(value) == 0:
+            return [None, None]
+        elif len(value) > ref:
+            return [self.maxtime, ref]
+        elif _do_clean:
+            return [self.minclean, 0]
+        else:
+            return [None, None]
+
     @property
     def contents(self):
         return sorted([os.path.basename(x) for x in glob(self.path + '/ask.*.json')])
@@ -275,35 +330,49 @@ class Deposit(footprints.util.GetByTag):
         """Try to clean up the current pool."""
         if not self.cleaning:
             return
-
-        items = self.contents
-        if len(items) < self.maxitems:
-            return
-        self.logger.debug('cleaning', path=self.path, len=len(items), maxtime=self.maxtime)
+        if not self._first_clean:
+            if delta_current_hour(self._tryclean) < self.periodclean:
+                return
 
         justnow = datetime.now()
+        self.logger.debug('last cleaning     : %s', self._lastclean)
+        self.logger.debug('last try cleaning : %s', self._tryclean)
+        items = self.contents
+        self._tryclean = justnow
+        self.logger.debug('status cleaning', path=self.path, len=len(items))
         oldfiles = list()
-        for askfile in items:
-            try:
-                askdate = datetime.strptime(askfile.split('.')[1], '%Y%m%d%H%M%S')
-            except ValueError:
-                self.logger.error('Bad request format', item=askfile)
-                os.remove(os.path.join(self.path, askfile))
-            else:
-                if (justnow - askdate).total_seconds() / 3600 > self.maxtime:
-                    oldfiles.append(askfile)
-        if oldfiles:
-            zipname = os.path.join(
-                self.archivepath,
-                oldfiles[0].split('.')[1] + '-' + oldfiles[-1].split('.')[1] + '.zip'
-            )
-            self.logger.info('Zip', path=zipname, maxtime=self.maxtime, size=len(oldfiles))
-            with zipfile.ZipFile(zipname, 'w') as pzip:
-                for xfile in oldfiles:
-                    actualfile = os.path.join(self.path, xfile)
-                    pzip.write(actualfile, xfile)
-                    os.remove(actualfile)
-            self.clean_archive()
+
+        cleaningtime, cleaningsize = self.cleaning_condition(items, self.maxitems)
+
+        if cleaningtime:
+            self.logger.debug('cleaning', path=self.path, len=len(items),
+                              len_clean=cleaningsize, maxtime=cleaningtime)
+            self.logger.debug('DBUG1 : premier test')
+
+
+            for askfile in items:
+                try:
+                    askdate = datetime.strptime(askfile.split('.')[1], '%Y%m%d%H%M%S')
+                except ValueError:
+                    self.logger.error('Bad request format', item=askfile)
+                    os.remove(os.path.join(self.path, askfile))
+                else:
+                    if delta_current_hour(askdate) > cleaningtime:
+                        oldfiles.append(askfile)
+
+            if len(oldfiles) > cleaningsize:
+                zipname = os.path.join(
+                    self.archivepath,
+                    oldfiles[0].split('.')[1] + '-' + oldfiles[-1].split('.')[1] + '.zip'
+                )
+                self.logger.info('Zip', path=zipname, maxtime=cleaningtime, size=len(oldfiles))
+                with zipfile.ZipFile(zipname, 'w') as pzip:
+                    for xfile in oldfiles:
+                        actualfile = os.path.join(self.path, xfile)
+                        pzip.write(actualfile, xfile)
+                        os.remove(actualfile)
+                self._lastclean = justnow
+                self.clean_archive()
 
     def migrate(self, item, target=None):
         """Migrate the request to the chained pool."""
