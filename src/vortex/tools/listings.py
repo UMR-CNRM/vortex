@@ -64,6 +64,8 @@ class ArpIfsListingDiff_Result(object):
                         for otype_k, otype_v in todo.items():
                             for sensor_k, sensor_v in otype_v.items():
                                 for var_k, var_v in sensor_v.items():
+                                    if var_k == 'GLOBAL':
+                                        continue
                                     print("  > {:s} > {:s} > {:4s} : d_n={:<9d}  d_jo={:f}".format(
                                         otype_k, sensor_k, var_k,
                                         var_v['n']['diff'], var_v['jo']['diff']))

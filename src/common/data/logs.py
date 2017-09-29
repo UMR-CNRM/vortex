@@ -58,7 +58,7 @@ class Listing(FlowResource):
             return "NOT_IMPLEMENTED"
 
     def archive_basename(self):
-        return "listing."+self.part
+        return "listing." + self.part
 
 
 class ParallelListing(Listing):
