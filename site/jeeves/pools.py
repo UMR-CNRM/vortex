@@ -9,7 +9,7 @@ import zipfile
 import json
 import time
 from glob import glob
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import footprints
 
@@ -57,19 +57,26 @@ def logname():
     return pwd.getpwuid(os.getuid())[0]
 
 
-def duration_to_hours(value):
-    """Convert to hours a duration given as an int, possibly
-    suffixed with 'h' for 'hours' (default) or 'd' for days.
+def duration_to_seconds(value):
+    """Convert to seconds a duration given as an int, possibly
+    suffixed with 's' for seconds (the default) , 'mn' for minutes,
+    'h' for 'hours' or 'd' for days.
 
-    >>> duration_to_hours(12)
-    12
-    >>> duration_to_hours('25H')
-    25
-    >>> duration_to_hours('3d')
-    72
-    >>> duration_to_hours('30m')
-    0.5
-    >>> duration_to_hours('3w')
+    >>> duration_to_seconds(3600)
+    3600
+    >>> duration_to_seconds('3600s')
+    3600
+    >>> duration_to_seconds('25mn')
+    1500
+    >>> duration_to_seconds('25H')
+    90000
+    >>> duration_to_seconds('3d')
+    259200
+    >>> duration_to_seconds('3m')
+    Traceback (most recent call last):
+     ...
+    ValueError: invalid literal for int() with base 10: '3m'
+    >>> duration_to_seconds('3w')
     Traceback (most recent call last):
      ...
     ValueError: invalid literal for int() with base 10: '3w'
@@ -77,13 +84,16 @@ def duration_to_hours(value):
     try:
         value = int(value)
     except ValueError:
-        value = str(value).lower().rstrip('h')
+        value = str(value).lower().rstrip('s')
         if value.endswith('d'):
             value = value.rstrip('d')
-            value = int(value) * 24
-        elif value.endswith('m'):
-            value = value.rstrip('m')
-            value = float(value) / 60
+            value = int(value) * 24 * 3600
+        elif value.endswith('h'):
+            value = value.rstrip('h')
+            value = int(value) * 3600
+        elif value.endswith('mn'):
+            value = value[:-2]
+            value = int(value) * 60
         else:
             value = int(value)
     return value
@@ -91,14 +101,14 @@ def duration_to_hours(value):
 
 def clean_older_files(logger, path, timelimit, pattern='*'):
     """Remove files in this path matching the glob pattern and
-       older than timelimit (not recursive).
-       See :py:func:`duration_to_hours` for the timelimit accepted forms.
+       older than timelimit seconds (not recursive).
+       See :py:func:`duration_to_seconds` for the timelimit accepted forms.
     """
-    hours = duration_to_hours(timelimit)
+    seconds = duration_to_seconds(timelimit)
     rightnow = time.time()
     antiques = [f for f in glob(os.path.join(path, pattern))
                 if os.path.isfile(f)
-                and (rightnow - os.path.getmtime(f)) / 3600 > hours]
+                and (rightnow - os.path.getmtime(f)) > seconds]
     logger.debug('Cleaning archived files', path=path, nfiles=len(antiques))
     for antique in antiques:
         os.remove(antique)
@@ -117,14 +127,14 @@ def parent_mkdir(path, mode=0755):
     return False
 
 
-def delta_current_hour(time):
-    """ return delta time between current time and paramter 'time'.
-    the result in hours
+def seconds_to_now(time):
+    """Return the time delta in seconds between the current time
+    and the parameter `time`.
 
-    :param time: object datetime
-    :return: delta hours
+    :param time: datetime object
+    :return: delta in seconds
     """
-    return (datetime.now() - time).total_seconds() / 3600
+    return (datetime.now() - time).total_seconds()
 
 
 class Request(object):
@@ -198,26 +208,37 @@ class Request(object):
 
 
 class Deposit(footprints.util.GetByTag):
-    """Something simple to handle a directory used by Jeeves to process requests."""
+    """Something simple to handle a directory used by Jeeves to process requests.
+
+    - ``cleaning``   : is cleaning active for this pool
+    - ``periodclean``: The archiving mechanism is activated every ``periodclean``.
+    - ''maxitems''   : an archiving is triggered when more than maxitems are present in the pool
+                       (and will be effective is the date condition is also met)
+    - ``maxtime``    : same role as maxitems, but for the duration
+    - ``keepzip``    : retention time for archived zip files
+    - ``minclean``   : items older than this duration will be archived, whatever how few
+    - ``tryclean``   : the last date the archiving process was run
+    - ``lastclean``  : the last date the archiving was effectively performed
+    """
 
     _tag_default = 'foo'
 
     def __init__(self, logger=None, path=None, active=False, target=None,
                  cleaning=True, maxitems=128, maxtime='24H', keepzip='10d',
-                 periodclean='15m', minclean='48H'):
+                 periodclean='15mn', minclean='48H'):
         self._logger      = logger
         self._target      = target
         self._path        = self.tag if path is None else path
         self.active       = active
-        self._cleaning    = cleaning
-        self.maxitems     = maxitems
-        self.maxtime      = maxtime
-        self.keepzip      = keepzip
-        self.periodclean  = periodclean
+        self._cleaning    = bool(cleaning)
+        self._maxitems    = int(maxitems)
+        self._maxtime     = duration_to_seconds(maxtime)
+        self._keepzip     = duration_to_seconds(keepzip)
+        self._periodclean = duration_to_seconds(periodclean)
         self._tryclean    = None
         self._lastclean   = None
-        self.minclean     = minclean
-        self._first_clean = True
+        self._minclean    = duration_to_seconds(minclean)
+        self._first_clean()
 
 
     @property
@@ -265,62 +286,25 @@ class Deposit(footprints.util.GetByTag):
 
     target = property(_get_target, _set_target)
 
-    def _get_maxitems(self):
+    @property
+    def maxitems(self):
         return self._maxitems
 
-    def _set_maxitems(self, value):
-        self._maxitems = int(value)
-
-    maxitems = property(_get_maxitems, _set_maxitems)
-
-    def _get_maxtime(self):
+    @property
+    def maxtime(self):
         return self._maxtime
 
-    def _set_maxtime(self, value):
-        self._maxtime = duration_to_hours(value)
-
-    maxtime = property(_get_maxtime, _set_maxtime)
-
-    def _get_keepzip(self):
+    @property
+    def keepzip(self):
         return self._keepzip
 
-    def _set_keepzip(self, value):
-        self._keepzip = duration_to_hours(value)
-
-    _keepzip = property(_get_keepzip, _set_keepzip)
-
-    def _get_periodclean(self):
+    @property
+    def periodclean(self):
         return self._periodclean
 
-    def _set_periodclean(self, value):
-        self._periodclean = duration_to_hours(value)
-
-    periodclean = property(_get_periodclean, _set_periodclean)
-
-    def _get_minclean(self):
+    @property
+    def minclean(self):
         return self._minclean
-
-    def _set_minclean(self, value):
-        self._minclean = duration_to_hours(value)
-
-    minclean = property(_get_minclean, _set_minclean)
-
-    def cleaning_condition(self, value, ref):
-        if self._first_clean:
-            _do_clean = True
-            self._lastclean = datetime.now()
-            self._first_clean = False
-        else:
-            _do_clean = delta_current_hour(self._lastclean) > self.minclean
-
-        if len(value) == 0:
-            return [None, None]
-        elif len(value) > ref:
-            return [self.maxtime, ref]
-        elif _do_clean:
-            return [self.minclean, 0]
-        else:
-            return [None, None]
 
     @property
     def contents(self):
@@ -328,28 +312,42 @@ class Deposit(footprints.util.GetByTag):
 
     def clean(self):
         """Try to clean up the current pool."""
-        if not self.cleaning:
-            return
-        if not self._first_clean:
-            if delta_current_hour(self._tryclean) < self.periodclean:
-                return
+        if self.cleaning and seconds_to_now(self._tryclean) >= self.periodclean:
+            self._real_clean()
 
+    def _cleaning_condition(self, items):
+        """Return a (time, size) criterions pair: we will archive
+        items older than the ``time`` criterion, but only if there
+        are more of them than the ``size`` criterion.
+        """
+        if not items:
+            return None, None
+        elif len(items) > self.maxitems:
+            return self.maxtime, self.maxitems
+        elif seconds_to_now(self._lastclean) > self.minclean:
+            return self.minclean, 0
+        else:
+            return None, None
+
+    def _first_clean(self):
+        """Run at deposit creation: set ``_last_clean``to force cleaning at initialization."""
+        self._lastclean = datetime.now() - timedelta(hours=1, seconds=self.minclean)
+        self._real_clean()
+
+    def _real_clean(self):
+        """Do the real cleaning."""
+        items = self.contents
         justnow = datetime.now()
+        self.logger.debug('status cleaning', path=self.path, len=len(items))
         self.logger.debug('last cleaning     : %s', self._lastclean)
         self.logger.debug('last try cleaning : %s', self._tryclean)
-        items = self.contents
         self._tryclean = justnow
-        self.logger.debug('status cleaning', path=self.path, len=len(items))
-        oldfiles = list()
 
-        cleaningtime, cleaningsize = self.cleaning_condition(items, self.maxitems)
-
+        cleaningtime, cleaningsize = self._cleaning_condition(items)
         if cleaningtime:
+            oldfiles = list()
             self.logger.debug('cleaning', path=self.path, len=len(items),
                               len_clean=cleaningsize, maxtime=cleaningtime)
-            self.logger.debug('DBUG1 : premier test')
-
-
             for askfile in items:
                 try:
                     askdate = datetime.strptime(askfile.split('.')[1], '%Y%m%d%H%M%S')
@@ -357,7 +355,7 @@ class Deposit(footprints.util.GetByTag):
                     self.logger.error('Bad request format', item=askfile)
                     os.remove(os.path.join(self.path, askfile))
                 else:
-                    if delta_current_hour(askdate) > cleaningtime:
+                    if seconds_to_now(askdate) > cleaningtime:
                         oldfiles.append(askfile)
 
             if len(oldfiles) > cleaningsize:

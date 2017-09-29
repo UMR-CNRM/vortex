@@ -32,7 +32,9 @@ Interface functions
 
 .. autofunction:: logname
 
-.. autofunction:: duration_to_hours
+.. autofunction:: duration_to_seconds
+
+.. autofunction:: seconds_to_now
 
 .. autofunction:: clean_older_files
 
