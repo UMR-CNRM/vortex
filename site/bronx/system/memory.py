@@ -21,16 +21,18 @@ import footprints
 
 logger = footprints.loggers.getLogger(__name__)
 
+DEFAULT_MEM_UNIT = 'MB'
+
 
 class MemToolUnavailableError(Exception):
     """Raised whenever the necessary commands and/or system files are missing."""
     pass
 
 
-def mem_unit(mem_b, unit):
-    """Convert memory in bytes to **unit** (among Kb, Mb, Gb)."""
-    unit_power = {'b':0, 'Kb':1, 'Mb':2, 'Gb':3}
-    if unit != 'b':
+def mem_in_unit(mem_b, unit):
+    """Convert memory in bytes to **unit** (among KB, MB, GB)."""
+    unit_power = {'B':0, 'KB':1, 'MB':2, 'GB':3}
+    if unit != 'B':
         mem_b = float(mem_b)
     return mem_b / (1024**unit_power[unit])
 
@@ -39,12 +41,21 @@ def mem_unit(mem_b, unit):
 class MemInfo(object):
     """Provide various informations about Memory (abstract class)."""
 
+    @abc.abstractmethod
     def __init__(self):
         self._system_RAM = None
 
-    def system_RAM(self, unit='Mb'):
+    def system_RAM(self, unit=DEFAULT_MEM_UNIT):
         """Get total RAM memory available in the system."""
-        return mem_unit(self._system_RAM, unit)
+        return mem_in_unit(self._system_RAM, unit)
+
+    @abc.abstractmethod
+    def process_maxRSS(self, unit=DEFAULT_MEM_UNIT):
+        pass
+
+    @abc.abstractmethod
+    def children_maxRSS(self, unit=DEFAULT_MEM_UNIT):
+        pass
 
 
 class LinuxMemInfo(MemInfo):
@@ -53,18 +64,18 @@ class LinuxMemInfo(MemInfo):
     def __init__(self):
         self._system_RAM = os.sysconf(b'SC_PAGE_SIZE') * os.sysconf(b'SC_PHYS_PAGES')
 
-    def process_maxRSS(self, unit='Mb'):
+    def process_maxRSS(self, unit=DEFAULT_MEM_UNIT):
         """
         Get Maximum Resident Set Size (i.e. maximum memory used at one moment)
         used by of the process.
         """
         maxrss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024
-        return mem_unit(maxrss, unit)
+        return mem_in_unit(maxrss, unit)
 
-    def children_maxRSS(self, unit='Mb'):
+    def children_maxRSS(self, unit=DEFAULT_MEM_UNIT):
         """
         Get Maximum Resident Set Size (i.e. maximum memory used at one moment)
         of the process children.
         """
         maxrss = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss * 1024
-        return mem_unit(maxrss, unit)
+        return mem_in_unit(maxrss, unit)

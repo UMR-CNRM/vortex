@@ -2,14 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-*meteo.constants* sub-module:
-
 Atmospheric physics constants.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-
-import numpy
 
 import footprints.loggers
 
