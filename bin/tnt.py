@@ -117,35 +117,41 @@ def remove_keys(nam, keys):
                                   "missing: cannot remove its key", k]))
 
 
-def _DOCTOR_convert(key, value):
+def _DOCTOR_convert(key, value, fatal=False):
     """
     According to the DOCTOR norm, try to convert value to the adequate type.
+
+    Cf. http://www.umr-cnrm.fr/gmapdoc/IMG/pdf/coding-rules.pdf
     """
     t = key.split('%')[-1][0]
-    if t in ('N', 'I', 'M'):
-        try:
-            value = int(value)
-        except:
-            raise ValueError('unable to convert variable {} from {} to int'.
-                             format(key, str(value)))
-    elif t in ('U', 'B', 'R', 'X', 'V', 'S'):
-        try:
-            value = float(value)
-        except:
-            raise ValueError('unable to convert variable {} from {} to float'.
-                             format(key, str(value)))
-    elif t in ('L',):
-        try:
-            value = bool(value)
-        except:
-            raise ValueError('unable to convert variable {} from {} to bool'.
-                             format(key, str(value)))
-    elif t in ('C'):
-        try:
-            value = str(value)
-        except:
-            raise ValueError('unable to convert variable {} from {} to str'.
-                             format(key, str(value)))
+    try:
+        if t in ('I', 'J', 'K', 'M', 'N'):
+            try:
+                value = int(value)
+            except ValueError:
+                raise ValueError('unable to convert variable {} from {} to int'.
+                                 format(key, str(value)))
+        elif t in ('L',):
+            try:
+                value = bool(value)
+            except ValueError:
+                raise ValueError('unable to convert variable {} from {} to bool'.
+                                 format(key, str(value)))
+        elif t in ('C'):
+            try:
+                value = str(value)
+            except ValueError:
+                raise ValueError('unable to convert variable {} from {} to str'.
+                                 format(key, str(value)))
+        else:
+            try:
+                value = float(value)
+            except ValueError:
+                raise ValueError('unable to convert variable {} from {} to float'.
+                                 format(key, str(value)))
+    except ValueError:
+        if fatal:
+            raise
     return value
 
 
