@@ -180,7 +180,7 @@ class Request(object):
         )
 
     def as_dict(self):
-        """Return a plain dictionnay of arguments."""
+        """Return the request as a plain dictionary."""
         return {k: v for k, v in self.__dict__.items() if not k.startswith('_')}
 
     @property
@@ -331,6 +331,8 @@ class Deposit(footprints.util.GetByTag):
 
     def _first_clean(self):
         """Run at deposit creation: set ``_last_clean``to force cleaning at initialization."""
+        if not self.cleaning:
+            return
         self._lastclean = datetime.now() - timedelta(hours=1, seconds=self.minclean)
         self._real_clean()
 
