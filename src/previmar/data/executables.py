@@ -41,7 +41,7 @@ class MasterSurges(OceanographicModel):
                 coupling_nprocs = dict(
                     type     = int,
                     optional = True,
-                    default  = 0,
+                    default  = 1,
                 ),
                 num_exp = dict(
                     type     = int,
@@ -62,6 +62,50 @@ class MasterSurges(OceanographicModel):
         else:
             name_simu_arg = [self.rundir] * 3
         name_simu_arg += str( self.num_exp )
+        cmd = ' '.join(name_simu_arg)
+        return cmd
+
+
+class InterpolationSurges(MasterSurges):
+    """Base class for the master of interpolation of a surges model"""
+    _footprint = [
+        gvar,
+        gdomain,
+        dict(
+            info = 'Interpolation surges',
+            attr = dict(
+                kind = dict(
+                    values = ['BinboxInterpSurges']
+                ),
+                gvar = dict(
+                    default  = 'master_[model]_main_[gdomain]_interpol',
+                ),
+                version = dict(
+                    optional = True,
+                    type     = str, 
+                    default  = 'V4', 
+                ),
+                version_cible = dict(
+                    optional = True,
+                    type     = str, 
+                    default  = 'V3', 
+                ),
+                bloc_increment = dict(
+                    optional = True,
+                    type     = str, 
+                    default  = '', 
+                ),
+            )
+        )
+    ]
+
+
+    def command_line(self, **opts):
+        name_simu_arg  = [self.rundir, self.coupling_exec, str(self.coupling_nprocs)]
+        name_simu_arg += str( self.num_exp )
+        name_simu_arg +=  [ self.version , self.version_cible ]
+        name_simu_arg += str( self.bloc_increment )
+    
         cmd = ' '.join(name_simu_arg)
         return cmd
 
@@ -100,7 +144,7 @@ class FiltrageGrib(Script):
     _footprint = [
         gvar,
         dict(
-            info = 'Filtering executable',
+            info = 'Filtering Grib input',
             attr = dict(
                 kind = dict(
                     values = ['FilteringGrib']
@@ -117,6 +161,30 @@ class FiltrageGrib(Script):
     @property
     def realkind(self):
         return 'filteringGrib'
+
+
+class FusionGrib(Script):
+    """Base class for Grib Fusion (Pmer, U,V 10-meters wind) on 2 different Model Grid"""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Fusion Grib input',
+            attr = dict(
+                kind = dict(
+                    values = ['FusionGrib']
+                ),
+                gvar = dict(
+                    default  = 'pesurcote_fusion_grib',
+                    values   = ['pesurcote_fusion_grib', 'fusion_grib'],
+                    remap    = {'fusion_grib': 'pesurcote_fusion_grib' },
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'fusionGrib'
 
 
 class ConversionGrib2Taux(BlackBox):
