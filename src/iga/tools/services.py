@@ -33,6 +33,7 @@ from StringIO import StringIO
 from logging.handlers import SysLogHandler
 
 import footprints
+from footprints.stdtypes import FPDict
 import vortex
 from common.tools.agt import agt_actual_command
 from vortex.syntax.stdattrs import DelayedEnvValue
@@ -663,12 +664,17 @@ class BdpeService(RoutingService):
                   " -q {0.quality} -r {0.soprano_target}".format(self)
         return agt_actual_command(self.sh, self.agt_pe_cmd, options)
 
+
 class TransmetService(BdpeService):
     """
     Class responsible for handling transmet data.
-        :version_header: 'TTAAII' use the 'entete_fichier_transmet.sh' script to
-                    generate the header into a empty file and the filename used for routing
-        :version_header: 'gfnc' not implemented (for the new naming rule)
+
+    The **version_header** attribute impact the header generation :
+
+        * 'TTAAII' use the 'entete_fichier_transmet.sh' script to
+          generate the header into a empty file and the filename used for routing
+        * 'gfnc' not implemented (for the new naming rule)
+
     This class should not be called directly.
     """
     _footprint = dict(
@@ -687,10 +693,10 @@ class TransmetService(BdpeService):
             ),
             transmet = dict(
                 optional  = True,
-                type      = dict,
+                type      = FPDict,
             ),
             version_header = dict(
-                values    = ['TTAAII','gfnc'],
+                values    = ['TTAAII', 'gfnc'],
                 optional  = True,
                 default   = 'TTAAII',
             )
@@ -700,6 +706,7 @@ class TransmetService(BdpeService):
     def __init__(self, *args, **kw):
         logger.debug('Transmet init %s', self.__class__)
         super(TransmetService, self).__init__(*args, **kw)
+        self._filename_transmet = None
 
     @property
     def realkind(self):
@@ -707,19 +714,24 @@ class TransmetService(BdpeService):
 
     @property
     def routing_name(self):
-        return self.filename_transmet
+        if self._filename_transmet is None:
+            if self.version_header == 'TTAAII':
+                actual_transmet = self.transmet if isinstance(self.transmet, dict) else dict()
+                self._filename_transmet = get_ttaaii_transmet_sh(self.sh, self.transmet_cmd,
+                                                                 actual_transmet, self.filename,
+                                                                 self.scriptdir)
+                logger.debug('filename transmet : %s', self.filename_transmet)
+            else:
+                logger.error('version_header : %s not implemented', self.version_header)
+                self._filename_transmet = False
+        return self._filename_transmet
 
     def __call__(self):
         """Actual service execution."""
-        if self.version_header == 'TTAAII':
-            self.filename_transmet = get_ttaaii_transmet_sh(self.sh, self.transmet_cmd,
-                                                            self.transmet, self.filename,
-                                                            self.scriptdir)
-            logger.debug('filename transmet : %s', self.filename_transmet)
+        if self.routing_name:
+            return super(TransmetService, self).__call__()
         else:
-            logger.error('version_header : %s not implemented', self.version_header)
             return False
-        rc = super(TransmetService, self).__call__()
 
 
 class DayfileReportService(FileReportService):

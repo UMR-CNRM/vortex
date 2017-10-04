@@ -62,6 +62,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: TransmetService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: BdpeService
    :show-inheritance:
    :members:
