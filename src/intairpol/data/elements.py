@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import absolute_import, print_function, division, unicode_literals
 
 import re
 import footprints
 
-from vortex.util.config  import IniConf, ExtendedReadOnlyConfigParser
+from vortex.util.config import IniConf, ExtendedReadOnlyConfigParser
+
+#: No automatic export
+__all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
 
@@ -139,11 +141,10 @@ class Element(footprints.FootprintBase):
         if self.translator:
             for k in self.translator.get('ordered_dump', '').split(','):
                 if not mkshort or self.footprint_getattr(k) is not None:
-                    print '{0:24s} : {1:s}'.format(
-                        self.translator.get(
-                            k, k.replace('_', ' ').title()),
-                            str(self.footprint_getattr(k))
-                        )
+                    print('{0:24s} : {1:s}'.format(
+                        self.translator.get(k, k.replace('_', ' ').title()),
+                        str(self.footprint_getattr(k)))
+                    )
         else:
             logger.warning('Could not produce a nice dump without translator')
 
@@ -194,20 +195,20 @@ class PollutantsTable(IniConf):
 
     def groups(self):
         """Actual list of items groups described in the current iniconf."""
-        return [ x for x in self.config.parser.sections()
-                    if ':' not in x and not x.startswith('lang_') ]
+        return [x for x in self.config.parser.sections()
+                if ':' not in x and not x.startswith('lang_')]
 
     def keys(self):
         """Actual list of different items in the current iniconf."""
-        return [ x for x in self.config.sections()
-                    if x not in self.groups() and not x.startswith('lang_') ]
+        return [x for x in self.config.sections()
+                if x not in self.groups() and not x.startswith('lang_')]
 
     @property
     def translator(self):
         """The special section of the iniconf dedicated to tranlastion, as a dict."""
         if not hasattr(self, '_translator'):
             if self.config.has_section('lang_' + self.language):
-                self._translator = self.config.as_dict()['lang_'+self.language]
+                self._translator = self.config.as_dict()['lang_' + self.language]
             else:
                 self._translator = None
         return self._translator
@@ -229,8 +230,8 @@ class PollutantsTable(IniConf):
                     d[item][self.groupname]     = group
                     d[item]['translator']       = self.translator
                     self._tablelist.append(footprints.proxy.element(**d[item]))
-                except:
-                   logger.warning('Some item description could not match')
+                except (KeyError, IndexError):
+                    logger.warning('Some item description could not match')
         return self._tablelist
 
     def get(self, item):
@@ -243,14 +244,14 @@ class PollutantsTable(IniConf):
 
     def grep(self, item):
         """Return a list of items with main key loosely matching the given argument."""
-        return [ x for x in self.tablelist
+        return [x for x in self.tablelist
                 if re.search(item, x.footprint_getattr(self.searchkeys[0]), re.IGNORECASE) ]
 
     def find(self, item):
         """Return a list of items with main key or name loosely matching the given argument."""
-        return [ x for x in self.tablelist if any([
-                    re.search(item, x.footprint_getattr(thiskey), re.IGNORECASE)
-                        for thiskey in self.searchkeys ]) ]
+        return [x for x in self.tablelist
+                if any([re.search(item, x.footprint_getattr(thiskey), re.IGNORECASE)
+                        for thiskey in self.searchkeys ])]
 
 
 class PollutantsElementsTable(PollutantsTable):

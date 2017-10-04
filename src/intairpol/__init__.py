@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import absolute_import, print_function, division
 
 # Recursive inclusion of packages with potential FootprintBase classes
-import data, zsv
+from . import data, zsv
+
+#: No automatic export
+__all__ = []

@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import, print_function, division, unicode_literals
+
 import io
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 import vortex
 from vortex.tools import date
 from vortex.syntax.stdattrs import DelayedEnvValue
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class ZSVTool(footprints.FootprintBase):
@@ -94,7 +97,7 @@ class ZSVDriver(ZSVTool):
                 optional = True,
                 type     = date.Date,
                 access   = 'rwx',
-                default  = date.lastround(base=date.utcnow())-'PT1H',
+                default  = date.lastround(base=date.utcnow()) - 'PT1H',
             ),
             date_end = dict(
                 optional = True,
@@ -276,7 +279,7 @@ class ZSVQualityStats(ZSVDriver):
             deflist = self.sh.cat(self.data_list)
             logger.info('Retrieved site list:\n%s', "\n".join(deflist))
             self.sites_map = {
-                xs['name'] : xs
+                xs['name']: xs
                 for xs in [ dict(zip(self.sites_labels, s.split())) for s in deflist ]
             }
             for xmap in self.sites_map.values():
@@ -344,8 +347,8 @@ class ZSVQualityStats(ZSVDriver):
             guess = [ x.strip() for x in l.split(':') ]
             if l.startswith('Valide'):
                 data = l.split()
-                obsreport['valid_begin'] = date.Date(data[2]+'T'+data[3])
-                obsreport['valid_end']   = date.Date(data[6]+'T'+data[7])
+                obsreport['valid_begin'] = date.Date(data[2] + 'T' + data[3])
+                obsreport['valid_end']   = date.Date(data[6] + 'T' + data[7])
             elif len(guess) == 1 and guess[0] and datebloc:
                 # store real values
                 data = guess[0].split()
@@ -376,17 +379,17 @@ class ZSVQualityStats(ZSVDriver):
                         info['dfirst'].ymdhm, self.date_begin.ymdhm)
             if info['dfirst'] < self.date_begin:
                 logger.warning('Begin date gap <couldbe:%s> <begin:%s>',
-                            info['dfirst'].ymdhm, self.date_begin.ymdhm)
+                               info['dfirst'].ymdhm, self.date_begin.ymdhm)
 
             logger.info('End date <actual:%s> <requested:%s>',
                         info['dlast'].ymdhm, self.date_end.ymdhm)
             if info['dlast'] > self.date_end:
                 logger.warning('End date gap <end:%s> <couldbe:%s>',
-                            self.date_end.ymdhm, info['dlast'].ymdhm)
+                               self.date_end.ymdhm, info['dlast'].ymdhm)
 
             if self.date_end > info['dlast']:
                 logger.warning('Change date <end:%s> <set:%s>',
-                            self.date_end.ymdhm, info['dlast'].ymdhm)
+                               self.date_end.ymdhm, info['dlast'].ymdhm)
                 stop = info['dlast']
 
             if start > stop:
@@ -399,9 +402,9 @@ class ZSVQualityStats(ZSVDriver):
 
     @property
     def iqs(self):
-        if self._iqs == None:
+        if self._iqs is None:
             self._iqs = tuple([iq.lower() for iq in sorted(self.obsreport_map.values())
-                            if iq.lower().startswith('iq') ])
+                               if iq.lower().startswith('iq') ])
         return self._iqs
 
     def extract(self, site):
@@ -447,13 +450,14 @@ class ZSVQualityStats(ZSVDriver):
                 obsdata = self.parse_obsreport(filename)
 
                 # check internal date and store quality indices
-                if obsdata.has_key('valid_begin'):
+                if 'valid_begin' in obsdata:
                     if obsdata['valid_begin'] == current:
                         logger.info('Quality indices %s',
-                                    ' '.join([ '<'+iq+':'+obsdata[iq]+'>' for iq in self.iqs ]))
+                                    ' '.join(['<' + iq + ':' + obsdata[iq] + '>'
+                                              for iq in self.iqs ]))
                         sitedata[current.ymdh] = ''.join([obsdata[iq] for iq in self.iqs])
                     else:
-                        logger.error('Obs mismatch <file:%s> <date:%s>', filename, intdate.ymdhm)
+                        logger.error('Obs mismatch <file:%s> <date:%s>', filename, current.ymdhm)
                 else:
                     logger.error('No valid date found in <file:%s>', filename)
 
@@ -461,7 +465,7 @@ class ZSVQualityStats(ZSVDriver):
             current = current + self.period
 
     def stats_add(self, site, stats):
-        self._stats[site]=stats
+        self._stats[site] = stats
 
     def stats_keys(self):
         return self._stats.keys()
@@ -470,19 +474,19 @@ class ZSVQualityStats(ZSVDriver):
         basefile = self.sh.path.join(self.workdir, '-'.join((
             'zsv-qstats', self.name, self.date_begin.ymdh, self.date_end.ymdh)))
         logger.info('Dump stats as json <file:%s.json>', basefile)
-        self.sh.json_dump(self._stats, basefile+'.json', indent=4, sort_keys=True)
+        self.sh.json_dump(self._stats, basefile + '.json', indent=4, sort_keys=True)
         logger.info('Dump stats as csv <file:%s.csv>', basefile)
-        with io.open(basefile+'.csv', 'w') as fd:
+        with io.open(basefile + '.csv', 'w') as fd:
             for n, site in enumerate(self.sites):
                 fd.write(u'{0:d};{1:s};{2:s}\n'.format(
-                    n+1, site, ';'.join([unicode(round(self._stats[site][iq].get('P'+ival, 0), 6))
-                                         for iq in self.iqs for ival in ('A', 'B', 'C')])))
+                    n + 1, site, ';'.join([unicode(round(self._stats[site][iq].get('P' + ival, 0), 6))
+                                           for iq in self.iqs for ival in ('A', 'B', 'C')])))
 
     def compute(self, site):
         """Compute ratio for each indices."""
 
         if site in self.record:
-            stats = { iq:dict(ilen=0, A=0, B=0, C=0) for iq in self.iqs }
+            stats = {iq: dict(ilen=0, A=0, B=0, C=0) for iq in self.iqs}
             start, stop = self.actual_dates(site)
             stats.update(date_begin=start.ymdhm, date_end=stop.ymdhm)
             current = start
@@ -506,7 +510,7 @@ class ZSVQualityStats(ZSVDriver):
                     logger.error('No data for stats <site:%s> <iq:%s>', site, iq)
                 else:
                     for ival in ('A', 'B', 'C'):
-                        stats[iq]['P'+ival] = stats[iq][ival] * 100.0 / stats[iq]['ilen']
+                        stats[iq]['P' + ival] = stats[iq][ival] * 100.0 / stats[iq]['ilen']
             logger.info('Complete stats <site:%s> %s', site, footprints.dump.lightdump(stats))
             self.stats_add(site, stats)
         else:
@@ -522,9 +526,8 @@ class ZSVQualityStats(ZSVDriver):
     def complete(self):
         super(ZSVQualityStats, self).complete()
         if self.verbose:
-            print footprints.dump.fulldump(self.record)
+            print(footprints.dump.fulldump(self.record))
         if self.update:
             self.record_dump()
         if self.stats_keys():
             self.stats_dump()
-
