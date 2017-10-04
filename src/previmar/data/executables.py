@@ -82,30 +82,29 @@ class InterpolationSurges(MasterSurges):
                 ),
                 version = dict(
                     optional = True,
-                    type     = str, 
-                    default  = 'V4', 
+                    type     = str,
+                    default  = 'V4',
                 ),
                 version_cible = dict(
                     optional = True,
-                    type     = str, 
-                    default  = 'V3', 
+                    type     = str,
+                    default  = 'V3',
                 ),
                 bloc_increment = dict(
                     optional = True,
-                    type     = str, 
-                    default  = '', 
+                    type     = str,
+                    default  = '',
                 ),
             )
         )
     ]
 
-
     def command_line(self, **opts):
         name_simu_arg  = [self.rundir, self.coupling_exec, str(self.coupling_nprocs)]
         name_simu_arg += str( self.num_exp )
-        name_simu_arg +=  [ self.version , self.version_cible ]
+        name_simu_arg += [self.version, self.version_cible]
         name_simu_arg += str( self.bloc_increment )
-    
+
         cmd = ' '.join(name_simu_arg)
         return cmd
 

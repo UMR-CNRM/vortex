@@ -46,3 +46,13 @@ Classes
    :members:
    :member-order: alphabetical
    
+.. autoclass:: FusionGrib
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: InterpolationSurges
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   

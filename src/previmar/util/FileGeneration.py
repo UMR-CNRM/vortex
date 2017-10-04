@@ -116,6 +116,5 @@ def RulesGribFunction(options):
     outstr += "if( ( level == 10 ) && (indicatorOfParameter==34) ){\n write;\n}"
     outstr += "}"
 
-
     # NB: The result have to be a file like object !
     return StringIO(outstr)

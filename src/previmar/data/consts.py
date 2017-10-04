@@ -26,16 +26,15 @@ class GenvUsageModelResource(GenvModelResource):
     )
 
     def genv_basename(self):
-        """Just retrieve a potential gvar attribute + self.usage."""      
+        """Just retrieve a potential gvar attribute + self.usage."""
         if self.usage is not None:
             if re.search('(_TGZ$)', self.gvar):
-                usage_key = re.sub('(_TGZ$)' , ('_' + self.usage + '_TGZ').upper() , self.gvar) 
+                usage_key = re.sub('(_TGZ$)', ('_' + self.usage + '_TGZ').upper(), self.gvar)
             else:
                 usage_key = ( self.gvar + '_' + self.usage).upper()
         else:
-            usage_key = self.gvar 
+            usage_key = self.gvar
         return usage_key
-
 
 
 class TidalHarmonic(GenvModelResource):
@@ -129,7 +128,7 @@ class ConfSurges(GenvUsageModelResource):
                     values  = ['ConfigSurges', 'ConfigRunSurges', 'BlkdatData'],
                 ),
                 gvar = dict(
-                    default = '[model]_[param]_[gdomain]', 
+                    default = '[model]_[param]_[gdomain]',
                 ),
                 param = dict(
                     values  = ['pts', 'savefield', 'ports', 'blkdat',
@@ -141,7 +140,7 @@ class ConfSurges(GenvUsageModelResource):
 
     @property
     def realkind(self):
-        return "{0:s}{1:s}".format('ConfigSurges', '' if self.usage is None else self.usage)
+        return 'ConfigSurges'
 
 
 class BinProjSurges(GenvModelResource):
@@ -195,7 +194,7 @@ class ConfCouplingOasisSurges(GenvUsageModelResource):
 
     @property
     def realkind(self):
-        return "{0:s}{1:s}".format('ConfCouplingOasisSurges', '' if self.usage is None else self.usage)
+        return 'ConfCouplingOasisSurges'
 
 
 class CouplingGridOasis(GenvUsageModelResource):
@@ -222,4 +221,4 @@ class CouplingGridOasis(GenvUsageModelResource):
 
     @property
     def realkind(self):
-        return "{0:s}{1:s}".format('CouplingGridOasis', '' if self.usage is None else self.usage)
+        return 'CouplingGridOasis'
