@@ -593,20 +593,23 @@ class IniConf(footprints.FootprintBase):
     _collector = ('iniconf',)
     _abstract  = True
     _footprint = dict(
-        info='Python Inifile',
+        info='Abstract Python Inifile',
         attr=dict(
             kind = dict(
+                info     = "The configuration object kind.",
                 values   = [ 'generic', ],
             ),
             clsconfig = dict(
-                type     = GenericReadOnlyConfigParser,
-                isclass  = True,
-                optional = True,
-                default  = GenericReadOnlyConfigParser,
+                type            = GenericReadOnlyConfigParser,
+                isclass         = True,
+                optional        = True,
+                default         = GenericReadOnlyConfigParser,
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
             inifile = dict(
+                kind     = 'The configuration file to look for.',
                 optional = True,
-                default  = '[kind].ini',
+                default  = '@[kind].ini',
             ),
         )
     )
@@ -619,3 +622,207 @@ class IniConf(footprints.FootprintBase):
     @property
     def config(self):
         return self._config
+
+
+class ConfigurationTable(IniConf):
+    """
+    A specialised version of :class:`IniConf` that automatically create a list of
+    items (instantiated from the tableitem footprint's collector) from a given
+    configuration file.
+    """
+    _abstract  = True
+    _footprint = dict(
+        info = 'Abstract configuration tables',
+        attr = dict(
+            kind = dict(
+                info     = "The configuration's table kind.",
+            ),
+            family = dict(
+                info     = "The configuration's table family.",
+            ),
+            version = dict(
+                info     = "The configuration's table version.",
+                optional = True,
+                default  = 'std',
+            ),
+            searchkeys = dict(
+                info     = "Item's attributes used to perform the lookup in the find method.",
+                type     = footprints.FPTuple,
+                optional = True,
+                default  = footprints.FPTuple(),
+            ),
+            groupname = dict(
+                info     = "The class attribute matching the configuration file groupname",
+                optional = True,
+                default  = 'family',
+            ),
+            inifile = dict(
+                optional = True,
+                default  = '@[family]-[kind]-[version].ini',
+            ),
+            clsconfig = dict(
+                default  = ExtendedReadOnlyConfigParser,
+            ),
+            language = dict(
+                info     = "The default language for the translator property.",
+                optional = True,
+                default  = 'en',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'configuration-table'
+
+    def groups(self):
+        """Actual list of items groups described in the current iniconf."""
+        return [x for x in self.config.parser.sections()
+                if ':' not in x and not x.startswith('lang_')]
+
+    def keys(self):
+        """Actual list of different items in the current iniconf."""
+        return [x for x in self.config.sections()
+                if x not in self.groups() and not x.startswith('lang_')]
+
+    @property
+    def translator(self):
+        """The special section of the iniconf dedicated to translation, as a dict."""
+        if not hasattr(self, '_translator'):
+            if self.config.has_section('lang_' + self.language):
+                self._translator = self.config.as_dict()['lang_' + self.language]
+            else:
+                self._translator = None
+        return self._translator
+
+    @property
+    def tablelist(self):
+        """List of unique instances of items described in the current iniconf."""
+        if not hasattr(self, '_tablelist'):
+            self._tablelist = list()
+            d = self.config.as_dict()
+            for item, group in [ x.split(':') for x in self.config.parser.sections() if ':' in x ]:
+                try:
+                    for k, v in d[item].items():
+                        # Can occur in case of a redundant entry in the config file
+                        if isinstance(v, basestring) and v:
+                            if re.match('none$', v, re.IGNORECASE):
+                                d[item][k] = None
+                            if re.search('[a-z]_[a-z]', v, re.IGNORECASE):
+                                d[item][k] = v.replace('_', "'")
+                    d[item][self.searchkeys[0]] = item
+                    d[item][self.groupname]     = group
+                    d[item]['translator']       = self.translator
+                    itemobj = footprints.proxy.tableitem(**d[item])
+                    if itemobj is not None:
+                        self._tablelist.append(itemobj)
+                    else:
+                        logger.error("Unable to create the %s item object. Check the footprint !", item)
+                except (KeyError, IndexError):
+                    logger.warning('Some item description could not match')
+        return self._tablelist
+
+    def get(self, item):
+        """Return the item with main key exactly matching the given argument."""
+        candidates = [x for x in self.tablelist
+                      if x.footprint_getattr(self.searchkeys[0]) == item]
+        if candidates:
+            return candidates[0]
+        else:
+            return None
+
+    def grep(self, item):
+        """Return a list of items with main key loosely matching the given argument."""
+        return [x for x in self.tablelist
+                if re.search(item, x.footprint_getattr(self.searchkeys[0]), re.IGNORECASE)]
+
+    def find(self, item):
+        """Return a list of items with main key or name loosely matching the given argument."""
+        return [x for x in self.tablelist
+                if any([re.search(item, x.footprint_getattr(thiskey), re.IGNORECASE)
+                        for thiskey in self.searchkeys ])]
+
+
+class TableItem(footprints.FootprintBase):
+    """
+    Abstract configuration table's item.
+    """
+
+    #: Attribute describing the item's name during RST exports
+    _RST_NAME = ''
+    #: Attributes that will appear on the top line of RST exports
+    _RST_HOTKEYS = []
+
+    _abstract = True
+    _collector = ('tableitem',)
+    _footprint = dict(
+        info = "Abstract configuration table's item.",
+        attr = dict(
+            # Define your own...
+            translator = dict(
+                optional = True,
+                type     = footprints.FPDict,
+                default  = None,
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'tableitem'
+
+    def _translated_items(self, mkshort=True):
+        """Returns a list of 3-elements tuples describing the item attributes.
+
+        [(translated_key, value, original_key), ...]
+        """
+        output_stack = list()
+        if self.translator:
+            for k in self.translator.get('ordered_dump', '').split(','):
+                if not mkshort or self.footprint_getattr(k) is not None:
+                    output_stack.append((self.translator.get(k, k.replace('_', ' ').title()),
+                                         str(self.footprint_getattr(k)), k))
+        else:
+            for k in self.footprint_attributes:
+                if ((not mkshort or self.footprint_getattr(k) is not None) and
+                        k != 'translator'):
+                    output_stack.append((k, str(self.footprint_getattr(k)), k))
+        return output_stack
+
+    def nice_str(self, mkshort=True):
+        """Produces a nice ordered representation of the item attributes."""
+        output_stack = self._translated_items(mkshort=mkshort)
+        output_list = []
+        if output_stack:
+            max_keylen = max([len(i[0]) for i in output_stack])
+            print_fmt = '{0:' + str(max_keylen) + 's} : {1:s}'
+            for item in output_stack:
+                output_list.append(print_fmt.format(* item))
+        return '\n'.join(output_list)
+
+    def __str__(self):
+        return self.nice_str()
+
+    def nice_print(self, mkshort=True):
+        """Print a nice ordered output of the item attributes."""
+        print(self.nice_str(mkshort=mkshort))
+
+    def nice_rst(self, mkshort=True):
+        """Produces a nice ordered RST output of the item attributes."""
+        assert self._RST_NAME, "Please override _RST_NAME"
+        output_stack = self._translated_items(mkshort=mkshort)
+        i_name = '????'
+        i_hot = []
+        i_other = []
+        for item in output_stack:
+            if item[2] == self._RST_NAME:
+                i_name = item
+            elif item[2] in self._RST_HOTKEYS:
+                i_hot.append(item)
+            else:
+                i_other.append(item)
+        return '**{}** : `{}`\n\n{}\n\n'.format(i_name[1],
+                                                ', '.join(['{0:s}={1:s}'.format(* i)
+                                                           for i in i_hot]),
+                                                '\n'.join(['    * {0:s}: {1:s}'.format(* i)
+                                                           for i in i_other]))
