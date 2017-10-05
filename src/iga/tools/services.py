@@ -720,7 +720,7 @@ class TransmetService(BdpeService):
                 self._filename_transmet = get_ttaaii_transmet_sh(self.sh, self.transmet_cmd,
                                                                  actual_transmet, self.filename,
                                                                  self.scriptdir)
-                logger.debug('filename transmet : %s', self.filename_transmet)
+                logger.debug('filename transmet : %s', self._filename_transmet)
             else:
                 logger.error('version_header : %s not implemented', self.version_header)
                 self._filename_transmet = False
