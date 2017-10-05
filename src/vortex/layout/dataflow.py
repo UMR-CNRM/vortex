@@ -447,6 +447,8 @@ class SequenceInputsReport(object):
             extrainfo = ''
             if status != self._Status.MISSING and (true_rh is not nominal_rh):
                 extrainfo = '(ALTERNATE USED)'
+            if status == self._Status.MISSING:
+                extrainfo = '(MISSING RESOURCES)'
             outstr += "* {:8s} {:16s} : {:s}\n".format(status, extrainfo, local)
             if detailed and extrainfo != '':
                 outstr += "  * The following resource is used:\n"
