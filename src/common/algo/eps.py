@@ -16,6 +16,7 @@ from vortex.util.structs import ShellEncoder
 from vortex.algo.components import BlindRun
 from vortex.layout.dataflow import intent
 from vortex.tools import grib
+from vortex.tools.systems import OSExtended
 
 
 class Svect(IFSParallel):
@@ -141,6 +142,9 @@ class CombiSV(CombiPert):
 
         totalVects = sum(nbVect.values())
         logger.info("Number of vectors :\n" + '\n'.join(['- %s: %d' % (z, n) for z, n in nbVect.iteritems()]))
+        # Getting the singular vectors per areas in a json file
+        # This is using by OPER for the e-mails...   
+        self.system.json_dump(nbVect,open('oper_number_of_singular_vectors.json','w'))
 
         # Tweak the namelists
         namsecs = self.context.sequence.effective_inputs(role = re.compile('Namelist'), kind = 'namelist')

@@ -43,6 +43,7 @@ from vortex.tools.schedulers import SMS
 from vortex.tools.services import Service, FileReportService, TemplatedMailService
 from vortex.tools.date import Time
 from vortex.util.config import GenericReadOnlyConfigParser
+from iga.tools.transmet import get_ttaaii_transmet_sh
 #: Export nothing
 __all__ = []
 
@@ -602,11 +603,6 @@ class BdpeService(RoutingService):
                 type     = Time,
                 default  = '0',
             ),
-            transmet = dict(
-                optional = True,
-                type     = dict,
-            )
-
         )
     )
 
@@ -666,6 +662,64 @@ class BdpeService(RoutingService):
                   " -n {0.productid} -e {0.term.fmtraw} -d {0.dmt_date_pivot}" \
                   " -q {0.quality} -r {0.soprano_target}".format(self)
         return agt_actual_command(self.sh, self.agt_pe_cmd, options)
+
+class TransmetService(BdpeService):
+    """
+    Class responsible for handling transmet data.
+        :version_header: 'TTAAII' use the 'entete_fichier_transmet.sh' script to
+                    generate the header into a empty file and the filename used for routing
+        :version_header: 'gfnc' not implemented (for the new naming rule)
+    This class should not be called directly.
+    """
+    _footprint = dict(
+        info = 'transmet service class',
+        attr = dict(
+            kind = dict(
+                values    = ['transmet'],
+            ),
+            scriptdir = dict(
+                optional = True,
+                default  = 'scriptdir'
+            ),
+            transmet_cmd = dict(
+                optional = True,
+                default  = 'transmet_cmd'
+            ),
+            transmet = dict(
+                optional  = True,
+                type      = dict,
+            ),
+            version_header = dict(
+                values    = ['TTAAII','gfnc'],
+                optional  = True,
+                default   = 'TTAAII',
+            )
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('Transmet init %s', self.__class__)
+        super(TransmetService, self).__init__(*args, **kw)
+
+    @property
+    def realkind(self):
+        return 'TRANSMET'
+
+    @property
+    def routing_name(self):
+        return self.filename_transmet
+
+    def __call__(self):
+        """Actual service execution."""
+        if self.version_header == 'TTAAII':
+            self.filename_transmet = get_ttaaii_transmet_sh(self.sh, self.transmet_cmd,
+                                                            self.transmet, self.filename,
+                                                            self.scriptdir)
+            logger.debug('filename transmet : %s', self.filename_transmet)
+        else:
+            logger.error('version_header : %s not implemented', self.version_header)
+            return False
+        rc = super(TransmetService, self).__call__()
 
 
 class DayfileReportService(FileReportService):
