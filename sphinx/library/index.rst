@@ -18,6 +18,7 @@ List of modules.
    common/index
    gco/index
    iga/index
+   intairpol/index
    mercator/index
    olive/index
    previmar/index

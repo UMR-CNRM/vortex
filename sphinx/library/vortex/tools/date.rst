@@ -47,7 +47,11 @@ Helper functions
 
 .. autofunction:: now
 
+.. autofunction:: utcnow
+
 .. autofunction:: at_hour
+
+.. autofunction:: at_minute
 
 .. autofunction:: at_second
 

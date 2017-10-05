@@ -38,6 +38,13 @@ GEOLIST       = $(SOURCEDIR)/geometries.rst
 # Source configuration file to generate the geometries list
 GEOLIST_DEP   = ../conf/geometries.ini
 
+# Target file for the pollutants list
+POL_ELTS      = $(SOURCEDIR)/pollutants-elements-std.rst
+POL_SITES     = $(SOURCEDIR)/pollutants-sites-std.rst
+# Source configuration file to generate the pollutants list
+POL_ELTS_DEP   = ../conf/pollutants-elements-std.ini
+POL_SITES_DEP  = ../conf/pollutants-sites-std.ini
+
 # Target directory for notebook's exports
 NOTEBOOKS     = notebooks
 # Source directory for netbooks
@@ -81,6 +88,12 @@ $(CHECKREPORT):
 $(GEOLIST): $(GEOLIST_DEP)
 	$(PYTHON) $(GENEDOC) --geometry $(GEOLIST)
 
+$(POL_ELTS): $(POL_ELTS_DEP)
+	$(PYTHON) $(GENEDOC) --configtable pollutants,elements,std,en,intairpol $(POL_ELTS)
+
+$(POL_SITES): $(POL_SITES_DEP)
+	$(PYTHON) $(GENEDOC) --configtable pollutants,sites,std,en,intairpol $(POL_SITES)
+
 # Do the Footprint's XML export (used in vortex-help)
 $(XMLEXPORTDIR):
 	mkdir -p $(XMLEXPORTDIR)
@@ -92,7 +105,7 @@ $(NOTEBOOKS): $(NOTEBOOKS_DEP)
 	$(NBOOKEXPORT) -v -o $(NOTEBOOKS) $(NOTEBOOKS_IN)
 
 # Build the html documentation
-html: $(CHECKREPORT) $(GEOLIST) $(XMLEXPORTDIR)
+html: $(CHECKREPORT) $(GEOLIST) $(POL_ELTS) $(POL_SITES) $(XMLEXPORTDIR)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 # Clean the notebooks
