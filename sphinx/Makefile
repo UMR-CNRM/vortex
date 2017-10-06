@@ -70,11 +70,11 @@ full-check:
 # Create rst files for new modules and check only for missing objects in rst
 # files
 miss-check:
-	$(PYTHON) $(CHECKDOC) missingonly=on
+	$(PYTHON) $(CHECKDOC) --light
 
 # Generate the checkdoc report (that will be included in the doc)
 $(CHECKREPORT):
-	$(PYTHON) $(CHECKDOC) generaterst=$@
+	$(PYTHON) $(CHECKDOC) --gen-report=$@
 
 # Other automatic lists
 # Geometries:

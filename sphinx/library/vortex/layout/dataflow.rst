@@ -12,13 +12,20 @@
 Global descriptors
 ------------------
 
-.. autodata:: IntentTuple
+.. autoclass:: IntentTuple
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 
 .. data:: intent
 
   Predefined INTENT values IN, OUT and INOUT.
 
-.. autodata:: IXOTuple
+.. autoclass:: IXOTuple
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 .. data:: ixo
 

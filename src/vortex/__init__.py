@@ -24,6 +24,7 @@ strongly advised.
 """
 
 __version__ = '1.1.5'
+__nextversion__ = '1.2.0'
 __prompt__  = 'Vortex v-' + __version__ + ':'
 
 __all__ = []
