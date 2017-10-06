@@ -9,7 +9,7 @@ import os
 import signal
 import unittest
 
-from opinel import interrupt
+from bronx.system import interrupt
 
 
 class TestInterrupt(unittest.TestCase):

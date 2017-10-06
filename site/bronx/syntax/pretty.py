@@ -7,19 +7,16 @@ Making things pretty.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints.loggers
-
-logger = footprints.loggers.getLogger(__name__)
 
 #: No automatic export
 __all__ = []
 
 
-def soft_string(s, escaped_characters={' ':'_',
-                                       '{':'', '}':'',
-                                       '(':'', ')':'',
-                                       '[':'', ']':'',
-                                       '*':''}):
+def smooth_string(s, escaped_characters={' ': '_',
+                                         '{': '', '}': '',
+                                         '(': '', ')': '',
+                                         '[': '', ']': '',
+                                         '*': '', '?': ''}):
     """
     Returns str(*s*) escaping special characters that may
     be forbidden in filenames.

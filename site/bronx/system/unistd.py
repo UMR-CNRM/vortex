@@ -2,20 +2,16 @@
 # -*- coding: utf-8 -*-
 
 """
-Miscellaneous I/O tools.
+Utilities to work on file descriptors through the standard Linux C layer.
+
+The name of this module is directly inspired from the eponym C library.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from six import io
+from contextlib import contextmanager
 import os
 import sys
-from contextlib import contextmanager
-import csv
-
-import footprints.loggers
-
-logger = footprints.loggers.getLogger(__name__)
 
 #: No automatic export
 __all__ = []
@@ -61,6 +57,11 @@ def redirected_stdio(module=sys, stdio='stdout', to=os.devnull):
             import os
             os.system("echo non-Python applications are also supported")
 
+    Warning:: Use with care. It will crash if **module.stdio** is already redirected
+    to a File like object that is not a "real" physical file (e.g. a StringIO object).
+    Because of that, it can not be tested with the unitest module since usual
+    test runner redirect stdout/stderr to memory.
+
     Inspired from:
     `<http://stackoverflow.com/questions/5081657/how-do-i-prevent-a-c-shared-library-to-print-on-stdout-in-python>`
     """
@@ -77,32 +78,3 @@ def redirected_stdio(module=sys, stdio='stdout', to=os.devnull):
             yield  # allow code to be run with the redirected stdio
         finally:
             _redirect_stdout(to=old_stdio)  # restore stdio.
-
-
-def read_dict_in_CSV(filename):
-    """
-    Reads a .csv file formatted as follow:
-    - on first line is described the delimiter
-    - on second line is described the 'priority' of the dict.
-    - all subsequent lines contain equivalent of a dict, with key/value duets
-      separated by the delimiter
-    """
-    field_dict = []
-    with io.open(filename, 'r') as f:
-        delimiter = str(f.readline()[0])
-        file_priority = str(f.readline()[0:-1])
-        field_table = csv.reader(f, delimiter=delimiter)
-        for field in field_table:
-            # syntax example of field description:
-            # name:FIELDNAME;param:value;...
-            if len(field) > 1 and field[0][0] != '#':
-                fd = {}
-                for kv in field:
-                    k,v = kv.split(':')
-                    try:
-                        fd[k] = int(v)
-                    except ValueError:
-                        fd[k] = v
-                field_dict.append(fd)
-
-    return field_dict, file_priority

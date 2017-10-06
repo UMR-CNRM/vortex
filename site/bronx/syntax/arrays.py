@@ -2,16 +2,13 @@
 # -*- coding: utf-8 -*-
 
 """
-Syntaxic useful tools.
+Numpy's useful tools.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import numpy
 
-import footprints.loggers
-
-logger = footprints.loggers.getLogger(__name__)
 
 #: No automatic export
 __all__ = []

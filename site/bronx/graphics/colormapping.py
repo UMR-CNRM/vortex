@@ -11,9 +11,6 @@ import numpy
 import copy
 import matplotlib
 
-import footprints.loggers
-
-logger = footprints.loggers.getLogger(__name__)
 
 #: No automatic export
 __all__ = []

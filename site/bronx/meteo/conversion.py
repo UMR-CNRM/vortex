@@ -9,9 +9,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import numpy
 
-import footprints.loggers
+from .constants import Rd, Rv
 
-logger = footprints.loggers.getLogger(__name__)
 
 #: No automatic export
 __all__ = []
@@ -23,14 +22,12 @@ def q2R(q, ql=0., qi=0., qr=0., qs=0., qg=0.):
     and hydrometeors if present.
 
     :param q: specific humidity (kg/kg)
-    :param ql: liquid water content (kg/kg)
-    :param qi: ice water content (kg/kg)
-    :param qr: rain water content (kg/kg)
-    :param qs: snow water content (kg/kg)
-    :param qg: graupel water content (kg/kg)
+    :param ql: liquid water content (kg/kg) (optional, default=0.)
+    :param qi: ice water content (kg/kg) (optional, default=0.)
+    :param qr: rain water content (kg/kg) (optional, default=0.)
+    :param qs: snow water content (kg/kg) (optional, default=0.)
+    :param qg: graupel water content (kg/kg) (optional, default=0.)
     """
-    from .constants import Rd
-    from .constants import Rv
     q = numpy.array(q)
     ql = numpy.array(ql)
     qi = numpy.array(qi)

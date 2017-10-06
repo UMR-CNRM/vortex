@@ -137,7 +137,7 @@ class UtEnv(TestCase):
         # Cleanup !
         e.active(False)
         del e
-        
+
     def test_encoding(self):
         e = Environment(active=True)
         e['toto'] = range(1, 4)
@@ -183,6 +183,7 @@ class UtEnv(TestCase):
         self.assertNotIn('titi', e)
         with self.assertRaises(RuntimeError):
             e.rewind()
+
 
 if __name__ == '__main__':
     main(verbosity=2)

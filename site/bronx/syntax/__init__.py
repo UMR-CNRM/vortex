@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Syntaxic useful tools.
+Syntax useful tools.
 """
 
 from __future__ import absolute_import, unicode_literals

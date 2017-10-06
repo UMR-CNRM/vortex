@@ -7,9 +7,6 @@ Parsing tools.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints.loggers
-
-logger = footprints.loggers.getLogger(__name__)
 
 #: No automatic export
 __all__ = []
@@ -24,8 +21,8 @@ def str2dict(string, try_convert=None):
     """
     if ':' not in string and '=' not in string:
         raise SyntaxError("string: '{}' is not convertible to a dict".format(string))
-    d = {i.replace('=', ':').split(':')[0].strip() : i.replace('=', ':').split(':')[1].strip()
-         for i in string.split(',')}
+    d = {e[0].strip(): e[1].strip()
+         for e in [i.replace('=', ':').split(':', 1) for i in string.split(',')]}
     if try_convert is not None:
         for k, v in d.items():
             try:

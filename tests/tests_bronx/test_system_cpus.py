@@ -6,12 +6,12 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import os
 import unittest
 
-import opinel.cpus_tool
+from bronx.system.cpus import CpusToolUnavailableError, LinuxCpusInfo
 
 DATADIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
 
 
-class LinuxCpusInfoTester(opinel.cpus_tool.LinuxCpusInfo):
+class LinuxCpusInfoTester(LinuxCpusInfo):
 
     _INFOFILE_CHECK = False
 
@@ -27,8 +27,8 @@ class TestLinuxCpusInfo(unittest.TestCase):
 
     def test_bascis_mine(self):
         try:
-            cinfo = opinel.cpus_tool.LinuxCpusInfo()
-        except opinel.cpus_tool.CpusToolUnavailableError as e:
+            cinfo = LinuxCpusInfo()
+        except CpusToolUnavailableError as e:
             raise self.skipTest(str(e))
         # Just ensure that the file is parseable...
         self.assertEqual(cinfo.nvirtual_cores,

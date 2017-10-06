@@ -17,11 +17,8 @@ import abc
 import os
 import resource
 
-import footprints
 
-logger = footprints.loggers.getLogger(__name__)
-
-DEFAULT_MEM_UNIT = 'MB'
+DEFAULT_MEM_UNIT = 'MiB'
 
 
 class MemToolUnavailableError(Exception):
@@ -29,12 +26,16 @@ class MemToolUnavailableError(Exception):
     pass
 
 
-def mem_in_unit(mem_b, unit):
-    """Convert memory in bytes to **unit** (among KB, MB, GB)."""
-    unit_power = {'B':0, 'KB':1, 'MB':2, 'GB':3}
+def convert_bytes_in_unit(mem_b, unit):
+    """Convert bytes to **unit** (among KB, MB, GB, ... or KiB, MiB, GiB)."""
+    unit_power = {'B': 0,
+                  'KB': 1, 'MB': 2, 'GB': 3, 'TB': 4, 'PB': 5, 'EB': 6,
+                  'KiB': 1, 'MiB': 2, 'GiB': 3, 'TiB': 4, 'PiB': 5, 'EiB': 6, }
+    if unit not in unit_power:
+        raise ValueError('Unknown unit {!s}'.format(unit))
     if unit != 'B':
         mem_b = float(mem_b)
-    return mem_b / (1024**unit_power[unit])
+    return mem_b / ((1024 if 'i' in unit else 1000) ** unit_power[unit])
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -47,7 +48,7 @@ class MemInfo(object):
 
     def system_RAM(self, unit=DEFAULT_MEM_UNIT):
         """Get total RAM memory available in the system."""
-        return mem_in_unit(self._system_RAM, unit)
+        return convert_bytes_in_unit(self._system_RAM, unit)
 
     @abc.abstractmethod
     def process_maxRSS(self, unit=DEFAULT_MEM_UNIT):
@@ -62,6 +63,7 @@ class LinuxMemInfo(MemInfo):
     """Provide various informations about Memory."""
 
     def __init__(self):
+        # The RAM size in bytes
         self._system_RAM = os.sysconf(b'SC_PAGE_SIZE') * os.sysconf(b'SC_PHYS_PAGES')
 
     def process_maxRSS(self, unit=DEFAULT_MEM_UNIT):
@@ -70,7 +72,7 @@ class LinuxMemInfo(MemInfo):
         used by of the process.
         """
         maxrss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024
-        return mem_in_unit(maxrss, unit)
+        return convert_bytes_in_unit(maxrss, unit)
 
     def children_maxRSS(self, unit=DEFAULT_MEM_UNIT):
         """
@@ -78,4 +80,4 @@ class LinuxMemInfo(MemInfo):
         of the process children.
         """
         maxrss = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss * 1024
-        return mem_in_unit(maxrss, unit)
+        return convert_bytes_in_unit(maxrss, unit)

@@ -10,9 +10,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import matplotlib
 import datetime
 
-import footprints.loggers
-
-logger = footprints.loggers.getLogger(__name__)
 
 #: No automatic export
 __all__ = []

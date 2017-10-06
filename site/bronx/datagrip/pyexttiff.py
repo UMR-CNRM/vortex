@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
-# Copyright (c) Météo France (2014-)
-# This software is governed by the CeCILL-C license under French law.
-# http://www.cecill.info
+
+from __future__ import print_function, absolute_import, division  # , unicode_literals
+
 """
 This module aims at reading tiff with private IFDs.
 It uses PIL for image reading.
 
-This module uses code from pylibtiff (https://pypi.python.org/pypi/libtiff, https://code.google.com/p/pylibtiff or https://github.com/hmeine/pylibtiff)
+This module uses code from pylibtiff (https://pypi.python.org/pypi/libtiff,
+https://code.google.com/p/pylibtiff or https://github.com/hmeine/pylibtiff)
 """
-
-from __future__ import print_function, absolute_import, division  # , unicode_literals
 
 import os
 import StringIO
@@ -21,13 +20,11 @@ import six
 
 
 class PyexttiffError(Exception):
-
     """Error handling for pyexttiff."""
     pass
 
 
 class TiffFile(object):
-
     """
     This class allows the access to the entire tiff file (tags and images).
     """
@@ -35,17 +32,17 @@ class TiffFile(object):
     _rational = numpy.dtype([('numer', numpy.uint32), ('denom', numpy.uint32)])
     _srational = numpy.dtype([('numer', numpy.int32), ('denom', numpy.int32)])
 
-    _type2name = {1:'BYTE', 2:'ASCII', 3:'SHORT', 4:'LONG', 5:'RATIONAL',  # two longs, lsm uses it for float64
-                  6:'SBYTE', 7:'UNDEFINED', 8:'SSHORT', 9:'SLONG', 10:'SRATIONAL',
-                  11:'FLOAT', 12:'DOUBLE',
+    _type2name = {1: 'BYTE', 2: 'ASCII', 3: 'SHORT', 4: 'LONG', 5: 'RATIONAL',  # two longs, lsm uses it for float64
+                  6: 'SBYTE', 7: 'UNDEFINED', 8: 'SSHORT', 9: 'SLONG', 10: 'SRATIONAL',
+                  11: 'FLOAT', 12: 'DOUBLE',
                   }
     _name2type = dict((v, k) for k, v in _type2name.items())
     _name2type['SHORT|LONG'] = _name2type['LONG']
     _name2type['LONG|SHORT'] = _name2type['LONG']
-    _type2bytes = {1:1, 2:1, 3:2, 4:4, 5:8, 6:1, 7:1, 8:2, 9:4, 10:8, 11:4, 12:8}
-    _type2dtype = {1:numpy.uint8, 2:numpy.uint8, 3:numpy.uint16, 4:numpy.uint32, 5:_rational,
-                   6:numpy.int8, 7:numpy.uint8, 8:numpy.int16, 9:numpy.int32, 10:_srational,
-                   11:numpy.float32, 12:numpy.float64}
+    _type2bytes = {1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 6: 1, 7: 1, 8: 2, 9: 4, 10: 8, 11: 4, 12: 8}
+    _type2dtype = {1: numpy.uint8, 2: numpy.uint8, 3: numpy.uint16, 4: numpy.uint32, 5: _rational,
+                   6: numpy.int8, 7: numpy.uint8, 8: numpy.int16, 9: numpy.int32, 10: _srational,
+                   11: numpy.float32, 12: numpy.float64}
 
     class _LittleEndianNumpyDTypes(object):
         uint8 = numpy.dtype('<u1')
@@ -84,14 +81,16 @@ class TiffFile(object):
             return dict((k, numpy.dtype(v).newbyteorder('>')) for k, v in TiffFile._type2dtype.items())
 
     def __init__(self, filename, subIFDpaths=[], method=1):
-        """
-        Opens a tiff file, reads header and IFDs.
+        """ Opens a tiff file, reads header and IFDs.
+
         *filename* is the filename containing the tiff
+
         *subIFDpaths* is the list of tag path whose values are offset to private IFDs
             a tag path is a tuple representing the path to a given tag which must represent an IFD
             (34665) means that tag 34665 of any given public IFD is an offset to a private IFD
             (32001, 521) means that tag 32001 of any given public IFD is an offset to a private IFD
                            and that tag 521 of any private tag referenced by a 32001 public tag is also an offset to a private IFD
+
         *method* is the method used to read data:
             1: f=open(..., 'rb') ; numpy.frombuffer(f.read(), dtype=numpy.ubyte)
             2: f=open(..., 'rb') ; numpy.ndarray(buffer=mmap(f), dtype=numpy.ubyte)
@@ -152,7 +151,7 @@ class TiffFile(object):
 
     def _readIFD(self, offset, path, subIFDpaths, num):
         """
-        Reads recursively IFDs
+        Reads recursively IFDs.
         """
         ifd = IFD()
         n = self._get_uint16(offset)
@@ -207,7 +206,7 @@ class TiffFile(object):
 
     def get_buffer(self):
         """
-        Returns the buffer
+        Returns the buffer.
         """
         return numpy.getbuffer(self.get_data())
 
@@ -225,10 +224,13 @@ class TiffFile(object):
 
     def _get_uint16(self, offset):
         return self.get_data()[offset:offset + 2].view(dtype=self.dtypes.uint16)[0]
+
     def _get_uint32(self, offset):
         return self.get_data()[offset:offset + 4].view(dtype=self.dtypes.uint32)[0]
+
     def _get_int32(self, offset):
         return self.get_data()[offset:offset + 4].view(dtype=self.dtypes.int32)[0]
+
     def _get_values(self, offset, typ, count):
         if isinstance(typ, numpy.dtype):
             dtype = typ
@@ -258,7 +260,7 @@ class TiffFile(object):
 
     def __del__(self):
         """
-        __del__ method
+        __del__ method.
         """
         self.close()
 
@@ -271,7 +273,7 @@ class IFD(list):
         self._image = None
 
     def has_tag(self, tag):
-        """Returns True if an entry fits the tag given"""
+        """Returns True if an entry fits the tag given."""
         result = False
         for entry in self:
             if entry.get_tag() == tag:
@@ -279,7 +281,7 @@ class IFD(list):
         return result
 
     def get_entry(self, tag):
-        """Returns the entry for a tag"""
+        """Returns the entry for a tag."""
         if not self.has_tag(tag):
             raise PyexttiffError("This tag doesn't exist in this IFD.")
         for entry in self:
@@ -288,11 +290,13 @@ class IFD(list):
         return result
 
     def get_value(self, tag, human=True):
-        """
-        Returns the value for a tag
-        if human=True, value is modified:
-            - value[0] is retruned instead of value if array contains only one element
-            - conversion in string is achieved for arrays representing strings
+        """Returns the value for a tag.
+
+        if **human**=*True*, value is modified:
+
+            * value[0] is retruned instead of value if array contains only one element
+            * conversion in string is achieved for arrays representing strings
+
         """
         if not self.has_tag(tag):
             raise PyexttiffError("This tag doesn't exist in this IFD.")
@@ -318,7 +322,7 @@ class IFD(list):
 
 
 class IFDEntry(object):
-    """This class represent an IFD entry"""
+    """This class represent an IFD entry."""
 
     # <TagName> <Hex> <Type> <Number of values>
     _tag_info = '''
@@ -503,16 +507,16 @@ EXIF_ImageUniqueID a420 ASCII 33
 
     def __init__(self, tag, entrytype, value=None):
         """
-        *tag* is the tag number of the entry
-        *entrytype* is the type of the entry
-        *value* is the value associated to the tag
+        * *tag* is the tag number of the entry
+        * *entrytype* is the type of the entry
+        * *value* is the value associated to the tag
         """
         self._tag = tag
         self._type = entrytype
         self._value = value
 
     def is_image(self):
-        """Returns True if content in an image"""
+        """Returns True if content in an image."""
         return self.get_tag() == 273
 
     def is_IFD(self):
@@ -520,15 +524,17 @@ EXIF_ImageUniqueID a420 ASCII 33
         return isinstance(self.get_value(), IFD)
 
     def get_tag(self):
-        """Returns the tag"""
+        """Returns the tag."""
         return self._tag
 
     def get_value(self, human=True):
-        """
-        Returns the value
-        if human=True, value is modified:
-            - value[0] is retruned instead of value if array contains only one element
-            - conversion in string is achieved for arrays representing strings
+        """Returns the value.
+
+        if **human**=*True*, value is modified:
+
+            * value[0] is returned instead of value if array contains only one element
+            * conversion in string is achieved for arrays representing strings
+
         """
         value = self._value
         if human:
@@ -539,7 +545,7 @@ EXIF_ImageUniqueID a420 ASCII 33
         return value
 
     def get_tagName(self):
-        """Returns the tag name"""
+        """Returns the tag name."""
         return self._tag_value2name.get(self.get_tag, 'TAG%s' % (hex(self._tag),))
 
     def get_type(self):
