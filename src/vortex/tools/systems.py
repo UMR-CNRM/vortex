@@ -46,8 +46,8 @@ import time
 from datetime import datetime
 
 import footprints
-from opinel.interrupt import SignalInterruptHandler, SignalInterruptError
-from opinel.cpus_tool import LinuxCpusInfo
+from bronx.system.interrupt import SignalInterruptHandler, SignalInterruptError
+from bronx.system.cpus import LinuxCpusInfo
 from vortex.gloves import Glove
 from vortex.tools import date
 from vortex.tools.env import Environment
@@ -736,7 +736,7 @@ class OSExtended(System):
             a string describing the wanted *topology* and the *method* used to
             bind the process (the string should looks like ``topology_method``).
             (see the :meth:`cpus_affinity_get` method and the
-            :mod:`opinel.cpu_tool` module for more details).
+            :mod:`bronx.system.cpus` module for more details).
         :param int taskset_id: The task id for this process
         :param int taskset_bsize: The number of CPU that will be used (usually 1,
             but possibly more when using threaded programs).
@@ -1073,7 +1073,7 @@ class OSExtended(System):
 
     @property
     def cpus_info(self):
-        """Return an object of a subclass of  :class:`opinel.cpu_tool.CpusInfo`.
+        """Return an object of a subclass of  :class:`bronx.system.cpus.CpusInfo`.
 
         Such objects are designed to get informations on the platform's CPUs.
 
@@ -2133,14 +2133,14 @@ class OSExtended(System):
     def signal_intercept_on(self):
         """Activate the signal's catching.
 
-        See :class:`opinel.interrupt.SignalInterruptHandler` documentation.
+        See :class:`bronx.system.interrupt.SignalInterruptHandler` documentation.
         """
         self._sighandler.activate()
 
     def signal_intercept_off(self):
         """Deactivate the signal's catching.
 
-        See :class:`opinel.interrupt.SignalInterruptHandler` documentation.
+        See :class:`bronx.system.interrupt.SignalInterruptHandler` documentation.
         """
         self._sighandler.deactivate()
 

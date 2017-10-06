@@ -16,5 +16,4 @@ List of modules.
    footprints/index
    jeeves/index
    mf/index
-   opinel/index
    taylorism/index

@@ -12,8 +12,8 @@ from unittest import TestCase, main
 import footprints
 import taylorism
 from taylorism import examples
-from opinel import interrupt  # because subprocesses must be killable properly
-from opinel import cpus_tool
+from bronx.system import interrupt  # because subprocesses must be killable properly
+from bronx.system import cpus as cpus_tool
 
 
 class _TestError(Exception):
@@ -31,9 +31,10 @@ class Succeeder(examples.Sleeper):
             succeed=dict(
                 info="Supposed to succeed.",
                 type=bool,
-                values=[True]),
-            )
+                values=[True]
+            ),
         )
+    )
 
     def _task(self):
         """Succeed at doing nothing."""
@@ -52,9 +53,10 @@ class Failer(examples.Sleeper):
             succeed=dict(
                 info="Supposed to fail.",
                 type=bool,
-                values=[False]),
-            )
+                values=[False]
+            ),
         )
+    )
 
     def _task(self):
         """Fails (an exception is raised) at doing nothing."""
@@ -74,9 +76,10 @@ class BindedSucceeder(examples.BindedSleeper):
             succeed=dict(
                 info="Supposed to succeed.",
                 type=bool,
-                values=[True]),
-            )
+                values=[True]
+            ),
         )
+    )
 
     def _task(self):
         """Succeed at doing nothing."""
@@ -93,8 +96,8 @@ class UtTaylorism(TestCase):
         """
 
         boss = taylorism.run_as_server(common_instructions={},
-                                       individual_instructions={'sleeping_time':[0.001, 0.01],
-                                                                'succeed':[False, True]},
+                                       individual_instructions={'sleeping_time': [0.001, 0.01],
+                                                                'succeed': [False, True]},
                                        scheduler=taylorism.MaxThreadsScheduler(max_threads=2))
         with interrupt.SignalInterruptHandler():
             with self.assertRaises(_TestError):
@@ -107,8 +110,8 @@ class UtTaylorism(TestCase):
         """
 
         boss = taylorism.run_as_server(common_instructions={},
-                                       individual_instructions={'sleeping_time':[60, 60],
-                                                                'succeed':[True, True]},
+                                       individual_instructions={'sleeping_time': [60, 60],
+                                                                'succeed': [True, True]},
                                        scheduler=taylorism.MaxThreadsScheduler(max_threads=2))
         with interrupt.SignalInterruptHandler():
             with self.assertRaises(interrupt.SignalInterruptError):
@@ -120,10 +123,10 @@ class UtTaylorism(TestCase):
         """Run as server mode, checks appending instructions."""
 
         boss = taylorism.run_as_server(common_instructions={},
-                                       individual_instructions={'sleeping_time':[0.001, 0.001, 0.001]},
+                                       individual_instructions={'sleeping_time': [0.001, 0.001, 0.001]},
                                        scheduler=taylorism.MaxThreadsScheduler(max_threads=2))
         time.sleep(0.1)
-        boss.set_instructions({}, individual_instructions={'sleeping_time':[0.001, ]})
+        boss.set_instructions({}, individual_instructions={'sleeping_time': [0.001, ]})
         boss.wait_till_finished()
         report = boss.get_report()
         self.assertEqual(len(report['workers_report']), 4, "4 instructions have been sent, which is not the size of report.")
@@ -134,20 +137,20 @@ class UtTaylorism(TestCase):
         subprocess does not lead to deadlock.
         """
         boss = taylorism.run_as_server(common_instructions={},
-                                       individual_instructions={'sleeping_time':[0.001, 60],
-                                                                'succeed':[False, True]},
+                                       individual_instructions={'sleeping_time': [0.001, 60],
+                                                                'succeed': [False, True]},
                                        scheduler=taylorism.MaxThreadsScheduler(max_threads=2))
         time.sleep(0.1)
         with interrupt.SignalInterruptHandler():
             with self.assertRaises(_TestError):
-                boss.set_instructions({}, individual_instructions={'sleeping_time':[1, ],
-                                                                   'bidon':['a' * 100000000, ]})
+                boss.set_instructions({}, individual_instructions={'sleeping_time': [1, ],
+                                                                   'bidon': ['a' * 100000000, ]})
 
     def test_binding(self):
         """Checks that the binding works."""
-        boss = taylorism.run_as_server(common_instructions={'sentence':'',
-                                                            'succeed':True},
-                                       individual_instructions={'sleeping_time':[0.001, 0.001, 0.001]},
+        boss = taylorism.run_as_server(common_instructions={'sentence': '',
+                                                            'succeed': True},
+                                       individual_instructions={'sleeping_time': [0.001, 0.001, 0.001]},
                                        scheduler=taylorism.MaxThreadsScheduler(max_threads=2))
         try:
             boss.wait_till_finished()
@@ -164,16 +167,16 @@ class UtTaylorism(TestCase):
         """
         with self.assertRaises(ValueError):
             boss = taylorism.run_as_server(common_instructions={},
-                                           individual_instructions={'name':['alfred', 'alfred'],
-                                                                    'sleeping_time':[60, 60],
-                                                                    'succeed':[True, True]},
+                                           individual_instructions={'name': ['alfred', 'alfred'],
+                                                                    'sleeping_time': [60, 60],
+                                                                    'succeed': [True, True]},
                                            scheduler=taylorism.MaxThreadsScheduler(max_threads=2))
             boss.wait_till_finished()
 
     def test_expansion_workers_name(self):
         """Checks that expansion in workers name works fine."""
-        boss = taylorism.run_as_server(common_instructions={'name':'jean-pierre_[sleeping_time]'},
-                                       individual_instructions={'sleeping_time':[0.001, 0.01]},
+        boss = taylorism.run_as_server(common_instructions={'name': 'jean-pierre_[sleeping_time]'},
+                                       individual_instructions={'sleeping_time': [0.001, 0.01]},
                                        scheduler=taylorism.MaxThreadsScheduler(max_threads=2))
         boss.wait_till_finished()
         report = boss.get_report()

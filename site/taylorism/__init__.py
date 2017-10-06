@@ -66,7 +66,7 @@ Dependencies
 
 ``footprints`` (MF package)
 
-``opinel`` (MF package)
+``bronx`` (MF package)
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -83,8 +83,8 @@ from multiprocessing.queues import Empty
 
 import footprints
 from footprints import FootprintBase, proxy as fpx
-from opinel import interrupt  # because subprocesses must be killable properly
-from opinel import cpus_tool
+from bronx.system import interrupt  # because subprocesses must be killable properly
+from bronx.system import cpus as cpus_tool
 
 from .schedulers import BaseScheduler, MaxThreadsScheduler
 
