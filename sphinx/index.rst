@@ -21,7 +21,7 @@ Contents
    User Guide (in French) <french/index>
    Technical Documentation <technical/index>
    Site Packages Standard Libraries <library/siteindex>
-   The Vortex Standard Library <library/index>
+   The Vortex Standard Library <library/libindex>
    Glossary <dico>
 
 Extras

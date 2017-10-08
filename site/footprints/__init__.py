@@ -26,6 +26,8 @@ __all__ = []
 
 __version__ = '1.1.5'
 
+__tocinfoline__ = 'A generic multi-purpose fabric for objects with tunable footprints'
+
 
 # Default logging
 

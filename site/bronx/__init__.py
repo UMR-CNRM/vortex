@@ -19,3 +19,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 __all__ = []
 
 __version__ = '1.1.5'
+
+
+__tocinfoline__ = 'A collection of basic utilities to be used in various projects'

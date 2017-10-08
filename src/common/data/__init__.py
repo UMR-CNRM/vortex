@@ -1,10 +1,16 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# -*- coding:Utf-8 -*-
+
+"""
+Common data resources (mostly NWP).
+"""
+
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+# Recursive inclusion of packages with potential FootprintBase classes
+from . import boundaries, climfiles, consts, diagnostics, executables, fields
+from . import assim, gridfiles, logs, modelstates, namelists, obs, surfex, eps, eda
+from . import providers, stores, query, monitoring
 
 #: No automatic export
 __all__ = []
-
-# Recursive inclusion of packages with potential FootprintBase classes
-import boundaries, climfiles, consts, diagnostics, executables, fields
-import assim, gridfiles, logs, modelstates, namelists, obs, surfex, eps, eda
-import providers, stores, query, monitoring

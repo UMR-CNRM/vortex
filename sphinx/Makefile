@@ -6,6 +6,8 @@ PYTHON        = python
 
 # Path to Vortex's doc checker
 CHECKDOC      = ../project/bin/checkdoc.py
+# Path to Vortex's index generator
+GENEINDEX     = ../project/bin/package_doc_index.py
 # Path to Vortex's doc generator for configuration files
 GENEDOC       = ../project/bin/config2doc.py
 # Path to Vortex's Notebook exporter (it converts notebooks to Rst files + attachments)
@@ -45,6 +47,11 @@ NOTEBOOKS_IN  = ../examples/notebooks
 # Dependencies list for the notebook generator
 NOTEBOOKS_DEP = $(shell find $(NOTEBOOKS_IN) -type f -print)
 
+# Librarie indexes to be built...
+AUTO_LIBINDEXES = $(shell find library/* -maxdepth 0 -type d -print)
+BUILD_LIBINDEXES = $(patsubst library/%, %_libindex, $(AUTO_LIBINDEXES))
+CLEAN_LIBINDEXES = $(patsubst library/%, clean-%_libindex, $(AUTO_LIBINDEXES))
+
 # Target directory for footprint's XML exports
 XMLEXPORTDIR  = $(SOURCEDIR)/_static/vortex-help/_ExportXML
 
@@ -61,7 +68,6 @@ all: $(NOTEBOOKS) html  # HTML documentation is obviously the default
 # No dependency check for the following targets (always execute them)
 .PHONY: all full-check miss-check $(CHECKREPORT) html \
         clean clean-$(NOTEBOOKS) $(XMLEXPORTDIR)
-
 
 # Create rst files for new modules and check all of the aspects
 full-check:
@@ -91,15 +97,30 @@ $(NOTEBOOKS): $(NOTEBOOKS_DEP)
 	rm -rf $(NOTEBOOKS)
 	$(NBOOKEXPORT) -v -o $(NOTEBOOKS) $(NOTEBOOKS_IN)
 
+# Standard build for library indexes
+%_libindex:
+	$(GENEINDEX) -v $(patsubst %_libindex, library/%, $@)
+
+# Special builds for some library indexes (custom versionid)
+taylorism_libindex:
+	$(GENEINDEX) -v --versionid version_taylorism $(patsubst %_libindex, library/%, $@)
+
+footprints_libindex:
+	$(GENEINDEX) -v --versionid version_fp $(patsubst %_libindex, library/%, $@)
+
 # Build the html documentation
-html: $(CHECKREPORT) $(GEOLIST) $(XMLEXPORTDIR)
+html: $(CHECKREPORT) $(GEOLIST) $(BUILD_LIBINDEXES) $(XMLEXPORTDIR)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 # Clean the notebooks
 clean-$(NOTEBOOKS):
 	rm -rf $(NOTEBOOKS)
 
+# Clean a library index
+clean-%_libindex:
+	$(GENEINDEX) -v --clean $(patsubst clean-%_libindex, library/%, $@)
+
 # Clean the build directory and the automatically generated rst files. 
-clean: clean-$(NOTEBOOKS)
+clean: clean-$(NOTEBOOKS) $(CLEAN_LIBINDEXES)
 	rm -rf $(BUILDDIR) $(XMLEXPORTDIR)
 	rm -f $(CHECKREPORT) $(GEOLIST)

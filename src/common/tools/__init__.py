@@ -1,5 +1,11 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# -*- coding:Utf-8 -*-
 
-#: No automatic export
+"""
+Common standalone tools (mostly for NWP).
+"""
+
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+#: Automatic export of data subpackage
 __all__ = []
