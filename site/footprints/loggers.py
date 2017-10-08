@@ -74,6 +74,15 @@ def setLogMethods(logger, methods=('debug', 'info', 'warning', 'error', 'critica
             setattr(thislog, logmethod, getattr(logger, logmethod))
 
 
+def getActualLevel(level):
+    """Return the actual level value as long as the argument is valid."""
+    if type(level) is int:
+        if level not in logging._levelNames:
+            level = None
+    else:
+        level = logging._levelNames.get(level.upper())
+    return level
+
 class SlurpHandler(logging.Handler):
     """A strange Handler that accumulates the log-records in a list.
 

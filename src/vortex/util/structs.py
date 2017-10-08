@@ -20,12 +20,21 @@ logger = footprints.loggers.getLogger(__name__)
 
 
 class Foo(object):
-    """Void C-struct like class... for gathering anything."""
+    """
+    Protected C-struct like class... for gathering anything.
+    Internal dict methods could be called through i_*methodname* protection.
+    """
     def __init__(self, **kw):
         self.__dict__.update(kw)
 
+    def as_dict(self):
+        return self.__dict__
+
     def __getattr__(self, attr):
-        return getattr(self.__dict__, attr)
+        if attr.startswith('i_'):
+            return getattr(self.__dict__, attr.split('_',1)[1])
+        else:
+            raise AttributeError
 
     def __str__(self):
         return str(self.__dict__)

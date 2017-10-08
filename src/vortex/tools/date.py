@@ -77,12 +77,20 @@ def now():
     td = datetime.datetime.now()
     return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
 
+def utcnow():
+    """Return the date and UTC time just now, with hours, minutes, seconds and microseconds."""
+    td = datetime.datetime.utcnow()
+    return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, td.microsecond)
 
 def at_second():
     """Return the date just now, with only hours, minutes and seconds."""
     td = datetime.datetime.now()
     return Date(td.year, td.month, td.day, td.hour, td.minute, td.second, 0)
 
+def at_minute():
+    """Return the date just now, with only hours and minutes."""
+    td = datetime.datetime.now()
+    return Date(td.year, td.month, td.day, td.hour, td.minute, 0, 0)
 
 def at_hour():
     """Return the date just now, with only hours."""
@@ -152,13 +160,16 @@ del x
 
 def mkisodate(datestr):
     """A crude attempt to reshape the iso8601 format."""
-    l = list(datestr)
+    l = list(re.sub(' ?(UTC|GMT)$', '', datestr.strip()))
     if len(l) > 4 and l[4] != '-':
         l[4:4] = [ '-' ]
     if len(l) > 7 and l[7] != '-':
         l[7:7] = [ '-' ]
     if len(l) > 10 and l[10] != 'T':
-        l[10:10] = [ 'T' ]
+        if l[10] in (' ', '-', 'H'):
+            l[10] = 'T'
+        else:
+            l[10:10] = [ 'T' ]
     if 10 < len(l) <= 13:
         l.extend(['0', '0'])
     if len(l) > 13 and l[13] != ':':

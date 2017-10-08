@@ -4,12 +4,14 @@
 import os
 
 import logging
+import footprints
 logging.basicConfig(level=logging.ERROR)
 
 from ConfigParser import InterpolationMissingOptionError, NoSectionError, NoOptionError
 
 from unittest import TestCase, TestLoader, TextTestRunner
-from vortex.util.config import ExtendedReadOnlyConfigParser, GenericConfigParser, AppConfigStringDecoder
+from vortex.util.config import ExtendedReadOnlyConfigParser, GenericConfigParser, \
+    AppConfigStringDecoder, TableItem, ConfigurationTable
 from vortex.data import geometries
 from iga.data.providers import IgaCfgParser
 
@@ -343,10 +345,114 @@ class TestAppConfigDecoder(TestCase):
             self.assertDictEqual(self.cd(sval),
                                  {'toto': ['titi', 'tata'], 'tata': 'titi'})
 
+
+class _UnitTestTableItem(TableItem):
+    """
+    Test element only
+    """
+    _RST_NAME = 'name'
+    _RST_HOTKEYS = ['latitude', 'longitude', 'description']
+
+    _footprint = dict(
+        info = 'Sites for sources of pollution (radiologic, chemical, volcanic, etc.)',
+        attr = dict(
+            name = dict(),
+            family = dict(
+                values = ['utest_chemical', 'utest_volcanic'],
+            ),
+            latitude = dict(
+                type = float
+            ),
+            longitude = dict(
+                type = float
+            ),
+            description = dict(
+            ),
+            location = dict(
+                optional = True,
+                default  = '[name]',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'utest_item'
+
+
+class _UnitTestConfTable(ConfigurationTable):
+
+    _footprint = dict(
+        info = 'Pollutants elements table',
+        attr = dict(
+            family = dict(
+                values = ['utestfamily', ]
+            ),
+            kind = dict(
+                values   = ['utestsites'],
+            ),
+            searchkeys = dict(
+                default  = ('name', 'location'),
+            ),
+            inifile = dict(
+                default  = os.path.join(DATAPATHTEST,
+                                        '[family]-[kind]-[version].ini'),
+            ),
+        )
+    )
+
+
+class UtConfigurationTable(TestCase):
+
+    _last_rawdump = """description : Chimique
+family      : utest_chemical
+latitude    : 0.0
+location    : HELLO
+longitude   : 0.0
+name        : HELLO"""
+    _last_endump = """Latitude     : 0.0
+Longitude    : 0.0
+Site's type  : Chimique
+Localisation : HELLO"""
+    _last_frdump = """Latitude     : 0.0
+Longitude    : 0.0
+Type de site : Chimique
+Localisation : HELLO"""
+    _last_rstdump = """**HELLO** : `description=Chimique, latitude=0.0, longitude=0.0`
+
+    * family: utest_chemical
+    * location: HELLO
+
+"""
+
+    def test_bare(self):
+        c_conf = footprints.proxy.iniconf(kind='utestsites', family='utestfamily',
+                                          version = 'bare')
+        self.assertItemsEqual(c_conf.groups(), ['utest_chemical', 'utest_volcanic'])
+        self.assertItemsEqual(c_conf.keys(), ['AGUA-DE-PAU', 'ARDOUKOBA', 'HELLO'])
+        self.assertEqual(len(c_conf.tablelist), 3)
+        self.assertIsInstance(c_conf.tablelist[0], _UnitTestTableItem)
+        self.assertListEqual(c_conf.find('somewhere'), [c_conf.get('ARDOUKOBA')])
+        self.assertListEqual(c_conf.grep('PA.'), [c_conf.get('AGUA-DE-PAU')])
+        itemtest = c_conf.get('HELLO')
+        self.assertEqual(str(itemtest), self._last_rawdump)
+        self.assertEqual(itemtest.nice_rst(), self._last_rstdump)
+
+    def test_traslate(self):
+        c_conf = footprints.proxy.iniconf(kind='utestsites', family='utestfamily',
+                                          version = 'tr')
+        itemtest = c_conf.get('HELLO')
+        self.assertEqual(str(itemtest), self._last_endump)
+        c_conf = footprints.proxy.iniconf(kind='utestsites', family='utestfamily',
+                                          version = 'tr', language='fr')
+        itemtest = c_conf.get('HELLO')
+        self.assertEqual(str(itemtest), self._last_frdump)
+
+
 if __name__ == '__main__':
     action = TestLoader().loadTestsFromTestCase
     tests = [UtGenericConfigParser, UtExtendedConfigParser, UtIgaCfgParser,
-             TestAppConfigDecoder]
+             TestAppConfigDecoder, UtConfigurationTable]
     suites = [action(elmt) for elmt in tests]
     for suite in suites:
         TextTestRunner(verbosity=1).run(suite)
@@ -354,4 +460,4 @@ if __name__ == '__main__':
 
 def get_test_class():
     return [UtGenericConfigParser, UtExtendedConfigParser, UtIgaCfgParser,
-            TestAppConfigDecoder]
+            TestAppConfigDecoder, UtConfigurationTable]

@@ -459,6 +459,12 @@ class StdFtp(object):
             except (OverflowError, ValueError):
                 return long(s)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
 
 class Ssh(object):
     """Remote command execution via ssh.
