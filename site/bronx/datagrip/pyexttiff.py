@@ -86,15 +86,18 @@ class TiffFile(object):
         *filename* is the filename containing the tiff
 
         *subIFDpaths* is the list of tag path whose values are offset to private IFDs
-            a tag path is a tuple representing the path to a given tag which must represent an IFD
-            (34665) means that tag 34665 of any given public IFD is an offset to a private IFD
-            (32001, 521) means that tag 32001 of any given public IFD is an offset to a private IFD
-                           and that tag 521 of any private tag referenced by a 32001 public tag is also an offset to a private IFD
+            * a tag path is a tuple representing the path to a given tag which must represent an IFD
+            * (34665) means that tag 34665 of any given public IFD is an offset to a private IFD
+            * (32001, 521) means that tag 32001 of any given public IFD is an offset to a private IFD
+              and that tag 521 of any private tag referenced by a 32001 public tag is also an offset
+              to a private IFD
 
         *method* is the method used to read data:
-            1: f=open(..., 'rb') ; numpy.frombuffer(f.read(), dtype=numpy.ubyte)
-            2: f=open(..., 'rb') ; numpy.ndarray(buffer=mmap(f), dtype=numpy.ubyte)
-            3: same as 2 but with modifications allowed - DANGEROUS
+
+            * 1: f=open(..., 'rb') ; numpy.frombuffer(f.read(), dtype=numpy.ubyte)
+            * 2: f=open(..., 'rb') ; numpy.ndarray(buffer=mmap(f), dtype=numpy.ubyte)
+            * 3: same as 2 but with modifications allowed - DANGEROUS
+
         """
 
         self._filename = filename
@@ -292,7 +295,7 @@ class IFD(list):
     def get_value(self, tag, human=True):
         """Returns the value for a tag.
 
-        if **human**=*True*, value is modified:
+        if **human** = *True*, value is modified:
 
             * value[0] is retruned instead of value if array contains only one element
             * conversion in string is achieved for arrays representing strings
@@ -530,7 +533,7 @@ EXIF_ImageUniqueID a420 ASCII 33
     def get_value(self, human=True):
         """Returns the value.
 
-        if **human**=*True*, value is modified:
+        if **human** = *True*, value is modified:
 
             * value[0] is returned instead of value if array contains only one element
             * conversion in string is achieved for arrays representing strings

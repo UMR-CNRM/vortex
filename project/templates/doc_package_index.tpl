@@ -8,11 +8,14 @@ $packdoc_sep
 List of modules.
 
 .. toctree::
-   :maxdepth: $depth
+   :maxdepth: 1
    
    $me
    
    $modules
-   
+
+.. toctree::
+   :maxdepth: $depth
+
    $packages
 
