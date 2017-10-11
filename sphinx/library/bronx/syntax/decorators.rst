@@ -15,3 +15,11 @@ Functions
 ---------
 
 .. autofunction:: nicedeco
+
+.. autofunction:: nicedeco_plusdoc
+
+.. autofunction:: disabled
+
+.. autofunction:: printargs
+
+.. autofunction:: timelimit

@@ -20,7 +20,7 @@ import urlparse
 from datetime import datetime
 
 import footprints
-from vortex.util.decorators import nicedeco
+from bronx.syntax.decorators import nicedeco
 from vortex.util.netrc import netrc
 from collections import namedtuple
 

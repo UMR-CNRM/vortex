@@ -53,7 +53,7 @@ from vortex.tools import date
 from vortex.tools.env import Environment
 from vortex.tools.net import StdFtp, AssistedSsh, LinuxNetstats
 from vortex.tools.compression import CompressionPipeline
-from vortex.util.decorators import nicedeco_plusdoc
+from bronx.syntax.decorators import nicedeco_plusdoc
 from vortex.util.structs import History
 from vortex.syntax.stdattrs import DelayedInit
 

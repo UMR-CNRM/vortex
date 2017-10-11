@@ -25,7 +25,7 @@ from vortex.tools import date
 from vortex.tools.actions import actiond as ad
 from vortex.tools.actions import FlowSchedulerGateway
 from vortex.util.config import ExtendedReadOnlyConfigParser, load_template
-from vortex.util.decorators import nicedeco
+from bronx.syntax.decorators import nicedeco
 
 #: Export nothing
 __all__ = []
