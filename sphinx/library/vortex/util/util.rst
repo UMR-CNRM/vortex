@@ -19,10 +19,8 @@ Modules
 
 * :mod:`vortex.util.authorizations`
 * :mod:`vortex.util.config`
-* :mod:`vortex.util.decorators`
 * :mod:`vortex.util.dispatch`
 * :mod:`vortex.util.empty`
-* :mod:`vortex.util.hash`
 * :mod:`vortex.util.helpers`
 * :mod:`vortex.util.introspection`
 * :mod:`vortex.util.iosponge`

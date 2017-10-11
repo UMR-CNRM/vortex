@@ -15,6 +15,7 @@ Sub-modules
 -----------
 
 * :mod:`bronx.system.cpus`
+* :mod:`bronx.system.hash`
 * :mod:`bronx.system.interrupt`
 * :mod:`bronx.system.memory`
 * :mod:`bronx.system.mf`

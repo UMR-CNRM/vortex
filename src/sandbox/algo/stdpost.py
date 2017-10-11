@@ -6,7 +6,7 @@ import collections
 import footprints
 
 from vortex.algo.components import AlgoComponent
-from vortex.util.hash import HashAdapter
+from bronx.system.hash import HashAdapter
 
 #: No automatic export
 __all__ = []

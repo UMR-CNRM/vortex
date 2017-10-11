@@ -14,7 +14,7 @@ import footprints
 
 from vortex.tools import env
 from vortex.tools.date import Date, Time, Month
-from vortex.util import hash as hashutils
+from bronx.system import hash as hashutils
 
 
 #: Export a set of attributes :data:`a_model`, :data:`a_date`, etc..

@@ -2,29 +2,31 @@
 # -*- coding: utf-8 -*-
 
 import hashlib
+import os
+import shutil
 import tempfile
 import unittest
 
-import vortex
-from vortex.util.hash import HashAdapter
+from bronx.system.hash import HashAdapter
+from bronx.system.interrupt import SignalInterruptHandler
+
+DATADIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
 
 
 class TestHashAdapter(unittest.TestCase):
 
     def setUp(self):
-        self.t = vortex.sessions.current()
-        self.sh = self.t.system()
-
         # Work in a dedicated directory
         self.tmpdir = tempfile.mkdtemp(suffix='test_utils_hash')
-        self.oldpwd = self.sh.pwd()
-        self.sh.cd(self.tmpdir)
-        self.sh.signal_intercept_on()
+        self.oldpwd = os.getcwd()
+        os.chdir(self.tmpdir)
 
-        rootpath = self.sh.path.join(self.t.glove.siteroot, 'tests', 'data')
-        self.bin_path = self.sh.path.join(rootpath, 'random_data.bin')
-        self.md5_path = self.sh.path.join(rootpath, 'random_data.bin.md5')
-        self.fake_path = self.sh.path.join(rootpath, 'false.ini')
+        self.sigh = SignalInterruptHandler()
+        self.sigh.activate()
+
+        self.bin_path = os.path.join(DATADIR, 'random_data.bin')
+        self.md5_path = os.path.join(DATADIR, 'random_data.bin.md5')
+        self.fake_path = os.path.join(DATADIR, 'false.ini')
         with open(self.md5_path, 'r') as m_fh:
             self.md5_sum = self._read_md5line(m_fh)
 
@@ -33,9 +35,9 @@ class TestHashAdapter(unittest.TestCase):
         self.md5_h._PREFERED_BLOCKSIZE = 1024
 
     def tearDown(self):
-        self.sh.cd(self.oldpwd)
-        self.sh.remove(self.tmpdir)
-        self.sh.signal_intercept_off()
+        os.chdir(self.oldpwd)
+        shutil.rmtree(self.tmpdir)
+        self.sigh.deactivate()
 
     def _read_md5line(self, i_fh):
         return i_fh.readline().split(' ')[0]
@@ -63,6 +65,7 @@ class TestHashAdapter(unittest.TestCase):
             self.assertTrue(self.md5_h.filecheck(self.bin_path, m_fh))
         self.assertFalse(self.md5_h.filecheck(self.bin_path, self.fake_path))
         self.assertFalse(self.md5_h.filecheck(self.bin_path, 'toto'))
+
 
 if __name__ == '__main__':
     unittest.main()
