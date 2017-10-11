@@ -482,11 +482,7 @@ class MassifGeometry(UnstructuredGeometry):
         """
         super(MassifGeometry, self).__init__(**kw)
         self.kind = 'massif'
-
-    def _check_attributes(self):
-        super(MassifGeometry, self)._check_attributes()
-        if self.nmassif is None:
-            raise AttributeError("Some mandatory arguments are missing")
+        self.area = self.tag
 
     def doc_export(self):
         """Relevant informations to print in the documentation."""

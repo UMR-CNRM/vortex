@@ -663,14 +663,17 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return self.strftime('%y%m%d')
 
     @property
+    def yymdh(self):
+        return self.strftime('%y%m%d%H')
+    
+    @property
     def ymdh(self):
         """YYYYMMDDHH formated string."""
         return self.strftime('%Y%m%d%H')
 
     @property
-    def yymdh(self):
-        """YYMMDDHH formated string."""
-        return self.strftime('%y%m%d%H')
+    def ymd6h(self):
+        return self.replace(hour=6).strftime('%Y%m%d%H')
 
     @property
     def ymdhm(self):
@@ -854,6 +857,16 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
             out = a - 'P1D'
         return out.ymd
 
+    def nivologyseason(self):
+         """Return the nivology season of a current date"""
+         if self.month < 8:
+             season_begin = datetime.datetime(self.year-1, 8, 1)
+             season_end   = datetime.datetime(self.year, 7, 31)
+         else:
+             season_begin = datetime.datetime(self.year, 8, 1)
+             season_end   = datetime.datetime(self.year+1, 7, 31)
+             
+         return season_begin.strftime('%y') + season_end.strftime('%y')
 
 class Time(_GetattrCalculatorMixin):
     """Basic object to handle hh:mm information.

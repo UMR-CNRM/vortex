@@ -8,6 +8,8 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.executables import Script, SurfaceModel
+from common.data.executables import BlackBox
+from gco.syntax.stdattrs import gvar
 
 
 class Safran(SurfaceModel):
@@ -18,9 +20,6 @@ class Safran(SurfaceModel):
         dict(
             info = 'Safran module',
             attr = dict(
-                kind = dict(
-                    values = ['safrane']
-                ),
                 model = dict(
                     values = ['safran'],
                 ),
@@ -116,6 +115,82 @@ class Sytist(Safran):
         return 'sytist'
 
 
+class Syvapr(Safran):
+    """Base class for the Sytist executable."""
+
+    _footprint = [
+        dict(
+            info = 'Syvapr executable',
+            attr = dict(
+                kind = dict(
+                    values = ['syvapr']
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'syvapr'
+   
+   
+class Syrper(Safran):
+    """Base class for the Sytist executable."""
+
+    _footprint = [
+        dict(
+            info = 'Syrper executable',
+            attr = dict(
+                kind = dict(
+                    values = ['syrper']
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'syrper'
+    
+    
+class Syvafi(Safran):
+    """Base class for the Sytist executable."""
+
+    _footprint = [
+        dict(
+            info = 'Syvafi executable',
+            attr = dict(
+                kind = dict(
+                    values = ['syvafi']
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'syvafi'  
+
+
+class Sypluie(Safran):
+    """Base class for the Sytist executable."""
+
+    _footprint = [
+        dict(
+            info = 'Sypluie executable',
+            attr = dict(
+                kind = dict(
+                    values = ['sypluie']
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'sypluie'
+
+
 class SafranGribFiltering(Script):
     """Base class for the creation of P files used by SAFRAN."""
 
@@ -124,14 +199,15 @@ class SafranGribFiltering(Script):
             info = 'Prepare the input files for SAFRAN',
             attr = dict(
                 kind = dict(
-                    values = ['filtering_grib']
+                    values = ['s2m_filtering_grib']
                 ),
-                cpl_model = dict(
+                cpl_vconf = dict(
                     values = ['pearp', 'pearome', 'arpege', 'arome'],
                     optional = True,
                 ),
                 gvar = dict(
-                    default = 's2m_[kind]',
+                    optional = True,
+                    default = '[kind]',
                 ),
             )
         )
@@ -140,3 +216,49 @@ class SafranGribFiltering(Script):
     @property
     def realkind(self):
         return 'gribfiltering'
+
+
+class Pgd(BlackBox):
+    """A tool to generate Surfex ground files."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Pgd utility to generate Surfex ground files',
+            attr = dict(
+                gvar = dict(
+                    default  = 'master_pgd'
+                ),
+                kind = dict(
+                    values   = ['pgd', ],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'pgd'
+
+
+class Offline(BlackBox):
+    """Surfex execution."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Surfex executable',
+            attr = dict(
+                gvar = dict(
+                    default  = 'master_offline'
+                ),
+                kind = dict(
+                    values   = ['offline', ],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'offline'

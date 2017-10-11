@@ -485,12 +485,21 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
         super(_UgetCacheStore, self).__init__(*args, **kw)
         del self.cache
 
+    def _fancy_get(self, remote, local, options):
+        """Gateway to :meth:`incacheget`."""
+        options_tmp = options.copy() if options else dict()
+        return self._actual_get(remote, local, options_tmp)
+    
     def _universal_remap(self, remote):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
         f_uuid = UgetId('uget:' + xpath[2])
         remote['path'] = self.system.path.join(f_uuid.location, xpath[1], f_uuid.id)
+        extract = remote['query'].get('extract', None)
+        if extract:
+            remote['path'] = self.system.path.join(remote['path'], extract[0])
+            logger.info('Extend remote path with extract value <%s>', remote['path'])
         return remote
 
     def ugetcheck(self, remote, options):
