@@ -1,7 +1,7 @@
-:mod:`vortex.util.netrc` --- An object-oriented interface to .netrc files
-=========================================================================
+:mod:`bronx.net.netrc` --- An object-oriented interface to .netrc files
+=======================================================================
 
-.. automodule:: vortex.util.netrc
+.. automodule:: bronx.net.netrc
    :synopsis: An object-oriented interface to .netrc files
 
 .. moduleauthor:: The Vortex Team
@@ -26,5 +26,5 @@ Classes
 
 .. autoclass:: netrc
    :show-inheritance:
-   :members:
+   :members: authenticators, __repr__
    :member-order: alphabetical

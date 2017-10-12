@@ -21,7 +21,7 @@ from datetime import datetime
 
 import footprints
 from bronx.syntax.decorators import nicedeco
-from vortex.util.netrc import netrc
+from bronx.net.netrc import netrc
 from collections import namedtuple
 
 #: No automatic export

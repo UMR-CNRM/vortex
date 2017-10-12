@@ -1,4 +1,13 @@
-"""An object-oriented interface to .netrc files."""
+"""An object-oriented interface to .netrc files.
+
+This code has been extacted from Python 3.5 and two patches have been applied:
+
+* With this class, the user **login** taken into accout when looking for .netrc
+  lines (see the **login** argument for the :func:`netrc.authenticators` method.
+* Password can be surrounded with simple or double quotes (for compatibility
+  with the standard Linux FTP client).
+
+"""
 
 # Module and documentation by Eric S. Raymond, 21 Dec 1998
 
@@ -15,11 +24,18 @@ import re
 import shlex
 import stat
 
+#: Wildchar exports
 __all__ = ["netrc", "NetrcParseError"]
 
 
 class NetrcParseError(Exception):
-    """Exception raised on syntax errors in the .netrc file."""
+    """
+    Exception raised by the :class:`netrc` class when syntactical errors are
+    encountered in source text. Instances of this exception provide three
+    interesting attributes: ``msg`` is a textual explanation of the error,
+    ``filename`` is the name of the source file, and ``lineno`` gives the
+    line number on which the error was found.
+    """
     def __init__(self, msg, filename=None, lineno=None):
         self.filename = filename
         self.lineno = lineno
@@ -31,10 +47,38 @@ class NetrcParseError(Exception):
 
 
 class netrc:
+    """
+    A :class:`netrc` instance or subclass instance encapsulates data from a
+    netrc file.
+
+    """
 
     _passwd_clean = re.compile(r'''^(?P<quote>["'])(?P<pass>.*)(?P=quote)$''')
 
     def __init__(self, file=None):
+        """
+        The initialisation argument, if present, specifies the file to parse.
+        If no argument is given, the file ``.netrc`` in the user's home directory
+        will be read. Parse errors will raise :class:`NetrcParseError` with diagnostic
+        information including the file name, line number, and terminating token.
+        If no argument is specified on a POSIX system, the presence of passwords
+        in the ``.netrc`` file will raise a :class:`NetrcParseError` if the file
+        ownership or permissions are insecure (owned by a user other than the
+        user running the process, or accessible for read or write by any other
+        user). This implements security behavior equivalent to that of ftp and
+        other programs that use ``.netrc``.
+
+        .. attribute:: netrc.hosts
+
+           Dictionary mapping host names to ``(login, account, password)`` tuples.  The
+           'default' entry, if any, is represented as a pseudo-host by that name.
+
+        .. attribute:: netrc.hosts
+
+           Dictionary mapping host names to ``(login, account, password)`` tuples.  The
+           'default' entry, if any, is represented as a pseudo-host by that name.
+
+        """
         default_netrc = file is None
         if file is None:
             try:
@@ -123,20 +167,23 @@ class netrc:
                                 file, lexer.lineno)
                         if (prop.st_mode & (stat.S_IRWXG | stat.S_IRWXO)):
                             raise NetrcParseError(
-                               "~/.netrc access too permissive: access"
-                               " permissions must restrict access to only"
-                               " the owner", file, lexer.lineno)
+                                "~/.netrc access too permissive: access"
+                                " permissions must restrict access to only"
+                                " the owner", file, lexer.lineno)
                     password = self._passwd_clean.sub(r'\g<pass>', lexer.get_token())
                 else:
                     raise NetrcParseError("bad follower token %r" % tt,
                                           file, lexer.lineno)
 
     def authenticators(self, host, login=None):
-        """Return a (user, account, password) tuple for given host.
+        """
+        Return a 3-tuple ``(login, account, password)`` of authenticators
+        for host. If the netrc file did not contain an entry for the given
+        host, return the tuple associated with the 'default' entry. If neither
+        matching host nor default entry is available, return ``None``.
 
         When provided, the optional login argument selects a tuple
         with a matching user name.
-
         """
         if host in self.hosts:
             if login is not None:
@@ -152,7 +199,10 @@ class netrc:
             return None
 
     def __repr__(self):
-        """Dump the class data in the format of a .netrc file."""
+        """
+        Dump the class data as a string in the format of a netrc file.
+        (This discards comments and may reorder the entries.)
+        """
         rep = ""
         for host, attrlist in self.allhosts.items():
             for attrs in attrlist:
@@ -166,6 +216,7 @@ class netrc:
                 rep = rep + line
             rep = rep + "\n"
         return rep
+
 
 if __name__ == '__main__':
     print(netrc())

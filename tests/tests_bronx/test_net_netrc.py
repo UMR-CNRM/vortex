@@ -1,11 +1,12 @@
+#!/usr/bin/env python
 # 09/02/2017
 # Original version: Python 3.5
 #                   Copyright 2001-2017 Python Software Foundation; All Rights Reserved
 # Proposed patched applied: https://bugs.python.org/issue11416
 # LFM: from test import support -> from test import test_support (for ptyhon2.7)
-# LFM: test for quted password
+# LFM: test for quoted password
 
-import vortex.util.netrc as netrc
+import bronx.net.netrc as netrc
 import os
 import unittest
 import sys
@@ -150,6 +151,7 @@ class NetrcTestCase(unittest.TestCase):
         self.assertTupleEqual(nrc.authenticators('host.com', 'foo'),
                               ('foo', 'foo', 'foo'))
         self.assertIsNone(nrc.authenticators('host.com', lambda: 'foo'))
+
 
 if __name__ == "__main__":
     unittest.main()
