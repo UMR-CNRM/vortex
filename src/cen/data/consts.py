@@ -13,8 +13,8 @@ from snowtools.tools.update_namelist import update_surfex_namelist
 
 
 class SurfexNamelistUpdate(update_surfex_namelist, NamelistContent):
-     """Fake DataContent subclass."""
-     pass
+    """Fake DataContent subclass."""
+    pass
 
 
 class List(GenvStaticGeoResource):

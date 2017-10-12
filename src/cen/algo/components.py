@@ -27,6 +27,7 @@ _OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSAP', 'OPSAN']
 
 _dic_area = dict(alp="alpes", pyr="pyrenees", cor="corse")
 
+
 class SurfexWorker(VortexWorkerBlindRun):
 
     _abstract  = True
@@ -43,7 +44,7 @@ class SurfexWorker(VortexWorkerBlindRun):
             ),
         )
     )
-        
+
     def vortex_task(self, **kw):
         rdict = dict(rc=True)
         rundir = self.system.getcwd()
@@ -61,8 +62,7 @@ class SurfexWorker(VortexWorkerBlindRun):
             self._surfex_commons(rundir, thisdir, rdict)
 
         return rdict
-    
-    
+
     def _surfex_commons(self, rundir, thisdir, rdict):
         if not self.system.path.exists('OPTIONS.nam'):
             # Copy the NAMELIST as it is to be updated
@@ -77,27 +77,26 @@ class SurfexWorker(VortexWorkerBlindRun):
             self.system.symlink(self.system.path.join(rundir, "ecoclimapI_covers_param.bin"), "ecoclimapI_covers_param.bin")
         if not self.system.path.exists("ecoclimapII_eu_covers_param.bin"):
             self.system.symlink(self.system.path.join(rundir, "ecoclimapII_eu_covers_param.bin"), "ecoclimapII_eu_covers_param.bin")
-            
+
         area = _dic_area[self.vconf]
         liste_massifs = infomassifs().dicArea[area]
-        
-        f = forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, ["0", "20", "40"], xrange(0,9))
-        
+
+        forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, ["0", "20", "40"], xrange(0, 9))
+
         for namelist in self.find_namelists():
             # Update the contents of the namelist (date and location)
             # Location taken in the FORCING file.
             namelist.resource.clscontents(self.date)
-            
+
         self._surfex_task(rundir, thisdir, rdict)
 
-
     def check_mandatory_resources(self, rdict, filenames):
-        pass 
-    
+        pass
+
     def _surfex_task(self, rundir, thisdir, rdict):
         """The piece of code specific to a SURFEX submodule does here."""
-        raise NotImplementedError() 
-    
+        raise NotImplementedError()
+
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
         namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind='OPTIONS.nam')]
@@ -147,9 +146,8 @@ class SafranWorker(VortexWorkerBlindRun):
     def __init__(self, *kargs, **kwargs):
         super(SafranWorker, self).__init__(*kargs, **kwargs)
         self._actual_terms = None
-        self._days = None    
+        self._days = None
 
-            
     @property
     def actual_terms(self):
         if self._actual_terms is None:
@@ -204,7 +202,7 @@ class SafranWorker(VortexWorkerBlindRun):
             sys.stdout = open(self.name + ".out", "a", buffering=0)
             sys.stderr = open(self.name + "_error.out", "a", buffering=0)
             self._safran_commons(rundir, thisdir, rdict)
-            
+
         return rdict
 
     def _safran_commons(self, rundir, thisdir, rdict):
@@ -300,14 +298,14 @@ class SypluieWorker(SafranWorker):
     )
 
     def _safran_task(self, rundir, thisdir, rdict):
-        for day, dterms in self.days.items():
+        for dterms in self.days.values():
             self.sapdat(dterms[-1])
             # Creation of the 'sapfich' file containing the name of the output file
             with open('sapfich', 'w') as f:
                 f.write('SAPLUI5')
             list_name = self.system.path.join(thisdir, 'listpluie')
             self.local_spawn(list_name)
-            # A FAIRE : gérer le fichier fort.78 (mv dans $list/day.$day ?, rejet) 
+            # A FAIRE : gérer le fichier fort.78 (mv dans $list/day.$day ?, rejet)
 
 
 class SyrpluieWorker(SafranWorker):
@@ -364,12 +362,12 @@ class SyvafiWorker(SafranWorker):
 
     def _safran_task(self, rundir, thisdir, rdict):
         for day, dterms in self.days.items():
-            #if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day), ]):
+            # if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day), ]):
             self.sapdat(dterms[-1])
             list_name = self.system.path.join(thisdir, 'listfi')
             self.local_spawn(list_name)
-            self.mv_if_exists('fort.90', 'TAL' + str(day)) 
-                         
+            self.mv_if_exists('fort.90', 'TAL' + str(day))
+
 
 class SyrmrrWorker(SafranWorker):
 
@@ -448,7 +446,6 @@ class Grib2SafranWorker(VortexWorkerBlindRun):
         return rdict
 
 
-
 class Grib2Safran(ParaExpresso):
 
     _footprint = dict(
@@ -509,7 +506,6 @@ class S2M_component(ParaBlindRun):
         """Set some variables according to target definition."""
         super(S2M_component, self).prepare(rh, opts)
         self.env.DR_HOOK_NOT_MPI = 1
-
 
     def _default_common_instructions(self, rh, opts):
         '''Create a common instruction dictionary that will be used by the workers.'''

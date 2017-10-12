@@ -132,8 +132,8 @@ class Syvapr(Safran):
     @property
     def realkind(self):
         return 'syvapr'
-   
-   
+
+
 class Syrper(Safran):
     """Base class for the Sytist executable."""
 
@@ -151,8 +151,8 @@ class Syrper(Safran):
     @property
     def realkind(self):
         return 'syrper'
-    
-    
+
+
 class Syvafi(Safran):
     """Base class for the Sytist executable."""
 
@@ -169,7 +169,7 @@ class Syvafi(Safran):
 
     @property
     def realkind(self):
-        return 'syvafi'  
+        return 'syvafi'
 
 
 class Sypluie(Safran):
