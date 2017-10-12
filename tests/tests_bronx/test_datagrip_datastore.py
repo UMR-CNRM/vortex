@@ -3,7 +3,7 @@ import tempfile
 import shutil
 import unittest
 
-from vortex.util.structs import DataStore
+from bronx.datagrip.datastore import DataStore
 
 
 class Parasite(object):

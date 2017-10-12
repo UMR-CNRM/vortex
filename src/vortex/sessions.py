@@ -15,14 +15,15 @@ __all__ = []
 
 import logging
 
+from bronx.datagrip.datastore import DataStore
 import footprints
+
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.env import Environment
 
 from vortex import gloves  # @UnusedImport
 from vortex.tools import date
-from vortex.util.structs import DataStore
 from vortex.layout import contexts
 
 

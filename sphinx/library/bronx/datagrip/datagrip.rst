@@ -13,6 +13,7 @@
 Sub-modules
 -----------
 
+* :mod:`bronx.datagrip.datastore`
 * :mod:`bronx.datagrip.misc`
 * :mod:`bronx.datagrip.pyexttiff`
 
