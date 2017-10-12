@@ -13,8 +13,8 @@ from snowtools.tools.update_namelist import update_surfex_namelist
 
 
 class SurfexNamelistUpdate(update_surfex_namelist, NamelistContent):
-     """Fake DataContent subclass."""
-     pass
+    """Fake DataContent subclass."""
+    pass
 
 
 class List(GenvStaticGeoResource):
@@ -58,12 +58,12 @@ class Metadata(Namelist):
             )
         )
     ]
-    
+
     @property
     def realkind(self):
         return 'METADATA.xml'
-    
-    
+
+
 class Options(Namelist):
     _footprint = [
         dict(
@@ -78,17 +78,17 @@ class Options(Namelist):
             )
         )
     ]
-    
+
     @property
     def realkind(self):
         return 'OPTIONS.nam'
-    
-    def contents_handler(self,**kw):
+
+    def contents_handler(self, **kw):
         self.clscontents(self.date)
-        
-        
+
+
 class PGD(GenvStaticGeoResource):
-    
+
     _footprint = dict(
         info = 'Ground description file used by  SURFEX.',
         attr = dict(
@@ -104,18 +104,18 @@ class PGD(GenvStaticGeoResource):
             ),
         )
     )
-    
-    @property   
+
+    @property
     def realkind(self):
         return 'PGD'
-    
-    
+
+
 class Ecoclimap(GenvStaticGeoResource):
-    
+
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = [ "ecoclimapI",  "ecoclimapII"],
+                values = [ "ecoclimapI", "ecoclimapII"],
             ),
             nativefmt = dict(
                 values  = ['bin'],
@@ -126,7 +126,29 @@ class Ecoclimap(GenvStaticGeoResource):
             ),
         )
     )
-    
-    @property   
+
+    @property
     def realkind(self):
         return 'ecoclimap'
+
+
+class Snowr_param(GenvStaticGeoResource):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ["drdt_bst_fit"],
+            ),
+            nativefmt = dict(
+                values  = ['netcdf', 'nc'],
+                default = 'netcdf',
+            ),
+            gvar = dict(
+                default = '[kind]',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'param_definition'

@@ -50,9 +50,9 @@ class SafranGuess(GeoFlowResource):
 
         )
     ]
-    
+
     _extension_remap = dict(ascii='txt')
-    
+
     @property
     def realkind(self):
         return 'guess'
@@ -68,8 +68,8 @@ class SafranGuess(GeoFlowResource):
 
     def origin_basename(self):
         # guess files could be named PYYMMDDHH_hh where YYMMDDHH is the creation date and hh the echeance
-        #origin_date = self.date.replace(hour=0)
-        #return 'P' + origin_date.yymdh + '_{0:02d}'.format(self.term.hour + 6)
+        # origin_date = self.date.replace(hour=0)
+        # return 'P' + origin_date.yymdh + '_{0:02d}'.format(self.term.hour + 6)
         # guess files are named PYYMMDDHH
         if self.date.hour in [0, 6, 12, 18]:
             return 'P' + self.date.yymdh
@@ -129,7 +129,7 @@ class Prep(InitialCondition):
             info = 'Instant SURFEX-Crocus Snowpack state',
             attr = dict(
                 kind = dict(
-                values  = ['SnowpackState'],
+                    values  = ['SnowpackState'],
                 ),
                 nativefmt = dict(
                     values = ['ascii', 'netcdf', 'nc'],
@@ -208,6 +208,7 @@ class Pro(Historic):
             fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
+
 class Synop(ObsRaw):
 
     _footprint = [
@@ -221,17 +222,18 @@ class Synop(ObsRaw):
             ),
         ),
     ]
-    
+
     @property
     def realkind(self):
         return 'synop'
-    
+
     def origin_basename(self):
         if self.realdate.hour in [0, 6, 12, 18]:
             return 'S' + self.realdate.yymdh
         else:
             raise DateError('SAFRAN S-files are synoptic, therefore the hour must be 0, 6, 12 or 18')
-        
+
+
 class Precipitation(ObsRaw):
 
     _footprint = [
@@ -239,22 +241,23 @@ class Precipitation(ObsRaw):
             info = 'SAFRAN R-files (precipitation observations)',
             attr = dict(
                 kind = dict(
-                values  = ['precipitation'],
+                    values  = ['precipitation'],
                 ),
             ),
         ),
     ]
-    
+
     @property
     def realkind(self):
         return 'precipitation'
-    
+
     def origin_basename(self):
         if self.date.hour == 6:
             return 'R' + self.date.yymdh
         else:
             raise DateError('SAFRAN R-files are daily, therefore the hour must be 6')
-        
+
+
 class HourlyObs(ObsRaw):
 
     _footprint = [
@@ -267,18 +270,18 @@ class HourlyObs(ObsRaw):
             ),
         ),
     ]
-    
+
     @property
     def realkind(self):
         return 'hourlyobs'
-    
+
     def origin_basename(self):
         if self.date.hour == 6:
             return 'T' + self.date.yymdh
         else:
             raise DateError('SAFRAN T-files are daily, therefore the hour must be 6')
-    
-        
+
+
 class RadioSondage(ObsRaw):
 
     _footprint = [
@@ -292,17 +295,17 @@ class RadioSondage(ObsRaw):
             ),
         ),
     ]
-    
+
     @property
     def realkind(self):
         return 'radiosondage'
-    
+
     def origin_basename(self):
         if self.realdate.hour in [0, 6, 12, 18]:
             return 'A' + self.realdate.yymdh
         else:
             raise DateError('SAFRAN A-files are synoptic, therefore the hour must be 0, 6, 12 or 18')
-    
+
 
 class Nebulosity(ObsRaw):
 
@@ -316,15 +319,13 @@ class Nebulosity(ObsRaw):
             ),
         ),
     ]
-    
+
     @property
     def realkind(self):
         return 'nebulosity'
-    
+
     def origin_basename(self):
         if self.date.hour == 6:
             return 'N' + self.date.yymdh
         else:
             raise DateError('SAFRAN N-files are daily, therefore the hour must be 6')
-        
-

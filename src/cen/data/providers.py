@@ -9,9 +9,10 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.util.config     import GenericConfigParser
 from vortex.data.providers  import Provider
-from vortex.syntax.stdattrs import namespacefp, a_suite
+from vortex.syntax.stdattrs import namespacefp
 
-map_suffix = {'alp':'_al', 'pyr':'_py', 'cor':'_co'}
+map_suffix = {'alp': '_al', 'pyr': '_py', 'cor': '_co'}
+
 
 class CenCfgParser(GenericConfigParser):
 
@@ -101,9 +102,7 @@ class SopranoDevProvider(Provider):
             info['level_two']   = 'p' + season + suffix
         elif resource.realkind == 'snowpackstate':
             info['level_two']   = 'prep' + season + suffix
-         
+
         logger.debug('sopranodevprovider::pathname info %s', info)
         self.config.setall(info)
         return self.config.resolvedpath(resource, self.vapp, self.vconf, 'guppy')
-
-
