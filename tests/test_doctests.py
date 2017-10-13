@@ -4,10 +4,10 @@
 import unittest
 import doctest
 
+from bronx.stdtypes import date
 from footprints import util
 
 from vortex.data import geometries
-from vortex.tools import date
 
 
 class utDocTests(unittest.TestCase):

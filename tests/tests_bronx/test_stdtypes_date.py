@@ -3,8 +3,9 @@
 
 from calendar import IllegalMonthError
 from datetime import datetime, timedelta
-from vortex.tools import date
 from unittest import TestCase, main
+
+from bronx.stdtypes import date
 
 
 class utDate(TestCase):
@@ -667,6 +668,7 @@ class utMonth(TestCase):
         self.assertGreater(m2, (12, 2015))
         self.assertEqual(m2, (1, 2016))
         self.assertEqual(m2, (1, 0))
+
 
 if __name__ == '__main__':
     main(verbosity=2)

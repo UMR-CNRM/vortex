@@ -1,7 +1,7 @@
-:mod:`vortex.tools.date` --- Time, date and calendars functions
-===============================================================
+:mod:`bronx.stdtypes.datet` --- Time, date and calendars functions
+=====================================================================
 
-.. automodule:: vortex.tools.date
+.. automodule:: bronx.stdtypes.date
    :synopsis: Time, date and calendars functions
 
 .. moduleauthor:: The Vortex Team
@@ -30,6 +30,15 @@ Classes
 .. autoclass:: Month
    :show-inheritance:
    :members:
+   :member-order: alphabetical
+
+
+Utility class
+-------------
+
+.. autoclass:: _GetattrCalculatorMixin
+   :show-inheritance:
+   :members: __getattr__
    :member-order: alphabetical
 
 
@@ -62,7 +71,11 @@ Helper functions
 Utility functions
 -----------------
 
+.. autofunction:: stardates
+
 .. autofunction:: stamp
+
+.. autofunction:: mkisodate
 
 .. autofunction:: guess
 

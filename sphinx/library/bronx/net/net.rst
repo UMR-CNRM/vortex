@@ -15,11 +15,10 @@ Package
 .. autodata:: __all__
 
 
-Modules
--------
+Sub-modules
+-----------
 
 * :mod:`bronx.net.netrc`
 
-
-.. hints
-.. * :mod:`bronx.net.`
+NB: All of these sub-modules have to be imported manually (depending on your
+needs).
