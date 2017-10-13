@@ -15,6 +15,7 @@ Sub-modules
 
 * :mod:`bronx.datagrip.datastore`
 * :mod:`bronx.datagrip.misc`
+* :mod:`bronx.datagrip.namelist`
 * :mod:`bronx.datagrip.pyexttiff`
 
 NB: All of these sub-modules have to be imported manually (depending on your

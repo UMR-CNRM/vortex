@@ -2,11 +2,10 @@
 # -*- coding:Utf-8 -*-
 
 from decimal import Decimal
-from StringIO import StringIO
+from six import StringIO
 from unittest import TestCase, main
 
-from vortex.tools import fortran
-from common.data.namelists import NamelistContent, NamelistContentError
+from bronx.datagrip import namelist
 import re
 
 
@@ -90,14 +89,15 @@ M3b='__SOMETHINGNEW__',
 TRAP='SOMETHINGNEW',
 A=25,30,15
 C=--,
+GRUIK=--,
 /
 """
 
 
-class UtFortran(TestCase):
+class UtFortranNamelist(TestCase):
 
     def setUp(self):
-        self.lp = fortran.LiteralParser()
+        self.lp = namelist.LiteralParser()
 
     def _parse_tester(self, string, expected, parser=None):
         parse = self.lp.parse
@@ -162,7 +162,7 @@ class UtFortran(TestCase):
         self._encode_tester(False, ".FALSE.")
 
     def test_namblock(self):
-        np = fortran.NamelistParser(macros=('MYMACRO1', 'MYMACRO2'))
+        np = namelist.NamelistParser(macros=('MYMACRO1', 'MYMACRO2'))
         nb_res = np.parse(NAMBLOCK1).as_dict()['MyNamelistTest']
         # Inspect the newly created object
         self.assertEqual(nb_res.name, 'MyNamelistTest')
@@ -173,6 +173,7 @@ class UtFortran(TestCase):
         self.assertEqual(nb_res["A"], [25, 30, 15])
         self.assertEqual(nb_res.M1, '$MYMACRO1')
         self.assertEqual(nb_res.M1b, "'MYMACRO1'")
+        self.assertSetEqual(nb_res.rmkeys(), set(['C', 'GRUIK']))
         nb_res.addmacro('MYMACRO1', 'Toto')
         self.assertListEqual(dict(MYMACRO1='Toto', MYMACRO2=None, SOMETHINGNEW=None).keys(),
                              nb_res.macros())
@@ -239,89 +240,74 @@ C='Trash',
         nb_res2.clear()
         self.assertEqual(len(nb_res2), 0)
 
-    def test_nampaser_full(self):
-        np = fortran.NamelistParser(macros=('NBPROC', ))
+    def test_namparser_namset_basics(self):
+        np = namelist.NamelistParser(macros=('NBPROC', ))
         ori = StringIO()
         ori.write(DIRTYNAM)
         parse_res = np.parse(ori)
         self.assertSetEqual(set(parse_res.iterkeys()),
                             set(['MyNamelistTest', 'MySecondOne']))
         self.assertEqual(parse_res.dumps(), CLEANEDNAM)
-        self.assertEqual(parse_res.dumps(sorting=fortran.FIRST_ORDER_SORTING),
+        self.assertEqual(parse_res.dumps(sorting=namelist.FIRST_ORDER_SORTING),
                          CLEANEDNAM_SORTED1)
-        self.assertEqual(parse_res.dumps(sorting=fortran.SECOND_ORDER_SORTING),
+        self.assertEqual(parse_res.dumps(sorting=namelist.SECOND_ORDER_SORTING),
                          CLEANEDNAM_SORTED2)
+        with self.assertRaises(AssertionError):
+            parse_res.mvblock('MyNamelistTest', 'MySecondOne')
+        parse_res.mvblock('MyNamelistTest', 'MyThirdOne')
+        self.assertSetEqual(set(parse_res.keys()),
+                            set(['MyThirdOne', 'MySecondOne']))
+        nset2 = namelist.NamelistSet(parse_res)
+        self.assertEqual(parse_res.keys(), nset2.keys())
 
-
-class DummyNamContainer(object):
-
-    def __init__(self, thetxt=DIRTYNAM):
-        self.mytxt = thetxt
-
-    def rewind(self):
-        pass
-
-    def read(self):
-        return self.mytxt
-
-    def close(self):
-        pass
-
-    def write(self, thetxt):
-        self.mytxt = thetxt
-
-
-class UtNamelistContent(TestCase):
-
-    def setUp(self):
-        self.cont = DummyNamContainer()
-        self.namcontent = NamelistContent()
-        self.namcontent.slurp(self.cont)
-
-    def test_basics(self):
-        self.namcontent.rewrite(self.cont)
-        self.assertEqual(self.cont.mytxt, CLEANEDNAM)
-        nb = self.namcontent.newblock('MYNEWBLOCK')
+    def test_namset_newblock(self):
+        np = namelist.NamelistParser(macros=('NBPROC', ))
+        nset = np.parse(DIRTYNAM)
+        nb = nset.newblock('MYNEWBLOCK')
         nb.A = 1
-        self.assertEqual(self.namcontent['MYNEWBLOCK'].A, 1)
-        nb = self.namcontent.newblock()
+        self.assertEqual(nset['MYNEWBLOCK'].A, 1)
+        nbbis = nset.newblock('MYNEWBLOCK')
+        self.assertIs(nb, nbbis)
+        nb = nset.newblock()
         nb.A = 1
-        self.assertEqual(self.namcontent['AUTOBLOCK001'].A, 1)
+        self.assertEqual(nset['AUTOBLOCK001'].A, 1)
+        nb = nset.newblock('AUTOBLOCK002')
+        nb = nset.newblock()
+        nb.A = 1
+        self.assertEqual(nset['AUTOBLOCK003'].A, 1)
         # Default macros
-        self.namcontent.setmacro('NBPROC', 9999)
-        self.assertTrue(re.search('STEST=9999,', self.namcontent.dumps()))
-        # Error
-        namcontent2 = NamelistContent()
-        cont2 = DummyNamContainer("&NAMGLURP\nMACHIN=EXISTEPAS,\n/")
-        with self.assertRaises(NamelistContentError):
-            namcontent2.slurp(cont2)
-        cont2 = DummyNamContainer("GLURP")
-        with self.assertRaises(NamelistContentError):
-            namcontent2.slurp(cont2)
+        nset.setmacro('NBPROC', 9999)
+        self.assertTrue(re.search('STEST=9999,', nset.dumps()))
 
-    def test_merge(self):
+    def test_merge_nothing(self):
+        np = namelist.NamelistParser(macros=('NBPROC', ))
+        nset = np.parse(DIRTYNAM)
         # Test removes
-        self.namcontent.merge({}, rmkeys=('A ', 'z'), rmblocks=('MySecondOne', ))
-        self.assertSetEqual(set(self.namcontent.keys()), set(('MyNamelistTest', )))
-        self.assertNotIn('A ', self.namcontent['MyNamelistTest'])
-        self.assertNotIn('Z', self.namcontent['MyNamelistTest'])
+        nset.merge({}, rmkeys=('A ', 'z'), rmblocks=('MySecondOne', ))
+        self.assertSetEqual(set(nset.keys()), set(('MyNamelistTest', )))
+        self.assertNotIn('A ', nset['MyNamelistTest'])
+        self.assertNotIn('Z', nset['MyNamelistTest'])
         # Test clear
-        self.namcontent.merge({}, clblocks=('MyNamelistTest', ))
-        self.assertEqual(len(self.namcontent['MyNamelistTest']), 0)
+        nset.merge({}, clblocks=('MyNamelistTest', ))
+        self.assertEqual(len(nset['MyNamelistTest']), 0)
 
-    def test_mergedelta(self):
-        np = fortran.NamelistParser(macros=('MYMACRO1', 'MYMACRO2'))
-        nblocks = np.parse(NAMBLOCK1 + ' &ANOTHERBLOCK\n TOTO="Truc"\n/')
-        self.namcontent.merge(nblocks)
-        self.assertNotIn('C', self.namcontent['MyNamelistTest'])
-        self.assertIn('C', self.namcontent['MySecondOne'])
-        self.assertEqual(self.namcontent['MyNamelistTest'].A, list((25, 30, 15)))
-        self.assertEqual(self.namcontent['ANOTHERBLOCK'].TOTO, 'Truc')
-        self.namcontent.setmacro('MYMACRO1', 1)
-        self.assertTrue(re.search('M1B=1,', self.namcontent.dumps()))
-        self.assertTrue(re.search('M1=1,', self.namcontent.dumps()))
-        self.assertTrue(re.search('M2=MYMACRO2,', self.namcontent.dumps()))
-        self.assertTrue(re.search('M3=__SOMETHINGNEW__,', self.namcontent.dumps()))
+    def test_merge_delta(self):
+        np = namelist.NamelistParser(macros=('NBPROC', ))
+        nset = np.parse(DIRTYNAM)
+        np_d = namelist.NamelistParser(macros=('MYMACRO1', 'MYMACRO2'))
+        nset_d = np_d.parse(NAMBLOCK1 + ' &ANOTHERBLOCK\n TOTO="Truc"\n/')
+        nset.merge(nset_d)
+        self.assertNotIn('C', nset['MyNamelistTest'])
+        self.assertIn('C', nset['MySecondOne'])
+        self.assertSetEqual(nset['MyNamelistTest'].rmkeys(), set(['C', 'GRUIK']))
+        self.assertEqual(nset['MyNamelistTest'].A, list((25, 30, 15)))
+        self.assertEqual(nset['ANOTHERBLOCK'].TOTO, 'Truc')
+        nset.setmacro('MYMACRO1', 1)
+        self.assertTrue(re.search('M1B=1,', nset.dumps()))
+        self.assertTrue(re.search('M1=1,', nset.dumps()))
+        self.assertTrue(re.search('M2=MYMACRO2,', nset.dumps()))
+        self.assertTrue(re.search('M3=__SOMETHINGNEW__,', nset.dumps()))
+
 
 if __name__ == '__main__':
     main(verbosity=2)

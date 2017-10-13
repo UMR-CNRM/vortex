@@ -27,9 +27,15 @@ directly.
 Inital author: Joris Picot (2010-12-08 / CERFACS)
 """
 
+# TODO: Activate unicode_literals but check that it still works with Olive
+# experiments and when sending emails.
+from __future__ import print_function, absolute_import, division  # , unicode_literals
+
+import collections
+import copy
 from decimal import Decimal
 import re
-import StringIO
+import six
 
 #: No automatic export
 __all__ = []
@@ -131,7 +137,7 @@ SECOND_ORDER_SORTING = 2
 
 
 class LiteralParser(object):
-    """Object in charge of parsing litteral fortran expressions that could be found in a namelist."""
+    """Object in charge of parsing literal fortran expressions that could be found in a namelist."""
     def __init__(self,
                  re_flags     = _RE_FLAGS,
                  re_integer   = '^' + _SIGNED_INT_LITERAL_CONSTANT + '$',
@@ -365,9 +371,21 @@ class NamelistBlock(object):
         self.__dict__['_declared_subs'] = set()
         self.__dict__['_literal'] = None
 
+    def __getstate__(self):
+        """For deepcopy and pickle."""
+        st = dict(self.__dict__)
+        st['_literal'] = None  # It's recreated on the fly when needed...
+        return st
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+    def set_name(self, name):
+        self.__dict__['_name'] = name
+
     @property
     def name(self):
-        """The namelist block's name."""
+        """The namelist's name."""
         return self._name
 
     def __repr__(self):
@@ -487,7 +505,7 @@ class NamelistBlock(object):
             self.setvar(var, value)
 
     def clear(self, rmkeys=None):
-        """Remove specified keys or completly clear the namelist block."""
+        """Remove specified keys or completely clear the namelist block."""
         if rmkeys:
             for k in rmkeys:
                 self.delvar(k)
@@ -534,7 +552,7 @@ class NamelistBlock(object):
         """Nice encoded value of the item, possibly substitute with macros."""
         if literal is None:
             if self._literal is None:
-                self._literal = LiteralParser()
+                self.__dict__['_literal'] = LiteralParser()
             literal = self._literal
         if isinstance(item, basestring):
             itemli = item[:]
@@ -618,6 +636,7 @@ class NamelistBlock(object):
         self.update(delta.pool())
         for dkey in [x for x in delta.rmkeys() if x in self]:
             self.delvar(dkey)
+        for dkey in delta.rmkeys():
             self.todelete(dkey)
         # Preserve macros
         for skey in delta.macros():
@@ -625,20 +644,103 @@ class NamelistBlock(object):
             self._declared_subs.update(delta._declared_subs)
 
 
-class NamelistSet(object):
+class NamelistSet(collections.MutableMapping):
     """A set of namelist blocks (see :class:`NamelistBlock`)."""
 
-    def __init__(self, namdict):
-        self._namset = namdict
+    def __init__(self, blocks_set=None):
+        # For later use
+        self._automkblock = 1
+        # Initialise the set content
+        if isinstance(blocks_set, (list, tuple)):
+            if any([not isinstance(i, NamelistBlock) for i in blocks_set]):
+                raise ValueError("When *blocks_set* is a list, its elements must be NamelistBlock objects")
+            blocks_set = blocks_set
+        elif isinstance(blocks_set, NamelistSet):
+            blocks_set = blocks_set.as_list()
+        elif blocks_set is None:
+            blocks_set = []
+        else:
+            raise ValueError("Incorrect value for *blocks_set*: {!s}".format(blocks_set))
+        # Generate a mapping based on the namelist blocks names
+        self._mapping_dict = collections.OrderedDict()
+        for nb in blocks_set:
+            self._mapping_dict[nb.name] = nb
 
-    def __getattr__(self, attr):
-        return getattr(self._namset, attr)
+    def __contains__(self, key):
+        return key in self._mapping_dict
 
-    def keys(self):
-        """Return the name of each namelist block stored in this set."""
-        return sorted(self._namset.keys())
+    def __len__(self):
+        return len(self._mapping_dict)
 
-    def dumps(self, sorting=NO_SORTING):
+    def __iter__(self):
+        for nbk in self._mapping_dict.keys():
+            yield nbk
+
+    def __getitem__(self, key):
+        return self._mapping_dict[key]
+
+    def __setitem__(self, key, value):
+        assert isinstance(value, NamelistBlock)
+        if value.name != key:
+            # To be safe...
+            value = copy.deepcopy(value)
+            value.set_name(key)
+        self._mapping_dict[key] = value
+
+    def __delitem__(self, key):
+        del self._mapping_dict[key]
+
+    def add(self, namblock):
+        """Add a namelist block object to the present namelist set.
+
+        :param NamelistBlock namblock: The namelist block to add.
+        """
+        self[namblock.name] = namblock
+
+    def newblock(self, name=None):
+        """Construct a new block.
+
+        :param str name: the name of the new block. If omitted a block new block
+            name will be generated (something like AUTOBLOCKnnn).
+        """
+        if name is None:
+            name = 'AUTOBLOCK{0:03d}'.format(self._automkblock)
+            while name in self:
+                self._automkblock += 1
+                name = 'AUTOBLOCK{0:03d}'.format(self._automkblock)
+        if name not in self:
+            self[name] = NamelistBlock(name=name)
+        return self[name]
+
+    def mvblock(self, sourcename, destname):
+        """Rename a block."""
+        assert destname not in self, "Block {:s} already exists".format(destname)
+        self[destname] = self.pop(sourcename)
+
+    def setmacro(self, item, value):
+        """Set macro value for further substitution."""
+        for namblock in filter(lambda x: item in x.macros(), self.values()):
+            namblock.addmacro(item, value)
+
+    def merge(self, delta, rmkeys=None, rmblocks=None, clblocks=None):
+        """Merge of the current namelist content with the set of namelist blocks provided."""
+        assert isinstance(delta, NamelistSet) or delta == dict()
+        for namblock in delta.values():
+            if namblock.name in self:
+                self[namblock.name].merge(namblock)
+            else:
+                self.add(copy.deepcopy(namblock))
+        if rmblocks is not None:
+            for item in [x for x in rmblocks if x in self]:
+                del self[item]
+        if clblocks is not None:
+            for item in [x for x in clblocks if x in self]:
+                self[item].clear()
+        if rmkeys is not None:
+            for item in self:
+                self[item].clear(rmkeys)
+
+    def dumps(self, sorting=NO_SORTING, block_sorting=True):
         """
         Join the fortran-strings dumped by each namelist block.
         Sorting option **sorting**:
@@ -648,11 +750,26 @@ class NamelistSet(object):
             * SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
 
         """
-        return ''.join([self._namset[x].dumps(sorting=sorting) for x in self.keys()])
+        if block_sorting:
+            return ''.join([self[nblock_k].dumps(sorting=sorting)
+                            for nblock_k in sorted(self.keys())])
+        else:
+            return ''.join([nblock.dumps(sorting=sorting)
+                            for nblock in self.values()])
 
-    def as_dict(self):
+    def as_dict(self, deepcopy=False):
         """Return the actual namelist set as a dictionary."""
-        return dict(self._namset)
+        if deepcopy:
+            return copy.deepcopy(self._mapping_dict)
+        else:
+            return dict(self._mapping_dict)
+
+    def as_list(self, deepcopy=False):
+        """Return the actual namelist set as a list."""
+        if deepcopy:
+            return copy.deepcopy(list(self.values()))
+        else:
+            return list(self.values())
 
 
 class NamelistParser(object):
@@ -724,11 +841,11 @@ class NamelistParser(object):
 
     def _namelist_parse(self, source):
         """Parse the all bunch of source as a dict of namelist blocks."""
-        namelists = dict()
+        namelists = list()
         while source:
             if self.block.search(source):
                 namblock, source = self._namelist_block_parse(source)
-                namelists.update({namblock.name: namblock})
+                namelists.append(namblock)
             else:
                 break
         return NamelistSet(namelists)
@@ -860,7 +977,7 @@ class NamelistParser(object):
                 iod.close()
             return self._namelist_parse(obj)
 
-        elif isinstance(obj, (file, StringIO.StringIO)):
+        elif isinstance(obj, (file, six.StringIO)):
             obj.seek(0)
             return self._namelist_parse(obj.read())
         else:

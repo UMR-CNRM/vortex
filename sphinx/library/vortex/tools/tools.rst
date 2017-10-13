@@ -21,7 +21,6 @@ Package
 * :mod:`vortex.tools.ddhpack`
 * :mod:`vortex.tools.env`
 * :mod:`vortex.tools.folder`
-* :mod:`vortex.tools.fortran`
 * :mod:`vortex.tools.grib`
 * :mod:`vortex.tools.lfi`
 * :mod:`vortex.tools.listings`

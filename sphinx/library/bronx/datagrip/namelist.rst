@@ -1,7 +1,7 @@
-:mod:`vortex.tools.fortran` --- FORTRAN literals and namelists
-==============================================================
+:mod:`bronx.datagrip.namelist` --- FORTRAN literals and namelists
+=================================================================
 
-.. automodule:: vortex.tools.fortran
+.. automodule:: bronx.datagrip.namelist
    :synopsis: Support for fortran literals and namelists
 
 .. moduleauthor:: The Vortex Team

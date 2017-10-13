@@ -9,6 +9,7 @@ import json
 import re
 import time
 
+from bronx.datagrip.namelist  import NamelistBlock
 import footprints
 from footprints.stdtypes import FPTuple
 from taylorism import Boss
@@ -19,7 +20,6 @@ from vortex.layout.monitor    import BasicInputMonitor, AutoMetaGang, MetaGang, 
 from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, Parallel, AlgoComponentError
 from vortex.syntax.stdattrs   import DelayedEnvValue, FmtInt
 from vortex.tools             import grib
-from vortex.tools.fortran     import NamelistBlock
 from vortex.tools.parallelism import TaylorVortexWorker, VortexWorkerBlindRun, ParallelResultParser
 from vortex.tools.systems     import ExecutionError
 from vortex.util.structs      import FootprintCopier

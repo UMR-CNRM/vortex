@@ -4,6 +4,7 @@
 import os
 import sys
 import re
+import bronx.datagrip.namelist
 import vortex  # @UnusedImport
 import vortex.util.config
 import common
@@ -304,7 +305,7 @@ def main(filename,
          blocks_to_remove=None,
          macros=None,
          # options
-         sorting=vortex.tools.fortran.NO_SORTING,
+         sorting=bronx.datagrip.namelist.NO_SORTING,
          blocks_ref=None,
          in_place=False,
          verbose=False,
@@ -324,7 +325,7 @@ def main(filename,
     Other options:
     :param in_place: if True, the namelist is written back in the same file;
                      else (default), the target namelist is suffixed with '.tnt'
-    :param sorting: Sorting option (from vortex.tools.fortran):
+    :param sorting: Sorting option (from bronx.datagrip.namelist):
                     NO_SORTING;
                     FIRST_ORDER_SORTING => sort all keys within blocks;
                     SECOND_ORDER_SORTING => sort only within indexes or
@@ -441,11 +442,11 @@ if __name__ == '__main__':
                         default=False)
     args = parser.parse_args()
     if args.firstorder_sorting:
-        sorting = vortex.tools.fortran.FIRST_ORDER_SORTING
+        sorting = bronx.datagrip.namelist.FIRST_ORDER_SORTING
     elif args.secondorder_sorting:
-        sorting = vortex.tools.fortran.SECOND_ORDER_SORTING
+        sorting = bronx.datagrip.namelist.SECOND_ORDER_SORTING
     else:
-        sorting = vortex.tools.fortran.NO_SORTING
+        sorting = bronx.datagrip.namelist.NO_SORTING
     if args.generate_directives_template:
         write_directives_template('tmpl_directives.tnt')
     else:

@@ -12,7 +12,7 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex import sessions
 from vortex.tools import env
 from vortex.tools.date import Time, Date
-from vortex.tools.fortran import NO_SORTING
+from bronx.datagrip.namelist import NO_SORTING, NamelistBlock, NamelistSet, NamelistParser
 from vortex.data.outflow import ModelResource, NoDateResource
 from vortex.data.contents import AlmostDictContent, IndexedTable
 from vortex.syntax.stdattrs import binaries, term, cutoff
@@ -23,7 +23,8 @@ KNOWN_NAMELIST_MACROS = set(['NPROC', 'NBPROC', 'NBPROC_IO', 'NCPROC', 'NDPROC',
                              'NBPROCIN', 'NBPROCOUT', 'IDAT', 'CEXP',
                              'TIMESTEP', 'FCSTOP', 'NMODVAL', 'NBE', 'SEED',
                              'MEMBER', 'NUMOD', 'OUTPUTID', 'NRESX', 'PERTURB',
-                             'JOUR', 'RES', 'LLADAJ', 'LLADMON', 'LLFLAG', 'LLARO', 'LLVRP', 'LLCAN'])
+                             'JOUR', 'RES', 'LLADAJ', 'LLADMON', 'LLFLAG',
+                             'LLARO', 'LLVRP', 'LLCAN'])
 
 
 class NamelistContentError(ValueError):
@@ -39,23 +40,13 @@ class NamelistContent(AlmostDictContent):
           * macros : pre-defined macros for all namelist blocks
           * remove : elements to remove from the contents
           * parser : a namelist parser object (a default one will be built otherwise)
-          * automkblock : give automatically a name to new blocks when not provided
-          * namblockcls : class for new blocks
         """
         kw.setdefault('macros', {k: None for k in KNOWN_NAMELIST_MACROS})
         kw.setdefault('remove', set())
         kw.setdefault('parser', None)
-        kw.setdefault('automkblock', 0)
-        if 'namblockcls' not in kw:
-            import vortex.tools.fortran
-            kw['namblockcls'] = vortex.tools.fortran.NamelistBlock
+        kw.setdefault('data', NamelistSet())
         super(NamelistContent, self).__init__(**kw)
         self._declaredmacros = set(self._macros.keys())
-
-    def add(self, addlist):
-        """Add namelist blocks to current contents."""
-        for nam in filter(lambda x: isinstance(x, self._namblockcls), addlist):
-            self._data[nam.name] = nam
 
     def toremove(self, bname):
         """Add an entry to the list of blocks to be removed."""
@@ -65,96 +56,56 @@ class NamelistContent(AlmostDictContent):
         """Returns the list of blocks to get rid off."""
         return self._remove
 
-    def newblock(self, name=None):
-        """Construct a new block."""
-        if name is None:
-            self._automkblock += 1
-            name = 'AUTOBLOCK{0:03d}'.format(self._automkblock)
-        if name not in self._data:
-            self._data[name] = self._namblockcls(name=name)
-        return self._data[name]
-
-    def mvblock(self, sourcename, destname):
-        """Rename a block."""
-        assert destname not in self._data, " ".join(["Block", destname, "already exists."])
-        self.newblock(destname).update(self.pop(sourcename))
-
     def macros(self):
         """Returns the dictionary of macros already registered."""
         return self._macros.copy()
 
     def setmacro(self, item, value):
         """Set macro value for further substitution."""
-        for namblock in filter(lambda x: item in x.macros(), self.values()):
-            namblock.addmacro(item, value)
+        self._data.setmacro(item, value)
         self._macros[item] = value
 
     def dumps(self, sorting=NO_SORTING):
         """
         Returns the namelist contents as a string.
-        Sorting option **sorting** (from vortex.tools.fortran):
+        Sorting option **sorting** (from bronx.datagrip.namelist):
 
             * NO_SORTING;
             * FIRST_ORDER_SORTING => sort all keys within blocks;
             * SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
 
         """
-        return ''.join([self.get(x).dumps(sorting=sorting)
-                        for x in sorted(self.keys())])
+        return self._data.dumps(sorting=sorting)
 
     def merge(self, delta, rmkeys=None, rmblocks=None, clblocks=None):
         """Merge of the current namelist content with the set of namelist blocks provided."""
-        for namblock in delta.values():
-            if namblock.name in self:
-                self[namblock.name].merge(namblock)
-            else:
-                newblock = self._namblockcls(name=namblock.name)
-                for dk in namblock.keys():
-                    newblock[dk] = namblock[dk]
-                # Also copy the macro and delete information
-                for mn in namblock.macros():
-                    if mn in namblock.declaredmacros():
-                        newblock.add_declaredmacro(mn, None)
-                    else:
-                        newblock.addmacro(mn, None)
-                for dn in namblock.rmkeys():
-                    newblock.todelete(dn)
-                self[namblock.name] = newblock
-        if rmblocks is None and hasattr(delta, 'rmblocks'):
-            rmblocks = delta.rmblocks()
-        if rmblocks is not None:
-            for item in [x for x in rmblocks if x in self]:
-                del self[item]
-        if clblocks is not None:
-            for item in [x for x in clblocks if x in self]:
-                self[item].clear()
-        if rmkeys is not None:
-            for item in self:
-                self[item].clear(rmkeys)
+        if isinstance(delta, NamelistContent):
+            if rmblocks is None and hasattr(delta, 'rmblocks'):
+                rmblocks = delta.rmblocks()
+            actualdelta = delta.data
+        else:
+            actualdelta = delta
+        self._data.merge(actualdelta,
+                         rmkeys=rmkeys, rmblocks=rmblocks, clblocks=clblocks)
 
     def slurp(self, container):
         """Get data from the ``container`` namelist."""
         container.rewind()
         if not self._parser:
-            import vortex.tools.fortran
-            self._parser = vortex.tools.fortran.NamelistParser(macros=self._declaredmacros)
+            self._parser = NamelistParser(macros=self._declaredmacros)
         try:
             namset = self._parser.parse(container.read())
         except (ValueError, IOError) as e:
             raise NamelistContentError('Could not parse container contents: {!s}'.format(e))
-        self._data = namset.as_dict()
+        self._data = namset
         for macro, value in self._macros.items():
-            if macro in self._declaredmacros:
-                for namblock in filter(lambda x: macro in x.macros(), self.values()):
-                    namblock.add_declaredmacro(macro, value)
-            else:
                 for namblock in filter(lambda x: macro in x.macros(), self.values()):
                     namblock.addmacro(macro, value)
 
     def rewrite(self, container, sorting=NO_SORTING):
         """
         Write the namelist contents in the specified container.
-        Sorting option **sorting** (from vortex.tools.fortran):
+        Sorting option **sorting** (from bronx.datagrip.namelist):
 
             * NO_SORTING;
             * FIRST_ORDER_SORTING => sort all keys within blocks;
@@ -473,8 +424,6 @@ class XXTContent(IndexedTable):
 
         if (self._cachedomains is None) or (self._cachedomains_term != maxterm):
 
-            import vortex.tools.fortran
-
             select_seen = dict()
             for term in [ x for x in allterms if x <= maxterm ]:
                 tvalue = self.get(term.fmthm, self.get(str(term.hour), None))
@@ -482,7 +431,7 @@ class XXTContent(IndexedTable):
                 if tvalue[0] is not None and sh.path.exists(tvalue[0]):
                     # Do not waste time on duplicated selects...
                     if tvalue[1] not in select_seen:
-                        fortp = vortex.tools.fortran.NamelistParser()
+                        fortp = NamelistParser()
                         with open(tvalue[0], 'r') as fd:
                             xx = fortp.parse(fd.read())
                         domains = set()
