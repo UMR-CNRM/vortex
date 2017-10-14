@@ -13,10 +13,10 @@
 Sub-modules
 -----------
 
-* :mod:`bronx.syntax.arrays`
-* :mod:`bronx.syntax.decorators`
-* :mod:`bronx.syntax.parsing`
-* :mod:`bronx.syntax.pretty`
+* :mod:`bronx.syntax.arrays`: Numpy's useful tools.
+* :mod:`bronx.syntax.decorators`: Useful decorators (or decorator of decorators).
+* :mod:`bronx.syntax.parsing`: String parsing tools.
+* :mod:`bronx.syntax.pretty`: Making things pretty
 
 NB: All of these sub-modules have to be imported manually (depending on your
 needs).

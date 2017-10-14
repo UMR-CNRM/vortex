@@ -53,6 +53,9 @@ class FanciesDisplayTest(unittest.TestCase):
             for stop in ('\n\n\nq', 'Q', 'quit', 'sdqgqg\nQ'):
                 with self._divert_stdin(stop):
                     self.assertEqual(query_yes_no_quit('', None), 'quit')
+            for stop in ('\n\n\nq', 'quit', ''):
+                with self._divert_stdin(stop):
+                    self.assertEqual(query_yes_no_quit('', 'quit'), 'quit')
 
     def test_printstatus(self):
         s_list = list()

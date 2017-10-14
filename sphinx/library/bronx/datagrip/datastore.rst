@@ -13,14 +13,14 @@
 
 Classes
 -------
-
-.. autoclass:: _DataStoreEntryKey
+   
+.. autoclass:: DataStore
    :show-inheritance:
    :members:
    :special-members:
    :member-order: alphabetical
-   
-.. autoclass:: DataStore
+
+.. autoclass:: _DataStoreEntryKey
    :show-inheritance:
    :members:
    :special-members:

@@ -1,8 +1,8 @@
-:mod:`bronx.datagrip.pyexttiff` --- TODO description
-====================================================
+:mod:`bronx.datagrip.pyexttiff` --- This module aims at reading tiff with private IFDs
+======================================================================================
 
 .. automodule:: bronx.datagrip.pyexttiff
-   :synopsis: TODO description
+   :synopsis: This module aims at reading tiff with private IFDs.
 
 .. moduleauthor:: The Vortex Team & many contributors
 .. sectionauthor:: The Vortex Team & many contributors

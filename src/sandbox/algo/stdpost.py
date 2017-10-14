@@ -52,7 +52,7 @@ class GribInfos(AlgoComponent):
         """Loop on the various Grib files."""
 
         gpsec = self.context.sequence.effective_inputs(role=('Gridpoint', ))
-        gpsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+        gpsec.sort(key=lambda s: s.rh.resource.term)
 
         gribstack = collections.defaultdict(dict)
         hash_a = HashAdapter('md5')

@@ -1,5 +1,5 @@
-:mod:`bronx.stdtypes.datet` --- Time, date and calendars functions
-=====================================================================
+:mod:`bronx.stdtypes.date` --- Time, date and calendars functions
+=================================================================
 
 .. automodule:: bronx.stdtypes.date
    :synopsis: Time, date and calendars functions

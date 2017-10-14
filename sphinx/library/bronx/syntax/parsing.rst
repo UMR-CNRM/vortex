@@ -2,7 +2,7 @@
 =============================================
 
 .. automodule:: bronx.syntax.parsing
-   :synopsis: Parsing tools
+   :synopsis: String parsing tools
 
 .. moduleauthor:: The Vortex Team & many contributors
 .. sectionauthor:: The Vortex Team & many contributors

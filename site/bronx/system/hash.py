@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 """
-Interface to the Python's hashlib module that generates hashes on files, strings, ...
+Interface to the Python's :mod:`hashlib` module that generates hashes on files, strings, ...
 """
 
-from __future__ import print_function, division, absolute_import
+from __future__ import print_function, division, absolute_import, unicode_literals
 
-import StringIO
+import six
 import hashlib
 import os
 
@@ -37,7 +37,7 @@ class HashAdapter(object):
     @staticmethod
     def algorithms():
         """List of available hash algorithms."""
-        return hashlib.algorithms
+        return hashlib.algorithms_guaranteed
 
     def _hinstance(self):
         """Return a new Hash object (see hashlib documentation)."""
@@ -62,11 +62,11 @@ class HashAdapter(object):
 
         :param input_file: Path to a file or opened File-like object
         """
-        if isinstance(input_file, basestring):
+        if isinstance(input_file, six.string_types):
             # input_file should be a file path
             with open(input_file, 'rb') as i_fh:
                 h = self._hinstance_from_fh(i_fh)
-        elif hasattr(input_file, 'read'):
+        elif hasattr(input_file, 'seek') and hasattr(input_file, 'read'):
             # input_file should be a file like object
             input_file.seek(0)
             h = self._hinstance_from_fh(input_file)
@@ -77,7 +77,7 @@ class HashAdapter(object):
 
         :param input_file: Path to a file or opened File-like object
         """
-        output = StringIO.StringIO()
+        output = six.StringIO()
         output.write(self.file2hash(input_file))
         output.seek(0)
         return output
@@ -109,13 +109,13 @@ class HashAdapter(object):
             or string that contains the reference hash sum)
         """
         # Get the reference hash string
-        if isinstance(reference, basestring):
+        if isinstance(reference, six.string_types):
             if os.path.isfile(reference):
                 with open(reference, 'r') as i_fh:
                     hashref = self._read_hashline(i_fh)
             else:
                 hashref = reference
-        elif hasattr(reference, 'read'):
+        elif hasattr(reference, 'seek') and hasattr(reference, 'read'):
             reference.seek(0)
             hashref = self._read_hashline(reference)
         # Compute input file's hash

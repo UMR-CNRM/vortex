@@ -53,18 +53,18 @@ class Coupling(FullPos):
             role = ('InitialCondition', 'CouplingSource'),
             kind = ('historic', 'analysis')
         )
-        cplsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+        cplsec.sort(key=lambda s: s.rh.resource.term)
         infile = 'ICMSH{0:s}INIT'.format(self.xpname)
         isMany = len(cplsec) > 1
         outprefix = 'PF{0:s}AREA'.format(self.xpname)
 
         cplguess = self.context.sequence.effective_inputs(role = 'Guess')
-        cplguess.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+        cplguess.sort(key=lambda s: s.rh.resource.term)
         guessing = bool(cplguess)
 
         cplsurf = self.context.sequence.effective_inputs(role = ('SurfaceInitialCondition',
                                                                  'SurfaceCouplingSource'))
-        cplsurf.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+        cplsurf.sort(key=lambda s: s.rh.resource.term)
         surfacing = bool(cplsurf)
         infilesurf = 'ICMSH{0:s}INIT.sfx'.format(self.xpname)
         if surfacing:
@@ -310,7 +310,7 @@ class Prep(BlindRun):
             role = ('InitialCondition', 'CouplingSource'),
             kind = ('historic', 'analysis')
         )
-        cplsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+        cplsec.sort(key=lambda s: s.rh.resource.term)
         infile = 'PREP1.{:s}'.format(self.underlyingformat)
         outfile = 'PREP2.{:s}'.format(self.underlyingformat)
         targetclim = self.context.sequence.effective_inputs(role=('TargetClim',))

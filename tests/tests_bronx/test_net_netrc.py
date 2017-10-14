@@ -11,7 +11,11 @@ import os
 import unittest
 import sys
 import textwrap
-from test import test_support
+
+try:
+    from test import support as test_support
+except ImportError:  # For python <= 2.7.13
+    from test import test_support
 
 temp_filename = test_support.TESTFN
 

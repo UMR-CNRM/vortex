@@ -5,6 +5,11 @@
 Classes and functions form this module are dedicated to the manipulation of
 date and time quantities.
 
+Obviously the main classes of this module are :class:`Date`, :class:`Period`,
+:class:`Time` and :class:`Month`.
+
+Some helper functions are also provided (to get the current date, ...).
+
 Formats hypothesis:
 
 1. Ideally dates and times should be represented as a valid ISO 8601 strings.
@@ -35,26 +40,20 @@ Formats hypothesis:
       * P1Y <=> is a 1 year period
       * P20D <=> is a 20 days period
       * PT15H10M55S <=> is a 15 hours, 10 minutes and 55 seconds period
-
-Obviously the main classes of this module are :class:`Date`, :class:`Period`,
-:class:`Time` and :class:`Month`.
-
-Some helper functions are also provided (to get the current date, ...).
-
 """
 
 # TODO: Activate unicode_literals but check that it still works with Olive
 # experiments and when sending emails.
-# TODO: There are still some __cmp__ functions and calls to cmp(): it doesn't
-# work with Python3.
 # TODO: In the core of Vortex, change vortex.tools.date to bronx.stdtypes.date
 from __future__ import print_function, absolute_import, division  # , unicode_literals
 
 import calendar
 import datetime
 import functools
+import inspect
 import operator
 import re
+import six
 
 #: No automatic export
 __all__ = []
@@ -124,7 +123,7 @@ def synop(delta=0, base=None, time=None, step=6):
     synopdate = lastround(step, delta, base)
     if time is not None:
         time = Time(time)
-        if time in [ Time(x) for x in range(0, 24, step) ]:
+        if time in [Time(x) for x in range(0, 24, step)]:
             dt = Period('PT' + str(step) + 'H')
             while synopdate.time() != time:
                 synopdate = synopdate - dt
@@ -163,31 +162,32 @@ def easter(year=None):
 local_date_functions = dict([
     (x.__name__, x)
     for x in locals().values()
-    if hasattr(x, 'func_name') and x.__doc__.startswith('Return the date')
+    if inspect.isfunction(x) and x.__doc__.startswith('Return the date')
 ])
 
-# noinspection PyUnboundLocalVariable
-del x
+if six.PY2:
+    # noinspection PyUnboundLocalVariable
+    del x
 
 
 def mkisodate(datestr):
     """A crude attempt to reshape the iso8601 format."""
     l = list(re.sub(' ?(UTC|GMT)$', '', datestr.strip()))
     if len(l) > 4 and l[4] != '-':
-        l[4:4] = [ '-' ]
+        l[4:4] = ['-', ]
     if len(l) > 7 and l[7] != '-':
-        l[7:7] = [ '-' ]
+        l[7:7] = ['-', ]
     if len(l) > 10 and l[10] != 'T':
         if l[10] in (' ', '-', 'H'):
             l[10] = 'T'
         else:
-            l[10:10] = [ 'T' ]
+            l[10:10] = ['T', ]
     if 10 < len(l) <= 13:
         l.extend(['0', '0'])
     if len(l) > 13 and l[13] != ':':
-        l[13:13] = [ ':' ]
+        l[13:13] = [':', ]
     if len(l) > 16 and l[16] != ':':
-        l[16:16] = [ ':' ]
+        l[16:16] = [':', ]
     if len(l) > 13 and l[-1] != 'Z':
         l.append('Z')
     return ''.join(l)
@@ -273,7 +273,7 @@ class Period(datetime.timedelta):
     @staticmethod
     def _parse(string):
         """Find out time duration that could be extracted from string argument."""
-        if not isinstance(string, basestring):
+        if not isinstance(string, six.string_types):
             raise TypeError("Expected string input")
         if len(string) < 2:
             raise ValueError("Badly formed short string %s" % string)
@@ -349,15 +349,15 @@ class Period(datetime.timedelta):
         top = args[0]
         ld = list()
         if isinstance(top, datetime.timedelta):
-            ld = [ top.days, top.seconds, top.microseconds ]
+            ld = [top.days, top.seconds, top.microseconds]
         elif isinstance(top, Time):
-            ld = [ 0, top.hour * 3600 + top.minute * 60 ]
-        elif len(args) < 2 and ( isinstance(top, int) or isinstance(top, float) ):
-            ld = [ 0, top ]
+            ld = [0, top.hour * 3600 + top.minute * 60]
+        elif len(args) < 2 and (isinstance(top, int) or isinstance(top, float)):
+            ld = [0, top]
         elif isinstance(top, int) and len(args) == 2:
             ld = list(args)
-        elif isinstance(top, basestring):
-            ld = [ 0, Period._parse(top) ]
+        elif isinstance(top, six.string_types):
+            ld = [0, Period._parse(top)]
         if not ld:
             raise ValueError("Initial Period value unknown")
         return datetime.timedelta.__new__(cls, *ld)
@@ -513,20 +513,20 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         top = args[0]
         deltas = []
         ld = list()
-        if isinstance(top, basestring) and top in local_date_functions:
+        if isinstance(top, six.string_types) and top in local_date_functions:
             try:
                 top = local_date_functions[top](**kw)
                 kw = dict()
             except (ValueError, TypeError):
                 pass
         if isinstance(top, datetime.datetime):
-            ld = [ top.year, top.month, top.day, top.hour, top.minute, top.second ]
+            ld = [top.year, top.month, top.day, top.hour, top.minute, top.second]
         elif isinstance(top, tuple) or isinstance(top, list):
             ld = list(top)
         elif isinstance(top, float):
             top = Date._origin + datetime.timedelta(0, top)
-            ld = [ top.year, top.month, top.day, top.hour, top.minute, top.second ]
-        elif isinstance(top, basestring):
+            ld = [top.year, top.month, top.day, top.hour, top.minute, top.second]
+        elif isinstance(top, six.string_types):
             s_top = top.split('/')
             top = s_top[0]
             top = re.sub('^YYYY', str(max(0, int(kw.pop('year', today().year)))), top.upper())
@@ -534,7 +534,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
             ld = [int(x) for x in re.split('[-:HTZ]+', mkisodate(top)) if re.match(r'\d+$', x)]
         else:
             ld = [int(x) for x in args
-                  if isinstance(x, (int, float)) or (isinstance(x, basestring) and re.match(r'\d+$', x)) ]
+                  if isinstance(x, (int, float)) or (isinstance(x, six.string_types) and re.match(r'\d+$', x))]
         if not ld:
             raise ValueError("Initial Date value unknown")
         newdate = datetime.datetime.__new__(cls, *ld)
@@ -545,7 +545,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
     def __init__(self, *args, **kw):  # @UnusedVariable
         """
         The object can be constructed from:
-            * a standard :`datetime.datetime` object;
+            * a standard :class:`datetime.datetime` object;
             * named attributes compatible with the :class:`datetime.datetime` class;
             * a Vortex's :class:`Date` object;
             * a tuple containing at least (year, month, day) values (optionally hours);
@@ -974,17 +974,17 @@ class Time(_GetattrCalculatorMixin):
             self._hour, self._minute = newtime.hour, newtime.minute
         elif isinstance(top, float):
             self._hour, self._minute = int(top), int((top - int(top)) * 60)
-        elif isinstance(top, basestring):
+        elif isinstance(top, six.string_types):
             if re.match(r'^[+-]?P', top):  # This looks like a Period string...
                 newtime = Period(top).time()
                 self._hour, self._minute = newtime.hour, newtime.minute
             else:
                 thesign = -2 * int(bool(re.match(r'^-', top))) + 1
-                ld = [ thesign * int(x) for x in re.split('[-:hHTZ]+', top) if re.match(r'\d+$', x) ]
+                ld = [thesign * int(x) for x in re.split('[-:hHTZ]+', top) if re.match(r'\d+$', x)]
         else:
-            ld = [ int(x) for x in args
-                   if (type(x) in (int, float) or
-                       (isinstance(x, basestring) and re.match(r'\d+$', x))) ]
+            ld = [int(x) for x in args
+                  if (type(x) in (int, float) or
+                      (isinstance(x, six.string_types) and re.match(r'\d+$', x)))]
         if ld:
             if len(ld) < 2:
                 ld.append(0)
@@ -1036,23 +1036,42 @@ class Time(_GetattrCalculatorMixin):
         """Return a hashkey."""
         return self.__int__()
 
-    def __eq__(self, other):
+    def __comparison_prepare(self, other):
         try:
             other = self.__class__(other)
         except (ValueError, TypeError):
             pass
+        return other
+
+    def __eq__(self, other):
+        other = self.__comparison_prepare(other)
         try:
             return int(self) == int(other)
         except (ValueError, TypeError):
             return False
 
-    def __cmp__(self, other):
-        """Compare two Time values or a Time and an int value."""
+    def __ne__(self, other):
+        other = self.__comparison_prepare(other)
         try:
-            other = self.__class__(other)
+            return int(self) != int(other)
         except (ValueError, TypeError):
-            pass
-        return cmp(int(self), int(other))
+            return True
+
+    def __gt__(self, other):
+        other = self.__comparison_prepare(other)
+        return int(self) > int(other)
+
+    def __ge__(self, other):
+        other = self.__comparison_prepare(other)
+        return int(self) >= int(other)
+
+    def __lt__(self, other):
+        other = self.__comparison_prepare(other)
+        return int(self) < int(other)
+
+    def __le__(self, other):
+        other = self.__comparison_prepare(other)
+        return int(self) <= int(other)
 
     def __add__(self, delta):
         """
@@ -1129,6 +1148,7 @@ class Time(_GetattrCalculatorMixin):
         return '{0:04d}'.format(t)
 
 
+@functools.total_ordering
 class Month(object):
     """
     Basic class for handling a month number, according to an explicit or
@@ -1138,7 +1158,7 @@ class Month(object):
     def __init__(self, *args, **kw):
         """
         The object can be constructed from:
-            * a standard :`datetime.datetime` object or a :class:`Date` object;
+            * a standard :class:`datetime.datetime` object or a :class:`Date` object;
             * a :class:`Month` object;
             * named attributes compatible with the :class:`datetime.datetime` class;
             * a unique integer representing the Month number (in such a case,
@@ -1221,7 +1241,7 @@ class Month(object):
         else:
             # Try to generate a Date object
             mmod = None
-            if isinstance(top, basestring):
+            if isinstance(top, six.string_types):
                 mmod = re.search(':(next|prev|closest)$', top)
                 if mmod:
                     args[0] = re.sub(':(?:next|prev|closest)$', '', top)
@@ -1342,25 +1362,39 @@ class Month(object):
     def __int__(self):
         return self._month
 
-    def __cmp__(self, other):
-        """Compare two month values."""
-        rc = 1
+    def __eq__(self, other):
         try:
-            if isinstance(other, int) or ( isinstance(other, basestring) and len(other.lstrip('0')) < 3 ):
-                rc = cmp(self.month, Month(int(other), self.year).month)
+            if isinstance(other, int) or (isinstance(other, six.string_types) and
+                                          len(other.lstrip('0')) < 3):
+                rc = self.month == Month(int(other), self.year).month
             else:
                 if isinstance(other, tuple) or isinstance(other, list):
                     mtest = Month(*other)
                 else:
                     mtest = Month(other)
                 if self.year * mtest.year == 0:
-                    rc = cmp(self.month, mtest.month)
+                    rc = self.month == mtest.month
                 else:
-                    rc = cmp(self.fmtym, mtest.fmtym)
+                    rc = self.fmtym == mtest.fmtym
         except (ValueError, TypeError):
-            rc = 1
+            rc = False
         finally:
             return rc
+
+    def __gt__(self, other):
+        if isinstance(other, int) or (isinstance(other, six.string_types) and
+                                      len(other.lstrip('0')) < 3):
+            rc = self.month > Month(int(other), self.year).month
+        else:
+            if isinstance(other, tuple) or isinstance(other, list):
+                mtest = Month(*other)
+            else:
+                mtest = Month(other)
+            if self.year * mtest.year == 0:
+                rc = self.month > mtest.month
+            else:
+                rc = self.fmtym > mtest.fmtym
+        return rc
 
 
 if __name__ == '__main__':

@@ -13,10 +13,10 @@
 Sub-modules
 -----------
 
-* :mod:`bronx.datagrip.datastore`
-* :mod:`bronx.datagrip.misc`
-* :mod:`bronx.datagrip.namelist`
-* :mod:`bronx.datagrip.pyexttiff`
+* :mod:`bronx.datagrip.datastore`: A simplified key/value embedded-database.
+* :mod:`bronx.datagrip.misc`: Miscellaneous I/O tools.
+* :mod:`bronx.datagrip.namelist`: Support for fortran literals and namelists
+* :mod:`bronx.datagrip.pyexttiff`: Aims at reading tiff with private IFDs.
 
 NB: All of these sub-modules have to be imported manually (depending on your
 needs).

@@ -2,7 +2,7 @@
 # -*- coding:Utf-8 -*-
 
 from decimal import Decimal
-from six import StringIO
+import six
 from unittest import TestCase, main
 
 from bronx.datagrip import namelist
@@ -167,16 +167,18 @@ class UtFortranNamelist(TestCase):
         # Inspect the newly created object
         self.assertEqual(nb_res.name, 'MyNamelistTest')
         self.assertEqual(len(nb_res), 9)
-        self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'A'], list(nb_res))  # Iterator test
-        self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'A'], nb_res.keys())
+        self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'A'],
+                         list(nb_res))  # Iterator test
+        self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'A'],
+                         list(nb_res.keys()))
         self.assertEqual(nb_res.A, [25, 30, 15])
         self.assertEqual(nb_res["A"], [25, 30, 15])
         self.assertEqual(nb_res.M1, '$MYMACRO1')
         self.assertEqual(nb_res.M1b, "'MYMACRO1'")
         self.assertSetEqual(nb_res.rmkeys(), set(['C', 'GRUIK']))
         nb_res.addmacro('MYMACRO1', 'Toto')
-        self.assertListEqual(dict(MYMACRO1='Toto', MYMACRO2=None, SOMETHINGNEW=None).keys(),
-                             nb_res.macros())
+        self.assertSetEqual(set(dict(MYMACRO1='Toto', MYMACRO2=None, SOMETHINGNEW=None).keys()),
+                             set(nb_res.macros()))
         # Test add/modify/delete of a namelist variable
         nb_res.B = 1.2
         self.assertEqual(nb_res["B"], 1.2)
@@ -242,10 +244,10 @@ C='Trash',
 
     def test_namparser_namset_basics(self):
         np = namelist.NamelistParser(macros=('NBPROC', ))
-        ori = StringIO()
+        ori = six.StringIO()
         ori.write(DIRTYNAM)
         parse_res = np.parse(ori)
-        self.assertSetEqual(set(parse_res.iterkeys()),
+        self.assertSetEqual(set(six.iterkeys(parse_res)),
                             set(['MyNamelistTest', 'MySecondOne']))
         self.assertEqual(parse_res.dumps(), CLEANEDNAM)
         self.assertEqual(parse_res.dumps(sorting=namelist.FIRST_ORDER_SORTING),

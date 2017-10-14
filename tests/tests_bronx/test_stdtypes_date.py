@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import division
+
 from calendar import IllegalMonthError
 from datetime import datetime, timedelta
 from unittest import TestCase, main
@@ -146,7 +148,7 @@ class utDate(TestCase):
         check = {2011: 20110424, 2012: 20120408, 2013: 20130331,
                  2014: 20140420, 2015: 20150405, 2016: 20160327,
                  2017: 20170416, 2018: 20180401, 2019: 20190421 }
-        for y, d in check.iteritems():
+        for y, d in check.items():
             self.assertEqual(date.Date(str(d)), date.easter(y))
 
     def test_date_julian(self):
@@ -154,7 +156,7 @@ class utDate(TestCase):
         self.assertEqual(rv.julian, '207')
 
     def test_date_vortex(self):
-        rv = date.Date(2013, 04, 15, 9, 27, 18)
+        rv = date.Date(2013, 4, 15, 9, 27, 18)
         self.assertEqual(rv.vortex(), '20130415T0927P')
         self.assertEqual(rv.vortex('a'), '20130415T0927A')
 
@@ -184,7 +186,7 @@ class utDate(TestCase):
             { 'month': 12 },
             { 'minute': 21 },
             { 'second': 59 },
-            { 'year': 2015, 'second': 01 }
+            { 'year': 2015, 'second': 1 }
         ]
         expected = [
             date.Date("20111231").compact(),
@@ -358,7 +360,7 @@ class utJeffrey(TestCase):
         obj = date.Period(obj_sec)
         self.assertEqual(len(obj), obj_sec)
         self.assertEqual(obj.length, obj_sec)
-        self.assertEqual(int(obj.time()), obj_sec / 60)  # 24h
+        self.assertEqual(int(obj.time()), obj_sec // 60)  # 24h
 
     def test_period_add(self):
         obj1 = date.Period('PT1S')
@@ -576,6 +578,7 @@ class utMonth(TestCase):
 
         rv = date.Month(2, year=-1)
         self.assertEqual(rv.month, 2)
+        self.assertNotEqual(rv.month, 'toto')
         self.assertEqual(rv.year, 0)
 
         mb = date.Month('20140101')
@@ -585,6 +588,8 @@ class utMonth(TestCase):
 
         rv = date.Month(mb, delta=7)
         self.assertEqual(rv.month, 8)
+        self.assertNotEqual(rv.month, 'toto')
+        self.assertNotEqual(rv.month, 9)
         self.assertEqual(rv.year, 2014)
 
         rv = date.Month(2, delta=12)
@@ -668,6 +673,7 @@ class utMonth(TestCase):
         self.assertGreater(m2, (12, 2015))
         self.assertEqual(m2, (1, 2016))
         self.assertEqual(m2, (1, 0))
+        self.assertNotEqual(m2, (2, 0))
 
 
 if __name__ == '__main__':

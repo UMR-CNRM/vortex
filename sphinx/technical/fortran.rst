@@ -1,129 +1,28 @@
 .. _fortran-usage:
 
-*************************
-Fortran usage with VORTEX
-*************************
-
+********************************************
+Fortran namelist usage with Bronx and VORTEX
+********************************************
 
 In the course of VORTEX usage, such as dealing with Algo Components (cf. :mod:`vortex.algo.components`),
 it is necessary to handle some FORTRAN objects. Therefore some basic functionalities have been integrated.
 But most of them could be used as standalone tools, without the other parts of the VORTEX toolbox.
 
 The present documentation explains how to manipulate FORTRAN items, mostly namelists,
-through the module :mod:`vortex.tools.fortran`.
+through the module :mod:`bronx.datagrip.namelist`.
 
-================
-Parsing literals
-================
-
-A default literal parser is provided in the fortran module:
-
-.. code-block:: python
-
-  >>> from vortex.tools import fortran
-  >>> lp = fortran.LiteralParser()
-  >>> lp
-  <vortex.tools.fortran.LiteralParser object at 0x7f14cc204b50>
-
-Checking fortran types
-======================
-
-Basic fortran types could be checked agains a string value:
-    
-.. code-block:: python
-
-  >>> lp.check_integer('2')
-  True
-  >>> lp.check_integer('2.')
-  False
-  >>> lp.check_integer('2x')
-  False
-  >>> lp.check_real('1.2E-6')
-  True
-  >>> lp.check_logical('.T.')
-  False
-  >>> lp.check_logical('.True.')
-  True
-  >>> print lp.false.match('.f.')
-  <_sre.SRE_Match object at 0x1d2b7e8>
-  >>> print lp.true.match('.f.')
-  >>> None
-
-Effective types are: integer, boz, real, complex, character, logical.
-
-Parsing fortran types
-=====================
-
-After a successful type check, one can parse a specific fortran type
-according to the corresponding method of the LiteralParser:
-
-.. code-block:: python
-
-  >>> s = '1.2E-6'
-  >>> lp.check_real(s)
-  True
-  >>> x = lp.parse_real(s)
-  >>> print x
-  0.0000012
-
-It could be more convenient to use the generic :func:`vortex.tools.fortran.LiteralParser.parse` method:
-
-.. code-block:: python
-
-  >>> x = lp.parse('.true.')
-  >>> print x
-  True
-  >>> type(x)
-  <type 'bool'>
-  >>> x = lp.parse('2.')
-  >>> print x
-  2
-  >>> type(x)
-  <class 'decimal.Decimal'>
-
-
-Encoding fortran types
-======================
-
-The reverse operation could be achieved through a specific encoding function:
-
-.. code-block:: python
-
-  >>> x = 2
-  >>> lp.encode_real(x)
-  '2.'
-  >>> lp.encode_integer(x)
-  '2'
-  >>> lp.encode_complex(x)
-  '(2.,0.)'
-  >>> lp.encode_logical(x)
-  '.TRUE.'
-
-It is possible to rely on the internal python type to decide which is the appropriate encoding
-through the generic :func:`vortex.tools.fortran.LiteralParser.encode` method:
-
-.. code-block:: python
-
-  >>> x = 2
-  >>> lp.encode(x)
-  '2'
-  >>> z = 1 - 2j
-  >>> lp.encode(z)
-  '(1.,-2.)'
-
-
-=================
-Parsing namelists
-=================
+================================================================
+Parsing namelists with the bronx package (independant of VORTEX)
+================================================================
 
 A default namelist parser is provided in the fortran module:
 
 .. code-block:: python
 
-  >>> from vortex.tools import fortran
-  >>> np = fortran.NamelistParser()
+  >>> from bronx.datagrip import namelist
+  >>> np = namelist.NamelistParser()
   >>> np
-  <vortex.tools.fortran.NamelistParser object at 0x1d465d0>
+  <bronx.datagrip.namelist.NamelistParser object at 0x1d465d0>
 
 The namelist parser
 ===================
@@ -134,43 +33,46 @@ If at least one namelist block could be identified, a string given as an argumen
 .. code-block:: python
 
   >>> namsrc = '&NAMFOO LWORK=.FALSE., NRETRY=0/'
-  >>> np.parse(namsrc)
-  {'NAMFOO': <NamelistBlock: NAMFOO has 2 item(s)>}
+  >>> nset = np.parse(namsrc)
+  >>> nset
+  <bronx.datagrip.namelist.NamelistSet object at 0x7f258aae7c90>
+  >>> nset.as_dict()
+  {'NAMFOO': <bronx.datagrip.namelist.NamelistBlock object at 0x7f258c4b7250 | name=NAMFOO len=2>}
+
 
 If it is not the case, the string is assumed to be a filename, which is opened and read:
 
 .. code-block:: python
 
-  >>> np.parse('toto')
-  {'NAERAD': <NamelistBlock: NAERAD has 5 item(s)>, 'NAIMPO': <NamelistBlock: NAIMPO has 0 item(s)>}
+  >>> nset = np.parse('toto')
 
 The user could also provide a opened file descriptor:
 
 .. code-block:: python
 
   >>> nd = open('toto', 'r')
-  >>> np.parse(nd)
-  {'NAERAD': <NamelistBlock: NAERAD has 5 item(s)>, 'NAIMPO': <NamelistBlock: NAIMPO has 0 item(s)>}
+  >>> nset = np.parse(nd)
   >>> nd.close()
 
 
 Playing around with namelist blocks
 ===================================
 
-The output of the parse function is a pure dictionary where keys are namelist names
-and values the associated namelist block as a :class:`vortex.tools.fortran.NamelistBlock` object.
+The output of the parse function is a :class:`~bronx.datagrip.namelist.NamelistSet` object that
+behaves as a dictionary where keys are namelist names and values the associated namelist block
+as a :class:`~bronx.datagrip.namelist.NamelistBlock` object.
 
 So accessing to a namelist block is easy as any dict manipulation:
 
 .. code-block:: python
 
   >>> nam = np.parse('namelistfc')
-  >>> for k, v in sorted(nam.iteritems()):
-  ...   print k, v
+  >>> for k, v in sorted(nam.items()):
+  ...   print k, repr(v)
   ...
-  NACIETEO <NamelistBlock: NACIETEO has 0 item(s)>
-  NACOBS <NamelistBlock: NACOBS has 0 item(s)>
-  NACTAN <NamelistBlock: NACTAN has 0 item(s)>
+  NACIETEO <bronx.datagrip.namelist.NamelistBlock object at 0x... | name=NACIETEO len=0>
+  NACOBS <bronx.datagrip.namelist.NamelistBlock object at 0x... | name=NACOBS len=0>
+  NACTAN <bronx.datagrip.namelist.NamelistBlock object at 0x... | name=NACTAN len=0>
   ...
 
 A specific namelist block is accessed through is key-name:
@@ -178,7 +80,17 @@ A specific namelist block is accessed through is key-name:
 .. code-block:: python
 
   >>> print nam['NAMPAR0']
-  <NamelistBlock: NAMPAR0 has 8 item(s)>
+   &NAMPAR0
+     MBX_SIZE=128000000,
+     MP_TYPE=4,
+     NOUTPUT=1,
+     NPRGPEW=1,
+     NPRGPNS=__NBPROC__,
+     NPROC=__NBPROC__,
+     NPRTRV=1,
+     NPRTRW=__NBPROC__,
+     LFOO=.TRUE.,
+   /
 
 Such a block behaves almost as a dictionary:
 
@@ -187,10 +99,10 @@ Such a block behaves almost as a dictionary:
   >>> nb = nam['NAMPAR0']
   >>> len(nb)
   8
-  >>> nb.keys()
+  >>> list(nb.keys())
   ['MBX_SIZE', 'MP_TYPE', 'NOUTPUT', 'NPRGPEW', 'NPRGPNS', 'NPROC', 'NPRTRV', 'NPRTRW']
   >>> nb['MP_TYPE']
-  [2]
+  2
 
 It must be stressed that any namelist value is a list of values, to be coherent with the fortran syntax
 of the namelist. Such values could be accessed as key-name of the pseudo-dict block or as fake attributes:
@@ -198,19 +110,19 @@ of the namelist. Such values could be accessed as key-name of the pseudo-dict bl
 .. code-block:: python
 
   >>> nb.mp_type
-  [2]
-  >>> nb.mp_type = [ 4 ]
+  2
+  >>> nb.mp_type = [ 4, 5 ]
   >>> nb.lfoo = [ True ]
   >>> print nb.dumps()
    &NAMPAR0
      MBX_SIZE=128000000,
-     MP_TYPE=4,
+     MP_TYPE=4,5,
      NOUTPUT=1,
      NPRGPEW=1,
-     NPRGPNS=NBPROC,
-     NPROC=NBPROC,
+     NPRGPNS=__NBPROC__,
+     NPROC=__NBPROC__,
      NPRTRV=1,
-     NPRTRW=NBPROC,
+     NPRTRW=__NBPROC__,
      LFOO=.TRUE.,
    /
 
@@ -236,12 +148,14 @@ We can see that some values are not valid fortran values. They are identified as
    /
 
 
-==========================
-Handling namelist contents
-==========================
+=========================================================
+Handling namelist contents (this part is VORTEX specific)
+=========================================================
 
-We have seen that the output of the parse command of a :class:`vortex.tools.fortran.NamelistParser`
-object produces a dictionary of :class:`vortex.tools.fortran.NamelistBlock` values which could be handled as such.
+We have seen that the output of the parse command of a :class:`~bronx.datagrip.namelist.NamelistParser`
+object produces a dictionary-like object (:class:`~bronx.datagrip.namelist.NamelistSet`) that
+contains :class:`~bronx.datagrip.namelist.NamelistBlock` values.
+
 However it is possible to go a bit further with the :class:`common.data.namelists.NamelistContent`.
 
 Namelist content as internal resource content
@@ -249,8 +163,8 @@ Namelist content as internal resource content
 
 In fact the :class:`common.data.namelists.NamelistContent` is defined as the default content class
 resources of the kind ``namelist`` derivated from class :class:`common.data.namelists.Namelist`.
-But this class :class:`common.data.namelists.NamelistContent`, could be used as a standalone class,
-as much of the :class:`vortex.data.contents.DataContent`:
+But this class :class:`~common.data.namelists.NamelistContent`, could also be used as a standalone
+class, as much of the :class:`vortex.data.contents.DataContent`:
 
 .. code-block:: python
 
@@ -284,13 +198,20 @@ Named or anonymous creation of block is possible:
    &NAMSPACE
    /
 
+All of the methods of the :class:`~bronx.datagrip.namelist.NamelistSet`
+class are available in the :class:`~common.data.namelists.NamelistContent` and
+compatibility is ensured.
+
+However, some extra methods are added in order to work with Vortex's resource and
+container but also to include a list of predefined macros. 
+
 Combining namelist content and resource container
 =================================================
 
 Instead of starting from scratch, it is obviously possible to merge from a dictionnary of
-already defined :class:`vortex.tools.fortran.NamelistBlock` values, but is also possible
-to provide the :class:`common.data.namelists.NamelistContent`
-with a :class:`vortex.data.containers.Container` derived object:
+already defined :class:`~bronx.datagrip.namelist.NamelistBlock` values, but is also possible
+to provide the :class:`~common.data.namelists.NamelistContent` with a 
+:class:`vortex.data.containers.Container` derived object:
 
 .. code-block:: python
 
@@ -320,7 +241,8 @@ with a :class:`vortex.data.containers.Container` derived object:
 Advanced methods
 ================
 
-The ``setmacro`` method propagates the specified value of the macro to any block using it:
+The :meth:`~common.data.namelists.NamelistContent.setmacro` method propagates the specified value
+of the macro to any block using it:
 
 .. code-block:: python
 
@@ -337,35 +259,8 @@ The ``setmacro`` method propagates the specified value of the macro to any block
      NPRTRW=2,
    /
 
-It is also possible to specify a block to exclude from the next merge operation involving
-the current namelist content as a delta:
-
-.. code-block:: python
-
-  >>> nc.toremove('NEMVAR')
-  >>> nc.rmblocks()
-  set(['NEMVAR'])
-
-The same kind of operation exists at the block level:
-
-.. code-block:: python
-
-  >>> nb = nc['NAMPAR0']
-  >>> nb.todelete('MP_TYPE')
-  >>> nb.rmkeys()
-  set(['MP_TYPE', 'MBX_SIZE'])
-
-Finaly the ``merge`` operates fine grain fusion between a namelist content and
-whatever bahaves as a dictionary of :class:`vortex.tools.fortran.NamelistBlock` values
-(so does an other :class:`common.data.namelists.NamelistContent`):
-
-  >>> from vortex import toolbox
-  >>> fc = toolbox.container(file='namelistfc')
-  >>> from common.data.namelists import NamelistContent
-  >>> nc = NamelistContent()
-  >>> nc.slurp(fc)
-  >>> from vortex.tools.fortran import NamelistBlock
-  >>> nb = NamelistBlock('NAMPAR0')
-  >>> nb.mp_type=1
-  >>> nb.todelete('MBX_SIZE')
-  >>> nc.merge(dict(thisblock = nb))
+The :meth:`~common.data.namelists.NamelistContent.merge` method is abled to merge a
+:class:`~common.data.namelists.NamelistContent` object with another 
+:class:`~common.data.namelists.NamelistContent` or with a raw 
+:class:`~bronx.datagrip.namelist.NamelistSet` object.
+ 

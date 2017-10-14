@@ -14,12 +14,12 @@
 Sub-modules
 -----------
 
-* :mod:`bronx.system.cpus`
-* :mod:`bronx.system.hash`
-* :mod:`bronx.system.interrupt`
-* :mod:`bronx.system.memory`
-* :mod:`bronx.system.mf`
-* :mod:`bronx.system.unistd`
+* :mod:`bronx.system.cpus`: To get informations on CPUs.
+* :mod:`bronx.system.hash`: Interface to the Python's secure hash algorithms.
+* :mod:`bronx.system.interrupt`: Advanced signal catching.
+* :mod:`bronx.system.memory`: To get informations on memory.
+* :mod:`bronx.system.mf`: Meteo France specific system related tools.
+* :mod:`bronx.system.unistd`: Utilities to work on file descriptors through the standard Linux C layer
 
 NB: All of these sub-modules have to be imported manually (depending on your
 needs).

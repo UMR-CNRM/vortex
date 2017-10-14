@@ -16,11 +16,6 @@ Package
 
 .. autodata:: __all__
 
-Functions
----------
-
-.. autofunction:: namparse
-
 Classes
 -------
 
@@ -43,3 +38,17 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+Functions
+---------
+
+.. autofunction:: namparse
+
+Public Data
+-----------
+
+.. autodata:: NO_SORTING
+
+.. autodata:: FIRST_ORDER_SORTING
+
+.. autodata:: SECOND_ORDER_SORTING

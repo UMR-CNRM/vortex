@@ -52,18 +52,18 @@ def redirected_stdio(module=sys, stdio='stdout', to=os.devnull):
 
     Usage::
 
-        with _redirected_stdio(sys, out='stdout', to=filename):
+        with redirected_stdio(sys, out='stdout', to=filename):
             print("from Python")
             import os
             os.system("echo non-Python applications are also supported")
 
-    Warning:: Use with care. It will crash if **module.stdio** is already redirected
+    Warning: Use with care. It will crash if **module.stdio** is already redirected
     to a File like object that is not a "real" physical file (e.g. a StringIO object).
     Because of that, it can not be tested with the unitest module since usual
     test runner redirect stdout/stderr to memory.
 
     Inspired from:
-    `<http://stackoverflow.com/questions/5081657/how-do-i-prevent-a-c-shared-library-to-print-on-stdout-in-python>`
+    http://stackoverflow.com/questions/5081657/how-do-i-prevent-a-c-shared-library-to-print-on-stdout-in-python
     """
     fd = getattr(module, stdio).fileno()
 

@@ -8,8 +8,9 @@ of the Vortex package.
 
 BRONX may mean...
 
-Boîte Révolutionnaire d'Outils Nonobstant vorteX
-Bunch of Reusable Objects Not in vorteX
+* Boîte Révolutionnaire d'Outils Nonobstant vorteX
+* Bunch of Reusable Objects Not in vorteX
+
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division

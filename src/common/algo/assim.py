@@ -207,7 +207,7 @@ class IFSODB(IFSParallel, odb.OdbComponent):
             x.rh for x in self.context.sequence.effective_inputs(kind = 'observations')
             if x.rh.container.actualfmt == 'odb'
         ]
-        allodb.sort(lambda a, b: cmp(a.resource.part, b.resource.part))
+        allodb.sort(key=lambda rh: rh.resource.part)
         if not allodb and fatal:
             logger.critical('Missing ODB input data for %s', self.fullname())
             raise ValueError('Missing ODB input data')

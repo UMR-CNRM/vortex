@@ -49,11 +49,14 @@ class TestDataStore(unittest.TestCase):
         self.ds.insert('some_stuff', dict(), dict(), readonly=True)
         # Let's grep it
         grep = self.ds.grep('vortex_free_store', dict())
-        self.assertItemsEqual((hst1, hst2, hst3), grep.values())
+        self.assertIn(hst1, grep.values())
+        self.assertIn(hst2, grep.values())
+        self.assertIn(hst3, grep.values())
         grep = self.ds.grep('vortex_free_store', dict(storage='hendrix.meteo.fr'))
-        self.assertItemsEqual((hst2, ), grep.values())
+        self.assertIn(hst2, grep.values())
         grep = self.ds.grep('vortex_free_store', dict(storage='alose.meteo.fr'))
-        self.assertItemsEqual((hst1, hst3), grep.values())
+        self.assertIn(hst1, grep.values())
+        self.assertIn(hst3, grep.values())
         # Other stuff
         self.assertEqual(len(self.ds), 4)
         self.assertListEqual(sorted([k.kind for k in self.ds.keys()]),
@@ -65,7 +68,7 @@ class TestDataStore(unittest.TestCase):
                        force=True)
         self.assertEqual(len(self.ds), 3)
         grep = self.ds.grep('vortex_free_store', dict(storage='alose.meteo.fr'))
-        self.assertItemsEqual((hst1, ), grep.values())
+        self.assertIn(hst1, grep.values())
         self.ds.grep_delete('vortex_free_store', dict(), force=True)
         self.assertEqual(len(self.ds), 1)
         grep = self.ds.grep('vortex_free_store', dict())
@@ -89,7 +92,7 @@ class TestDataStore(unittest.TestCase):
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
         # Are all keys and dictionary equal ?
-        self.assertItemsEqual(self.ds.keys(), ds2.keys())
+        self.assertSetEqual(set(self.ds.keys()), set(ds2.keys()))
         for k, v in self.ds:
             if isinstance(v, dict):
                 self.assertDictEqual(v, ds2.get(k.kind, dict(storage=k.storage)))

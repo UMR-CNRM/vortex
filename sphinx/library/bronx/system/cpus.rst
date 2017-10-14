@@ -1,8 +1,8 @@
-:mod:`bronx.system.cpus` --- This module is in charge of getting informations on CPUs
-=====================================================================================
+:mod:`bronx.system.cpus` --- Module in charge of getting informations on CPUs
+=============================================================================
 
 .. automodule:: bronx.system.cpus
-   :synopsis: This module is in charge of getting informations on CPUs
+   :synopsis: Module in charge of getting informations on CPUs
 
 .. moduleauthor:: The Vortex Team & many contributors
 .. sectionauthor:: The Vortex Team & many contributors
@@ -24,18 +24,21 @@ Exceptions
    :members:
    :member-order: alphabetical
 
-Classes
--------
+Abstract classes
+----------------
+
+.. autoclass:: CpusInfo
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 .. autoclass:: CpuInfo
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: CpusInfo
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
+OS-specific implementations
+---------------------------
 
 .. autoclass:: LinuxCpusInfo
    :show-inheritance:

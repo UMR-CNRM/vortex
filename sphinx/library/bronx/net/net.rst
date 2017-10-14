@@ -18,7 +18,7 @@ Package
 Sub-modules
 -----------
 
-* :mod:`bronx.net.netrc`
+* :mod:`bronx.net.netrc`: An object-oriented interface to .netrc files.
 
 NB: All of these sub-modules have to be imported manually (depending on your
 needs).

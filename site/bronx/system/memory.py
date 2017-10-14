@@ -27,7 +27,11 @@ class MemToolUnavailableError(Exception):
 
 
 def convert_bytes_in_unit(mem_b, unit):
-    """Convert bytes to **unit** (among KB, MB, GB, ... or KiB, MiB, GiB)."""
+    """Convert bytes to **unit** (among KB, MB, GB, ... or KiB, MiB, GiB).
+
+    Note: KB, MB, ... are powers of 1000 whereas KiB, MiB, ... are powers of 1024
+    (KiB are often mistaken of KB).
+    """
     unit_power = {'B': 0,
                   'KB': 1, 'MB': 2, 'GB': 3, 'TB': 4, 'PB': 5, 'EB': 6,
                   'KiB': 1, 'MiB': 2, 'GiB': 3, 'TiB': 4, 'PiB': 5, 'EiB': 6, }

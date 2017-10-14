@@ -13,7 +13,7 @@
 Sub-modules
 -----------
 
-.. * :mod:`bronx.stdtypes.XXX`
+* :mod:`bronx.stdtypes.date`: Time, date and calendars functions.
 
 NB: All of these sub-modules have to be imported manually (depending on your
 needs).

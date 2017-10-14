@@ -1,8 +1,8 @@
-:mod:`bronx.system.memory` --- This module is in charge of getting informations on Memory
-=========================================================================================
+:mod:`bronx.system.memory` --- Module is in charge of getting informations on Memory
+====================================================================================
 
 .. automodule:: bronx.system.memory
-   :synopsis: This module is in charge of getting informations on Memory
+   :synopsis: Module in charge of getting informations on Memory
 
 .. moduleauthor:: The Vortex Team & many contributors
 .. sectionauthor:: The Vortex Team & many contributors
@@ -22,13 +22,16 @@ Exceptions
    :members:
    :member-order: alphabetical
 
-Classes
--------
+Abstract class
+--------------
 
 .. autoclass:: MemInfo
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+OS-specific implementations
+---------------------------
 
 .. autoclass:: LinuxMemInfo
    :show-inheritance:

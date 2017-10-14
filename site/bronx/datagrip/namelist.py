@@ -2,27 +2,18 @@
 #  -*- coding: utf-8 -*-
 
 """
-This module contains functions for type conversion between FORTRAN
-literals, represented as strings, and corresponding python types.
+This module contains:
 
-For each literal type (integer, boz, real, complex, character and
-logical), there is a corresponding function parse_* and a global
-parser, simply called parser, choose automatically the appropriate
-literal type. Here is the type conversion table:
-
-  * integer   -> int
-  * boz       -> int
-  * real      -> float or Decimal
-  * complex   -> complex
-  * character -> string
-  * logical   -> bool
-
-For python data, functions are provided for conversion into FORTRAN
-literals through a LiteralParser. Each literal type has its encode_* function and a global
-encoder, simply called encode, chooses automatically the appropriate
-encoder; python integers will be converted into a FORTRAN integer,
-hence the only way to produce a FORTRAN boz is to use encode_boz
-directly.
+* The :class:`LiteralParser` class in charge of type conversion
+  between FORTRAN literals, represented as strings, and corresponding
+  python types. A detailed exemple is given in the class's documentation.
+* The :class:`NamelistBlock` class that contains a single namelist and allows
+  to modify its content.
+* The :class:`NamelistSet` class that holds a collection of namelist blocks
+  (described by :class:`NamelistBlock` objects).
+* The :class:`NamelistParser` class that parse a string, a physical file or
+  File-like object and look for namelist blocks. Upon success, it returns a
+  :class:`NamelistSet` object
 
 Inital author: Joris Picot (2010-12-08 / CERFACS)
 """
@@ -130,14 +121,117 @@ _LITERAL_CONSTANT = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + _BOZ_LITERAL_CO
                     _SIGNED_REAL_LITERAL_CONSTANT + "|" + _COMPLEX_LITERAL_CONSTANT + "|" + \
                     _CHAR_LITERAL_CONSTANT + "|" + _LOGICAL_LITERAL_CONSTANT + ")"
 
-# Sorting
+#: Do not sort anything
 NO_SORTING = 0
+#: Sort all keys
 FIRST_ORDER_SORTING = 1
+#: Sort only within indexes or attributes of the same key.
 SECOND_ORDER_SORTING = 2
 
 
 class LiteralParser(object):
-    """Object in charge of parsing literal fortran expressions that could be found in a namelist."""
+    """
+    Object in charge of parsing literal fortran expressions that could be found
+    in a namelist.
+
+    For each literal type (integer, boz, real, complex, character and
+    logical), there is a corresponding function parse_* and a global
+    parser, simply called :meth:`parse`, choose automatically the
+    appropriate literal type. Here is the type conversion table:
+
+    * integer   -> int
+    * boz       -> int
+    * real      -> float or Decimal
+    * complex   -> complex
+    * character -> string
+    * logical   -> bool
+
+    For python data, functions are provided for conversion into FORTRAN
+    literals through a LiteralParser. Each literal type has its encode_*
+    function and a global encoder, simply called :meth:`encode`, chooses
+    automatically the appropriate encoder; python integers will be converted
+    into a FORTRAN integer, hence the only way to produce a FORTRAN boz is
+    to use encode_boz directly.
+
+    :example: A :class:`LiteralParser` can easily be created:
+
+        >>> lp = LiteralParser()
+        >>> lp #doctest: +ELLIPSIS
+        <bronx.datagrip.namelist.LiteralParser object at 0x...>
+
+        Basic fortran types could be checked agains a string value:
+
+        >>> lp.check_integer('2')
+        True
+        >>> lp.check_integer('2.')
+        False
+        >>> lp.check_integer('2x')
+        False
+        >>> lp.check_real('1.2E-6')
+        True
+        >>> lp.check_logical('.T.')
+        False
+        >>> lp.check_logical('.True.')
+        True
+        >>> lp.check_complex('(2.,0.)')
+        True
+        >>> lp.check_boz("B'11'")
+        True
+
+        After a successful type check, one can parse a specific fortran type
+        according to the corresponding method of the :class:`LiteralParser`:
+
+        >>> s = '1.2E-6'
+        >>> lp.check_real(s)
+        True
+        >>> x = lp.parse_real(s)
+        >>> print(x)
+        0.0000012
+
+        It could be more convenient to use the generic :meth:`parse` method:
+
+        >>> x = lp.parse('.true.')
+        >>> print(x)
+        True
+        >>> type(x)
+        <type 'bool'>
+        >>> x = lp.parse('2.')
+        >>> print(x)
+        2
+        >>> type(x)
+        <class 'decimal.Decimal'>
+        >>> x = lp.parse('Z"1F"')
+        >>> print(x)
+        31
+        >>> type(x)
+        <type 'int'>
+
+        The reverse operation could be achieved through a specific encodingfunction:
+
+        >>> x = 2
+        >>> lp.encode_real(x)
+        '2.'
+        >>> lp.encode_integer(x)
+        '2'
+        >>> lp.encode_complex(x)
+        '(2.,0.)'
+        >>> lp.encode_logical(x)
+        '.TRUE.'
+
+        It is possible to rely on the internal python type to decide which
+        is the appropriate encoding through the generic :meth:`encode` method:
+
+        >>> x = 2
+        >>> lp.encode(x)
+        '2'
+        >>> z = 1 - 2j
+        >>> lp.encode(z)
+        '(1.,-2.)'
+        >>> x = 2.
+        >>> lp.encode(x)
+        '2.'
+
+    """
     def __init__(self,
                  re_flags     = _RE_FLAGS,
                  re_integer   = '^' + _SIGNED_INT_LITERAL_CONSTANT + '$',
@@ -158,9 +252,9 @@ class LiteralParser(object):
         self._re_true      = re_true
         self._re_false     = re_false
         self._log = list()
-        self.recompile()
+        self._recompile()
 
-    def recompile(self):
+    def _recompile(self):
         """Recompile regexps according to internal characters strings by literal types."""
         self.integer = re.compile(self._re_integer, self._re_flags)
         self.boz = re.compile(self._re_boz, self._re_flags)
@@ -288,6 +382,8 @@ class LiteralParser(object):
         else:
             raise ValueError("Literal %s doesn't represent a FORTRAN literal" % string)
 
+    # Python types envoding
+
     @staticmethod
     def encode_integer(value):
         """Returns the string form of the integer ``value``."""
@@ -347,7 +443,7 @@ class LiteralParser(object):
             return self.encode_real(value)
         elif isinstance(value, complex):
             return self.encode_complex(value)
-        elif isinstance(value, basestring):
+        elif isinstance(value, six.string_types):
             return self.encode_character(value)
         else:
             raise ValueError("Type %s cannot be FORTRAN encoded" % type(value))
@@ -356,7 +452,76 @@ class LiteralParser(object):
 class NamelistBlock(object):
     """
     This class represent a FORTRAN namelist block.
-    Values should be an iterable of FORTRAN compatible data.
+
+    This class defines all the methods of a usual Python's dictionary. The
+    keys being the namelist's variable names.
+
+    Macros are special values prefixed and suffixed with ``__`` (e.g. ``__MYMACRO__``)
+    that can be substituted at any time using the :meth:`addmacro` method. NB: They
+    need to be declared using the :meth:`addmacro` method prior to being used.
+
+    :example: To create an empty :class:`NamelistBlock` object, just provide the name:
+
+        >>> nb1 = NamelistBlock('MYNAM')
+        >>> nb1 # doctest: +ELLIPSIS
+        <bronx.datagrip.namelist.NamelistBlock object at 0x... | name=MYNAM len=0>
+
+        From now and on, it's possible to play arround with the namelist block:
+
+        >>> nb1['A'] = 1
+        >>> nb1.B = 2.
+        >>> nb1.text = 'MyBad'
+        >>> print(nb1)
+         &MYNAM
+           A=1,
+           B=2.,
+           TEXT='MyBad',
+         /
+        <BLANKLINE>
+        >>> for k in nb1:
+        ...     print('Entry {:s}: Value is {!s}'.format(k, nb1[k]))
+        ...
+        Entry A: Value is 1
+        Entry B: Value is 2.0
+        Entry TEXT: Value is MyBad
+        >>> for k, v in nb1.items():
+        ...     print('Entry {:s}: Value is {!s}'.format(k, v))
+        ...
+        Entry A: Value is [1]
+        Entry B: Value is [2.0]
+        Entry TEXT: Value is ['MyBad']
+        >>> del nb1.B
+
+        An exemple of namelist blocks merge:
+
+        >>> nb2 = NamelistBlock('MYNAM')
+        >>> nb2.A = 3
+        >>> nb2.todelete('text')
+        >>> nb1.merge(nb2)
+        >>> print(nb1)
+         &MYNAM
+           A=3,
+         /
+        <BLANKLINE>
+
+        Macros can be defined in a namelist blocks using the __MACRONAME__ syntax.
+        They can be substituted at anytime:
+
+        >>> nb3 = NamelistBlock('MYNAM')
+        >>> nb3.addmacro('MACRO_A')
+        >>> nb3.A = '__MACRO_A__'
+        >>> print(nb3)
+         &MYNAM
+           A=__MACRO_A__,
+         /
+        <BLANKLINE>
+        >>> nb3.addmacro('MACRO_A', 3)
+        >>> print(nb3)
+         &MYNAM
+           A=3,
+         /
+        <BLANKLINE>
+
     """
 
     _RE_FREEMACRO = re.compile(r'^' + _UNDERSCORE + r'{2}(.*)' + _UNDERSCORE + r'{2}$')
@@ -378,14 +543,16 @@ class NamelistBlock(object):
         return st
 
     def __setstate__(self, state):
+        """For deepcopy and pickle."""
         self.__dict__.update(state)
 
     def set_name(self, name):
+        """Change the namelist block anme."""
         self.__dict__['_name'] = name
 
     @property
     def name(self):
-        """The namelist's name."""
+        """The namelist block name."""
         return self._name
 
     def __repr__(self):
@@ -396,13 +563,16 @@ class NamelistBlock(object):
                                                       len(self._pool))
 
     def __str__(self):
+        """Returns a text dump of the namelist (see the :meth:`dumps` method)."""
         return self.dumps()
 
     def setvar(self, varname, value, index=None):
         """
-        Insert or change a namelist block key.
+        Insert or change a namelist block variable.
 
-        :param index: if given, set the key to the given index in block.
+        :param str varname: the variable name
+        :param value: the variable value
+        :param int index: if given, set the key to the given index in block.
         """
         varname = varname.upper()
         if not isinstance(value, list):
@@ -420,16 +590,15 @@ class NamelistBlock(object):
         self._dels.discard(varname)
 
     def __setitem__(self, varname, value):
+        """Insert or change a namelist block variable."""
         return self.setvar(varname, value)
 
     def __setattr__(self, varname, value):
+        """Insert or change a namelist block variable."""
         return self.setvar(varname, value)
 
     def getvar(self, varname):
-        """
-        Get ``varname`` value (this is not case sensitive).
-        Also used as internal for attribute access or dictionary access.
-        """
+        """Get ``varname`` variable's value (this is not case sensitive)."""
         varname = varname.upper()
         if varname in self._pool:
             if len(self._pool[varname]) == 1:
@@ -440,44 +609,53 @@ class NamelistBlock(object):
             raise AttributeError("Unknown Namelist variable")
 
     def __getitem__(self, varname):
+        """Get ``varname`` variable's value (this is not case sensitive)."""
         return self.getvar(varname)
 
     def __getattr__(self, varname):
+        """Get ``varname`` variable's value (this is not case sensitive)."""
         return self.getvar(varname)
 
     def delvar(self, varname):
-        """Delete the specified ``varname`` from this block."""
+        """Delete the specified ``varname`` variable from this block."""
         varname = varname.upper()
         if varname in self._pool:
             del self._pool[varname]
             self._keys.remove(varname)
 
     def __delitem__(self, varname):
+        """Delete the specified ``varname`` variable from this block."""
         self.delvar(varname)
 
     def __delattr__(self, varname):
+        """Delete the specified ``varname`` variable from this block."""
         self.delvar(varname)
 
     def __len__(self):
+        """The number of variable within the namelist block."""
         return len(self._pool)
 
     def __iter__(self):
+        """Iterate through variable names."""
         for t in self._keys:
             yield t
 
+    def keys(self):
+        """Returns the ordered variable names of the namelist block."""
+        if six.PY3:
+            return self.__iter__()
+        else:
+            return self._keys[:]
+
+    iterkeys = __iter__
+
     def __contains__(self, item):
+        """Returns whether ``item`` value is defined as a namelist variable or not."""
         return item.upper() in self._pool
 
     def has_key(self, item):
-        """
-        Returns whether ``varname`` value is defined as a namelist key or not.
-        Also used as internal for dictionary access.
-        """
+        """Returns whether ``item`` value is defined as a namelist variable or not."""
         return item in self
-
-    def keys(self):
-        """Returns the ordered keys of the namelist block."""
-        return self._keys[:]
 
     def __call__(self):
         return self.pool()
@@ -485,6 +663,18 @@ class NamelistBlock(object):
     def values(self):
         """Returns the values of the internal pool of variables."""
         return self._pool.values()
+
+    def items(self):
+        """Iterate over the namelist block's variables."""
+        if six.PY3:
+            return self.iteritems()
+        else:
+            return [(k, self._pool[k]) for k in self._keys]
+
+    def iteritems(self):
+        """Iterate over the namelist block's variables."""
+        for k in self._keys:
+            yield (k, self._pool[k])
 
     def pool(self):
         """Returns the reference of the internal pool of variables."""
@@ -494,18 +684,13 @@ class NamelistBlock(object):
         """Proxy to the dictionary ``get`` mechanism on the internal pool of variables."""
         return self._pool.get(*args)
 
-    def iteritems(self):
-        """Iterate over the namelist lock's variables."""
-        for k in self._keys:
-            yield (k, self._pool[k])
-
     def update(self, dico):
         """Updates the pool of keys, and keeps as much as possible the initial order."""
-        for var, value in dico.iteritems():
+        for var, value in six.iteritems(dico):
             self.setvar(var, value)
 
     def clear(self, rmkeys=None):
-        """Remove specified keys or completely clear the namelist block."""
+        """Remove specified keys (**rmkeys**) or completely clear the namelist block."""
         if rmkeys:
             for k in rmkeys:
                 self.delvar(k)
@@ -534,7 +719,10 @@ class NamelistBlock(object):
         self._subs[macro] = value
 
     def add_declaredmacro(self, macro, value=None):
-        """Add a new old-style declared macro to this definition block, and/or set a value."""
+        """
+        Add a new old-style declared macro to this definition block,
+        and/or set a value.
+        """
         self.addmacro(macro, value)
         self._declared_subs.add(macro)
 
@@ -542,7 +730,7 @@ class NamelistBlock(object):
         """Find wether *item* is a macro or not."""
         if item in self._declared_subs:
             return item
-        elif isinstance(item, basestring) and self._RE_FREEMACRO.match(item):
+        elif isinstance(item, six.string_types) and self._RE_FREEMACRO.match(item):
             itemized = self._RE_FREEMACRO.sub(r'\1', item)
             if itemized in self._subs:
                 return itemized
@@ -554,7 +742,7 @@ class NamelistBlock(object):
             if self._literal is None:
                 self.__dict__['_literal'] = LiteralParser()
             literal = self._literal
-        if isinstance(item, basestring):
+        if isinstance(item, six.string_types):
             itemli = item[:]
             # Ignore quote and double-quote when mathing macro's name
             if ((itemli.startswith("'") and itemli.endswith("'")) or
@@ -576,13 +764,12 @@ class NamelistBlock(object):
 
     def dumps(self, literal=None, sorting=NO_SORTING):
         """
-        Returns a string of the namelist block, readable by fortran parsers.
-        Sorting option **sorting**:
+        Returns a string of the namelist block that will be readable by fortran parsers.
 
-            * NO_SORTING;
-            * FIRST_ORDER_SORTING => sort keys;
-            * SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
-
+        :param sorting: Sorting option. One of :py:data:`NO_SORTING`,
+                        :py:data:`FIRST_ORDER_SORTING` (sort based on variable names) or
+                        :py:data:`SECOND_ORDER_SORTING` (sort only within indexes or attributes
+                        of the same variable: usefull with arrays).
         """
         namout = " &{0:s}\n".format(self.name.upper())
         if literal is None:
@@ -632,7 +819,10 @@ class NamelistBlock(object):
         return namout + " /\n"
 
     def merge(self, delta):
-        """Merge the delta provided to the current block."""
+        """Merge the delta provided to the current block.
+
+        :param NamelistBlock delta: The namelist block to merge in.
+        """
         self.update(delta.pool())
         for dkey in [x for x in delta.rmkeys() if x in self]:
             self.delvar(dkey)
@@ -645,9 +835,76 @@ class NamelistBlock(object):
 
 
 class NamelistSet(collections.MutableMapping):
-    """A set of namelist blocks (see :class:`NamelistBlock`)."""
+    """A set of namelist blocks (see :class:`NamelistBlock`).
+
+    This class defines all the methods of a usual Python's dictionary. The
+    keys being the namelist names and the values the corresponding namelist
+    blocks.
+
+    :example: To create a :class:`NamelistSet` object populated with a pre-existing
+        namelist block:
+
+        >>> nb = NamelistBlock('MYNAM')
+        >>> nb.A = 3
+        >>> nset = NamelistSet([nb, ])
+
+        It's possible to add a new block and customise it:
+
+        >>> newblock = nset.newblock('TESTNAM')
+        >>> newblock.A = 1
+        >>> nset['TESTNAM'].B = 5.
+        >>> print(nset.dumps())
+         &MYNAM
+           A=3,
+         /
+         &TESTNAM
+           A=1,
+           B=5.,
+         /
+        <BLANKLINE>
+
+        For instance, this block can be renamed and the previous one deleted:
+
+        >>> nset.mvblock('TESTNAM', 'MYNAM2')
+        >>> del nset['MYNAM']
+        >>> print(nset.dumps())
+         &MYNAM2
+           A=1,
+           B=5.,
+         /
+        <BLANKLINE>
+
+        The :meth:`merge` method allows to merge two namelist sets:
+
+        >>> nset2 = NamelistSet([nb, ])
+        >>> newblock = nset2.newblock('MYNAM2')
+        >>> newblock.A = 999
+        >>> print(nset2.dumps())
+         &MYNAM
+           A=3,
+         /
+         &MYNAM2
+           A=999,
+         /
+        <BLANKLINE>
+        >>> nset.merge(nset2)
+        >>> print(nset.dumps())
+         &MYNAM
+           A=3,
+         /
+         &MYNAM2
+           A=999,
+           B=5.,
+         /
+        <BLANKLINE>
+
+    """
 
     def __init__(self, blocks_set=None):
+        """
+        :param list blocks_set: A list of :class:`NamelistBlock` objects (if
+                                missing, an empty list is assumed).
+        """
         # For later use
         self._automkblock = 1
         # Initialise the set content
@@ -713,17 +970,23 @@ class NamelistSet(collections.MutableMapping):
         return self[name]
 
     def mvblock(self, sourcename, destname):
-        """Rename a block."""
+        """Rename a namelist block."""
         assert destname not in self, "Block {:s} already exists".format(destname)
         self[destname] = self.pop(sourcename)
 
     def setmacro(self, item, value):
-        """Set macro value for further substitution."""
+        """
+        Set macro value for further substitution (in all of the
+        namelist blocks).
+        """
         for namblock in filter(lambda x: item in x.macros(), self.values()):
             namblock.addmacro(item, value)
 
     def merge(self, delta, rmkeys=None, rmblocks=None, clblocks=None):
-        """Merge of the current namelist content with the set of namelist blocks provided."""
+        """
+        Merge of the current namelist set with the set of namelist blocks
+        provided.
+        """
         assert isinstance(delta, NamelistSet) or delta == dict()
         for namblock in delta.values():
             if namblock.name in self:
@@ -742,13 +1005,14 @@ class NamelistSet(collections.MutableMapping):
 
     def dumps(self, sorting=NO_SORTING, block_sorting=True):
         """
-        Join the fortran-strings dumped by each namelist block.
-        Sorting option **sorting**:
+        Join the fortran's strings dumped by each namelist block.
 
-            * NO_SORTING;
-            * FIRST_ORDER_SORTING => sort all keys within blocks;
-            * SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key.
-
+        :param sorting: Sorting option. One of :py:data:`NO_SORTING`,
+                        :py:data:`FIRST_ORDER_SORTING` (sort based on variable names) or
+                        :py:data:`SECOND_ORDER_SORTING` (sort only within indexes or attributes
+                        of the same variable: usefull with arrays).
+        :param bool block_sorting: if True, namelist blocks are ordered based
+                                   on their name.
         """
         if block_sorting:
             return ''.join([self[nblock_k].dumps(sorting=sorting)
@@ -776,6 +1040,31 @@ class NamelistParser(object):
     """
     Parser that creates a :class:`NamelistSet` object from a namelist file or
     a string.
+
+    Macros (i.e. __SOMETHING__ values) are properly dealt with.
+
+    :example: To get a :class:`NamelistSet` object from a string:
+
+    >>> np = NamelistParser()
+    >>> nset = np.parse('&NAM1 A=5.69, / &NAM2 B=__MYMACRO__ /')
+    >>> print(nset.dumps())
+     &NAM1
+       A=5.69,
+     /
+     &NAM2
+       B=__MYMACRO__,
+     /
+    <BLANKLINE>
+    >>> nset.setmacro('MYMACRO', 'toto')
+    >>> print(nset.dumps())
+     &NAM1
+       A=5.69,
+     /
+     &NAM2
+       B='toto',
+     /
+    <BLANKLINE>
+
     """
 
     def __init__(self,
@@ -809,9 +1098,9 @@ class NamelistParser(object):
         self._re_freemacro = re_freemacro
         self._re_endol = re_endol
         self._re_comma = re_comma
-        self.recompile()
+        self._recompile()
 
-    def recompile(self):
+    def _recompile(self):
         """Recompile regexps according to internal characters strings by namelist entity."""
         self.clean = re.compile(self._re_clean, self._re_flags)
         self.block = re.compile(self._re_block, self._re_flags)
@@ -965,11 +1254,11 @@ class NamelistParser(object):
         return (namelist, source)
 
     def parse(self, obj):
+        """Parse a string or a file.
+
+        Returns a :class:`NamelistSet` object.
         """
-        Parse a string or a file.
-        Returns a dict of {namelist block title: namelist block object}.
-        """
-        if isinstance(obj, basestring):
+        if isinstance(obj, six.string_types):
             if not self.block.search(obj):
                 obj = obj.strip()
                 iod = open(obj, 'r')
@@ -977,7 +1266,7 @@ class NamelistParser(object):
                 iod.close()
             return self._namelist_parse(obj)
 
-        elif isinstance(obj, (file, six.StringIO)):
+        elif hasattr(obj, 'seek') and hasattr(obj, 'read'):
             obj.seek(0)
             return self._namelist_parse(obj.read())
         else:
@@ -985,6 +1274,22 @@ class NamelistParser(object):
 
 
 def namparse(obj, **kwargs):
-    """Raw parsing with an default anonymous fortran parser."""
+    """Raw parsing with an default anonymous fortran parser.
+
+    This function is a shortcut to the :meth:`NamelistParser.parse` method.
+
+    :example: To get a :class:`NamelistSet` object from a string:
+
+        >>> nset = namparse('&NAM1 A=5.69, / &NAM2 B=1 /')
+        >>> print(nset.dumps())
+         &NAM1
+           A=5.69,
+         /
+         &NAM2
+           B=1,
+         /
+        <BLANKLINE>
+
+    """
     namp = NamelistParser(**kwargs)
     return namp.parse(obj)

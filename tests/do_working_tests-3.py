@@ -6,7 +6,12 @@ import unittest
 import os
 
 
-testmodules = ['tests_footprints.test_fp_core',
+testmodules = ['tests_bronx.test_datagrip_datastore',
+               'tests_bronx.test_datagrip_namelist',
+               'tests_bronx.test_stdtypes_date',
+               'tests_bronx.test_system_hash',
+               'tests_bronx.test_system_interrupt',
+               'tests_footprints.test_fp_core',
                'tests_footprints.test_fp_doc',
                'tests_footprints.test_fp_dumps',
                'tests_footprints.test_fp_logging',

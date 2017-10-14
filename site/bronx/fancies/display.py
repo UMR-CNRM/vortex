@@ -42,6 +42,13 @@ def query_yes_no_quit(question, default="yes"):
     :return: 'yes', 'no' or 'quit' depending on the user's answer.
     :rtype: A unicode string.
 
+    :example: Ask something to someone...
+
+        >>> answer = query_yes_no_quit('Do you want to continue ?', default='yes')
+        Do you want to continue ? [Y/n/q] Y
+        >>> answer
+        u'yes'
+
     from: http://code.activestate.com/recipes/577097/
     """
     valid = {"yes": "yes", "y": "yes", "ye": "yes",

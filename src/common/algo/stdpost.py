@@ -250,7 +250,7 @@ class Fa2Grib(ParaBlindRun):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = [ 'fa2grib' ],
+                values = ['fa2grib'],
             ),
             timeout = dict(
                 type = int,
@@ -376,7 +376,7 @@ class StandaloneGRIBFilter(TaylorRun, grib.GribApiComponent):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = [ 'gribfilter' ],
+                values = ['gribfilter'],
             ),
             timeout = dict(
                 type = int,
@@ -466,7 +466,7 @@ class AddField(BlindRun):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = [ 'addcst', 'addconst', 'addfield' ],
+                values = ['addcst', 'addconst', 'addfield'],
                 remap = dict(
                     addconst = 'addcst',
                 ),
@@ -496,16 +496,17 @@ class AddField(BlindRun):
         """Loop on the various initial conditions provided."""
 
         # Is there any namelist provided ?
-        namrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('Namelist'), kind='namelist') ]
+        namrh = [x.rh for x in self.context.sequence.effective_inputs(role=('Namelist'),
+                                                                      kind='namelist')]
         if namrh:
             self.system.softlink(namrh[0].container.localpath(), self.fortnam)
         else:
             logger.warning('Do not find any namelist for %s', self.kind)
 
         # Look for some sources files
-        srcrh = [ x.rh for x in self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
-                                                                       kind='gridpoint') ]
-        srcrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
+        srcrh = [x.rh for x in self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
+                                                                      kind='gridpoint')]
+        srcrh.sort(key=lambda rh: rh.resource.term)
 
         for r in srcrh:
             self.system.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
@@ -553,11 +554,11 @@ class DiagPE(BlindRun, grib.GribApiComponent):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = [ 'diagpe' ],
+                values = ['diagpe'],
             ),
             method = dict(
                 info   = 'The method used to compute the diagnosis',
-                values = [ 'neighbour' ],
+                values = ['neighbour'],
             ),
             numod = dict(
                 type     = int,
@@ -671,7 +672,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
 
         # Tweak the namelist
         namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
-        for nam in [ x.rh for x in namsec if 'NAM_PARAM' in x.rh.contents ]:
+        for nam in [x.rh for x in namsec if 'NAM_PARAM' in x.rh.contents]:
             logger.info("Substitute the date (%s) to AAAAMMJJHH namelist entry", basedate.ymdh)
             nam.contents['NAM_PARAM']['AAAAMMJJHH'] = basedate.ymdh
             logger.info("Substitute the number of members (%d) to NBRUN namelist entry", len(members))
@@ -826,7 +827,7 @@ class _DiagPICommons(FootprintCopier):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = [ 'diagpi', 'diaglabo' ],
+                values = ['diagpi', 'diaglabo'],
             ),
             numod = dict(
                 info     = 'The GRIB model number',
@@ -921,11 +922,11 @@ class _DiagPICommons(FootprintCopier):
 
         srcsec = self.context.sequence.effective_inputs(role=('Gridpoint', 'Sources'),
                                                         kind='gridpoint')
-        srcsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+        srcsec.sort(key=lambda s: s.rh.resource.term)
 
         outsec = self.context.sequence.effective_inputs(role='GridpointOutputPrepare')
         if outsec:
-            outsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+            outsec.sort(key=lambda s: s.rh.resource.term)
 
         for sec in srcsec:
             r = sec.rh
@@ -933,7 +934,7 @@ class _DiagPICommons(FootprintCopier):
                                                                            r.resource.term.fmthm))
             # Tweak the namelist
             namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
-            for nam in [ x.rh for x in namsec if 'NAM_PARAM' in x.rh.contents ]:
+            for nam in [x.rh for x in namsec if 'NAM_PARAM' in x.rh.contents]:
                 logger.info("Substitute the date (%s) to AAAAMMJJHH namelist entry", r.resource.date.ymdh)
                 nam.contents['NAM_PARAM']['AAAAMMJJHH'] = r.resource.date.ymdh
                 logger.info("Substitute the the number of terms to NECH(0) namelist entry")
@@ -950,7 +951,7 @@ class _DiagPICommons(FootprintCopier):
                     nmod = self.numod
                     logger.info("Substitute the model number (%d) to namelist entry", nmod)
                     for namk in ('CONV', 'BR', 'HIV', 'ECHOT', 'ICA'):
-                        if nam.contents['NAM_DIAG'].has_key(namk) and nam.contents['NAM_DIAG'][namk] != 0:
+                        if namk in nam.contents['NAM_DIAG'] and nam.contents['NAM_DIAG'][namk] != 0:
                             nam.contents['NAM_DIAG'][namk] = nmod
                 # We are done with the namelist
                 nam.save()
@@ -1054,7 +1055,7 @@ class Fa2GaussGrib(BlindRun):
         thisoutput = 'GRID_' + self.fortinput[7:14] + '1'
 
         gpsec = self.context.sequence.effective_inputs(role=('Historic', 'ModelState'))
-        gpsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+        gpsec.sort(key=lambda s: s.rh.resource.term)
 
         for sec in gpsec:
             r = sec.rh

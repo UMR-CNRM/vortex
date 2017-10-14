@@ -14,7 +14,7 @@ __all__ = []
 
 def str2dict(string, try_convert=None):
     """
-    Parse a **string** (of syntax 'key1:value1,key2=value2') to a dict.
+    Parse a **string** (of syntax ``key1:value1,key2=value2``) to a dict.
 
     :param try_convert: try to convert values as type **try_convert**,
                         e.g. try_convert=int

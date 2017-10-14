@@ -84,10 +84,10 @@ class Forecast(IFSParallel):
                 inittest = checkmonth,
             )
 
-            for bdaprh in [ x.rh for x in self.context.sequence.effective_inputs(
+            for bdaprh in [x.rh for x in self.context.sequence.effective_inputs(
                 role = ('LocalClim', 'TargetClim', 'BDAPClim'),
                 kind = 'clim_bdap',
-            ) if x.rh.resource.month == thismonth ]:
+            ) if x.rh.resource.month == thismonth]:
                 thisclim = bdaprh.container.localpath()
                 thisname = 'const.clim.' + bdaprh.resource.geometry.area
                 if thisclim != thisname:
@@ -100,10 +100,10 @@ class Forecast(IFSParallel):
             # At least, expect the analysis to be there...
             self.grab(analysis, comment='analysis')
 
-        for namrh in [ x.rh for x in self.context.sequence.effective_inputs(
+        for namrh in [x.rh for x in self.context.sequence.effective_inputs(
             role = 'Namelist',
             kind = 'namelist',
-        ) ]:
+        )]:
             try:
                 namlocal = namrh.container.actualpath()
                 namc = namrh.contents
@@ -209,17 +209,16 @@ class LAMForecast(Forecast):
         sh = self.system
 
         # Check boundaries conditions
-        cplrh = [ x.rh for x in self.context.sequence.effective_inputs(
+        cplrh = [x.rh for x in self.context.sequence.effective_inputs(
             role = 'BoundaryConditions',
             kind = 'boundary'
-        ) ]
-        cplrh.sort(lambda a, b: cmp(a.resource.date + a.resource.term,
-                                    b.resource.date + b.resource.term))
+        )]
+        cplrh.sort(key=lambda rh: rh.resource.date + rh.resource.term)
 
         # Ordered pre-linking of boundaring and building ot the synchronization tools
         firstsync = None
         sh.header('Check boundaries...')
-        if any([ x.is_expected() for x in cplrh ]):
+        if any([x.is_expected() for x in cplrh]):
             logger.info('Some boundaries conditions are still expected')
             self.mksync = True
         else:
@@ -318,11 +317,11 @@ class FullPosGeo(FullPos):
 
         sh = self.system
 
-        initrh = [ x.rh for x in self.context.sequence.effective_inputs(
+        initrh = [x.rh for x in self.context.sequence.effective_inputs(
             role = ('Analysis', 'Guess', 'InitialCondition'),
             kind = ('analysis', 'historic', 'ic', re.compile('(stp|ana)min'),
                     re.compile('pert'), ),
-        ) ]
+        )]
 
         # is there one (deterministic forecast) or many (ensemble forecast) fullpos to perform ?
         isMany = len(initrh) > 1
@@ -348,7 +347,7 @@ class FullPosGeo(FullPos):
                 runstore = 'RUNOUT'
                 sh.mkdir(runstore)
                 # Freeze the current output
-                for posfile in [ x for x in sh.glob('PF{0:s}*+*'.format(self.xpname)) ]:
+                for posfile in [x for x in sh.glob('PF{0:s}*+*'.format(self.xpname))]:
                     sh.move(posfile, sh.path.join(runstore, 'pfout_{:d}'.format(num)), fmt = r.container.actualfmt)
 
                 sh.remove(infile, fmt=r.container.actualfmt)
@@ -363,11 +362,11 @@ class FullPosGeo(FullPos):
         """Post processing cleaning."""
         sh = self.system
 
-        initrh = [ x.rh for x in self.context.sequence.effective_inputs(
+        initrh = [x.rh for x in self.context.sequence.effective_inputs(
             role = ('Analysis', 'Guess', 'InitialCondition'),
             kind = ('analysis', 'historic', 'ic', re.compile('(stp|ana)min'),
                     re.compile('pert'), ),
-        ) ]
+        )]
         if len(initrh) > 1:
             for num, r in enumerate(initrh):
                 sh.move('RUNOUT/pfout_{:d}'.format(num),
@@ -385,7 +384,7 @@ class FullPosBDAP(FullPos):
         attr = dict(
             kind = dict(
                 values  = ['fullpos', 'fp'],
-                remap   = dict(fp= 'fullpos' )
+                remap   = dict(fp= 'fullpos')
             ),
             fcterm = dict(
                 values = [0, ],
@@ -412,20 +411,20 @@ class FullPosBDAP(FullPos):
 
         sh = self.system
 
-        namrh = [ x.rh for x in self.context.sequence.effective_inputs(
+        namrh = [x.rh for x in self.context.sequence.effective_inputs(
             kind = 'namelistfp'
-        ) ]
+        )]
 
-        namxx = [ x.rh for x in self.context.sequence.effective_inputs(
+        namxx = [x.rh for x in self.context.sequence.effective_inputs(
             role = 'FullPosSelection',
             kind = 'namselect',
-        ) ]
+        )]
 
-        initrh = [ x.rh for x in self.context.sequence.effective_inputs(
+        initrh = [x.rh for x in self.context.sequence.effective_inputs(
             role = ('InitialCondition', 'ModelState'),
             kind = 'historic',
-        ) ]
-        initrh.sort(lambda a, b: cmp(a.resource.term, b.resource.term))
+        )]
+        initrh.sort(key=lambda rh: rh.resource.term)
 
         for r in initrh:
             sh.subtitle('Loop on {0:s}'.format(r.resource.term.fmthm))
@@ -433,11 +432,11 @@ class FullPosBDAP(FullPos):
 
             thisdate = r.resource.date + r.resource.term
             thismonth = thisdate.month
-            logger.info('Fullpos <month:%s>' % thismonth )
-            for bdaprh in [ x.rh for x in self.context.sequence.effective_inputs(
+            logger.info('Fullpos <month:%s>' % thismonth)
+            for bdaprh in [x.rh for x in self.context.sequence.effective_inputs(
                 role = 'LocalClim',
                 kind = 'clim_bdap',
-            ) if x.rh.resource.month == thismonth ]:
+            ) if x.rh.resource.month == thismonth]:
                 thisclim = bdaprh.container.localpath()
                 thisname = 'const.clim.' + bdaprh.resource.geometry.area
                 if thisclim != thisname:
@@ -450,7 +449,7 @@ class FullPosBDAP(FullPos):
 
             # Define an input namelist
             try:
-                namfp = [ x for x in namrh if x.resource.term == r.resource.term ].pop()
+                namfp = [x for x in namrh if x.resource.term == r.resource.term].pop()
                 namfplocal = namfp.container.localpath()
                 if self.outputid is not None:
                     namfp.contents.setmacro('OUTPUTID', self.outputid)
@@ -464,7 +463,7 @@ class FullPosBDAP(FullPos):
 
             # Define an selection namelist
             try:
-                namxt = [ x for x in namxx if x.resource.term == r.resource.term ].pop()
+                namxt = [x for x in namxx if x.resource.term == r.resource.term].pop()
                 sh.remove('xxt00000000')
                 sh.symlink(namxt.container.localpath(), 'xxt00000000')
             except Exception:
@@ -479,8 +478,8 @@ class FullPosBDAP(FullPos):
             super(FullPosBDAP, self).execute(rh, opts)
 
             # Freeze the current output
-            for posfile in [ x for x in (sh.glob('PF{0:s}*+*'.format(self.xpname)) +
-                                         sh.glob('GRIBPF{0:s}*+*'.format(self.xpname)))]:
+            for posfile in [x for x in (sh.glob('PF{0:s}*+*'.format(self.xpname)) +
+                                        sh.glob('GRIBPF{0:s}*+*'.format(self.xpname)))]:
                 rootpos = re.sub('0+$', '', posfile)
                 sh.move(
                     posfile,

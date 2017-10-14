@@ -19,16 +19,16 @@ __all__ = []
 def read_cmap(sourcefile):
     """
     Read and creates a custom Colormap from a set of RGB colors in a file with the
-    following formating:
+    following formating::
 
-    r1,g1,b1;\n
-    r2,g2,b2;\n
-    ...\n
-    rn,gn,bn
+        r1,g1,b1;\n
+        r2,g2,b2;\n
+        ...\n
+        rn,gn,bn
 
     each value being comprised between 0 and 255, or 0 and 1.
 
-    :param sourcefile: open file-like object to read colormap in.
+    :param sourcefile: opened file-like object to read colormap from.
     """
     colors = sourcefile.readlines()
     for i in range(len(colors)):
@@ -48,7 +48,7 @@ def add_cmap(cmap, sourcefile):
     Reads and registers the given colormap in matplotlib.
 
     :param cmap: name of the colormap, to be registered under and used then
-    :param sourcefile: file-like object to read the colormap in.
+    :param sourcefile: opened file-like object to read the colormap in.
     """
     plt = matplotlib.pyplot
     if cmap not in plt.colormaps():

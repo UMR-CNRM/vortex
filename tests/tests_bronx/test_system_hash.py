@@ -45,7 +45,7 @@ class TestHashAdapter(unittest.TestCase):
     def test_hash_compute(self):
         # Filename or FileHandle to hash string
         self.assertEqual(self.md5_h.file2hash(self.bin_path), self.md5_sum)
-        with open(self.bin_path, 'r') as i_fh:
+        with open(self.bin_path, 'rb') as i_fh:
             self.assertEqual(self.md5_h.file2hash(i_fh), self.md5_sum)
         # Filename to hash FileHandle
         self.assertEqual(self._read_md5line(self.md5_h.file2hash_fh(self.bin_path)),
@@ -58,7 +58,7 @@ class TestHashAdapter(unittest.TestCase):
         # String 2 Hash
         strdata = u'dgerqgjnmrsgr864bgvsrdvsrce'
         self.assertEqual(self.md5_h.string2hash(strdata),
-                         hashlib.md5(strdata).hexdigest())
+                         hashlib.md5(strdata.encode()).hexdigest())
         # Automatic check
         self.assertTrue(self.md5_h.filecheck(self.bin_path, self.md5_path))
         with open(self.md5_path, 'r') as m_fh:

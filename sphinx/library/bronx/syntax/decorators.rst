@@ -2,7 +2,7 @@
 ====================================================
 
 .. automodule:: bronx.syntax.decorators
-   :synopsis: Useful decorators
+   :synopsis: Useful decorators (or decorator of decorators)
 
 .. moduleauthor:: The Vortex Team & many contributors
 .. sectionauthor:: The Vortex Team & many contributors
