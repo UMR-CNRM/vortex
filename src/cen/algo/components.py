@@ -80,8 +80,9 @@ class SurfexWorker(VortexWorkerBlindRun):
 
         area = _dic_area[self.vconf]
         liste_massifs = infomassifs().dicArea[area]
+        liste_aspect  = infomassifs().get_list_aspect(8, ["0", "20", "40"])
 
-        forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, ["0", "20", "40"], xrange(0, 9))
+        forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, ["0", "20", "40"], liste_aspect)
 
         for namelist in self.find_namelists():
             # Update the contents of the namelist (date and location)
@@ -117,6 +118,8 @@ class OfflineWorker(SurfexWorker):
     )
 
     def _surfex_task(self, rundir, thisdir, rdict):
+        if not self.system.path.exists("OFFLINE"):
+            self.system.symlink(self.system.path.join(rundir, "OFFLINE"), "OFFLINE")
         list_name = self.system.path.join(thisdir, 'offline.out')
         self.local_spawn(list_name)
 
