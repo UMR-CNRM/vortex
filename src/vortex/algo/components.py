@@ -244,7 +244,7 @@ class AlgoComponent(footprints.FootprintBase):
         time_sleep = self.flyput_sleep()
         redo = True
 
-        # Start recording the chnges in the current context
+        # Start recording the changes in the current context
         ctxrec = self.context.get_recorder()
 
         while redo and not event_complete.is_set():
@@ -939,7 +939,7 @@ class Parallel(xExecutableAlgoComponent):
                 default         = 'basicsingle',
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
-            binarymutli = dict(
+            binarymulti = dict(
                 info            = 'If *binaries* is missing, the default binary role for multiple binaries',
                 type            = footprints.FPList,
                 optional        = True,
@@ -1042,12 +1042,12 @@ class Parallel(xExecutableAlgoComponent):
         elif len(rh) > 1 and not self.binaries:
 
             # Binary roles
-            if len(self.binarymutli) == 1:
-                bnames = self.binarymutli * len(rh)
+            if len(self.binarymulti) == 1:
+                bnames = self.binarymulti * len(rh)
             else:
-                if len(self.binarymutli) != len(rh):
+                if len(self.binarymulti) != len(rh):
                     raise ParallelInconsistencyAlgoComponentError("self.binarymulti")
-                bnames = self.binarymutli
+                bnames = self.binarymulti
 
             # Check mpiopts shape
             u_mpiopts = opts.get('mpiopts', dict())

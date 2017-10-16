@@ -164,11 +164,11 @@ class TestParallel(unittest.TestCase):
                         '-npernode 8 -np 8 {pwd:s}/fake2 -joke yes', args)
         # Manual mpi_description names
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpirun',
-                                                 binarymutli=['basicsingle', 'basic']))
+                                                 binarymulti=['basicsingle', 'basic']))
         with self.assertRaises(ParallelInconsistencyAlgoComponentError):
             _, args = algo._bootstrap_mpitool(bins, dict(mpiopts=dict(nn=[2, 2, 1], openmp=[10, 5, 5], nnp=[4, 8, 8])))
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpirun',
-                                                 binarymutli=['basicsingle', 'basic', 'nwpioserv']))
+                                                 binarymulti=['basicsingle', 'basic', 'nwpioserv']))
         _, args = algo._bootstrap_mpitool(bins, dict(mpiopts=dict(nn=[2, 2, 1], openmp=[10, 5, 5], nnp=[4, 8, 8])))
         self.assertCmdl('mpirun -npernode 4 -np 8 {pwd:s}/fake0 -joke yes : ' +
                         '-npernode 8 -np 16 {pwd:s}/fake1 -joke yes : ' +

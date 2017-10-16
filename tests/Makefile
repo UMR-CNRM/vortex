@@ -1,3 +1,7 @@
+
+EXTRAPATH    := $(PWD)/../src:$(PWD)/../site:$(PWD)/../project:$(PYTHONPATH)
+export PYTHONPATH = $(EXTRAPATH)
+
 PYTHON        = python2.7
 NOSE          = nosetests-2.7
 
@@ -22,6 +26,9 @@ all: check
 check:
 	$(PYTHON) ./do_working_tests.py
 
+check3:
+	$(PYTHON3) ./do_working_tests-3.py
+
 # Run all test with nose
 tests:
 	$(NOSE3) $(NOSE_OPTS) $(PY3READY)
@@ -35,6 +42,7 @@ clean-coverage:
 	rm -f .coverage
 	rm -rf $(COVER_OUT)
 
-# Clean the test directories (nothing to be done at the moment)
+# Clean the test directories
 clean: clean-coverage
+	@# nothing else at the moment
 
