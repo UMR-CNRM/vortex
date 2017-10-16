@@ -12,7 +12,7 @@ __all__ = []
 
 import os
 import random
-import base64
+import hashlib
 from string import Template
 from ConfigParser import NoOptionError, NoSectionError
 
@@ -499,7 +499,7 @@ class HideService(Service):
                     'HIDDEN',
                     date.now().strftime('%Y%m%d%H%M%S.%f'),
                     'P{0:06d}'.format(self.sh.getpid()),
-                    base64.b64encode(self.sh.path.abspath(filename))
+                    hashlib.md5(self.sh.path.abspath(filename)).hexdigest()
                 ))
             )
             self.sh.cp(filename, destination, intent='in', fmt=self.asfmt)

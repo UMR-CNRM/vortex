@@ -317,6 +317,7 @@ class OpPhase(Action):
             fmt=fmt,
             source=hide(effective_path),
             destination=remote_path,
+            original=self.sh.path.abspath(effective_path),
             **opts
         )
 
