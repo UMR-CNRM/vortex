@@ -275,7 +275,7 @@ class InputReportContext(_ReportContext):
                  fatal_tplid='input_error'):
         super(InputReportContext, self).__init__(task, ticket)
         self._alternate_tplid = alternate_tplid
-        self._nonfatal_tplid = nonfatal_tplid  # Pas encore utilise : voir TODO dans la methode suivante...
+        self._nonfatal_tplid = nonfatal_tplid  
         self._fatal_tplid = fatal_tplid
 
     def _report(self, t, try_ok=True, **kw):
@@ -288,11 +288,10 @@ class InputReportContext(_ReportContext):
                 t.sh.header('Input informations: active alternates were found')
                 if self._alternate_tplid:
                     ad.opmail(task=self._task.tag, id=self._alternate_tplid, report=report.synthetic_report())
-            # elif any(report.missing_resources()):
-                # TODO: Ici envoyer un mail dans le cas ou une ressource avec fatal=False est manquante
-                # Voir ticket Redmine #748
-                # Cela se substitura avantageusement a la modification faite dans compi.py pour controler
-                # le nombre de vecteurs singuliers (ceci dit en passant, je ne pense pas que cela fonctionne...)
+            elif any(report.missing_resources()):
+                t.sh.header('Input informations: missing resources')
+                if self._nonfatal_tplid:
+                    ad.opmail(task=self._task.tag, id=self._nonfatal_tplid, report=report.synthetic_report())
             else:
                 t.sh.header('Input informations: everything is ok')
         else:
