@@ -32,12 +32,12 @@ Norms   check FAILED    for steps:
   (NSIM4D=None, subroutine=STEPO, NSTEP=30, CDCONF=AAAA0VDAA)
   (NSIM4D=0, subroutine=STEPO, NSTEP=0, CDCONF=A00000000)
 JoTable check FAILED    for: SCREENING JOB    T1198 NCONF=     1 NSIM4D=     0 NUPTRA=     0
-  > SYNOP, Land stations and ships   > French RADOME                    > U    : d_n=-1         d_jo=-1.000000
-  > SYNOP, Land stations and ships   > French RADOME                    > U10  : d_n=-1         d_jo=-3.000000
-  > SYNOP, Land stations and ships   > French RADOME                    > Q    : d_n=-1         d_jo=-1.000000
-  > DRIBU, Drifing Buoys             > DRIBU Buoy Report                > U10  : d_n=-2         d_jo=-2.000000
-  > SATEM, Satellite sounding data   > JPSS     0   224 SENSOR=ATMS     > RAD  : d_n=-1031184   d_jo=-444350.465813
-  > SATEM, Satellite sounding data   > HIMAWARI 8   173 SENSOR=AHI      > RAD  : d_n=2491340    d_jo=3395197.925141
+  > SYNOP, LAND STATIONS AND SHIPS   > FRENCH RADOME                    > U    : d_n=-1         d_jo=-1.000000
+  > SYNOP, LAND STATIONS AND SHIPS   > FRENCH RADOME                    > U10  : d_n=-1         d_jo=-3.000000
+  > SYNOP, LAND STATIONS AND SHIPS   > FRENCH RADOME                    > Q    : d_n=-1         d_jo=-1.000000
+  > DRIBU, DRIFING BUOYS             > DRIBU BUOY REPORT                > U10  : d_n=-2         d_jo=-2.000000
+  > SATEM, SATELLITE SOUNDING DATA   > JPSS     0   224 SENSOR=ATMS     > RAD  : d_n=-1031184   d_jo=-444350.465813
+  > SATEM, SATELLITE SOUNDING DATA   > HIMAWARI 8   173 SENSOR=AHI      > RAD  : d_n=2491340    d_jo=3395197.925141
 """
 
 L1SIZE = 3000
@@ -89,6 +89,7 @@ class TestArpIfsIntegration(unittest.TestCase):
         self.assertEqual(len(adapt.normset), 7)
         self.assertIsInstance(adapt.jotables, arpifs_listings.jo_tables.JoTables)
         self.assertEqual(len(adapt.jotables), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

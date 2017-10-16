@@ -50,6 +50,16 @@ class Listing(FlowResource):
             compute = self.part,
         )
 
+    def olive_basename(self):
+        """Fake basename for getting olive listings"""
+        if hasattr(self, '_listingpath'):
+            return self._listingpath
+        else:
+            return "NOT_IMPLEMENTED"
+
+    def archive_basename(self):
+        return "listing." + self.part
+
 
 class ParallelListing(Listing):
     """Multi output for parallel MPI and/or OpenMP processing."""
