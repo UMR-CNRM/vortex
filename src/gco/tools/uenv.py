@@ -2,7 +2,6 @@
 # -*- coding:Utf-8 -*-
 
 import re
-import StringIO
 
 import footprints
 
@@ -46,12 +45,21 @@ def contents(cycle, scheme=None, netloc=None):
         regcycle = p.insert(_DATASTORE_KIND, dict(cycle=cycle),
                             Environment(active=False, clear=True, history=False))
         uri_s = '{:s}://{:s}/env/{:s}'.format(scheme, netloc, cycle.short)
-        tmplocal = StringIO.StringIO()
         localst = footprints.proxy.store(scheme=scheme, netloc=netloc)
         try:
-            rc = localst.get(uriparse(uri_s), tmplocal, dict())
-        except IOError:
-            rc = False
+            # First, try with a temporary ShouldFly (potentially, this allows
+            # FtServ to be used
+            tmplocal = footprints.proxy.container(shouldfly=True)
+            rc = localst.get(uriparse(uri_s), tmplocal.iotarget(), dict())
+        except (OSError, IOError) as e:
+            print e
+            try:
+                # This may happen if the user has insufficient rights on
+                # the current directory
+                tmplocal = footprints.proxy.container(incore=True)
+                rc = localst.get(uriparse(uri_s), tmplocal.iotarget(), dict())
+            except OSError:
+                rc = False
         if not rc:
             raise UenvError("The {:s} cycle was not found".format(uri_s))
         tmplocal.seek(0)
@@ -67,6 +75,7 @@ def contents(cycle, scheme=None, netloc=None):
             else:
                 raise UenvError('Malformed environement file (line {:d}, "{:s}")'
                                 .format(i + 1, item.rstrip("\n")))
+        tmplocal.clear()
     return regcycle
 
 
