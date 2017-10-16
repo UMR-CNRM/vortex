@@ -16,7 +16,6 @@ from vortex.util.structs import ShellEncoder
 from vortex.algo.components import BlindRun
 from vortex.layout.dataflow import intent
 from vortex.tools import grib
-from vortex.tools.systems import OSExtended
 
 
 class Svect(IFSParallel):
@@ -115,36 +114,56 @@ class CombiPert(Combi):
             namsec.rh.save()
 
 
+#: Definition of a named tuple that holds informations on SV for a given zone
+_SvInfoTuple = collections.namedtuple('SvInfoTuple', ['available', 'expected'], verbose=False)
+
+
 class CombiSV(CombiPert):
     """Combine the SV to create perturbations by gaussian sampling."""
 
     _abstract = True
+    _footprint = dict(
+        attr = dict(
+            info_fname = dict(
+                default = 'singular_vectors_info.json',
+                optional = True,
+            ),
+        )
+    )
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(CombiSV, self).prepare(rh, opts)
 
         # Check the number of singular vectors and link them in succession
-        nbVect = collections.OrderedDict()
-        svec_sections = self.context.sequence.effective_inputs(role='SingularVectors', kind='svector')
-        for num, svecsec in enumerate(svec_sections):
-            componoms = re.split(r'[.,+]', svecsec.rh.container.localpath())
-            if len(componoms) < 3:
-                logger.critical("The SV name does not contain the information 'zone.numero': %s",
+        nbVectTmp = collections.OrderedDict()
+        totalVects = 0
+        svec_sections = self.context.sequence.filtered_inputs(role='SingularVectors', kind='svector')
+        for svecsec in svec_sections:
+            c_match = re.match(r'^([^+,.]+)[+,.][^+,.]+[+,.][^+,.]+(.*)$',
+                               svecsec.rh.container.localpath())
+            if c_match is None:
+                logger.critical("The SV name is not formated correctly: %s",
                                 svecsec.rh.container.actualpath())
-            radical = componoms[0]
-            sufix = re.sub('^' + radical + r'[+,.]' + componoms[1] + r'[+,.]' + componoms[2],
-                           '', svecsec.rh.container.localpath())
-            nbVect.setdefault(componoms[1], 0)
-            nbVect[componoms[1]] += 1
-            self.system.softlink(svecsec.rh.container.localpath(),
-                                 radical + '{:03d}'.format(num + 1) + sufix)
-
-        totalVects = sum(nbVect.values())
-        logger.info("Number of vectors :\n" + '\n'.join(['- %s: %d' % (z, n) for z, n in nbVect.iteritems()]))
-        # Getting the singular vectors per areas in a json file
-        # This is using by OPER for the e-mails...   
-        self.system.json_dump(nbVect,open('oper_number_of_singular_vectors.json','w'))
+            (radical, suffix) = c_match.groups()
+            zone = svecsec.rh.resource.zone
+            nbVectTmp.setdefault(zone, [0, 0])
+            nbVectTmp[zone][1] += 1  # Expected
+            if svecsec.stage == 'get':
+                totalVects += 1
+                nbVectTmp[zone][0] += 1  # Available
+                self.system.softlink(svecsec.rh.container.localpath(),
+                                     radical + '{:03d}'.format(totalVects) + suffix)
+        # Convert the temporary dictionary to a dictionary of tuples
+        nbVect = collections.OrderedDict()
+        for k, v in nbVectTmp.items():
+            nbVect[k] = _SvInfoTuple(* v)
+        logger.info("Number of vectors :\n" +
+                    '\n'.join(['- {0:8s}: {1.available:3d} ({1.expected:3d} expected).'.format(z, n)
+                               for z, n in nbVect.items()]))
+        # Writing the singular vectors per areas in a json file
+        with open(self.info_fname, 'w') as fhinfo:
+            self.system.json_dump(nbVect, fhinfo)
 
         # Tweak the namelists
         namsecs = self.context.sequence.effective_inputs(role = re.compile('Namelist'), kind = 'namelist')
@@ -154,7 +173,8 @@ class CombiSV(CombiPert):
             namsec.rh.contents['NAMMOD']['LANAP'] = False
             namsec.rh.contents['NAMMOD']['LBRED'] = False
             logger.info("Added to NVSZONE namelist entry")
-            namsec.rh.contents['NAMOPTI']['NVSZONE'] = nbVect.values()
+            namsec.rh.contents['NAMOPTI']['NVSZONE'] = [v.available for v in nbVect.values()
+                                                        if v.available]  # Zones with 0 vectors are discarded
 
             nbVectNam = namsec.rh.contents['NAMENS']['NBVECT']
             if int(nbVectNam) != totalVects:
@@ -162,9 +182,10 @@ class CombiSV(CombiPert):
                 logger.info("Update the total number of vectors in the NBVECT namelist entry")
                 namsec.rh.contents['NAMENS']['NBVECT'] = totalVects
 
-            nbzone = len(nbVect)
+            actualZones = [k for k, v in nbVect.items() if v.available]  # Zones with 0 vectors are discarded
+            nbzone = len(actualZones)
             namsec.rh.contents['NAMOPTI']['NBZONE'] = nbzone
-            namsec.rh.contents['NAMOPTI']['CNOMZONE'] = nbVect.keys()
+            namsec.rh.contents['NAMOPTI']['CNOMZONE'] = actualZones
             nbrc = len(namsec.rh.contents['NAMOPTI'].RC)
             if nbrc != nbzone:
                 logger.critical("%d zones but NAMOPTI/RC has length %d" % (nbzone, nbrc))

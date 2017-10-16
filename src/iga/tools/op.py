@@ -275,7 +275,7 @@ class InputReportContext(_ReportContext):
                  fatal_tplid='input_error'):
         super(InputReportContext, self).__init__(task, ticket)
         self._alternate_tplid = alternate_tplid
-        self._nonfatal_tplid = nonfatal_tplid  
+        self._nonfatal_tplid = nonfatal_tplid
         self._fatal_tplid = fatal_tplid
 
     def _report(self, t, try_ok=True, **kw):
