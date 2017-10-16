@@ -110,9 +110,11 @@ def RulesGribFunction(options):
     This function is designed to be used with a function store.
     """
     outstr = ''
-    outstr += "if( (indicatorOfParameter==2) ){\n write;\n}\n"
+    outstr += "if( (table2Version==1) ){\n"
+    outstr += "if( (indicatorOfParameter==2) && (indicatorOfTypeOfLevel==102) ){\n write;\n}\n"
     outstr += "if( ( level == 10 ) && (indicatorOfParameter==33) ){\n write;\n}\n"
     outstr += "if( ( level == 10 ) && (indicatorOfParameter==34) ){\n write;\n}"
+    outstr += "}"
 
     # NB: The result have to be a file like object !
     return StringIO(outstr)

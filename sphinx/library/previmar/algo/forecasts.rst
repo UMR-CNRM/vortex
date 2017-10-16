@@ -20,3 +20,9 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: SurgesCouplingInterp
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   

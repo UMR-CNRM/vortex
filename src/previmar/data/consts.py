@@ -4,10 +4,37 @@
 #: No automatic export
 __all__ = []
 
+import re
+
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 from gco.syntax.stdattrs import gdomain
 from common.data.consts import GenvModelResource
+
+
+class GenvUsageModelResource(GenvModelResource):
+
+    _abstract = True
+    _footprint = dict(
+        info = 'different use : model classic use for simulation or interpolation use for interpolation between grid of Hycom',
+        attr = dict(
+            usage = dict(
+                values  = ['model', 'interpol'],
+                optional = True,
+            ),
+        )
+    )
+
+    def genv_basename(self):
+        """Just retrieve a potential gvar attribute + self.usage."""
+        if self.usage is not None:
+            if re.search('(_TGZ$)', self.gvar):
+                usage_key = re.sub('(_TGZ$)', ('_' + self.usage + '_TGZ').upper(), self.gvar)
+            else:
+                usage_key = ( self.gvar + '_' + self.usage).upper()
+        else:
+            usage_key = self.gvar
+        return usage_key
 
 
 class TidalHarmonic(GenvModelResource):
@@ -88,7 +115,7 @@ class SurgesNativeGrid(GenvModelResource):
         return 'NativeGrid'
 
 
-class ConfSurgesModel(GenvModelResource):
+class ConfSurges(GenvUsageModelResource):
     """Surges model static parameters on input file. (Ascii file).
     A Genvkey can be given.
     """
@@ -113,7 +140,7 @@ class ConfSurgesModel(GenvModelResource):
 
     @property
     def realkind(self):
-        return 'ConfigSurgesModel'
+        return 'ConfigSurges'
 
 
 class BinProjSurges(GenvModelResource):
@@ -142,7 +169,7 @@ class BinProjSurges(GenvModelResource):
         return 'SurgesInterpFactor'
 
 
-class ConfCouplingOasisSurges(GenvModelResource):
+class ConfCouplingOasisSurges(GenvUsageModelResource):
     """Coupling description of OASIS between Hycom and WW3
     A Genvkey can be given.
     """
@@ -170,7 +197,7 @@ class ConfCouplingOasisSurges(GenvModelResource):
         return 'ConfCouplingOasisSurges'
 
 
-class CouplingGridOasis(GenvModelResource):
+class CouplingGridOasis(GenvUsageModelResource):
     """Coupling grid file information for Oasis, for binaries coupled execution
     A Genvkey can be given.
     """

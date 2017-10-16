@@ -26,3 +26,14 @@ class SurgesCouplingForecasts(Parallel):
         logger.info('Temporarily change the working dir to ./%s', tmpwd)
         with self.system.cdcontext(tmpwd):
             super(SurgesCouplingForecasts, self).execute(rh, opts)
+
+
+class SurgesCouplingInterp(SurgesCouplingForecasts):
+    """Algo for interpolation case, not documented yet"""
+    _footprint = dict(
+        attr = dict(
+            binary = dict(
+                values = ['hycominterp'],
+            ),
+        )
+    )

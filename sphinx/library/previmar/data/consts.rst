@@ -16,6 +16,11 @@ Package
 Classes
 -------
 
+.. autoclass:: GenvUsageModelResource
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: TidalHarmonic
    :show-inheritance:
    :members:
@@ -31,7 +36,7 @@ Classes
    :members:
    :member-order: alphabetical
    
-.. autoclass:: ConfSurgesModel
+.. autoclass:: ConfSurges
    :show-inheritance:
    :members:
    :member-order: alphabetical
