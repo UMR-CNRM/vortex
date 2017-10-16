@@ -94,7 +94,7 @@ class TLTest(object):
     fields.
     Then, the largest the score, the best the test is .
 
-    Scores are actually computed as :literal:`int(round(-log10(|1.0-RAT|)))`
+    Scores are actually computed as :literal:`-log10(|1.0-RAT|)`
     where RAT is the ratio computed in the TL test, :literal:`RAT = (M(x+dx)-M(x))/M'(dx)`.
     """
 
