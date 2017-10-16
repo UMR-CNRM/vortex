@@ -37,7 +37,10 @@ class HashAdapter(object):
     @staticmethod
     def algorithms():
         """List of available hash algorithms."""
-        return hashlib.algorithms_guaranteed
+        if hasattr(hashlib, 'algorithms_guaranteed'):
+            return hashlib.algorithms_guaranteed
+        else:
+            return hashlib.algorithms  # For old Python interpreters
 
     def _hinstance(self):
         """Return a new Hash object (see hashlib documentation)."""
