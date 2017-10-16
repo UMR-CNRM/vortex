@@ -38,6 +38,7 @@ rd_iniconf  = '{0:s}/conf/{1:s}_{2:s}{3:s}.ini'.format(appbase,
 ja = footprints.proxy.jobassistant(kind = 'generic',
                                    modules = footprints.stdtypes.FPSet(($loadedmods)),
                                    addons = footprints.stdtypes.FPSet(($loadedaddons)),
+                                   ldlibs = footprints.stdtypes.FPSet(($ldlibs)),
                                    special_prefix='rd_',
                                    )
 ja.add_plugin('tmpdir')
