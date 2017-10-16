@@ -54,6 +54,7 @@ import iga.tools.op
 ja = footprints.proxy.jobassistant(kind = 'op_default',
                                    modules = footprints.stdtypes.FPSet(($loadedmods)),
                                    addons = footprints.stdtypes.FPSet(($loadedaddons)),
+                                   ldlibs = footprints.stdtypes.FPSet(($ldlibs)),
                                    special_prefix='op_',
                                    )
 

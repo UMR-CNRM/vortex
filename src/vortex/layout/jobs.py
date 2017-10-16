@@ -163,11 +163,13 @@ def mkjob(t, **kw):
     if tplconf['suitebg'] is not None:
         tplconf['suitebg'] = "'" + tplconf['suitebg'] + "'"
 
-    for explist in ('loadedmods', 'loadedaddons'):
+    for explist in ('loadedmods', 'loadedaddons', 'ldlibs'):
         if explist in tplconf:
             tplconf[explist] = ','.join(["'{:s}'".format(x)
                                          for x in re.split(r'\s*,\s*', tplconf[explist])
-                                         if len(x)]) + ','  # Always ends with a ,
+                                         if len(x)])
+            if tplconf[explist]:
+                tplconf[explist] += ','  # Always ends with a ,
 
     corejob = load_template(t, tplconf['template'])
     opts['tplfile'] = corejob.srcfile
@@ -221,16 +223,25 @@ class JobAssistant(footprints.FootprintBase):
                 values = ['generic', 'minimal']
             ),
             modules = dict(
+                info = 'A set of Python modules/packages to be imported.',
                 type = FPSet,
                 optional = True,
                 default = FPSet(()),
             ),
             addons = dict(
+                info = 'A set of Vortex shell addons to load in the main System object',
+                type = FPSet,
+                optional = True,
+                default = FPSet(()),
+            ),
+            ldlibs = dict(
+                info = 'A set of paths to prepend to the LD_LIBRARY_PATH variable.',
                 type = FPSet,
                 optional = True,
                 default = FPSet(()),
             ),
             special_prefix = dict(
+                info = 'The prefix of environment variable with a special meaning.',
                 optional = True,
                 default = 'op_',
             )
@@ -344,8 +355,12 @@ class JobAssistant(footprints.FootprintBase):
     def _system_setup(self, t, **kw):
         """Set usual settings for the system shell."""
         t.sh.header("Session's basic setup")
+        print('+ Setting "stack" and "memlock" limits to unlimited.')
         t.sh.setulimit('stack')
         t.sh.setulimit('memlock')
+        for ldlib in self.ldlibs:
+            print('+ Prepending "{}" to the LD_LIBRARY_PATH.'.format(ldlib))
+            t.env.setgenericpath('LD_LIBRARY_PATH', ldlib, pos=0)
 
     @_extendable
     def _early_session_setup(self, t, **kw):
