@@ -72,8 +72,7 @@ sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 import footprints as fp
-import opinel
-from opinel.interrupt import SignalInterruptError
+from bronx.system import interrupt
 import vortex
 
 # Main script logger
@@ -106,7 +105,7 @@ def actual_action(action, t, args):
             rst = False
             try:
                 rst = getattr(rh, action)()
-            except (KeyboardInterrupt, SignalInterruptError):
+            except (KeyboardInterrupt, interrupt.SignalInterruptError):
                 if action == 'get':
                     # Get ride of incomplete files
                     logger.warning("The transfer was interrupted. Cleaning %s.",
@@ -205,8 +204,7 @@ def main():
         (loglevel_main, loglevel_fp) = ('DEBUG', 'INFO')
     else:
         (loglevel_main, loglevel_fp) = ('DEBUG', 'DEBUG')
-    logger.setLevel(loglevel_main)
-    opinel.logger.setLevel(loglevel_fp)
+    interrupt.logger.setLevel(loglevel_main)
     vortex.logger.setLevel(loglevel_main)
     fp.logger.setLevel(loglevel_fp)
     del args.verbose
@@ -235,7 +233,7 @@ def main():
         actual_action(action, t, args)
         t.sh.signal_intercept_off()
 
-    except (KeyboardInterrupt, SignalInterruptError) as e:
+    except (KeyboardInterrupt, interrupt.SignalInterruptError) as e:
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         return 1
 

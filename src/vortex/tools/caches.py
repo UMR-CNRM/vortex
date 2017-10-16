@@ -249,9 +249,14 @@ class MtoolCache(Cache):
             elif e.MTOOLDIR and self.sh.path.isdir(e.MTOOLDIR):
                 cache = self.sh.path.join(e.MTOOLDIR, 'cache')
                 logger.debug('Using %s mtool dir cache %s', self, cache)
-            else:
-                cache = self.sh.path.join(e.FTDIR or e.WORKDIR or e.TMPDIR, self.kind, 'cache')
+            elif e.FTDIR or e.WORKDIR:
+                cache = self.sh.path.join(e.FTDIR or e.WORKDIR, self.kind, 'cache')
                 logger.debug('Using %s default cache %s', self, cache)
+            else:
+                logger.error('Unable to find an appropriate location for the cache space.')
+                logger.error('Tip: Set either the MTOOLDIR, FTDIR or WORKDIR environment variables ' +
+                             '(MTOOLDIR having the highest priority)')
+                raise RuntimeError('Unable to find an appropriate location for the cache space')
         else:
             cache = self.actual_rootdir
         return self.sh.path.join(cache, self.actual_headdir)
