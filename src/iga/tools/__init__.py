@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
+"""
+Specific DSI/OP/IGA standalone tools.
+"""
 
-import services
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+from . import services
+
+#: Automatic export of data subpackage
+__all__ = []

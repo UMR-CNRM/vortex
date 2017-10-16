@@ -6,25 +6,27 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import importlib
 import unittest
 
-testmodules = [
-    'tests_footprints.test_fp_core',
-    'tests_footprints.test_fp_doc',
-    'tests_footprints.test_fp_dumps',
-    'tests_footprints.test_fp_logging',
-    'tests_footprints.test_fp_observers',
-    'tests_footprints.test_fp_priorities',
-    'tests_footprints.test_fp_reporting',
-    'tests_footprints.test_fp_setup',
-    'tests_footprints.test_fp_stdtypes',
-    'tests_footprints.test_fp_util',
-    'test_import',
-    'test_date',
-    'test_env',
-    'test_cfgparser',
-    'test_vortexnames',
-    'test_fortran',
-    'test_layoutnodes',
-    'test_providers'
+testmodules = ['test_import',
+               'tests_bronx.test_datagrip_datastore',
+               'tests_bronx.test_datagrip_namelist',
+               'tests_bronx.test_stdtypes_date',
+               'tests_bronx.test_system_hash',
+               'tests_bronx.test_system_interrupt',
+               'tests_footprints.test_fp_core',
+               'tests_footprints.test_fp_doc',
+               'tests_footprints.test_fp_dumps',
+               'tests_footprints.test_fp_logging',
+               'tests_footprints.test_fp_observers',
+               'tests_footprints.test_fp_priorities',
+               'tests_footprints.test_fp_reporting',
+               'tests_footprints.test_fp_setup',
+               'tests_footprints.test_fp_stdtypes',
+               'tests_footprints.test_fp_util',
+               'test_env',
+               'test_cfgparser',
+               'test_vortexnames',
+               'test_layoutnodes',
+               'test_providers'
 ]
 
 

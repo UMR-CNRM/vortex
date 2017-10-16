@@ -1,4 +1,5 @@
 *.py[co~]
+*.ini[~]
 
 # Packages
 *.egg
@@ -29,6 +30,8 @@ tbinterface_*.json
 .ipynb_checkpoints
 
 # RST file generated on the fly
+pollutants-sites-std.rst
+pollutants-elements-std.rst
 checkreport.rst
 geometries.rst
 sphinx/notebooks
@@ -44,6 +47,9 @@ _ExportXML
 .settings
 .project
 .pydevproject
+
+# Kate unwanted file
+*.kate-swp
 
 # Pascal unwanted files
 playground

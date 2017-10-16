@@ -8,7 +8,7 @@ import tempfile
 
 import footprints as fp
 
-from opinel import interrupt
+from bronx.system import interrupt
 
 import unittest
 
@@ -21,7 +21,7 @@ logger = fp.loggers.getLogger(__name__)
 # lsync = fp.loggers.getLogger('vortex.algo.serversynctools')
 # lsync.setLevel('DEBUG')
 
-lopi = fp.loggers.getLogger('opinel.interrupt')
+lopi = fp.loggers.getLogger('bronx.system.interrupt')
 lopi.setLevel('WARNING')
 
 

@@ -5,9 +5,9 @@ import re
 import socket
 import string
 
+from bronx.datagrip import namelist as fortran
 import footprints
 from vortex import sessions
-from vortex.tools import fortran
 from vortex.util import config
 from common.data.namelists import KNOWN_NAMELIST_MACROS
 
@@ -24,8 +24,8 @@ def olive_label(sh, env, target=None):
 
     label = env.PBS_JOBID or env.SLURM_JOB_ID or 'localpid'
 
-    if (label=='localpid'):
-        label=str(sh.getpid())
+    if label == 'localpid':
+        label = str(sh.getpid())
 
     if env.MTOOL_STEP:
         depot = env.MTOOL_STEP_DEPOT or env.MTOOL_STEP_STORE

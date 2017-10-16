@@ -15,13 +15,13 @@ import copy
 import ftplib
 import re
 
+from bronx.system import hash as hashutils
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.layout import dataflow
 from vortex.util import config
-from vortex.util import hash as hashutils
 from vortex.syntax.stdattrs import hashalgo, hashalgo_avail_list, compressionpipeline
 from vortex.tools import caches
 from vortex.tools import compression

@@ -53,8 +53,8 @@ class OdbProcess(Parallel, odb.OdbComponent):
 
     def input_obs(self):
         """Find any observations with the proper kind, without any regards to role."""
-        obsall = [ x.rh for x in self.context.sequence.effective_inputs(kind = 'observations') ]
-        obsall.sort(lambda a, b: cmp(a.resource.part, b.resource.part))
+        obsall = [x.rh for x in self.context.sequence.effective_inputs(kind = 'observations')]
+        obsall.sort(key=lambda rh: rh.resource.part)
         return obsall
 
     def prepare(self, rh, opts):
@@ -249,7 +249,7 @@ class Raw2ODB(OdbProcess):
                 self._map_refdatainfo(refmap, refall, imap, thismap)
 
         # Deal with observations that are not described in the obsmap
-        for notmap in [ obs for obs in obsok if not obs.mapped ]:
+        for notmap in [obs for obs in obsok if not obs.mapped]:
             thispart = notmap.rh.resource.part
             logger.info('Inspect not mapped obs ' + thispart)
             if thispart not in self.obspack:
@@ -431,7 +431,7 @@ class OdbAverage(OdbProcess):
         sh = self.system
 
         # Looking for input observations
-        obsall = [ x for x in self.input_obs() if x.resource.layout == 'ecma' ]
+        obsall = [x for x in self.input_obs() if x.resource.layout == 'ecma']
 
         # One database at a time
         if not obsall:
@@ -498,7 +498,7 @@ class OdbAverage(OdbProcess):
 
         sh = self.system
 
-        mask = [ x.rh for x in self.context.sequence.effective_inputs(kind = 'atmsmask') ]
+        mask = [x.rh for x in self.context.sequence.effective_inputs(kind = 'atmsmask')]
         if not mask:
             raise ValueError('Could not find any MASK input')
 

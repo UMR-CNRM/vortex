@@ -4,10 +4,11 @@
 import unittest
 import doctest
 
+from bronx.datagrip import namelist
+from bronx.stdtypes import date
 from footprints import util
 
 from vortex.data import geometries
-from vortex.tools import date
 
 
 class utDocTests(unittest.TestCase):
@@ -18,6 +19,7 @@ class utDocTests(unittest.TestCase):
                          'Doctests errors {:s} for {!r}'.format(rc, module))
 
     def test_doctests(self):
+        self.assert_doctests(namelist)
         self.assert_doctests(date)
         self.assert_doctests(geometries)
         self.assert_doctests(util)

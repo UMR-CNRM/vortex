@@ -33,21 +33,16 @@ Classes
    :member-order: alphabetical
 
 
-Utility class
--------------
-
-.. autoclass:: _GetattrCalculatorMixin
-   :show-inheritance:
-   :members: __getattr__
-   :member-order: alphabetical
-
-
 Helper functions
 ----------------
 
 .. autofunction:: now
 
+.. autofunction:: utcnow
+
 .. autofunction:: at_hour
+
+.. autofunction:: at_minute
 
 .. autofunction:: at_second
 
@@ -67,11 +62,7 @@ Helper functions
 Utility functions
 -----------------
 
-.. autofunction:: stardates
-
 .. autofunction:: stamp
-
-.. autofunction:: mkisodate
 
 .. autofunction:: guess
 

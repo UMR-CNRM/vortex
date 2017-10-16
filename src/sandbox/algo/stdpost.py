@@ -6,7 +6,7 @@ import collections
 import footprints
 
 from vortex.algo.components import AlgoComponent
-from vortex.util.hash import HashAdapter
+from bronx.system.hash import HashAdapter
 
 #: No automatic export
 __all__ = []
@@ -52,7 +52,7 @@ class GribInfos(AlgoComponent):
         """Loop on the various Grib files."""
 
         gpsec = self.context.sequence.effective_inputs(role=('Gridpoint', ))
-        gpsec.sort(lambda a, b: cmp(a.rh.resource.term, b.rh.resource.term))
+        gpsec.sort(key=lambda s: s.rh.resource.term)
 
         gribstack = collections.defaultdict(dict)
         hash_a = HashAdapter('md5')

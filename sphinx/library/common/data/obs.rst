@@ -16,9 +16,15 @@ Package
 Data
 ----
 
-.. autodata:: ObsMapItem
+.. autoclass:: ObsMapItem
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
-.. autodata:: ObsRefItem
+.. autoclass:: ObsRefItem
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 Classes
 -------

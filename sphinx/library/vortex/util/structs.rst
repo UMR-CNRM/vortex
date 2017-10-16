@@ -46,16 +46,6 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: _DataStoreEntryKey
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: DataStore
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: ReadOnlyDict
    :show-inheritance:
    :members:

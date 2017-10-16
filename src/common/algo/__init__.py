@@ -1,8 +1,15 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
+"""
+Common AlgoComponents (mostly for NWP).
+"""
+
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 # Recursive inclusion of packages with potential FootprintBase classes
-import forecasts, coupling, mpitools, odbtools, stdpost, assim, eps, eda, request, monitoring
+from . import forecasts, coupling, mpitools, odbtools, stdpost, assim, eps, \
+    eda, request, monitoring
+
+#: No automatic export
+__all__ = []

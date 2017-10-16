@@ -14,9 +14,13 @@ Data definition
 
 .. autodata:: top
 
-.. autodata:: set_after
 
-.. autodata:: set_before
+Functions
+---------
+
+.. autofunction:: set_after
+
+.. autofunction:: set_before
 
 
 Handling priorities

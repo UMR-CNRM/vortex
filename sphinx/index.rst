@@ -21,7 +21,7 @@ Contents
    User Guide (in French) <french/index>
    Technical Documentation <technical/index>
    Site Packages Standard Libraries <library/siteindex>
-   The Vortex Standard Library <library/index>
+   The Vortex Standard Library <library/libindex>
    Glossary <dico>
 
 Extras
@@ -30,7 +30,9 @@ Extras
 .. toctree::
    :maxdepth: 1
 
-   List of default geometries <geometries>
+   List of default geometries (from geometries.ini) <geometries>
+   List of default pollutant elements (from pollutants-elements-std.ini) <pollutants-elements-std>
+   List of default pollutant sites (from pollutants-sites-std.ini) <pollutants-sites-std>
    checkreport
    notebooks/index
    Vortex-Help <_static/vortex-help/index.html#http://>

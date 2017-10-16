@@ -35,11 +35,20 @@ class BaseScheduler(object):
         raise NotImplementedError('launchable() method must be implemented in \
                                    inheritant classes. (BaseScheduler is abstract).')
 
+    def _assign_tickets(self, workers, launchable):
+        """Assign available tickets in **launchable** instructions."""
+        assigned_tickets = set([w.scheduler_ticket for w in workers.values()])
+        possible_tickets = sorted(self._all_tickets - assigned_tickets)
+        for instructions in launchable:
+            instructions['scheduler_ticket'] = possible_tickets.pop(0)
+        return launchable
+
 
 class LaxistScheduler(BaseScheduler):
     """No sorting is done !"""
     def launchable(self, pending_instructions, workers, report):
-        return pending_instructions
+        launchable = self._assign_tickets(workers, pending_instructions)
+        return launchable
 
 
 class MaxThreadsScheduler(BaseScheduler):
@@ -58,11 +67,7 @@ class MaxThreadsScheduler(BaseScheduler):
         available_threads = self.max_threads - len(workers)
         launchable = pending_instructions[0:max(available_threads, 0)]
         not_yet_launchable = pending_instructions[max(available_threads, 0):]
-        assigned_tickets = set([w.scheduler_ticket for w in workers.values()])
-        possible_tickets = sorted(self._all_tickets - assigned_tickets)
-        for instructions in launchable:
-            instructions['scheduler_ticket'] = possible_tickets.pop(0)
-
+        launchable = self._assign_tickets(workers, launchable)
         return (launchable, not_yet_launchable)
 
 
@@ -98,7 +103,7 @@ class MaxMemoryScheduler(BaseScheduler):
                 used_memory += instructions['memory']
             else:
                 not_yet_launchable.append(instructions)
-
+        launchable = self._assign_tickets(workers, launchable)
         return (launchable, not_yet_launchable)
 
 
@@ -121,5 +126,5 @@ class SingleOpenFileScheduler(MaxThreadsScheduler):
         # and finally sort with regards to MaxThreads
         (launchable, nyl) = super(SingleOpenFileScheduler, self).launchable(launchable, workers, report)
         not_yet_launchable.extend(nyl)
-
+        launchable = self._assign_tickets(workers, launchable)
         return (launchable, not_yet_launchable)

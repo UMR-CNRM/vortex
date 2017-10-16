@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# -*- coding:Utf-8 -*-
 
 """
-This is a pure package containing several modules that could be used
-as standalone tools.
+Specific CEN standalone tools.
 """
 
-#: No automatic export
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+from . import apps, op
+
+#: Automatic export of data subpackage
 __all__ = []
-
-import op, apps 

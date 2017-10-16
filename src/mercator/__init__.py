@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-__all__ = [ 'data' ]
+"""
+The Mercator VORTEX extension package.
+"""
 
-import data
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+# Recursive inclusion of packages with potential FootprintBase classes
+from . import data
+
+#: Automatic export of data subpackage
+__all__ = ['data', ]
+
+__tocinfoline__ = 'The Mercator VORTEX extension'

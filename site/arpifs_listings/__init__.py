@@ -1,14 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Processing and comparison of various data from Arpege/IFS listings.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 import six
 
 import sys
 
-__version__ = '1.0.4'
-
 from . import util, norms, jo_tables, listings
+
+__version__ = '1.0.4'
 
 
 def compare_files(file_test, file_ref,

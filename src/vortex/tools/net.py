@@ -20,8 +20,8 @@ import urlparse
 from datetime import datetime
 
 import footprints
-from vortex.util.decorators import nicedeco
-from vortex.util.netrc import netrc
+from bronx.syntax.decorators import nicedeco
+from bronx.net.netrc import netrc
 from collections import namedtuple
 
 #: No automatic export
@@ -458,6 +458,12 @@ class StdFtp(object):
                 return int(s)
             except (OverflowError, ValueError):
                 return long(s)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
 
 
 class Ssh(object):

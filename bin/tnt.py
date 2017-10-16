@@ -4,6 +4,7 @@
 import os
 import sys
 import re
+import bronx.datagrip.namelist
 import vortex  # @UnusedImport
 import vortex.util.config
 import common
@@ -117,30 +118,77 @@ def remove_keys(nam, keys):
                                   "missing: cannot remove its key", k]))
 
 
-def set_keys(nam, keys):
+def _DOCTOR_convert(key, value, fatal=False):
+    """
+    According to the DOCTOR norm, try to convert value to the adequate type.
+
+    Cf. http://www.umr-cnrm.fr/gmapdoc/IMG/pdf/coding-rules.pdf
+    """
+    t = key.split('%')[-1][0]
+    try:
+        if t in ('I', 'J', 'K', 'M', 'N'):
+            try:
+                value = int(value)
+            except ValueError:
+                raise ValueError('unable to convert variable {} from {} to int'.
+                                 format(key, str(value)))
+        elif t in ('L',):
+            try:
+                value = bool(value)
+            except ValueError:
+                raise ValueError('unable to convert variable {} from {} to bool'.
+                                 format(key, str(value)))
+        elif t in ('C'):
+            try:
+                value = str(value)
+            except ValueError:
+                raise ValueError('unable to convert variable {} from {} to str'.
+                                 format(key, str(value)))
+        else:
+            try:
+                value = float(value)
+            except ValueError:
+                raise ValueError('unable to convert variable {} from {} to float'.
+                                 format(key, str(value)))
+    except ValueError:
+        if fatal:
+            raise
+    return value
+
+
+def set_keys(nam, keys, doctor=False, indexes=None):
     """
     Set a set of keys inside a NamelistContent object.
 
-    **nam**: NamelistContent
-
-    **keys**: {('BLOCK','KEY'):value, ...}
+    :param nam: NamelistContent
+    :param keys: {('BLOCK','KEY'):value, ...}
+    :param doctor: if true, try to convert value to DOCTOR norm according type
+    :param indexes: if present, set the keys at given index in block
+                    {('BLOCK','KEY'):index, ...}
     """
     assert isinstance(nam, common.data.namelists.NamelistContent)
     for ((b, k), v) in keys.items():
+        idx = indexes.get((b, k), None)
         if b in nam:
-            nam[b][k] = v
+            if doctor:
+                nam[b].setvar(k, _DOCTOR_convert(k, v), index=idx)
+            else:
+                nam[b].setvar(k, v, index=idx)
         else:
             raise KeyError(" ".join(["block", b,
                                      "missing: cannot set its key", k]))
 
 
-def move_keys(nam, keys):
+def move_keys(nam, keys, doctor=False, keep_index=False):
     """
     Move a set of keys within a NamelistContent object.
 
-    **nam**: NamelistContent
-
-    **keys**: {('BLOCK_OLD','KEY_OLD'):('BLOCK_NEW','KEY_NEW'), ...}
+    :param nam: NamelistContent
+    :param keys: {('BLOCK_OLD','KEY_OLD'):('BLOCK_NEW','KEY_NEW'), ...}
+    :param doctor: if True, try to convert value to DOCTOR norm according type
+    :param keep_index: if True, moved keys in identical block keep the original
+                       index of key in block (except a sorting is requested
+                       later on.
     """
     assert isinstance(nam, common.data.namelists.NamelistContent)
 
@@ -152,11 +200,17 @@ def move_keys(nam, keys):
     for (ob, ok), (nb, nk) in expanded_keys.items():
         if ob in nam:
             if ok in nam[ob]:
+                if keep_index and ob == nb:
+                    idx = nam[ob].keys().index(ok)
+                else:
+                    idx = None
                 v = nam[ob][ok]
                 remove_keys(nam, [(ob, ok)])
                 if nb in nam:
                     if nk not in nam[nb]:
-                        set_keys(nam, {(nb, nk): v})
+                        set_keys(nam, {(nb, nk): v},
+                                 doctor=doctor,
+                                 indexes={(nb, nk): idx})
                     else:
                         raise ValueError(" ".join(["key", nk,
                                                    "in block", nb,
@@ -243,29 +297,21 @@ def read_directives(filename):
 # MAIN #
 ########
 def main(filename,
-         sorting=vortex.tools.fortran.NO_SORTING,
-         blocks_ref=None,
-         in_place=False,
-         verbose=False,
          new_blocks=None,
          blocks_to_move=None,
          keys_to_move=None,
          keys_to_remove=None,
          keys_to_set=None,
          blocks_to_remove=None,
-         macros=None):
+         macros=None,
+         # options
+         sorting=bronx.datagrip.namelist.NO_SORTING,
+         blocks_ref=None,
+         in_place=False,
+         verbose=False,
+         doctor=False,
+         keep_index=False):
     """
-    If **in_place** is True, the namelist is written back in the same file;
-    else (default), the target namelist is suffixed with '.tnt'.
-
-    Sorting option **sorting** (from vortex.tools.fortran):
-      NO_SORTING;
-      FIRST_ORDER_SORTING => sort all keys within blocks;
-      SECOND_ORDER_SORTING => sort only within indexes or attributes of the same key, within blocks.
-
-    If **blocks_ref** is not None, defines the path for a reference namelist to
-    which the set of blocks is asserted to be equal.
-
     For the syntax of keys & blocks arguments, please refer to the according
     functions.
 
@@ -275,6 +321,22 @@ def main(filename,
     If **macros** is not None, it can contain the macros a.k.a. values to be
     replaced, e.g.: {'NPROC':8, 'substrA':None} will replace all NPROC values
     by 8 and will let substrA untouched.
+
+    Other options:
+    :param in_place: if True, the namelist is written back in the same file;
+                     else (default), the target namelist is suffixed with '.tnt'
+    :param sorting: Sorting option (from bronx.datagrip.namelist):
+                    NO_SORTING;
+                    FIRST_ORDER_SORTING => sort all keys within blocks;
+                    SECOND_ORDER_SORTING => sort only within indexes or
+                    attributes of the same key, within blocks.
+    :param blocks_ref: if not None, defines the path for a reference namelist to
+                       which the set of blocks is asserted to be equal.
+    :param doctor: if True, try to convert value to DOCTOR norm according type
+                   for moved keys
+    :param keep_index: if True, moved keys in identical block keep the original
+                       index of key in block (except a sorting is requested
+                       later on.
     """
 
     if verbose:
@@ -301,7 +363,7 @@ def main(filename,
     if blocks_to_move is not None:
         move_blocks(namelist, blocks_to_move)
     if keys_to_move is not None:
-        move_keys(namelist, keys_to_move)
+        move_keys(namelist, keys_to_move, doctor=doctor, keep_index=keep_index)
     if keys_to_remove is not None:
         remove_keys(namelist, keys_to_remove)
     if keys_to_set is not None:
@@ -354,6 +416,19 @@ if __name__ == '__main__':
                          help='Second order sorting: sort only within indexes \
                                or attributes of the same key within blocks.',
                          default=False)
+    parser.add_argument('--doctor',
+                        action='store_true',
+                        dest='doctor',
+                        help='try to convert value to DOCTOR norm according \
+                              type for moved keys',
+                        default=False)
+    parser.add_argument('--keep_index',
+                        action='store_true',
+                        dest='keep_index',
+                        help='moved keys in identical block keep the original \
+                              index of key in block (except a sorting is \
+                              requested)',
+                        default=False)
     parser.add_argument('-r',
                         dest='blocks_ref',
                         type=str,
@@ -367,11 +442,11 @@ if __name__ == '__main__':
                         default=False)
     args = parser.parse_args()
     if args.firstorder_sorting:
-        sorting = vortex.tools.fortran.FIRST_ORDER_SORTING
+        sorting = bronx.datagrip.namelist.FIRST_ORDER_SORTING
     elif args.secondorder_sorting:
-        sorting = vortex.tools.fortran.SECOND_ORDER_SORTING
+        sorting = bronx.datagrip.namelist.SECOND_ORDER_SORTING
     else:
-        sorting = vortex.tools.fortran.NO_SORTING
+        sorting = bronx.datagrip.namelist.NO_SORTING
     if args.generate_directives_template:
         write_directives_template('tmpl_directives.tnt')
     else:
@@ -382,4 +457,6 @@ if __name__ == '__main__':
                  in_place=args.in_place,
                  blocks_ref=args.blocks_ref,
                  verbose=args.verbose,
+                 doctor=args.doctor,
+                 keep_index=args.keep_index,
                  **directives)

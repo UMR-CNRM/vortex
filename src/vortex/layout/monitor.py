@@ -221,8 +221,7 @@ class BasicInputMonitor(_StateFullMembersList):
                 has_term += 1
                 map_term[e.section.rh.resource.term.fmthm] += 1
         if toclassify and has_term == len(toclassify):
-            toclassify.sort(lambda a, b: cmp(a.section.rh.resource.term,
-                                             b.section.rh.resource.term))
+            toclassify.sort(key=lambda e: e.section.rh.resource.term)
             # Use a crawling threshold that is large enough to span a little bit
             # more than one term.
             self._crawling_threshold = max(self._crawling_threshold,

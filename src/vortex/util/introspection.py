@@ -40,9 +40,7 @@ class Sherlock(object):
             subpath[-1] = subpath[-2]
         subpath[-1] += '.rst'
 
-        if subpath[1] == 'vortex' and len(subpath) == 3:
-            subpath[2:2] = [ 'kernel' ]
-        subpath[1:1] = [ 'library' ]
+        subpath[1:1] = ['library', ]
         return self.glove.sitedoc + '/'.join(subpath)
 
     def rstshort(self, filename):

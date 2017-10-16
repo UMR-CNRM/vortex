@@ -13,7 +13,7 @@ import time
 from taylorism import Worker, BindedWorker, run_as_server
 from taylorism.schedulers import MaxThreadsScheduler
 
-from opinel import cpus_tool
+from bronx.system import cpus as cpus_tool
 
 
 class Sleeper(Worker):
@@ -87,7 +87,7 @@ class BindedSleeper(BindedWorker):
 def sleepers_example_program(verbose=True):
     """Example: how to run and control the Boss."""
 
-    boss = run_as_server(common_instructions={'wakeup_sentence':'Hello !'},
+    boss = run_as_server(common_instructions={'wakeup_sentence': 'Hello !'},
                          individual_instructions={'sleeping_time': [5, 10, 2, 1]},
                          scheduler=MaxThreadsScheduler(max_threads=3),
                          verbose=verbose)
@@ -103,7 +103,7 @@ def sleepers_example_program(verbose=True):
 def binded_sleepers_example_program(verbose=True):
     """Example: how to run and control the Boss."""
 
-    boss = run_as_server(common_instructions={'sentence':'Hello !'},
+    boss = run_as_server(common_instructions={'sentence': 'Hello !'},
                          individual_instructions={'sleeping_time': [5, 10, 2, 1]},
                          scheduler=MaxThreadsScheduler(max_threads=3),
                          verbose=verbose)

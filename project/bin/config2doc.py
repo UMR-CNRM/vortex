@@ -6,6 +6,24 @@ Automatically generates an ReST file based on a given configuration file.
 
 from __future__ import print_function
 
+from argparse import ArgumentParser
+from argparse import RawDescriptionHelpFormatter
+import importlib
+import os
+import re
+import sys
+
+# Automatically set the python path
+vortexbase = re.sub('{0:}project{0:}bin$'.format(os.path.sep), '',
+                    os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(vortexbase, 'site'))
+sys.path.insert(0, os.path.join(vortexbase, 'src'))
+
+import footprints as fp
+import vortex
+from vortex.data import geometries
+from vortex.util.config import GenericConfigParser
+
 argparse_epilog = '''
 The ReST code is contained directly in the configuration files:
   - If a line starts with *#R* or *;R*, it will be treated as pure ReST code
@@ -24,24 +42,6 @@ The ReST code is contained directly in the configuration files:
     key1 = value ;R The key1 description
 
 '''
-
-import sys
-import os
-import re
-
-from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
-
-# Automatically set the python path
-vortexbase = re.sub('{0:}project{0:}bin$'.format(os.path.sep), '',
-                    os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(vortexbase, 'site'))
-sys.path.insert(0, os.path.join(vortexbase, 'src'))
-
-import footprints as fp
-import vortex
-from vortex.data import geometries
-from vortex.util.config import GenericConfigParser
 
 # Main script logger
 logger = fp.loggers.getLogger(__name__)
@@ -176,6 +176,32 @@ def geometry_rst(outfile, verbose=0):
         logger.debug('Resulting ReST written in: {}'.format(outfile))
 
 
+def configtable_rst(indata, outfile, verbose=0):
+    """Handle the special case of geometries."""
+    idata = indata.split(',')
+    if len(idata) >= 5:
+        importlib.import_module(idata[4])
+    fpargs = dict(family=idata[0],
+                  kind=idata[1],
+                  version=idata[2],
+                  language=idata[3] if len(idata) >= 4 else 'en',)
+    c_parser = fp.proxy.iniconf(**fpargs)
+
+    def tableitem_easydump(parser, section, comment, ckeys):
+        """Generate bits of ReST code for a given tableitem."""
+        if ':' in section:
+            item = c_parser.get(section.split(':', 1)[0])
+            return item.nice_rst()
+        else:
+            return ''
+
+    # We are now parsing the ini file manually to find RST code
+    rstparse = RstConfigFileParser(c_parser.config.file, section_cb=tableitem_easydump)
+    with open(outfile, 'w') as outfh:
+        outfh.write(rstparse.parse())
+        logger.debug('Resulting ReST written in: {}'.format(outfile))
+
+
 def main():
     '''Process command line options.'''
 
@@ -191,6 +217,9 @@ def main():
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--geometry", dest="geometry", action="store_true",
                        help="Generates the documentation for the geometries.")
+    group.add_argument("--configtable", dest="configtable", action="store",
+                       help=("Generates the documentation for a config table. " +
+                             "Must be a coma separated list (family,kind,version,lang,package)"))
     group.add_argument("--default", dest="default", action="store",
                        help=("Generates the documentation for any config file (default formating). " +
                              "The path (relative or absolute) to the config file has to be specified " +
@@ -214,6 +243,8 @@ def main():
 
     if args.geometry:
         geometry_rst(args.output_file, verbose=args.verbose)
+    if args.configtable:
+        configtable_rst(args.configtable, args.output_file, verbose=args.verbose)
     if args.default:
         default_rst(args.default, args.output_file, verbose=args.verbose)
 

@@ -51,3 +51,18 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: IniConf
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ConfigurationTable
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+ 
+.. autoclass:: TableItem
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
