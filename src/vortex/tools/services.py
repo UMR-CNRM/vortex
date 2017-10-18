@@ -13,6 +13,7 @@ from six.moves.configparser import NoOptionError, NoSectionError
 import hashlib
 import io
 import six
+from email import encoders
 from string import Template
 
 from bronx.stdtypes import date
@@ -20,7 +21,6 @@ from bronx.syntax.pretty import Utf8PrettyPrinter
 import footprints
 
 from vortex import sessions
-from vortex.tools.actions import actiond as ad  # @UnusedImport
 from vortex.util.config import GenericConfigParser, load_template
 
 #: No automatic export
@@ -189,7 +189,7 @@ class MailService(Service):
     def get_mimemap(self):
         """Construct and return a map of MIME types."""
         try:
-            md = self._mimemap
+            self._mimemap
         except AttributeError:
             from email.mime.audio import MIMEAudio
             from email.mime.image import MIMEImage
@@ -228,6 +228,7 @@ class MailService(Service):
                     xmsg = MIMEBase(maintype, subtype)
                     with io.open(xtra, 'rb') as fp:
                         xmsg.set_payload(fp.read())
+                    encoders.encode_base64(xmsg)
                 xmsg.add_header('Content-Disposition', 'attachment', filename=xtra)
                 multi.attach(xmsg)
         return multi
@@ -235,7 +236,7 @@ class MailService(Service):
     def set_headers(self, msg):
         """Put on the current message the header items associated to footprint attributes."""
         msg['From'] = self.sender
-        msg['To']   = self.commaspace.join(self.to.split())
+        msg['To'] = self.commaspace.join(self.to.split())
         if self.is_not_plain_ascii(self.subject):
             from email.header import Header
             msg['Subject'] = Header(self.subject, self.charset)
