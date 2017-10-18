@@ -619,7 +619,8 @@ class MatFilter(GenvStaticGeoResource):
         return dict(
             geo     = [{'truncation': self.geometry.truncation},
                        {'stretching': self.geometry.stretching},
-                       self.scope.area, {'filtering': self.scope.filtering}],
+                       self.scope.area,
+                       {'filtering': self.scope.filtering}],
             radical = 'matfil',
             src     = self.model,
         )

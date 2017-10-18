@@ -8,7 +8,6 @@ import collections
 import json
 import re
 import time
-from string import Template
 
 from bronx.datagrip.namelist  import NamelistBlock
 import footprints
@@ -1123,21 +1122,20 @@ class Reverser(BlindRun):
     def prepare(self, rh, opts):
         # Get info about the directives files directory
         directives = self.context.sequence.effective_inputs(role='Directives',
-                                                        kind='ctpini_directives_file')
+                                                            kind='ctpini_directives_file')
         if len(directives) < 1:
             logger.error("No directive file found. Stop")
             raise ValueError("No directive file found.")
         if len(directives) > 1:
-            logger.warning("Multiple directive files found. The first %s is taken.",
-                           directives[0].rh.container.filename)
-        # Subsitute values in the simili namelist
+            logger.warning("Multiple directive files found. This is strange...")
+        # Substitute values in the simili namelist
         param = self.context.sequence.effective_inputs(role='Param')
         if len(param) < 1:
             logger.error("No parameter file found. Stop")
             raise ValueError("No parameter file found.")
         elif len(param) > 1:
             logger.warning("Multiple files for parameter, the first %s is taken",
-                            param[0].rh.container.filename)
+                           param[0].rh.container.filename)
         param = param[0].rh
         paramct = param.contents
         dictkeyvalue = dict()
@@ -1146,9 +1144,9 @@ class Reverser(BlindRun):
         dictkeyvalue[r'ano_type'] = str(self.ano_type)
         paramct.setitems(dictkeyvalue)
         param.save()
-        self.system.cat(param.container.filename, output=False)
+        logger.info("Here is the parameter file (after substitution):")
+        param.container.cat()
         # Define an environment variable
-        self.export('DR_HOOK_NOT_MPI')
-        logger.info("Set environment variable DR_HOOK_NOT_MPI=1.")
+        self.export('drhook_not_mpi')
         # Call the parent's prepare
         super(Reverser, self).prepare(rh, opts)

@@ -422,30 +422,32 @@ class DataRaw(AlmostListContent):
         self._do_delayed_slurp = None
 
 
-class DataTemplate(AlmostListContent):
+class DataTemplate(DataContent):
     """
     Multi-lines data which fits to a template.
     Behave mostly as a list.
     """
 
-    def __init__(self,**kw):
-        kw.setdefault('fmt', None)
-        super(DataTemplate,self).__init__(**kw)
-
-    def _actual_slurp(self, container):
+    def slurp(self, container):
+        """Actually read a container."""
+        super(DataTemplate, self).slurp(container)
         container.rewind()
-        data = container.read()
-        self._data.append(data)
-        self._do_delayed_slurp = None
+        self._data = container.read()
 
     def setitems(self, keyvaluedict):
         """
-        Substitute the different keys contained in a dictionnary into
+        Substitute the different keys contained in a dictionary into
         the data content using a template.
-        :param keyvaluedict: keys-values dictionnary to be substituted.
+
+        :param dict keyvaluedict: things to be substituted.
         """
-        data_tmp = Template(self.data[0])
-        self.data[0] = data_tmp.substitute(keyvaluedict)
+        data_tmp = Template(self._data)
+        self._data = data_tmp.substitute(keyvaluedict)
+
+    def rewrite(self, container):
+        """Write the list contents in the specified container."""
+        container.close()
+        container.write(self.data)
 
 
 class FormatAdapter(DataContent):

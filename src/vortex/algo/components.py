@@ -844,7 +844,7 @@ class BlindRun(xExecutableAlgoComponent):
 
         args = [self.absexcutable(rh.container.localpath())]
         args.extend(self.spawn_command_line(rh))
-        logger.info('BlindRun executable resource %s', args)
+        logger.debug('BlindRun executable resource %s', args)
         self.spawn(args, opts)
 
 
