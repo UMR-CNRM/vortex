@@ -20,6 +20,7 @@ Included Modules
 * :mod:`common.data.boundaries`
 * :mod:`common.data.climfiles`
 * :mod:`common.data.consts`
+* :mod:`common.data.ctpini`
 * :mod:`common.data.diagnostics`
 * :mod:`common.data.eda`
 * :mod:`common.data.eps`
