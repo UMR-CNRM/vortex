@@ -48,7 +48,7 @@ class RawFiles(GeoFlowResource):
         """Generic information for names fabric, with radical = ``bcor``."""
         return dict(
             radical = self.realkind,
-            geo     = [{'truncation': self.geometry.truncation}],
+            geo     = self._geo2basename_info(add_stretching=False),
             fmt     = self.nativefmt,
             src     = [self.model],
             term    = self.term.fmthm,

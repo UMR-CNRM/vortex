@@ -95,14 +95,9 @@ class Analysis(GeoFlowResource):
 
     def basename_info(self):
         """Generic information, radical = ``analysis``."""
-        if self.geometry.lam:
-            lgeo = [self.geometry.area, self.geometry.rnice]
-        else:
-            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
-
         return dict(
             fmt     = self.nativefmt,
-            geo     = lgeo,
+            geo     = self._geo2basename_info(),
             radical = self.realkind,
             src     = [self.filling, self.model],
         )
@@ -212,14 +207,9 @@ class Historic(GeoFlowResource):
 
     def basename_info(self):
         """Generic information, radical = ``historic``."""
-        if self.geometry.lam:
-            lgeo = [self.geometry.area, self.geometry.rnice]
-        else:
-            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
-
         return dict(
             fmt     = self.nativefmt,
-            geo     = lgeo,
+            geo     = self._geo2basename_info(),
             radical = self.realkind,
             src     = self.model,
             term    = self.term.fmthm,
@@ -263,14 +253,9 @@ class BiasDFI(GeoFlowResource):
 
     def basename_info(self):
         """Generic information, radical = ``historic``."""
-        if self.geometry.lam:
-            lgeo = [self.geometry.area, self.geometry.rnice]
-        else:
-            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
-
         return dict(
             fmt     = self.nativefmt,
-            geo     = lgeo,
+            geo     = self._geo2basename_info(),
             radical = 'biasdfi',
             src     = self.model,
             term    = self.term.fmthm,

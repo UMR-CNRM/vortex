@@ -146,3 +146,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: ExecReverser
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

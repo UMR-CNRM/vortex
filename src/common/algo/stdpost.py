@@ -1097,3 +1097,56 @@ class Fa2GaussGrib(BlindRun):
 
             # Some cleaning
             self.system.rmall(self.fortinput)
+
+
+class Reverser(BlindRun):
+    """Compute the initial state for Ctpini."""
+    _footprint = dict(
+        info = "Compute initial state for Ctpini.",
+        attr = dict(
+            kind = dict(
+                values  = ['reverser'],
+            ),
+            param_iter = dict(
+                type = int,
+            ),
+            condlim = dict(
+                type = int,
+            ),
+            ano_type = dict(
+                type = int,
+            ),
+        )
+    )
+
+    def prepare(self, rh, opts):
+        # Get info about the directives files directory
+        directives = self.context.sequence.effective_inputs(role='Directives',
+                                                            kind='ctpini_directives_file')
+        if len(directives) < 1:
+            logger.error("No directive file found. Stop")
+            raise ValueError("No directive file found.")
+        if len(directives) > 1:
+            logger.warning("Multiple directive files found. This is strange...")
+        # Substitute values in the simili namelist
+        param = self.context.sequence.effective_inputs(role='Param')
+        if len(param) < 1:
+            logger.error("No parameter file found. Stop")
+            raise ValueError("No parameter file found.")
+        elif len(param) > 1:
+            logger.warning("Multiple files for parameter, the first %s is taken",
+                           param[0].rh.container.filename)
+        param = param[0].rh
+        paramct = param.contents
+        dictkeyvalue = dict()
+        dictkeyvalue[r'param_iter'] = str(self.param_iter)
+        dictkeyvalue[r'condlim'] = str(self.condlim)
+        dictkeyvalue[r'ano_type'] = str(self.ano_type)
+        paramct.setitems(dictkeyvalue)
+        param.save()
+        logger.info("Here is the parameter file (after substitution):")
+        param.container.cat()
+        # Define an environment variable
+        self.export('drhook_not_mpi')
+        # Call the parent's prepare
+        super(Reverser, self).prepare(rh, opts)

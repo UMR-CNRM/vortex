@@ -41,14 +41,9 @@ class ISP(GeoFlowResource):
 
     def basename_info(self):
         """Generic information, radical = ``isp``."""
-        if self.geometry.lam:
-            lgeo = [self.geometry.area, self.geometry.rnice]
-        else:
-            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
-
         return dict(
             fmt     = self.nativefmt,
-            geo     = lgeo,
+            geo     = self._geo2basename_info(),
             radical = self.realkind,
             src     = self.model,
         )
@@ -76,14 +71,9 @@ class _DDHcommon(GeoFlowResource):
 
     def basename_info(self):
         """Generic information, radical = ``ddh``."""
-        if self.geometry.lam:
-            lgeo = [self.geometry.area, self.geometry.rnice]
-        else:
-            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
-
         return dict(
             fmt     = self.nativefmt,
-            geo     = lgeo,
+            geo     = self._geo2basename_info(),
             radical = 'ddh',
             src     = [ self.model, self.scope ],
         )

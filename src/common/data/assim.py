@@ -51,7 +51,7 @@ class _BackgroundErrorInfo(GeoFlowResource):
         """Generic information for names fabric, with radical = ``bcor``."""
         return dict(
             radical = self.realkind,
-            geo     = [{'truncation': self.geometry.truncation}],
+            geo     = self._geo2basename_info(add_stretching=False),
             fmt     = self.nativefmt,
             src     = [self.model, ],
             term    = self.term.fmthm,
@@ -211,7 +211,7 @@ class Wavelet(GeoFlowResource):
         """Generic information for names fabric, with radical = ``bcor``."""
         return dict(
             radical = self.realkind,
-            geo     = [{'truncation': self.geometry.truncation}],
+            geo     = self._geo2basename_info(add_stretching=False),
             fmt     = self.nativefmt,
             src     = [self.model],
             term    = self.term.fmthm,
@@ -259,7 +259,7 @@ class RawControlVector(GeoFlowResource):
         """Generic information for names fabric, with radical = ``bcor``."""
         return dict(
             radical = self.realkind,
-            geo     = [{'truncation': self.geometry.truncation}],
+            geo     = self._geo2basename_info(add_stretching=False),
             fmt     = self.nativefmt,
             src     = [self.model],
         )
@@ -293,7 +293,7 @@ class InternalMinim(GeoFlowResource):
         """Generic information for names fabric, with radical = ``bcor``."""
         return dict(
             radical = self.realkind,
-            geo     = [{'truncation': self.geometry.truncation}],
+            geo     = self._geo2basename_info(add_stretching=False),
             fmt     = self.nativefmt,
             src     = [self.model],
         )

@@ -73,7 +73,7 @@ class ClimGlobal(ClimModel):
         """Generic information, radical = ``clim``."""
         return dict(
             fmt     = self.nativefmt,
-            geo     = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}],
+            geo     = self._geo2basename_info(),
             radical = 'clim',
             src     = self.model,
             suffix  = {'month': self.month},

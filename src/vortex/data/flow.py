@@ -6,7 +6,7 @@ __all__ = []
 
 
 from .resources  import Resource
-from .geometries import HorizontalGeometry
+from .geometries import HorizontalGeometry, GaussGeometry, ProjectedGeometry
 from .contents   import FormatAdapter
 
 from vortex.syntax.stdattrs import model, date, cutoff
@@ -57,3 +57,15 @@ class GeoFlowResource(FlowResource):
     def footprint_export_geometry(self):
         """Return the ``geometry`` attribute as its id tag."""
         return self.geometry.tag
+
+    def _geo2basename_info(self, add_stretching=True):
+        """Return an array describing the geometry for the Vortex's name builder."""
+        if isinstance(self.geometry, GaussGeometry):
+            lgeo = [{'truncation': self.geometry.truncation}, ]
+            if add_stretching:
+                lgeo.append({'stretching': self.geometry.stretching})
+        elif isinstance(self.geometry, ProjectedGeometry):
+            lgeo = [self.geometry.area, self.geometry.rnice]
+        else:
+            lgeo = self.geometry.area  # Default: always defined
+        return lgeo
