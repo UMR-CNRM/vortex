@@ -351,6 +351,10 @@ class utJeffrey(TestCase):
         self.assertEqual(res_exp.total_seconds(), 21780)
         obj = date.Period(0, 21780)
         self.assertEqual(obj, res_exp)
+        obj = date.Period(0, 1234567, 42)
+        self.assertEqual(obj.days, 14)
+        self.assertEqual(obj.seconds, 24967)
+        self.assertEqual(obj.microseconds, 42)
 
     def test_period_utilities(self):
         obj_sec = 86410
@@ -358,6 +362,9 @@ class utJeffrey(TestCase):
         self.assertEqual(len(obj), obj_sec)
         self.assertEqual(obj.length, obj_sec)
         self.assertEqual(int(obj.time()), obj_sec / 60)  # 24h
+        obj = date.Period(1, 314)
+        self.assertEqual(obj.hms, '24:05:14')
+        self.assertEqual(obj.hmscompact, '240514')
 
     def test_period_add(self):
         obj1 = date.Period('PT1S')

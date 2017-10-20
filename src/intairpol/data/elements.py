@@ -158,7 +158,7 @@ class PollutantsTable(IniConf):
         attr = dict(
             kind = dict(),
             family = dict(
-                values   = [ 'pollutants', 'pollution' ],
+                values   = ['pollutants', 'pollution'],
                 remap    = dict(pollution = 'pollutants'),
             ),
             version = dict(
@@ -229,13 +229,23 @@ class PollutantsTable(IniConf):
                     d[item][self.groupname]     = group
                     d[item]['translator']       = self.translator
                     self._tablelist.append(footprints.proxy.element(**d[item]))
-                except:
-                   logger.warning('Some item description could not match')
+                except Exception as trouble:
+                   logger.warning('Some item description could not match ' + item + '/' + group)
+                   logger.warning(trouble)
         return self._tablelist
 
     def get(self, item):
         """Return the item with main key exactly matching the given argument."""
         candidates = [ x for x in self.tablelist if x.footprint_getattr(self.searchkeys[0]) == item ]
+        if candidates:
+            return candidates[0]
+        else:
+            return None
+
+    def match(self, item):
+        """Return the item with main key matching the given argument without case consideration."""
+        candidates = [ x for x in self.tablelist
+                      if x.footprint_getattr(self.searchkeys[0]).lower().startswith(item.lower()) ]
         if candidates:
             return candidates[0]
         else:
@@ -261,10 +271,10 @@ class PollutantsElementsTable(PollutantsTable):
         info = 'Pollutants elements table',
         attr = dict(
             kind = dict(
-                values   = [ 'elements' ],
+                values   = ['elements'],
             ),
             version = dict(
-                values   = ['std', 'nist'],
+                values   = ['std', 'nist', 'si'],
                 remap    = dict(si='nist'),
             ),
             searchkeys = dict(
@@ -286,7 +296,7 @@ class PollutantsSitesTable(PollutantsTable):
         info = 'Pollutants sites table',
         attr = dict(
             kind = dict(
-                values   = [ 'sites' ],
+                values   = ['sites'],
             ),
             searchkeys = dict(
                 default  = footprints.FPTuple(('name', 'location'),)

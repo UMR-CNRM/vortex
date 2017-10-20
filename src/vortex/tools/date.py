@@ -50,6 +50,7 @@ import datetime
 import calendar
 import functools
 import operator
+import yaml
 
 
 def today():
@@ -342,7 +343,7 @@ class Period(datetime.timedelta):
             ld = [ 0, top.hour * 3600 + top.minute * 60 ]
         elif len(args) < 2 and ( isinstance(top, int) or isinstance(top, float) ):
             ld = [ 0, top ]
-        elif isinstance(top, int) and len(args) == 2:
+        elif isinstance(top, int) and len(args) > 1:
             ld = list(args)
         elif isinstance(top, basestring):
             ld = [ 0, Period._parse(top) ]
@@ -409,6 +410,21 @@ class Period(datetime.timedelta):
     def time(self):
         """Return a :class:`Time` object."""
         return Time(0, int(self.total_seconds()) / 60)
+
+    @property
+    def hms(self):
+        """Nicely formatted HH:MM:SS string."""
+        hours, mins = divmod(self.length, 3600)
+        mins, seconds = divmod(mins, 60)
+        return '{0:02d}:{1:02d}:{2:02d}'.format(hours, mins, seconds)
+
+    @property
+    def hmscompact(self):
+        """Compact HHMMSS string."""
+        return self.hms.replace(':', '')
+
+    def __str__(self):
+        return self.isoformat()
 
 
 class _GetattrCalculatorMixin(object):
@@ -706,6 +722,10 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
     def compact(self):
         """Compact concatenation of date values, up to the second (YYYYMMDDHHSS)."""
         return self.ymdhms
+
+    def stamp(self):
+        """Compact concatenationup to microseconds."""
+        return self.ymdhms + '{0:06d}'.format(self.microsecond)
 
     def vortex(self, cutoff='P'):
         """Semi-compact representation for vortex paths."""
