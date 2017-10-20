@@ -6,7 +6,9 @@ This modules defines the base nodes of the logical layout
 for any :mod:`vortex` experiment.
 """
 
+import collections
 import re
+import six
 
 import footprints
 
@@ -48,21 +50,21 @@ class NiceLayout(object):
             print " + ...\n"
 
 
-class ConfigSet(footprints.util.LowerCaseDict):
-    """Simple struct-like object which is also a lower case dictionary.
+class ConfigSet(collections.MutableMapping):
+    """Simple struct-like object that acts as a lower case dictionary.
 
     Two syntax are available to add a new entry in a :class:`ConfigSet` object:
 
     * ``ConfigSetObject.key = value``
     * ``ConfigSetObject[key] = value``
 
-    Prior to its assignment, ``value`` is always passed to a
+    Prior to being retrieved, entries ere passed to a
     :class:`vortex.util.config.AppConfigStringDecoder` object. It allows to
     describe complex data types (see the :class:`vortex.util.config.AppConfigStringDecoder`
     class documentation).
 
-    Some extra features are added on top of the :class:`vortex.util.config.AppConfigStringDecoder`
-    capabilities:
+    Some extra features are added on top of the
+    :class:`vortex.util.config.AppConfigStringDecoder` capabilities:
 
     * If ``key`` ends with *_map*, ``value`` will be seen as a dictionary
     * If ``key`` contains the words *geometry* or *geometries*, ``value``
@@ -74,19 +76,22 @@ class ConfigSet(footprints.util.LowerCaseDict):
 
     def __init__(self, *kargs, **kwargs):
         super(ConfigSet, self).__init__(*kargs, **kwargs)
-        self._confdecoder = AppConfigStringDecoder()
+        self.__dict__['_internal'] = dict()
+        self.__dict__['_confdecoder'] = AppConfigStringDecoder(substitution_cb=self._internal.get)
 
-    def __getattr__(self, attr):
-        if attr in self:
-            return self.get(attr)
-        else:
-            raise AttributeError('No such parameter <' + attr + '>')
+    @staticmethod
+    def _remap_key(key):
+        return key.lower()
 
-    def __setattr__(self, attr, value):
-        self[attr] = value
+    def __iter__(self):
+        for k in self._internal.keys():
+            yield self._remap_key(k)
+
+    def __getitem__(self, key):
+        return self._confdecoder(self._internal[self._remap_key(key)])
 
     def __setitem__(self, key, value):
-        if value is not None and isinstance(value, basestring):
+        if value is not None and isinstance(value, six.string_types):
             # Support for old style dictionaries (compatibility)
             if (key.endswith('_map') and not re.match(r'^dict\(.*\)$', value) and
                     not re.match(r'^\w+\(dict\(.*\)\)$', value)):
@@ -95,20 +100,45 @@ class ConfigSet(footprints.util.LowerCaseDict):
                     value = re.sub(r'^(\w+)\((.*)\)$', r'\1(dict(\2))', value)
                 else:
                     value = 'dict(' + value + ')'
-            # Support for geometries
+            # Support for geometries (compatibility)
             if (('geometry' in key or 'geometries' in key) and
                     (not re.match(r'^geometry\(.*\)$', value, flags=re.IGNORECASE))):
                 value = 'geometry(' + value + ')'
-            # Process the values recursively
-            value = self._confdecoder(value)
-            # Special case for rangex
-            if key.endswith('_range') and isinstance(value, list):
+            # Support for oldstyle range (compatibility)
+            if (key.endswith('_range') and not re.match(r'^rangex\(.*\)$', value) and
+                    not re.match(r'^\w+\(rangex\(.*\)\)$', value)):
                 key = key[:-6]
-                value = footprints.util.rangex(* value)
-            if key.endswith('_range') and isinstance(value, basestring):
-                key = key[:-6]
-                value = footprints.util.rangex(re.sub(r'\s', '', value))
-        super(ConfigSet, self).__setitem__(key, value)
+                if re.match(r'^\w+\(.*\)$', value):
+                    value = re.sub(r'^(\w+)\((.*)\)$', r'\1(rangex(\2))', value)
+                else:
+                    value = 'rangex(' + value + ')'
+        self._internal[self._remap_key(key)] = value
+
+    def __delitem__(self, key):
+        del self._internal[self._remap_key(key)]
+
+    def __len__(self):
+        return len(self._internal)
+
+    def clear(self):
+        self._internal = dict()
+
+    def __contains__(self, key):
+        return self._remap_key(key) in self._internal
+
+    def __getattr__(self, key):
+        if key in self:
+            return self[key]
+        else:
+            raise AttributeError('No such parameter <' + key + '>')
+
+    def __setattr__(self, attr, value):
+        self[attr] = value
+
+    def copy(self):
+        newobj = self.__class__()
+        newobj.update(** self)
+        return newobj
 
 
 class Node(footprints.util.GetByTag, NiceLayout):
