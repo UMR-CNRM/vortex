@@ -12,11 +12,12 @@ import sys
 from distutils.version import LooseVersion
 
 import footprints
+from footprints import proxy as fpx
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.data.contents import MetaDataReader
-from vortex.tools.date import Date, Time
+from vortex.tools.date import Date, Time, Period
 
 try:
     import epygram  # @UnusedImport
@@ -245,3 +246,57 @@ class GribMetadataReader(EpygramMetadataReader):
             return None, 0
         else:
             return bundle.pop()
+
+
+@disabled_if_no_epygram
+def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
+                            outname=None,
+                            fieldslist=None,
+                            field_prefix='S1D_',
+                            pack=None):
+    """
+    Hook to convert fields from a PGD.lfi to well-formatted for clim923 FA format.
+
+    :param t: session ticket
+    :param rh_pgdlfi: resource handler of source PGD.lfi to process
+    :param nam923blocks: namelist blocks of geometry for clim923
+    :param outname: output filename
+    :param fieldslist: list of fields to convert
+    :param field_prefix: prefix to add to field name in FA
+    :param pack: packing for fields to write
+    """
+
+    def sfxlfi2fa_field(fld, geom):
+        fldout = fpx.fields.almost_clone(fld,
+                                         geometry=geom,
+                                         fid={'FA':field_prefix + fld.fid['LFI']})
+        fldout.setdata(fld.data[1:-1, 1:-1])
+        return fldout
+
+    if fieldslist is None:
+        fieldslist = ['ZS', 'COVER001', 'COVER002']
+    if pack is None:
+        pack = {'KNGRIB':-1}
+    if outname is None:
+        outname = rh_pgdlfi.container.abspath + '.fa923'
+    if not t.sh.exists(outname):
+        with epy_env_prepare(t):
+            pgdin = fpx.dataformats.almost_clone(rh_pgdlfi.contents.data,
+                                                 true3d=True)
+
+            geom, spgeom = epygram.geometries.domain_making.build_geom_from_e923nam(nam923blocks)
+            validity = epygram.base.FieldValidity(date_time=Date(1994,5,31,0),  # Start of ALADIN
+                                                  term=Period(0))
+            pgdout = epygram.formats.resource(filename=outname,
+                                              openmode='w',
+                                              fmt='FA',
+                                              processtype='initialization',
+                                              validity=validity,
+                                              geometry=geom,
+                                              spectral_geometry=spgeom)
+            for f in fieldslist:
+                fldout = sfxlfi2fa_field(pgdin.readfield(f), geom)
+                pgdout.writefield(fldout, compression=pack)
+    else:
+        logger.warning('Try to create an already existing resource <%s>',
+                       outname)

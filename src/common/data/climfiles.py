@@ -169,3 +169,93 @@ class ClimBDAP(StaticGeoResource):
     def olive_basename(self):
         """OLIVE specific naming convention."""
         return 'Const.Clim.' + str(self.month)
+
+
+# Databases to generate clim files
+
+class GTOPO30derivedDB(StaticGeoResource):
+    """
+    Class of a tar-zip file containing parameters derived from
+    GTOPO30 database, generated with old stuff.
+    A Genvkey can be given.
+    """
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Database for GTOPO30-derived parameters.',
+            attr = dict(
+                kind = dict(
+                    values   = ['misc_orography'],
+                ),
+                source = dict(
+                    values   = ['GTOPO30'],
+                ),
+                gvar = dict(
+                    default  = '[source]_[kind]'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'misc_orography'
+
+
+class GTOPO30Urbanisation(StaticGeoResource):
+    """
+    Class of a binary file containing urbanisation from
+    GTOPO30 database.
+    A Genvkey can be given.
+    """
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Database for GTOPO30 urbanisation.',
+            attr = dict(
+                kind = dict(
+                    values   = ['urbanisation'],
+                ),
+                source = dict(
+                    values   = ['GTOPO30'],
+                ),
+                gvar = dict(
+                    default  = '[source]_[kind]'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'urbanisation'
+
+
+class GTOPO30WaterPercentage(StaticGeoResource):
+    """
+    Class of a binary file containing water percentage from
+    GTOPO30 database.
+    A Genvkey can be given.
+    """
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Database for GTOPO30 water percentage.',
+            attr = dict(
+                kind = dict(
+                    values   = ['water_percentage'],
+                ),
+                source = dict(
+                    values   = ['GTOPO30'],
+                ),
+                gvar = dict(
+                    default  = '[source]_[kind]'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'water_percentage'
+

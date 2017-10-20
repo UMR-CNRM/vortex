@@ -134,3 +134,147 @@ class IsbaParams(StaticGeoResource):
     @property
     def realkind(self):
         return 'isba'
+
+
+class SandDB(StaticGeoResource):
+    """
+    Class of a tar-zip (.dir/.hdr) file containing surface sand database.
+    A Genvkey can be given.
+    """
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Database for quantity of sand in soil',
+            attr = dict(
+                kind = dict(
+                    values   = ['sand'],
+                ),
+                source = dict(
+                    type = str,
+                    # values   = ['HWSD', 'FAO'],
+                ),
+                gvar = dict(
+                    default  = '[source]_[kind]'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'sand'
+
+
+class ClayDB(StaticGeoResource):
+    """
+    Class of a tar-zip (.dir/.hdr) file containing surface clay database.
+    A Genvkey can be given.
+    """
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Database for quantity of clay in soil',
+            attr = dict(
+                kind = dict(
+                    values   = ['clay'],
+                ),
+                source = dict(
+                    type = str,
+                    # values   = ['HWSD', 'FAO'],
+                ),
+                gvar = dict(
+                    default  = '[source]_[kind]'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'clay'
+
+
+class OrographyDB(StaticGeoResource):
+    """
+    Class of a tar-zip (.dir/.hdr) file containing orography database.
+    A Genvkey can be given.
+    """
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Database for orography',
+            attr = dict(
+                kind = dict(
+                    values   = ['orography'],
+                ),
+                source = dict(
+                    type = str,
+                    # values   = ['GTOPO30', 'GMTED2010'],
+                ),
+                gvar = dict(
+                    default  = '[source]_[kind]_[geometry::rnice]'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'orography'
+
+
+class SurfaceTypeDB(StaticGeoResource):
+    """
+    Class of a tar-zip (.dir/.hdr) file containing surface type database.
+    A Genvkey can be given.
+    """
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Database for surface type',
+            attr = dict(
+                kind = dict(
+                    values   = ['surface_type'],
+                ),
+                source = dict(
+                    type = str,
+                    # values   = ['ECOCLIMAP_I'],
+                ),
+                gvar = dict(
+                    default  = '[source]_[kind]'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'surface_type'
+
+
+class BathymetryDB(StaticGeoResource):
+    """
+    Class of a tar-zip (.dir/.hdr) file containing bathymetry database.
+    A Genvkey can be given.
+    """
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Database for bathymetry',
+            attr = dict(
+                kind = dict(
+                    values   = ['bathymetry'],
+                ),
+                source = dict(
+                    values   = ['ETOPO2'],
+                ),
+                gvar = dict(
+                    default  = '[source]_[kind]_[geometry::rnice]'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'bathymetry'
