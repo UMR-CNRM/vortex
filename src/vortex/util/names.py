@@ -150,7 +150,7 @@ class VortexNameBuilder(object):
                 name = name + '+' + '-'.join(self.pack_std_items(d['period']))
 
         if d['number'] is not None:
-            name = name + '.' + str(d['number'])
+            name = name + '.' + '-'.join(self.pack_std_items(d['number']))
 
         if d['fmt'] is not None:
             name = name + '.' + d['fmt']

@@ -226,13 +226,17 @@ class HorizontalGeometry(Geometry):
         if self.runit is not None:
             if self.runit == 'km':
                 res = '{0:05.2f}'.format(self.resolution)
-            elif self.runit == 's':
+            elif self.runit in ('s', 'min'):
                 res = '{0:04.1f}'.format(self.resolution)
             else:
                 res = '{0:06.3f}'.format(self.resolution)
             return re.sub(r'\.', self.runit, res, 1)
         else:
             return 'Unknown Resolution'
+
+    @property
+    def rnice_u(self):
+        return self.rnice.upper()
 
     def anonymous_info(self, *args):  # @UnusedVariable
         """Try to build a meaningful information from an anonymous geometry."""

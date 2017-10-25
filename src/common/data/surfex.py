@@ -212,7 +212,7 @@ class OrographyDB(StaticGeoResource):
                     # values   = ['GTOPO30', 'GMTED2010'],
                 ),
                 gvar = dict(
-                    default  = '[source]_[kind]_[geometry::rnice]'
+                    default  = '[source]_[kind]_[geometry::rnice_u]'
                 ),
             )
         )
@@ -266,10 +266,11 @@ class BathymetryDB(StaticGeoResource):
                     values   = ['bathymetry'],
                 ),
                 source = dict(
-                    values   = ['ETOPO2'],
+                    type = str,
+                    # values   = ['ETOPO2'],
                 ),
                 gvar = dict(
-                    default  = '[source]_[kind]_[geometry::rnice]'
+                    default  = '[source]_[kind]_[geometry::rnice_u]'
                 ),
             )
         )

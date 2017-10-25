@@ -279,7 +279,7 @@ def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
         pack = {'KNGRIB':-1}
     if outname is None:
         outname = rh_pgdlfi.container.abspath + '.fa923'
-    if not t.sh.exists(outname):
+    if not t.sh.path.exists(outname):
         with epy_env_prepare(t):
             pgdin = fpx.dataformats.almost_clone(rh_pgdlfi.contents.data,
                                                  true3d=True)

@@ -1248,9 +1248,15 @@ class Month(object):
             try:
                 tmpdate = Date(*args)
             except (ValueError, TypeError):
-                raise ValueError('Could not create a Month from values provided %s', str(args))
+                try:
+                    self._month = int(args[0])
+                    if not (1 <= self._month <= 12):
+                        raise ValueError('Not a valid month: {}'.format(self._month))
+                    tmpday = 1
+                except (ValueError, TypeError):
+                    raise ValueError('Could not create a Month from values provided %s', str(args))
             else:
-                self._month, self._year = tmpdate.month, tmpdate.year
+                self._month, self._year, tmpday = tmpdate.month, tmpdate.year, tmpdate.day
             # Process the modifiers
             if mmod:
                 if mmod.group(1) == 'next':
@@ -1258,7 +1264,7 @@ class Month(object):
                 elif mmod.group(1) == 'prev':
                     delta = -1
                 elif mmod.group(1) == 'closest':
-                    if tmpdate.day > 15:
+                    if tmpday > 15:
                         delta = 1
                     else:
                         delta = -1

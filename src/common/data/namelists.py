@@ -14,6 +14,7 @@ from vortex.tools import env
 from vortex.tools.date import Time, Date
 from bronx.datagrip.namelist import NO_SORTING, NamelistBlock, NamelistSet, NamelistParser
 from vortex.data.outflow import ModelResource, NoDateResource
+from vortex.data.outflow import StaticGeoResource
 from vortex.data.contents import AlmostDictContent, IndexedTable
 from vortex.syntax.stdattrs import binaries, term, cutoff
 from gco.syntax.stdattrs import gvar
@@ -498,3 +499,47 @@ class NamelistSelectDef(NoDateResource):
         else:
             thesource = self.source
         return 'extract=' + thesource
+
+
+class GeoBlocks(StaticGeoResource):
+    """Extract of a namelist containing Geometry blocks."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                info = "Geometry blocks of namelist.",
+                type = str,
+                values = ['geoblocks']
+            ),
+            clscontents = dict(
+                default = NamelistContent,
+            ),
+            target = dict(
+                info = "Scope that should use these blocks.",
+                type = str,
+            ),
+            nativefmt = dict(
+                optional = True,
+                values = ['nam'],
+                default = 'nam',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'geoblocks'
+
+    def basename_info(self):
+        if self.geometry.kind == 'projected':
+            lgeo = [self.geometry.area, self.geometry.rnice]
+        elif self.geometry.kind == 'gauss':
+            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
+        else:
+            lgeo = self.geometry.area
+        return dict(
+            radical = self.realkind,
+            geo = lgeo,
+            src = self.target,
+            fmt = self.nativefmt
+        )
