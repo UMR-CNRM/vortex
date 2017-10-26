@@ -502,6 +502,12 @@ class utFootprint(TestCase):
         rv = fp._replacement(nbpass, 'stuff2', guess, dict(otherfoo=thisfoo), todo)
         self.assertDictEqual(guess, dict(stuff1=None, stuff2='misc_2', somefoo=thisfoo))
 
+        # Mix of attributes and methods
+        thisfoo = Foo(value='ToTo')
+        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:value::lower]', somefoo=thisfoo))
+        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        self.assertDictEqual(guess, dict(stuff1='misc_toto', stuff2='foo', somefoo=thisfoo))
+
     def test_footprint_replmethod(self):
         fp = self.fpbis
         nbpass = 0
@@ -518,10 +524,21 @@ class utFootprint(TestCase):
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_done_2', stuff2='foo'))
 
+        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justdoit:upper]', somefoo=thisfoo))
+        todo = [ 'stuff1' ]
+        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        self.assertTrue(rv)
+        self.assertDictEqual(guess, dict(stuff1='misc_DONE_2', stuff2='foo'))
+
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justraise]', somefoo=thisfoo))
         rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
         self.assertFalse(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justraise]', stuff2='foo'))
+
+        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justraise:upper]', somefoo=thisfoo))
+        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        self.assertFalse(rv)
+        self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justraise:upper]', stuff2='foo'))
 
     def test_footprint_replacementfmt(self):
         fp = self.fpbis
@@ -567,6 +584,15 @@ class utFootprint(TestCase):
         rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_01_and_02', stuff2=1))
+
+        # With a full "format" syntax
+        fp = self.fpter
+        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2%02d]_and_[more%.upper:s]', more='toto'))
+        todo = ['stuff1', ]
+        extras = dict(more='toto')
+        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        self.assertTrue(rv)
+        self.assertDictEqual(guess, dict(stuff1='misc_01_and_TOTO', stuff2=1))
 
     def test_resolve_unknown(self):
         fp = Footprint(self.fpbis, dict(

@@ -13,6 +13,7 @@ import glob
 from weakref import WeakSet
 from collections import deque
 import six
+import string
 
 from . import loggers
 
@@ -757,3 +758,14 @@ class UpperCaseDict(SpecialDict):
     def remap(self, key):
         """Return a upper case value of the actual key."""
         return key.upper()
+
+
+class FoxyFormatter(string.Formatter):
+    """A string formatter that may try to call an argument-less method."""
+
+    def get_field(self, field_name, args, kwargs):
+        """Given a **field_name**, find the object it references."""
+        obj, used_key = super(FoxyFormatter, self).get_field(field_name, args, kwargs)
+        if callable(obj):
+            obj = obj()
+        return (obj, used_key)

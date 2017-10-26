@@ -62,3 +62,8 @@ Base Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: FoxyFormatter
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
