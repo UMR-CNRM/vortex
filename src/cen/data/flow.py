@@ -100,6 +100,8 @@ class SurfaceForcing(GeoFlowResource):
                     info = "The resource's massif geometry.",
                     type = MassifGeometry,
                 ),
+                # startdate = a_date,
+                # enddate   = a_date,
             )
         )
     ]

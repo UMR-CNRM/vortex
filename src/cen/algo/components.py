@@ -67,16 +67,18 @@ class SurfexWorker(VortexWorkerBlindRun):
         if not self.system.path.exists('OPTIONS.nam'):
             # Copy the NAMELIST as it is to be updated
             copyfile(self.system.path.join(rundir, 'OPTIONS.nam'), 'OPTIONS.nam')
-        if not self.system.path.exists('PGD.txt'):
-            self.system.symlink(self.system.path.join(rundir, 'PGD.txt'), 'PGD.txt')
-        if not self.system.path.exists('PREP.txt'):
-            self.system.symlink(self.system.path.join(rundir, 'PREP.txt'), 'PREP.txt')
+        if not self.system.path.exists('PGD.nc'):
+            self.system.symlink(self.system.path.join(rundir, 'PGD.nc'), 'PGD.nc')
+        if not self.system.path.exists('PREP.nc'):
+            self.system.symlink(self.system.path.join(rundir, 'PREP.nc'), 'PREP.nc')
         if not self.system.path.exists('METADATA.xml'):
             self.system.symlink(self.system.path.join(rundir, 'METADATA.xml'), 'METADATA.xml')
         if not self.system.path.exists("ecoclimapI_covers_param.bin"):
             self.system.symlink(self.system.path.join(rundir, "ecoclimapI_covers_param.bin"), "ecoclimapI_covers_param.bin")
         if not self.system.path.exists("ecoclimapII_eu_covers_param.bin"):
             self.system.symlink(self.system.path.join(rundir, "ecoclimapII_eu_covers_param.bin"), "ecoclimapII_eu_covers_param.bin")
+        if not self.system.path.exists("drdt_bst_fit_60.nc"):
+            self.system.symlink(self.system.path.join(rundir, "drdt_bst_fit_60.nc"), "drdt_bst_fit_60.nc")
 
         area = _dic_area[self.vconf]
         liste_massifs = infomassifs().dicArea[area]
