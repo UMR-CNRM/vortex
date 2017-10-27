@@ -11,7 +11,7 @@ import decimal
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.algo.components import BlindRun, AlgoComponent
+from vortex.algo.components import BlindRun, AlgoComponent, AlgoComponentError
 from vortex.data.geometries import HorizontalGeometry
 from common.algo.ifsroot import IFSParallel
 
@@ -145,6 +145,13 @@ class MakeLAMDomain(AlgoComponent):
                         "epygram.geometries.domain_making.build_geometry_fromlonlat()"),
                 type = footprints.FPDict,
             ),
+            orography_truncation = dict(
+                info = ("Type of truncation of orography, among" +
+                        "('linear', 'quadratic', 'cubic')."),
+                type = str,
+                optional = True,
+                default = 'quadratic',
+            ),
             plot_params = dict(
                 info = "Plot geometry parameters.",
                 type = footprints.FPDict,
@@ -206,7 +213,8 @@ class MakeLAMDomain(AlgoComponent):
                                     out='.'.join([self.geometry.tag,
                                                   self.illustration_fmt]),
                                     **self.plot_params)
-        namblocks = domain_making.geom2namblocks(geometry)
+        namblocks = domain_making.geom2namblocks(geometry,
+                                                 truncated=self.orography_truncation)
         domain_making.format_namelists(namblocks, prefix=self.geometry.tag)
 
 

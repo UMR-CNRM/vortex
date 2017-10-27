@@ -48,9 +48,9 @@ class ClimModel(StaticGeoResource):
         return 'Const.Clim'
 
 
-class MonthlyClimModel(ClimModel):
+class MonthlyClim(StaticGeoResource):
     """
-    Abstract class for a monthly model climatology.
+    Abstract class for a monthly climatology.
     An HorizontalGeometry object is needed.
     A Genvkey can be given.
     """
@@ -58,18 +58,9 @@ class MonthlyClimModel(ClimModel):
     _footprint = [
         month,
         dict(
-            info = 'Model climatology',
-            attr = dict(
-                kind = dict(
-                    values = ['monthly_clim_model']
-                ),
-            )
+            info = 'Monthly climatology',
         )
     ]
-
-    @property
-    def realkind(self):
-        return 'monthly_clim_model'
 
     def gget_basename(self):
         """GGET specific naming convention."""
@@ -108,33 +99,16 @@ class ClimGlobal(ClimModel):
         )
 
 
-class MonthlyClimGlobal(MonthlyClimModel, ClimGlobal):
+class MonthlyClimGlobal(ClimGlobal, MonthlyClim):
     """
     Class for a monthly model climatology of a global model.
     A SpectralGeometry object is needed. A Genvkey can be given.
     """
-    _footprint = dict(
-        info = 'Model climatology for Global Models',
-        attr = dict(
-            model = dict(
-                values = ['arpege']
-            ),
-            gvar = dict(
-                default = 'clim_[model]_t[geometry::truncation]'
-            ),
-        )
-    )
 
     def basename_info(self):
-        """Generic information, radical = ``clim``."""
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = [{'truncation': self.geometry.truncation},
-                       {'stretching': self.geometry.stretching}],
-            radical = 'clim',
-            src     = self.model,
-            suffix  = {'month': self.month},
-        )
+        sd = super(MonthlyClimGlobal, self).basename_info()
+        sd['suffix'] = {'month': self.month}
+        return sd
 
 
 class ClimLAM(ClimModel):
@@ -170,38 +144,17 @@ class ClimLAM(ClimModel):
         )
 
 
-class MonthlyClimLAM(MonthlyClimModel, ClimLAM):
+class MonthlyClimLAM(ClimLAM, MonthlyClim):
     """
     Class for a monthly model climatology of a Local Area Model.
     A SpectralGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """
-    _footprint = dict(
-        info = 'Model climatology for Local Area Models',
-        attr = dict(
-#            model = dict(
-#                values = ['aladin', 'arome']
-#            ),
-#            gdomain = dict(
-#                type = GenvDomain,
-#                optional = True,
-#                default = '[geometry::area]'
-#            ),
-#            gvar = dict(
-#                default = 'clim_[gdomain]_[geometry::rnice]'
-#            ),
-        )
-    )
 
     def basename_info(self):
-        """Generic information, radical = ``clim``."""
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = [self.geometry.area, self.geometry.rnice],
-            radical = 'clim',
-            src     = self.model,
-            suffix  = {'month': self.month},
-        )
+        sd = super(MonthlyClimLAM, self).basename_info()
+        sd['suffix'] = {'month': self.month}
+        return sd
 
 
 class ClimBDAP(StaticGeoResource):
@@ -255,45 +208,17 @@ class ClimBDAP(StaticGeoResource):
         return 'Const.Clim'
 
 
-class MonthlyClimBDAP(ClimBDAP):
+class MonthlyClimBDAP(ClimBDAP, MonthlyClim):
     """
     Class for a monthly climatology of a BDAP domain.
     A LonlatGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """
-    _footprint = [
-        month,
-        dict(
-            info = 'Monthly Bdap climatology',
-            attr = dict(
-                kind = dict(
-                    values = ['monthly_clim_bdap']
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'monthly_clim_bdap'
 
     def basename_info(self):
-        """Generic information, radical = ``clim``."""
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = self.geometry.area,
-            radical = 'clim',
-            src     = self.model,
-            suffix  = {'month': self.month},
-        )
-
-    def gget_basename(self):
-        """GGET specific naming convention."""
-        return '.m' + str(self.month)
-
-    def olive_basename(self):
-        """OLIVE specific naming convention."""
-        return 'Const.Clim.' + str(self.month)
+        sd = super(MonthlyClimBDAP, self).basename_info()
+        sd['suffix'] = {'month': self.month}
+        return sd
 
 
 # Databases to generate clim files
@@ -329,10 +254,9 @@ class GTOPO30DerivedDB(StaticGeoResource):
         return 'misc_orography'
 
 
-class GTOPO30Urbanisation(StaticGeoResource):
+class UrbanisationDB(StaticGeoResource):
     """
-    Class of a binary file containing urbanisation from
-    GTOPO30 database.
+    Class of a binary file containing urbanisation database.
     A Genvkey can be given.
     """
     _footprint = [
@@ -361,10 +285,9 @@ class GTOPO30Urbanisation(StaticGeoResource):
         return 'urbanisation'
 
 
-class GTOPO30WaterPercentage(StaticGeoResource):
+class WaterPercentageDB(StaticGeoResource):
     """
-    Class of a binary file containing water percentage from
-    GTOPO30 database.
+    Class of a binary file containing water percentage database.
     A Genvkey can be given.
     """
     _footprint = [
@@ -393,25 +316,25 @@ class GTOPO30WaterPercentage(StaticGeoResource):
         return 'water_percentage'
 
 
-class GB2000SoilVeg(StaticGeoResource):
+class SoilANdVegDB(StaticGeoResource):
     """
     Class of a tar-zip file containing parameters derived from
-    Giard and Bazile 2000 Soil and vegetation database.
+    various databases.
     A Genvkey can be given.
     """
     _footprint = [
         gvar,
         dict(
-            info = 'Database for Giard and Bazile 2000 Soil and Vegetation.',
+            info = 'Database for Soil and Vegetation.',
             attr = dict(
                 kind = dict(
                     values   = ['soil_and_veg'],
                 ),
                 source = dict(
-                    values   = ['GiardBazile2000'],
+                    values   = ['GiardBazile2000', 'AVHRR-ESA'],
                 ),
                 geometry = dict(
-                    values = ['global1dg'],
+                    values = ['global1dg', 'europeb01'],
                 ),
                 gvar = dict(
                     default  = '[source]_[kind]'
@@ -425,25 +348,26 @@ class GB2000SoilVeg(StaticGeoResource):
         return 'soil_and_veg'
 
 
-class GB2000MonthlyLAI(StaticGeoResource):
+class MonthlyLAIDB(StaticGeoResource):
     """
     Class of a binary file containing monthly LAI derived from
-    Giard and Bazile 2000 Soil and vegetation database.
+    various databases.
     A Genvkey can be given.
     """
     _footprint = [
         gvar,
+        month,
         dict(
-            info = 'Database for Giard and Bazile 2000 monthly LAI.',
+            info = 'Database for monthly LAI.',
             attr = dict(
                 kind = dict(
                     values   = ['LAI'],
                 ),
                 source = dict(
-                    values   = ['GiardBazile2000'],
+                    values   = ['GiardBazile2000', 'AVHRR-ESA'],
                 ),
                 geometry = dict(
-                    values = ['global1dg'],
+                    values = ['global1dg', 'europeb01'],
                 ),
                 gvar = dict(
                     default  = '[source]_[kind]'
@@ -456,23 +380,97 @@ class GB2000MonthlyLAI(StaticGeoResource):
     def realkind(self):
         return 'LAI'
 
+    def gget_basename(self):
+        """GGET specific naming convention."""
+        return '.m' + str(self.month)
 
-class GB2000MonthlyVeg(StaticGeoResource):
+
+class MonthlyVegDB(StaticGeoResource):
     """
     Class of a binary file containing monthly vegetation derived from
-    Giard and Bazile 2000 Soil and vegetation database.
+    various databases.
     A Genvkey can be given.
     """
     _footprint = [
         gvar,
+        month,
         dict(
-            info = 'Database for Giard and Bazile 2000 monthly vegetation.',
+            info = 'Database for monthly vegetation.',
             attr = dict(
                 kind = dict(
                     values   = ['vegetation'],
                 ),
                 source = dict(
-                    values   = ['GiardBazile2000'],
+                    values   = ['GiardBazile2000', 'AVHRR-ESA'],
+                ),
+                geometry = dict(
+                    values = ['global1dg', 'europeb01'],
+                ),
+                gvar = dict(
+                    default  = '[source]_[kind]'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'vegetation'
+
+    def gget_basename(self):
+        """GGET specific naming convention."""
+        return '.m' + str(self.month)
+
+
+class SoilClimatologyDB(StaticGeoResource):
+    """
+    Class of a binary file containing climatologic soil parameters
+    (temperature, moisture, snow, ice) derived from
+    various databases.
+    A Genvkey can be given.
+    """
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Database for soil climatology parameters.',
+            attr = dict(
+                kind = dict(
+                    values   = ['soil_clim'],
+                ),
+                source = dict(
+                    values   = ['Arp-reanalysis', 'US-Navy'],
+                ),
+                geometry = dict(
+                    values = ['globaln108', 'global1dg'],
+                ),
+                gvar = dict(
+                    default  = '[source]_[kind]'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'soil_clim'
+
+
+class SurfGeopotentialDB(StaticGeoResource):
+    """
+    Class of a binary file containing Surface Geopotential derived from
+    various databases.
+    A Genvkey can be given.
+    """
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Database for surface geopotential.',
+            attr = dict(
+                kind = dict(
+                    values   = ['surfgeopotential'],
+                ),
+                source = dict(
+                    values   = ['Arp-reanalysis'],
                 ),
                 geometry = dict(
                     values = ['global1dg'],
@@ -486,28 +484,48 @@ class GB2000MonthlyVeg(StaticGeoResource):
 
     @property
     def realkind(self):
-        return 'vegetation'
+        return 'surfgeopotential'
 
 
-class USNavySoil(StaticGeoResource):
+class MonthlySoilClimatologyDB(SoilClimatologyDB):
     """
-    Class of a binary file containing soil parameters derived from
-    a US-Navy soil database.
+    Class of a binary file containing monthly climatologic soil parameters
+    (temperature, moisture, snow, ice) derived from
+    various databases.
+    A Genvkey can be given.
+    """
+    _footprint = [
+        month,
+        dict(
+            info = 'Database for monthly soil climatology parameters.',
+        )
+    ]
+
+    def gget_basename(self):
+        """GGET specific naming convention."""
+        return '.m' + str(self.month)
+
+
+class MonthlyChemicalDB(StaticGeoResource):
+    """
+    Class of a binary file containing climatologic chemicals (ozone, aerosols)
+    parameters derived from various databases.
     A Genvkey can be given.
     """
     _footprint = [
         gvar,
+        month,
         dict(
-            info = 'Database for US-Navy derived soil parameters.',
+            info = 'Database for monthly chemicals.',
             attr = dict(
                 kind = dict(
-                    values   = ['soil'],
+                    values   = ['ozone', 'aerosols'],
                 ),
                 source = dict(
-                    values   = ['US-Navy'],
+                    values   = ['UGAMP', 'Tegen'],
                 ),
                 geometry = dict(
-                    values = ['globaln108'],
+                    values = ['global2dg5', 'global5x4'],
                 ),
                 gvar = dict(
                     default  = '[source]_[kind]'
@@ -518,7 +536,11 @@ class USNavySoil(StaticGeoResource):
 
     @property
     def realkind(self):
-        return 'soil'
+        return self.kind
+
+    def gget_basename(self):
+        """GGET specific naming convention."""
+        return '.m' + str(self.month)
 
 
 class GeometryIllustration(StaticGeoResource):

@@ -534,7 +534,8 @@ class GeoBlocks(StaticGeoResource):
         if self.geometry.kind == 'projected':
             lgeo = [self.geometry.area, self.geometry.rnice]
         elif self.geometry.kind == 'gauss':
-            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
+            lgeo = [{'truncation': self.geometry.truncation},
+                    {'stretching': self.geometry.stretching}]
         else:
             lgeo = self.geometry.area
         return dict(
