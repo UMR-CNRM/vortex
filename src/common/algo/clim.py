@@ -98,9 +98,7 @@ class C923(IFSParallel):
         nam923blocks = geom_delta.contents.data
         # Note: conversion to float because may be Decimal
         for b in nam923blocks.values():
-            print(b)
             for k in b.keys():
-                print(k)
                 if isinstance(b[k], decimal.Decimal):
                     b[k] = float(b[k])
         # convert pgd
@@ -114,10 +112,88 @@ class C923(IFSParallel):
             if pgd.resource.nativefmt == 'lfi':
                 assert pgd.container.basename != self.input_orog_name, \
                     "Local name for resource Pgd mustn't be '{}' if format is lfi.".format(self.input_orog_name)
-                print("Convert PGD from LFI to FA923")
+                logger.info("Convert PGD from LFI to FA923")
                 self._convert_pgdlfi2pgdfa923(pgd,
                                               nam923blocks,
                                               outname=self.input_orog_name)
+
+
+class FinalizePGD(AlgoComponent):
+    """
+    Finalize PGD file: report spectrally filtered orography from Clim to PGD,
+    and convert it to FA if necessary.
+    """
+
+    _footprint = dict(
+        info = "Finalization of PGD.",
+        attr = dict(
+            kind = dict(
+                values   = ['finalize_pgd'],
+            ),
+            pgd_out_name = dict(
+                type = str,
+                optional = True,
+                default = 'PGD_final.fa'
+            ),
+        )
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        super(FinalizePGD, self).__init__(*kargs, **kwargs)
+        self._addon_checked = None
+
+    def _check_addons(self):
+        if self._addon_checked is None:
+            self._addon_checked = 'sfx' in self.system.loaded_addons()
+        if not self._addon_checked:
+            raise RuntimeError("The sfx addon is needed... please load it.")
+
+    def prepare(self, rh, opts):
+        """Default pre-link for namelist file and domain change."""
+        super(FinalizePGD, self).prepare(rh, opts)
+        from common.util.usepygram import empty_fa
+        # Basic exports
+        for optpack in ['drhook', 'drhook_not_mpi']:
+            self.export(optpack)
+        # Handle resources
+        clim = self.context.sequence.effective_inputs(role=('Clim',))
+        if not (len(clim) == 1):
+            raise AlgoComponentError("One Clim has to be provided")
+        pgdin = self.context.sequence.effective_inputs(role=('InputPGD',))
+        if not (len(pgdin) == 1):
+            raise AlgoComponentError("One InputPGD has to be provided")
+        if self.system.path.exists(self.pgd_out_name):
+            raise IOError("The output pgd file %s already exists.",
+                          self.pgd_out_name)
+        # prepare PGDin if necessary
+        if pgdin[0].rh.resource.nativefmt == 'lfi':
+            # PGD need conversion
+            logger.info("Create empty target fa file: %s.",
+                        self.pgd_out_name)
+            # Create empty FA...
+            self._pgd_fa = empty_fa(self.ticket, clim[0].rh, self.pgd_out_name)
+            # Convert PGD.lfi to PGD.fa...
+            logger.info("Calling sfxtools' lfi2fa from %s to %s.",
+                        pgdin[0].rh.container.localpath(),
+                        self.pgd_out_name)
+            self.system.sfx_lfi2fa(pgdin[0].rh.container.localpath(), self.pgd_out_name)
+        elif pgdin[0].rh.resource.nativefmt == 'fa':
+            # Format Adapter: epygram
+            self._pgd_fa = pgdin[0].rh.contents.data
+        else:
+            raise IOError("File %s actualfmt must be 'fa' or 'lfi'.")
+
+    def execute(self, rh, opts):
+        """Convert SURFGEOPOTENTIEL from clim to SFX.ZS in pgd."""
+        clim = self.context.sequence.effective_inputs(role=('Clim',))
+        self._pgd_fa.open(openmode='a')
+        zs_name = 'SFX.ZS'
+        self._pgd_fa.readfield(zs_name, getdata=False)  # to know how it is encoded
+        zs = clim[0].rh.contents.data.readfield('SURFGEOPOTENTIEL')
+        zs.operation('/', 9.80665)
+        zs.fid['FA'] = zs_name
+        self._pgd_fa.writefield(zs, compression=self._pgd_fa.fieldscompression[zs.fid['FA']])
+        self._pgd_fa.close()
 
 
 class MakeLAMDomain(AlgoComponent):

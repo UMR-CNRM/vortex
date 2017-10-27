@@ -300,3 +300,29 @@ def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
     else:
         logger.warning('Try to create an already existing resource <%s>',
                        outname)
+
+
+@disabled_if_no_epygram
+def empty_fa(t, rh, empty_name):
+    """
+    Create an empty FA file with fielname **empty_name**,
+    creating header from given existing FA resource handler **rh**.
+
+    :return: the empty epygram resource, closed
+    """
+    if rh.container.exists():
+        with epy_env_prepare(t):
+            rh.contents.data.open()
+            assert not t.sh.path.exists(empty_name), \
+                'Empty target filename already exist: {}'.format(empty_name)
+            e = epygram.formats.resource(empty_name, 'w', fmt='FA',
+                                         headername=rh.contents.data.headername,
+                                         validity=rh.contents.data.validity,
+                                         processtype=rh.contents.data.processtype,
+                                         cdiden=rh.contents.cdiden)
+            e.close()
+            rh.contents.data.close()
+            return e
+    else:
+        raise IOError('Try to copy header from a missing resource <%s>',
+                      rh.container.localpath())
