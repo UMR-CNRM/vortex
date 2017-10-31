@@ -434,7 +434,7 @@ class SequenceInputsReport(object):
             true_rh = nominal.rh
         return status, true_rh, nominal.rh
 
-    def synthetic_report(self, detailed=False):
+    def synthetic_report(self, detailed=False, args=None):
         '''Returns a string that decribes each local resource with its status.
 
         :param detailed: when alternates are used, tell which resource handler
@@ -443,16 +443,29 @@ class SequenceInputsReport(object):
         '''
         outstr = ''
         for local in sorted(self._local_map):
+
             status, true_rh, nominal_rh = self._local_status(local)
             extrainfo = ''
-            if status != self._Status.MISSING and (true_rh is not nominal_rh):
-                extrainfo = '(ALTERNATE USED)'
-            outstr += "* {:8s} {:16s} : {:s}\n".format(status, extrainfo, local)
-            if detailed and extrainfo != '':
-                outstr += "  * The following resource is used:\n"
-                outstr += true_rh.idcard(indent=6) + "\n"
-                outstr += "  * Instead of:"
-                outstr += nominal_rh.idcard(indent=6) + "\n"
+
+            print "DBUG", args
+            if args in ['present', 'expected','checked','missing','unused'] and args == status:
+                outstr += "* {:8s} : {:s}\n".format(status, local)
+
+            elif args is None:
+                if status != self._Status.MISSING and (true_rh is not nominal_rh):
+                    extrainfo = '(ALTERNATE USED)'
+                outstr += "* {:8s} {:16s} : {:s}\n".format(status, extrainfo, local)
+                if detailed and extrainfo != '':
+                    outstr += "  * The following resource is used:\n"
+                    outstr += true_rh.idcard(indent=6) + "\n"
+                    outstr += "  * Instead of:"
+                    outstr += nominal_rh.idcard(indent=6) + "\n"
+            elif args not in ['present', 'expected','checked','missing','unused']:
+                outstr += "* Your args is wrong !"
+                return outstr
+            else:
+                pass
+
         return outstr
 
     def print_report(self, detailed=False):

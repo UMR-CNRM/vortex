@@ -291,7 +291,7 @@ class InputReportContext(_ReportContext):
             elif any(report.missing_resources()):
                 t.sh.header('Input informations: missing resources')
                 if self._nonfatal_tplid:
-                    ad.opmail(task=self._task.tag, id=self._nonfatal_tplid, report=report.synthetic_report())
+                    ad.opmail(task=self._task.tag, id=self._nonfatal_tplid, report=report.synthetic_report(args='missing'))
             else:
                 t.sh.header('Input informations: everything is ok')
         else:
