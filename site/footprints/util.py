@@ -258,6 +258,10 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     """
     rangevalues = list()
 
+    # Very strange case of an empty range
+    if start is None:
+        return list()
+
     pstarts = ([str(s) for s in start]
                if isinstance(start, (list, tuple)) else str(start).split(','))
     for pstart in pstarts:
