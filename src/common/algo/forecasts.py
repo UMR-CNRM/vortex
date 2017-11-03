@@ -7,7 +7,7 @@ __all__ = []
 import re
 from collections import defaultdict
 
-from bronx.stdtypes.date import Time
+from bronx.stdtypes.date import Time, Month
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -326,6 +326,8 @@ class FullPosGeo(FullPos):
 
         # is there one (deterministic forecast) or many (ensemble forecast) fullpos to perform ?
         isMany = len(initrh) > 1
+        do_fix_input_clim = not self.system.path.exists('Const.Clim')
+        do_fix_output_clim = not self.system.path.exists('const.clim.000')
         infile = 'ICMSH{0:s}INIT'.format(self.xpname)
 
         for num, r in enumerate(initrh):
@@ -338,6 +340,40 @@ class FullPosGeo(FullPos):
                     logger.critical('Cannot process multiple Historic files if %s exists.', infile)
             else:
                 sh.cp(r.container.localpath(), infile, fmt=r.container.actualfmt, intent=intent.IN)
+
+            # Fix links for climatology files
+            actualmonth = Month(r.resource.date + r.resource.term)
+            startingclim = r.resource.geometry
+
+            def check_month_and_inputgeo(actualrh):
+                return bool(actualrh.resource.month == actualmonth and
+                            actualrh.resource.geometry.tag == startingclim.tag)
+
+            if do_fix_input_clim:
+                sh.remove('Const.Clim')
+                logger.info("Linking in the Initial clim file (Const.Clim) " +
+                            "for month %s and geometry == %s.", actualmonth, startingclim.tag)
+                self.setlink(
+                    initrole = (re.compile('Clim$'), re.compile('Clim$')),
+                    initkind = 'clim_model',
+                    initname = 'Const.Clim',
+                    inittest = check_month_and_inputgeo
+                )
+
+            def check_month_and_othergeo(actualrh):
+                return bool(actualrh.resource.month == actualmonth and
+                            actualrh.resource.geometry.tag != startingclim.tag)
+
+            if do_fix_output_clim:
+                sh.remove('const.clim.000')
+                logger.info("Linking in the Target clim file (const.clim.000) " +
+                            "for month %s and geometry != %s.", actualmonth, startingclim.tag)
+                self.setlink(
+                    initrole = (re.compile('Clim$'), re.compile('Clim$')),
+                    initkind = 'clim_model',
+                    initname = 'const.clim.000',
+                    inittest = check_month_and_othergeo
+                )
 
             # Standard execution
             super(FullPosGeo, self).execute(rh, opts)
