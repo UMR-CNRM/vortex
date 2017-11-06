@@ -13,6 +13,8 @@ from vortex.tools import date
 from common.tools.agt import agt_actual_command
 from vortex.syntax.stdattrs import Namespace
 from vortex.tools.actions import actiond as ad
+import vortex
+from vortex.tools.net import Ssh
 
 #: No automatic export
 __all__ = []
@@ -194,7 +196,10 @@ class BdapArchiveStore(Store):
         request += '#FORM BINAIRE'
 
         filereq = 'filereq'
-        self.system.spawn(['ssh', 'rm', self.storehost, self.storepath + '/' + filereq], fatal = False, silent = True)
+        ssh = vortex.sessions.current().system.ssh(vortex.sessions.current().system, self.storehost)
+        ssh.remove(self.storepath + '/' + filereq)
+#         self.system.spawn(['ssh', 'rm', self.storehost, self.storepath + '/' + filereq], fatal = False, silent = True)
+
         cmds = ['cd ' + self.storepath]
         cmds += ['echo "' + request + '" > ' + filereq]
         cmds += ['export DMT_DATE_PIVOT=' + date_pivot]
@@ -204,10 +209,13 @@ class BdapArchiveStore(Store):
         logger.debug('dap_cmd: {}'.format(actual_command))
 
         try:
-            ad.ssh(actual_command, hostname=self.storehost)
-            self.system.spawn(['scp'] + [self.storehost + ':' + self.storepath + '/' + local] + ['.'], shell = False, output = True)
-            ad.ssh('rm ' + self.storepath + '/' + filereq, hostname = self.storehost)
-            ad.ssh('rm ' + self.storepath + '/' + local, hostname = self.storehost)
+            ssh.execute(actual_command)
+            ssh.scpget(self.storepath + '/' + local, '.')
+            ssh.remove(self.storepath + '/' + filereq)
+            ssh.remove(self.storepath + '/' + local)
+            #self.system.spawn(['scp'] + [self.storehost + ':' + self.storepath + '/' + local] + ['.'], shell = False, output = True)
+#             ad.ssh('rm ' + self.storepath + '/' + filereq, hostname = self.storehost)
+#             ad.ssh('rm ' + self.storepath + '/' + local, hostname = self.storehost)
             rc = True
         except RuntimeError:
             rc = False
