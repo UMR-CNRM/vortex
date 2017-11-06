@@ -210,7 +210,6 @@ class HorizontalGeometry(Geometry):
             cv = getattr(self, item)
             if cv is not None:
                 setattr(self, item, float(cv))
-        # TODO coherence entre les coordonnees / resolution
         self._check_attributes()
         logger.debug('Abstract Horizontal Geometry init %s', str(self))
 
@@ -408,6 +407,7 @@ class LonlatGeometry(HorizontalGeometry):
         kw.setdefault('runit', 'dg')
         super(LonlatGeometry, self).__init__(**kw)
         self.kind = 'lonlat'
+        # TODO: coherence entre les coordonnees et nlon/nlat/resolution
         logger.debug('Lon/Lat Geometry init %s', str(self))
 
     def __str__(self):

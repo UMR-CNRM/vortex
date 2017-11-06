@@ -9,7 +9,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 # Recursive inclusion of packages with potential FootprintBase classes
 from . import boundaries, climfiles, consts, diagnostics, executables, fields
-from . import assim, gridfiles, logs, modelstates, namelists, obs, surfex, eps, eda
+from . import assim, gridfiles, logs, modelstates, namelists, obs, surfex, eps, eda, scores
 from . import providers, stores, query, monitoring
 
 #: No automatic export
