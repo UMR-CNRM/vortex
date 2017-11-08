@@ -34,24 +34,24 @@ class CenCfgParser(GenericConfigParser):
         return self.get(resname, 'resolvedpath')
 
 
-class SopranoDevProvider(Provider):
+class CenSopranoDevProvider(Provider):
 
     _footprint = [
         namespacefp,
         dict(
-            info = 'Soprano provider',
+            info = 'CEN Soprano provider',
             attr = dict(
                 namespace = dict(
-                    values   = ['guppy.meteo.fr', 'dev.soprano.fr'],
+                    values   = ['cendev.soprano.fr'],
                     optional  = False,
+                ),
+                storage = dict(
+                    values   = ['guppy.meteo.fr', ]
                 ),
                 tube = dict(
                     optional = True,
-                    values   = ['scp', 'rcp', 'ftp'],
+                    values   = ['scp', 'ftp'],
                     default  = 'ftp'
-                ),
-                suite = dict(
-                    optional = True,
                 ),
                 config = dict(
                     type     = CenCfgParser,
@@ -64,11 +64,11 @@ class SopranoDevProvider(Provider):
 
     def __init__(self, *args, **kw):
         logger.debug('SOPRANO dev job provider init %s', self.__class__)
-        super(SopranoDevProvider, self).__init__(*args, **kw)
+        super(CenSopranoDevProvider, self).__init__(*args, **kw)
 
     @property
     def realkind(self):
-        return 'soprano'
+        return 'cendev'
 
     def scheme(self, resource):
         """The actual scheme is the ``tube`` attribute of the current provider."""
@@ -77,10 +77,6 @@ class SopranoDevProvider(Provider):
     def netloc(self, resource):
         """The actual netloc is the ``namespace`` attribute of the current provider."""
         return self.namespace.netloc
-
-    def basename(self, resource):
-        """Use the resource basename."""
-        return resource.origin_basename()
 
     def pathname(self, resource):
         """
@@ -105,4 +101,4 @@ class SopranoDevProvider(Provider):
 
         logger.debug('sopranodevprovider::pathname info %s', info)
         self.config.setall(info)
-        return self.config.resolvedpath(resource, self.vapp, self.vconf, 'guppy')
+        return self.config.resolvedpath(resource, self.vapp, self.vconf, self.storage)

@@ -482,7 +482,8 @@ class MassifGeometry(UnstructuredGeometry):
         """
         super(MassifGeometry, self).__init__(**kw)
         self.kind = 'massif'
-        self.area = self.tag
+        if self.area is None:
+            self.area = self.tag
 
     def doc_export(self):
         """Relevant informations to print in the documentation."""

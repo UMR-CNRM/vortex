@@ -9,7 +9,19 @@ logger = footprints.loggers.getLogger(__name__)
 
 from common.data.consts import GenvStaticGeoResource
 from common.data.namelists import Namelist, NamelistContent
-from snowtools.tools.update_namelist import update_surfex_namelist
+
+
+class ImportFailer(object):
+    """Temporary class to del with a missing snowtools package."""
+
+    def __new__(self, *kargs, **kwargs):
+        raise RuntimeError('snowtools is not available')
+
+
+try:
+    from snowtools.tools.update_namelist import update_surfex_namelist
+except ImportError:
+    update_surfex_namelist = ImportFailer
 
 
 class SurfexNamelistUpdate(update_surfex_namelist, NamelistContent):
@@ -85,51 +97,6 @@ class Options(Namelist):
 
     def contents_handler(self, **kw):
         self.clscontents(self.date)
-
-
-class PGD(GenvStaticGeoResource):
-
-    _footprint = dict(
-        info = 'Ground description file used by  SURFEX.',
-        attr = dict(
-            kind = dict(
-                values = [ 'pgd', 'PGD' ],
-            ),
-            nativefmt = dict(
-                values  = ['ascii'],
-                default = 'ascii',
-            ),
-            gvar = dict(
-                default = '[kind]',
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'PGD'
-
-
-class Ecoclimap(GenvStaticGeoResource):
-
-    _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = [ "ecoclimapI", "ecoclimapII"],
-            ),
-            nativefmt = dict(
-                values  = ['bin'],
-                default = 'bin',
-            ),
-            gvar = dict(
-                default = '[kind]',
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'ecoclimap'
 
 
 class Snowr_param(GenvStaticGeoResource):

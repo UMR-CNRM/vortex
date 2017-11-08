@@ -551,8 +551,10 @@ class Driver(footprints.util.GetByTag, NiceLayout):
 
         # Set default parameters for the actual job
         self._options = dict() if options is None else options
+        self._special_prefix = self._options.get('special_prefix', 'OP_').upper()
         j_assist = self._options.get('jobassistant', None)
-        self._special_prefix = j_assist.special_prefix.upper() or 'OP_'
+        if j_assist is not None:
+            self._special_prefix = j_assist.special_prefix.upper()
         self._iniconf = iniconf or t.env.get('{:s}INICONF'.format(self._special_prefix))
         self._jobname = jobname or t.env.get('{:s}JOBNAME'.format(self._special_prefix)) or 'void'
         self._rundate = rundate or t.env.get('{:s}RUNDATE'.format(self._special_prefix))

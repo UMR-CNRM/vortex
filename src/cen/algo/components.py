@@ -17,8 +17,6 @@ from vortex.tools.date import Time
 from vortex.syntax.stdattrs import a_date
 from vortex.algo.components import ParaBlindRun, ParaExpresso
 from vortex.tools.parallelism import VortexWorkerBlindRun
-from snowtools.tools.change_forcing import forcinput_select
-from snowtools.utils.infomassifs import infomassifs
 
 _OP_files_common = dict(alp=['OPlisteo', 'OPlistem', 'OPlisteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat', 'OPnoir'],
                         pyr=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat', 'OPnoir'],
@@ -79,6 +77,9 @@ class SurfexWorker(VortexWorkerBlindRun):
             self.system.symlink(self.system.path.join(rundir, "ecoclimapII_eu_covers_param.bin"), "ecoclimapII_eu_covers_param.bin")
         if not self.system.path.exists("drdt_bst_fit_60.nc"):
             self.system.symlink(self.system.path.join(rundir, "drdt_bst_fit_60.nc"), "drdt_bst_fit_60.nc")
+
+        from snowtools.tools.change_forcing import forcinput_select
+        from snowtools.utils.infomassifs import infomassifs
 
         area = _dic_area[self.vconf]
         liste_massifs = infomassifs().dicArea[area]

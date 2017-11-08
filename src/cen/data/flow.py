@@ -5,6 +5,7 @@
 __all__ = []
 
 import footprints
+from footprints.util import rangex
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.flow        import GeoFlowResource
@@ -14,9 +15,14 @@ from common.data.modelstates import Historic, InitialCondition
 from vortex.syntax.stdattrs  import a_date, term
 
 
-class DateError(ValueError):
+class SafranObsDateError(ValueError):
     """General content error."""
-    pass
+
+    def __init__(self, allowedhours):
+        super(SafranObsDateError, self).__init__(
+            'SAFRAN guess are synoptic, therefore the hour must be in {!s}'.
+            format(rangex(allowedhours))
+        )
 
 
 class SafranGuess(GeoFlowResource):
@@ -39,7 +45,11 @@ class SafranGuess(GeoFlowResource):
                     optional = True,
                 ),
                 source_app = dict(
-                    values = ['arpege', 'arome', 'ifs', 'pearp', 'pearome'],
+                    values = ['arpege', 'arome', 'ifs', ],
+                    optional = True,
+                ),
+                source_conf = dict(
+                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps'],
                     optional = True,
                 ),
                 geometry = dict(
@@ -61,12 +71,12 @@ class SafranGuess(GeoFlowResource):
         return dict(
             radical = self.realkind,
             geo     = self.geometry.area,
-            src     = self.source_app,
+            src     =  [self.source_app, self.source_conf],
             term    = self.term.fmthour,
-            fmt     = self._extension_remap.get(self.nativefmt),
+            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
-    def origin_basename(self):
+    def cendev_basename(self):
         # guess files could be named PYYMMDDHH_hh where YYMMDDHH is the creation date and hh the echeance
         # origin_date = self.date.replace(hour=0)
         # return 'P' + origin_date.yymdh + '_{0:02d}'.format(self.term.hour + 6)
@@ -100,8 +110,6 @@ class SurfaceForcing(GeoFlowResource):
                     info = "The resource's massif geometry.",
                     type = MassifGeometry,
                 ),
-                # startdate = a_date,
-                # enddate   = a_date,
             )
         )
     ]
@@ -145,6 +153,10 @@ class Prep(InitialCondition):
                     info = "The resource's massif geometry.",
                     type = MassifGeometry,
                 ),
+                filling = dict(
+                    value = ['surf', ],
+                    default = 'surf',
+                ),
             )
         )
     ]
@@ -159,10 +171,10 @@ class Prep(InitialCondition):
         return dict(
             radical = self.realkind,
             geo     = self.geometry.area,
-            fmt     = self._extension_remap.get(self.nativefmt),
+            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
-    def origin_basename(self):
+    def cendev_basename(self):
         return 'prep' + self.date.yymdh
 
 
@@ -211,123 +223,37 @@ class Pro(Historic):
         )
 
 
-class Synop(ObsRaw):
+class SafranObsRaw(ObsRaw):
 
-    _footprint = [
-        dict(
-            info = 'SAFRAN S-files (SYNOP observations)',
-            attr = dict(
-                kind = dict(
-                    values  = ['synop'],
-                ),
-                realdate = a_date,
+    _footprint = dict(
+        info = 'SAFRAN observation files (SYNOP observations)',
+        attr = dict(
+            part = dict(
+                values  = ['synop', 'precipitation', 'hourlyobs', 'radiosondage', 'nebulosity'],
+            ),
+            model = dict(
+                values  = ['safran'],
+            ),
+            cendev_map = dict(
+                type    = footprints.FPDict,
+                default = footprints.FPDict({'precipitation': 'R',
+                                             'hourlyobs': 'T',
+                                             'radiosondage': 'A'}),
+            ),
+            cendev_hours = dict(
+                type    = footprints.FPDict,
+                default = footprints.FPDict({'default': '0-18-6',
+                                             'precipitation': '6',
+                                             'hourlyobs': '6',
+                                             'nebulosity': '6'}),
             ),
         ),
-    ]
+    )
 
-    @property
-    def realkind(self):
-        return 'synop'
-
-    def origin_basename(self):
-        if self.realdate.hour in [0, 6, 12, 18]:
-            return 'S' + self.realdate.yymdh
+    def cendev_basename(self):
+        prefix = self.cendev_map.get(self.part, self.part[0].upper())
+        allowed = rangex(self.cendev_hours.get(self.part, self.cendev_hours['default']))
+        if self._realdate.hour in allowed:
+            return prefix + self.date.yymdh
         else:
-            raise DateError('SAFRAN S-files are synoptic, therefore the hour must be 0, 6, 12 or 18')
-
-
-class Precipitation(ObsRaw):
-
-    _footprint = [
-        dict(
-            info = 'SAFRAN R-files (precipitation observations)',
-            attr = dict(
-                kind = dict(
-                    values  = ['precipitation'],
-                ),
-            ),
-        ),
-    ]
-
-    @property
-    def realkind(self):
-        return 'precipitation'
-
-    def origin_basename(self):
-        if self.date.hour == 6:
-            return 'R' + self.date.yymdh
-        else:
-            raise DateError('SAFRAN R-files are daily, therefore the hour must be 6')
-
-
-class HourlyObs(ObsRaw):
-
-    _footprint = [
-        dict(
-            info = 'SAFRAN T-files (hourly observations)',
-            attr = dict(
-                kind = dict(
-                    values  = ['hourlyobs'],
-                ),
-            ),
-        ),
-    ]
-
-    @property
-    def realkind(self):
-        return 'hourlyobs'
-
-    def origin_basename(self):
-        if self.date.hour == 6:
-            return 'T' + self.date.yymdh
-        else:
-            raise DateError('SAFRAN T-files are daily, therefore the hour must be 6')
-
-
-class RadioSondage(ObsRaw):
-
-    _footprint = [
-        dict(
-            info = 'SAFRAN A-files (radiosondages)',
-            attr = dict(
-                kind = dict(
-                    values  = ['radiosondage'],
-                ),
-                realdate = a_date,
-            ),
-        ),
-    ]
-
-    @property
-    def realkind(self):
-        return 'radiosondage'
-
-    def origin_basename(self):
-        if self.realdate.hour in [0, 6, 12, 18]:
-            return 'A' + self.realdate.yymdh
-        else:
-            raise DateError('SAFRAN A-files are synoptic, therefore the hour must be 0, 6, 12 or 18')
-
-
-class Nebulosity(ObsRaw):
-
-    _footprint = [
-        dict(
-            info = 'SAFRAN N-files (nebulosity)',
-            attr = dict(
-                kind = dict(
-                    values  = ['nebulosity'],
-                ),
-            ),
-        ),
-    ]
-
-    @property
-    def realkind(self):
-        return 'nebulosity'
-
-    def origin_basename(self):
-        if self.date.hour == 6:
-            return 'N' + self.date.yymdh
-        else:
-            raise DateError('SAFRAN N-files are daily, therefore the hour must be 6')
+            raise SafranObsDateError(allowed)

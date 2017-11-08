@@ -8,7 +8,6 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.executables import Script, SurfaceModel
-from common.data.executables import BlackBox
 from gco.syntax.stdattrs import gvar
 
 
@@ -216,49 +215,3 @@ class SafranGribFiltering(Script):
     @property
     def realkind(self):
         return 'gribfiltering'
-
-
-class Pgd(BlackBox):
-    """A tool to generate Surfex ground files."""
-
-    _footprint = [
-        gvar,
-        dict(
-            info = 'Pgd utility to generate Surfex ground files',
-            attr = dict(
-                gvar = dict(
-                    default  = 'master_pgd'
-                ),
-                kind = dict(
-                    values   = ['pgd', ],
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'pgd'
-
-
-class Offline(BlackBox):
-    """Surfex execution."""
-
-    _footprint = [
-        gvar,
-        dict(
-            info = 'Surfex executable',
-            attr = dict(
-                gvar = dict(
-                    default  = 'master_offline'
-                ),
-                kind = dict(
-                    values   = ['offline', ],
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'offline'
