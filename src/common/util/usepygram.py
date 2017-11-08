@@ -248,7 +248,7 @@ class GribMetadataReader(EpygramMetadataReader):
             return bundle.pop()
 
 
-@disabled_if_no_epygram
+@disabled_if_no_epygram('1.2.11')
 def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
                             outname=None,
                             fieldslist=None,
@@ -269,14 +269,14 @@ def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
     def sfxlfi2fa_field(fld, geom):
         fldout = fpx.fields.almost_clone(fld,
                                          geometry=geom,
-                                         fid={'FA':field_prefix + fld.fid['LFI']})
+                                         fid={'FA': field_prefix + fld.fid['LFI']})
         fldout.setdata(fld.data[1:-1, 1:-1])
         return fldout
 
     if fieldslist is None:
         fieldslist = ['ZS', 'COVER001', 'COVER002']
     if pack is None:
-        pack = {'KNGRIB':-1}
+        pack = {'KNGRIB': -1}
     if outname is None:
         outname = rh_pgdlfi.container.abspath + '.fa923'
     if not t.sh.path.exists(outname):
@@ -285,7 +285,7 @@ def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
                                                  true3d=True)
 
             geom, spgeom = epygram.geometries.domain_making.build_geom_from_e923nam(nam923blocks)
-            validity = epygram.base.FieldValidity(date_time=Date(1994,5,31,0),  # Start of ALADIN
+            validity = epygram.base.FieldValidity(date_time=Date(1994, 5, 31, 0),  # Date of birth of ALADIN
                                                   term=Period(0))
             pgdout = epygram.formats.resource(filename=outname,
                                               openmode='w',
@@ -302,7 +302,7 @@ def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
                        outname)
 
 
-@disabled_if_no_epygram
+@disabled_if_no_epygram('1.0.0')
 def empty_fa(t, rh, empty_name):
     """
     Create an empty FA file with fielname **empty_name**,

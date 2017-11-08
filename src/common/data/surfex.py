@@ -150,8 +150,6 @@ class SandDB(StaticGeoResource):
                     values   = ['sand'],
                 ),
                 source = dict(
-                    type = str,
-                    # values   = ['HWSD', 'FAO'],
                 ),
                 gvar = dict(
                     default  = '[source]_[kind]'
@@ -179,8 +177,6 @@ class ClayDB(StaticGeoResource):
                     values   = ['clay'],
                 ),
                 source = dict(
-                    type = str,
-                    # values   = ['HWSD', 'FAO'],
                 ),
                 gvar = dict(
                     default  = '[source]_[kind]'
@@ -208,8 +204,6 @@ class OrographyDB(StaticGeoResource):
                     values   = ['orography'],
                 ),
                 source = dict(
-                    type = str,
-                    # values   = ['GTOPO30', 'GMTED2010'],
                 ),
                 gvar = dict(
                     default  = '[source]_[kind]_[geometry::rnice_u]'
@@ -237,8 +231,6 @@ class SurfaceTypeDB(StaticGeoResource):
                     values   = ['surface_type'],
                 ),
                 source = dict(
-                    type = str,
-                    # values   = ['ECOCLIMAP_I'],
                 ),
                 gvar = dict(
                     default  = '[source]_[kind]'
@@ -266,8 +258,6 @@ class BathymetryDB(StaticGeoResource):
                     values   = ['bathymetry'],
                 ),
                 source = dict(
-                    type = str,
-                    # values   = ['ETOPO2'],
                 ),
                 gvar = dict(
                     default  = '[source]_[kind]_[geometry::rnice_u]'

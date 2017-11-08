@@ -14,7 +14,6 @@ __all__ = []
 def update_namelist(t, rh, *completive_rh):
     """Update namelist with resource handler(s) given in **completive_rh**."""
     for crh in completive_rh:
-        print(crh.container.basename, ':')
-        print(crh.contents.dumps())
+        print('Merging: {!r} :\n{:s}'.format(crh.container, rh.contents.dumps()))
         rh.contents.merge(crh.contents)
     rh.save()

@@ -531,16 +531,9 @@ class GeoBlocks(StaticGeoResource):
         return 'geoblocks'
 
     def basename_info(self):
-        if self.geometry.kind == 'projected':
-            lgeo = [self.geometry.area, self.geometry.rnice]
-        elif self.geometry.kind == 'gauss':
-            lgeo = [{'truncation': self.geometry.truncation},
-                    {'stretching': self.geometry.stretching}]
-        else:
-            lgeo = self.geometry.area
         return dict(
             radical = self.realkind,
-            geo = lgeo,
-            src = self.target,
+            geo = self._geo2basename_info(),
+            src = [self.model, self.target],
             fmt = self.nativefmt
         )

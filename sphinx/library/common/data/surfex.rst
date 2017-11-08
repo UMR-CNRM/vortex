@@ -40,3 +40,28 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: ClayDB
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SandDB
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: BathymetryDB
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OrographyDB
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SurfaceTypeDB
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

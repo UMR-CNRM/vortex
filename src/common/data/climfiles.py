@@ -6,11 +6,11 @@ __all__ = []
 
 from vortex.data.geometries import LonlatGeometry
 from vortex.data.outflow import StaticGeoResource
-from vortex.syntax.stdattrs import a_model, month
+from vortex.syntax.stdattrs import month
 from gco.syntax.stdattrs import gvar, GenvDomain
 
 
-class ClimModel(StaticGeoResource):
+class GenericClim(StaticGeoResource):
     """
     Abstract class for a model climatology.
     An HorizontalGeometry object is needed.
@@ -22,7 +22,6 @@ class ClimModel(StaticGeoResource):
         dict(
             info = 'Model climatology',
             attr = dict(
-                model = a_model,
                 kind = dict(
                     values = ['clim_model']
                 ),
@@ -43,35 +42,30 @@ class ClimModel(StaticGeoResource):
         """Returns geometry's truncation."""
         return self.geometry.truncation
 
-    def olive_basename(self):
-        """OLIVE specific naming convention."""
-        return 'Const.Clim'
-
-
-class MonthlyClim(StaticGeoResource):
-    """
-    Abstract class for a monthly climatology.
-    An HorizontalGeometry object is needed.
-    A Genvkey can be given.
-    """
-    _abstract = True
-    _footprint = [
-        month,
-        dict(
-            info = 'Monthly climatology',
-        )
-    ]
+    def _monthly_suffix(self, prefix=''):
+        return '.{0:s}{1.month:s}'.format(prefix, self) if hasattr(self, 'month') else ''
 
     def gget_basename(self):
         """GGET specific naming convention."""
-        return '.m' + str(self.month)
+        return self._monthly_suffix(prefix='m')
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'Const.Clim.' + str(self.month)
+        return 'Const.Clim' + self._monthly_suffix()
+
+    def basename_info(self):
+        sd = dict(
+            fmt     = self.nativefmt,
+            geo     = self._geo2basename_info(),
+            radical = 'clim',
+            src     = self.model,
+        )
+        if hasattr(self, 'month'):
+            sd['suffix'] = {'month': self.month}
+        return sd
 
 
-class ClimGlobal(ClimModel):
+class GlobalClim(GenericClim):
     """
     Class for a model climatology of a global model.
     A SpectralGeometry object is needed. A Genvkey can be given.
@@ -88,30 +82,22 @@ class ClimGlobal(ClimModel):
         )
     )
 
-    def basename_info(self):
-        """Generic information, radical = ``clim``."""
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = [{'truncation': self.geometry.truncation},
-                       {'stretching': self.geometry.stretching}],
-            radical = 'clim',
-            src     = self.model,
-        )
 
-
-class MonthlyClimGlobal(ClimGlobal, MonthlyClim):
+class MonthlyGlobalClim(GlobalClim):
     """
     Class for a monthly model climatology of a global model.
     A SpectralGeometry object is needed. A Genvkey can be given.
     """
 
-    def basename_info(self):
-        sd = super(MonthlyClimGlobal, self).basename_info()
-        sd['suffix'] = {'month': self.month}
-        return sd
+    _footprint = [
+        month,
+        dict(
+            info = 'Monthly model climatology for Global Models',
+        )
+    ]
 
 
-class ClimLAM(ClimModel):
+class ClimLAM(GenericClim):
     """
     Class for a model climatology of a Local Area Model.
     A SpectralGeometry object is needed. A Genvkey can be given
@@ -134,46 +120,34 @@ class ClimLAM(ClimModel):
         )
     )
 
-    def basename_info(self):
-        """Generic information, radical = ``clim``."""
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = [self.geometry.area, self.geometry.rnice],
-            radical = 'clim',
-            src     = self.model,
-        )
 
-
-class MonthlyClimLAM(ClimLAM, MonthlyClim):
+class MonthlyClimLAM(ClimLAM):
     """
     Class for a monthly model climatology of a Local Area Model.
     A SpectralGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """
 
-    def basename_info(self):
-        sd = super(MonthlyClimLAM, self).basename_info()
-        sd['suffix'] = {'month': self.month}
-        return sd
+    _footprint = [
+        month,
+        dict(
+            info = 'Monthly model climatology for Local Area Models',
+        )
+    ]
 
 
-class ClimBDAP(StaticGeoResource):
+class ClimBDAP(GenericClim):
     """
     Class for a climatology of a BDAP domain.
     A LonlatGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """
     _footprint = [
-        gvar,
         dict(
             info = 'Bdap climatology',
             attr = dict(
                 kind = dict(
                     values = ['clim_bdap']
-                ),
-                nativefmt = dict(
-                    values = ['fa'],
-                    default = 'fa',
                 ),
                 geometry = dict(
                     type = LonlatGeometry,
@@ -194,31 +168,20 @@ class ClimBDAP(StaticGeoResource):
     def realkind(self):
         return 'clim_bdap'
 
-    def basename_info(self):
-        """Generic information, radical = ``clim``."""
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = self.geometry.area,
-            radical = 'clim',
-            src     = self.model,
-        )
 
-    def olive_basename(self):
-        """OLIVE specific naming convention."""
-        return 'Const.Clim'
-
-
-class MonthlyClimBDAP(ClimBDAP, MonthlyClim):
+class MonthlyClimBDAP(ClimBDAP):
     """
     Class for a monthly climatology of a BDAP domain.
     A LonlatGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """
 
-    def basename_info(self):
-        sd = super(MonthlyClimBDAP, self).basename_info()
-        sd['suffix'] = {'month': self.month}
-        return sd
+    _footprint = [
+        month,
+        dict(
+            info = 'Monthly Bdap climatology',
+        )
+    ]
 
 
 # Databases to generate clim files
@@ -561,14 +524,8 @@ class GeometryIllustration(StaticGeoResource):
         return 'geometry_plot'
 
     def basename_info(self):
-        if self.geometry.kind == 'projected':
-            lgeo = [self.geometry.area, self.geometry.rnice]
-        elif self.geometry.kind == 'gauss':
-            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
-        else:
-            lgeo = self.geometry.area
         return dict(
             radical = self.realkind,
-            geo = lgeo,
+            geo = self._geo2basename_info(),
             fmt = self.nativefmt
         )

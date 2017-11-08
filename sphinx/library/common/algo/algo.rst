@@ -17,6 +17,7 @@ Included Modules
 ----------------
 
 * :mod:`common.algo.assim`
+* :mod:`common.algo.clim`
 * :mod:`common.algo.coupling`
 * :mod:`common.algo.eda`
 * :mod:`common.algo.eps`

@@ -1,19 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
+"""
+Common AlgoComponnent to build model's climatology files.
+"""
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, division
 
 import decimal
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
-from vortex.algo.components import BlindRun, AlgoComponent, AlgoComponentError
+from vortex.algo.components import BlindRun, AlgoComponent
 from vortex.data.geometries import HorizontalGeometry
 from common.algo.ifsroot import IFSParallel
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class BuildPGD(BlindRun):
@@ -86,14 +91,16 @@ class C923(IFSParallel):
         super(C923, self).prepare(rh, opts)
         # Namelist
         nam = self.context.sequence.effective_inputs(role=('Namelist',))
-        assert len(nam) == 1, "One and only one namelist necessary as input."
+        self.algoassert(len(nam) == 1,
+                        "One and only one namelist necessary as input.")
         nam = nam[0].rh
         nam.contents['NAMMCC']['N923'] = self.step
         nam.contents.setmacro('LIPGD', self.orog_in_pgd)
         nam.save()
         # get geometry for lfi->fa923
         geom_delta = self.context.sequence.effective_inputs(role=('GeometryDefinition',))
-        assert len(geom_delta) == 1, "One and only one namelist necessary as input."
+        self.algoassert(len(geom_delta) == 1,
+                        "One and only one namelist necessary as input.")
         geom_delta = geom_delta[0].rh
         nam923blocks = geom_delta.contents.data
         # Note: conversion to float because may be Decimal
@@ -104,14 +111,17 @@ class C923(IFSParallel):
         # convert pgd
         pgd = self.context.sequence.effective_inputs(role=('Pgd',))
         if len(pgd) == 0:
-            assert not self.orog_in_pgd, \
-                """As long as 'orog_in_pgd' attribute of this algo component is
-                True, a 'Role: Pgd' resource must be provided."""
+            self.algoassert(
+                not self.orog_in_pgd,
+                "As long as 'orog_in_pgd' attribute of this algo component is " +
+                "True, a 'Role: Pgd' resource must be provided.")
         else:
             pgd = pgd[0].rh
             if pgd.resource.nativefmt == 'lfi':
-                assert pgd.container.basename != self.input_orog_name, \
-                    "Local name for resource Pgd mustn't be '{}' if format is lfi.".format(self.input_orog_name)
+                self.algoassert(
+                    pgd.container.basename != self.input_orog_name,
+                    "Local name for resource Pgd mustn't be '{}' if format is lfi.".
+                    format(self.input_orog_name))
                 logger.info("Convert PGD from LFI to FA923")
                 self._convert_pgdlfi2pgdfa923(pgd,
                                               nam923blocks,
@@ -120,12 +130,12 @@ class C923(IFSParallel):
 
 class FinalizePGD(AlgoComponent):
     """
-    Finalize PGD file: report spectrally filtered orography from Clim to PGD,
+    Finalise PGD file: report spectrally filtered orography from Clim to PGD,
     and convert it to FA if necessary.
     """
 
     _footprint = dict(
-        info = "Finalization of PGD.",
+        info = "Finalisation of PGD.",
         attr = dict(
             kind = dict(
                 values   = ['finalize_pgd'],
@@ -152,16 +162,11 @@ class FinalizePGD(AlgoComponent):
         """Default pre-link for namelist file and domain change."""
         super(FinalizePGD, self).prepare(rh, opts)
         from common.util.usepygram import empty_fa
-        # Basic exports
-        for optpack in ['drhook', 'drhook_not_mpi']:
-            self.export(optpack)
         # Handle resources
         clim = self.context.sequence.effective_inputs(role=('Clim',))
-        if not (len(clim) == 1):
-            raise AlgoComponentError("One Clim has to be provided")
+        self.algoassert(len(clim) == 1, "One and only one Clim has to be provided")
         pgdin = self.context.sequence.effective_inputs(role=('InputPGD',))
-        if not (len(pgdin) == 1):
-            raise AlgoComponentError("One InputPGD has to be provided")
+        self.algoassert(len(pgdin) == 1, "One and only one InputPGD has to be provided")
         if self.system.path.exists(self.pgd_out_name):
             raise IOError("The output pgd file %s already exists.",
                           self.pgd_out_name)
@@ -181,19 +186,21 @@ class FinalizePGD(AlgoComponent):
             # Format Adapter: epygram
             self._pgd_fa = pgdin[0].rh.contents.data
         else:
-            raise IOError("File %s actualfmt must be 'fa' or 'lfi'.")
+            raise IOError("File %s nativefmt must be 'fa' or 'lfi'.")
 
     def execute(self, rh, opts):
         """Convert SURFGEOPOTENTIEL from clim to SFX.ZS in pgd."""
+        from common.util.usepygram import epy_env_prepare
         clim = self.context.sequence.effective_inputs(role=('Clim',))
-        self._pgd_fa.open(openmode='a')
-        zs_name = 'SFX.ZS'
-        self._pgd_fa.readfield(zs_name, getdata=False)  # to know how it is encoded
-        zs = clim[0].rh.contents.data.readfield('SURFGEOPOTENTIEL')
-        zs.operation('/', 9.80665)
-        zs.fid['FA'] = zs_name
-        self._pgd_fa.writefield(zs, compression=self._pgd_fa.fieldscompression[zs.fid['FA']])
-        self._pgd_fa.close()
+        with epy_env_prepare(self.ticket):
+            self._pgd_fa.open(openmode='a')
+            zs_name = 'SFX.ZS'
+            self._pgd_fa.readfield(zs_name, getdata=False)  # to know how it is encoded
+            zs = clim[0].rh.contents.data.readfield('SURFGEOPOTENTIEL')
+            zs.operation('/', 9.80665)
+            zs.fid['FA'] = zs_name
+            self._pgd_fa.writefield(zs, compression=self._pgd_fa.fieldscompression[zs.fid['FA']])
+            self._pgd_fa.close()
 
 
 class MakeLAMDomain(AlgoComponent):
@@ -209,7 +216,7 @@ class MakeLAMDomain(AlgoComponent):
             ),
             mode = dict(
                 info = ("Kind of input for building geometry:" +
-                        "'center_dims' to build domain given its center and" +
+                        "'center_dims' to build domain given its centre and" +
                         "dimensions; 'lonlat_included' to build domain given" +
                         "an included lon/lat area."),
                 values = ['center_dims', 'lonlat_included']
@@ -232,13 +239,19 @@ class MakeLAMDomain(AlgoComponent):
                 info = "Plot geometry parameters.",
                 type = footprints.FPDict,
                 optional = True,
-                default = footprints.FPDict({'gisquality':'i',
-                                             'bluemarble':0.,
-                                             'background':True})
+                default = footprints.FPDict({'gisquality': 'i',
+                                             'bluemarble': 0.,
+                                             'background': True})
             ),
             geometry = dict(
                 info = "The horizontal geometry to be generated.",
                 type = HorizontalGeometry,
+            ),
+            illustration = dict(
+                info = "Create the domain illustration image.",
+                type = bool,
+                optional = True,
+                default = True
             ),
             illustration_fmt = dict(
                 info = "The format of the domain illustration image.",
@@ -252,7 +265,7 @@ class MakeLAMDomain(AlgoComponent):
     def __init__(self, *args, **kwargs):
         super(MakeLAMDomain, self).__init__(*args, **kwargs)
         from common.util.usepygram import is_epygram_available
-        assert is_epygram_available('1.2.10')
+        self.algoassert(is_epygram_available('1.2.10'), "Epygram >= 1.2.10 is needed here")
         self._check_geometry()
         self.plot_params['bluemarble'] = 0.  # FIXME:? JPEG decoder not available on beaufix
 
@@ -265,10 +278,12 @@ class MakeLAMDomain(AlgoComponent):
             params = ['lonmin', 'lonmax', 'latmin', 'latmax',
                       'resolution']
             params_extended = params + ['Iwidth', 'force_projection', 'maximize_CI_in_E']
-        assert set(params).issubset(set(self.geom_params.keys())), \
-            "With mode=={}, geom_params must contain at least {}".format(self.mode, str(params))
-        assert set(self.geom_params.keys()).issubset(set(params_extended)), \
-            "With mode=={}, geom_params must contain at most {}".format(self.mode, str(params))
+        self.algoassert(set(params).issubset(set(self.geom_params.keys())),
+                        "With mode=={}, geom_params must contain at least {}".
+                        format(self.mode, str(params)))
+        self.algoassert(set(self.geom_params.keys()).issubset(set(params_extended)),
+                        "With mode=={}, geom_params must contain at most {}".
+                        format(self.mode, str(params)))
 
     def execute(self, rh, opts):
         from common.util.usepygram import epygram
@@ -284,11 +299,12 @@ class MakeLAMDomain(AlgoComponent):
         # summary, plot, namelists:
         with open(self.geometry.tag + '_summary.txt', 'w') as o:
             o.write(domain_making.show_geometry(geometry))
-        domain_making.plot_geometry(geometry,
-                                    lonlat_included=lonlat_included,
-                                    out='.'.join([self.geometry.tag,
-                                                  self.illustration_fmt]),
-                                    **self.plot_params)
+        if self.illustration:
+            domain_making.plot_geometry(geometry,
+                                        lonlat_included=lonlat_included,
+                                        out='.'.join([self.geometry.tag,
+                                                      self.illustration_fmt]),
+                                        **self.plot_params)
         namblocks = domain_making.geom2namblocks(geometry,
                                                  truncated=self.orography_truncation)
         domain_making.format_namelists(namblocks, prefix=self.geometry.tag)

@@ -112,6 +112,47 @@ class ParallelListing(Listing):
         return info
 
 
+class StaticListing(Resource):
+    """Miscelanous application output from a task processing, out-of-flow."""
+    _footprint = [
+        dict(
+            info = 'Listing',
+            attr = dict(
+                task = dict(
+                    optional = True,
+                    default  = 'anonymous'
+                ),
+                kind = dict(
+                    values   = ['staticlisting']
+                ),
+                part = dict(
+                    optional = True,
+                    default  = 'all',
+                ),
+                binary = dict(
+                    optional = True,
+                    default  = '[model]',
+                ),
+                clscontents = dict(
+                    default = FormatAdapter,
+                ),
+            ),
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'staticlisting'
+
+    def basename_info(self):
+        """Generic information, radical = ``listing``."""
+        return dict(
+            radical = self.realkind,
+            src     = [self.binary, self.task.split('/').pop()],
+            compute = self.part,
+        )
+
+
 class DrHookListing(Listing):
     """Output produced by DrHook"""
     _footprint = [
@@ -171,45 +212,4 @@ class Beacon(FlowResource):
             radical = self.realkind,
             src     = [self.model],
             fmt     = self.nativefmt
-        )
-
-
-class StaticListing(Resource):
-    """Miscelanous application output from a task processing, out-of-flow."""
-    _footprint = [
-        dict(
-            info = 'Listing',
-            attr = dict(
-                task = dict(
-                    optional = True,
-                    default  = 'anonymous'
-                ),
-                kind = dict(
-                    values   = ['staticlisting']
-                ),
-                part = dict(
-                    optional = True,
-                    default  = 'all',
-                ),
-                binary = dict(
-                    optional = True,
-                    default  = '[model]',
-                ),
-                clscontents = dict(
-                    default = FormatAdapter,
-                ),
-            ),
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'staticlisting'
-
-    def basename_info(self):
-        """Generic information, radical = ``listing``."""
-        return dict(
-            radical = self.realkind,
-            src     = self.binary,
-            compute = self.part,
         )

@@ -21,7 +21,12 @@ Exceptions
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
+.. autoclass:: AlgoComponentAssertionError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: DelayedAlgoComponentError
    :show-inheritance:
    :members:
