@@ -124,6 +124,7 @@ class MailService(Service):
                 optional = True,
                 default  = '',
                 alias    = ('contents', 'body'),
+                type     = unicode,
             ),
             filename = dict(
                 optional = True,
@@ -173,7 +174,7 @@ class MailService(Service):
                 body += tmp.read()
         mimetext = self.get_mimemap().get('text')
         if self.is_not_plain_ascii(body):
-            return mimetext(body.decode(self.charset), 'plain', self.charset)
+            return mimetext(body.encode(self.charset), 'plain', self.charset)
         else:
             return mimetext(body, 'plain')
 

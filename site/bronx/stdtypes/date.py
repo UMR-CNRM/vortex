@@ -221,13 +221,63 @@ def daterange(start, end=None, step='P1D'):
         if not isinstance(end, Date):
             end = Date(end)
 
+    start, end = sorted((start, end))
+
     if not isinstance(step, Period):
         step = Period(step)
+
+    if step.total_seconds() < 0:
+        step = Period(step.length)
 
     rollingdate = start
     while rollingdate <= end:
         yield rollingdate
         rollingdate += step
+
+def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
+    """Extended date range expansion."""
+
+    rangevalues = list()
+
+    pstarts = ([str(s) for s in start]
+              if isinstance(start, (list, tuple)) else str(start).split(','))
+
+    for pstart in pstarts:
+        actualrange = re.split('[-/]', pstart)
+        realstart = Date(actualrange.pop(0))
+
+        if actualrange:
+            realend = Date(actualrange.pop(0))
+        elif end is None:
+            realend = realstart
+        else:
+            realend = Date(end)
+
+        if actualrange:
+            realstep = Period(actualrange.pop())
+        elif step is None:
+            realstep = Period('PT1H')
+        else:
+            realstep = Period(step)
+
+        if shift is not None:
+            realshift = Period(shift)
+            realstart += realshift
+            realend   += realshift
+
+        pvalues = daterange(realstart, realend, realstep)
+
+        if pvalues:
+            if fmt is not None:
+                pvalues = [getattr(x, fmt) for x in pvalues]
+                if callable(pvalues[0]):
+                    pvalues = [x() for x in pvalues]
+            if prefix is not None:
+                    pvalues = [ prefix + str(x) for x in pvalues ]
+
+        rangevalues.extend(pvalues)
+
+    return sorted(set(rangevalues))
 
 
 class Period(datetime.timedelta):
@@ -354,7 +404,7 @@ class Period(datetime.timedelta):
             ld = [0, top.hour * 3600 + top.minute * 60]
         elif len(args) < 2 and (isinstance(top, int) or isinstance(top, float)):
             ld = [0, top]
-        elif isinstance(top, int) and len(args) == 2:
+        elif isinstance(top, int) and len(args)> 1:
             ld = list(args)
         elif isinstance(top, six.string_types):
             ld = [0, Period._parse(top)]
@@ -421,6 +471,21 @@ class Period(datetime.timedelta):
     def time(self):
         """Return a :class:`Time` object."""
         return Time(0, int(self.total_seconds()) // 60)
+
+    @property
+    def hms(self):
+        """Nicely formatted HH:MM:SS string."""
+        hours, mins = divmod(self.length, 3600)
+        mins, seconds = divmod(mins, 60)
+        return '{0:02d}:{1:02d}:{2:02d}'.format(hours, mins, seconds)
+
+    @property
+    def hmscompact(self):
+        """Compact HHMMSS string."""
+        return self.hms.replace(':', '')
+
+    def __str__(self):
+        return self.isoformat()
 
 
 class _GetattrCalculatorMixin(object):
@@ -704,6 +769,10 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
     def ymdhms(self):
         """YYYYMMDDHHMMSS formated string."""
         return self.strftime('%Y%m%d%H%M%S')
+
+    def stamp(self):
+        """Compact concatenation up to microseconds."""
+        return self.ymdhms + '{0:06d}'.format(self.microsecond)
 
     @property
     def hm(self):

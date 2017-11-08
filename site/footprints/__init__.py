@@ -842,6 +842,10 @@ class FootprintBase(object):
             raise AttributeError("Can't set attribute without valid authorization")
         del self._attributes[attr]
 
+    def footprint_undefs(self):
+        """Return list of attributes which are still None."""
+        return [a for a in self.footprint_attributes if self.footprint_getattr(a) is None]
+
     def footprint_clone(self, full=False, extra=None):
         """
         Return a deep copy of the current object as a brand new one.
@@ -861,6 +865,11 @@ class FootprintBase(object):
     def footprint_attributes(self):
         """Returns the list of current attributes."""
         return sorted(self._attributes.keys())
+
+    @property
+    def footprint_attributes_values(self):
+        """Returns the list of current attributes values."""
+        return sorted(self._attributes.values())
 
     def footprint_as_shallow_dict(self):
         """Returns a dictionary that contains the current attributes (shallow copy)."""

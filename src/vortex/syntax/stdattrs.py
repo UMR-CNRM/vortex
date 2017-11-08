@@ -221,6 +221,51 @@ class Namespace(str):
         return self._full
 
 
+class Latitude(float):
+    """Bounded floating point value with N-S nice representation."""
+    def __new__(cls, value):
+        value = str(value).lower()
+        if value.endswith('n'):
+            value = value[:-1]
+        elif value.endswith('s'):
+            value = value[:-1]
+            if not value.startswith('-'):
+                value = '-' + value
+        if not -90 <= float(value) <= 90:
+            raise ValueError('Latitude out of bounds: ' + value)
+        return float.__new__(cls, value)
+
+    def nice(self):
+        ns = 'N' if self >= 0 else 'S'
+        return str(self).strip('-') + ns
+
+    @property
+    def hemisphere(self):
+        return 'North' if self >= 0 else 'South'
+
+class Longitude(float):
+    """Bounded floating point value with E-W nice representation."""
+    def __new__(cls, value):
+        value = str(value).lower()
+        if value.endswith('e'):
+            value = value[:-1]
+        elif value.endswith('w'):
+            value = value[:-1]
+            if not value.startswith('-'):
+                value = '-' + value
+        if not -180 <= float(value) <= 180:
+            raise ValueError('Longitude out of bounds: ' + value)
+        return float.__new__(cls, value)
+
+    def nice(self):
+        ns = 'E' if self >= 0 else 'W'
+        return str(self).strip('-') + ns
+
+    @property
+    def hemisphere(self):
+        return 'East' if self >= 0 else 'West'
+
+
 # predefined attributes
 
 #: Usual definition for the ``xpid`` or experiment name.

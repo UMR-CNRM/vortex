@@ -1,5 +1,6 @@
 *.py[co~]
 *.ini[~]
+*.orig
 
 # Packages
 *.egg

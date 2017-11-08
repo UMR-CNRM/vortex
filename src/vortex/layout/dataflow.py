@@ -745,7 +745,7 @@ class LocalTracker(defaultdict):
         if isinstance(lpath, basestring):
             self[lpath].update_rh(rh, info)
         else:
-            logger.info("The iotarget isn't a basestring: It will be skipped in %s",
+            logger.debug('The iotarget is not a basestring: skipped in %s',
                         self.__class__)
 
     def update_store(self, store, info):

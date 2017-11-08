@@ -1,7 +1,7 @@
 
 import unittest
 
-from vortex.syntax.stdattrs import DelayedInit
+from vortex.syntax.stdattrs import DelayedInit, Latitude, Longitude
 
 
 class Scrontch(object):
@@ -36,6 +36,67 @@ class TestDelayedInit(unittest.TestCase):
         self.assertRegexpMatches(repr(di), 'proxied=<.*\.Scrontch')
         self.assertEqual(di.ping(), "Ping")
 
+class TestLatLon(unittest.TestCase):
+
+    def test_latitude(self):
+        rv = Latitude(42)
+        self.assertEqual(rv, 42.0)
+        self.assertEqual(str(rv), '42.0')
+        self.assertEqual(rv.nice(), '42.0N')
+        self.assertEqual(rv.hemisphere, 'North')
+        rv = Latitude('42N')
+        self.assertEqual(rv, 42.0)
+        self.assertEqual(str(rv), '42.0')
+        self.assertEqual(rv.nice(), '42.0N')
+        self.assertEqual(rv.hemisphere, 'North')
+        rv = Latitude(-12.3)
+        self.assertEqual(rv, -12.3)
+        self.assertEqual(str(rv), '-12.3')
+        self.assertEqual(rv.nice(), '12.3S')
+        self.assertEqual(rv.hemisphere, 'South')
+        rv = Latitude('12.3S')
+        self.assertEqual(rv, -12.3)
+        self.assertEqual(str(rv), '-12.3')
+        self.assertEqual(rv.nice(), '12.3S')
+        self.assertEqual(rv.hemisphere, 'South')
+        with self.assertRaises(ValueError):
+            rv = Latitude(90.1)
+        with self.assertRaises(ValueError):
+            rv = Latitude('91N')
+        with self.assertRaises(ValueError):
+            rv = Latitude(-90.1)
+        with self.assertRaises(ValueError):
+            rv = Latitude('91S')
+
+    def test_longitude(self):
+        rv = Longitude(142)
+        self.assertEqual(rv, 142.0)
+        self.assertEqual(str(rv), '142.0')
+        self.assertEqual(rv.nice(), '142.0E')
+        self.assertEqual(rv.hemisphere, 'East')
+        rv = Longitude('142E')
+        self.assertEqual(rv, 142.0)
+        self.assertEqual(str(rv), '142.0')
+        self.assertEqual(rv.nice(), '142.0E')
+        self.assertEqual(rv.hemisphere, 'East')
+        rv = Longitude(-142.3)
+        self.assertEqual(rv, -142.3)
+        self.assertEqual(str(rv), '-142.3')
+        self.assertEqual(rv.nice(), '142.3W')
+        self.assertEqual(rv.hemisphere, 'West')
+        rv = Longitude('142.3W')
+        self.assertEqual(rv, -142.3)
+        self.assertEqual(str(rv), '-142.3')
+        self.assertEqual(rv.nice(), '142.3W')
+        self.assertEqual(rv.hemisphere, 'West')
+        with self.assertRaises(ValueError):
+            rv = Longitude(180.1)
+        with self.assertRaises(ValueError):
+            rv = Longitude('181E')
+        with self.assertRaises(ValueError):
+            rv = Longitude(-180.1)
+        with self.assertRaises(ValueError):
+            rv = Longitude('181W')
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
