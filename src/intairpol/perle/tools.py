@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import io
 import re
 
@@ -80,7 +82,7 @@ class PerleTool(AirTool):
         return 'perletool'
 
 
-class PerleLauncher(AirTool):
+class PerleLauncher(PerleTool):
 
     _abstract = True
     _footprint = dict(
@@ -262,7 +264,7 @@ class OldPerleLauncher(PerleLauncher):
     )
 
     def setup_controls(self):
-        """Try to set undefined attributes a            nd check thier cohenrency."""
+        """Try to set undefined attributes and check their cohenrency."""
 
         site = self.table_sites.match(self.emission_site)
         if site is None:
@@ -380,9 +382,9 @@ class OldPerleLauncher(PerleLauncher):
         self.dataput(driver_env)
 
         # launch the remote job
-        print '\n'.join(self.ssh.execute('; '.join((
+        print('\n'.join(self.ssh.execute('; '.join((
             'cd ' + self.sh.path.join(self.target_path, self.xtag),
             self.sh.path.join(
                 self.target_root, self.release, self.get_family_tag(),
                 'job', 'replay_submit.sh'),
-        ))))
+        )))))
