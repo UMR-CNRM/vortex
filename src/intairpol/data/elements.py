@@ -3,7 +3,6 @@
 
 from __future__ import absolute_import, print_function, division, unicode_literals
 
-import re
 import footprints
 
 from vortex.util.config import ConfigurationTable, TableItem

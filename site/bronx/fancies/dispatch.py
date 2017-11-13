@@ -8,6 +8,10 @@ The object should be created before parsing of arguments.
 The first argument is the so-called action to perform.
 All other command-line arguments are supposed to be options
 given to action-methods of the dispatcher.
+
+.. warning:: This module is under heavy development consequently significant
+             will be made in future versions. DO NOT USE YET.
+
 """
 
 from __future__ import absolute_import, unicode_literals
@@ -23,6 +27,7 @@ def _construct_yaml_str(self, node):
     # to always return unicode objects
     return self.construct_scalar(node)
 
+
 yaml.Loader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
 yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
 
@@ -36,6 +41,8 @@ def upfirst(subpath='work', thispath=None):
         if os.path.isdir(os.path.join(thispath, subpath)):
             found = os.path.join(thispath, subpath)
         else:
+            if thispath == '/':
+                break
             thispath = os.path.dirname(thispath)
     return found
 

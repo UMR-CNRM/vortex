@@ -10,10 +10,10 @@ class which follow the :class:`footprints.Footprint` syntax.
 import copy
 import re
 
+from bronx.stdtypes.date import Date, Time, Month
 import footprints
 
 from vortex.tools import env
-from vortex.tools.date import Date, Time, Month
 from bronx.system import hash as hashutils
 
 
@@ -242,6 +242,7 @@ class Latitude(float):
     @property
     def hemisphere(self):
         return 'North' if self >= 0 else 'South'
+
 
 class Longitude(float):
     """Bounded floating point value with E-W nice representation."""

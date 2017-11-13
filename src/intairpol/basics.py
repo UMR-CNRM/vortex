@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import re
+"""
+TODO: Module documentation
+"""
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -10,6 +12,7 @@ import vortex
 from vortex.syntax.stdattrs import DelayedEnvValue
 
 from bronx.fancies.dispatch import upfirst
+from bronx.stdtypes.date import now
 
 #: Recognition of package name
 ALTNAMES = ('intairpol', 'airpol', 'airtools')
@@ -44,7 +47,7 @@ class AirTool(footprints.FootprintBase):
             ),
             stamp = dict(
                 optional = True,
-                default  = vortex.tools.date.now().compact(),
+                default  = now().compact(),
             ),
             release = dict(
                 optional = True,
@@ -124,4 +127,3 @@ class AirTool(footprints.FootprintBase):
             else:
                 self._actualcfg = self.sh.abspath(self.cfgfile)
         return self._actualcfg
-

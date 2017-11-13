@@ -11,11 +11,6 @@
 Classes
 -------
 
-.. autoclass:: ZSVTool
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: ZSVDriver
    :show-inheritance:
    :members:

@@ -3,14 +3,17 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
-import re
+"""
+TODO: Module documentation
+"""
 
+import io
+
+from bronx.stdtypes import date
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 import vortex
-from vortex.tools import date
 from vortex.syntax.stdattrs import DelayedEnvValue, Latitude, Longitude
 
 from intairpol.basics import AirTool
@@ -27,6 +30,7 @@ EMISSION_TYPES = dict(
     volcanic   = 'volcanic',
 )
 
+
 class SimulationLevel(str):
     def __new__(cls, value):
         value = str(value).upper()
@@ -34,7 +38,7 @@ class SimulationLevel(str):
             if k.startswith(value):
                 value = k
                 break
-        for i, l in {str(v):k for k, v in SIMULATION_LEVELS.items()}.items():
+        for i, l in {str(v): k for k, v in SIMULATION_LEVELS.items()}.items():
             if value == i:
                 value = l
                 break
@@ -53,7 +57,7 @@ class EmissionType(str):
             if k.startswith(value):
                 value = k
                 break
-        for i, l in {v:k for k, v in EMISSION_TYPES.items()}.items():
+        for i, l in {v: k for k, v in EMISSION_TYPES.items()}.items():
             if value == i:
                 value = l
                 break
@@ -320,18 +324,17 @@ class OldPerleLauncher(PerleLauncher):
 
         with io.open(filename, 'w') as fd:
             fd.write(unicode(''.join([
-                x + '\n' for x in [
-                getattr(self, 'dump_'+p, self.dump_void)(getattr(self, p, ''))
-                for p in self.config['simulation_params'] ] if len(x) > 0
+                x + '\n' for x in [getattr(self, 'dump_' + p, self.dump_void)(getattr(self, p, ''))
+                                   for p in self.config['simulation_params'] ] if len(x) > 0
             ])))
 
         logger.info('Job config written <file:%s> <size:%d>', filename, self.sh.size(filename))
 
-        self.sh.yaml_dump(dict(simulations_params=[
-                {p : getattr(self, p, '') }
-                for p in self.config['simulation_params']
-            ]), 'perle.yml'
-        )
+        self.sh.yaml_dump(dict(simulations_params=[{p: getattr(self, p, '') }
+                                                   for p in self.config['simulation_params']
+                                                   ]
+                               ), 'perle.yml'
+                          )
 
         return filename
 

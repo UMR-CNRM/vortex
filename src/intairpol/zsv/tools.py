@@ -3,15 +3,18 @@
 
 from __future__ import absolute_import, print_function, division, unicode_literals
 
+"""
+TODO: Module documentation
+"""
+
 import io
 
+from bronx.stdtypes import date
 import footprints
 
 import vortex
-from vortex.tools import date
 from vortex.syntax.stdattrs import DelayedEnvValue
 
-from bronx.fancies.dispatch import upfirst
 from intairpol.basics import AirTool
 
 
@@ -296,8 +299,8 @@ class ZSVQualityStats(ZSVDriver):
             guess = [ x.strip() for x in l.split(':') ]
             if l.startswith('Valide'):
                 data = l.split()
-                obsreport['valid_begin'] = date.Date(data[2]+'T'+data[3])
-                obsreport['valid_end']   = date.Date(data[6]+'T'+data[7])
+                obsreport['valid_begin'] = date.Date(data[2] + 'T' + data[3])
+                obsreport['valid_end']   = date.Date(data[6] + 'T' + data[7])
             elif len(guess) == 1 and guess[0] and datebloc:
                 # store real values
                 data = guess[0].split()
@@ -328,17 +331,17 @@ class ZSVQualityStats(ZSVDriver):
                         info['dfirst'].ymdhm, self.date_begin.ymdhm)
             if info['dfirst'] < self.date_begin:
                 logger.warning('Begin date gap <couldbe:%s> <begin:%s>',
-                            info['dfirst'].ymdhm, self.date_begin.ymdhm)
+                               info['dfirst'].ymdhm, self.date_begin.ymdhm)
 
             logger.info('End date <actual:%s> <requested:%s>',
                         info['dlast'].ymdhm, self.date_end.ymdhm)
             if info['dlast'] > self.date_end:
                 logger.warning('End date gap <end:%s> <couldbe:%s>',
-                            self.date_end.ymdhm, info['dlast'].ymdhm)
+                               self.date_end.ymdhm, info['dlast'].ymdhm)
 
             if self.date_end > info['dlast']:
                 logger.warning('Change date <end:%s> <set:%s>',
-                            self.date_end.ymdhm, info['dlast'].ymdhm)
+                               self.date_end.ymdhm, info['dlast'].ymdhm)
                 stop = info['dlast']
 
             if start > stop:
@@ -351,9 +354,9 @@ class ZSVQualityStats(ZSVDriver):
 
     @property
     def iqs(self):
-        if self._iqs == None:
+        if self._iqs is None:
             self._iqs = tuple([iq.lower() for iq in sorted(self.obsreport_map.values())
-                            if iq.lower().startswith('iq') ])
+                               if iq.lower().startswith('iq') ])
         return self._iqs
 
     def extract(self, site):
@@ -404,13 +407,13 @@ class ZSVQualityStats(ZSVDriver):
                 obsdata = self.parse_obsreport(filename)
 
                 # check internal date and store quality indices
-                if obsdata.has_key('valid_begin'):
+                if 'valid_begin' in obsdata:
                     if obsdata['valid_begin'] == current:
                         logger.info('Quality indices %s',
-                                    ' '.join([ '<'+iq+':'+obsdata[iq]+'>' for iq in self.iqs ]))
+                                    ' '.join(['<' + iq + ':' + obsdata[iq] + '>' for iq in self.iqs]))
                         sitedata[current.ymdh] = ''.join([obsdata[iq] for iq in self.iqs])
                     else:
-                        logger.error('Obs mismatch <file:%s> <date:%s>', filename, intdate.ymdhm)
+                        logger.error('Obs mismatch <file:%s> <date:%s>', filename, obsdata['valid_begin'].ymdhm)
                 else:
                     logger.error('No valid date found in <file:%s>', filename)
 
@@ -418,7 +421,7 @@ class ZSVQualityStats(ZSVDriver):
             current = current + self.date_period
 
     def stats_add(self, site, stats):
-        self._stats[site]=stats
+        self._stats[site] = stats
 
     def stats_keys(self):
         return self._stats.keys()
@@ -447,18 +450,19 @@ class ZSVQualityStats(ZSVDriver):
         logger.info('Dump stats as csv <file:%s>', self.stats_csvfile)
         with io.open(self.stats_csvfile, 'w') as fd:
             for n, site in enumerate(self.sites):
-                fd.write(u'{0:d},{1:s},{2:s}\n'.format(
-                    n+1, site, ','.join([unicode(round(self._stats[site][iq].get('P'+ival, 0), 6))
-                                         for iq in self.iqs for ival in ('A', 'B', 'C')])))
+                fd.write(u'{0:d},{1:s},{2:s}\n'.
+                         format(n + 1, site,
+                                ','.join([unicode(round(self._stats[site][iq].get('P' + ival, 0), 6))
+                                          for iq in self.iqs for ival in ('A', 'B', 'C')])))
 
     def stats_dump_as_txt(self):
         logger.info('Dump stats as txt <file:%s>', self.stats_txtfile)
         with io.open(self.stats_txtfile, 'w') as fd:
             for n, site in enumerate(self.sites):
-                fd.write(u'{0:d};{1:s};{2:s}\n'.format(
-                    n + 1, site, ';'.join([
-                        unicode(round(self._stats[site][iq].get('P'+ival, 0), 6)).replace('.', ',')
-                            for iq in self.iqs for ival in ('A', 'B', 'C')])))
+                fd.write(u'{0:d};{1:s};{2:s}\n'.
+                         format(n + 1, site,
+                                ';'.join([unicode(round(self._stats[site][iq].get('P' + ival, 0), 6)).replace('.', ',')
+                                          for iq in self.iqs for ival in ('A', 'B', 'C')])))
 
     def stats_dump(self):
         for fmt in self.statsfmt:
@@ -470,7 +474,7 @@ class ZSVQualityStats(ZSVDriver):
         """Compute ratio for each indices."""
 
         if site in self.record:
-            stats = { iq:dict(ilen=0, A=0, B=0, C=0) for iq in self.iqs }
+            stats = {iq: dict(ilen=0, A=0, B=0, C=0) for iq in self.iqs}
             start, stop = self.actual_dates(site)
             stats.update(date_begin=start.ymdhm, date_end=stop.ymdhm)
             current = start

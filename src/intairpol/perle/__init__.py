@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+various tools related to the PERLE model.
+"""
+
 #: No automatic export
 __all__ = []
 

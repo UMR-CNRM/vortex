@@ -36,6 +36,7 @@ class TestDelayedInit(unittest.TestCase):
         self.assertRegexpMatches(repr(di), 'proxied=<.*\.Scrontch')
         self.assertEqual(di.ping(), "Ping")
 
+
 class TestLatLon(unittest.TestCase):
 
     def test_latitude(self):
@@ -97,6 +98,7 @@ class TestLatLon(unittest.TestCase):
             rv = Longitude(-180.1)
         with self.assertRaises(ValueError):
             rv = Longitude('181W')
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

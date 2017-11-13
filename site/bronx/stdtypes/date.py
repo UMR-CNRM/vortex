@@ -235,7 +235,10 @@ def daterange(start, end=None, step='P1D'):
         rollingdate += step
 
 def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
-    """Extended date range expansion."""
+    """Extended date range expansion.
+    
+    TODO: example.
+    """
 
     rangevalues = list()
 

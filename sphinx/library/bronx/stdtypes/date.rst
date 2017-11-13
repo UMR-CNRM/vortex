@@ -80,3 +80,5 @@ Utility functions
 .. autofunction:: guess
 
 .. autofunction:: daterange
+
+.. autofunction:: daterangex

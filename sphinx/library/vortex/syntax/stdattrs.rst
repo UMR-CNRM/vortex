@@ -98,4 +98,13 @@ Class attributes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
+.. autoclass:: Longitude
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Latitude
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

@@ -14,6 +14,7 @@
 Sub-modules
 -----------
 
+* :mod:`bronx.fancies.dispatch`
 * :mod:`bronx.fancies.display`
 
 NB: All of these sub-modules have to be imported manually (depending on your

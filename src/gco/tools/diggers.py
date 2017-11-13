@@ -1,6 +1,14 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
+"""
+utility classes to information on the availability of operational resources.
+
+.. warning:: This module is under heavy development consequently significant
+             will be made in future versions. DO NOT USE YET.
+
+"""
+
 from __future__ import absolute_import, print_function, unicode_literals
 
 import footprints
@@ -8,8 +16,6 @@ import footprints
 from vortex import toolbox
 from bronx.stdtypes import date
 from bronx.fancies.dispatch import InteractiveDispatcher
-
-import common.util.usepygram
 
 
 class OpDigger(InteractiveDispatcher):
@@ -44,7 +50,7 @@ class OpDigger(InteractiveDispatcher):
 
     def op_vapps(self, **kw):
         """Current vapp/vconf defined in configuration file."""
-        return [ vapp + '-' + vconf
+        return [vapp + '-' + vconf
                 for vapp in self.op_models(**kw)
                 for vconf in self.notexcluded(self.cfginfo[vapp])]
 
@@ -67,10 +73,10 @@ class OpDigger(InteractiveDispatcher):
     def rdelta(self, vapp, vconf, cutoff, hour):
         runs = sorted(self.cfginfo[vapp][vconf][cutoff].keys())
         ipos = runs.index(hour)
-        dt = int(runs[ipos-1]) - int(runs[ipos])
+        dt = int(runs[ipos - 1]) - int(runs[ipos])
         if dt >= 0:
             dt = dt - 24
-        return date.Period(abs(dt)*3600)
+        return date.Period(abs(dt) * 3600)
 
     def find_date(self, **kw):
         rv = dict()
@@ -87,7 +93,7 @@ class OpDigger(InteractiveDispatcher):
                 closest = -1
                 for i, v in enumerate(runs):
                     if kw['date'].hour < int(v):
-                        closest = i-1
+                        closest = i - 1
                         break
                 xdate = date.Date(kw['date'].ymd + runs[closest])
                 delta = kw['date'] - xdate
@@ -98,11 +104,11 @@ class OpDigger(InteractiveDispatcher):
                             rv[isotime] = list()
                         for shelf in kw['location']:
                             status = 'ok'
-                            start, end = self.cfginfo[vapp][vconf][c][xdate.hh]['t'+shelf]
+                            start, end = self.cfginfo[vapp][vconf][c][xdate.hh]['t' + shelf]
                             length = start - end
                             length = length.hour * 60 + length.minute
                             extra = length * delta.time().hour / self.cfginfo[vapp][vconf][c][xdate.hh]['terms'][-1]
-                            extra = date.Period(extra*60)
+                            extra = date.Period(extra * 60)
                             if kw[shelf] < kw['top'] - xdate:
                                 status = 'out'
                             elif kw['top'] < xdate + start + extra:

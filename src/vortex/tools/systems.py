@@ -47,10 +47,10 @@ import yaml
 from datetime import datetime
 
 import footprints
+from bronx.stdtypes import date
 from bronx.system.interrupt import SignalInterruptHandler, SignalInterruptError
 from bronx.system.cpus import LinuxCpusInfo
 from vortex.gloves import Glove
-from vortex.tools import date
 from vortex.tools.env import Environment
 from vortex.tools.net import StdFtp, AssistedSsh, LinuxNetstats
 from vortex.tools.compression import CompressionPipeline
@@ -82,6 +82,7 @@ _fmtshcmd_docbonus = """
         present one).
 """
 
+
 @nicedeco_plusdoc(_fmtshcmd_docbonus)
 def fmtshcmd(func):
     """This decorator gives a try to the equivalent formatted command.
@@ -99,6 +100,7 @@ def fmtshcmd(func):
         else:
             return fmtcall(self, *args, **kw)
     return formatted_method
+
 
 def _kw2spawn(func):
     """This decorator justs update the docstring of a class...
