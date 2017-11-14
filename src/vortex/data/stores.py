@@ -863,7 +863,7 @@ class Finder(Store):
         """Delegates to ``system`` the file transfer of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
         logger.info('ftpget on ftp://%s/%s (to: %s)', self.hostname(), rpath, local)
-        rc = self.system.rawftget(
+        rc = self.system.smartftget(
             rpath,
             local,
             # ftp control
@@ -880,7 +880,7 @@ class Finder(Store):
         """Delegates to ``system`` the file transfer of ``local`` to ``remote``."""
         rpath = self.fullpath(remote)
         logger.info('ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
-        rc = self.system.rawftput(
+        rc = self.system.smartftput(
             local,
             rpath,
             # ftp control

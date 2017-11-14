@@ -15,7 +15,7 @@ from vortex.util.config import ExtendedReadOnlyConfigParser, GenericConfigParser
 from vortex.data import geometries
 from iga.data.providers import IgaCfgParser
 
-DATAPATHTEST = '/'.join(__file__.split('/')[0:-1]) + '/data'
+DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
 
 
 class _FooResource(object):
