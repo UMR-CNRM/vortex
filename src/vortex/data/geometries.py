@@ -190,6 +190,8 @@ class HorizontalGeometry(Geometry):
             stretching = None,
             nmassif = None,
             lam = True,
+            lonmin = None,
+            latmin = None,
         )
         desc.update(kw)
         super(HorizontalGeometry, self).__init__(**desc)
@@ -204,7 +206,7 @@ class HorizontalGeometry(Geometry):
             cv = getattr(self, item)
             if cv is not None:
                 setattr(self, item, int(cv))
-        for item in ('stretching', 'resolution'):
+        for item in ('stretching', 'resolution', 'lonmin', 'latmin'):
             cv = getattr(self, item)
             if cv is not None:
                 setattr(self, item, float(cv))
@@ -275,6 +277,15 @@ class HorizontalGeometry(Geometry):
         if self.lam:
             header += ' area=\'{0:s}\''.format(self.area)
         return header
+
+    @property
+    def coordinates(self):
+        if any([getattr(self, x) is None for x in ('lonmin', 'latmin', 'nlat', 'nlon', 'resolution')]):
+            return
+        coordinates = dict(lonmin = self.lonmin, latmin = self.latmin)
+        coordinates['latmax'] = self.latmin + self.resolution * (self.nlat - 1)
+        coordinates['lonmax'] = self.lonmin + self.resolution * (self.nlon - 1)
+        return coordinates
 
 
 # Combined geometry (not used at the present time)
@@ -397,6 +408,7 @@ class LonlatGeometry(HorizontalGeometry):
         kw.setdefault('runit', 'dg')
         super(LonlatGeometry, self).__init__(**kw)
         self.kind = 'lonlat'
+        # TODO: coherence entre les coordonnees et nlon/nlat/resolution
         logger.debug('Lon/Lat Geometry init %s', str(self))
 
     def __str__(self):
