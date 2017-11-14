@@ -220,7 +220,7 @@ class UEnvProvider(_UtypeProvider):
         return "cycle='{0:s}'".format(self.uenv)
 
     def _get_id(self, resource):
-        """Return the UgetIf or GgetId associated with a given resource."""
+        """Return the UgetId or GgetId associated with a given resource."""
         if id(resource) not in self._id_cache:
             gconf = uenv.contents(cycle=self.uenv, scheme='uget', netloc=self.unamespace)
             gkey = resource.basename(self.realkind)

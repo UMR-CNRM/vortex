@@ -79,6 +79,24 @@ class PGDFA(PGDRaw):
     )
 
 
+class PGDNC(PGDRaw):
+    """
+    SURFEX climatological resource in netcdf format.
+    A Genvkey can be provided.
+    """
+    _footprint = dict(
+        info = 'Grid-point data consts',
+        attr = dict(
+            kind = dict(
+                values  = ['pgdnc'],
+            ),
+            nativefmt = dict(
+                default = 'netcdf',
+            )
+        )
+    )
+
+
 class CoverParams(StaticGeoResource):
     """
     Class of a tar-zip set of coefficients for radiative transfers computations.

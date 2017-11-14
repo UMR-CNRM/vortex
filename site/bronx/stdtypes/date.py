@@ -764,6 +764,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return self.strftime('%y%m%d%H')
 
     @property
+    def ymd6h(self):
+        """YYMMDDHH formated string with HH=6:00."""
+        return self.replace(hour=6).strftime('%Y%m%d%H')
+
+    @property
     def ymdhm(self):
         """YYYYMMDDHHMM formated string."""
         return self.strftime('%Y%m%d%H%M')

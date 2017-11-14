@@ -7,6 +7,7 @@ from __future__ import division
 __all__ = []
 
 from collections import defaultdict
+import sys
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -16,19 +17,21 @@ from vortex.syntax.stdattrs import a_date
 from vortex.algo.components import ParaBlindRun, ParaExpresso
 from vortex.tools.parallelism import VortexWorkerBlindRun
 
-_OP_files_common = dict(alp=['OPlisteo', 'OPlistem', 'OPlisteml', 'OPclim', 'OPNOmt'],
-                        pyr=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt'],)
+_OP_files_common = dict(alp=['OPlisteo', 'OPlistem', 'OPlisteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat', 'OPnoir'],
+                        pyr=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat', 'OPnoir'],
+                        cor=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat', 'OPnoir'],)
 _OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSAP', 'OPSAN']
 
+_dic_area = dict(alp="alpes", pyr="pyrenees", cor="corse")
 
-class Grib2SafranWorker(VortexWorkerBlindRun):
 
+class SurfexWorker(VortexWorkerBlindRun):
+
+    _abstract  = True
     _footprint = dict(
         attr = dict(
-            kind = dict(
-                values = [ 'grib2safran', 'pearp2safran' ],
-                remap = dict(autoremap = 'first'),
-            ),
+            date = a_date,
+            vconf = dict(),
             subdir = dict(
                 info = 'work in this particular subdirectory',
                 optional = True
@@ -38,12 +41,95 @@ class Grib2SafranWorker(VortexWorkerBlindRun):
 
     def vortex_task(self, **kw):
         rdict = dict(rc=True)
+        rundir = self.system.getcwd()
         if self.subdir is not None:
+            thisdir = self.system.path.join(rundir, self.subdir)
             with self.system.cdcontext(self.subdir, create=True):
-                self.local_spawn('stdout.listing')
+                sys.stdout = open(self.name + ".out", "a", buffering=0)
+                sys.stderr = open(self.name + "_error.out", "a", buffering=0)
+                self._surfex_commons(rundir, thisdir, rdict)
         else:
-            self.local_spawn('stdout.listing')
+            thisdir = rundir
+            sys.stdout = open(self.name + ".out", "a", buffering=0)
+            sys.stderr = open(self.name + "_error.out", "a", buffering=0)
+            self._surfex_commons(rundir, thisdir, rdict)
+
         return rdict
+
+    def set_env(self, rundir):
+        inputs = [x.rh for x in self.context.sequence.effective_inputs()]
+        print inputs
+
+    def _surfex_commons(self, rundir, thisdir, rdict):
+
+        self.set_env(rundir)
+
+        if not self.system.path.exists('OPTIONS.nam'):
+            # Copy the NAMELIST as it is to be updated
+            self.system.cp(self.system.path.join(rundir, 'OPTIONS.nam'), 'OPTIONS.nam')
+        if not self.system.path.exists('PGD.nc'):
+            self.system.symlink(self.system.path.join(rundir, 'PGD.nc'), 'PGD.nc')
+        if not self.system.path.exists('PREP.nc'):
+            self.system.symlink(self.system.path.join(rundir, 'PREP.nc'), 'PREP.nc')
+        if not self.system.path.exists('METADATA.xml'):
+            self.system.symlink(self.system.path.join(rundir, 'METADATA.xml'), 'METADATA.xml')
+        if not self.system.path.exists("ecoclimapI_covers_param.bin"):
+            self.system.symlink(self.system.path.join(rundir, "ecoclimapI_covers_param.bin"), "ecoclimapI_covers_param.bin")
+        if not self.system.path.exists("ecoclimapII_eu_covers_param.bin"):
+            self.system.symlink(self.system.path.join(rundir, "ecoclimapII_eu_covers_param.bin"), "ecoclimapII_eu_covers_param.bin")
+        if not self.system.path.exists("drdt_bst_fit_60.nc"):
+            self.system.symlink(self.system.path.join(rundir, "drdt_bst_fit_60.nc"), "drdt_bst_fit_60.nc")
+
+        from snowtools.tools.change_forcing import forcinput_select
+        from snowtools.utils.infomassifs import infomassifs
+        from snowtools.tools.update_namelist import update_surfex_namelist_object
+
+        area = _dic_area[self.vconf]
+        liste_massifs = infomassifs().dicArea[area]
+        liste_aspect  = infomassifs().get_list_aspect(8, ["0", "20", "40"])
+
+        forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, ["0", "20", "40"], liste_aspect)
+
+        for namelist in self.find_namelists():
+            # Update the contents of the namelist (date and location)
+            # Location taken in the FORCING file.
+            newcontent = update_surfex_namelist_object(namelist.contents, self.date)
+            newnam = footprints.proxy.container(filename=namelist.container.basename)
+            newcontent.rewrite(newnam)
+            newnam.close()
+
+        self._surfex_task(rundir, thisdir, rdict)
+
+    def check_mandatory_resources(self, rdict, filenames):
+        pass
+
+    def _surfex_task(self, rundir, thisdir, rdict):
+        """The piece of code specific to a SURFEX submodule does here."""
+        raise NotImplementedError()
+
+    def find_namelists(self, opts=None):
+        """Find any namelists candidates in actual context inputs."""
+        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind='namelist')]
+        self.system.subtitle('Namelist candidates')
+        for nam in namcandidates:
+            nam.quickview()
+
+        return namcandidates
+
+
+class OfflineWorker(SurfexWorker):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['s2m_offline']
+            ),
+        )
+    )
+
+    def _surfex_task(self, rundir, thisdir, rdict):
+        list_name = self.system.path.join(thisdir, 'offline.out')
+        self.local_spawn(list_name)
 
 
 class SafranWorker(VortexWorkerBlindRun):
@@ -58,6 +144,7 @@ class SafranWorker(VortexWorkerBlindRun):
             vconf = dict(),
             day_begins_at = dict(
                 type = int,
+                optional = True,
                 default = 6
             ),
             subdir = dict(
@@ -92,15 +179,20 @@ class SafranWorker(VortexWorkerBlindRun):
                 del new_dates[0]
 
             self._days = defaultdict(list)
+            remain_terms = len(new_terms)
+            create_new_day = True
             for date, term in zip(new_dates, new_terms):
                 length = (date - new_dates[0]).length  # duration in seconds since the beginning
                 current_day = length // 86400
-                # Assign the term to the current
-                self._days[current_day + 1].append(term)
                 # If the term is exactly the upper bound of the previous day, save it
                 if current_day > 0 and length % 86400 == 0:
                     self._days[current_day].append(term)
-
+                    # Begin a new day only if there is more than 5 other terms
+                    if remain_terms < 5:
+                        create_new_day = False
+                if create_new_day:
+                    self._days[current_day + 1].append(term)
+                remain_terms = remain_terms - 1
             if not len(self._days):
                 logger.warning('No terms to process, doing nothing.')
 
@@ -113,9 +205,13 @@ class SafranWorker(VortexWorkerBlindRun):
         if self.subdir is not None:
             thisdir = self.system.path.join(rundir, self.subdir)
             with self.system.cdcontext(self.subdir, create=True):
+                sys.stdout = open(self.name + ".out", "a", buffering=0)
+                sys.stderr = open(self.name + "_error.out", "a", buffering=0)
                 self._safran_commons(rundir, thisdir, rdict)
         else:
             thisdir = rundir
+            sys.stdout = open(self.name + ".out", "a", buffering=0)
+            sys.stderr = open(self.name + "_error.out", "a", buffering=0)
             self._safran_commons(rundir, thisdir, rdict)
 
         return rdict
@@ -125,9 +221,12 @@ class SafranWorker(VortexWorkerBlindRun):
             self.system.symlink(self.system.path.join(rundir, 'SORTIES'), 'SORTIES')
         if not self.system.path.exists('MELANGE'):
             self.system.symlink(self.system.path.join(rundir, 'MELANGE'), 'MELANGE')
+        if not self.system.path.exists('IMPRESS'):
+            self.system.symlink(self.system.path.join(rundir, 'IMPRESS'), 'IMPRESS')
 
         # Generate the 'OPxxxxx' files containing links for the safran execution.
-        for op_file in _OP_files_common[self.vconf]:
+        vconf = self.vconf.split('@')[0]
+        for op_file in _OP_files_common[vconf]:
             with open(op_file, 'w') as f:
                 f.write(rundir + '@\n')
 
@@ -137,9 +236,9 @@ class SafranWorker(VortexWorkerBlindRun):
 
         self.system.remove('sapfich')
 
-        self._safran_task(self, rundir, thisdir, rdict)
+        self._safran_task(rundir, thisdir, rdict)
 
-    def _safran_task(self, rundir, thisdir, rdict, days):
+    def _safran_task(self, rundir, thisdir, rdict):
         """The piece of code specific to a Safran submodule does here."""
         raise NotImplementedError()
 
@@ -160,7 +259,8 @@ class SafranWorker(VortexWorkerBlindRun):
     def link_in(self, local, dest):
         """Link a file (the target is cleaned first)."""
         self.system.remove(dest)
-        self.system.symlink(local, dest)
+        if self.system.path.isfile(local):
+            self.system.symlink(local, dest)
 
     def sapdat(self, term):
         # Creation of the 'sapdat' file containing the exact date of the file to be processed.
@@ -195,6 +295,28 @@ class SafraneWorker(SafranWorker):
                 f.write('SAF' + str(term.hour))
             list_name = self.system.path.join(thisdir, 'listsaf' + str(term.hour))
             self.local_spawn(list_name)
+            # A FAIRE : gérer le fichier fort.79 (mv dans $list/day.$day ?, rejet)
+
+
+class SypluieWorker(SafranWorker):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['sypluie']
+            ),
+        )
+    )
+
+    def _safran_task(self, rundir, thisdir, rdict):
+        for dterms in self.days.values():
+            self.sapdat(dterms[-1])
+            # Creation of the 'sapfich' file containing the name of the output file
+            with open('sapfich', 'w') as f:
+                f.write('SAPLUI5')
+            list_name = self.system.path.join(thisdir, 'listpluie')
+            self.local_spawn(list_name)
+            # A FAIRE : gérer le fichier fort.78 (mv dans $list/day.$day ?, rejet)
 
 
 class SyrpluieWorker(SafranWorker):
@@ -207,13 +329,55 @@ class SyrpluieWorker(SafranWorker):
         )
     )
 
-    def safran_task(self, rundir, thisdir, rdict):
+    def _safran_task(self, rundir, thisdir, rdict):
         for day, dterms in self.days.items():
             logger.info('Running day : %s', str(day))
             self.sapdat(dterms[-1])
-            list_name = self.system.path.join(self.thisdir, 'listpluie' + str(day))
+            list_name = self.system.path.join(thisdir, 'listpluie' + str(day))
             self.local_spawn(list_name)
             self.mv_if_exists('fort.21', 'SAPLUI5' + str(day))
+
+
+class SyvaprWorker(SafranWorker):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['syvapr']
+            ),
+        )
+    )
+
+    def _safran_task(self, rundir, thisdir, rdict):
+        for day, dterms in self.days.items():
+            if self.check_mandatory_resources(rdict, ['SAF' + str(t.hour) for t in dterms]):
+                for i, term in enumerate(dterms):
+                    self.link_in('SAF' + str(term.hour), 'SAFRAN' + str(i + 1))
+                self.sapdat(dterms[-1])
+                list_name = self.system.path.join(thisdir, 'listpr')
+                self.local_spawn(list_name)
+                self.mv_if_exists('fort.13', 'SAPLUI5' + str(day))
+                self.mv_if_exists('fort.14', 'SAPLUI5_ARP' + str(day))
+                self.mv_if_exists('fort.15', 'SAPLUI5_ANA' + str(day))
+
+
+class SyvafiWorker(SafranWorker):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['syvafi']
+            ),
+        )
+    )
+
+    def _safran_task(self, rundir, thisdir, rdict):
+        for day, dterms in self.days.items():
+            # if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day), ]):
+            self.sapdat(dterms[-1])
+            list_name = self.system.path.join(thisdir, 'listfi')
+            self.local_spawn(list_name)
+            self.mv_if_exists('fort.90', 'TAL' + str(day))
 
 
 class SyrmrrWorker(SafranWorker):
@@ -226,13 +390,13 @@ class SyrmrrWorker(SafranWorker):
         )
     )
 
-    def safran_task(self, rundir, thisdir, rdict):
+    def _safran_task(self, rundir, thisdir, rdict):
         for day, dterms in self.days.items():
             logger.info('Running day : %s', str(day))
             if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day), ]):
                 self.link_in('SAPLUI5' + str(day), 'fort.12')
                 self.sapdat(dterms[-1])
-                list_name = self.system.path.join(self.thisdir, 'listrr' + str(day))
+                list_name = self.system.path.join(thisdir, 'listrr' + str(day))
                 self.local_spawn(list_name)
                 self.mv_if_exists('fort.13', 'SAPLUI5' + str(day))
                 self.mv_if_exists('fort.14', 'SAPLUI5_ARP' + str(day))
@@ -249,22 +413,48 @@ class SytistWorker(SafranWorker):
         )
     )
 
-    def safran_task(self, rundir, thisdir, rdict):
+    def _safran_task(self, rundir, thisdir, rdict):
         for day, dterms in self.days.items():
             logger.info('Running day : %s', str(day))
-            if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day),
-                                                      'SAPLUI5_ARP' + str(day),
-                                                      'SAPLUI5_ANA' + str(day)
-                                                      ] +
-                                                     ['SAF' + str(t) for t in dterms]):
-                self.link_in('SAPLUI5' + str(day), 'SAPLUI5')
-                self.link_in('SAPLUI5_ARP' + str(day), 'SAPLUI5_ARP')
-                self.link_in('SAPLUI5_ANA' + str(day), 'SAPLUI5_ANA')
+            if self.system.path.isfile('SAPLUI5' + str(day)):
+                if self.system.path.isfile('SAPLUI5'):
+                    self.system.remove('SAPLUI5')
+                self.system.symlink('SAPLUI5' + str(day), 'SAPLUI5')
+            # REVOIR LA GESTION DES LIENS POUR L'ANALYSE
+            self.link_in('SAPLUI5_ARP' + str(day), 'SAPLUI5_ARP')
+            self.link_in('SAPLUI5_ANA' + str(day), 'SAPLUI5_ANA')
+            if self.check_mandatory_resources(rdict, ['SAPLUI5'] + ['SAF' + str(t.hour) for t in dterms]):
                 for i, term in enumerate(dterms):
                     self.link_in('SAF' + str(term.hour), 'SAFRAN' + str(i + 1))
                 self.sapdat(dterms[-1])
-                list_name = self.system.path.join(self.thisdir, 'listist' + str(day))
+                list_name = self.system.path.join(thisdir, 'listist' + str(day))
                 self.local_spawn(list_name)
+
+
+class Grib2SafranWorker(VortexWorkerBlindRun):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = [ 'grib2safran', 'pearp2safran', 'arpege2safran' ],
+                remap = dict(autoremap = 'first'),
+            ),
+            subdir = dict(
+                info = 'work in this particular subdirectory',
+                optional = True
+            ),
+        )
+    )
+
+    def vortex_task(self, **kw):
+        rdict = dict(rc=True)
+        print self.subdir
+        if self.subdir is not None:
+            with self.system.cdcontext(self.subdir, create=True):
+                self.local_spawn('stdout.listing')
+        else:
+            self.local_spawn('stdout.listing')
+        return rdict
 
 
 class Grib2Safran(ParaExpresso):
@@ -273,7 +463,7 @@ class Grib2Safran(ParaExpresso):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = [ 'grib2safran', 'pearp2safran' ],
+                values = [ 'grib2safran', 'pearp2safran', 'arpege2safran' ],
                 remap = dict(autoremap = 'first'),
             ),
             members = dict(
@@ -296,13 +486,14 @@ class Grib2Safran(ParaExpresso):
         self._default_post_execute(rh, opts)
 
 
-class Safran(ParaBlindRun):
+class S2M_component(ParaBlindRun):
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['safrane', 'syrpluie', 'syrmrr', 'sytist'],
+                values = ['safrane', 'syrpluie', 'syrmrr', 'sytist', 'sypluie', 'syvapr',
+                          'syvafi', 'PREP', 'PGD', 's2m_offline'],
             ),
             date   = a_date,
             members = dict(
@@ -322,9 +513,14 @@ class Safran(ParaBlindRun):
         )
     )
 
+    def prepare(self, rh, opts):
+        """Set some variables according to target definition."""
+        super(S2M_component, self).prepare(rh, opts)
+        self.env.DR_HOOK_NOT_MPI = 1
+
     def _default_common_instructions(self, rh, opts):
         '''Create a common instruction dictionary that will be used by the workers.'''
-        ddict = super(Safran, self)._default_common_instructions(rh, opts)
+        ddict = super(S2M_component, self)._default_common_instructions(rh, opts)
         ddict['date']  = self.date  # Note: The date could be auto-detected using the sequence
         ddict['vconf'] = self.vconf
         ddict['terms'] = self.terms  # Note: The list of terms could be auto-detected using the sequence

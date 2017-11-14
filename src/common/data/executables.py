@@ -7,7 +7,7 @@ from __future__ import print_function, absolute_import, division
 __all__ = []
 
 
-from vortex.data.executables import Script, BlackBox, NWPModel
+from vortex.data.executables import Script, BlackBox, NWPModel, SurfaceModel
 from gco.syntax.stdattrs import gvar, arpifs_cycle
 
 
@@ -125,6 +125,32 @@ class PGD(BlackBox):
     @property
     def realkind(self):
         return 'buildpgd'
+
+
+class OfflineSurfex(SurfaceModel):
+    """Surfex executable."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Surfex executable',
+            attr = dict(
+                gvar = dict(
+                    default  = 'master_offline'
+                ),
+                kind = dict(
+                    values   = ['offline', ],
+                ),
+                model = dict(
+                    values   = ['surfex', ],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'offline'
 
 
 class ProGrid(BlackBox):
@@ -696,6 +722,7 @@ class ExecMonitoring(BlackBox):
             )
         )
     ]
+
 
 class ExecReverser(BlackBox):
     """Compute the initial state for Ctpini."""

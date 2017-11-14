@@ -31,7 +31,7 @@ models = set([
 ])
 
 #: Default values for the most common binaries.
-binaries  = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'mesonh', 'safran'])
+binaries  = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'mesonh', 'safran', 'surfex'])
 utilities = set(['batodb'])
 
 #: Default attributes excluded from `repr` display
