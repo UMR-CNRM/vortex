@@ -8,7 +8,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from common.data.consts import GenvStaticGeoResource
-from common.data.namelists import Namelist, NamelistContent
+from gco.syntax.stdattrs import gdomain
 
 
 class ImportFailer(object):
@@ -24,79 +24,31 @@ except ImportError:
     update_surfex_namelist = ImportFailer
 
 
-class SurfexNamelistUpdate(update_surfex_namelist, NamelistContent):
-    """Fake DataContent subclass."""
-    pass
-
-
 class List(GenvStaticGeoResource):
 
-    _footprint = dict(
-        info = 'Namelist file used by  Safran.',
-        attr = dict(
-            kind = dict(
-                values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml',
-                          'rsclim', 'icrccm', 'NORELot', 'NORELmt', 'blacklist'],
-            ),
-            nativefmt = dict(
-                values  = ['ascii'],
-                default = 'ascii',
-            ),
-            gvar = dict(
-                default = '[kind]_[vconf]',
-            ),
-            vconf = dict(
-                values = ['alp', 'pyr', 'cor']
-            ),
+    _footprint = [
+        gdomain,
+        dict(
+            info = 'Config file used by  S2M models.',
+            attr = dict(
+                kind = dict(
+                    values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml',
+                              'rsclim', 'icrccm', 'NORELot', 'NORELmt', 'blacklist', 'metadata'],
+                ),
+                nativefmt = dict(
+                    values  = ['ascii'],
+                    default = 'ascii',
+                ),
+                gvar = dict(
+                    default = '[kind]_[gdomain]',
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
         return 'safran_namelist'
-
-
-class Metadata(Namelist):
-    _footprint = [
-        dict(
-            info = 'Namelist for SURFEX',
-            attr = dict(
-                kind = dict(
-                    values   = ['metadata', 'metadata.xml', 'METADATA', 'METADATA.xml']
-                ),
-                clscontents = dict(
-                    default  = SurfexNamelistUpdate
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'METADATA.xml'
-
-
-class Options(Namelist):
-    _footprint = [
-        dict(
-            info = 'Namelist for SURFEX',
-            attr = dict(
-                kind = dict(
-                    values   = ['options', 'options.nam', 'OPTIONS', 'OPTIONS.nam']
-                ),
-                clscontents = dict(
-                    default  = SurfexNamelistUpdate
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'OPTIONS.nam'
-
-    def contents_handler(self, **kw):
-        self.clscontents(self.date)
 
 
 class Snowr_param(GenvStaticGeoResource):
@@ -104,7 +56,7 @@ class Snowr_param(GenvStaticGeoResource):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = ["drdt_bst_fit"],
+                values = ["function_param"],
             ),
             nativefmt = dict(
                 values  = ['netcdf', 'nc'],

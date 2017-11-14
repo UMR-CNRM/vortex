@@ -7,7 +7,6 @@ from __future__ import division
 __all__ = []
 
 from collections import defaultdict
-from shutil import copyfile
 import sys
 
 import footprints
@@ -32,9 +31,6 @@ class SurfexWorker(VortexWorkerBlindRun):
     _footprint = dict(
         attr = dict(
             date = a_date,
-            terms = dict(
-                type = footprints.FPList,
-            ),
             vconf = dict(),
             subdir = dict(
                 info = 'work in this particular subdirectory',
@@ -51,7 +47,6 @@ class SurfexWorker(VortexWorkerBlindRun):
             with self.system.cdcontext(self.subdir, create=True):
                 sys.stdout = open(self.name + ".out", "a", buffering=0)
                 sys.stderr = open(self.name + "_error.out", "a", buffering=0)
-                print self.context
                 self._surfex_commons(rundir, thisdir, rdict)
         else:
             thisdir = rundir
@@ -61,10 +56,20 @@ class SurfexWorker(VortexWorkerBlindRun):
 
         return rdict
 
+    def set_env(self, rundir):
+        inputs = [x.rh for x in self.context.sequence.effective_inputs()]
+        print 'DBUG'
+        print inputs
+        for rh in inputs:
+            print dir(rh.resource)
+
     def _surfex_commons(self, rundir, thisdir, rdict):
+
+        self.set_env(rundir)
+
         if not self.system.path.exists('OPTIONS.nam'):
             # Copy the NAMELIST as it is to be updated
-            copyfile(self.system.path.join(rundir, 'OPTIONS.nam'), 'OPTIONS.nam')
+            self.system.cp(self.system.path.join(rundir, 'OPTIONS.nam'), 'OPTIONS.nam')
         if not self.system.path.exists('PGD.nc'):
             self.system.symlink(self.system.path.join(rundir, 'PGD.nc'), 'PGD.nc')
         if not self.system.path.exists('PREP.nc'):
@@ -80,6 +85,7 @@ class SurfexWorker(VortexWorkerBlindRun):
 
         from snowtools.tools.change_forcing import forcinput_select
         from snowtools.utils.infomassifs import infomassifs
+        from snowtools.tools.update_namelist import update_surfex_namelist_object
 
         area = _dic_area[self.vconf]
         liste_massifs = infomassifs().dicArea[area]
@@ -90,7 +96,9 @@ class SurfexWorker(VortexWorkerBlindRun):
         for namelist in self.find_namelists():
             # Update the contents of the namelist (date and location)
             # Location taken in the FORCING file.
-            namelist.resource.clscontents(self.date)
+            print namelist
+            namelist.resource.clscontents = update_surfex_namelist_object(namelist.resource.clscontents, self.date)
+            namelist.resource.clscontents.rewrite(namelist.container)
 
         self._surfex_task(rundir, thisdir, rdict)
 
@@ -103,10 +111,11 @@ class SurfexWorker(VortexWorkerBlindRun):
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
-        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind='OPTIONS.nam')]
+        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind='namelist')]
         self.system.subtitle('Namelist candidates')
         for nam in namcandidates:
             nam.quickview()
+
         return namcandidates
 
 
@@ -115,14 +124,12 @@ class OfflineWorker(SurfexWorker):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = ['OFFLINE']
+                values = ['s2m_offline']
             ),
         )
     )
 
     def _surfex_task(self, rundir, thisdir, rdict):
-        if not self.system.path.exists("OFFLINE"):
-            self.system.symlink(self.system.path.join(rundir, "OFFLINE"), "OFFLINE")
         list_name = self.system.path.join(thisdir, 'offline.out')
         self.local_spawn(list_name)
 
@@ -488,7 +495,7 @@ class S2M_component(ParaBlindRun):
         attr = dict(
             kind = dict(
                 values = ['safrane', 'syrpluie', 'syrmrr', 'sytist', 'sypluie', 'syvapr',
-                          'syvafi', 'PREP', 'PGD', 'OFFLINE'],
+                          'syvafi', 'PREP', 'PGD', 's2m_offline'],
             ),
             date   = a_date,
             members = dict(

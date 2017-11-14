@@ -471,8 +471,11 @@ class AlgoComponent(footprints.FootprintBase):
 
     def spawn_command_line(self, rh):
         """Split the shell command line of the resource to be run."""
-        opts = self.spawn_command_options()
-        return shlex.split(rh.resource.command_line(**opts))
+        if hasattr(rh.resource, 'command_line') and callable(getattr(rh.resource, 'command_line')):
+            opts = self.spawn_command_options()
+            return shlex.split(rh.resource.command_line(**opts))
+        else:
+            return list()
 
     def execute_single(self, rh, opts):
         """Abstract method.

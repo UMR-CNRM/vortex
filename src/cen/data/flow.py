@@ -71,7 +71,7 @@ class SafranGuess(GeoFlowResource):
         return dict(
             radical = self.realkind,
             geo     = self.geometry.area,
-            src     =  [self.source_app, self.source_conf],
+            src     = [self.source_app, self.source_conf],
             term    = self.term.fmthour,
             fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
@@ -84,7 +84,7 @@ class SafranGuess(GeoFlowResource):
         if self.date.hour in [0, 6, 12, 18]:
             return 'P' + self.date.yymdh
         else:
-            raise DateError('SAFRAN guess are synoptic, therefore the hour must be 0, 6, 12 or 18')
+            raise SafranObsDateError('SAFRAN guess are synoptic, therefore the hour must be 0, 6, 12 or 18')
 
 
 class SurfaceForcing(GeoFlowResource):
@@ -234,17 +234,22 @@ class SafranObsRaw(ObsRaw):
             model = dict(
                 values  = ['safran'],
             ),
+            stage = dict(
+                values = ['safrane', 'sypluie']
+            ),
             cendev_map = dict(
-                type    = footprints.FPDict,
-                default = footprints.FPDict({'precipitation': 'R',
+                type     = footprints.FPDict,
+                optional = True,
+                default  = footprints.FPDict({'precipitation': 'R',
                                              'hourlyobs': 'T',
                                              'radiosondage': 'A'}),
             ),
             cendev_hours = dict(
-                type    = footprints.FPDict,
-                default = footprints.FPDict({'default': '0-18-6',
+                type     = footprints.FPDict,
+                optional = True,
+                default  = footprints.FPDict({'default': '0-18-6',
                                              'precipitation': '6',
-                                             'hourlyobs': '6',
+                                            'hourlyobs': '6',
                                              'nebulosity': '6'}),
             ),
         ),
@@ -253,7 +258,7 @@ class SafranObsRaw(ObsRaw):
     def cendev_basename(self):
         prefix = self.cendev_map.get(self.part, self.part[0].upper())
         allowed = rangex(self.cendev_hours.get(self.part, self.cendev_hours['default']))
-        if self._realdate.hour in allowed:
+        if self.date.hour in allowed:
             return prefix + self.date.yymdh
         else:
             raise SafranObsDateError(allowed)

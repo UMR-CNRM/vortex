@@ -76,7 +76,7 @@ class CenSopranoDevProvider(Provider):
 
     def netloc(self, resource):
         """The actual netloc is the ``namespace`` attribute of the current provider."""
-        return self.namespace.netloc
+        return self.storage
 
     def pathname(self, resource):
         """
