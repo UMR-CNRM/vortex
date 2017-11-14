@@ -13,6 +13,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.actions import actiond as ad
 from iga.util import swissknife
+from vortex.layout.dataflow import InputsReportStatus as rStatus
 from vortex.layout.jobs import JobAssistant
 
 
@@ -280,24 +281,28 @@ class InputReportContext(_ReportContext):
 
     def _report(self, t, try_ok=True, **kw):
         """Report status of the OP session (input review, mail diffusion...)."""
-        report = t.context.sequence.inputs_report()
         t.sh.header('Input review')
+        report = t.context.sequence.inputs_report()
         report.print_report(detailed=True)
+        mail_statuses = [rStatus.PRESENT, rStatus.EXPECTED, rStatus.MISSING]
         if try_ok:
             if any(report.active_alternates()):
                 t.sh.header('Input informations: active alternates were found')
                 if self._alternate_tplid:
-                    ad.opmail(task=self._task.tag, id=self._alternate_tplid, report=report.synthetic_report())
+                    ad.opmail(task=self._task.tag, id=self._alternate_tplid,
+                              report=report.synthetic_report(only=mail_statuses))
             elif any(report.missing_resources()):
                 t.sh.header('Input informations: missing resources')
                 if self._nonfatal_tplid:
-                    ad.opmail(task=self._task.tag, id=self._nonfatal_tplid, report=report.synthetic_report())
+                    ad.opmail(task=self._task.tag, id=self._nonfatal_tplid,
+                              report=report.synthetic_report(only=rStatus.MISSING))
             else:
                 t.sh.header('Input informations: everything is ok')
         else:
             t.sh.header('Input informations: one of the input failed')
             if self._fatal_tplid:
-                ad.opmail(task=self._task.tag, id=self._fatal_tplid, report=report.synthetic_report())
+                ad.opmail(task=self._task.tag, id=self._fatal_tplid,
+                          report=report.synthetic_report(only=mail_statuses))
 
 
 class OutputReportContext(_ReportContext):

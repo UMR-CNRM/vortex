@@ -31,6 +31,14 @@ Global descriptors
 
   Predefined IXO sequence values INPUT, OUTPUT and EXEC.
 
+.. autoclass:: InputsReportStatusTupple
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. data:: InputsReportStatus
+
+  Predefined Statuses for input's reports.
 
 Interface
 ---------

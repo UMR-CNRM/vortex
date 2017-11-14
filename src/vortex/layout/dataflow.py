@@ -30,6 +30,7 @@ class SectionFatalError(Exception):
     """Exception when fatal mode is activated."""
     pass
 
+
 #: Definition of a named tuple INTENT
 IntentTuple = namedtuple('IntentTuple', ['IN', 'OUT', 'INOUT'], verbose=False)
 
@@ -388,17 +389,23 @@ class Sequence(footprints.observers.Observer):
         raise ValueError("Cannot process a {!s} type skeleton".format(type(skeleton)))
 
 
+#: Class of a list of statuses
+InputsReportStatusTupple = namedtuple('InputsReportStatusTupple',
+                                      ('PRESENT', 'EXPECTED', 'CHECKED', 'MISSING', 'UNUSED'))
+
+
+#: Possible statuses used in :class:`SequenceInputsReport` objects
+InputsReportStatus = InputsReportStatusTupple(PRESENT='present', EXPECTED='expected',
+                                              CHECKED='checked', MISSING='missing',
+                                              UNUSED='unused')
+
+
 class SequenceInputsReport(object):
     """Summarize data about inputs (missing resources, alternates, ...)."""
 
-    _StatusTupple = namedtuple('_StatusTupple',
-                               ('PRESENT', 'EXPECTED', 'CHECKED', 'MISSING', 'UNUSED'))
-    _Status = _StatusTupple(PRESENT='present', EXPECTED='expected',
-                            CHECKED='checked', MISSING='missing',
-                            UNUSED='unused')
-    _TranslateStage = dict(get=_Status.PRESENT, expected=_Status.EXPECTED,
-                           checked=_Status.CHECKED, void=_Status.MISSING,
-                           load=_Status.UNUSED)
+    _TranslateStage = dict(get=InputsReportStatus.PRESENT, expected=InputsReportStatus.EXPECTED,
+                           checked=InputsReportStatus.CHECKED, void=InputsReportStatus.MISSING,
+                           load=InputsReportStatus.UNUSED)
 
     def __init__(self, inputs):
         self._local_map = defaultdict(lambda: defaultdict(list))
@@ -409,11 +416,11 @@ class SequenceInputsReport(object):
             self._local_map[local][kind].append(insec)
 
     def _local_status(self, local):
-        '''Find out the local resource status (see _Status).
+        '''Find out the local resource status (see InputsReportStatus).
 
-        It returns a tupple that contains:
+        It returns a tuple that contains:
 
-        * The local resource status (see _Status)
+        * The local resource status (see InputsReportStatus)
         * The resource handler that was actually used to get the resource
         * The resource handler that should have been used in the nominal case
         '''
@@ -423,10 +430,10 @@ class SequenceInputsReport(object):
         status = self._TranslateStage[nominal.stage]
         true_rh = None
         # Look for alternates:
-        if status == self._Status.MISSING:
+        if status == InputsReportStatus.MISSING:
             for alter in desc['alternate']:
                 alter_status = self._TranslateStage[alter.stage]
-                if alter_status != self._Status.MISSING:
+                if alter_status != InputsReportStatus.MISSING:
                     status = alter_status
                     true_rh = alter.rh
                     break
@@ -434,35 +441,58 @@ class SequenceInputsReport(object):
             true_rh = nominal.rh
         return status, true_rh, nominal.rh
 
-    def synthetic_report(self, detailed=False):
-        '''Returns a string that decribes each local resource with its status.
+    def synthetic_report(self, detailed=False, only=None):
+        '''Returns a string that describes each local resource with its status.
 
-        :param detailed: when alternates are used, tell which resource handler
-                         is actualy used and which one should have been used in
-                         the nominal case.
+        :param bool detailed: when alternates are used, tell which resource handler
+                              is actually used and which one should have been used
+                              in the nominal case.
+        :param list only: Output only the listed statuses (statuses are defined in
+                          :data:`InputsReportStatus`). By default (*None*), output
+                          everything. Note that "alternates" are always shown.
         '''
+        if only is None:
+            # The default is to display everything
+            only = list(InputsReportStatus)
+        else:
+            # Convert a single string to a list
+            if isinstance(only, basestring):
+                only = [only, ]
+            # Check that the provided statuses exist
+            if not all([f in InputsReportStatus for f in only]):
+                return "* The only attribute is wrong ! ({!s})".format(only)
+
         outstr = ''
         for local in sorted(self._local_map):
+            # For each and every local file, check alternates and find out the status
             status, true_rh, nominal_rh = self._local_status(local)
             extrainfo = ''
-            if status != self._Status.MISSING and (true_rh is not nominal_rh):
+            # Detect alternates
+            is_alternate = status != InputsReportStatus.MISSING and (true_rh is not nominal_rh)
+            if is_alternate:
                 extrainfo = '(ALTERNATE USED)'
-            outstr += "* {:8s} {:16s} : {:s}\n".format(status, extrainfo, local)
-            if detailed and extrainfo != '':
-                outstr += "  * The following resource is used:\n"
-                outstr += true_rh.idcard(indent=6) + "\n"
-                outstr += "  * Instead of:"
-                outstr += nominal_rh.idcard(indent=6) + "\n"
+            # Alternates are always printed. Otherwise rely on **only**
+            if is_alternate or status in only:
+                outstr += "* {:8s} {:16s} : {:s}\n".format(status, extrainfo, local)
+                if detailed and extrainfo != '':
+                    outstr += "  * The following resource is used:\n"
+                    outstr += true_rh.idcard(indent=6) + "\n"
+                    outstr += "  * Instead of:"
+                    outstr += nominal_rh.idcard(indent=6) + "\n"
+
         return outstr
 
-    def print_report(self, detailed=False):
+    def print_report(self, detailed=False, only=None):
         '''Print a list of each local resource with its status.
 
-        :param detailed: when alternates are used, tell which resource handler
-                         is actualy used and which one should have been used in
-                         the nominal case.
+        :param bool detailed: when alternates are used, tell which resource handler
+                              is actually used and which one should have been used
+                              in the nominal case.
+        :param list only: Output only the listed statuses (statuses are defined in
+                          :data:`InputsReportStatus`). By default (*None*), output
+                          everything. Note that "alternates" are always shown.
         '''
-        print self.synthetic_report(detailed=detailed)
+        print self.synthetic_report(detailed=detailed, only=only)
 
     def active_alternates(self):
         '''List the local resource for which an alternative resource has been used.
@@ -476,7 +506,7 @@ class SequenceInputsReport(object):
         outstack = dict()
         for local in self._local_map:
             status, true_rh, nominal_rh = self._local_status(local)
-            if status != self._Status.MISSING and (true_rh is not nominal_rh):
+            if status != InputsReportStatus.MISSING and (true_rh is not nominal_rh):
                 outstack[local] = (true_rh, nominal_rh)
         return outstack
 
@@ -486,7 +516,7 @@ class SequenceInputsReport(object):
         for local in self._local_map:
             (status, true_rh,  # @UnusedVariable
              nominal_rh) = self._local_status(local)
-            if status == self._Status.MISSING:
+            if status == InputsReportStatus.MISSING:
                 outstack[local] = nominal_rh
         return outstack
 
