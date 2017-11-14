@@ -50,7 +50,7 @@ proxy = proxies.get()
 # Predefined constants
 
 UNKNOWN = '__unknown__'
-replattr = re.compile(r'\[(\w+)(?::+(\w+))?(?:#(\w+))?(?:%(\w+))?\]')
+replattr = re.compile(r'\[(\w+)(?::+([:\w]+))?(?:#(\w+))?(?:%([^\]]+))?\]')
 
 
 # Footprint exceptions
@@ -340,6 +340,43 @@ class Footprint(object):
             if k not in extras and k not in guess:
                 extras[k] = more[k]
 
+    def _process_replm(self, replkv, replm, guessk, changed,
+                       guess, extras, myautofmt,
+                       requeue=False):
+        """
+        Deal with calls to properties or methods during the replacement process.
+        """
+        starter = replkv
+        replms = re.split(':+', replm)
+        for replm in replms:
+            subattr = getattr(starter, replm, None)
+            if subattr is None:
+                guessk = None
+                break
+            else:
+                if callable(subattr):
+                    if isinstance(subattr, types.BuiltinFunctionType):
+                        starter = subattr()
+                    else:
+                        try:
+                            starter = subattr(guess, extras)
+                        except Exception as trouble:
+                            logger.critical(trouble)
+                            if requeue:
+                                starter = '__SKIP__'
+                                changed = 0
+                                break
+                            else:
+                                raise
+                    if starter is None:
+                        guessk = None
+                        break
+                else:
+                    starter = subattr
+        if guessk is not None and starter != '__SKIP__':
+            guessk = replattr.sub(myautofmt(starter), guessk, 1)
+        return guessk, changed
+
     def _replacement(self, nbpass, k, guess, extras, todo):
         """
         Try to resolve any replacement sequence inside the ``guess[k]`` value
@@ -380,9 +417,12 @@ class Footprint(object):
 
                     def myautofmt(repl, myfmt=mobj.group(4)):
                         if myfmt:
+                            f_formatter = util.FoxyFormatter()
+                            thefmt = ("{0" + myfmt + "}" if (':' in myfmt or '!' in myfmt)
+                                      else "{0:" + myfmt + "}")
                             try:
-                                return ("{:" + myfmt + "}").format(repl)
-                            except ValueError:
+                                return f_formatter.format(thefmt, repl)
+                            except (ValueError, AttributeError):
                                 logger.error('Formating failed for %s. Please check the format string.',
                                              mobj.group(0))
                                 raise
@@ -405,36 +445,17 @@ class Footprint(object):
                         if replk not in todo:
                             changed = 1
                             if replm:
-                                subattr = getattr(guess[replk], replm, None)
-                                if subattr is None:
-                                    guessk = None
-                                else:
-                                    guessk = replattr.sub(myautofmt(subattr), guessk, 1)
+                                replk_v = guess[replk]
+                                guessk, changed = self._process_replm(replk_v, replm, guessk, changed,
+                                                                      guess, extras, myautofmt, requeue=False)
                             else:
                                 guessk = replattr.sub(myautofmt(guess[replk]), guessk, 1)
                     elif replk in extras:
                         changed = 1
                         if replm:
-                            subattr = getattr(extras[replk], replm, None)
-                            if subattr is None:
-                                guessk = None
-                            else:
-                                if callable(subattr):
-                                    try:
-                                        if isinstance(subattr, types.BuiltinFunctionType):
-                                            attrcall = subattr()
-                                        else:
-                                            attrcall = subattr(guess, extras)
-                                    except Exception as trouble:
-                                        logger.critical(trouble)
-                                        attrcall = '__SKIP__'
-                                        changed = 0
-                                    if attrcall is None:
-                                        guessk = None
-                                    elif attrcall != '__SKIP__':
-                                        guessk = replattr.sub(myautofmt(attrcall), guessk, 1)
-                                else:
-                                    guessk = replattr.sub(myautofmt(subattr), guessk, 1)
+                            replk_v = extras[replk]
+                            guessk, changed = self._process_replm(replk_v, replm, guessk, changed,
+                                                                  guess, extras, myautofmt, requeue=True)
                         else:
                             guessk = replattr.sub(myautofmt(extras[replk]), guessk, 1)
 
