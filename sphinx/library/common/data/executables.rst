@@ -37,6 +37,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: OfflineSurfex
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ProGrid
    :show-inheritance:
    :members:

@@ -13,13 +13,6 @@ Package
 
 .. autodata:: __all__
 
-
-Modules
--------
-
-Included Modules
-----------------
-
 Classes
 -------
 
@@ -44,6 +37,26 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: Sytist
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Syvapr
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Syrper
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Syvafi
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Sypluie
    :show-inheritance:
    :members:
    :member-order: alphabetical

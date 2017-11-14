@@ -41,6 +41,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: PGDNC
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ClayDB
    :show-inheritance:
    :members:

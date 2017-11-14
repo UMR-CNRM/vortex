@@ -16,12 +16,12 @@ Package
 Classes
 -------
 
-.. autoclass:: Grib2SafranWorker
+.. autoclass:: SurfexWorker
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Grib2Safran
+.. autoclass:: OfflineWorker
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -30,13 +30,28 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: SafraneWorker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SypluieWorker
    :show-inheritance:
    :members:
    :member-order: alphabetical
  
 .. autoclass:: SyrpluieWorker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SyvaprWorker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+ 
+.. autoclass:: SyvafiWorker
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -50,8 +65,18 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
-.. autoclass:: Safran
+
+.. autoclass:: Grib2SafranWorker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Grib2Safran
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: S2M_component
    :show-inheritance:
    :members:
    :member-order: alphabetical

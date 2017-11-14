@@ -17,7 +17,12 @@ Package
 Classes
 -------
 
-.. autoclass:: CenGEnvProvider
+.. autoclass:: CenCfgParser
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CenSopranoDevProvider
    :show-inheritance:
    :members:
    :member-order: alphabetical

@@ -14,15 +14,18 @@ Package
 .. autodata:: __all__
 
 
-Classes
--------
+Exceptions
+----------
 
-.. autoclass:: SafranEbauche
+.. autoclass:: SafranObsDateError
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: SafranRadioSondages
+Classes
+-------
+
+.. autoclass:: SafranGuess
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -32,7 +35,17 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MetFiles
+.. autoclass:: Prep
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Pro
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SafranObsRaw
    :show-inheritance:
    :members:
    :member-order: alphabetical

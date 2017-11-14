@@ -21,3 +21,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: Snowr_param
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
