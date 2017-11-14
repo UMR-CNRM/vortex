@@ -24,8 +24,6 @@ class TestConfigSet(unittest.TestCase):
         cs.tgeometries = 'global798,globalsp2'
         self.assertListEqual(cs.tgeometries, [geometries.get(tag='global798'),
                                               geometries.get(tag='globalsp2')])
-        cs.tr_range = 'int(1,5,2)'
-        self.assertListEqual(cs.tr, [1, 3, 5])
         cs.tr_range = '1-5-2'
         self.assertListEqual(cs.tr, [1, 3, 5])
         # Remap + dict?

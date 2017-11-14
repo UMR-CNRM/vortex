@@ -6,10 +6,12 @@ Configuration management through ini files.
 """
 
 from ConfigParser import SafeConfigParser, NoOptionError, NoSectionError, InterpolationDepthError
-import itertools
 import re
+import six
 
+from bronx.syntax.parsing import StringDecoder, StringDecoderSyntaxError
 import footprints
+from footprints.util import rangex
 
 from vortex import sessions
 
@@ -429,57 +431,36 @@ class JacketConfigParser(GenericConfigParser):
         build on the basis of a comma separated list.
         """
         s = SafeConfigParser.get(self, section, option)
-        l = s.replace(' ', '').split(',')
-        if len(l) > 1:
-            return l
+        tmplist = s.replace(' ', '').split(',')
+        if len(tmplist) > 1:
+            return tmplist
         else:
-            return l[0]
+            return tmplist[0]
 
 
-class AppConfigStringDecoder(object):
+class AppConfigStringDecoder(StringDecoder):
     """Convert a string from a configuration file into a proper Python's object.
 
-    This introduces a lot of flexibility regarding configuration strings since
-    it allows to describe lists and dictionaries (with an optional type
-    conversion).
+    See the :class:`StringDecoder` class documentation for a complete description
+    the configuration string's syntax.
 
-    The decoding is done simply by calling the :class:`AppConfigStringDecoder`
-    object: ``decoded_string = DecoderObject(config_string)``
+    This class extends the :class:`StringDecoder` as follow:
 
+    * It's possible to convert (i.e. remap) configuration lines to Vortex's
+      geometries: ``geometry(geo_tagname)``
+    * The :func:`footprints.util.rangex` can be called to generate a list:
+      ``dict(production:rangex(0-6-1) assim:rangex(0-3-1))`` will generate
+      the following object ``{u'assim': [0, 1, 2, 3], u'production': [0, 1, 2, 3, 4, 5, 6]}``
+    * It is possible to create an object using the *iniconf* footprint's collector:
+      ``'iniconf(family:pollutants kind:elements version:std)'`` will generate
+      the following object ``<intairpol.data.elements.PollutantsElementsTable at 0x...>``
+      (provided that the :mod:`intairpol` package has been imported).
+    * It is possible to create an object using the *conftools* footprint's collector
+      (following the previous example's syntax).
 
-    A meta-language is used. Here are some examples:
-
-    * ``toto`` will be decoded as ``toto``
-    * ``1,2,3`` will be decoded as a list of strings ``['1', '2', '3']``
-    * ``int(1,2,3)`` will decoded as a list of ints ``[1, 2, 3]``
-    * ``dict(prod:1 assim:2)`` will be decoded as a dictionary of strings
-      ``dict(prod='1', assim='2')``
-    * ``geometry(dict(prod:globalsp assim:globalsp2))`` will be decoded as a
-      dictionary of geometries
-      ``dict(prod=data.geometries.Geometry('globalsp'), assim=data.geometries.Geometry('globalsp2'))``
-    * Dictionaries can be combined like in:
-      ``dict(production:dict(0:102 12:24) assim:dict(0:6 12:6))``
-    * Dictionaries and lists can be mixed:
-      ``dict(production:dict(0:0,96,102 12:3,6,24) assim:dict(0:0,3,6 12:0,3,6))``
-
-    Multiple spaces and line breaks are ignored and removed during the decoding.
-
-    The only supported type conversion are: ``int``, ``float`` and ``geometry``.
     """
 
-    def remap_int(self, value):
-        try:
-            value = int(value)
-        except ValueError:
-            pass
-        return value
-
-    def remap_float(self, value):
-        try:
-            value = float(value)
-        except ValueError:
-            pass
-        return value
+    BUILDERS = StringDecoder.BUILDERS + ['rangex', 'iniconf', 'conftool']
 
     def remap_geometry(self, value):
         from vortex.data import geometries
@@ -489,101 +470,26 @@ class AppConfigStringDecoder(object):
             pass
         return value
 
-    def remap_default(self, value):
-        return value
+    def _build_rangex(self, value, remap, subs):
+        """Build a dictionary from the **value** string."""
+        return rangex([self._value_expand(v, remap, subs)
+                       for v in self._sparser(value, itemsep=',')])
 
-    @staticmethod
-    def _litteral_cleaner(litteral):
-        """Remove unwanted characters from a configuration file's string."""
-        cleaned = litteral.lstrip().rstrip()
-        # Remove \n and \r
-        cleaned = cleaned.replace("\n", ' ').replace("\r", '')
-        # Useless spaces after/before parenthesis
-        cleaned = re.sub(r'\(\s*', '(', cleaned)
-        cleaned = re.sub(r'\s*\)', ')', cleaned)
-        # Useless spaces around separators
-        cleaned = re.sub(r'\s*:\s*', ':', cleaned)
-        cleaned = re.sub(r'\s*,\s*', ',', cleaned)
-        # Duplicated spaces
-        cleaned = re.sub(r'\s+', ' ', cleaned)
-        return cleaned
+    def _build_fpgeneric(self, value, remap, subs, collector):
+        fp = {k: self._value_expand(v, remap, subs)
+              for k, v in six.iteritems(self._sparser(value, itemsep=' ', keysep=':'))}
+        obj = footprints.collectors.get(tag=collector).load(** fp)
+        if obj is None:
+            raise StringDecoderSyntaxError(value,
+                                           'No object could be created from the {} collector'.
+                                           format(collector))
+        return obj
 
-    @staticmethod
-    def _sparser(litteral, itemsep=None, keysep=None):
-        """Split a string taking into account (nested?) parenthesis."""
-        if itemsep is None and keysep is None:
-            return [litteral, ]
-        if keysep is not None and itemsep is None:
-            raise ValueError("keysep can not be set without itemsep")
-        # What are the expected separators ?
-        markers_it = itertools.cycle([keysep, itemsep] if keysep else [itemsep, ])
-        # Default values
-        res_stack = []
-        accumstr = ''
-        parenthesis = 0
-        marker = markers_it.next()
-        # Process the string characters one by one and but take parenthesis into
-        # account.
-        for c in litteral:
-            if c == '(':
-                parenthesis += 1
-            elif c == ')':
-                parenthesis -= 1
-            if parenthesis < 0:
-                raise ValueError("'{}' unbalanced paranthesis". format(litteral))
-            if parenthesis == 0 and c == marker:
-                res_stack.append(accumstr)
-                marker = markers_it.next()
-                accumstr = ''
-            else:
-                accumstr += c
-        if accumstr:
-            res_stack.append(accumstr)
-        if parenthesis > 0:
-            raise ValueError("'{}' unbalanced paranthesis". format(litteral))
-        if (keysep is not None) and (res_stack) and (len(res_stack) % 2 != 0):
-            raise ValueError("'{}' could not be processed as a dictionnary".format(litteral))
-        return res_stack
+    def _build_iniconf(self, value, remap, subs):
+        return self._build_fpgeneric(value, remap, subs, 'iniconf')
 
-    def _value_expand(self, value, remap):
-        """Recursively expand the configuration file's string."""
-        # dictionaries...
-        if isinstance(value, basestring) and re.match(r'^dict\(.*\)$', value):
-            value = value[5:-1]
-            basis = self._sparser(value, itemsep=' ', keysep=':')
-            value = {k: self._value_expand(v, remap)
-                     for k, v in zip(basis[0::2], basis[1::2])}
-        # lists...
-        separeted = self._sparser(value, itemsep=',')
-        if isinstance(value, basestring) and len(separeted) > 1:
-            value = [self._value_expand(v, remap) for v in separeted]
-        # None ?
-        if value == 'None':
-            value = None
-        if isinstance(value, basestring) and re.match('true$', value, flags=re.IGNORECASE):
-            value = True
-        if isinstance(value, basestring) and re.match('false$', value, flags=re.IGNORECASE):
-            value = False
-        # Usual values...
-        if isinstance(value, basestring):
-            value = remap(value)
-        return value
-
-    def __call__(self, value):
-        """Return the decoded configuration string."""
-        if value is not None and isinstance(value, basestring):
-            # Check if a type cast is needed, remove spaces, ...
-            rmap = 'default'
-            value = self._litteral_cleaner(value)
-            if (not re.match('^dict', value) and
-                    re.match(r'^\w+\(.*\)$', value)):
-                ipos = value.index('(')
-                rmap = value[:ipos].lower()
-                value = value[ipos + 1:-1]
-            remap = getattr(self, 'remap_' + rmap)
-            # Process the values recursively
-            value = self._value_expand(value, remap)
-        return value
+    def _build_conftool(self, value, remap, subs):
+        return self._build_fpgeneric(value, remap, subs, 'conftool')
 
 
 class IniConf(footprints.FootprintBase):

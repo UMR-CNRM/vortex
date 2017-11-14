@@ -15,3 +15,29 @@ Functions
 ---------
 
 .. autofunction:: str2dict
+
+Classes
+-------
+
+.. autoclass:: StringDecoder
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+Exceptions
+----------
+
+.. autoclass:: StringDecoderSyntaxError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: StringDecoderRemapError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: StringDecoderSubstError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

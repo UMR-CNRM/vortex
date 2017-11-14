@@ -20,6 +20,7 @@ Modules
 * :mod:`common.tools.agt`
 * :mod:`common.tools.bdap`
 * :mod:`common.tools.bdm`
+* :mod:`common.tools.conftools`
 * :mod:`common.tools.grib`
 * :mod:`common.tools.gribdiff`
 * :mod:`common.tools.igastuff`

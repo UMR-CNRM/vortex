@@ -170,7 +170,8 @@ class RstIndexEntry(object):
                       f.startswith(self.packagedir) and
                       f.endswith(_DOCEXT) and
                       not f.endswith(_INDEX))]:
-            if f.endswith(self.packname + _DOCEXT):
+            if (f == self.packname + _DOCEXT or
+                    f.endswith(os.path.sep + self.packname + _DOCEXT)):
                 self.my_doc = f
             else:
                 self.mod_doc.append(f)

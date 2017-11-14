@@ -34,8 +34,8 @@ class ArpIfsListingDiff_Result(object):
     def __str__(self):
         return '{0:s} | NormsOk={1:b} JoTablesOk={2:b}>'.format(
             repr(self).rstrip('>'),
-            self._norms_eq and all(self._norms_eq.values()),
-            self._jos_eq and all(self._jos_eq.values())
+            all(self._norms_eq.values()),
+            all(self._jos_eq.values())
         )
 
     def differences(self):
@@ -50,7 +50,7 @@ class ArpIfsListingDiff_Result(object):
                 print("Norms   check FAILED    for steps:\n  {:s}".format(
                     "\n  ".join([str(k) for k, v in self._norms_eq.items() if not v])))
         else:
-            print("Norms steps do not match. The check FAILED.")
+            print("No norms found in the new listing or no matching norms.")
         print
         if self._jos_eq:
             diffprinted = False
@@ -71,15 +71,15 @@ class ArpIfsListingDiff_Result(object):
                                         var_v['n']['diff'], var_v['jo']['diff']))
                         diffprinted = True
         else:
-            print("The number of Jo-Tables do not match. The check FAILED.")
+            print("No Jo-Tables were found or the number of Jo-Tables do not match.")
 
 
 class ArpIfsListingDiff_Status(object):
     """Holds the status of a listing comparison."""
 
     def __init__(self, norms_eq, jos_eq, jos_diff):
-        self._norms_ok = norms_eq and all(norms_eq.values())
-        self._jos_ok = jos_eq and all(jos_eq.values())
+        self._norms_ok = all(norms_eq.values())
+        self._jos_ok = all(jos_eq.values())
         self._result = ArpIfsListingDiff_Result(norms_eq, jos_eq, jos_diff)
 
     def __str__(self):
@@ -127,45 +127,47 @@ class ArpIfsListingsTool(addons.Addon):
 
         # The reference listing may contain more norms compared to the second one
         norms_eq = OrderedDict()
-        if not l2_normset.steps_equal(l1_normset):
-            l1_tdict = OrderedDict()
-            for n in l1_normset:
-                l1_tdict[n.format_step()] = n
-            l2_tdict = OrderedDict()
-            for n in l2_normset:
-                l2_tdict[n.format_step()] = n
-            ikeys = set(l1_tdict.keys()) & set(l2_tdict.keys())
-            for k in ikeys:
-                norms_eq[k] = l1_tdict[k] == l2_tdict[k]
-        else:
-            for i, n in enumerate(l2_normset):
-                k = n.format_step()
-                norms_eq[k] = n == l1_normset[i]
+        if len(l2_normset):
+            if not l2_normset.steps_equal(l1_normset):
+                l1_tdict = OrderedDict()
+                for n in l1_normset:
+                    l1_tdict[n.format_step()] = n
+                l2_tdict = OrderedDict()
+                for n in l2_normset:
+                    l2_tdict[n.format_step()] = n
+                ikeys = set(l1_tdict.keys()) & set(l2_tdict.keys())
+                for k in ikeys:
+                    norms_eq[k] = l1_tdict[k] == l2_tdict[k]
+            else:
+                for i, n in enumerate(l2_normset):
+                    k = n.format_step()
+                    norms_eq[k] = n == l1_normset[i]
 
         jos_eq = OrderedDict()
         jos_diff = OrderedDict()
-        if not l1_jos == l2_jos:
-            # If the JoTables list is not consistent: do nothing
-            if list(l1_jos.keys()) == list(l2_jos.keys()):
-                for table1, table2 in zip(l1_jos.values(), l2_jos.values()):
-                    jos_eq[table1.name] = table1 == table2
-                    if not jos_eq[table1.name]:
-                        jos_diff[table1.name] = OrderedDict()
-                        # We only save differences when deltaN or deltaJo != 0
-                        for otype_k, otype_v in table2.compute_diff(table1).items():
-                            otype_tmp = OrderedDict()
-                            for sensor_k, sensor_v in otype_v.items():
-                                sensor_tmp = OrderedDict()
-                                for k, v in sensor_v.items():
-                                    if v['n']['diff'] != 0 or v['jo']['diff'] != 0:
-                                        sensor_tmp[k] = v
-                                if len(sensor_tmp):
-                                    otype_tmp[sensor_k] = sensor_tmp
-                            if len(otype_tmp):
-                                jos_diff[table1.name][otype_k] = otype_tmp
-        else:
-            for k in l1_jos.keys():
-                jos_eq[k] = True
+        if len(l2_jos):
+            if not l1_jos == l2_jos:
+                # If the JoTables list is not consistent: do nothing
+                if list(l1_jos.keys()) == list(l2_jos.keys()):
+                    for table1, table2 in zip(l1_jos.values(), l2_jos.values()):
+                        jos_eq[table1.name] = table1 == table2
+                        if not jos_eq[table1.name]:
+                            jos_diff[table1.name] = OrderedDict()
+                            # We only save differences when deltaN or deltaJo != 0
+                            for otype_k, otype_v in table2.compute_diff(table1).items():
+                                otype_tmp = OrderedDict()
+                                for sensor_k, sensor_v in otype_v.items():
+                                    sensor_tmp = OrderedDict()
+                                    for k, v in sensor_v.items():
+                                        if v['n']['diff'] != 0 or v['jo']['diff'] != 0:
+                                            sensor_tmp[k] = v
+                                    if len(sensor_tmp):
+                                        otype_tmp[sensor_k] = sensor_tmp
+                                if len(otype_tmp):
+                                    jos_diff[table1.name][otype_k] = otype_tmp
+            else:
+                for k in l1_jos.keys():
+                    jos_eq[k] = True
 
         return ArpIfsListingDiff_Status(norms_eq, jos_eq, jos_diff)
 
