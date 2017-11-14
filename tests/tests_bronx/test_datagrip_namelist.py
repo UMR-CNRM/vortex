@@ -12,13 +12,15 @@ import re
 DIRTYNAM = """\
 ! This is a test namelist
 &MySecondOne C=.TRUE./
+! Below an extra useless endblock: ignoring it
+/
 &MyNamelistTest
 title = 'Coordinates/t=10',
 A= 25,30, ! This is a parameter
 x = 300.d0, y=628.318, z=0d0,
 B(10 )=1,
 c=(0,1), boz=B'11', stest=NBPROC,
-B(2)=2,
+B(2)=2, LT=T, LF=F
 /
 """
 
@@ -34,6 +36,8 @@ CLEANEDNAM = """\
    BOZ=3,
    STEST=NBPROC,
    B(2)=2,
+   LT=.TRUE.,
+   LF=.FALSE.,
  /
  &MYSECONDONE
    C=.TRUE.,
@@ -47,6 +51,8 @@ CLEANEDNAM_SORTED1 = """\
    B(10 )=1,
    BOZ=3,
    C=(0.,1.),
+   LF=.FALSE.,
+   LT=.TRUE.,
    STEST=NBPROC,
    TITLE='Coordinates/t=10',
    X=300.,
@@ -70,6 +76,8 @@ CLEANEDNAM_SORTED2 = """\
    C=(0.,1.),
    BOZ=3,
    STEST=NBPROC,
+   LT=.TRUE.,
+   LF=.FALSE.,
  /
  &MYSECONDONE
    C=.TRUE.,
@@ -140,6 +148,9 @@ class UtFortranNamelist(TestCase):
         self._parse_tester('foo', ValueError)
         self._parse_tester(".TRUE.", True)
         self._parse_tester(".False.", False)
+        self._parse_tester("T", True)
+        self._parse_tester("F", False)
+        self._parse_tester("G", ValueError)
         self._parse_tester(".true._2", True)                # With kind.
         self._parse_tester(".truea", ValueError)
 
