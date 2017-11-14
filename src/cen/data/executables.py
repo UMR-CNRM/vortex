@@ -8,7 +8,6 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.executables import Script, SurfaceModel
-from gco.syntax.stdattrs import gvar
 
 
 class Safran(SurfaceModel):

@@ -199,3 +199,11 @@ class SurfaceModel(Binary):
             ),
         ),
     )
+
+    @property
+    def realkind(self):
+        return 'surfacemodel'
+
+    def command_line(self, **opts):
+        """Abstract method."""
+        return ''

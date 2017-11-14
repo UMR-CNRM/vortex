@@ -11,19 +11,6 @@ from common.data.consts import GenvStaticGeoResource
 from gco.syntax.stdattrs import gdomain
 
 
-class ImportFailer(object):
-    """Temporary class to del with a missing snowtools package."""
-
-    def __new__(self, *kargs, **kwargs):
-        raise RuntimeError('snowtools is not available')
-
-
-try:
-    from snowtools.tools.update_namelist import update_surfex_namelist
-except ImportError:
-    update_surfex_namelist = ImportFailer
-
-
 class List(GenvStaticGeoResource):
 
     _footprint = [

@@ -14,5 +14,4 @@ CEN extension
    
    algo/index
    data/index
-   tools/index
  

@@ -58,10 +58,7 @@ class SurfexWorker(VortexWorkerBlindRun):
 
     def set_env(self, rundir):
         inputs = [x.rh for x in self.context.sequence.effective_inputs()]
-        print 'DBUG'
         print inputs
-        for rh in inputs:
-            print dir(rh.resource)
 
     def _surfex_commons(self, rundir, thisdir, rdict):
 
@@ -96,9 +93,10 @@ class SurfexWorker(VortexWorkerBlindRun):
         for namelist in self.find_namelists():
             # Update the contents of the namelist (date and location)
             # Location taken in the FORCING file.
-            print namelist
-            namelist.resource.clscontents = update_surfex_namelist_object(namelist.resource.clscontents, self.date)
-            namelist.resource.clscontents.rewrite(namelist.container)
+            newcontent = update_surfex_namelist_object(namelist.contents, self.date)
+            newnam = footprints.proxy.container(filename=namelist.container.basename)
+            newcontent.rewrite(newnam)
+            newnam.close()
 
         self._surfex_task(rundir, thisdir, rdict)
 
