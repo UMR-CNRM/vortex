@@ -72,6 +72,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: DataTemplate
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: FormatAdapter
    :show-inheritance:
    :members:

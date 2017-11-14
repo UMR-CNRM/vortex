@@ -101,13 +101,9 @@ class GeoFields(GeoFlowResource):
         return 'icmshanal' + self.fields
 
     def basename_info(self):
-        if self.geometry.lam:
-            lgeo = [self.geometry.area, self.geometry.rnice]
-        else:
-            lgeo = [{'truncation': self.geometry.truncation}, {'stretching': self.geometry.stretching}]
         return dict(
             radical = self.fields,
-            geo     = lgeo,
+            geo     = self._geo2basename_info(),
             fmt     = self.nativefmt,
             src     = [self.model],
         )
