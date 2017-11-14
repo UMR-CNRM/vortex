@@ -104,6 +104,29 @@ class Prep(BlackBox):
         return 'prep'
 
 
+class PGD(BlackBox):
+    """A tool to create Surfex clim files."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'PGD utility to create Surfex clim files',
+            attr = dict(
+                gvar = dict(
+                    default  = 'master_pgd'
+                ),
+                kind = dict(
+                    values   = ['buildpgd', ],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'buildpgd'
+
+
 class ProGrid(BlackBox):
     """A tool for grib conversion."""
 

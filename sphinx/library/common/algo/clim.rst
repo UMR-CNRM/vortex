@@ -1,43 +1,40 @@
-:mod:`common.data.logs` --- Common log files
-============================================
+:mod:`common.algo.clim` --- Common AlgoComponnent to build model's climatology files
+====================================================================================
 
-.. automodule:: common.data.logs
-   :synopsis: Log files for usual applications
+.. automodule:: common.algo.clim
+   :synopsis: Common AlgoComponnent to build model's climatology files
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.2
-
-Package
--------
+.. versionadded:: 1.2.1
 
 .. autodata:: __all__
 
 
 Classes
 -------
- 
-.. autoclass:: Listing
+
+.. autoclass:: MakeGaussGeometry
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: ParallelListing
+.. autoclass:: MakeLAMDomain
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: StaticListing
+.. autoclass:: C923
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: DrHookListing
+.. autoclass:: BuildPGD
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Beacon
+.. autoclass:: FinalizePGD
    :show-inheritance:
    :members:
    :member-order: alphabetical

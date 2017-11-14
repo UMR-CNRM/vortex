@@ -20,4 +20,5 @@ Included Modules
 * :mod:`common.util.beacon`
 * :mod:`common.util.diffpygram`
 * :mod:`common.util.ens`
+* :mod:`common.util.hooks`
 * :mod:`common.util.useepygram`

@@ -28,6 +28,11 @@ class AlgoComponentError(Exception):
     pass
 
 
+class AlgoComponentAssertionError(AlgoComponentError):
+    """Assertion exception class for Algo Components."""
+    pass
+
+
 class DelayedAlgoComponentError(AlgoComponentError):
     """Triggered when exceptions occured during the execution but were delayed."""
     def __init__(self, excs):
@@ -174,6 +179,10 @@ class AlgoComponent(footprints.FootprintBase):
             print 'Traceback:'
             print "\n".join(traceback.format_tb(exc_traceback))
         self._delayed_excs.append(exc)
+
+    def algoassert(self, assertion, msg=''):
+        if not assertion:
+            raise AlgoComponentAssertionError(msg)
 
     def grab(self, sec, comment='resource', sleep=10, timeout=None):
         """Wait for a given resource and get it if expected."""

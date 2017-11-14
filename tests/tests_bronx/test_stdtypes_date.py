@@ -628,6 +628,14 @@ class utMonth(TestCase):
         self.assertEqual(rv.month, 8)
         self.assertEqual(rv.year, 2014)
 
+        rv = date.Month('02')
+        self.assertEqual(rv.month, 2)
+        self.assertEqual(rv.year, thisyear)
+
+        rv = date.Month('02', delta=12)
+        self.assertEqual(rv.month, 2)
+        self.assertEqual(rv.year, thisyear + 1)
+
         rv = date.Month(2, delta=12)
         self.assertEqual(rv.month, 2)
         self.assertEqual(rv.year, thisyear + 1)

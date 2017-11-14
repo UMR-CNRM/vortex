@@ -32,6 +32,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: PGD
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ProGrid
    :show-inheritance:
    :members:

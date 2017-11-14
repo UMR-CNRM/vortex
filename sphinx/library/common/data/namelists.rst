@@ -63,3 +63,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: GeoBlocks
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
