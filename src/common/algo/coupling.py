@@ -248,6 +248,7 @@ class Prep(BlindRun):
     def _do_input_format_change(self, section, output_name):
         (localpath, infmt) = (section.rh.container.localpath(),
                               section.rh.container.actualfmt)
+        self.system.subtitle("Processing inputs")
         if section.rh.container.actualfmt != self.underlyingformat:
             if infmt == 'fa' and self.underlyingformat == 'lfi':
                 if self.system.path.exists(output_name):
@@ -268,6 +269,7 @@ class Prep(BlindRun):
                              section.rh.container.actualfmt)
         finaloutput = '{:s}_interpolated.{:s}'.format(radical, outfmt)
         finallisting = '{:s}_listing'.format(radical)
+        self.system.subtitle("Processing outputs")
         if outfmt != self.underlyingformat:
             # There is a need for a format change
             if outfmt == 'fa' and self.underlyingformat == 'lfi':
@@ -276,7 +278,8 @@ class Prep(BlindRun):
                 self.system.fa_empty(output_clim, finaloutput)
                 logger.info("Calling sfxtools' lfi2fa from %s to %s.", output_name, finaloutput)
                 self.system.sfx_lfi2fa(output_name, finaloutput)
-                self.system.rm(output_name)
+                finallfi = '{:s}_interpolated.{:s}'.format(radical, self.underlyingformat)
+                self.system.mv(output_name, finallfi)
             else:
                 raise RuntimeError("Format conversion from %s to %s is not possible",
                                    outfmt, self.underlyingformat)
@@ -334,6 +337,8 @@ class Prep(BlindRun):
 
             # Standard execution
             super(Prep, self).execute(rh, opts)
+            sh.subtitle("Listing after PREP")
+            sh.dir(output=False, fatal=False)
 
             # Deal with outputs
             actualname = self._process_outputs(sec, targetclim, outfile)
