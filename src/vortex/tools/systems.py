@@ -43,13 +43,14 @@ import StringIO
 import tarfile
 import tempfile
 import time
+import yaml
 from datetime import datetime
 
 import footprints
+from bronx.stdtypes import date
 from bronx.system.interrupt import SignalInterruptHandler, SignalInterruptError
 from bronx.system.cpus import LinuxCpusInfo
 from vortex.gloves import Glove
-from vortex.tools import date
 from vortex.tools.env import Environment
 from vortex.tools.net import StdFtp, AssistedSsh, LinuxNetstats
 from vortex.tools.compression import CompressionPipeline
@@ -2085,6 +2086,13 @@ class OSExtended(System):
         """
         return self.blind_dump(json, obj, destination, **opts)
 
+    def yaml_dump(self, obj, destination, **opts):
+        """
+        Dump a YAML representation of specified **obj** in file **destination**,
+        (either a file descriptor or a filename).
+        """
+        return self.blind_dump(yaml, obj, destination, **opts)
+
     def blind_load(self, source, gateway=None):
         """
         Use **gateway** for a blind load the representation stored in file **source**,
@@ -2094,6 +2102,8 @@ class OSExtended(System):
             obj = gateway.load(source)
         else:
             with io.open(self.path.expanduser(source), 'rb') as fd:
+                if gateway is None:
+                    gateway = sys.modules.get(source.split('.')[-1].lower(), yaml)
                 obj = gateway.load(fd)
         return obj
 
@@ -2110,6 +2120,13 @@ class OSExtended(System):
         (either a file descriptor or a filename).
         """
         return self.blind_load(source, gateway=json)
+
+    def yaml_load(self, source):
+        """
+        Load from a YAML representation stored in file **source**,
+        (either a file descriptor or a filename).
+        """
+        return self.blind_load(source, gateway=yaml)
 
     def pickle_clone(self, obj):
         """Clone an object (**obj**) through pickling / unpickling."""

@@ -74,12 +74,12 @@ class Element(TableItem):
                 optional = True,
                 default  = 'microns',
             ),
-            speed = dict(
+            deposit = dict(
                 optional = True,
                 type     = float,
                 default  = None,
             ),
-            speed_unit = dict(
+            deposit_unit = dict(
                 optional = True,
                 default  = 'm.s-1',
             ),
@@ -110,7 +110,7 @@ class Element(TableItem):
                 optional = True,
                 default  = 's',
             ),
-            leaching = dict(
+            scavenging = dict(
                 optional = True,
                 type     = float,
                 default  = None,
@@ -163,10 +163,10 @@ class PollutantsElementsTable(PollutantsTable):
         info = 'Pollutants elements table',
         attr = dict(
             kind = dict(
-                values   = [ 'elements' ],
+                values   = ['elements'],
             ),
             version = dict(
-                values   = ['std', 'nist'],
+                values   = ['std', 'nist', 'si'],
                 remap    = dict(si='nist'),
             ),
             searchkeys = dict(
@@ -189,7 +189,7 @@ class PollutantsSitesTable(PollutantsTable):
         info = 'Pollutants sites table',
         attr = dict(
             kind = dict(
-                values   = [ 'sites' ],
+                values   = ['sites'],
             ),
             searchkeys = dict(
                 default  = footprints.FPTuple(('name', 'location'),)

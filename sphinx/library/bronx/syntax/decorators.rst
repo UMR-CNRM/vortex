@@ -23,3 +23,5 @@ Functions
 .. autofunction:: printargs
 
 .. autofunction:: timelimit
+
+.. autofunction:: unicode_filter

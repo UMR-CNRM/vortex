@@ -637,6 +637,15 @@ class ConfigurationTable(IniConf):
         else:
             return None
 
+    def match(self, item):
+        """Return the item with main key matching the given argument without case consideration."""
+        candidates = [x for x in self.tablelist
+                      if x.footprint_getattr(self.searchkeys[0]).lower().startswith(item.lower())]
+        if candidates:
+            return candidates[0]
+        else:
+            return None
+
     def grep(self, item):
         """Return a list of items with main key loosely matching the given argument."""
         return [x for x in self.tablelist

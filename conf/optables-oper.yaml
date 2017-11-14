@@ -1,0 +1,92 @@
+excluded:
+    - meta
+    - remap
+    - default
+    - footprint
+
+meta:
+    disk_period: 'PT24H'
+    arch_period: 'P10Y'
+
+arpege:
+    remap:
+        france: '4dvarfr'
+    default: '4dvarfr'
+    4dvarfr:
+        footprint:
+            geometry: 'globalsp2'
+        assim:
+            '00':
+                terms: '0-6-1'
+                tdisk: ['08:35', '08:38']
+                tarch: ['08:40', '08:40']
+            '06':
+                terms: '0-6-1'
+                tdisk: ['07:25', '07:29']
+                tarch: ['07:30', '07:30']
+            '12':
+                terms: '0-6-1'
+                tdisk: ['08:35', '08:39']
+                tarch: ['08:40', '08:40']
+            '18':
+                terms: '0-6-1'
+                tdisk: ['07:50', '07:53']
+                tarch: ['07:55', '07:55']
+        production:
+            '00':
+                terms: '0-48,51-84-3,90-102-6'
+                tdisk: ['02:45', '03:30']
+                tarch: ['03:30', '03:35']
+            '06':
+                terms: '0-48,51-72-3'
+                tdisk: ['03:35', '04:05']
+                tarch: ['04:10', '04:15']
+            '12':
+                terms: '0-48,51-84-3,90-114-6'
+                tdisk: ['02:25', '03:15']
+                tarch: ['03:15', '03:20']
+            '18':
+                terms: '0-48,51-60-3'
+                tdisk: ['03:35', '04:00']
+                tarch: ['04:00', '04:05']
+
+arome:
+    remap:
+        france: '3dvarfr'
+    default: '3dvarfr'
+    3dvarfr:
+        footprint:
+            geometry: 'franmgsp'
+        production:
+            '00':
+                terms: '0-42'
+                tdisk: ['01:45', '02:25']
+                tarch: ['02:25', '02:25']
+            '03':
+                terms: '0-39'
+                tdisk: ['01:30', '02:10']
+                tarch: ['02:10', '02:10']
+            '06':
+                terms: '0-36'
+                tdisk: ['03:50', '04:30']
+                tarch: ['04:30', '04:30']
+            '09':
+                terms: '0-7'
+                tdisk: ['03:00', '03:10']
+                tarch: ['03:10', '03:10']
+            '12':
+                terms: '0-42'
+                tdisk: ['02:45', '03:30']
+                tarch: ['03:30', '03:30']
+            '15':
+                terms: '0-7'
+                tdisk: ['02:40', '02:50']
+                tarch: ['02:50', '02:50']
+            '18':
+                terms: '0-36'
+                tdisk: ['03:55', '04:30']
+                tarch: ['04:30', '04:30']
+            '21':
+                terms: '0-7'
+                tdisk: ['03:00', '03:10']
+                tarch: ['03:10', '03:10']
