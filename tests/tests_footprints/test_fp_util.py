@@ -203,6 +203,9 @@ class utRangex(TestCase):
         rv = util.rangex(2)
         self.assertListEqual(rv, [2])
 
+        rv = util.rangex(None)
+        self.assertListEqual(rv, [])
+
         rv = util.rangex(2, 5)
         self.assertListEqual(rv, [2, 3, 4, 5])
 
