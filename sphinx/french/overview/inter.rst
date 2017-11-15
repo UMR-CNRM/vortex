@@ -44,7 +44,7 @@ sur un calculateur de Météo-France::
             sys.path.insert(0, toolbox_root + '/src')
             import vortex
             from vortex import toolbox
-            from vortex.tools import date
+            from bronx.stdtypes import date
             from vortex.tools import lfi, odb
             t = vortex.ticket()
             sh = t.sh
@@ -68,7 +68,7 @@ un pour le chargement du package :mod:`footprints`, un autre pour celui du packa
 Par pur confort, nous rendons également disponibles deux modules super-stars:
 
   * l'interface procédurale nommée :mod:`~vortex.toolbox` qui permet de charger rapidement des *handlers* de ressources ou de générer directement des sections *input*, *output*, *algo*, *promise*, etc. -- tout ceci sera détaillé par après.
-  * le module :mod:`~vortex.tools.date`, qui l'on peut s'en douter est un n-ième outil de manipulation de dates, qui étend celui de python ;
+  * le module :mod:`~bronx.stdtypes.date`, qui l'on peut s'en douter est un n-ième outil de manipulation de dates, qui étend celui de python ;
 
 Histoire de tout de suite pouvoir manipuler des ressources dans ces formats spécifiques, nous chargeons
 explicitement les modules :mod:`~vortex.tools.lfi` et :mod:`~vortex.tools.odb`, et générons à la volée

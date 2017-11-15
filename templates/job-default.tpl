@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 sys.path.insert(0, appbase)
 
+import bronx.stdtypes.date
 import footprints
 import vortex
 import vortex.layout.jobs
@@ -26,7 +27,7 @@ import $package.$task as todo
 rd_vapp     = '$vapp'
 rd_vconf    = '$vconf'
 rd_cutoff   = '$cutoff'
-rd_rundate  = vortex.tools.date.Date($rundate)
+rd_rundate  = bronx.stdtypes.date.Date($rundate)
 rd_member   = $member
 rd_xpid     = '$xpid'
 rd_suitebg  = $suitebg

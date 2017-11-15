@@ -16,12 +16,12 @@ import string
 import sys
 import traceback
 
+from bronx.stdtypes import date
 import footprints
 from footprints import proxy as fpx
 from footprints.stdtypes import FPSet
 
 import vortex
-from vortex.tools import date
 from vortex.tools.actions import actiond as ad
 from vortex.tools.actions import FlowSchedulerGateway
 from vortex.util.config import ExtendedReadOnlyConfigParser, load_template

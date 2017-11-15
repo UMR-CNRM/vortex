@@ -6,9 +6,9 @@ from __future__ import print_function, absolute_import, division
 import io
 import re
 
+from bronx.stdtypes import date
 import footprints
 from gco.tools import genv
-from vortex.tools import date
 from gco.data.stores import GcoStoreConfig, GGET_DEFAULT_CONFIGFILE
 
 

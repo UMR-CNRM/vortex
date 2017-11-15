@@ -22,6 +22,7 @@ for d in pathdirs:
     if os.path.isdir(d):
         sys.path.insert(0, d)
 
+import bronx.stdtypes.date
 import vortex
 from vortex.layout.jobs import mkjob
 from vortex.util.config import load_template
@@ -159,7 +160,7 @@ def makejob(job):
         rundate = (re.sub(r"^'(.*)'$", r'\1', tplconf['rundate'])
                    if isinstance(tplconf['rundate'], basestring) else '.')
         cmd = tplconf.get('extra_wrapper').format(injob=jobfile,
-                                                  tstamp=vortex.tools.date.now().ymdhms,
+                                                  tstamp=bronx.stdtypes.date.now().ymdhms,
                                                   appbase=tplconf['appbase'],
                                                   pwd=tplconf['pwd'],
                                                   name=tplconf['name'],

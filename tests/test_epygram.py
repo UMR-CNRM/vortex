@@ -10,10 +10,10 @@ except ImportError:
 import tempfile
 import unittest
 
+from bronx.stdtypes.date import Date, Time
 import footprints
 
 import vortex
-from vortex.tools.date import Date, Time
 from common.tools.grib import GRIBFilter
 import common.util.usepygram as uepy
 

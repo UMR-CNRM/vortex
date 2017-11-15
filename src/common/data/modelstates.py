@@ -11,7 +11,7 @@ import re
 
 from vortex.data.flow       import GeoFlowResource
 from vortex.syntax.stdattrs import term
-from vortex.tools.date      import Time
+from bronx.stdtypes.date    import Time
 
 from common.tools.igastuff  import archive_suffix
 

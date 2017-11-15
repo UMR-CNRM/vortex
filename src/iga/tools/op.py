@@ -7,6 +7,7 @@ __all__ = []
 import re
 from tempfile import mkdtemp
 
+import bronx.stdtypes.date
 import vortex  # @UnusedImport
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -103,16 +104,16 @@ class OpJobAssistantTest(JobAssistant):
         t.sh.header('Setting up the rundate')
 
         if t.env.OP_RUNDATE:
-            if not isinstance(t.env.OP_RUNDATE, vortex.tools.date.Date):
-                t.env.OP_RUNDATE = vortex.tools.date.Date(t.env.OP_RUNDATE)
+            if not isinstance(t.env.OP_RUNDATE, bronx.stdtypes.date.Date):
+                t.env.OP_RUNDATE = bronx.stdtypes.date.Date(t.env.OP_RUNDATE)
         else:
             anydate = kw.get('rundate', t.env.get('DMT_DATE_PIVOT', None))
             if anydate is None:
                 anytime = kw.get('runtime', t.env.get('OP_RUNTIME', None))
                 anystep = kw.get('runstep', t.env.get('OP_RUNSTEP', 6))
-                rundate = vortex.tools.date.synop(delta=kw.get('delta', '-PT2H'), time=anytime, step=anystep)
+                rundate = bronx.stdtypes.date.synop(delta=kw.get('delta', '-PT2H'), time=anytime, step=anystep)
             else:
-                rundate = vortex.tools.date.Date(anydate)
+                rundate = bronx.stdtypes.date.Date(anydate)
             t.env.OP_RUNDATE = rundate
         t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
         logger.info('Effective rundate = %s', t.env.OP_RUNDATE.ymdhm)

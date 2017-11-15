@@ -5,10 +5,9 @@
 __all__ = []
 
 
+from bronx.stdtypes.date import Time
 import footprints
 logger = footprints.loggers.getLogger(__name__)
-
-from vortex.tools.date      import Time
 
 from vortex.data.flow       import FlowResource, GeoFlowResource
 from vortex.data.contents   import JsonDictContent

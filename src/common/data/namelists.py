@@ -11,8 +11,8 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.tools import env
-from vortex.tools.date import Time, Date
-from bronx.datagrip.namelist import NO_SORTING, NamelistBlock, NamelistSet, NamelistParser
+from bronx.stdtypes.date import Time, Date
+from bronx.datagrip.namelist import NO_SORTING, NamelistSet, NamelistParser
 from vortex.data.outflow import ModelResource, NoDateResource
 from vortex.data.outflow import StaticGeoResource
 from vortex.data.contents import AlmostDictContent, IndexedTable
@@ -379,7 +379,7 @@ class XXTContent(IndexedTable):
         self._cachedomains_term = None
 
     def fmtkey(self, key):
-        """Reshape entry keys of the internal dictionary as a :class:`~vortex.tools.date.Time` value."""
+        """Reshape entry keys of the internal dictionary as a :class:`~bronx.stdtypes.date.Time` value."""
         key = Time(key)
         return key.fmthm
 

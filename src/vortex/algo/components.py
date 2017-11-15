@@ -11,6 +11,7 @@ import traceback
 import shlex
 import multiprocessing
 
+from bronx.stdtypes import date
 from taylorism import Boss
 from taylorism.schedulers import MaxThreadsScheduler
 import footprints
@@ -18,7 +19,6 @@ logger = footprints.loggers.getLogger(__name__)
 
 import vortex
 from vortex.algo  import mpitools
-from vortex.tools import date
 from vortex.tools.parallelism import ParallelResultParser
 from vortex.syntax.stdattrs import DelayedEnvValue
 

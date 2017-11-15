@@ -7,7 +7,8 @@ __all__ = []
 
 import re
 
-from vortex.tools import date, env
+from bronx.stdtypes import date
+from vortex.tools import env
 from vortex.data.flow import GeoFlowResource
 from vortex.syntax.stdattrs import term, a_cutoff
 

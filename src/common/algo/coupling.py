@@ -6,12 +6,13 @@ __all__ = []
 
 import re
 
+from bronx.stdtypes import date
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.algo.components import AlgoComponentError, BlindRun
 from vortex.layout.dataflow import intent
-from vortex.tools import date
+
 from .forecasts import FullPos
 
 

@@ -8,7 +8,7 @@ import footprints
 
 from vortex.data.stores import Store
 from vortex.syntax.stdattrs import compressionpipeline
-from vortex.tools import date
+from bronx.stdtypes import date
 
 from common.tools.agt import agt_actual_command
 

@@ -11,13 +11,13 @@ in EPyGrAM package.
 import sys
 from distutils.version import LooseVersion
 
+from bronx.stdtypes.date import Date, Time, Period
 import footprints
 from footprints import proxy as fpx
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.data.contents import MetaDataReader
-from vortex.tools.date import Date, Time, Period
 
 try:
     import epygram  # @UnusedImport

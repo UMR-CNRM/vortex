@@ -15,6 +15,7 @@ import copy
 import ftplib
 import re
 
+from bronx.stdtypes import date
 from bronx.system import hash as hashutils
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -25,7 +26,6 @@ from vortex.util import config
 from vortex.syntax.stdattrs import hashalgo, hashalgo_avail_list, compressionpipeline
 from vortex.tools import caches
 from vortex.tools import compression
-from vortex.tools import date
 from vortex.tools import net
 from vortex.tools.systems import ExecutionError
 from vortex.tools.actions import actiond as ad

@@ -2,11 +2,11 @@
 from copy import deepcopy
 import unittest
 
-
+from bronx.stdtypes.date import Date, Time
 import footprints as fp
+
 import vortex.data.providers  # @UnusedImport
 import olive.data.providers  # @UnusedImport
-from vortex.tools.date import Date, Time
 from vortex.data import geometries
 
 

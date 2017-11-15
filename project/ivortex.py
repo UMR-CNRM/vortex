@@ -65,6 +65,7 @@ class VortexMagics(Magics):
     def _vortex_base(self, line, verbose=True):
         """%vortex imports the vortex package and setup some usefull shortcuts."""
         if self._session is None:
+            import bronx.stdtypes.date
             import footprints
             import vortex
             try:
@@ -80,7 +81,7 @@ class VortexMagics(Magics):
             # Shortcuts
             self._shell.push(dict(fp=footprints, fpx=fpx,
                                   vortex=vortex, toolbox=vortex.toolbox,
-                                  date=vortex.tools.date,
+                                  date=bronx.stdtypes.date,
                                   t=self._session, e=self._session.env,
                                   sh=self._session.sh))
             self._session.sh.trace = False

@@ -1,11 +1,12 @@
 
 import unittest
 
+from bronx.stdtypes.date import Date
 import footprints as fp
-import common.data.eps  # @UnusedImport
+
 from vortex.data import geometries
-from vortex.tools.date import Date
 from vortex.util.names import VortexNameBuilder
+import common.data.eps  # @UnusedImport
 
 rcollect = fp.collectors.get(tag='resource')
 rcollect.fasttrack = ('kind', )

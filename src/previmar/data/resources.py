@@ -4,13 +4,13 @@
 #: No automatic export
 __all__ = []
 
+from bronx.stdtypes.date import Date, Time, Period
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource, GeoFlowResource
 from common.data.modelstates import InitialCondition
-from vortex.tools.date import Date, Time, Period
 
 
 class SolutionPoint(FlowResource):

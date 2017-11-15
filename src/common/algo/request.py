@@ -8,11 +8,11 @@ A set of AlgoComponents interrogating various databases.
 from __future__ import division, print_function, absolute_import
 
 
+from bronx.stdtypes.date import Time
 import footprints
 from vortex.algo.components import AlgoComponent, Expresso, BlindRun
 from vortex.syntax.stdattrs import a_date
 from vortex.tools.systems import ExecutionError
-from vortex.tools.date import Time
 from vortex.util.structs import FootprintCopier
 from common.tools.bdap import BDAPrequest_actual_command, BDAPGetError, BDAPRequestConfigurationError
 from common.tools.bdm import BDMGetError, BDMRequestConfigurationError, BDMError

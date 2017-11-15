@@ -44,7 +44,6 @@ Formats hypothesis:
 
 # TODO: Activate unicode_literals but check that it still works with Olive
 # experiments and when sending emails.
-# TODO: In the core of Vortex, change vortex.tools.date to bronx.stdtypes.date
 from __future__ import print_function, absolute_import, division  # , unicode_literals
 
 import calendar

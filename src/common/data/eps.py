@@ -9,7 +9,7 @@ import copy
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.tools.date        import Date, Time
+from bronx.stdtypes.date      import Date, Time
 from vortex.data.flow         import FlowResource
 from vortex.data.contents     import JsonDictContent, TextContent
 from vortex.syntax.stdattrs   import FmtInt

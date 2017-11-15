@@ -1,10 +1,12 @@
 
 import unittest
 
+from bronx.stdtypes.date import Date
 import footprints as fp
-import common.data.modelstates  # @UnusedImport
+
 from vortex.data import geometries
-from vortex.tools.date import Date
+import common.data.modelstates  # @UnusedImport
+
 from vortex.util.names import VortexNameBuilder
 
 rcollect = fp.collectors.get(tag='resource')

@@ -16,6 +16,7 @@ __all__ = []
 import logging
 
 from bronx.datagrip.datastore import DataStore
+from bronx.stdtypes import date
 import footprints
 
 logger = footprints.loggers.getLogger(__name__)
@@ -23,7 +24,6 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex.tools.env import Environment
 
 from vortex import gloves  # @UnusedImport
-from vortex.tools import date
 from vortex.layout import contexts
 
 

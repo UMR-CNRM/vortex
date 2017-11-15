@@ -11,10 +11,10 @@ __all__ = []
 import sys
 import re
 
+from bronx.stdtypes.date import Time
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-from vortex.tools.date import Time
 
+logger = footprints.loggers.getLogger(__name__)
 
 _arpcourt_vconf = ('courtfr', 'frcourt', 'court')
 _arome_vconf    = ('3dvarfr',)

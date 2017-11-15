@@ -7,7 +7,7 @@ __all__ = []
 from vortex.data.resources import Resource
 from mercator.syntax.stdattrs import grids, experiences, bogus, model, atmofields, atmoForcingOrigin
 from vortex.syntax.stdattrs import term
-from vortex.tools.date import Date
+from bronx.stdtypes.date import Date
 
 
 class Namelist(Resource):

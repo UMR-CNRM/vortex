@@ -11,17 +11,15 @@ a default Mail Service is provided.
 __all__ = []
 
 import os
-import random
 import hashlib
 from string import Template
 from ConfigParser import NoOptionError, NoSectionError
 
+from bronx.stdtypes import date
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
-from vortex.tools import date
-
 from vortex.tools.actions import actiond as ad
 from vortex.util.config import GenericConfigParser, load_template
 from vortex.util.structs import Utf8PrettyPrinter

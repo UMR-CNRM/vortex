@@ -8,7 +8,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from StringIO import StringIO
-from vortex.tools.date import Date, Time
+from bronx.stdtypes.date import Date, Time
 
 
 def EchoData(options):

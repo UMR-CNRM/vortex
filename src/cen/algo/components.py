@@ -9,10 +9,10 @@ __all__ = []
 from collections import defaultdict
 import sys
 
+from bronx.stdtypes.date import Time
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from vortex.tools.date import Time
 from vortex.syntax.stdattrs import a_date
 from vortex.algo.components import ParaBlindRun, ParaExpresso
 from vortex.tools.parallelism import VortexWorkerBlindRun

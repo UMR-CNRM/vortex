@@ -4,12 +4,12 @@
 #: No automatic export
 __all__ = []
 
+from bronx.stdtypes.date import Date
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.executables import BlackBox, Script, OceanographicModel
 from gco.syntax.stdattrs import gdomain, gvar
-from vortex.tools.date import Date
 
 
 class MasterSurges(OceanographicModel):

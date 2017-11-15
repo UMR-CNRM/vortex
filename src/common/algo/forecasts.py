@@ -7,11 +7,12 @@ __all__ = []
 import re
 from collections import defaultdict
 
+from bronx.stdtypes.date import Time
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.algo.components import AlgoComponentError
-from vortex.tools.date import Time
+
 from vortex.util.structs import ShellEncoder
 from .ifsroot import IFSParallel
 from vortex.layout.dataflow import intent

@@ -6,11 +6,11 @@ __all__ = []
 
 import re
 
+from bronx.stdtypes.date import Date
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools import odb
-from vortex.tools.date import Date
 from vortex.algo.components import BlindRun, Parallel
 from .ifsroot import IFSParallel
 from vortex.syntax.stdattrs import a_date

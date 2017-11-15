@@ -15,8 +15,8 @@ import time
 import traceback
 
 from footprints import loggers, observers
+from bronx.stdtypes import date
 
-from vortex.tools import date
 from vortex.tools.parallelism import ParallelSilencer, ParallelResultParser
 
 logger = loggers.getLogger(__name__)

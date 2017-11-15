@@ -8,7 +8,7 @@ import footprints
 from vortex.data.providers import Provider
 from vortex.util.config import GenericConfigParser
 from vortex.syntax.stdattrs import Namespace, DelayedEnvValue
-from vortex.tools.date import Time
+from bronx.stdtypes.date import Time
 
 #: No automatic export
 __all__ = []

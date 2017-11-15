@@ -8,8 +8,8 @@ import sys
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 from tests_contents.test_generic import _BaseDataContentTest
 
+from bronx.stdtypes.date import Date
 from vortex.data.containers import DataSizeTooBig, InCore
-from vortex.tools.date import Date
 from common.data import obs
 
 
