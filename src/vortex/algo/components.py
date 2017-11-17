@@ -689,6 +689,9 @@ class TaylorRun(AlgoComponent):
                 default     = DelayedEnvValue('VORTEX_SUBMIT_TASKS', 1),
                 optional    = True
             ),
+            engine = dict(
+                values = ['parallelTaylorism']
+            ),
         )
     )
 
