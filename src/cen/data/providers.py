@@ -88,12 +88,13 @@ class CenSopranoDevProvider(Provider):
         info['level_one'] = self.vconf.split('@')[0]
         suffix = map_suffix[info['level_one']]
         season = resource.date.nivologyseason()
-        if resource.realkind in [ 'synop', 'precipitation', 'hourlyobs']:
-            info['level_two']   = 'obs/rs' + season + suffix
-        elif resource.realkind == 'radiosondage':
-            info['level_two']   = 'a' + season + suffix
-        elif resource.realkind == 'nebulosity':
-            info['level_two']   = 'neb/n' + season + suffix
+        if resource.realkind == 'observations':
+            if resource.part in [ 'synop', 'precipitation', 'hourlyobs']:
+                info['level_two']   = 'obs/rs' + season + suffix
+            elif resource.part == 'radiosondage':
+                info['level_two']   = 'a' + season + suffix
+            elif resource.part == 'nebulosity':
+                info['level_two']   = 'neb/n' + season + suffix
         elif resource.realkind == 'guess':
             info['level_two']   = 'p' + season + suffix
         elif resource.realkind == 'snowpackstate':
