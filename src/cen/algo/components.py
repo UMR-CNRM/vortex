@@ -293,7 +293,7 @@ class SafraneWorker(SafranWorker):
             # Creation of the 'sapfich' file containing the name of the output file
             with open('sapfich', 'w') as f:
                 f.write('SAF' + str(term.hour))
-            list_name = self.system.path.join(thisdir, 'listsaf' + str(term.hour))
+            list_name = self.system.path.join(thisdir, self.kind + str(term.hour) + '.out')
             self.local_spawn(list_name)
             # A FAIRE : gérer le fichier fort.79 (mv dans $list/day.$day ?, rejet)
 
@@ -314,7 +314,7 @@ class SypluieWorker(SafranWorker):
             # Creation of the 'sapfich' file containing the name of the output file
             with open('sapfich', 'w') as f:
                 f.write('SAPLUI5')
-            list_name = self.system.path.join(thisdir, 'listpluie')
+            list_name = self.system.path.join(thisdir, self.kind + '.out')
             self.local_spawn(list_name)
             # A FAIRE : gérer le fichier fort.78 (mv dans $list/day.$day ?, rejet)
 
@@ -333,7 +333,7 @@ class SyrpluieWorker(SafranWorker):
         for day, dterms in self.days.items():
             logger.info('Running day : %s', str(day))
             self.sapdat(dterms[-1])
-            list_name = self.system.path.join(thisdir, 'listpluie' + str(day))
+            list_name = self.system.path.join(thisdir, self.kind + str(day) + '.out')
             self.local_spawn(list_name)
             self.mv_if_exists('fort.21', 'SAPLUI5' + str(day))
 
@@ -354,7 +354,7 @@ class SyvaprWorker(SafranWorker):
                 for i, term in enumerate(dterms):
                     self.link_in('SAF' + str(term.hour), 'SAFRAN' + str(i + 1))
                 self.sapdat(dterms[-1])
-                list_name = self.system.path.join(thisdir, 'listpr')
+                list_name = self.system.path.join(thisdir, self.kind + '.out')
                 self.local_spawn(list_name)
                 self.mv_if_exists('fort.13', 'SAPLUI5' + str(day))
                 self.mv_if_exists('fort.14', 'SAPLUI5_ARP' + str(day))
@@ -375,7 +375,7 @@ class SyvafiWorker(SafranWorker):
         for day, dterms in self.days.items():
             # if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day), ]):
             self.sapdat(dterms[-1])
-            list_name = self.system.path.join(thisdir, 'listfi')
+            list_name = self.system.path.join(thisdir, self.kind + '.out')
             self.local_spawn(list_name)
             self.mv_if_exists('fort.90', 'TAL' + str(day))
 
@@ -396,7 +396,7 @@ class SyrmrrWorker(SafranWorker):
             if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day), ]):
                 self.link_in('SAPLUI5' + str(day), 'fort.12')
                 self.sapdat(dterms[-1])
-                list_name = self.system.path.join(thisdir, 'listrr' + str(day))
+                list_name = self.system.path.join(thisdir, self.kind + str(day) + '.out')
                 self.local_spawn(list_name)
                 self.mv_if_exists('fort.13', 'SAPLUI5' + str(day))
                 self.mv_if_exists('fort.14', 'SAPLUI5_ARP' + str(day))
@@ -427,7 +427,7 @@ class SytistWorker(SafranWorker):
                 for i, term in enumerate(dterms):
                     self.link_in('SAF' + str(term.hour), 'SAFRAN' + str(i + 1))
                 self.sapdat(dterms[-1])
-                list_name = self.system.path.join(thisdir, 'listist' + str(day))
+                list_name = self.system.path.join(thisdir, self.kind + str(day) + '.out')
                 self.local_spawn(list_name)
 
 
