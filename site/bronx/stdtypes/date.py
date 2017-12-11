@@ -953,6 +953,17 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
             out = a - 'P1D'
         return out.ymd
 
+    def nivologyseason(self):
+        """Return the nivology season of a current date"""
+        if self.month < 8:
+            season_begin = datetime.datetime(self.year - 1, 8, 1)
+            season_end   = datetime.datetime(self.year, 7, 31)
+        else:
+            season_begin = datetime.datetime(self.year, 8, 1)
+            season_end   = datetime.datetime(self.year + 1, 7, 31)
+
+        return season_begin.strftime('%y') + season_end.strftime('%y')
+
 
 class Time(_GetattrCalculatorMixin):
     """Basic object to handle hh:mm information.
