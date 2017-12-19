@@ -127,6 +127,7 @@ class Geometry(footprints.util.GetByTag):
         self.inifile = None
         self.__dict__.update(kw)
         self.kind    = 'abstract'
+        self._init_attributes = {k:v for k,v in kw.items() if v is not None}
         logger.debug('Abstract Geometry init kw=%s', str(kw))
 
     @classmethod
@@ -143,6 +144,14 @@ class Geometry(footprints.util.GetByTag):
     def doc_export(self):
         """Relevant informations to print in the documentation."""
         return 'kind={:s}'.format(self.kind)
+
+    def to_inifile(self):
+        """Format geometry to put in the inifile."""
+        self._init_attributes.update(kind=self.kind)
+        s = '[{}]\n'.format(self.tag)
+        for k in sorted(self._init_attributes.keys()):
+            s += '{:10s} = {}\n'.format(k, self._init_attributes[k])
+        return s
 
 
 class VerticalGeometry(Geometry):

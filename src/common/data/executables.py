@@ -745,3 +745,33 @@ class ExecReverser(BlackBox):
     @property
     def realkind(self):
         return 'exec_reverser'
+
+
+class Rgrid(BlackBox):
+    """An executable to make a gaussian reduced grid from several parameters."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Executable to make a gaussian reduced grid',
+            attr = dict(
+                kind = dict(
+                    values   = ['rgrid', ],
+                ),
+                gvar=dict(
+                    values=['master_rgrid'],
+                    default='master_rgrid',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'rgrid'
+
+    def command_line(self, **opts):
+        args = []
+        for k, v in opts.items():
+            args.extend(['-' + k, v])
+        return ' '.join(args)

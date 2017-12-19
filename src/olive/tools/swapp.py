@@ -9,6 +9,7 @@ from bronx.datagrip import namelist as fortran
 import footprints
 from vortex import sessions
 from vortex.util import config
+from vortex.data import geometries
 from common.data.namelists import KNOWN_NAMELIST_MACROS
 
 #: No automatic export
@@ -178,3 +179,11 @@ def olive_generic_hook_factory(body):
         exec bytecode in jail
 
     return olive_generic_hook
+
+
+def olive_new_geometry(tag, kind, **kw):
+    """Add on-the-fly new geometries."""
+    g_constructor = getattr(geometries, kind[0].upper() + kind[1:] + 'Geometry')
+    g = g_constructor(tag=tag, new=True, **kw)
+    print('!!! New geometry to be added to geometries.ini:')
+    print(g.to_inifile())
