@@ -13,7 +13,6 @@ import multiprocessing
 
 from bronx.stdtypes import date
 from taylorism import Boss
-from taylorism.schedulers import MaxThreadsScheduler
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -704,7 +703,7 @@ class TaylorRun(AlgoComponent):
         '''Various initialisations. In particular it creates the task scheduler (Boss).'''
         # Start the task scheduler
         self._boss = Boss(verbose=self.verbose,
-                          scheduler=MaxThreadsScheduler(max_threads=self.ntasks))
+                          scheduler=footprints.proxy.scheduler(limit='threads', max_threads=self.ntasks))
         self._boss.make_them_work()
 
     def _add_instructions(self, common_i, individual_i):

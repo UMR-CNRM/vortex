@@ -15,13 +15,37 @@ Other quantities, variables among execution, must be available within
 *workers* (work being done) and *report* (work done).
 
 A set of basic schedulers is given.
+
+Dependencies
+------------
+
+``footprints`` (MF package)
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from footprints import FootprintBase
+from bronx.system import cpus
 
-class BaseScheduler(object):
-    """Abstract class."""
+import os
+import multiprocessing
+
+
+class BaseScheduler(FootprintBase):
+    """Abstract base class for schedulers."""
+
+    _abstract = True
+    _collector = ('scheduler',)
+    _footprint = dict(
+        attr = dict(
+            identity = dict(
+                info     = "Scheduler identity.",
+                optional = True,
+                default  = 'anonymous',
+            ),
+        )
+    )
+
     def launchable(self, pending_instructions, workers, report):
         """
         Split *pending_instructions* into "launchable" and "not_yet_launchable"
@@ -35,35 +59,88 @@ class BaseScheduler(object):
         raise NotImplementedError('launchable() method must be implemented in \
                                    inheritant classes. (BaseScheduler is abstract).')
 
+    def _all_tickets(self):
+        return set([None])
+
+    def _workers_hooks(self):
+        """Return a list of callbacks to be triggered before workers task processing."""
+        return list()
+
     def _assign_tickets(self, workers, launchable):
         """Assign available tickets in **launchable** instructions."""
         assigned_tickets = set([w.scheduler_ticket for w in workers.values()])
-        possible_tickets = sorted(self._all_tickets - assigned_tickets)
+        possible_tickets = sorted(self._all_tickets() - assigned_tickets)
         for instructions in launchable:
-            instructions['scheduler_ticket'] = possible_tickets.pop(0)
+            possible_tickets.append(None)
+            instructions.update(
+                scheduler_ticket = possible_tickets.pop(0),
+                scheduler_hooks  = self._workers_hooks(),
+            )
         return launchable
 
 
 class LaxistScheduler(BaseScheduler):
     """No sorting is done !"""
+
+    _footprint = dict(
+        attr = dict(
+            nosort = dict(
+                alias  = ('laxist', 'unsorted'),
+                values = (True,),
+                type   = bool,
+            ),
+        )
+    )
+
     def launchable(self, pending_instructions, workers, report):
+        """Very crude strategy: any pending instruction could be triggered."""
         launchable = self._assign_tickets(workers, pending_instructions)
-        return launchable
+        return (launchable, list())
 
 
-class MaxThreadsScheduler(BaseScheduler):
+class LimitedScheduler(BaseScheduler):
+    """
+    A scheduler that dequeue the pending list as long as a maximum number
+    of simultaneous tasks (*max_threads*) is not reached.
+    """
+
+    _abstract = True,
+    _footprint = dict(
+        attr = dict(
+            limit = dict(
+                values = ['threads', 'memory', 'mem'],
+                remap  = dict(mem = 'memory'),
+            ),
+        )
+    )
+
+
+class MaxThreadsScheduler(LimitedScheduler):
     """
     A basic scheduler that dequeue the pending list as long as a maximum number
     of simultaneous tasks (*max_threads*) is not reached.
     """
-    import multiprocessing as mpc
 
-    def __init__(self, max_threads=mpc.cpu_count() / 2):
-        """*max_threads* to be launched simultaneously."""
-        self.max_threads = int(max_threads)
-        self._all_tickets = set(range(0, self.max_threads))
+    _footprint = dict(
+        attr = dict(
+            limit = dict(
+                values = ['threads', 'processes'],
+                remap  = dict(processes = 'threads'),
+            ),
+            max_threads = dict(
+                alias  = ('maxpc', 'maxthreads'),
+                remap  = {0: multiprocessing.cpu_count()/2},
+                type   = int,
+            ),
+        )
+    )
+
+    def _all_tickets(self):
+        """The actual range of available tickets is limited by a maximum number of threads."""
+        return set(range(0, self.max_threads))
 
     def launchable(self, pending_instructions, workers, report):
+        """Limit strategy: only max_threads processes could run simultaneously."""
         available_threads = self.max_threads - len(workers)
         launchable = pending_instructions[0:max(available_threads, 0)]
         not_yet_launchable = pending_instructions[max(available_threads, 0):]
@@ -71,40 +148,114 @@ class MaxThreadsScheduler(BaseScheduler):
         return (launchable, not_yet_launchable)
 
 
-class MaxMemoryScheduler(BaseScheduler):
+class BindedScheduler(object):
+    """
+    Extension for binding processes to logical cpus.
+    """
+
+    def set_affinity(self, worker):
+        cpusinfo = cpus.LinuxCpusInfo()
+        cpuslist = list(cpusinfo.socketpacked_cpulist())
+        binded_cpu = cpuslist[worker.scheduler_ticket % cpusinfo.nvirtual_cores]
+        cpus.set_affinity(binded_cpu, str(os.getpid()))
+
+    def _workers_hooks(self):
+        return [self.set_affinity]
+
+
+class BindedMaxThreadsScheduler(BindedScheduler, MaxThreadsScheduler):
+    """
+    A max threads scheduler that binds workers to specific cpus.
+    """
+
+    _footprint = dict(
+        attr = dict(
+            binded = dict(
+                values = (True,),
+                type   = bool,
+            ),
+        )
+    )
+
+
+class MaxMemoryScheduler(LimitedScheduler):
     """
     A basic scheduler that dequeue the pending list as long as a critical memory
     level (according to 'memory' element of workers instructions (in MB) and
     total system memory) is not reached.
     """
 
-    def __init__(self, max_memory_percentage=0.75, total_system_memory='compute'):
-        """
-        *max_memory_percentage*: max memory level as a percentage of the total
-        system memory.
-        *total_system_memory*: total system memory in MB;
-        if 'compute', computed (Unix only).
-        """
-        import os
+    _footprint = dict(
+        attr = dict(
+            limit = dict(
+                values = ['memory', 'mem'],
+                remap  = dict(mem = 'memory'),
+            ),
+            max_memory = dict(
+                optional = True,
+                default  = None,
+                type     = float,
+                access   = 'rwx',
+            ),
+            memory_per_task = dict(
+                optional = True,
+                default  = 2.,
+                type     = float,
+            ),
+            memory_max_percentage = dict(
+                optional = True,
+                default  = 0.75,
+                type     = float,
+            ),
+            memory_total_size = dict(
+                optional = True,
+                default  = os.sysconf(str('SC_PAGE_SIZE')) * os.sysconf(str('SC_PHYS_PAGES')) / (1024 ** 3.),
+                type     = float,
+            ),
+        )
+    )
 
-        if total_system_memory == 'compute':
-            total_system_memory = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
-            total_system_memory = float(total_system_memory) / (1024 ** 2.)
-        self.max_memory = max_memory_percentage * total_system_memory
+    def __init__(self, *args, **kw):
+        """
+        *memory_max_percentage*: max memory level as a percentage of the total system memory.
+        *memory_total_size*: total system memory in GB.
+        """
+        super(MaxMemoryScheduler, self).__init__(*args, **kw)
+        if self.max_memory is None:
+            self.max_memory = self.memory_max_percentage * self.memory_total_size
 
     def launchable(self, pending_instructions, workers, report):
-        assert all([hasattr(w, 'memory') for w in workers.values()])
-        used_memory = sum([w.memory for w in workers.values()])
-        launchable = []
-        not_yet_launchable = []
+        """Limit strategy: only processes that fit in a given amount of memory could run."""
+        used_memory = sum([w.memory or self.memory_per_task for w in workers.values()])
+        launchable = list()
+        not_yet_launchable = list()
         for instructions in pending_instructions:
-            if used_memory + instructions['memory'] < self.max_memory:
+            actual_memory = instructions.get('memory', self.memory_per_task)
+            if used_memory + actual_memory < self.max_memory:
                 launchable.append(instructions)
-                used_memory += instructions['memory']
+                used_memory += actual_memory
             else:
                 not_yet_launchable.append(instructions)
         launchable = self._assign_tickets(workers, launchable)
         return (launchable, not_yet_launchable)
+
+
+class BindedMaxMemoryScheduler(BindedScheduler, MaxMemoryScheduler):
+    """
+    A max memory scheduler that binds workers to specific cpus.
+    """
+
+    _footprint = dict(
+        attr = dict(
+            binded = dict(
+                values = (True,),
+                type   = bool,
+            ),
+        )
+    )
+
+    def _all_tickets(self):
+        return set(range(cpus.LinuxCpusInfo().nphysical_cores))
 
 
 class SingleOpenFileScheduler(MaxThreadsScheduler):
@@ -112,6 +263,15 @@ class SingleOpenFileScheduler(MaxThreadsScheduler):
     Ensure that files will not be open 2 times simultaneously by 2 workers.
     And with a maximum threads number.
     """
+
+    _footprint = dict(
+        attr = dict(
+            singlefile = dict(
+                values = (True,),
+                type   = bool,
+            ),
+        )
+    )
 
     def launchable(self, pending_instructions, workers, report):
         launchable = []
