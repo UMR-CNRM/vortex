@@ -98,10 +98,12 @@ __version__ = '1.0.6'
 
 # FUNCTIONS
 ###########
+
 def run_as_server(common_instructions=dict(),
                   individual_instructions=dict(),
                   scheduler=fpx.scheduler(limit='threads', max_threads=0),
-                  verbose=False):
+                  verbose=False,
+                  maxlenreport=1024):
     """
     Build a Boss instance, make him hire workers,
     run the workers, and returns the Boss instance.
@@ -115,7 +117,7 @@ def run_as_server(common_instructions=dict(),
     :param scheduler: scheduler to rule scheduling of workers/threads
     :param bool verbose: is the Boss verbose or not.
     """
-    boss = Boss(verbose=verbose, scheduler=scheduler)
+    boss = Boss(verbose=verbose, scheduler=scheduler, maxlenreport=maxlenreport)
     boss.set_instructions(common_instructions, individual_instructions)
     boss.make_them_work()
     return boss
@@ -125,6 +127,7 @@ def batch_main(common_instructions=dict(),
                individual_instructions=dict(),
                scheduler=fpx.scheduler(limit='threads', max_threads=0),
                verbose=False,
+               maxlenreport=1024,
                print_report=print):
     """
     Run execution of the instructions as a batch process, waiting for all
@@ -135,7 +138,8 @@ def batch_main(common_instructions=dict(),
     boss = run_as_server(common_instructions,
                          individual_instructions,
                          scheduler=scheduler,
-                         verbose=verbose)
+                         verbose=verbose,
+                         maxlenreport=maxlenreport)
 
     with interrupt.SignalInterruptHandler():
         try:
@@ -308,13 +312,14 @@ class Boss(object):
                        'STOP_RIGHTNOW': 'Stop workers immediately and stop\
                                          listening.'}
 
-    def __init__(self, scheduler=None, name=None, verbose=False):
+    def __init__(self, scheduler=None, name=None, verbose=False, maxlenreport=1024):
         if scheduler is None:
             scheduler = fpx.scheduler(limit='threads', max_threads=0)
         assert isinstance(scheduler, BaseScheduler)
         self.scheduler = scheduler
         self.name = name
         self.verbose = verbose
+        self.maxlenreport = int(maxlenreport)
 
         self.workers_messenger = mpc.Queue()
         (self.control_messenger_in, self.control_messenger_out) = mpc.Pipe()  # in = inside subprocess, out = main
@@ -651,7 +656,10 @@ class Boss(object):
                     else:
                         # worker has finished
                         if self.verbose:
-                            taylorism_log.info(str(reported['report']))
+                            msglog = str(reported['report'])
+                            if len(msglog) > self.maxlenreport:
+                                msglog = msglog[:self.maxlenreport] + ' ...'
+                            taylorism_log.info(msglog)
                     workers.pop(reported['name']).bye()
                 # C. there is work to do and no STOP signal has been received: re-launch
                 if len(pending_instructions) > 0 and not stop and not halt:

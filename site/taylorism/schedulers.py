@@ -30,6 +30,7 @@ from bronx.system import cpus
 import os
 import multiprocessing
 
+MAX_NUMBER_PROCESSES=512
 
 class BaseScheduler(FootprintBase):
     """Abstract base class for schedulers."""
@@ -255,7 +256,7 @@ class BindedMaxMemoryScheduler(BindedScheduler, MaxMemoryScheduler):
     )
 
     def _all_tickets(self):
-        return set(range(cpus.LinuxCpusInfo().nphysical_cores))
+        return set(range(MAX_NUMBER_PROCESSES))
 
 
 class SingleOpenFileScheduler(MaxThreadsScheduler):
