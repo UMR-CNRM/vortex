@@ -7,7 +7,6 @@ Common AlgoComponnent to build model's climatology files.
 
 from __future__ import print_function, absolute_import, division
 
-import decimal
 import copy
 
 import footprints
@@ -77,21 +76,7 @@ class C923(IFSParallel):
         )
     )
 
-    def _convert_pgdlfi2pgdfa923(self, *args, **kwargs):
-        """
-        Convert fields from a PGD.lfi to ad-hoc-well-formatted-for-clim923 FA
-        format.
-
-        Refer to :function:`common.util.usepygram.mk_pgdfa923_from_pgdlfi`
-        for args and kwargs, ticket session excepted.
-
-        !!! DEPRECATED !!!
-        """
-        from common.util.usepygram import mk_pgdfa923_from_pgdlfi
-        mk_pgdfa923_from_pgdlfi(self.ticket, *args, **kwargs)
-
     def prepare(self, rh, opts):
-        """Prepare PGD to be readable."""
         super(C923, self).prepare(rh, opts)
         # Namelist
         nam = self.context.sequence.effective_inputs(role=('Namelist',))
@@ -116,43 +101,6 @@ class C923(IFSParallel):
                     format(self.input_orog_name))
             elif pgd.resource.nativefmt == 'lfi':
                 raise NotImplementedError('CY43T2 onwards: lfi PGD should not be used.')
-        """
-        # get geometry for lfi->fa923
-        geom_delta = self.context.sequence.effective_inputs(role=('GeometryDefinition',))
-        self.algoassert(len(geom_delta) == 1,
-                        "One and only one namelist necessary as input.")
-        geom_delta = geom_delta[0].rh
-        nam923blocks = geom_delta.contents.data
-        # Note: conversion to float because may be Decimal
-        for b in nam923blocks.values():
-            for k in b.keys():
-                if isinstance(b[k], decimal.Decimal):
-                    b[k] = float(b[k])
-        # convert pgd
-        pgd = self.context.sequence.effective_inputs(role=('Pgd',))
-        if self.orog_in_pgd:
-            if len(pgd) == 0:
-                self.algoassert(
-                    not self.orog_in_pgd,
-                    "As long as 'orog_in_pgd' attribute of this algo component is " +
-                    "True, a 'Role: Pgd' resource must be provided.")
-            pgd = pgd[0].rh
-            if pgd.resource.nativefmt == 'fa':
-                self.algoassert(
-                    pgd.container.basename == self.input_orog_name,
-                    "Local name for resource Pgd must be '{}'".
-                    format(self.input_orog_name))
-            elif pgd.resource.nativefmt == 'lfi':
-                raise NotImplementedError('lfi PGD should be abandonned. cy43t2 onwards')
-                self.algoassert(
-                    pgd.container.basename != self.input_orog_name,
-                    "Local name for resource Pgd mustn't be '{}' if format is lfi.".
-                    format(self.input_orog_name))
-                logger.info("Convert PGD from LFI to FA923")
-                self._convert_pgdlfi2pgdfa923(pgd,
-                                              nam923blocks,
-                                              outname=self.input_orog_name)
-                """
 
 
 class FinalizePGD(AlgoComponent):
@@ -517,7 +465,7 @@ class MakeGaussGeometry(BlindRun):
                             'namel_buildpgd',
                             'geoblocks']),
                   'w') as out:
-            out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
+            out.write(nam_pgd.dumps(sorting=namelist.SECOND_ORDER_SORTING))
         # C923 namelist
         del nam['NAM_PGD_GRID']
         with open('.'.join([self.geometry.tag,
@@ -555,17 +503,17 @@ class MakeBDAPDomain(AlgoComponent):
             ),
             mode = dict(
                 info = ("Kind of input for building geometry:" +
-                        "'corners' to build domain given its lon/lat boundaries" +
+                        "'boundaries' to build domain given its lon/lat boundaries" +
                         "(+ resolution); 'inside_model' to build domain given" +
                         "a model geometry to be included in (+ resolution)."),
-                values = ['corners', 'inside_model']
+                values = ['boundaries', 'inside_model']
             ),
             resolution = dict(
                 info = "Resolution in degrees.",
                 type = float,
             ),
-            corners = dict(
-                info = "Lonlat boundaries of the domain, case mode='corners'.",
+            boundaries = dict(
+                info = "Lonlat boundaries of the domain, case mode='boundaries'.",
                 type = footprints.FPDict,
                 optional = True,
                 default = None,
@@ -605,10 +553,10 @@ class MakeBDAPDomain(AlgoComponent):
         ev = '1.2.13+'
         self.algoassert(is_epygram_available(ev), "Epygram >= " + ev +
                         " is needed here")
-        if self.mode == 'corners':
+        if self.mode == 'boundaries':
             params = ['lonmin', 'lonmax', 'latmin', 'latmax']
-            self.algoassert(set(params) == set(self.corners.keys()),
-                            "With mode=={}, corners must contain at least {}".
+            self.algoassert(set(params) == set(self.boundaries.keys()),
+                            "With mode=={}, boundaries must contain at least {}".
                             format(self.mode, str(params)))
             if self.model_clim is not None:
                 logger.info('attribute *model_clim* ignored')
@@ -617,8 +565,8 @@ class MakeBDAPDomain(AlgoComponent):
                             "attribute *model_clim* must be provided with " +
                             "mode=='inside_model'.")
             self.algoassert(self.sh.path.exists(self.model_clim))
-            if self.corners is not None:
-                logger.info('attribute *corners* ignored')
+            if self.boundaries is not None:
+                logger.info('attribute *boundaries* ignored')
         self.plot_params['bluemarble'] = 0.  # FIXME:? JPEG decoder not available on beaufix
 
     def execute(self, rh, opts):
@@ -630,11 +578,11 @@ class MakeBDAPDomain(AlgoComponent):
                 g = r.readfield('SURFGEOPOTENTIEL')
             else:
                 raise NotImplementedError()
-            corners = dm.build.compute_lonlat_included(g.geometry)
+            boundaries = dm.build.compute_lonlat_included(g.geometry)
         else:
-            corners = self.corners
+            boundaries = self.boundaries
         # build geometry
-        geometry = dm.build.build_lonlat_geometry(corners,
+        geometry = dm.build.build_lonlat_geometry(boundaries,
                                                   resolution=self.resolution)
         # summary, plot, namelists:
         if self.illustration:

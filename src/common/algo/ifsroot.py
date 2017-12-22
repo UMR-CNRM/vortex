@@ -97,8 +97,9 @@ class IFSParallel(Parallel, grib.GribApiComponent):
 
     def valid_executable(self, rh):
         """Be sure that the specifed executable is ifsmodel compatible."""
+        valid = super(IFSParallel, self).valid_executable(rh)
         try:
-            return bool(rh.resource.realkind == 'ifsmodel')
+            return valid and bool(rh.resource.realkind == 'ifsmodel')
         except (ValueError, TypeError):
             return False
 
