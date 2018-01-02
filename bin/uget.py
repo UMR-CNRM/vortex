@@ -338,7 +338,7 @@ class UGetShell(cmd.Cmd):
             # retrieve the resource"
             uri = self._uri(self._storeweak, (mline['what'], mline['shortuget']))
             try:
-                rc = self._storeweak.get(uri, tofile)
+                rc = self._storeweak.get(uri, tofile, dict(auto_repack=True))
             except IOError:
                 rc = False
             if not rc:
@@ -359,7 +359,8 @@ class UGetShell(cmd.Cmd):
 
     def _single_push(self, what, shortid):
         """Push a single data to the archive store (request confirmation for overwrite)."""
-        source = self._storehack.locate(self._uri(self._storehack, (what, shortid)))
+        source = self._storehack.locate(self._uri(self._storehack, (what, shortid)),
+                                        dict(auto_repack=True))
         dest_uri = self._uri(self._storearch, (what, shortid))
         if self._storearch.check(dest_uri):
             res = query_yes_no_quit('< {:s} > already exists in the Archive store. Overwrite ?'.format(shortid),
@@ -501,12 +502,15 @@ class UGetShell(cmd.Cmd):
                                         format(mline['shortuget']), default='no')
                 if res in ('quit', 'no'):
                     return False
+                # Clean previous stuff...
+                self._storehackrw.delete(dest_uri, dict())
             # Ok, let's create a temporary working directory
             tdir = mkdtemp(prefix='uget_at_work')
             tfile = sh.path.join(tdir, 'uget' + sh.safe_filesuffix())
             try:
-                # The source is a Uget element
                 if mline['gco'] is None:
+                    # The source is a Uget element
+                    source_element = mline['baseid']
                     source_uri = self._uri(self._storeweak, (mline['what'], mline['baseshort']))
                     if mline['shortuget'] == mline['baseshort']:
                         self._error('The SourceId and destination Uget cannot be the same.')
@@ -521,10 +525,11 @@ class UGetShell(cmd.Cmd):
                 # The source is a GCO element
                 else:
                     # The source is a genv cycle
+                    source_element = mline['baseid']
                     if mline['what'] == 'env':
-                        mygenv = genv.autofill(mline['baseid'])
+                        mygenv = genv.autofill(source_element)
                         if not mygenv:
-                            self._error("Could not get genv < {:s} >".format(mline['baseid']))
+                            self._error("Could not get genv < {:s} >".format(source_element))
                             return False
                         with open(tfile, 'w') as tfilefh:
                             tfilefh.writelines(['{:s}={:s}\n'.format(k, v)
@@ -534,16 +539,41 @@ class UGetShell(cmd.Cmd):
                         ghost = tg.get('gco:ggetarchive', 'hendrix.meteo.fr')
                         gtool = sh.path.join(tg.get('gco:ggetpath', ''), tg.get('gco:ggetcmd', 'gget'))
                         with sh.cdcontext(tdir):
-                            rc = sh.spawn([gtool, '-host', ghost, mline['baseid']],
+                            rc = sh.spawn([gtool, '-host', ghost, source_element],
                                           output=False, fatal=False)
                             if not rc:
-                                self._error("Could not get gget data < {:s} >".format(mline['baseid']))
+                                self._error("Could not get gget data < {:s} >".format(source_element))
                                 return False
-                            sh.mv(mline['baseid'], tfile)
-                # That went great ! Store the retrived ressource inthe hack store !
+                            sh.mv(source_element, tfile)
+                # The destination filename
+                dest_loc = self._storehack.locate(dest_uri)
+                # If the file is a tar file, check the content... and potentially
+                # rename the first level directory.
+                if sh.is_tarname(dest_loc):
+                    tarbase_loc = sh.tarname_radix(sh.path.basename(dest_loc))
+                    # With uget/gget, we might end up with a directory...
+                    if sh.path.isdir(tfile):
+                        with sh.cdcontext(tdir):
+                            sh.mv(tfile, tarbase_loc)
+                            sh.tar(sh.path.basename(dest_loc), tarbase_loc)
+                            sh.mv(sh.path.basename(dest_loc), tfile)
+                    else:
+                        loctmp = mkdtemp(prefix='untar_', dir=tdir)
+                        with sh.cdcontext(loctmp, clean_onexit=True):
+                            sh.untar(tfile)
+                            unpacked = sh.glob('*')
+                            if len(unpacked) == 1 and unpacked[0] == sh.tarname_radix(source_element):
+                                sh.mv(unpacked[0], tarbase_loc)
+                                sh.tar(sh.path.basename(dest_loc), tarbase_loc)
+                                sh.mv(sh.path.basename(dest_loc), tfile)
+                else:
+                    if sh.path.isdir(tfile):
+                        self._error('A directory was retireved: this should not happened ! ' +
+                                    'Maybe you forgot the .tar/.tgz extension for the target element.')
+                        return False
+                # That went great ! Store the retrieved resource in the hack store !
                 self._storehackrw.put(tfile, dest_uri, dict())
                 # Give write permissions to the user (that's kind of dirty for a cache but that's hacking !)
-                dest_loc = self._storehack.locate(dest_uri)
                 st = sh.stat(dest_loc).st_mode
                 sh.chmod(dest_loc, st | stat.S_IWUSR)
             finally:

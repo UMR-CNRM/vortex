@@ -136,9 +136,10 @@ class CdContext(object):
         # back to the original path
     """
 
-    def __init__(self, sh, newpath, create=False):
+    def __init__(self, sh, newpath, create=False, clean_onexit=False):
         self.sh = sh
         self.create = create
+        self.clean_onexit = clean_onexit
         self.newpath = self.sh.path.expanduser(newpath)
 
     def __enter__(self):
@@ -147,6 +148,8 @@ class CdContext(object):
 
     def __exit__(self, etype, value, traceback):  # @UnusedVariable
         self.sh.cd(self.oldpath)
+        if self.clean_onexit:
+            self.sh.rm(self.newpath)
 
 
 class System(footprints.FootprintBase):
@@ -890,12 +893,12 @@ class OSExtended(System):
         self._os.chdir(pathtogo)
         return True
 
-    def cdcontext(self, path, create=False):
+    def cdcontext(self, path, create=False, clean_onexit=False):
         """
         Returns a new :class:`CdContext` context manager initialised with the
         **path** and **create** arguments.
         """
-        return CdContext(self, path, create)
+        return CdContext(self, path, create, clean_onexit)
 
     def ffind(self, *args):
         """Recursive file find. Arguments are starting paths."""
@@ -1988,7 +1991,7 @@ class OSExtended(System):
         fullsource = self.path.realpath(source)
         self.mkdir(destination)
         loctmp = tempfile.mkdtemp(prefix='untar_', dir=destination)
-        with self.cdcontext(loctmp):
+        with self.cdcontext(loctmp, clean_onexit=True):
             self.untar(fullsource, **kw)
             unpacked = self.glob('*')
             # If requested, ignore the first level of directory
@@ -2002,7 +2005,6 @@ class OSExtended(System):
                     logger.error('Some previous item exists before untar [%s]', untaritem)
                 else:
                     self.mv(untaritem, '../' + itemtarget)
-        self.rm(loctmp)
         return unpacked
 
     def is_tarname(self, objname):

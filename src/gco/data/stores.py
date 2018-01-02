@@ -348,6 +348,9 @@ class _UgetStoreMixin(object):
                     else:
                         untaropts = self.ugetconfig.key_untar_properties(uname)
                         rc = len(self.system.smartuntar(uname, destdir, output=False, **untaropts)) > 0
+                # Otherwise, assume that the file to extract is in a directory
+                else:
+                    destdir = self.system.path.realpath(uname)
                 rc = rc and self.system.cp(destdir + '/' + extract[0], local, fmt=fmt)
             else:
                 # Automatic untar if needed... (the local file needs to end with a tar extension)
@@ -557,6 +560,59 @@ class UgetHackCacheStore(_UgetCacheStore):
             )
         )
     )
+
+    def _alternate_source(self, remote, options):
+        """
+        If the target remote file is a tar/tgz file, check if a directory with
+        the same name (but without any extension) exists.
+        """
+        parrentsource = super(UgetHackCacheStore, self).ugetlocate(remote, options)
+        alternate_remote = None
+        sh = self.system
+        if sh.is_tarname(parrentsource):
+            tar_ts = sh.stat(parrentsource).st_mtime if sh.path.isfile(parrentsource) else 0
+            source_tarradix = sh.tarname_radix(parrentsource)
+            # Check if the directory exists...
+            if sh.path.isdir(source_tarradix):
+                alternate_remote = copy.copy(remote)
+                alternate_remote['path'] = alternate_remote['path'].replace(sh.path.basename(parrentsource),
+                                                                            sh.path.basename(source_tarradix))
+                tarradix_ts = max([sh.stat(tfile).st_mtime for tfile in sh.ffind(source_tarradix)])
+            if alternate_remote is not None and tarradix_ts > tar_ts:
+                # Do something only if the content of the directory is more recent
+                # than the Tar file
+                if options is not None and options.get('auto_repack', False):
+                    print("Recreating < {:s} > based on < {:s} >.".format(
+                          sh.path.basename(parrentsource), source_tarradix))
+                    with self.system.cdcontext(self.system.path.dirname(source_tarradix)):
+                        self.system.tar(parrentsource,
+                                        self.system.path.basename(source_tarradix))
+                else:
+                    remote = alternate_remote
+        return remote, alternate_remote
+
+    def ugetlocate(self, remote, options):
+        """Proxy to :meth:`incachelocate`."""
+        a_remote, _ = self._alternate_source(remote, options)
+        return super(UgetHackCacheStore, self).ugetlocate(a_remote, options)
+
+    def ugetcheck(self, remote, options):
+        """Proxy to :meth:`incachecheck`."""
+        a_remote, _ = self._alternate_source(remote, options)
+        return super(UgetHackCacheStore, self).ugetcheck(a_remote, options)
+
+    def ugetget(self, remote, local, options):
+        """Proxy to :meth:`incacheget`."""
+        a_remote, _ = self._alternate_source(remote, options)
+        return super(UgetHackCacheStore, self).ugetget(a_remote, local, options)
+
+    def ugetdelete(self, remote, options):
+        """Proxy to :meth:`incachedelete`."""
+        _, a_remote = self._alternate_source(remote, options)
+        rc = super(UgetHackCacheStore, self).ugetdelete(remote, options)
+        if a_remote is not None:
+            rc = rc and super(UgetHackCacheStore, self).ugetdelete(a_remote, options)
+        return rc
 
 
 class UgetStore(MultiStore):
