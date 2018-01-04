@@ -22,7 +22,54 @@ _OP_files_common = dict(alp=['OPlisteo', 'OPlistem', 'OPlisteml', 'OPclim', 'OPN
                         cor=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat', 'OPnoir'],)
 _OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSAP', 'OPSAN']
 
+_Safran_namelists = ['ANALYSE', 'CENPRAA', 'OBSERVA', 'OBSERVR', 'IMPRESS', 'ADAPT', 'SORTIES', 'MELANGE']
+
 _dic_area = dict(alp="alpes", pyr="pyrenees", cor="corse")
+
+
+class GuessWorker(VortexWorkerBlindRun):
+
+    _footprint = dict(
+        attr = dict(
+            date = a_date,
+            subdir = dict(
+                info = 'work in this particular subdirectory',
+                optional = True
+            ),
+            kind = dict(
+                values = ['guess']
+            ),
+            interpreter = dict(
+                values = [ 'python' ]
+            ),
+            vconf = dict(
+                values = ['alp', 'pyr', 'cor'],
+                optional = True,
+            ),
+        )
+    )
+
+    def vortex_task(self, **kw):
+        rdict = dict(rc=True)
+        rundir = self.system.getcwd()
+        if self.subdir is not None:
+            thisdir = self.system.path.join(rundir, self.subdir)
+            with self.system.cdcontext(self.subdir, create=True):
+                sys.stdout = open(self.name + ".out", "a", buffering=0)
+                sys.stderr = open(self.name + "_error.out", "a", buffering=0)
+                self._guess_commons(rundir, thisdir, rdict)
+        else:
+            thisdir = rundir
+            sys.stdout = open(self.name + ".out", "a", buffering=0)
+            sys.stderr = open(self.name + "_error.out", "a", buffering=0)
+            self._guess_commons(rundir, thisdir, rdict)
+
+        return rdict
+
+    def _guess_commons(self, rundir, thisdir, rdict):
+        print self.progargs
+        list_name = self.system.path.join(thisdir, self.kind + '.out')
+        self.local_spawn(list_name)
 
 
 class SurfexWorker(VortexWorkerBlindRun):
@@ -58,6 +105,9 @@ class SurfexWorker(VortexWorkerBlindRun):
 
     def set_env(self, rundir):
         inputs = [x.rh for x in self.context.sequence.effective_inputs()]
+        print 'DBUG'
+        print self.context.sequence.effective_inputs()
+        print dir(self.context.sequence.effective_inputs())
         print inputs
 
     def _surfex_commons(self, rundir, thisdir, rdict):
@@ -217,12 +267,9 @@ class SafranWorker(VortexWorkerBlindRun):
         return rdict
 
     def _safran_commons(self, rundir, thisdir, rdict):
-        if not self.system.path.exists('SORTIES'):
-            self.system.symlink(self.system.path.join(rundir, 'SORTIES'), 'SORTIES')
-        if not self.system.path.exists('MELANGE'):
-            self.system.symlink(self.system.path.join(rundir, 'MELANGE'), 'MELANGE')
-        if not self.system.path.exists('IMPRESS'):
-            self.system.symlink(self.system.path.join(rundir, 'IMPRESS'), 'IMPRESS')
+        for nam in _Safran_namelists:
+            if not self.system.path.exists(nam) and self.system.path.exists(self.system.path.join(rundir, nam)):
+                self.system.symlink(self.system.path.join(rundir, nam), nam)
 
         # Generate the 'OPxxxxx' files containing links for the safran execution.
         vconf = self.vconf.split('@')[0]
@@ -431,48 +478,42 @@ class SytistWorker(SafranWorker):
                 self.local_spawn(list_name)
 
 
-class Grib2SafranWorker(VortexWorkerBlindRun):
-
-    _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = [ 'grib2safran', 'pearp2safran', 'arpege2safran' ],
-                remap = dict(autoremap = 'first'),
-            ),
-            subdir = dict(
-                info = 'work in this particular subdirectory',
-                optional = True
-            ),
-        )
-    )
-
-    def vortex_task(self, **kw):
-        rdict = dict(rc=True)
-        print self.subdir
-        if self.subdir is not None:
-            with self.system.cdcontext(self.subdir, create=True):
-                self.local_spawn('stdout.listing')
-        else:
-            self.local_spawn('stdout.listing')
-        return rdict
-
-
-class Grib2Safran(ParaExpresso):
+class Guess(ParaExpresso):
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = [ 'grib2safran', 'pearp2safran', 'arpege2safran' ],
-                remap = dict(autoremap = 'first'),
+                values = [ 'guess' ],
             ),
+            date   = a_date,
             members = dict(
                 info = "The members that will be processed",
                 type = footprints.FPList,
                 optional = True
             ),
+            terms = dict(
+                info = "The list of terms that require an execution.",
+                type = footprints.FPList,
+            ),
+            interpreter = dict(
+                values = [ 'python']
+            )
         )
     )
+
+    def prepare(self, rh, opts):
+        """Set some variables according to target definition."""
+        super(Guess, self).prepare(rh, opts)
+        self.env.DR_HOOK_NOT_MPI = 1
+
+    def _default_common_instructions(self, rh, opts):
+        '''Create a common instruction dictionary that will be used by the workers.'''
+        ddict = super(Guess, self)._default_common_instructions(rh, opts)
+        ddict['date']  = self.date  # Note: The date could be auto-detected using the sequence
+        ddict['terms'] = self.terms  # Note: The list of terms could be auto-detected using the sequence
+        ddict['interpreter'] = self.interpreter
+        return ddict
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
