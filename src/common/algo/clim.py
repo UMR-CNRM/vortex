@@ -400,7 +400,6 @@ class MakeGaussGeometry(BlindRun):
                         " is needed here")
         self._complete_dimensions()
         self._unit = 4
-        print('am:------------------------------------------------')
         self.plot_params['bluemarble'] = 0.  # FIXME:? JPEG decoder not available on beaufix
 
     def _complete_dimensions(self):
@@ -432,7 +431,7 @@ class MakeGaussGeometry(BlindRun):
         for k in options_dict.keys():
             if getattr(self, k) is not None:
                 options[options_dict[k]] = str(getattr(self, k))
-        return options  # FIXME:? redirect output prints to listing.rgrid ?
+        return options
 
     def postfix(self, rh, opts):
         """Complete and write namelists."""
