@@ -564,3 +564,60 @@ class SstGrb2Ascii(BlindRun):
             lon = self.nlon,
             lat = self.nlat,
         )
+
+class IceNetCDF2Ascii(BlindRun):
+    """Transform ice NetCDF files from the BDPE into ascii files"""
+    _footprint = dict(
+        info = 'Binary to change the format of ice BDPE files.',
+        attr = dict(
+            kind = dict(
+                values = ['ice_nc2ascii'],
+            ),
+            output_file = dict(
+                optional = True,
+                default = "ice_concent"
+            ),
+            param = dict(
+                optional = True,
+                default = "ice_conc",
+            ),
+        )
+    )
+
+    def prepare(self, rh, opts):
+        super(IceNetCDF2Ascii, self).prepare(rh, opts)
+        # Look for the input files
+        list_netcdf = self.context.sequence.effective_inputs(role='NetCDFfiles',
+                                                             kind='observations')
+        hn_file = ''
+        hs_file = ''
+        for sect in list_netcdf:
+            part = sect.rh.resource.part
+            filename = sect.rh.container.filename
+            if part == "ice_hn":
+                if hn_file == '':
+                    hn_file = filename
+                    logger.info('The input file for the North hemisphere is: %s.', hn_file)
+                else:
+                    logger.warning('There was already one file for the North hemisphere. The following one, %s, is not used.',
+                                   filename)
+            elif part == "ice_hs":
+                if hs_file == '':
+                    hs_file = filename
+                    logger.info('The input file for the South hemisphere is: %s.', hs_file)
+                else:
+                    logger.warning('There was already one file for the South hemisphere. The following one, %s, is not used.',
+                                   filename)
+            else:
+                logger.warning('The following file is not used: %s.', filename)
+        self.input_file_hn = hn_file
+        self.input_file_hs = hs_file
+
+    def spawn_command_options(self):
+        """Build the dictionnary to provide arguments to the binary."""
+        return dict(
+            file_in_hn = self.input_file_hn,
+            file_in_hs = self.input_file_hs,
+            param = self.param,
+            file_out = self.output_file
+        )
