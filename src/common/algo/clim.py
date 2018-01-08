@@ -126,7 +126,7 @@ class FinalizePGD(AlgoComponent):
     def __init__(self, *args, **kwargs):
         super(FinalizePGD, self).__init__(*args, **kwargs)
         from common.util.usepygram import is_epygram_available
-        ev = '1.2.13+'
+        ev = '1.2.14'
         self.algoassert(is_epygram_available(ev), "Epygram >= " + ev +
                         " is needed here")
 
@@ -242,7 +242,7 @@ class MakeLAMDomain(AlgoComponent):
     def __init__(self, *args, **kwargs):
         super(MakeLAMDomain, self).__init__(*args, **kwargs)
         from common.util.usepygram import is_epygram_available
-        ev = '1.2.13+'
+        ev = '1.2.14'
         self.algoassert(is_epygram_available(ev), "Epygram >= " + ev +
                         " is needed here")
         self._check_geometry()
@@ -395,7 +395,7 @@ class MakeGaussGeometry(BlindRun):
     def __init__(self, *args, **kwargs):
         super(MakeGaussGeometry, self).__init__(*args, **kwargs)
         from common.util.usepygram import is_epygram_available
-        ev = '1.2.13+'
+        ev = '1.2.14'
         self.algoassert(is_epygram_available(ev), "Epygram >= " + ev +
                         " is needed here")
         self._complete_dimensions()
@@ -549,7 +549,7 @@ class MakeBDAPDomain(AlgoComponent):
     def __init__(self, *args, **kwargs):
         super(MakeBDAPDomain, self).__init__(*args, **kwargs)
         from common.util.usepygram import is_epygram_available
-        ev = '1.2.13+'
+        ev = '1.2.14'
         self.algoassert(is_epygram_available(ev), "Epygram >= " + ev +
                         " is needed here")
         if self.mode == 'boundaries':
