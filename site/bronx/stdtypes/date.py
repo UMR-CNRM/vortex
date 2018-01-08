@@ -681,7 +681,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         :mod:`footprints` package substitution mechanism. It allows to do
         calculations on the fly::
 
-            >>> date = Date('easter')
+            >>> date = Date('20170416')
             >>> date
             Date(2017, 4, 16, 0, 0)
             >>> date.addPT6H
