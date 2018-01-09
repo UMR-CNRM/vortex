@@ -320,7 +320,11 @@ class SafranWorker(VortexWorkerBlindRun):
             d.write('0,0,0\n')
             d.write('3,1,3,3\n')
             d.write('0\n')
-            d.write('1,1,1\n')
+            if self.subdir is not None:
+                # Pas de chaine poste en prevision
+                d.write('1,1,0\n')
+            else:
+                d.write('1,1,1\n')
 
 
 class SafraneWorker(SafranWorker):
