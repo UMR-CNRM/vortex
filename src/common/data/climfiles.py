@@ -197,16 +197,16 @@ class GTOPO30DerivedDB(StaticGeoResource):
             info = 'Database for GTOPO30-derived parameters.',
             attr = dict(
                 kind = dict(
-                    values   = ['misc_orography'],
+                    values = ['misc_orography'],
                 ),
                 source = dict(
-                    values   = ['GTOPO30'],
+                    values = ['GTOPO30'],
                 ),
                 geometry = dict(
                     values = ['global2m5'],
                 ),
                 gvar = dict(
-                    default  = '[source]_[kind]'
+                    default = '[source]_[kind]'
                 ),
             )
         )
@@ -225,13 +225,13 @@ class UrbanisationDB(StaticGeoResource):
     _footprint = [
         gvar,
         dict(
-            info = 'Database for GTOPO30 urbanisation.',
+            info = 'Database for urbanisation.',
             attr = dict(
                 kind = dict(
                     values   = ['urbanisation'],
                 ),
                 source = dict(
-                    values   = ['GTOPO30'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['global2m5'],
@@ -256,13 +256,13 @@ class WaterPercentageDB(StaticGeoResource):
     _footprint = [
         gvar,
         dict(
-            info = 'Database for GTOPO30 water percentage.',
+            info = 'Database for water percentage.',
             attr = dict(
                 kind = dict(
                     values   = ['water_percentage'],
                 ),
                 source = dict(
-                    values   = ['GTOPO30'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['global2m5'],
@@ -294,7 +294,7 @@ class SoilANdVegDB(StaticGeoResource):
                     values   = ['soil_and_veg'],
                 ),
                 source = dict(
-                    values   = ['GiardBazile2000', 'AVHRR-ESA'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['global1dg', 'europeb01'],
@@ -327,7 +327,7 @@ class MonthlyLAIDB(StaticGeoResource):
                     values   = ['LAI'],
                 ),
                 source = dict(
-                    values   = ['GiardBazile2000', 'AVHRR-ESA'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['global1dg', 'europeb01'],
@@ -364,7 +364,7 @@ class MonthlyVegDB(StaticGeoResource):
                     values   = ['vegetation'],
                 ),
                 source = dict(
-                    values   = ['GiardBazile2000', 'AVHRR-ESA'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['global1dg', 'europeb01'],
@@ -401,7 +401,7 @@ class SoilClimatologyDB(StaticGeoResource):
                     values   = ['soil_clim'],
                 ),
                 source = dict(
-                    values   = ['Arp-reanalysis', 'US-Navy'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['globaln108', 'global1dg'],
@@ -433,7 +433,7 @@ class SurfGeopotentialDB(StaticGeoResource):
                     values   = ['surfgeopotential'],
                 ),
                 source = dict(
-                    values   = ['Arp-reanalysis'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['global1dg'],
@@ -485,7 +485,7 @@ class MonthlyChemicalDB(StaticGeoResource):
                     values   = ['ozone', 'aerosols'],
                 ),
                 source = dict(
-                    values   = ['UGAMP', 'Tegen'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['global2dg5', 'global5x4'],
