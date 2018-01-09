@@ -20,7 +20,7 @@ from vortex.tools.parallelism import VortexWorkerBlindRun
 _OP_files_common = dict(alp=['OPlisteo', 'OPlistem', 'OPlisteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat', 'OPnoir'],
                         pyr=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat', 'OPnoir'],
                         cor=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat', 'OPnoir'],)
-_OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSAP', 'OPSAN']
+_OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSAP', 'OPSAN', 'OPposte']
 
 _Safran_namelists = ['ANALYSE', 'CENPRAA', 'OBSERVA', 'OBSERVR', 'IMPRESS', 'ADAPT', 'SORTIES', 'MELANGE']
 
@@ -320,7 +320,7 @@ class SafranWorker(VortexWorkerBlindRun):
             d.write('0,0,0\n')
             d.write('3,1,3,3\n')
             d.write('0\n')
-            d.write('1,1,0,0,1\n')
+            d.write('1,1,1\n')
 
 
 class SafraneWorker(SafranWorker):
