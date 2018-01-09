@@ -22,7 +22,7 @@ class List(GenvStaticGeoResource):
             info = 'Config file used by  S2M models.',
             attr = dict(
                 kind = dict(
-                    values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml',
+                    values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml', 'carpost',
                               'rsclim', 'icrccm', 'NORELot', 'NORELmt', 'blacklist', 'metadata'],
                 ),
                 nativefmt = dict(
