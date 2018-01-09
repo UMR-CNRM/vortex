@@ -11,7 +11,7 @@ import copy
 
 import footprints
 
-from vortex.algo.components import BlindRun, AlgoComponent
+from vortex.algo.components import BlindRun, AlgoComponent, Parallel
 from vortex.data.geometries import HorizontalGeometry
 from common.algo.ifsroot import IFSParallel
 from bronx.datagrip import namelist
@@ -290,7 +290,7 @@ class MakeLAMDomain(AlgoComponent):
         dm.output.write_namelists(namelists, prefix=self.geometry.tag)
 
 
-class MakeGaussGeometry(BlindRun):
+class MakeGaussGeometry(Parallel):
     """
     Wrapper to call Gauss geometry making RGRID and generate
     namelist deltas for geometry (BuildPGD & C923).
