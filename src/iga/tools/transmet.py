@@ -59,7 +59,7 @@ def execute_cmd_sh(sh, cmd):
     return sh.spawn(cmd, shell=True, output=True)
 
 
-def get_ttaaii_transmet_sh(sh, transmet_cmd, transmet_dict, filename, scriptdir):
+def get_ttaaii_transmet_sh(sh, transmet_cmd, transmet_dict, filename, scriptdir, header_infile):
     """"create a file with transmet header and returns the filename used for routing.
 
     :param ~vortex.tools.systems.OSExtended sh: The vortex shell that will be used
@@ -67,6 +67,7 @@ def get_ttaaii_transmet_sh(sh, transmet_cmd, transmet_dict, filename, scriptdir)
     :param dict transmet_dict: variables used to create transmet header
     :param str filename: initial filename
     :param str scriptdir: script path directory
+    :param bool header_infile: if True, add header in initial file before routing
     :return: 'transmet' filename
     :rtype: str
     """
@@ -74,6 +75,9 @@ def get_ttaaii_transmet_sh(sh, transmet_cmd, transmet_dict, filename, scriptdir)
     cmd = ttaaii_actual_command(sh, transmet_cmd, transmet_dict, scriptdir)
     filename_ttaaii = execute_cmd_sh(sh, cmd)[0]
     filename_ttaaii = str(sh.path.join(sh.path.dirname(filename), filename_ttaaii))
-    sh.rename('entete', filename_ttaaii)
-    tramsmet_file(filename, filename_ttaaii)
+    if header_infile:
+        sh.rename('entete', filename_ttaaii)
+        tramsmet_file(filename, filename_ttaaii)
+    else:
+        sh.cp(filename, filename_ttaaii, intent='in')
     return filename_ttaaii
