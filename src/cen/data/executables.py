@@ -45,7 +45,7 @@ class Safrane(Safran):
             info = 'Safrane executable',
             attr = dict(
                 kind = dict(
-                    values = ['safrane']
+                    values = ['safrane', 'safrane_dev']
                 ),
             )
         )
@@ -64,7 +64,7 @@ class Syrpluie(Safran):
             info = 'Syrpluie executable',
             attr = dict(
                 kind = dict(
-                    values = ['syrpluie']
+                    values = ['syrpluie', 'syrpluie_dev']
                 ),
             )
         )
@@ -83,7 +83,7 @@ class Syrmrr(Safran):
             info = 'Syrmrr executable',
             attr = dict(
                 kind = dict(
-                    values = ['syrmrr']
+                    values = ['syrmrr', 'syrmrr_dev']
                 ),
             )
         )
@@ -102,7 +102,7 @@ class Sytist(Safran):
             info = 'Sytist executable',
             attr = dict(
                 kind = dict(
-                    values = ['sytist']
+                    values = ['sytist', 'sytist_dev']
                 ),
             )
         )
@@ -121,7 +121,7 @@ class Syvapr(Safran):
             info = 'Syvapr executable',
             attr = dict(
                 kind = dict(
-                    values = ['syvapr']
+                    values = ['syvapr', 'syvapr_dev']
                 ),
             )
         )
@@ -140,7 +140,7 @@ class Syrper(Safran):
             info = 'Syrper executable',
             attr = dict(
                 kind = dict(
-                    values = ['syrper']
+                    values = ['syrper', 'syrper_dev']
                 ),
             )
         )
@@ -159,7 +159,7 @@ class Syvafi(Safran):
             info = 'Syvafi executable',
             attr = dict(
                 kind = dict(
-                    values = ['syvafi']
+                    values = ['syvafi', 'syvafi_dev']
                 ),
             )
         )
@@ -178,7 +178,7 @@ class Sypluie(Safran):
             info = 'Sypluie executable',
             attr = dict(
                 kind = dict(
-                    values = ['sypluie']
+                    values = ['sypluie', 'sypluie_dev']
                 ),
             )
         )
