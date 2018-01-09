@@ -19,6 +19,8 @@ A set of basic schedulers is given.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import multiprocessing as mpc
+
 
 class BaseScheduler(object):
     """Abstract class."""
@@ -56,7 +58,6 @@ class MaxThreadsScheduler(BaseScheduler):
     A basic scheduler that dequeue the pending list as long as a maximum number
     of simultaneous tasks (*max_threads*) is not reached.
     """
-    import multiprocessing as mpc
 
     def __init__(self, max_threads=mpc.cpu_count() / 2):
         """*max_threads* to be launched simultaneously."""
@@ -128,44 +129,46 @@ class SingleOpenFileScheduler(MaxThreadsScheduler):
         not_yet_launchable.extend(nyl)
         launchable = self._assign_tickets(workers, launchable)
         return (launchable, not_yet_launchable)
-    
-    
+
+
 class LongerFirstScheduler(BaseScheduler):
     """
-    A scheduler based on MaxMemory Scheduler. It consists launching the workers thats are expected to run in the longer time first,
-    while there is enought memory.
-    Workers needs to have 2 attributes: 
-        - time representing the expected run time
-        - mem representing the expected memory consumed       
-    This scheduler is typically used with Bateur workers, in src/common/algo/odbtools.py for parallel BATOR run
+    A scheduler based on the MaxMemory Scheduler. It aims at launching as soon
+    as possible the workers that are expected to have the longest run-time (whilst
+    there is enough available memory).
+
+    Workers needs to have 2 attributes:
+
+        * time representing the expected run time
+        * mem representing the expected memory consumed
+
+    This scheduler is typically used with Bateur workers, in vortex's
+    src/common/algo/odbtools.py (for parallel BATOR run).
     """
-    import multiprocessing as mpc
 
-
-    def __init__(self,max_memory, max_threads=mpc.cpu_count() - 1):
+    def __init__(self, max_memory, max_threads=mpc.cpu_count() - 1):
         """*max_threads* to be launched simultaneously."""
         self.max_threads = int(max_threads)
-        self.max_memory=max_memory
+        self.max_memory = max_memory
         self._all_tickets = set(range(0, self.max_threads))
-
 
     def launchable(self, pending_instructions, workers, report):
         available_threads = self.max_threads - len(workers)
-        usedMemory=0
+        usedMemory = 0
         for w in workers.values():
-            usedMemory+=w.mem
-        availableMemory=self.max_memory-usedMemory
-        launchable=[]
-        not_yet_launchable=[]
-        #sort by decreasing time
-        pending_instructions.sort(key=lambda tup: tup['time'],reverse=True) 
+            usedMemory += w.mem
+        availableMemory = self.max_memory - usedMemory
+        launchable = []
+        not_yet_launchable = []
+        # sort by decreasing time
+        pending_instructions.sort(key=lambda tup: tup['time'], reverse=True)
         for pending in pending_instructions:
-            if ((pending['mem']<availableMemory) and (available_threads>0)):
+            if ((pending['mem'] <= availableMemory) and (available_threads > 0)):
                 launchable.append(pending)
-                availableMemory-=pending['mem']
-                available_threads-=1
+                availableMemory -= pending['mem']
+                available_threads -= 1
             else:
                 not_yet_launchable.append(pending)
 
         launchable = self._assign_tickets(workers, launchable)
-        return (launchable, not_yet_launchable)    
+        return (launchable, not_yet_launchable)
