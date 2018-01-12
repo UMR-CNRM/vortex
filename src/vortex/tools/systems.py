@@ -1234,7 +1234,8 @@ class OSExtended(System):
             return False
 
     @fmtshcmd
-    def ftput(self, source, destination, hostname=None, logname=None, cpipeline=None):
+    def ftput(self, source, destination, hostname=None, logname=None, cpipeline=None,
+              sync=False):  # @UnusedVariable
         """Proceed to a direct ftp put on the specified target (using Vortex's FTP client).
 
         :param source: The source of data (either a path to file or a
@@ -1247,6 +1248,8 @@ class OSExtended(System):
             :class:`~vortex.tools.net.StdFtp` class to get the effective default)
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             compress the data during the file transfer (default: *None*).
+        :param bool sync: If False, allow asynchronous transfers (currently not
+            used: transfers are always synchronous).
         """
         rc = False
         if self.is_iofile(source):
@@ -1283,12 +1286,15 @@ class OSExtended(System):
         else:
             return False
 
-    def ftserv_put(self, source, destination, hostname=None, logname=None, specialshell=None):
+    def ftserv_put(self, source, destination, hostname=None, logname=None,
+                   specialshell=None, sync=False):
         """Asynchronous put of a file using FtServ."""
         if isinstance(source, basestring) and isinstance(destination, basestring):
             if self.path.exists(source):
                 ftcmd = self.ftputcmd or 'ftput'
                 extras = list()
+                if not sync:
+                    extras.extend(['-q', ])
                 if hostname:
                     extras.extend(['-h', hostname])
                 if logname:
@@ -1296,8 +1302,7 @@ class OSExtended(System):
                 if specialshell:
                     extras.extend(['-s', specialshell])
                 rc = self.spawn([ftcmd,
-                                 '-o', 'mkdir',  # Automatically create subdirectories
-                                 '-q', ] +  # Asynchronous mode
+                                 '-o', 'mkdir', ] +  # Automatically create subdirectories
                                 extras + [source, destination], output=False)
             else:
                 raise IOError('No such file or directory: {!s}'.format(source))
@@ -1324,7 +1329,8 @@ class OSExtended(System):
         return rc
 
     @fmtshcmd
-    def rawftput(self, source, destination, hostname=None, logname=None, cpipeline=None):
+    def rawftput(self, source, destination, hostname=None, logname=None,
+                 cpipeline=None, sync=False):
         """Proceed with some external ftput command on the specified target.
 
         :param str source: Path to the source filename
@@ -1333,18 +1339,21 @@ class OSExtended(System):
         :param str logname: the target logname  (default: *None*).
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             compress the data during the file transfer (default: *None*).
+        :param bool sync: If False, allow asynchronous transfers.
         """
         if cpipeline is not None:
             if cpipeline.compress2rawftp(source):
                 return self.ftserv_put(source, destination, hostname, logname,
-                                       specialshell=cpipeline.compress2rawftp(source))
+                                       specialshell=cpipeline.compress2rawftp(source),
+                                       sync=sync)
             else:
-                return self.ftput(source, destination, hostname, logname, cpipeline=cpipeline)
+                return self.ftput(source, destination, hostname, logname,
+                                  cpipeline=cpipeline, sync=sync)
         else:
-            return self.ftserv_put(source, destination, hostname, logname)
+            return self.ftserv_put(source, destination, hostname, logname, sync=sync)
 
     def smartftput(self, source, destination, hostname=None, logname=None,
-                   cpipeline=None, fmt=None):
+                   cpipeline=None, sync=False, fmt=None):
         """Select the best alternative between ``ftput`` and ``rawftput``.
 
         :param source: The source of data (either a path to file or a
@@ -1357,6 +1366,7 @@ class OSExtended(System):
             for the default)
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             compress the data during the file transfer.
+        :param bool sync: If False, allow asynchronous transfers.
         :param str fmt: The format of data.
 
         ``rawftput`` will be used if all of the following conditions are met:
@@ -1367,10 +1377,10 @@ class OSExtended(System):
         """
         if self.ftraw and isinstance(source, basestring) and isinstance(destination, basestring):
             return self.rawftput(source, destination, hostname=hostname, logname=logname,
-                                 cpipeline=cpipeline, fmt=fmt)
+                                 cpipeline=cpipeline, sync=sync, fmt=fmt)
         else:
             return self.ftput(source, destination, hostname=hostname, logname=logname,
-                              cpipeline=cpipeline, fmt=fmt)
+                              cpipeline=cpipeline, sync=sync, fmt=fmt)
 
     @fmtshcmd
     def rawftget(self, source, destination, hostname=None, logname=None, cpipeline=None):

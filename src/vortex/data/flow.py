@@ -9,7 +9,7 @@ from .resources  import Resource
 from .geometries import HorizontalGeometry, GaussGeometry, ProjectedGeometry
 from .contents   import FormatAdapter
 
-from vortex.syntax.stdattrs import model, date, cutoff
+from vortex.syntax.stdattrs import model, date, cutoff, term
 
 
 class FlowResource(Resource):
@@ -26,6 +26,42 @@ class FlowResource(Resource):
             date      = self.date,
             cutoff    = self.cutoff,
         )
+
+
+class UnknownFlow(FlowResource):
+
+    _footprint = [
+        term,
+        dict(
+            info = 'Unknown assumed NWP Flow-Resource (development only !)',
+            attr = dict(
+                unknownflow = dict(
+                    info = "Activate the unknown flow resource",
+                    type = bool
+                ),
+                term = dict(
+                    optional = True,
+                ),
+                nickname = dict(
+                    info = "The string that serves the purpose of Vortex's basename radical",
+                    optional = True,
+                    default = 'unknown'
+                ),
+                clscontents = dict(
+                    default = FormatAdapter
+                ),
+            ),
+        )
+    ]
+
+    def basename_info(self):
+        """Keep the Unknown resource unknown."""
+        bdict = dict(radical=self.nickname, )
+        if self.nativefmt not in ('auto', 'autoconfig', 'foo', 'unknown'):
+            bdict['fmt'] = self.nativefmt
+        if self.term is not None:
+            bdict['term'] = self.term.fmthm
+        return bdict
 
 
 class GeoFlowResource(FlowResource):

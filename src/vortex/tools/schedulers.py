@@ -161,7 +161,8 @@ class SMS(EcmwfLikeScheduler):
         )
     )
 
-    _KNOWN_CMD = ('abort', 'complete', 'event', 'init', 'label', 'meter', 'msg', 'variable')
+    _KNOWN_CMD = ('abort', 'complete', 'event', 'init', 'label', 'meter',
+                  'msg', 'variable', 'fix')
 
     def __init__(self, *args, **kw):
         logger.debug('SMS scheduler client init %s', self)

@@ -205,7 +205,7 @@ class FlowSchedulerGateway(Action):
     Send a child command to any ECMWF's workfow scheduler.
     """
 
-    _KNOWN_CMD = dict(sms=['abort', 'complete', 'event', 'init', 'label', 'meter', 'msg', 'variable'],
+    _KNOWN_CMD = dict(sms=['abort', 'complete', 'event', 'init', 'label', 'meter', 'msg', 'variable', 'fix'],
                       ecflow=['abort', 'complete', 'event', 'init', 'label', 'meter', 'msg'])
 
     def __init__(self, kind='flow', service=None, active=True, permanent=True):
