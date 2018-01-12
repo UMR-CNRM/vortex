@@ -221,7 +221,7 @@ class FolderShell(addons.FtrawEnableAddon):
             return self._folder_ftget(source, destination, hostname, logname)
 
     def _folder_ftput(self, source, destination, hostname=None, logname=None,
-                      cpipeline=None):
+                      cpipeline=None, sync=False):
         """Proceed direct ftp put on the specified target."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
@@ -247,7 +247,7 @@ class FolderShell(addons.FtrawEnableAddon):
             return False
 
     def _folder_rawftput(self, source, destination, hostname=None, logname=None,
-                         cpipeline=None):
+                         cpipeline=None, sync=False):
         """Use ftserv as much as possible."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
@@ -262,11 +262,11 @@ class FolderShell(addons.FtrawEnableAddon):
             self.sh.readonly(request)
             rc = self.sh.ftserv_put(request, destination,
                                     hostname=hostname, logname=logname,
-                                    specialshell=self.rawftshell)
+                                    specialshell=self.rawftshell, sync=sync)
             self.sh.rm(request)
             return rc
         else:
-            return self._folder_ftput(source, destination, hostname, logname)
+            return self._folder_ftput(source, destination, hostname, logname, sync=sync)
 
     def _folder_scpget(self, source, destination, hostname, logname=None, cpipeline=None):
         """Retrieve a folder using scp."""

@@ -244,7 +244,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         return None
 
     def _std_ftput(self, source, destination, hostname=None, logname=None,
-                   cpipeline=None):
+                   cpipeline=None, sync=False):
         """On the fly packing and ftp."""
         if self.is_xlfi(source):
             if cpipeline is not None:
@@ -279,10 +279,10 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             return st
         else:
             return self.sh.ftput(source, destination, hostname=hostname,
-                                 logname=logname, cpipeline=cpipeline)
+                                 logname=logname, cpipeline=cpipeline, sync=sync)
 
     def _std_rawftput(self, source, destination, hostname=None, logname=None,
-                      cpipeline=None):
+                      cpipeline=None, sync=False):
         """Use ftserv as much as possible."""
         if self.is_xlfi(source):
             if cpipeline is not None:
@@ -291,14 +291,14 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
                 newsource = self.sh.copy2ftspool(source, fmt='lfi')
                 rc = self.sh.ftserv_put(newsource, destination,
                                         hostname=hostname, logname=logname,
-                                        specialshell=self.rawftshell)
+                                        specialshell=self.rawftshell, sync=sync)
                 self.sh.rm(newsource)  # Delete the request file
                 return rc
             else:
-                return self._std_ftput(source, destination, hostname, logname)
+                return self._std_ftput(source, destination, hostname, logname, sync=sync)
         else:
             return self.sh.rawftput(source, destination, hostname=hostname,
-                                    logname=logname, cpipeline=cpipeline)
+                                    logname=logname, cpipeline=cpipeline, sync=sync)
 
     fa_ftput = lfi_ftput = _std_ftput
     fa_rawftput = lfi_rawftput = _std_rawftput

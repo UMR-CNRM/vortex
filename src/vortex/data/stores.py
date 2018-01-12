@@ -879,6 +879,9 @@ class Finder(Store):
     def ftpput(self, local, remote, options):
         """Delegates to ``system`` the file transfer of ``local`` to ``remote``."""
         rpath = self.fullpath(remote)
+        put_opts = dict()
+        put_opts['fmt'] = options.get('fmt')
+        put_opts['sync'] = options.get('enforcesync', False)
         logger.info('ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
         rc = self.system.smartftput(
             local,
@@ -886,7 +889,7 @@ class Finder(Store):
             # ftp control
             hostname = self.hostname(),
             logname  = remote['username'],
-            fmt      = options.get('fmt'),
+            ** put_opts
         )
         return rc and self._hash_put(self.ftpput, local, remote, options)
 
@@ -1026,6 +1029,7 @@ class ArchiveStore(Store):
         rpath = self._ftpformatpath(remote)
         if put_sync:
             logger.info('ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
+            put_opts['sync'] = options.get('enforcesync', False)
             rc = self.system.smartftput(local, rpath, **put_opts)
         else:
             logger.info('delayed ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)

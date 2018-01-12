@@ -156,7 +156,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
             return True
 
     def _std_ftput(self, source, destination, hostname=None, logname=None,
-                   cpipeline=None):
+                   cpipeline=None, sync=False):
         """On the fly packing and ftp."""
         if self.is_xgrib(source):
             if cpipeline is not None:
@@ -180,10 +180,10 @@ class GRIB_Tool(addons.FtrawEnableAddon):
             return rc
         else:
             return self.sh.ftput(source, destination, hostname=hostname,
-                                 logname=logname, cpipeline=cpipeline)
+                                 logname=logname, cpipeline=cpipeline, sync=sync)
 
     def _std_rawftput(self, source, destination, hostname=None, logname=None,
-                      cpipeline=None):
+                      cpipeline=None, sync=False):
         """Use ftserv as much as possible."""
         if self.is_xgrib(source):
             if cpipeline is not None:
@@ -198,15 +198,15 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                 self.sh.readonly(request)
                 rc = self.sh.ftserv_put(request, destination,
                                         hostname=hostname, logname=logname,
-                                        specialshell=self.rawftshell)
+                                        specialshell=self.rawftshell, sync=sync)
                 self.sh.rm(request)
                 return rc
             else:
                 return self._std_ftput(source, destination,
-                                       hostname=hostname, logname=logname)
+                                       hostname=hostname, logname=logname, sync=sync)
         else:
             return self.sh.rawftput(source, destination, hostname=hostname,
-                                    logname=logname, cpipeline=cpipeline)
+                                    logname=logname, cpipeline=cpipeline, sync=sync)
 
     grib_ftput = _std_ftput
     grib_rawftput = _std_rawftput
