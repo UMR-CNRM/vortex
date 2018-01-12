@@ -146,15 +146,23 @@ class Unknown(Resource):
                 info = "Activate the unknown resource.",
                 type = bool
             ),
+            nickname = dict(
+                info = "The string that serves the purpose of Vortex's basename radical",
+                optional = True,
+                default = 'unknown'
+            ),
             clscontents = dict(
                 default = FormatAdapter,
             ),
         )
     )
 
-    def vortex_basename(self):
+    def basename_info(self):
         """Keep the Unknown resource unknown."""
-        return 'unknown'
+        bdict = dict(radical=self.nickname, )
+        if self.nativefmt not in ('auto', 'autoconfig', 'foo', 'unknown'):
+            bdict['fmt'] = self.nativefmt
+        return bdict
 
 
 # Activate the footprint's fasttrack on the resources collector
