@@ -528,7 +528,7 @@ class UGetShell(cmd.Cmd):
                             return False
                         with open(tfile, 'w') as tfilefh:
                             tfilefh.writelines(['{:s}={:s}\n'.format(k, v)
-                                                for k, v in mygenv.items() if k not in ('cycle', )])
+                                                for k, v in sorted(mygenv.items()) if k not in ('cycle', )])
                     # The source is a gget data
                     else:
                         ghost = tg.get('gco:ggetarchive', 'hendrix.meteo.fr')
