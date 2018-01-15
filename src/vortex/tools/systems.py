@@ -43,7 +43,6 @@ import StringIO
 import tarfile
 import tempfile
 import time
-import yaml
 from datetime import datetime
 
 import footprints
@@ -54,7 +53,7 @@ from vortex.gloves import Glove
 from vortex.tools.env import Environment
 from vortex.tools.net import StdFtp, AssistedSsh, LinuxNetstats
 from vortex.tools.compression import CompressionPipeline
-from bronx.syntax.decorators import nicedeco_plusdoc
+from bronx.syntax.decorators import nicedeco_plusdoc, nicedeco
 from vortex.util.structs import History
 from vortex.syntax.stdattrs import DelayedInit
 
@@ -62,6 +61,13 @@ from vortex.syntax.stdattrs import DelayedInit
 __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
+
+# Optional, non-standard packages
+try:
+    import yaml
+except ImportError:
+    logger.warning('The YAML package is unavaillable on your system...')
+    pass
 
 #: Pre-compiled regex to check a none str value
 isnonedef = re.compile(r'none', re.IGNORECASE)
@@ -81,6 +87,20 @@ _fmtshcmd_docbonus = """
         value of the **ftm** attribute), it will be executed instead of the
         present one).
 """
+
+
+class YamlUnavailableError(Exception):
+    pass
+
+
+@nicedeco
+def disabled_if_no_yaml(func_or_cls):
+    """This decorator disables the provided funciotn if yaml is not available."""
+    def error_func(*args, **kw):
+        raise YamlUnavailableError()
+    return (func_or_cls
+            if 'yaml' in sys.modules
+            else error_func)
 
 
 @nicedeco_plusdoc(_fmtshcmd_docbonus)
@@ -2098,6 +2118,7 @@ class OSExtended(System):
         """
         return self.blind_dump(json, obj, destination, **opts)
 
+    @disabled_if_no_yaml
     def yaml_dump(self, obj, destination, **opts):
         """
         Dump a YAML representation of specified **obj** in file **destination**,
@@ -2133,6 +2154,7 @@ class OSExtended(System):
         """
         return self.blind_load(source, gateway=json)
 
+    @disabled_if_no_yaml
     def yaml_load(self, source):
         """
         Load from a YAML representation stored in file **source**,

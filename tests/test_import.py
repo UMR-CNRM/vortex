@@ -14,6 +14,8 @@ import vortex
 fp.loggers.getLogger('vortex').setLevel('ERROR')
 fp.loggers.getLogger('common').setLevel('ERROR')
 
+non_standard_dep = {'yaml': ['bronx.fancies.dispatch', ], }
+
 
 class DynamicTerminal(object):
 
@@ -45,12 +47,24 @@ class utImport(TestCase):
         sh = vortex.sh()
         self.assertTrue(sh.python > '2.7')
 
+    def _test_ignore_modules(self):
+        exclude = list()
+        for dep, modlist in non_standard_dep.items():
+            try:
+                importlib.import_module(dep)
+            except ImportError:
+                print("!!! {} is unavailable on this system. Skipping the import test for {!s}".
+                      format(dep, modlist))
+                exclude.extend(modlist)
+        return exclude
+
     def test_importModules(self):
         sh = vortex.sh()
+        exclude = self._test_ignore_modules()
         # Try to import all modules
         modules = sh.vortex_modules()
-        with DynamicTerminal("> importing module ", len(modules)) as nterm:
-            for modname in modules:
+        with DynamicTerminal("> importing module ", len(modules) - len(exclude)) as nterm:
+            for modname in [m for m in modules if m not in exclude]:
                 nterm.increment(modname)
                 self.assertTrue(importlib.import_module(modname))
         # Then dump all the footprints
