@@ -29,6 +29,8 @@ import logging
 import random
 import re
 import socket
+from datetime import datetime
+
 from StringIO import StringIO
 from logging.handlers import SysLogHandler
 
@@ -825,9 +827,11 @@ class DayfileReportService(FileReportService):
         defaults to spooldir for these parts of centralized log files.
         """
         name = ''.join([
-            str(date.now().epoch),
+            datetime.now().strftime('%Y%m%d%H%M%S.%f'),
             '_',
-            self.env.get('NQSID', ''),
+            self.env.get('SLURM_JOBID', ''),
+            str(self.sh.getpid()),
+            '_',
             '1' if 'DEBUT' in self.mode else '0',
             str(random.random()),
         ])
