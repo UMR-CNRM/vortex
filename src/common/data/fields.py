@@ -21,7 +21,7 @@ class RawFields(NoDateResource):
                     values = ['rawfields']
                 ),
                 origin = dict(
-                    values = ['bdm', 'nesdis', 'ostia', 'psy4','bdpe']
+                    values = ['bdm', 'nesdis', 'ostia', 'psy4','bdpe', 'safosi']
                 ),
                 fields = dict(
                     values = ['sst', 'seaice', 'ocean']
