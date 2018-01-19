@@ -49,6 +49,11 @@ The `rangex` utility function can be specified directly on the command-line.
 For example, --term='rangex(0-6-1)' on the command-line, will result in
 term = [0, 1, 2, 3, 4, 5, 6] in the ``vortex.toolbox.rload``` call.
 
+The `daterangex` utility is also available, e.g. this would generate the
+dates from 2017 Jan. 1st, 18h (included) to 2017 Jan. 3rd, 7h (excluded)
+by step of 6h:
+  --date=daterangex('2017010118','2017010307','PT6H')
+
 Environment variables:
 
 Some of the defaults can be changed bythe mean of environment varialbes:
@@ -73,6 +78,7 @@ sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 import footprints as fp
 from bronx.system import interrupt
+from bronx.stdtypes import date
 import vortex
 
 # Main script logger
@@ -126,6 +132,9 @@ def argvalue_rewrite(value):
     if value.startswith('rangex'):
         value = re.split('\s*,\s*', value[7:-1])
         return fp.util.rangex(* value)
+    elif value.startswith('daterangex'):
+        value = re.split('\s*,\s*', value[11:-1])
+        return date.daterangex(* value)
     else:
         return value
 
