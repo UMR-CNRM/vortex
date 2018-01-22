@@ -565,6 +565,7 @@ class SstGrb2Ascii(BlindRun):
             lat = self.nlat,
         )
 
+
 class IceNetCDF2Ascii(BlindRun):
     """Transform ice NetCDF files from the BDPE into ascii files"""
     _footprint = dict(
