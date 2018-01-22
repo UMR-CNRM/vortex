@@ -264,6 +264,34 @@ class IceGrb2Ascii(BlackBox):
     ]
 
 
+class IceNCDF2Ascii(BlackBox):
+    """Transform sea ice NetCDF files into obsoul files."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Ice_netcdf executable to convert sea ice NetCDF files into obsoul files',
+            attr = dict(
+                gvar = dict(
+                    default = 'master_ice_netcdf'
+                ),
+                kind = dict(
+                    values = ['ice_netcdf']
+                )
+            )
+        )
+    ]
+
+    def command_line(self, file_in_hn, file_in_hs, param, file_out):
+        """Build the command line to launch the executable."""
+        return '{file_in_hn} {file_in_hs} {param} {file_out}'.format(
+            file_in_hn = file_in_hn,
+            file_in_hs = file_in_hs,
+            param = param,
+            file_out = file_out
+        )
+
+
 class IOAssign(BlackBox):
     """A tool for ODB pools mapping."""
 
