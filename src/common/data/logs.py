@@ -213,3 +213,45 @@ class Beacon(FlowResource):
             src     = [self.model],
             fmt     = self.nativefmt
         )
+
+
+class TaskInfo(FlowResource):
+    """Task informations."""
+    _footprint = [
+        dict(
+            info = 'Task informations',
+            attr = dict(
+                task = dict(
+                    optional = True,
+                    default  = 'anonymous'
+                ),
+                kind = dict(
+                    values   = ['taskinfo']
+                ),
+                scope = dict(
+                    optional = True,
+                    default  = 'void',
+                ),
+                clscontents = dict(
+                    default = JsonDictContent,
+                ),
+                nativefmt = dict(
+                    default = 'json',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'taskinfo'
+
+    def basename_info(self):
+        """Generic information, radical = ``taskinfo``."""
+        return dict(
+            radical = self.realkind,
+            src     = self.task.split('/').pop(),
+            compute = self.scope,
+            fmt     = self.nativefmt
+        )
+

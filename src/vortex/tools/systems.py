@@ -49,6 +49,7 @@ import footprints
 from bronx.stdtypes import date
 from bronx.system.interrupt import SignalInterruptHandler, SignalInterruptError
 from bronx.system.cpus import LinuxCpusInfo
+from bronx.system.memory import LinuxMemInfo
 from vortex.gloves import Glove
 from vortex.tools.env import Environment
 from vortex.tools.net import StdFtp, AssistedSsh, LinuxNetstats
@@ -604,6 +605,7 @@ class OSExtended(System):
         super(OSExtended, self).__init__(*args, **kw)
         # Initialise possibly missing objects
         self.__dict__['_cpusinfo'] = None
+        self.__dict__['_memoryinfo'] = None
         self.__dict__['_netstatsinfo'] = None
         # Initialise the signal handler object
         self._signal_intercept_init()
@@ -1117,6 +1119,17 @@ class OSExtended(System):
             list: Starting command prefix, dict: Environment update)
         """
         return (False, list(), dict())
+
+    @property
+    def memory_info(self):
+        """Return an object of a subclass of  :class:`bronx.system.memory.MemInfo`.
+
+        Such objects are designed to get informations on the platform's RAM.
+
+        :note: *None* might be returned on some platforms (if meminfo is not
+            implemented)
+        """
+        return self._memoryinfo
 
     @property
     def netstatsinfo(self):
@@ -2324,6 +2337,7 @@ class Linux(OSExtended):
         self._psopts = kw.pop('psopts', ['-w', '-f', '-a'])
         super(Linux, self).__init__(*args, **kw)
         self.__dict__['_cpusinfo'] = LinuxCpusInfo()
+        self.__dict__['_memoryinfo'] = LinuxMemInfo()
         self.__dict__['_netstatsinfo'] = LinuxNetstats()
 
     @property
