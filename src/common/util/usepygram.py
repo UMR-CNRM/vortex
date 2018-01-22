@@ -265,6 +265,7 @@ def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
     :param field_prefix: prefix to add to field name in FA
     :param pack: packing for fields to write
     """
+    dm = epygram.geometries.domain_making
 
     def sfxlfi2fa_field(fld, geom):
         fldout = fpx.fields.almost_clone(fld,
@@ -283,8 +284,7 @@ def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
         with epy_env_prepare(t):
             pgdin = fpx.dataformats.almost_clone(rh_pgdlfi.contents.data,
                                                  true3d=True)
-
-            geom, spgeom = epygram.geometries.domain_making.build_geom_from_e923nam(nam923blocks)
+            geom, spgeom = dm.build.build_geom_from_e923nam(nam923blocks) # TODO: Arpege case
             validity = epygram.base.FieldValidity(date_time=Date(1994, 5, 31, 0),  # Date of birth of ALADIN
                                                   term=Period(0))
             pgdout = epygram.formats.resource(filename=outname,
@@ -305,7 +305,7 @@ def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
 @disabled_if_no_epygram('1.0.0')
 def empty_fa(t, rh, empty_name):
     """
-    Create an empty FA file with fielname **empty_name**,
+    Create an empty FA file with fieldname **empty_name**,
     creating header from given existing FA resource handler **rh**.
 
     :return: the empty epygram resource, closed
@@ -326,3 +326,20 @@ def empty_fa(t, rh, empty_name):
     else:
         raise IOError('Try to copy header from a missing resource <%s>',
                       rh.container.localpath())
+
+
+@disabled_if_no_epygram('1.0.0')
+def geopotentiel2zs(t, rh, rhsource, pack=None):
+    """Copy surface geopotential from clim to zs in PGD."""
+    from bronx.meteo.constants import g0
+    if rh.container.exists():
+        with epy_env_prepare(t):
+            orog = rhsource.contents.data.readfield('SURFGEOPOTENTIEL')
+            orog.operation('/', g0)
+            orog.fid['FA'] = 'SFX.ZS'
+            rh.contents.data.close()
+            rh.contents.data.open(openmode='a')
+            rh.contents.data.writefield(orog, compression=pack)
+    else:
+        logger.warning('Try to copy field on a missing resource <%s>',
+                       rh.container.localpath())

@@ -534,6 +534,6 @@ class GeoBlocks(StaticGeoResource):
         return dict(
             radical = self.realkind,
             geo = self._geo2basename_info(),
-            src = [self.model, self.target],
+            src = self.target,
             fmt = self.nativefmt
         )

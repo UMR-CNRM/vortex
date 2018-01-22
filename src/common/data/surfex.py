@@ -38,7 +38,7 @@ class PGDRaw(StaticGeoResource):
         """Generic information, radical = ``pgd``."""
         return dict(
             fmt     = self.nativefmt,
-            geo     = [ self.geometry.area, self.geometry.rnice ],
+            geo     = self._geo2basename_info(),
             radical = self.realkind,
         )
 
