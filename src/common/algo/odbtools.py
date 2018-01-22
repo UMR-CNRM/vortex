@@ -491,6 +491,11 @@ class Raw2ODBparallel(TaylorOdbProcess):
                         sh.softlink(sh.path.join(workdir, inpt.rh.container.localpath()),
                                     inpt.rh.container.localpath())
 
+                if cycle < 'cy42_op1':
+                    # Special stuff for cy < 42
+                    logger.info('creating softlink for ficdate.')
+                    sh.softlink(sh.path.join(workdir, 'ficdate'), 'ficdate')
+
                 odb_input_size = 0
                 for obsname, obsinfo in thispack.obsfile.items():
                     logger.info('creating softlink: %s -> %s', obsname,
