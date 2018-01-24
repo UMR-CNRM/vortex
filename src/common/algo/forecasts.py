@@ -346,7 +346,8 @@ class FullPosGeo(FullPos):
             startingclim = r.resource.geometry
 
             def check_month_and_inputgeo(actualrh):
-                return bool(actualrh.resource.month == actualmonth and
+                return bool(hasattr(actualrh.resource, 'month') and
+                            actualrh.resource.month == actualmonth and
                             actualrh.resource.geometry.tag == startingclim.tag)
 
             if do_fix_input_clim:
@@ -354,14 +355,15 @@ class FullPosGeo(FullPos):
                 logger.info("Linking in the Initial clim file (Const.Clim) " +
                             "for month %s and geometry == %s.", actualmonth, startingclim.tag)
                 self.setlink(
-                    initrole = (re.compile('Clim$'), re.compile('Clim$')),
+                    initrole = (re.compile('^Clim'), re.compile('Clim$')),
                     initkind = 'clim_model',
                     initname = 'Const.Clim',
                     inittest = check_month_and_inputgeo
                 )
 
             def check_month_and_othergeo(actualrh):
-                return bool(actualrh.resource.month == actualmonth and
+                return bool(hasattr(actualrh.resource, 'month') and
+                            actualrh.resource.month == actualmonth and
                             actualrh.resource.geometry.tag != startingclim.tag)
 
             if do_fix_output_clim:
@@ -369,7 +371,7 @@ class FullPosGeo(FullPos):
                 logger.info("Linking in the Target clim file (const.clim.000) " +
                             "for month %s and geometry != %s.", actualmonth, startingclim.tag)
                 self.setlink(
-                    initrole = (re.compile('Clim$'), re.compile('Clim$')),
+                    initrole = (re.compile('^Clim'), re.compile('Clim$')),
                     initkind = 'clim_model',
                     initname = 'const.clim.000',
                     inittest = check_month_and_othergeo
