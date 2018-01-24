@@ -1451,11 +1451,7 @@ class CacheStore(Store):
 
     def incachecheck(self, remote, options):
         """Returns a stat-like object if the ``remote`` exists in the current cache."""
-        try:
-            st = self.system.stat(self.incachelocate(remote, options))
-        except OSError:
-            st = None
-        return st
+        return self.cache.check(remote, options)
 
     def incachelocate(self, remote, options):
         """Agregates cache to remote subpath."""

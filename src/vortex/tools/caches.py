@@ -19,70 +19,59 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 
-class Cache(footprints.FootprintBase):
-    """Root class for any :class:Cache subclasses."""
+class Storage(footprints.FootprintBase):
+    """Root class for any Storage class, ex: Cache"""
 
-    _abstract  = True
-    _collector = ('cache',)
+    _abstract = True,
     _footprint = dict(
-        info = 'Default cache description',
+        info = 'Default storage place description',
         attr = dict(
-            config = dict(
-                type     = GenericConfigParser,
-                optional = True,
-                default  = None,
+            config=dict(
+                type=GenericConfigParser,
+                optional=True,
+                default=None,
             ),
-            inifile = dict(
-                optional = True,
-                default  = '@cache-[storage].ini',
+            inifile=dict(
+                optional=True,
+                default='@storage-[storage].ini',
             ),
-            iniauto = dict(
-                type     = bool,
-                optional = True,
-                default  = True,
+            iniauto=dict(
+                type=bool,
+                optional=True,
+                default=True,
             ),
-            kind = dict(
-                values   = ['std'],
+            kind=dict(
+                values=['generic'],
             ),
-            rootdir = dict(
-                optional = True,
-                default  = '/tmp',
+            rootdir=dict(
+                optional=True,
+                default='default',
             ),
-            headdir = dict(
-                optional = True,
-                default  = 'cache',
+            headdir=dict(
+                optional=True,
+                default='default',
             ),
-            storage = dict(
-                optional = True,
-                default  = 'localhost',
+            storage=dict(
+                optional=True,
+                default='default',
             ),
-            record = dict(
-                type     = bool,
-                optional = True,
-                default  = False,
-                access   = 'rwx',
+            record=dict(
+                type=bool,
+                optional=True,
+                default=False,
+                access='rwx',
             ),
-            rtouch = dict(
-                type     = bool,
-                optional = True,
-                default  = False,
-            ),
-            rtouchskip = dict(
-                type     = int,
-                optional = True,
-                default  = 0,
-            ),
-            readonly = dict(
-                type     = bool,
-                optional = True,
-                default  = False,
+            readonly=dict(
+                type=bool,
+                optional=True,
+                default=False,
             ),
         )
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Abstract cache init %s', self.__class__)
-        super(Cache, self).__init__(*args, **kw)
+        logger.debug('Abstract storage init %s', self.__class__)
+        super(Storage, self).__init__(*args, **kw)
         self._actual_config = self.config
         if self._actual_config is None:
             self._actual_config = GenericConfigParser(inifile=self.inifile, mkforce=self.iniauto)
@@ -90,7 +79,7 @@ class Cache(footprints.FootprintBase):
 
     @property
     def realkind(self):
-        return 'cache'
+        return 'storage'
 
     @property
     def sh(self):
@@ -124,17 +113,39 @@ class Cache(footprints.FootprintBase):
 
     @property
     def entry(self):
-        """Tries to figure out what could be the actual entry point for cache space."""
+        """Tries to figure out what could be the actual entry point for storage space."""
         return self.sh.path.join(self.actual_rootdir, self.kind, self.actual_headdir)
 
     def fullpath(self, subpath):
-        """Actual full path in the cache."""
+        """Actual full path in the storage place."""
         return self.sh.path.join(self.entry, subpath.lstrip('/'))
 
     def addrecord(self, action, item, **infos):
-        """Push a new record to the cache log."""
+        """Push a new record to the storage place log."""
         if self.actual_record:
             self.history.append(action, item, infos)
+
+    def flush(self, dumpfile=None):
+        """Flush actual history to the specified ``dumpfile`` if record is on."""
+        if dumpfile is None:
+            logfile = '.'.join((
+                'HISTORY',
+                datetime.now().strftime('%Y%m%d%H%M%S.%f'),
+                'P{0:06d}'.format(self.sh.getpid()),
+                self.sh.getlogname()
+            ))
+            dumpfile = self.sh.path.join(self.entry, '.history', logfile)
+        if self.actual_record:
+            self.sh.pickle_dump(self.history, dumpfile)
+
+    def catalog(self):
+        """List all files present in this storage place (for cache mainly).
+
+        NB: It might be quite slow...
+        """
+        entry = self.sh.path.expanduser(self.entry)
+        files = self.sh.ffind(entry)
+        return [f[len(entry):] for f in files]
 
     def _recursive_touch(self, rc, item):
         """Make recursive touches on parent directories.
@@ -148,8 +159,86 @@ class Cache(footprints.FootprintBase):
                 for index in range(len(items), self.rtouchskip, -1):
                     self.sh.touch(self.fullpath(self.sh.path.join(*items[:index])))
 
-    def insert(self, item, local, intent='in', fmt='foo', info=None):
+    def insert(self, item, local, **kwargs):
+        """Insert an item in the current storage place."""
+        pass
+
+    def retrieve(self, item, local, **kwargs):
+        """Retrieve an item from the current storage place."""
+        pass
+
+    def delete(self, item, **kwargs):
+        """Delete an item from the current storage place."""
+        pass
+
+    def check(self, item, **kwargs):
+        """Check/Stat an item from the current storage place."""
+        pass
+
+
+class Cache(Storage):
+    """Root class for any :class:Cache subclasses."""
+
+    _abstract  = True
+    _collector = ('cache',)
+    _footprint = dict(
+        info = 'Default cache description',
+        attr = dict(
+            inifile = dict(
+                optional = True,
+                default  = '@cache-[storage].ini',
+            ),
+            kind = dict(
+                values   = ['std'],
+            ),
+            rootdir = dict(
+                optional = True,
+                default  = '/tmp',
+            ),
+            headdir = dict(
+                optional = True,
+                default  = 'cache',
+            ),
+            storage = dict(
+                optional = True,
+                default  = 'localhost',
+            ),
+            rtouch = dict(
+                type     = bool,
+                optional = True,
+                default  = False,
+            ),
+            rtouchskip = dict(
+                type     = int,
+                optional = True,
+                default  = 0,
+            ),
+        )
+    )
+
+    def check(self, item, **kwargs):
+        """Check/Stat an item from the current cache."""
+        try:
+            st = self.system.stat(self.incachelocate(item, kwargs))
+        except OSError:
+            st = None
+        return st
+
+    def __init__(self, *args, **kwargs):
+        logger.debug('Abstract cache init %s', self.__class__)
+        super(Cache, self).__init__(*args, **kwargs)
+
+    @property
+    def realkind(self):
+        return 'cache'
+
+    def insert(self, item, local, **kwargs):
         """Insert an item in the current cache."""
+        # Get the relevant options
+        intent = kwargs.get("intent", "in")
+        fmt = kwargs.get("fmt", "foo")
+        info = kwargs.get("info", None)
+        # Insert the element
         if self.readonly:
             raise IOError("This Cache is readonly.")
         rc = self.sh.cp(local, self.fullpath(item), intent=intent, fmt=fmt)
@@ -157,9 +246,16 @@ class Cache(footprints.FootprintBase):
         self.addrecord('INSERT', item, status=rc, info=info, fmt=fmt, intent=intent)
         return rc
 
-    def retrieve(self, item, local, intent='in', fmt='foo', info=None, silent=False,
-                 dirextract=False, tarextract=False, uniquelevel_ignore=True):
+    def retrieve(self, item, local, **kwargs):
         """Retrieve an item from the current cache."""
+        # Get the relevant options
+        intent = kwargs.get("intent", "in")
+        fmt = kwargs.get("fmt", "foo")
+        info = kwargs.get("info", None)
+        silent = kwargs.get("silent", False)
+        dirextract = kwargs.get("dirextract", False)
+        tarextract = kwargs.get("tarextract", False)
+        uniquelevel_ignore = kwargs.get("uniquelevel_ignore", True)
         source = self.fullpath(item)
         # If auto_dirextract, copy recursively each file contained in source
         if dirextract and self.sh.path.isdir(source) and self.sh.is_tarname(local):
@@ -186,35 +282,17 @@ class Cache(footprints.FootprintBase):
         self.addrecord('RETRIEVE', item, status=rc, info=info, fmt=fmt, intent=intent)
         return rc
 
-    def delete(self, item, fmt='foo', info=None):
+    def delete(self, item, **kwargs):
         """Delete an item from the current cache."""
+        # Get the relevant options
+        fmt = kwargs.get("fmt", "foo")
+        info = kwargs.get("info", None)
+        # Delete the element
         if self.readonly:
             raise IOError("This Cache is readonly.")
         rc = self.sh.remove(self.fullpath(item), fmt=fmt)
         self.addrecord('DELETE', item, status=rc, info=info, fmt=fmt)
         return rc
-
-    def catalog(self):
-        """List all files present in this cache.
-
-        NB: It might be quite slow...
-        """
-        entry = self.sh.path.expanduser(self.entry)
-        files = self.sh.ffind(entry)
-        return [f[len(entry):] for f in files]
-
-    def flush(self, dumpfile=None):
-        """Flush actual history to the specified ``dumpfile`` if record is on."""
-        if dumpfile is None:
-            logfile = '.'.join((
-                'HISTORY',
-                datetime.now().strftime('%Y%m%d%H%M%S.%f'),
-                'P{0:06d}'.format(self.sh.getpid()),
-                self.sh.getlogname()
-            ))
-            dumpfile = self.sh.path.join(self.entry, '.history', logfile)
-        if self.actual_record:
-            self.sh.pickle_dump(self.history, dumpfile)
 
 
 class MtoolCache(Cache):
@@ -348,3 +426,179 @@ class HackerCache(Cache):
         else:
             sweethome = self.actual_rootdir
         return sh.path.join(sweethome, self.actual_headdir)
+
+
+class Archive(Storage):
+    """Root class for any :class:Archive subclasses."""
+
+    _abstract  = True
+    _collector = ('archive',)
+    _footprint = dict(
+        info = 'Default archive description',
+        attr = dict(
+            inifile = dict(
+                optional = True,
+                default  = '@archive-[storage].ini',
+            ),
+            kind = dict(
+                values   = ['std'],
+            ),
+            rootdir = dict(
+                optional = True,
+                default  = '/tmp',
+            ),
+            headdir = dict(
+                optional = True,
+                default  = 'sto',
+            ),
+            storage = dict(
+                optional = True,
+                default  = 'localhost',
+            ),
+            scheme = dict(
+                optional = True,
+                default = "file",
+                values = ['ftp', 'ftserv', 'scp', 'rcp', 'ectrans', 'ecfs', 'file']
+            )
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('Abstract archive init %s', self.__class__)
+        super(Archive, self).__init__(*args, **kw)
+
+    @property
+    def realkind(self):
+        return 'archive'
+
+    def check(self, item, **kwargs):
+        """Check/Stat an item from the current archive."""
+        if isinstance(self.scheme, ['ftp', 'ftserv']):
+            pass
+        elif isinstance(self.scheme, ['ectrans']):
+            pass
+        elif isinstance(self.scheme, ['ecfs']):
+            pass
+        elif isinstance(self.scheme, ['rcp']):
+            pass
+        elif isinstance(self.scheme, ['scp']):
+            pass
+        elif isinstance(self.scheme, ['file']):
+            pass
+        return False
+
+    def insert(self, item, local, **kwargs):
+        """Insert an item in the current archive."""
+        pass
+
+    def retrieve(self, item, local, **kwargs):
+        """Retrieve an item from the current archive."""
+        pass
+
+    def delete(self, item, **kwargs):
+        """Delete an item from the current archive."""
+        pass
+
+
+class VortexArchive(Archive):
+    """Archive items for the Vortex like applications"""
+
+    _footprint = dict(
+        info = 'Vortex like archive',
+        attr = dict(
+            kind = dict(
+                values   = ['vortex'],
+            ),
+            rootdir = dict(
+                optional = True,
+                default  = 'auto'
+            ),
+            headdir = dict(
+                optional = True,
+                default  = 'vortex',
+                outcast = ['xp',],
+            ),
+            storage = dict(
+                optional = True,
+                default = "hendrix.meteo.fr",
+            ),
+        )
+    )
+
+    @property
+    def entry(self):
+        """Tries to figure out what could be the actual entry point for archive space."""
+        if self.rootdir == 'auto':
+            pass
+        else:
+            archive = self.actual_rootdir
+        return self.sh.path.join(archive, self.actual_headdir)
+
+
+class OliveArchive(Archive):
+    """Archive items for the Olive like applications"""
+
+    _footprint = dict(
+        info = 'Olive like archive',
+        attr = dict(
+            kind = dict(
+                values   = ['olive'],
+            ),
+            rootdir = dict(
+                optional = True,
+                default  = 'auto'
+            ),
+            headdir = dict(
+                optional = True,
+                default  = 'xp',
+                outcast = ['olive',],
+            ),
+            storage = dict(
+                optional = True,
+                default = "hendrix.meteo.fr",
+            ),
+        )
+    )
+
+    @property
+    def entry(self):
+        """Tries to figure out what could be the actual entry point for archive space."""
+        if self.rootdir == 'auto':
+            pass
+        else:
+            archive = self.actual_rootdir
+        return self.sh.path.join(archive, self.actual_headdir)
+
+
+class OpArchive(Archive):
+    """Archive items for the old operational applications in ksh"""
+
+    _footprint = dict(
+        info = 'Old operational like archive',
+        attr = dict(
+            kind = dict(
+                values   = ['op-ksh'],
+            ),
+            rootdir = dict(
+                optional = True,
+                default  = 'auto'
+            ),
+            headdir = dict(
+                optional = True,
+                default  = None,
+            ),
+            storage = dict(
+                optional = True,
+                default = "hendrix.meteo.fr",
+            ),
+        )
+    )
+
+    @property
+    def entry(self):
+        """Tries to figure out what could be the actual entry point for archive space."""
+        if self.rootdir == 'auto':
+            pass
+        else:
+            archive = self.actual_rootdir
+        return self.sh.path.join(archive, self.actual_headdir)
