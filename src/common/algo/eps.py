@@ -501,6 +501,9 @@ class Clustering(BlindRun, grib.GribApiComponent):
         # if not, generate face outputs
         else:
             logger.info("Generating fake outputs with %d members", self.nbmembers)
+            with open('ASCII_CLUST', 'w') as fdcl:
+                fdcl.write("\n".join(['{0:3d} {1:3d} {0:3d}'.format(i, 1)
+                                      for i in range(1, self.nbmembers + 1)]))
             with open('ASCII_RMCLUST', 'w') as fdrm:
                 fdrm.write("\n".join([str(i) for i in range(1, self.nbmembers + 1)]))
             with open('ASCII_POPCLUST', 'w') as fdpop:
@@ -514,10 +517,19 @@ class Clustering(BlindRun, grib.GribApiComponent):
         if avail_json:
             logger.info("Creating a JSON output...")
             # Read the clustering information
-            with open('ASCII_RMCLUST') as fdrm:
-                cluster_members = [int(m) for m in fdrm.readlines()]
-            with open('ASCII_POPCLUST') as fdpop:
-                cluster_sizes = [int(s) for s in fdpop.readlines()]
+            if self.system.path.exists('ASCII_CLUST'):
+                # New format for clustering outputs
+                with open('ASCII_CLUST') as fdcl:
+                    cluster_members = list()
+                    cluster_sizes = list()
+                    for l in [l.split() for l in fdcl.readlines()]:
+                        cluster_members.append(int(l[0]))
+                        cluster_sizes.append(int(l[1]))
+            else:
+                with open('ASCII_RMCLUST') as fdrm:
+                    cluster_members = [int(m) for m in fdrm.readlines()]
+                with open('ASCII_POPCLUST') as fdpop:
+                    cluster_sizes = [int(s) for s in fdpop.readlines()]
             # Update the population JSON
             mycontent = copy.deepcopy(avail_json[0].rh.contents)
             mycontent.data['resource_kind'] = 'mbsample'

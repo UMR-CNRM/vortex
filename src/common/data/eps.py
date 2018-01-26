@@ -378,7 +378,7 @@ class GeneralCluster(FlowResource):
                 remap    = dict(ascii = 'txt'),
             ),
             filling = dict(
-                values   = ['population', 'pop', 'members'],
+                values   = ['population', 'pop', 'members', 'full'],
                 remap    = dict(population = 'pop'),
                 default  = '',
             ),
