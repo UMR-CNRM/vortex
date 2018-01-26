@@ -68,6 +68,7 @@ class Addon(footprints.FootprintBase):
         super(Addon, self).__init__(*args, **kw)
         self.sh.extend(self)
         self._context_cache = defaultdict(dict)
+        self._cmd_xperms_cache = set()
         if self.env is None:
             self.env = Environment(active=False, clear=True)
         clsenv = self.__class__.__dict__
@@ -142,6 +143,11 @@ class Addon(footprints.FootprintBase):
         # Is there a need for an interpreter ?
         if 'interpreter' in kw:
             cmd.insert(0, kw.pop('interpreter'))
+        else:
+            # The first element of the command line needs to be executable
+            if cmd[0] not in self._cmd_xperms_cache:
+                self._cmd_xperms_cache.add(cmd[0])
+                self.sh.xperm(cmd[0], force=True)
 
         # Overwrite global module env values with specific ones
         with self.sh.env.clone() as localenv:

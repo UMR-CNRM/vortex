@@ -131,14 +131,26 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         )
     )
 
+    def __init__(self, *args, **kw):
+        """LFI tools initialisation."""
+        super(LFI_Tool_Raw, self).__init__(*args, **kw)
+        self._lfitools_path = None
+
+    @property
+    def lfitools_path(self):
+        if self._lfitools_path is None:
+            self._lfitools_path = self.actual_path + '/' + self.actual_cmd
+            self.sh.xperm(self._lfitools_path, force=True)
+        return self._lfitools_path
+
     def _spawn(self, cmd, **kw):
         """Tube to set LFITOOLS env variable."""
-        self.env.LFITOOLS = self.actual_path + '/' + self.actual_cmd
+        self.env.LFITOOLS = self.lfitools_path
         return super(LFI_Tool_Raw, self)._spawn(cmd, **kw)
 
     def _spawn_wrap(self, func, cmd, **kw):
         """Tube to set LFITOOLS env variable."""
-        self.env.LFITOOLS = self.actual_path + '/' + self.actual_cmd
+        self.env.LFITOOLS = self.lfitools_path
         return super(LFI_Tool_Raw, self)._spawn_wrap(['lfi_' + func, ] + cmd, **kw)
 
     def is_xlfi(self, source):
