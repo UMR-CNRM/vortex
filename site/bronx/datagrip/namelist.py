@@ -727,15 +727,15 @@ class NamelistBlock(object):
         self.addmacro(macro, value)
         self._declared_subs.add(macro)
 
-    def _possible_macroname(self, item):
+    def possible_macroname(self, item):
         """Find wether *item* is a macro or not."""
         if item in self._declared_subs:
             return item
         elif isinstance(item, six.string_types) and self._RE_FREEMACRO.match(item):
             itemized = self._RE_FREEMACRO.sub(r'\1', item)
-            if itemized in self._subs:
-                return itemized
-        return None
+            return itemized
+        else:
+            return None
 
     def nice(self, item, literal=None):
         """Nice encoded value of the item, possibly substitute with macros."""
@@ -754,9 +754,9 @@ class NamelistBlock(object):
                 itemli = itemli[1:]
         else:
             itemli = item
-        macroname = self._possible_macroname(itemli)
+        macroname = self.possible_macroname(itemli)
         if macroname is not None:
-            if self._subs[macroname] is None:
+            if self._subs.get(macroname, None) is None:
                 return item
             else:
                 return literal.encode(self._subs[macroname])
