@@ -157,6 +157,7 @@ class GridPointFullPos(GridPoint):
             t = 0
 
         name = None
+
         if self.model == 'mocage':
             if self.origin == 'hst':
                 name = 'HM' + self.geometry.area + '+' + self.term.fmthour
@@ -184,9 +185,13 @@ class GridPointFullPos(GridPoint):
 
         name = None
         if self.origin == 'hst':
-            name = 'HM' + self.geometry.area + '+' + deltadate.ymdh
+            if re.match('ifs', self.model):
+                name = 'PFFPOS' + self.geometry.area + '+' + self.term.fmthour
+            else :
+                name = 'HM' + self.geometry.area + '+' + deltadate.ymdh
         elif self.origin == 'interp':
             name = 'SM' + self.geometry.area + '+' + deltadate.ymd
+
 
         if name is None:
             raise ValueError('Could not build a proper archive name: {!s}'.format(self))
@@ -200,7 +205,7 @@ class GridPointExport(GridPoint):
         info = 'GridPoint fields as exported for dissemination',
         attr = dict(
             nativefmt = dict(
-                values  = ['grib'],
+                values  = ['grib','grib2','netcdf'],
                 default = 'grib',
             ),
         )
@@ -223,6 +228,10 @@ class GridPointExport(GridPoint):
             name = 'GRID' + self.geometry.area + 'r' + str(self.date.hour) + '_' + self.term.fmthour
         elif re.match('arp|hycom|surcotes', self.model):
             name = '(gribfix:igakey)'
+        elif re.match('ifs', self.model):
+            deltastr = 'PT' + str(self.term.hour) + 'H'
+            deltadate = self.date + deltastr
+            name = 'MET' + deltadate.ymd + '.' +self.geometry.area  + '.grb'
 
         if name is None:
             raise ValueError('Could not build a proper archive name: {!s}'.format(self))

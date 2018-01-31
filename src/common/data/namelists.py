@@ -25,7 +25,7 @@ KNOWN_NAMELIST_MACROS = set(['NPROC', 'NBPROC', 'NBPROC_IO', 'NCPROC', 'NDPROC',
                              'TIMESTEP', 'FCSTOP', 'NMODVAL', 'NBE', 'SEED',
                              'MEMBER', 'NUMOD', 'OUTPUTID', 'NRESX', 'PERTURB',
                              'JOUR', 'RES', 'LLADAJ', 'LLADMON', 'LLFLAG',
-                             'LLARO', 'LLVRP', 'LLCAN'])
+                             'LLARO', 'LLVRP', 'LLCAN', ])
 
 
 class NamelistContentError(ValueError):

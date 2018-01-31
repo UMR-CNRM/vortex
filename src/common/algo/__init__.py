@@ -9,7 +9,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 # Recursive inclusion of packages with potential FootprintBase classes
 from . import forecasts, coupling, mpitools, odbtools, stdpost, assim, eps, \
-    eda, request, monitoring, clim
+    eda, request, monitoring, clim, mocage
+
 
 #: No automatic export
 __all__ = []

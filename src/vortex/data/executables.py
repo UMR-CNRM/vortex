@@ -54,6 +54,10 @@ class Executable(Resource):
         )
     )
 
+    def stdin_text(self, **opts):
+        """Abstract method."""
+        return None
+
 
 class Script(Executable):
     """Basic interpreted executable associated to a specific language."""

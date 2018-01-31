@@ -9,6 +9,7 @@ import collections
 import sys
 import traceback
 import shlex
+import tempfile
 import multiprocessing
 
 from bronx.stdtypes import date
@@ -441,7 +442,7 @@ class AlgoComponent(footprints.FootprintBase):
         """Last chance to say something before execution."""
         pass
 
-    def spawn(self, args, opts):
+    def spawn(self, args, opts, stdin=None):
         """
         Spawn in the current system the command as defined in raw ``args``.
 
@@ -468,7 +469,7 @@ class AlgoComponent(footprints.FootprintBase):
         self.spawn_hook()
         self.target.spawn_hook(sh)
         sh.subtitle('{0:s} : start execution'.format(self.realkind))
-        sh.spawn(args, output=False, fatal=opts.get('fatal', True))
+        sh.spawn(args, output=False, stdin=stdin, fatal=opts.get('fatal', True))
 
         # On-the-fly coprocessing cleaning
         if p_io:
@@ -482,6 +483,22 @@ class AlgoComponent(footprints.FootprintBase):
         """Split the shell command line of the resource to be run."""
         opts = self.spawn_command_options()
         return shlex.split(rh.resource.command_line(**opts))
+
+    def spawn_stdin_options(self):
+        """Prepare options for the resource's stdin generator."""
+        return dict()
+
+    def spawn_stdin(self, rh):
+        """Generate the stdin File-Like object of the resource to be run."""
+        opts = self.spawn_stdin_options()
+        stdin_text = rh.resource.stdin_text(**opts)
+        if stdin_text is not None:
+            tmpfh = tempfile.TemporaryFile(dir=self.system.pwd())
+            tmpfh.write(stdin_text)
+            tmpfh.seek(0)
+            return tmpfh
+        else:
+            return None
 
     def execute_single(self, rh, opts):
         """Abstract method.
@@ -786,8 +803,12 @@ class Expresso(ExecutableAlgoComponent):
         args = [self.interpreter, ]
         args.extend(self._interpreter_args_fix(rh, opts))
         args.extend(self.spawn_command_line(rh))
-        logger.debug('Run script %s', args)
-        self.spawn(args, opts)
+        logger.info('Run script %s', args)
+        rh_stdin = self.spawn_stdin(rh)
+        if rh_stdin is not None:
+            logger.info('Script stdin:\n%s', rh_stdin.read())
+            rh_stdin.seek(0)
+        self.spawn(args, opts, stdin=rh_stdin)
 
 
 class ParaExpresso(TaylorRun):
@@ -853,8 +874,13 @@ class BlindRun(xExecutableAlgoComponent):
 
         args = [self.absexcutable(rh.container.localpath())]
         args.extend(self.spawn_command_line(rh))
-        logger.debug('BlindRun executable resource %s', args)
-        self.spawn(args, opts)
+        logger.info('BlindRun executable resource %s', args)
+        rh_stdin = self.spawn_stdin(rh)
+        if rh_stdin is not None:
+            logger.info('BlindRun executable stdin (file: %s, fileno:%d):\n%s',
+                        rh_stdin.name, rh_stdin.fileno(), rh_stdin.read())
+            rh_stdin.seek(0)
+        self.spawn(args, opts, stdin=rh_stdin)
 
 
 class ParaBlindRun(TaylorRun):
