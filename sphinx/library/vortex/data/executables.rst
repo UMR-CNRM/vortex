@@ -56,3 +56,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: ChemistryModel
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

@@ -26,12 +26,13 @@ __all__ = [
 #: Default values for atmospheric models.
 models = set([
     'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro',
-    'aearp', 'pearp', 'mocage','mesonh', 'surfex', 'hycom', 'psy4',
+    'aearp', 'pearp', 'mocage', 'mesonh', 'surfex', 'hycom', 'psy4',
     'safran', 'ifs',
 ])
 
 #: Default values for the most common binaries.
-binaries  = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'sumo','corromegasurf','mesonh', 'safran', 'surfex','macc', 'mktopbd'])
+binaries  = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'sumo',
+                 'corromegasurf', 'mesonh', 'safran', 'surfex', 'macc', 'mktopbd'])
 utilities = set(['batodb'])
 
 #: Default attributes excluded from `repr` display
@@ -40,7 +41,7 @@ notinrepr = set(['kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'])
 #: Known formats
 knownfmt = set([
     'auto', 'autoconfig', 'unknown', 'foo', 'arpifslist',
-    'ascii', 'txt', 'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib', 'grib2',
+    'ascii', 'txt', 'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib', 'grib1', 'grib2',
     'bufr', 'hdf5', 'obsoul', 'odb', 'ecma', 'ccma',
     'bullx', 'sx', 'ddhpack', 'tar', 'rawfiles', 'binary', 'bin',
     'obslocationpack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr'

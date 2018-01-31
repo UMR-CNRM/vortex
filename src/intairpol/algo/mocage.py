@@ -8,20 +8,27 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.algo.components import Parallel, BlindRun
-from vortex.syntax.stdattrs import a_date
+from vortex.syntax.stdattrs import a_date, model
 from bronx.stdtypes import date
+
 
 class Corromegasurf(Parallel):
     """Corromegasurf"""
 
-    _footprint = dict(
-        info='Corromegasurf',
-        attr=dict(
-            kind=dict(
-                values=['corromegasurf'],
-            ),
+    _footprint = [
+        model,
+        dict(
+            info='Corromegasurf',
+            attr=dict(
+                kind=dict(
+                    values=['corromegasurf'],
+                ),
+                model=dict(
+                    values=['mocage']
+                )
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -42,37 +49,36 @@ class Corromegasurf(Parallel):
 
         sh.remove('fort.2')
         list_file = [filerh.rh.container.filename for filerh in gridrh]
-        list_file = "\n".join([str(len(list_file))]+list_file)
+        list_file = "\n".join([str(len(list_file))] + list_file)
 
         with open('fort.2', 'w') as fnam:
             fnam.write(list_file)
         sh.cat('fort.2')
 
 
-    def execute(self, rh, opts):
-        """Standard execution."""
-
-        super(Corromegasurf, self).execute(rh, opts)
-
-
-
 class Surface(Parallel):
     """Algo component for Sumo"""
 
-    _footprint = dict(
-        info='Surface',
-        attr=dict(
-            kind=dict(
-                values=['surface'],
-            ),
-            cfgfile=dict(
-                info='Radical of the name of the configuration file',
-                type=str,
-                optional=True,
-                default='RACMOBUS_MACCOPER2016',
-            ),
+    _footprint = [
+        model,
+        dict(
+            info='Surface',
+            attr=dict(
+                kind=dict(
+                    values=['surface'],
+                ),
+                cfgfile=dict(
+                    info='Radical of the name of the configuration file',
+                    type=str,
+                    optional=True,
+                    default='RACMOBUS_MACCOPER2016',
+                ),
+                model=dict(
+                    values=['mocage']
+                )
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -83,10 +89,8 @@ class Surface(Parallel):
         rh.contents.setmacro(macro, value)
         logger.info('Setup %s macro to %s in %s', macro, value, rh.container.actualpath())
 
-
     def execute(self, rh, opts):
         """Standard execution."""
-
         sh = self.system
 
         # Sumo namelist
@@ -106,10 +110,10 @@ class Surface(Parallel):
             kind='gridpoint', )
 
         for i in gribrh:
-            sh.cp('nam_init',namrh.container.localpath())
+            sh.cp('nam_init', namrh.container.localpath())
             r = i.rh
             sh.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
-                                                                           r.resource.term.fmthm))
+                                                                  r.resource.term.fmthm))
             actualdate = r.resource.date + r.resource.term
             cfgfile = self.cfgfile + '.' + r.resource.geometry.area + '.cfg'
 
@@ -124,28 +128,40 @@ class Surface(Parallel):
 
             super(Surface, self).execute(rh, opts)
 
-class Fire(Parallel):
-    """Algo component for sumo (fire task) EN COURS DE DEV ne pas utiliser"""
 
-    _footprint = dict(
-        info='Fire',
-        attr=dict(
-            kind=dict(
-                values=['fire'],
-            ),
-            cfgfile=dict(
-                info='Radical of the name of the configuration file',
-                type=str,
-                optional=True,
-                default='RACMOBUS_MACCOPER2016_BB',
-            ),
-            domain=dict(
-                info='Domains',
-                type=footprints.FPList,
-            ),
-            basedate=a_date,
+class Fire(Parallel):
+    """Algo component for sumo (fire task).
+
+    !!! EN COURS DE DEV ne pas utiliser !!!
+    La liste des domaines devrait etre "devinee" via la Sequence (effective_inpus).
+    Cela implique d'avoir une fichier d'entree par domaine.
+    """
+
+    _footprint = [
+        model,
+        dict(
+            info='Fire',
+            attr=dict(
+                kind=dict(
+                    values=['fire'],
+                ),
+                cfgfile=dict(
+                    info='Radical of the name of the configuration file',
+                    type=str,
+                    optional=True,
+                    default='RACMOBUS_MACCOPER2016_BB',
+                ),
+                domain=dict(
+                    info='Domains',
+                    type=footprints.FPList,
+                ),
+                basedate=a_date,
+                model=dict(
+                    values=['mocage']
+                )
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -156,10 +172,8 @@ class Fire(Parallel):
         rh.contents.setmacro(macro, value)
         logger.info('Setup %s macro to %s in %s', macro, value, rh.container.actualpath())
 
-
     def execute(self, rh, opts):
         """Standard execution."""
-
         sh = self.system
 
         # Sumo namelist
@@ -176,7 +190,7 @@ class Fire(Parallel):
         # Loop on domains
 
         for domain in self.domain:
-            sh.cp('nam_init',namrh.container.localpath())
+            sh.cp('nam_init', namrh.container.localpath())
 
             sh.title('Loop on domain {0:s}'.format(domain))
             cfgfile = self.cfgfile + '.' + domain + '.cfg'
@@ -196,19 +210,25 @@ class Fire(Parallel):
 class Mktopbd(BlindRun):
     """Algo component for Mktopbd"""
 
-    _footprint = dict(
-        info='Mktopbd algo component',
-        attr=dict(
-            kind=dict(
-                values=['mktopbd'],
-            ),
-            fcterm=dict(
-                info='Forecast term',
-                type=int,
-            ),
-            basedate=a_date,
+    _footprint = [
+        model,
+        dict(
+            info='Mktopbd algo component',
+            attr=dict(
+                kind=dict(
+                    values=['mktopbd'],
+                ),
+                fcterm=dict(
+                    info='Forecast term',
+                    type=date.Time,
+                ),
+                basedate=a_date,
+                model=dict(
+                    values=['mocage']
+                )
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -225,14 +245,20 @@ class Mktopbd(BlindRun):
 class Grib(BlindRun):
     """Algo component for maccraq binary"""
 
-    _footprint = dict(
-        info='Cams fullpos',
-        attr=dict(
-            kind=dict(
-                values=['grib'],
-            ),
+    _footprint = [
+        model,
+        dict(
+            info='Cams fullpos',
+            attr=dict(
+                kind=dict(
+                    values=['grib'],
+                ),
+                model=dict(
+                    values=['mocage']
+                )
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -269,7 +295,7 @@ class Grib(BlindRun):
 
             sh.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
                                                                   r.resource.term.fmthm))
-            sh.cp('nam_init',namrh.container.localpath())
+            sh.cp('nam_init', namrh.container.localpath())
             actualdate = r.resource.date + r.resource.term
 
             self._fix_nam_macro(namrh, 'YYYY', int(actualdate.year))
@@ -282,6 +308,7 @@ class Grib(BlindRun):
             namrh.container.cat()
 
             # Load miscellaneous modules
+            # FIXME: At least before it becomes operational !
             lpath = r.container.localpath()
             cmd1 = '. /etc/profile.d/00-modules.sh; set -x ; module load gnu; module load gcc; module load nco; module load cdo; module load netcdf; module load jasper; ncks -O -v a_hybr_coord,b_hybr_coord ' + lpath + ' HM_HYBRID.nc'
             cmd2 = '. /etc/profile.d/00-modules.sh; set -x; module load gnu; module load gcc; module load nco; module load cdo; module load netcdf; module load jasper; cdo remapbil,regridMACC ' + lpath + ' HMMACC.nc'
@@ -295,29 +322,35 @@ class Grib(BlindRun):
             super(Grib, self).execute(rh, opts)
 
             if self.system.path.exists('MFM_V5-.grib2'):
-                sh.mv('MFM_V5-.grib2','MFM_' + actualdate.ymdh + '.grib2')
+                sh.mv('MFM_V5-.grib2', 'MFM_' + actualdate.ymdh + '.grib2')
             if self.system.path.exists('MFM_V5+.grib2'):
                     sh.mv('MFM_V5+.grib2', 'MFM_' + actualdate.ymdh + '.grib2')
 
-            sh.rmall('HMFILE', 'HM_HYBRID.nc','HM.nc')
+            sh.rmall('HMFILE', 'HM_HYBRID.nc', 'HM.nc')
+
 
 class Forecast(Parallel):
     """Algo component for mocage binary"""
 
-    _footprint = dict(
-        info='Mocage forecast',
-        attr=dict(
-            kind=dict(
-                values=['forecast'],
-            ),
-            basedate=a_date,
-            fcterm=dict(
-                info='Forecast term',
-                type=int,
-                optional=True,
-            ),
+    _footprint = [
+        model,
+        dict(
+            info='Mocage forecast',
+            attr=dict(
+                kind=dict(
+                    values=['forecast'],
+                ),
+                basedate=a_date,
+                fcterm=dict(
+                    info='Forecast term',
+                    type=date.Time,
+                ),
+                model=dict(
+                    values=['mocage']
+                )
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -342,8 +375,7 @@ class Forecast(Parallel):
         namrh = namrh[0].rh
 
         first = self.basedate
-        lterm = 'PT' + str(self.fcterm) + 'H'
-        last= self.basedate + date.Period(lterm)
+        last = self.basedate + self.fcterm
 
         self._fix_nam_macro(namrh, 'YYYY1', int(first.year))
         self._fix_nam_macro(namrh, 'YYYY2', int(last.year))
@@ -358,4 +390,3 @@ class Forecast(Parallel):
         namrh.container.cat()
 
         super(Forecast, self).execute(rh, opts)
-

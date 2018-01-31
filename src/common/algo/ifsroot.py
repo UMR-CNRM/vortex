@@ -8,6 +8,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex.algo.components import Parallel
+from vortex.syntax.stdattrs import model
 from vortex.tools import grib
 
 
@@ -15,81 +16,88 @@ class IFSParallel(Parallel, grib.GribApiComponent):
     """Abstract IFSModel parallel algo components."""
 
     _abstract = True
-    _footprint = dict(
-        info = 'Abstract AlgoComponent for anything based on Arpege/IFS.',
-        attr = dict(
-            kind = dict(
-                info            = 'The kind of processing we want the Arpege/IFS binary to perform.',
-                default         = 'ifsrun',
-                doc_zorder      = 90,
-            ),
-            ioname = dict(
-                default = 'nwpioserv',
-            ),
-            binarysingle = dict(
-                default = 'basicnwp',
-            ),
-            conf = dict(
-                info = 'The configuration number given to Arpege/IFS.',
-                type            = int,
-                optional        = True,
-                default         = 1,
-                doc_visibility  = footprints.doc.visibility.ADVANCED,
-            ),
-            timescheme = dict(
-                info = 'The timescheme that will be used by Arpege/IFS model.',
-                optional        = True,
-                default         = 'sli',
-                values          = ['eul', 'eulerian', 'sli', 'semilag'],
-                remap           = dict(
-                    eulerian = 'eul',
-                    semilag  = 'sli'
+    _footprint = [
+        model,
+        dict(
+            info = 'Abstract AlgoComponent for anything based on Arpege/IFS.',
+            attr = dict(
+                kind = dict(
+                    info            = 'The kind of processing we want the Arpege/IFS binary to perform.',
+                    default         = 'ifsrun',
+                    doc_zorder      = 90,
                 ),
-                doc_visibility  = footprints.doc.visibility.ADVANCED,
-            ),
-            timestep = dict(
-                info     = 'The timestep of the Arpege/IFS model.',
-                type     = float,
-                optional = True,
-                default  = 600.,
-            ),
-            fcterm = dict(
-                info     = 'The forecast term of the Arpege/IFS model.',
-                type = int,
-                optional = True,
-                default = 0,
-            ),
-            fcunit = dict(
-                info     = 'The unit used in the *fcterm* attribute.',
-                optional = True,
-                default  = 'h',
-                values   = ['h', 'hour', 't', 'step'],
-                remap = dict(
-                    hour = 'h',
-                    step = 't'
-                )
-            ),
-            xpname = dict(
-                info = 'The default labelling of files used in Arpege/IFS model.',
-                optional        = True,
-                default         = 'XPVT',
-                doc_visibility  = footprints.doc.visibility.ADVANCED,
-            ),
-            drhookprof = dict(
-                info            = 'Activate the DrHook profiling.',
-                optional        = True,
-                type            = bool,
-                default         = False,
-                doc_zorder      = -50,
-            ),
-            member = dict(
-                info            = ("The current member's number " +
-                                   "(may be omitted in deterministic configurations)."),
-                optional        = True,
-                type            = int,
-            ),
+                model = dict(
+                    values = ['arpege', 'arp', 'arp_court', 'aladin', 'ald',
+                              'arome', 'aro', 'aearp', 'pearp', 'ifs']
+                ),
+                ioname = dict(
+                    default = 'nwpioserv',
+                ),
+                binarysingle = dict(
+                    default = 'basicnwp',
+                ),
+                conf = dict(
+                    info = 'The configuration number given to Arpege/IFS.',
+                    type            = int,
+                    optional        = True,
+                    default         = 1,
+                    doc_visibility  = footprints.doc.visibility.ADVANCED,
+                ),
+                timescheme = dict(
+                    info = 'The timescheme that will be used by Arpege/IFS model.',
+                    optional        = True,
+                    default         = 'sli',
+                    values          = ['eul', 'eulerian', 'sli', 'semilag'],
+                    remap           = dict(
+                        eulerian = 'eul',
+                        semilag  = 'sli'
+                    ),
+                    doc_visibility  = footprints.doc.visibility.ADVANCED,
+                ),
+                timestep = dict(
+                    info     = 'The timestep of the Arpege/IFS model.',
+                    type     = float,
+                    optional = True,
+                    default  = 600.,
+                ),
+                fcterm = dict(
+                    info     = 'The forecast term of the Arpege/IFS model.',
+                    type = int,
+                    optional = True,
+                    default = 0,
+                ),
+                fcunit = dict(
+                    info     = 'The unit used in the *fcterm* attribute.',
+                    optional = True,
+                    default  = 'h',
+                    values   = ['h', 'hour', 't', 'step'],
+                    remap = dict(
+                        hour = 'h',
+                        step = 't'
+                    )
+                ),
+                xpname = dict(
+                    info = 'The default labelling of files used in Arpege/IFS model.',
+                    optional        = True,
+                    default         = 'XPVT',
+                    doc_visibility  = footprints.doc.visibility.ADVANCED,
+                ),
+                drhookprof = dict(
+                    info            = 'Activate the DrHook profiling.',
+                    optional        = True,
+                    type            = bool,
+                    default         = False,
+                    doc_zorder      = -50,
+                ),
+                member = dict(
+                    info            = ("The current member's number " +
+                                       "(may be omitted in deterministic configurations)."),
+                    optional        = True,
+                    type            = int,
+                ),
+            )
         )
-    )
+    ]
 
     def fstag(self):
         """Extend default tag with ``kind`` value."""

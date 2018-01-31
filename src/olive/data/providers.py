@@ -276,7 +276,7 @@ class OpArchive(Provider):
                     return '/'.join((self.igakey, suite, dd))
                 elif re.match(r'macc', self.igakey) and re.match(r'production', rinfo['cutoff']):
                     return '/'.join((self.igakey, suite, dd))
-                elif re.match(r'macc', self.igakey) and re.match(r'assim', rinfo['cutoff']) :
+                elif re.match(r'macc', self.igakey) and re.match(r'assim', rinfo['cutoff']):
                     return '/'.join((self.igakey, suite, rinfo['cutoff'], dd))
                 elif re.match(r'surcotes|surcotes_oi', self.igakey):
                     return '/'.join((self.igakey, suite, dd, rr )).rstrip('/')

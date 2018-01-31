@@ -175,7 +175,8 @@ class Historic(GeoFlowResource):
                     )
                 ),
                 nativefmt = dict(
-                    values = ['fa', 'grib', 'lfi', 'unknown', 'nc'],
+                    values = ['fa', 'grib', 'lfi', 'netcdf', 'unknown', 'nc'],
+                    remap = dict(nc='netcdf'),
                     default = 'fa',
                 ),
             )
@@ -192,14 +193,15 @@ class Historic(GeoFlowResource):
         midfix = '(histfix:igakey)'
         termfix = '(termfix:modelkey)'
         suffix = '(suffix:modelkey)'
+
         if self.geometry.lam and re.match('testms1|testmp1|testmp2', self.geometry.area):
             suffix = '.r' + archive_suffix(self.model, self.cutoff, self.date)
 
-        if re.match('mocage', self.model):
+        if self.model == 'mocage':
             prefix = 'HM'
             midfix = self.geometry.area
-            if re.match('nc',self.nativefmt):
-                suffix = '.'+ self.nativefmt
+            if self.nativefmt == 'netcdf':
+                suffix = '.nc'
 
         return prefix + midfix + termfix + suffix
 

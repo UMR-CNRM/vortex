@@ -211,3 +211,25 @@ class SurfaceModel(Binary):
     def command_line(self, **opts):
         """Abstract method."""
         return ''
+
+
+class ChemistryModel(Binary):
+
+    _abstract  = True
+    _footprint = dict(
+        info = 'Base class for Chemistry models.',
+        attr = dict(
+            model = a_model,
+            kind  = dict(
+                values = ['chemistrymodel'],
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return 'chemistrymodel'
+
+    def command_line(self, **opts):
+        """Abstract method."""
+        return ''

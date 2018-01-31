@@ -70,7 +70,7 @@ class _AbstractLAMBoundary(GeoFlowResource):
         if re.match('ifs|ecmwf', source) and '16km' in self.geometry.rnice:
             prefix = 'COUPLIFS'
 
-        if re.match('mocage', self.model):
+        if self.model == 'mocage':
             valid = (self.date + self.term).ymd
             return 'SM' + self.geometry.area + '+' + valid
 
