@@ -729,6 +729,10 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         """Plain ISO 8601 representation."""
         return self.isoformat() + 'Z'
 
+    def as_datetime(self):
+        """Silly enough, but could be usefull to retrieve a raw ``datetime.datetime`` object."""
+        return datetime.datetime(self.year, self.month, self.day, self.hour, self.minute, self.second, self.microsecond)
+
     def __str__(self):
         """Default string representation is iso8601."""
         return self.iso8601()

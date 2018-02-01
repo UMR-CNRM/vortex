@@ -16,8 +16,9 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex.data.flow     import GeoFlowResource, FlowResource
 from vortex.data.contents import TextContent, AlmostListContent
 from vortex.syntax        import stdattrs
-from bronx.stdtypes.date  import Date
-from vortex.util.structs  import ReadOnlyDict
+
+from bronx.stdtypes.date         import Date
+from bronx.stdtypes.dictionaries import ReadOnlyDict
 
 from gco.syntax.stdattrs  import gvar, GenvKey
 

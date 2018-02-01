@@ -22,7 +22,7 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex import sessions
 from vortex.tools.actions import actiond as ad
 from vortex.util.config import GenericConfigParser, load_template
-from vortex.util.structs import Utf8PrettyPrinter
+from bronx.syntax.pretty import Utf8PrettyPrinter
 
 
 # See logging.handlers.SysLogHandler.priority_map

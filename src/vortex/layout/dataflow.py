@@ -19,7 +19,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from footprints.util import mktuple
-from vortex.util.structs import Utf8PrettyPrinter
+from bronx.syntax.pretty import Utf8PrettyPrinter
 from vortex.util.roles import setrole
 
 

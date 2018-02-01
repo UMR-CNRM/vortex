@@ -104,7 +104,7 @@ class PerleLauncher(PerleTool):
                 optional = True,
                 alias    = ('op',),
                 values   = ['oper', 'dble', 'test', 'dbl'],
-                remap    = dict(dbl = 'dble'),
+                #remap    = dict(dbl = 'dble'),
                 default  = DelayedEnvValue('PERLE_OPER_VERSION', 'oper'),
             ),
             simulation_level = dict(
@@ -128,6 +128,15 @@ class PerleLauncher(PerleTool):
                 optional = True,
                 access   = 'rwx',
                 default  = DelayedEnvValue('PERLE_TARGET_PATH', '/scratch/work'),
+            ),
+            lpdm_path = dict(
+                optional = True,
+                access   = 'rwx',
+                default  = DelayedEnvValue('PERLE_LPDM_PATH'),
+            ),
+            nolpdm = dict(
+                optional = True,
+                default  = False,
             ),
             storage = dict(
                 optional = True,
@@ -360,7 +369,7 @@ class OldPerleLauncher(PerleLauncher):
 
         return filename
 
-    def submit(self):
+    def submit(self, nosubmit=False):
         """Submit the remote job."""
 
         # some cocooning...
@@ -385,9 +394,14 @@ class OldPerleLauncher(PerleLauncher):
         self.dataput(driver_env)
 
         # launch the remote job
-        print('\n'.join(self.ssh.execute('; '.join((
+        actualcmd = '; '.join((
             'cd ' + self.sh.path.join(self.target_path, self.xtag),
             self.sh.path.join(
                 self.target_root, self.release, self.get_family_tag(),
-                'job', 'replay_submit.sh'),
-        )))))
+                'job', 'replay_submit.sh'
+            )
+        ))
+        if nosubmit:
+            print('Not submitted:', actualcmd)
+        else:
+            print('\n'.join(self.ssh.execute(actualcmd)))

@@ -1,19 +1,27 @@
 excluded:
-    - meta
-    - remap
     - default
-    - footprint
+    - defaults
+    - remap
+    - resources
 
-meta:
-    disk_period: 'PT24H'
-    arch_period: 'P10Y'
+defaults:
+    locations:
+        disk:
+            storage_period: 'PT24H'
+            namespace: '[suite].inline.fr'
+            datacheck: True
+        arch:
+            storage_period: 'P10Y'
+            namespace: '[suite].archive.fr'
+            datacheck: False
 
 arpege:
+    default: '4dvarfr'
     remap:
         france: '4dvarfr'
-    default: '4dvarfr'
     4dvarfr:
-        footprint:
+        resources:
+            kind: 'historic'
             geometry: 'globalsp2'
         assim:
             '00':
@@ -51,11 +59,12 @@ arpege:
                 tarch: ['04:00', '04:05']
 
 arome:
+    default: '3dvarfr'
     remap:
         france: '3dvarfr'
-    default: '3dvarfr'
     3dvarfr:
-        footprint:
+        resources:
+            kind: 'historic'
             geometry: 'franmgsp'
         production:
             '00':

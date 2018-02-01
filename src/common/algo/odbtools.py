@@ -17,10 +17,11 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex.tools.systems   import ExecutionError
 from vortex.tools           import odb
 from vortex.algo.components import Parallel
-from vortex.util.structs    import Foo
 from vortex.syntax.stdattrs import a_date
 
 from common.data.obs import ObsMapContent, ObsMapItem, ObsRefContent, ObsRefItem
+
+from bronx.stdtypes.dictionaries import Foo
 
 
 class OdbProcess(Parallel, odb.OdbComponent):

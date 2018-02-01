@@ -246,8 +246,7 @@ class ZSVQualityStats(ZSVDriver):
 
     def setup_extensions(self):
         self.setup_data_list()
-        if self.update:
-            self.record_load()
+        self.record_load()
 
     def record_load(self):
         """Load and set up current record of statistic computations."""

@@ -7,8 +7,10 @@ This modules defines the physical layout.
 
 import footprints
 from vortex.tools.env import Environment
-from vortex.util.structs import Tracker, PrivateHistory
 from . import dataflow
+
+from bronx.stdtypes.history  import PrivateHistory
+from bronx.stdtypes.tracking import Tracker
 
 #: No automatic export.
 __all__ = []

@@ -11,7 +11,8 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
-from vortex.util.structs import ReadOnlyDict
+
+from bronx.stdtypes.dictionaries import ReadOnlyDict
 
 
 class DataContentError(ValueError):

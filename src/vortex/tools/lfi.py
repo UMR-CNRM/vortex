@@ -5,13 +5,14 @@ import io
 import re
 
 import footprints
-from vortex.util.structs import Tracker
+logger = footprints.loggers.getLogger(__name__)
+
 from . import addons
+
+from bronx.stdtypes.tracking import Tracker
 
 #: Export nothing
 __all__ = []
-
-logger = footprints.loggers.getLogger(__name__)
 
 
 def use_in_shell(sh, **kw):
