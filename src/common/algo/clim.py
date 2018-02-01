@@ -453,7 +453,8 @@ class MakeGaussGeometry(Parallel):
         nam['NAMGEM']['RSTRET'] = self.stretching
         # numbers of longitudes
         with open('fort.' + str(self._unit), 'r') as n:
-            nam.merge(namelist.namparse(n))
+            namrgri = namelist.namparse(n)
+            nam.merge(namrgri)
         # PGD namelist
         nam_pgd = copy.deepcopy(nam)
         nam_pgd['NAMGEM'].delvar('NHTYP')
@@ -479,6 +480,26 @@ class MakeGaussGeometry(Parallel):
         nam['NAMDIM']['NSMAX'] = trunc_nsmax
         with open('.'.join([self.geometry.tag,
                             'namel_c923_orography',
+                            'geoblocks']),
+                  'w') as out:
+            out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
+        # C927 (fullpos) namelist
+        nam = namelist.NamelistSet()
+        nam.add(namelist.NamelistBlock('NAMFPD'))
+        nam.add(namelist.NamelistBlock('NAMFPG'))
+        nam['NAMFPD']['NLAT'] = self.latitudes
+        nam['NAMFPD']['NLON'] = self.longitudes
+        nam['NAMFPG']['NFPMAX'] = self.truncation
+        nam['NAMFPG']['NFPHTYP'] = 2
+        nam['NAMFPG']['NFPTTYP'] = 2 if self.pole != {'lon':0., 'lat':90.} else 1
+        nam['NAMFPG']['FPMUCEN'] = math.sin(math.radians(float(self.pole['lat'])))
+        nam['NAMFPG']['FPLOCEN'] = math.radians(float(self.pole['lon']))
+        nam['NAMFPG']['FPSTRET'] = self.stretching
+        nrgri = [v for _,v in sorted(namrgri['NAMRGRI'].items())]
+        for i in range(len(nrgri)):
+            nam['NAMFPG']['NFPRGRI({:>4})'.format(i + 1)] = nrgri[i]
+        with open('.'.join([self.geometry.tag,
+                            'namel_c927',
                             'geoblocks']),
                   'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
