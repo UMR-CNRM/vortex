@@ -6,12 +6,15 @@ This package handles cache objects that could be in charge of
 hosting data resources. Cache objects use the :mod:`footprints` mechanism.
 """
 
+import hashlib
+import ftplib
 from datetime import datetime
 
 import footprints
 from vortex import sessions
 from vortex.util.config import GenericConfigParser
 from vortex.util.structs import History
+from vortex.tools.actions import actiond as ad
 
 #: No automatic export
 __all__ = []
@@ -116,9 +119,12 @@ class Storage(footprints.FootprintBase):
         """Tries to figure out what could be the actual entry point for storage space."""
         return self.sh.path.join(self.actual_rootdir, self.kind, self.actual_headdir)
 
-    def fullpath(self, subpath):
-        """Actual full path in the storage place."""
+    def formatted_path(self, subpath, **kwargs):
         return self.sh.path.join(self.entry, subpath.lstrip('/'))
+
+    def fullpath(self, subpath, **kwargs):
+        """Actual full path in the storage place."""
+        return self.formatted_path(subpath, **kwargs)
 
     def addrecord(self, action, item, **infos):
         """Push a new record to the storage place log."""
@@ -216,14 +222,6 @@ class Cache(Storage):
         )
     )
 
-    def check(self, item, **kwargs):
-        """Check/Stat an item from the current cache."""
-        try:
-            st = self.system.stat(self.incachelocate(item, kwargs))
-        except OSError:
-            st = None
-        return st
-
     def __init__(self, *args, **kwargs):
         logger.debug('Abstract cache init %s', self.__class__)
         super(Cache, self).__init__(*args, **kwargs)
@@ -231,6 +229,15 @@ class Cache(Storage):
     @property
     def realkind(self):
         return 'cache'
+
+    def check(self, item, **kwargs):
+        """Check/Stat an item in the current cache."""
+        path = self.fullpath(item, **kwargs)
+        try:
+            st = self.sh.stat(path)
+        except OSError:
+            st = None
+        return st
 
     def insert(self, item, local, **kwargs):
         """Insert an item in the current cache."""
@@ -441,7 +448,7 @@ class Archive(Storage):
                 default  = '@archive-[storage].ini',
             ),
             kind = dict(
-                values   = ['std'],
+                values   = ['archive-std'],
             ),
             rootdir = dict(
                 optional = True,
@@ -458,8 +465,8 @@ class Archive(Storage):
             scheme = dict(
                 optional = True,
                 default = "file",
-                values = ['ftp', 'ftserv', 'scp', 'rcp', 'ectrans', 'ecfs', 'file']
-            )
+                values = ['ftp', 'ftserv', 'scp', 'rcp', 'ectrans', 'ecfs', 'file'],
+            ),
         )
     )
 
@@ -471,33 +478,218 @@ class Archive(Storage):
     def realkind(self):
         return 'archive'
 
+    def ftpfullpath(self, subpath, **kwargs):
+        """Actual full path in the archive place using ftp"""
+        username = kwargs.get('username', None)
+        rc = None
+        ftp = self.sh.ftp(hostname=self.storage,
+                          logname=username,
+                          delayed = True)
+        if ftp:
+            rc = ftp.netpath(subpath)
+            ftp.close()
+        return rc
+
+    def ftpcheck(self, item, **kwargs):
+        """Check/Stat an item from the current archive using Ftp"""
+        username = kwargs.get('username', None)
+        rc = None
+        ftp = self.sh.ftp(hostname=self.storage,
+                          logname=username)
+        if ftp:
+            try:
+                rc = ftp.size(item)
+            except (ValueError, TypeError, ftplib.all_errors):
+                pass
+            finally:
+                ftp.close()
+        return rc
+
+    def ftpretrieve(self, item, local, **kwargs):
+        """Retrieve an item from the current archive using ftp."""
+        logger.info('ftpget on ftp://%s/%s (to: %s)', self.storage, item, local)
+        rc = self.sh.smartftget(
+            item,
+            local,
+            # Ftp control
+            hostname = self.storage,
+            logname = kwargs.get('username'),
+            cpipeline = kwargs.get('compressionpipeline', None),
+            fmt = kwargs.get('fmt'),
+        )
+        return rc
+
+    def ftpinsert(self, item, local, **kwargs):
+        """Insert an item in the current archive using ftp."""
+        sync_insert = kwargs.get('sync')
+        if sync_insert:
+            logger.info('ftpput to ftp://%s/%s (from: %s)', self.storage, item, local)
+            rc = self.sh.smartftput(
+                local,
+                item,
+                # Ftp control
+                hostname = self.storage,
+                logname = kwargs.get('username'),
+                cpipeline = kwargs.get('compressionpipeline', None),
+                fmt = kwargs.get('fmt'),
+            )
+        else:
+            logger.info('delayed ftpput to ftp://%s/%s (from: %s)', self.storage, item, local)
+            tempo = footprints.proxy.service(kind='hiddencache',
+                                             asfmt=kwargs.get('fmt'))
+            compressionpipeline = kwargs.get('compressionpipeline', None)
+            if compressionpipeline is None:
+                compressionpipeline = ''
+            else:
+                compressionpipeline = compressionpipeline.description_string
+            rc = ad.jeeves(
+                hostname = self.storage,
+                logname = kwargs.get('username'),
+                cpipeline = compressionpipeline,
+                fmt = kwargs.get('fmt'),
+                todo = 'ftput',
+                rhandler = kwargs.get('rhandler', None),
+                source = tempo(local),
+                destination = item,
+                original = self.sh.path.abspath(local),
+            )
+        return rc
+
+    def ftpdelete(self, item, **kwargs):
+        """Delete an item from the current archive using ftp."""
+        rc = None
+        username = kwargs.get('username', None)
+        ftp = self.system.ftp(self.storage, username)
+        if ftp:
+            if self.check(item, kwargs):
+                logger.info('ftpdelete on ftp://%s/%s', self.storage, item)
+                rc = ftp.delete(item)
+                ftp.close()
+            else:
+                logger.error('Try to remove a non-existing resource <%s>', item)
+        return rc
+
+    def formatted_path(self, subpath, **kwargs):
+        root = kwargs.get('root')
+        if root is not None and root != self.actual_rootdir:
+            rawpath = self.sh.path.join(root, subpath.lstrip('/'))
+        else:
+            rawpath = super(Archive, self).formatted_path(subpath, **kwargs)
+        compressionpipeline = kwargs.get('compressionpipeline', None)
+        if compressionpipeline is not None:
+            rawpath += compressionpipeline.suffix
+        return rawpath
+
+    def fullpath(self, subpath, **kwargs):
+        """Actual full path in the archive place according to the compression used."""
+        # Define the name of the file
+        format_path = super(Archive, self).fullpath(subpath, **kwargs)
+        if format_path is not None:
+            # Locate the file according to the scheme
+            if isinstance(self.scheme, ['ftp', 'ftserv']):
+                format_path = self.ftpfullpath(format_path, **kwargs)
+            elif isinstance(self.scheme, ['ectrans']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['ecfs']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['rcp']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['scp']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['file']):
+                raise NotImplementedError
+        else:
+            logger.error('The path is void')
+            raise ValueError('The path is void.')
+        return format_path
+
     def check(self, item, **kwargs):
         """Check/Stat an item from the current archive."""
-        if isinstance(self.scheme, ['ftp', 'ftserv']):
-            pass
-        elif isinstance(self.scheme, ['ectrans']):
-            pass
-        elif isinstance(self.scheme, ['ecfs']):
-            pass
-        elif isinstance(self.scheme, ['rcp']):
-            pass
-        elif isinstance(self.scheme, ['scp']):
-            pass
-        elif isinstance(self.scheme, ['file']):
-            pass
-        return False
+        rc = None
+        path = self.fullpath(item, **kwargs)
+        if path is not None:
+            if isinstance(self.scheme, ['ftp', 'ftserv']):
+                rc = self.ftpcheck(path, **kwargs)
+            elif isinstance(self.scheme, ['ectrans']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['ecfs']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['rcp']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['scp']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['file']):
+                raise NotImplementedError
+        else:
+            logger.error('The path is void.')
+            raise ValueError('The path is void.')
+        return rc
 
     def insert(self, item, local, **kwargs):
         """Insert an item in the current archive."""
-        pass
+        rc = None
+        path = self.fullpath(item, **kwargs)
+        if path is not None:
+            if isinstance(self.scheme, ['ftp', 'ftserv']):
+                rc = self.ftpinsert(path, local, **kwargs)
+            elif isinstance(self.scheme, ['ectrans']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['ecfs']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['rcp']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['scp']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['file']):
+                raise NotImplementedError
+        else:
+            logger.error('The path is void.')
+            raise ValueError('The path is void.')
+        return rc
 
     def retrieve(self, item, local, **kwargs):
         """Retrieve an item from the current archive."""
-        pass
+        rc = None
+        path = self.fullpath(item, **kwargs)
+        if path is not None:
+            if isinstance(self.scheme, ['ftp', 'ftserv']):
+                rc = self.ftpretrieve(path, local, **kwargs)
+            elif isinstance(self.scheme, ['ectrans']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['ecfs']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['rcp']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['scp']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['file']):
+                raise NotImplementedError
+        else:
+            logger.error('The path is void.')
+            raise ValueError('The path is void.')
+        return rc
 
     def delete(self, item, **kwargs):
         """Delete an item from the current archive."""
-        pass
+        rc = None
+        path = self.fullpath(item, **kwargs)
+        if path is not None:
+            if isinstance(self.scheme, ['ftp', 'ftserv']):
+                rc = self.ftpdelete(path, **kwargs)
+            elif isinstance(self.scheme, ['ectrans']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['ecfs']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['rcp']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['scp']):
+                raise NotImplementedError
+            elif isinstance(self.scheme, ['file']):
+                raise NotImplementedError
+        else:
+            logger.error('The path is void.')
+            raise ValueError('The path is void.')
+        return rc
 
 
 class VortexArchive(Archive):
@@ -507,7 +699,7 @@ class VortexArchive(Archive):
         info = 'Vortex like archive',
         attr = dict(
             kind = dict(
-                values   = ['vortex'],
+                values   = ['vortex-archive'],
             ),
             rootdir = dict(
                 optional = True,
@@ -522,6 +714,11 @@ class VortexArchive(Archive):
                 optional = True,
                 default = "hendrix.meteo.fr",
             ),
+            scheme=dict(
+                optional=True,
+                default='ftp',
+                values=['ftp', 'ftserv', 'ectrans'],
+            )
         )
     )
 
@@ -557,6 +754,11 @@ class OliveArchive(Archive):
                 optional = True,
                 default = "hendrix.meteo.fr",
             ),
+            scheme=dict(
+                optional=True,
+                default='ftp',
+                values=['ftp', 'ftserv', 'ectrans'],
+            )
         )
     )
 
@@ -577,7 +779,7 @@ class OpArchive(Archive):
         info = 'Old operational like archive',
         attr = dict(
             kind = dict(
-                values   = ['op-ksh'],
+                values   = ['op-ksh-archive'],
             ),
             rootdir = dict(
                 optional = True,
@@ -589,8 +791,13 @@ class OpArchive(Archive):
             ),
             storage = dict(
                 optional = True,
-                default = "hendrix.meteo.fr",
+                default  = "hendrix.meteo.fr",
             ),
+            scheme = dict(
+                optional = True,
+                default  = 'ftp',
+                values   = ['ftp', 'ftserv'],
+            )
         )
     )
 
@@ -602,3 +809,72 @@ class OpArchive(Archive):
         else:
             archive = self.actual_rootdir
         return self.sh.path.join(archive, self.actual_headdir)
+
+    def formatted_path(self, subpath, **kwargs):
+        targetpath = None
+        extract = kwargs.get('extract', None)
+        glue = kwargs.get('glue')
+        if glue is None:
+            logger.info('The glue object is None. It should not. Stop.')
+            raise ValueError('The glue object is None. It should not. Stop.')
+        cleanpath = self.actual_rootdir + subpath
+        (dirname, basename) = self.sh.path.split(cleanpath)
+        if not extract and glue.containsfile(basename):
+            (cleanpath, targetpath) = glue.filemap(self.system, dirname, basename)
+        return cleanpath, targetpath, basename
+
+    def fullpath(self, subpath, **kwargs):
+        """Define the fullpath of resources in the case of the old ksh op archive"""
+        rc = None
+        (cleanpath, targetpath, basename) = self.formatted_path(subpath, **kwargs)
+        if cleanpath is not None:
+            rc = self.ftpfullpath(cleanpath, **kwargs)
+        return rc
+
+    def delete(self, item, **kwargs):
+        raise NotImplementedError
+        return False
+
+    def retrieve(self, item, local, **kwargs):
+        """Retrieve an item from the current archive."""
+        rc = False
+        extract = kwargs.get('extract', None)
+        glue = kwargs.get('glue')
+        (cleanpath, targetpath, basename) = self.formatted_path(item, **kwargs)
+        if targetpath is None:
+            targetpath = local
+        if not extract and glue.containsfile(basename):
+            extract = basename
+        elif extract:
+            extract = extract[0]
+            targetpath = basename
+        targetstamp = targetpath + '.stamp' + hashlib.md5(cleanpath).hexdigest()
+        if cleanpath is not None:
+            if extract and self.sh.path.exists(targetpath):
+                if self.system.path.exists(targetstamp):
+                    logger.info("%s was already fetched. that's great !", targetpath)
+                    rc = True
+                else:
+                    self.system.rm(targetpath)
+                    self.system.rmall(targetpath + '.stamp*')
+            if not rc:
+                rc = self.ftpretrieve(cleanpath, targetpath, **kwargs)
+            if not rc:
+                logger.error('FTP could not get file %s', cleanpath)
+            elif extract:
+                self.sh.touch(targetstamp)
+                if extract == 'all':
+                    rc = self.sh.untar(targetpath, output = False)
+                else:
+                    heaven = 'a_very_safe_untar_heaven'
+                    fulltarpath = self.sh.path.abspath(targetpath)
+                    with self.sh.cdcontext('a_very_safe_untar_heaven', create=True):
+                        rc = self.sh.untar(fulltarpath, extract, output=False)
+                    rc = rc and self.sh.rm(local)
+                    rc = rc and self.sh.mv(self.system.path.join(heaven, extract),
+                                               local)
+                    self.sh.rm(heaven)  # Sadly this is a temporary heaven
+        else:
+            logger.error('The path is void.')
+            raise ValueError('The path is void.')
+        return rc

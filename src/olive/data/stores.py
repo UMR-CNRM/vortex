@@ -37,12 +37,22 @@ class OliveArchiveStore(ArchiveStore):
                 default = 'xp',
                 outcast = ['vortex']
             ),
+            strategy=dict(
+                optional=True,
+                default='vortex-archive',
+                outcast=['olive-archive', ]
+            ),
         )
     )
 
     def __init__(self, *args, **kw):
         logger.debug('Olive archive store init %s', self.__class__)
         super(OliveArchiveStore, self).__init__(*args, **kw)
+    def _actual_scheme(self):
+        if self.scheme == 'olive':
+            return 'ftp'
+        else:
+            return self.scheme
 
     def remap_read(self, remote, options):
         """Remap actual remote path to distant store path for read-only actions."""
@@ -59,27 +69,27 @@ class OliveArchiveStore(ArchiveStore):
     def olivecheck(self, remote, options):
         """Remap and ftpcheck sequence."""
         self.remap_read(remote, options)
-        return self.ftpcheck(remote, options)
+        return self.inarchivecheck(remote, options)
 
     def olivelocate(self, remote, options):
         """Remap and ftplocate sequence."""
         self.remap_read(remote, options)
-        return self.ftplocate(remote, options)
+        return self.inarchivelocate(remote, options)
 
     def oliveget(self, remote, local, options):
         """Remap and ftpget sequence."""
         self.remap_read(remote, options)
-        return self.ftpget(remote, local, options)
+        return self.inarchiveget(remote, local, options)
 
     def oliveput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
         self.remap_write(remote, options)
-        return self.ftpput(local, remote, options)
+        return self.inarchiveput(local, remote, options)
 
     def olivedelete(self, remote, options):
         """Remap and ftpdelete sequence."""
         self.remap_write(remote, options)
-        return self.ftpdelete(remote, options)
+        return self.inarchivedelete(remote, options)
 
 
 class OliveCacheStore(CacheStore):
@@ -188,6 +198,11 @@ class OpArchiveStore(ArchiveStore):
                 optional = True,
                 default  = oparchivemap,
             ),
+            strategy=dict(
+                optional=True,
+                default='op-ksh-archive',
+                outcast=['olive-archive','vortex-archive', ]
+            )
         )
     )
 
@@ -195,104 +210,35 @@ class OpArchiveStore(ArchiveStore):
         logger.debug('Archive store init %s', self.__class__)
         super(OpArchiveStore, self).__init__(*args, **kw)
 
+    @property
+    def _actual_scheme(self):
+        if self.scheme == 'op':
+            return 'ftp'
+        else:
+            return self.scheme
+
+    @property
+    def _actual_glue(self):
+        return self.glue
+
     def fullpath(self, remote):
         return self.storeroot + remote['path']
 
     def oplocate(self, remote, options):
         """Delegates to ``system`` a distant check."""
-        ftp = self.system.ftp(self.hostname(), remote['username'], delayed=True)
-        if ftp:
-            extract = remote['query'].get('extract', None)
-            cleanpath = self.fullpath(remote)
-            (dirname, basename) = self.system.path.split(cleanpath)
-            if not extract and self.glue.containsfile(basename):
-                cleanpath, _ = self.glue.filemap(self.system, dirname, basename)
-            if cleanpath is not None:
-                rloc = ftp.netpath(cleanpath)
-            else:
-                rloc = None
-            ftp.close()
-            return rloc
-        else:
-            return None
+        return self.inarchivelocate(remote, options)
 
     def opcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
-        ftp = self.system.ftp(self.hostname(), remote['username'])
-        rc = None
-        if ftp:
-            extract = remote['query'].get('extract', None)
-            cleanpath = self.fullpath(remote)
-            (dirname, basename) = self.system.path.split(cleanpath)
-            if not extract and self.glue.containsfile(basename):
-                cleanpath, _ = self.glue.filemap(self.system, dirname, basename)
-            try:
-                rc = ftp.size(cleanpath)
-            except (ValueError, TypeError, ftplib.all_errors):
-                pass
-            finally:
-                ftp.close()
-        return rc
+        return self.inarchivecheck(remote, options)
 
     def opget(self, remote, local, options):
         """File transfer: get from store."""
-        targetpath = local
-        cleanpath  = self.fullpath(remote)
-        extract = remote['query'].get('extract', None)
-        locfmt = remote['query'].get('format', options.get('fmt', 'unknown'))
-        (dirname, basename) = self.system.path.split(cleanpath)
-        if not extract and self.glue.containsfile(basename):
-            extract = basename
-            cleanpath, targetpath = self.glue.filemap(self.system, dirname, basename)
-        elif extract:
-            extract = extract[0]
-            targetpath = basename
-        targetstamp = targetpath + '.stamp' + hashlib.md5(cleanpath).hexdigest()
-        rc = False
-        if cleanpath is not None:
-            if extract and self.system.path.exists(targetpath):
-                if self.system.path.exists(targetstamp):
-                    logger.info("%s was already fetched. that's great !", targetpath)
-                    rc = True
-                else:
-                    self.system.rm(targetpath)
-                    self.system.rmall(targetpath + '.stamp*')
-            if not rc:
-                rc = self.system.smartftget(
-                    cleanpath,
-                    targetpath,
-                    # ftp control
-                    hostname = self.hostname(),
-                    logname  = remote['username'],
-                    fmt      = locfmt,
-                )
-            if not rc:
-                logger.error('FTP could not get file %s', cleanpath)
-            elif extract:
-                self.system.touch(targetstamp)
-                if extract == 'all':
-                    rc = self.system.untar(targetpath, output=False)
-                else:
-                    heaven = 'a_very_safe_untar_heaven'
-                    fulltarpath = self.system.path.abspath(targetpath)
-                    with self.system.cdcontext('a_very_safe_untar_heaven', create=True):
-                        rc = self.system.untar(fulltarpath, extract, output=False)
-                    rc = rc and self.system.rm(local)
-                    rc = rc and self.system.mv(self.system.path.join(heaven, extract),
-                                               local)
-                    self.system.rm(heaven)  # Sadly this is a temporary heaven
-        return rc
+        return self.inarchiveget(remote, local, options)
 
     def opput(self, local, remote, options):
         """File transfer: put to store."""
-        return self.system.smartftput(
-            local,
-            self.fullpath(remote),
-            # ftp control
-            hostname = self.hostname(),
-            logname  = remote['username'],
-            fmt      = options.get('fmt'),
-        )
+        return self.inarchiveput(local, remote, options)
 
     def opdelete(self, remote, options):
         """This operation is not supported."""
