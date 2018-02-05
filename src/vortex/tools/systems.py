@@ -2212,10 +2212,11 @@ class OSExtended(System):
         return cp.file2uncompress(source, destination)
 
     def find_mount_point(self, path):
-        """ return the mount point of **path**
+        """Return the mount point of *path*.
 
-        :param path: path
-        :return: mount point
+        :param str path: path where to look for a mount point
+        :return: the path to the mount point
+        :rtype: str
         """
         if not os.path.exists(path):
             logger.warning('Path does not exist: <%s>', path)

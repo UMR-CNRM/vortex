@@ -29,7 +29,6 @@ import logging
 import random
 import re
 import socket
-from datetime import datetime
 
 from StringIO import StringIO
 from logging.handlers import SysLogHandler
@@ -832,7 +831,7 @@ class DayfileReportService(FileReportService):
         defaults to spooldir for these parts of centralized log files.
         """
         name = ''.join([
-            datetime.now().strftime('%Y%m%d%H%M%S.%f'),
+            date.now().strftime('%Y%m%d%H%M%S.%f'),
             '_',
             self.env.get('SLURM_JOBID', ''),
             str(self.sh.getpid()),
