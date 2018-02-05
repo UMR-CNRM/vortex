@@ -55,6 +55,7 @@ class BDAPQuery(Query):
     def realkind(self):
         return 'bdap_query'
 
+
 class BDMPQuery(Query):
     """Class to deal with BDMP queries."""
     _footprint = dict(
