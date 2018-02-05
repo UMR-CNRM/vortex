@@ -31,6 +31,9 @@ Interface functions
 
 .. autofunction:: olive_enforce_oneshot
 
+.. autofunction:: olive_new_geometry
+
+
 Classes
 -------
 

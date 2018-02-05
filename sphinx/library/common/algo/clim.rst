@@ -24,6 +24,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MakeBDAPDomain
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: C923
    :show-inheritance:
    :members:

@@ -42,6 +42,7 @@ Functions
 
 .. autofunction:: empty_fa
 
+.. autofunction:: geopotentiel2zs
 
 Classes
 -------

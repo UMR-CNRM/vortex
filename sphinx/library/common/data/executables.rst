@@ -57,6 +57,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: IceNCDF2Ascii
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: SstGrb2Ascii
    :show-inheritance:
    :members:
@@ -138,6 +143,11 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: AddPearp
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Rgrid
    :show-inheritance:
    :members:
    :member-order: alphabetical

@@ -21,7 +21,17 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Raw2ODB
+.. autoclass:: Raw2ODBparallel
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: TaylorOdbProcess
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Bateur
    :show-inheritance:
    :members:
    :member-order: alphabetical

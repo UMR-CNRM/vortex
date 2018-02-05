@@ -26,3 +26,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: UnknownFlow
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

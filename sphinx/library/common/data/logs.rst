@@ -41,3 +41,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: TaskInfo
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
