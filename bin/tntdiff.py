@@ -73,7 +73,7 @@ def main(before_filename, after_filename,
                             macros.append(av)
                         if before_namelist[b].possible_macroname(bv):
                             macros.append(bv)
-    keys_to_set.update({bk:v[1] for bk,v in modified_values.items()})
+    keys_to_set.update({ bk: v[1] for bk, v in modified_values.items() })
 
     # Write directives
     tab = ' ' * 4
