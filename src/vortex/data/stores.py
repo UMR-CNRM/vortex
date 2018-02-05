@@ -956,7 +956,7 @@ class ArchiveStore(Store):
                 ),
                 strategy = dict(
                     optional = True,
-                    default = 'archive-std'
+                    default = 'vortex-archive'
                 ),
             )
         ),
@@ -1249,7 +1249,7 @@ class VortexArchiveStore(ArchiveStore):
             strategy = dict(
                 optional = True,
                 default = 'vortex-archive',
-                outcast = ['olive-archive',]
+                outcast = ['olive-archive', 'op-ksh-archive', ]
             )
         )
     )
@@ -1258,6 +1258,7 @@ class VortexArchiveStore(ArchiveStore):
         logger.debug('Vortex archive store init %s', self.__class__)
         super(VortexArchiveStore, self).__init__(*args, **kw)
 
+    @property
     def _actual_scheme(self):
         if self.scheme == 'vortex':
             return 'ftp'
@@ -1324,7 +1325,7 @@ class VortexStdArchiveStore(VortexArchiveStore):
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
         xpath[3:4] = list(xpath[3])
-        xpath[:0] = [self.system.path.sep, self.storehead]
+        xpath[:0] = [self.system.path.sep,]
         remote['path'] = self.system.path.join(*xpath)
         return remote
 
@@ -1354,7 +1355,6 @@ class VortexFreeStdArchiveStore(VortexArchiveStore, ConfigurableArchiveStore):
         xpath = remote['path'].split('/')
         f_xpid = FreeXPid(xpath[3])
         xpath[3] = f_xpid.id
-        xpath[:0] = [self.storehead, ]
         if 'root' not in remote:
             remote['root'] = self._actual_storeroot(f_xpid)
         remote['path'] = self.system.path.join(*xpath)
@@ -1390,7 +1390,7 @@ class VortexOpArchiveStore(VortexArchiveStore):
         vxdate.insert(7, '/')
         vxdate.insert(10, '/')
         xpath[4] = ''.join(vxdate)
-        xpath[:0] = [self.system.path.sep, self.storehead]
+        xpath[:0] = [self.system.path.sep,]
         remote['path'] = self.system.path.join(*xpath)
         return remote
 

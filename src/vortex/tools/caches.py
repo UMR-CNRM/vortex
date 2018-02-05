@@ -465,7 +465,7 @@ class Archive(Storage):
             scheme = dict(
                 optional = True,
                 default = "file",
-                values = ['ftp', 'ftserv', 'scp', 'rcp', 'ectrans', 'ecfs', 'file'],
+                values = ['ftp', 'ftserv',],
             ),
         )
     )
@@ -473,6 +473,15 @@ class Archive(Storage):
     def __init__(self, *args, **kw):
         logger.debug('Abstract archive init %s', self.__class__)
         super(Archive, self).__init__(*args, **kw)
+
+    @property
+    def entry(self):
+        """Tries to figure out what could be the actual entry point for archive space."""
+        if self.rootdir == 'auto':
+            pass
+        else:
+            archive = self.actual_rootdir
+        return self.sh.path.join(archive, self.actual_headdir)
 
     @property
     def realkind(self):
@@ -584,21 +593,13 @@ class Archive(Storage):
     def fullpath(self, subpath, **kwargs):
         """Actual full path in the archive place according to the compression used."""
         # Define the name of the file
-        format_path = super(Archive, self).fullpath(subpath, **kwargs)
+        format_path = self.formatted_path(subpath, **kwargs)
         if format_path is not None:
             # Locate the file according to the scheme
-            if isinstance(self.scheme, ['ftp', 'ftserv']):
+            if self.scheme in ['ftp', 'ftserv']:
                 format_path = self.ftpfullpath(format_path, **kwargs)
-            elif isinstance(self.scheme, ['ectrans']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['ecfs']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['rcp']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['scp']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['file']):
-                raise NotImplementedError
+            else:
+                raise NotImplementedError('The scheme is not implemented.')
         else:
             logger.error('The path is void')
             raise ValueError('The path is void.')
@@ -607,20 +608,12 @@ class Archive(Storage):
     def check(self, item, **kwargs):
         """Check/Stat an item from the current archive."""
         rc = None
-        path = self.fullpath(item, **kwargs)
+        path = self.formatted_path(item, **kwargs)
         if path is not None:
-            if isinstance(self.scheme, ['ftp', 'ftserv']):
+            if self.scheme in ['ftp', 'ftserv']:
                 rc = self.ftpcheck(path, **kwargs)
-            elif isinstance(self.scheme, ['ectrans']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['ecfs']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['rcp']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['scp']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['file']):
-                raise NotImplementedError
+            else:
+                raise NotImplementedError('The scheme is not implemented.')
         else:
             logger.error('The path is void.')
             raise ValueError('The path is void.')
@@ -629,20 +622,12 @@ class Archive(Storage):
     def insert(self, item, local, **kwargs):
         """Insert an item in the current archive."""
         rc = None
-        path = self.fullpath(item, **kwargs)
+        path = self.formatted_path(item, **kwargs)
         if path is not None:
-            if isinstance(self.scheme, ['ftp', 'ftserv']):
+            if self.scheme in ['ftp', 'ftserv']:
                 rc = self.ftpinsert(path, local, **kwargs)
-            elif isinstance(self.scheme, ['ectrans']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['ecfs']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['rcp']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['scp']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['file']):
-                raise NotImplementedError
+            else:
+                raise NotImplementedError('The scheme is not implemented.')
         else:
             logger.error('The path is void.')
             raise ValueError('The path is void.')
@@ -651,20 +636,13 @@ class Archive(Storage):
     def retrieve(self, item, local, **kwargs):
         """Retrieve an item from the current archive."""
         rc = None
-        path = self.fullpath(item, **kwargs)
+        path = self.formatted_path(item, **kwargs)
+        print(path)
         if path is not None:
-            if isinstance(self.scheme, ['ftp', 'ftserv']):
+            if self.scheme in ['ftp', 'ftserv']:
                 rc = self.ftpretrieve(path, local, **kwargs)
-            elif isinstance(self.scheme, ['ectrans']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['ecfs']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['rcp']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['scp']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['file']):
-                raise NotImplementedError
+            else:
+                raise NotImplementedError('The scheme is not implemented.')
         else:
             logger.error('The path is void.')
             raise ValueError('The path is void.')
@@ -673,20 +651,12 @@ class Archive(Storage):
     def delete(self, item, **kwargs):
         """Delete an item from the current archive."""
         rc = None
-        path = self.fullpath(item, **kwargs)
+        path = self.formatted_path(item, **kwargs)
         if path is not None:
-            if isinstance(self.scheme, ['ftp', 'ftserv']):
+            if self.scheme in ['ftp', 'ftserv']:
                 rc = self.ftpdelete(path, **kwargs)
-            elif isinstance(self.scheme, ['ectrans']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['ecfs']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['rcp']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['scp']):
-                raise NotImplementedError
-            elif isinstance(self.scheme, ['file']):
-                raise NotImplementedError
+            else:
+                raise NotImplementedError('The scheme is not implemented.')
         else:
             logger.error('The path is void.')
             raise ValueError('The path is void.')
@@ -723,15 +693,6 @@ class VortexArchive(Archive):
         )
     )
 
-    @property
-    def entry(self):
-        """Tries to figure out what could be the actual entry point for archive space."""
-        if self.rootdir == 'auto':
-            pass
-        else:
-            archive = self.actual_rootdir
-        return self.sh.path.join(archive, self.actual_headdir)
-
 
 class OliveArchive(Archive):
     """Archive items for the Olive like applications"""
@@ -740,7 +701,7 @@ class OliveArchive(Archive):
         info = 'Olive like archive',
         attr = dict(
             kind = dict(
-                values   = ['olive'],
+                values   = ['olive-archive'],
             ),
             rootdir = dict(
                 optional = True,
@@ -762,15 +723,6 @@ class OliveArchive(Archive):
             )
         )
     )
-
-    @property
-    def entry(self):
-        """Tries to figure out what could be the actual entry point for archive space."""
-        if self.rootdir == 'auto':
-            pass
-        else:
-            archive = self.actual_rootdir
-        return self.sh.path.join(archive, self.actual_headdir)
 
 
 class OpArchive(Archive):
@@ -801,15 +753,6 @@ class OpArchive(Archive):
             )
         )
     )
-
-    @property
-    def entry(self):
-        """Tries to figure out what could be the actual entry point for archive space."""
-        if self.rootdir == 'auto':
-            pass
-        else:
-            archive = self.actual_rootdir
-        return self.sh.path.join(archive, self.actual_headdir)
 
     def formatted_path(self, subpath, **kwargs):
         targetpath = None

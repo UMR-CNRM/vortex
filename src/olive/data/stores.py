@@ -39,8 +39,8 @@ class OliveArchiveStore(ArchiveStore):
             ),
             strategy=dict(
                 optional=True,
-                default='vortex-archive',
-                outcast=['olive-archive', ]
+                default='olive-archive',
+                outcast=['vortex-archive', 'op-ksh-archive', ]
             ),
         )
     )
@@ -48,6 +48,8 @@ class OliveArchiveStore(ArchiveStore):
     def __init__(self, *args, **kw):
         logger.debug('Olive archive store init %s', self.__class__)
         super(OliveArchiveStore, self).__init__(*args, **kw)
+
+    @property
     def _actual_scheme(self):
         if self.scheme == 'olive':
             return 'ftp'
@@ -58,7 +60,7 @@ class OliveArchiveStore(ArchiveStore):
         """Remap actual remote path to distant store path for read-only actions."""
         xpath = remote['path'].split('/')
         xpath[1:2] = list(xpath[1])
-        xpath[:0] = [ self.system.path.sep, self.storehead ]
+        xpath[:0] = [ self.system.path.sep,]
         remote['path'] = self.system.path.join(*xpath)
 
     def remap_write(self, remote, options):
@@ -220,9 +222,6 @@ class OpArchiveStore(ArchiveStore):
     @property
     def _actual_glue(self):
         return self.glue
-
-    def fullpath(self, remote):
-        return self.storeroot + remote['path']
 
     def oplocate(self, remote, options):
         """Delegates to ``system`` a distant check."""
