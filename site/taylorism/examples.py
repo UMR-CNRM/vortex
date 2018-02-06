@@ -66,12 +66,14 @@ def sleepers_generic_program(verbose=True, scheduler=None):
     for r in report['workers_report']:
         print(r)
 
+
 def sleepers_example_laxist(verbose=True):
     """Example: assuming no selection of strategy for scheduling."""
     sleepers_generic_program(
         verbose = verbose,
         scheduler = fpx.scheduler(nosort=True),
     )
+
 
 def sleepers_example_threads(verbose=True):
     """Example: scheduling is driven by number of threads."""
@@ -80,6 +82,7 @@ def sleepers_example_threads(verbose=True):
         scheduler = fpx.scheduler(limit='threads', max_threads=3),
     )
 
+
 def sleepers_example_bindedthreads(verbose=True):
     """Example: scheduling is driven by number of threads and processes are binded."""
     sleepers_generic_program(
@@ -87,12 +90,14 @@ def sleepers_example_bindedthreads(verbose=True):
         scheduler = fpx.scheduler(limit='threads', max_threads=3, binded=True),
     )
 
+
 def sleepers_example_memory(verbose=True):
     """Example: scheduling is driven by memory consumption."""
     sleepers_generic_program(
         verbose = verbose,
         scheduler = fpx.scheduler(limit='memory', memory_per_task=1.8),
     )
+
 
 def sleepers_example_bindedmemory(verbose=True):
     """Example: scheduling is driven by memory consumption and processes are binded."""

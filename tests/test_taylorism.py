@@ -11,7 +11,7 @@ from unittest import TestCase, main
 
 import footprints
 import taylorism
-from taylorism import examples
+from taylorism import examples, schedulers
 from bronx.system import interrupt  # because subprocesses must be killable properly
 from bronx.system import cpus as cpus_tool
 
@@ -103,17 +103,19 @@ class UtTaylorism(TestCase):
 
     def test_servermode(self):
         """Run as server mode, checks appending instructions."""
-
-        boss = taylorism.run_as_server(
-            common_instructions     = dict(),
-            individual_instructions = dict(sleeping_time=[0.001, 0.001, 0.001]),
-            scheduler               = footprints.proxy.scheduler(limit='threads', max_threads=2),
-        )
-        time.sleep(0.1)
-        boss.set_instructions(dict(), individual_instructions=dict(sleeping_time=[0.001, ]))
-        boss.wait_till_finished()
-        report = boss.get_report()
-        self.assertEqual(len(report['workers_report']), 4, "4 instructions have been sent, which is not the size of report.")
+        # Test both new and legacy schedulers
+        for scheduler in (footprints.proxy.scheduler(limit='threads', max_threads=2),
+                          schedulers.MaxThreadsScheduler(max_threads=2)):
+            boss = taylorism.run_as_server(
+                common_instructions     = dict(),
+                individual_instructions = dict(sleeping_time=[0.001, 0.001, 0.001]),
+                scheduler               = scheduler,
+            )
+            time.sleep(0.1)
+            boss.set_instructions(dict(), individual_instructions=dict(sleeping_time=[0.001, ]))
+            boss.wait_till_finished()
+            report = boss.get_report()
+            self.assertEqual(len(report['workers_report']), 4, "4 instructions have been sent, which is not the size of report.")
 
     def test_toomany_instr_after_crash(self):
         """
@@ -130,7 +132,7 @@ class UtTaylorism(TestCase):
             with self.assertRaises(_TestError):
                 boss.set_instructions(
                     dict(),
-                    individual_instructions = dict(sleeping_time=[1,], bidon=['a' * 100000000, ])
+                    individual_instructions = dict(sleeping_time=[1, ], bidon=['a' * 100000000, ])
                 )
 
     def test_binding(self):

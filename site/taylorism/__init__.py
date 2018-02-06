@@ -86,6 +86,7 @@ from footprints import FootprintBase, FPList, proxy as fpx
 from bronx.system import interrupt, cpus  # because subprocesses must be killable properly
 
 from .schedulers import BaseScheduler
+from .schedulers import MaxThreadsScheduler, binding_setup  # For compatibility
 
 interrupt.logger.setLevel('WARNING')
 taylorism_log = footprints.loggers.getLogger(__name__)
@@ -93,7 +94,7 @@ taylorism_log = footprints.loggers.getLogger(__name__)
 # : timeout when polling for a Queue/Pipe communication
 communications_timeout = 0.01
 
-__version__ = '1.0.6'
+__version__ = '1.0.7'
 
 
 # FUNCTIONS
@@ -116,6 +117,8 @@ def run_as_server(common_instructions=dict(),
     :param dict individual_instructions: to be passed to the workers
     :param scheduler: scheduler to rule scheduling of workers/threads
     :param bool verbose: is the Boss verbose or not.
+    :param int maxlenreport: the maximum number of lines for the report (when
+        running in verbose mode)
     """
     boss = Boss(verbose=verbose, scheduler=scheduler, maxlenreport=maxlenreport)
     boss.set_instructions(common_instructions, individual_instructions)
@@ -178,7 +181,7 @@ class Worker(FootprintBase):
                 access   = 'rwx',
             ),
             memory = dict(
-                info     = 'Memory that should be used by the worker in GB.',
+                info     = 'Memory that should be used by the worker (in MiB).',
                 optional = True,
                 default  = 0.,
                 type     = float,
@@ -223,7 +226,11 @@ class Worker(FootprintBase):
     messenger = property(_get_messenger, _set_messenger)
 
     def binding(self):
-        """Return the actual physical binding of the current process to a cpu if available."""
+        """Return the actual physical binding of the current process to a cpu if available.
+
+        The :class:`cpus.CpusToolUnavailableError` may be raised depending
+        on the system.
+        """
         cpuloc = cpus.get_affinity()
         if cpuloc == list(cpus.LinuxCpusInfo().raw_cpulist()):
             cpuloc = [None]
@@ -254,17 +261,18 @@ class Worker(FootprintBase):
         world !
         """
         with interrupt.SignalInterruptHandler():
-            to_be_sent_back = dict(name = self.name, report = None)
+            to_be_sent_back = dict(name=self.name, report=None)
             try:
                 for callback in self.scheduler_hooks:
                     callback(self)
-                to_be_sent_back.update(report = self._task())
+                self._work_and_communicate_prehook()
+                to_be_sent_back.update(report=self._task())
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 tb = traceback.format_exception(exc_type,
                                                 exc_value,
                                                 exc_traceback)
-                to_be_sent_back.update(report = e, traceback = tb)
+                to_be_sent_back.update(report=e, traceback=tb)
             finally:
                 try:
                     self.messenger.put(to_be_sent_back)
@@ -273,9 +281,14 @@ class Worker(FootprintBase):
                     # PickleError = to_be_sent_back unpickelable.
                     sys.stderr.write("The to_be_sent_back variable was:\n")
                     sys.stderr.write(str(to_be_sent_back))
-                    to_be_sent_back.update(report = e, traceback ='Traceback missing')
+                    to_be_sent_back.update(report=e, traceback='Traceback missing')
                     self.messenger.put(to_be_sent_back)
 
+    def _work_and_communicate_prehook(self):
+        """
+        Some stuff executed before the "real" work_end_communicate takes place.
+        """
+        pass
 
     def _task(self, **kwargs):
         """
@@ -283,6 +296,26 @@ class Worker(FootprintBase):
         Return the report to be sent back to the Boss.
         """
         raise RuntimeError("this method must be implemented in Worker's inheritant class !")
+
+
+class BindedWorker(Worker):
+    """Workers binded to a cpu core (Linux only).
+
+    This class is deprecated. Instead, inherit from :class:`Worker` and create
+    a scheduler with binded=True.
+    """
+
+    _abstract = True
+
+    def __init__(self, *kargs, **kwargs):
+        super(BindedWorker, self).__init__(*kargs, **kwargs)
+        taylorism_log.warning('The %s class is deprecated. Please use "Worker" instead.',
+                              self.__class__.__name__)
+
+    def _work_and_communicate_prehook(self):
+        """Bind the process to a cpu"""
+        if self.scheduler_ticket is not None:
+            binding_setup(self)
 
 
 class Boss(object):
@@ -315,7 +348,9 @@ class Boss(object):
     def __init__(self, scheduler=None, name=None, verbose=False, maxlenreport=1024):
         if scheduler is None:
             scheduler = fpx.scheduler(limit='threads', max_threads=0)
-        assert isinstance(scheduler, BaseScheduler)
+        # Duck typing check...
+        assert hasattr(scheduler, 'launchable')
+        assert callable(scheduler.launchable)
         self.scheduler = scheduler
         self.name = name
         self.verbose = verbose
@@ -504,7 +539,7 @@ class Boss(object):
         if not splitmode:
             report = self.control_messenger_out.recv()
         else:
-            report = {'workers_report':[]}
+            report = {'workers_report': []}
             while True:
                 r = self.control_messenger_out.recv()
                 if isinstance(r, tuple):
@@ -540,7 +575,7 @@ class Boss(object):
                                                 exc_value,
                                                 exc_traceback)
                 report = {'workers_report': e,
-                          'status':'workers exception',
+                          'status': 'workers exception',
                           'traceback': tb}
             finally:
                 try:
@@ -551,7 +586,7 @@ class Boss(object):
                     # already pickled once (by the workers)
                     taylorism_log.error("The report is too big to be sent back :-(")
                     report = {'workers_report': e,
-                              'status':'transmission exception',
+                              'status': 'transmission exception',
                               'traceback': 'Traceback missing'}
                     self._send_report(report, splitmode=True)
 

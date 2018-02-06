@@ -16,6 +16,17 @@ Other quantities, variables among execution, must be available within
 
 A set of basic schedulers is given.
 
+Starting from version 1.0.7, schedulers should be created using the footprints
+package::
+
+    import footprints as fp
+    # In order to create a NewMaxThreadsScheduler scheduler:
+    mt_sched = fp.proxy.scheduler(limit='threads', max_threads=2)
+
+Compatibility classes are still provided (see :class:`LaxistScheduler`,
+:class:`MaxThreadsScheduler`, :class:`MaxMemoryScheduler` and
+:class:`SingleOpenFileScheduler`) but they should not be used anymore.
+
 Dependencies
 ------------
 
@@ -25,12 +36,16 @@ Dependencies
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from footprints import FootprintBase
-from bronx.system import cpus
+from bronx.system import cpus, memory
 
 import os
 import multiprocessing
+import footprints
 
-MAX_NUMBER_PROCESSES=512
+logger = footprints.loggers.getLogger(__name__)
+
+MAX_NUMBER_PROCESSES = 512
+
 
 class BaseScheduler(FootprintBase):
     """Abstract base class for schedulers."""
@@ -80,7 +95,7 @@ class BaseScheduler(FootprintBase):
         return launchable
 
 
-class LaxistScheduler(BaseScheduler):
+class NewLaxistScheduler(BaseScheduler):
     """No sorting is done !"""
 
     _footprint = dict(
@@ -99,7 +114,7 @@ class LaxistScheduler(BaseScheduler):
         return (launchable, list())
 
 
-class LimitedScheduler(BaseScheduler):
+class NewLimitedScheduler(BaseScheduler):
     """
     A scheduler that dequeue the pending list as long as a maximum number
     of simultaneous tasks (*max_threads*) is not reached.
@@ -116,25 +131,65 @@ class LimitedScheduler(BaseScheduler):
     )
 
 
-class MaxThreadsScheduler(LimitedScheduler):
+#: Abstract footprint attribute for binding aware schedulers
+_binded_fpattr = footprints.Footprint(info = 'Abstract binded attribute',
+                                      attr = dict(binded = dict(type=bool,
+                                                                default=False,
+                                                                optional=True)))
+
+
+def binding_setup(worker):
+    """Bind a *worker* to its *scheduler_ticket* compute core."""
+    cpusinfo = cpus.LinuxCpusInfo()
+    cpuslist = list(cpusinfo.socketpacked_cpulist())
+    binded_cpu = cpuslist[worker.scheduler_ticket % cpusinfo.nvirtual_cores]
+    cpus.set_affinity(binded_cpu, str(os.getpid()))
+
+
+def BindingAwareScheduler(cls):
+    """
+    A class decorator that wraps the original _workers_hooks method to add
+    binding's setup method to the list Worker's hooks.
+
+    NB: The class' footprint should include a 'binded' attribute.
+    """
+
+    # Wrap _workers_hooks
+    original_hooks = getattr(cls, '_workers_hooks')
+
+    def new_hooks(self):
+        hookslist = original_hooks(self)
+        if getattr(self, 'binded', False):
+            hookslist.append(binding_setup)
+        return hookslist
+
+    cls._workers_hooks = new_hooks
+    return cls
+
+
+@BindingAwareScheduler
+class NewMaxThreadsScheduler(NewLimitedScheduler):
     """
     A basic scheduler that dequeue the pending list as long as a maximum number
     of simultaneous tasks (*max_threads*) is not reached.
     """
 
-    _footprint = dict(
-        attr = dict(
-            limit = dict(
-                values = ['threads', 'processes'],
-                remap  = dict(processes = 'threads'),
-            ),
-            max_threads = dict(
-                alias  = ('maxpc', 'maxthreads'),
-                remap  = {0: multiprocessing.cpu_count()/2},
-                type   = int,
-            ),
+    _footprint = [
+        _binded_fpattr,
+        dict(
+            attr = dict(
+                limit = dict(
+                    values = ['threads', 'processes'],
+                    remap  = dict(processes = 'threads'),
+                ),
+                max_threads = dict(
+                    alias  = ('maxpc', 'maxthreads'),
+                    remap  = {0: multiprocessing.cpu_count() / 2},
+                    type   = int,
+                ),
+            )
         )
-    )
+    ]
 
     def _all_tickets(self):
         """The actual range of available tickets is limited by a maximum number of threads."""
@@ -149,81 +204,60 @@ class MaxThreadsScheduler(LimitedScheduler):
         return (launchable, not_yet_launchable)
 
 
-class BindedScheduler(object):
-    """
-    Extension for binding processes to logical cpus.
-    """
-
-    def set_affinity(self, worker):
-        cpusinfo = cpus.LinuxCpusInfo()
-        cpuslist = list(cpusinfo.socketpacked_cpulist())
-        binded_cpu = cpuslist[worker.scheduler_ticket % cpusinfo.nvirtual_cores]
-        cpus.set_affinity(binded_cpu, str(os.getpid()))
-
-    def _workers_hooks(self):
-        return [self.set_affinity]
-
-
-class BindedMaxThreadsScheduler(BindedScheduler, MaxThreadsScheduler):
-    """
-    A max threads scheduler that binds workers to specific cpus.
-    """
-
-    _footprint = dict(
-        attr = dict(
-            binded = dict(
-                values = (True,),
-                type   = bool,
-            ),
-        )
-    )
-
-
-class MaxMemoryScheduler(LimitedScheduler):
+@BindingAwareScheduler
+class NewMaxMemoryScheduler(NewLimitedScheduler):
     """
     A basic scheduler that dequeue the pending list as long as a critical memory
     level (according to 'memory' element of workers instructions (in MB) and
     total system memory) is not reached.
     """
 
-    _footprint = dict(
-        attr = dict(
-            limit = dict(
-                values = ['memory', 'mem'],
-                remap  = dict(mem = 'memory'),
-            ),
-            max_memory = dict(
-                optional = True,
-                default  = None,
-                type     = float,
-                access   = 'rwx',
-            ),
-            memory_per_task = dict(
-                optional = True,
-                default  = 2.,
-                type     = float,
-            ),
-            memory_max_percentage = dict(
-                optional = True,
-                default  = 0.75,
-                type     = float,
-            ),
-            memory_total_size = dict(
-                optional = True,
-                default  = os.sysconf(str('SC_PAGE_SIZE')) * os.sysconf(str('SC_PHYS_PAGES')) / (1024 ** 3.),
-                type     = float,
-            ),
+    _footprint = [
+        _binded_fpattr,
+        dict(
+            attr = dict(
+                limit = dict(
+                    values = ['memory', 'mem'],
+                    remap  = dict(mem = 'memory'),
+                ),
+                max_memory = dict(
+                    info     = "Amount of usable memroy (in MiB)",
+                    optional = True,
+                    type     = float,
+                    access   = 'rwx',
+                ),
+                memory_per_task = dict(
+                    info     = ("If a worker do not provide any information on memory, " +
+                                "request at least *memory_per_task* MiB of memory."),
+                    optional = True,
+                    default  = 2048.,
+                    type     = float,
+                ),
+                memory_max_percentage = dict(
+                    info     = ("Max memory level as a fraction of the total" +
+                                "system memory (used only if max_memroy is not provided)."),
+                    optional = True,
+                    default  = 0.75,
+                    type     = float,
+                ),
+            )
         )
-    )
+    ]
 
     def __init__(self, *args, **kw):
-        """
-        *memory_max_percentage*: max memory level as a percentage of the total system memory.
-        *memory_total_size*: total system memory in GB.
-        """
-        super(MaxMemoryScheduler, self).__init__(*args, **kw)
+        """Setup the maximum """
+        super(NewMaxMemoryScheduler, self).__init__(*args, **kw)
         if self.max_memory is None:
-            self.max_memory = self.memory_max_percentage * self.memory_total_size
+            # memory tools are all but generic, they might fail !
+            try:
+                system_mem = memory.LinuxMemInfo().system_RAM('MiB')
+            except OSError:
+                raise OSError("Unable to determine the total system's memory size.")
+            self.max_memory = self.memory_max_percentage * system_mem
+
+    def _all_tickets(self):
+        """The actual range of available tickets is limited by a maximum number of threads."""
+        return set(range(0, MAX_NUMBER_PROCESSES))
 
     def launchable(self, pending_instructions, workers, report):
         """Limit strategy: only processes that fit in a given amount of memory could run."""
@@ -241,25 +275,7 @@ class MaxMemoryScheduler(LimitedScheduler):
         return (launchable, not_yet_launchable)
 
 
-class BindedMaxMemoryScheduler(BindedScheduler, MaxMemoryScheduler):
-    """
-    A max memory scheduler that binds workers to specific cpus.
-    """
-
-    _footprint = dict(
-        attr = dict(
-            binded = dict(
-                values = (True,),
-                type   = bool,
-            ),
-        )
-    )
-
-    def _all_tickets(self):
-        return set(range(MAX_NUMBER_PROCESSES))
-
-
-class SingleOpenFileScheduler(MaxThreadsScheduler):
+class NewSingleOpenFileScheduler(NewMaxThreadsScheduler):
     """
     Ensure that files will not be open 2 times simultaneously by 2 workers.
     And with a maximum threads number.
@@ -285,7 +301,77 @@ class SingleOpenFileScheduler(MaxThreadsScheduler):
             else:
                 launchable.append(pi)
         # and finally sort with regards to MaxThreads
-        (launchable, nyl) = super(SingleOpenFileScheduler, self).launchable(launchable, workers, report)
+        (launchable, nyl) = super(NewSingleOpenFileScheduler, self).launchable(launchable, workers, report)
         not_yet_launchable.extend(nyl)
         launchable = self._assign_tickets(workers, launchable)
         return (launchable, not_yet_launchable)
+
+
+# ------------------------------------------------------------------------------
+# The following classes are kept for backward compatibility. From now and on, one
+# should abstain to use them.
+
+
+class _AbstractOldSchedulerProxy(object):
+    """the abstract class of deprecated scheduler objects."""
+
+    _TARGET_CLASS = None
+
+    def __init__(self, *kargs, **kwargs):
+        if self._TARGET_CLASS is None:
+            raise RuntimeError('_TARGET_CLASS needs to be defined')
+        logger.warning('The %s class is deprecated. ' +
+                       'Instead, use the footprint mechanism to create schedulers.',
+                       self.__class__.__name__)
+        self.__target_scheduler = self._TARGET_CLASS(*kargs, **kwargs)
+        super(_AbstractOldSchedulerProxy, self).__init__()
+
+    def __getattr__(self, name):
+        return getattr(self.__target_scheduler, name)
+
+
+class LaxistScheduler(_AbstractOldSchedulerProxy):
+    """Deprecated class: should not be used from now and on."""
+
+    _TARGET_CLASS = NewLaxistScheduler
+
+    def __init__(self):
+        super(LaxistScheduler, self).__init__(nosort=True)
+
+
+class MaxThreadsScheduler(_AbstractOldSchedulerProxy):
+    """Deprecated class: should not be used from now and on."""
+
+    _TARGET_CLASS = NewMaxThreadsScheduler
+
+    def __init__(self, max_threads=0):
+        super(MaxThreadsScheduler, self).__init__(limit='threads', max_threads=max_threads)
+
+
+class MaxMemoryScheduler(_AbstractOldSchedulerProxy):
+    """Deprecated class: should not be used from now and on."""
+
+    _TARGET_CLASS = NewMaxMemoryScheduler
+
+    def __init__(self, max_memory_percentage=0.75, total_system_memory=None):
+        """
+        :param float max_memory_percentage: Max memory level as a fraction of the total system memory
+        :param float total_system_memory: Memory available on this system (in MiB)
+        """
+        if total_system_memory is not None:
+            max_memory = total_system_memory * max_memory_percentage
+        else:
+            max_memory = None
+        super(MaxMemoryScheduler, self).__init__(limit='memory',
+                                                 max_memory = max_memory,
+                                                 memory_max_percentage=max_memory_percentage)
+
+
+class SingleOpenFileScheduler(_AbstractOldSchedulerProxy):
+    """Deprecated class: should not be used from now and on."""
+
+    _TARGET_CLASS = NewSingleOpenFileScheduler
+
+    def __init__(self, max_threads=0):
+        super(SingleOpenFileScheduler, self).__init__(limit='threads', max_threads=max_threads,
+                                                      singlefile=True)
