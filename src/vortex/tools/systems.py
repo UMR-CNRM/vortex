@@ -2258,6 +2258,22 @@ class OSExtended(System):
                 raise ValueError("If destination is omitted, source must be a filename.")
         return cp.file2uncompress(source, destination)
 
+    def find_mount_point(self, path):
+        """Return the mount point of *path*.
+
+        :param str path: path where to look for a mount point
+        :return: the path to the mount point
+        :rtype: str
+        """
+        if not os.path.exists(path):
+            logger.warning('Path does not exist: <%s>', path)
+
+        path = os.path.abspath(path)
+        while not os.path.ismount(path):
+            path = os.path.dirname(path)
+
+        return path
+
 
 class Python27(object):
     """Python features starting from version 2.7."""

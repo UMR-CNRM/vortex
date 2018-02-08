@@ -345,7 +345,9 @@ def filteractive(r, dic):
     return filter_active
 
 
-def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_target=None, routingkey=None, selkeyproductid=None, targetname=None, transmet=None):
+def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_target=None,
+                         routingkey=None, selkeyproductid=None, targetname=None, transmet=None,
+                         header_infile=True):
     """Hook functions factory to route files while the execution is running.
 
     :param str kind: kind use to route
@@ -356,13 +358,15 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
     :param str routingkey: the BD routing key
     :param str selkeyproductid: (example: area, term, fields ...)
     :param str targetname:
-    :param str transmet:
+    :param dict transmet:
+    :param bool header_infile: use to add transmet header in routing file
     """
 
     def hook_route(t, rh):
         kwargs = dict(kind=kind, productid=productid, sshhost=sshhost,
                       filename=rh.container.abspath, soprano_target=soprano_target,
-                      routingkey=routingkey, targetname=targetname, transmet=transmet)
+                      routingkey=routingkey, targetname=targetname, transmet=transmet,
+                      header_infile=header_infile)
 
         if selkeyproductid:
             if isinstance(productid, dict):

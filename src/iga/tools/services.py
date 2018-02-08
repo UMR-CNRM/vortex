@@ -29,6 +29,7 @@ import logging
 import random
 import re
 import socket
+
 from StringIO import StringIO
 from logging.handlers import SysLogHandler
 
@@ -699,6 +700,11 @@ class TransmetService(BdpeService):
                 values    = ['TTAAII', 'gfnc'],
                 optional  = True,
                 default   = 'TTAAII',
+            ),
+            header_infile = dict(
+                optional  = True,
+                type      = bool,
+                default   = True,
             )
         )
     )
@@ -719,7 +725,7 @@ class TransmetService(BdpeService):
                 actual_transmet = self.transmet if isinstance(self.transmet, dict) else dict()
                 self._filename_transmet = get_ttaaii_transmet_sh(self.sh, self.transmet_cmd,
                                                                  actual_transmet, self.filename,
-                                                                 self.scriptdir)
+                                                                 self.scriptdir, self.header_infile)
                 logger.debug('filename transmet : %s', self._filename_transmet)
             else:
                 logger.error('version_header : %s not implemented', self.version_header)
@@ -825,9 +831,11 @@ class DayfileReportService(FileReportService):
         defaults to spooldir for these parts of centralized log files.
         """
         name = ''.join([
-            str(date.now().epoch),
+            date.now().strftime('%Y%m%d%H%M%S.%f'),
             '_',
-            self.env.get('NQSID', ''),
+            self.env.get('SLURM_JOBID', ''),
+            str(self.sh.getpid()),
+            '_',
             '1' if 'DEBUT' in self.mode else '0',
             str(random.random()),
         ])
