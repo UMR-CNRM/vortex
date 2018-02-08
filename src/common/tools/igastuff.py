@@ -148,6 +148,8 @@ class IgakeyFactoryArchive(_BaseIgakeyFactory):
                           'courtfr': 'arpege',
                           'frcourt': 'arpege',
                           'court': 'arpege', },
+               'mocage': {'camsfcst': 'macc',
+                          'camsassim': 'macc', },
                'arome': {'3dvarfr': 'arome',
                          'france': 'arome',
                          'pegase': 'pegase', },

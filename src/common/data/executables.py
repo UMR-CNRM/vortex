@@ -7,8 +7,9 @@ from __future__ import print_function, absolute_import, division
 __all__ = []
 
 
-from vortex.data.executables import Script, BlackBox, NWPModel, SurfaceModel
+from vortex.data.executables import Script, BlackBox, NWPModel, SurfaceModel, ChemistryModel
 from gco.syntax.stdattrs import gvar, arpifs_cycle
+from bronx.stdtypes import date
 
 
 class IFSModel(NWPModel):

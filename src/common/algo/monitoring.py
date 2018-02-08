@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: Automatic export of Observations class
+#: Automatic export of Monitoring class
 __all__ = [ ]
 
 import footprints

@@ -196,6 +196,9 @@ class OpArchive(Provider):
                                 fuzzy = fuzzy.upper()
                 elif entry == 'termfix':
                     fuzzy = '+' + resource.term.fmthour
+                    if(self.vapp == 'mocage'):
+                        valid = (resource.date + resource.term).ymdh
+                        fuzzy = '+' + valid
                     if keyattr == 'modelkey' and self.block == 'coupling_fc':
                         fuzzy = ''
                 elif entry == 'suffix':
@@ -270,7 +273,11 @@ class OpArchive(Provider):
                 if re.match(r'testms1|testmp1', self.igakey):
                     return '/'.join((self.igakey, dd, rr ))
                 elif re.match(r'mocage', self.igakey):
-                    return '/'.join((self.igakey, dd))
+                    return '/'.join((self.igakey, suite, dd))
+                elif re.match(r'macc', self.igakey) and re.match(r'production', rinfo['cutoff']):
+                    return '/'.join((self.igakey, suite, dd))
+                elif re.match(r'macc', self.igakey) and re.match(r'assim', rinfo['cutoff']):
+                    return '/'.join((self.igakey, suite, rinfo['cutoff'], dd))
                 elif re.match(r'surcotes|surcotes_oi', self.igakey):
                     return '/'.join((self.igakey, suite, dd, rr )).rstrip('/')
                 else:
