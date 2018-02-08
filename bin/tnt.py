@@ -167,6 +167,8 @@ def set_keys(nam, keys, doctor=False, indexes=None):
                     {('BLOCK','KEY'):index, ...}
     """
     assert isinstance(nam, common.data.namelists.NamelistContent)
+    if indexes is None:
+        indexes = {}
     for ((b, k), v) in keys.items():
         idx = indexes.get((b, k), None)
         if b in nam:
@@ -382,11 +384,12 @@ def main(filename,
 
 if __name__ == '__main__':
     import argparse
+    _tmpl = 'tmpl_directives.tnt'
     parser = argparse.ArgumentParser(description='TNT - The Namelist Tool: a namelist updater.',
                                      epilog='End of help for: %(prog)s')
     parser.add_argument('namelists',
                         type=str,
-                        nargs='+',
+                        nargs='*',
                         help='namelist(s) file(s) to be processed.')
     directives = parser.add_mutually_exclusive_group(required=True)
     directives.add_argument('-d',
@@ -397,7 +400,7 @@ if __name__ == '__main__':
     directives.add_argument('-D',
                             dest='generate_directives_template',
                             action='store_true',
-                            help="generates a directives template 'tmpl_directives.tnt'.")
+                            help="generates a directives template '{}'.".format(_tmpl))
     parser.add_argument('-i',
                         action='store_true',
                         dest='in_place',
@@ -448,8 +451,10 @@ if __name__ == '__main__':
     else:
         sorting = bronx.datagrip.namelist.NO_SORTING
     if args.generate_directives_template:
-        write_directives_template('tmpl_directives.tnt')
+        write_directives_template(_tmpl)
+        print("Template of directives written in: " + os.path.abspath(_tmpl))
     else:
+        assert len(args.namelists) > 0, "no namelists provided to process."
         directives = read_directives(args.directives)
         for nam in args.namelists:
             main(nam,

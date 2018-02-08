@@ -578,6 +578,12 @@ class NamelistBlock(object):
         varname = varname.upper()
         if not isinstance(value, list):
             value = [value, ]
+        # Automatically add free macros to the macro list
+        for v in [self._RE_FREEMACRO.match(v) for v in value
+                  if isinstance(v, six.string_types)]:
+            if v and v.group(1) not in self.macros():
+                self.addmacro(v.group(1))
+        # Process the given value...
         self._pool[varname] = value
         if varname not in self._keys:
             if index is None:
@@ -727,15 +733,15 @@ class NamelistBlock(object):
         self.addmacro(macro, value)
         self._declared_subs.add(macro)
 
-    def _possible_macroname(self, item):
-        """Find wether *item* is a macro or not."""
+    def possible_macroname(self, item):
+        """Find whether *item* is a macro or not."""
         if item in self._declared_subs:
             return item
         elif isinstance(item, six.string_types) and self._RE_FREEMACRO.match(item):
             itemized = self._RE_FREEMACRO.sub(r'\1', item)
-            if itemized in self._subs:
-                return itemized
-        return None
+            return itemized
+        else:
+            return None
 
     def nice(self, item, literal=None):
         """Nice encoded value of the item, possibly substitute with macros."""
@@ -754,9 +760,9 @@ class NamelistBlock(object):
                 itemli = itemli[1:]
         else:
             itemli = item
-        macroname = self._possible_macroname(itemli)
+        macroname = self.possible_macroname(itemli)
         if macroname is not None:
-            if self._subs[macroname] is None:
+            if self._subs.get(macroname, None) is None:
                 return item
             else:
                 return literal.encode(self._subs[macroname])
@@ -1192,7 +1198,6 @@ class NamelistParser(object):
 
             elif self.freemacro_eol.match(source):
                 rmatch = self.freemacro_eol.match(source)
-                namelist.addmacro(rmatch.group('NAME'), None)
                 values.append(rmatch.group(0))
                 source = self._namelist_clean(source[len(rmatch.group(0)):])
                 if self.comma.match(source):
