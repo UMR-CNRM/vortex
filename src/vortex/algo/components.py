@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
-#: No automatic export
-__all__ = []
-
 import collections
 import sys
 import traceback
@@ -14,12 +11,16 @@ import multiprocessing
 from bronx.stdtypes import date
 from taylorism import Boss
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 import vortex
 from vortex.algo  import mpitools
 from vortex.tools.parallelism import ParallelResultParser
 from vortex.syntax.stdattrs import DelayedEnvValue
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class AlgoComponentError(Exception):

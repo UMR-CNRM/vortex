@@ -1,6 +1,16 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation
+TODO: More documentation (incl. examples)
+TODO: unittest
+
+.. warning:: This module is under heavy development consequently significant
+             changes will be made in future versions. DO NOT USE YET.
+
+"""
+
 from __future__ import absolute_import, unicode_literals, print_function
 
 import re
@@ -10,15 +20,13 @@ import textwrap
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from bronx.stdtypes import date
-
-import bronx.fancies.arguments
+import bronx.fancies.arguments  # @UnusedImport
 
 DEFAULT_PARSER_KIND = 'full'
 
 
 class WrapCmdLineArgs(object):
-    """Decorator for do_ functions of cmd.Cmd derivated classes."""
+    """Decorator for ``do_`` functions of cmd.Cmd derivated classes."""
 
     _re_doc_defaults = re.compile(r'^\s*[Dd]efaul?ts?\s+(\w+)\s*:\s*(\S.*)\s*$', re.MULTILINE)
 
@@ -62,7 +70,8 @@ class WrapCmdLineArgs(object):
         self.parser.parser_init.update(add_help=self.addhelp)
         if '_all' in self.items:
             self.items = set(self.parser.keys())
-        self.opts = {opt:self.parser.store_defined_argument(opt, required=self.required, optional=self.optional) for opt in self.items}
+        self.opts = {opt: self.parser.store_defined_argument(opt, required=self.required, optional=self.optional)
+                     for opt in self.items}
 
     def setprog(self, f):
         """Top level documentation of the decorated function: prog and description."""
@@ -92,6 +101,7 @@ class WrapCmdLineArgs(object):
         """Decorate the do_ function in order to get a dict with parsed options as sole argument."""
         self.setprog(f)
         self.setdefaults()
+
         def parsed_f(objcmd, *args, **kw):
             objcmd.defined_opts = self.opts
             line = args[0] if args else ''
@@ -104,9 +114,10 @@ class WrapCmdLineArgs(object):
                 return
             options.update(kw)
             objcmd.logflag = options.get('report')
-            for item, pstore in self.opts.iteritems():
+            for item, pstore in self.opts.iteritems():  # @UnusedVariable
                 options[pstore.dest] = pstore.callback(options[pstore.dest])
             return f(objcmd, **options)
+
         parsed_f.__name__ = f.__name__
         parsed_f.__doc__  = self.parser.format_help()
         return parsed_f

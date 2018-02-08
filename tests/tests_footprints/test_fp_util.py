@@ -642,10 +642,6 @@ class utCatalog(TestCase):
         self.assertEqual(len(rv), 0)
         self.assertFalse(rv.filled)
 
-        # this is a property
-        with self.assertRaises(AttributeError):
-            rv.weak = False
-
         # could not create a weak ref to 'int' object
         with self.assertRaises(TypeError):
             rv.add(2)

@@ -12,13 +12,13 @@ import re
 import traceback
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
 from vortex.util.structs    import ShellEncoder
 from bronx.stdtypes.history import PrivateHistory
 
 #: No automatic export
 __all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 #: Pre-compiled evaluation mostly used by :class:`Environment` method (true).
 vartrue = re.compile(r'^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$', flags=re.IGNORECASE)

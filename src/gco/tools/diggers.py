@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-utility classes to information on the availability of operational resources.
+utility classes to information on the availability of some resources.
 
 .. warning:: This module is under heavy development consequently significant
              will be made in future versions. DO NOT USE YET.
@@ -12,11 +12,12 @@ utility classes to information on the availability of operational resources.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import toolbox
 from bronx.stdtypes import date
 from bronx.fancies.colors import termcolors as tmc
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Digger(footprints.FootprintBase):

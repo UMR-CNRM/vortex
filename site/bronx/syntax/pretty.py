@@ -36,7 +36,8 @@ class Utf8PrettyPrinter(pprint.PrettyPrinter, object):
     """
     An utf-8 friendly version of the standard pprint.
 
-    This class may be used like the original, e.g.:
+    This class may be used like the original, e.g.::
+
        pf = Utf8PrettyPrinter().pformat
        print 'an_object:', pf(vars(an_object))
     """

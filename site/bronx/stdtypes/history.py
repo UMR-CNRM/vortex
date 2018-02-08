@@ -3,6 +3,10 @@
 
 """
 Some types to manage history of commands, actions, etc.
+
+TODO: Module documentation + example
+TODO: Add a simple unittest
+TODO: Fix undocumented properties
 """
 
 import collections
@@ -25,6 +29,7 @@ class PrivateHistory(object):
         if not hasattr(self, '_timer'):
             self._timer = False
         return self._timer
+
     def _set_timer(self, value):
         self._timer = bool(value)
 

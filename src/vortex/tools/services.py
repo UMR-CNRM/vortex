@@ -7,8 +7,6 @@ With the abstract class Service (inheritating from FootprintBase)
 a default Mail Service is provided.
 """
 
-#: No automatic export
-__all__ = []
 
 import os
 import hashlib
@@ -16,14 +14,17 @@ from string import Template
 from ConfigParser import NoOptionError, NoSectionError
 
 from bronx.stdtypes import date
+from bronx.syntax.pretty import Utf8PrettyPrinter
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
-from vortex.tools.actions import actiond as ad
+from vortex.tools.actions import actiond as ad  # @UnusedImport
 from vortex.util.config import GenericConfigParser, load_template
-from bronx.syntax.pretty import Utf8PrettyPrinter
 
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 # See logging.handlers.SysLogHandler.priority_map
 criticals = ['debug', 'info', 'error', 'warning', 'critical']

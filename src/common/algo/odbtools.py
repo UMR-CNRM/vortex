@@ -3,16 +3,13 @@
 
 from __future__ import print_function, absolute_import, division
 
-#: No automatic export
-__all__ = []
-
 from collections import defaultdict
 import io
 import re
 
-
 import footprints
-logger = footprints.loggers.getLogger(__name__)
+
+from bronx.stdtypes.dictionaries import Foo
 
 from vortex.tools.systems   import ExecutionError
 from vortex.tools           import odb
@@ -21,7 +18,10 @@ from vortex.syntax.stdattrs import a_date
 
 from common.data.obs import ObsMapContent, ObsMapItem, ObsRefContent, ObsRefItem
 
-from bronx.stdtypes.dictionaries import Foo
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class OdbProcess(Parallel, odb.OdbComponent):

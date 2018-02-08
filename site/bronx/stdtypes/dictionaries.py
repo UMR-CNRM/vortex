@@ -2,8 +2,13 @@
 # -*- coding:Utf-8 -*-
 
 """
-Structs like classes for miscellaneous usage.
+Structs or dictionary like classes for miscellaneous usage.
+
+TODO: Example
+TODO: unittest
 """
+
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import collections
 
@@ -30,7 +35,7 @@ class Foo(object):
 
 
 class ReadOnlyDict(collections.Mapping):
-    """A type of readonly dictionnary."""
+    """A type of read-only dictionary."""
 
     def __init__(self, data=dict()):
         self._data = data

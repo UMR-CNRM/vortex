@@ -1,15 +1,25 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation
+
+TODO: Add a simple unittest
+
+.. warning:: This module is under heavy development consequently significant
+             changes will be made in future versions. DO NOT USE YET.
+
+"""
 from __future__ import absolute_import, unicode_literals, print_function
 
 import re
 import argparse
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from bronx.stdtypes import date
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class ArgumentParser(footprints.FootprintBase):
@@ -68,18 +78,21 @@ class ArgumentParser(footprints.FootprintBase):
 
     def _get_description(self):
         return self.actual_parser.description
+
     def _set_description(self, value):
         self.actual_parser.description = value
     description = property(_get_description, _set_description)
 
     def _get_usage(self):
         return self.actual_parser.usage
+
     def _set_usage(self, value):
         self.actual_parser.usage = value
     usage = property(_get_usage, _set_usage)
 
     def _get_prog(self):
         return self.actual_parser.prog
+
     def _set_prog(self, value):
         self.actual_parser.prog = value
     prog = property(_get_prog, _set_prog)
@@ -485,7 +498,7 @@ class MeteoExtendedArguments(object):
     @classmethod
     def mkperiodlist(cls, value):
         """Return a list of date.Period values from an extended period range value in minutes."""
-        return [date.Period('PT'+unicode(x)+'M') for x in footprints.util.rangex(value)]
+        return [date.Period('PT' + unicode(x ) + 'M') for x in footprints.util.rangex(value)]
 
 
 class CfgMeteoArgumentParser(DefinedArgumentParser, CfgExtendedArguments, MeteoExtendedArguments):

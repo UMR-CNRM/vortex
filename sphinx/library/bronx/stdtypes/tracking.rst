@@ -1,0 +1,18 @@
+:mod:`bronx.stdtypes.tracking` --- Tool to handle changes in some context
+=========================================================================
+
+.. automodule:: bronx.stdtypes.tracking
+   :synopsis: Tool to handle changes in some context
+
+.. moduleauthor:: The Vortex Team & many contributors
+.. sectionauthor:: The Vortex Team & many contributors
+.. versionadded:: 1.2.2
+
+
+Classes
+-------
+
+.. autoclass:: Tracker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

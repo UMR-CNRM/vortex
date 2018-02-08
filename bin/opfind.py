@@ -45,7 +45,7 @@ class OpFindArgs(CfgMeteoArgumentParser):
 
     def refine_defined_xdate(self):
         """Set the last synoptic hour as default, UTC."""
-       return dict(
+        return dict(
             default = date.lastround(base=date.utcnow(), rh=3).ymdhm,
         )
 
@@ -83,6 +83,7 @@ from bronx.fancies.wrapcmd import WrapCmdLineArgs
 from bronx.fancies.dispatch import ExtendedCmdLiner
 
 FULL_OPTS = ('xdate', 'model', 'cutoff', 'term', 'notterm', 'location', 'step', 'suite', 'kind', 'namespace')
+
 
 class OpFindCmd(ExtendedCmdLiner):
 

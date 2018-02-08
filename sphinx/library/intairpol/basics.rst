@@ -9,12 +9,6 @@
 .. versionadded:: 1.2.1
 
 
-Functions
----------
-
-.. autofunction:: airpath
-
-
 Classes
 -------
 

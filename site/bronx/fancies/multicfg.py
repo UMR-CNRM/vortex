@@ -7,8 +7,11 @@ YAML Configuration file with possible multiple versions.
 A basic mechanism is implemented for the selection of the current version.
 It may be extended to support various criteria.
 
+TODO: More documentation (incl. examples)
+TODO: unittest
+
 .. warning:: This module is under heavy development consequently significant
-             will be made in future versions. DO NOT USE YET.
+             changes will be made in future versions. DO NOT USE YET.
 
 """
 
@@ -20,9 +23,10 @@ import io
 import yaml
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from bronx.stdtypes import date
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 def _construct_yaml_str(self, node):
@@ -53,7 +57,7 @@ def upfirst(subpath='work', thispath=None):
 class MultiFileCfg(footprints.FootprintBase):
     """
     Handler for multi-files YAML configuration files.
-    Filenames should be cfgname-cfgtag-*.cfgext
+    Filenames should be ``cfgname-cfgtag-*.cfgext``
     """
 
     _abstract  = True
@@ -90,7 +94,6 @@ class MultiFileCfg(footprints.FootprintBase):
         self._cfgstack = glob.glob(self.cfgfullpath())
         self._cfgstack.sort()
         self.select()
-
 
     @property
     def cfgfile(self):

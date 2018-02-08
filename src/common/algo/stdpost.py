@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
-
 import collections
 import json
 import re
@@ -14,8 +11,6 @@ import footprints
 from footprints.stdtypes import FPTuple
 from taylorism import Boss
 
-logger = footprints.loggers.getLogger(__name__)
-
 from vortex.layout.monitor    import BasicInputMonitor, AutoMetaGang, MetaGang, EntrySt, GangSt
 from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, Parallel, AlgoComponentError
 from vortex.syntax.stdattrs   import DelayedEnvValue, FmtInt
@@ -25,6 +20,11 @@ from vortex.tools.systems     import ExecutionError
 from vortex.util.structs      import FootprintCopier
 
 from common.tools.grib        import GRIBFilter
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class _FA2GribWorker(VortexWorkerBlindRun):

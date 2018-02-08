@@ -3,8 +3,14 @@
 
 """
 Tool to handle changes in some context.
+
 Changes could be creation, deletion, modification.
+
+TODO: More documentation + example
+TODO: unittest
+TODO: Properties' documentation
 """
+
 
 class Tracker(object):
     """Handling of simple state status through ``deleted``, ``created`` or ``updated`` items."""

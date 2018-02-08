@@ -11,9 +11,9 @@ __all__ = []
 import json
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
 from bronx.stdtypes.history import PrivateHistory
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class History(PrivateHistory, footprints.util.GetByTag):

@@ -104,7 +104,6 @@ class PerleLauncher(PerleTool):
                 optional = True,
                 alias    = ('op',),
                 values   = ['oper', 'dble', 'test', 'dbl'],
-                #remap    = dict(dbl = 'dble'),
                 default  = DelayedEnvValue('PERLE_OPER_VERSION', 'oper'),
             ),
             simulation_level = dict(

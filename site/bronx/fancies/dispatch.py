@@ -7,6 +7,10 @@ An extended cmd line action dispatcher for interactive usage.
 The first argument is the so-called action to perform.
 All other command-line arguments are supposed to be options
 given to action-methods of the dispatcher.
+
+.. warning:: This module is under heavy development consequently significant
+             will be made in future versions. DO NOT USE YET.
+
 """
 
 from __future__ import absolute_import, unicode_literals, print_function
@@ -16,20 +20,18 @@ import sys
 import subprocess
 import shlex
 import re
-import glob
 import io
 import cmd
 import pickle
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
-from bronx.stdtypes import date
 from bronx.stdtypes.history import PrivateHistory as Histo
 from bronx.fancies.colors import termcolors
 from bronx.fancies.wrapcmd import WrapCmdLineArgs
+import bronx.fancies.multicfg  # @UnusedImport
 
-import bronx.fancies.multicfg
+logger = footprints.loggers.getLogger(__name__)
 
 
 class StdColorFilter(object):
@@ -105,7 +107,7 @@ class CmdLiner(cmd.Cmd):
 
     def setprompt(self):
         """Build a prompt with history count."""
-        self.prompt = '[{0:s}][{1:d}] '.format(self._prompt, self.history.count+1)
+        self.prompt = '[{0:s}][{1:d}] '.format(self._prompt, self.history.count + 1)
 
     def precmd(self, line):
         """Save non-empty command lines in history."""
@@ -113,7 +115,7 @@ class CmdLiner(cmd.Cmd):
             if re.match('^!!', line):
                 line = re.sub('^!!', self.history.nice(self.history.last), line)
             elif re.match('^!\d+', line):
-                line = re.sub('^!(\d+)', lambda m : self.history.nice(self.history.getbynumber(int(m.group(1)))), line)
+                line = re.sub('^!(\d+)', lambda m: self.history.nice(self.history.getbynumber(int(m.group(1)))), line)
         if line:
             self.history.append(line)
             self.setprompt()
@@ -132,7 +134,7 @@ class CmdLiner(cmd.Cmd):
     def nicelist(self, itervalue, **opts):
         """Return a comma separated list of iterable values according to discard and grep options."""
         return ', '.join(sorted([x for x in itervalue
-            if x not in opts['discard'] and opts['grep'].search(x)]))
+                                 if x not in opts['discard'] and opts['grep'].search(x)]))
 
     def do_shell(self, line):
         """Simply run the command line as a shell subprocess."""
@@ -166,7 +168,7 @@ class CmdLiner(cmd.Cmd):
     @WrapCmdLineArgs('_all', addhelp=True)
     def do_echo(self, **opts):
         """Display all the registered arguments and their default values."""
-        invopts = {v.dest:v for v in self.defined_opts.values()}
+        invopts = {v.dest: v for v in self.defined_opts.values()}
         maxname = max([len(x.optname) for x in invopts.values()])
         maxclean = max([len(x.optclean) for x in invopts.values()])
         for k, v in sorted(opts.items()):
@@ -176,11 +178,11 @@ class CmdLiner(cmd.Cmd):
             else:
                 alternate = '[' + storeaction.optname + ']'
             self.stdlog('{0:{widthclean}s} {1:{widthname}s} :'.format(
-                    storeaction.optclean,
-                    alternate,
-                    widthclean=maxclean,
-                    widthname=maxname+2,
-                ), opts[storeaction.dest])
+                storeaction.optclean,
+                alternate,
+                widthclean=maxclean,
+                widthname=maxname + 2,
+            ), opts[storeaction.dest])
 
     def save_history(self):
         """Dump actual history logfile."""

@@ -6,14 +6,15 @@ This modules defines the physical layout.
 """
 
 import footprints
-from vortex.tools.env import Environment
-from . import dataflow
-
 from bronx.stdtypes.history  import PrivateHistory
 from bronx.stdtypes.tracking import Tracker
 
+from vortex.tools.env import Environment
+from . import dataflow
+
 #: No automatic export.
 __all__ = []
+
 logger = footprints.loggers.getLogger(__name__)
 
 _RHANDLERS_OBSBOARD = 'Resources-Handlers'
