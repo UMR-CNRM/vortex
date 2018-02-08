@@ -130,7 +130,7 @@ class FinalizePGD(AlgoComponent):
         self.algoassert(is_epygram_available(ev), "Epygram >= " + ev +
                         " is needed here")
 
-    def execute(self, rh, opts):
+    def execute(self, rh, opts):  # @UnusedVariable
         """Convert SURFGEOPOTENTIEL from clim to SFX.ZS in pgd."""
         import numpy
         from common.util.usepygram import epygram, epy_env_prepare
@@ -166,7 +166,7 @@ class FinalizePGD(AlgoComponent):
                       fld.geometry.grid.get('LAMzone') is not None):
                     ext_data = numpy.ma.masked_equal(numpy.zeros(g.data.shape), 0.)
                     ext_data[:fld.geometry.dimensions['Y'],
-                             :fld.geometry.dimensions['X']] = fld.data[:,:]
+                             :fld.geometry.dimensions['X']] = fld.data[:, :]
                     fld = footprints.proxy.fields.almost_clone(fld, geometry=g.geometry)
                     fld.setdata(ext_data)
                 pgdout.writefield(fld, compression=epypgd.fieldscompression.get(f, None))
@@ -264,7 +264,7 @@ class MakeLAMDomain(AlgoComponent):
                         "With mode=={}, geom_params must contain at most {}".
                         format(self.mode, str(params)))
 
-    def execute(self, rh, opts):
+    def execute(self, rh, opts):  # @UnusedVariable
         from common.util.usepygram import epygram
         dm = epygram.geometries.domain_making
         if self.mode == 'center_dims':
@@ -329,7 +329,7 @@ class MakeGaussGeometry(Parallel):
                 info = 'pole of stretching (lon, lat), angles in degrees',
                 type = footprints.FPDict,
                 optional = True,
-                default = {'lon':0., 'lat':90.}
+                default = {'lon': 0., 'lat': 90.}
             ),
             # RGRID commandline options
             latitudes = dict(
@@ -406,7 +406,7 @@ class MakeGaussGeometry(Parallel):
         # from common.util.usepygram import epygram
         from epygram.geometries.SpectralGeometry import gridpoint_dims_from_truncation
         if self.latitudes is None and self.longitudes is None:
-            dims = gridpoint_dims_from_truncation({'max':self.truncation},
+            dims = gridpoint_dims_from_truncation({'max': self.truncation},
                                                   grid=self.grid)
             self._attributes['latitudes'] = dims['lat_number']
             self._attributes['longitudes'] = dims['max_lon_number']
@@ -424,10 +424,10 @@ class MakeGaussGeometry(Parallel):
                    'g': str(self.latitudes),
                    'l': str(self.longitudes),
                    'f': str(self._unit)}
-        options_dict = {'orthogonality':'o',
-                        'aliasing':'a',
-                        'oddity':'n',
-                        'verbosity':'v'}
+        options_dict = {'orthogonality': 'o',
+                        'aliasing': 'a',
+                        'oddity': 'n',
+                        'verbosity': 'v'}
         for k in options_dict.keys():
             if getattr(self, k) is not None:
                 options[options_dict[k]] = str(getattr(self, k))
@@ -447,13 +447,14 @@ class MakeGaussGeometry(Parallel):
         nam['NAMDIM']['NDLON'] = self.longitudes
         nam['NAMDIM']['NSMAX'] = self.truncation
         nam['NAMGEM']['NHTYP'] = 2
-        nam['NAMGEM']['NSTTYP'] = 2 if self.pole != {'lon':0., 'lat':90.} else 1
+        nam['NAMGEM']['NSTTYP'] = 2 if self.pole != {'lon': 0., 'lat': 90.} else 1
         nam['NAMGEM']['RMUCEN'] = math.sin(math.radians(float(self.pole['lat'])))
         nam['NAMGEM']['RLOCEN'] = math.radians(float(self.pole['lon']))
         nam['NAMGEM']['RSTRET'] = self.stretching
         # numbers of longitudes
         with open('fort.' + str(self._unit), 'r') as n:
-            nam.merge(namelist.namparse(n))
+            namrgri = namelist.namparse(n)
+            nam.merge(namrgri)
         # PGD namelist
         nam_pgd = copy.deepcopy(nam)
         nam_pgd['NAMGEM'].delvar('NHTYP')
@@ -473,12 +474,32 @@ class MakeGaussGeometry(Parallel):
                   'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
         # subtruncated grid for orography
-        trunc_nsmax = truncation_from_gridpoint_dims({'lat_number':self.latitudes,
-                                                      'max_lon_number':self.longitudes},
+        trunc_nsmax = truncation_from_gridpoint_dims({'lat_number': self.latitudes,
+                                                      'max_lon_number': self.longitudes},
                                                      grid=self.orography_grid)['max']
         nam['NAMDIM']['NSMAX'] = trunc_nsmax
         with open('.'.join([self.geometry.tag,
                             'namel_c923_orography',
+                            'geoblocks']),
+                  'w') as out:
+            out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
+        # C927 (fullpos) namelist
+        nam = namelist.NamelistSet()
+        nam.add(namelist.NamelistBlock('NAMFPD'))
+        nam.add(namelist.NamelistBlock('NAMFPG'))
+        nam['NAMFPD']['NLAT'] = self.latitudes
+        nam['NAMFPD']['NLON'] = self.longitudes
+        nam['NAMFPG']['NFPMAX'] = self.truncation
+        nam['NAMFPG']['NFPHTYP'] = 2
+        nam['NAMFPG']['NFPTTYP'] = 2 if self.pole != {'lon': 0., 'lat': 90.} else 1
+        nam['NAMFPG']['FPMUCEN'] = math.sin(math.radians(float(self.pole['lat'])))
+        nam['NAMFPG']['FPLOCEN'] = math.radians(float(self.pole['lon']))
+        nam['NAMFPG']['FPSTRET'] = self.stretching
+        nrgri = [v for _, v in sorted(namrgri['NAMRGRI'].items())]
+        for i in range(len(nrgri)):
+            nam['NAMFPG']['NFPRGRI({:>4})'.format(i + 1)] = nrgri[i]
+        with open('.'.join([self.geometry.tag,
+                            'namel_c927',
                             'geoblocks']),
                   'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
@@ -568,7 +589,7 @@ class MakeBDAPDomain(AlgoComponent):
                 logger.info('attribute *boundaries* ignored')
         self.plot_params['bluemarble'] = 0.  # FIXME:? JPEG decoder not available on beaufix
 
-    def execute(self, rh, opts):
+    def execute(self, rh, opts):  # @UnusedVariable
         from common.util.usepygram import epygram
         dm = epygram.geometries.domain_making
         if self.mode == 'inside_model':
