@@ -14,6 +14,9 @@ Sub-modules
 -----------
 
 * :mod:`bronx.stdtypes.date`: Time, date and calendars functions.
+* :mod:`bronx.stdtypes.dictionaries`
+* :mod:`bronx.stdtypes.history`
+* :mod:`bronx.stdtypes.tracking`
 
 NB: All of these sub-modules have to be imported manually (depending on your
 needs).

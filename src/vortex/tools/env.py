@@ -12,7 +12,8 @@ import re
 import traceback
 
 import footprints
-from vortex.util.structs import PrivateHistory, ShellEncoder
+from vortex.util.structs    import ShellEncoder
+from bronx.stdtypes.history import PrivateHistory
 
 #: No automatic export
 __all__ = []
@@ -66,7 +67,7 @@ class Environment(object):
             this environment is associated to. This implies that the
             environment won't activate unless this associated Context is active.
         :param bool history: Record every changes in an
-            :class:`~vortex.util.structs.PrivateHistory` object that will be
+            :class:`~bronx.stdtypes.history.PrivateHistory` object that will be
             accessible through the :attr:`history` property.
         """
         self.__dict__['_history'] = PrivateHistory() if history else None
@@ -106,7 +107,7 @@ class Environment(object):
     @property
     def history(self):
         """
-        This environment's :class:`~vortex.util.structs.PrivateHistory`
+        This environment's :class:`~bronx.stdtypes.history.PrivateHistory`
         object (may be ``None``).
         """
         return self._history

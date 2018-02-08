@@ -5,9 +5,6 @@
 This modules defines the low level physical layout for data handling.
 """
 
-#: No automatic export.
-__all__ = []
-
 import re
 import collections
 from collections import namedtuple, defaultdict
@@ -16,12 +13,15 @@ import weakref
 import json
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
 from footprints.util import mktuple
-from vortex.util.structs import Utf8PrettyPrinter
+from bronx.syntax.pretty import Utf8PrettyPrinter
+
 from vortex.util.roles import setrole
 
+#: No automatic export.
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 _RHANDLERS_OBSBOARD = 'Resources-Handlers'
 
@@ -776,7 +776,7 @@ class LocalTracker(defaultdict):
             self[lpath].update_rh(rh, info)
         else:
             logger.debug('The iotarget is not a basestring: skipped in %s',
-                        self.__class__)
+                         self.__class__)
 
     def update_store(self, store, info):
         """Update the object based on data received from the observer board.

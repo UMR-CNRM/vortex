@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
-
 import collections
 import json
 import re
@@ -13,8 +10,6 @@ from bronx.datagrip.namelist  import NamelistBlock
 import footprints
 from footprints.stdtypes import FPTuple
 from taylorism import Boss
-from taylorism.schedulers import MaxThreadsScheduler
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.layout.monitor    import BasicInputMonitor, AutoMetaGang, MetaGang, EntrySt, GangSt
 from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, Parallel, AlgoComponentError
@@ -25,6 +20,11 @@ from vortex.tools.systems     import ExecutionError
 from vortex.util.structs      import FootprintCopier
 
 from common.tools.grib        import GRIBFilter
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class _FA2GribWorker(VortexWorkerBlindRun):
@@ -225,7 +225,7 @@ def parallel_grib_filter(context, inputs, outputs, intents=(),
         raise AlgoComponentError("inputs and outputs must have the same length")
     if len(intents) != len(outputs):
         intents = FPTuple(['in', ] * len(outputs))
-    boss = Boss(scheduler=MaxThreadsScheduler(max_threads=nthreads))
+    boss = Boss(scheduler=footprints.proxy.scheduler(limit='threads', max_threads=nthreads))
     common_i = dict(kind='gribfilter', filters=filters, concatenate=cat, put_promises=False)
     for ifile, ofile, intent in zip(inputs, outputs, intents):
         logger.info("%s -> %s (intent: %s) added to the GRIBfilter task's list",

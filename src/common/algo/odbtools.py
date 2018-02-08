@@ -10,21 +10,23 @@ import re
 import time
 
 import footprints
+
 from bronx.stdtypes.date import utcnow
+from bronx.stdtypes.dictionaries import Foo
 from bronx.system.memory import convert_bytes_in_unit
 
 from vortex.tools.systems   import ExecutionError
 from vortex.tools           import odb
 from vortex.algo.components import Parallel
-from vortex.util.structs    import Foo, FootprintCopier
+from vortex.util.structs    import FootprintCopier
 from vortex.syntax.stdattrs import a_date
 
 from common.data.obs import ObsMapContent, ObsMapItem, ObsRefContent, ObsRefItem
 
 from vortex.tools.parallelism import VortexWorkerBlindRun
 from vortex.algo.components import ParaBlindRun
-from taylorism.schedulers import LongerFirstScheduler
 from taylorism import Boss
+from __builtin__ import property
 
 #: No automatic export
 __all__ = []
@@ -49,16 +51,6 @@ class Bateur(VortexWorkerBlindRun):
                 info        = 'working directory of the run',
                 type        = str
             ),
-            mem=dict(
-                info        = 'memory expected in bytes',
-                type        = int,
-                default     = 1024,
-            ),
-            time=dict(
-                info        = 'time expected in second',
-                type        = int,
-                default     = 1,
-            ),
             inputsize = dict(
                 info        = 'input files total size in bytes',
                 type        = int,
@@ -66,6 +58,10 @@ class Bateur(VortexWorkerBlindRun):
             )
         )
     )
+
+    @property
+    def memory_in_bytes(self):
+        return self.mem * 1024 * 1024
 
     def vortex_task(self, **kwargs):
 
@@ -88,20 +84,20 @@ class Bateur(VortexWorkerBlindRun):
 
         if self.system.memory_info is not None:
             realMem = self.system.memory_info.children_maxRSS('B')
-            memRatio = (realMem / float(self.mem)) if self.mem > 0 else None
+            memRatio = (realMem / float(self.memory_in_bytes)) if self.memory_in_bytes > 0 else None
         else:
             realMem = None
             memRatio = None
 
         rdict['synthesis'] = dict(base=self.base,
                                   inputsize=self.inputsize,
-                                  mem_expected=self.mem,
+                                  mem_expected=self.memory_in_bytes,
                                   mem_real=realMem,
                                   mem_ratio=memRatio,
-                                  time_expected=self.time,
+                                  time_expected=self.expected_time,
                                   time_start = start_time,
                                   time_real=real_time,
-                                  time_ratio=(real_time / float(self.time)) if self.time > 0 else None,
+                                  time_ratio=(real_time / float(self.expected_time)) if self.expected_time > 0 else None,
                                   sched_id=self.scheduler_ticket,
                                   )
 
@@ -267,13 +263,14 @@ class Raw2ODBparallel(TaylorOdbProcess):
 
     @property
     def effective_maxmem(self):
+        """Return the maximum amount of usable memory (in MiB)."""
         if self._effective_maxmem is None:
             if self.maxmemory:
-                self._effective_maxmem = self.maxmemory * (1024 ** 3)  # maxmemory in GB
+                self._effective_maxmem = self.maxmemory * 1024  # maxmemory in GB
             else:
-                sys_maxmem = self.system.memory_info.system_RAM('B')
+                sys_maxmem = self.system.memory_info.system_RAM('MiB')
                 # System memory minus 20% or minus 4GB
-                self._effective_maxmem = max(sys_maxmem * .8, sys_maxmem - 4 * (1024 ** 3))
+                self._effective_maxmem = max(sys_maxmem * .8, sys_maxmem - 4 * 1024)
         return self._effective_maxmem
 
     def input_obs(self):
@@ -457,8 +454,10 @@ class Raw2ODBparallel(TaylorOdbProcess):
         '''Change default initialisation to use LongerFirstScheduler'''
         # Start the task scheduler
         self._boss = Boss(verbose=self.verbose,
-                          scheduler=LongerFirstScheduler(max_threads = self.ntasks,
-                                                         max_memory = self.effective_maxmem))
+                          scheduler=footprints.proxy.scheduler(limit='threads+memory',
+                                                               max_threads=self.ntasks,
+                                                               max_memory=self.effective_maxmem,
+                                                               ))
         self._boss.make_them_work()
 
     def execute(self, rh, opts):
@@ -538,6 +537,7 @@ class Raw2ODBparallel(TaylorOdbProcess):
                     offsets = (0., 0.)
                 bTime = (odb_input_size * pconst[1]  / 1048576) + offsets[1]
                 bMemory = odb_input_size * pconst[0] + (offsets[0] * 1024 * 1024)
+                bMemory = bMemory / 1024. / 1024.
                 if bMemory > self.effective_maxmem:
                     logger.info("For %s, the computed memory needs exceed the node limit.", odbset)
                     logger.info("Memory requirement reseted to %d (originally %d.)",
@@ -545,8 +545,8 @@ class Raw2ODBparallel(TaylorOdbProcess):
                     bMemory = self.effective_maxmem
                 scheduler_instructions['name'].append('ODB_database_{:s}'.format(odbset))
                 scheduler_instructions['base'].append(odbset)
-                scheduler_instructions['mem'].append(bMemory)
-                scheduler_instructions['time'].append(bTime)
+                scheduler_instructions['memory'].append(bMemory)
+                scheduler_instructions['expected_time'].append(bTime)
                 scheduler_instructions['inputsize'].append(odb_input_size)
 
         sh.title('Launching Bator using taylorism...')

@@ -228,7 +228,7 @@ def get_affinity(pid=None):
         raise CpusToolUnavailableError('No {:s} command on this system.'.format(AFFINITY_CMD))
     loc_cmd = locale.getdefaultlocale() or ('unknown', 'ascii')
     uni_out = t_out.decode(loc_cmd[1], 'replace')  # Unicode stuff...
-    binproc = int(_re_get_out.match(uni_out).group('binproc'), 16)  # It's hexadeciaml
+    binproc = int(_re_get_out.match(uni_out).group('binproc'), 16)  # It's hexadecimal
     binlist = list()
     while binproc:
         binlist.append(binproc % 2)

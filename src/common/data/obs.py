@@ -3,23 +3,25 @@
 
 from __future__ import print_function, absolute_import, division
 
-#: Automatic export of Observations class
-__all__ = [ 'Observations' ]
-
 import re
 import itertools
 from collections import namedtuple
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
+
+from bronx.stdtypes.date         import Date
+from bronx.stdtypes.dictionaries import ReadOnlyDict
 
 from vortex.data.flow     import GeoFlowResource, FlowResource
 from vortex.data.contents import TextContent, AlmostListContent
 from vortex.syntax        import stdattrs
-from bronx.stdtypes.date  import Date
-from vortex.util.structs  import ReadOnlyDict
 
 from gco.syntax.stdattrs  import gvar, GenvKey
+
+#: Automatic export of Observations class
+__all__ = [ 'Observations' ]
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Observations(GeoFlowResource):

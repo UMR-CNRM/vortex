@@ -83,6 +83,21 @@ def getActualLevel(level):
         level = logging._levelNames.get(level.upper())
     return level
 
+
+def setGlobalLevel(level):
+    """
+    Explicitly sets the logging level to the ``level`` value for all roots items.
+    """
+    thislevel = getActualLevel(level)
+    if thislevel is None:
+        logger.error('Try to set an unknown log level <%s>', level)
+    else:
+        for rootname in roots:
+            r_logger = logging.getLogger(rootname)
+            r_logger.setLevel(thislevel)
+    return thislevel
+
+
 class SlurpHandler(logging.Handler):
     """A strange Handler that accumulates the log-records in a list.
 

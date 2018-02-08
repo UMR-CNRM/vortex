@@ -14,8 +14,12 @@
 Sub-modules
 -----------
 
+* :mod:`bronx.fancies.arguments`
+* :mod:`bronx.fancies.colors`
 * :mod:`bronx.fancies.dispatch`
 * :mod:`bronx.fancies.display`
+* :mod:`bronx.fancies.multicfg`
+* :mod:`bronx.fancies.wrapcmd`
 
 NB: All of these sub-modules have to be imported manually (depending on your
 needs).

@@ -640,12 +640,8 @@ class Catalog(object):
 
     def __init__(self, **kw):
         logger.debug('Abstract %s init', self.__class__)
-        self._weak  = kw.pop('weak', False)
         self._items = kw.pop('items', list())
-        if self._weak:
-            self._items = WeakSet(self._items)
-        else:
-            self._items = set(self._items)
+        self.weak = kw.pop('weak', False)
         self.__dict__.update(kw)
 
     @classmethod
@@ -658,10 +654,20 @@ class Catalog(object):
         """Boolean value, true if there is at least one item in the catalog."""
         return bool(self._items)
 
-    @property
-    def weak(self):
+
+    def _get_weak(self):
         """Boolean value, true if the catalog is built with weak references."""
         return self._weak
+
+    def _set_weak(self, switch):
+        """Set boolean value, true if the catalog should be made of weak references."""
+        self._weak = bool(switch)
+        if self._weak:
+            self._items = WeakSet(self._items)
+        else:
+            self._items = set(self._items)
+
+    weak = property(_get_weak, _set_weak)
 
     def items(self):
         """A list, copy of the catalog items."""

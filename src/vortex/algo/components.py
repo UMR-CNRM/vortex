@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
-#: No automatic export
-__all__ = []
-
 import collections
 import sys
 import traceback
@@ -14,14 +11,17 @@ import multiprocessing
 
 from bronx.stdtypes import date
 from taylorism import Boss
-from taylorism.schedulers import MaxThreadsScheduler
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 import vortex
 from vortex.algo  import mpitools
 from vortex.tools.parallelism import ParallelResultParser
 from vortex.syntax.stdattrs import DelayedEnvValue
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class AlgoComponentError(Exception):
@@ -721,7 +721,7 @@ class TaylorRun(AlgoComponent):
         '''Various initialisations. In particular it creates the task scheduler (Boss).'''
         # Start the task scheduler
         self._boss = Boss(verbose=self.verbose,
-                          scheduler=MaxThreadsScheduler(max_threads=self.ntasks))
+                          scheduler=footprints.proxy.scheduler(limit='threads', max_threads=self.ntasks))
         self._boss.make_them_work()
 
     def _add_instructions(self, common_i, individual_i):

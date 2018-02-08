@@ -5,7 +5,9 @@ import io
 import re
 
 import footprints
-from vortex.util.structs import Tracker
+
+from bronx.stdtypes.tracking import Tracker
+
 from . import addons
 
 #: Export nothing

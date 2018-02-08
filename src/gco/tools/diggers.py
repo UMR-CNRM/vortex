@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-utility classes to information on the availability of operational resources.
+utility classes to information on the availability of some resources.
 
 .. warning:: This module is under heavy development consequently significant
              will be made in future versions. DO NOT USE YET.
@@ -15,107 +15,102 @@ import footprints
 
 from vortex import toolbox
 from bronx.stdtypes import date
-from bronx.fancies.dispatch import InteractiveDispatcher
+from bronx.fancies.colors import termcolors as tmc
+
+logger = footprints.loggers.getLogger(__name__)
 
 
-class OpDigger(InteractiveDispatcher):
+class Digger(footprints.FootprintBase):
+    """
+    Some kind of auxilary class for doing real hard work
+    according to some contract.
+    """
+
+    _abstract  = True
+    _collector = ('digger',)
+    _footprint = dict(
+        info = 'Default digger class.',
+        attr = dict(
+            mine = dict(),
+        ),
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('Abstract digger init %s', self.__class__)
+        super(Digger, self).__init__(*args, **kw)
+        self.clear_stack()
+
+    def clear_stack(self):
+        self._stack = list()
+
+    def delayed_print(self, *args):
+        self._stack.append(args)
+
+    @property
+    def stack(self):
+        return '\n'.join([' '.join(x) for x in self._stack])
+
+
+class OpDigger(Digger):
     """
     On a basis of empirical configuration values, give pertinent information
     about availability of operational resources.
     """
 
-    def cfgsetup(self):
-        self._maxterm = 0
-        self.expandall(self.cfginfo)
+    _footprint = dict(
+        info = 'Digg in the op tables !',
+        attr = dict(
+            mine = dict(
+                values = ['op'],
+            ),
+        ),
+    )
 
-    def expandall(self, data):
-        for k, v in data.items():
-            if k.endswith('_period'):
-                data[k] = date.Period(v)
-            elif k.endswith('_term') or k == 'terms':
-                data[k] = footprints.util.rangex(v)
-                self._maxterm = max(self._maxterm, data[k][-1])
-            elif k.startswith('t') and type(v) is list:
-                data[k] = [date.Time(x) for x in v]
-            elif type(v) is dict:
-                self.expandall(v)
+    def get_storage_period(self, vapp, vconf, location, period):
+        """Return actual storage period for the specified location."""
+        if period is None:
+            thisloc = self.cfg.info[vapp][vconf].get('locations', dict())
+            if location in thisloc:
+                period = thisloc[location]['storage_period']
+            else:
+                period = self.cfg.defaults['locations'][location]['storage_period']
+        return period
 
-    @property
-    def maxterm(self):
-        return self._maxterm
-
-    def op_maxterm(self, **kw):
-        """Exploration depth in hours."""
-        return self.maxterm
-
-    def op_vapps(self, **kw):
-        """Current vapp/vconf defined in configuration file."""
-        return [vapp + '-' + vconf
-                for vapp in self.op_models(**kw)
-                for vconf in self.notexcluded(self.cfginfo[vapp])]
-
-    def op_models(self, **kw):
-        """Entry points of the configuration file."""
-        return self.notexcluded(self.cfginfo.keys())
-
-    def op_cutoffs(self, **kw):
-        """Set of defined cutoff for all models."""
-        c = set()
-        for vapp in self.op_models():
-            for vconf in self.notexcluded(self.cfginfo[vapp]):
-                c.update(self.notexcluded(self.cfginfo[vapp][vconf].keys()))
-        return list(c)
-
-    def op_locations(self, **kw):
-        """List of storage location (probably: disk and arch)."""
-        return [x.replace('_period', '') for x in self.cfginfo['meta'].keys()]
-
-    def rdelta(self, vapp, vconf, cutoff, hour):
-        runs = sorted(self.cfginfo[vapp][vconf][cutoff].keys())
-        ipos = runs.index(hour)
-        dt = int(runs[ipos - 1]) - int(runs[ipos])
-        if dt >= 0:
-            dt = dt - 24
-        return date.Period(abs(dt) * 3600)
+    def get_extra_time(self, run, shelf, term):
+        start, end = run['t' + shelf]
+        length = end - start
+        length = length.hour * 60 + length.minute
+        lastterm = date.Time(run['terms'][-1])
+        extra = length * (term.hour * 60 + term.minute) / (lastterm.hour * 60 + lastterm.minute)
+        extra = date.Period(extra * 60)
+        return (start, end, extra)
 
     def find_date(self, **kw):
+        """Core function to find a proper reference for a given date."""
         rv = dict()
-        for m in kw['model']:
-            if '-' in m:
-                vapp, vconf = m.split('-')
-            else:
-                vapp = m
-                vconf = self.cfginfo[m]['default']
-            if 'remap' in self.cfginfo[vapp]:
-                vconf = self.cfginfo[vapp]['remap'].get(vconf, vconf)
-            for c in [x for x in kw['cutoff'] if x in self.cfginfo[vapp][vconf]]:
-                runs = sorted(self.cfginfo[vapp][vconf][c].keys())
-                closest = -1
-                for i, v in enumerate(runs):
-                    if kw['date'].hour < int(v):
-                        closest = i - 1
-                        break
-                xdate = date.Date(kw['date'].ymd + runs[closest])
-                delta = kw['date'] - xdate
-                while delta.time().hour <= kw['term']:
-                    if delta.time().hour in self.cfginfo[vapp][vconf][c][xdate.hh]['terms']:
-                        isotime = delta.time().fmthm
+        for term in [date.Time(x) for x in footprints.util.rangex(0, end=kw['term'].fmthm, step=kw['step']) if x not in kw['notterm']]:
+            isotime = term.fmthm
+            xdate = kw['date'] - date.Period(term)
+            self.cfg.select(date=xdate)
+            for model in kw['model']:
+                vapp, vconf = self.cfg.get_vapp_vconf(model)
+                for cutoff in [x for x in kw['cutoff'] if x in self.cfg.info[vapp][vconf]]:
+                    runs = [date.Time(x) for x in self.cfg.info[vapp][vconf][cutoff].keys()]
+                    if xdate.time() not in runs:
+                        continue
+                    xdatehm = xdate.time().fmthm
+                    thisrun = self.cfg.info[vapp][vconf][cutoff][xdatehm]
+                    if term in [date.Time(x) for x in thisrun['terms']]:
                         if isotime not in rv:
                             rv[isotime] = list()
                         for shelf in kw['location']:
                             status = 'ok'
-                            start, end = self.cfginfo[vapp][vconf][c][xdate.hh]['t' + shelf]
-                            length = start - end
-                            length = length.hour * 60 + length.minute
-                            extra = length * delta.time().hour / self.cfginfo[vapp][vconf][c][xdate.hh]['terms'][-1]
-                            extra = date.Period(extra * 60)
-                            if kw[shelf] < kw['top'] - xdate:
+                            start, end, extra = self.get_extra_time(thisrun, shelf, term)
+                            if self.get_storage_period(vapp, vconf, shelf, kw.get(shelf+'_period')) < kw['top'] - xdate:
                                 status = 'out'
                             elif kw['top'] < xdate + start + extra:
                                 status = 'notyet'
-                            rv[isotime].append((vapp, vconf, c, xdate.ymdhm, shelf, status))
-                    xdate = xdate - self.rdelta(vapp, vconf, c, xdate.hh)
-                    delta = kw['date'] - xdate
+                            rv[isotime].append((vapp, vconf, cutoff, xdate.ymdhm, shelf, status))
         return rv
 
     def toolbox_setup(self, **kw):
@@ -123,29 +118,42 @@ class OpDigger(InteractiveDispatcher):
             rootdir = kw.get('rootdir', '/chaine/mxpt001'),
         )
 
-    def op_guess(self, **kw):
-        kw.update(
-            top  = date.utcnow(),
-            disk = self.cfginfo['meta']['disk_period'],
-            arch = self.cfginfo['meta']['arch_period'],
-        )
+    def prune_options(self, kw):
+        """Remove None values from the given dictionnary of options."""
+        for k, v in kw.items():
+            if v is None:
+                kw.pop(k)
+
+    def candidates(self, **kw):
+        # prune pseudo default values
+        self.prune_options(kw)
+        # Take a stamp just now !
+        kw.update(top=date.utcnow())
         # Set some default for non-interactive usage
-        kw.setdefault('location', self.op_locations())
-        kw.setdefault('check', False)
+        kw.setdefault('step', date.Time('01:00'))
+        kw.setdefault('location', self.cfg.locations())
+        kw.setdefault('notterm', set())
         # Ensure some list-like values
-        for opt in ('date', 'model', 'cutoff', 'location'):
+        for opt in ('date', 'model', 'cutoff', 'location', 'notterm'):
             if not isinstance(kw[opt], (list, tuple, set, dict)):
                 kw[opt] = (kw[opt],)
-        if kw.get('term') is None or kw['term'] < 0:
-            kw['term'] = self.maxterm
-        return {d.ymdhm: self.find_date(date=d, **kw) for d in kw.pop('date')}
-
-    def op_view(self, **kw):
-        return footprints.dump.fulldump(self.op_guess(**kw))
+        # Result is a date-driven dictionnary
+        myguess = dict()
+        for thisdate in kw.pop('date'):
+            # Switch to current configuration
+            self.cfg.select(date=thisdate)
+            # Get a fresh light copy because some values may be date-dependent
+            thisargs = kw.copy()
+            # Set max term for this date
+            if thisargs.get('term') is None or thisargs['term'] < 0:
+                thisargs['term'] = date.Time(self.cfg.maxterm)
+            else:
+                thisargs['term'] = date.Time(thisargs['term'])
+            myguess[thisdate.ymdhm] = self.find_date(date=thisdate, **thisargs)
+        return myguess
 
     def getrh(self, vapp, vconf, cutoff, basedate, term, location, kw):
-        location = 'inline' if location == 'disk' else 'archive'
-        fp = self.cfginfo[vapp][vconf].get('footprint', dict())
+        fp = self.cfg.info[vapp][vconf].get('resources', dict()).copy()
         fp.update(
             incore        = True,
             vapp          = vapp,
@@ -156,8 +164,8 @@ class OpDigger(InteractiveDispatcher):
             model         = vapp,
             suite         = kw.get('suite', fp.get('suite', 'oper')),
             kind          = kw.get('kind', fp.get('kind', 'historic')),
-            namespace     = '[suite].' + location + '.fr',
-            metadatacheck = True if location == 'inline' else False,
+            namespace     = kw.get('namespace', fp.get('namespace', self.cfg.defaults['locations'][location].get('namespace'))),
+            metadatacheck = kw.get('datacheck', fp.get('datacheck', self.cfg.defaults['locations'][location].get('datacheck'))),
         )
         return toolbox.rh(**fp)
 
@@ -168,24 +176,30 @@ class OpDigger(InteractiveDispatcher):
             pass
         return str(rst)
 
-    def op_look(self, **kw):
-        guess = self.op_guess(**kw)
+    def lookup(self, **kw):
+        """Give a look to the expected candidates for the specified resource."""
+        self.prune_options(kw)
+        guess = self.candidates(**kw)
         self.toolbox_setup(**kw)
+        self.clear_stack()
         for d in sorted(guess.keys()):
-            print(' ' * 3, '*', d)
+            self.delayed_print(' ', tmc.critical('* ' + d))
             for h in sorted(guess[d].keys()):
-                print(' ' * 7, '+', h)
+                self.delayed_print(' ' * 3, tmc.ok('+ ' + h))
                 for r in guess[d][h]:
-                    print(' ' * 11, '[{0:s}]'.format(', '.join(r)))
+                    self.delayed_print(' ' * 5, '[{0:s}]'.format(', '.join(r)))
                     (vapp, vconf, cutoff, basedate, location, status) = r
                     if status in ('ok', 'notyet'):
                         rh = self.getrh(vapp, vconf, cutoff, basedate, h, location, kw)
                         if rh is not None:
                             rst = '[{0:s}]'.format(self.getstnice(rh.check())) if kw['check'] else ''
-                            print(' ' * 11, '-', rh.locate(), rst)
+                            self.delayed_print(' ' * 5, '-', tmc.warning(rh.locate()), rst)
+        return self.stack
 
-    def op_best(self, **kw):
-        guess = self.op_guess(**kw)
+    def best(self, **kw):
+        """Find the best candidate for an expected resource."""
+        self.prune_options(kw)
+        guess = self.candidates(**kw)
         self.toolbox_setup(**kw)
         rbest = dict()
         for d in sorted(guess.keys()):
@@ -200,4 +214,122 @@ class OpDigger(InteractiveDispatcher):
                             if rh.check():
                                 rbest[d] = dict(description=r, handler=rh, term=h)
                                 break
-        return [rbest[x] for x in sorted(rbest.keys())]
+        return rbest
+
+    def ontime(self, **kw):
+        """Give a look to the effective time match of the specified resources."""
+        self.prune_options(kw)
+        self.toolbox_setup(**kw)
+        self.clear_stack()
+        # Take a stamp just now !
+        kw.update(top=date.utcnow())
+        # Set some default for non-interactive usage
+        kw.setdefault('location', self.cfg.locations())
+        # Ensure some list-like values
+        for opt in ('date', 'model', 'cutoff', 'location'):
+            if not isinstance(kw[opt], (list, tuple, set, dict)):
+                kw[opt] = (kw[opt],)
+        # Result is a date-driven list
+        for thisdate in kw['date']:
+            # Switch to current configuration
+            self.cfg.select(date=thisdate)
+            for model in kw['model']:
+                vapp, vconf = self.cfg.get_vapp_vconf(model)
+                for cutoff in [x for x in kw['cutoff'] if x in self.cfg.info[vapp][vconf]]:
+                    runs = [date.Time(x) for x in self.cfg.info[vapp][vconf][cutoff].keys()]
+                    if thisdate.time() not in runs:
+                        continue
+                    self.delayed_print(' ', tmc.critical('* ' + thisdate.ymdhm))
+                    xdatehm = thisdate.time().fmthm
+                    thisrun = self.cfg.info[vapp][vconf][cutoff][xdatehm]
+                    for term in kw['term']:
+                        self.delayed_print(' ' * 3, tmc.ok('+ ' + term.fmthm))
+                        for shelf in kw['location']:
+                            start, end, extra = self.get_extra_time(thisrun, shelf, term)
+                            expected = thisdate + start + extra
+                            r = (vapp, vconf, cutoff, shelf, expected.isoformat())
+                            self.delayed_print(' ' * 5, '[{0:s}]'.format(', '.join(r)))
+                            rh = self.getrh(vapp, vconf, cutoff, thisdate, term, shelf, kw)
+                            if rh is not None:
+                                rst = ''
+                                if kw['check']:
+                                    rst = rh.check()
+                                    try:
+                                        rst = (date.Date(float(rst.st_ctime)) - expected).time().fmthm
+                                    except AttributeError:
+                                        pass
+                                    rst = '[{0:s}]'.format(str(rst))
+                                self.delayed_print(' ' * 5, '-', tmc.warning(rh.locate()), rst)
+        return self.stack
+
+
+class NamDigger(Digger):
+    """
+    Do its best to digg into operationnal namelists.
+    """
+
+    _footprint = dict(
+        info = 'Digg in the op namelists !',
+        attr = dict(
+            mine = dict(
+                values = ['namelist', 'naml'],
+            ),
+        ),
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('Abstract nam digger init %s', self.__class__)
+        super(NamDigger, self).__init__(*args, **kw)
+        self._rh = None
+        self._domains = None
+
+    @property
+    def rh(self):
+        return self._rh
+
+    @property
+    def domains(self):
+        if not self._domains:
+            self._domains = sorted(self.cfg.defaults.get('domains', list()))
+        return self._domains
+
+    def set_domains(self, only=None, grep=None, discard=None):
+        self._domains = None
+        if None in only:
+            self._domains = [x for x in self.domains if x not in discard and grep.search(x)]
+        else:
+            self._domains = [x for x in self.domains if x in only]
+        self.apply_domains()
+
+    def load(self, **kw):
+        try:
+            self._rh = toolbox.rh(**kw)
+        except toolbox.VortexToolboxDescError:
+            self._rh = None
+        if self.rh:
+            self.rh.get()
+            return '\n'.join((
+                repr(self.rh),
+                'Resource  : ' + str(self.rh.resource),
+                'Provider  : ' + str(self.rh.provider),
+                'Container : ' + str(self.rh.container),
+            ))
+        else:
+            return None
+        return self._rh.quickview() if self._rh else None
+
+    def cat(self, **kw):
+        return self.rh.contents.dumps()
+
+    def blocks(self, **kw):
+        return self.rh.contents.keys()
+
+    def apply_domains(self):
+        domains = ':'.join(self.domains)
+        for block in self.rh.contents.data.values():
+            for k in [x for x in block.keys() if x.startswith('CLD')]:
+                block[k] = domains
+
+    def save(self, **kw):
+        self.rh.save()
+        return self.rh.container.actualpath()

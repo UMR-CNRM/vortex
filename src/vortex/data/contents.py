@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
-
 import collections
 from string import Template
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
+from bronx.stdtypes.dictionaries import ReadOnlyDict
 
 from vortex import sessions
-from vortex.util.structs import ReadOnlyDict
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class DataContentError(ValueError):

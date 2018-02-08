@@ -82,11 +82,11 @@ import subprocess
 from multiprocessing.queues import Empty
 
 import footprints
-from footprints import FootprintBase, proxy as fpx
-from bronx.system import interrupt  # because subprocesses must be killable properly
-from bronx.system import cpus as cpus_tool
+from footprints import FootprintBase, FPList, proxy as fpx
+from bronx.system import interrupt, cpus  # because subprocesses must be killable properly
 
-from .schedulers import BaseScheduler, MaxThreadsScheduler
+from .schedulers import BaseScheduler
+from .schedulers import MaxThreadsScheduler, binding_setup  # For compatibility
 
 interrupt.logger.setLevel('WARNING')
 taylorism_log = footprints.loggers.getLogger(__name__)
@@ -94,14 +94,17 @@ taylorism_log = footprints.loggers.getLogger(__name__)
 # : timeout when polling for a Queue/Pipe communication
 communications_timeout = 0.01
 
-__version__ = '1.0.6'
+__version__ = '1.0.7'
 
 
 # FUNCTIONS
 ###########
-def run_as_server(common_instructions, individual_instructions,
-                  scheduler=MaxThreadsScheduler(),
-                  verbose=False):
+
+def run_as_server(common_instructions=dict(),
+                  individual_instructions=dict(),
+                  scheduler=fpx.scheduler(limit='threads', max_threads=0),
+                  verbose=False,
+                  maxlenreport=1024):
     """
     Build a Boss instance, make him hire workers,
     run the workers, and returns the Boss instance.
@@ -114,25 +117,33 @@ def run_as_server(common_instructions, individual_instructions,
     :param dict individual_instructions: to be passed to the workers
     :param scheduler: scheduler to rule scheduling of workers/threads
     :param bool verbose: is the Boss verbose or not.
+    :param int maxlenreport: the maximum number of lines for the report (when
+        running in verbose mode)
     """
-    boss = Boss(verbose=verbose, scheduler=scheduler)
+    boss = Boss(verbose=verbose, scheduler=scheduler, maxlenreport=maxlenreport)
     boss.set_instructions(common_instructions, individual_instructions)
     boss.make_them_work()
     return boss
 
 
-def batch_main(common_instructions, individual_instructions,
-               scheduler=MaxThreadsScheduler(),
-               verbose=False):
+def batch_main(common_instructions=dict(),
+               individual_instructions=dict(),
+               scheduler=fpx.scheduler(limit='threads', max_threads=0),
+               verbose=False,
+               maxlenreport=1024,
+               print_report=print):
     """
     Run execution of the instructions as a batch process, waiting for all
     instructions are finished and finally printing report.
 
     Args and kwargs are those of run_as_server() function.
     """
-    boss = run_as_server(common_instructions, individual_instructions,
+    boss = run_as_server(common_instructions,
+                         individual_instructions,
                          scheduler=scheduler,
-                         verbose=verbose)
+                         verbose=verbose,
+                         maxlenreport=maxlenreport)
+
     with interrupt.SignalInterruptHandler():
         try:
             boss.wait_till_finished()
@@ -142,9 +153,12 @@ def batch_main(common_instructions, individual_instructions,
             boss.wait_till_finished()
             raise
         else:
-            print("Report from workers:")
             for r in report['workers_report']:
-                print(r['report'])
+                taskheader = 'WORKER NAME: ' + r['name']
+                print('=' * len(taskheader))
+                print(taskheader)
+                print('-' * len(taskheader))
+                print_report(r['report'])
 
 
 # MAIN CLASSES
@@ -159,18 +173,36 @@ class Worker(FootprintBase):
     _abstract = True
     _collector = ('worker',)
     _footprint = dict(
-        attr=dict(
-            name=dict(
-                info="Name of the worker.",
-                optional=True,
-                default=None,
-                access='rwx'
+        attr = dict(
+            name = dict(
+                info     = 'Name of the worker.',
+                optional = True,
+                default  = None,
+                access   = 'rwx',
             ),
-            scheduler_ticket=dict(
-                info="The slot number given by the scheduler (optional)",
-                optional=True,
-                default=None,
-                type=int
+            memory = dict(
+                info     = 'Memory that should be used by the worker (in MiB).',
+                optional = True,
+                default  = 0.,
+                type     = float,
+            ),
+            expected_time = dict(
+                info     = 'How long the worker is expected to run (in s).',
+                optional = True,
+                default  = 0.,
+                type     = float,
+            ),
+            scheduler_ticket = dict(
+                info     = 'The slot number given by the scheduler (optional).',
+                optional = True,
+                default  = None,
+                type     = int,
+            ),
+            scheduler_hooks = dict(
+                info     = 'List of callbacks before starting effective task work.',
+                optional = True,
+                default  = FPList(),
+                type     = FPList,
             ),
         )
     )
@@ -180,12 +212,35 @@ class Worker(FootprintBase):
         if self.name is None:
             self.name = str(uuid.uuid4())
         self._process = mpc.Process(target=self._work_and_communicate)
+        self._messenger = None
 
     def __del__(self):
         if hasattr(self, '_process'):
             self._process.join(1)
             if self._process.is_alive():
                 self._process.terminate()
+
+    def _get_messenger(self):
+        """Return actual messenger for communication with the boss."""
+        return self._messenger
+
+    def _set_messenger(self, messenger):
+        """Connect to some Queue."""
+        assert(callable(messenger.put))
+        self._messenger = messenger
+
+    messenger = property(_get_messenger, _set_messenger)
+
+    def binding(self):
+        """Return the actual physical binding of the current process to a cpu if available.
+
+        The :class:`cpus.CpusToolUnavailableError` may be raised depending
+        on the system.
+        """
+        cpuloc = cpus.get_affinity()
+        if cpuloc == list(cpus.LinuxCpusInfo().raw_cpulist()):
+            cpuloc = [None]
+        return cpuloc
 
     def work(self):
         """Send the Worker to his job."""
@@ -212,29 +267,28 @@ class Worker(FootprintBase):
         world !
         """
         with interrupt.SignalInterruptHandler():
-            to_be_sent_back = {'name': self.name, 'report': None}
+            to_be_sent_back = dict(name=self.name, report=None)
             try:
+                for callback in self.scheduler_hooks:
+                    callback(self)
                 self._work_and_communicate_prehook()
-                to_be_sent_back = {'name': self.name, 'report': self._task()}
+                to_be_sent_back.update(report=self._task())
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 tb = traceback.format_exception(exc_type,
                                                 exc_value,
                                                 exc_traceback)
-                to_be_sent_back = {'name': self.name,
-                                   'report': e,
-                                   'traceback': tb}
+                to_be_sent_back.update(report=e, traceback=tb)
             finally:
                 try:
-                    self._messenger.put(to_be_sent_back)
+                    self.messenger.put(to_be_sent_back)
                 except (ValueError, PickleError) as e:
                     # ValueError = to_be_sent_back too big.
                     # PickleError = to_be_sent_back unpickelable.
                     sys.stderr.write("The to_be_sent_back variable was:\n")
                     sys.stderr.write(str(to_be_sent_back))
-                    to_be_sent_back = {'name': self.name, 'report': e,
-                                       'traceback': 'Traceback missing'}
-                    self._messenger.put(to_be_sent_back)
+                    to_be_sent_back.update(report=e, traceback='Traceback missing')
+                    self.messenger.put(to_be_sent_back)
 
     def _work_and_communicate_prehook(self):
         """
@@ -251,17 +305,23 @@ class Worker(FootprintBase):
 
 
 class BindedWorker(Worker):
-    """Workers binded to a cpu core (Linux only)."""
+    """Workers binded to a cpu core (Linux only).
+
+    This class is deprecated. Instead, inherit from :class:`Worker` and create
+    a scheduler with binded=True.
+    """
 
     _abstract = True
+
+    def __init__(self, *kargs, **kwargs):
+        super(BindedWorker, self).__init__(*kargs, **kwargs)
+        taylorism_log.warning('The %s class is deprecated. Please use "Worker" instead.',
+                              self.__class__.__name__)
 
     def _work_and_communicate_prehook(self):
         """Bind the process to a cpu"""
         if self.scheduler_ticket is not None:
-            cpus = cpus_tool.LinuxCpusInfo()
-            cpulist = list(cpus.socketpacked_cpulist())
-            binded_cpu = cpulist[self.scheduler_ticket % cpus.nvirtual_cores]
-            cpus_tool.set_affinity(binded_cpu, str(os.getpid()))
+            binding_setup(self)
 
 
 class Boss(object):
@@ -291,14 +351,16 @@ class Boss(object):
                        'STOP_RIGHTNOW': 'Stop workers immediately and stop\
                                          listening.'}
 
-    def __init__(self,
-                 scheduler=MaxThreadsScheduler(),
-                 name=None,
-                 verbose=False):
-        assert isinstance(scheduler, BaseScheduler)
+    def __init__(self, scheduler=None, name=None, verbose=False, maxlenreport=1024):
+        if scheduler is None:
+            scheduler = fpx.scheduler(limit='threads', max_threads=0)
+        # Duck typing check...
+        assert hasattr(scheduler, 'launchable')
+        assert callable(scheduler.launchable)
         self.scheduler = scheduler
         self.name = name
         self.verbose = verbose
+        self.maxlenreport = int(maxlenreport)
 
         self.workers_messenger = mpc.Queue()
         (self.control_messenger_in, self.control_messenger_out) = mpc.Pipe()  # in = inside subprocess, out = main
@@ -319,8 +381,8 @@ class Boss(object):
         self.workers_messenger.close()
 
     def set_instructions(self,
-                         common_instructions={},
-                         individual_instructions={},
+                         common_instructions=dict(),
+                         individual_instructions=dict(),
                          fatal=True):
         """
         Set instructions to be distributed to workers.
@@ -483,7 +545,7 @@ class Boss(object):
         if not splitmode:
             report = self.control_messenger_out.recv()
         else:
-            report = {'workers_report':[]}
+            report = {'workers_report': []}
             while True:
                 r = self.control_messenger_out.recv()
                 if isinstance(r, tuple):
@@ -519,7 +581,7 @@ class Boss(object):
                                                 exc_value,
                                                 exc_traceback)
                 report = {'workers_report': e,
-                          'status':'workers exception',
+                          'status': 'workers exception',
                           'traceback': tb}
             finally:
                 try:
@@ -530,7 +592,7 @@ class Boss(object):
                     # already pickled once (by the workers)
                     taylorism_log.error("The report is too big to be sent back :-(")
                     report = {'workers_report': e,
-                              'status':'transmission exception',
+                              'status': 'transmission exception',
                               'traceback': 'Traceback missing'}
                     self._send_report(report, splitmode=True)
 
@@ -558,7 +620,7 @@ class Boss(object):
             if w is None:
                 raise AttributeError("no adequate Worker was found with these instructions: " +
                                      str(instructions))
-            w._messenger = self.workers_messenger
+            w.messenger = self.workers_messenger
             if w.name not in workers.keys():
                 workers[w.name] = w
             else:
@@ -576,10 +638,8 @@ class Boss(object):
                     if control in self.control_signals.values():
                         # received a control signal
                         if control == self.control_signals['SEND_REPORT']:
-                            report = {'workers_report': report,
-                                      'status': 'interim'}
                             try:
-                                self._send_report(report, splitmode=True)
+                                self._send_report({'workers_report': report, 'status': 'interim'}, splitmode=True)
                             except ValueError:
                                 # ValueError = report too big.
                                 # We are sure that a PickleError won't occur
@@ -637,14 +697,18 @@ class Boss(object):
                     else:
                         # worker has finished
                         if self.verbose:
-                            taylorism_log.info(str(reported['report']))
+                            msglog = str(reported['report'])
+                            if len(msglog) > self.maxlenreport:
+                                msglog = msglog[:self.maxlenreport] + ' ...'
+                            taylorism_log.info(msglog)
                     workers.pop(reported['name']).bye()
                 # C. there is work to do and no STOP signal has been received: re-launch
                 if len(pending_instructions) > 0 and not stop and not halt:
-                    (launchable,
-                     not_yet_launchable) = self.scheduler.launchable(pending_instructions,
-                                                                     workers=workers,
-                                                                     report=report)
+                    (launchable, not_yet_launchable) = self.scheduler.launchable(
+                        pending_instructions,
+                        workers=workers,
+                        report=report
+                    )
                     for instructions in launchable:
                         try:
                             w = hire_worker(instructions)

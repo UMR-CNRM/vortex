@@ -28,6 +28,8 @@ Interface functions
 
 .. autofunction:: setLogMethods
 
+.. autofunction:: setGlobalLevel
+
 .. autofunction:: getActualLevel
 
 
