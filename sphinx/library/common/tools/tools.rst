@@ -19,7 +19,9 @@ Modules
 * :mod:`common.tools.addons`
 * :mod:`common.tools.agt`
 * :mod:`common.tools.bdap`
+* :mod:`common.tools.bdcp`
 * :mod:`common.tools.bdm`
+* :mod:`common.tools.bdmp`
 * :mod:`common.tools.conftools`
 * :mod:`common.tools.grib`
 * :mod:`common.tools.gribdiff`

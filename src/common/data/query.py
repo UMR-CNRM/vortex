@@ -56,6 +56,58 @@ class BDAPQuery(Query):
         return 'bdap_query'
 
 
+class BDMPQuery(Query):
+    """Class to deal with BDMP queries."""
+    _footprint = dict(
+        info = 'BDMP query',
+        attr = dict(
+            kind = dict(
+                values = ['bdmp_query']
+            ),
+            gvar = dict(
+                values  = ['extract_stuff'],
+                default = 'extract_stuff'
+            ),
+            origin = dict(
+                default = 'bdmp',
+                values  = ['bdmp'],
+                optional = True
+            ),
+            source = dict(),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'bdmp_query'
+
+
+class BDCPQuery(Query):
+    """Class to deal with BDCP queries."""
+    _footprint = dict(
+        info = 'BDCP query',
+        attr = dict(
+            kind = dict(
+                values = ['bdcp_query']
+            ),
+            gvar = dict(
+                values  = ['extract_stuff'],
+                default = 'extract_stuff'
+            ),
+            origin = dict(
+                default = 'bdcp',
+                values  = ['bdcp'],
+                optional = True
+            ),
+            source = dict(),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'bdcp_query'
+
+
 class BDMQuery(Query):
     """Class to deal with BDM queries."""
     _footprint = dict(

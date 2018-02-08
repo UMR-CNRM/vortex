@@ -26,6 +26,16 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: BDCPQuery
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: BDMPQuery
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: BDMQuery
    :show-inheritance:
    :members:
