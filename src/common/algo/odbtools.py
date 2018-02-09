@@ -61,7 +61,7 @@ class Bateur(VortexWorkerBlindRun):
 
     @property
     def memory_in_bytes(self):
-        return self.mem * 1024 * 1024
+        return self.memory * 1024 * 1024
 
     def vortex_task(self, **kwargs):
 

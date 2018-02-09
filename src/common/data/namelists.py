@@ -100,8 +100,7 @@ class NamelistContent(AlmostDictContent):
             raise NamelistContentError('Could not parse container contents: {!s}'.format(e))
         self._data = namset
         for macro, value in self._macros.items():
-                for namblock in filter(lambda x: macro in x.macros(), self.values()):
-                    namblock.addmacro(macro, value)
+            self._data.setmacro(macro, value)
 
     def rewrite(self, container, sorting=NO_SORTING):
         """

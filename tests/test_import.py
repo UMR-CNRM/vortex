@@ -14,7 +14,7 @@ import vortex
 fp.loggers.getLogger('vortex').setLevel('ERROR')
 fp.loggers.getLogger('common').setLevel('ERROR')
 
-non_standard_dep = {'yaml': ['bronx.fancies.dispatch', ], }
+non_standard_dep = {'yaml': ['bronx.fancies.multicfg', ], }
 
 
 class DynamicTerminal(object):

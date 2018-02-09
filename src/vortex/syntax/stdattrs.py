@@ -342,7 +342,7 @@ cutoff = footprints.Footprint(info = 'Abstract cutoff', attr = dict(cutoff = a_c
 a_model = dict(
     info     = "The model name (from a source code perspective).",
     type     = str,
-    alias    = ('engine', 'turtle'),
+    alias    = ('turtle', ),
     optional = False,
     values   = models,
     remap    = dict(

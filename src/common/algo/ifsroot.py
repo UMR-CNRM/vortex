@@ -27,8 +27,8 @@ class IFSParallel(Parallel, grib.GribApiComponent):
                     doc_zorder      = 90,
                 ),
                 model = dict(
-                    values = ['arpege', 'arp', 'arp_court', 'aladin', 'ald',
-                              'arome', 'aro', 'aearp', 'pearp', 'ifs']
+                    values  = ['arpege', 'arp', 'arp_court', 'aladin', 'ald',
+                               'arome', 'aro', 'aearp', 'pearp', 'ifs']
                 ),
                 ioname = dict(
                     default = 'nwpioserv',
