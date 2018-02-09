@@ -875,8 +875,6 @@ class BlindRun(xExecutableAlgoComponent):
         args = [self.absexcutable(rh.container.localpath())]
         args.extend(self.spawn_command_line(rh))
         logger.info('BlindRun executable resource %s', args)
-        self.spawn(args, opts)
-        logger.info('BlindRun executable resource %s', args)
         rh_stdin = self.spawn_stdin(rh)
         if rh_stdin is not None:
             logger.info('BlindRun executable stdin (file: %s, fileno:%d):\n%s',
