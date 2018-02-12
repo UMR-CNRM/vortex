@@ -769,6 +769,10 @@ class NamelistBlock(object):
         else:
             return literal.encode(item)
 
+    def dumps_values(self, key, literal=None):
+        """Nice encoded values (incl. list of)."""
+        return ','.join([self.nice(value, literal) for value in self._pool[key]])
+
     def dumps(self, literal=None, sorting=NO_SORTING):
         """
         Returns a string of the namelist block that will be readable by fortran parsers.
@@ -821,8 +825,8 @@ class NamelistBlock(object):
         else:
             keylist = self._keys
         for key in keylist:
-            value_strings = [self.nice(value, literal) for value in self._pool[key]]
-            namout += '   {0:s}={1:s},\n'.format(key, ','.join(value_strings))
+            value_strings = self.dumps_values(key, literal=literal)
+            namout += '   {0:s}={1:s},\n'.format(key, value_strings)
         return namout + " /\n"
 
     def merge(self, delta):

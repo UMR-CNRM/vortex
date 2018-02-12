@@ -29,7 +29,6 @@ def main(before_filename, after_filename,
 
     # Compare:
     # 7. macros
-    macros = []
     # 6. blocks to remove
     blocks_to_remove = []
     for b in before_namelist:
@@ -42,8 +41,6 @@ def main(before_filename, after_filename,
             if b not in before_namelist or k not in before_namelist[b]:
                 v = after_namelist[b][k]
                 keys_to_set[(b, k)] = v
-                if after_namelist[b].possible_macroname(v):
-                    macros.append(v)
     # 4. Keys to be removed.
     keys_to_remove = []
     for b in before_namelist:
@@ -66,14 +63,9 @@ def main(before_filename, after_filename,
             if b in before_namelist:
                 if k in before_namelist[b]:
                     if after_namelist[b][k] != before_namelist[b][k]:
-                        bv = before_namelist[b][k]
-                        av = after_namelist[b][k]
-                        modified_values[(b, k)] = (before_namelist[b][k], av)
-                        if after_namelist[b].possible_macroname(av):
-                            macros.append(av)
-                        if before_namelist[b].possible_macroname(bv):
-                            macros.append(bv)
-    keys_to_set.update({ bk: v[1] for bk, v in modified_values.items() })
+                        keys_to_set[(b, k)] = after_namelist[b][k]
+                        modified_values[(b, k)] = (before_namelist[b].dumps_values(k),
+                                                   after_namelist[b].dumps_values(k))
 
     # Write directives
     tab = ' ' * 4
@@ -96,14 +88,11 @@ def main(before_filename, after_filename,
             v = "'{}'".format(v)
         dirs += tab + "{}:{},\n".format(k, v)
     dirs += tab + '}' + '\n'
-    dirs += "# of which modified values:\n"
-    for k, v in sorted(modified_values.items()):
-        v = ("'{}'".format(v[0]) if (isinstance(v[0], six.string_types) and
-                                     not v[0] in macros) else v[0],
-             "'{}'".format(v[1]) if (isinstance(v[1], six.string_types) and
-                                     not v[1] in macros) else v[1])
-        dirs += "# {}: {} => {}\n".format(k, *v)
-    dirs += '\n' * 2
+    if len(modified_values) > 0:
+        dirs += "# of which modified values:\n"
+        for k, v in sorted(modified_values.items()):
+            dirs += "# {}: {} => {}\n".format(k, *v)
+    dirs += '\n'
     # 6. blocks to remove
     dirs += 'blocks_to_remove = set([\n'
     for b in blocks_to_remove:
