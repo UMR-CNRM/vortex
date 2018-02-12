@@ -532,6 +532,7 @@ class Archive(Storage):
                 logname = kwargs.get('username'),
                 cpipeline = kwargs.get('compressionpipeline', None),
                 fmt = kwargs.get('fmt'),
+                sync = kwargs.get('enforcesync', False)
             )
         else:
             logger.info('delayed ftpput to ftp://%s/%s (from: %s)', self.storage, item, local)
