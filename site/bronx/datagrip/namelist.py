@@ -525,7 +525,7 @@ class NamelistBlock(object):
 
     """
 
-    _RE_FREEMACRO = re.compile(r'^' + _UNDERSCORE + r'{2}(.*)' + _UNDERSCORE + r'{2}$')
+    _RE_FREEMACRO = re.compile(r'^' + _FREEMACRONAME + r'$')
 
     def __init__(self, name='UNKNOWN'):
         self.__dict__['_name'] = name
@@ -581,8 +581,8 @@ class NamelistBlock(object):
         # Automatically add free macros to the macro list
         for v in [self._RE_FREEMACRO.match(v) for v in value
                   if isinstance(v, six.string_types)]:
-            if v and v.group(1) not in self.macros():
-                self.addmacro(v.group(1))
+            if v and v.group('NAME') not in self.macros():
+                self.addmacro(v.group('NAME'))
         # Process the given value...
         self._pool[varname] = value
         if varname not in self._keys:
@@ -737,9 +737,10 @@ class NamelistBlock(object):
         """Find whether *item* is a macro or not."""
         if item in self._declared_subs:
             return item
-        elif isinstance(item, six.string_types) and self._RE_FREEMACRO.match(item):
-            itemized = self._RE_FREEMACRO.sub(r'\1', item)
-            return itemized
+        elif isinstance(item, six.string_types):
+            fm_match = self._RE_FREEMACRO.match(item)
+            if fm_match:
+                return fm_match.group('NAME') if fm_match else None
         else:
             return None
 

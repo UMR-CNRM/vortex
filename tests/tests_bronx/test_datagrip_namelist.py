@@ -95,6 +95,7 @@ M2=MYMACRO2,
 M3=__SOMETHINGNEW__,
 M3b='__SOMETHINGNEW__',
 TRAP='SOMETHINGNEW',
+M4='__AUTOCREATE__',
 A=25,30,15
 C=--,
 GRUIK=--,
@@ -174,13 +175,14 @@ class UtFortranNamelist(TestCase):
 
     def test_namblock(self):
         np = namelist.NamelistParser(macros=('MYMACRO1', 'MYMACRO2'))
-        nb_res = np.parse(NAMBLOCK1).as_dict()['MyNamelistTest']
+        nb_set = np.parse(NAMBLOCK1)
+        nb_res = nb_set.as_dict()['MyNamelistTest']
         # Inspect the newly created object
         self.assertEqual(nb_res.name, 'MyNamelistTest')
-        self.assertEqual(len(nb_res), 9)
-        self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'A'],
+        self.assertEqual(len(nb_res), 10)
+        self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'M4', 'A'],
                          list(nb_res))  # Iterator test
-        self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'A'],
+        self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'M4', 'A'],
                          list(nb_res.keys()))
         self.assertEqual(nb_res.A, [25, 30, 15])
         self.assertEqual(nb_res["A"], [25, 30, 15])
@@ -188,14 +190,14 @@ class UtFortranNamelist(TestCase):
         self.assertEqual(nb_res.M1b, "'MYMACRO1'")
         self.assertSetEqual(nb_res.rmkeys(), set(['C', 'GRUIK']))
         nb_res.addmacro('MYMACRO1', 'Toto')
-        self.assertSetEqual(set(dict(MYMACRO1='Toto', MYMACRO2=None, SOMETHINGNEW=None).keys()),
-                             set(nb_res.macros()))
+        self.assertSetEqual(set(dict(MYMACRO1='Toto', MYMACRO2=None, SOMETHINGNEW=None, AUTOCREATE=None).keys()),
+                            set(nb_res.macros()))
         # Test add/modify/delete of a namelist variable
         nb_res.B = 1.2
         self.assertEqual(nb_res["B"], 1.2)
         nb_res["B"] = 1.2
         self.assertEqual(nb_res["B"], 1.2)
-        self.assertEqual(len(nb_res), 10)
+        self.assertEqual(len(nb_res), 11)
         del nb_res.B
         self.assertFalse('B' in nb_res)
         self.assertIs(nb_res.get('B', None), None)
@@ -210,11 +212,13 @@ class UtFortranNamelist(TestCase):
    M3=__SOMETHINGNEW__,
    M3B='__SOMETHINGNEW__',
    TRAP='SOMETHINGNEW',
+   M4='__AUTOCREATE__',
    A=25,30,15,
  /
 """
         self.assertEqual(nb_res.dumps(), dumped_ori)
-        nb_res.addmacro('SOMETHINGNEW', 1)
+        nb_set.setmacro('SOMETHINGNEW', 1)
+        nb_set.setmacro('AUTOCREATE', 'Blop')
         # Check that the substitution works
         dumped_ori = """\
  &MYNAMELISTTEST
@@ -226,6 +230,7 @@ class UtFortranNamelist(TestCase):
    M3=1,
    M3B=1,
    TRAP='SOMETHINGNEW',
+   M4='Blop',
    A=25,30,15,
  /
 """
