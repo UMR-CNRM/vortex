@@ -310,6 +310,7 @@ def main(filename,
          sorting=bronx.datagrip.namelist.NO_SORTING,
          blocks_ref=None,
          in_place=False,
+         outfilename=None,
          verbose=False,
          doctor=False,
          keep_index=False):
@@ -327,6 +328,8 @@ def main(filename,
     Other options:
     :param in_place: if True, the namelist is written back in the same file;
                      else (default), the target namelist is suffixed with '.tnt'
+                     if not given as **outfilename**.
+    :param outfilename: target file for out namelist
     :param sorting: Sorting option (from bronx.datagrip.namelist):
                     NO_SORTING;
                     FIRST_ORDER_SORTING => sort all keys within blocks;
@@ -353,8 +356,13 @@ def main(filename,
     # read namelist
     initial_container = footprints.proxy.container(filename=filename)
     if not in_place:
-        target_container = footprints.proxy.container(filename=filename + '.tnt')
+        if outfilename is not None:
+            target_container = footprints.proxy.container(filename=outfilename)
+        else:
+            target_container = footprints.proxy.container(filename=filename + '.tnt')
     else:
+        if outfilename is not None:
+            raise ValueError("Incompatibility between arguments *outfilename* and *in_place*.")
         target_container = initial_container
     namelist = common.data.namelists.NamelistContent(macros=macros)
     namelist.slurp(initial_container)
@@ -405,8 +413,13 @@ if __name__ == '__main__':
                         action='store_true',
                         dest='in_place',
                         help='modifies the namelist(s) in place. \
-                              Else, modified namelists are suffixed with .tnt',
+                              Else, modified namelists are suffixed with .tnt \
+                              if not given as arg -o.',
                         default=False)
+    parser.add_argument('-o',
+                        dest='outfilename',
+                        default=None,
+                        help="directives (.py) output filename.")
     sorting = parser.add_mutually_exclusive_group()
     sorting.add_argument('-S',
                          action='store_true',
@@ -450,6 +463,8 @@ if __name__ == '__main__':
         sorting = bronx.datagrip.namelist.SECOND_ORDER_SORTING
     else:
         sorting = bronx.datagrip.namelist.NO_SORTING
+    if len(args.namelists) > 1 and args.outfilename is not None:
+        raise ValueError('Arg -o should not be used applied to several namelists')
     if args.generate_directives_template:
         write_directives_template(_tmpl)
         print("Template of directives written in: " + os.path.abspath(_tmpl))
@@ -460,6 +475,7 @@ if __name__ == '__main__':
             main(nam,
                  sorting=sorting,
                  in_place=args.in_place,
+                 outfilename=args.outfilename,
                  blocks_ref=args.blocks_ref,
                  verbose=args.verbose,
                  doctor=args.doctor,
