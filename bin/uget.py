@@ -25,6 +25,7 @@ sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 from bronx.fancies.display import query_yes_no_quit
+from bronx.syntax.decorators import nicedeco
 from footprints import proxy as fpx
 
 import vortex
@@ -50,6 +51,15 @@ def ugetid_doc(func):
           'set' and 'info' commands)."""
     func.__doc__ = re.sub(r'\bUGETID_DOC\b', ugetid_doc.__doc__, func.__doc__)
     return func
+
+
+#  A decorator that enables FTP connection pooling for a given method
+@nicedeco
+def ftp_pooling(func):
+    def ftp_pooling_wrapper(*args, **kwargs):
+        with sh.ftppool():
+            return func(*args, **kwargs)
+    return ftp_pooling_wrapper
 
 
 class WeakUgetStore(UgetStore):
@@ -257,6 +267,7 @@ class UGetShell(cmd.Cmd):
                 res += stname + ', '
         return res.rstrip(', ') or 'MISSING'
 
+    @ftp_pooling
     @ugetid_doc
     def do_check(self, line):
         """
@@ -313,6 +324,7 @@ class UGetShell(cmd.Cmd):
         """Auto-completion for the *pull* command."""
         return self._complete_basics(text, line, begidx, endidx)
 
+    @ftp_pooling
     @ugetid_doc
     def do_pull(self, line):
         """
@@ -374,6 +386,7 @@ class UGetShell(cmd.Cmd):
             self._error("The file transfer to the archive failed")
         return rc
 
+    @ftp_pooling
     @ugetid_doc
     def do_push(self, line):
         """
@@ -470,6 +483,7 @@ class UGetShell(cmd.Cmd):
             completions = ()
         return [f for f in completions if not text or f.startswith(text)]
 
+    @ftp_pooling
     @ugetid_doc
     def do_hack(self, line):
         """
@@ -579,6 +593,7 @@ class UGetShell(cmd.Cmd):
             finally:
                 sh.rmtree(tdir)
 
+    @ftp_pooling
     def do_clean_hack(self, line):
         """
         Remove all the element of the Hack store that are available in the Archive store.
@@ -592,16 +607,19 @@ class UGetShell(cmd.Cmd):
         for h_uri, a_uri in zip(h_uris, a_uris):
             if self._storearch.check(a_uri, dict()):
                 to_delete.append(h_uri)
-        to_delete.sort()
-        print('The following elements will be deleted:')
-        for h_uri in to_delete:
-            print('  {:s}'.format(h_uri['path']))
-        res = query_yes_no_quit('Please, confirm...', default='no')
-        if res in ('quit', 'no'):
-            print('aborting...')
-            return False
-        for h_uri in to_delete:
-            self._storehackrw.delete(h_uri, dict())
+        if to_delete:
+            to_delete.sort()
+            print('The following elements will be deleted:')
+            for h_uri in to_delete:
+                print('  {:s}'.format(h_uri['path']))
+            res = query_yes_no_quit('Please, confirm...', default='no')
+            if res in ('quit', 'no'):
+                print('aborting...')
+                return False
+            for h_uri in to_delete:
+                self._storehackrw.delete(h_uri, dict())
+        else:
+            print('There is nothing to clean...')
 
     def do_bootstrap_hack(self, line):
         """
