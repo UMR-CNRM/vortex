@@ -14,7 +14,9 @@ import vortex
 fp.loggers.getLogger('vortex').setLevel('ERROR')
 fp.loggers.getLogger('common').setLevel('ERROR')
 
-non_standard_dep = {'yaml': ['bronx.fancies.multicfg', ], }
+non_standard_dep = {'yaml': ['bronx.fancies.multicfg', ],
+                    'PIL': ['bronx.datagrip.pyexttiff', ],
+                    'numpy': ['bronx.datagrip.pyexttiff', ], }
 
 
 class DynamicTerminal(object):
@@ -48,15 +50,15 @@ class utImport(TestCase):
         self.assertTrue(sh.python > '2.7')
 
     def _test_ignore_modules(self):
-        exclude = list()
+        exclude = set()
         for dep, modlist in non_standard_dep.items():
             try:
                 importlib.import_module(dep)
             except ImportError:
                 print("!!! {} is unavailable on this system. Skipping the import test for {!s}".
                       format(dep, modlist))
-                exclude.extend(modlist)
-        return exclude
+                exclude.update(modlist)
+        return list(exclude)
 
     def test_importModules(self):
         sh = vortex.sh()
