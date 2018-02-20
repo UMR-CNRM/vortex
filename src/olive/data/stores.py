@@ -63,10 +63,7 @@ class OliveArchiveStore(ArchiveStore):
         xpath[:0] = [ self.system.path.sep,]
         remote['path'] = self.system.path.join(*xpath)
 
-    def remap_write(self, remote, options):
-        """Remap actual remote path to distant store path for intrusive actions."""
-        if 'root' not in remote:
-            remote['root'] = self.storehead
+    remap_write = remap_read
 
     def olivecheck(self, remote, options):
         """Remap and ftpcheck sequence."""

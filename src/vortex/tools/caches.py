@@ -478,7 +478,7 @@ class Archive(Storage):
     def entry(self):
         """Tries to figure out what could be the actual entry point for archive space."""
         if self.rootdir == 'auto':
-            pass
+            archive = "~"
         else:
             archive = self.actual_rootdir
         return self.sh.path.join(archive, self.actual_headdir)
@@ -582,7 +582,7 @@ class Archive(Storage):
     def formatted_path(self, subpath, **kwargs):
         root = kwargs.get('root')
         if root is not None and root != self.actual_rootdir:
-            rawpath = self.sh.path.join(root, subpath.lstrip('/'))
+            rawpath = self.sh.path.join(root, self.actual_headdir, subpath.lstrip('/'))
         else:
             rawpath = super(Archive, self).formatted_path(subpath, **kwargs)
         compressionpipeline = kwargs.get('compressionpipeline', None)
