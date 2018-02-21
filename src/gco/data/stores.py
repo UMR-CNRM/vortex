@@ -430,6 +430,28 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
             remote['root'] = self._actual_storeroot(f_uuid)
         return remote
 
+    def _list_remap(self, remote):
+        """Reformulates the remote path to compatible vortex namespace."""
+        rlist = []
+        xpath = remote['path'].split('/')
+        if re.match('^@(\w+)$', xpath[2]):
+            f_uuid = UgetId('uget:fake' + xpath[2])
+            for h in range(16):
+                a_remote = copy.copy(remote)
+                a_remote['path'] = self.system.path.join(self.storehead, xpath[1],
+                                                         re.sub('0x(.)', r'\1', hex(h)))
+                rlist.append(a_remote)
+        else:
+            f_uuid = UgetId('uget:' + xpath[2])
+            a_remote = copy.copy(remote)
+            a_remote['path'] = self.system.path.join(self.storehead, xpath[1],
+                                                     self._hashdir(f_uuid.id), f_uuid.id)
+            rlist.append(a_remote)
+        for a_remote in rlist:
+            if 'root' not in a_remote:
+                a_remote['root'] = self._actual_storeroot(f_uuid)
+        return rlist
+
     def ugetcheck(self, remote, options):
         """Remap and ftpcheck sequence."""
         return self.ftpcheck(self._universal_remap(remote), options)
@@ -437,6 +459,18 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
     def ugetlocate(self, remote, options):
         """Remap and ftplocate sequence."""
         return self.ftplocate(self._universal_remap(remote), options)
+
+    def ugetlist(self, remote, options):
+        """Remap and ftplocate sequence."""
+        stuff = set()
+        with self.system.ftppool():
+            for a_remote in self._list_remap(remote):
+                rc = self.ftplist(a_remote, options)
+                if isinstance(rc, list):
+                    stuff.update(rc)
+                elif rc is True:
+                    return rc
+        return sorted([s for s in stuff if not (s.endswith('.' + self.storehash) and s[:-(len(self.storehash) + 1)] in stuff)])
 
     def _actual_get(self, remote, local, options):
         return self.ftpget(remote, local, options)
@@ -496,6 +530,18 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
         remote['path'] = self.system.path.join(f_uuid.location, xpath[1], f_uuid.id)
         return remote
 
+    def _list_remap(self, remote):
+        """Reformulates the remote path to compatible vortex namespace."""
+        remote = copy.copy(remote)
+        xpath = remote['path'].split('/')
+        if re.match('^@(\w+)$', xpath[2]):
+            f_uuid = UgetId('uget:fake' + xpath[2])
+            remote['path'] = self.system.path.join(f_uuid.location, xpath[1])
+        else:
+            f_uuid = UgetId('uget:' + xpath[2])
+            remote['path'] = self.system.path.join(f_uuid.location, xpath[1], f_uuid.id)
+        return remote
+
     def ugetcheck(self, remote, options):
         """Proxy to :meth:`incachecheck`."""
         return self.incachecheck(self._universal_remap(remote), options)
@@ -503,6 +549,10 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
     def ugetlocate(self, remote, options):
         """Proxy to :meth:`incachelocate`."""
         return self.incachelocate(self._universal_remap(remote), options)
+
+    def ugetlist(self, remote, options):
+        """Proxy to :meth:`incachelocate`."""
+        return self.incachelist(self._list_remap(remote), options)
 
     def _actual_get(self, remote, local, options):
         return self.incacheget(remote, local, options)

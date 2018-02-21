@@ -2,7 +2,7 @@
 =========================================================================
 
 .. automodule:: bronx.stdtypes.tracking
-   :synopsis: Tool to handle changes in some context
+   :synopsis: Tools to handle changes in some context
 
 .. moduleauthor:: The Vortex Team & many contributors
 .. sectionauthor:: The Vortex Team & many contributors
@@ -16,3 +16,9 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: MappingTracker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   

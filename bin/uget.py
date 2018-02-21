@@ -24,8 +24,9 @@ vortexbase = re.sub(os.path.sep + 'bin$', '',
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
-from bronx.fancies.display import query_yes_no_quit
+from bronx.fancies.display import query_yes_no_quit, print_tablelike
 from bronx.syntax.decorators import nicedeco
+from bronx.stdtypes.tracking import MappingTracker
 from footprints import proxy as fpx
 
 import vortex
@@ -63,10 +64,10 @@ def ftp_pooling(func):
 
 
 class WeakUgetStore(UgetStore):
-    """Combined cache and central GCO stores."""
+    """Combined hack and central Uget stores."""
 
     _footprint = dict(
-        info = 'GCO multi access',
+        info = 'Uget weak access',
         attr = dict(
             netloc = dict(
                 values   = ['uget.weak.fr'],
@@ -82,20 +83,23 @@ class WeakUgetStore(UgetStore):
 class UGetShell(cmd.Cmd):
     """Accepts commands via the normal interactive prompt or on the command line."""
 
-    _valid_partial_ugetid = r'(?P<shortuget>(?P<id>\S+?)(?:@(?P<location>\w+))?\b)'
+    _valid_partial_ugetid = r'(?:u(?:get|env):)?(?P<shortuget>(?P<id>\S+?)(?:@(?P<location>\w+))?\b)'
+    _valid_partial_baseid = r'(?:(?(gco)|u(?:get|env):))?(?P<baseshort>(?P<baseid>\S+?)(?(gco)\b|(?:@(?P<baselocation>\w+))?\b))'
     _valid_check = re.compile(r'(?P<what>data|env)\s+' + _valid_partial_ugetid + '$')
     _valid_pull = _valid_check
     _valid_push = _valid_check
-    _valid_hack = re.compile(r'(?P<gco>g)?(?P<what>data|env)\s+' +
-                             r'(?P<baseshort>(?P<baseid>\S+?)(?(gco)\b|(?:@(?P<baselocation>\w+))?\b))\s+' +
+    _valid_list = re.compile(r'(?P<what>data|env)(?:\s+from\s+(?P<listlocation>\w+))?(?:\s+matching\s+(?P<grep>.*))?\s*$')
+    _valid_diff = re.compile(r'env\s+' + _valid_partial_ugetid + '(?:\s+wrt\s+' +
+                             r'(?P<gco>g)?(?P<what>data|env)\s+' + _valid_partial_baseid + r')?\s*$')
+    _valid_hack = re.compile(r'(?P<gco>g)?(?P<what>data|env)\s+' + _valid_partial_baseid + r'\s+' +
                              r'into\s+' + _valid_partial_ugetid + '$')
     _valid_set = re.compile(r'(?P<what>storage|location)\s+(?P<value>\S+)$')
     _valid_bootstraphack = re.compile(r'(?P<location>\w+)')
 
     _config_file = sh.path.join(gl.configrc, 'uget-client-defaults.ini')
 
-    _complete_basics = ['env', 'data']
-    _complete_basics_plus = _complete_basics + ['genv', 'gdata']
+    _complete_basics_raw = ['env', 'data']
+    _complete_basics_plus = _complete_basics_raw + ['genv', 'gdata']
 
     _push_res_fmt = "{:9s}: {:s}"
     _push_res_mfmt = "{:9s}: {:s} for month: {:02d}"
@@ -112,10 +116,18 @@ class UGetShell(cmd.Cmd):
             self._config.add_section('cli')
             self._cliconfig_set('storage', None)
             self._cliconfig_set('location', None)
-        # Initiaalise the stores
+        # Initialise the stores
         self._storehack = fpx.store(scheme='uget', netloc='uget.hack.fr')
         self._storehackrw = fpx.store(scheme='uget', netloc='uget.hack.fr', readonly=False)
         self._update_stores(storage=self._cliconfig_get('storage'))
+
+    # A whole bunch of utility functions
+
+    @staticmethod
+    def _error(msg):
+        """Print out an error message."""
+        print('Error: {!s}'.format(msg))
+        print()
 
     def _cliconfig_get(self, key):
         """Get a variable from the configuration file."""
@@ -157,19 +169,13 @@ class UGetShell(cmd.Cmd):
                                           ('id', 'baseid'), ('location', 'baselocation')):
                 if loc in gdict and gdict[loc] is None:
                     gdict[loc] = self._cliconfig_get('location')
-                    if loc is None:
+                    if gdict[loc] is None:
                         print('Syntax error (got < {:s} >) but location is not set'
                               .format(self.lastcmd, line))
                         print()
                         return None
                     gdict[shortid] = '{:s}@{:s}'.format(gdict[l_id], gdict[loc])
             return gdict
-
-    @staticmethod
-    def _error(msg):
-        """Print out an error message."""
-        print('Error: {!s}'.format(msg))
-        print()
 
     @staticmethod
     def _check_remap(rc):
@@ -188,6 +194,159 @@ class UGetShell(cmd.Cmd):
             path = '/'.join(path)
         return uriparse('{:s}://{:s}/{:s}'.format(store.scheme, store.netloc, path))
 
+    def _instore_check(self, store, ugetid, what='data'):
+        """Look for a given *ugetid* in *store*.
+
+        Extends the lookup to monthly element if sensible.
+        """
+        barerc = store.check(self._uri(store, (what, ugetid.short)))
+        if what == 'data' and not barerc:
+            monthchecked = list()
+            for m in range(1, 13):
+                monthchecked.append(bool(store.check(self._uri(store,
+                                                               (what, ugetid.monthlyshort(m))))))
+            if any(monthchecked):
+                return [(monthchecked[m - 1], ugetid.monthlyshort(m))
+                        for m in range(1, 13)]
+            else:
+                return [(False, ugetid.short), ]
+        else:
+            return [(bool(barerc), ugetid.short), ]
+
+    def _single_check(self, store_checks):
+        """Synthesise the result of several _instore_check calls."""
+        chk_target = None
+        # What are we looking for, monthly data or not ?
+        for stname, _ in self._storelist:
+            if any([chk[0] for chk in store_checks[stname]]):
+                chk_target = store_checks[stname]
+                break
+        if chk_target:
+            res_stack = list()
+            expectedlen = len(chk_target)
+            for i in range(expectedlen):
+                res = ''
+                for stname, _ in self._storelist:
+                    checks = store_checks[stname]
+                    if len(checks) == expectedlen and checks[i][0]:
+                        res += stname + ', '
+                res_stack.append((chk_target[i][1],
+                                  (res.rstrip(', ') or 'MISSING')))
+            return res_stack
+        else:
+            # The element is missing everywhere
+            return [(store_checks[stname][0][1], 'MISSING'), ]
+
+    def _single_push(self, what, shortid):
+        """Push a single data to the archive store (request confirmation for overwrite)."""
+        source = self._storehack.locate(self._uri(self._storehack, (what, shortid)),
+                                        dict(auto_repack=True))
+        dest_uri = self._uri(self._storearch, (what, shortid))
+        if self._storearch.check(dest_uri):
+            res = query_yes_no_quit('< {:s} > already exists in the Archive store. Overwrite ?'.format(shortid),
+                                    default='no')
+            if res == 'quit':
+                return False
+            if res == 'no':
+                return True
+        rc = bool(self._storearchrw.put(source, dest_uri, dict()))
+        if not rc:
+            self._error("The file transfer to the archive failed")
+        return rc
+
+    def _generate_diff_tracker(self, mline):
+        """Creates a diff tracker given the parsed *mline* user input."""
+        # Target
+        try:
+            targetenv = uenv.contents('uget:' + mline['shortuget'],
+                                      scheme='uget', netloc='uget.weak.fr')
+        except (IOError, OSError):
+            targetenv = None
+        if not targetenv:
+            self._error("Could not get env < {:s} >".format(mline['shortuget']))
+            return (None, None, None)
+
+        if mline['what'] is None:
+            # No reference
+            refenv = dict()
+        else:
+            # Reference
+            if mline['gco'] is None:
+                # The reference is a Uget element
+                ref_element = mline['baseshort']
+                try:
+                    refenv = uenv.contents('uget:' + ref_element,
+                                           scheme='uget', netloc='uget.weak.fr')
+                except (IOError, OSError):
+                    refenv = None
+            else:
+                # The source is a genv cycle
+                ref_element = mline['baseid']
+                try:
+                    refenv = genv.autofill(ref_element)
+                except (IOError, OSError):
+                    refenv = None
+            if not refenv:
+                self._error("Could not get env or genv < {:s} >".format(ref_element))
+                return (None, None, None)
+        track = MappingTracker(refenv, targetenv)
+        return targetenv, refenv, track
+
+    def _export_element_check(self, elt):
+        """For a given *elt* build the list of things to export."""
+        try:
+            ugetid = UgetId(elt)
+        except ValueError:
+            if ' ' in elt:
+                return ['(unexpanded list off uget/gget elements)', ]
+            else:
+                return [elt, ]
+        else:
+            uri = self._uri(self._storearch, ('data', ugetid.short))
+            reslist = list()
+            rc = self._storearch.check(uri)
+            if not rc:
+                m_list = list()
+                for m in range(1, 13):
+                    m_uri = self._uri(self._storearch, ('data', ugetid.monthlyshort(m)))
+                    m_list.append((bool(self._storearch.check(m_uri)), m_uri))
+                if any([m_test[0] for m_test in m_list]):
+                    reslist.extend(m_list)
+                else:
+                    reslist.append((False, uri))
+            else:
+                reslist.append((True, uri))
+            return [re.sub('^\w+@', '', self._storearch.locate(r[1])) if r[0] else '!!!MISSING!!!'
+                    for r in reslist]
+
+    # Cmd.Cmd related stuff
+
+    def _complete_basics(self, text, line, begidx, endidx, guesses=_complete_basics_raw):
+        """Deals with auto-completion for the first level of keywords."""
+        sline = line.split()
+        if len(sline) == 1 or (len(sline) == 2 and sline[1] not in guesses):
+            completions = guesses
+        else:
+            completions = []
+        return [f for f in completions if not text or f.startswith(text)]
+
+    def _complete_diff_export(self, text, line, begidx, endidx):
+        """Auto-completion for the *diff* or *export* command."""
+        sline = line.split()
+        # First keyword
+        if len(sline) == 1 or (len(sline) == 2 and sline[1] not in ('env', )):
+            completions = ('env', )
+        # Third keyword
+        elif len(sline) == 3 or (len(sline) == 4 and sline[3] not in ('wrt', )):
+            completions = ('wrt', )
+        # Forth keyword
+        elif len(sline) == 4 or (len(sline) == 5 and sline[4] not in ('env', 'genv')):
+            completions = ('env', 'genv')
+        # Forth keyword
+        else:
+            completions = ()
+        return [f for f in completions if not text or f.startswith(text)]
+
     def cmdloop(self, intro=None):
         """Catch Ctrl-C."""
         going_on = True
@@ -203,6 +362,8 @@ class UGetShell(cmd.Cmd):
         print()
         return cmd.Cmd.precmd(self, line)
 
+    # Definition of actual uget.py commands
+
     def do_info(self, line):
         """
         Print some info on the uget.py command-line interface.
@@ -215,15 +376,6 @@ class UGetShell(cmd.Cmd):
         print('Hack store      : {:s}'.format(self._storehack))
         print('Archive store   : {:s}'.format(self._storearch))
         print()
-
-    def _complete_basics(self, text, line, begidx, endidx, guesses=_complete_basics):
-        """Deals with auto-completion for the first level of keywords."""
-        sline = line.split()
-        if len(sline) == 1 or (len(sline) == 2 and sline[1] not in guesses):
-            completions = guesses
-        else:
-            completions = []
-        return [f for f in completions if not text or f.startswith(text)]
 
     def complete_set(self, text, line, begidx, endidx):
         """Auto-completion for the *set* command."""
@@ -260,13 +412,6 @@ class UGetShell(cmd.Cmd):
         """Auto-completion for the *check* command."""
         return self._complete_basics(text, line, begidx, endidx)
 
-    def _single_check(self, shortname):
-        res = ''
-        for stname, st in self._storelist:
-            if st.check(self._uri(st, ('data', shortname))):
-                res += stname + ', '
-        return res.rstrip(', ') or 'MISSING'
-
     @ftp_pooling
     @ugetid_doc
     def do_check(self, line):
@@ -298,27 +443,166 @@ class UGetShell(cmd.Cmd):
                 print('Digging into this particular Uenv:')
                 myenv = uenv.contents('uget:' + mline['shortuget'],
                                       scheme='uget', netloc='uget.weak.fr')
+                outlist = list()
                 for k, v in myenv.items():
-                    monthchecked = list()
                     if isinstance(v, UgetId):
-                        res = self._single_check(v.short)
-                        if res == 'MISSING':
-                            # Go for monthly check
-                            monthchecked = list()
-                            for m in range(1, 13):
-                                monthchecked.append(self._single_check(v.monthlyshort(m)))
-                            if all([m == 'MISSING' for m in monthchecked]):
-                                monthchecked = list()
+                        chkres = {stname: self._instore_check(st, v)
+                                  for stname, st in self._storelist}
+                        rstack = self._single_check(chkres)
+                        for i, res in enumerate(rstack):
+                            if len(rstack) > 1:
+                                outlist.append((k, res[1],
+                                                'uget:{:s} for month: {:02d}'.format(res[0], i + 1)))
+                            else:
+                                outlist.append((k, res[1], 'uget:{:s}'.format(res[0])))
                     else:
-                        res = 'unchecked'
-                    if monthchecked:
-                        for m in range(1, 13):
-                            print('  {:36s}: {:14s} ({:s} for month: {:02d})'.
-                                  format(k, monthchecked[m - 1], v, m))
-                    else:
-                        print('  {:36s}: {:14s} ({:s})'.format(k, res, v))
+                        outlist.append((k, 'Unchecked', v))
                 uenv.clearall()
+                print_tablelike('  {:s}: {:s}  ({:s})', * zip(* outlist))
             print()
+
+    def complete_list(self, text, line, begidx, endidx):
+        """Auto-completion for the *hack* command."""
+        sline = line.split()
+        # First keyword
+        if len(sline) == 1 or (len(sline) == 2 and sline[1] not in self._complete_basics_raw):
+            completions = self._complete_basics_raw
+        # Second keyword
+        elif len(sline) == 2 or (len(sline) == 3 and sline[2] not in ('from', 'matching')):
+            completions = ('from', 'matching')
+        # Forth keyword
+        elif (len(sline) >= 4 and sline[2] != 'matching' and
+              (len(sline) == 4 or (len(sline) == 5 and sline[4] != 'matching'))):
+            completions = ('matching', )
+        else:
+            completions = ()
+        return [f for f in completions if not text or f.startswith(text)]
+
+    @ftp_pooling
+    def do_list(self, line):
+        """
+        List the archived available stuff for a given location.
+
+        Syntax: list [data|env] [from location] [matching regex]
+
+        * 'list data' will list all the constant data for a given location
+        * 'list env' will list all the environment files for a given location
+        * 'from location' may be omitted. In such a case the default_location is used
+          (see the 'set' and 'info' commands)
+        * the 'matching regex' part of the command can be used to filter the results
+          (optional)
+        """
+        mline = self._valid_syntax(self._valid_list, line)
+        if mline:
+            actuallocation = mline['listlocation'] or self._cliconfig_get('location')
+            if not actuallocation:
+                print('Syntax error (got < {:s} >) but location is not set'.format(self.lastcmd, line))
+                print()
+                return None
+            uri = self._uri(self._storearch, (mline['what'], '@' + actuallocation))
+            stuff = self._storearch.list(uri, options=dict())
+            if mline['grep']:
+                regex = re.compile(mline['grep'])
+                stuff = [s for s in stuff if regex.search(s)]
+            for element in stuff:
+                print(element)
+            print()
+
+    complete_diff = _complete_diff_export
+
+    @ftp_pooling
+    @ugetid_doc
+    def do_diff(self, line):
+        """
+        Compare a Uget environment with another Uget environment or genv.
+
+        Syntax: diff env UgetId [wrt [env|genv] RefId]
+
+        * UGETID_DOC
+        * The optional *wrt* clause is intended to specify a reference uenv or
+          genv cycle to compare to.
+        """
+        mline = self._valid_syntax(self._valid_diff, line)
+        if mline:
+            targetenv, refenv, track = self._generate_diff_tracker(mline)
+            if targetenv is None:
+                return False
+            print()
+            if not (track.created or track.deleted or track.updated):
+                print('There are no differences !')
+                print()
+            if track.created:
+                print('CREATED ENTRIES:')
+                todo = [(k, targetenv[k]) for k in sorted(track.created)]
+                print_tablelike('  {:s} = {:s}', * zip(* todo))
+                print()
+            if track.deleted:
+                print('DELETED ENTRIES:')
+                for k in sorted(track.deleted):
+                    todo = [(k, refenv[k]) for k in sorted(track.deleted)]
+                print_tablelike('  {:s} (previously: {:s})', * zip(* todo))
+                print()
+            if track.updated:
+                print('UPDATED ENTRIES:')
+                for k in sorted(track.updated):
+                    todo = [(k, targetenv[k], refenv[k]) for k in sorted(track.updated)]
+                print_tablelike('  {:s}={:s} (previously: {:s})', * zip(* todo))
+                print()
+
+    complete_export = _complete_diff_export
+
+    @ftp_pooling
+    @ugetid_doc
+    def do_export(self, line):
+        """
+        Export a Uget environment (with respect to another Uget environment or genv).
+
+        Syntax: export env UgetId [wrt [env|genv] RefId]
+
+        * UGETID_DOC
+        * The optional *wrt* clause is intended to specify a reference uenv or
+          genv cycle to compare to.
+        """
+        mline = self._valid_syntax(self._valid_diff, line)
+        if mline:
+            targetenv, _, track = self._generate_diff_tracker(mline)
+            if targetenv is None:
+                return False
+            print()
+            if not (track.created or track.deleted or track.updated):
+                print('There are no differences !')
+                print()
+            else:
+                print('NB: Uenv keys starting with MASTER_ are omitted.')
+                print()
+                for (category, cfilter) in zip(('NAMELISTS', 'CONSTANTS'),
+                                               (lambda k: re.match('^NAMELIST', k),
+                                                lambda k: not (re.match('^NAMELIST', k) or
+                                                               re.match('^MASTER', k)))):
+
+                    def applyfilter(keys):
+                        return [k for k in keys if cfilter(k)]
+
+                    if applyfilter(track.created):
+                        print('----- CREATED {:s}: -----'.format(category))
+                        for k in sorted(applyfilter(track.created)):
+                            print("\n* {:s}".format(k))
+                            for p in self._export_element_check(targetenv[k]):
+                                print(p)
+                        print()
+                    if applyfilter(track.deleted):
+                        print('----- DELETED {:s}: -----'.format(category))
+                        print()
+                        for k in sorted(applyfilter(track.deleted)):
+                            print(k)
+                        print()
+                    if applyfilter(track.updated):
+                        print('----- UPDATED {:s}: -----'.format(category))
+                        for k in sorted(applyfilter(track.updated)):
+                            print("\n* {:s}".format(k))
+                            for p in self._export_element_check(targetenv[k]):
+                                print(p)
+                        print()
 
     def complete_pull(self, text, line, begidx, endidx):
         """Auto-completion for the *pull* command."""
@@ -369,23 +653,6 @@ class UGetShell(cmd.Cmd):
         """Auto-completion for the *push* command."""
         return self._complete_basics(text, line, begidx, endidx)
 
-    def _single_push(self, what, shortid):
-        """Push a single data to the archive store (request confirmation for overwrite)."""
-        source = self._storehack.locate(self._uri(self._storehack, (what, shortid)),
-                                        dict(auto_repack=True))
-        dest_uri = self._uri(self._storearch, (what, shortid))
-        if self._storearch.check(dest_uri):
-            res = query_yes_no_quit('< {:s} > already exists in the Archive store. Overwrite ?'.format(shortid),
-                                    default='no')
-            if res == 'quit':
-                return False
-            if res == 'no':
-                return True
-        rc = bool(self._storearchrw.put(source, dest_uri, dict()))
-        if not rc:
-            self._error("The file transfer to the archive failed")
-        return rc
-
     @ftp_pooling
     @ugetid_doc
     def do_push(self, line):
@@ -420,52 +687,38 @@ class UGetShell(cmd.Cmd):
                                       scheme='uget', netloc='uget.weak.fr')
                 for _, v in myenv.items():
                     if isinstance(v, UgetId):
-                        # If the element is a Uget data available in the Hack store: upload it
-                        if self._storehack.check(self._uri(self._storehack, ('data', v.short))):
-                            print(self._push_res_fmt.format("Uploading", v))
-                            rc = self._single_push('data', v.short)
+                        chkres = self._instore_check(self._storehack, v)
+                        if len(chkres) == 1 and chkres[0][0]:
+                            # "Simple" non-monthly case
+                            print(self._push_res_fmt.format("Uploading", 'uget:' + chkres[0][1]))
+                            rc = self._single_push('data', chkres[0][1])
                             if rc is not True:
                                 return rc
-                        else:
-                            # Look for any monthly data
-                            monthfound = list()
-                            for m in range(1, 13):
-                                myshort = v.monthlyshort(m)
-                                if self._storehack.check(self._uri(self._storehack, ('data', myshort))):
-                                    monthfound.append(myshort)
-                            if monthfound:
-                                # Great, this is monthly, push and check for all months
-                                for m in range(1, 13):
-                                    myshort = v.monthlyshort(m)
-                                    if myshort in monthfound:
-                                        print(self._push_res_mfmt.format("Uploading", v, m))
-                                        rc = self._single_push('data', myshort)
-                                        if rc is not True:
-                                            return rc
-                                    else:
-                                        rstuff_uri = self._uri(self._storearch, ('data', myshort))
-                                        print(self._push_res_mfmt.format(self._check_remap(self._storearch.check(rstuff_uri)), v, m))
-                            else:
-                                # Oops: nothing to upload
-                                rstuff_uri = self._uri(self._storearch, ('data', v.short))
-                                usualchecked = self._storearch.check(rstuff_uri)
-                                monthchecked = list()
-                                if usualchecked:
-                                    # This is a usual data
-                                    print(self._push_res_fmt.format(self._check_remap(usualchecked), v))
+                        elif len(chkres) > 1:
+                            # Monthly stuff
+                            for i, res in enumerate(chkres):
+                                if res[0]:
+                                    print(self._push_res_fmt.format("Uploading", 'uget:' + res[1]))
+                                    rc = self._single_push('data', res[1])
+                                    if rc is not True:
+                                        return rc
                                 else:
-                                    # Check for a monthly data
-                                    for m in range(1, 13):
-                                        rstuff_uri = self._uri(self._storearch, ('data', v.monthlyshort(m)))
-                                        monthchecked.append(self._storearch.check(rstuff_uri))
-                                    if any(monthchecked):
-                                        for m in range(1, 13):
-                                            print(self._push_res_mfmt.format(self._check_remap(monthchecked[m - 1]), v, m))
-                                    else:
-                                        # Nope, it definitely doesn't exist
-                                        print(self._push_res_fmt.format(self._check_remap(usualchecked), v))
+                                    # Missing in Hack, check in the archive...
+                                    rstuff_uri = self._uri(self._storearch, ('data', res[1]))
+                                    print(self._push_res_mfmt.format(self._check_remap(self._storearch.check(rstuff_uri)),
+                                                                     'uget:' + res[1], i + 1))
+                        else:
+                            # Not in Hack, check in the archive
+                            chkarch = self._instore_check(self._storearch, v)
+                            for i, chk in enumerate(chkarch):
+                                if len(chkarch) > 1:
+                                    print(self._push_res_mfmt.format(self._check_remap(chk[0]),
+                                                                     'uget:' + chk[1], i + 1))
+                                else:
+                                    print(self._push_res_fmt.format(self._check_remap(chk[0]),
+                                                                    'uget:' + chk[1]))
                     else:
-                        print("Unchecked: {:s}".format(v))
+                        print(self._push_res_fmt.format('Unckecked', v))
                 uenv.clearall()
                 print()
 
@@ -541,7 +794,10 @@ class UGetShell(cmd.Cmd):
                     # The source is a genv cycle
                     source_element = mline['baseid']
                     if mline['what'] == 'env':
-                        mygenv = genv.autofill(source_element)
+                        try:
+                            mygenv = genv.autofill(source_element)
+                        except (OSError, IOError):
+                            mygenv = dict()
                         if not mygenv:
                             self._error("Could not get genv < {:s} >".format(source_element))
                             return False

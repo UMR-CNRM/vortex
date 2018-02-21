@@ -713,7 +713,7 @@ class AutoMetaGang(MetaGang):
 
         :param vortex.layout.monitor.BasicInputMonitor bm: The BasicInputMonitor
                                                            that will be explored
-        :param list grouping_keys: The attributes that are used to discriminate the gangs
+        :param list[str] grouping_keys: The attributes that are used to discriminate the gangs
         :param int allowmissing: The number of missing members allowed for a gang
             (It will be used to initialise the member gangs *minsize* attribute)
         :param int waitlimit: The *waitlimit* attribute of the member gangs

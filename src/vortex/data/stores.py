@@ -294,6 +294,15 @@ class Store(footprints.FootprintBase):
         else:
             return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
 
+    def list(self, remote, options=None):
+        """Proxy method to dedicated list method according to scheme."""
+        logger.debug('Store list %s', remote)
+        if options is not None and options.get('incache', False) and not self.use_cache():
+            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+            return None
+        else:
+            return getattr(self, self.scheme + 'list', self.notyet)(remote, options)
+
     def _hash_store_defaults(self, options):
         """Update default options when fetching hash files."""
         options = options.copy() if options is not None else dict()
@@ -523,6 +532,19 @@ class MultiStore(footprints.FootprintBase):
             if tmp_rloc:
                 rloc.append(tmp_rloc)
         return ';'.join(rloc)
+
+    def list(self, remote, options=None):
+        """Go through internal opened stores and list the expected resource for each of them."""
+        logger.debug('Multistore list %s', remote)
+        rlist = set()
+        for sto in self.openedstores:
+            logger.debug('Multistore list at %s', sto)
+            tmp_rloc = sto.list(remote.copy(), options)
+            if isinstance(tmp_rloc, (list, tuple, set)):
+                rlist.update(tmp_rloc)
+            elif tmp_rloc is True:
+                return True
+        return sorted(rlist)
 
     def get(self, remote, local, options=None):
         """Go through internal opened stores for the first available resource."""
@@ -1003,6 +1025,31 @@ class ArchiveStore(Store):
             ftp.close()
         return rc
 
+    def ftplist(self, remote, options):
+        """Use ``system.ftp`` to list availlable files."""
+        ftp = self.system.ftp(self.hostname(), remote['username'], delayed=True)
+        if ftp:
+            rpath = self._ftpformatpath(remote)
+            try:
+                # Is this a directory ?
+                rc = ftp.cd(rpath)
+            except ftplib.all_errors:
+                # Apparently not...
+                rc = None
+                try:
+                    # Is it a file ?
+                    if ftp.size(rpath) is not None:
+                        rc = True
+                except (ValueError, TypeError, ftplib.all_errors):
+                    pass
+            else:
+                # Content of the directory...
+                if rc:
+                    rc = ftp.nlst()
+            finally:
+                ftp.close()
+        return rc
+
     def ftpget(self, remote, local, options):
         """Delegates to ``system.ftp`` the get action."""
         rpath = self._ftpformatpath(remote)
@@ -1220,6 +1267,15 @@ class VortexArchiveStore(ArchiveStore):
         """Reformulates the remote path to compatible vortex namespace."""
         pass
 
+    def remap_list(self, remote, options):
+        """Reformulates the remote path to compatible vortex namespace."""
+        if len(remote['path'].split('/')) >= 4:
+            return self.remap_read(remote, options)
+        else:
+            logger.critical('The << %s >> path is not listable.', remote['path'])
+            return None
+        return remote
+
     def remap_write(self, remote, options):
         """Remap actual remote path to distant store path for intrusive actions."""
         if 'root' not in remote:
@@ -1236,6 +1292,14 @@ class VortexArchiveStore(ArchiveStore):
         """Remap and ftplocate sequence."""
         remote = self.remap_read(remote, options)
         return self.ftplocate(remote, options)
+
+    def vortexlist(self, remote, options):
+        """Remap and ftplist sequence."""
+        remote = self.remap_list(remote, options)
+        if remote:
+            return self.ftplist(remote, options)
+        else:
+            return None
 
     def vortexget(self, remote, local, options):
         """Remap and ftpget sequence."""
@@ -1461,6 +1525,17 @@ class CacheStore(Store):
         """Agregates cache to remote subpath."""
         return self.cache.fullpath(remote['path'])
 
+    def incachelist(self, remote, options):
+        """List the content of a remote path."""
+        path = self.incachelocate(remote, options)
+        if self.system.path.exists(path):
+            if self.system.path.isdir(path):
+                return self.system.listdir(path)
+            else:
+                return True
+        else:
+            return None
+
     def incacheget(self, remote, local, options):
         """Simple copy from current cache cache to ``local``."""
         logger.info('incacheget on %s://%s/%s (to: %s)',
@@ -1540,6 +1615,10 @@ class _VortexCacheBaseStore(CacheStore):
     def vortexlocate(self, remote, options):
         """Proxy to :meth:`incachelocate`."""
         return self.incachelocate(remote, options)
+
+    def vortexlist(self, remote, options):
+        """Proxy to :meth:`incachelocate`."""
+        return self.incachelist(remote, options)
 
     def vortexget(self, remote, local, options):
         """Proxy to :meth:`incacheget`."""
