@@ -9,12 +9,13 @@ from __future__ import print_function, absolute_import, division
 
 import cmd
 import ConfigParser
+import io
 import itertools
 import logging
 import os
 import re
+import six
 import stat
-import StringIO
 import sys
 from tempfile import mkdtemp
 
@@ -31,6 +32,7 @@ from footprints import proxy as fpx
 
 import vortex
 from vortex.tools.net import uriparse
+from vortex.tools.systems import ExecutionError
 
 from gco.data.stores import UgetStore
 from gco.syntax.stdattrs import UgetId
@@ -89,8 +91,10 @@ class UGetShell(cmd.Cmd):
     _valid_pull = _valid_check
     _valid_push = _valid_check
     _valid_list = re.compile(r'(?P<what>data|env)(?:\s+from\s+(?P<listlocation>\w+))?(?:\s+matching\s+(?P<grep>.*))?\s*$')
-    _valid_diff = re.compile(r'env\s+' + _valid_partial_ugetid + '(?:\s+wrt\s+' +
-                             r'(?P<gco>g)?(?P<what>data|env)\s+' + _valid_partial_baseid + r')?\s*$')
+    _valid_diff = re.compile(r'env\s+' + _valid_partial_ugetid + '(?:\s+wrt\s+(?:' +
+                             r'(?P<gco>g)?(?P<what>env)\s+' + _valid_partial_baseid + '|'
+                             r'(?P<parent>parent)'
+                             r'))?\s*$')
     _valid_hack = re.compile(r'(?P<gco>g)?(?P<what>data|env)\s+' + _valid_partial_baseid + r'\s+' +
                              r'into\s+' + _valid_partial_ugetid + '$')
     _valid_set = re.compile(r'(?P<what>storage|location)\s+(?P<value>\S+)$')
@@ -103,6 +107,10 @@ class UGetShell(cmd.Cmd):
 
     _push_res_fmt = "{:9s}: {:s}"
     _push_res_mfmt = "{:9s}: {:s} for month: {:02d}"
+
+    _hack_commentline_fmt = '# Created by uget.py from an existing {:s}: {:s}\n'
+    _hack_commentline_re = re.compile(r'^\s*#\s+Created\s+by\s+uget\.py\s+from\s+an\s+existing\s+(?:(?P<gco>g)|u)env:\s+' +
+                                      _valid_partial_baseid + r'\s*$')
 
     def __init__(self, *kargs, **kwargs):
         cmd.Cmd.__init__(self, *kargs, **kwargs)
@@ -168,6 +176,8 @@ class UGetShell(cmd.Cmd):
             for shortid, l_id, loc in zip(('shortuget', 'baseshort'),
                                           ('id', 'baseid'), ('location', 'baselocation')):
                 if loc in gdict and gdict[loc] is None:
+                    if gdict.get('gco', False) and shortid.startswith('base'):
+                        continue
                     gdict[loc] = self._cliconfig_get('location')
                     if gdict[loc] is None:
                         print('Syntax error (got < {:s} >) but location is not set'
@@ -257,38 +267,46 @@ class UGetShell(cmd.Cmd):
     def _generate_diff_tracker(self, mline):
         """Creates a diff tracker given the parsed *mline* user input."""
         # Target
-        try:
-            targetenv = uenv.contents('uget:' + mline['shortuget'],
-                                      scheme='uget', netloc='uget.weak.fr')
-        except (IOError, OSError):
-            targetenv = None
+        targetenv = self._uenv_contents(mline['shortuget'])
         if not targetenv:
             self._error("Could not get env < {:s} >".format(mline['shortuget']))
             return (None, None, None)
 
+        # Find out what is the reference
+        ref_cb = None  # Default is no reference
+        refenv = dict()
         if mline['what'] is None:
-            # No reference
-            refenv = dict()
+            # Look for comment line that contains informations about the parent env
+            if mline['parent']:
+                # Fetch the target uenv file
+                uenvfile = six.StringIO()
+                uri = self._uri(self._storeweak, ('env', mline['shortuget']))
+                # Should always work since self._uenv_contents was called before...
+                self._storeweak.get(uri, uenvfile)
+                uenvfile.seek(0)
+                for l in uenvfile.readlines():
+                    cmatch = self._hack_commentline_re.match(l.rstrip('\n'))
+                    if cmatch:
+                        ref_cb = self._genv_contents if cmatch.group('gco') else self._uenv_contents
+                        ref_element = cmatch.group('baseshort')
+                        break
+                if ref_cb is None:
+                    self._error('Unable to find the parent env of < {:s} >'
+                                .format(mline['shortuget']))
+                    return (None, None, None)
+                else:
+                    print('The parent {:s}env is: {:s}'.format(cmatch.group('gco') or '', ref_element))
         else:
-            # Reference
-            if mline['gco'] is None:
-                # The reference is a Uget element
-                ref_element = mline['baseshort']
-                try:
-                    refenv = uenv.contents('uget:' + ref_element,
-                                           scheme='uget', netloc='uget.weak.fr')
-                except (IOError, OSError):
-                    refenv = None
-            else:
-                # The source is a genv cycle
-                ref_element = mline['baseid']
-                try:
-                    refenv = genv.autofill(ref_element)
-                except (IOError, OSError):
-                    refenv = None
+            ref_cb = self._genv_contents if mline['gco'] else self._uenv_contents
+            ref_element = mline['baseshort']
+
+        # Fetch the reference
+        if ref_cb is not None:
+            refenv = ref_cb(ref_element)
             if not refenv:
                 self._error("Could not get env or genv < {:s} >".format(ref_element))
                 return (None, None, None)
+
         track = MappingTracker(refenv, targetenv)
         return targetenv, refenv, track
 
@@ -340,12 +358,30 @@ class UGetShell(cmd.Cmd):
         elif len(sline) == 3 or (len(sline) == 4 and sline[3] not in ('wrt', )):
             completions = ('wrt', )
         # Forth keyword
-        elif len(sline) == 4 or (len(sline) == 5 and sline[4] not in ('env', 'genv')):
-            completions = ('env', 'genv')
+        elif len(sline) == 4 or (len(sline) == 5 and sline[4] not in ('env', 'genv', 'parent')):
+            completions = ('env', 'genv', 'parent')
         # Forth keyword
         else:
             completions = ()
         return [f for f in completions if not text or f.startswith(text)]
+
+    def _uenv_contents(self, shortid):
+        try:
+            theenv = uenv.contents('uget:' + shortid, scheme='uget', netloc='uget.weak.fr')
+        except (IOError, OSError, uenv.UenvError) as e:
+            self._error('Error getting uenv data: {!s}'.format(e))
+            uenv.clearall()
+            theenv = None
+        return theenv
+
+    def _genv_contents(self, cycle):
+        try:
+            theenv = genv.autofill(cycle)
+        except (OSError, IOError, ExecutionError) as e:
+            self._error('Error getting genv data: {!s}'.format(e))
+            genv.clearall()
+            theenv = None
+        return theenv
 
     def cmdloop(self, intro=None):
         """Catch Ctrl-C."""
@@ -386,7 +422,7 @@ class UGetShell(cmd.Cmd):
         """
         Edit the settings of the uget.py command-line interface.
 
-        Syntax: set [storage|location] somevalue
+        Syntax: set (storage|location) somevalue
 
         * somevalue may be 'None'
         * 'set storage' refers to the hostname where the Uget archive is located
@@ -418,7 +454,7 @@ class UGetShell(cmd.Cmd):
         """
         Check the availability of a given Uget element.
 
-        Syntax: check [data|env] UgetId
+        Syntax: check (data|env) UgetId
 
         * 'check data' will look for constant data described by UgetId
         * 'check env' will look for an environment file (also refered as Uenv)
@@ -441,10 +477,11 @@ class UGetShell(cmd.Cmd):
             if mline['what'] == 'env' and found:
                 print()
                 print('Digging into this particular Uenv:')
-                myenv = uenv.contents('uget:' + mline['shortuget'],
-                                      scheme='uget', netloc='uget.weak.fr')
+                myenv = self._uenv_contents(mline['shortuget'])
+                if not myenv:
+                    return False
                 outlist = list()
-                for k, v in myenv.items():
+                for k, v in sorted(myenv.items()):
                     if isinstance(v, UgetId):
                         chkres = {stname: self._instore_check(st, v)
                                   for stname, st in self._storelist}
@@ -483,7 +520,7 @@ class UGetShell(cmd.Cmd):
         """
         List the archived available stuff for a given location.
 
-        Syntax: list [data|env] [from location] [matching regex]
+        Syntax: list (data|env) [from location] [matching regex]
 
         * 'list data' will list all the constant data for a given location
         * 'list env' will list all the environment files for a given location
@@ -516,11 +553,13 @@ class UGetShell(cmd.Cmd):
         """
         Compare a Uget environment with another Uget environment or genv.
 
-        Syntax: diff env UgetId [wrt [env|genv] RefId]
+        Syntax: diff env UgetId [wrt ((env|genv) RefId|parent)]
 
         * UGETID_DOC
-        * The optional *wrt* clause is intended to specify a reference uenv or
+        * The optional *wrt (env|get)* clause is intended to specify a reference uenv or
           genv cycle to compare to.
+        * The *wrt parent* allows to read in the uenv file which uenv/genv was
+          used by the *hack* commabnd to create it.
         """
         mline = self._valid_syntax(self._valid_diff, line)
         if mline:
@@ -557,11 +596,13 @@ class UGetShell(cmd.Cmd):
         """
         Export a Uget environment (with respect to another Uget environment or genv).
 
-        Syntax: export env UgetId [wrt [env|genv] RefId]
+        Syntax: export env UgetId [wrt ((env|genv) RefId|parent)]
 
         * UGETID_DOC
         * The optional *wrt* clause is intended to specify a reference uenv or
           genv cycle to compare to.
+        * The *wrt parent* allows to read in the uenv file which uenv/genv was
+          used by the *hack* commabnd to create it.
         """
         mline = self._valid_syntax(self._valid_diff, line)
         if mline:
@@ -614,7 +655,7 @@ class UGetShell(cmd.Cmd):
         """
         Retrieve an Uget element.
 
-        Syntax: pull [data|env] UgetId
+        Syntax: pull (data|env) UgetId
 
         * 'pull data' will retrieve the constant data described by UgetId. (it
           will be retrieved as a local file named after the 'element_name' part
@@ -628,7 +669,7 @@ class UGetShell(cmd.Cmd):
         if mline:
             # name of the temporary file
             if mline['what'] == 'env':
-                tofile = StringIO.StringIO()
+                tofile = six.StringIO()
             else:
                 tofile = mline['id'] + sh.safe_filesuffix()
             # retrieve the resource"
@@ -659,7 +700,7 @@ class UGetShell(cmd.Cmd):
         """
         Push an element from the Hack store to the archive store.
 
-        Syntax: push [data|env] UgetId
+        Syntax: push (data|env) UgetId
 
         * 'push data' will push the constant data described by UgetId.
         * 'push env' will push the environment file (also refered as Uenv)
@@ -683,9 +724,10 @@ class UGetShell(cmd.Cmd):
             # When dealing with a Uenv, also push the related Uget data
             if mline['what'] == 'env':
                 print('Digging into this particular Uenv:')
-                myenv = uenv.contents('uget:' + mline['shortuget'],
-                                      scheme='uget', netloc='uget.weak.fr')
-                for _, v in myenv.items():
+                myenv = self._uenv_contents(mline['shortuget'])
+                if not myenv:
+                    return False
+                for _, v in sorted(myenv.items()):
                     if isinstance(v, UgetId):
                         chkres = self._instore_check(self._storehack, v)
                         if len(chkres) == 1 and chkres[0][0]:
@@ -742,7 +784,7 @@ class UGetShell(cmd.Cmd):
         """
         Retrieve an element and place it in the Hack store.
 
-        Syntax: hack [data|env|gdata|genv] SourceId into UgetId
+        Syntax: hack (data|env|gdata|genv) SourceId into UgetId
 
         * The kacked element may originate from different sources:
           * hack data: A Uget element is looked for (in such a case,
@@ -794,10 +836,7 @@ class UGetShell(cmd.Cmd):
                     # The source is a genv cycle
                     source_element = mline['baseid']
                     if mline['what'] == 'env':
-                        try:
-                            mygenv = genv.autofill(source_element)
-                        except (OSError, IOError):
-                            mygenv = dict()
+                        mygenv = self._genv_contents(source_element)
                         if not mygenv:
                             self._error("Could not get genv < {:s} >".format(source_element))
                             return False
@@ -841,6 +880,15 @@ class UGetShell(cmd.Cmd):
                         self._error('A directory was retireved: this should not happened ! ' +
                                     'Maybe you forgot the .tar/.tgz extension for the target element.')
                         return False
+                if mline['what'] == 'env':
+                    # Add a comment line at the beginning of the new environment file
+                    finalenv = six.StringIO()
+                    finalenv.write(self._hack_commentline_fmt
+                                   .format('genv' if mline['gco'] else 'uenv', mline['baseshort']))
+                    with io.open(tfile, 'r') as fhini:
+                        finalenv.write(fhini.read())
+                    finalenv.seek(0)
+                    tfile = finalenv
                 # That went great ! Store the retrieved resource in the hack store !
                 self._storehackrw.put(tfile, dest_uri, dict())
                 # Give write permissions to the user (that's kind of dirty for a cache but that's hacking !)
