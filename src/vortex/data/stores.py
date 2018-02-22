@@ -294,6 +294,31 @@ class Store(footprints.FootprintBase):
         else:
             return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
 
+    def prestage_through_hub(self, remote, options=None):
+        """Use the context's prestaging hub to process the pre-staging request."""
+        logger.debug('Store prestage through hub %s', remote)
+        infos_cb = getattr(self, self.scheme + 'prestageinfo', None)
+        if infos_cb:
+            infodict = infos_cb(remote, options)
+            infodict.setdefault('issuerkind', self.realkind)
+            infodict.setdefault('scheme', self.scheme)
+            if options and 'priority' in options:
+                infodict['priority'] = options['priority']
+            ctx = options.get('current_context', sessions.current())
+            ctx.prestaging_hub.record(** infodict)
+        else:
+            logger.info('Prestaging is not supported for scheme: %s', self.scheme)
+        return True
+
+    def prestage(self, remote, options=None):
+        """Proxy method to dedicated prestage method according to scheme."""
+        logger.debug('Store prestage %s', remote)
+        if options is not None and options.get('incache', False) and not self.use_cache():
+            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+            return True
+        else:
+            return getattr(self, self.scheme + 'prestage', self.prestage_through_hub)(remote, options)
+
     def _hash_store_defaults(self, options):
         """Update default options when fetching hash files."""
         options = options.copy() if options is not None else dict()
@@ -523,6 +548,17 @@ class MultiStore(footprints.FootprintBase):
             if tmp_rloc:
                 rloc.append(tmp_rloc)
         return ';'.join(rloc)
+
+    def prestage(self, remote, options=None):
+        """Go through internal opened stores and prestage the resource for each of them."""
+        logger.debug('Multistore prestage %s', remote)
+        if not self.openedstores:
+            return False
+        rc = True
+        for sto in self.openedstores:
+            logger.debug('Multistore prestage at %s', sto)
+            rc = rc and sto.prestage(remote.copy(), options)
+        return rc
 
     def get(self, remote, local, options=None):
         """Go through internal opened stores for the first available resource."""
@@ -1003,6 +1039,17 @@ class ArchiveStore(Store):
             ftp.close()
         return rc
 
+    def ftpprestageinfo(self, remote, options):
+        """Returns the prestaging informations"""
+        logname = remote['username']
+        if logname is None:
+            ftp = self.system.ftp(self.hostname(), remote['username'], delayed=True)
+            logname = ftp.logname
+        baseinfo = dict(storage=self.hostname(),
+                        logname=logname,
+                        location=self._ftpformatpath(remote), )
+        return baseinfo
+
     def ftpget(self, remote, local, options):
         """Delegates to ``system.ftp`` the get action."""
         rpath = self._ftpformatpath(remote)
@@ -1237,6 +1284,11 @@ class VortexArchiveStore(ArchiveStore):
         remote = self.remap_read(remote, options)
         return self.ftplocate(remote, options)
 
+    def vortexprestageinfo(self, remote, options):
+        """Remap and ftpprestageinfo sequence."""
+        remote = self.remap_read(remote, options)
+        return self.ftpprestageinfo(remote, options)
+
     def vortexget(self, remote, local, options):
         """Remap and ftpget sequence."""
         remote = self.remap_read(remote, options)
@@ -1461,6 +1513,11 @@ class CacheStore(Store):
         """Agregates cache to remote subpath."""
         return self.cache.fullpath(remote['path'])
 
+    def incacheprestageinfo(self, remote, options):
+        """Returns pre-staging informations."""
+        return dict(strategy=self.strategy,
+                    location=self.incachelocate(remote, options), )
+
     def incacheget(self, remote, local, options):
         """Simple copy from current cache cache to ``local``."""
         logger.info('incacheget on %s://%s/%s (to: %s)',
@@ -1540,6 +1597,10 @@ class _VortexCacheBaseStore(CacheStore):
     def vortexlocate(self, remote, options):
         """Proxy to :meth:`incachelocate`."""
         return self.incachelocate(remote, options)
+
+    def vortexprestageinfo(self, remote, options):
+        """Proxy to :meth:`incacheprestageinfo`."""
+        return self.incacheprestageinfo(remote, options)
 
     def vortexget(self, remote, local, options):
         """Proxy to :meth:`incacheget`."""

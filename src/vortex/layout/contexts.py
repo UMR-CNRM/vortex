@@ -10,6 +10,7 @@ from bronx.stdtypes.history  import PrivateHistory
 from bronx.stdtypes.tracking import Tracker
 
 from vortex.tools.env import Environment
+import vortex.tools.prestaging
 from . import dataflow
 
 #: No automatic export.
@@ -332,6 +333,12 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
             return Environment.current()
         else:
             return self._env
+
+    @property
+    def prestaging_hub(self):
+        """Return the prestaging hub associated with this context."""
+        return vortex.tools.prestaging.get_hub(tag='contextbound_{:s}'.format(self.tag),
+                                               sh=self.system)
 
     @property
     def system(self):

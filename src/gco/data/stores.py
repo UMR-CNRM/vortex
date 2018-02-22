@@ -438,6 +438,10 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
         """Remap and ftplocate sequence."""
         return self.ftplocate(self._universal_remap(remote), options)
 
+    def ugetprestageinfo(self, remote, options):
+        """Remap and ftpprestageinfo sequence."""
+        return self.ftpprestageinfo(self._universal_remap(remote), options)
+
     def _actual_get(self, remote, local, options):
         return self.ftpget(remote, local, options)
 
@@ -503,6 +507,10 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
     def ugetlocate(self, remote, options):
         """Proxy to :meth:`incachelocate`."""
         return self.incachelocate(self._universal_remap(remote), options)
+
+    def ugetprestageinfo(self, remote, options):
+        """Proxy to :meth:`incacheprestageinfo`."""
+        return self.incacheprestageinfo(self._universal_remap(remote), options)
 
     def _actual_get(self, remote, local, options):
         return self.incacheget(remote, local, options)

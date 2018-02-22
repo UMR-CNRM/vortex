@@ -51,3 +51,11 @@ SOPRANO Servers
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+Archive targets (pre-staging stuff)
+-----------------------------------
+
+.. autoclass:: HendrixPrestagingTool
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
