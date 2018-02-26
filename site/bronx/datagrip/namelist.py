@@ -450,7 +450,7 @@ class LiteralParser(object):
             raise ValueError("Type %s cannot be FORTRAN encoded" % type(value))
 
 
-class NamelistBlock(object):
+class NamelistBlock(collections.MutableMapping):
     """
     This class represent a FORTRAN namelist block.
 
