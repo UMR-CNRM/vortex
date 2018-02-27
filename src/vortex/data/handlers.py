@@ -444,7 +444,6 @@ class Handler(object):
             store = self.store
             if store:
                 logger.debug('Prestage resource %s at %s from %s', self, self.lasturl, store)
-                extras['current_context'] = self._cur_context
                 rst = store.prestage(
                     self.uridata,
                     self.mkopts(extras)

@@ -294,8 +294,12 @@ class Store(footprints.FootprintBase):
         else:
             return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
 
-    def prestage_through_hub(self, remote, options=None):
-        """Use the context's prestaging hub to process the pre-staging request."""
+    def prestage_advertise(self, remote, options=None):
+        """Use the Stores-Activity observer board to advertise the prestaging request.
+
+        Hopefully, something will register to the ober board in order to process
+        the request.
+        """
         logger.debug('Store prestage through hub %s', remote)
         infos_cb = getattr(self, self.scheme + 'prestageinfo', None)
         if infos_cb:
@@ -304,8 +308,8 @@ class Store(footprints.FootprintBase):
             infodict.setdefault('scheme', self.scheme)
             if options and 'priority' in options:
                 infodict['priority'] = options['priority']
-            ctx = options.get('current_context', sessions.current())
-            ctx.prestaging_hub.record(** infodict)
+            infodict['action'] = 'prestage_req'
+            self._observer.notify_upd(self, infodict)
         else:
             logger.info('Prestaging is not supported for scheme: %s', self.scheme)
         return True
@@ -317,7 +321,7 @@ class Store(footprints.FootprintBase):
             self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
             return True
         else:
-            return getattr(self, self.scheme + 'prestage', self.prestage_through_hub)(remote, options)
+            return getattr(self, self.scheme + 'prestage', self.prestage_advertise)(remote, options)
 
     def _hash_store_defaults(self, options):
         """Update default options when fetching hash files."""
@@ -1451,8 +1455,8 @@ class CacheStore(Store):
 
     def __init__(self, *args, **kw):
         logger.debug('Generic cache store init %s', self.__class__)
-        super(CacheStore, self).__init__(*args, **kw)
         del self.cache
+        super(CacheStore, self).__init__(*args, **kw)
 
     @property
     def realkind(self):
