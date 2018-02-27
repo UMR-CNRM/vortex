@@ -38,12 +38,12 @@ class List(GenvStaticGeoResource):
         return 'safran_namelist'
 
 
-class Snowr_param(GenvStaticGeoResource):
+class SSA_param(GenvStaticGeoResource):
 
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = ["function_param"],
+                values = ["ssa_params"],
             ),
             nativefmt = dict(
                 values  = ['netcdf', 'nc'],
@@ -57,4 +57,36 @@ class Snowr_param(GenvStaticGeoResource):
 
     @property
     def realkind(self):
-        return 'param_definition'
+        return self.kind
+
+
+class climTG(GenvStaticGeoResource):
+    """
+    Ground temperature climatological resource.
+    """
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ["climTG"],
+            ),
+            nativefmt = dict(
+                values  = ['netcdf', 'nc'],
+                default = 'netcdf',
+            ),
+            gvar = dict(
+                default = '[kind]',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'climTG'
+
+    def basename_info(self):
+        return dict(
+            fmt     = self.nativefmt,
+            geo     = [ self.geometry.area, self.geometry.rnice ],
+            radical = self.realkind,
+        )

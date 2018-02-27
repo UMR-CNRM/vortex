@@ -11,8 +11,10 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex.data.flow        import GeoFlowResource
 from common.data.obs         import ObsRaw
 from vortex.data.geometries  import MassifGeometry
-from common.data.modelstates import Historic, InitialCondition
-from vortex.syntax.stdattrs  import a_date, term
+from common.data.modelstates import InitialCondition
+from vortex.syntax.stdattrs  import term
+
+from bronx.stdtypes.date import Date
 
 
 class SafranObsDateError(ValueError):
@@ -87,29 +89,34 @@ class SafranGuess(GeoFlowResource):
             raise SafranObsDateError('SAFRAN guess are synoptic, therefore the hour must be 0, 6, 12 or 18')
 
 
-class SurfaceForcing(GeoFlowResource):
-    """Class for the safrane output files."""
+class SurfaceIO(GeoFlowResource):
 
+    _abstract = True
     _footprint = [
-        term,
         dict(
-            info = 'Safran-produced forcing file',
+            info = 'SURFEX input or output file',
             attr = dict(
-                kind = dict(
-                    values = ['analysis', 'forcing', 'interpolation', 'interp'],
-                ),
                 nativefmt = dict(
                     values  = ['netcdf', 'nc'],
                     default = 'netcdf',
                     remap = dict(autoremap = 'first'),
                 ),
-                model = dict(
-                    values = ['safran'],
-                ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
                     type = MassifGeometry,
                 ),
+                datebegin = dict(
+                    info = "First date of the forcing file",
+                    type = Date,
+                ),
+                dateend = dict(
+                    info = "Last date of the forcing file",
+                    type = Date,
+                    optional = True,
+                ),
+                # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
+                cutoff = dict(
+                    optional = True)
             )
         )
     ]
@@ -118,23 +125,61 @@ class SurfaceForcing(GeoFlowResource):
 
     @property
     def realkind(self):
-        return 'forcing'
+        return self.kind
 
-    def basename_info(self):
-        return dict(
-            radical = self.realkind,
-            geo     = self.geometry.area,
-            src     = self.model,
-            term    = self.term.fmthour,
-            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
+    def cenvortex_basename(self):
+
+        for var in [self.realkind, self.datebegin.ymdh, self.dateend.ymdh, self._extension_remap.get(self.nativefmt, self.nativefmt)]:
+            print type(var), var
+        return self.realkind + "_" + self.datebegin.ymdh + "_" + self.dateend.ymdh + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
+
+
+class SurfaceForcing(SurfaceIO):
+    """Class for the safrane output files."""
+    _footprint = [
+        dict(
+            info = 'Safran-produced forcing file',
+            attr = dict(
+                kind = dict(
+                    values = ['MeteorologicalForcing'],
+                ),
+                model = dict(
+                    values = ['safran'],
+                ),
+            )
         )
+    ]
+
+    @property
+    def realkind(self):
+        return "FORCING"
+
+
+class Pro(SurfaceIO):
+    """Class for the safrane output files."""
+    _footprint = [
+        dict(
+            info = 'Safran-produced forcing file',
+            attr = dict(
+                kind = dict(
+                    values = ['SnowpackSimulation'],
+                ),
+                model = dict(
+                    values = ['surfex'],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return "PRO"
 
 
 class Prep(InitialCondition):
     """Class for the SURFEX-Crocus initialisation of the snowpack state."""
 
     _footprint = [
-        term,
         dict(
             info = 'Instant SURFEX-Crocus Snowpack state',
             attr = dict(
@@ -157,6 +202,9 @@ class Prep(InitialCondition):
                     value = ['surf', ],
                     default = 'surf',
                 ),
+                # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
+                cutoff = dict(
+                    optional = True)
             )
         )
     ]
@@ -174,53 +222,9 @@ class Prep(InitialCondition):
             fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
-    def cendev_basename(self):
-        return 'prep' + self.date.yymdh
+    def cenvortex_basename(self):
 
-
-class Pro(Historic):
-    """Class for the SURFEX-Crocus simulated snowpack."""
-
-    _footprint = [
-        term,
-        dict(
-            info = 'SURFEX-Crocus Snowpack simulation',
-            attr = dict(
-                kind = dict(
-                    values  = ['SnowpackSimulation', 'pro'],
-                ),
-                nativefmt = dict(
-                    values = ['netcdf', 'nc'],
-                    default = 'netcdf',
-                    remap = dict(autoremap = 'first'),
-                ),
-                origin = dict(
-                    default = None,
-                    optional = True,
-                ),
-                geometry = dict(
-                    info = "The resource's massif geometry.",
-                    type = MassifGeometry,
-                ),
-                startdate = a_date,
-                enddate   = a_date,
-            )
-        )
-    ]
-
-    _extension_remap = dict(netcdf='nc')
-
-    @property
-    def realkind(self):
-        return 'snowpack'
-
-    def basename_info(self):
-        return dict(
-            radical = self.realkind,
-            geo     = self.geometry.area,
-            term    = self.term.fmthour,
-            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
-        )
+        return 'PREP_' + self.date.ymdh + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
 
 class SafranObsRaw(ObsRaw):

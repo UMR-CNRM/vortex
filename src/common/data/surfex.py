@@ -34,6 +34,10 @@ class PGDRaw(StaticGeoResource):
         """OLIVE specific naming convention."""
         return 'PGDFILE-' + self.geometry.area + '.' + self.nativefmt
 
+    def cenvortex_basename(self):
+        """CEN specific naming convention"""
+        return 'PGD_' + self.geometry.area + '.' + self.nativefmt
+
     def basename_info(self):
         """Generic information, radical = ``pgd``."""
         return dict(
