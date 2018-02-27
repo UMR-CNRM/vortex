@@ -94,19 +94,20 @@ if __name__ == '__main__':
         raise ValueError('Arg -o should not be used applied to several namelists')
 
     if args.generate_directives_template:
-        tnt.config.write_directives_template(_tmpl)
-        print("Template of directives written in: " + os.path.abspath(_tmpl))
+        tnt.config.write_directives_template(_tmpl + '.py')
+        print("Template of directives written in: " + os.path.abspath(_tmpl + '.py'))
+        tnt.config.write_directives_template(_tmpl + '.yaml')
+        print("Template of directives written in: " + os.path.abspath(_tmpl + '.yaml'))
     else:
 
         assert len(args.namelists) > 0, "no namelists provided to process."
         directives = tnt.config.read_directives(args.directives)
         for nam in args.namelists:
             tnt.util.set_verbose(args.verbose, nam)
-            tnt.util.process_namelist(nam,
+            tnt.util.process_namelist(nam, directives,
                                       sorting=sorting,
                                       in_place=args.in_place,
                                       outfilename=args.outfilename,
                                       blocks_ref=args.blocks_ref,
                                       doctor=args.doctor,
-                                      keep_index=args.keep_index,
-                                      **directives)
+                                      keep_index=args.keep_index)

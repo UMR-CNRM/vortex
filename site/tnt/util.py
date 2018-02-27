@@ -22,14 +22,7 @@ def set_verbose(verbose, filename):
         tntlog.setLevel('WARNING')
 
 
-def process_namelist(filename,
-                     new_blocks=None,
-                     blocks_to_move=None,
-                     keys_to_move=None,
-                     keys_to_remove=None,
-                     keys_to_set=None,
-                     blocks_to_remove=None,
-                     macros=None,
+def process_namelist(filename, directives,
                      # options
                      sorting=NO_SORTING,
                      blocks_ref=None,
@@ -68,7 +61,7 @@ def process_namelist(filename,
     """
 
     # The initial namelist
-    initial_nam = BronxNamelistAdapter(filename)
+    initial_nam = BronxNamelistAdapter(filename, macros=directives.macros)
 
     # Target namelist file
     if not in_place:
@@ -79,20 +72,21 @@ def process_namelist(filename,
             raise ValueError("Incompatibility between arguments *outfilename* and *in_place*.")
 
     # process (in the right order !)
-    if new_blocks is not None:
-        initial_nam.add_blocks(new_blocks)
-    if blocks_to_move is not None:
-        initial_nam.move_blocks(blocks_to_move)
-    if keys_to_move is not None:
-        initial_nam.move_keys(keys_to_move, doctor=doctor, keep_index=keep_index)
-    if keys_to_remove is not None:
-        initial_nam.remove_keys(keys_to_remove)
-    if keys_to_set is not None:
-        initial_nam.add_keys(keys_to_set)
-    if blocks_to_remove is not None:
-        initial_nam.remove_blocks(blocks_to_remove)
+    if directives.new_blocks is not None:
+        initial_nam.add_blocks(directives.new_blocks)
+    if directives.blocks_to_move is not None:
+        initial_nam.move_blocks(directives.blocks_to_move)
+    if directives.keys_to_move is not None:
+        initial_nam.move_keys(directives.keys_to_move,
+                              doctor=doctor, keep_index=keep_index)
+    if directives.keys_to_remove is not None:
+        initial_nam.remove_keys(directives.keys_to_remove)
+    if directives.keys_to_set is not None:
+        initial_nam.add_keys(directives.keys_to_set)
+    if directives.blocks_to_remove is not None:
+        initial_nam.remove_blocks(directives.blocks_to_remove)
     if blocks_ref is not None:
-        cb = initial_nam.check_blocks(blocks_ref, macros)
+        cb = initial_nam.check_blocks(blocks_ref, directives.macros)
         if len(cb) != 0:
             tntlog.warning('Set of blocks is different from reference: ' + blocks_ref)
             tntlog.warning('diff: ' + str(cb))
