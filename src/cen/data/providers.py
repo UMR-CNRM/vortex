@@ -3,11 +3,13 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import os.path
+
 import footprints
 
 from vortex.util.config     import GenericConfigParser
-from vortex.data.providers  import Provider
-from vortex.syntax.stdattrs import namespacefp
+from vortex.data.providers  import Provider, VortexFreeStd
+from vortex.syntax.stdattrs import namespacefp, Namespace
 
 #: No automatic export
 __all__ = []
@@ -15,6 +17,44 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 map_suffix = {'alp': '_al', 'pyr': '_py', 'cor': '_co'}
+
+
+class CenVortex(VortexFreeStd):
+    _footprint = [
+        dict(
+            info = 'CEN Vortex provider because we do not want a date in the namespace',
+            attr = dict(
+                namespace = dict(
+                    values   = [
+                        'cenvortex.cache.fr', 'cenvortex.archive.fr', 'cenvortex.multi.fr',
+                    ],
+                    default  = Namespace('cenvortex.cache.fr'),
+                ),
+                block = dict(optional = True)
+            )
+        )
+    ]
+
+    def pathname(self, resource):
+        """Constructs pathname of the ``resource`` according to :func:`pathinfo`."""
+
+        rpath = [
+            self.vapp,
+            self.vconf,
+            self.experiment,
+        ]
+        print "block="
+        print self.block
+        if self.member is not None:
+            rpath.append(self.nice_member())
+        if self.block:
+            rpath.append(self.block)
+
+        print os.path.join(*rpath)
+        return os.path.join(*rpath)
+
+    def basename(self, resource):
+        return resource.cenvortex_basename()
 
 
 class CenCfgParser(GenericConfigParser):

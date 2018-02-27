@@ -404,29 +404,34 @@ class Node(footprints.util.GetByTag, NiceLayout):
                 ('openmp' in self.conf and
                  not isinstance(self.conf.openmp, (list, tuple)))):
             env_update['OMP_NUM_THREADS'] = int(self.conf.get('openmp', 1))
+        
         # If some mpiopts are in the config file, use them...
-        mpiotps = dict()
+        mpiopts = kwargs.pop('mpiopts', dict())
+        print "DEBUG1"
+        print mpiopts        
         mpiopts_map = dict(nnodes='nn', ntasks='nnp', nprocs='np', proc='np')
         for stuff in [s for s in ('proc', 'nprocs', 'nnodes', 'ntasks', 'openmp',
-                                  'prefixcommand') if s in self.conf]:
-                mpiotps[mpiopts_map.get(stuff, stuff)] = self.conf[stuff]
+                                  'prefixcommand') if s in mpiopts or s in self.conf]:
+                mpiopts[mpiopts_map.get(stuff, stuff)] = mpiopts.pop(stuff, self.conf[stuff])
+        print "DEBUG2"
+        print mpiopts
 
         # if the prefix command is missing in the configuration file, look in the input sequence
-        if 'prefixcommand' not in mpiotps:
+        if 'prefixcommand' not in mpiopts:
             prefixes = self.ticket.context.sequence.effective_inputs(role =re.compile('Prefixcommand'))
             if len(prefixes) > 1:
                 raise RuntimeError("Only one prefix command can be used...")
             for sec in prefixes:
                 prefixpath = sec.rh.container.actualpath()
                 logger.info('The following MPI prefix command will be used: %s', prefixpath)
-                mpiotps['prefixcommand'] = prefixpath
+                mpiopts['prefixcommand'] = prefixpath
 
         # Ensure that some of the mpiopts are integers
-        for stuff in [s for s in ('nn', 'nnp', 'openmp', 'np') if s in mpiotps]:
-            if isinstance(mpiotps[stuff], (list, tuple)):
-                mpiotps[stuff] = [int(v) for v in mpiotps[stuff]]
+        for stuff in [s for s in ('nn', 'nnp', 'openmp', 'np') if s in mpiopts]:
+            if isinstance(mpiopts[stuff], (list, tuple)):
+                mpiopts[stuff] = [int(v) for v in mpiopts[stuff]]
             else:
-                mpiotps[stuff] = int(mpiotps[stuff])
+                mpiopts[stuff] = int(mpiopts[stuff])
         # When multiple list of binaries are given (i.e several binaries are launched
         # by the same MPI command).
         if tbx and isinstance(tbx[0], (list, tuple)):
@@ -434,7 +439,7 @@ class Node(footprints.util.GetByTag, NiceLayout):
         with self.env.delta_context(**env_update):
             for binary in tbx:
                 try:
-                    tbalgo.run(binary, mpiopts = mpiotps, **kwargs)
+                    tbalgo.run(binary, mpiopts = mpiopts, **kwargs)
                 except Exception:
                     self.report_execution_error()
                     raise
