@@ -528,7 +528,7 @@ class NamelistBlock(collections.MutableMapping):
     _RE_FREEMACRO = re.compile(r'^' + _UNDERSCORE + r'{2}(.*)' + _UNDERSCORE + r'{2}$')
 
     def __init__(self, name='UNKNOWN'):
-        self.__dict__['_name'] = name
+        self.__dict__['_name'] = name.upper()
         self.__dict__['_keys'] = list()
         self.__dict__['_pool'] = dict()
         self.__dict__['_mods'] = set()
@@ -549,7 +549,7 @@ class NamelistBlock(collections.MutableMapping):
 
     def set_name(self, name):
         """Change the namelist block anme."""
-        self.__dict__['_name'] = name
+        self.__dict__['_name'] = name.upper()
 
     @property
     def name(self):
@@ -782,7 +782,7 @@ class NamelistBlock(collections.MutableMapping):
                         :py:data:`SECOND_ORDER_SORTING` (sort only within indexes or attributes
                         of the same variable: usefull with arrays).
         """
-        namout = " &{0:s}\n".format(self.name.upper())
+        namout = " &{0:s}\n".format(self.name)
         if literal is None:
             if self._literal is None:
                 self.__dict__['_literal'] = LiteralParser()
@@ -935,7 +935,7 @@ class NamelistSet(collections.MutableMapping):
             self._mapping_dict[nb.name] = nb
 
     def __contains__(self, key):
-        return key in self._mapping_dict
+        return key.upper() in self._mapping_dict
 
     def __len__(self):
         return len(self._mapping_dict)
@@ -945,10 +945,11 @@ class NamelistSet(collections.MutableMapping):
             yield nbk
 
     def __getitem__(self, key):
-        return self._mapping_dict[key]
+        return self._mapping_dict[key.upper()]
 
     def __setitem__(self, key, value):
         assert isinstance(value, NamelistBlock)
+        key = key.upper()
         if value.name != key:
             # To be safe...
             value = copy.deepcopy(value)
@@ -956,7 +957,7 @@ class NamelistSet(collections.MutableMapping):
         self._mapping_dict[key] = value
 
     def __delitem__(self, key):
-        del self._mapping_dict[key]
+        del self._mapping_dict[key.upper()]
 
     def add(self, namblock):
         """Add a namelist block object to the present namelist set.
