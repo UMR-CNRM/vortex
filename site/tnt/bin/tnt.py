@@ -1,7 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+"""
+TNT - The Namelist Tool: a namelist updater.
+"""
+
 import argparse
+import io
 import os
 import re
 import sys
@@ -33,7 +40,11 @@ if __name__ == '__main__':
     directives.add_argument('-D',
                             dest='generate_directives_template',
                             action='store_true',
-                            help="generates a directives template '{}'.".format(_tmpl))
+                            help="generates a directives template '{}.(py|yaml)'.".format(_tmpl))
+    directives.add_argument('-n',
+                            dest='namdelta',
+                            type=str,
+                            help='path to a file that contains a namelist delta.')
     parser.add_argument('-i',
                         action='store_true',
                         dest='in_place',
@@ -94,14 +105,17 @@ if __name__ == '__main__':
         raise ValueError('Arg -o should not be used applied to several namelists')
 
     if args.generate_directives_template:
-        tnt.config.write_directives_template(_tmpl + '.py')
+        tnt.config.write_directives_template(_tmpl + '.py', tplname='tnt-directive.tpl.py')
         print("Template of directives written in: " + os.path.abspath(_tmpl + '.py'))
-        tnt.config.write_directives_template(_tmpl + '.yaml')
+        tnt.config.write_directives_template(_tmpl + '.yaml', tplname='tnt-directive.tpl.yaml')
         print("Template of directives written in: " + os.path.abspath(_tmpl + '.yaml'))
     else:
-
         assert len(args.namelists) > 0, "no namelists provided to process."
-        directives = tnt.config.read_directives(args.directives)
+        if args.directives:
+            directives = tnt.config.read_directives(args.directives)
+        else:
+            with io.open(args.namdelta, 'r') as fhnam:
+                directives = tnt.config.TntDirective(namdelta=fhnam.read())
         for nam in args.namelists:
             tnt.util.set_verbose(args.verbose, nam)
             tnt.util.process_namelist(nam, directives,

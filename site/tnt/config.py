@@ -1,6 +1,6 @@
 """
 A bunch of classes and functions that deal with TNT configuration files and
-directives
+directives.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -12,32 +12,54 @@ import six
 import string
 import sys
 
+import footprints
+
+tntlog = footprints.loggers.getLogger('tntlog')
+
 # Detect TNT's configuration files directory
 TPL_DIRECTORY = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                              'templates')
 
 
+# EXCEPTIONS
+#
+
 class TntDirectiveError(Exception):
+    """Any exception raised by a TNT configuration class should derive form this one."""
     pass
 
 
 class TntDirectiveUnkownError(TntDirectiveError):
+    """The TNT directive is unknown."""
     def __init__(self, name):
         errmsg = 'The "{:s}" directive is not allowed with TNT.'.format(name)
         super(TntDirectiveUnkownError, self).__init__(errmsg)
 
 
 class TntDirectiveValueError(TntDirectiveError):
+    """An inappropriate value was given as a TNT directive."""
     def __init__(self, name, value):
         errmsg = '"{!s}" is not an appropriate value for the "{:s}" directive.'.format(value, name)
         super(TntDirectiveValueError, self).__init__(errmsg)
 
 
+class TntStackDirectiveError(TntDirectiveError):
+    """Syntax error in the TNT stack directive file."""
+    pass
+
+
+# TNT directives part
+#
+
 class TntDirective(object):
+    """Class that holds all the necessary informations about TNT directives.
+
+    It is in charge of checking the correctness of all the provided attributes.
+    """
 
     _ALLOWED_DIRECTIVES = set(('keys_to_remove', 'keys_to_set', 'keys_to_move',
                                'blocks_to_move', 'blocks_to_remove', 'new_blocks',
-                               'macros'))
+                               'macros', 'namdelta'))
 
     def _check_keytuple(self, val, theexc, unique=False):
         """Verify if *val* is some kind of a (block, key) tuple description."""
@@ -128,6 +150,11 @@ class TntDirective(object):
             raise TntDirectiveValueError('macros', val)
         return {k: v for k, v in val.items()}
 
+    def _process_namdelta(self, val):
+        if not (isinstance(val, six.string_types)):
+            raise TntDirectiveValueError('namdelta', val)
+        return val
+
     def __init__(self, **kwargs):
         self._internals = dict()
         # Is the directive allowed ?
@@ -145,7 +172,7 @@ class TntDirective(object):
 
 def read_directives(filename):
     """
-    Read directives in an external file (**filename**).
+    Read TNT directives in an external file (**filename**).
 
     For a template of directives, call function *write_directives_template()*.
     """
@@ -171,6 +198,129 @@ def read_directives(filename):
         return TntDirective(** {k: v for k, v in m.__dict__.items() if not k.startswith('_')})
 
 
+# TNTstack directives part
+#
+
+class TntStackDirective(object):
+    """Class that holds all the necessary informations about TNTstack directives.
+
+    :param str basedir: The name of the directory where the TNTstack reqests lies
+    :param list[dict] todolist: The list of actions to be performed
+    :param dict[dict] directives: A list of TNT directives
+    """
+
+    def __init__(self, basedir, todolist, directives=None):
+        self._basedir = basedir
+        self._directives = dict()
+        self._todolist = list()
+        self._directives_init(directives or dict())
+        self._todolist_init(todolist)
+
+    def _directives_init(self, directives):
+        """
+        Read the *directives* attribute and create :class:`TntDirective` objects
+        from that.
+        """
+        if not (isinstance(directives, collections.Mapping) and
+                all([isinstance(v, collections.Mapping) for v in directives.values()])):
+            raise TntStackDirectiveError('The directives argument must be a mapping of mappings')
+        for k, v in directives.items():
+            if 'external' in v:
+                newdir = read_directives(os.path.join(self._basedir, v['external']))
+            else:
+                newdir = TntDirective(** v)
+            self._directives[k] = newdir
+
+    def _checkdict(self, action, values, attr, str_or_list=False):
+        """Check that the *values* dictionary has a valid *attr* item.
+
+        :param str action: The name of the current action (used to print meaningful
+                           error messages).
+        :param bool str_or_list: It *True*, the *attr* item can be either a string
+                                 or a list of strings. (otherwise, it has to be a string).
+        """
+        stuff = values.get(attr, None)
+        if stuff is None:
+            tntlog.error("Error while processing todo list item:\n%s", values)
+            raise TntStackDirectiveError('The "{:s}" entry is mandatory with the "{:s}" action'
+                                         .format(attr, action))
+        if isinstance(stuff, six.string_types) or not isinstance(stuff, collections.Iterable):
+            stuff = [stuff, ]
+        else:
+            stuff = [v for v in stuff]
+        if str_or_list:
+            return stuff
+        else:
+            if len(stuff) != 1:
+                tntlog.error("Error while processing todo list item:\n%s", values)
+                raise TntStackDirectiveError('The "{:s}" entry requires a unique element ("{:s}" action).'
+                                             .format(attr, action))
+            return stuff[0]
+
+    def _todolist_init(self, todolist):
+        """Read the *todolist* attribute and check that everything is ok."""
+        if not (isinstance(todolist, collections.Iterable) and
+                all([isinstance(v, collections.Mapping) for v in todolist])):
+            raise TntStackDirectiveError('The todolist argument must be an iterable of mappings')
+        for todo in todolist:
+            action = todo.get('action', None)
+            action_d = dict(action=action)
+
+            if action == 'tnt':
+                action_d['namelist'] = self._checkdict(action, todo, 'namelist', str_or_list=True)
+                action_d['directive'] = self._checkdict(action, todo, 'directive', str_or_list=True)
+
+            elif action == 'create':
+                action_d['target'] = self._checkdict(action, todo, 'target')
+                if 'external' in todo:
+                    action_d['external'] = os.path.join(self._basedir,
+                                                        self._checkdict(action, todo, 'external'))
+                    if not os.path.isfile(action_d['external']):
+                        raise TntStackDirectiveError('The "{:s}"  does not exists.'
+                                                     .format(action_d['external']))
+                elif 'copy' in todo:
+                    action_d['copy'] = self._checkdict(action, todo, 'copy')
+                else:
+                    action_d['namelist'] = self._checkdict(action, todo, 'namelist')
+                    action_d['directive'] = self._checkdict(action, todo, 'directive', str_or_list=True)
+
+            elif action in ('delete', 'touch'):
+                action_d['namelist'] = self._checkdict(action, todo, 'namelist', str_or_list=True)
+
+            elif action in ('link', 'move'):
+                action_d['target'] = self._checkdict(action, todo, 'target')
+                action_d['namelist'] = self._checkdict(action, todo, 'namelist')
+
+            elif action == 'clean_untouched':
+                pass
+
+            else:
+                raise TntStackDirectiveError('Unknown action "{!s}" requested in the todolist'.format(action))
+
+            # Check the directive entry against existing directives
+            if 'directive' in action_d:
+                tocheck = ([action_d['directive'], ]
+                           if isinstance(action_d['directive'], six.string_types)
+                           else action_d['directive'])
+                for a_dir in tocheck:
+                    if a_dir not in self.directives:
+                        raise TntStackDirectiveError('The "{:s}" directive is not defined.'.format(a_dir))
+            self._todolist.append(action_d)
+
+    @property
+    def directives(self):
+        """The dictionary of TNT directives (as :class:`TntDirective` objects)."""
+        return self._directives
+
+    @property
+    def todolist(self):
+        """The todo's list (as a list of dictionaries)."""
+        return self._todolist
+
+
+# Utility function that deals with template files
+#
+
 def get_template(tplname, encoding=None):
     tplfile = os.path.join(TPL_DIRECTORY, tplname)
     with io.open(tplfile, 'r', encoding=encoding) as fhtpl:
@@ -178,13 +328,10 @@ def get_template(tplname, encoding=None):
     return tpl
 
 
-def write_directives_template(out=sys.stdout):
+def write_directives_template(out=sys.stdout, tplname='tnt-directive.tpl.py'):
     """Write out a directives template."""
-    tplname = 'tnt-directive.tpl.py'
     if isinstance(out, six.string_types):
         outfh = io.open(out, 'w')
-        if os.path.splitext(out)[1] in ('.yaml', '.yml'):
-            tplname = 'tnt-directive.tpl.yaml'
     else:
         outfh = out
     outtpl = os.path.join(TPL_DIRECTORY, tplname)

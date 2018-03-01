@@ -1,6 +1,8 @@
 """
-Adapter classes that uses external namelist's parsers to provide functionalities
-that fit the needs of TNT utilities.
+Adapter classes for namelist's parsers.
+
+Set of adapter classes that uses external namelist's parsers to provide
+functionalities that fit the needs of TNT utilities.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -37,13 +39,18 @@ SECOND_ORDER_SORTING = 2
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractNamelistAdapter(collections.Mapping):
+    """Every Namelist adapter must derive from this abstract class."""
 
     @abc.abstractmethod
     def __init__(self, namelistsfile, macros=None):  # @UnusedVariable
+        """
+        :param str namelistsfile: The namelist itself or a path to a namelist file.
+        """
         self._parser = None
 
     @property
     def parser(self):
+        """The internal namelist's parser."""
         return self._parser
 
     # Public methods that operates on namelist's blocks
@@ -311,6 +318,14 @@ class AbstractNamelistAdapter(collections.Mapping):
         """
         pass
 
+    @abc.abstractmethod
+    def merge(self, other):
+        """Merge another namelist in the current one.
+
+        :param AbstractNamelistAdapter other: Another namelist to merge in.
+        """
+        pass
+
 
 class AbstractMapableNamelistAdapter(AbstractNamelistAdapter):
     """
@@ -364,13 +379,13 @@ class BronxNamelistAdapter(AbstractMapableNamelistAdapter):
                                          macros=self._all_macros(macros))
 
     def _actual_newblock(self, item):
-        self._parser.newblock(item)
+        self.parser.newblock(item)
 
     def _actual_rmblock(self, item):
-        del self._parser[item]
+        del self.parser[item]
 
     def _actual_mvblock(self, item, targetitem):
-        self._parser.mvblock(item, targetitem)
+        self.parser.mvblock(item, targetitem)
 
     def _actual_newkey(self, block, key, value, index=None):
         self[block].setvar(key, value, index=index)
@@ -384,4 +399,12 @@ class BronxNamelistAdapter(AbstractMapableNamelistAdapter):
         sorting_map = dict(NO_SORTING=bnamelists.NO_SORTING,
                            FIRST_ORDER_SORTING=bnamelists.FIRST_ORDER_SORTING,
                            SECOND_ORDER_SORTING=bnamelists.SECOND_ORDER_SORTING)
-        return self._parser.dumps(sorting=sorting_map.get(sorting, sorting))
+        return self.parser.dumps(sorting=sorting_map.get(sorting, sorting))
+
+    def merge(self, other):
+        """Merge another namelist in the current one.
+
+        :param AbstractNamelistAdapter other: Another namelist to merge in.
+        """
+        assert isinstance(other, self.__class__)
+        self.parser.merge(other.parser)

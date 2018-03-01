@@ -4,17 +4,23 @@ Utility methods widely used in the various TNT utilities.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import glob
 import io
+import os
+import shutil
 import six
 
 import footprints
 
-from tnt.namadapter import BronxNamelistAdapter, NO_SORTING
+from tnt.namadapter import BronxNamelistAdapter, NO_SORTING, SECOND_ORDER_SORTING
 
 tntlog = footprints.loggers.getLogger('tntlog')
+tntstacklog = footprints.loggers.getLogger('tntstacklog')
 
 
 def set_verbose(verbose, filename):
+    """Set or reset the verbosity level."""
+    tntstacklog.setLevel('INFO')
     if verbose:
         print("==> ", filename)
         tntlog.setLevel('INFO')
@@ -42,6 +48,7 @@ def process_namelist(filename, directives,
     by 8 and will let substrA untouched.
 
     Other options:
+
     :param in_place: if True, the namelist is written back in the same file;
                      else (default), the target namelist is suffixed with '.tnt'
                      if not given as **outfilename**.
@@ -60,8 +67,11 @@ def process_namelist(filename, directives,
                        later on.
     """
 
+    if not isinstance(directives, (list, tuple)):
+        directives = [directives, ]
+
     # The initial namelist
-    initial_nam = BronxNamelistAdapter(filename, macros=directives.macros)
+    initial_nam = BronxNamelistAdapter(filename, macros=directives[0].macros)
 
     # Target namelist file
     if not in_place:
@@ -71,25 +81,114 @@ def process_namelist(filename, directives,
         if outfilename is not None:
             raise ValueError("Incompatibility between arguments *outfilename* and *in_place*.")
 
-    # process (in the right order !)
-    if directives.new_blocks is not None:
-        initial_nam.add_blocks(directives.new_blocks)
-    if directives.blocks_to_move is not None:
-        initial_nam.move_blocks(directives.blocks_to_move)
-    if directives.keys_to_move is not None:
-        initial_nam.move_keys(directives.keys_to_move,
-                              doctor=doctor, keep_index=keep_index)
-    if directives.keys_to_remove is not None:
-        initial_nam.remove_keys(directives.keys_to_remove)
-    if directives.keys_to_set is not None:
-        initial_nam.add_keys(directives.keys_to_set)
-    if directives.blocks_to_remove is not None:
-        initial_nam.remove_blocks(directives.blocks_to_remove)
+    for d in directives:
+        # process (in the appropriate order !)
+        if d.new_blocks is not None:
+            initial_nam.add_blocks(d.new_blocks)
+        if d.blocks_to_move is not None:
+            initial_nam.move_blocks(d.blocks_to_move)
+        if d.keys_to_move is not None:
+            initial_nam.move_keys(d.keys_to_move,
+                                  doctor=doctor, keep_index=keep_index)
+        if d.keys_to_remove is not None:
+            initial_nam.remove_keys(d.keys_to_remove)
+        if d.keys_to_set is not None:
+            initial_nam.add_keys(d.keys_to_set)
+        if d.blocks_to_remove is not None:
+            initial_nam.remove_blocks(d.blocks_to_remove)
+        if d.namdelta is not None:
+            try:
+                ndelta = BronxNamelistAdapter(d.namdelta, macros=d.macros)
+            except ValueError:
+                tntlog.error("Error while parsing the following namelist's delta:\n%s",
+                             d.namdelta)
+                raise
+            initial_nam.merge(ndelta)
+
     if blocks_ref is not None:
-        cb = initial_nam.check_blocks(blocks_ref, directives.macros)
+        cb = initial_nam.check_blocks(blocks_ref, directives[0].macros)
         if len(cb) != 0:
             tntlog.warning('Set of blocks is different from reference: ' + blocks_ref)
             tntlog.warning('diff: ' + str(cb))
 
     with io.open(target_namfile, 'w', encoding='ascii') as fh_namout:
         fh_namout.write(six.u(initial_nam.dumps(sorting=sorting)))
+
+
+def process_tnt_stack(directive, sorting=SECOND_ORDER_SORTING):
+    """Apply *directive* to the current working directory.
+
+    :param TntStackDirective directive: The tntstack directive to apply
+    :param sorting: Sorting option (from bronx.datagrip.namelist):
+                    NO_SORTING;
+                    FIRST_ORDER_SORTING => sort all keys within blocks;
+                    SECOND_ORDER_SORTING => sort only within indexes or
+                    attributes of the same key, within blocks.
+    """
+    # Record the list of file contained in the directory
+    initial_files = set()
+    initial_subdirectories = set()
+    for root, directories, files in os.walk('.'):
+        for f in files:
+            initial_files.add(os.path.normpath(os.path.join(root, f)))
+        for d in directories:
+            initial_subdirectories.add(os.path.normpath(os.path.join(root, d)))
+
+    # Process the todolist
+    for todo in directive.todolist:
+        action = todo['action']
+
+        if action == 'tnt':
+            for nam in todo['namelist']:
+                for realnam in glob.glob(nam):
+                    tntstacklog.info("Namelist '%s': applying the following directives: %s",
+                                     realnam, ",".join(todo['directive']))
+                    process_namelist(realnam,
+                                     [directive.directives[name] for name in todo['directive']],
+                                     in_place=True, sorting=sorting)
+                    initial_files.discard(os.path.normpath(realnam))
+
+        elif action == 'create':
+            if 'external' in todo:
+                tntstacklog.info("Creating namelist '%s' from external file '%s'", todo['target'], todo['external'])
+                shutil.copy(todo['external'], todo['target'])
+            elif 'copy' in todo:
+                tntstacklog.info("Creating namelist '%s' from file '%s'", todo['target'], todo['copy'])
+                shutil.copy(todo['copy'], todo['target'])
+            else:
+                tntstacklog.info("Creating namelist '%s' from namelist '%s' by applying the following directives: %s",
+                                 todo['target'], todo['namelist'], ",".join(todo['directive']))
+                process_namelist(todo['namelist'],
+                                 [directive.directives[name] for name in todo['directive']],
+                                 outfilename=todo['target'], sorting=sorting)
+            initial_files.discard(os.path.normpath(todo['target']))
+
+        elif action in ('delete', 'touch'):
+            for nam in todo['namelist']:
+                for realnam in glob.glob(nam):
+                    if action == 'delete':
+                        tntstacklog.info("Deleting namelist '%s'", realnam)
+                        os.unlink(realnam)
+                    elif action == 'touch':
+                        tntstacklog.info("Marking file '%s' as touched'", realnam)
+                    initial_files.discard(os.path.normpath(realnam))
+
+        elif action == 'link':
+            tntstacklog.info("Linking '%s' -> '%s'", todo['target'], todo['namelist'])
+            os.symlink(todo['namelist'], todo['target'])
+            initial_files.discard(os.path.normpath(todo['namelist']))
+
+        elif action == 'move':
+            tntstacklog.info("Moving '%s' to '%s'", todo['namelist'], todo['target'])
+            shutil.move(todo['namelist'], todo['target'])
+            initial_files.discard(os.path.normpath(todo['namelist']))
+            initial_files.discard(os.path.normpath(todo['target']))
+
+        elif action == 'clean_untouched':
+            for f in initial_files:
+                tntstacklog.info("Deleting file '%s'", f)
+                os.unlink(f)
+            for d in [d for d in initial_subdirectories if not os.listdir(d)]:
+                # Remove empty directories
+                tntstacklog.info("Deleting empty directory '%s'", d)
+                os.rmdir(d)
