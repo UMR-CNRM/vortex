@@ -1,0 +1,1 @@
+../site/tnt/bin/tntdiff.py
