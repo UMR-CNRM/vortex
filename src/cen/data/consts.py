@@ -80,6 +80,8 @@ class climTG(GenvStaticGeoResource):
         )
     )
 
+    _extension_remap = dict(netcdf='nc')
+
     @property
     def realkind(self):
         return 'climTG'
@@ -90,3 +92,7 @@ class climTG(GenvStaticGeoResource):
             geo     = [ self.geometry.area, self.geometry.rnice ],
             radical = self.realkind,
         )
+
+    def cenvortex_basename(self):
+        """CEN specific naming convention"""
+        return 'init_TG_' + self.geometry.area + '.' + self._extension_remap.get(self.nativefmt, self.nativefmt)

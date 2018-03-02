@@ -25,6 +25,7 @@ class PGDRaw(StaticGeoResource):
             )
         )
     ]
+    _extension_remap = dict(netcdf='nc')
 
     @property
     def realkind(self):
@@ -36,7 +37,7 @@ class PGDRaw(StaticGeoResource):
 
     def cenvortex_basename(self):
         """CEN specific naming convention"""
-        return 'PGD_' + self.geometry.area + '.' + self.nativefmt
+        return 'PGD_' + self.geometry.area + '.' + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
     def basename_info(self):
         """Generic information, radical = ``pgd``."""
