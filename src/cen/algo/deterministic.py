@@ -124,13 +124,14 @@ class Surfex_Parallel(Parallel):
 
     def execute(self, rh, opts):
 
-        # Modification of the PREP file
-        self.modify_prep()
-
         need_other_run = True
         datebegin_this_run = self.datebegin
 
         while need_other_run:
+
+            # Modification of the PREP file
+            self.modify_prep(datebegin_this_run)
+
             # Get the first file covering part of the whole simulation period
             dateforcbegin, dateforcend = get_file_period("FORCING", ".", datebegin_this_run, self.dateend)
             dateend_this_run = min(self.dateend, dateforcend)
@@ -152,23 +153,29 @@ class Surfex_Parallel(Parallel):
             datebegin_this_run = dateend_this_run
             need_other_run = dateforcend < self.dateend
 
-    def modify_prep(self):
+    def modify_prep(self, datebegin_this_run):
         ''' The PREP file needs to be modified if the init date differs from the starting date
          or if a threshold needs to be applied on snow water equivalent.'''
 
-        modif = (self.threshold > 0 and self.datebegin.month == 8 and self.datebegin.day == 1) or self.datebegin != self.dateinit
+        modif_swe = self.threshold > 0 and datebegin_this_run.month == 8 and datebegin_this_run.day == 1
+        modif_date = datebegin_this_run == self.datebegin and self.datebegin != self.dateinit
+        modif = modif_swe or modif_date
 
         if modif:
             prep = prep_tomodify("PREP.nc")
 
-            if self.datebegin.month == 8 and self.datebegin.day == 1:
-                if self.threshold > 0:
-                    prep.apply_swe_threshold(self.threshold)
+            if modif_swe:
+                print "APPLY THRESHOLD ON SWE."
+                prep.apply_swe_threshold(self.threshold)
 
-            if self.datebegin != self.dateinit:
+            if modif_date:
+                print "CHANGE DATE OF THE PREP FILE."
                 prep.change_date(self.datebegin)
 
             prep.close()
+        else:
+            print "DO NOT CHANGE THE PREP FILE."
+
 
     def find_namelists(self, opts=None):
         '''Duplicated method with the Surfex Worker used by the S2M_component class inheriting from ParaBlindrun'''
