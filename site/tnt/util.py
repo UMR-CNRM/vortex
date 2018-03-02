@@ -12,7 +12,8 @@ import six
 
 import footprints
 
-from tnt.namadapter import BronxNamelistAdapter, NO_SORTING, SECOND_ORDER_SORTING
+from bronx.fancies.colors import termcolors
+from tnt.namadapter import BronxNamelistAdapter, NO_SORTING, FIRST_ORDER_SORTING, SECOND_ORDER_SORTING
 
 tntlog = footprints.loggers.getLogger('tntlog')
 tntstacklog = footprints.loggers.getLogger('tntstacklog')
@@ -192,3 +193,46 @@ def process_tnt_stack(directive, sorting=SECOND_ORDER_SORTING):
                 # Remove empty directories
                 tntstacklog.info("Deleting empty directory '%s'", d)
                 os.rmdir(d)
+
+
+def namelist_read_and_sort(namfile):
+    try:
+        namp = BronxNamelistAdapter(namfile)
+    except (ValueError, IOError):
+        tntlog.error("Something went wrong will reading: %s", namfile)
+        raise
+    if not len(namp):
+        raise ValueError('Nothing to read in "{:s}": Is it a namelist ?'.format(namfile))
+    return namp.dumps(sorting=FIRST_ORDER_SORTING)
+
+
+def _check_diffline(line, expected):
+    return line and len(line) >= 2 and line[0] == expected and line[1] == ' '
+
+
+def _color_diffline(prevline, line=''):
+    """Colorise an individual line of a difflib output."""
+    if _check_diffline(prevline, '-') and _check_diffline(line, '?'):
+        return termcolors.error(prevline)
+    elif _check_diffline(prevline, '+') and _check_diffline(line, '?'):
+        return termcolors.error(prevline)
+    elif _check_diffline(prevline, '-'):
+        return termcolors.critical(prevline)
+    elif _check_diffline(prevline, '+'):
+        return termcolors.okgreen(prevline)
+    elif _check_diffline(prevline, '?'):
+        return termcolors.error(prevline)
+    else:
+        return prevline
+
+
+def colorise_diff(lines):
+    """Colorise the lines of any kind of difflib outputs."""
+    newdiff = list()
+    prevline = None
+    for l in lines:
+        if prevline:
+            newdiff.append(_color_diffline(prevline, l))
+        prevline = l
+    newdiff.append(_color_diffline(prevline))
+    return newdiff

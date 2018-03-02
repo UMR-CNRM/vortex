@@ -1,13 +1,40 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+TNTdiff - The Namelist Tool: a namelist comparator.
+
+Compares two namelists and produce the following outputs:
+
+* (default)   a TNT directives file to go from one (before/-b) to the other
+              (after/-a);
+* (-H option) a HTML file that displays the differences in a table
+* (-V or -v)  a summary of the differences on the standard output
+* (-e option) a visualisation of the differences in an external tool
+
+Beware that TNTdiff (purposely) DO NOT take into account:
+
+* Differences in the order of appearance of namelists blocks or keys
+* Differences in the formatting of namelist values (e.g 1.0 and 1.0000 are
+  considered the same)
+
+With the -H, -V, -v or -e options, the displayed namelists DO NOT necessarily
+correspond to the original files since, prior to be displayed, blocks/keys are
+ordered alphabetically and values are formatted in a "standard" way.
+
+"""
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import argparse
+import difflib
 import io
 import os
 import re
 import six
+import subprocess
 import sys
+import tempfile
+
 
 # Automatically set the python path
 sitepath = re.sub('{0:}tnt{0:}bin$'.format(os.path.sep), '',
@@ -17,7 +44,7 @@ sys.path.insert(0, sitepath)
 from bronx.stdtypes.tracking import Tracker, MappingTracker
 import tnt
 
-_outfilename = 'tntdiff.out.py'
+_outfilename = 'tntdiff.out'
 
 
 def _string_encode(valueslist):
@@ -26,7 +53,45 @@ def _string_encode(valueslist):
             for v in valueslist]
 
 
-def main(before_filename, after_filename, outfilename=_outfilename):
+def visualdiff(before_filename, after_filename, bw=False):
+    namtxtB = tnt.util.namelist_read_and_sort(before_filename).split('\n')
+    namtxtA = tnt.util.namelist_read_and_sort(after_filename).split('\n')
+
+    diff = difflib.ndiff(namtxtB, namtxtA)
+    if not bw and diff:
+        diff = tnt.util.colorise_diff(diff)
+
+    print('\n'.join(diff))
+
+
+def htmldiff_view(before_filename, after_filename, outfilename):
+    namtxtB = tnt.util.namelist_read_and_sort(before_filename).split('\n')
+    namtxtA = tnt.util.namelist_read_and_sort(after_filename).split('\n')
+
+    htmldiff = difflib.HtmlDiff()
+    htmlout = htmldiff.make_file(namtxtB, namtxtA, before_filename, after_filename)
+    with io.open(outfilename, "w") as fh_ht:
+        fh_ht.writelines(htmlout)
+    import webbrowser
+    webbrowser.open(outfilename)
+
+
+def extdiff(before_filename, after_filename, tool):
+    with tempfile.NamedTemporaryFile(mode='w', prefix='tntdiff_BEFORE.', delete=True) as fhB:
+        with tempfile.NamedTemporaryFile(mode='w', prefix='tntdiff_AFTER.', delete=True) as fhA:
+            fhB.write(tnt.util.namelist_read_and_sort(before_filename))
+            fhA.write(tnt.util.namelist_read_and_sort(after_filename))
+            fhB.flush()
+            fhA.flush()
+            if tool == 'meld':
+                subprocess.check_call(['meld', '--diff', fhB.name, fhA.name])
+            elif tool == 'vim':
+                subprocess.check_call(['vim', '-d', fhB.name, fhA.name])
+            else:
+                raise ValueError("Unknown diff tool.")
+
+
+def main(before_filename, after_filename, outfilename):
     """
     Compare two namelists and return directives to go from one (before) to the
     other (after).
@@ -88,12 +153,9 @@ def main(before_filename, after_filename, outfilename=_outfilename):
 
 
 if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser(
-        description='TNTdiff - The Namelist Tool: a namelist comparator. ' +
-                    'Compares two namelists and writes the TNT directives to ' +
-                    'go from one (before/-b) to the other (after/-a).',
-        epilog='End of help for: %(prog)s')
+    program_desc = '%(prog)s -- ' + __import__('__main__').__doc__.lstrip('\n')
+    parser = argparse.ArgumentParser(description=program_desc, epilog='End of help for: %(prog)s',
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-b', '--before',
                         required=True,
                         help="source namelist.")
@@ -101,10 +163,34 @@ if __name__ == '__main__':
                         required=True,
                         help="target namelist.")
     parser.add_argument('-o',
-                        dest='outputfilename',
                         default=_outfilename,
-                        help="directives (.py) output filename. Defaults to " +
-                             _outfilename)
+                        dest='outputfilename',
+                        help="output filename (without any extension). Defaults to %(default)s.")
+    visual = parser.add_mutually_exclusive_group()
+    visual.add_argument('-H',
+                        action='store_true',
+                        dest='html',
+                        help="Create a HTML file and display it in a webbrowser.")
+    visual.add_argument('-V',
+                        action='store_true',
+                        dest='visual',
+                        help="Visualise the diff result on the standard output.")
+    visual.add_argument('-v',
+                        action='store_true',
+                        dest='visualbw',
+                        help="Visualise the diff result on the standard output (in black & white).")
+    visual.add_argument('-e',
+                        choices=('meld', 'vim'),
+                        dest='external',
+                        help="Use an external tool to compute and display the diff.")
     args = parser.parse_args()
-    print("Diff directives written in: " + os.path.abspath(_outfilename))
-    main(args.before, args.after, args.outputfilename)
+    if args.html:
+        print("HTML diff file written in: " + os.path.abspath(args.outputfilename + '.html'))
+        htmldiff_view(args.before, args.after, args.outputfilename + '.html')
+    elif args.visual or args.visualbw:
+        visualdiff(args.before, args.after, bw=args.visualbw)
+    elif args.external:
+        extdiff(args.before, args.after, args.external)
+    else:
+        print("Diff directives written in: " + os.path.abspath(args.outputfilename + '.py'))
+        main(args.before, args.after, args.outputfilename + '.py')

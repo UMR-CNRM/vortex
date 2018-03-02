@@ -15,6 +15,8 @@ Functions
 .. autofunction:: set_verbose
 .. autofunction:: process_namelist
 .. autofunction:: process_tnt_stack
+.. autofunction:: namelist_read_and_sort
+.. autofunction:: colorise_diff
 
 
 .. hints
