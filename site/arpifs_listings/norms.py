@@ -11,8 +11,11 @@ from .util import (read_listing,
                    number_of_different_digits,
                    find_line_containing,
                    re_for_fortran_scientific_format,
+                   re_for_nan,
                    ParsingError,
-                   PARSING_ERROR_CODE)
+                   PARSING_ERROR_CODE,
+                   FOUND_NAN_ERROR_CODE,
+                   get_worst)
 
 #: Automatic export
 __all__ = ['Norms', 'Norm', 'NormsComparison', 'compare_norms']
@@ -115,9 +118,13 @@ class NormsSet(object):
             s['nstep'] = nstep
 
         # look for norms at each step
-        for i in range(len(steps) - 1):
+        for i in range(len(steps)):
             lineno = steps[i].pop('lineno')
-            (i0, i1) = (lineno, steps[i + 1]['lineno'])
+            i0 = lineno
+            if i == len(steps) - 1:  # last one
+                i1 = -1
+            else:
+                i1 = steps[i + 1]['lineno']
             extract = lines[i0:i1]
             norm = Norms(steps[i], extract)
             if not norm.empty:
@@ -143,6 +150,11 @@ class Norms(object):
     def empty(self):
         """Return True if no norm has been found."""
         return self.spnorms == self.gpnorms == {}
+
+    @property
+    def found_NaN(self):
+        return (any([re_for_nan.match(str(v)) for v in self.spnorms.values()]) or
+                any([re_for_nan.match(str(v)) for v in self.gpnorms.values()]))
 
     def format_step(self, complete=False):
         """Return a formatted string describing the step."""
@@ -317,14 +329,12 @@ class NormsComparison(object):
         Or worst of the worst of 'both'.
         """
         if ntype == 'both':
-            worst = max(list(self.sp_comp.values()) +
-                        list(self.gp_comp.values()))
+            all_ = list(self.sp_comp.values()) + list(self.gp_comp.values())
         elif ntype == 'spectral':
-            worst = max(self.sp_comp.values())
+            all_ = list(self.sp_comp.values())
         elif ntype == 'gridpoint':
-            worst = max(self.gp_comp.values())
-
-        return worst
+            all_ = list(self.gp_comp.values())
+        return get_worst(all_)
 
     def write(self, out=sys.stdout, onlymaxdiff=False):
         """Write the NormsComparison to **out**."""
@@ -408,6 +418,7 @@ def _write_normcomp_for_field(fieldname, digit, out=sys.stdout):
     arrow = ' --> '
     diffdigits = '{:>{width}} last digits differ'
     unable = '??? unable to compare, check manually ???'
+    nan = '!!! Found NaN in norms !!!'
     fmt = arrow + diffdigits
     fmtlen = len(diffdigits.format('', width=digits_len))
     if digit is None or digit == 0:
@@ -416,6 +427,9 @@ def _write_normcomp_for_field(fieldname, digit, out=sys.stdout):
     elif digit == PARSING_ERROR_CODE:
         out.write('{:>{width}}'.format(fieldname, width=fieldname_width) +
                   ' --> {:<{width}}'.format(unable, width=len(unable)))
+    elif digit == FOUND_NAN_ERROR_CODE:
+        out.write('{:>{width}}'.format(fieldname, width=fieldname_width) +
+                  ' --> {:<{width}}'.format(nan, width=len(nan)))
     else:
         out.write('{:>{width}}'.format(fieldname, width=fieldname_width) +
                   fmt.format(str(digit), width=digits_len))
