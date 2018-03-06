@@ -211,11 +211,14 @@ class Worker(FootprintBase):
         super(Worker, self).__init__(*args, **kwargs)
         if self.name is None:
             self.name = str(uuid.uuid4())
+        self._parent_pid = os.getpid()
         self._process = mpc.Process(target=self._work_and_communicate)
         self._messenger = None
 
     def __del__(self):
-        if hasattr(self, '_process'):
+        if (hasattr(self, '_process') and self._process.pid and
+                # A subprocess should never call join on itself...
+                self._parent_pid == os.getpid()):
             self._process.join(1)
             if self._process.is_alive():
                 self._process.terminate()
@@ -366,13 +369,16 @@ class Boss(object):
         (self.control_messenger_in, self.control_messenger_out) = mpc.Pipe()  # in = inside subprocess, out = main
         self.control_messenger_out.send(self.control_signals['HALT'])
 
+        self._parent_pid = os.getpid()
         self._process = mpc.Process(target=self._listen_and_communicate)
         self._process.start()
 
         self._finalreport = None
 
     def __del__(self):
-        if hasattr(self, '_process'):
+        if (hasattr(self, '_process') and self._process.pid and
+                # A subprocess should never call join on itself...
+                self._parent_pid == os.getpid()):
             self._process.join(1)
             if self._process.is_alive():
                 self._process.terminate()

@@ -34,37 +34,37 @@ class Tracker(object):
         >>> b=[1,2,4,6,7]
         >>> tracker=Tracker(before=a, after=b)
         >>> tracker.dump()
-        Section deleted: frozenset([3, 5])
-        Section created: frozenset([7])
-        Section updated: frozenset([])
-        Section unchanged: frozenset([1, 2, 4, 6])
+        Section deleted: 3, 5
+        Section created: 7
+        Section updated: 
+        Section unchanged: 1, 2, 4, 6
         >>> tracker.differences()
-        Section deleted: frozenset([3, 5])
-        Section created: frozenset([7])
-        Section updated: frozenset([])
+        Section deleted: 3, 5
+        Section created: 7
+        Section updated: 
         >>> list(tracker)
         [1, 2, 3, 4, 5, 6, 7]
         >>> tracker.updated = [2, 4]
         >>> tracker.dump()
-        Section deleted: frozenset([3, 5])
-        Section created: frozenset([7])
-        Section updated: frozenset([2, 4])
-        Section unchanged: frozenset([1, 6])
+        Section deleted: 3, 5
+        Section created: 7
+        Section updated: 2, 4
+        Section unchanged: 1, 6
 
     Example using *deleted*, *created* and *unchanged*::
 
         >>> trackbis=Tracker(deleted=[1, 2], created=[3, 4], unchanged=[5, 6], updated=[7, 8])
         >>> trackbis.dump()
-        Section deleted: frozenset([1, 2])
-        Section created: frozenset([3, 4])
-        Section updated: frozenset([8, 7])
-        Section unchanged: frozenset([5, 6])
+        Section deleted: 1, 2
+        Section created: 3, 4
+        Section updated: 8, 7
+        Section unchanged: 5, 6
         >>> trackbis.unchanged = [7, ]
         >>> trackbis.dump()
-        Section deleted: frozenset([1, 2])
-        Section created: frozenset([3, 4])
-        Section updated: frozenset([8])
-        Section unchanged: frozenset([7])
+        Section deleted: 1, 2
+        Section created: 3, 4
+        Section updated: 8
+        Section unchanged: 7
 
     """
 
@@ -164,7 +164,8 @@ class Tracker(object):
         if not args:
             args = ('deleted', 'created', 'updated', 'unchanged')
         for section in args:
-            print('Section {0:s}: {1:s}'.format(section, str(getattr(self, section))))
+            sectionset = getattr(self, section)
+            print('Section {0:s}: {1:s}'.format(section, ', '.join([str(x) for x in sectionset])))
 
     def differences(self):
         """Dump only created, deleted and updated items."""
@@ -186,20 +187,18 @@ class MappingTracker(Tracker):
         >>> b=dict(b=9, c=3, d=4)
         >>> mtracker=MappingTracker(a, b)
         >>> mtracker.dump()
-        Section deleted: frozenset(['a'])
-        Section created: frozenset(['d'])
-        Section updated: frozenset(['b'])
-        Section unchanged: frozenset(['c'])
+        Section deleted: a
+        Section created: d
+        Section updated: b
+        Section unchanged: c
         >>> mtracker.differences()
-        Section deleted: frozenset(['a'])
-        Section created: frozenset(['d'])
-        Section updated: frozenset(['b'])
-        >>> mtracker.updated
-        frozenset(['b'])
+        Section deleted: a
+        Section created: d
+        Section updated: b
         >>> len(mtracker)
         3
-        >>> list(mtracker)
-        ['a', 'c', 'b', 'd']
+        >>> sorted(mtracker)
+        ['a', 'b', 'c', 'd']
         >>> 'c' in mtracker
         True
 

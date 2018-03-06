@@ -194,8 +194,8 @@ class LiteralParser(object):
         >>> x = lp.parse('.true.')
         >>> print(x)
         True
-        >>> type(x)
-        <type 'bool'>
+        >>> type(x).__name__
+        'bool'
         >>> x = lp.parse('2.')
         >>> print(x)
         2
@@ -204,8 +204,8 @@ class LiteralParser(object):
         >>> x = lp.parse('Z"1F"')
         >>> print(x)
         31
-        >>> type(x)
-        <type 'int'>
+        >>> type(x).__name__
+        'int'
 
         The reverse operation could be achieved through a specific encodingfunction:
 
