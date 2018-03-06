@@ -23,7 +23,7 @@ def printstatus(step, end, refresh_freq=1):
     :param end: the final loop step
     :param refresh_freq: the frequency in % at which reprinting status.
     """
-    status = step * 100. / end
+    status = int(step * 100. / end)
     if status % refresh_freq == 0:
         sys.stdout.write('{:>{width}}%'.format(int(status), width=3))
         sys.stdout.flush()

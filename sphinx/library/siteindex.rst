@@ -38,3 +38,8 @@ List of modules.
    :maxdepth: 2
    
    taylorism/index
+
+.. toctree::
+   :maxdepth: 2
+   
+   tnt/index

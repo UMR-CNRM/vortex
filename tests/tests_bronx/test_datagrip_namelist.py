@@ -175,10 +175,9 @@ class UtFortranNamelist(TestCase):
 
     def test_namblock(self):
         np = namelist.NamelistParser(macros=('MYMACRO1', 'MYMACRO2'))
-        nb_set = np.parse(NAMBLOCK1)
-        nb_res = nb_set.as_dict()['MyNamelistTest']
+        nb_res = np.parse(NAMBLOCK1).as_dict()['MYNAMELISTTEST']
         # Inspect the newly created object
-        self.assertEqual(nb_res.name, 'MyNamelistTest')
+        self.assertEqual(nb_res.name, 'MYNAMELISTTEST')
         self.assertEqual(len(nb_res), 10)
         self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'M4', 'A'],
                          list(nb_res))  # Iterator test
@@ -217,8 +216,8 @@ class UtFortranNamelist(TestCase):
  /
 """
         self.assertEqual(nb_res.dumps(), dumped_ori)
-        nb_set.setmacro('SOMETHINGNEW', 1)
-        nb_set.setmacro('AUTOCREATE', 'Blop')
+        nb_res.addmacro('SOMETHINGNEW', 1)
+        nb_res.addmacro('AUTOCREATE', 'Blop')
         # Check that the substitution works
         dumped_ori = """\
  &MYNAMELISTTEST
@@ -242,7 +241,7 @@ class UtFortranNamelist(TestCase):
 C='Trash',
 /
 """
-        nb_res2 = np.parse(ori2).as_dict()['MyNamelistTest']
+        nb_res2 = np.parse(ori2).as_dict()['MYNAMELISTTEST']
         nb_res2.merge(nb_res)
         # 'C' should have been deleted...
         self.assertNotIn('C', nb_res2)
@@ -264,7 +263,7 @@ C='Trash',
         ori.write(DIRTYNAM)
         parse_res = np.parse(ori)
         self.assertSetEqual(set(six.iterkeys(parse_res)),
-                            set(['MyNamelistTest', 'MySecondOne']))
+                            set(['MYNAMELISTTEST', 'MYSECONDONE']))
         self.assertEqual(parse_res.dumps(), CLEANEDNAM)
         self.assertEqual(parse_res.dumps(sorting=namelist.FIRST_ORDER_SORTING),
                          CLEANEDNAM_SORTED1)
@@ -274,7 +273,7 @@ C='Trash',
             parse_res.mvblock('MyNamelistTest', 'MySecondOne')
         parse_res.mvblock('MyNamelistTest', 'MyThirdOne')
         self.assertSetEqual(set(parse_res.keys()),
-                            set(['MyThirdOne', 'MySecondOne']))
+                            set(['MYTHIRDONE', 'MYSECONDONE']))
         nset2 = namelist.NamelistSet(parse_res)
         self.assertEqual(parse_res.keys(), nset2.keys())
 
@@ -302,7 +301,7 @@ C='Trash',
         nset = np.parse(DIRTYNAM)
         # Test removes
         nset.merge({}, rmkeys=('A ', 'z'), rmblocks=('MySecondOne', ))
-        self.assertSetEqual(set(nset.keys()), set(('MyNamelistTest', )))
+        self.assertSetEqual(set(nset.keys()), set(('MYNAMELISTTEST', )))
         self.assertNotIn('A ', nset['MyNamelistTest'])
         self.assertNotIn('Z', nset['MyNamelistTest'])
         # Test clear
