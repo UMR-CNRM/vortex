@@ -447,9 +447,9 @@ class SequenceInputsReport(object):
         :param bool detailed: when alternates are used, tell which resource handler
                               is actually used and which one should have been used
                               in the nominal case.
-        :param list only: Output only the listed statuses (statuses are defined in
-                          :data:`InputsReportStatus`). By default (*None*), output
-                          everything. Note that "alternates" are always shown.
+        :param list[str] only: Output only the listed statuses (statuses are defined in
+                               :data:`InputsReportStatus`). By default (*None*), output
+                               everything. Note that "alternates" are always shown.
         '''
         if only is None:
             # The default is to display everything
@@ -488,9 +488,9 @@ class SequenceInputsReport(object):
         :param bool detailed: when alternates are used, tell which resource handler
                               is actually used and which one should have been used
                               in the nominal case.
-        :param list only: Output only the listed statuses (statuses are defined in
-                          :data:`InputsReportStatus`). By default (*None*), output
-                          everything. Note that "alternates" are always shown.
+        :param list[str] only: Output only the listed statuses (statuses are defined in
+                               :data:`InputsReportStatus`). By default (*None*), output
+                               everything. Note that "alternates" are always shown.
         '''
         print self.synthetic_report(detailed=detailed, only=only)
 

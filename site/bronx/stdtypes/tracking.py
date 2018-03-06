@@ -2,20 +2,78 @@
 # -*- coding:Utf-8 -*-
 
 """
-Tool to handle changes in some context.
+Tools to handle changes in some context.
 
 Changes could be creation, deletion, modification.
-
-TODO: More documentation + example
-TODO: unittest
-TODO: Properties' documentation
 """
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import collections
 
 
 class Tracker(object):
-    """Handling of simple state status through ``deleted``, ``created`` or ``updated`` items."""
+    """Handling of simple state status through ``deleted``, ``created`` or ``updated`` items.
+
+    :param collections.Iterable before: The reference list of items
+    :param collections.Iterable after: The possibly modified list of items
+    :param collections.Iterable deleted: The list of deleted items
+    :param collections.Iterable created: The list of created items
+    :param collections.Iterable updated: The list of updated items
+    :param collections.Iterable unchanged: The list of unchanged items
+
+    There are two way to initialise such an object:
+
+    * Using the *after* and *before* attributes. Doing so, the *deleted*, *created* and
+      *unchanged* sets are automatically computed;
+    * Using the *deleted*, *created* and *unchanged* attributes in order to setup
+      manually those items.
+
+    Example using *after* and *before*::
+
+        >>> a=[1,2,3,4,5,6]
+        >>> b=[1,2,4,6,7]
+        >>> tracker=Tracker(before=a, after=b)
+        >>> tracker.dump()
+        Section deleted: frozenset([3, 5])
+        Section created: frozenset([7])
+        Section updated: frozenset([])
+        Section unchanged: frozenset([1, 2, 4, 6])
+        >>> tracker.differences()
+        Section deleted: frozenset([3, 5])
+        Section created: frozenset([7])
+        Section updated: frozenset([])
+        >>> list(tracker)
+        [1, 2, 3, 4, 5, 6, 7]
+        >>> tracker.updated = [2, 4]
+        >>> tracker.dump()
+        Section deleted: frozenset([3, 5])
+        Section created: frozenset([7])
+        Section updated: frozenset([2, 4])
+        Section unchanged: frozenset([1, 6])
+
+    Example using *deleted*, *created* and *unchanged*::
+
+        >>> trackbis=Tracker(deleted=[1, 2], created=[3, 4], unchanged=[5, 6], updated=[7, 8])
+        >>> trackbis.dump()
+        Section deleted: frozenset([1, 2])
+        Section created: frozenset([3, 4])
+        Section updated: frozenset([8, 7])
+        Section unchanged: frozenset([5, 6])
+        >>> trackbis.unchanged = [7, ]
+        >>> trackbis.dump()
+        Section deleted: frozenset([1, 2])
+        Section created: frozenset([3, 4])
+        Section updated: frozenset([8])
+        Section unchanged: frozenset([7])
+
+    """
 
     def __init__(self, before=None, after=None, deleted=None, created=None, updated=None, unchanged=None):
+        for args in (before, after, deleted, created, updated, unchanged):
+            if args is not None:
+                if not (isinstance(args, collections.Iterable) and
+                        all([isinstance(item, collections.Hashable) for item in args])):
+                    raise ValueError("Whenever provided, arguments must consists of hashable items.")
         if before is not None and after is not None:
             before = frozenset(before)
             after  = frozenset(after)
@@ -23,7 +81,10 @@ class Tracker(object):
             self._created = after - before
             self._unchanged = before & after
         else:
+            if deleted is None or created is None:
+                raise ValueError("None of the deleted and created attributes should be omitted")
             self._unchanged = frozenset()
+            self._updated = frozenset()
             self._set_deleted(deleted)
             self._set_created(created)
             self._set_unchanged(unchanged)
@@ -47,7 +108,7 @@ class Tracker(object):
             except TypeError:
                 self._deleted = frozenset()
 
-    deleted = property(_get_deleted, _set_deleted, None, None)
+    deleted = property(_get_deleted, _set_deleted, None, "The set of deleted items.")
 
     def _get_created(self):
         return self._created
@@ -60,7 +121,7 @@ class Tracker(object):
             except TypeError:
                 self._created = frozenset()
 
-    created = property(_get_created, _set_created, None, None)
+    created = property(_get_created, _set_created, None, "The set of created items.")
 
     def _get_updated(self):
         return self._updated
@@ -73,7 +134,7 @@ class Tracker(object):
             except TypeError:
                 self._updated = frozenset()
 
-    updated = property(_get_updated, _set_updated, None, None)
+    updated = property(_get_updated, _set_updated, None, "The set of updated items.")
 
     def _get_unchanged(self):
         return self._unchanged
@@ -86,7 +147,7 @@ class Tracker(object):
             except TypeError:
                 self._unchanged = frozenset()
 
-    unchanged = property(_get_unchanged, _set_unchanged, None, None)
+    unchanged = property(_get_unchanged, _set_unchanged, None, "The set of unchanged items.")
 
     def __contains__(self, item):
         return item in self.deleted or item in self.created or item in self.updated or item in self.unchanged
@@ -103,8 +164,64 @@ class Tracker(object):
         if not args:
             args = ('deleted', 'created', 'updated', 'unchanged')
         for section in args:
-            print 'Section {0:s}: {1:s}'.format(section, str(getattr(self, section)))
+            print('Section {0:s}: {1:s}'.format(section, str(getattr(self, section))))
 
     def differences(self):
         """Dump only created, deleted and updated items."""
         return self.dump('deleted', 'created', 'updated')
+
+
+class MappingTracker(Tracker):
+    """A tracker that compute the differences between two mappings (e.g. dicitonaries).
+
+    :param collections.Mapping before: The reference mapping
+    :param collections.Mapping after: The (possibly) modified mapping
+
+    On the contrary to the :class:`Tracker` class, the :data:`deleted`, :data:`created`,
+    :data:`updated` and :data:`unchanged` properties are read-only.
+
+    Example::
+
+        >>> a=dict(a=1, b=2, c=3)
+        >>> b=dict(b=9, c=3, d=4)
+        >>> mtracker=MappingTracker(a, b)
+        >>> mtracker.dump()
+        Section deleted: frozenset(['a'])
+        Section created: frozenset(['d'])
+        Section updated: frozenset(['b'])
+        Section unchanged: frozenset(['c'])
+        >>> mtracker.differences()
+        Section deleted: frozenset(['a'])
+        Section created: frozenset(['d'])
+        Section updated: frozenset(['b'])
+        >>> mtracker.updated
+        frozenset(['b'])
+        >>> len(mtracker)
+        3
+        >>> list(mtracker)
+        ['a', 'c', 'b', 'd']
+        >>> 'c' in mtracker
+        True
+
+    """
+
+    def __init__(self, before, after):
+        if not isinstance(before, collections.Mapping):
+            raise ValueError('The before argument must be some kind of mapping.')
+        if not isinstance(after, collections.Mapping):
+            raise ValueError('The after argument must be some kind of mapping.')
+        super(MappingTracker, self).__init__(before, after)
+        super(MappingTracker, self)._set_updated([k for k in self.unchanged if after[k] != before[k]])
+
+    deleted = property(Tracker._get_deleted, None, None, "The set of deleted items.")
+
+    created = property(Tracker._get_created, None, None, "The set of created items.")
+
+    updated = property(Tracker._get_updated, None, None, "The set of updated items.")
+
+    unchanged = property(Tracker._get_unchanged, None, None, "The set of unchanged items.")
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

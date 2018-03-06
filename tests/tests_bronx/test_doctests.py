@@ -4,8 +4,9 @@
 import unittest
 import doctest
 
-from footprints import util
-from vortex.data import geometries
+from bronx.datagrip import namelist
+from bronx.fancies import display
+from bronx.stdtypes import date, tracking
 
 
 class utDocTests(unittest.TestCase):
@@ -16,8 +17,10 @@ class utDocTests(unittest.TestCase):
                          'Doctests errors {:s} for {!r}'.format(rc, module))
 
     def test_doctests(self):
-        self.assert_doctests(geometries)
-        self.assert_doctests(util)
+        self.assert_doctests(namelist)
+        self.assert_doctests(display)
+        self.assert_doctests(date)
+        self.assert_doctests(tracking)
 
 
 if __name__ == '__main__':

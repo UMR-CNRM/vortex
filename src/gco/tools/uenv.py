@@ -17,6 +17,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 _DATASTORE_KIND = 'uenv_registred_cycle'
 
+_UENV_IGNORE_RE = re.compile(r'^(?:\s*(?:#|//|!).*|\s*)$')
 _UENV_LINE_RE = re.compile(r'^[^=]+=')
 
 
@@ -64,7 +65,9 @@ def contents(cycle, scheme=None, netloc=None):
             raise UenvError("The {:s} cycle was not found".format(uri_s))
         tmplocal.seek(0)
         for i, item in enumerate(tmplocal.readlines()):
-            if _UENV_LINE_RE.match(item):
+            if _UENV_IGNORE_RE.match(item):
+                pass
+            elif _UENV_LINE_RE.match(item):
                 k, v = item.split('=', 1)
                 cycle = v.rstrip("\n").strip('"')
                 try:

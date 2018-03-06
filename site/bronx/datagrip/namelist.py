@@ -910,8 +910,8 @@ class NamelistSet(collections.MutableMapping):
 
     def __init__(self, blocks_set=None):
         """
-        :param list blocks_set: A list of :class:`NamelistBlock` objects (if
-                                missing, an empty list is assumed).
+        :param list[NamelistBlock] blocks_set: A list of :class:`NamelistBlock` objects (if
+                                               missing, an empty list is assumed).
         """
         # For later use
         self._automkblock = 1

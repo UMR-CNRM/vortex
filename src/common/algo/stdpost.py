@@ -212,9 +212,9 @@ def parallel_grib_filter(context, inputs, outputs, intents=(),
     """A simple method that calls the GRIBFilter class in parallel.
 
     :param vortex.layout.contexts.Context context: the current context
-    :param list inputs: the list of input file names
-    :param list outputs: the list of output file names
-    :param list intents: the list of intent (in|inout) for output files (in if omitted)
+    :param list[str] inputs: the list of input file names
+    :param list[str] outputs: the list of output file names
+    :param list[str] intents: the list of intent (in|inout) for output files (in if omitted)
     :param bool cat: whether or not to concatenate the input files (False by default)
     :param tuple filters: a list of filters to apply (as a list of JSON dumps)
     :param int nthreads: the maximum number of tasks used concurently (8 by default)

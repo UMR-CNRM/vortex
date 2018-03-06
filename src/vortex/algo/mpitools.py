@@ -216,7 +216,7 @@ class MpiTool(footprints.FootprintBase):
     def mkcmdline(self, args):
         """Builds the MPI command line.
 
-        :param list args: Command line arguments for each of the binaries.
+        :param list[str] args: Command line arguments for each of the binaries.
         """
         cmdl = [ self.launcher, ]
         for k, v in self._reshaped_mpiopts().items():

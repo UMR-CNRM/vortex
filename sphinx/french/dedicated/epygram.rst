@@ -33,7 +33,7 @@ Installation sur supercalculateur
 ---------------------------------
 
   * EPyGrAM est également disponible sur *beaufix* et *prolix*, avec un jeu réduit d'outils (tout ce qui n'est pas graphique).
-  * Lire les rapides instructions de :file:`/home/gmap/mrpe/mary/public/EPyGrAM.0.6.7/_install/INSTALL_README_cnrm_bull.txt`
+  * Lire les rapides instructions de :file:`/home/gmap/mrpe/mary/public/EPyGrAM-current/_install/INSTALL_README_cnrm_bull.txt`
   * Attention toutefois, n'allez pas saturer la mémoire et le cpu des nœuds de login avec !!!
 
 Usage générique

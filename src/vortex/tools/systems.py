@@ -703,7 +703,7 @@ class OSExtended(System):
         """Do its best to nicely shutdown the process started by **p**.
 
         :param subprocess.Popen p: The process to be shutdown
-        :param list ok: The shell return codes considered as successful
+        :param list[int] ok: The shell return codes considered as successful
             (if *None*, only 0 is considered successful)
         :return bool: Returns *True* if the process return code is within the
             **ok** list.
@@ -737,10 +737,10 @@ class OSExtended(System):
               taskset=None, taskset_id=0, taskset_bsize=1):
         """Subprocess call of **args**.
 
-        :param str|list args: The command (+ its command-line arguments) to be
+        :param str|list[str] args: The command (+ its command-line arguments) to be
             executed. When **shell** is *False* it should be a list. When **shell**
             is *True*, it should be a string.
-        :param list ok: The shell return codes considered as successful
+        :param list[int] ok: The shell return codes considered as successful
             (if *None*, only 0 is considered successful)
         :param bool shell: If *True*, the specified command will be executed
             through the system shell. (It is usually considered a security hazard:
