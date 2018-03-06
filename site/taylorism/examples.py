@@ -27,7 +27,7 @@ class Sleeper(Worker):
         attr = dict(
             sleeping_time = dict(
                 info     = "Sleeping time in s.",
-                values   = [0.001, 0.01, 0.1] + range(10) + range(10, 65, 5),
+                values   = [0.001, 0.01, 0.1] + list(range(10)) + list(range(10, 65, 5)),
                 type     = float,
             ),
             wakeup_sentence = dict(

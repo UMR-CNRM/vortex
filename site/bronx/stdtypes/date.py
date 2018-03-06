@@ -209,7 +209,33 @@ def guess(*args):
 
 
 def daterange(start, end=None, step='P1D'):
-    """Date generator."""
+    """Date generator.
+
+    :param start: A :class:`Date` object or something that can be converted to one.
+    :param end: A :class:`Date` object or something that can be converted to one.
+    :param step: A :class:`Period` object or something that can be converted to one.
+
+    :func:`daterange` always returns a generator object::
+
+        >>> daterange('2017010100', '2017013100', 'P14D')  # doctest: +ELLIPSIS
+        <generator object daterange at 0x...>
+        >>> list(daterange('2017010100', '2017013100', 'P14D'))
+        [Date(2017, 1, 1, 0, 0), Date(2017, 1, 15, 0, 0), Date(2017, 1, 29, 0, 0)]
+
+    The *start* and *end* attributes are always sorted::
+
+        >>> list(daterange('2017013100', '2017010100', 'P14D'))
+        [Date(2017, 1, 1, 0, 0), Date(2017, 1, 15, 0, 0), Date(2017, 1, 29, 0, 0)]
+
+    When *end* is not provided, it is assumed to be 10 days after *start*::
+
+        >>> list(daterange('2017010100'))  # doctest: +NORMALIZE_WHITESPACE
+        [Date(2017, 1, 1, 0, 0), Date(2017, 1, 2, 0, 0), Date(2017, 1, 3, 0, 0),
+         Date(2017, 1, 4, 0, 0), Date(2017, 1, 5, 0, 0), Date(2017, 1, 6, 0, 0),
+         Date(2017, 1, 7, 0, 0), Date(2017, 1, 8, 0, 0), Date(2017, 1, 9, 0, 0),
+         Date(2017, 1, 10, 0, 0), Date(2017, 1, 11, 0, 0)]
+
+    """
 
     if not isinstance(start, Date):
         start = Date(start)
@@ -233,16 +259,58 @@ def daterange(start, end=None, step='P1D'):
         yield rollingdate
         rollingdate += step
 
+
 def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     """Extended date range expansion.
-    
-    TODO: example.
+
+    :func:`daterange` accepts many arguments combinations::
+
+        >>> daterangex('2017010100', '2017013100', 'P14D')
+        [Date(2017, 1, 1, 0, 0), Date(2017, 1, 15, 0, 0), Date(2017, 1, 29, 0, 0)]
+        >>> daterangex('2017010100-2017013100-P14D')
+        [Date(2017, 1, 1, 0, 0), Date(2017, 1, 15, 0, 0), Date(2017, 1, 29, 0, 0)]
+        >>> daterangex('2017010100/2017013100/P14D')
+        [Date(2017, 1, 1, 0, 0), Date(2017, 1, 15, 0, 0), Date(2017, 1, 29, 0, 0)]
+
+    *lists*, *tuples* or comma-separated string can be provided::
+
+        >>> daterangex(['2017010100-2017013100-P14D', '2017060100-2017063000-P14D', '2017122500'])  # doctest: +NORMALIZE_WHITESPACE
+        [Date(2017, 1, 1, 0, 0), Date(2017, 1, 15, 0, 0), Date(2017, 1, 29, 0, 0),
+         Date(2017, 6, 1, 0, 0), Date(2017, 6, 15, 0, 0), Date(2017, 6, 29, 0, 0),
+         Date(2017, 12, 25, 0, 0)]
+        >>> daterangex('2017010100-2017013100-P14D,2017060100-2017063000-P14D,2017122500')  # doctest: +NORMALIZE_WHITESPACE
+        [Date(2017, 1, 1, 0, 0), Date(2017, 1, 15, 0, 0), Date(2017, 1, 29, 0, 0),
+         Date(2017, 6, 1, 0, 0), Date(2017, 6, 15, 0, 0), Date(2017, 6, 29, 0, 0),
+         Date(2017, 12, 25, 0, 0)]
+
+    Extra features are provided such as ; applying a global *shift*::
+
+        >>> daterangex('2017010100-2017013100-P14D,2017060100-2017063000-P14D,2017122500',
+        ...            shift='P1D')  # doctest: +NORMALIZE_WHITESPACE
+        [Date(2017, 1, 2, 0, 0), Date(2017, 1, 16, 0, 0), Date(2017, 1, 30, 0, 0),
+         Date(2017, 6, 2, 0, 0), Date(2017, 6, 16, 0, 0), Date(2017, 6, 30, 0, 0),
+         Date(2017, 12, 26, 0, 0)]
+
+    Formatting the date as a string depending on the *fmt* function name::
+
+        >>> daterangex('2017010100-2017013100-P14D,2017060100-2017063000-P14D,2017122500',
+        ...            fmt='ymdh')  # doctest: +NORMALIZE_WHITESPACE
+        ['2017010100', '2017011500', '2017012900',
+        '2017060100', '2017061500', '2017062900', '2017122500']
+
+    Adding a *prefix* before the date string::
+
+        >>> daterangex('2017010100-2017013100-P14D,2017060100-2017063000-P14D,2017122500',
+        ...            fmt='ymdh', prefix='loop')  # doctest: +NORMALIZE_WHITESPACE
+        ['loop2017010100', 'loop2017011500', 'loop2017012900',
+         'loop2017060100', 'loop2017061500', 'loop2017062900', 'loop2017122500']
+
     """
 
     rangevalues = list()
 
     pstarts = ([str(s) for s in start]
-              if isinstance(start, (list, tuple)) else str(start).split(','))
+               if isinstance(start, (list, tuple)) else str(start).split(','))
 
     for pstart in pstarts:
         actualrange = re.split('[-/]', pstart)
@@ -406,7 +474,7 @@ class Period(datetime.timedelta):
             ld = [0, top.hour * 3600 + top.minute * 60]
         elif len(args) < 2 and (isinstance(top, int) or isinstance(top, float)):
             ld = [0, top]
-        elif isinstance(top, int) and len(args)> 1:
+        elif isinstance(top, int) and len(args) > 1:
             ld = list(args)
         elif isinstance(top, six.string_types):
             ld = [0, Period._parse(top)]
@@ -714,6 +782,10 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         newinstance = type(self)(self)
         memo[id(self)] = newinstance
         return newinstance
+
+    def __hash__(self):
+        """Force the object to be hashable (needed with Python3)."""
+        return datetime.datetime.__hash__(self)
 
     @property
     def origin(self):

@@ -66,6 +66,11 @@ XMLEXPORTDIR  = $(SOURCEDIR)/_static/vortex-help/_ExportXML
 # automatic documentation in classes derived from FootprintBase.
 FOOTPRINT_DOCSTRINGS	:= 2
 export FOOTPRINT_DOCSTRINGS
+# Tweak the behavior of bronx.fancies.wrapcmd.* decorators to generate an
+# ReST-compatible documentation.
+BRONX_FANCIES_RSTDOC    := 1
+export BRONX_FANCIES_RSTDOC
+
 
 # -------------
 # Build targets
