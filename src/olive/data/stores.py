@@ -66,6 +66,11 @@ class OliveArchiveStore(ArchiveStore):
         self.remap_read(remote, options)
         return self.ftplocate(remote, options)
 
+    def oliveprestageinfo(self, remote, options):
+        """Remap and ftpprestageinfo sequence."""
+        self.remap_read(remote, options)
+        return self.ftpprestageinfo(remote, options)
+
     def oliveget(self, remote, local, options):
         """Remap and ftpget sequence."""
         self.remap_read(remote, options)
@@ -124,6 +129,10 @@ class OliveCacheStore(CacheStore):
     def olivelocate(self, remote, options):
         """Gateway to :meth:`incachelocate`."""
         return self.incachelocate(remote, options)
+
+    def oliveprestageinfo(self, remote, options):
+        """Gateway to :meth:`incacheprestageinfo`."""
+        return self.incacheprestageinfo(remote, options)
 
     def oliveget(self, remote, local, options):
         """Gateway to :meth:`incacheget`."""
@@ -198,8 +207,7 @@ class OpArchiveStore(ArchiveStore):
     def fullpath(self, remote):
         return self.storeroot + remote['path']
 
-    def oplocate(self, remote, options):
-        """Delegates to ``system`` a distant check."""
+    def _op_find_stuff(self, remote, options, netpath=True):
         ftp = self.system.ftp(self.hostname(), remote['username'], delayed=True)
         if ftp:
             extract = remote['query'].get('extract', None)
@@ -208,13 +216,26 @@ class OpArchiveStore(ArchiveStore):
             if not extract and self.glue.containsfile(basename):
                 cleanpath, _ = self.glue.filemap(self.system, dirname, basename)
             if cleanpath is not None:
-                rloc = ftp.netpath(cleanpath)
+                if netpath:
+                    rloc = ftp.netpath(cleanpath)
+                else:
+                    rloc = cleanpath
             else:
                 rloc = None
             ftp.close()
             return rloc
         else:
             return None
+
+    def oplocate(self, remote, options):
+        """Delegates to ``system`` a distant locate."""
+        return self._op_find_stuff(remote, options, netpath=True)
+
+    def opprestageinfo(self, remote, options):
+        """Find out prestage info."""
+        superinfo = self.ftpprestageinfo(remote, options)
+        superinfo['location'] = self._op_find_stuff(remote, options, netpath=False)
+        return superinfo
 
     def opcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
@@ -336,6 +357,10 @@ class OpCacheStore(CacheStore):
     def oplocate(self, remote, options):
         """Gateway to :meth:`incachelocate`."""
         return self.incachelocate(remote, options)
+
+    def opprestageinfo(self, remote, options):
+        """Gateway to :meth:`incacheprestageinfo`."""
+        return self.incacheprestageinfo(remote, options)
 
     def opget(self, remote, local, options):
         """Gateway to :meth:`incacheget`."""

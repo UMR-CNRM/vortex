@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
 # encoding: utf-8
 '''
-Invokes get/put on resource handlers created form the command-line options.
+Invokes get/put/prestage on resource handlers created form the command-line options.
 
 Any option specified on the command line (except -h and -v) will be used as
 attributes by the ```vortex.toolbox.rload``` function in order to create the
@@ -14,7 +14,7 @@ This scripts only supports two notations for the command line:
 `--attribute=value` or `--atribute value`.
 '''
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 argparse_epilog = '''
 Examples:
@@ -49,9 +49,14 @@ The `rangex` utility function can be specified directly on the command-line.
 For example, --term='rangex(0-6-1)' on the command-line, will result in
 term = [0, 1, 2, 3, 4, 5, 6] in the ``vortex.toolbox.rload``` call.
 
+The `daterangex` utility is also available, e.g. this would generate the
+dates from 2017 Jan. 1st, 18h (included) to 2017 Jan. 3rd, 7h (excluded)
+by step of 6h:
+  --date=daterangex('2017010118','2017010307','PT6H')
+
 Environment variables:
 
-Some of the defaults can be changed bythe mean of environment varialbes:
+Some of the defaults can be changed by the mean of environment variables:
   * --namespace default is control by VORTEX_NAMESPACE
   * --vapp default is control by VORTEX_VAPP
   * --vconf default is control by VORTEX_VCONF
@@ -73,6 +78,7 @@ sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 import footprints as fp
 from bronx.system import interrupt
+from bronx.stdtypes import date
 import vortex
 
 # Main script logger
@@ -94,8 +100,8 @@ def vortex_delayed_init(t):
     vortex.proxy.addon(kind='grib', shell=t.sh)  # @UndefinedVariable
 
 
-def actual_action(action, t, args):
-    '''Performs the action request by the user (get/put).'''
+def actual_action(action, t, args, fatal=True):
+    '''Performs the action request by the user (get/put/prestage).'''
     from vortex import toolbox
     rhanlers = toolbox.rload(** vars(args))
     with t.sh.ftppool():
@@ -113,13 +119,28 @@ def actual_action(action, t, args):
                                        rh.container.localpath())
                         t.sh.remove(rh.container.localpath(), fmt=args.format)
                     raise
+                except StandardError as e:
+                    logger.warning("An exception was caught: %s.", str(e))
+                    rst = False
+                    if fatal:
+                        raise
                 finally:
                     if rst:
                         print("\n:-) Action '{}' on the resource handler went fine".format(action))
                     else:
                         print("\n:-( Action '{}' on the resource handler ended badly".format(action))
+                if not rst:
+                    if fatal:
+                        raise IOError("... stopping everithing since fatal is True and rst={!s}".format(rst))
+                    else:
+                        print("... but going on since fatal is False.")
             else:
                 raise ValueError("The resource handler could not be fully defined.")
+    
+        # Finish the action by actualy sending the prestaging request
+        if action == 'prestage':
+            ctx = t.context
+            ctx.prestaging_hub.flush()
 
 
 def argvalue_rewrite(value):
@@ -127,6 +148,9 @@ def argvalue_rewrite(value):
     if value.startswith('rangex'):
         value = re.split('\s*,\s*', value[7:-1])
         return fp.util.rangex(* value)
+    elif value.startswith('daterangex'):
+        value = re.split('\s*,\s*', value[11:-1])
+        return date.daterangex(* value)
     else:
         return value
 
@@ -170,6 +194,10 @@ def main():
                             formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument("-v", "--verbose", dest="verbose", action="count",
                         help="set verbosity level [default: %(default)s]")
+    parser.add_argument("-p", "--prestage", dest="prestage", action="store_true",
+                        help="during a get action, prestage data first")
+    parser.add_argument("--no-fatal", dest="fatal", action="store_false",
+                        help="do not fail if the action do not succeed (just print a warning)")
     parser.add_argument("--local", dest="local", action="store", required=True,
                         help="path to the resource on the local filesystem")
     parser.add_argument("--format", dest="format", action="store", default="unknown",
@@ -210,8 +238,16 @@ def main():
     fp.logger.setLevel(loglevel_fp)
     del args.verbose
 
+    # is it Fatal
+    fatal = args.fatal
+    del args.fatal
+
+    # do some prestaging before get actions
+    prestage = args.prestage
+    del args.prestage
+
     # Process the action (get/true)
-    program_match = re.match('vtx(get|put)(?:\.py)?$', program_name)
+    program_match = re.match('vtx(get|put|prestage)(?:\.py)?$', program_name)
     if program_match is None:
         raise NotImplementedError("Unrecognised script name.")
     else:
@@ -231,7 +267,9 @@ def main():
     try:
         t.sh.signal_intercept_on()
         vortex_delayed_init(t)
-        actual_action(action, t, args)
+        if action == 'get' and prestage:
+            actual_action('prestage', t, args, fatal=fatal)
+        actual_action(action, t, args, fatal=fatal)
         t.sh.signal_intercept_off()
 
     except (KeyboardInterrupt, interrupt.SignalInterruptError) as e:

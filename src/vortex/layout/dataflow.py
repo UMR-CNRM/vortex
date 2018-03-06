@@ -788,15 +788,16 @@ class LocalTracker(defaultdict):
         :param info: Info dictionary sent by the :class:`~vortex.data.stores.Store` object
         """
         lpath = info.get('local', None)
-        clean_uri = _fast_clean_uri(store, info['remote'])
         if lpath is None:
             # Check for file deleted on the remote side
             if info['action'] == 'del' and info['status']:
+                clean_uri = _fast_clean_uri(store, info['remote'])
                 huri = self._hashable_uri(clean_uri)
                 for atracker in list(self._uri_map['put'][huri]):
                     atracker.check_uri_remote_delete(clean_uri)
         else:
             if isinstance(lpath, basestring):
+                clean_uri = _fast_clean_uri(store, info['remote'])
                 self[lpath].update_store(info, clean_uri)
             else:
                 logger.debug("The iotarget isn't a basestring: It will be skipped in %s",

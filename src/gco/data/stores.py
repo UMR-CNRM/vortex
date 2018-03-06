@@ -472,6 +472,10 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
                     return rc
         return sorted([s for s in stuff if not (s.endswith('.' + self.storehash) and s[:-(len(self.storehash) + 1)] in stuff)])
 
+    def ugetprestageinfo(self, remote, options):
+        """Remap and ftpprestageinfo sequence."""
+        return self.ftpprestageinfo(self._universal_remap(remote), options)
+
     def _actual_get(self, remote, local, options):
         return self.ftpget(remote, local, options)
 
@@ -553,6 +557,10 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
     def ugetlist(self, remote, options):
         """Proxy to :meth:`incachelocate`."""
         return self.incachelist(self._list_remap(remote), options)
+
+    def ugetprestageinfo(self, remote, options):
+        """Proxy to :meth:`incacheprestageinfo`."""
+        return self.incacheprestageinfo(self._universal_remap(remote), options)
 
     def _actual_get(self, remote, local, options):
         return self.incacheget(remote, local, options)

@@ -5,13 +5,20 @@
 This package handles some common targets used at Meteo France.
 """
 
+import ftplib
+import six
+import socket
+import uuid
+
+import footprints
+
+from vortex.tools.targets import Target
+from vortex.tools.prestaging import PrestagingTool
+
 #: No automatic export
 __all__ = []
 
-import footprints
 logger = footprints.loggers.getLogger(__name__)
-
-from vortex.tools.targets import Target
 
 
 class MeteoBull(Target):
@@ -151,3 +158,64 @@ class MeteoSopranoDevRH6(MeteoSoprano):
     def generic(self):
         """Generic name to be used in acess paths"""
         return 'soprano_dev_rh6'
+
+
+class HendrixPrestagingTool(PrestagingTool):
+
+    _footprint = dict(
+        info = "Process Hendrix's pre-staging requests.",
+        attr = dict(
+            issuerkind = dict(
+                values = ['archivestore', ]
+            ),
+            storage = dict(
+                values = ['hendrix', 'hendrix.meteo.fr'],
+                remap = dict(hendrix='hendrix.meteo.fr')
+            ),
+            scheme = dict(),
+            stagedir = dict(
+                optional = True,
+                default = '/DemandeMig/ChargeEnEspaceRapide',
+            ),
+            logname = dict(
+                optional = True
+            )
+        )
+    )
+
+    def flush(self, email=None):
+        """Acutally send the pre-staging request to Hendrix."""
+        # Build the target
+        request = []
+        if email is not None:
+            request.append("#MAIL=" + email)
+        request.extend(self.items())
+        # Send this stuff to hendrix
+        request_filename = '.'.join([self.logname or 'unknownuser',
+                                     'stagereq',
+                                     uuid.uuid4().hex[:16],
+                                     'MIG'])
+        request_data = six.StringIO()
+        request_data.write('\n'.join(request))
+        request_data.seek(0)
+        try:
+            ftp = self.system.ftp(self.storage, logname=self.logname)
+        except (ftplib.all_errors, socket.error) as e:
+            logger.error('Prestaging to %s: unable to connect: %s', self.storage, str(e))
+            ftp = None
+        if ftp:
+            try:
+                rc = ftp.cd(self.stagedir)
+            except (IOError, ftplib.all_errors) as e:
+                logger.error('Prestaging to %s: error with "cd": %s', self.storage, str(e))
+                rc = False
+            if rc:
+                try:
+                    ftp.put(request_data, request_filename)
+                except (IOError, ftplib.all_errors) as e:
+                    logger.error('Prestaging to %s: error with "put": %s', self.storage, str(e))
+                    rc = False
+            ftp.close()
+            return rc
+        else:
+            return False
