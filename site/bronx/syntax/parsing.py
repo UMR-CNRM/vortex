@@ -192,7 +192,7 @@ class StringDecoder(object):
         res_stack = []
         accumstr = ''
         parenthesis = 0
-        marker = markers_it.next()
+        marker = next(markers_it)
         # Process the string characters one by one and but take parenthesis into
         # account.
         for c in litteral:
@@ -204,7 +204,7 @@ class StringDecoder(object):
                 raise ValueError("'{}' unbalanced parenthesis". format(litteral))
             if parenthesis == 0 and c == marker:
                 res_stack.append(accumstr)
-                marker = markers_it.next()
+                marker = next(markers_it)
                 accumstr = ''
             else:
                 accumstr += c
@@ -310,7 +310,7 @@ class StringDecoder(object):
 
     def __call__(self, value):
         """Return the decoded configuration string (possibly from cache)."""
-        if value is not None and isinstance(value, basestring):
+        if value is not None and isinstance(value, six.string_types):
             clean_value = self._litteral_cleaner(value)
             u_subs, hashkey = self._substitute_lookup(clean_value, set())
             if self._cache_check(hashkey):
