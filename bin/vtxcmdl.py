@@ -98,27 +98,28 @@ def actual_action(action, t, args):
     '''Performs the action request by the user (get/put).'''
     from vortex import toolbox
     rhanlers = toolbox.rload(** vars(args))
-    for n, rh in enumerate(rhanlers):
-        t.sh.subtitle("Resource Handler {:02d}/{:02d}".format(n + 1, len(rhanlers)))
-        rh.quickview()
-        if rh.complete:
-            rst = False
-            try:
-                rst = getattr(rh, action)()
-            except (KeyboardInterrupt, interrupt.SignalInterruptError):
-                if action == 'get':
-                    # Get ride of incomplete files
-                    logger.warning("The transfer was interrupted. Cleaning %s.",
-                                   rh.container.localpath())
-                    t.sh.remove(rh.container.localpath(), fmt=args.format)
-                raise
-            finally:
-                if rst:
-                    print("\n:-) Action '{}' on the resource handler went fine".format(action))
-                else:
-                    print("\n:-( Action '{}' on the resource handler ended badly".format(action))
-        else:
-            raise ValueError("The resource handler could not be fully defined.")
+    with t.sh.ftppool():
+        for n, rh in enumerate(rhanlers):
+            t.sh.subtitle("Resource Handler {:02d}/{:02d}".format(n + 1, len(rhanlers)))
+            rh.quickview()
+            if rh.complete:
+                rst = False
+                try:
+                    rst = getattr(rh, action)()
+                except (KeyboardInterrupt, interrupt.SignalInterruptError):
+                    if action == 'get':
+                        # Get ride of incomplete files
+                        logger.warning("The transfer was interrupted. Cleaning %s.",
+                                       rh.container.localpath())
+                        t.sh.remove(rh.container.localpath(), fmt=args.format)
+                    raise
+                finally:
+                    if rst:
+                        print("\n:-) Action '{}' on the resource handler went fine".format(action))
+                    else:
+                        print("\n:-( Action '{}' on the resource handler ended badly".format(action))
+            else:
+                raise ValueError("The resource handler could not be fully defined.")
 
 
 def argvalue_rewrite(value):
@@ -243,6 +244,7 @@ def main():
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help\n")
         return 2
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -30,6 +30,14 @@ Exceptions
 Classes
 -------
 
+Misc
+****
+
+.. autoclass:: FtpFlavourTuple
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Generic system objects
 **********************
 

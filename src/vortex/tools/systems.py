@@ -22,6 +22,8 @@ When working with System objects, preferentialy use high-level methods such as
 
 """
 
+from collections import namedtuple
+import contextlib
 import filecmp
 import glob
 import hashlib
@@ -52,7 +54,7 @@ from bronx.system.cpus import LinuxCpusInfo
 from bronx.system.memory import LinuxMemInfo
 from vortex.gloves import Glove
 from vortex.tools.env import Environment
-from vortex.tools.net import StdFtp, AssistedSsh, LinuxNetstats
+from vortex.tools.net import StdFtp, AutoRetriesFtp, FtpConnectionPool, AssistedSsh, LinuxNetstats
 from vortex.tools.compression import CompressionPipeline
 from bronx.syntax.decorators import nicedeco_plusdoc, nicedeco
 from vortex.util.structs import History
@@ -88,6 +90,16 @@ _fmtshcmd_docbonus = """
         value of the **ftm** attribute), it will be executed instead of the
         present one).
 """
+
+
+# Constant items
+
+#: Definition of a named tuple ftpflavour
+FtpFlavourTuple = namedtuple('FtpFlavourTuple', ['STD', 'RETRIES', 'CONNECTION_POOLS'],
+                             verbose=False)
+
+#: Predefined FTP_FLAVOUR values IN, OUT and INOUT.
+FTP_FLAVOUR = FtpFlavourTuple(STD=0, RETRIES=1, CONNECTION_POOLS=2)
 
 
 class YamlUnavailableError(Exception):
@@ -287,7 +299,7 @@ class System(footprints.FootprintBase):
         self.__dict__['prompt'] = kw.pop('prompt', '')
         for flag in ('trace', 'timer'):
             self.__dict__[flag] = kw.pop(flag, False)
-        for flag in ('output',):
+        for flag in ('output', ):
             self.__dict__[flag] = kw.pop(flag, True)
         super(System, self).__init__(*args, **kw)
 
@@ -590,6 +602,9 @@ class OSExtended(System):
               (default: ftput).
             * **ftgetcmd** - The name of the raw FTP command for the "get" action
               (default: ftget).
+            * **ftpflavour** - The default Vortex's FTP client behaviour
+              (default: `FTP_FLAVOUR.CONNECTION_POOLS`). See the :meth:`ftp` method
+              for more details.
         """
         logger.debug('Abstract System init %s', self.__class__)
         self._rmtreemin = kw.pop('rmtreemin', 3)
@@ -598,6 +613,9 @@ class OSExtended(System):
         self.ftraw = kw.pop('ftraw', False)
         self.ftputcmd = kw.pop('ftputcmd', None)
         self.ftgetcmd = kw.pop('ftgetcmd', None)
+        # FTP stuff again
+        self.ftpflavour = kw.pop('ftpflavour', FTP_FLAVOUR.CONNECTION_POOLS)
+        self._current_ftppool = None
         # Some internal variables used by particular methods
         self._ftspool_cache = None
         self._frozen_target = None
@@ -607,6 +625,7 @@ class OSExtended(System):
         self.__dict__['_cpusinfo'] = None
         self.__dict__['_memoryinfo'] = None
         self.__dict__['_netstatsinfo'] = None
+
         # Initialise the signal handler object
         self._signal_intercept_init()
 
@@ -1214,28 +1233,70 @@ class OSExtended(System):
             isinstance(iocandidate, StringIO.StringIO)
         )
 
+    @contextlib.contextmanager
+    def ftppool(self):
+        """Create a context manager that initialises the FTP connection pool.
+
+        Within this context manager, if `self.ftpflavour==FTP_FLAVOUR.CONNECTION_POOLS`,
+        the :meth:`ftp` method will use the FTP connection pool initialised by this
+        context manager (see the :class:`~vortex.tools.net.FtpConnectionPool` class)
+        in order to dispense FTP clients.
+
+        When the context manager is exited, the FTP connection pool is destroyed
+        (and all the space FTP clients are closed).
+        """
+        pool_control = self._current_ftppool is None
+        if pool_control:
+            self._current_ftppool = FtpConnectionPool(self)
+        try:
+            yield self._current_ftppool
+        finally:
+            if pool_control:
+                self._current_ftppool.clear()
+                self._current_ftppool = None
+
     def ftp(self, hostname, logname=None, delayed=False):
-        """Return an :class:`~vortex.tools.net.StdFtp` object.
+        """Return an FTP client object.
 
         :param str hostname: the remote host's name for FTP.
         :param str logname: the logname on the remote host.
         :param bool delayed: delay the actual connection attempt as much as possible.
 
-        See the :class:`~vortex.tools.net.StdFtp` class documentation for
-        more information.
+        The returned object is an instance of :class:`~vortex.tools.net.StdFtp`
+        or of one of its subclasses. Consequently, see the :class:`~vortex.tools.net.StdFtp`
+        class documentation to get more information on the client's capabilities.
+
+        The type and behaviour of the returned object depends of the `self.ftpflavour`
+        setting. Possible values are:
+
+            * `FTP_FLAVOUR.STD`: a :class:`~vortex.tools.net.StdFtp` object is returned.
+            * `FTP_FLAVOUR.RETRIES`: a :class:`~vortex.tools.net.AutoRetriesFtp` object
+              is returned (consequently multiple retries will be made if something
+              goes wrong with any FTP command).
+            * `FTP_FLAVOUR.CONNECTION_POOLS`: a :class:`~vortex.tools.net.AutoRetriesFtp`
+              or a :class:`~vortex.tools.net.PooledResetableAutoRetriesFtp` object
+              is returned. If the :meth:`ftp` method is called from within a context
+              manager created by the :meth:`ftppool`, a
+              :class:`~vortex.tools.net.FtpConnectionPool` object is used in order
+              to create and re-use FTP connections; Otherwise a "usual"
+              :class:`~vortex.tools.net.AutoRetriesFtp` is returned.
         """
-        ftpbox = StdFtp(self, hostname)
         if logname is None:
             if self.glove is not None:
                 logname = self.glove.user
             else:
                 raise ValueError("Either a logname or a glove must be set-up")
-        rc = ftpbox.fastlogin(logname, delayed=delayed)
-        if rc:
-            return ftpbox
+        if self._current_ftppool is not None:
+            return self._current_ftppool.deal(hostname, logname, delayed=delayed)
         else:
-            logger.warning('Could not login on %s as %s [%s]', hostname, logname, str(rc))
-            return None
+            ftpclass = AutoRetriesFtp if self.ftpflavour != FTP_FLAVOUR.STD else StdFtp
+            ftpbox = ftpclass(self, hostname)
+            rc = ftpbox.fastlogin(logname, delayed=delayed)
+            if rc:
+                return ftpbox
+            else:
+                logger.warning('Could not login on %s as %s [%s]', hostname, logname, str(rc))
+                return None
 
     @fmtshcmd
     def ftget(self, source, destination, hostname=None, logname=None, cpipeline=None):
@@ -1469,7 +1530,7 @@ class OSExtended(System):
         :class:`~vortex.tools.net.AssistedSsh`  constructor.
 
         See the :class:`~vortex.tools.net.AssistedSsh` class documentation for
-        more information.
+        more information and examples.
         """
         return AssistedSsh(self, hostname, logname, *args, **kw)
 
