@@ -31,7 +31,7 @@ class ADTest(object):
     signature = 'TEST OF THE ADJOINT'
     p_fxy = '< F(X) , Y >'
     p_xfy = '< X , F*(Y) >'
-    p_zero = 'THE DIFFERENCE IS\s*(?P<n_times_zero>(\d*\.\d+)|(\**))\s+TIMES THE ZERO OF THE MACHINE$'
+    p_zero = 'THE DIFFERENCE IS\s*((?P<n_times_zero>(\d*\.\d+)|(\**))\s+)+TIMES THE ZERO OF THE MACHINE$'
     zero_overflow = 21
 
     def __init__(self, source):
