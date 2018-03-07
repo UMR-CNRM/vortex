@@ -26,6 +26,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from collections import namedtuple
 import contextlib
+import errno
 import filecmp
 import glob
 import hashlib
@@ -406,6 +407,15 @@ class System(footprints.FootprintBase):
                     ' '.join([six.text_type(x) for x in args])
                 )
             )
+
+    @contextlib.contextmanager
+    def mute_stderr(self):
+        oldtrace = self.trace
+        self.trace = False
+        try:
+            yield
+        finally:
+            self.trace = oldtrace
 
     def echo(self, args):
         """Joined **args** are echoed."""
@@ -803,7 +813,7 @@ class OSExtended(System):
             output = self.output
         if stdin is True:
             stdin = subprocess.PIPE
-        localenv = os.environ.copy()
+        localenv = self._os.environ.copy()
         if taskset is not None:
             taskset_def = taskset.split('_')
             taskset, taskset_cmd, taskset_env = self.cpus_affinity_get(taskset_id,
@@ -974,10 +984,10 @@ class OSExtended(System):
         If **force** is set to *True*, the file's permission will be modified
         so that the file becomes executable.
         """
-        if os.path.exists(filename):
-            is_x = bool(os.stat(filename).st_mode & 1)
+        if self._os.path.exists(filename):
+            is_x = bool(self._os.stat(filename).st_mode & 1)
             if not is_x and force:
-                self.chmod(filename, os.stat(filename).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+                self.chmod(filename, self._os.stat(filename).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
                 is_x = True
             return is_x
         else:
@@ -989,8 +999,8 @@ class OSExtended(System):
         If **force** is set to *True*, the file's permission will be modified
         so that the file becomes writable.
         """
-        if os.path.exists(filename):
-            st = os.stat(filename).st_mode
+        if self._os.path.exists(filename):
+            st = self._os.stat(filename).st_mode
             is_w = bool(st & stat.S_IWUSR)
             if not is_w and force:
                 self.chmod(filename, st | stat.S_IWUSR)
@@ -1016,8 +1026,8 @@ class OSExtended(System):
         inodename = self.path.expanduser(inodename)
         self.stderr('readonly', inodename)
         rc = None
-        if os.path.exists(inodename):
-            if os.path.isdir(inodename):
+        if self._os.path.exists(inodename):
+            if self._os.path.isdir(inodename):
                 rc = self.chmod(inodename, 0o555)
             else:
                 st = self.stat(inodename).st_mode
@@ -1074,15 +1084,15 @@ class OSExtended(System):
         :param str objpath: Path to the object to unlink
         """
         objpath = self.path.expanduser(objpath)
-        if os.path.exists(objpath):
+        if self._os.path.exists(objpath):
             self.stderr('remove', objpath)
-            if os.path.isdir(objpath):
+            if self._os.path.isdir(objpath):
                 self.rmtree(objpath)
             else:
                 self.unlink(objpath)
         else:
             self.stderr('clear', objpath)
-        return not os.path.exists(objpath)
+        return not self._os.path.exists(objpath)
 
     @fmtshcmd
     def rm(self, objpath):
@@ -1655,7 +1665,7 @@ class OSExtended(System):
     def safe_filesuffix(self):
         """Returns a file suffix that should be unique across the system."""
         return '.'.join((datetime.now().strftime('_%Y%m%d_%H%M%S_%f'),
-                         self.hostname, 'p{0:06d}'.format(os.getpid()),))
+                         self.hostname, 'p{0:06d}'.format(self._os.getpid()),))
 
     def rawcp(self, source, destination):
         """Perform a simple ``copyfile`` or ``copytree`` command depending on **source**.
@@ -1744,6 +1754,100 @@ class OSExtended(System):
         st2 = self.stat(self.path.dirname(self.path.realpath(path2)))
         return st1.st_dev == st2.st_dev and not self.path.islink(path1)
 
+    def _safe_hardlink(self, source, destination, securecopy=True):
+        """Create a (unique) hardlink in a secure way.
+
+        i.e. if the "Too many links" OS error is raised, we try to replace
+        the original file by a copy of itself. If that also fails because of
+        the lack of file permissions, a "simple" rawcp is made.
+
+        :param bool securecopy: while creating the copy of the source file
+                                (because of a "Too many links" OS error), create
+                                a temporary filename and move it afterward to the
+                                *destination*: longer but safer.
+        """
+        try:
+            self._os.link(source, destination)
+        except OSError as e:
+            if e.errno == errno.EMLINK:
+                # Too many links
+                logger.warning('Too many links for the source file (%s).', source)
+                if self.usr_file(source):
+                    if securecopy:
+                        rc = self.rawcp(source, destination)
+                    else:
+                        # Do not bother with a temporary file, create a direct copy
+                        self.copyfile(source, destination)
+                        # Preserve the execution permissions...
+                        if self.xperm(source):
+                            self.xperm(destination, force=True)
+                        rc = bool(self.size(source) == self.size(destination))
+                    if rc:
+                        try:
+                            logger.warning('Replacing the orignal file with a copy...')
+                            self.move(destination, source)
+                        except IOError as ebis:
+                            if ebis.errno == errno.EACCES:
+                                # Permission denied
+                                logger.warning('No permissions to create a copy of the source file (%s)',
+                                               source)
+                                logger.warning('Going on with the copy instead of the link...')
+                            else:
+                                raise
+                        else:
+                            # Ok, a copy was created for the source file
+                            self.link(source, destination)
+                            rc = self.path.samefile(source, destination)
+            else:
+                raise
+        else:
+            rc = self.path.samefile(source, destination)
+        return rc
+
+    def hardlink(self, source, destination, readonly=True, securecopy=True):
+        """Create hardlinks for both single files or directories.
+
+        :param bool readonly: ensure that all of the created links are readonly
+        :param bool securecopy: while creating the copy of the source file
+                        (because of a "Too many links" OS error), create
+                        a temporary filename and move it afterward to the
+                        *destination*: longer but safer.
+        """
+        if self.path.isdir(source):
+            self.stderr('hardlink', source, destination,
+                        '#', 'directory,', 'readonly={!s}'.format(readonly))
+            with self.mute_stderr():
+                # Mimics 'cp -al'
+                names = self._os.listdir(source)
+                self._os.makedirs(destination)
+                rc = True
+                for name in names:
+                    srcname = self._os.path.join(source, name)
+                    dstname = self._os.path.join(destination, name)
+                    if self._os.path.islink(srcname):
+                        linkto = self._os.readlink(srcname)
+                        self._os.symlink(linkto, dstname)
+                    elif self.path.isdir(srcname):
+                        rc = self.hardlink(srcname, dstname,
+                                           readonly=readonly, securecopy=securecopy)
+                    else:
+                        rc = self._safe_hardlink(srcname, dstname, securecopy=securecopy)
+                        if readonly and rc:
+                            self.readonly(dstname)
+                    if not rc:
+                        logger.error('Error while processing %s (rc=%s)', srcname, str(rc))
+                        break
+                if rc:
+                    self._sh.copystat(source, destination)
+                    self.wperm(destination, force=True)
+                return rc
+        else:
+            self.stderr('hardlink', source, destination)
+            rc = self._safe_hardlink(source, destination, securecopy=securecopy)
+            if readonly and rc:
+                self.readonly(destination)
+            return rc
+
     def smartcp(self, source, destination, silent=False):
         """
         Hard link the **source** file to a safe **destination** (if possible).
@@ -1770,13 +1874,7 @@ class OSExtended(System):
             if self.is_samefs(source, destination):
                 tmp_destination = destination + self.safe_filesuffix()
                 if self.path.isdir(source):
-                    rc = self.spawn(['cp', '-al', source, tmp_destination], output=False)
-                    self.stderr('chmod', 0o444, tmp_destination)
-                    oldtrace, self.trace = self.trace, False
-                    for linkedfile in self.ffind(tmp_destination):
-                        if not self.path.islink(linkedfile):  # This make no sense to chmod symlinks
-                            self.chmod(linkedfile, 0o444)
-                    self.trace = oldtrace
+                    rc = self.hardlink(source, tmp_destination, securecopy=False)
                     if rc:
                         # Warning: Not an atomic portion of code (sorry)
                         do_cleanup = self.path.exists(destination)
@@ -1797,10 +1895,9 @@ class OSExtended(System):
                     return rc
                 else:
                     if self.usr_file(source):
-                        self.link(source, tmp_destination)
-                        self.readonly(tmp_destination)
-                        self.move(tmp_destination, destination)  # Move is atomic for a file
-                        return self.path.samefile(source, destination)
+                        rc = self.hardlink(source, tmp_destination, securecopy=False)
+                        rc = rc and self.move(tmp_destination, destination)  # Move is atomic for a file
+                        return rc
                     else:
                         rc = self.rawcp(source, destination)
                         if rc:
@@ -1878,7 +1975,7 @@ class OSExtended(System):
         with sufficient depth (or not a subpath at all)
         """
         safe = True
-        if len(thispath.split(os.sep)) < self._rmtreemin + 1:
+        if len(thispath.split(self._os.sep)) < self._rmtreemin + 1:
             logger.warning('Unsafe starting point depth %s (min is %s)', thispath, self._rmtreemin)
             safe = False
         else:
@@ -1886,7 +1983,7 @@ class OSExtended(System):
                 (safedir, d) = safepack
                 rp = self.path.relpath(thispath, safedir)
                 if not rp.startswith('..'):
-                    if len(rp.split(os.sep)) < d:
+                    if len(rp.split(self._os.sep)) < d:
                         logger.warning('Unsafe access to %s relative to %s', thispath, safedir)
                         safe = False
         return safe
@@ -2336,12 +2433,12 @@ class OSExtended(System):
         :return: the path to the mount point
         :rtype: str
         """
-        if not os.path.exists(path):
+        if not self._os.path.exists(path):
             logger.warning('Path does not exist: <%s>', path)
 
-        path = os.path.abspath(path)
-        while not os.path.ismount(path):
-            path = os.path.dirname(path)
+        path = self._os.path.abspath(path)
+        while not self._os.path.ismount(path):
+            path = self._os.path.dirname(path)
 
         return path
 
