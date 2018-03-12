@@ -375,8 +375,10 @@ class BronxNamelistAdapter(AbstractMapableNamelistAdapter):
         super(BronxNamelistAdapter, self).__init__(namelistsfile)
         # Delay the import of the bronx library since one may want to use another backend
         from bronx.datagrip import namelist
-        self._parser = namelist.namparse(namelistsfile,
-                                         macros=self._all_macros(macros))
+        actual_macros = self._all_macros(macros)
+        self._parser = namelist.namparse(namelistsfile, macros=actual_macros)
+        for macro, value in actual_macros.items():
+            self._parser.setmacro(macro, value)
 
     def _actual_newblock(self, item):
         self.parser.newblock(item)
