@@ -32,6 +32,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: GnuScript
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Binary
    :show-inheritance:
    :members:

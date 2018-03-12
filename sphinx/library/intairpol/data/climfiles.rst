@@ -18,7 +18,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: ChemLimitClim
+.. autoclass:: ChemicalBackup
    :show-inheritance:
    :members:
    :member-order: alphabetical

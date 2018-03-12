@@ -53,6 +53,11 @@ Classes
    :private-members:
    :member-order: alphabetical
 
+.. autoclass:: ObsFirePackShell
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: FolderShellsGroup
    :show-inheritance:
    :members:

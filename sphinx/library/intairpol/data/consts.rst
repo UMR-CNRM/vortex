@@ -18,17 +18,17 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: EmisSumo
+.. autoclass:: StaticSurfaceEmissions
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: ChemSurf
+.. autoclass:: ChemicalSurfaceScheme
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Template
+.. autoclass:: GribTemplate
    :show-inheritance:
    :members:
    :member-order: alphabetical
