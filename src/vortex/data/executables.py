@@ -93,6 +93,32 @@ class Script(Executable):
             return self.rawopts
 
 
+class GnuScript(Executable):
+    """Basic interpreted executable with standard command line arguments."""
+
+    _footprint = dict(
+        attr = dict(
+            language = dict(
+                info     = "The programming language",
+                values   = ['perl', 'python', 'ksh', 'bash', 'sh', 'awk'],
+            ),
+            kind = dict(
+                optional = True,
+                default  = 'gnuscript',
+                values   = ['gnuscript', 'argscript'],
+            )
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'script'
+
+    def command_line(self, **opts):
+        """Returns a blank separated list of options."""
+        return ' '.join(['--' + k + ' ' + ' '.join([str(x) for x in footprints.util.mktuple(v)]) for k, v in opts.items()])
+
+
 class Binary(Executable):
     """Basic compiled executable."""
     _abstract = True

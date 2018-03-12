@@ -780,7 +780,7 @@ class Expresso(ExecutableAlgoComponent):
         attr = dict(
             interpreter = dict(
                 info   = 'The interpreter needed to run the script.',
-                values = ['awk', 'ksh', 'bash', 'perl', 'python']
+                values = ['current', 'awk', 'ksh', 'bash', 'perl', 'python']
             ),
             engine = dict(
                 values = ['exec', 'launch']
@@ -800,7 +800,8 @@ class Expresso(ExecutableAlgoComponent):
         Run the specified resource handler through the current interpreter,
         using the resource command_line method as args.
         """
-        args = [self.interpreter, ]
+        actual_interpreter = sys.executable if self.interpreter == 'current' else self.interpreter
+        args = [actual_interpreter, ]
         args.extend(self._interpreter_args_fix(rh, opts))
         args.extend(self.spawn_command_line(rh))
         logger.info('Run script %s', args)

@@ -9,29 +9,30 @@ from common.data.climfiles import GenericClim
 __all__ = []
 
 
-class ChemLimitClim(GenvModelResource):
+class ChemicalBackup(GenvModelResource):
     """
-     Boundary chemical limit conditions climatologic file
+    Pseudo-climatological file for chemical boundary conditions.
+    Backup values for missing values.
     """
     _footprint = dict(
-        info='Climatological boundary chemical limit conditions',
-        attr=dict(
-            kind=dict(
-                values=['chemlimit_clim'],
+        info = 'Climatological backup for chemical boundary conditions',
+        attr = dict(
+            kind = dict(
+                values   = ['chemical_bkup'],
             ),
-            gvar=dict(
-                default='macc_bc22_moins1_nc'
+            gvar = dict(
+                default  = 'cams_bc_backup'
             ),
-            nativefmt=dict(
-                optional=True,
-                default='netcdf',
+            nativefmt = dict(
+                optional = True,
+                default  = 'netcdf',
             )
         )
     )
 
     @property
     def realkind(self):
-        return 'chemlimit_clim'
+        return 'chemical_bkup'
 
 
 class MonthClimMisc(GenericClim):
@@ -41,20 +42,20 @@ class MonthClimMisc(GenericClim):
     _footprint = [
         month,
         dict(
-            info='Monthly climatological files',
-            attr=dict(
-                kind=dict(
-                    values=['clim_misc'],
+            info = 'Monthly climatological files',
+            attr = dict(
+                kind = dict(
+                    values  = ['clim_misc'],
                 ),
-                gvar=dict(
-                    default='clim_[model]_[source]'
+                gvar = dict(
+                    default = 'clim_[model]_[source]'
                 ),
-                source=dict(
-                    values=['jdata', '19941998'],
+                source = dict(
+                    values  = ['topmodel', 'fcst_photolysis'],
                 ),
-                model=dict(
-                    values=['mocage'],
-                    default='mocage',
+                model = dict(
+                    values  = ['mocage'],
+                    default = 'mocage',
                 ),
             )
         )

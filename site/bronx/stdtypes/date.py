@@ -233,16 +233,17 @@ def daterange(start, end=None, step='P1D'):
         yield rollingdate
         rollingdate += step
 
+
 def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     """Extended date range expansion.
-    
+
     TODO: example.
     """
 
     rangevalues = list()
 
     pstarts = ([str(s) for s in start]
-              if isinstance(start, (list, tuple)) else str(start).split(','))
+               if isinstance(start, (list, tuple)) else str(start).split(','))
 
     for pstart in pstarts:
         actualrange = re.split('[-/]', pstart)
@@ -406,13 +407,17 @@ class Period(datetime.timedelta):
             ld = [0, top.hour * 3600 + top.minute * 60]
         elif len(args) < 2 and (isinstance(top, int) or isinstance(top, float)):
             ld = [0, top]
-        elif isinstance(top, int) and len(args)> 1:
+        elif isinstance(top, int) and len(args) > 1:
             ld = list(args)
         elif isinstance(top, six.string_types):
             ld = [0, Period._parse(top)]
         if not ld:
             raise ValueError("Initial Period value unknown")
         return datetime.timedelta.__new__(cls, *ld)
+
+    def __reduce__(self):
+        """Return a compatible args sequence for the Period constructor (used by :mod:`pickle`)."""
+        return (self.__class__, (self.isoformat(),))
 
     def __deepcopy__(self, memo):
         newinstance = type(self)(self)
@@ -464,6 +469,10 @@ class Period(datetime.timedelta):
     def isoformat(self):
         """Return default ISO representation."""
         return self.iso8601()
+
+    def export_dict(self):
+        """Return the month and year as a tuple."""
+        return (self.days, self.seconds)
 
     @property
     def length(self):
