@@ -482,6 +482,10 @@ class Period(datetime.timedelta):
             raise ValueError("Initial Period value unknown")
         return datetime.timedelta.__new__(cls, *ld)
 
+    def __reduce__(self):
+        """Return a compatible args sequence for the Period constructor (used by :mod:`pickle`)."""
+        return (self.__class__, (self.isoformat(),))
+
     def __deepcopy__(self, memo):
         newinstance = type(self)(self)
         memo[id(self)] = newinstance
@@ -532,6 +536,10 @@ class Period(datetime.timedelta):
     def isoformat(self):
         """Return default ISO representation."""
         return self.iso8601()
+
+    def export_dict(self):
+        """Return the month and year as a tuple."""
+        return (self.days, self.seconds)
 
     @property
     def length(self):

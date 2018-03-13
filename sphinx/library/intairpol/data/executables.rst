@@ -19,7 +19,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: ExecSumo
+.. autoclass:: PrepSurfMocage
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -29,7 +29,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: ExecMktopbd
+.. autoclass:: MkTopBD
    :show-inheritance:
    :members:
    :member-order: alphabetical

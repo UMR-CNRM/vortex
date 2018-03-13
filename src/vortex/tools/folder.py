@@ -132,7 +132,7 @@ class FolderShell(addons.FtrawEnableAddon):
 
     def _folder_preftget(self, source, destination):
         """Prepare source and destination"""
-        if not (source.endswith('.tgz') or source.endswith('.tar')):
+        if not (source.endswith('.tgz') or source.endswith('.tar.gz') or source.endswith('.tar')):
             source += '.tgz'
         self.sh.rm(destination)
         destination = self.sh.path.abspath(destination)
@@ -367,6 +367,23 @@ class ObsLocationPackShell(FolderShell):
         attr = dict(
             kind = dict(
                 values   = ['obslocationpack'],
+            ),
+        )
+    )
+
+
+@folderize
+class ObsFirePackShell(FolderShell):
+    """
+    Default interface to Obs Fire packs commands.
+    These commands extend the shell.
+    """
+
+    _footprint = dict(
+        info = 'Default Obs Location packs system interface',
+        attr = dict(
+            kind = dict(
+                values   = ['obsfirepack'],
             ),
         )
     )

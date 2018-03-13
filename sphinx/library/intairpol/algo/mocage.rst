@@ -23,12 +23,17 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Corromegasurf
+.. autoclass:: CorrOmegaSurf
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
 .. autoclass:: Mktopbd
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+.. autoclass:: PPCamsBDAP
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -38,8 +43,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Grib
+.. autoclass:: MkStatsCams
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
