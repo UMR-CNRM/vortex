@@ -1575,6 +1575,8 @@ class CacheStore(Store):
             st = self.system.stat(self.incachelocate(remote, options))
         except OSError:
             st = None
+        if options.get('isfile', False) and st:
+            st = self.system.path.isfile(self.incachelocate(remote, options))
         return st
 
     def incachelocate(self, remote, options):

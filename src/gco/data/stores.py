@@ -656,7 +656,13 @@ class UgetHackCacheStore(_UgetCacheStore):
 
     def ugetcheck(self, remote, options):
         """Proxy to :meth:`incachecheck`."""
-        a_remote, _ = self._alternate_source(remote, options)
+        a_remote, a_altremote = self._alternate_source(remote, options)
+        options = options.copy() if options is not None else dict()
+        # Also check if the data is a regular file with the notable exception
+        # of expanded tarfiles (see _alternate_source above) and specific data
+        # format (e.g. ODB databases)
+        options.setdefault('isfile', not (a_remote == a_altremote or
+                                          'fmt' in options))
         return super(UgetHackCacheStore, self).ugetcheck(a_remote, options)
 
     def ugetget(self, remote, local, options):
