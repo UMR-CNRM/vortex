@@ -9,7 +9,7 @@ import footprints
 
 from vortex.util.config     import GenericConfigParser
 from vortex.data.providers  import Provider, VortexFreeStd
-from vortex.syntax.stdattrs import namespacefp, Namespace
+from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt
 
 #: No automatic export
 __all__ = []
@@ -24,6 +24,11 @@ class CenVortex(VortexFreeStd):
         dict(
             info = 'CEN Vortex provider because we do not want a date in the namespace',
             attr = dict(
+                member = dict(
+                    type    = FmtInt,
+                    args    = dict(fmt = '04'),
+                    optional = True,
+                ),
                 namespace = dict(
                     values   = [
                         'cenvortex.cache.fr', 'cenvortex.archive.fr', 'cenvortex.multi.fr',
