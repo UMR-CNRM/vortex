@@ -145,9 +145,15 @@ class Section(object):
                 rc = self.rh.get(**kw)
             except StandardError as e:
                 logger.error('Something wrong (input section): %s', e)
-                logger.error('Resource %s', self.rh.locate())
+                try:
+                    logger.error('Resource %s', self.rh.locate())
+                except StandardError:
+                    logger.error('Resource ???')
             if not rc and self.fatal:
-                logger.critical('Fatal error with action get %s', self.rh.locate())
+                try:
+                    logger.critical('Fatal error with action get %s', self.rh.locate())
+                except StandardError:
+                    logger.critical('Fatal error with action get on ???')
                 raise SectionFatalError('Could not get resource [%s]' % str(rc))
         else:
             logger.error('Try to get from an output section')
@@ -162,10 +168,15 @@ class Section(object):
                 rc = self.rh.put(**kw)
             except Exception as e:
                 logger.error('Something wrong (output section): %s', e)
-                logger.error('Resource %s', self.rh.locate())
-                raise
+                try:
+                    logger.error('Resource %s', self.rh.locate())
+                except StandardError:
+                    logger.error('Resource ???')
             if not rc and self.fatal:
-                logger.critical('Fatal error with action put %s', self.rh.locate())
+                try:
+                    logger.critical('Fatal error with action put %s', self.rh.locate())
+                except StandardError:
+                    logger.critical('Fatal error with action put ???')
                 raise SectionFatalError('Could not put resource [%s]', str(rc))
         else:
             logger.error('Try to put from an input section.')

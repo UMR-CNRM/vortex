@@ -175,13 +175,3 @@ class Surfex_Parallel(Parallel):
             prep.close()
         else:
             print "DO NOT CHANGE THE PREP FILE."
-
-
-    def find_namelists(self, opts=None):
-        '''Duplicated method with the Surfex Worker used by the S2M_component class inheriting from ParaBlindrun'''
-        """Find any namelists candidates in actual context inputs."""
-        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind='OPTIONS.nam')]
-        self.system.subtitle('Namelist candidates')
-        for nam in namcandidates:
-            nam.quickview()
-        return namcandidates
