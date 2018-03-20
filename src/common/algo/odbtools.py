@@ -34,6 +34,17 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 
+class Raw2OdbExecutionError(ExecutionError):
+
+    def __init__(self, odb_database):
+        self.odb_database = odb_database
+        super(Raw2OdbExecutionError, self).__init__('Raw2odb execution failed.')
+
+    def __str__(self):
+        return ("Error while running bator for ODB database < {:s} >"
+                .format(self.odb_database))
+
+
 class Bateur(VortexWorkerBlindRun):
     """
     Worker for parallel BATOR run. It returns in its report a synthesis about
@@ -78,8 +89,8 @@ class Bateur(VortexWorkerBlindRun):
         list_name = self.system.path.join(cwd, "listing." + self.base)
         try:
             self.local_spawn(list_name)
-        except ExecutionError as e:
-            rdict['rc'] = e
+        except ExecutionError:
+            rdict['rc'] = Raw2OdbExecutionError(self.base)
         real_time += time.time()
 
         if self.system.memory_info is not None:
@@ -603,43 +614,29 @@ class Raw2ODBparallel(TaylorOdbProcess):
 
         # Print the parallel execution summary
         sh.subtitle('Here is the parallel execution synthesis: memory aspects')
-        header = 'Database  InSize(MiB) PredMem(GiB) RealMem(GiB) Status'
-        rfmt = '{:8s} {:>12.0f} {:>12.1f} {:>12.1f} {:>5.2f} {:s}'
+        header = 'Database  InputSize(MiB) PredMem(GiB) RealMem(GiB) Real/Pred Ratio'
+        rfmt = '{:8s} {:>15.0f} {:>12.1f} {:>12.1f} {:>15.2f}'
         print(header)
         for row in sorted(self.para_synthesis.keys()):
             srep = self.para_synthesis[row]
-            if srep['mem_ratio'] is not None and srep['mem_ratio'] > 0.98:
-                status = "!update memory constant!"
-            elif srep['mem_ratio'] is not None and srep['mem_ratio'] < 0.7:
-                status = "!decrease memory constant!"
-            else:
-                status = ""
             print(rfmt.format(row,
                               convert_bytes_in_unit(srep['inputsize'], 'MiB'),
                               convert_bytes_in_unit(srep['mem_expected'], 'GiB'),
                               (99.99 if srep['mem_real'] is None else
                                convert_bytes_in_unit(srep['mem_real'], 'GiB')),
                               (99.99 if srep['mem_ratio'] is None else
-                               srep['mem_ratio']),
-                              status))
+                               srep['mem_ratio'])))
 
         sh.subtitle('Here is the parallel execution synthesis: elapsed time aspects')
-        header = 'Database  InSize(MiB) PredTime(s) RealTime(s) Status'
-        rfmt = '{:8s} {:>12.0f} {:>11.1f} {:>11.1f} {:>5.2f} {:s}'
+        header = 'Database  InputSize(MiB) PredTime(s) RealTime(s) Real/Pred Ratio'
+        rfmt = '{:8s} {:>15.0f} {:>11.1f} {:>11.1f} {:>15.2f}'
         print(header)
         for row in sorted(self.para_synthesis.keys()):
             srep = self.para_synthesis[row]
-            if srep['time_ratio'] is not None and srep['time_ratio'] > 1.1:
-                status = "!update time constant!"
-            elif srep['time_ratio'] is not None and srep['time_ratio'] < 0.7:
-                status = "!decrease time constant!"
-            else:
-                status = ""
             print(rfmt.format(row,
                               convert_bytes_in_unit(srep['inputsize'], 'MiB'),
                               srep['time_expected'], srep['time_real'],
-                              (99.99 if srep['time_ratio'] is None else srep['time_ratio']),
-                              status))
+                              (99.99 if srep['time_ratio'] is None else srep['time_ratio'])))
 
         sh.subtitle('Here is the parallel execution synthesis: timeline')
         header = 'Database                           StartTime(UTC) PredMem(GiB) RealTime(s) ExecSlot'
@@ -649,7 +646,8 @@ class Raw2ODBparallel(TaylorOdbProcess):
             print(rfmt.format(row, srep['time_start'],
                               convert_bytes_in_unit(srep['mem_expected'], 'GiB'),
                               srep['time_real'], str(srep['sched_id'])))
-        print('\nThe memory limit was set to: {:.1f} GiB'.format(convert_bytes_in_unit(self.effective_maxmem, 'GiB')))
+
+        print('\nThe memory limit was set to: {:.1f} GiB'.format(self.effective_maxmem / 1024.))
 
         super(Raw2ODBparallel, self).postfix(rh, opts)
 

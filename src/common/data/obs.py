@@ -508,11 +508,16 @@ ObsMapItem = namedtuple('ObsMapItem', ('odb', 'data', 'fmt', 'instr'))
 class ObsMapContent(TextContent):
     """Content class for the *ObsMap* resources.
 
-    The :class:`ObsMap` resource provides its *discard* attribute. This
-    attribute is a :class:`footprints.stdtypes.FPSet` object thats holds *odb:data* pairs
-    that will be used to discard some of the lines of the local resource. The
-    matching is done using regular expressions (however, when *:data* is
-    omitted, ':' is automativaly added at the end of the regular expression).
+    The :class:`ObsMap` resource provides its *discard* and *only* attributes.
+    This attribute is a :class:`footprints.stdtypes.FPSet` object thats holds
+    *odb:data* pairs that will be used to filter/discard some of the lines of
+    the local resource. The matching is done using regular expressions (however
+    when *:data* is omitted, ':' is automatically added at the end of the regular
+    expression).
+
+    The *only* attribute is evaluated first (if *only* is not provided or equals
+    *None*, all ObsMap lines are retained).
+
     Here are some examples:
 
     * ``discard=FPSet(('sev',))`` -> The *sev* ODB database will be discarded
@@ -526,18 +531,25 @@ class ObsMapContent(TextContent):
       would usualy be inserted in the *conv* database.
     * ``discard=FPSet(('conv:t[ea]', ))`` -> Discard the data file starting
       with *te* or *ta* that would usualy be inserted in the *conv* database.
+    * ``only=FPSet(('conv',))`` -> Only *conv* ODB database will be used.
     """
 
     _delayed_slurp = False
 
     def __init__(self, **kw):
         kw.setdefault('discarded', set())
+        kw.setdefault('only', None)
         super(ObsMapContent, self).__init__(**kw)
 
     @property
     def discarded(self):
         """Set of *odb:data* pairs that will be discarded."""
         return self._discarded
+
+    @property
+    def only(self):
+        """Set of *odb:data* pairs that will be kept (*None* means "keep everything")."""
+        return self._only
 
     def append(self, item):
         """Append the specified ``item`` to internal data contents."""
@@ -546,16 +558,25 @@ class ObsMapContent(TextContent):
     def slurp(self, container):
         """Get data from the ``container``."""
         container.rewind()
-        filters = [re.compile(d if ':' in d else d + ':')
-                   for d in self.discarded]
+
+        if self.only is not None:
+            ofilters = [re.compile(d if ':' in d else d + ':')
+                        for d in self.only]
+        else:
+            ofilters = None
+        dfilters = [re.compile(d if ':' in d else d + ':') for d in self.discarded]
+
+        def item_filter(omline):
+            om = ':'.join([omline.odb, omline.data])
+            return ((ofilters is None or
+                     any([f.match(om) for f in ofilters])) and
+                    not any([f.match(om) for f in dfilters]))
+
         self.extend(
-            itertools.ifilter(
-                lambda o: not any([f.match(':'.join([o.odb, o.data]))
-                                   for f in filters]),
-                [ObsMapItem(* x.split())
-                 for x in [ line.strip() for line in container ]
-                 if x and not x.startswith('#')]
-            )
+            itertools.ifilter(item_filter,
+                              [ObsMapItem(* x.split())
+                               for x in [line.strip() for line in container]
+                               if x and not x.startswith('#')])
         )
         self._size = container.totalsize
 
@@ -582,9 +603,9 @@ class ObsMapContent(TextContent):
 
     def datafmt(self, data):
         """Return format associated to specified ``data``."""
-        l = [ x.fmt for x in self if x.data == data ]
+        dfmt = [x.fmt for x in self if x.data == data]
         try:
-            return l[0]
+            return dfmt[0]
         except IndexError:
             logger.warning('Data "%s" not found in ObsMap contents', data)
 
@@ -642,10 +663,15 @@ class ObsMap(FlowResource):
                     remap = dict(surf = 'surface'),
                 ),
                 discard = dict(
-                    info     = "Discard some lines of the mapping (see the class documentaion).",
+                    info     = "Discard some lines of the mapping (see the class documentation).",
                     type     = footprints.FPSet,
                     optional = True,
                     default  = footprints.FPSet(),
+                ),
+                only = dict(
+                    info     = "Only retain some lines of the mapping (see the class documentation).",
+                    type     = footprints.FPSet,
+                    optional = True,
                 )
             )
         )
@@ -657,7 +683,7 @@ class ObsMap(FlowResource):
 
     def contents_args(self):
         """Returns default arguments value to class content constructor."""
-        return dict(discarded=set(self.discard))
+        return dict(discarded=set(self.discard), only=self.only)
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
