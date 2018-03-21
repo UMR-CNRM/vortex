@@ -29,7 +29,6 @@ class _BackgroundErrorInfo(GeoFlowResource):
             attr=dict(
                 term=dict(
                     optional=True,
-                    values=[3, 6, 9, 12],
                     default=3
                 ),
                 nativefmt=dict(
