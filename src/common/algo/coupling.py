@@ -56,7 +56,8 @@ class Coupling(FullPos):
             kind = ('historic', 'analysis')
         )
         cplsec.sort(key=lambda s: s.rh.resource.term)
-        infile = 'ICMSH{0:s}INIT'.format(self.xpname)
+        ininc = self.naming_convention('ic', rh)
+        infile = ininc()
         isMany = len(cplsec) > 1
         outprefix = 'PF{0:s}AREA'.format(self.xpname)
 
@@ -68,13 +69,15 @@ class Coupling(FullPos):
                                                                  'SurfaceCouplingSource'))
         cplsurf.sort(key=lambda s: s.rh.resource.term)
         surfacing = bool(cplsurf)
-        infilesurf = 'ICMSH{0:s}INIT.sfx'.format(self.xpname)
+        inisurfnc = self.naming_convention('ic', rh, model='surfex')
+        infilesurf = inisurfnc()
         if surfacing:
             # Link in the Surfex's PGD
+            sclimnc = self.naming_convention(kind='targetclim', rh=rh, model='surfex')
             self.setlink(
                 initrole = ('ClimPGD', ),
                 initkind = ('pgdfa', 'pgdlfi'),
-                initname = 'const.clim.sfx.AREA',
+                initname = sclimnc(area='AREA')
             )
 
         for sec in cplsec:
@@ -133,25 +136,12 @@ class Coupling(FullPos):
 
             # Find out actual monthly climatological resource
             actualmonth = date.Month(actualdate)
-
-            def checkmonth(actualrh):
-                return bool(actualrh.resource.month == actualmonth)
-
-            sh.remove('Const.Clim')
-            self.setlink(
-                initrole = ('GlobalClim', 'InitialClim'),
-                initkind = 'clim_model',
-                initname = 'Const.Clim',
-                inittest = checkmonth
-            )
-
-            sh.remove('const.clim.AREA')
-            self.setlink(
-                initrole = ('LocalClim', 'TargetClim'),
-                initkind = 'clim_model',
-                initname = 'const.clim.AREA',
-                inittest = checkmonth
-            )
+            self.climfile_fixer(rh, convkind='modelclim', month=actualmonth,
+                                inputrole=('GlobalClim', 'InitialClim'),
+                                inputkind='clim_model')
+            self.climfile_fixer(rh, convkind='targetclim', month=actualmonth,
+                                inputrole=('LocalClim', 'TargetClim'),
+                                inputkind='clim_model', area='AREA')
 
             # Standard execution
             super(Coupling, self).execute(rh, opts)

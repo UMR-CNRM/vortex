@@ -23,9 +23,9 @@ Included Modules
 * :mod:`common.algo.eps`
 * :mod:`common.algo.forecasts`
 * :mod:`common.algo.ifsroot`
+* :mod:`common.algo.ifsnaming`
 * :mod:`common.algo.monitoring`
 * :mod:`common.algo.mpitools`
 * :mod:`common.algo.odbtools`
 * :mod:`common.algo.request`
 * :mod:`common.algo.stdpost`
-
