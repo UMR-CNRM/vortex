@@ -40,10 +40,14 @@ class DelayedAlgoComponentError(AlgoComponentError):
         super(DelayedAlgoComponentError, self).__init__("One or several errors occurs during the run.")
         self._excs = excs
 
+    def __iter__(self):
+        for exc in self._excs:
+            yield exc
+
     def __str__(self):
         outstr = "One or several errors occur during the run. In order of appearance:\n"
         outstr += "\n".join(['{0:3d}. {1!s} (type: {2!s})'.format(i + 1, exc, type(exc))
-                             for i, exc in enumerate(self._excs)])
+                             for i, exc in enumerate(self)])
         return outstr
 
 

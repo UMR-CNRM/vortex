@@ -27,5 +27,6 @@ Modules
 * :mod:`vortex.util.names`
 * :mod:`vortex.util.patterns`
 * :mod:`vortex.util.roles`
+* :mod:`vortex.util.storefunctions`
 * :mod:`vortex.util.structs`
 * :mod:`vortex.util.worker`
