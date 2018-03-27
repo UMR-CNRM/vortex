@@ -41,7 +41,7 @@ class MasterSurges(OceanographicModel):
                 coupling_nprocs = dict(
                     type     = int,
                     optional = True,
-                    default  = 1,
+                    default  = 0,
                 ),
                 num_exp = dict(
                     type     = int,
@@ -107,6 +107,31 @@ class InterpolationSurges(MasterSurges):
 
         cmd = ' '.join(name_simu_arg)
         return cmd
+
+
+class SimulationSurges(MasterSurges):
+    """Base class for the master of simulation of a surges model, either Full or tideonly simulation"""
+    _footprint = [
+        gvar,
+        gdomain,
+        dict(
+            info = 'Simulation surges difference because full simulation need coupling execution',
+            attr = dict(
+                kind = dict(
+                    values = ['SimuSurges']
+                ),
+                gvar = dict(
+                    default  = 'master_[model]_main_[gdomain]_[param]',
+                ),
+                param = dict(
+                    optional = True,
+                    type     = str,
+                    default  = 'full',
+                    values   = ['ms', 'full'],
+                ),
+            )
+        )
+    ]
 
 
 class IniZeroSurges(BlackBox):

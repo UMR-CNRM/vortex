@@ -14,6 +14,7 @@ from vortex.syntax.stdattrs import term
 from bronx.stdtypes.date    import Time
 
 from common.tools.igastuff  import archive_suffix
+from vortex.data.geometries import CurvlinearGeometry
 
 
 class Analysis(GeoFlowResource):
@@ -213,6 +214,15 @@ class Historic(GeoFlowResource):
             )
         else:
             return 'ICMSH' + self.model[:4].upper() + '+' + self.term.fmthour
+
+    def _geo2basename_info(self, add_stretching=True):
+        """Return an array describing the geometry for the Vortex's name builder."""
+        if isinstance(self.geometry, CurvlinearGeometry) and self.model == 'hycom': 
+            ## return the old naming convention for surges restart files
+            lgeo = [self.geometry.area, self.geometry.rnice]
+            return lgeo
+        else:
+            return super(Historic, self)._geo2basename_info()
 
     def basename_info(self):
         """Generic information, radical = ``historic``."""
