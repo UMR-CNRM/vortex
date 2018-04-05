@@ -123,7 +123,7 @@ class MailService(Service):
                 optional = True,
                 default  = '',
                 alias    = ('contents', 'body'),
-                type     = unicode,
+                #type     = unicode,
             ),
             filename = dict(
                 optional = True,
@@ -173,7 +173,7 @@ class MailService(Service):
                 body += tmp.read()
         mimetext = self.get_mimemap().get('text')
         if self.is_not_plain_ascii(body):
-            return mimetext(body.encode(self.charset), 'plain', self.charset)
+            return mimetext(body.decode(self.charset), 'plain', self.charset)
         else:
             return mimetext(body, 'plain')
 
@@ -538,7 +538,7 @@ class Directory(object):
         """Build a space separated list of unique mail addresses
            from a string that may reference aliases."""
         addresses = set()
-        for item in definition.replace(',', ' ').split():
+        for item in definition.lower().replace(',', ' ').split():
             if item in self.aliases:
                 addresses |= self.aliases[item]
             else:

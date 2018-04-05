@@ -365,6 +365,11 @@ class RoutingService(Service):
             sshhost   = dict(
                 optional = True,
             ),
+            maxtries = dict(
+                type     = int,
+                optional = True,
+                default  = 5,
+            ),
         )
     )
 
@@ -450,10 +455,10 @@ class RoutingService(Service):
             if self.sh.default_target.isagtnode:
                 rc = self.sh.spawn(cmdline, shell=True, output=True)
             else:
-                sshobj = self.sh.ssh(hostname='agt', virtualnode=True)
+                sshobj = self.sh.ssh(hostname='agt', virtualnode=True, maxtries=self.maxtries)
                 rc = sshobj.execute(cmdline)
         else:
-            sshobj = self.sh.ssh(hostname=self.sshhost)
+            sshobj = self.sh.ssh(hostname=self.sshhost, maxtries=self.maxtries)
             rc = sshobj.execute(cmdline)
 
         if self._actual_targetname:

@@ -31,7 +31,7 @@ def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
         else:
             map_suffix = {(cutoff, h): 'r{:02d}'.format(h) for h in assim_cutoffs}
     elif cutoff == 'production' and vconf not in _arpcourt_vconf:
-        suffix_r0 = 'rAM' if model == 'arpege' else 'rCM'
+        suffix_r0 = 'rAM' if model == 'arpege' or model == 'surfex'  else 'rCM'
         map_suffix = dict(
             zip(
                 zip(
@@ -138,8 +138,9 @@ def global_pnames(provider, resource):
     info = getattr(resource, provider.realkind + '_pathinfo',
                    resource.vortex_pathinfo)()
     # patch pearp : the arpege surface analysis from surfex is in 'autres', not in 'fic_day'
-    if resource.model == 'surfex' and provider.vapp == 'arpege':
-        info['fmt'] = 'autres'
+    if hasattr(resource, 'model'):
+        if resource.model == 'surfex' and provider.vapp == 'arpege':
+            info['fmt'] = 'autres'
     for mnd in ('suite', 'igakey', 'fmt'):
         if mnd not in info:
             info[mnd] = getattr(provider, mnd, None)
@@ -409,7 +410,11 @@ def varbc_bnames(resource, provider):
     if stage == 'merge':
         localname = 'VARBC.merge.' + str(reseau)
     else:
-        localname = 'VARBC.cycle' + suffix + '.r' + str(reseau)
+        if model == "arome":
+            localname = 'VARBC.cycle' + suffix +'.'+ str(resource.date.ymdhms)
+        elif model == "arpege":
+            localname = 'VARBC.cycle.r' + str(reseau)
+
     return localname
 
 
@@ -521,7 +526,7 @@ def global_snames(resource, provider):
     """global names for soprano provider"""
     cutoff = resource.cutoff
     if cutoff == 'assim':
-        map_suffix = {(cutoff, h): '{:02d}'.format(h) for h in (0, 6, 12, 18)}
+        map_suffix = {(cutoff, h): '{:02d}'.format(h) for h in range(24)}
     elif cutoff == 'production':
         map_suffix = {(cutoff, h): '{:02d}'.format(h) for h in range(24)}
     elif cutoff == 'short':
@@ -582,5 +587,9 @@ def global_snames(resource, provider):
         bname = 'toto'
     if resource.realkind == 'obsmap':
         suff = map_suffix[(cutoff, resource.date.hour)]
-        bname = 'bm_' + vapp.upper() + '_' + resource.scope + '.' + suff + '.' + resource.date.ymd
+        if resource.scope.startswith('surf'):
+            scope = resource.scope[:4].lower()
+        else:
+            scope = resource.scope
+        bname = 'bm_' + vapp.upper() + '_' + scope + '.' + suff + '.' + resource.date.ymd
     return bname
