@@ -348,6 +348,94 @@ def inplace(desc, key, value, globs=None):
     return newd
 
 
+def _parse_globs(todo):
+    """Process the **todo** string that contains ``glob`` statements.
+
+    Nested brackets are dealt with.
+
+    Returns a 3-elements tuple consisting of:
+
+        * A set that contains the glob's names ;
+        * The compiled regular expression that can be used to select the files
+          and detect the glob's expressions ;
+        * The python's glob string that can be used to look for files.
+
+    """
+    gstart = re.compile('^{glob:(\w+):')
+    glob_names = set()
+    finalglob = ''
+    finalpattern = ''
+    curbuffer = ''
+    curname = None
+    bracket_count = 0
+
+    def glob2re(cbuffer):
+        """Convert a Unix glob string to a regular expression (very crude)."""
+        fpattern = ''
+        for c in cbuffer:
+            if c == '*':
+                fpattern += '.*'
+            elif c == '?':
+                fpattern += '.'
+            else:
+                fpattern += re.escape(c)
+        return fpattern
+
+    while todo:
+        # Usual text processing
+        if not curname:
+            gmatch = gstart.match(todo)
+            if gmatch:
+                # Starting a glob pattern match
+                if curbuffer:
+                    finalpattern += glob2re(curbuffer)
+                    finalglob += curbuffer
+                    curbuffer = ''
+                curname = gmatch.group(1)
+                if curname in glob_names:
+                    raise ValueError("Duplicated glob's name ('{:s}' has already been defined)"
+                                     .format(curname))
+                glob_names.add(curname)
+                todo = gstart.sub('', todo)
+                continue
+        # Pattern processing
+        else:
+            if (not curbuffer or curbuffer[-1] != '\\') and todo[0] == '{':
+                # Opening bracket detected
+                bracket_count += 1
+            elif (not curbuffer or curbuffer[-1] != '\\') and todo[0] == '}':
+                # Closing bracket detected
+                if bracket_count:
+                    bracket_count -= 1
+                else:
+                    # Pattern definition is done
+                    try:
+                        re.compile(curbuffer)
+                    except re.error:
+                        raise ValueError("Unable to compile << {:s} >> for glob's name = << {:s} >>"
+                                         .format(curbuffer, curname))
+                    finalpattern += '(?P<{:s}>{:s})'.format(curname, curbuffer)
+                    finalglob += '*'
+                    curname = None
+                    curbuffer = ''
+                    todo = todo[1:]
+                    continue
+
+        curbuffer += todo[0]
+        todo = todo[1:]
+
+    if curname:
+        raise ValueError("Unbalanced brackets in << {:s} >> for glob's name = << {:s} >>"
+                         .format(curbuffer, curname))
+
+    if curbuffer:
+        # Save the remain
+        finalpattern += glob2re(curbuffer)
+        finalglob += curbuffer
+
+    return glob_names, re.compile('^' + finalpattern + '$'), finalglob
+
+
 def expand(desc):
     """
     Expand the given description according to iterable or expandable arguments.
@@ -425,32 +513,16 @@ def expand(desc):
                     newld.extend([ inplace(d, k, x) for x in v.split(',') ])
                     somechanges = True
                     break
-                if isinstance(v, six.string_types) and re.search(r'{glob:', v):
+                if isinstance(v, six.string_types) and re.search(r'{glob:\w+:', v):
                     logger.debug(' > Globbing from string %s', v)
-                    vglob = v
-                    globitems = list()
-
-                    def getglob(matchobj):
-                        globitems.append([matchobj.group(1), matchobj.group(2)])
-                        return '*'
-                    vglob = re.sub(r'{glob:(\w+):([^\}]+)}', getglob, vglob)
-                    ngrp = 0
-                    while re.search(r'{glob:', v):
-                        v = re.sub(r'{glob:\w+:([^\}]+)}', '{' + str(ngrp) + '}', v, count=1)
-                        ngrp += 1
-                    v = v.replace('+', r'\+')
-                    v = v.replace('.', r'\.')
-                    ngrp = 0
-                    while re.search(r'{\d+}', v):
-                        v = re.sub(r'{\d+}', '(' + globitems[ngrp][1] + ')', v, count=1)
-                        ngrp += 1
+                    g_names, g_re, g_glob = _parse_globs(v)
                     repld = list()
-                    for filename in glob.glob(vglob):
-                        m = re.search(r'^' + v + r'$', filename)
+                    for filename in glob.glob(g_glob):
+                        m = g_re.match(filename)
                         if m:
                             globmap = dict()
-                            for i, g in enumerate(globitems):
-                                globmap[g[0]] = m.group(i + 1)
+                            for g in g_names:
+                                globmap[g[0]] = m.group(g)
                             repld.append(inplace(d, k, filename, globmap))
                     newld.extend(repld)
                     somechanges = True
