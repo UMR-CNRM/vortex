@@ -409,6 +409,12 @@ def output(*args, **kw):
     :return: A list of :class:`vortex.data.handlers.Handler` objects (associated
         with the newly created class:`~vortex.layout.dataflow.Section` objects).
     """
+    # Strip the metadatacheck option depending on active_metadatacheck
+    if not active_promise:
+        for target in ('promised', 'expected'):
+            if target in kw and kw[target]:
+                logger.info("The %s argument is removed since active_promise=False.", target)
+                del kw[target]
     return add_section('output', args, kw)
 
 
