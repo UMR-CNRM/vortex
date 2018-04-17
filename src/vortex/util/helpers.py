@@ -6,6 +6,7 @@ Some convenient functions that may simplify scripts
 """
 
 from collections import defaultdict
+import random
 
 import footprints as fp
 
@@ -152,3 +153,19 @@ def merge_contents(*kargs):
     newcontent = ctlist[0].__class__()
     newcontent.merge(*ctlist)
     return newcontent
+
+def mix_list(list_elements, date = None, member = None):
+    """Mix a list using a determined seed, if member and/or date are present."""
+
+    if member is None:
+        if date is None:
+            seed = random.random()
+        else:
+            seed = 1./int(date)
+    else:
+        if date is None:
+            seed = 1./member
+        else:
+            seed = 1.*member/int(date)
+    seed = None
+    return random.shuffle(list_elements.sort(), lambda: seed)
