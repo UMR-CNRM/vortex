@@ -17,7 +17,7 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 
-class IFSParallel(Parallel, grib.GribApiComponent):
+class IFSParallel(Parallel, grib.EcGribComponent):
     """Abstract IFSModel parallel algo components."""
 
     _abstract = True
@@ -311,7 +311,7 @@ class IFSParallel(Parallel, grib.GribApiComponent):
         # Basic exports
         for optpack in ('drhook{}'.format('prof' if self.drhookprof else ''), ):
             self.export(optpack)
-        self.gribapi_setup(rh, opts)
+        self.eccodes_setup(rh, opts, compat=True)
         # Namelist fixes
         self.prepare_namelists(rh, opts)
         # Fix for RTTOV coefficients

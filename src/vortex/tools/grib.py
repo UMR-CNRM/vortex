@@ -235,51 +235,120 @@ class GRIB_Tool(addons.FtrawEnableAddon):
     grib_scpput = _std_scpput
 
 
-class GribApiComponent(object):
+class EcGribComponent(object):
     """Extend Algo Components with GribApi features."""
 
-    def gribapi_setup(self, rh, opts):
-        # First set the GRIB-API paths by inspecting the binary
+    def _ecgrib_libs_detext(self, rh):
+        """Run ldd and tries to find ecCodes or grib_api libraries locations."""
         libs = self.system.ldd(rh.container.localpath()) if rh is not None else {}
+        eccodes_lib = None
         gribapi_lib = None
-        for lib in libs.keys():
+        for lib, path in libs.items():
+            if re.match(r'^libeccodes(?:-[.0-9]+)?\.so(?:\.[.0-9]+)?$', lib):
+                eccodes_lib = path
             if re.match(r'^libgrib_api(?:-[.0-9]+)?\.so(?:\.[.0-9]+)?$', lib):
-                gribapi_lib = lib
-                break
+                gribapi_lib = path
+        return eccodes_lib, gribapi_lib
+
+    def _ecgrib_additional_config(self, a_role, a_var):
+        """Add axtra definitions/samples to the library path."""
+        for gdef in self.context.sequence.effective_inputs(role=a_role):
+            local_path = gdef.rh.container.localpath()
+            new_path = (local_path if self.system.path.isdir(local_path)
+                        else self.system.path.dirname(local_path))
+            # NB: Grib-API doesn't understand relative paths...
+            new_path = self.system.path.abspath(new_path)
+            self.env.setgenericpath(a_var, new_path, pos=0)
+
+    def _gribapi_envsetup(self, gribapi_lib):
+        """Setup environment variables for grib_api."""
+        defvar = 'GRIB_DEFINITION_PATH'
+        samplevar = 'GRIB_SAMPLES_PATH'
         if gribapi_lib is not None:
-            gribapi_root = self.system.path.dirname(libs[gribapi_lib])
+            gribapi_root = self.system.path.dirname(gribapi_lib)
             gribapi_root = self.system.path.split(gribapi_root)[0]
             gribapi_share = self.system.path.join(gribapi_root, 'share', 'grib_api')
-            if 'GRIB_DEFINITION_PATH' not in self.env:
+            if defvar not in self.env:
                 # This one is for compatibility with old versions of the gribapi !
-                self.env.setgenericpath('GRIB_DEFINITION_PATH',
+                self.env.setgenericpath(defvar,
                                         self.system.path.join(gribapi_root, 'share', 'definitions'))
                 # This should be the lastest one:
-                self.env.setgenericpath('GRIB_DEFINITION_PATH',
+                self.env.setgenericpath(defvar,
                                         self.system.path.join(gribapi_share, 'definitions'))
-            if 'GRIB_SAMPLES_PATH' not in self.env:
+            if samplevar not in self.env:
                 # This one is for compatibility with old versions of the gribapi !
-                self.env.setgenericpath('GRIB_SAMPLES_PATH',
+                self.env.setgenericpath(samplevar,
                                         self.system.path.join(gribapi_root, 'ifs_samples', 'grib1'))
                 # This should be the lastest one:
-                self.env.setgenericpath('GRIB_SAMPLES_PATH',
+                self.env.setgenericpath(samplevar,
                                         self.system.path.join(gribapi_share, 'ifs_samples', 'grib1'))
         else:
             # Use the default GRIB-API config if the ldd approach fails
             self.export('gribapi')
-        # Then, inspect the context to look for customised search paths
-        for a_role, a_var in (('AdditionalGribAPIDefinitions', 'GRIB_DEFINITION_PATH'),
-                              ('AdditionalGribAPISamples', 'GRIB_SAMPLES_PATH')):
-            for gdef in self.context.sequence.effective_inputs(role=a_role):
-                local_path = gdef.rh.container.localpath()
-                new_path = (local_path if self.system.path.isdir(local_path)
-                            else self.system.path.dirname(local_path))
-                # NB: Grib-API doesn't understand relative paths...
-                new_path = self.system.path.abspath(new_path)
-                self.env.setgenericpath(a_var, new_path, pos=0)
+        return defvar, samplevar
+
+    def gribapi_setup(self, rh, opts):
+        """Setup the grib_api related stuff."""
+        _, gribapi_lib = self._ecgrib_libs_detext(rh)
+        defvar, samplevar = self._gribapi_envsetup(gribapi_lib)
+        self._ecgrib_additional_config('AdditionalGribAPIDefinitions', defvar)
+        self._ecgrib_additional_config('AdditionalGribAPISamples', samplevar)
         # Recap
-        for a_var in ('GRIB_DEFINITION_PATH', 'GRIB_SAMPLES_PATH'):
+        for a_var in (defvar, samplevar):
             logger.info('After gribapi_setup %s = %s', a_var, self.env.getvar(a_var))
+
+    def _eccodes_envsetup(self, eccodes_lib):
+        """Setup environment variables for ecCodes."""
+        dep_warn = ("%s is left unconfigured because the old grib_api's variable is defined." +
+                    "Please remove that !")
+        eccodes_root = self.system.path.dirname(eccodes_lib)
+        eccodes_root = self.system.path.split(eccodes_root)[0]
+        eccodes_share = self.system.path.join(eccodes_root, 'share', 'eccodes')
+        defvar = 'ECCODES_DEFINITION_PATH'
+        if defvar not in self.env:
+            if 'GRIB_DEFINITION_PATH' in self.env:
+                logger.warning(dep_warn, defvar)
+                defvar = 'GRIB_DEFINITION_PATH'
+            else:
+                self.env.setgenericpath(defvar, self.system.path.join(eccodes_share, 'definitions'))
+        samplevar = 'ECCODES_SAMPLES_PATH'
+        if samplevar not in self.env:
+            if 'GRIB_SAMPLES_PATH' in self.env:
+                logger.warning(dep_warn, samplevar)
+                samplevar = 'GRIB_SAMPLES_PATH'
+            else:
+                self.env.setgenericpath(samplevar,
+                                        self.system.path.join(eccodes_share, 'ifs_samples', 'grib1'))
+        return defvar, samplevar
+
+    def eccodes_setup(self, rh, opts, compat=False, fatal=True):
+        """Setup the grib_api related stuff.
+
+        If **compat** is ``True`` and ecCodes is not found, the old grib_api
+        will be set-up. Otherwise, it will just return (if **fatal** is ``False``)
+        or raise an exception (if **fatal** is ``True``).
+        """
+        # Detect the library's path and setup appropriate variables
+        eccodes_lib, gribapi_lib = self._ecgrib_libs_detext(rh)
+        if eccodes_lib is not None:
+            defvar, samplevar = self._eccodes_envsetup(eccodes_lib)
+        elif compat:
+            defvar, samplevar = self._gribapi_envsetup(gribapi_lib)
+        else:
+            if fatal:
+                raise RuntimeError('No suitable configuration found for ecCodes.')
+            else:
+                logger.error("ecCodes was not found !")
+                return
+        # Then, inspect the context to look for customised search paths
+        self._ecgrib_additional_config(('AdditionalGribAPIDefinitions', 'AdditionalEcCodesDefinitions'),
+                                       defvar)
+        self._ecgrib_additional_config(('AdditionalGribAPISamples', 'AdditionalEcCodesSamples'),
+                                       samplevar)
+        # Recap
+        for a_var in (defvar, samplevar):
+            logger.info('After eccodes_setup (compat=%s) : %s = %s', str(compat),
+                        a_var, self.env.getvar(a_var))
 
 
 class GRIBAPI_Tool(addons.Addon):

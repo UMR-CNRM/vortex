@@ -26,7 +26,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: GribApiComponent
+.. autoclass:: EcGribComponent
    :show-inheritance:
    :members:
    :member-order: alphabetical
