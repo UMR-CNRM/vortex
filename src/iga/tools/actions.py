@@ -60,15 +60,20 @@ class OpMail(Action):
     Class responsible for sending pre-defined mails.
     """
 
-    def __init__(self, kind='opmail', service='opmail', active=True, directory=None, catalog=None):
+    def __init__(self, kind='opmail', service='opmail', active=True,
+                 directory=None, catalog=None, inputs_charset=None):
         super(OpMail, self).__init__(kind=kind, active=active, service=service)
-        self.directory = directory or Directory('@opmail-address-book.ini')
-        self.catalog = catalog or GenericConfigParser('@opmail-inventory.ini')
+        self.directory = directory or Directory('@opmail-address-book.ini',
+                                                encoding=inputs_charset)
+        self.catalog = catalog or GenericConfigParser('@opmail-inventory.ini',
+                                                      encoding=inputs_charset)
+        self.inputs_charset = inputs_charset
 
     def service_info(self, **kw):
         """Kindly propose the permanent directory and catalog to the final service"""
         kw.setdefault('directory', self.directory)
         kw.setdefault('catalog', self.catalog)
+        kw.setdefault('inputs_charset', self.inputs_charset)
         return super(OpMail, self).service_info(**kw)
 
     def execute(self, *args, **kw):

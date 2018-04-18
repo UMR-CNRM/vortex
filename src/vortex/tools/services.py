@@ -8,8 +8,10 @@ a default Mail Service is provided.
 """
 
 
-import os
 import hashlib
+import io
+import os
+import six
 from string import Template
 from ConfigParser import NoOptionError, NoSectionError
 
@@ -123,7 +125,7 @@ class MailService(Service):
                 optional = True,
                 default  = '',
                 alias    = ('contents', 'body'),
-                type     = unicode,
+                type     = six.text_type,
             ),
             filename = dict(
                 optional = True,
@@ -135,7 +137,9 @@ class MailService(Service):
                 default  = footprints.FPList(),
                 alias    = ('files', 'attach'),
             ),
-            subject = dict(),
+            subject = dict(
+                type     = six.text_type,
+            ),
             smtpserver = dict(
                 optional = True,
                 default  = 'localhost',
@@ -145,8 +149,13 @@ class MailService(Service):
                 default  = '/usr/sbin/sendmail',
             ),
             charset = dict(
+                info     = 'The encoding that should be used when sending the email',
                 optional = True,
                 default  = 'utf-8',
+            ),
+            inputs_charset = dict(
+                info     = 'The encoding that should be used when reading input files',
+                optional = True,
             ),
             commaspace = dict(
                 optional = True,
@@ -169,7 +178,7 @@ class MailService(Service):
         """Returns the internal body contents as a MIMEText object."""
         body = self.message
         if self.filename:
-            with open(self.filename, 'r') as tmp:
+            with io.open(self.filename, 'r', encoding=self.inputs_charset) as tmp:
                 body += tmp.read()
         mimetext = self.get_mimemap().get('text')
         if self.is_not_plain_ascii(body):
@@ -213,14 +222,12 @@ class MailService(Service):
                 mimemap = self.get_mimemap()
                 mimeclass = mimemap.get(maintype, None)
                 if mimeclass:
-                    fp = open(xtra)
-                    xmsg = mimeclass(fp.read(), _subtype=subtype)
-                    fp.close()
+                    with io.open(xtra, 'rb') as fp:
+                        xmsg = mimeclass(fp.read(), _subtype=subtype)
                 else:
                     xmsg = MIMEBase(maintype, subtype)
-                    fp = open(xtra, 'rb')
-                    xmsg.set_payload(fp.read())
-                    fp.close()
+                    with open(xtra, 'rb') as fp:
+                        xmsg.set_payload(fp.read())
                 xmsg.add_header('Content-Disposition', 'attachment', filename=xtra)
                 multi.attach(xmsg)
         return multi
@@ -248,7 +255,7 @@ class MailService(Service):
         if not self.sh.default_target.isnetworknode:
             import tempfile
             count, tmpmsgfile = tempfile.mkstemp(prefix='mailx_')
-            with open(tmpmsgfile, 'w') as fd:
+            with io.open(tmpmsgfile, 'w') as fd:
                 fd.write(msgcorpus)
             mailcmd = '{0:s} {1:s} < {2:s}'.format(
                 self.altmailx,
@@ -519,9 +526,9 @@ class Directory(object):
     Directory (en) means Annuaire (fr).
     """
 
-    def __init__(self, inifile, domain='meteo.fr'):
+    def __init__(self, inifile, domain='meteo.fr', encoding=None):
         """Keep aliases in memory, as a dict of sets."""
-        config = GenericConfigParser(inifile)
+        config = GenericConfigParser(inifile, encoding=encoding)
         try:
             self.domain = config.get('general', 'default_domain')
         except NoOptionError:
@@ -663,11 +670,11 @@ class TemplatedMailService(MailService):
 
     def header(self):
         """String prepended to the message body."""
-        return ''
+        return u''
 
     def trailer(self):
         """String appended to the message body."""
-        return ''
+        return u''
 
     def deactivated(self):
         """Return True to eventually prevent the mail from being sent."""
@@ -733,7 +740,7 @@ class TemplatedMailService(MailService):
             tplfile = self.section.get('template', self.id)
             tplfile = self._template_name_rewrite(tplfile)
             try:
-                tpl = load_template(self.ticket, tplfile)
+                tpl = load_template(self.ticket, tplfile, encoding=self.inputs_charset)
             except ValueError as exc:
                 logger.error('{}'.format(exc.message))
                 return None
@@ -787,6 +794,9 @@ class TemplatedMailService(MailService):
             return False
 
         tpldict = self.substitution_dictionary(add_ons)
+        # Convert everything to unicode
+        for k in tpldict.keys():
+            tpldict[k] = six.text_type(tpldict[k])
 
         self.message = self.get_message(tpldict)
         if self.message is None:

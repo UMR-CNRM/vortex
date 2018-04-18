@@ -28,6 +28,7 @@ import locale
 import logging
 import random
 import re
+import six
 import socket
 
 from StringIO import StringIO
@@ -1056,16 +1057,21 @@ class OpMailService(TemplatedMailService):
 
     def header(self):
         """String prepended to the message body."""
-        locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
-        stamp = date.now().strftime('%A %d %B %Y à %X locales')
-        return 'Mail envoyé le {}\n--\n\n'.format(stamp)
+        locale.setlocale(locale.LC_ALL, u'fr_FR.UTF-8')
+        now = date.now()
+        stamp1 = now.strftime(u'%A %d %B %Y')
+        stamp2 = now.strftime(u'%X')
+        if six.PY2:
+            penc = locale.getpreferredencoding()
+            stamp1 = stamp1.decode(penc)
+            stamp2 = stamp2.decode(penc)
+        return u'Mail envoyé le {} à {} locales.\n--\n\n'.format(stamp1, stamp2)
 
     def trailer(self):
         """String appended to the message body."""
-        return ('\n--\nEnvoi automatique par Vortex {} ' +
-                'pour <{}@{}>\n').format(vortex.__version__,
-                                         self.env.user,
-                                         self.sh.default_target.inetname)
+        return (u'\n--\nEnvoi automatique par Vortex {} pour <{}@{}>.\n'
+                .format(vortex.__version__,
+                        self.env.user, self.sh.default_target.inetname))
 
     def __call__(self, *args):
         """Main action as inherited, and prompts.
