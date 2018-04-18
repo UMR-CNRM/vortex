@@ -217,12 +217,12 @@ class Historic(GeoFlowResource):
 
     def _geo2basename_info(self, add_stretching=True):
         """Return an array describing the geometry for the Vortex's name builder."""
-        if isinstance(self.geometry, CurvlinearGeometry) and self.model == 'hycom': 
-            ## return the old naming convention for surges restart files
+        if isinstance(self.geometry, CurvlinearGeometry) and self.model == 'hycom':
+            # return the old naming convention for surges restart files
             lgeo = [self.geometry.area, self.geometry.rnice]
             return lgeo
         else:
-            return super(Historic, self)._geo2basename_info()
+            return super(Historic, self)._geo2basename_info(add_stretching=add_stretching)
 
     def basename_info(self):
         """Generic information, radical = ``historic``."""

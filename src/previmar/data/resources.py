@@ -134,7 +134,8 @@ class SurgesResultNative(GeoFlowResource):
                 values = ['HUV_ltideonly_forcing', 'lssh_global_ms.nc',
                           'HUV_ltide_wind_forcing', 'lssh_global_full.nc',
                           'HUV_tideonly_forcing', 'HUV_tide_wind_forcing',
-                          'ssh_global_full.nc', 'ssh_global_ms.nc',                         'ssh_global.nc', 'maree_global.nc'],
+                          'ssh_global_full.nc', 'ssh_global_ms.nc',
+                          'ssh_global.nc', 'maree_global.nc'],
                 remap = {
                     'HUV_ltideonly_forcing': 'lssh_global_ms.nc',
                     'HUV_tideonly_forcing': 'ssh_global_ms.nc',
@@ -202,15 +203,15 @@ class ForcingOutData(InitialCondition):
                 values  = ['ascii', 'unknown'],
             ),
             fields = dict(
-                values  = ['preatm', 'tauewd', 'taunwd', 
-                           'windx', 'windy' , 'mslprs', 
-                           'wndnwd','wndewd'],
+                values  = ['preatm', 'tauewd', 'taunwd',
+                           'windx', 'windy', 'mslprs',
+                           'wndnwd', 'wndewd'],
                 remap = {
                     'windx': 'wndewd',
                     'windy': 'wndnwd',
-                    'preatm': 'mslprs',             
-                    },
-            ),           
+                    'preatm': 'mslprs',
+                },
+            ),
         )
     )
 
@@ -244,7 +245,7 @@ class TideOnlyOut(InitialCondition):
                 remap = {
                     'info': 'txt',
                     'native': 'nat',
-                    },
+                },
             ),
         )
     )

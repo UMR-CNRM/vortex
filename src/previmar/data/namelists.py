@@ -4,22 +4,21 @@
 #: No automatic export
 __all__ = []
 
-import re
-
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-from gco.syntax.stdattrs import gdomain
 
+from vortex.data.outflow import NoDateResource
+from gco.syntax.stdattrs import gvar, gdomain
 from previmar.data.contents import SurgeTemplate
-from common.data.ctpini import AsciiFiles
-from bronx.stdtypes.date import Date
+
+logger = footprints.loggers.getLogger(__name__)
 
 
-class BlkdatNamFiles(AsciiFiles):
+class BlkdatNamFiles(NoDateResource):
     """
     """
     _footprint = [
-       gdomain,
+        gvar,
+        gdomain,
         dict(
             info = "blkdat ascii files. list to tweak",
             attr = dict(
@@ -32,13 +31,9 @@ class BlkdatNamFiles(AsciiFiles):
                 param = dict(
                     values  = ['full_prv', 'full_ana', 'ms', 'full'],
                 ),
-                date = dict(
-                    optional = True,
-                    type = Date,
-                ),
                 clscontents=dict(
                     default = SurgeTemplate
-                ), 
+                ),
             )
         )
     ]

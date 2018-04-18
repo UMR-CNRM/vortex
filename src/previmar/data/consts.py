@@ -223,6 +223,3 @@ class CouplingGridOasis(GenvUsageModelResource):
     @property
     def realkind(self):
         return 'CouplingGridOasis'
-
-
-
