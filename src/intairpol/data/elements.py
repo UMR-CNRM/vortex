@@ -3,6 +3,8 @@
 
 from __future__ import absolute_import, print_function, division, unicode_literals
 
+import six
+
 import footprints
 
 from vortex.util.config import ConfigurationTable, TableItem
@@ -21,7 +23,9 @@ class Site(TableItem):
     _footprint = dict(
         info = 'Sites for sources of pollution (radiologic, chemical, volcanic, etc.)',
         attr = dict(
-            name = dict(),
+            name = dict(
+                type   = six.text_type,
+            ),
             family = dict(
                 values = ['radiologic', 'chemical', 'volcanic'],
             ),
@@ -32,6 +36,7 @@ class Site(TableItem):
                 type = float
             ),
             location = dict(
+                type     = six.text_type,
                 optional = True,
                 default  = '[name]',
             ),
@@ -58,6 +63,7 @@ class Element(TableItem):
                 values = ['radiologic', 'chemical', 'volcanic'],
             ),
             name = dict(
+                type     = six.text_type,
                 optional = True,
                 default  = '[symbol]',
             ),

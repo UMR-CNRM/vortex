@@ -10,7 +10,6 @@ a default Mail Service is provided.
 
 import hashlib
 import io
-import os
 import six
 from string import Template
 from ConfigParser import NoOptionError, NoSectionError
@@ -211,7 +210,7 @@ class MailService(Service):
         for xtra in self.attachments:
             if isinstance(xtra, MIMEBase):
                 multi.attach(xtra)
-            elif os.path.isfile(xtra):
+            elif self.sh.path.isfile(xtra):
                 import mimetypes
                 ctype, encoding = mimetypes.guess_type(xtra)
                 if ctype is None or encoding is not None:

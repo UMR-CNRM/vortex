@@ -5,6 +5,8 @@
 Configuration management through ini files.
 """
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 from ConfigParser import SafeConfigParser, NoOptionError, NoSectionError, InterpolationDepthError
 import io
 import re
@@ -707,12 +709,12 @@ class TableItem(footprints.FootprintBase):
             for k in self.translator.get('ordered_dump', '').split(','):
                 if not mkshort or self.footprint_getattr(k) is not None:
                     output_stack.append((self.translator.get(k, k.replace('_', ' ').title()),
-                                         str(self.footprint_getattr(k)), k))
+                                         six.text_type(self.footprint_getattr(k)), k))
         else:
             for k in self.footprint_attributes:
                 if ((not mkshort or self.footprint_getattr(k) is not None) and
                         k != 'translator'):
-                    output_stack.append((k, str(self.footprint_getattr(k)), k))
+                    output_stack.append((k, six.text_type(self.footprint_getattr(k)), k))
         return output_stack
 
     def nice_str(self, mkshort=True):
