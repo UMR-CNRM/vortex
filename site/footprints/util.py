@@ -522,7 +522,7 @@ def expand(desc):
                         if m:
                             globmap = dict()
                             for g in g_names:
-                                globmap[g[0]] = m.group(g)
+                                globmap[g] = m.group(g)
                             repld.append(inplace(d, k, filename, globmap))
                     newld.extend(repld)
                     somechanges = True
