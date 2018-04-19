@@ -325,8 +325,8 @@ def add_section(section, args, kw):
                                                                                len(rl)))
                             rhandler.quickview(nb=ir + 1, indent=0)
                             t.sh.header('Action ' + doitmethod)
-                            logger.info('%s %s ...',
-                                        doitmethod.upper(), rhandler.location())
+                            logger.info('%s %s ...', doitmethod.upper(),
+                                        rhandler.location(fatal=False))
                         # If quick get was ok for this resource don't  call get again...
                         ok = do_quick_insitu and quickget[ir]
                         ok = ok or getattr(newsection, doitmethod)(**cmdopts)
@@ -340,7 +340,7 @@ def add_section(section, args, kw):
                         if not ok:
                             if complete:
                                 logger.warning('Force complete for %s',
-                                               rhandler.location())
+                                               rhandler.location(fatal=False))
                                 raise VortexForceComplete('Force task complete on resource error')
                         else:
                             rlok.append(rhandler)

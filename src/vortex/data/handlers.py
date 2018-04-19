@@ -254,11 +254,17 @@ class Handler(object):
         opts.update(kw)
         return opts
 
-    def location(self):
+    def location(self, fatal=True):
         """Returns the URL as defined by the internal provider and resource."""
         self._lasturl = None
         if self.provider and self.resource:
-            self._lasturl = self.provider.uri(self.resource)
+            try:
+                self._lasturl = self.provider.uri(self.resource)
+            except StandardError as e:
+                if fatal:
+                    raise
+                else:
+                    return ('OOPS: {!s} (but fatal is False)' .format(e))
             return self._lasturl
         else:
             logger.warning('Resource handler %s could not build location', self)
