@@ -766,7 +766,11 @@ class NamelistBlock(collections.MutableMapping):
             if self._subs.get(macroname, None) is None:
                 return item
             else:
-                return literal.encode(self._subs[macroname])
+                macrovalue = self._subs[macroname]
+                if isinstance(macrovalue, (list, tuple)):
+                    return ','.join([literal.encode(value) for value in macrovalue])
+                else:
+                    return literal.encode(self._subs[macroname])
         else:
             return literal.encode(item)
 

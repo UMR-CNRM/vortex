@@ -249,6 +249,11 @@ C='Trash',
         self.assertTrue(re.search("M2=MYMACRO2,", str(nb_res2)))
         nb_res2.C = 5
         self.assertNotIn('C', nb_res2.rmkeys())
+        # Macros expaded as lists
+        nb_res.addmacro('MYMACRO2', [1, 2, 3])
+        self.assertTrue(re.search("M2=1,2,3,", str(nb_res)))
+        nb_res.addmacro('MYMACRO2', ['a', 'b', 'c'])
+        self.assertTrue(re.search("M2='a','b','c',", str(nb_res)))
         # Test the clear function
         nb_res2.clear(rmkeys=('C',))
         self.assertTrue(re.search("M1B='Toto',", str(nb_res2)))

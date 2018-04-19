@@ -917,6 +917,15 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         else:
             return Date(substract)
 
+    def __rsub__(self, delta):
+        """Reversed-substract (based on the __sub__ method)."""
+        if not isinstance(delta, self.__class__):
+            try:
+                delta = self.__class__(delta)
+            except (ValueError, TypeError):
+                raise ValueError("'{:s} cannot be convert to a proper Date object".format(delta))
+        return delta - self
+
     def __eq__(self, other):
         """Compare two Date values or a Date and a datetime or string value."""
         try:
