@@ -253,7 +253,7 @@ class IFSParallel(Parallel, grib.GribApiComponent):
             if thisclim != thisname:
                 logger.info("Linking in the %s to %s for month %s.", thisclim, thisname, month)
                 self.system.symlink(thisclim, thisname)
-                dealtwith = thisname
+                dealtwith.append(thisname)
 
         return dealtwith
 
