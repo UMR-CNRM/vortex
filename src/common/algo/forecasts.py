@@ -465,13 +465,16 @@ class FullPosBDAP(FullPos):
                 raise
 
             # Define an selection namelist
-            try:
-                namxt = [x for x in namxx if x.resource.term == r.resource.term].pop()
-                sh.remove('xxt00000000')
-                sh.symlink(namxt.container.localpath(), 'xxt00000000')
-            except Exception:
-                logger.critical('Could not get a selection namelist for term %s', r.resource.term)
-                raise
+            if namxx:
+                namxt = [x for x in namxx if x.resource.term == r.resource.term]
+                if namxt:
+                    sh.remove('xxt00000000')
+                    sh.symlink(namxt.pop().container.localpath(), 'xxt00000000')
+                else:
+                    logger.critical('Could not get a selection namelist for term %s', r.resource.term)
+                    raise AlgoComponentError()
+            else:
+                logger.info("No selection namelist are provided.")
 
             # Finally set the actual init file
             sh.remove(infile)
