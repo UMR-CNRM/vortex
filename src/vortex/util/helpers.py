@@ -6,7 +6,9 @@ Some convenient functions that may simplify scripts
 """
 
 from collections import defaultdict
+import random
 
+from bronx.stdtypes.date import Date
 import footprints as fp
 
 from vortex.data.handlers import Handler
@@ -152,3 +154,21 @@ def merge_contents(*kargs):
     newcontent = ctlist[0].__class__()
     newcontent.merge(*ctlist)
     return newcontent
+
+
+def mix_list(list_elements, date = None, member = None):
+    """Mix a list using a determined seed, if member and/or date are present."""
+    dateinfo = date if date is None else Date(date)
+    memberinfo = member if member is None else int(member)
+    if (dateinfo is not None) or (memberinfo is not None):
+        seed = (dateinfo, memberinfo)
+        logger.debug("The random seed is %s.", seed)
+        random.seed(seed)
+    else:
+        logger.info("The random seed not initialised")
+    logger.debug("The list of elements is %s.", " ".join([str(x) for x in list_elements]))
+    result_list_elements = list_elements
+    result_list_elements.sort()
+    random.shuffle(result_list_elements)
+    logger.debug("The mixed list of elements is %s.", " ".join([str(x) for x in result_list_elements]))
+    return result_list_elements

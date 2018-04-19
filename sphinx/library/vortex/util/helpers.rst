@@ -26,3 +26,5 @@ Functions
 .. autofunction:: colorfull_input_checker
 
 .. autofunction:: merge_contents
+
+.. autofunction:: mix_list
