@@ -4,11 +4,12 @@
 Automatically generates an ReST file based on a given configuration file.
 '''
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import importlib
+import io
 import os
 import re
 import sys
@@ -197,7 +198,7 @@ def configtable_rst(indata, outfile, verbose=0):
 
     # We are now parsing the ini file manually to find RST code
     rstparse = RstConfigFileParser(c_parser.config.file, section_cb=tableitem_easydump)
-    with open(outfile, 'w') as outfh:
+    with io.open(outfile, 'w') as outfh:
         outfh.write(rstparse.parse())
         logger.debug('Resulting ReST written in: {}'.format(outfile))
 

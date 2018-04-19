@@ -38,9 +38,9 @@ class GcoStoreConfig(GenericConfigParser):
         except (SyntaxError, ValueError):
             return value
 
-    def setfile(self, inifile):
+    def setfile(self, inifile, encoding=None):
         """Read the specified ``inifile`` as new configuration."""
-        super(GcoStoreConfig, self).setfile(inifile)
+        super(GcoStoreConfig, self).setfile(inifile, encoding=None)
         # Create a regex cache for later use in key_properties
         for section in self.sections():
             k_re = re.compile(section)

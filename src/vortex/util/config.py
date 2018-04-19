@@ -5,7 +5,10 @@
 Configuration management through ini files.
 """
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 from ConfigParser import SafeConfigParser, NoOptionError, NoSectionError, InterpolationDepthError
+import io
 import re
 import six
 
@@ -22,10 +25,13 @@ logger = footprints.loggers.getLogger(__name__)
 _RE_AUTO_TPL = re.compile(r'^@([^/].*\.tpl)$')
 
 
-def load_template(t, tplfile):
+def load_template(t, tplfile, encoding=None):
     """
     Load a template according to filename provided, either absolute or relative path.
     The first argument ``t`` should be a valid ticket session.
+
+    :param str encoding: Specify an encoding in order to get a properly decoded
+                         unicode string.
     """
     autofile = _RE_AUTO_TPL.match(tplfile)
     if autofile is None:
@@ -46,7 +52,7 @@ def load_template(t, tplfile):
                 raise ValueError('Template file not found: <{}>'.format(tplfile))
     try:
         import string
-        with open(tplfile, 'r') as tplfd:
+        with io.open(tplfile, 'r', encoding=encoding) as tplfd:
             tpl = string.Template(tplfd.read())
         tpl.srcfile = tplfile
     except Exception as pb:
@@ -79,12 +85,14 @@ class GenericReadOnlyConfigParser(object):
 
     _RE_AUTO_SETFILE = re.compile(r'^@([^/]+\.ini)$')
 
-    def __init__(self, inifile=None, parser=None, mkforce=False, clsparser=SafeConfigParser):
+    def __init__(self, inifile=None, parser=None, mkforce=False,
+                 clsparser=SafeConfigParser, encoding=None):
         self.parser = parser
         self.mkforce = mkforce
         self.clsparser = clsparser
+        self.defaultencoding = encoding
         if inifile:
-            self.setfile(inifile)
+            self.setfile(inifile, encoding=None)
         else:
             self.file = None
 
@@ -97,7 +105,7 @@ class GenericReadOnlyConfigParser(object):
         """Return a nicely formated class name for dump in footprint."""
         return 'file={!s}'.format(self.file)
 
-    def setfile(self, inifile):
+    def setfile(self, inifile, encoding=None):
         """Read the specified **inifile** as new configuration.
 
         **inifile** may be:
@@ -129,6 +137,8 @@ class GenericReadOnlyConfigParser(object):
         """
         if self.parser is None:
             self.parser = self.clsparser()
+        if encoding is None:
+            encoding = self.defaultencoding
         self.file = None
         filestack = list()
         local = sessions.system()
@@ -162,7 +172,9 @@ class GenericReadOnlyConfigParser(object):
                     else:
                         raise ValueError('Configuration file ' + inifile + ' not found')
             self.file = ",".join(filestack)
-            self.parser.read(filestack)
+            for a_file in filestack:
+                with io.open(a_file, 'r', encoding=encoding) as a_fh:
+                    self.parser.readfp(a_fh)
 
     def as_dict(self, merged=True):
         """Export the configuration file as a dictionary."""
@@ -347,8 +359,9 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
         documentation for more details.
     """
 
-    def __init__(self, inifile=None, parser=None, mkforce=False, clsparser=SafeConfigParser):
-        super(GenericConfigParser, self).__init__(inifile, parser, mkforce, clsparser)
+    def __init__(self, inifile=None, parser=None, mkforce=False,
+                 clsparser=SafeConfigParser, encoding=None):
+        super(GenericConfigParser, self).__init__(inifile, parser, mkforce, clsparser, encoding)
         self.updates = list()
 
     def setall(self, kw):
@@ -360,7 +373,7 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
 
     def save(self):
         """Write the current state of the configuration in the inital file."""
-        with open(self.file.split(",").pop(), 'wb') as configfile:
+        with io.open(self.file.split(",").pop(), 'wb') as configfile:
             self.write(configfile)
 
     @property
@@ -696,12 +709,12 @@ class TableItem(footprints.FootprintBase):
             for k in self.translator.get('ordered_dump', '').split(','):
                 if not mkshort or self.footprint_getattr(k) is not None:
                     output_stack.append((self.translator.get(k, k.replace('_', ' ').title()),
-                                         str(self.footprint_getattr(k)), k))
+                                         six.text_type(self.footprint_getattr(k)), k))
         else:
             for k in self.footprint_attributes:
                 if ((not mkshort or self.footprint_getattr(k) is not None) and
                         k != 'translator'):
-                    output_stack.append((k, str(self.footprint_getattr(k)), k))
+                    output_stack.append((k, six.text_type(self.footprint_getattr(k)), k))
         return output_stack
 
     def nice_str(self, mkshort=True):

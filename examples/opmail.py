@@ -23,7 +23,7 @@ sh.trace = True
 e.verbose(True, sh)
 
 # run in a dedicated directory
-rundir = e.get('RUNDIR', e.WORKDIR + '/rundir/' + date.today().ymd)
+rundir = e.get('RUNDIR', e.get('WORKDIR', '\tmp') + '/rundir/' + date.today().ymd)
 sh.cd(rundir, create=True)
 sh.subtitle('Rundir is ' + rundir)
 
@@ -105,6 +105,7 @@ def test_opmail():
     ad.opmail(id='test_empty_section')
     ad.opmail(id='test_missing_section')
 
+    e.op_mail = 1
     for op_suite in ['oper', 'double']:
         e.op_suite = op_suite
         ad.opmail(
