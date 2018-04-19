@@ -20,7 +20,7 @@ from common.tools.igastuff import IgakeyFactoryInline
 import iga.util.bpnames as bp
 
 #: TODO move in config file
-ATM_LIST_ONE = {'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie',
+ATM_LIST_ONE = {'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie','aromeaefr',
                 'polynesie', 'restart_cep', 'reunion', 'ssmice', 'varpack', 'mfwam'}
 
 #: TODO move in config file
@@ -216,6 +216,8 @@ class SopranoProvider(Provider):
         info = self.pathinfo(resource)
         if self.vapp == 'arome' and self.vconf == 'pifrance':
             info['model'] = 'aromepi'
+        elif self.vapp == 'arome' and self.vconf == 'aefrance':
+            info['model'] = 'aromeaefr'
         else:
             info['model'] = self.vapp
         if info['model'] in ATM_LIST_ONE:

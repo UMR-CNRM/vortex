@@ -544,7 +544,7 @@ class Directory(object):
         """Build a space separated list of unique mail addresses
            from a string that may reference aliases."""
         addresses = set()
-        for item in definition.replace(',', ' ').split():
+        for item in definition.lower().replace(',', ' ').split():
             if item in self.aliases:
                 addresses |= self.aliases[item]
             else:
