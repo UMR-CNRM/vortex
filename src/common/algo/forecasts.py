@@ -64,35 +64,24 @@ class Forecast(IFSParallel):
         """Default pre-link for the initial condition file"""
         super(Forecast, self).prepare(rh, opts)
 
-        sh = self.system
-
+        ininc = self.naming_convention('ic', rh)
         analysis = self.setlink(
             initrole = ('InitialCondition', 'Analysis'),
-            initname = 'ICMSH{0:s}INIT'.format(self.xpname)
+            initname = ininc()
         )
 
         if analysis:
             analysis  = analysis.pop()
             thismonth = analysis.rh.resource.date.month
 
-            def checkmonth(actualrh):
-                return bool(actualrh.resource.month == thismonth)
+            # Possibly fix the model clim
+            if self.do_climfile_fixer(rh, convkind='modelclim'):
+                self.climfile_fixer(rh, convkind='modelclim', month=thismonth,
+                                    inputrole=('GlobalClim', 'InitialClim'),
+                                    inputkind='clim_model')
 
-            self.setlink(
-                initrole = ('GlobalClim', 'InitialClim'),
-                initkind = 'clim_model',
-                initname = 'Const.Clim',
-                inittest = checkmonth,
-            )
-
-            for bdaprh in [x.rh for x in self.context.sequence.effective_inputs(
-                role = ('LocalClim', 'TargetClim', 'BDAPClim'),
-                kind = 'clim_bdap',
-            ) if x.rh.resource.month == thismonth]:
-                thisclim = bdaprh.container.localpath()
-                thisname = 'const.clim.' + bdaprh.resource.geometry.area
-                if thisclim != thisname:
-                    sh.symlink(thisclim, thisname)
+            # Possibly fix post-processing clim files
+            self.all_localclim_fixer(rh, thismonth)
 
             for iaurh in [x for x in
                           self.context.sequence.effective_inputs(role = re.compile(r'IAU_\w'))]:
@@ -228,7 +217,8 @@ class LAMForecast(Forecast):
 
         for i, bound in enumerate(cplrh):
             thisbound = bound.container.localpath()
-            sh.softlink(thisbound, 'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, i))
+            lbcnc = self.naming_convention('lbc', rh, actualfmt=bound.container.actualfmt)
+            sh.softlink(thisbound, lbcnc(number=i))
             if self.mksync:
                 thistool = self.synctool + '.{0:03d}'.format(i)
                 bound.mkgetpr(pr_getter=thistool, tplfetch=self.synctpl)
@@ -266,9 +256,10 @@ class DFIForecast(LAMForecast):
     def prepare(self, rh, opts):
         """Pre-link boundary conditions as special DFI files."""
         super(DFIForecast, self).prepare(rh, opts)
-        initname = 'ICMSH{0:s}INIT'.format(self.xpname)
+        ininc = self.naming_convention('ic', rh)
+        lbcnc = self.naming_convention('lbc', rh, actualfmt='fa')
         for pseudoterm in (999, 0, 1):
-            self.system.softlink(initname, 'ELSCF{0:s}ALBC{1:03d}'.format(self.xpname, pseudoterm))
+            self.system.softlink(ininc(), lbcnc(number=pseudoterm))
 
 
 class FullPos(IFSParallel):
@@ -326,9 +317,10 @@ class FullPosGeo(FullPos):
 
         # is there one (deterministic forecast) or many (ensemble forecast) fullpos to perform ?
         isMany = len(initrh) > 1
-        do_fix_input_clim = not self.system.path.exists('Const.Clim')
-        do_fix_output_clim = not self.system.path.exists('const.clim.000')
-        infile = 'ICMSH{0:s}INIT'.format(self.xpname)
+        do_fix_input_clim = self.do_climfile_fixer(rh, convkind='modelclim')
+        do_fix_output_clim = self.do_climfile_fixer(rh, convkind='targetclim', area='000')
+        ininc = self.naming_convention('ic', rh)
+        infile = ininc()
 
         for num, r in enumerate(initrh):
             str_subtitle = 'Fullpos execution on {}'.format(r.container.localpath())
@@ -345,37 +337,15 @@ class FullPosGeo(FullPos):
             actualmonth = Month(r.resource.date + r.resource.term)
             startingclim = r.resource.geometry
 
-            def check_month_and_inputgeo(actualrh):
-                return bool(hasattr(actualrh.resource, 'month') and
-                            actualrh.resource.month == actualmonth and
-                            actualrh.resource.geometry.tag == startingclim.tag)
-
             if do_fix_input_clim:
-                sh.remove('Const.Clim')
-                logger.info("Linking in the Initial clim file (Const.Clim) " +
-                            "for month %s and geometry == %s.", actualmonth, startingclim.tag)
-                self.setlink(
-                    initrole = (re.compile('^Clim'), re.compile('Clim$')),
-                    initkind = 'clim_model',
-                    initname = 'Const.Clim',
-                    inittest = check_month_and_inputgeo
-                )
-
-            def check_month_and_othergeo(actualrh):
-                return bool(hasattr(actualrh.resource, 'month') and
-                            actualrh.resource.month == actualmonth and
-                            actualrh.resource.geometry.tag != startingclim.tag)
+                self.climfile_fixer(rh, convkind='modelclim', month=actualmonth, geo=startingclim,
+                                    inputrole=(re.compile('^Clim'), re.compile('Clim$')),
+                                    inputkind='clim_model')
 
             if do_fix_output_clim:
-                sh.remove('const.clim.000')
-                logger.info("Linking in the Target clim file (const.clim.000) " +
-                            "for month %s and geometry != %s.", actualmonth, startingclim.tag)
-                self.setlink(
-                    initrole = (re.compile('^Clim'), re.compile('Clim$')),
-                    initkind = 'clim_model',
-                    initname = 'const.clim.000',
-                    inittest = check_month_and_othergeo
-                )
+                self.climfile_fixer(rh, convkind='targetclim', month=actualmonth, notgeo=startingclim,
+                                    inputrole=(re.compile('^Clim'), re.compile('Clim$')),
+                                    inputkind='clim_model', area='000')
 
             # Standard execution
             super(FullPosGeo, self).execute(rh, opts)
@@ -465,22 +435,16 @@ class FullPosBDAP(FullPos):
         )]
         initrh.sort(key=lambda rh: rh.resource.term)
 
+        ininc = self.naming_convention('ic', rh)
+        infile = ininc()
+
         for r in initrh:
             sh.subtitle('Loop on {0:s}'.format(r.resource.term.fmthm))
-            thesenames = list()
 
             thisdate = r.resource.date + r.resource.term
             thismonth = thisdate.month
             logger.info('Fullpos <month:%s>' % thismonth)
-            for bdaprh in [x.rh for x in self.context.sequence.effective_inputs(
-                role = 'LocalClim',
-                kind = 'clim_bdap',
-            ) if x.rh.resource.month == thismonth]:
-                thisclim = bdaprh.container.localpath()
-                thisname = 'const.clim.' + bdaprh.resource.geometry.area
-                if thisclim != thisname:
-                    thesenames.append(thisname)
-                    sh.symlink(thisclim, thisname)
+            thesenames = self.all_localclim_fixer(rh, thismonth)
 
             # Set a local storage place
             runstore = 'RUNOUT' + r.resource.term.fmtraw
@@ -501,17 +465,20 @@ class FullPosBDAP(FullPos):
                 raise
 
             # Define an selection namelist
-            try:
-                namxt = [x for x in namxx if x.resource.term == r.resource.term].pop()
-                sh.remove('xxt00000000')
-                sh.symlink(namxt.container.localpath(), 'xxt00000000')
-            except Exception:
-                logger.critical('Could not get a selection namelist for term %s', r.resource.term)
-                raise
+            if namxx:
+                namxt = [x for x in namxx if x.resource.term == r.resource.term]
+                if namxt:
+                    sh.remove('xxt00000000')
+                    sh.symlink(namxt.pop().container.localpath(), 'xxt00000000')
+                else:
+                    logger.critical('Could not get a selection namelist for term %s', r.resource.term)
+                    raise AlgoComponentError()
+            else:
+                logger.info("No selection namelist are provided.")
 
-            # Finaly set the actual init file
-            sh.remove('ICMSH{0:s}INIT'.format(self.xpname))
-            sh.softlink(r.container.localpath(), 'ICMSH{0:s}INIT'.format(self.xpname))
+            # Finally set the actual init file
+            sh.remove(infile)
+            sh.softlink(r.container.localpath(), infile)
 
             # Standard execution
             super(FullPosBDAP, self).execute(rh, opts)

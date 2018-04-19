@@ -654,7 +654,6 @@ class Catalog(object):
         """Boolean value, true if there is at least one item in the catalog."""
         return bool(self._items)
 
-
     def _get_weak(self):
         """Boolean value, true if the catalog is built with weak references."""
         return self._weak

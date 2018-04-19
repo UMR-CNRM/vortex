@@ -11,6 +11,7 @@ import footprints as fp
 
 from vortex.data.handlers import Handler
 from vortex.layout.dataflow import Section
+from vortex import sessions
 
 logger = fp.loggers.getLogger(__name__)
 
@@ -52,13 +53,6 @@ def generic_input_checker(grouping_keys, min_items, *rhandlers, **kwargs):
             else:
                 outlist.append(rh)
 
-    # Check mandatory
-    mychecks = [(rh, rh.check()) for rh in flat_rhmandatory]
-    if not all([acheck[1] for acheck in mychecks]):
-        for rh in [acheck[0] for acheck in mychecks if not acheck[1]]:
-            logger.error("  Missing location: %s", str(rh.locate()))
-        raise InputCheckerError("Some of the mandatory resources are missing.")
-
     # Extract the group informations for each of the resource handlers
     rhgroups = defaultdict(list)
     for rh in flat_rhlist:
@@ -68,24 +62,35 @@ def generic_input_checker(grouping_keys, min_items, *rhandlers, **kwargs):
             keylist.append(value)
         rhgroups[tuple(keylist)].append(rh)
 
-    # Check call
-    outputlist = list()
-    # Is the check real or a delusion ?
-    fakecheck = kwargs.pop('fakecheck', False)
-    #  The keys are sorted so that results remains reproducible
-    for grouping_values in sorted(rhgroups.iterkeys()):
-        mychecks = [(rh, fakecheck or rh.check()) for rh in rhgroups[grouping_values]]
-        groupid = fp.stdtypes.FPDict({k: v
-                                      for k, v in zip(grouping_keys, grouping_values)
-                                      if v is not None})
-        if all([acheck[1] for acheck in mychecks]):
-            outputlist.append(groupid)
-            logger.info("Group (%s): All the input files are accounted for.", str(groupid))
-        else:
-            logger.warning("Group (%s): Discarded because some of the input files are missing (see below).",
-                           str(groupid))
+    # Activate FTP connections pooling (for enhanced performances)
+    t = sessions.current()
+    with t.sh.ftppool():
+
+        # Check mandatory stuff
+        mychecks = [(rh, rh.check()) for rh in flat_rhmandatory]
+        if not all([acheck[1] for acheck in mychecks]):
             for rh in [acheck[0] for acheck in mychecks if not acheck[1]]:
-                logger.warning("  Missing location: %s", str(rh.locate()))
+                logger.error("  Missing location: %s", str(rh.locate()))
+            raise InputCheckerError("Some of the mandatory resources are missing.")
+
+        # Check call for non-mandatory stuff
+        outputlist = list()
+        # Is the check real or a delusion ?
+        fakecheck = kwargs.pop('fakecheck', False)
+        #  The keys are sorted so that results remains reproducible
+        for grouping_values in sorted(rhgroups.iterkeys()):
+            mychecks = [(rh, fakecheck or rh.check()) for rh in rhgroups[grouping_values]]
+            groupid = fp.stdtypes.FPDict({k: v
+                                          for k, v in zip(grouping_keys, grouping_values)
+                                          if v is not None})
+            if all([acheck[1] for acheck in mychecks]):
+                outputlist.append(groupid)
+                logger.info("Group (%s): All the input files are accounted for.", str(groupid))
+            else:
+                logger.warning("Group (%s): Discarded because some of the input files are missing (see below).",
+                               str(groupid))
+                for rh in [acheck[0] for acheck in mychecks if not acheck[1]]:
+                    logger.warning("  Missing location: %s", str(rh.locate()))
 
     # Enforce min_items
     if len(outputlist) < min_items:

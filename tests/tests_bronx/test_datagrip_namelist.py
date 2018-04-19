@@ -95,6 +95,7 @@ M2=MYMACRO2,
 M3=__SOMETHINGNEW__,
 M3b='__SOMETHINGNEW__',
 TRAP='SOMETHINGNEW',
+M4='__AUTOCREATE__',
 A=25,30,15
 C=--,
 GRUIK=--,
@@ -174,13 +175,13 @@ class UtFortranNamelist(TestCase):
 
     def test_namblock(self):
         np = namelist.NamelistParser(macros=('MYMACRO1', 'MYMACRO2'))
-        nb_res = np.parse(NAMBLOCK1).as_dict()['MyNamelistTest']
+        nb_res = np.parse(NAMBLOCK1).as_dict()['MYNAMELISTTEST']
         # Inspect the newly created object
-        self.assertEqual(nb_res.name, 'MyNamelistTest')
-        self.assertEqual(len(nb_res), 9)
-        self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'A'],
+        self.assertEqual(nb_res.name, 'MYNAMELISTTEST')
+        self.assertEqual(len(nb_res), 10)
+        self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'M4', 'A'],
                          list(nb_res))  # Iterator test
-        self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'A'],
+        self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'M4', 'A'],
                          list(nb_res.keys()))
         self.assertEqual(nb_res.A, [25, 30, 15])
         self.assertEqual(nb_res["A"], [25, 30, 15])
@@ -188,14 +189,14 @@ class UtFortranNamelist(TestCase):
         self.assertEqual(nb_res.M1b, "'MYMACRO1'")
         self.assertSetEqual(nb_res.rmkeys(), set(['C', 'GRUIK']))
         nb_res.addmacro('MYMACRO1', 'Toto')
-        self.assertSetEqual(set(dict(MYMACRO1='Toto', MYMACRO2=None, SOMETHINGNEW=None).keys()),
-                             set(nb_res.macros()))
+        self.assertSetEqual(set(dict(MYMACRO1='Toto', MYMACRO2=None, SOMETHINGNEW=None, AUTOCREATE=None).keys()),
+                            set(nb_res.macros()))
         # Test add/modify/delete of a namelist variable
         nb_res.B = 1.2
         self.assertEqual(nb_res["B"], 1.2)
         nb_res["B"] = 1.2
         self.assertEqual(nb_res["B"], 1.2)
-        self.assertEqual(len(nb_res), 10)
+        self.assertEqual(len(nb_res), 11)
         del nb_res.B
         self.assertFalse('B' in nb_res)
         self.assertIs(nb_res.get('B', None), None)
@@ -210,11 +211,13 @@ class UtFortranNamelist(TestCase):
    M3=__SOMETHINGNEW__,
    M3B='__SOMETHINGNEW__',
    TRAP='SOMETHINGNEW',
+   M4='__AUTOCREATE__',
    A=25,30,15,
  /
 """
         self.assertEqual(nb_res.dumps(), dumped_ori)
         nb_res.addmacro('SOMETHINGNEW', 1)
+        nb_res.addmacro('AUTOCREATE', 'Blop')
         # Check that the substitution works
         dumped_ori = """\
  &MYNAMELISTTEST
@@ -226,6 +229,7 @@ class UtFortranNamelist(TestCase):
    M3=1,
    M3B=1,
    TRAP='SOMETHINGNEW',
+   M4='Blop',
    A=25,30,15,
  /
 """
@@ -237,7 +241,7 @@ class UtFortranNamelist(TestCase):
 C='Trash',
 /
 """
-        nb_res2 = np.parse(ori2).as_dict()['MyNamelistTest']
+        nb_res2 = np.parse(ori2).as_dict()['MYNAMELISTTEST']
         nb_res2.merge(nb_res)
         # 'C' should have been deleted...
         self.assertNotIn('C', nb_res2)
@@ -259,7 +263,7 @@ C='Trash',
         ori.write(DIRTYNAM)
         parse_res = np.parse(ori)
         self.assertSetEqual(set(six.iterkeys(parse_res)),
-                            set(['MyNamelistTest', 'MySecondOne']))
+                            set(['MYNAMELISTTEST', 'MYSECONDONE']))
         self.assertEqual(parse_res.dumps(), CLEANEDNAM)
         self.assertEqual(parse_res.dumps(sorting=namelist.FIRST_ORDER_SORTING),
                          CLEANEDNAM_SORTED1)
@@ -269,7 +273,7 @@ C='Trash',
             parse_res.mvblock('MyNamelistTest', 'MySecondOne')
         parse_res.mvblock('MyNamelistTest', 'MyThirdOne')
         self.assertSetEqual(set(parse_res.keys()),
-                            set(['MyThirdOne', 'MySecondOne']))
+                            set(['MYTHIRDONE', 'MYSECONDONE']))
         nset2 = namelist.NamelistSet(parse_res)
         self.assertEqual(parse_res.keys(), nset2.keys())
 
@@ -297,7 +301,7 @@ C='Trash',
         nset = np.parse(DIRTYNAM)
         # Test removes
         nset.merge({}, rmkeys=('A ', 'z'), rmblocks=('MySecondOne', ))
-        self.assertSetEqual(set(nset.keys()), set(('MyNamelistTest', )))
+        self.assertSetEqual(set(nset.keys()), set(('MYNAMELISTTEST', )))
         self.assertNotIn('A ', nset['MyNamelistTest'])
         self.assertNotIn('Z', nset['MyNamelistTest'])
         # Test clear

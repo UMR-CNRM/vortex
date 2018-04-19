@@ -18,6 +18,8 @@ Functions
 
 .. autofunction:: query_yes_no_quit
 
+.. autofunction:: print_tablelike
+
 .. Exceptions
 .. ----------
 

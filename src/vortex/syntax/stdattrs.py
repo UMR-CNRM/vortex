@@ -44,7 +44,7 @@ knownfmt = set([
     'ascii', 'txt', 'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib', 'grib1', 'grib2',
     'bufr', 'hdf5', 'obsoul', 'odb', 'ecma', 'ccma',
     'bullx', 'sx', 'ddhpack', 'tar', 'rawfiles', 'binary', 'bin',
-    'obslocationpack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr'
+    'obslocationpack', 'obsfirepack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr'
 ])
 
 # Special classes

@@ -61,7 +61,7 @@ class Environment(object):
             that case the new environment is by default not active).
         :param verbose clear: Activate the verbose mode (every variable exported
             to the system environment will be signalled on stderr).
-        :param list noexport: A list of variable names that will never be
+        :param list[str] noexport: A list of variable names that will never be
             broadcasted to the system environment variables list.
         :param ~vortex.layout.contexts.Context contextlock: The Context
             this environment is associated to. This implies that the
@@ -274,6 +274,14 @@ class Environment(object):
     def iteritems(self):
         """Proxy to the dictionary ``iteritems`` method on the internal pool of variables."""
         return self._pool.iteritems()
+
+    def __eq__(self, other):
+        return (isinstance(other, type(self)) and
+                set(self.keys()) == set(other.keys) and
+                all([self[k] == other[k] for k in self.keys]))
+
+    def __ne__(self, other):
+        return not self == other
 
     def update(self, *args, **kw):
         """Set a collection of variables given as a list of iterable items or key-values pairs."""
@@ -489,6 +497,9 @@ class Environment(object):
         environment variable).
         """
         self.rmgenericpath('PATH', value)
+
+
+collections.Mapping.register(Environment)
 
 
 class EnvironmentDeltaContext():

@@ -106,7 +106,7 @@ class UtNamelistContent(TestCase):
     def test_merge(self):
         # Test removes
         self.namcontent.merge({}, rmkeys=('A ', 'z'), rmblocks=('MySecondOne', ))
-        self.assertSetEqual(set(self.namcontent.keys()), set(('MyNamelistTest', )))
+        self.assertSetEqual(set(self.namcontent.keys()), set(('MYNAMELISTTEST', )))
         self.assertNotIn('A ', self.namcontent['MyNamelistTest'])
         self.assertNotIn('Z', self.namcontent['MyNamelistTest'])
         # Test clear

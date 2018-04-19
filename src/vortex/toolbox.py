@@ -315,37 +315,39 @@ def add_section(section, args, kw):
 
         # If not insitu, not now, or if the quiet get failed
         if not (do_quick_insitu and all(quickget)):
-            # Create a section for each resource handler, and perform action on demand
-            for ir, newsection in enumerate(newsections):
-                rhandler = newsection.rh
-                ok = True
-                if now:
-                    if talkative:
-                        t.sh.subtitle('Resource no {0:02d}/{1:02d}'.format(ir + 1,
-                                                                           len(rl)))
-                        rhandler.quickview(nb=ir + 1, indent=0)
-                        t.sh.header('Action ' + doitmethod)
-                        logger.info('%s %s ...',
-                                    doitmethod.upper(), rhandler.location())
-                    # If quick get was ok for this resource don't  call get again...
-                    ok = do_quick_insitu and quickget[ir]
-                    ok = ok or getattr(newsection, doitmethod)(**cmdopts)
-                    if talkative:
-                        t.sh.header('Result from ' + doitmethod)
-                        logger.info('%s returns [%s]', doitmethod.upper(), ok)
-                    if talkative and not ok:
-                        logger.error('Could not %s resource %s',
-                                     doitmethod, rhandler.container.localpath())
-                        print t.line
-                    if not ok:
-                        if complete:
-                            logger.warning('Force complete for %s',
-                                           rhandler.location())
-                            raise VortexForceComplete('Force task complete on resource error')
-                    if t.sh.trace:
-                        print
-                if ok:
-                    rlok.append(rhandler)
+            if now:
+                with t.sh.ftppool():
+                    # Create a section for each resource handler, and perform action on demand
+                    for ir, newsection in enumerate(newsections):
+                        rhandler = newsection.rh
+                        if talkative:
+                            t.sh.subtitle('Resource no {0:02d}/{1:02d}'.format(ir + 1,
+                                                                               len(rl)))
+                            rhandler.quickview(nb=ir + 1, indent=0)
+                            t.sh.header('Action ' + doitmethod)
+                            logger.info('%s %s ...',
+                                        doitmethod.upper(), rhandler.location())
+                        # If quick get was ok for this resource don't  call get again...
+                        ok = do_quick_insitu and quickget[ir]
+                        ok = ok or getattr(newsection, doitmethod)(**cmdopts)
+                        if talkative:
+                            t.sh.header('Result from ' + doitmethod)
+                            logger.info('%s returns [%s]', doitmethod.upper(), ok)
+                        if talkative and not ok:
+                            logger.error('Could not %s resource %s',
+                                         doitmethod, rhandler.container.localpath())
+                            print t.line
+                        if not ok:
+                            if complete:
+                                logger.warning('Force complete for %s',
+                                               rhandler.location())
+                                raise VortexForceComplete('Force task complete on resource error')
+                        else:
+                            rlok.append(rhandler)
+                        if t.sh.trace:
+                            print
+            else:
+                rlok.extend([newsection.rh for newsection in newsections])
 
     return rlok
 

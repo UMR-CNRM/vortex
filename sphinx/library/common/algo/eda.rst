@@ -13,10 +13,48 @@ Package
 
 .. autodata:: __all__
 
+Abstract classes
+----------------
+
+.. autoclass:: IFSEdaAbstractAlgo
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IFSEdaEnsembleAbstractAlgo
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Classes
 -------
 
-.. autoclass:: CovB
+.. autoclass:: IFSEdaFemars
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IFSInflationFactor
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IFSInflationFactorLegacy
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IFSEnsembleMean
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IFSInflationLike
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IFSCovB
    :show-inheritance:
    :members:
    :member-order: alphabetical

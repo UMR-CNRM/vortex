@@ -6,6 +6,7 @@ Net tools.
 """
 
 import abc
+import collections
 import ftplib
 import functools
 import io
@@ -71,91 +72,68 @@ def uriunparse(uridesc):
     return urlparse.urlunparse(uridesc)
 
 
-@nicedeco
-def _ensure_delayedlogin(method):
-    """Login if necessary."""
+def netrc_lookup(logname, hostname):
+    """Looks into the .netrc file to find FTP authentication credentials.
 
-    def opened_method(self, *kargs, **kwargs):
-        rc = self._delayedlogin()
-        if rc:
-            return method(self, *kargs, **kwargs)
+    :param str logname: The login to look for
+    :param str hostname: The hostname to look for
+
+    For backward compatibility reasons:
+
+        * If *hostname* is a FQDN, an attempt will be made using the hostname
+          alone.
+        * If credentials are not found for the *logname*/*hostname* pair, an attempt
+          is made ignoring the provided *logname*.
+
+    """
+    actual_logname = None
+    actual_pwd = None
+    nrc = netrc()
+    if nrc:
+        auth = nrc.authenticators(hostname, login=logname)
+        if not auth:
+            # self.host may be a FQDN, try to guess only the hostname
+            auth = nrc.authenticators(hostname.split('.')[0], login=logname)
+        # for backward compatibility: This might be removed one day
+        if not auth:
+            auth = nrc.authenticators(hostname)
+        if not auth:
+            # self.host may be a FQDN, try to guess only the hostname
+            auth = nrc.authenticators(hostname.split('.')[0])
+        # End of backward compatibility section
+        if auth:
+            actual_logname = auth[0]
+            actual_pwd = auth[2]
         else:
-            return rc
+            logger.warning('netrc lookup failed (%s)', str(auth))
+    else:
+        logger.warning('unable to fetch .netrc file')
+    return actual_logname, actual_pwd
 
-    return opened_method
 
+class ExtendedFtplib(object):
+    """Simple Vortex's extension to the bare ftplib object.
 
-class StdFtp(object):
+    It wraps the standard ftplib object to add or overwrite methods.
     """
-    Standard wrapper for the crude FTP object from :mod:`ftplib`.
-    First argument of the constructor is the calling OS interface.
-    """
 
-    def __init__(self, system, hostname, loginretries=5):
-        logger.debug('FTP init <host:%s>', hostname)
+    def __init__(self, system, ftpobj):
+        """
+        :param ~vortex.tools.systems.OSExtended system: The system object to work with
+        :param ftplib.FTP ftpobj: The FTP object to work with / to extend
+        """
         self._system = system
+        self._ftplib = ftpobj
         self._closed = True
-        self._hostname = hostname
-        self._internal_ftplib = None
-        self._logname = None
-        self._cached_pwd = None
+        self._logname = 'not_logged_in'
         self._created = datetime.now()
         self._opened = None
         self._deleted = None
-        self._loginretries = loginretries
-        self._loginretries_sleep = 20
-
-    @property
-    def _ftplib(self):
-        """Delay the call to 'connect' as much as possible."""
-        if self._internal_ftplib is None:
-            retry = self._loginretries
-            while self._internal_ftplib is None and retry:
-                try:
-                    self._internal_ftplib = ftplib.FTP(self._hostname)
-                except socket.timeout:
-                    logger.warning('Timeout error occurred when connecting to the FTP server')
-                    self._internal_ftplib = None
-                    retry -= 1
-                    if not retry:
-                        logger.warning('The maximum number of retries (%d) was reached.', self._loginretries)
-                        raise
-                    logger.warning('Sleeping %d sec. before the next attempt.', self._loginretries_sleep)
-                    self.system.sleep(self._loginretries_sleep)
-            # self._internal_ftplib.set_debuglevel(2)
-        return self._internal_ftplib
 
     @property
     def host(self):
         """Return the hostname."""
-        if self._internal_ftplib is None:
-            return self._hostname
-        else:
-            return self._ftplib.host
-
-    def _delayedlogin(self):
-        """Login if it was not already done."""
-        if self._closed:
-            if self._logname is None or self._cached_pwd is None:
-                logger.warning('FTP logname/password must be set first. Use the fastlogin method.')
-                return False
-            retry = self._loginretries
-            rc = False
-            while not rc and retry:
-                try:
-                    rc = self.login(self._logname, self._cached_pwd)
-                except ftplib.all_errors as e:
-                    logger.warning('An FTP error occurred: %s', str(e))
-                    rc = False
-                    retry -= 1
-                    if not retry:
-                        logger.warning('The maximum number of retries (%d) was reached.', self._loginretries)
-                        raise
-                    logger.warning('Sleeping %d sec. before the next attempt.', self._loginretries_sleep)
-                    self.system.sleep(self._loginretries_sleep)
-            return rc
-        else:
-            return True
+        return self._ftplib.host
 
     def __str__(self):
         """
@@ -174,9 +152,6 @@ class StdFtp(object):
         actualattr = getattr(self._ftplib, key)
         if callable(actualattr):
             def osproxy(*args, **kw):
-                # For most of the native commands, we want autologin to be performed
-                if key not in ('set_debuglevel', 'connect'):
-                    self._delayedlogin()
                 cmd = [key]
                 cmd.extend(args)
                 cmd.extend(['{0:s}={1:s}'.format(x, str(kw[x])) for x in kw.keys()])
@@ -224,7 +199,6 @@ class StdFtp(object):
         """Proxy to ftplib :meth:`ftplib.FTP.close`."""
         self.stderr('close')
         rc = self._ftplib.close()
-        self._internal_ftplib = None
         self._closed = True
         self._deleted = datetime.now()
         return rc
@@ -232,6 +206,7 @@ class StdFtp(object):
     def login(self, *args):
         """Proxy to ftplib :meth:`ftplib.FTP.login`."""
         self.stderr('login', args[0])
+        self._logname = args[0]
         # kept for debugging, but this exposes the user's password!
         # logger.debug('FTP login <args:%s>', str(args))
         rc = self._ftplib.login(*args)
@@ -243,51 +218,6 @@ class StdFtp(object):
             logger.warning('FTP could not login <args:%s>', str(args))
         return rc
 
-    def fastlogin(self, logname, password=None, delayed=True):
-        """
-        Simple heuristic using actual attributes and/or netrc information to find
-        login informations.
-
-        The actual login will be performed later (whenever necessary)
-        """
-        self.stderr('fastlogin', logname)
-        rc = False
-        if logname and password:
-            self._logname = logname
-            self._cached_pwd = password
-            rc = True
-        else:
-            nrc = netrc()
-            if nrc:
-                auth = nrc.authenticators(self.host, login=logname)
-                if not auth:
-                    # self.host may be a FQDN, try to guess only the hostname
-                    auth = nrc.authenticators(self.host.split('.')[0], login=logname)
-                # for backward compatibility: This might be removed one day
-                if not auth:
-                    auth = nrc.authenticators(self.host)
-                if not auth:
-                    # self.host may be a FQDN, try to guess only the hostname
-                    auth = nrc.authenticators(self.host.split('.')[0])
-                # End of backward compatibility section
-                if auth:
-                    self._logname = auth[0]
-                    self._cached_pwd = auth[2]
-                    self.stderr('netrc', self._logname)
-                    rc = True
-                else:
-                    logger.warning('netrc lookup failed (%s)', str(auth))
-            else:
-                logger.warning('unable to fetch .netrc file')
-        if not delayed and rc:
-            # If one really wants to login...
-            rc = self.login(self._logname, self._cached_pwd)
-        return bool(rc)
-
-    def netpath(self, remote):
-        """The complete qualified net path of the remote resource."""
-        return self.logname + '@' + self.host + ':' + remote
-
     def list(self, *args):
         """Returns standard directory listing from ftp protocol."""
         self.stderr('list', *args)
@@ -295,9 +225,8 @@ class StdFtp(object):
         self.retrlines('LIST', callback=contents.append)
         return contents
 
-    @_ensure_delayedlogin
     def dir(self, *args):
-        """Proxy to ftplib :meth:`ftplib.FTP.login`."""
+        """Proxy to ftplib :meth:`ftplib.FTP.dir`."""
         self.stderr('dir', *args)
         return self._ftplib.dir(*args)
 
@@ -348,12 +277,12 @@ class StdFtp(object):
     def put(self, source, destination, size=None, exact=False):
         """Store a local `source` file object to a remote `destination`.
 
-           When `size` is known, it is sent to the ftp server with the ALLO
-           command. It is mesured in this method for real files, but should
-           be given for other (non-seekeable) sources such as pipes.
+        When `size` is known, it is sent to the ftp server with the ALLO
+        command. It is mesured in this method for real files, but should
+        be given for other (non-seekeable) sources such as pipes.
 
-           When `exact` is True, the size is checked against the size of the
-           destination, and a mismatch is considered a failure.
+        When `exact` is True, the size is checked against the size of the
+        destination, and a mismatch is considered a failure.
         """
         self.stderr('put', source, destination)
         if isinstance(source, basestring):
@@ -414,7 +343,7 @@ class StdFtp(object):
         return rc
 
     def rmkdir(self, destination):
-        """Recursive directory creation."""
+        """Recursive directory creation (mimics `mkdir -p`)."""
         self.stderr('rmkdir', destination)
         origin = self.pwd()
         if destination.startswith('/'):
@@ -469,11 +398,474 @@ class StdFtp(object):
             except (OverflowError, ValueError):
                 return long(s)
 
+
+class StdFtp(object):
+    """Standard wrapper for the crude FTP object (of class :class:`ExtendedFtplib`).
+
+    It relies heavily on the :class:`ExtendedFtplib` class for FTP commands but
+    adds some interesting features such as:
+
+        * a fast login using the .netrc file;
+        * the ability to delay the :class:`ftplib.FTP` object creation as much as possible.
+
+    Methods that are not explicitly defined in the present class will be looked
+    for in the associated :class:`ExtendedFtplib` object (and eventually in the
+    wrapped :class:`ftplib.FTP` object). For example, it's possible
+    to call `self.get(...)` (exactly as one would do with the native
+    :class:`ExtendedFtplib` and :class:`ftplib.FTP` class).
+    """
+
+    _NO_AUTOLOGIN = ('set_debuglevel', 'connect', 'login', 'close', 'stderr', )
+
+    def __init__(self, system, hostname):
+        """
+        :param ~vortex.tools.systems.OSExtended system: The system object to work with
+        :param str hostname: The remote host's network name
+        """
+        logger.debug('FTP init <host:%s>', hostname)
+        self._system = system
+        self._hostname = hostname
+        self._internal_ftp = None
+        self._logname = None
+        self._cached_pwd = None
+
+    @property
+    def _extended_ftp(self):
+        """This property provides the :class:`ExtendedFtpLib` to work with.
+
+        It is created on-demand.
+        """
+        if self._internal_ftp is None:
+            self._internal_ftp = ExtendedFtplib(self._system,
+                                                ftplib.FTP(self._hostname))
+        return self._internal_ftp
+
+    @property
+    def system(self):
+        """The current local system interface."""
+        return self._system
+
+    @property
+    def host(self):
+        """The FTP server hostname."""
+        if self._internal_ftp is None:
+            return self._hostname
+        else:
+            return self._extended_ftp.host
+
+    @property
+    def logname(self):
+        """The current logname."""
+        return self._logname
+
+    @property
+    def cached_pwd(self):
+        """The current cached password."""
+        return self._cached_pwd
+
+    def netpath(self, remote):
+        """The complete qualified net path of the remote resource."""
+        return '{:s}@{:s}:{:s}'.format(self.logname if self.logname is not None else 'unknown',
+                                       self.host, remote)
+
+    def _delayedlogin(self):
+        """Login to the FTP server (if it was not already done)."""
+        if self._extended_ftp.closed:
+            if self.logname is None or self.cached_pwd is None:
+                logger.warning('FTP logname/password must be set first. Use the fastlogin method.')
+                raise RuntimeError('logname/password were not provided')
+            return self.login(self.logname, self.cached_pwd)
+        else:
+            return True
+
+    def fastlogin(self, logname, password=None, delayed=True):
+        """
+        Simple heuristic using actual attributes and/or netrc information to find
+        login informations.
+
+        If *delayed=True*, the actual login will be performed later (whenever
+        necessary).
+        """
+        rc = False
+        if logname and password:
+            self._logname = logname
+            self._cached_pwd = password
+            rc = True
+        else:
+            actual_logname, actual_pwd = netrc_lookup(logname, self.host)
+            if actual_logname is not None:
+                self._logname = actual_logname
+                self._cached_pwd = actual_pwd
+                rc = True
+        if not delayed and rc:
+            # If one really wants to login...
+            rc = self.login(self._logname, self._cached_pwd)
+        return bool(rc)
+
+    def _extended_ftp_lookup_check(self, key):
+        """Are we allowed to look for *key* in the `self._extended_ftp` object ?"""
+        return not key.startswith('_')
+
+    def _extended_ftp_lookup(self, key):
+        """Look if the `self._extended_ftp` object can provide a given method.
+
+        If so, a possibly wrapped method is returned (in order to perform the
+        delayed login).
+        """
+        actualattr = getattr(self._extended_ftp, key)
+        if callable(actualattr):
+            def osproxy(*args, **kw):
+                # For most of the native commands, we want autologin to be performed
+                if key not in self._NO_AUTOLOGIN:
+                    self._delayedlogin()
+                # This is important because wrapper functions are cached (see __getattr__)
+                actualattr = getattr(self._extended_ftp, key)
+                return actualattr(*args, **kw)
+
+            osproxy.__name__ = key
+            osproxy.__doc__ = actualattr.__doc__
+            return osproxy
+        else:
+            return actualattr
+
+    def __getattr__(self, key):
+        """Gateway to undefined method or attributes if present in ``_extended_ftp``."""
+        if self._extended_ftp_lookup_check(key):
+            attr = self._extended_ftp_lookup(key)
+            if callable(attr):
+                setattr(self, key, attr)
+            return attr
+        raise AttributeError()
+
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
+
+
+class AutoRetriesFtp(StdFtp):
+    """An advanced FTP client with retry-on-failure capabilities.
+
+    It inherits from :class:`StdFtp` class thus providing the same interface (no
+    new public methods are added).
+
+    However, most of the :class:`StdFtp` methods are wrapped in order to implement
+    the retry-on-failure capability.
+    """
+
+    def __init__(self, system, hostname,
+                 retrycount_default=6, retrycount_connect=8, retrycount_login=3,
+                 retrydelay_default=15, retrydelay_connect=15, retrydelay_login=10):
+        """
+        :param ~vortex.tools.systems.OSExtended system: The system object to work with.
+        :param str hostname: The remote host's network name.
+        :param int retrycount_default: The maximum number of retries for most of the FTP functions.
+        :param int retrydelay_default: The delay (in seconds) between two retries for most of the FTP functions.
+        :param int retrycount_connect: The maximum number of retries when connecting to the FTP server.
+        :param int retrydelay_connect: The delay (in seconds) between two retries when connecting to the FTP server.
+        :param int retrycount_login: The maximum number of retries when login in to the FTP server.
+        :param int retrydelay_login: The delay (in seconds) between two retries when login in to the FTP server.
+        """
+        logger.debug('AutoRetries FTP init <host:%s>', hostname)
+        # Retry stuff
+        self.retrycount_default = retrycount_default
+        self.retrycount_connect = retrycount_connect
+        self.retrycount_login = retrycount_login
+        self.retrydelay_default = retrydelay_default
+        self.retrydelay_connect = retrydelay_connect
+        self.retrydelay_login = retrydelay_login
+        # Reset everything
+        self._initialise()
+        # Finalise
+        super(AutoRetriesFtp, self).__init__(system, hostname)
+
+    def _initialise(self):
+        self._internal_retries_max = None
+        self._cwd = ''
+        self._autodestroy()
+
+    def _autodestroy(self):
+        """Reset the proxied :class:`ExtendedFtpLib` object."""
+        self._internal_ftp = None
+
+    @property
+    def _extended_ftp(self):
+        """Delay the call to 'connect' as much as possible."""
+        if self._internal_ftp is None:
+            wftplib = self._retry_wrapped_callable(ftplib.FTP,
+                                                   retrycount=self.retrycount_connect,
+                                                   retrydelay=self.retrydelay_connect,
+                                                   exceptions_extras=[socket.timeout, ])
+            ftplibobj = wftplib(host=self._hostname)
+            logger.debug('ftplib.FTP object in use: %s', repr(ftplibobj))
+            self._internal_ftp = ExtendedFtplib(self._system, ftplibobj)
+        return self._internal_ftp
+
+    def _actual_login(self, *args):
+        """Actually log in + save logname/password + correct the cwd if needed."""
+        rc = self._extended_ftp.login(*args)
+        if rc:
+            self._logname = args[0]
+            self._cached_pwd = args[1]
+        if rc and self._cwd:
+            cocoondir = self._cwd
+            self._cwd = ''
+            rc = rc and self.cwd(cocoondir)
+        return rc
+
+    def login(self, *args):
+        """Proxy to ftplib :meth:`ftplib.FTP.login`."""
+        wftplogin = self._retry_wrapped_callable(self._actual_login,
+                                                 retrycount=self.retrycount_login,
+                                                 retrydelay=self.retrydelay_login,
+                                                 exceptions_extras=[ftplib.error_perm, socket.error, ])
+        return wftplogin(*args)
+
+    def _retry_wrapped_callable(self, func, retrycount=None, retrydelay=None,
+                                exceptions_extras=None):
+        """
+        Wraps the *func* function in order to implement a retry on failure
+        mechanism.
+
+        :param object func: Any callable that should be wrapped (usually a function)
+        :param int retrycount: The wanted retry count (`self.retrycount_default` if omitted)
+        :param int retrydelay: The delay between retries (`self.retrydelay_default` if omitted)
+        :param list exceptions_extras: Extra exceptions to be catch during the retry
+            phase (in addtion of `ftplib.error_temp`, `ftplib.error_proto`,
+            `ftplib.error_reply`).
+
+        Upon failure, :meth:`_autodestroy` is called in order to reset this object
+        and start with a clean slate.
+        """
+        actual_rcount = retrycount or self.retrycount_default
+        actual_rdelay = retrydelay or self.retrydelay_default
+        actual_exc = [ftplib.error_temp, ftplib.error_proto, ftplib.error_reply, ]
+        if exceptions_extras:
+            actual_exc.extend(exceptions_extras)
+        actual_exc = tuple(actual_exc)
+
+        def retries_wrapper(*args, **kw):
+            globalcounter_driver = self._internal_retries_max is None
+            if globalcounter_driver:
+                self._internal_retries_max = actual_rcount
+            retriesleft = max(min(self._internal_retries_max, actual_rcount), 1)
+            try:
+                while retriesleft:
+                    try:
+                        return func(*args, **kw)
+                    except actual_exc as e:
+                        logger.warning('An error occurred (in "%s"): %s',
+                                       func.__name__, str(e))
+                        retriesleft -= 1
+                        self._internal_retries_max -= 1
+                        if not retriesleft:
+                            logger.warning('The maximum number of retries (%d) was reached.',
+                                           actual_rcount)
+                            raise
+                        logger.warning('Sleeping %d sec. before the next attempt.',
+                                       actual_rdelay)
+                        self._autodestroy()
+                        self.system.sleep(actual_rdelay)
+            finally:
+                if globalcounter_driver:
+                    self._internal_retries_max = None
+
+        retries_wrapper.__name__ = func.__name__
+        retries_wrapper.__doc__ = func.__doc__
+        return retries_wrapper
+
+    def __getattr__(self, key):
+        """Gateway to undefined method or attributes if present in ``_extended_ftp``."""
+        if self._extended_ftp_lookup_check(key):
+            attr = self._extended_ftp_lookup(key)
+            if callable(attr):
+                if key not in self._NO_AUTOLOGIN:
+                    attr = self._retry_wrapped_callable(attr,
+                                                        exceptions_extras=[socket.error, ])
+                setattr(self, key, attr)
+            return attr
+        raise AttributeError()
+
+    def cwd(self, pathname):
+        """Change the current directory to the *pathname* directory."""
+        todo = self._retry_wrapped_callable(self._extended_ftp_lookup('cwd'))
+        rc = todo(pathname)
+        if rc:
+            if self.system.path.isabs(pathname):
+                self._cwd = pathname
+            else:
+                self._cwd = self.system.path.join(self._cwd, pathname)
+                self._cwd = self.system.path.normpath(self._cwd)
+        return rc
+
+    def cd(self, destination):
+        """Change the current directory to the *pathname* directory."""
+        return self.cwd(destination)
+
+    def quit(self):
+        """Quit the current ftp session politely."""
+        try:
+            rc = self._retry_wrapped_callable(self._extended_ftp_lookup('quit'))()
+        finally:
+            self._initialise()
+        return rc
+
+    def close(self):
+        """Quit the current ftp session abruptly."""
+        rc = self._extended_ftp_lookup('close')()
+        self._initialise()
+        return rc
+
+
+class ResetableAutoRetriesFtp(AutoRetriesFtp):
+    """
+    An advanced FTP client with retry-on-failure capabilities and an additional
+    method :meth:`reset` to reset the current working directory to its initial
+    value (i.e. The working directory just after login).
+    """
+
+    def _initialise(self):
+        super(ResetableAutoRetriesFtp, self)._initialise()
+        self._initialpath = None
+
+    def _actual_login(self, *args):
+        if self._initialpath is not None and self._cwd:
+            rc = super(ResetableAutoRetriesFtp, self)._actual_login(*args)
+        else:
+            rc = super(ResetableAutoRetriesFtp, self)._actual_login(*args)
+            if rc:
+                self._initialpath = self.pwd()
+        return rc
+
+    def reset(self):
+        """Reset the current working directory to its initial value."""
+        if self._initialpath is not None and self._cwd:
+            self._cwd = ''
+            return self.cwd(self._initialpath)
+
+
+class PooledResetableAutoRetriesFtp(ResetableAutoRetriesFtp):
+    """
+    An advanced FTP client derived from :class:`ResetableAutoRetriesFtp` that can
+    be used in conjunction with an :class:`FtpConnectionPool` object.
+    """
+
+    def __init__(self, pool, *kargs, **kwargs):
+        """
+        :param FtpConnectionPool pool: The FTP connection pool to work with.
+
+        *kargs* and *kwargs* are passed directly to the :class:`ResetableAutoRetriesFtp`
+        class constructor (refers to its documentation).
+        """
+        self._pool = pool
+        super(PooledResetableAutoRetriesFtp, self).__init__(*kargs, **kwargs)
+        logger.debug('Pooled FTP init <host:%s> <pool:%s>', self.host, repr(pool))
+
+    def forceclose(self):
+        """Really quit the ftp session."""
+        return super(PooledResetableAutoRetriesFtp, self).close()
+
+    def close(self):
+        """
+        The ftp session is not really closed... instead, the current object is
+        given back to the FTP connection pool that will be able to reuse it.
+        """
+        self._pool.relinquishing(self)
+        return True
+
+
+class FtpConnectionPool(object):
+    """A class that dispense FTP client objects for a given *hostname*/*logname* pair.
+
+    Dispensed objects can either be new object or re-used pre-existing ones: this
+    makes no differences for the caller since re-used object are properly "reseted"
+    before being dispensed.
+
+    The great advantage of this class is to keep FTP connections open for a given
+    number of clients which avoids multiple connect/login sequences (that are
+    time consuming). On the other hand, the user must be cautious when using this
+    class since having numerous long standing opened connections can harm the
+    remote FTP hosts.
+    """
+
+    #: The FTP client class that will be used
+    _FTPCLIENT_CLASS = PooledResetableAutoRetriesFtp
+    #: The maximum number of spare FTP client (when this threshold is hit,
+    #: warning are issued)
+    _REUSABLE_THRESHOLD = 10
+
+    def __init__(self, system):
+        """
+        :param ~vortex.tools.systems.OSExtended system: The system object to work with.
+        """
+        self._system = system
+        self._reusable = collections.defaultdict(collections.deque)
+        self._created = 0
+        self._reused = 0
+        self._givenback = 0
+
+    @property
+    def poolsize(self):
+        """The number of spare FTP clients."""
+        return sum([len(hpool) for hpool in self._reusable.values()])
+
+    def __str__(self):
+        """Print a summary of the connection pool activity."""
+        out = 'Current connection pool size: {:d}\n'.format(self.poolsize)
+        out += '  # of created objects: {:d}\n'.format(self._created)
+        out += '  # of re-used objects: {:d}\n'.format(self._reused)
+        out += '  # of given back objects: {:d}\n'.format(self._givenback)
+        if self.poolsize:
+            out += '\nDetailed list of current spare clients:\n'
+            for ident, hpool in self._reusable.items():
+                for client in hpool:
+                    out += '  - {id[1]:s}@{id[0]:s}: {cl!r}\n'.format(id=ident, cl=client)
+        return out
+
+    def deal(self, hostname, logname, delayed=True):
+        """Retrieve an FTP client for the *hostname*/*logname* pair."""
+        if self._reusable[(hostname, logname)]:
+            ftpc = self._reusable[(hostname, logname)].pop()
+            ftpc.reset()
+            logger.debug('Re-using a client: %s', repr(ftpc))
+            self._reused += 1
+            return ftpc
+        else:
+            ftpc = self._FTPCLIENT_CLASS(self, self._system, hostname)
+            rc = ftpc.fastlogin(logname, delayed=delayed)
+            if rc:
+                logger.debug('Creating a new client: %s', repr(ftpc))
+                self._created += 1
+                return ftpc
+            else:
+                logger.warning('Could not login on %s as %s [%s]', hostname, logname, str(rc))
+                return None
+
+    def relinquishing(self, client):
+        """
+        When the user is done with a reusable *client*, this method should be
+        called in order for the FTP connection pool to reuse it.
+
+        It is usually dealt with properly by the FTP client object itself when
+        its `close` method is called.
+        """
+        assert isinstance(client, self._FTPCLIENT_CLASS)
+        self._reusable[(client.host, client.logname)].append(client)
+        self._givenback += 1
+        logger.debug("Spare client for %s@%s has been stored (poolsize=%d).",
+                     client.logname, client.host, self.poolsize)
+        if self.poolsize >= self._REUSABLE_THRESHOLD:
+            logger.warning('The FTP pool is too big ! (%d  >= %d).',
+                           self.poolsize, self._REUSABLE_THRESHOLD)
+
+    def clear(self):
+        """Destroy all the spare FTP clients."""
+        for hpool in self._reusable.values():
+            for client in hpool:
+                logger.debug("Destroying client for %s@%s", client.logname, client.host)
+                client.forceclose()
+            hpool.clear()
 
 
 class Ssh(object):
@@ -956,6 +1348,52 @@ class AssistedSsh(Ssh):
       hostname is tested, ... and so on).
     - virtual nodes support (i.e. the real hostnames associated with a virtual
       node name are read in the configuration file).
+
+    Examples (`sh` being an :class:`~vortex.tools.systems.OSExtended` object):
+
+    - Basic use::
+
+        >>> ssh1 = AssistedSsh(sh, 'localhost')
+        >>> print ssh1, ssh1.remote
+        <vortex.tools.net.AssistedSsh object at 0x7fac3bb19810> localhost
+        >> ssh1.execute("echo -n 'My name is: '; hostname")
+        ['My name is: beaufixlogin3']
+
+    - Using virtual nodes names (let's consider here that "network" nodes are
+      defined in the current target-?.ini configuration file)::
+
+        >>> ssh2 = AssistedSsh(sh, 'network', virtualnode=True)
+        >>> print ssh2, ssh2.targets  # The list of possible network nodes
+        ['beaufixlogin0', 'beaufixlogin1', 'beaufixlogin2', 'beaufixlogin3', ]
+        >>> print ssh2, ssh2.remote  # Pick one randomly
+        'beaufixlogin2'
+
+    - The multiple retries concept::
+
+        >>> ssh3 = AssistedSsh(sh, 'network', virtualnode=True, maxtries=3)
+        >>> print ssh3, ssh3.remote  # Pick one randomly
+        'beaufixlogin0'
+        >>> ssh3.execute("false")
+        # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]: Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+        # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
+        # [2018/02/19-11:29:00][vortex.tools.net][wrapped:1296][INFO]: Trying again (retries=2/3)...
+        # [2018/02/19-11:29:01][vortex.tools.systems][spawn:0878][WARNING]: Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+        # [2018/02/19-11:29:01][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
+        # [2018/02/19-11:29:01][vortex.tools.net][wrapped:1296][INFO]: Trying again (retries=3/3)...
+        # [2018/02/19-11:29:02][vortex.tools.systems][spawn:0878][WARNING]: Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+        # [2018/02/19-11:29:02][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
+        # [2018/02/19-11:29:02][vortex.tools.net][wrapped:1268][ERROR]: The maximum number of retries (3) was reached...
+        False
+
+    - Raise an exception on failure::
+
+        >>> ssh4 = AssistedSsh(sh, 'network', virtualnode=True,  fatal=True)
+        >>> ssh4.execute("false")
+        # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]: Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+        # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
+        # [2018/02/19-11:29:02][vortex.tools.net][wrapped:1268][ERROR]: The maximum number of retries (1) was reached...
+        RuntimeError: Could not execute the SSH command.
+
     """
 
     _auto_checkfatal = ['check_ok', 'execute', 'cocoon', 'remove',

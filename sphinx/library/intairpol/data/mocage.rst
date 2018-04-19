@@ -30,12 +30,22 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: ChemLimit
+.. autoclass:: TopBoundaryCondition
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: FireObs
+.. autoclass:: ChemicalBoundaryConditions
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ObsFire
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: PostPeriodicStats
    :show-inheritance:
    :members:
    :member-order: alphabetical

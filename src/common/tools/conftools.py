@@ -350,6 +350,13 @@ class CouplingOffsetConfTool(ConfTool):
         _, myhh = self._process_date(date)
         return getattr(self._cpl_data[cutoff][myhh], stuff)
 
+    def coupling_steps(self, date, cutoff):
+        '''
+        For a task needing coupling (at **date** and **cutoff**), return the
+        prescribed steps.
+        '''
+        return self._coupling_stuff(date, cutoff, 'steps')
+
     def coupling_cutoff(self, date, cutoff):
         '''
         For a task needing coupling (at **date** and **cutoff**), return the

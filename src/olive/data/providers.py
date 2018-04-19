@@ -15,6 +15,7 @@ from vortex.syntax.stdattrs import namespacefp, member, block, Namespace, a_suit
 from vortex.util.config import GenericConfigParser
 
 from common.tools.igastuff import archive_suffix, fuzzyname, arpcourt_vconf, IgakeyFactoryArchive
+from bronx.stdtypes import date
 
 
 class Olive(Provider):
@@ -124,6 +125,11 @@ class OpArchive(Provider):
                     type     = IgakeyFactoryArchive,
                     optional = True,
                     default  = '[vapp]/[vconf]'
+                ),
+                opdelta = dict(
+                    type     = date.Period,
+                    optional = True,
+                    default  = None,
                 ),
                 inout = dict(
                     optional = True,
@@ -252,6 +258,8 @@ class OpArchive(Provider):
         suite_map = dict(dble='dbl', mirr='miroir')
         rinfo = self.pathinfo(resource)
         rdate = rinfo.get('date')
+        if self.opdelta is not None:
+            rdate = rdate + self.opdelta
         suite = suite_map.get(self.suite, self.suite)
         yyyy = str(rdate.year)
         mm = '{0:02d}'.format(rdate.month)

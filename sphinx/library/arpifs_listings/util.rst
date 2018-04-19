@@ -26,6 +26,8 @@ Functions
 
 .. autofunction:: get_maxint
 
+.. autofunction:: get_worst
+
 .. autofunction:: diverging_digit
 
 .. autofunction:: find_line_containing

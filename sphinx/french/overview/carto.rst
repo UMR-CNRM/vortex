@@ -28,34 +28,47 @@ Jetons un coup d'œil au répertoire principal...
 
 .. code-block:: bash
 
-    % ls -l
-    total 84
-    drwxr-xr-x 2 esevault algo  4096 juin  16 10:28 bin/
-    drwxr-xr-x 2 esevault algo  4096 juin  16 10:28 conf/
-    drwxr-xr-x 7 esevault algo  4096 juin  16 10:28 examples/
-    -rw-r--r-- 1 esevault algo 21863 sept. 30  2014 LICENSE-en.txt
-    -rw-r--r-- 1 esevault algo 22755 sept. 30  2014 LICENSE-fr.txt
-    -rw-r--r-- 1 esevault algo  1937 mai    2  2013 README.md
-    drwxr-xr-x 5 esevault algo  4096 mars  27 10:52 site/
-    drwxr-xr-x 8 esevault algo  4096 juin  16 11:15 sphinx/
-    drwxr-xr-x 9 esevault algo  4096 mars  12  2013 src/
-    drwxr-xr-x 2 esevault algo  4096 juin  16 10:28 templates/
-    drwxr-xr-x 6 esevault algo  4096 mars  18 16:13 tests/
+   meunierlf@lxgmap45:~/vortex-dev/vortex$ ll
+   total 92K
+   drwxr-xr-x  2 meunierlf algo 4.0K mars   5 09:36 bin
+   drwxr-xr-x  2 meunierlf algo 4.0K févr. 28 09:23 conf
+   drwxr-xr-x  6 meunierlf algo 4.0K sept. 25 19:05 examples
+   -rw-r--r--  1 meunierlf algo  22K avril 28  2016 LICENSE-en.txt
+   -rw-r--r--  1 meunierlf algo  23K avril 28  2016 LICENSE-fr.txt
+   -rw-r--r--  1 meunierlf algo 2.0K juil. 13  2017 Makefile
+   drwxr-xr-x  5 meunierlf algo 4.0K mars   1 17:49 project
+   -rw-r--r--  1 meunierlf algo 1.9K avril 28  2016 README.md
+   drwxr-xr-x  9 meunierlf algo 4.0K févr. 28 13:29 site
+   drwxr-xr-x  7 meunierlf algo 4.0K mars   5 09:36 sphinx
+   drwxr-xr-x 12 meunierlf algo 4.0K janv.  5 14:14 src
+   drwxr-xr-x  3 meunierlf algo 4.0K mars   5 09:36 templates
+   drwxr-xr-x 11 meunierlf algo 4.0K mars   5 09:36 tests
+
 
 Installation de site
 --------------------
 
-Sont regroupés dans ce répertoire les packages développés indépendamment de VORTEX. Il est donc possible
-par exemple de pointer :envvar:`PYTHONPATH` uniquement sur ce répertoire.
+Sont regroupés dans ce répertoire les packages développés indépendamment de VORTEX.
+Il est donc possible par exemple de pointer :envvar:`PYTHONPATH` uniquement sur ce
+répertoire.
 
 .. code-block:: bash
 
     % export PYTHONPATH=/home/sevault/git-dev/vortex/site
 
-On dispose dans ce cas des deux packages suivants:
+On dispose dans ce cas des packages suivants:
 
-    * footprints
-    * jeeves
+    * arpifs_listings : Bibliothèque permettant de lire des listing poduits par
+      Arpège/IFS pour en extraire l'information pertinente (normes spectrals,
+      normes points de grille, statistiques sur les observvations, ...) ;
+    * bronx : Ensemble d'outils utilisés dans Vortex mais présentant un intérêt
+      plus général (module de gestion des dates, parser de namelists Fortran, ...) ;
+    * footprints : Voir :ref:`overview-footprints` ;
+    * jeeves : Démon permttant la réalisation de tâches de manière asynchrone ;
+    * mf : Description des machines utilisées à Météo-France (très lié à Vortex) ;
+    * taylorism : Surcouche à la librairie standard :mod:`multiprocessing` permettant
+      un gestion simplifiée de la parallélistation
+    * tnt : ``TNT`` pour ``The Namelist Tool``.
 
 
 Le package vortex proprement dit
@@ -89,6 +102,7 @@ s'en passer facilement:
   * ggetall.py : récupération d'un jeu complet de composants versionnés par GCO ;
   * mkjob.py : génération de jobs opérationnels sur base d'un template ;
   * tbinterface.py : génération de l'interface de la toolbox VORTEX pour usage dans SWAPP/OLIVE ;
+  * vtxget/put.py : récupération/dépôt d'une ressource via Vortex.
 
 Il faut mentionner à part l'outil de lancement du daemon de traitement de tâches asynchrones, *litj.py*,
 c'est-à-dire *Leave It To Jeeves* dont l'usage sera détaillé dans la section :ref:`overview-async`.
@@ -149,6 +163,8 @@ Répertoire tests
 Les tests sont quant à eux maintenus avec une certaine attention. En particulier ceux sur les composants de base.
 Mais il y a aussi toute une batterie de tests de manipulation des ressources météorologiques, dans les espaces
 de nom "recherche" ou "oper".
+
+Les tests peuvent se lancer simplement via un ``Makefile``: ``make tests``.
 
 =======================
 Les modes d'utilisation

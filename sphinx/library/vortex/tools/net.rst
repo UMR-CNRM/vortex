@@ -25,13 +25,46 @@ Functions
 
 .. autofunction:: uriunparse
 
+.. autofunction:: netrc_lookup
+
 Classes
 -------
+
+FTP related stuff
+*****************
+
+.. autoclass:: ExtendedFtplib
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 .. autoclass:: StdFtp
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: AutoRetriesFtp
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ResetableAutoRetriesFtp
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: PooledResetableAutoRetriesFtp
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FtpConnectionPool
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+SSH related stuff
+*****************
 
 .. autoclass:: Ssh
    :show-inheritance:
@@ -47,6 +80,9 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+Network related stuff
+*********************
 
 .. autoclass:: AbstractNetstats
    :show-inheritance:

@@ -194,8 +194,8 @@ class LiteralParser(object):
         >>> x = lp.parse('.true.')
         >>> print(x)
         True
-        >>> type(x)
-        <type 'bool'>
+        >>> type(x).__name__
+        'bool'
         >>> x = lp.parse('2.')
         >>> print(x)
         2
@@ -204,8 +204,8 @@ class LiteralParser(object):
         >>> x = lp.parse('Z"1F"')
         >>> print(x)
         31
-        >>> type(x)
-        <type 'int'>
+        >>> type(x).__name__
+        'int'
 
         The reverse operation could be achieved through a specific encodingfunction:
 
@@ -450,7 +450,7 @@ class LiteralParser(object):
             raise ValueError("Type %s cannot be FORTRAN encoded" % type(value))
 
 
-class NamelistBlock(object):
+class NamelistBlock(collections.MutableMapping):
     """
     This class represent a FORTRAN namelist block.
 
@@ -525,10 +525,10 @@ class NamelistBlock(object):
 
     """
 
-    _RE_FREEMACRO = re.compile(r'^' + _UNDERSCORE + r'{2}(.*)' + _UNDERSCORE + r'{2}$')
+    _RE_FREEMACRO = re.compile(r'^' + _FREEMACRONAME + r'$')
 
     def __init__(self, name='UNKNOWN'):
-        self.__dict__['_name'] = name
+        self.__dict__['_name'] = name.upper()
         self.__dict__['_keys'] = list()
         self.__dict__['_pool'] = dict()
         self.__dict__['_mods'] = set()
@@ -549,7 +549,7 @@ class NamelistBlock(object):
 
     def set_name(self, name):
         """Change the namelist block anme."""
-        self.__dict__['_name'] = name
+        self.__dict__['_name'] = name.upper()
 
     @property
     def name(self):
@@ -581,8 +581,8 @@ class NamelistBlock(object):
         # Automatically add free macros to the macro list
         for v in [self._RE_FREEMACRO.match(v) for v in value
                   if isinstance(v, six.string_types)]:
-            if v and v.group(1) not in self.macros():
-                self.addmacro(v.group(1))
+            if v and v.group('NAME') not in self.macros():
+                self.addmacro(v.group('NAME'))
         # Process the given value...
         self._pool[varname] = value
         if varname not in self._keys:
@@ -737,9 +737,10 @@ class NamelistBlock(object):
         """Find whether *item* is a macro or not."""
         if item in self._declared_subs:
             return item
-        elif isinstance(item, six.string_types) and self._RE_FREEMACRO.match(item):
-            itemized = self._RE_FREEMACRO.sub(r'\1', item)
-            return itemized
+        elif isinstance(item, six.string_types):
+            fm_match = self._RE_FREEMACRO.match(item)
+            if fm_match:
+                return fm_match.group('NAME') if fm_match else None
         else:
             return None
 
@@ -769,6 +770,10 @@ class NamelistBlock(object):
         else:
             return literal.encode(item)
 
+    def dumps_values(self, key, literal=None):
+        """Nice encoded values (incl. list of)."""
+        return ','.join([self.nice(value, literal) for value in self._pool[key]])
+
     def dumps(self, literal=None, sorting=NO_SORTING):
         """
         Returns a string of the namelist block that will be readable by fortran parsers.
@@ -778,7 +783,7 @@ class NamelistBlock(object):
                         :py:data:`SECOND_ORDER_SORTING` (sort only within indexes or attributes
                         of the same variable: usefull with arrays).
         """
-        namout = " &{0:s}\n".format(self.name.upper())
+        namout = " &{0:s}\n".format(self.name)
         if literal is None:
             if self._literal is None:
                 self.__dict__['_literal'] = LiteralParser()
@@ -821,8 +826,8 @@ class NamelistBlock(object):
         else:
             keylist = self._keys
         for key in keylist:
-            value_strings = [self.nice(value, literal) for value in self._pool[key]]
-            namout += '   {0:s}={1:s},\n'.format(key, ','.join(value_strings))
+            value_strings = self.dumps_values(key, literal=literal)
+            namout += '   {0:s}={1:s},\n'.format(key, value_strings)
         return namout + " /\n"
 
     def merge(self, delta):
@@ -909,8 +914,8 @@ class NamelistSet(collections.MutableMapping):
 
     def __init__(self, blocks_set=None):
         """
-        :param list blocks_set: A list of :class:`NamelistBlock` objects (if
-                                missing, an empty list is assumed).
+        :param list[NamelistBlock] blocks_set: A list of :class:`NamelistBlock` objects (if
+                                               missing, an empty list is assumed).
         """
         # For later use
         self._automkblock = 1
@@ -931,7 +936,7 @@ class NamelistSet(collections.MutableMapping):
             self._mapping_dict[nb.name] = nb
 
     def __contains__(self, key):
-        return key in self._mapping_dict
+        return key.upper() in self._mapping_dict
 
     def __len__(self):
         return len(self._mapping_dict)
@@ -941,10 +946,11 @@ class NamelistSet(collections.MutableMapping):
             yield nbk
 
     def __getitem__(self, key):
-        return self._mapping_dict[key]
+        return self._mapping_dict[key.upper()]
 
     def __setitem__(self, key, value):
         assert isinstance(value, NamelistBlock)
+        key = key.upper()
         if value.name != key:
             # To be safe...
             value = copy.deepcopy(value)
@@ -952,7 +958,7 @@ class NamelistSet(collections.MutableMapping):
         self._mapping_dict[key] = value
 
     def __delitem__(self, key):
-        del self._mapping_dict[key]
+        del self._mapping_dict[key.upper()]
 
     def add(self, namblock):
         """Add a namelist block object to the present namelist set.

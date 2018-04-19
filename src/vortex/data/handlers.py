@@ -437,6 +437,24 @@ class Handler(object):
             logger.error('Could not locate an incomplete rh %s', self)
         return rst
 
+    def prestage(self, **extras):
+        """Request the pre-staging of the remote resource."""
+        rst = None
+        if self.resource and self.provider:
+            store = self.store
+            if store:
+                logger.debug('Prestage resource %s at %s from %s', self, self.lasturl, store)
+                rst = store.prestage(
+                    self.uridata,
+                    self.mkopts(extras)
+                )
+                self.history.append(store.fullname(), 'prestage', rst)
+            else:
+                logger.error('Could not find any store to prestage %s', self.lasturl)
+        else:
+            logger.error('Could not prestage an incomplete rh %s', self)
+        return rst
+
     def _generic_apply_hooks(self, action, **extras):
         """Apply the hooks after a get request (or verify that they were done)."""
         if self.hooks:

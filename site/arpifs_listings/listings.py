@@ -7,7 +7,7 @@ import six
 import sys
 from collections import OrderedDict
 
-from .util import PARSING_ERROR_CODE
+from .util import PARSING_ERROR_CODE, FOUND_NAN_ERROR_CODE, get_worst
 from .norms import NormsSet, NormsComparison
 from .jo_tables import JoTables, DEFAULT_N_THRESHOLD, DEFAULT_JO_THRESHOLD
 from .TLAD import ADTest, TLTest
@@ -160,7 +160,7 @@ def compare_norms(test, ref,
                   which='first_and_last_spectral',
                   out=sys.stdout,
                   onlymaxdiff=False,
-                  **ignored_kwargs):
+                  **_):
     """Compare two 'norms' pattern-type output listings.
 
     :param which: either 'all' to compare norms for all steps found in listings,
@@ -279,7 +279,7 @@ def compare_norms(test, ref,
         fig.savefig(pngname, bbox_inches='tight', dpi=300)
 
     if mode == 'get_worst':
-        return max(worstdigits)
+        return get_worst(worstdigits)
     elif mode == 'get_worst_by_step':
         return worstdigits
     else:
@@ -292,7 +292,7 @@ def compare_jo_tables(test, ref,
                       jothres=DEFAULT_JO_THRESHOLD,
                       bw=False,
                       onlymaxdiff=False,
-                      **ignored_kwargs):
+                      **_):
     """
     Compare two 'Jo-tables' pattern-type output listings.
 
@@ -326,7 +326,7 @@ def compare_jo_tables(test, ref,
 def compare_AD_tests(test, ref,
                      mode='text',
                      out=sys.stdout,
-                     **ignored_kwargs):
+                     **_):
     """
     Compare two adjoint tests, return the absolute difference of both scores.
 
@@ -349,6 +349,8 @@ def compare_AD_tests(test, ref,
     if mode == 'get_worst':
         if PARSING_ERROR_CODE in (test.ad_test.score, ref.ad_test.score):
             comp = PARSING_ERROR_CODE
+        elif FOUND_NAN_ERROR_CODE in (test.ad_test.score, ref.ad_test.score):
+            comp = FOUND_NAN_ERROR_CODE
         elif test.ad_test.zero_overflow in (test.ad_test.score, ref.ad_test.score):
             comp = test.ad_test.zero_overflow
         else:
@@ -364,7 +366,7 @@ def compare_AD_tests(test, ref,
 def compare_TL_tests(test, ref,
                      mode='plot',
                      out='TL-tests.png',
-                     ** ignored_kwargs):
+                     **_):
     """
     Compare two tangent linear tests, return the absolute difference of both
     scores.
@@ -389,6 +391,8 @@ def compare_TL_tests(test, ref,
     if mode == 'get_worst':
         if PARSING_ERROR_CODE in (test.tl_test.score, ref.tl_test.score):
             comp = PARSING_ERROR_CODE
+        elif FOUND_NAN_ERROR_CODE in (test.tl_test.score, ref.tl_test.score):
+            comp = FOUND_NAN_ERROR_CODE
         else:
             comp = abs(test.tl_test.score - ref.tl_test.score)
         return comp

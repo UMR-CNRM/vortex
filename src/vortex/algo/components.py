@@ -40,10 +40,14 @@ class DelayedAlgoComponentError(AlgoComponentError):
         super(DelayedAlgoComponentError, self).__init__("One or several errors occurs during the run.")
         self._excs = excs
 
+    def __iter__(self):
+        for exc in self._excs:
+            yield exc
+
     def __str__(self):
         outstr = "One or several errors occur during the run. In order of appearance:\n"
         outstr += "\n".join(['{0:3d}. {1!s} (type: {2!s})'.format(i + 1, exc, type(exc))
-                             for i, exc in enumerate(self._excs)])
+                             for i, exc in enumerate(self)])
         return outstr
 
 
@@ -780,7 +784,7 @@ class Expresso(ExecutableAlgoComponent):
         attr = dict(
             interpreter = dict(
                 info   = 'The interpreter needed to run the script.',
-                values = ['awk', 'ksh', 'bash', 'perl', 'python']
+                values = ['current', 'awk', 'ksh', 'bash', 'perl', 'python']
             ),
             engine = dict(
                 values = ['exec', 'launch']
@@ -800,7 +804,8 @@ class Expresso(ExecutableAlgoComponent):
         Run the specified resource handler through the current interpreter,
         using the resource command_line method as args.
         """
-        args = [self.interpreter, ]
+        actual_interpreter = sys.executable if self.interpreter == 'current' else self.interpreter
+        args = [actual_interpreter, ]
         args.extend(self._interpreter_args_fix(rh, opts))
         args.extend(self.spawn_command_line(rh))
         logger.info('Run script %s', args)

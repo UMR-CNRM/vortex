@@ -12,20 +12,20 @@ __all__ = [ ]
 logger = footprints.loggers.getLogger(__name__)
 
 
-class ChemLimit(FlowResource):
-    """Boundary chemical limit conditions file."""
+class ChemicalBoundaryConditions(FlowResource):
+    """Chemical boundary conditions produced by some external model."""
 
     _footprint = [
         term,
         dict(
-            info = 'Boundary chemical limit conditions',
+            info = 'Chemical boundary conditions',
             attr = dict(
                 kind = dict(
-                    values = ['chemlimit'],
+                    values   = ['chemical_bc'],
                 ),
                 nativefmt = dict(
-                    values = ['netcdf'],
-                    default = 'netcdf',
+                    values   = ['netcdf'],
+                    default  = 'netcdf',
                     optional = True
                 ),
             )
@@ -34,14 +34,13 @@ class ChemLimit(FlowResource):
 
     @property
     def realkind(self):
-        return 'chemlimit'
+        return 'chemical_bc'
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
         prefix = 'bc22_'
         actualdate = self.date + self.term
         fmtremap = dict(netcdf='nc')
-
         return prefix + actualdate.ymdh + '.' + fmtremap.get(self.nativefmt, self.nativefmt)
 
 
@@ -51,14 +50,14 @@ class Fire(GeoFlowResource):
     _footprint = [
         term,
         dict(
-            info='Fire data file',
-            attr=dict(
-                kind=dict(
-                    values=['fire'],
+            info = 'Fire data file',
+            attr = dict(
+                kind = dict(
+                    values  = ['fire'],
                 ),
-                nativefmt=dict(
-                    values=['fa'],
-                    default='fa',
+                nativefmt = dict(
+                    values  = ['fa'],
+                    default = 'fa',
                 ),
             )
         )
@@ -66,7 +65,7 @@ class Fire(GeoFlowResource):
 
     @property
     def realkind(self):
-            return 'fire'
+        return 'fire'
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
@@ -76,7 +75,6 @@ class Fire(GeoFlowResource):
 
     def basename_info(self):
         """Generic information for names fabric."""
-
         return dict(
             radical = 'fire',
             fmt     = self.nativefmt,
@@ -85,16 +83,21 @@ class Fire(GeoFlowResource):
         )
 
 
-class FireObs(GeoFlowResource):
-    """Fire observations file. EN COURS DE DEV ne pas utiliser"""
+class ObsFire(GeoFlowResource):
+    """Fire observations file."""
 
     _footprint = [
         term,
         dict(
-            info='Fire observations file',
-            attr=dict(
-                kind=dict(
-                    values=['fireobs'],
+            info = 'Fire observations file',
+            attr = dict(
+                kind = dict(
+                    values = ['obsfire'],
+                ),
+                nativefmt = dict(
+                    values   = ['obsfirepack'],
+                    default  = 'obsfirepack',
+                    optional = True
                 ),
             )
         )
@@ -102,10 +105,85 @@ class FireObs(GeoFlowResource):
 
     @property
     def realkind(self):
-            return 'fireobs'
+        return 'obsfire'
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
         prefix = 'GFASfires_'
         actualdate = self.date + self.term
         return prefix + actualdate.ymd + '.tar.gz'
+
+    def basename_info(self):
+        """Generic information for names fabric."""
+        return dict(
+            radical = 'obsfire',
+            geo     = self._geo2basename_info(),
+            term    = self.term.fmthm
+        )
+
+
+class TopBoundaryCondition(FlowResource):
+    """Boundary conditions on top of the model, e.g. mocage."""
+
+    _footprint = dict(
+        info = 'Top Boundary Conditions',
+        attr = dict(
+            kind = dict(
+                values   = ['topbd'],
+            ),
+            model = dict(
+                values   = ['mocage'],
+                default  = 'mocage',
+                optional = True,
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'topbd'
+
+    def basename_info(self):
+        """Generic information for names fabric."""
+        return dict(
+            radical = self.realkind,
+            src     = self.model,
+        )
+
+
+class PostPeriodicStats(GeoFlowResource):
+    """Stats computed on a defined forecast period."""
+
+    _footprint = [
+        term,
+        dict(
+            info = 'Stats computed on a defined forecast period',
+            attr = dict(
+                kind = dict(
+                    values  = ['ppstats'],
+                ),
+                nativefmt = dict(
+                    values  = ['netcdf'],
+                    default = 'netcdf',
+                ),
+                run_eval = dict(
+                    values = ['first_level', 'stats', 'base'],
+                    remap = dict(base = 'stats'),
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'ppstats'
+
+    def basename_info(self):
+        """Generic information for names fabric for these stats."""
+        return dict(
+            radical = self.realkind,
+            fmt     = self.nativefmt,
+            term    = self.term.fmthm,
+            geo     = self._geo2basename_info(),
+            src     = [self.model, self.run_eval],
+        )

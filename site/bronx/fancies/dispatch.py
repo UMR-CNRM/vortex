@@ -203,17 +203,17 @@ class CmdLiner(cmd.Cmd):
 
     @WrapCmdLineArgs('discard', 'grep', addhelp=True)
     def do_commands(self, **opts):
-        """
-        List of available commands.
-        Default discard : commands
+        """List of available commands.
+
+        Default discard: commands
         """
         self.stdlog(self.nicelist([x.split('_', 1)[-1] for x in dir(self) if x.startswith('do_')], **opts))
 
     @WrapCmdLineArgs('grep', 'resize', 'focus', 'delta', addhelp=True, strict=True)
     def do_history(self, **opts):
-        """
-        Resize or print history with an optional grep selection or focus.
-        Default resize : -1
+        """Resize or print history with an optional grep selection or focus.
+
+        Default resize: -1
         """
         if opts['resize'] > 0:
             self.history.resize(maxlen=opts['resize'])
@@ -309,14 +309,19 @@ class ExtendedCmdLiner(CmdLiner):
 
     @WrapCmdLineArgs(addhelp=True)
     def do_cfgtmp(self, **opts):
-        """Display internal temporary values stored while processing the configuration file."""
+        """
+        Display internal temporary values stored while processing the
+        configuration file.
+        """
         self.stdlog(footprints.dump.fulldump(self.cfg.tmp))
 
     @WrapCmdLineArgs('grep', 'discard', addhelp=True)
     def do_excluded(self, **opts):
         """
-        Display internal keys that should be discarded when dealing with configuration information.
-        Default discard : None
+        Display internal keys that should be discarded when dealing with
+        configuration information.
+
+        Default discard: None
         """
         self.stdlog(self.nicelist(self.cfg.excluded, **opts))
 

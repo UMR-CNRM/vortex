@@ -13,6 +13,14 @@ Package
 
 .. autodata:: __all__
 
+Exceptions
+----------
+
+.. autoclass:: Raw2OdbExecutionError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Classes
 -------
 

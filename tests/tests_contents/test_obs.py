@@ -143,6 +143,16 @@ class UtObsMapContent(_BaseDataContentTest):
         ct = obs.ObsMapContent(discarded=set(['conv:a[a-i]', ]))
         ct.slurp(self.insample[0])
         self.assertEqual(ct.data, [OBSMAP_E[0], OBSMAP_E[3], ])
+        # Only
+        ct = obs.ObsMapContent(only=set(['conv', ]))
+        ct.slurp(self.insample[0])
+        self.assertEqual(ct.data, [OBSMAP_E[0], OBSMAP_E[1], OBSMAP_E[2], ])
+        ct = obs.ObsMapContent(only=set(['conv:a[a-i]', ]))
+        ct.slurp(self.insample[0])
+        self.assertEqual(ct.data, [OBSMAP_E[1], OBSMAP_E[2], ])
+        ct = obs.ObsMapContent(only=set(['conv', ]), discarded=set(['conv:a[a-i]', ]))
+        ct.slurp(self.insample[0])
+        self.assertEqual(ct.data, [OBSMAP_E[0], ])
 
 
 if __name__ == '__main__':

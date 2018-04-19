@@ -13,3 +13,4 @@ Présentations ou documentations spécifiques en langue française.
    :maxdepth: 2
 
    overview/index
+   dedicated/index

@@ -20,11 +20,11 @@ class Mocage(ChemistryModel):
         dict(
             info = 'Executable used in macc/mocage for forecast',
             attr = dict(
-                gvar = dict(
-                    default = "master_mocage",
-                ),
                 kind = dict(
                     values = ['mocage'],
+                ),
+                gvar = dict(
+                    default = 'master_[kind]',
                 ),
                 model = dict(
                     values = ['mocage']
@@ -42,30 +42,30 @@ class ExecCorromegasurf(BlackBox):
         dict(
             info = 'Executable used in macc/mocage to correct omegasurf field',
             attr = dict(
-                gvar = dict(
-                    default = "master_corromegasurf"
-                ),
                 kind = dict(
-                    values = ['exec_corromegasurf'],
+                    values = ['altitude'],
+                ),
+                gvar = dict(
+                    default = 'master_[kind]',
                 )
             )
         )
     ]
 
 
-class ExecSumo(BlackBox):
-    """Compute sumo."""
+class PrepSurfMocage(BlackBox):
+    """Prepare surface fields for mocage, particularly sources emissions."""
 
     _footprint = [
         gvar,
         dict(
             info = 'Executable used in macc/mocage for surface coupling',
             attr = dict(
-                gvar = dict(
-                    default = "master_sumo"
-                ),
                 kind = dict(
-                    values = ['exec_sumo'],
+                    values  = ['surface'],
+                ),
+                gvar = dict(
+                    default = 'master_[kind]',
                 )
             )
         )
@@ -73,37 +73,37 @@ class ExecSumo(BlackBox):
 
 
 class Maccraq(BlackBox):
-    """Compute mktopbd."""
+    """Convert fields to BDAP grib inputs."""
 
     _footprint = [
         gvar,
         dict(
-            info = 'Executable used in macc fullpos',
+            info = 'Convert fields to BDAP grib inputs',
             attr = dict(
-                gvar = dict(
-                    default = "master_maccraq"
-                ),
                 kind = dict(
-                    values = ['maccraq'],
+                    values  = ['post_bdap'],
+                ),
+                gvar = dict(
+                    default = 'master_[kind]',
                 )
             )
         )
     ]
 
 
-class ExecMktopbd(BlackBox):
-    """Compute mktopbd."""
+class MkTopBD(BlackBox):
+    """Compute topbd."""
 
     _footprint = [
         gvar,
         dict(
             info = 'Executable used in macc/mocage',
             attr = dict(
-                gvar = dict(
-                    default = "master_mktopbd"
-                ),
                 kind = dict(
-                    values = ['exec_mktopbd'],
+                    values  = ['mktopbd'],
+                ),
+                gvar = dict(
+                    default = 'master_[kind]'
                 )
             )
         )
@@ -111,8 +111,6 @@ class ExecMktopbd(BlackBox):
 
     def stdin_text(self, fcterm=date.Time('24:00'), basedate=None):
         """Build the stdin text used by the executable."""
-
         first = basedate.ymdh
         last = (basedate + fcterm).ymdh
-
         return '{first}\n{last}\n'.format(first=first, last=last)

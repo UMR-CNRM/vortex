@@ -294,6 +294,44 @@ class Store(footprints.FootprintBase):
         else:
             return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
 
+    def list(self, remote, options=None):
+        """Proxy method to dedicated list method according to scheme."""
+        logger.debug('Store list %s', remote)
+        if options is not None and options.get('incache', False) and not self.use_cache():
+            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+            return None
+        else:
+            return getattr(self, self.scheme + 'list', self.notyet)(remote, options)
+
+    def prestage_advertise(self, remote, options=None):
+        """Use the Stores-Activity observer board to advertise the prestaging request.
+
+        Hopefully, something will register to the ober board in order to process
+        the request.
+        """
+        logger.debug('Store prestage through hub %s', remote)
+        infos_cb = getattr(self, self.scheme + 'prestageinfo', None)
+        if infos_cb:
+            infodict = infos_cb(remote, options)
+            infodict.setdefault('issuerkind', self.realkind)
+            infodict.setdefault('scheme', self.scheme)
+            if options and 'priority' in options:
+                infodict['priority'] = options['priority']
+            infodict['action'] = 'prestage_req'
+            self._observer.notify_upd(self, infodict)
+        else:
+            logger.info('Prestaging is not supported for scheme: %s', self.scheme)
+        return True
+
+    def prestage(self, remote, options=None):
+        """Proxy method to dedicated prestage method according to scheme."""
+        logger.debug('Store prestage %s', remote)
+        if options is not None and options.get('incache', False) and not self.use_cache():
+            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+            return True
+        else:
+            return getattr(self, self.scheme + 'prestage', self.prestage_advertise)(remote, options)
+
     def _hash_store_defaults(self, options):
         """Update default options when fetching hash files."""
         options = options.copy() if options is not None else dict()
@@ -523,6 +561,30 @@ class MultiStore(footprints.FootprintBase):
             if tmp_rloc:
                 rloc.append(tmp_rloc)
         return ';'.join(rloc)
+
+    def list(self, remote, options=None):
+        """Go through internal opened stores and list the expected resource for each of them."""
+        logger.debug('Multistore list %s', remote)
+        rlist = set()
+        for sto in self.openedstores:
+            logger.debug('Multistore list at %s', sto)
+            tmp_rloc = sto.list(remote.copy(), options)
+            if isinstance(tmp_rloc, (list, tuple, set)):
+                rlist.update(tmp_rloc)
+            elif tmp_rloc is True:
+                return True
+        return sorted(rlist)
+
+    def prestage(self, remote, options=None):
+        """Go through internal opened stores and prestage the resource for each of them."""
+        logger.debug('Multistore prestage %s', remote)
+        if not self.openedstores:
+            return False
+        rc = True
+        for sto in self.openedstores:
+            logger.debug('Multistore prestage at %s', sto)
+            rc = rc and sto.prestage(remote.copy(), options)
+        return rc
 
     def get(self, remote, local, options=None):
         """Go through internal opened stores for the first available resource."""
@@ -1003,6 +1065,42 @@ class ArchiveStore(Store):
             ftp.close()
         return rc
 
+    def ftplist(self, remote, options):
+        """Use ``system.ftp`` to list availlable files."""
+        ftp = self.system.ftp(self.hostname(), remote['username'], delayed=True)
+        if ftp:
+            rpath = self._ftpformatpath(remote)
+            try:
+                # Is this a directory ?
+                rc = ftp.cd(rpath)
+            except ftplib.all_errors:
+                # Apparently not...
+                rc = None
+                try:
+                    # Is it a file ?
+                    if ftp.size(rpath) is not None:
+                        rc = True
+                except (ValueError, TypeError, ftplib.all_errors):
+                    pass
+            else:
+                # Content of the directory...
+                if rc:
+                    rc = ftp.nlst()
+            finally:
+                ftp.close()
+        return rc
+
+    def ftpprestageinfo(self, remote, options):
+        """Returns the prestaging informations"""
+        logname = remote['username']
+        if logname is None:
+            ftp = self.system.ftp(self.hostname(), remote['username'], delayed=True)
+            logname = ftp.logname
+        baseinfo = dict(storage=self.hostname(),
+                        logname=logname,
+                        location=self._ftpformatpath(remote), )
+        return baseinfo
+
     def ftpget(self, remote, local, options):
         """Delegates to ``system.ftp`` the get action."""
         rpath = self._ftpformatpath(remote)
@@ -1220,6 +1318,15 @@ class VortexArchiveStore(ArchiveStore):
         """Reformulates the remote path to compatible vortex namespace."""
         pass
 
+    def remap_list(self, remote, options):
+        """Reformulates the remote path to compatible vortex namespace."""
+        if len(remote['path'].split('/')) >= 4:
+            return self.remap_read(remote, options)
+        else:
+            logger.critical('The << %s >> path is not listable.', remote['path'])
+            return None
+        return remote
+
     def remap_write(self, remote, options):
         """Remap actual remote path to distant store path for intrusive actions."""
         if 'root' not in remote:
@@ -1236,6 +1343,19 @@ class VortexArchiveStore(ArchiveStore):
         """Remap and ftplocate sequence."""
         remote = self.remap_read(remote, options)
         return self.ftplocate(remote, options)
+
+    def vortexlist(self, remote, options):
+        """Remap and ftplist sequence."""
+        remote = self.remap_list(remote, options)
+        if remote:
+            return self.ftplist(remote, options)
+        else:
+            return None
+
+    def vortexprestageinfo(self, remote, options):
+        """Remap and ftpprestageinfo sequence."""
+        remote = self.remap_read(remote, options)
+        return self.ftpprestageinfo(remote, options)
 
     def vortexget(self, remote, local, options):
         """Remap and ftpget sequence."""
@@ -1455,11 +1575,29 @@ class CacheStore(Store):
             st = self.system.stat(self.incachelocate(remote, options))
         except OSError:
             st = None
+        if options.get('isfile', False) and st:
+            st = self.system.path.isfile(self.incachelocate(remote, options))
         return st
 
     def incachelocate(self, remote, options):
         """Agregates cache to remote subpath."""
         return self.cache.fullpath(remote['path'])
+
+    def incachelist(self, remote, options):
+        """List the content of a remote path."""
+        path = self.incachelocate(remote, options)
+        if self.system.path.exists(path):
+            if self.system.path.isdir(path):
+                return self.system.listdir(path)
+            else:
+                return True
+        else:
+            return None
+
+    def incacheprestageinfo(self, remote, options):
+        """Returns pre-staging informations."""
+        return dict(strategy=self.strategy,
+                    location=self.incachelocate(remote, options), )
 
     def incacheget(self, remote, local, options):
         """Simple copy from current cache cache to ``local``."""
@@ -1540,6 +1678,14 @@ class _VortexCacheBaseStore(CacheStore):
     def vortexlocate(self, remote, options):
         """Proxy to :meth:`incachelocate`."""
         return self.incachelocate(remote, options)
+
+    def vortexlist(self, remote, options):
+        """Proxy to :meth:`incachelocate`."""
+        return self.incachelist(remote, options)
+
+    def vortexprestageinfo(self, remote, options):
+        """Proxy to :meth:`incacheprestageinfo`."""
+        return self.incacheprestageinfo(remote, options)
 
     def vortexget(self, remote, local, options):
         """Proxy to :meth:`incacheget`."""

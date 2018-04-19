@@ -22,6 +22,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: RandBFiles
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: InflationFactor
    :show-inheritance:
    :members:

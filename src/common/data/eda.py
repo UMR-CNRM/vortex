@@ -69,6 +69,62 @@ class RawFiles(GeoFlowResource):
         return '.{:03d}.tar'.format(self.ipert)
 
 
+class RandBFiles(GeoFlowResource):
+    """Input files for wavelet covariances estimation."""
+
+    _footprint = [
+        term,
+        gvar,
+        dict(
+            info = 'Input files for wavelet covariances estimation',
+            attr = dict(
+                kind = dict(
+                    values   = ['randbfiles', 'famembers'],
+                    remap    = dict(autoremap = 'first')
+                ),
+                nativefmt   = dict(
+                    values  = ['fa', 'unknown'],
+                ),
+                gvar = dict(
+                    default = 'aearp_randb_t[geometry:truncation]'
+                ),
+                ipert = dict(
+                    type = int,
+                    optional = True,
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'randbfiles'
+
+    def basename_info(self):
+        """Generic information for names fabric, with radical = ``bcor``."""
+        return dict(
+            radical = self.realkind,
+            geo     = self._geo2basename_info(add_stretching=False),
+            fmt     = self.nativefmt,
+            src     = [self.model],
+            term    = self.term.fmthm,
+        )
+
+    def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
+        return 'famember(memberfix:member)+{:s}.{:d}'.format(self.term.fmthour, self.geometry.truncation)
+
+    def olive_basename(self):
+        """OLIVE specific naming convention."""
+        raise NotImplementedError()
+
+    def gget_basename(self):
+        """GGET specific naming convention."""
+        if self.ipert is None:
+            raise ValueError('ipert is mandatory with the GCO provider')
+        return '.{:03d}'.format(self.ipert) + ".fa"
+
+
 class InflationFactor(_BackgroundErrorInfo):
     """
     Inflation factor profiles.

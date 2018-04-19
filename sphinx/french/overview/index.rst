@@ -29,7 +29,6 @@ et que la caractéristique fondamentale du VORTEX est d'être un système « ou
    footprints
    inter
    data
-   epygram
    algo
 
 .. toctree::

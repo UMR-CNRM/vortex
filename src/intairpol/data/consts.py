@@ -7,39 +7,39 @@ from common.data.consts import GenvModelResource
 __all__ = []
 
 
-class EmisSumo(GenvModelResource):
+class StaticSurfaceEmissions(GenvModelResource):
     """
-    Emissions files
+    Emissions files collected by international community.
     """
     _footprint = dict(
-        info='Emissions files for sumo',
-        attr=dict(
-            kind=dict(
-                values=['emissumo'],
+        info = 'Emissions files for sumo',
+        attr = dict(
+            kind = dict(
+                values  = ['emiss_cst'],
             ),
-            gvar=dict(
-                default='mocage_emis_sumo02'
+            gvar = dict(
+                default = 'surface_emissions_files'
             ),
         )
     )
 
     @property
     def realkind(self):
-        return 'emissumo'
+        return 'emiss_cst'
 
 
 class Regrid(GenvModelResource):
     """
-    File constant for macc/mocage forecast
+    Parameters for mocage grid transformation from 0.2 to 0.1 degree.
     """
     _footprint = dict(
-        info='File constant for mocage forecast',
-        attr=dict(
-            kind=dict(
-                values=['regrid'],
+        info = 'Parameters for mocage grid transformation',
+        attr = dict(
+            kind = dict(
+                values  = ['regrid'],
             ),
-            gvar=dict(
-                default='regrid_macc'
+            gvar = dict(
+                default = 'regrid02to01'
             ),
         )
     )
@@ -49,60 +49,64 @@ class Regrid(GenvModelResource):
         return 'regrid'
 
 
-class Template(GenvModelResource):
+class GribTemplate(GenvModelResource):
     """
-    File constant for macc/mocage forecast
+    File constant for macc/mocage forecast.
     """
     _footprint = dict(
-        info='Template file for mocage forecast',
-        attr=dict(
-            kind=dict(
-                values=['template'],
+        info = 'Grib template for mocage forecast',
+        attr = dict(
+            kind = dict(
+                values   = ['gribtpl'],
             ),
-            gvar=dict(
-                default='template_mfm'
+            edition = dict(
+                optional = True,
+                default  = 2,
+            ),
+            gvar = dict(
+                default  = 'gribtpl_cams'
             ),
         )
     )
 
     @property
     def realkind(self):
-        return 'template'
+        return 'gribtpl'
 
 
-class ChemSurf(GenvModelResource):
+class ChemicalSurfaceScheme(GenvModelResource):
     """
-     Chemical surface scheme
+     Chemical surface scheme.
     """
     _footprint = dict(
-        info='Chemical surface scheme',
-        attr=dict(
-            kind=dict(
-                values=['chemsurf'],
+        info = 'Chemical surface scheme',
+        attr = dict(
+            kind = dict(
+                values  = ['chemical_surf'],
             ),
             gvar=dict(
-                default='chemscheme_surf'
+                default = 'table_chemscheme_surf'
             ),
         )
     )
 
     @property
     def realkind(self):
-        return 'chemsurf'
+        return 'chemicalsurf'
 
 
 class FireCst(GenvModelResource):
     """
-     Fire constant file - EN COURS DE DEV ne pas utiliser
+     Fire constant file
     """
     _footprint = dict(
-        info='Fire constant file',
-        attr=dict(
-            kind=dict(
-                values=['firecst'],
+        info = 'Fire constant file',
+        attr = dict(
+            kind = dict(
+                values  = ['firecst'],
             ),
-            gvar=dict(
-                default='auxi_sumo2_embb_macc'
+            gvar = dict(
+                default = 'config_fires'
             ),
         )
     )

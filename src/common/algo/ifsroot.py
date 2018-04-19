@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import footprints
+
+
+from vortex.algo.components import Parallel, AlgoComponentError
+from vortex.syntax.stdattrs import model
+from vortex.tools import grib
+
+from common.algo import ifsnaming  # @UnusedImport
+
 #: No automatic export
 __all__ = []
 
-import footprints
 logger = footprints.loggers.getLogger(__name__)
-
-from vortex.algo.components import Parallel
-from vortex.syntax.stdattrs import model
-from vortex.tools import grib
 
 
 class IFSParallel(Parallel, grib.GribApiComponent):
@@ -128,6 +132,130 @@ class IFSParallel(Parallel, grib.GribApiComponent):
             fcterm     = self.fcterm,
             fcunit     = self.fcunit,
         )
+
+    def naming_convention(self, kind, rh, actualfmt=None, **kwargs):
+        """Create an appropriate :class:`IFSNamingConvention`.
+
+        :param str kind: The :class:`IFSNamingConvention` object kind.
+        :param rh: The binary's ResourceHandler.
+        :param actualfmt: The format of the target file.
+        :param dict kwargs: Any argument you may see fit.
+        """
+        nc_args = dict(model=self.model,
+                       conf=self.conf,
+                       xpname=self.xpname)
+        nc_args.update(kwargs)
+        nc = footprints.proxy.ifsnamingconv(kind=kind,
+                                            actualfmt=actualfmt,
+                                            cycle=rh.resource.cycle,
+                                            **nc_args)
+        if nc is None:
+            raise AlgoComponentError("No IFSNamingConvention was found.")
+        return nc
+
+    def do_climfile_fixer(self, rh, convkind, actualfmt=None, geo=None, **kwargs):
+        """Is it necessary to fix the climatology file ? (i.e link in the appropriate file).
+
+        :param rh: The binary's ResourceHandler.
+        :param str convkind: The :class:`IFSNamingConvention` object kind.
+        :param actualfmt: The format of the climatology file.
+        :param geo: The geometry of the desired geometry file.
+        :param dict kwargs: Any argument you may see fit (used to create and call
+                            the IFSNamingConvention object.
+        """
+        nc = self.naming_convention(kind=convkind, rh=rh, actualfmt=actualfmt, **kwargs)
+        nc_args = dict()
+        if geo:
+            nc_args['area'] = geo.area
+        nc_args.update(kwargs)
+        return not self.system.path.exists(nc(** nc_args))
+
+    def climfile_fixer(self, rh, convkind,
+                       month, geo=None, notgeo=None, actualfmt=None,
+                       inputrole=None, inputkind=None, **kwargs):
+        """Fix the climatology files (by choosing the appropriate month, geometry, ...)
+
+        :param rh: The binary's ResourceHandler.
+        :param str convkind: The :class:`IFSNamingConvention` object kind.
+        :param ~bronx.stdtypes.date.Month month: The climatlogy file month
+        :param geo: The climatlogy file geometry
+        :param notgeo: Exclude these geometries during the climatology file lookup
+        :param actualfmt: The format of the climatology file.
+        :param inputrole: The section's role in which Climatology files are looked for.
+        :param inputkind: The section's realkind in which Climatology files are looked for/
+        :param dict kwargs: Any argument you may see fit (used to create and call
+                            the IFSNamingConvention object).
+        """
+        if geo is not None and notgeo is not None:
+            raise ValueError('*geo* and *notgeo* cannot be provided together.')
+
+        def check_month(actualrh):
+            return bool(hasattr(actualrh.resource, 'month') and
+                        actualrh.resource.month == month)
+
+        def check_month_and_geo(actualrh):
+            return (check_month(actualrh) and
+                    actualrh.resource.geometry.tag == geo.tag)
+
+        def check_month_and_notgeo(actualrh):
+            return (check_month(actualrh) and
+                    actualrh.resource.geometry.tag != notgeo.tag)
+
+        if geo:
+            checker = check_month_and_geo
+        elif notgeo:
+            checker = check_month_and_notgeo
+        else:
+            checker = check_month
+
+        nc = self.naming_convention(kind=convkind, rh=rh, actualfmt=actualfmt, **kwargs)
+        nc_args = dict()
+        if geo:
+            nc_args['area'] = geo.area
+        nc_args.update(kwargs)
+        target_name = nc(** nc_args)
+
+        self.system.remove(target_name)
+
+        logger.info("Linking in the %s file (%s) for month %s.", convkind, target_name, month)
+        rc = self.setlink(initrole = inputrole, initkind = inputkind, inittest = checker,
+                          initname = target_name)
+        return target_name if rc else None
+
+    def all_localclim_fixer(self, rh, month, convkind='targetclim', actualfmt=None,
+                            inputrole=('LocalClim', 'TargetClim', 'BDAPClim'),
+                            inputkind='clim_bdap', **kwargs):
+        """Fix all the local/BDAP climatology files (by choosing the appropriate month)
+
+        :param rh: The binary's ResourceHandler.
+        :param ~bronx.stdtypes.date.Month month: The climatology file month
+        :param str convkind: The :class:`IFSNamingConvention` object kind.
+        :param actualfmt: The format of the climatology file.
+        :param inputrole: The section's role in which Climatology files are looked for.
+        :param inputkind: The section's realkind in which Climatology files are looked for/
+        :param dict kwargs: Any argument you may see fit (used to create and call
+                            the IFSNamingConvention object.
+        :return: The list of linked files
+        """
+
+        def check_month(actualrh):
+            return bool(hasattr(actualrh.resource, 'month') and
+                        actualrh.resource.month == month)
+
+        nc = self.naming_convention(kind=convkind, rh=rh, actualfmt=actualfmt, **kwargs)
+        dealtwith = list()
+
+        for tclimrh in [x.rh for x in self.context.sequence.effective_inputs(
+                role = inputrole, kind = inputkind,
+        ) if x.rh.resource.month == month]:
+            thisclim = tclimrh.container.localpath()
+            thisname = nc(area=tclimrh.resource.geometry.area)
+            if thisclim != thisname:
+                logger.info("Linking in the %s to %s for month %s.", thisclim, thisname, month)
+                self.system.symlink(thisclim, thisname)
+                dealtwith.append(thisname)
+
+        return dealtwith
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
