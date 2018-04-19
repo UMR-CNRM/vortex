@@ -1820,6 +1820,7 @@ class PromiseCacheStore(VortexCacheMtStore):
         else:
             options_upd = dict()
         options_upd['fmt'] = 'ascii'  # Promises are always JSON files
+        options_upd['intent'] = 'in'  # Promises are always read-only
         return options_upd
 
     def vortexget(self, remote, local, options):
@@ -1946,7 +1947,15 @@ class PromiseStore(footprints.FootprintBase):
             options = dict()
         self.delayed = False
         logger.info('Try promise from store %s', self.promise)
-        rc = self.promise.get(remote.copy(), local, options)
+        try:
+            rc = self.promise.get(remote.copy(), local, options)
+        except (IOError, OSError) as e:
+            # If something goes wrong, assume that the promise file had been
+            # deleted during the execution of self.promise.get (which can cause
+            # IOError or OSError to be raised).
+            logger.info('An error occured while fetching the promise file: %s', str(e))
+            logger.info('Assuming this is a negative result...')
+            rc = False
         if rc:
             self.delayed = True
         else:
