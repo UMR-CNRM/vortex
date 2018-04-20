@@ -227,6 +227,78 @@ class Prep(InitialCondition):
         return 'PREP_' + self.date.ymdh + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
 
+class SnowObs(GeoFlowResource):
+
+    _footprint = [
+        dict(
+            info = 'Observations of snow for model evaluation',
+            attr = dict(
+                kind = dict(
+                    values = ['SnowObservations'],
+                ),
+
+                model = dict(
+                    values = ['obs']
+                ),
+
+                nativefmt = dict(
+                    values  = ['netcdf', 'nc'],
+                    default = 'netcdf',
+                    remap = dict(autoremap = 'first'),
+                ),
+                geometry = dict(
+                    info = "The resource's massif geometry.",
+                    type = MassifGeometry,
+                ),
+                datebegin = dict(
+                    info = "First date of the forcing file",
+                    type = Date,
+                ),
+                dateend = dict(
+                    info = "Last date of the forcing file",
+                    type = Date,
+                ),
+                # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
+                cutoff = dict(
+                    optional = True)
+            )
+        )
+    ]
+
+    _extension_remap = dict(netcdf='nc')
+
+    @property
+    def realkind(self):
+        return "obs_insitu"
+
+    def cenvortex_basename(self):
+        print "CENVORTEX_BASENAME"
+        print self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
+
+        return self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
+
+
+class ScoresSnow(SurfaceIO):
+    """Class for the safrane output files."""
+    _footprint = [
+        dict(
+            info = 'Safran-produced forcing file',
+            attr = dict(
+                kind = dict(
+                    values = ['ScoresSnow'],
+                ),
+                model = dict(
+                    values = ['surfex'],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return "scores"
+
+
 class SafranObsRaw(ObsRaw):
 
     _footprint = dict(
