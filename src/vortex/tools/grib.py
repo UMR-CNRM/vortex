@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import io
 import re
-import urlparse
+import six
+from six.moves.urllib import parse as urlparse
 
 import footprints
 
@@ -42,7 +45,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
     xgrib_index_get = _std_grib_index_get
 
     def _std_grib_index_write(self, destination, gribpaths):
-        gribparts = [unicode(urlparse.urlunparse(('file', '', path, '', '', '')))
+        gribparts = [six.text_type(urlparse.urlunparse(('file', '', path, '', '', '')))
                      for path in gribpaths]
         tmpfile = destination + self.sh.safe_filesuffix()
         with io.open(tmpfile, 'w') as fd:
@@ -52,7 +55,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
     def is_xgrib(self, source):
         """Check if the given ``source`` is a multipart-GRIB file."""
         rc = False
-        if source and isinstance(source, basestring) and self.sh.path.exists(source):
+        if source and isinstance(source, six.string_types) and self.sh.path.exists(source):
             with io.open(source, 'rb') as fd:
                 rc = fd.read(7) == 'file://'
         return rc
@@ -93,7 +96,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         # Might be multipart
         if self.is_xgrib(source):
             rc = True
-            if isinstance(destination, basestring) and not pack:
+            if isinstance(destination, six.string_types) and not pack:
                 idx = self._std_grib_index_get(source)
                 destdir = self.sh.path.abspath(self.sh.path.expanduser(destination) + ".d")
                 rc = rc and self.sh.mkdir(destdir)
@@ -103,7 +106,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                     rc = rc and self.sh._backend_cp(a_mpart, target_idx[-1], intent=intent)
                     rc = rc and self._std_grib_index_write(destination, target_idx)
                 if intent == 'in':
-                    self.sh.chmod(destination, 0444)
+                    self.sh.chmod(destination, 0o444)
             else:
                 rc = rc and self.xgrib_pack(source, destination)
         else:
@@ -142,13 +145,13 @@ class GRIB_Tool(addons.FtrawEnableAddon):
 
     def xgrib_pack(self, source, destination, intent='in'):
         """Manually pack a multi GRIB."""
-        if isinstance(destination, basestring):
+        if isinstance(destination, six.string_types):
             tmpfile = destination + self.sh.safe_filesuffix()
             with io.open(tmpfile, 'wb') as fd:
                 p = self._pack_stream(source, stdout=fd)
             self.sh.pclose(p)
             if intent == 'in':
-                self.sh.chmod(tmpfile, 0444)
+                self.sh.chmod(tmpfile, 0o444)
             return self.sh.move(tmpfile, destination)
         else:
             p = self._pack_stream(source, stdout=destination)
@@ -191,9 +194,9 @@ class GRIB_Tool(addons.FtrawEnableAddon):
             if self.sh.ftraw and self.rawftshell is not None:
                 # Copy the GRIB pieces individually
                 pieces = self.xgrib_index_get(source)
-                newsources = [self.sh.copy2ftspool(piece) for piece in pieces]
+                newsources = [six.text_type(self.sh.copy2ftspool(piece)) for piece in pieces]
                 request = newsources[0] + '.request'
-                with open(request, 'w') as request_fh:
+                with io.open(request, 'w') as request_fh:
                     request_fh.writelines('\n'.join(newsources))
                 self.sh.readonly(request)
                 rc = self.sh.ftserv_put(request, destination,
@@ -239,7 +242,7 @@ class GribApiComponent(object):
         # First set the GRIB-API paths by inspecting the binary
         libs = self.system.ldd(rh.container.localpath()) if rh is not None else {}
         gribapi_lib = None
-        for lib in libs.iterkeys():
+        for lib in libs.keys():
             if re.match(r'^libgrib_api(?:-[.0-9]+)?\.so(?:\.[.0-9]+)?$', lib):
                 gribapi_lib = lib
                 break

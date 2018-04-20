@@ -8,8 +8,10 @@ In any kind of cache directories, the folder structure is kept as is. When
 data are sent using FTP or SSH, a tar file is created on the fly.
 """
 
-from __future__ import division
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+import io
+import six
 import tempfile
 
 import footprints
@@ -74,18 +76,18 @@ class FolderShell(addons.FtrawEnableAddon):
         if rc:
             rc, source, destination = self.sh.tarfix_in(source, destination)
             if rc and intent == 'inout':
-                self.sh.stderr('chmod', 0644, destination)
+                self.sh.stderr('chmod', 0o644, destination)
                 oldtrace, self.sh.trace = self.sh.trace, False
                 for infile in self.sh.ffind(destination):
-                    self.sh.chmod(infile, 0644)
+                    self.sh.chmod(infile, 0o644)
                 self.sh.trace = oldtrace
         return rc
 
     def _folder_mv(self, source, destination):
         """Shortcut to :meth:`move` method (file or directory)."""
-        if not isinstance(source, basestring) or not isinstance(destination, basestring):
+        if not isinstance(source, six.string_types) or not isinstance(destination, six.string_types):
             rc = self.sh.hybridcp(source, destination)
-            if isinstance(source, basestring):
+            if isinstance(source, six.string_types):
                 rc = rc and self.sh.remove(source)
         else:
             rc, source, destination = self.sh.tarfix_out(source, destination)
@@ -257,8 +259,8 @@ class FolderShell(addons.FtrawEnableAddon):
             newsource = self.sh.copy2ftspool(source, nest=True,
                                              fmt=self.supportedfmt)
             request = self.sh.path.dirname(newsource) + '.request'
-            with open(request, 'w') as request_fh:
-                request_fh.write(self.sh.path.dirname(newsource))
+            with io.open(request, 'w') as request_fh:
+                request_fh.write(six.text_type(self.sh.path.dirname(newsource)))
             self.sh.readonly(request)
             rc = self.sh.ftserv_put(request, destination,
                                     hostname=hostname, logname=logname,

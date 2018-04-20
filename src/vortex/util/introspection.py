@@ -5,16 +5,19 @@
 Some convenient functions to explore the source code or its documentation.
 """
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 import inspect
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Sherlock(object):
@@ -58,7 +61,7 @@ class Sherlock(object):
                 try:
                     if modfile == inspect.getsourcefile(y):
                         if self.verbose:
-                            print x, y
+                            print(x, y)
                         objs[x] = y
                 except TypeError:
                     pass

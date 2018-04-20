@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.util.config     import GenericConfigParser
 from vortex.data.providers  import Provider
 from vortex.syntax.stdattrs import namespacefp
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 map_suffix = {'alp': '_al', 'pyr': '_py', 'cor': '_co'}
 

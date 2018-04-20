@@ -19,7 +19,7 @@ Description files for option -f may include comments (introduced by '#')
 and  blank lines. The usual separators are allowed (space, tab, newline).
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import argparse
 import os

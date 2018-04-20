@@ -5,7 +5,7 @@
 Utility that manages the Uget Hack and Archive Stores.
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import cmd
 import ConfigParser

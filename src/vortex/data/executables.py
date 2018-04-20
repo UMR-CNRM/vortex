@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
 
-from resources import Resource
+from .resources import Resource
 from vortex.syntax.stdattrs import a_model
 from vortex.util.config import JacketConfigParser
+
+#: No automatic export
+__all__ = []
 
 
 class Jacket(object):

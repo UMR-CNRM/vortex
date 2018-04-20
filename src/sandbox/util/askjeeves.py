@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import io
 import time
 
 #: No automatic export
@@ -52,7 +55,7 @@ def test_bar(pnum, ask, config, logger, **kw):
     elif selector == 'slow_write':
         finalpath = ask.data.get('filepath', None)
         temporary = finalpath + '.tmp'
-        with open(temporary, 'a+') as fp:
+        with io.open(temporary, 'a+') as fp:
             for step in range(11):
                 fp.write('step {:02d}\n'.format(step))
                 fp.flush()
@@ -64,7 +67,7 @@ def test_bar(pnum, ask, config, logger, **kw):
         ask_time = ask.data.get('ask_time', 'not specified')
         message = ask.data.get('message', 'no message')
         now_time = time.strftime('%Y%m%d %H:%M:%S', time.localtime())
-        with open(filepath, 'a+') as fp:
+        with io.open(filepath, 'a+') as fp:
             fp.write('test_bar stamp - ask time {} - run time {} - {}\n'.format(ask_time, now_time, message))
 
     else:

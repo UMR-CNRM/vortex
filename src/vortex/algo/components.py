@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import collections
 import sys
 import traceback
@@ -179,10 +181,10 @@ class AlgoComponent(footprints.FootprintBase):
         logger.error("An exception is delayed")
         if traceback:
             (exc_type, exc_value, exc_traceback) = sys.exc_info()
-            print 'Exception type: ' + str(exc_type)
-            print 'Exception info: ' + str(exc_value)
-            print 'Traceback:'
-            print "\n".join(traceback.format_tb(exc_traceback))
+            print('Exception type: {!s}'.format(exc_type))
+            print('Exception info: {!s}'.format(exc_value))
+            print('Traceback:')
+            print("\n".join(traceback.format_tb(exc_traceback)))
         self._delayed_excs.append(exc)
 
     def algoassert(self, assertion, msg=''):
@@ -391,12 +393,12 @@ class AlgoComponent(footprints.FootprintBase):
         self.system.signal_intercept_on()
         try:
             self.execute_single(rh, opts)
-        except:
+        except Exception:
             (exc_type, exc_value, exc_traceback) = sys.exc_info()
-            print 'Exception type: ' + str(exc_type)
-            print 'Exception info: ' + str(exc_value)
-            print 'Traceback:'
-            print "\n".join(traceback.format_tb(exc_traceback))
+            print('Exception type: {!s}'.format(exc_type))
+            print('Exception info: {!s}'.format(exc_value))
+            print('Traceback:')
+            print("\n".join(traceback.format_tb(exc_traceback)))
             # Alert the main process of the error
             self._server_event.set()
 
@@ -457,9 +459,9 @@ class AlgoComponent(footprints.FootprintBase):
         sh = self.system
 
         if self.env.true('vortex_debug_env'):
-            sh.subtitle('{0:s} : dump environment (os bound: {1:s})'.format(
+            sh.subtitle('{0:s} : dump environment (os bound: {1!s})'.format(
                 self.realkind,
-                str(self.env.osbound())
+                self.env.osbound()
             ))
             self.env.osdump()
 
@@ -617,11 +619,11 @@ class AlgoComponent(footprints.FootprintBase):
     def quickview(self, nb=0, indent=0):
         """Standard glance to objects."""
         tab = '  ' * indent
-        print '{0}{1:02d}. {2:s}'.format(tab, nb, repr(self))
+        print('{0}{1:02d}. {2:s}'.format(tab, nb, repr(self)))
         for subobj in ( 'kind', 'engine', 'interpreter'):
             obj = getattr(self, subobj, None)
             if obj:
-                print '{0}  {1:s}: {2:s}'.format(tab, subobj, str(obj))
+                print('{0}  {1:s}: {2!s}'.format(tab, subobj, obj))
         print
 
     def setlink(self, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
@@ -1091,7 +1093,7 @@ class Parallel(xExecutableAlgoComponent):
 
             # Check mpiopts shape
             u_mpiopts = opts.get('mpiopts', dict())
-            for k, v in u_mpiopts.iteritems():
+            for k, v in u_mpiopts.items():
                 if not isinstance(v, collections.Iterable):
                     raise ValueError('In such a case, mpiopts must be Iterable')
                 if len(v) != len(rh):
@@ -1104,7 +1106,7 @@ class Parallel(xExecutableAlgoComponent):
                                                        nodes   = self.env.get('VORTEX_SUBMIT_NODES', 1),
                                                        ** mpi_desc))
                 # Reshape mpiopts
-                bins[i].options = {k: v[i] for k, v in u_mpiopts.iteritems()}
+                bins[i].options = {k: v[i] for k, v in u_mpiopts.items()}
                 bins[i].master  = self.absexcutable(r.container.localpath())
 
         # Nothing to do: binary descriptions are provided by the user

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from vortex.data.contents import JsonDictContent
 from vortex.data.flow import FlowResource
 

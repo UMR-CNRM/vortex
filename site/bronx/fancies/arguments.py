@@ -10,10 +10,11 @@ TODO: Add a simple unittest
              changes will be made in future versions. DO NOT USE YET.
 
 """
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, unicode_literals, print_function, division
+import six
 
-import re
 import argparse
+import re
 
 import footprints
 
@@ -232,10 +233,10 @@ class DefinedArgumentParser(ArgumentParser):
     @classmethod
     def mktuple(cls, value):
         """Do our best to build a tuple from a given command line value."""
-        if isinstance(value, (str, unicode)):
+        if isinstance(value, six.string_types):
             # just split a comma sparated string
             value = tuple([x.strip() for x in value.split(',')])
-        elif isinstance(value, list) and len(value) == 1 and isinstance(value[0], (str, unicode)):
+        elif isinstance(value, list) and len(value) == 1 and isinstance(value[0], six.string_types):
             # because of the special nargs case we must check again comma separated lists
             value = tuple([x.strip() for x in value[0].split(',')])
         else:
@@ -260,7 +261,6 @@ class CfgExtendedArguments(object):
             options  = '--cfgname',
             help     = 'Cfg files radical',
             metavar  = 'name',
-            type     = unicode,
             default  = None,
         )
 
@@ -269,7 +269,6 @@ class CfgExtendedArguments(object):
             options  = '--cfgtag',
             help     = 'Cfg files tag',
             metavar  = 'tag',
-            type     = unicode,
             default  = 'default',
         )
 
@@ -278,7 +277,6 @@ class CfgExtendedArguments(object):
             options  = '--cfgdir',
             help     = 'Cfg files directory name',
             metavar  = 'path',
-            type     = unicode,
             default  = 'conf',
         )
 
@@ -287,7 +285,6 @@ class CfgExtendedArguments(object):
             options  = '--cfgroot',
             help     = 'Cfg files root path',
             metavar  = 'path',
-            type     = unicode,
             default  = None,
         )
 
@@ -296,7 +293,6 @@ class CfgExtendedArguments(object):
             options  = '--cfgext',
             help     = 'Cfg extension filename',
             metavar  = 'str',
-            type     = unicode,
             default  = 'yaml',
         )
 
@@ -305,7 +301,6 @@ class CfgExtendedArguments(object):
             options  = '--cfgfile',
             help     = 'Cfg full file path',
             metavar  = 'path',
-            type     = unicode,
             default  = None,
         )
 
@@ -384,7 +379,6 @@ class MeteoExtendedArguments(object):
             options  = ('-s', '--suite'),
             help     = 'Op suite',
             metavar  = 'suite',
-            type     = unicode,
             choices  = ('oper', 'dble', 'test'),
             default  = 'oper',
         )
@@ -395,7 +389,6 @@ class MeteoExtendedArguments(object):
             help     = 'Vortex application name',
             metavar  = 'vapp[-vconf]',
             nargs    = '+',
-            type     = unicode,
             default  = 'arome',
             callback = self.mktuple,
         )
@@ -406,7 +399,6 @@ class MeteoExtendedArguments(object):
             help     = 'Cutoff',
             metavar  = 'cutoff-name',
             nargs    = '+',
-            type     = unicode,
             choices  = ('production', 'assim'),
             default  = 'production',
             callback = self.mktuple,
@@ -426,7 +418,6 @@ class MeteoExtendedArguments(object):
             options  = ('-t', '--term'),
             help     = 'Extended terms range',
             metavar  = 'termstr',
-            type     = str,
             default  = date.Time(1),
             callback = self.mktimelist,
         )
@@ -446,7 +437,6 @@ class MeteoExtendedArguments(object):
             help     = 'Resource kind',
             metavar  = 'kind',
             default  = None,
-            type     = unicode,
         )
 
     def add_defined_namespace(self):
@@ -455,7 +445,6 @@ class MeteoExtendedArguments(object):
             help     = 'Resource namespace',
             metavar  = 'name',
             default  = None,
-            type     = unicode,
         )
 
     def add_defined_datacheck(self):
@@ -471,7 +460,6 @@ class MeteoExtendedArguments(object):
             help     = 'Container filename',
             metavar  = 'name',
             default  = None,
-            type     = unicode,
         )
 
     def add_defined_remote(self):
@@ -480,7 +468,6 @@ class MeteoExtendedArguments(object):
             help     = 'Remote resource filename',
             metavar  = 'name',
             default  = None,
-            type     = unicode,
         )
 
     def add_defined_incore(self):
@@ -498,7 +485,7 @@ class MeteoExtendedArguments(object):
     @classmethod
     def mkperiodlist(cls, value):
         """Return a list of date.Period values from an extended period range value in minutes."""
-        return [date.Period('PT' + unicode(x ) + 'M') for x in footprints.util.rangex(value)]
+        return [date.Period('PT' + six.text_type(x ) + 'M') for x in footprints.util.rangex(value)]
 
 
 class CfgMeteoArgumentParser(DefinedArgumentParser, CfgExtendedArguments, MeteoExtendedArguments):

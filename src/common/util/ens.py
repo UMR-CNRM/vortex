@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 """
 A collection of utility functions used in the context of Ensemble forecasts.
 """
 
-from StringIO import StringIO
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import json
 from random import seed, sample
 import re
+import six
 
 import footprints
 from vortex import sessions
@@ -56,9 +57,9 @@ def drawingfunction(options):
             raise FunctionStoreCallbackError('The resource must hold a non-empty population attribute')
         nbset = len(population)
 
-        tirage = (sample(population * (nbsample / nbset), (nbsample / nbset) * nbset) +
+        tirage = (sample(population * (nbsample // nbset), (nbsample // nbset) * nbset) +
                   sample(population, nbsample % nbset))
-        logger.info('List of random elements: %s', ', '.join([str(x) for x in tirage]))
+        logger.info('List of random elements: %s', ', '.join([six.text_type(x) for x in tirage]))
     else:
         raise FunctionStoreCallbackError("no resource handler here :-(")
     # NB: The result have to be a file like object !
@@ -71,7 +72,7 @@ def drawingfunction(options):
                    population = population)
     if rhdict['provider'].get('experiment', None) is not None:
         outdict['experiment'] = rhdict['provider']['experiment']
-    return StringIO(json.dumps(outdict, indent=4))
+    return six.StringIO(json.dumps(outdict, indent=4))
 
 
 def _checkingfunction_dict(options):
@@ -133,7 +134,7 @@ def checkingfunction(options):
                    population = avail_list)
     if rhdict['provider'].get('experiment', None) is not None:
         outdict['experiment'] = rhdict['provider']['experiment']
-    return StringIO(json.dumps(outdict, indent=4))
+    return six.StringIO(json.dumps(outdict, indent=4))
 
 
 def safedrawingfunction(options):

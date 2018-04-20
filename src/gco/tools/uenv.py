@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import re
 
 import footprints
@@ -53,7 +55,7 @@ def contents(cycle, scheme=None, netloc=None):
             tmplocal = footprints.proxy.container(shouldfly=True)
             rc = localst.get(uriparse(uri_s), tmplocal.iotarget(), dict())
         except (OSError, IOError) as e:
-            print e
+            print(e)
             try:
                 # This may happen if the user has insufficient rights on
                 # the current directory

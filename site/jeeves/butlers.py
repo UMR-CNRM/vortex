@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 import sys
 import os
 import platform
@@ -17,7 +19,7 @@ import multiprocessing
 from ast          import literal_eval
 from datetime     import datetime
 from signal       import SIGTERM
-from ConfigParser import SafeConfigParser
+from six.moves.configparser import SafeConfigParser
 
 import footprints
 from . import pools
@@ -118,7 +120,7 @@ class GentleTalk(object):
             )
             mutex = multiprocessing.Lock()
             mutex.acquire()
-            print msg
+            print(msg)
             mutex.release()
 
     def debug(self, msg, *args, **kw):
@@ -207,11 +209,11 @@ class ExitHandler(object):
         self.daemon.info('Context exit ' + repr(exc_type))
         if hasattr(exc_value, 'message') and exc_value.message:
             self.daemon.critical('Context exit', error=exc_value)
-            print "\n", '-' * 80
-            print exc_value.message
-            print '-' * 80, "\n"
-            print "\n".join(traceback.format_tb(exc_traceback))
-            print '-' * 80, "\n"
+            print("\n", '-' * 80)
+            print(exc_value.message)
+            print('-' * 80, "\n")
+            print("\n".join(traceback.format_tb(exc_traceback)))
+            print('-' * 80, "\n")
         else:
             self.daemon.info('Context exit', value=exc_value)
         for callback in [x for x in self.on_exit if x is not None]:
@@ -279,7 +281,7 @@ class PidFile(object):
         try:
             while retry > 0:
                 os.kill(pid, SIGTERM)
-                print 'Sending SIGTERM to', pid, '...'
+                print('Sending SIGTERM to', pid, '...')
                 time.sleep(0.2)
                 retry -= 1
         except OSError as err:
@@ -414,7 +416,7 @@ class BaseDaemon(object):
             if pid > 0:
                 # exit first parent
                 sys.exit(0)
-        except OSError, e:
+        except OSError as e:
             sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
             sys.exit(1)
 
@@ -429,7 +431,7 @@ class BaseDaemon(object):
             if pid > 0:
                 # exit from second parent
                 sys.exit(0)
-        except OSError, e:
+        except OSError as e:
             sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
             sys.exit(1)
 
@@ -459,7 +461,7 @@ class BaseDaemon(object):
             if self.stdout and os.path.exists(self.stdout):
                 oldpath, oldname = os.path.split(self.stdout)
                 newpath = os.path.join(oldpath, LOG_ARCHIVE_PATH)
-                pools.parent_mkdir(newpath, mode=0755)
+                pools.parent_mkdir(newpath, mode=0o755)
                 os.rename(self.stdout, os.path.join(
                     newpath, oldname + '.' + pools.timestamp()
                 ))
@@ -497,7 +499,7 @@ class BaseDaemon(object):
             sys.exit('Daemon already running.')
 
         # start the daemon
-        print 'Starting daemon...'
+        print('Starting daemon...')
         if mkdaemon:
             self.daemonize()
 
@@ -525,7 +527,7 @@ class BaseDaemon(object):
         # check if a daemon is actually running
         if not self.pidfile.is_running():
             self.pidfile.unlock()
-            print 'Daemon not running.'
+            print('Daemon not running.')
             return
 
         # try to nicelly kill the daemon process
@@ -590,14 +592,14 @@ class HouseKeeping(object):
         """Display on stdout the current configuration."""
         if actualcfg is None:
             actualcfg = self.config
-        print "\n", '-' * 80
-        print scope.upper(), 'CONFIGURATION DISPLAY'
-        print '-' * 80
+        print("\n", '-' * 80)
+        print(scope.upper(), 'CONFIGURATION DISPLAY')
+        print('-' * 80)
         for section, infos in sorted(actualcfg.items()):
-            print "\n", ' *', section
+            print("\n", ' *', section)
             for k, v in sorted(infos.items()):
-                print '   +', k.ljust(16), '=', v
-        print "\n", '-' * 80, "\n"
+                print('   +', k.ljust(16), '=', v)
+        print("\n", '-' * 80, "\n")
         return True
 
     def internal_update(self, ask):

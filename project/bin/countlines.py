@@ -7,6 +7,8 @@ Uses the "cloc.pl" software to compute the number of lines of code in specific
 folders of the vortex project
 '''
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import argparse
 import collections
 import xml.etree.ElementTree as ET
@@ -79,5 +81,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     for subdir in args.subdirs:
-        print '{:-^80s}'.format('Subdirectories: ' + subdir)
-        print subdir_analyse(subdir, args.clocpath, args.clocdef)
+        print('{:-^80s}'.format('Subdirectories: ' + subdir))
+        print(subdir_analyse(subdir, args.clocpath, args.clocdef))

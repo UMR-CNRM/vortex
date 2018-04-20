@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from common.data.assim import _BackgroundErrorInfo
+
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import footprints
+
+from vortex.data.flow       import GeoFlowResource
+from common.data.assim      import _BackgroundErrorInfo
+from vortex.syntax.stdattrs import term
+from gco.syntax.stdattrs    import gvar
 
 #: Automatic export off
 __all__ = []
 
-
-import footprints
 logger = footprints.loggers.getLogger(__name__)
-
-from vortex.data.flow       import GeoFlowResource
-from vortex.syntax.stdattrs import term
-from gco.syntax.stdattrs    import gvar
 
 
 class RawFiles(GeoFlowResource):

@@ -10,7 +10,7 @@ it must deal with the data (given to realize the action) and the action
 to be processed: e.g. mail, routing, alarm.
 """
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
 

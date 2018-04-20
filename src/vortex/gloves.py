@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import footprints
+
+from vortex.tools.env import Environment
+
 #: No automatic export
 __all__ = []
 
-import footprints
 logger = footprints.loggers.getLogger(__name__)
-
-from vortex.tools.env import Environment
 
 
 class Glove(footprints.FootprintBase):
@@ -131,13 +134,13 @@ class Glove(footprints.FootprintBase):
         """Returns a printable description of the current glove."""
         card = "\n".join((
             '{0}User     = {1:s}',
-            '{0}Profile  = {2:s}',
+            '{0}Profile  = {2!s}',
             '{0}Vapp     = {3:s}',
             '{0}Vconf    = {4:s}',
             '{0}Configrc = {5:s}'
         )).format(
             indent,
-            self.user, str(self.profile), self.vapp, self.vconf, self.configrc
+            self.user, self.profile, self.vapp, self.vconf, self.configrc
         )
         return card
 

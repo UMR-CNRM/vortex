@@ -1,9 +1,15 @@
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from astroid import MANAGER
 from astroid import scoped_nodes
 from astroid import Instance
+
 import __builtin__
+
+import io
 import glob
 import os
+import six
 import sys
 import json
 
@@ -15,7 +21,7 @@ _FP_EXPORT = []
 def register(linter):
     # First, read the footprint dumps Json files
     for colfile in glob.glob('{:s}/tbinterface_*.json'.format(VORTEXBASE)):
-        with open(colfile, 'r') as fd:
+        with io.open(colfile, 'rb') as fd:
             _FP_EXPORT.append(json.load(fd))
 
 
@@ -28,9 +34,9 @@ def _footprint_members_add(cls):
             thefp = coldata[fname]['footprint']
     if thefp is not None:
         # Loop on footprint attributes
-        for attr, desc  in thefp['attr'].iteritems():
+        for attr, desc  in thefp['attr'].items():
 
-            thetype = desc.get('type', 'str')
+            thetype = desc.get('type', six.text_type.__name__)
             # If the attribute is a complex type, try to load the
             # module's AST
             if '.' in thetype:

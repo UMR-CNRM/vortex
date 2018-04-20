@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: Automatic export of Monitoring class
-__all__ = [ ]
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
 
-logger = footprints.loggers.getLogger(__name__)
-
 from vortex.syntax.stdattrs import a_date, a_model, a_cutoff
 from common.algo.odbtools import OdbProcess
+
+#: Automatic export of Monitoring class
+__all__ = [ ]
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class OdbMonitoring(OdbProcess):

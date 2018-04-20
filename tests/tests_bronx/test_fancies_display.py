@@ -27,6 +27,7 @@ class FanciesDisplayTest(unittest.TestCase):
     @contextmanager
     def _quiet_stdout(self):
         oldstdout = sys.stdout
+        # io.open would be better but it fails in eclipse/pydev...
         with open(os.devnull, "w") as newstdout:
             sys.stdout = newstdout
             yield

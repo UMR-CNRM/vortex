@@ -5,7 +5,7 @@
 Some useful hooks.
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 #: No automatic export
 __all__ = []

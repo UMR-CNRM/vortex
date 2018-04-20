@@ -5,6 +5,8 @@
 This package handles some common targets used at Meteo France.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import ftplib
 import six
 import socket
@@ -55,10 +57,10 @@ class Beaufix(MeteoBull):
         info = 'Bull Beaufix Supercomputer at Meteo France',
         attr = dict(
             hostname = dict(
-                values = \
-                    [ x + str(y) for x in ('beaufix',) for y in range(1836) ] + \
-                    [ x + str(y) for x in ('beaufixlogin',) for y in range(6) ] + \
-                    [ x + str(y) for x in ('beaufixtransfert',) for y in range(8) ]
+                values = (
+                    [ x + str(y) for x in ('beaufix',) for y in range(1836) ] +
+                    [ x + str(y) for x in ('beaufixlogin',) for y in range(6) ] +
+                    [ x + str(y) for x in ('beaufixtransfert',) for y in range(8) ] )
             ),
             inetname = dict(
                 default = 'beaufix',
@@ -66,9 +68,6 @@ class Beaufix(MeteoBull):
             ),
         )
     )
-
-    del x
-    del y
 
 
 class Prolix(MeteoBull):
@@ -78,10 +77,10 @@ class Prolix(MeteoBull):
         info = 'Bull Prolix Supercomputer at Meteo France',
         attr = dict(
             hostname = dict(
-                values = \
-                    [ x + str(y) for x in ('prolix',) for y in range(1800) ] + \
-                    [ x + str(y) for x in ('prolixlogin',) for y in range(6) ] + \
-                    [ x + str(y) for x in ('prolixtransfert',) for y in range(8) ]
+                values = (
+                    [ x + str(y) for x in ('prolix',) for y in range(1800) ] +
+                    [ x + str(y) for x in ('prolixlogin',) for y in range(6) ] +
+                    [ x + str(y) for x in ('prolixtransfert',) for y in range(8) ] )
             ),
             inetname = dict(
                 default = 'prolix',
@@ -89,9 +88,6 @@ class Prolix(MeteoBull):
             ),
         )
     )
-
-    del x
-    del y
 
 
 class Aneto(Target):
@@ -117,9 +113,6 @@ class Aneto(Target):
             level = footprints.priorities.top.TOOLBOX
         )
     )
-
-    del x
-    del y
 
 
 class MeteoSoprano(Target):

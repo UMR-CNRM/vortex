@@ -6,12 +6,13 @@ Hierarchical documents to store footprints information.
 StandardReport is derived from :class:`xml.dom.minidom.Document`.
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
+import collections
 from datetime import datetime
 import re
+import six
 import weakref
-import collections
 
 from . import dump, util
 
@@ -184,7 +185,7 @@ class FootprintLogClass(FootprintLogEntry):
         """Insert in the specified ``xmlnode`` informations relative to attributes of the candidate class."""
         xmlnode.current(xmlnode.add('class', name=self.name))
         for kid in self._items:
-            kidstr = dict([(k, str(v)) for k, v in kid.items()])
+            kidstr = dict([(k, six.text_type(v)) for k, v in kid.items()])
             xmlnode.add('attribute', **kidstr)
 
     def as_dict(self):
@@ -440,7 +441,7 @@ class FlatReport(object):
             if done or skip:
                 focus = info.pop('focus')
                 if info:
-                    current[focus] = ' / '.join([str(x) + ': ' + str(info[x]) for x in info.keys()])
+                    current[focus] = ' / '.join([six.text_type(x) + ': ' + six.text_type(info[x]) for x in info.keys()])
                 else:
                     current[focus] = None
 
@@ -522,7 +523,7 @@ class FactorizedReport(object):
             if v is None:
                 raise KeyError("Ordering key not found: {:s}".format(k))
         info = kw.get('args', '')
-        dic[tagvalue] = str(info)
+        dic[tagvalue] = six.text_type(info)
 
     def printer(self, dic, currentindent, depth, ordered=False):
         if depth == len(self):

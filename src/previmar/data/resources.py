@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.stdtypes.date import Date, Time, Period
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource, GeoFlowResource
 from common.data.modelstates import InitialCondition
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class SolutionPoint(FlowResource):

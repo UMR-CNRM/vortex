@@ -1,18 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import absolute_import, print_function, division, unicode_literals
 
+import io
 import re
+import six
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.algo.components import Parallel, BlindRun, Expresso
 from vortex.syntax.stdattrs import a_date, model
 from bronx.stdtypes import date
 from bronx.datagrip.namelist import NamelistBlock
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class CorrOmegaSurf(Parallel):
@@ -51,10 +56,10 @@ class CorrOmegaSurf(Parallel):
         gridrh.sort(key=lambda s: s.rh.resource.term)
 
         sh.remove('fort.2')
-        list_file = [filerh.rh.container.filename for filerh in gridrh]
-        list_file = "\n".join([str(len(list_file))] + list_file)
+        list_file = [six.text_type(filerh.rh.container.localpath()) for filerh in gridrh]
+        list_file = "\n".join([six.text_type(len(list_file)), ] + list_file)
 
-        with open('fort.2', 'w') as fnam:
+        with io.open('fort.2', 'w') as fnam:
             fnam.write(list_file)
         sh.cat('fort.2')
 

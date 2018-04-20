@@ -18,15 +18,15 @@ This module contains:
 Inital author: Joris Picot (2010-12-08 / CERFACS)
 """
 
-# TODO: Activate unicode_literals but check that it still works with Olive
-# experiments and when sending emails.
-from __future__ import print_function, absolute_import, division  # , unicode_literals
+from __future__ import print_function, absolute_import, division, unicode_literals
+import six
 
 import collections
 import copy
 from decimal import Decimal
+import io
 import re
-import six
+
 
 #: No automatic export
 __all__ = []
@@ -210,27 +210,27 @@ class LiteralParser(object):
         The reverse operation could be achieved through a specific encodingfunction:
 
         >>> x = 2
-        >>> lp.encode_real(x)
-        '2.'
-        >>> lp.encode_integer(x)
-        '2'
-        >>> lp.encode_complex(x)
-        '(2.,0.)'
-        >>> lp.encode_logical(x)
-        '.TRUE.'
+        >>> print(lp.encode_real(x))
+        2.
+        >>> print(lp.encode_integer(x))
+        2
+        >>> print(lp.encode_complex(x))
+        (2.,0.)
+        >>> print(lp.encode_logical(x))
+        .TRUE.
 
         It is possible to rely on the internal python type to decide which
         is the appropriate encoding through the generic :meth:`encode` method:
 
         >>> x = 2
-        >>> lp.encode(x)
-        '2'
+        >>> print(lp.encode(x))
+        2
         >>> z = 1 - 2j
-        >>> lp.encode(z)
-        '(1.,-2.)'
+        >>> print(lp.encode(z))
+        (1.,-2.)
         >>> x = 2.
-        >>> lp.encode(x)
-        '2.'
+        >>> print(lp.encode(x))
+        2.
 
     """
     def __init__(self,
@@ -388,12 +388,12 @@ class LiteralParser(object):
     @staticmethod
     def encode_integer(value):
         """Returns the string form of the integer ``value``."""
-        return str(value)
+        return six.text_type(value)
 
     @staticmethod
     def encode_boz(value):
         """Returns the string form of the BOZ ``value``."""
-        return str(value)
+        return six.text_type(value)
 
     @staticmethod
     def encode_real(value):
@@ -486,11 +486,11 @@ class NamelistBlock(collections.MutableMapping):
         Entry B: Value is 2.0
         Entry TEXT: Value is MyBad
         >>> for k, v in nb1.items():
-        ...     print('Entry {:s}: Value is {!s}'.format(k, v))
+        ...     print('Entry {:s}: Value is {!s}'.format(k, v))  # doctest: +ELLIPSIS
         ...
         Entry A: Value is [1]
         Entry B: Value is [2.0]
-        Entry TEXT: Value is ['MyBad']
+        Entry TEXT: Value is [...'MyBad']
         >>> del nb1.B
 
         An exemple of namelist blocks merge:
@@ -548,7 +548,7 @@ class NamelistBlock(collections.MutableMapping):
         self.__dict__.update(state)
 
     def set_name(self, name):
-        """Change the namelist block anme."""
+        """Change the namelist block name."""
         self.__dict__['_name'] = name.upper()
 
     @property
@@ -1279,9 +1279,8 @@ class NamelistParser(object):
         if isinstance(obj, six.string_types):
             if not self.block.search(obj):
                 obj = obj.strip()
-                iod = open(obj, 'r')
-                obj = iod.read()
-                iod.close()
+                with io.open(obj, 'r') as iod:
+                    obj = iod.read()
             return self._namelist_parse(obj)
 
         elif hasattr(obj, 'seek') and hasattr(obj, 'read'):

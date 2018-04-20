@@ -6,9 +6,9 @@ Various tools designed for interactive scripts.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import collections
-import six
 import sys
 
 #: No automatic export

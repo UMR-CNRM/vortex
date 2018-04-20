@@ -5,14 +5,18 @@
 Interface to SMS commands.
 """
 
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import functools
+import six
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from .services import Service
+
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Scheduler(Service):
@@ -73,7 +77,7 @@ class EcmwfLikeScheduler(Scheduler):
         """Possibly export the provided variables and return a dictionary of positioned variables."""
         if kwenv:
             for schedvar in [ x.upper() for x in kwenv.keys() if x.upper().startswith(self.env_pattern) ]:
-                self.env[schedvar] = str(kwenv[schedvar])
+                self.env[schedvar] = six.text_type(kwenv[schedvar])
         subenv = dict()
         for schedvar in [ x for x in self.env.keys() if x.startswith(self.env_pattern) ]:
             subenv[schedvar] = self.env.get(schedvar)
@@ -81,8 +85,8 @@ class EcmwfLikeScheduler(Scheduler):
 
     def info(self):
         """Dump current defined variables."""
-        for schedvar, schedvalue in self.conf(dict()).iteritems():
-            print '{0:s}="{1:s}"'.format(schedvar, str(schedvalue))
+        for schedvar, schedvalue in six.iteritems(self.conf(dict())):
+            print('{0:s}="{1!s}"'.format(schedvar, schedvalue))
 
     def __call__(self, *args):
         """By default call the :meth:`info` method."""
@@ -238,7 +242,7 @@ class SMSColor(SMS):
     def wrap_in(self):
         """Last minute wrap before binary child command."""
         rc = super(SMSColor, self).wrap_in()
-        print "SMS COLOR"
+        print("SMS COLOR")
         return rc
 
 
@@ -328,7 +332,7 @@ class EcFlow(EcmwfLikeScheduler):
                 args.extend(options[1:])
         else:
             args.append('--{:s}'.format(cmd))
-        args = [str(a) for a in args]
+        args = [six.text_type(a) for a in args]
         logger.info('Issuing the ecFlow command: %s', ' '.join(args[1:]))
         return self.sh.spawn(args, output=False)
 

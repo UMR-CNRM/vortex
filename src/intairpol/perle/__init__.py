@@ -5,8 +5,10 @@
 various tools related to the PERLE model.
 """
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 # Recursive inclusion of packages with potential FootprintBase classes
-import tools
+from . import tools
+
+#: No automatic export
+__all__ = []

@@ -5,22 +5,25 @@
 Top level interface for accessing the VORTEX facilities.
 
 This module does not provides any class, constant, or any nice object.
-It defines a very basic interface to some (possibly) powefull capacities
+It defines a very basic interface to some (possibly) powerful capacities
 of the :mod:`vortex` toolbox.
 """
-
-#: Automatic export of superstar interface.
-__all__ = [ 'rload', 'rget', 'rput' ]
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from contextlib import contextmanager
 import re
+import six
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions, data, proxy, VortexForceComplete
 from vortex.layout.dataflow import stripargs_section, intent, ixo, Section
 from vortex.util.structs import History
+
+#: Automatic export of superstar interface.
+__all__ = [ 'rload', 'rget', 'rput' ]
+
+logger = footprints.loggers.getLogger(__name__)
 
 #: Shortcut to footprint env defaults
 defaults = footprints.setup.defaults
@@ -63,7 +66,7 @@ def show_toolbox_settings(ljust=24):
                  'metadatacheck', 'incache')]:
         kval = globals().get(key, None)
         if kval is not None:
-            print '+', key.ljust(ljust), '=', kval
+            print('+', key.ljust(ljust), '=', kval)
 
 
 def quickview(args, nb=0, indent=0):
@@ -78,7 +81,7 @@ def quickview(args, nb=0, indent=0):
         if quickview:
             quickview(nb, indent)
         else:
-            print '{0:02d}. {1:s}'.format(nb, x)
+            print('{0:02d}. {1:s}'.format(nb, x))
 
 
 class VortexToolboxDescError(Exception):
@@ -168,9 +171,9 @@ def rput(*args, **kw):
 
 def nicedump(msg, **kw):
     """Simple dump the **kw** dict content with ``msg`` as header."""
-    print '#', msg, ':'
-    for k, v in sorted(kw.iteritems()):
-        print '+', k.ljust(12), '=', str(v)
+    print('#', msg, ':')
+    for k, v in sorted(six.iteritems(kw)):
+        print('+', k.ljust(12), '=', str(v))
     print
 
 
@@ -336,7 +339,7 @@ def add_section(section, args, kw):
                         if talkative and not ok:
                             logger.error('Could not %s resource %s',
                                          doitmethod, rhandler.container.localpath())
-                            print t.line
+                            print(t.line)
                         if not ok:
                             if complete:
                                 logger.warning('Force complete for %s',
@@ -518,7 +521,7 @@ def algo(*args, **kw):
 
         ok = proxy.component(**kw)  # @UndefinedVariable
         if ok and talkative:
-            print t.line
+            print(t.line)
             ok.quickview(nb=1, indent=0)
 
     return ok
@@ -584,9 +587,9 @@ def diff(*args, **kw):
         # Let the magic of footprints resolution operate...
         for ir, rhandler in enumerate(rload(*args, **kwclean)):
             if talkative:
-                print t.line
+                print(t.line)
                 rhandler.quickview(nb=ir + 1, indent=0)
-                print t.line
+                print(t.line)
             if not rhandler.complete:
                 logger.error('Incomplete Resource Handler for diff [%s]', rhandler)
                 if fatal:
@@ -703,9 +706,9 @@ def print_namespaces(**kw):
     nd = namespaces(**kw)
     justify = max([len(x) for x in nd.keys()])
     linesep = ",\n" + ' ' * (justify + len(prefix) + 2)
-    for k, v in sorted(nd.iteritems()):
+    for k, v in sorted(six.iteritems(nd)):
         nice_v = linesep.join(v) if len(v) > 1 else v[0]
-        print prefix + k.ljust(justify), '[' + nice_v + ']'
+        print(prefix + k.ljust(justify), '[' + nice_v + ']')
 
 
 def clear_promises(clear=None, netloc='promise.cache.fr', scheme='vortex',

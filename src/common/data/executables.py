@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
+
+from vortex.data.executables import Script, BlackBox, NWPModel, SurfaceModel
+from gco.syntax.stdattrs import gvar, arpifs_cycle
 
 #: No automatic export
 __all__ = []
-
-
-from vortex.data.executables import Script, BlackBox, NWPModel, SurfaceModel, ChemistryModel
-from gco.syntax.stdattrs import gvar, arpifs_cycle
-from bronx.stdtypes import date
 
 
 class IFSModel(NWPModel):

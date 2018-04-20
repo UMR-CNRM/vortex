@@ -7,10 +7,10 @@ Configuration management through ini files.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-from ConfigParser import SafeConfigParser, NoOptionError, NoSectionError, InterpolationDepthError
 import io
 import re
 import six
+from six.moves.configparser import SafeConfigParser, NoOptionError, NoSectionError, InterpolationDepthError
 
 from bronx.syntax.parsing import StringDecoder, StringDecoderSyntaxError
 import footprints
@@ -142,7 +142,7 @@ class GenericReadOnlyConfigParser(object):
         self.file = None
         filestack = list()
         local = sessions.system()
-        if not isinstance(inifile, basestring):
+        if not isinstance(inifile, six.string_types):
             # Assume it's an IO descriptor
             inifile.seek(0)
             self.parser.readfp(inifile)
@@ -196,7 +196,8 @@ class GenericReadOnlyConfigParser(object):
                                               'has_section', 'has_option'):
             return getattr(self.parser, attr)
         else:
-            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" + str(attr) + "'")
+            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" +
+                                 six.text_type(attr) + "'")
 
     def footprint_export(self):
         return self.file
@@ -331,7 +332,8 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
         if attr in ('defaults', ):
             return getattr(self.parser, attr)
         else:
-            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" + str(attr) + "'")
+            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" +
+                                 six.text_type(attr) + "'")
 
     def as_dict(self, merged=True):
         """Export the configuration file as a dictionary."""
@@ -368,8 +370,8 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
         """Define in all sections the couples of ( key, values ) given as dictionary argument."""
         self.updates.append(kw)
         for section in self.sections():
-            for key, value in kw.iteritems():
-                self.set(section, key, str(value))
+            for key, value in six.iteritems(kw):
+                self.set(section, key, six.text_type(value))
 
     def save(self):
         """Write the current state of the configuration in the inital file."""
@@ -388,7 +390,8 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
     def __getattr__(self, attr):
         # Give access to all of the parser's methods
         if attr.startswith('__'):
-            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" + str(attr) + "'")
+            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" +
+                                 six.text_type(attr) + "'")
         return getattr(self.parser, attr)
 
 
@@ -624,7 +627,7 @@ class ConfigurationTable(IniConf):
                 try:
                     for k, v in d[item].items():
                         # Can occur in case of a redundant entry in the config file
-                        if isinstance(v, basestring) and v:
+                        if isinstance(v, six.text_type) and v:
                             if re.match('none$', v, re.IGNORECASE):
                                 d[item][k] = None
                             if re.search('[a-z]_[a-z]', v, re.IGNORECASE):
@@ -723,7 +726,7 @@ class TableItem(footprints.FootprintBase):
         output_list = []
         if output_stack:
             max_keylen = max([len(i[0]) for i in output_stack])
-            print_fmt = '{0:' + str(max_keylen) + 's} : {1:s}'
+            print_fmt = '{0:' + six.text_type(max_keylen) + 's} : {1:s}'
             for item in output_stack:
                 output_list.append(print_fmt.format(* item))
         return '\n'.join(output_list)

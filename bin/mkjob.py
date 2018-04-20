@@ -1,11 +1,13 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import argparse
 import os
 import re
 from shutil import copyfile
+import six
 import sys
 import tempfile
 
@@ -101,7 +103,7 @@ def list_jobs(jobs):
 
 def make_cmdline(description):
     t = vortex.ticket()
-    if type(description) is str:
+    if isinstance(description, six.string_types):
         description = description.split(' ')
     return t.sh.rawopts(description)
 

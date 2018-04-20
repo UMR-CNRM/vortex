@@ -9,6 +9,9 @@ TODO: Add a simple unittest
 TODO: Fix undocumented properties
 """
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+import six
+
 import collections
 import datetime
 
@@ -59,7 +62,7 @@ class PrivateHistory(object):
     def nice(self, item):
         """Try to build some nice string of the item."""
         if type(item) is list or type(item) is tuple:
-            niceitem = ' '.join([str(x) for x in item])
+            niceitem = ' '.join([six.text_type(x) for x in item])
         else:
             niceitem = item
         return niceitem
@@ -129,14 +132,14 @@ class PrivateHistory(object):
         in the inclusive interval ``start`` - ``end``.
         """
         for c, t, i in self.get(start, end):
-            print '[{0:{size}d}]{1:s} : {2:s}'.format(c, self.fmt_timer(t), self.nice(i), size=self.sizefmt)
+            print('[{0:{size}d}]{1:s} : {2:s}'.format(c, self.fmt_timer(t), self.nice(i), size=self.sizefmt))
 
     def showmatch(self, regex):
         """
         Display a selection of history items matching argument ``regex``.
         """
         for c, t, i in self.match(regex):
-            print '[{0:{size}d}]{1:s} : {2:s}'.format(c, self.fmt_timer(t), self.nice(i), size=self.sizefmt)
+            print('[{0:{size}d}]{1:s} : {2:s}'.format(c, self.fmt_timer(t), self.nice(i), size=self.sizefmt))
 
     def showlast(self):
         """Display the last entry of the current history."""
@@ -158,7 +161,7 @@ class PrivateHistory(object):
         if focus is None:
             focus = self.stamp()
         for c, t, i in self.getaround(focus, delta):
-            print '[{0:{size}d}]{1:s} : {2:s}'.format(c, self.fmt_timer(t, force=True), self.nice(i), size=self.sizefmt)
+            print('[{0:{size}d}]{1:s} : {2:s}'.format(c, self.fmt_timer(t, force=True), self.nice(i), size=self.sizefmt))
 
     def __call__(self):
         return self.show()

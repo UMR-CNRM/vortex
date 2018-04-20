@@ -5,10 +5,13 @@
 Functions and tools to handle resources names or other kind of names.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import footprints
+
 #: No automatic export
 __all__ = []
 
-import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 
@@ -117,7 +120,7 @@ class VortexNameBuilder(object):
         packed = list()
         for i in items:
             if isinstance(i, dict):
-                for k, v in i.iteritems():
+                for k, v in i.items():
                     packmtd = getattr(self, 'pack_std_item_' + k, self.pack_void)
                     packed.append(packmtd(v))
             else:

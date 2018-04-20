@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-import six
 
+import io
 import sys
 from collections import OrderedDict
 
@@ -44,8 +44,8 @@ class OutputListing(object):
         self.tl_test = None
 
         # read listing in file
-        with open(self.filename, 'r') as f:
-            self.lines = [six.u(l).rstrip("\n") for l in f]  # to remove trailing '\n'
+        with io.open(self.filename, 'r') as f:
+            self.lines = [l.rstrip("\n") for l in f]  # to remove trailing '\n'
 
     def __len__(self):
         return len(self.lines)

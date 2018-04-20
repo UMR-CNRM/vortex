@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 # Function to create and write a few information in a file using Vortex (FunctionStore)
 
-# To convert a string into a file that contains the string
-from StringIO import StringIO
-
 import json
+import six
 
 #: No automatic export
 __all__ = []
@@ -38,4 +38,4 @@ def beaconfunction(options):
         rst['error'] = 'No resource handler here'
     outstr = json.dumps(rst)
     # Return the string, which has to be converted to a file like object
-    return StringIO(outstr)
+    return six.StringIO(outstr)

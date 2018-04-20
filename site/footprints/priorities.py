@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import functools
+import six
 
 __all__ = [ 'top' ]
 
@@ -17,7 +18,7 @@ class PriorityLevel(object):
         if isinstance(pset, PrioritySet):
             self._pset = pset
         else:
-            raise TypeError('argument `pset` should be a PrioritySet, not ' + str(type(pset)))
+            raise TypeError('argument `pset` should be a PrioritySet, not {!s}'.format(type(pset)))
 
     def __call__(self):
         return self.rank
@@ -38,14 +39,14 @@ class PriorityLevel(object):
     def __eq__(self, other):
         if not isinstance(other, PriorityLevel):
             try:
-                other = self.inset.level(str(other))
+                other = self.inset.level(six.text_type(other))
             except (ValueError, TypeError):
                 return False
         return self.rank == other.rank
 
     def __gt__(self, other):
         if not isinstance(other, PriorityLevel):
-            other = self.inset.level(str(other))
+            other = self.inset.level(six.text_type(other))
         return self.rank > other.rank
 
     def delete(self):
@@ -126,8 +127,8 @@ class PrioritySet(object):
         if isinstance(tag, PriorityLevel):
             return tag
         pl = None
-        if tag and str(tag).upper() in self._levels:
-            pl = self.__dict__[str(tag).upper()]
+        if tag and six.text_type(tag).upper() in self._levels:
+            pl = self.__dict__[six.text_type(tag).upper()]
         return pl
 
     def reset(self):
@@ -192,7 +193,7 @@ class PrioritySet(object):
         if isinstance(tag, PriorityLevel):
             tag = tag.tag
         else:
-            tag = str(tag).upper()
+            tag = six.text_type(tag).upper()
         self._levels.remove(tag)
         del self.__dict__[tag]
 
@@ -201,7 +202,7 @@ class PrioritySet(object):
         if tag is None:
             return None
         else:
-            tag = str(tag).upper()
+            tag = six.text_type(tag).upper()
         self.extend(tag)
         if after is not None:
             self._levels.remove(tag)

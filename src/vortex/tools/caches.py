@@ -5,6 +5,7 @@
 This package handles cache objects that could be in charge of
 hosting data resources. Cache objects use the :mod:`footprints` mechanism.
 """
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from datetime import datetime
 

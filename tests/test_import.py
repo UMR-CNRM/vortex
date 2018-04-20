@@ -6,7 +6,11 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from unittest import TestCase, main
 import importlib
 import json
+import os
 import sys
+
+# Otherwise os.getcwd may fail with nose
+os.chdir(os.environ['HOME'])
 
 import footprints as fp
 import vortex

@@ -9,7 +9,9 @@ utility classes to information on the availability of some resources.
 
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import six
 
 import footprints
 
@@ -81,7 +83,7 @@ class OpDigger(Digger):
         length = end - start
         length = length.hour * 60 + length.minute
         lastterm = date.Time(run['terms'][-1])
-        extra = length * (term.hour * 60 + term.minute) / (lastterm.hour * 60 + lastterm.minute)
+        extra = length * (term.hour * 60 + term.minute) // (lastterm.hour * 60 + lastterm.minute)
         extra = date.Period(extra * 60)
         return (start, end, extra)
 
@@ -106,7 +108,8 @@ class OpDigger(Digger):
                         for shelf in kw['location']:
                             status = 'ok'
                             start, end, extra = self.get_extra_time(thisrun, shelf, term)
-                            if self.get_storage_period(vapp, vconf, shelf, kw.get(shelf+'_period')) < kw['top'] - xdate:
+                            if self.get_storage_period(vapp, vconf, shelf,
+                                                       kw.get(shelf + '_period')) < kw['top'] - xdate:
                                 status = 'out'
                             elif kw['top'] < xdate + start + extra:
                                 status = 'notyet'
@@ -174,7 +177,7 @@ class OpDigger(Digger):
             rst = rst.st_size
         except AttributeError:
             pass
-        return str(rst)
+        return six.text_type(rst)
 
     def lookup(self, **kw):
         """Give a look to the expected candidates for the specified resource."""
@@ -258,7 +261,7 @@ class OpDigger(Digger):
                                         rst = (date.Date(float(rst.st_ctime)) - expected).time().fmthm
                                     except AttributeError:
                                         pass
-                                    rst = '[{0:s}]'.format(str(rst))
+                                    rst = '[{0!s}]'.format(rst)
                                 self.delayed_print(' ' * 5, '-', tmc.warning(rh.locate()), rst)
         return self.stack
 
@@ -310,9 +313,9 @@ class NamDigger(Digger):
             self.rh.get()
             return '\n'.join((
                 repr(self.rh),
-                'Resource  : ' + str(self.rh.resource),
-                'Provider  : ' + str(self.rh.provider),
-                'Container : ' + str(self.rh.container),
+                'Resource  : {!s}'.format(self.rh.resource),
+                'Provider  : {!s}'.format(self.rh.provider),
+                'Container : {!s}'.format(self.rh.container),
             ))
         else:
             return None

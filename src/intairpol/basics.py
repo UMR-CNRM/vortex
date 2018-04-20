@@ -5,14 +5,17 @@
 TODO: Module documentation
 """
 
+from __future__ import absolute_import, print_function, division, unicode_literals
+
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 import vortex
 from vortex.syntax.stdattrs import DelayedEnvValue
 
 from bronx.fancies.multicfg import upfirst
 from bronx.stdtypes.date import now
+
+logger = footprints.loggers.getLogger(__name__)
 
 #: Recognition of package name
 ALTNAMES = ('intairpol', 'airpol', 'airtools')

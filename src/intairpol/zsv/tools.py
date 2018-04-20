@@ -8,6 +8,7 @@ TODO: Module documentation
 """
 
 import io
+import six
 
 from bronx.stdtypes import date
 import footprints
@@ -131,7 +132,7 @@ class ZSVDriver(AirTool):
         logger.debug('Configuration defaults: %s', self.config)
 
         # populate actual options with defaults
-        for k, v in self.config.iteritems():
+        for k, v in six.iteritems(self.config):
             if not hasattr(self, k) or getattr(self, k) is None:
                 setattr(self, k, v)
 
@@ -451,7 +452,7 @@ class ZSVQualityStats(ZSVDriver):
             for n, site in enumerate(self.sites):
                 fd.write(u'{0:d},{1:s},{2:s}\n'.
                          format(n + 1, site,
-                                ','.join([unicode(round(self._stats[site][iq].get('P' + ival, 0), 6))
+                                ','.join([six.text_type(round(self._stats[site][iq].get('P' + ival, 0), 6))
                                           for iq in self.iqs for ival in ('A', 'B', 'C')])))
 
     def stats_dump_as_txt(self):
@@ -460,7 +461,7 @@ class ZSVQualityStats(ZSVDriver):
             for n, site in enumerate(self.sites):
                 fd.write(u'{0:d};{1:s};{2:s}\n'.
                          format(n + 1, site,
-                                ';'.join([unicode(round(self._stats[site][iq].get('P' + ival, 0), 6)).replace('.', ',')
+                                ';'.join([six.text_type(round(self._stats[site][iq].get('P' + ival, 0), 6)).replace('.', ',')
                                           for iq in self.iqs for ival in ('A', 'B', 'C')])))
 
     def stats_dump(self):

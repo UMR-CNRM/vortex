@@ -27,6 +27,8 @@ Do not create :class:`IFSNamingConvention` objects directly. Instead, use the
 :meth:`IFSParallel.naming_convention` method.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import footprints
 
 from vortex.syntax.stdattrs import model, actualfmt

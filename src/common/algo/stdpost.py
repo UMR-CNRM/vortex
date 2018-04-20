@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import collections
+import io
 import json
 import re
+import six
 import time
 
 from bronx.datagrip.namelist  import NamelistBlock
@@ -103,7 +107,7 @@ class _FA2GribWorker(VortexWorkerBlindRun):
             nb.ITUNIT = self.timeunit
         nb['CLFSORT(1)'] = thisoutput
         nb['CDNOMF(1)'] = self.fortinput
-        with open(self.fortnam, 'w') as namfd:
+        with io.open(self.fortnam, 'w') as namfd:
             namfd.write(nb.dumps())
 
         # Finally set the actual init file
@@ -361,7 +365,7 @@ class Fa2Grib(ParaBlindRun):
 
         self._default_post_execute(rh, opts)
 
-        for failed_file in [e.section.rh.container.localpath() for e in bm.failed.itervalues()]:
+        for failed_file in [e.section.rh.container.localpath() for e in six.itervalues(bm.failed)]:
             logger.error("We were unable to fetch the following file: %s", failed_file)
             if self.fatal:
                 self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),
@@ -450,7 +454,7 @@ class StandaloneGRIBFilter(TaylorRun, grib.GribApiComponent):
 
         self._default_post_execute(rh, opts)
 
-        for failed_file in [e.section.rh.container.localpath() for e in bm.failed.itervalues()]:
+        for failed_file in [e.section.rh.container.localpath() for e in six.itervalues(bm.failed)]:
             logger.error("We were unable to fetch the following file: %s", failed_file)
             if self.fatal:
                 self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),
@@ -543,7 +547,7 @@ class DegradedDiagPEError(AlgoComponentError):
     def __str__(self):
         outstr = "Missing input data for geometry={0.area:s}, term={1!s}:\n".format(self._ginfo['geometry'],
                                                                                     self._ginfo['term'])
-        for k, missing in self._missings.iteritems():
+        for k, missing in self._missings.items():
             for member in missing:
                 outstr += "{:s}: member #{!s}\n".format(k, member)
         return outstr
@@ -642,7 +646,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
                 self.delayed_exception_add(newexc, traceback=False)
             else:
                 logger.info("Fatal is false consequently no exception is recorder. It would look like this:")
-                print newexc
+                print(newexc)
         members = sorted(members)
 
         # This is hopeless :-(
@@ -792,7 +796,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
                 except IndexError:
                     current_gang[geometry] = None
 
-            while any([g is not None for g in current_gang.itervalues()]):
+            while any([g is not None for g in six.itervalues(current_gang)]):
 
                 for geometry, a_gang in [(g, current_gang[g]) for g in geometries
                                          if (current_gang[g] is not None and
@@ -809,7 +813,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
 
                 if not (bm.all_done or any(current_gang[g] is not None and
                                            gang.state is not GangSt.ufo
-                                           for gang in current_gang.itervalues())):
+                                           for gang in six.itervalues(current_gang))):
                     # Timeout ?
                     bm.is_timedout(self.timeout, IOError)
                     # Wait a little bit :-)
@@ -1073,7 +1077,7 @@ class Fa2GaussGrib(BlindRun):
 
             nb['LLBAVE'] = self.verbose
             nb['CDNOMF(1)'] = self.fortinput
-            with open('fort.4', 'w') as namfd:
+            with io.open('fort.4', 'w') as namfd:
                 namfd.write(nb.dumps())
 
             self.system.header('{0:s} : local namelist {1:s} dump'.format(self.realkind, 'fort.4'))
@@ -1139,9 +1143,9 @@ class Reverser(BlindRun):
         param = param[0].rh
         paramct = param.contents
         dictkeyvalue = dict()
-        dictkeyvalue[r'param_iter'] = str(self.param_iter)
-        dictkeyvalue[r'condlim'] = str(self.condlim)
-        dictkeyvalue[r'ano_type'] = str(self.ano_type)
+        dictkeyvalue[r'param_iter'] = six.text_type(self.param_iter)
+        dictkeyvalue[r'condlim'] = six.text_type(self.condlim)
+        dictkeyvalue[r'ano_type'] = six.text_type(self.ano_type)
         paramct.setitems(dictkeyvalue)
         param.save()
         logger.info("Here is the parameter file (after substitution):")

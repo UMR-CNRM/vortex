@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import footprints
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+import footprints
 
 from vortex.algo.components import Parallel, AlgoComponentError
 from vortex.syntax.stdattrs import model

@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import footprints
+
+from vortex.syntax.stdattrs import a_nativefmt, notinrepr
+from .contents import DataContent, UnknownContent, FormatAdapter
+
 #: Export Resource and associated Catalog classes.
 __all__ = [ 'Resource' ]
 
-import footprints
 logger = footprints.loggers.getLogger(__name__)
-
-from vortex.syntax.stdattrs import a_nativefmt, notinrepr
-from contents import DataContent, UnknownContent, FormatAdapter
 
 
 class Resource(footprints.FootprintBase):
@@ -44,7 +47,7 @@ class Resource(footprints.FootprintBase):
         d = self.footprint_as_shallow_dict()
         for xdel in [ x for x in notinrepr if x in d ]:
             del d[xdel]
-        return ' '.join([ '{0:s}=\'{1:s}\''.format(k, str(v)) for k, v in d.items() ])
+        return ' '.join(['{0:s}=\'{1!s}\''.format(k, v) for k, v in d.items()])
 
     @property
     def mailbox(self):

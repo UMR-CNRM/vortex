@@ -1,21 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import division
-
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import defaultdict
 import sys
 
 from bronx.stdtypes.date import Time
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.syntax.stdattrs import a_date
 from vortex.algo.components import ParaBlindRun, ParaExpresso
 from vortex.tools.parallelism import VortexWorkerBlindRun
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 _OP_files_common = dict(alp=['OPlisteo', 'OPlistem', 'OPlisteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat', 'OPnoir'],
                         pyr=['OPlysteo', 'OPlystem', 'OPlysteml', 'OPclim', 'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat', 'OPnoir'],
@@ -58,7 +59,7 @@ class SurfexWorker(VortexWorkerBlindRun):
 
     def set_env(self, rundir):
         inputs = [x.rh for x in self.context.sequence.effective_inputs()]
-        print inputs
+        print(inputs)
 
     def _surfex_commons(self, rundir, thisdir, rdict):
 
@@ -448,7 +449,7 @@ class Grib2SafranWorker(VortexWorkerBlindRun):
 
     def vortex_task(self, **kw):
         rdict = dict(rc=True)
-        print self.subdir
+        print(self.subdir)
         if self.subdir is not None:
             with self.system.cdcontext(self.subdir, create=True):
                 self.local_spawn('stdout.listing')

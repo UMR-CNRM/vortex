@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import deque, defaultdict
-import StringIO
+import io
+import six
 import sys
 
 import footprints
@@ -12,6 +12,9 @@ from footprints import loggers
 import taylorism
 import vortex
 from vortex.tools.systems import ExecutionError
+
+#: No automatic export
+__all__ = []
 
 logger = loggers.getLogger(__name__)
 
@@ -97,7 +100,7 @@ class VortexWorkerBlindRun(TaylorVortexWorker):
         :param stdoutfile: Path to the file where the standard/error output will
                            be saved.
         """
-        tmpio = open(stdoutfile, 'w')
+        tmpio = io.open(stdoutfile, 'wb')
         self.system.remove('core')
         self.system.softlink('/dev/null', 'core')
         self.local_spawn_hook()
@@ -154,7 +157,7 @@ class ParallelSilencer(object):
         """Reset variables were the records are stored."""
         self._ctx_r = None
         self._log_r = deque()
-        self._io_r = StringIO.StringIO()
+        self._io_r = six.StringIO()
         if handler:
             self._slurp_h = loggers.SlurpHandler(self._log_r)
 

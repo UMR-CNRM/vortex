@@ -5,7 +5,7 @@
 Utility functions of the :mod:`footprints` package.
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import re
 import copy
@@ -34,13 +34,13 @@ def dictmerge(d1, d2):
         >>> a = {'name':'clim','attr':{'model':{'values':('arpege','arome')}}}
         >>> b = {'name':'clim model','attr':{'truncation':{'type':'int','optional':'False'}}}
         >>> dictmerge(a, b)
-        {'name': 'clim model', 'attr': {'model': {'values': ('arpege', 'arome')}, 'truncation': {'type': 'int', 'optional': 'False'}}}
+        {u'name': u'clim model', u'attr': {u'model': {u'values': (u'arpege', u'arome')}, u'truncation': {u'type': u'int', u'optional': u'False'}}}
 
         >>> dictmerge({'a':'1'},{'b':'2'})
-        {'a': '1', 'b': '2'}
+        {u'a': u'1', u'b': u'2'}
 
         >>> dictmerge({'a':'1','c':{'d':'3','e':'4'},'i':{'b':'2','f':{'g':'5'}}}, {'c':{'h':'6', 'e':'7'}})
-        {'a': '1', 'i': {'b': '2', 'f': {'g': '5'}}, 'c': {'h': '6', 'e': '7', 'd': '3'}}
+        {u'a': u'1', u'i': {u'b': u'2', u'f': {u'g': u'5'}}, u'c': {u'h': u'6', u'e': u'7', u'd': u'3'}}
     """
 
     for key, value in six.iteritems(d2):
@@ -85,7 +85,7 @@ class TimeInt(int):
     """
 
     def __new__(cls, ti, tm=None):
-        ti = str(ti)
+        ti = six.text_type(ti)
         if not re.match(r'-?\d*(?::\d\d+)?$', ti):
             raise ValueError('{} is not a valid TimeInt'.format(ti))
         if ti.startswith('-'):
@@ -125,7 +125,7 @@ class TimeInt(int):
 
     def __str__(self):
         if self.is_int():
-            return str(self.ti)
+            return six.text_type(self.ti)
         else:
             return self.str_time
 
@@ -211,7 +211,7 @@ class TimeInt(int):
 
     @property
     def value(self):
-        return self.ti if self.is_int() else str(self)
+        return self.ti if self.is_int() else six.text_type(self)
 
 
 def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
@@ -231,24 +231,24 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
         [24, 27, 30, 33, 36]
         >>> rangex(0, 12, 3, shift=24)
         [24, 27, 30, 33, 36]
-        >>> rangex('0-12-3', shift=24, fmt='%03d')
-        ['024', '027', '030', '033', '036']
+        >>> print(', '.join(rangex('0-12-3', shift=24, fmt='%03d')))
+        024, 027, 030, 033, 036
 
     Hour/Minutes examples::
 
-        >>> rangex(0, 3, '0:30')
-        ['0000:00', '0000:30', '0001:00', '0001:30', '0002:00', '0002:30', '0003:00']
-        >>> rangex('0:00', '3:00', '0:30')
-        ['0000:00', '0000:30', '0001:00', '0001:30', '0002:00', '0002:30', '0003:00']
-        >>> rangex(0, 3, '0:30', shift=24)
-        ['0024:00', '0024:30', '0025:00', '0025:30', '0026:00', '0026:30', '0027:00']
+        >>> print(', '.join(rangex(0, 3, '0:30')))
+        0000:00, 0000:30, 0001:00, 0001:30, 0002:00, 0002:30, 0003:00
+        >>> print(', '.join(rangex('0:00', '3:00', '0:30')))
+        0000:00, 0000:30, 0001:00, 0001:30, 0002:00, 0002:30, 0003:00
+        >>> print(', '.join(rangex(0, 3, '0:30', shift=24)))
+        0024:00, 0024:30, 0025:00, 0025:30, 0026:00, 0026:30, 0027:00
 
     It also works with negative values::
 
-        >>> rangex(3, 0,'-0:30')
-        ['0000:00', '0000:30', '0001:00', '0001:30', '0002:00', '0002:30', '0003:00']
-        >>> rangex(-3, 0,'0:30')
-        ['-0000:30', '-0001:00', '-0001:30', '-0002:00', '-0002:30', '-0003:00', '0000:00']
+        >>> print(', '.join(rangex(3, 0,'-0:30')))
+        0000:00, 0000:30, 0001:00, 0001:30, 0002:00, 0002:30, 0003:00
+        >>> print(', '.join(rangex(-3, 0,'0:30')))
+        -0000:30, -0001:00, -0001:30, -0002:00, -0002:30, -0003:00, 0000:00
         >>> rangex(-3, 0, 1)
         [-3, -2, -1, 0]
 
@@ -263,8 +263,8 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     if start is None:
         return list()
 
-    pstarts = ([str(s) for s in start]
-               if isinstance(start, (list, tuple)) else str(start).split(','))
+    pstarts = ([six.text_type(s) for s in start]
+               if isinstance(start, (list, tuple)) else six.text_type(start).split(','))
     for pstart in pstarts:
 
         if re.search('_', pstart):
@@ -321,7 +321,7 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
                        for i, x in enumerate(pvalues)]
 
         if prefix is not None:
-            pvalues = [ prefix + str(x) for x in pvalues ]
+            pvalues = [ prefix + six.text_type(x) for x in pvalues ]
         rangevalues.extend(pvalues)
 
     return sorted(set(rangevalues))
@@ -334,10 +334,10 @@ def inplace(desc, key, value, globs=None):
     Examples::
 
         >>> inplace({'test':'alpha'}, 'ajout', 'beta')
-        {'test': 'alpha', 'ajout': 'beta'}
+        {u'test': u'alpha', u'ajout': u'beta'}
 
         >>> inplace({'test':'alpha', 'recurs':{'a':1, 'b':2}}, 'ajout', 'beta')
-        {'test': 'alpha', 'ajout': 'beta', 'recurs': {'a': 1, 'b': 2}}
+        {u'test': u'alpha', u'ajout': u'beta', u'recurs': {u'a': 1, u'b': 2}}
     """
     newd = copy.deepcopy(desc)
     newd[key] = value
@@ -443,23 +443,23 @@ def expand(desc):
     List expansion::
 
         >>> expand( {'test': 'alpha'} )
-        [{'test': 'alpha'}]
+        [{u'test': u'alpha'}]
 
         >>> expand( { 'test': 'alpha', 'niv2': [ 'a', 'b', 'c' ] } )
-        [{'test': 'alpha', 'niv2': 'a'}, {'test': 'alpha', 'niv2': 'b'}, {'test': 'alpha', 'niv2': 'c'}]
+        [{u'test': u'alpha', u'niv2': u'a'}, {u'test': u'alpha', u'niv2': u'b'}, {u'test': u'alpha', u'niv2': u'c'}]
 
         >>> expand({'test': 'alpha', 'niv2': 'x,y,z'})
-        [{'test': 'alpha', 'niv2': 'x'}, {'test': 'alpha', 'niv2': 'y'}, {'test': 'alpha', 'niv2': 'z'}]
+        [{u'test': u'alpha', u'niv2': u'x'}, {u'test': u'alpha', u'niv2': u'y'}, {u'test': u'alpha', u'niv2': u'z'}]
 
         >>> expand({'test': 'alpha', 'niv2': 'range(1,3)'})
-        [{'test': 'alpha', 'niv2': 1}, {'test': 'alpha', 'niv2': 2}, {'test': 'alpha', 'niv2': 3}]
+        [{u'test': u'alpha', u'niv2': 1}, {u'test': u'alpha', u'niv2': 2}, {u'test': u'alpha', u'niv2': 3}]
         >>> expand({'test': 'alpha', 'niv2': 'range(0,6,3)'})
-        [{'test': 'alpha', 'niv2': 0}, {'test': 'alpha', 'niv2': 3}, {'test': 'alpha', 'niv2': 6}]
+        [{u'test': u'alpha', u'niv2': 0}, {u'test': u'alpha', u'niv2': 3}, {u'test': u'alpha', u'niv2': 6}]
 
     List expansion + dictionary matching::
 
         >>> expand({'test': 'alpha', 'niv2': ['x', 'y'], 'niv3': {'niv2': {'x': 'niv2 is x', 'y': 'niv2 is y'}}})
-        [{'test': 'alpha', 'niv3': 'niv2 is x', 'niv2': 'x'}, {'test': 'alpha', 'niv3': 'niv2 is y', 'niv2': 'y'}]
+        [{u'test': u'alpha', u'niv3': u'niv2 is x', u'niv2': u'x'}, {u'test': u'alpha', u'niv3': u'niv2 is y', u'niv2': u'y'}]
 
     Globbing::
 
@@ -531,7 +531,7 @@ def expand(desc):
                     for dk in [ x for x in v.keys() if x in d ]:
                         dv = d[dk]
                         if not(isinstance(dv, list) or isinstance(dv, tuple) or isinstance(dv, set)):
-                            newld.append(inplace(d, k, v[dk][str(dv)]))
+                            newld.append(inplace(d, k, v[dk][six.text_type(dv)]))
                             somechanges = True
                             break
                     if somechanges:

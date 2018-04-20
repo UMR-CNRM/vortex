@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
-
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
@@ -13,6 +11,9 @@ from vortex.data.flow import GeoFlowResource
 from vortex.syntax.stdattrs import term, a_cutoff
 
 from common.tools.igastuff import archive_suffix
+
+#: No automatic export
+__all__ = []
 
 
 class _AbstractLAMBoundary(GeoFlowResource):
@@ -74,7 +75,7 @@ class _AbstractLAMBoundary(GeoFlowResource):
             valid = (self.date + self.term).ymd
             return 'SM' + self.geometry.area + '+' + valid
 
-        return prefix + self.term.fmthour + '.r' + str(suffix)
+        return prefix + self.term.fmthour + '.r{!s}'.format(suffix)
 
     def basename_info(self):
         """Generic information, radical = ``cpl``."""

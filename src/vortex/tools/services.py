@@ -7,12 +7,13 @@ With the abstract class Service (inheritating from FootprintBase)
 a default Mail Service is provided.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+from six.moves.configparser import NoOptionError, NoSectionError
 import hashlib
 import io
 import six
 from string import Template
-from ConfigParser import NoOptionError, NoSectionError
 
 from bronx.stdtypes import date
 from bronx.syntax.pretty import Utf8PrettyPrinter
@@ -225,7 +226,7 @@ class MailService(Service):
                         xmsg = mimeclass(fp.read(), _subtype=subtype)
                 else:
                     xmsg = MIMEBase(maintype, subtype)
-                    with open(xtra, 'rb') as fp:
+                    with io.open(xtra, 'rb') as fp:
                         xmsg.set_payload(fp.read())
                 xmsg.add_header('Content-Disposition', 'attachment', filename=xtra)
                 multi.attach(xmsg)
@@ -556,7 +557,7 @@ class Directory(object):
     def __str__(self):
         return '\n'.join(sorted(
             ['{}: {}'.format(k, ' '.join(sorted(v)))
-             for (k, v) in self.aliases.iteritems()]
+             for (k, v) in six.iteritems(self.aliases)]
         ))
 
     def _flatten(self):
@@ -566,14 +567,14 @@ class Directory(object):
         while changed:
             changed = False
             count += 1
-            for kref, vref in self.aliases.iteritems():
+            for kref, vref in six.iteritems(self.aliases):
                 if kref in vref:
                     logger.error('Cycle detected in the aliases directory.\n'
                                  'offending key: %s.\n'
                                  'directory being flattened:\n%s',
                                  str(kref), str(self))
                     raise ValueError('Cycle for key <{}> in directory definition'.format(kref))
-                for k, v in self.aliases.iteritems():
+                for k, v in six.iteritems(self.aliases):
                     if kref in v:
                         v -= {kref}
                         v |= vref

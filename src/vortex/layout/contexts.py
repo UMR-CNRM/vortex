@@ -5,6 +5,10 @@
 This modules defines the physical layout.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import six
+
 import footprints
 from bronx.stdtypes.history  import PrivateHistory
 from bronx.stdtypes.tracking import Tracker
@@ -148,7 +152,7 @@ class DiffHistory(PrivateHistory):
     def append_record(self, rc, localcontainer, remotehandler):
         """Adds a new diff record in the current DiffHistory."""
         rcmap = {True: 'PASS', False: 'FAIL'}
-        containerstr = (str(localcontainer) if localcontainer.is_virtual()
+        containerstr = (six.text_type(localcontainer) if localcontainer.is_virtual()
                         else localcontainer.localpath())
         self.append('{:s}: {:s} (Ref: {!s})'.format(rcmap[bool(rc)], containerstr,
                                                     remotehandler.provider))
@@ -179,7 +183,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         self._path     = path + '/' + self.tag
         self._session  = None
         self._rundir   = None
-        self._stamp    = '-'.join(('vortex', 'stamp', self.tag, str(id(self))))
+        self._stamp    = '-'.join(('vortex', 'stamp', self.tag, six.text_type(id(self))))
         self._fstore   = dict()
         self._fstamps  = set()
         self._wkdir    = None
@@ -396,7 +400,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
 
     def stamp(self, tag='default'):
         """Return a stamp name that could be used for any generic purpose."""
-        return self._stamp + '.' + str(tag)
+        return self._stamp + '.' + six.text_type(tag)
 
     def fstrack_stamp(self, tag='default'):
         """Set a stamp to track changes on the filesystem."""

@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import fcntl
 from vortex.util.worker import VortexWorker
+
+#: No automatic export
+__all__ = []
 
 
 class LockedOpen(object):

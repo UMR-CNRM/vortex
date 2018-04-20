@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
 import re
+import six
 import sys
 import functools
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 
@@ -18,6 +17,11 @@ from vortex.tools  import net
 from vortex.util   import config, structs
 from vortex.layout import contexts, dataflow
 from vortex.data   import containers, resources, providers
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 OBSERVER_TAG = 'Resources-Handlers'
 
@@ -78,7 +82,7 @@ class Handler(object):
                 pass
 
     def __str__(self):
-        return str(self.__dict__)
+        return six.text_type(self.__dict__)
 
     def _get_resource(self):
         """Getter for ``resource`` property."""
@@ -305,12 +309,12 @@ class Handler(object):
     def quickview(self, nb=0, indent=0):
         """Standard glance to objects."""
         tab = '  ' * indent
-        print '{0}{1:02d}. {2:s}'.format(tab, nb, repr(self))
-        print '{0}  Complete  : {1:s}'.format(tab, str(self.complete))
+        print('{0}{1:02d}. {2:s}'.format(tab, nb, repr(self)))
+        print('{0}  Complete  : {1!s}'.format(tab, self.complete))
         for subobj in ('container', 'provider', 'resource'):
             obj = getattr(self, subobj, None)
             if obj:
-                print '{0}  {1:10s}: {2:s}'.format(tab, subobj.capitalize(), str(obj))
+                print('{0}  {1:10s}: {2!s}'.format(tab, subobj.capitalize(), obj))
 
     def wide_key_lookup(self, key, exports=False, fatal=True):
         """Return the *key* attribute if it exists in the provider or resource.
@@ -344,7 +348,7 @@ class Handler(object):
     def as_dict(self):
         """Produce a raw json-compatible dictionary."""
         rhd = dict(options=dict())
-        for k, v in self.options.iteritems():
+        for k, v in six.iteritems(self.options):
             try:
                 v = v.export_dict()
             except AttributeError:
@@ -710,7 +714,7 @@ class Handler(object):
                 pyopts  = py_opts,
                 promise = self.container.localpath(),
             ))
-        t.sh.chmod(pr_getter, 0555)
+        t.sh.chmod(pr_getter, 0o555)
         return pr_getter
 
     @property
@@ -782,5 +786,4 @@ class Handler(object):
 
     def strlast(self):
         """String formatted log of the last action."""
-        return ' '.join([str(x) for x in self.history.last])
-
+        return ' '.join([six.text_type(x) for x in self.history.last])

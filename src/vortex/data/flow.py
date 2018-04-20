@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
-
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from .resources  import Resource
 from .geometries import HorizontalGeometry, GaussGeometry, ProjectedGeometry
 from .contents   import FormatAdapter
 
 from vortex.syntax.stdattrs import model, date, cutoff, term
+
+#: No automatic export
+__all__ = []
 
 
 class FlowResource(Resource):

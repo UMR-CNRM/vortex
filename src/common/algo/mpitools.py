@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.algo import mpitools
 from vortex.syntax.stdattrs import DelayedEnvValue
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class MpiAuto(mpitools.MpiTool):
@@ -154,7 +157,7 @@ class MpiNWPIO(mpitools.MpiBinaryIOServer):
             namio.pioprocr_MDL         = self.env.VORTEX_IOSERVER_PIOMODEL
 
         self.system.subtitle('Parallel io namelist')
-        print namio.dumps()
+        print(namio.dumps())
 
         return True
 

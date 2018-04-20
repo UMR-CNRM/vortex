@@ -3,8 +3,9 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import six
+import io
 import re
+import six
 
 #: No automatic export
 __all__ = []
@@ -195,8 +196,8 @@ def read_listing(source):
     if isinstance(source, list):
         lines = source
     elif isinstance(source, six.string_types):
-        with open(source, 'r') as listfh:
-            lines = [six.u(l).rstrip("\n") for l in listfh]
+        with io.open(source, 'r') as listfh:
+            lines = [l.rstrip("\n") for l in listfh]
     return lines
 
 

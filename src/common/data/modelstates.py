@@ -1,19 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
-
-import footprints
-logger = footprints.loggers.getLogger(__name__)
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
+
+import footprints
 
 from vortex.data.flow       import GeoFlowResource
 from vortex.syntax.stdattrs import term
 from bronx.stdtypes.date    import Time
 
 from common.tools.igastuff  import archive_suffix
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Analysis(GeoFlowResource):

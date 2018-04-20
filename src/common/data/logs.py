@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
-
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.flow import FlowResource
 from vortex.data.resources import Resource
 from vortex.syntax.stdattrs import FmtInt
 from vortex.data.contents   import JsonDictContent, FormatAdapter
 
+#: No automatic export
+__all__ = []
+
 
 class Listing(FlowResource):
-    """Miscelanous application output from a task processing."""
+    """Miscellaneous application output from a task processing."""
     _footprint = [
         dict(
             info = 'Listing',

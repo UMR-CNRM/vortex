@@ -24,6 +24,9 @@ This module contains the services specifically needed by the operational suite.
   * formatted dayfile logging with :class:`DayfileReportService`
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import io
 import locale
 import logging
 import random
@@ -31,7 +34,7 @@ import re
 import six
 import socket
 
-from StringIO import StringIO
+from six import StringIO
 from logging.handlers import SysLogHandler
 
 from bronx.stdtypes import date
@@ -77,7 +80,7 @@ class LogFacility(int):
     """
 
     def __new__(cls, value):
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             value = value.lower()
             if value.startswith('log_'):
                 value = value[4:]
@@ -87,15 +90,15 @@ class LogFacility(int):
                 logger.error('Could not get a SysLog value for name ' + value)
                 raise
         if value not in SysLogHandler.facility_names.values():
-            raise ValueError('Not a SysLog facility value: ' + str(value))
+            raise ValueError('Not a SysLog facility value: {!s}'.format(value))
         return int.__new__(cls, value)
 
     def name(self):
         """Reverse access: deduce the name from the integer value."""
-        for s, n in SysLogHandler.facility_names.iteritems():
+        for s, n in six.iteritems(SysLogHandler.facility_names):
             if self == n:
                 return s
-        raise ValueError('Not a SysLog facility value: ' + str(self))
+        raise ValueError('Not a SysLog facility value: {!s}'.format(self))
 
 
 class AlarmService(Service):
@@ -198,7 +201,7 @@ class AlarmProxyService(AlarmService):
         info = 'Alarm Proxy Service',
         attr = dict(
             issyslognode = dict(
-                values = [str(False), ],
+                values = [six.text_type(False), ],
                 default = '[systemtarget:issyslognode]',
                 optional = True
             ),
@@ -275,7 +278,7 @@ class AlarmLogService(AlarmService):
                 access   = 'rwx',
             ),
             issyslognode = dict(
-                values   = [str(True), ],
+                values   = [six.text_type(True), ],
                 default  = '[systemtarget:issyslognode]',
                 optional = True
             ),
@@ -312,7 +315,7 @@ class AlarmRemoteService(AlarmService):
                 default  = socket.SOCK_DGRAM,
             ),
             issyslognode = dict(
-                values   = [str(True), ],
+                values   = [six.text_type(True), ],
                 default  = '[systemtarget:issyslognode]',
                 optional = True
             ),
@@ -472,7 +475,7 @@ class RoutingService(Service):
         if not rc:
             # BDM call has no term
             if hasattr(self, 'term'):
-                term = ' echeance ' + str(self.term)
+                term = ' echeance {!s}'.format(self.term)
             else:
                 term = ''
             text = "{0.taskname} Pb envoi {0.realkind} id {0.productid}{term}".format(self, term=term)
@@ -625,7 +628,7 @@ class BdpeService(RoutingService):
         """Return the actual routing key to use for the 'router_pe' call."""
 
         rule = self.iniparser.get(self.soprano_target, 'rule_exclude')
-        if re.match(rule, str(self.productid)):
+        if re.match(rule, six.text_type(self.productid)):
             msg = 'Pas de routage du produit {productid} sur {soprano_target} ({filename})'.format(
                 productid=self.productid,
                 filename=self.filename,
@@ -840,10 +843,10 @@ class DayfileReportService(FileReportService):
             date.now().strftime('%Y%m%d%H%M%S.%f'),
             '_',
             self.env.get('SLURM_JOBID', ''),
-            str(self.sh.getpid()),
+            six.text_type(self.sh.getpid()),
             '_',
             '1' if 'DEBUT' in self.mode else '0',
-            str(random.random()),
+            six.text_type(random.random()),
         ])
         final = self.sh.path.join(
             self.actual_value(
@@ -888,7 +891,7 @@ class DayfileReportService(FileReportService):
             target = final + '.tmp'
 
         self.sh.filecocoon(target)
-        with open(target, 'a') as fp:
+        with io.open(target, 'a') as fp:
             fp.write(self.infos)
         if not self.filename:
             self.sh.mv(target, final)
@@ -915,7 +918,7 @@ class SMSOpService(SMS):
         else:
             stamp = date.now().compact()
             self.variable(varname, stamp)
-            self.label('etat', str(status) + ': ' + stamp + ' ' + str(comment))
+            self.label('etat', six.text_type(status) + ': ' + stamp + ' ' + six.text_type(comment))
 
     def close_init(self, *args):
         """Set starting date as a XCDP variable."""
@@ -984,7 +987,7 @@ class DMTEventService(Service):
 
     def get_dmtinfo(self):
         """The pair of usefull information to forward to monitor."""
-        return [self.resource_name, str(self.resource_flag)]
+        return [self.resource_name, six.text_type(self.resource_flag)]
 
     def get_cmdline(self):
         """Complete command line that runs the soprano command."""

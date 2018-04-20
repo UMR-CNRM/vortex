@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.geometries import LonlatGeometry
 from vortex.data.outflow import StaticGeoResource
 from vortex.syntax.stdattrs import month
 from gco.syntax.stdattrs import gvar, GenvDomain
+
+#: No automatic export
+__all__ = []
 
 
 class GenericClim(StaticGeoResource):
@@ -345,7 +347,7 @@ class MonthlyLAIDB(StaticGeoResource):
 
     def gget_basename(self):
         """GGET specific naming convention."""
-        return '.m' + str(self.month)
+        return '.m{!s}'.format(self.month)
 
 
 class MonthlyVegDB(StaticGeoResource):
@@ -382,7 +384,7 @@ class MonthlyVegDB(StaticGeoResource):
 
     def gget_basename(self):
         """GGET specific naming convention."""
-        return '.m' + str(self.month)
+        return '.m{!s}'.format(self.month)
 
 
 class SoilClimatologyDB(StaticGeoResource):
@@ -466,7 +468,7 @@ class MonthlySoilClimatologyDB(SoilClimatologyDB):
 
     def gget_basename(self):
         """GGET specific naming convention."""
-        return '.m' + str(self.month)
+        return '.m{!s}'.format(self.month)
 
 
 class MonthlyChemicalDB(StaticGeoResource):
@@ -503,7 +505,7 @@ class MonthlyChemicalDB(StaticGeoResource):
 
     def gget_basename(self):
         """GGET specific naming convention."""
-        return '.m' + str(self.month)
+        return '.m{!s}'.format(self.month)
 
 
 class GeometryIllustration(StaticGeoResource):

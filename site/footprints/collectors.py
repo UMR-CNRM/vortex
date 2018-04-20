@@ -7,7 +7,7 @@ Module's usage is mostly dedicated to the main footprints package.
 The footprints proxy could make some part of the interface visible as well.
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 from weakref import WeakSet
 import collections

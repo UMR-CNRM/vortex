@@ -3,6 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
 from unittest import TestCase, main
 
 import footprints
@@ -36,7 +37,7 @@ expected_doc_v1 = """
        Aliases of some parameters:
 
          * **arg1** is an alias of stuff1.
-""".format(autofmt(str), autofmt(float))
+""".format(autofmt(six.text_type), autofmt(float))
 
 
 class utDoc(TestCase):
@@ -64,6 +65,7 @@ class utDoc(TestCase):
         self.assertEqual("\n".join([l.rstrip(" ")
                                     for l in doc.format_docstring(self.fp, 2).split("\n")]),
                          expected_doc_v1)
+
 
 if __name__ == '__main__':
     main(verbosity=2)

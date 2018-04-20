@@ -6,7 +6,10 @@
 # LFM: from test import support -> from test import test_support (for ptyhon2.7)
 # LFM: test for quoted password
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import bronx.net.netrc as netrc
+import io
 import os
 import unittest
 import sys
@@ -27,7 +30,7 @@ class NetrcTestCase(unittest.TestCase):
         mode = 'w'
         if sys.platform != 'cygwin':
             mode += 't'
-        with open(temp_filename, mode) as fp:
+        with io.open(temp_filename, mode) as fp:
             fp.write(test_data)
         self.addCleanup(os.unlink, temp_filename)
         return netrc.netrc(temp_filename)
@@ -130,7 +133,7 @@ class NetrcTestCase(unittest.TestCase):
         os.mkdir(d)
         self.addCleanup(test_support.rmtree, d)
         fn = os.path.join(d, '.netrc')
-        with open(fn, 'wt') as f:
+        with io.open(fn, 'wt') as f:
             f.write("""\
                 machine foo.domain.com login bar password pass
                 default login foo password pass

@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-r"""
+"""
 An empty module to be filled with some kind of blackholes objects.
 """
+
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import footprints
 
 #: No automatic export
 __all__ = []
 
-import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 

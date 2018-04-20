@@ -1,18 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = ['Provider']
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import os.path
+import six
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, member, block
 from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt
 from vortex.util.names import VortexNameBuilder
 from vortex.tools import net
+
+#: No automatic export
+__all__ = ['Provider']
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Provider(footprints.FootprintBase):
@@ -300,7 +304,7 @@ class Vortex(Provider):
 
     def nice_member(self):
         """Nice formatting view of the member number, if any."""
-        return 'mb' + str(self.member) if self.member is not None else ''
+        return 'mb' + six.text_type(self.member) if self.member is not None else ''
 
     def pathname(self, resource):
         """Constructs pathname of the ``resource`` according to :func:`pathinfo`."""

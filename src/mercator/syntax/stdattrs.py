@@ -7,6 +7,8 @@ of attributes description that could be used in the footprint definition of any
 class which follow the :class:`vortex.syntax.Footprint` syntax.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import footprints
 
 #: Export a set of attributes :data:`grids`, :data:`bogus`, etc..
@@ -24,17 +26,14 @@ atmoForcingOrigin = [ 'ECMWF', ]
 
 models = [ 'PSY3V2R2', 'PSY2V4R2', 'PSY4V1R3', 'IBI36V2R1' ]
 Model = dict(
-  type = str,
-  optional = False,
-  values = models,
-  remap = dict(
-    psy2  = 'PSY2V4R2',
-    psy3  = 'PSY3V2R2',
-    psy4  = 'PSY4V1R3',
-    ibi36 = 'IBI36V2R1',
-  ),
+    optional = False,
+    values = models,
+    remap = dict(
+        psy2  = 'PSY2V4R2',
+        psy3  = 'PSY3V2R2',
+        psy4  = 'PSY4V1R3',
+        ibi36 = 'IBI36V2R1',
+    ),
 )
 
 model = footprints.Footprint( info = 'Model', attr = dict( model = Model ) )
-
-

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import hashlib
+import io
 import os
 import shutil
 import tempfile
@@ -27,7 +30,7 @@ class TestHashAdapter(unittest.TestCase):
         self.bin_path = os.path.join(DATADIR, 'random_data.bin')
         self.md5_path = os.path.join(DATADIR, 'random_data.bin.md5')
         self.fake_path = os.path.join(DATADIR, 'false.ini')
-        with open(self.md5_path, 'r') as m_fh:
+        with io.open(self.md5_path, 'r') as m_fh:
             self.md5_sum = self._read_md5line(m_fh)
 
         self.md5_h = HashAdapter('md5')
@@ -45,14 +48,14 @@ class TestHashAdapter(unittest.TestCase):
     def test_hash_compute(self):
         # Filename or FileHandle to hash string
         self.assertEqual(self.md5_h.file2hash(self.bin_path), self.md5_sum)
-        with open(self.bin_path, 'rb') as i_fh:
+        with io.open(self.bin_path, 'rb') as i_fh:
             self.assertEqual(self.md5_h.file2hash(i_fh), self.md5_sum)
         # Filename to hash FileHandle
         self.assertEqual(self._read_md5line(self.md5_h.file2hash_fh(self.bin_path)),
                          self.md5_sum)
         # Filename to hash file
         self.md5_h.file2hash_file(self.bin_path, 'test_file1.md5')
-        with open('test_file1.md5', 'r') as t_fh:
+        with io.open('test_file1.md5', 'r') as t_fh:
             md5_test = self._read_md5line(t_fh)
         self.assertEqual(md5_test, self.md5_sum)
         # String 2 Hash
@@ -61,7 +64,7 @@ class TestHashAdapter(unittest.TestCase):
                          hashlib.md5(strdata.encode()).hexdigest())
         # Automatic check
         self.assertTrue(self.md5_h.filecheck(self.bin_path, self.md5_path))
-        with open(self.md5_path, 'r') as m_fh:
+        with io.open(self.md5_path, 'r') as m_fh:
             self.assertTrue(self.md5_h.filecheck(self.bin_path, m_fh))
         self.assertFalse(self.md5_h.filecheck(self.bin_path, self.fake_path))
         self.assertFalse(self.md5_h.filecheck(self.bin_path, 'toto'))

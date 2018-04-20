@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
-from __future__ import print_function, absolute_import
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import six
 
 import footprints
 
@@ -68,7 +70,7 @@ class BdpeStore(Store):
         """Real extraction from the BDPE database."""
 
         # Check that local is a file (i.e not a virtual container)
-        if not isinstance(local, basestring):
+        if not isinstance(local, six.string_types):
             raise TypeError('The BDPE provider can not deal with virtual containers')
 
         # remote['path'] looks like '/86GV/20151105T0000P/BDPE_42+06:00'

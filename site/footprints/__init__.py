@@ -6,7 +6,7 @@ A generic multi-purpose fabric for objects with tunable footprints,
 i.e. some set of key/value pairs that attributes (possibly optional) could cover.
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import os
 import re
@@ -205,7 +205,7 @@ class Footprint(object):
                         fp['attr'][a]['remap'][x] = vfirst
             fp['attr'][a]['values'] = set(fp['attr'][a].get('values', set()))
             fp['attr'][a]['outcast'] = set(fp['attr'][a].get('outcast', set()))
-            ktype = fp['attr'][a].get('type', str)
+            ktype = fp['attr'][a].get('type', six.text_type)
             kargs = fp['attr'][a].get('args', dict())
             for autoreclass in ('values', 'outcast'):
                 for v in fp['attr'][a][autoreclass]:
@@ -221,7 +221,7 @@ class Footprint(object):
         self._fp = fp
 
     def __str__(self):
-        return str(self.attr)
+        return six.text_type(self.attr)
 
     def allkeys(self):
         """Return a set of possible keys for the footprint's attributes."""
@@ -427,7 +427,7 @@ class Footprint(object):
                                              mobj.group(0))
                                 raise
                         else:
-                            return str(repl)
+                            return six.text_type(repl)
 
                     if replk not in guess and replk not in extras:
                         if replx:
@@ -526,7 +526,7 @@ class Footprint(object):
             if guess[k] is UNKNOWN:
                 logger.debug(' > Optional attr still unknown : %s', k)
             else:
-                ktype = kdef.get('type', str)
+                ktype = kdef.get('type', six.text_type)
                 if kdef.get('isclass', False):
                     if not issubclass(guess[k], ktype):
                         logger.debug(' > Attr %s class %s not a subclass %s', k, guess[k], ktype)
@@ -542,7 +542,7 @@ class Footprint(object):
                     except (ValueError, TypeError, FootprintException):
                         logger.debug(' > Attr %s badly reclassed as %s = %s', k, ktype, guess[k])
                         report.add(attribute=k, why=reporting.REPORT_WHY_RECLASS,
-                                   args=(ktype.__name__, str(guess[k])))
+                                   args=(ktype.__name__, six.text_type(guess[k])))
                         diags[k] = True
                         guess[k] = None
                 if kdef['values'] and not self.in_values(guess[k], kdef['values']):
@@ -925,7 +925,7 @@ class FootprintBase(object):
 
     def _str_more(self):
         """Additional information to be combined in repr output."""
-        return 'footprint=' + str(len(self._attributes))
+        return 'footprint={!s}'.format(len(self._attributes))
 
     def __str__(self):
         """

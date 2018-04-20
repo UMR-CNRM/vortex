@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import io
+import six
+
 import footprints
+
 logger = footprints.loggers.getLogger(__name__)
 
 
@@ -13,9 +19,9 @@ def tramsmet_file(filename, filename_transmet, blocksize=67108864):
     :param int blocksize: the blocksize for I/O operations
     """
 
-    with open(filename_transmet, 'a') as f_header:
-        f_header.write('\n\n')
-        with open(filename, 'rb') as f:
+    with io.open(filename_transmet, 'ab') as f_header:
+        f_header.write(b'\n\n')
+        with io.open(filename, 'rb') as f:
             while True:
                 datablock = f.read(blocksize)
                 if not datablock:
@@ -35,7 +41,7 @@ def ttaaii_actual_command(sh, transmet_cmd, transmet_dict, scriptdir):
     """
 
     options = ''
-    for k, w in transmet_dict.iteritems():
+    for k, w in six.iteritems(transmet_dict):
         options += '{}={} '.format(k, w)
     options += 'FICHIER_ENTETE=entete'
     scriptdir = sh.default_target.get(scriptdir, default=None)
@@ -74,7 +80,7 @@ def get_ttaaii_transmet_sh(sh, transmet_cmd, transmet_dict, filename, scriptdir,
 
     cmd = ttaaii_actual_command(sh, transmet_cmd, transmet_dict, scriptdir)
     filename_ttaaii = execute_cmd_sh(sh, cmd)[0]
-    filename_ttaaii = str(sh.path.join(sh.path.dirname(filename), filename_ttaaii))
+    filename_ttaaii = sh.path.join(sh.path.dirname(filename), filename_ttaaii)
     if header_infile:
         sh.rename('entete', filename_ttaaii)
         tramsmet_file(filename, filename_ttaaii)

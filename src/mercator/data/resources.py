@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.resources import Resource
 from mercator.syntax.stdattrs import grids, experiences, bogus, model, atmofields, atmoForcingOrigin
 from vortex.syntax.stdattrs import term
 from bronx.stdtypes.date import Date
+
+#: No automatic export
+__all__ = []
 
 
 class Namelist(Resource):
@@ -86,7 +88,8 @@ class NamelistBogus(NamelistAssimilation):
         attr = dict(
             nmtype = dict(
                 optional = False,
-                values = [ 'hbr', 'hbrst', 'gradhbr', 'hunderice', 'runoff', 'tsuvontrop', 'tsuvunderice' ],
+                values = ['hbr', 'hbrst', 'gradhbr', 'hunderice', 'runoff',
+                          'tsuvontrop', 'tsuvunderice' ],
             ),
             grid = dict(
                 values = grids,
@@ -155,7 +158,8 @@ class Bathymetry(Resource):
         else:
             # guess this one:
             if self.grid == 'orca025':
-                return self.grid.upper()+'_bathy_etopo1_gebco1_smoothed_coast_corrected_sept09.nc'
+                return (self.grid.upper() +
+                        '_bathy_etopo1_gebco1_smoothed_coast_corrected_sept09.nc')
 
     def mercator_pathinfo(self):
         assim_ocean = 'ocean'
@@ -164,7 +168,7 @@ class Bathymetry(Resource):
 
         return dict(
             grid = self.grid,
-            path = 'staticinput/'+assim_ocean+'/',
+            path = 'staticinput/' + assim_ocean + '/',
         )
 
 
@@ -179,14 +183,15 @@ class Runoff(Resource):
                 values = experiences,
             ),
             kind = dict(
-              values = [ 'runoff' ]
+                values = [ 'runoff' ]
             )
         ),
     )
 
     def mercator_basename(self):
         if self.grid == 'orca025':
-            return 'runoff_obtaz_rhone_antar_1m_bathy_sept09_'+self.grid.upper()+'_10112009.nc'
+            return ('runoff_obtaz_rhone_antar_1m_bathy_sept09_' +
+                    self.grid.upper() + '_10112009.nc')
 
     def mercator_pathinfo(self):
         return dict(
@@ -216,7 +221,7 @@ class Moorings(Resource):
     ]
 
     def mercator_basename(self):
-        return 'position.'+self.type+'.'+self.model
+        return 'position.' + self.type + '.' + self.model
 
     def mercator_pathinfo(self):
         return dict(
@@ -270,7 +275,7 @@ class Coordinates(Resource):
     )
 
     def mercator_basename(self):
-        return 'coordinates_'+self.grid.upper()+'_LIM.nc'
+        return 'coordinates_' + self.grid.upper() + '_LIM.nc'
 
     def mercator_pathinfo(self):
         return dict(
@@ -319,7 +324,7 @@ class ModelBinaries(Resource):
         elif self.type == 'pil':
             return 'SAMIAU_PALM_MULTIMP.pil'
         elif self.type == 'build_nc':
-            return self.type+'_mpp'
+            return self.type + '_mpp'
         elif self.type == 'anolist':
             return 'createlisttxtbylib.x'
 
@@ -364,7 +369,8 @@ class ClimatologyLevitus(Resource):
         return 'climatology'
 
     def mercator_basename(self):
-        return 'Levitus'+self.year+'_'+self.field+'_'+self.grid.upper()+'m'+self.month+'.nc'
+        return ('Levitus' + self.year + '_' + self.field + '_' +
+                self.grid.upper() + 'm' + self.month + '.nc')
 
     def mercator_pathinfo(self):
         return dict(

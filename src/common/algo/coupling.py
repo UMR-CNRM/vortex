@@ -1,19 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
 from bronx.stdtypes import date
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.algo.components import AlgoComponentError, BlindRun
 from vortex.layout.dataflow import intent
 
 from .forecasts import FullPos
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Coupling(FullPos):
@@ -82,7 +85,7 @@ class Coupling(FullPos):
 
         for sec in cplsec:
             r = sec.rh
-            sh.subtitle('Loop on {0:s}'.format(str(r.resource)))
+            sh.subtitle('Loop on {0!s}'.format(r.resource))
 
             # First attempt to set actual date as the one of the source model
             actualdate = r.resource.date + r.resource.term

@@ -5,9 +5,11 @@
 Common AlgoComponnent to build model's climatology files.
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import copy
+import io
+import six
 
 import footprints
 
@@ -66,7 +68,6 @@ class C923(IFSParallel):
             ),
             input_orog_name = dict(
                 info = "Filename for input orography file (case LNORO=.T.).",
-                type = str,
                 optional = True,
                 default = 'Neworog',
             ),
@@ -116,7 +117,6 @@ class FinalizePGD(AlgoComponent):
                 values   = ['finalize_pgd'],
             ),
             pgd_out_name = dict(
-                type = str,
                 optional = True,
                 default = 'PGD_final.fa'
             ),
@@ -204,14 +204,12 @@ class MakeLAMDomain(AlgoComponent):
             truncation = dict(
                 info = ("Type of spectral truncation, among" +
                         "('linear', 'quadratic', 'cubic')."),
-                type = str,
                 optional = True,
                 default = 'linear',
             ),
             orography_truncation = dict(
                 info = ("Type of truncation of orography, among" +
                         "('linear', 'quadratic', 'cubic')."),
-                type = str,
                 optional = True,
                 default = 'quadratic',
             ),
@@ -258,11 +256,11 @@ class MakeLAMDomain(AlgoComponent):
                       'resolution']
             params_extended = params + ['Iwidth', 'force_projection', 'maximize_CI_in_E']
         self.algoassert(set(params).issubset(set(self.geom_params.keys())),
-                        "With mode=={}, geom_params must contain at least {}".
-                        format(self.mode, str(params)))
+                        "With mode=={!s}, geom_params must contain at least {!s}".
+                        format(self.mode, params))
         self.algoassert(set(self.geom_params.keys()).issubset(set(params_extended)),
-                        "With mode=={}, geom_params must contain at most {}".
-                        format(self.mode, str(params)))
+                        "With mode=={!s}, geom_params must contain at most {!s}".
+                        format(self.mode, params))
 
     def execute(self, rh, opts):  # @UnusedVariable
         from common.util.usepygram import epygram
@@ -420,17 +418,17 @@ class MakeGaussGeometry(Parallel):
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
-        options = {'t': str(self.truncation),
-                   'g': str(self.latitudes),
-                   'l': str(self.longitudes),
-                   'f': str(self._unit)}
+        options = {'t': six.text_type(self.truncation),
+                   'g': six.text_type(self.latitudes),
+                   'l': six.text_type(self.longitudes),
+                   'f': six.text_type(self._unit)}
         options_dict = {'orthogonality': 'o',
                         'aliasing': 'a',
                         'oddity': 'n',
                         'verbosity': 'v'}
         for k in options_dict.keys():
             if getattr(self, k) is not None:
-                options[options_dict[k]] = str(getattr(self, k))
+                options[options_dict[k]] = six.text_type(getattr(self, k))
         return options
 
     def postfix(self, rh, opts):
@@ -452,7 +450,7 @@ class MakeGaussGeometry(Parallel):
         nam['NAMGEM']['RLOCEN'] = math.radians(float(self.pole['lon']))
         nam['NAMGEM']['RSTRET'] = self.stretching
         # numbers of longitudes
-        with open('fort.' + str(self._unit), 'r') as n:
+        with io.open('fort.{!s}'.format(self._unit), 'r') as n:
             namrgri = namelist.namparse(n)
             nam.merge(namrgri)
         # PGD namelist

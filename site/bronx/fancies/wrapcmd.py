@@ -11,7 +11,8 @@ TODO: unittest
 
 """
 
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, unicode_literals, print_function, division
+import six
 
 import re
 import os
@@ -19,9 +20,10 @@ import shlex
 import textwrap
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 import bronx.fancies.arguments  # @UnusedImport
+
+logger = footprints.loggers.getLogger(__name__)
 
 DEFAULT_PARSER_KIND = 'full'
 
@@ -39,7 +41,7 @@ class WrapCmdLineArgs(object):
         self.optional = set()
         expanded_items = list()
         for item in items:
-            if hasattr(item, '__iter__'):
+            if hasattr(item, '__iter__') and not isinstance(item, six.string_types):
                 expanded_items.extend(list(item))
             else:
                 expanded_items.append(item)
@@ -123,7 +125,7 @@ class WrapCmdLineArgs(object):
                 return
             options.update(kw)
             objcmd.logflag = options.get('report')
-            for item, pstore in self.opts.iteritems():  # @UnusedVariable
+            for item, pstore in self.opts.items():  # @UnusedVariable
                 options[pstore.dest] = pstore.callback(options[pstore.dest])
             return f(objcmd, **options)
 

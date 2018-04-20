@@ -5,6 +5,8 @@
 Net tools.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import abc
 import collections
 import ftplib
@@ -13,11 +15,12 @@ import io
 import operator
 import re
 import random
+import six
 import socket
 import stat
 import struct
 import time
-import urlparse
+from six.moves.urllib import parse as urlparse
 from datetime import datetime
 
 import footprints
@@ -140,11 +143,11 @@ class ExtendedFtplib(object):
         Nicely formatted print, built as the concatenation
         of the class full name and `logname` and `length` attributes.
         """
-        return '{0:s} | host={1:s} logname={2:s} since={3:s}>'.format(
+        return '{0:s} | host={1:s} logname={2:s} since={3!s}>'.format(
             repr(self).rstrip('>'),
             self.host,
             self.logname,
-            str(self.length)
+            self.length,
         )
 
     def __getattr__(self, key):
@@ -154,11 +157,12 @@ class ExtendedFtplib(object):
             def osproxy(*args, **kw):
                 cmd = [key]
                 cmd.extend(args)
-                cmd.extend(['{0:s}={1:s}'.format(x, str(kw[x])) for x in kw.keys()])
+                cmd.extend(['{0:s}={1!s}'.format(x, kw[x]) for x in kw.keys()])
                 self.stderr(*cmd)
                 return actualattr(*args, **kw)
 
-            osproxy.func_name = key
+            osproxy.func_name = str(key)
+            osproxy.__name__ = str(key)
             osproxy.func_doc = actualattr.__doc__
             setattr(self, key, osproxy)
             return osproxy
@@ -240,7 +244,7 @@ class ExtendedFtplib(object):
     def get(self, source, destination):
         """Retrieve a remote `destination` file to a local `source` file object."""
         self.stderr('get', source, destination)
-        if isinstance(destination, basestring):
+        if isinstance(destination, six.string_types):
             self.system.filecocoon(destination)
             target = io.open(destination, 'wb')
             xdestination = True
@@ -285,7 +289,7 @@ class ExtendedFtplib(object):
         destination, and a mismatch is considered a failure.
         """
         self.stderr('put', source, destination)
-        if isinstance(source, basestring):
+        if isinstance(source, six.string_types):
             inputsrc = io.open(source, 'rb')
             xsource = True
         else:
@@ -363,7 +367,7 @@ class ExtendedFtplib(object):
                 try:
                     self.mkd(current)
                 except ftplib.error_perm as errmkd:
-                    if 'File exists' not in str(errmkd):
+                    if 'File exists' not in six.text_type(errmkd):
                         raise
                 self.cwd(current)
             path_pre = current + '/'
@@ -522,7 +526,8 @@ class StdFtp(object):
                 actualattr = getattr(self._extended_ftp, key)
                 return actualattr(*args, **kw)
 
-            osproxy.__name__ = key
+            osproxy.func_name = str(key)
+            osproxy.__name__ = str(key)
             osproxy.__doc__ = actualattr.__doc__
             return osproxy
         else:
@@ -671,6 +676,7 @@ class AutoRetriesFtp(StdFtp):
                 if globalcounter_driver:
                     self._internal_retries_max = None
 
+        retries_wrapper.func_name = func.__name__
         retries_wrapper.__name__ = func.__name__
         retries_wrapper.__doc__ = func.__doc__
         return retries_wrapper
@@ -970,10 +976,10 @@ class Ssh(object):
 
     def _scp_putget_commons(self, source, destination):
         """Common checks on source and destination."""
-        if not isinstance(source, basestring):
+        if not isinstance(source, six.string_types):
             msg = 'Source is not a plain file path: {!r}'.format(source)
             raise TypeError(msg)
-        if not isinstance(destination, basestring):
+        if not isinstance(destination, six.string_types):
             msg = 'Destination is not a plain file path: {!r}'.format(destination)
             raise TypeError(msg)
 
@@ -1090,17 +1096,17 @@ class Ssh(object):
     def scpput_stream(self, stream, destination, permissions=None, sshopts=''):
         """Send the ``stream`` to the ``destination``.
 
-        - ``stream`` is a ``file`` (typically returned by open(),
+        - ``stream`` is a ``file`` (typically returned by io.open(),
           or the piped output of a spawned process).
         - ``destination`` is the remote file name.
 
         Return True for ok, False on error.
         """
-        if not isinstance(stream, file):
+        if not isinstance(stream, (file, io.IOBase) if six.PY2 else io.IOBase):
             msg = "stream is a {}, should be a <type 'file'>".format(type(stream))
             raise TypeError(msg)
 
-        if not isinstance(destination, basestring):
+        if not isinstance(destination, six.string_types):
             msg = 'Destination is not a plain file path: {!r}'.format(destination)
             raise TypeError(msg)
 
@@ -1125,16 +1131,16 @@ class Ssh(object):
         """Send the ``source`` to the ``stream``.
 
         - ``source`` is the remote file name.
-        - ``stream`` is a ``file`` (typically returned by open(),
+        - ``stream`` is a ``file`` (typically returned by io.open(),
           or the piped output of a spawned process).
 
         Return True for ok, False on error.
         """
-        if not isinstance(stream, file):
+        if not isinstance(stream, (file, io.IOBase) if six.PY2 else io.IOBase):
             msg = "stream is a {}, should be a <type 'file'>".format(type(stream))
             raise TypeError(msg)
 
-        if not isinstance(source, basestring):
+        if not isinstance(source, six.string_types):
             msg = 'Source is not a plain file path: {!r}'.format(source)
             raise TypeError(msg)
 
@@ -1542,7 +1548,7 @@ class LinuxNetstats(AbstractNetstats):
     @property
     def unprivileged_ports(self):
         if self.__unprivileged_ports is None:
-            with open('/proc/sys/net/ipv4/ip_local_port_range', 'r') as tmprange:
+            with io.open('/proc/sys/net/ipv4/ip_local_port_range', 'r') as tmprange:
                 tmpports = [int(x) for x in tmprange.readline().split()]
             unports = set(range(5001, 65536))
             self.__unprivileged_ports = sorted(unports - set(range(tmpports[0], tmpports[1] + 1)))
@@ -1561,11 +1567,11 @@ class LinuxNetstats(AbstractNetstats):
 
     def _generic_netstats(self, proto, rclass):
         tmpports = dict()
-        with open('/proc/net/{:s}'.format(proto), 'r') as netstats:
+        with io.open('/proc/net/{:s}'.format(proto), 'r') as netstats:
             netstats.readline()  # Skip the header line
             tmpports[socket.AF_INET] = [re.split(r':\b|\s+', x.strip())[1:6]
                                         for x in netstats.readlines()]
-        with open('/proc/net/{:s}6'.format(proto), 'r') as netstats:
+        with io.open('/proc/net/{:s}6'.format(proto), 'r') as netstats:
             netstats.readline()  # Skip the header line
             tmpports[socket.AF_INET6] = [re.split(r':\b|\s+', x.strip())[1:6]
                                          for x in netstats.readlines()]

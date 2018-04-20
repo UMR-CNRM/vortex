@@ -13,7 +13,8 @@ given to action-methods of the dispatcher.
 
 """
 
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, unicode_literals, print_function, division
+import six
 
 import os
 import sys
@@ -23,6 +24,7 @@ import re
 import io
 import cmd
 import pickle
+
 
 import footprints
 
@@ -99,7 +101,7 @@ class CmdLiner(cmd.Cmd):
     def report(self, info):
         """Append ``info`` to the logfile."""
         with io.open(self.logfile, 'a') as fd:
-            fd.write(unicode(info).rstrip() + u'\n')
+            fd.write(six.text_type(info).rstrip() + u'\n')
 
     def emptyline(self):
         """Just do nothing when line is empty."""
@@ -123,7 +125,7 @@ class CmdLiner(cmd.Cmd):
 
     def stdlog(self, *args, **kw):
         """Print to stdout and possibly logfile the current arguments."""
-        text = ' '.join([unicode(x) for x in args])
+        text = ' '.join([six.text_type(x) for x in args])
         if kw.get('raw', False):
             print(text)
         else:

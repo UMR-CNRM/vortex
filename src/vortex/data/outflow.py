@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+from .resources  import Resource
+from .geometries import HorizontalGeometry, GaussGeometry, ProjectedGeometry
+from .contents   import FormatAdapter
+from vortex.syntax.stdattrs import model
+
 #: No automatic export
 __all__ = []
-
-from resources  import Resource
-from geometries import HorizontalGeometry, GaussGeometry, ProjectedGeometry
-from contents   import FormatAdapter
-from vortex.syntax.stdattrs import model
 
 
 class NoDateResource(Resource):
@@ -63,7 +65,7 @@ class StaticGeoResource(ModelResource):
     def footprint_export_geometry(self):
         """Return the ``geometry`` attribute as its id tag."""
         return self.geometry.tag
-    
+
     def _geo2basename_info(self, add_stretching=True):
         """Return an array describing the geometry for the Vortex's name builder."""
         if isinstance(self.geometry, GaussGeometry):

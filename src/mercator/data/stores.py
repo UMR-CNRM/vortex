@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import footprints
+
+from vortex.data.stores import Store
+
 #: No automatic export
 __all__ = []
 
-import footprints
 logger = footprints.loggers.getLogger(__name__)
-
-from vortex.data.stores import Store
 
 
 class MercatorArchiveStore(Store):
@@ -57,4 +60,3 @@ class MercatorArchiveStore(Store):
             rc = ftp.put(local, self.rootdir + remote['path'])
             ftp.close()
             return rc
-

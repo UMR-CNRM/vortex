@@ -5,12 +5,15 @@
 This modules defines the low level physical layout for data handling.
 """
 
-import re
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import collections
 from collections import namedtuple, defaultdict
-import pprint
-import weakref
 import json
+import pprint
+import re
+import six
+import weakref
 
 import footprints
 from footprints.util import mktuple
@@ -154,7 +157,7 @@ class Section(object):
                     logger.critical('Fatal error with action get %s', self.rh.locate())
                 except StandardError:
                     logger.critical('Fatal error with action get on ???')
-                raise SectionFatalError('Could not get resource [%s]' % str(rc))
+                raise SectionFatalError('Could not get resource {!s}'.format(rc))
         else:
             logger.error('Try to get from an output section')
         return rc
@@ -177,7 +180,7 @@ class Section(object):
                     logger.critical('Fatal error with action put %s', self.rh.locate())
                 except StandardError:
                     logger.critical('Fatal error with action put ???')
-                raise SectionFatalError('Could not put resource [%s]', str(rc))
+                raise SectionFatalError('Could not put resource {!s}'.format(rc))
         else:
             logger.error('Try to put from an input section.')
         return rc
@@ -186,7 +189,7 @@ class Section(object):
         """Nice dump of the section attributes and contents."""
         for k, v in sorted(vars(self).items()):
             if k != 'rh':
-                print ' ', k.ljust(16), ':', v
+                print(' ', k.ljust(16), ':', v)
         self.rh.quickview(indent=1)
 
 
@@ -284,7 +287,7 @@ class Sequence(footprints.observers.Observer):
     @staticmethod
     def _fuzzy_match(stuff, allowed):
         '''Check if ``stuff`` is in ``allowed``. ``allowed`` may contain regex.'''
-        if (isinstance(allowed, basestring) or
+        if (isinstance(allowed, six.string_types) or
                 not isinstance(allowed, collections.Iterable)):
             allowed = [allowed, ]
         for pattern in allowed:
@@ -467,7 +470,7 @@ class SequenceInputsReport(object):
             only = list(InputsReportStatus)
         else:
             # Convert a single string to a list
-            if isinstance(only, basestring):
+            if isinstance(only, six.string_types):
                 only = [only, ]
             # Check that the provided statuses exist
             if not all([f in InputsReportStatus for f in only]):
@@ -503,7 +506,7 @@ class SequenceInputsReport(object):
                                :data:`InputsReportStatus`). By default (*None*), output
                                everything. Note that "alternates" are always shown.
         '''
-        print self.synthetic_report(detailed=detailed, only=only)
+        print(self.synthetic_report(detailed=detailed, only=only))
 
     def active_alternates(self):
         '''List the local resource for which an alternative resource has been used.
@@ -536,23 +539,23 @@ def _str2unicode(jsencode):
     """Convert all the strings to Unicode."""
     if isinstance(jsencode, dict):
         return {_str2unicode(key): _str2unicode(value)
-                for key, value in jsencode.iteritems()}
+                for key, value in six.iteritems(jsencode)}
     elif isinstance(jsencode, list):
         return [_str2unicode(value) for value in jsencode]
     elif isinstance(jsencode, str):
-        return unicode(str)
+        return six.text_type(str)
     else:
         return jsencode
 
 
 def _fast_clean_uri(store, remote):
     """Clean a URI so that it can be compared with a JSON load version."""
-    return _str2unicode({u'scheme': unicode(store.scheme),
-                         u'netloc': unicode(store.netloc),
-                         u'path': unicode(remote['path']),
-                         u'params': unicode(remote['params']),
+    return _str2unicode({u'scheme': six.text_type(store.scheme),
+                         u'netloc': six.text_type(store.netloc),
+                         u'path': six.text_type(remote['path']),
+                         u'params': six.text_type(remote['params']),
                          u'query': remote['query'],
-                         u'fragment': unicode(remote['fragment'])})
+                         u'fragment': six.text_type(remote['fragment'])})
 
 
 class LocalTrackerEntry(object):
@@ -717,7 +720,7 @@ class LocalTrackerEntry(object):
         for element in self._data[internal][action]:
             if isinstance(element, collections.Mapping):
                 succeed = True
-                for key, val in skeleton.iteritems():
+                for key, val in skeleton.items():
                     succeed = succeed and ((key in element) and (element[key] == val))
                 if succeed:
                     stack.append(element)
@@ -783,10 +786,10 @@ class LocalTracker(defaultdict):
         :param info: Info dictionary sent by the :class:`~vortex.data.handlers.Handler` object
         """
         lpath = rh.container.iotarget()
-        if isinstance(lpath, basestring):
+        if isinstance(lpath, six.string_types):
             self[lpath].update_rh(rh, info)
         else:
-            logger.debug('The iotarget is not a basestring: skipped in %s',
+            logger.debug('The iotarget is not a six.text_type: skipped in %s',
                          self.__class__)
 
     def update_store(self, store, info):
@@ -807,11 +810,11 @@ class LocalTracker(defaultdict):
                 for atracker in list(self._uri_map['put'][huri]):
                     atracker.check_uri_remote_delete(clean_uri)
         else:
-            if isinstance(lpath, basestring):
+            if isinstance(lpath, six.string_types):
                 clean_uri = _fast_clean_uri(store, info['remote'])
                 self[lpath].update_store(info, clean_uri)
             else:
-                logger.debug("The iotarget isn't a basestring: It will be skipped in %s",
+                logger.debug("The iotarget isn't a six.text_type: It will be skipped in %s",
                              self.__class__)
 
     def is_tracked_input(self, local):
@@ -819,13 +822,13 @@ class LocalTracker(defaultdict):
 
         :param local: Local name of the input that will be checked
         """
-        return (isinstance(local, basestring) and
+        return (isinstance(local, six.string_types) and
                 (local in self) and
                 (self[local].latest_rhdict('get')))
 
     def _grep_stuff(self, internal, action, skeleton=dict()):
         stack = []
-        for entry in self.itervalues():
+        for entry in six.itervalues(self):
             stack.extend(entry._grep_stuff(internal, action, skeleton))
         return stack
 
@@ -842,7 +845,7 @@ class LocalTracker(defaultdict):
 
         :param filename: Path to the JSON file.
         """
-        outdict = {loc: entry.dump_as_dict() for loc, entry in self.iteritems()}
+        outdict = {loc: entry.dump_as_dict() for loc, entry in six.iteritems(self)}
         with file(filename, 'w') as fpout:
             json.dump(outdict, fpout, indent=2, sort_keys=True)
 
@@ -855,12 +858,12 @@ class LocalTracker(defaultdict):
             indict = json.load(fpin)
         # Start from scratch
         self.clear()
-        for loc, adict in indict.iteritems():
+        for loc, adict in six.iteritems(indict):
             self[loc].load_from_dict(adict)
 
     def append(self, othertracker):
         """Append the content of another LocalTracker object into this one."""
-        for loc, entry in othertracker.iteritems():
+        for loc, entry in six.iteritems(othertracker):
             self[loc].append(entry)
 
     def datastore_inplace_overwrite(self, other):
@@ -870,8 +873,8 @@ class LocalTracker(defaultdict):
 
     def __str__(self):
         out = ''
-        for loc, entry in self.iteritems():
-            entryout = str(entry)
+        for loc, entry in six.iteritems(self):
+            entryout = six.text_type(entry)
             if entryout:
                 out += "========== {} ==========\n{}".format(loc, entryout)
         return out

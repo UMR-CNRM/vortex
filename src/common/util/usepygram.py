@@ -8,22 +8,26 @@ When loaded, this module discards any FootprintBase resource collected as a cont
 in EPyGrAM package.
 """
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import sys
 from distutils.version import LooseVersion
 
 from bronx.stdtypes.date import Date, Time, Period
 import footprints
 from footprints import proxy as fpx
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.data.contents import MetaDataReader
+
+logger = footprints.loggers.getLogger(__name__)
 
 try:
     import epygram  # @UnusedImport
     logger.info('Epygram %s loaded.', LooseVersion(epygram.__version__))
 except ImportError:
     pass
+
 
 footprints.proxy.containers.discard_package('epygram', verbose=False)
 
@@ -284,7 +288,7 @@ def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
         with epy_env_prepare(t):
             pgdin = fpx.dataformats.almost_clone(rh_pgdlfi.contents.data,
                                                  true3d=True)
-            geom, spgeom = dm.build.build_geom_from_e923nam(nam923blocks) # TODO: Arpege case
+            geom, spgeom = dm.build.build_geom_from_e923nam(nam923blocks)  # TODO: Arpege case
             validity = epygram.base.FieldValidity(date_time=Date(1994, 5, 31, 0),  # Date of birth of ALADIN
                                                   term=Period(0))
             pgdout = epygram.formats.resource(filename=outname,

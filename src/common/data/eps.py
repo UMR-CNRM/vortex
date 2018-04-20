@@ -1,19 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import copy
+import six
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from bronx.stdtypes.date      import Date, Time
 from vortex.data.flow         import FlowResource
 from vortex.data.contents     import JsonDictContent, TextContent
 from vortex.syntax.stdattrs   import FmtInt
 from common.data.modelstates  import Historic
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class PerturbedState(Historic):
@@ -222,7 +226,7 @@ class SampleContent(JsonDictContent):
         targetterm = Time(g.get('targetterm', x.get('targetterm', 0)))
         thedate = Date(self.date(g, x))
         period = (targetdate + targetterm) - thedate
-        return str(period.time())
+        return six.text_type(period.time())
 
     def _actual_diff(self, ref):
         me = copy.copy(self.data)

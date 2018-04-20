@@ -15,7 +15,7 @@ TODO: unittest
 
 """
 
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, unicode_literals, print_function, division
 
 import os
 import glob
@@ -42,7 +42,11 @@ yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
 def upfirst(subpath='work', thispath=None):
     """Return first directory matching subpath in specified or current path."""
     if thispath is None:
-        thispath = os.getcwd()
+        try:
+            thispath = os.getcwd()
+        except OSError as e:
+            logger.error('getcwd failed: %s.', str(e))
+            thispath = ''
     found = None
     while thispath and not found:
         if os.path.isdir(os.path.join(thispath, subpath)):

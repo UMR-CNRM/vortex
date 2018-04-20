@@ -8,6 +8,7 @@ Actions specific to operational needs.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import collections
+import six
 
 import footprints
 from vortex.data.handlers import Handler
@@ -182,8 +183,8 @@ class OpPhase(Action):
 
         def isiterable(item):
             return (
-                isinstance(item, collections.Iterable)
-                and not isinstance(item, basestring)
+                isinstance(item, collections.Iterable) and
+                not isinstance(item, six.string_types)
             )
 
         def flatten(iterable):

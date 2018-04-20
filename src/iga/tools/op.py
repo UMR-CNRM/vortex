@@ -1,21 +1,26 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+import io
 import re
+import six
 from tempfile import mkdtemp
 
 import bronx.stdtypes.date
 import vortex  # @UnusedImport
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.actions import actiond as ad
 from iga.util import swissknife
 from vortex.layout.dataflow import InputsReportStatus as rStatus
 from vortex.layout.jobs import JobAssistant
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class OpJobAssistantTest(JobAssistant):
@@ -40,7 +45,7 @@ class OpJobAssistantTest(JobAssistant):
             profile = opd.get('op_suite', 'oper')
         )
 
-        print gl.idcard()
+        print(gl.idcard())
 
         # ----------------------------------------------------------------------
         t.sh.header('Activate a new session with previous glove')
@@ -136,7 +141,7 @@ class OpJobAssistantTest(JobAssistant):
 
         t.env.RUNDIR = kw.get('rundir', mkdtemp(prefix=t.glove.tag + '-'))
         t.sh.cd(t.env.RUNDIR, create=True)
-        t.sh.chmod(t.env.RUNDIR, 0755)
+        t.sh.chmod(t.env.RUNDIR, 0o755)
         t.rundir = t.sh.getcwd()
         logger.info('Current rundir <%s>', t.rundir)
 
@@ -159,10 +164,10 @@ class OpJobAssistantTest(JobAssistant):
 
         ad.add(vortex.tools.actions.SmsGateway())
 
-        print '+ SMS candidates =', ad.candidates('sms')
+        print('+ SMS candidates =', ad.candidates('sms'))
 
-        print '+ JEEVES candidates =', ad.candidates('jeeves')
-        print '+ JEEVES default =', vortex.toolbox.defaults.get('jname')
+        print('+ JEEVES candidates =', ad.candidates('jeeves'))
+        print('+ JEEVES default =', vortex.toolbox.defaults.get('jname'))
 
         # ----------------------------------------------------------------------
         t.sh.header('START message to op MESSDAYF reporting file')
@@ -195,24 +200,24 @@ class OpJobAssistantTest(JobAssistant):
             else:
                 logger.error('No contents defined for cycle %s or bad opcycle path %s', cycle, genvdef)
                 raise ValueError('Bad cycle value')
-            print genv.as_rawstr(cycle=cycle)
+            print(genv.as_rawstr(cycle=cycle))
 
     def complete(self):
         """Exit from OP session."""
         ad.report(kind='dayfile', mode='FIN')
         ad.sms_complete()
-        print 'Well done Denis !'
+        print('Well done Denis !')
         super(OpJobAssistantTest, self).complete()
 
     def rescue(self):
         """Exit from OP session after a crash but simulating a happy ending. Use only in a test environment."""
         ad.sms_abort()
-        print 'Bad luck...'
+        print('Bad luck...')
         super(OpJobAssistantTest, self).rescue()
 
     def finalise(self):
         super(OpJobAssistantTest, self).finalise()
-        print 'Bye bye Op...'
+        print('Bye bye Op...')
 
 
 class OpJobAssistant(OpJobAssistantTest):
@@ -239,9 +244,9 @@ class OpJobAssistant(OpJobAssistantTest):
             if 'DATA_OUTPUT_ARCH_PATH' in t.env:
                 option_insertion = option_insertion + ' --arch-path=' + t.env['DATA_OUTPUT_ARCH_PATH']
             tfile = t.env['HOME'] + '/tempo/option_insertion.' + t.env['SLURM_JOB_ID'] + '.txt'
-            print tfile
-            print option_insertion
-            with open(tfile, "w") as f:
+            print(tfile)
+            print(option_insertion)
+            with io.open(tfile, "w") as f:
                 f.write(option_insertion)
 
     def rescue(self):
@@ -337,7 +342,7 @@ def filteractive(r, dic):
     """ this function returns the filter status """
     filter_active = True
     if dic is not None:
-        for k, w in dic.iteritems():
+        for k, w in six.iteritems(dic):
             if not get_resource_value(r, k) in w:
                 logger.info('filter not active : {} = {} actual value : {}'.
                             format(k, w, get_resource_value(r, k)))
@@ -384,7 +389,7 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
 
         if filteractive(rh, optfilter):
             ad.route(** kwargs)
-            print t.prompt, 'routing file = ', rh
+            print(t.prompt, 'routing file = ', rh)
 
     return hook_route
 
@@ -397,6 +402,6 @@ def opphase_hook_factory(optfilter=None):
     def hook_phase(t, rh):
         if filteractive(rh, optfilter):
             ad.phase(rh)
-            print t.prompt, 'phasing file = ', rh
+            print(t.prompt, 'phasing file = ', rh)
 
     return hook_phase

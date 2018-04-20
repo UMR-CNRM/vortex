@@ -2,11 +2,14 @@
 # -*- coding:Utf-8 -*-
 # pylint: disable=unused-argument
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import ast
 import collections
 import copy
 import hashlib
 import re
+import six
 
 import footprints
 from vortex.data.stores import Store, ArchiveStore, MultiStore, CacheStore,\
@@ -47,7 +50,7 @@ class GcoStoreConfig(GenericConfigParser):
             self._config_re_cache[k_re] = {k: self._decoder(v)
                                            for k, v in self.items(section)}
         self._config_defaults = {k: self._decoder(v)
-                                 for k, v in self.defaults().iteritems()}
+                                 for k, v in six.iteritems(self.defaults())}
 
     def key_properties(self, ggetkey):
         """See if a given *ggetkey* matches one of the sections of the configuration file.
@@ -60,7 +63,7 @@ class GcoStoreConfig(GenericConfigParser):
             if self.file is None:
                 raise RuntimeError("A configuration file must be setup first")
             myconf = self._config_defaults
-            for section_re, section_conf in self._config_re_cache.iteritems():
+            for section_re, section_conf in six.iteritems(self._config_re_cache):
                 if section_re.match(ggetkey):
                     myconf = section_conf
                     break
@@ -69,7 +72,7 @@ class GcoStoreConfig(GenericConfigParser):
 
     def key_untar_properties(self, ggetkey):
         """Filtered version of **key_properties** with only untar related data."""
-        return {k: v for k, v in self.key_properties(ggetkey).iteritems()
+        return {k: v for k, v in six.iteritems(self.key_properties(ggetkey))
                 if k in ['uniquelevel_ignore']}
 
 
@@ -354,7 +357,7 @@ class _UgetStoreMixin(object):
                 rc = rc and self.system.cp(destdir + '/' + extract[0], local, fmt=fmt)
             else:
                 # Automatic untar if needed... (the local file needs to end with a tar extension)
-                if (isinstance(local, basestring) and not self.system.path.isdir(local) and
+                if (isinstance(local, six.string_types) and not self.system.path.isdir(local) and
                         self.system.is_tarname(local) and self.system.is_tarfile(local)):
                     destdir = self.system.path.dirname(self.system.path.realpath(local))
                     untaropts = self.ugetconfig.key_untar_properties(uname)

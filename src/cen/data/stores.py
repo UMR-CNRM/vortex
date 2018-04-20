@@ -2,15 +2,18 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.syntax.stdattrs import DelayedEnvValue
 
 from iga.data.stores import IgaGcoCacheStore
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class CenGcoCacheStore(IgaGcoCacheStore):

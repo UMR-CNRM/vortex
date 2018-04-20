@@ -2,16 +2,19 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.stores     import Store, Finder
 from vortex.syntax.stdattrs import DelayedEnvValue, hashalgo_avail_list
 
 from gco.data.stores import GcoCacheStore
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class IgaGcoCacheStore(GcoCacheStore):

@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
-
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.providers import Provider
+
+#: No automatic export
+__all__ = []
 
 
 class MercatorArchive(Provider):
@@ -16,7 +17,7 @@ class MercatorArchive(Provider):
             namespace = dict(
                 optional = False,
                 default = 'mercator.archive.fr',
-                values = ['mercator.archive.fr',]
+                values = ['mercator.archive.fr', ]
             ),
         )
     )
@@ -34,7 +35,7 @@ class MercatorArchive(Provider):
     def pathname(self, resource):
         rinfo = self.pathinfo(resource)
         return '/'.join((
-          'chains/oper/glo', 
-          rinfo.get('grid', ''), 
-          rinfo.get('path', '')
+            'chains/oper/glo',
+            rinfo.get('grid', ''),
+            rinfo.get('path', '')
         ))

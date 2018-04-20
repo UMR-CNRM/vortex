@@ -44,7 +44,8 @@ Formats hypothesis:
 
 # TODO: Activate unicode_literals but check that it still works with Olive
 # experiments and when sending emails.
-from __future__ import print_function, absolute_import, division  # , unicode_literals
+from __future__ import print_function, absolute_import, division, unicode_literals
+import six
 
 import calendar
 import datetime
@@ -52,7 +53,6 @@ import functools
 import inspect
 import operator
 import re
-import six
 
 #: No automatic export
 __all__ = []
@@ -123,11 +123,11 @@ def synop(delta=0, base=None, time=None, step=6):
     if time is not None:
         time = Time(time)
         if time in [Time(x) for x in range(0, 24, step)]:
-            dt = Period('PT' + str(step) + 'H')
+            dt = Period('PT{!s}H'.format(step))
             while synopdate.time() != time:
                 synopdate = synopdate - dt
         else:
-            raise ValueError('Not a synoptic hour: ' + str(time))
+            raise ValueError('Not a synoptic hour: {!s}'.format(time))
     return synopdate
 
 
@@ -141,8 +141,8 @@ def easter(year=None):
     """Return the date for easter of the given year
 
     >>> dates = [2013, 2014, 2015, 2016, 2017, 2018]
-    >>> [easter(d).ymd for d in dates]
-    ['20130331', '20140420', '20150405', '20160327', '20170416', '20180401']
+    >>> [easter(d).ymd for d in dates]  # doctest: +ELLIPSIS
+    [...'20130331', ...'20140420', ...'20150405', ...'20160327', ...'20170416', ...'20180401']
     """
     if not year:
         year = today().year
@@ -205,7 +205,7 @@ def guess(*args):
             return isoclass(*args)
         except (ValueError, TypeError):
             continue
-    raise ValueError("Cannot guess what Period or Date could be %s" % str(args))
+    raise ValueError("Cannot guess what Period or Date could be {!s}".format(args))
 
 
 def daterange(start, end=None, step='P1D'):
@@ -294,23 +294,23 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     Formatting the date as a string depending on the *fmt* function name::
 
         >>> daterangex('2017010100-2017013100-P14D,2017060100-2017063000-P14D,2017122500',
-        ...            fmt='ymdh')  # doctest: +NORMALIZE_WHITESPACE
-        ['2017010100', '2017011500', '2017012900',
-        '2017060100', '2017061500', '2017062900', '2017122500']
+        ...            fmt='ymdh')  # doctest: +NORMALIZE_WHITESPACE,+ELLIPSIS
+        [...'2017010100', ...'2017011500', ...'2017012900',
+         ...'2017060100', ...'2017061500', ...'2017062900', ...'2017122500']
 
     Adding a *prefix* before the date string::
 
         >>> daterangex('2017010100-2017013100-P14D,2017060100-2017063000-P14D,2017122500',
-        ...            fmt='ymdh', prefix='loop')  # doctest: +NORMALIZE_WHITESPACE
-        ['loop2017010100', 'loop2017011500', 'loop2017012900',
-         'loop2017060100', 'loop2017061500', 'loop2017062900', 'loop2017122500']
+        ...            fmt='ymdh', prefix='loop')  # doctest: +NORMALIZE_WHITESPACE,+ELLIPSIS
+        [...'loop2017010100', ...'loop2017011500', ...'loop2017012900',
+         ...'loop2017060100', ...'loop2017061500', ...'loop2017062900', ...'loop2017122500']
 
     """
 
     rangevalues = list()
 
-    pstarts = ([str(s) for s in start]
-               if isinstance(start, (list, tuple)) else str(start).split(','))
+    pstarts = ([six.text_type(s) for s in start]
+               if isinstance(start, (list, tuple)) else six.text_type(start).split(','))
 
     for pstart in pstarts:
         actualrange = re.split('[-/]', pstart)
@@ -343,7 +343,7 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
                 if callable(pvalues[0]):
                     pvalues = [x() for x in pvalues]
             if prefix is not None:
-                    pvalues = [ prefix + str(x) for x in pvalues ]
+                    pvalues = [ prefix + six.text_type(x) for x in pvalues ]
 
         rangevalues.extend(pvalues)
 
@@ -530,8 +530,8 @@ class Period(datetime.timedelta):
             days += 1
             seconds = 86400 - seconds
         if days:
-            iso += str(abs(days)) + 'D'
-        return sign + iso + 'T' + str(seconds) + 'S'
+            iso += '{!s}D'.format(abs(days))
+        return sign + iso + 'T{!s}S'.format(seconds)
 
     def isoformat(self):
         """Return default ISO representation."""
@@ -672,7 +672,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         elif isinstance(top, six.string_types):
             s_top = top.split('/')
             top = s_top[0]
-            top = re.sub('^YYYY', str(max(0, int(kw.pop('year', today().year)))), top.upper())
+            top = re.sub('^YYYY', six.text_type(max(0, int(kw.pop('year', today().year)))), top.upper())
             deltas = s_top[1:]
             ld = [int(x) for x in re.split('[-:HTZ]+', mkisodate(top)) if re.match(r'\d+$', x)]
         else:
@@ -766,13 +766,13 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
             Date(2017, 4, 15, 0, 0)
             >>> date.subP1D_addPT6H
             Date(2017, 4, 15, 6, 0)
-            >>> date.subP1D_ymdh
-            '2017041500'
+            >>> print(date.subP1D_ymdh)
+            2017041500
 
         The following will also work::
 
-            >>> date.addterm_ymdh(dict(term=Time(6, 0)), dict())
-            '2017041606'
+            >>> print(date.addterm_ymdh(dict(term=Time(6, 0)), dict()))
+            2017041606
 
         In such a documentation, this looks horrible. However, in the context of
         :mod:`footprints` substitutions, it works like a charm (to compute the
@@ -820,6 +820,9 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
     def is_synoptic(self):
         """True if the current hour is a synoptic one."""
         return self.hour in (0, 6, 12, 18)
+
+    def strftime(self, *kargs, **kwargs):
+        return six.text_type(super(Date, self).strftime(*kargs, **kwargs))
 
     @property
     def julian(self):
@@ -881,7 +884,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
 
     def vortex(self, cutoff='P'):
         """Semi-compact representation for vortex paths."""
-        return self.strftime('%Y%m%dT%H%M') + str(cutoff)[0].upper()
+        return self.strftime('%Y%m%dT%H%M') + six.text_type(cutoff)[0].upper()
 
     def reallynice(self):
         """Nice and verbose string representation."""
@@ -933,7 +936,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         except (ValueError, TypeError):
             pass
         finally:
-            return self.compact() == '{0:<08s}'.format(str(other))
+            return self.compact() == '{0:<08s}'.format(six.text_type(other))
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -945,7 +948,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         except (ValueError, TypeError):
             pass
         finally:
-            return self.compact() < '{0:<08s}'.format(str(other))
+            return self.compact() < '{0:<08s}'.format(six.text_type(other))
 
     def __le__(self, other):
         return self == other or self < other
@@ -957,7 +960,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         except (ValueError, TypeError):
             pass
         finally:
-            return self.compact() > '{0:<08s}'.format(str(other))
+            return self.compact() > '{0:<08s}'.format(six.text_type(other))
 
     def __ge__(self, other):
         return self == other or self > other
@@ -1118,10 +1121,10 @@ class Time(_GetattrCalculatorMixin):
             Time(18, 30)
             >>> atime.addPT6H30M
             Time(18, 30)
-            >>> atime.addPT6H30M_fmthm
-            '0018:30'
-            >>> atime.subPT18H30M_fmthm
-            '-0006:30'
+            >>> print(atime.addPT6H30M_fmthm)
+            0018:30
+            >>> print(atime.subPT18H30M_fmthm)
+            -0006:30
 
         """
         if kw:
@@ -1306,7 +1309,7 @@ class Time(_GetattrCalculatorMixin):
 
     def isoformat(self):
         """Almost ISO representation (HH:MM)."""
-        return str(self)
+        return six.text_type(self)
 
     def iso8601(self):
         """Plain ISO 8601 representation."""
@@ -1423,7 +1426,7 @@ class Month(object):
                         raise ValueError('Not a valid month: {}'.format(self._month))
                     tmpday = 1
                 except (ValueError, TypeError):
-                    raise ValueError('Could not create a Month from values provided %s', str(args))
+                    raise ValueError('Could not create a Month from values provided {!s}'.format(args))
             else:
                 self._month, self._year, tmpday = tmpdate.month, tmpdate.year, tmpdate.day
             # Process the modifiers

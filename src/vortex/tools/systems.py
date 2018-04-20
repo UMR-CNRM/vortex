@@ -22,6 +22,8 @@ When working with System objects, preferentialy use high-level methods such as
 
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from collections import namedtuple
 import contextlib
 import filecmp
@@ -29,6 +31,7 @@ import glob
 import hashlib
 import io
 import json
+import locale
 import os
 import pickle
 import platform
@@ -37,11 +40,11 @@ import re
 import resource
 import shutil
 import signal
+import six
 import socket
 import stat
 import subprocess
 import sys
-import StringIO
 import tarfile
 import tempfile
 import time
@@ -127,7 +130,7 @@ def fmtshcmd(func):
     """
     def formatted_method(self, *args, **kw):
         fmt = kw.pop('fmt', None)
-        fmtcall = getattr(self, str(fmt).lower() + '_' + func.func_name, func)
+        fmtcall = getattr(self, str(fmt).lower() + '_' + func.__name__, func)
         if getattr(fmtcall, 'func_extern', False):
             return fmtcall(*args, **kw)
         else:
@@ -176,7 +179,7 @@ class CdContext(object):
         self.newpath = self.sh.path.expanduser(newpath)
 
     def __enter__(self):
-        self.oldpath = self.sh.getcwd()
+        self.oldpath = self.sh.getcwdu() if six.PY2 else self.sh.getcwd()
         self.sh.cd(self.newpath, create=self.create)
 
     def __exit__(self, etype, value, traceback):  # @UnusedVariable
@@ -296,7 +299,7 @@ class System(footprints.FootprintBase):
         self.__dict__['_xtrack'] = dict()
         self.__dict__['_history'] = History(tag='shell')
         self.__dict__['_rclast'] = 0
-        self.__dict__['prompt'] = kw.pop('prompt', '')
+        self.__dict__['prompt'] = six.text_type(kw.pop('prompt', ''))
         for flag in ('trace', 'timer'):
             self.__dict__[flag] = kw.pop(flag, False)
         for flag in ('output', ):
@@ -337,7 +340,7 @@ class System(footprints.FootprintBase):
         """Extend the current external attribute resolution to **obj** (module or object)."""
         if obj is not None:
             if hasattr(obj, 'kind'):
-                for k, v in self._xtrack.iteritems():
+                for k, v in six.iteritems(self._xtrack):
                     if hasattr(v, 'kind'):
                         if hasattr(self, k):
                             delattr(self, k)
@@ -384,7 +387,8 @@ class System(footprints.FootprintBase):
                 self.stderr(*cmd)
                 return actualattr(*args, **kw)
 
-            osproxy.func_name = key
+            osproxy.func_name = str(key)
+            osproxy.__name__ = str(key)
             osproxy.func_doc = actualattr.__doc__
             osproxy.func_extern = True
             setattr(self, key, osproxy)
@@ -399,13 +403,13 @@ class System(footprints.FootprintBase):
             sys.stderr.write(
                 "* [{0:s}][{1:d}] {2:s}\n".format(
                     justnow.strftime('%Y/%m/%d-%H:%M:%S'), count,
-                    ' '.join([str(x) for x in args])
+                    ' '.join([six.text_type(x) for x in args])
                 )
             )
 
     def echo(self, args):
         """Joined **args** are echoed."""
-        print '>>>', ' '.join(args)
+        print('>>>', ' '.join(args))
 
     def title(self, textlist, tchar='=', autolen=96):
         """Formated title output.
@@ -414,18 +418,18 @@ class System(footprints.FootprintBase):
         :param str tchar: The character used to frame the title text
         :param int autolen: The title width
         """
-        if isinstance(textlist, basestring):
+        if isinstance(textlist, six.string_types):
             textlist = (textlist,)
         if autolen:
             nbc = autolen
         else:
             nbc = max([len(text) for text in textlist])
         print
-        print tchar * (nbc + 4)
+        print(tchar * (nbc + 4))
         for text in textlist:
-            print '{0:s} {1:^{size}s} {0:s}'.format(tchar, text.upper(), size=nbc)
-        print tchar * (nbc + 4)
-        print ''
+            print('{0:s} {1:^{size}s} {0:s}'.format(tchar, text.upper(), size=nbc))
+        print(tchar * (nbc + 4))
+        print('')
 
     def subtitle(self, text='', tchar='-', autolen=96):
         """Formated subtitle output.
@@ -438,10 +442,10 @@ class System(footprints.FootprintBase):
             nbc = autolen
         else:
             nbc = len(text)
-        print "\n", tchar * (nbc + 4)
+        print("\n", tchar * (nbc + 4))
         if text:
-            print '# {0:{size}s} #'.format(text, size=nbc)
-            print tchar * (nbc + 4)
+            print('# {0:{size}s} #'.format(text, size=nbc))
+            print(tchar * (nbc + 4))
 
     def header(self, text='', tchar='-', autolen=False, xline=True, prompt=None):
         """Formated header output.
@@ -456,17 +460,17 @@ class System(footprints.FootprintBase):
             nbc = len(prompt + text) + 1
         else:
             nbc = 100
-        print "\n", tchar * nbc
+        print("\n", tchar * nbc)
         if text:
             if not prompt:
                 prompt = self.prompt
             if prompt:
-                prompt = str(prompt) + ' '
+                prompt = six.text_type(prompt) + ' '
             else:
                 prompt = ''
-            print prompt + text
+            print(prompt + six.text_type(text))
             if xline:
-                print tchar * nbc
+                print(tchar * nbc)
 
     def pythonpath(self, output=None):
         """Return or print actual ``sys.path``."""
@@ -478,7 +482,7 @@ class System(footprints.FootprintBase):
         else:
             self.subtitle('Python PATH')
             for pypath in sys.path:
-                print pypath
+                print(pypath)
             return True
 
     @property
@@ -521,8 +525,8 @@ class System(footprints.FootprintBase):
             checklist.append((modname, modname in sys.modules))
         if not output:
             for m, s in checklist:
-                print str(s).ljust(8), m
-            print '--'
+                print(str(s).ljust(8), m)
+            print('--')
             return True
         else:
             return checklist
@@ -788,6 +792,9 @@ class OSExtended(System):
         :note: When a signal is caught by the Python script, the TERM signal is
             sent to the spawned process and then the signal Exception is re-raised
             (the **fatal** argument has no effect on that).
+        :note: If **output** = True, the results is a Unicode string decoded
+            assuming the **locale.getpreferredencoding(False)**
+            encoding.
         """
         rc = False
         if ok is None:
@@ -806,7 +813,7 @@ class OSExtended(System):
                 localenv.update(taskset_env)
             else:
                 logger.warning("CPU binding is not available on this platform")
-        if isinstance(args, basestring):
+        if isinstance(args, six.string_types):
             if taskset:
                 args = taskset_cmd + ' ' + args
             if self.timer:
@@ -824,8 +831,8 @@ class OSExtended(System):
             else:
                 cmdout, cmderr = None, None
         else:
-            if isinstance(output, basestring):
-                output = open(output, outmode)
+            if isinstance(output, six.string_types):
+                output = io.open(output, outmode)
             cmdout, cmderr = output, output
         p = None
         try:
@@ -867,12 +874,12 @@ class OSExtended(System):
                 p.wait()
             raise  # Fatal has no effect on that !
         else:
+            plocale = locale.getpreferredencoding(False)
             if p.returncode in ok:
                 if isinstance(output, bool) and output:
+                    rc = p_out.decode(plocale, 'replace')
                     if outsplit:
-                        rc = p_out.rstrip('\n').split('\n')
-                    else:
-                        rc = p_out
+                        rc = rc.rstrip('\n').split('\n')
                     p.stdout.close()
                 else:
                     rc = not bool(p.returncode)
@@ -881,7 +888,7 @@ class OSExtended(System):
                     logger.warning('Bad return code [%d] for %s', p.returncode, str(args))
                     if isinstance(output, bool) and output:
                         for xerr in p_err:
-                            sys.stderr.write(xerr)
+                            sys.stderr.write(xerr.decode(plocale, 'replace'))
                 if fatal:
                     raise ExecutionError
                 else:
@@ -918,11 +925,15 @@ class OSExtended(System):
         if output is None:
             output = self.output
         self.stderr('pwd')
-        realpwd = self._os.getcwd()
+        try:
+            realpwd = self._os.getcwdu() if six.PY2 else self._os.getcwd()
+        except OSError as e:
+            logger.error('getcwdu failed: %s.', str(e))
+            return None
         if output:
             return realpwd
         else:
-            print realpwd
+            print(realpwd)
             return True
 
     def cd(self, pathtogo, create=False):
@@ -1007,7 +1018,7 @@ class OSExtended(System):
         rc = None
         if os.path.exists(inodename):
             if os.path.isdir(inodename):
-                rc = self.chmod(inodename, 0555)
+                rc = self.chmod(inodename, 0o555)
             else:
                 st = self.stat(inodename).st_mode
                 if st & stat.S_IWUSR or st & stat.S_IWGRP or st & stat.S_IWOTH:
@@ -1052,7 +1063,7 @@ class OSExtended(System):
             except StandardError:
                 rc = False
         else:
-            fh = file(filename, 'a')
+            fh = io.open(filename, 'a')
             fh.close()
         return rc
 
@@ -1114,7 +1125,7 @@ class OSExtended(System):
     def ulimit(self):
         """Dump the user limits currently defined."""
         for limit in [r for r in dir(self._rl) if r.startswith('RLIMIT_')]:
-            print ' ', limit.ljust(16), ':', self._rl.getrlimit(getattr(self._rl, limit))
+            print(' ', limit.ljust(16), ':', self._rl.getrlimit(getattr(self._rl, limit)))
 
     @property
     def cpus_info(self):
@@ -1214,7 +1225,7 @@ class OSExtended(System):
         if cmdline is None:
             cmdline = sys.argv[1:]
         opts.update(dict([x.split('=') for x in cmdline]))
-        for k, v in opts.iteritems():
+        for k, v in six.iteritems(opts):
             if v not in (None, True, False):
                 if istrue.match(v):
                     opts[k] = True
@@ -1227,10 +1238,9 @@ class OSExtended(System):
     def is_iofile(self, iocandidate):
         """Check if actual **iocandidate** is a valid filename or io stream."""
         return iocandidate is not None and (
-            (isinstance(iocandidate, basestring) and self.path.exists(iocandidate)) or
-            isinstance(iocandidate, file) or
-            isinstance(iocandidate, io.IOBase) or
-            isinstance(iocandidate, StringIO.StringIO)
+            (isinstance(iocandidate, six.string_types) and self.path.exists(iocandidate)) or
+            isinstance(iocandidate, (file, io.IOBase) if six.PY2 else io.IOBase) or
+            isinstance(iocandidate, six.StringIO)
         )
 
     @contextlib.contextmanager
@@ -1313,7 +1323,7 @@ class OSExtended(System):
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             uncompress the data during the file transfer (default: *None*).
         """
-        if isinstance(destination, basestring):  # destination may be Virtual
+        if isinstance(destination, six.string_types):  # destination may be Virtual
             self.rm(destination)
         ftp = self.ftp(hostname, logname)
         if ftp:
@@ -1383,7 +1393,7 @@ class OSExtended(System):
     def ftserv_put(self, source, destination, hostname=None, logname=None,
                    specialshell=None, sync=False):
         """Asynchronous put of a file using FtServ."""
-        if isinstance(source, basestring) and isinstance(destination, basestring):
+        if isinstance(source, six.string_types) and isinstance(destination, six.string_types):
             if self.path.exists(source):
                 ftcmd = self.ftputcmd or 'ftput'
                 extras = list()
@@ -1406,7 +1416,7 @@ class OSExtended(System):
 
     def ftserv_get(self, source, destination, hostname=None, logname=None):
         """Get a file using FtServ."""
-        if isinstance(source, basestring) and isinstance(destination, basestring):
+        if isinstance(source, six.string_types) and isinstance(destination, six.string_types):
             if self.filecocoon(destination):
                 destination = self.path.expanduser(destination)
                 extras = list()
@@ -1469,7 +1479,7 @@ class OSExtended(System):
             * **source** is a string (as opposed to a File like object)
             * **destination** is a string (as opposed to a File like object)
         """
-        if self.ftraw and isinstance(source, basestring) and isinstance(destination, basestring):
+        if self.ftraw and isinstance(source, six.string_types) and isinstance(destination, six.string_types):
             return self.rawftput(source, destination, hostname=hostname, logname=logname,
                                  cpipeline=cpipeline, sync=sync, fmt=fmt)
         else:
@@ -1512,7 +1522,7 @@ class OSExtended(System):
             * **destination** is a string (as opposed to a File like object)
         """
         if (self.ftraw and cpipeline is None and
-                isinstance(source, basestring) and isinstance(destination, basestring)):
+                isinstance(source, six.string_types) and isinstance(destination, six.string_types)):
             # FtServ is uninteresting when dealing with compression
             return self.rawftget(source, destination, hostname=hostname, logname=logname,
                                  cpipeline=cpipeline, fmt=fmt)
@@ -1549,7 +1559,7 @@ class OSExtended(System):
         """
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
-        if isinstance(source, basestring) and cpipeline is None:
+        if isinstance(source, six.string_types) and cpipeline is None:
             self.stderr('scpput', source, destination, msg)
             return ssh.scpput(source, destination)
         else:
@@ -1575,7 +1585,7 @@ class OSExtended(System):
         """
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
-        if isinstance(destination, basestring) and cpipeline is None:
+        if isinstance(destination, six.string_types) and cpipeline is None:
             self.stderr('scpget', source, destination, msg)
             return ssh.scpget(source, destination)
         else:
@@ -1689,7 +1699,7 @@ class OSExtended(System):
         the operation is atomic.
         """
         self.stderr('hybridcp', source, destination)
-        if isinstance(source, basestring):
+        if isinstance(source, six.string_types):
             if not self.path.exists(source):
                 if not silent:
                     logger.error('Missing source %s', source)
@@ -1702,7 +1712,7 @@ class OSExtended(System):
                 source.seek(0)
             except AttributeError:
                 logger.warning('Could not rewind io source before cp: ' + str(source))
-        if isinstance(destination, basestring):
+        if isinstance(destination, six.string_types):
             if self.filecocoon(destination):
                 # Write to a temp file
                 original_dest = self.path.expanduser(destination)
@@ -1745,7 +1755,7 @@ class OSExtended(System):
         directory some restrictions apply (see :meth:`rawcp`)
         """
         self.stderr('smartcp', source, destination)
-        if not isinstance(source, basestring) or not isinstance(destination, basestring):
+        if not isinstance(source, six.string_types) or not isinstance(destination, six.string_types):
             return self.hybridcp(source, destination)
         source = self.path.expanduser(source)
         if not self.path.exists(source):
@@ -1761,11 +1771,11 @@ class OSExtended(System):
                 tmp_destination = destination + self.safe_filesuffix()
                 if self.path.isdir(source):
                     rc = self.spawn(['cp', '-al', source, tmp_destination], output=False)
-                    self.stderr('chmod', 0444, tmp_destination)
+                    self.stderr('chmod', 0o444, tmp_destination)
                     oldtrace, self.trace = self.trace, False
                     for linkedfile in self.ffind(tmp_destination):
                         if not self.path.islink(linkedfile):  # This make no sense to chmod symlinks
-                            self.chmod(linkedfile, 0444)
+                            self.chmod(linkedfile, 0o444)
                     self.trace = oldtrace
                     if rc:
                         # Warning: Not an atomic portion of code (sorry)
@@ -1802,7 +1812,7 @@ class OSExtended(System):
                     if self.path.isdir(destination):
                         for copiedfile in self.ffind(destination):
                             if not self.path.islink(copiedfile):  # This make no sense to chmod symlinks
-                                self.chmod(copiedfile, 0444)
+                                self.chmod(copiedfile, 0o444)
                     else:
                         self.readonly(destination)
                 return rc
@@ -1831,7 +1841,7 @@ class OSExtended(System):
         The fastest option should be used...
         """
         self.stderr('cp', source, destination)
-        if not isinstance(source, basestring) or not isinstance(destination, basestring):
+        if not isinstance(source, six.string_types) or not isinstance(destination, six.string_types):
             return self.hybridcp(source, destination, silent=silent)
         if not self.path.exists(source):
             if not silent:
@@ -1887,7 +1897,7 @@ class OSExtended(System):
         to :meth:`safepath`).
         """
         ok = True
-        if isinstance(pathlist, basestring):
+        if isinstance(pathlist, six.string_types):
             pathlist = [pathlist]
         for pname in pathlist:
             for entry in filter(lambda x: self.safepath(x, safedirs), self.glob(pname)):
@@ -1927,7 +1937,7 @@ class OSExtended(System):
         llresult = self._globcmd(['ls', '-l'], args, **kw)
         if llresult:
             for lline in [x for x in llresult if not x.startswith('total')]:
-                print lline
+                print(lline)
         else:
             return False
 
@@ -1978,9 +1988,9 @@ class OSExtended(System):
         :param destination: The destination object (file, directory, File-like object, ...)
         """
         self.stderr('mv', source, destination)
-        if not isinstance(source, basestring) or not isinstance(destination, basestring):
+        if not isinstance(source, six.string_types) or not isinstance(destination, six.string_types):
             self.hybridcp(source, destination)
-            if isinstance(source, basestring):
+            if isinstance(source, six.string_types):
                 return self.remove(source)
         else:
             return self.move(source, destination)
@@ -2113,11 +2123,11 @@ class OSExtended(System):
 
     def is_tarname(self, objname):
         """Check if a ``objname`` is a string with ``.tar`` suffix."""
-        return isinstance(objname, basestring) and (objname.endswith('.tar') or
-                                                    objname.endswith('.tar.gz') or
-                                                    objname.endswith('.tgz') or
-                                                    objname.endswith('.tar.bz2') or
-                                                    objname.endswith('.tbz'))
+        return isinstance(objname, six.string_types) and (objname.endswith('.tar') or
+                                                          objname.endswith('.tar.gz') or
+                                                          objname.endswith('.tgz') or
+                                                          objname.endswith('.tar.bz2') or
+                                                          objname.endswith('.tbz'))
 
     def tarname_radix(self, objname):
         """Remove any ``.tar`` specific suffix."""
@@ -2295,7 +2305,7 @@ class OSExtended(System):
         """
         cp = CompressionPipeline(self, pipelinedesc)
         if destination is None:
-            if isinstance(source, basestring):
+            if isinstance(source, six.string_types):
                 destination = source + cp.suffix
             else:
                 raise ValueError("If destination is omitted, source must be a filename.")
@@ -2310,7 +2320,7 @@ class OSExtended(System):
         """
         cp = CompressionPipeline(self, pipelinedesc)
         if destination is None:
-            if isinstance(source, basestring):
+            if isinstance(source, six.string_types):
                 if source.endswith(cp.suffix):
                     destination = source[:-len(cp.suffix)]
                 else:
@@ -2363,6 +2373,11 @@ class Python27(object):
         else:
             logger.error('Bad function path name <%s>' % funcname)
         return thisfunc
+
+
+class Python34(Python27):
+    """Python features starting from version 3.4."""
+    pass
 
 
 class Garbage(OSExtended, Python27):
@@ -2447,9 +2462,9 @@ class Linux(OSExtended):
         cmdl = list()
         env = dict()
         if method == 'taskset':
-            cmdl += ['taskset', '--cpu-list', ','.join([str(c) for c in cpus])]
+            cmdl += ['taskset', '--cpu-list', ','.join([six.text_type(c) for c in cpus])]
         elif method == 'gomp':
-            env['GOMP_CPU_AFFINITY'] = ' '.join([str(c) for c in cpus])
+            env['GOMP_CPU_AFFINITY'] = ' '.join([six.text_type(c) for c in cpus])
         return (True, cmdl, env)
 
 
@@ -2460,7 +2475,20 @@ class Linux27(Linux, Python27):
         info = 'Linux based system with aging Python version',
         attr = dict(
             python = dict(
-                values = ['2.7.' + str(x) for x in range(3, 50)]
+                values = ['2.7.' + six.text_type(x) for x in range(3, 50)]
+            )
+        )
+    )
+
+
+class Linux34p(Linux, Python34):
+    """Linux system with python version >= 3.4"""
+
+    _footprint = dict(
+        info = 'Linux based system with aging Python version',
+        attr = dict(
+            python = dict(
+                values = ['3.{:d}.{:d}'.format(i, j) for i in range(4, 50) for j in range(1, 100)]
             )
         )
     )

@@ -7,18 +7,17 @@ This module handles store objects in charge of physically accessing resources.
 Store objects use the :mod:`footprints` mechanism.
 """
 
-#: Export base class
-__all__ = ['Store']
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import defaultdict
 import copy
 import ftplib
 import re
+import six
 
 from bronx.stdtypes import date
 from bronx.system import hash as hashutils
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.layout import dataflow
@@ -32,6 +31,10 @@ from vortex.tools.actions import actiond as ad
 from vortex.syntax.stdattrs import Namespace, FreeXPid
 from vortex.syntax.stdattrs import DelayedEnvValue
 
+#: Export base class
+__all__ = ['Store']
+
+logger = footprints.loggers.getLogger(__name__)
 
 OBSERVER_TAG = 'Stores-Activity'
 
@@ -65,7 +68,7 @@ class StoreGlue(object):
 
     def as_dump(self):
         """Return a nicely formated class name for dump in footprint."""
-        return str(self.gluemap)
+        return six.text_type(self.gluemap)
 
     def sections(self):
         """Returns a list of available glue section names. Mostly file archive names."""
@@ -113,8 +116,8 @@ class StoreGlue(object):
         """
         if item not in self._cross:
             self._cross[item] = dict()
-            for section, contents in self.as_dict().iteritems():
-                for option, desc in contents.iteritems():
+            for section, contents in six.iteritems(self.as_dict()):
+                for option, desc in six.iteritems(contents):
                     if item in desc:
                         if desc[item] not in self._cross[item]:
                             self._cross[item][desc[item]] = list()
@@ -831,7 +834,7 @@ class Finder(Store):
             return remote['path']
 
     def _localtarfix(self, local):
-        if (isinstance(local, basestring) and self.system.path.isfile(local) and
+        if (isinstance(local, six.string_types) and self.system.path.isfile(local) and
                 self.system.is_tarfile(local)):
             destdir = self.system.path.dirname(self.system.path.realpath(local))
             self.system.smartuntar(local, destdir, output=False)
@@ -1217,7 +1220,7 @@ class ConfigurableArchiveStore(object):
                 conf['locations'][section] = dict(localcfg.items(section))
 
         # Look for remote configurations
-        remotecfgs = sorted([key for key in conf['host'].iterkeys()
+        remotecfgs = sorted([key for key in conf['host'].keys()
                              if key.startswith('remoteconf')])
         for remotecfg in [conf['host'][k] for k in remotecfgs]:
             logger.info("Reading config file: %s", remotecfg)

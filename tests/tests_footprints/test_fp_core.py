@@ -10,6 +10,7 @@ import copy
 import datetime
 import logging
 import re
+import six
 from six import StringIO
 import sys
 import types
@@ -1186,7 +1187,7 @@ class utFootprintBase(TestCase):
 
         self.assertIsInstance(x.someint, int)
         self.assertIsInstance(x.somefoo, Foo)
-        self.assertIsInstance(x.somestr, str)
+        self.assertIsInstance(x.somestr, six.string_types)
 
         x.someint = 4
         self.assertEqual(x.someint, 4)

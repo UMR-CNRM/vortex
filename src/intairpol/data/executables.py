@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
-
-#: No automatic export
-__all__ = []
-
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 from vortex.data.executables import BlackBox, ChemistryModel
 from gco.syntax.stdattrs import gvar
 from bronx.stdtypes import date
+
+#: No automatic export
+__all__ = []
 
 
 class Mocage(ChemistryModel):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-from __future__ import division
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from calendar import IllegalMonthError
 from datetime import datetime, timedelta

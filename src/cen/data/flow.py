@@ -1,18 +1,21 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
 from footprints.util import rangex
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.flow        import GeoFlowResource
 from common.data.obs         import ObsRaw
 from vortex.data.geometries  import MassifGeometry
 from common.data.modelstates import Historic, InitialCondition
 from vortex.syntax.stdattrs  import a_date, term
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class SafranObsDateError(ValueError):

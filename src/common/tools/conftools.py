@@ -9,8 +9,11 @@ They might be used when some complex calculations are needed to establish the
 tasks configuration.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import collections
 import functools
+import six
 
 from bronx.stdtypes.date import Date, Time, Period, Month
 import footprints
@@ -171,25 +174,25 @@ class CouplingOffsetConfTool(ConfTool):
         # Pre-compute the prepare terms
         self._prepare_terms_map = self._compute_prepare_terms()
         if self.verbose:
-            print '**** Coupling tasks terms map:'
-            print '{:s}  :  {:s}'.format(self._cpl_fmtkey(('HH', 'VAPP', 'VCONF', 'MODEL', 'CUTOFF')),
-                                         'Computed Terms')
+            print('**** Coupling tasks terms map:')
+            print('{:s}  :  {:s}'.format(self._cpl_fmtkey(('HH', 'VAPP', 'VCONF', 'MODEL', 'CUTOFF')),
+                                         'Computed Terms'))
             for k in sorted(self._prepare_terms_map.keys()):
-                print '{:s}  :  {:s}'.format(self._cpl_fmtkey(k),
-                                             ' '.join([str(t.hour) for t in self._prepare_terms_map[k]]))
+                print('{:s}  :  {:s}'.format(self._cpl_fmtkey(k),
+                                             ' '.join([six.text_type(t.hour) for t in self._prepare_terms_map[k]])))
             print
 
         # Pre-compute the default refill_map
         self._refill_terms_map = dict()
         self._refill_terms_map[self.refill_cutoff] = self._compute_refill_terms(self.refill_cutoff)
         if self.verbose:
-            print '**** Refill tasks activation map (default refill_cutoff is: {:s}):'.format(self.refill_cutoff)
-            print '{:s}  :  {:s}'.format(self._rtask_fmtkey(('VAPP', 'VCONF', 'MODEL', 'CUTOFF')),
-                                         'Active hours')
+            print('**** Refill tasks activation map (default refill_cutoff is: {:s}):'.format(self.refill_cutoff))
+            print('{:s}  :  {:s}'.format(self._rtask_fmtkey(('VAPP', 'VCONF', 'MODEL', 'CUTOFF')),
+                                         'Active hours'))
             for k in sorted(self._refill_terms_map[self.refill_cutoff].keys()):
                 vdict = self._refill_terms_map[self.refill_cutoff][k]
-                print '{:s}  :  {:s}'.format(self._rtask_fmtkey(k),
-                                             ' '.join([str(t.hour) for t in sorted(vdict.keys())]))
+                print('{:s}  :  {:s}'.format(self._rtask_fmtkey(k),
+                                             ' '.join([six.text_type(t.hour) for t in sorted(vdict.keys())])))
             print
 
     def _reshape_inputs(self, input_dict, class_default=None, value_reclass=lambda x: x):
@@ -243,7 +246,7 @@ class CouplingOffsetConfTool(ConfTool):
 
     @staticmethod
     def _cpl_key(hh, cutoff, vapp, vconf, model):
-        return (str(hh), vapp, vconf, model, cutoff)
+        return (six.text_type(hh), vapp, vconf, model, cutoff)
 
     @staticmethod
     def _cpl_fmtkey(k):
@@ -398,7 +401,7 @@ class CouplingOffsetConfTool(ConfTool):
         if key not in self._refill_terms_map[refill_cutoff]:
             raise CouplingOffsetConfRefillError(self._rtask_fmtkey(key))
         for off, terms in self._refill_terms_map[refill_cutoff][key][myhh].items():
-            finaldates[str(mydate - off)] = terms
+            finaldates[six.text_type(mydate - off)] = terms
         return {'date': finaldates}
 
     def refill_dates(self, date, cutoff, vapp, vconf, model=None, refill_cutoff=None):

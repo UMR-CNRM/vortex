@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-import unittest
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import doctest
+import unittest
 
 from bronx.datagrip import namelist
 from bronx.fancies import display

@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: Automatic export of the online provider Olive
-__all__ = ['Olive']
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
+import six
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.providers import Provider, Remote
 from vortex.syntax.stdattrs import namespacefp, member, block, Namespace, a_suite,\
@@ -16,6 +15,11 @@ from vortex.util.config import GenericConfigParser
 
 from common.tools.igastuff import archive_suffix, fuzzyname, arpcourt_vconf, IgakeyFactoryArchive
 from bronx.stdtypes import date
+
+#: Automatic export of the online provider Olive
+__all__ = ['Olive']
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Olive(Provider):
@@ -70,9 +74,9 @@ class Olive(Provider):
         mb = None
         if self.member is not None:
             if re.match(r'pearp', self.vconf):
-                mb = 'fc_' + str(self.member) if self.member is not None else ''
+                mb = 'fc_{!s}'.format(self.member) if self.member is not None else ''
             if re.match(r'aearp', self.vconf):
-                mb = 'member_' + str(self.member) if self.member is not None else ''
+                mb = 'member_{!s}'.format(self.member) if self.member is not None else ''
         return mb
 
     def basename(self, resource):
@@ -222,7 +226,7 @@ class OpArchive(Provider):
                     rr = archive_suffix(resource.model, resource.cutoff,
                                         resource.date, vconf=self.vconf)
                     if getattr(self, keyattr) == 'pearp':
-                        fuzzy = '_'.join(('fc', rr, str(self.member), resource.geometry.area, resource.term.fmthour))
+                        fuzzy = '_'.join(('fc', rr, six.text_type(self.member), resource.geometry.area, resource.term.fmthour))
                     elif getattr(self, keyattr) in ('surcotes', 'surcotes_oi'):
                         if getattr(self, keyattr) == 'surcotes' and self.vconf[-3:] == 'aro' and re.search('001', resource.geometry.tag):
                             fuzzy = '.'.join((fuzzyname('prefix', 'gridpoint', 'hycom_grb') + 'hr', config,
@@ -250,7 +254,7 @@ class OpArchive(Provider):
                     fuzzy = fuzzyname(entry, resource.realkind, getattr(self, keyattr))
                 bname = bname.replace(i, fuzzy)
             else:
-                bname = bname.replace(i, str(getattr(self, s1)))
+                bname = bname.replace(i, six.text_type(getattr(self, s1)))
 
         return bname
 
@@ -261,7 +265,7 @@ class OpArchive(Provider):
         if self.opdelta is not None:
             rdate = rdate + self.opdelta
         suite = suite_map.get(self.suite, self.suite)
-        yyyy = str(rdate.year)
+        yyyy = six.text_type(rdate.year)
         mm = '{0:02d}'.format(rdate.month)
         dd = '{0:02d}'.format(rdate.day)
         rr = 'r{0:d}'.format(rdate.hour)
@@ -356,7 +360,7 @@ class RemoteBinset(RemoteGenericSet):
 
     def basename(self, resource):
         """OS basename of the ``remote`` attribute."""
-        gvar = str(resource.basename('genv')).lower()
+        gvar = six.text_type(resource.basename('genv')).lower()
         if not self.config.has_section(self.binmap):
             raise ValueError("The {:s} binmap do not exists.".format(self.binmap))
         return self.config.get(self.binmap, gvar)
@@ -378,7 +382,7 @@ class RemoteExtractSet(RemoteGenericSet):
 
     def basename(self, resource):
         """OS basename of the ``remote`` attribute."""
-        extractquery = str(resource.urlquery('gget'))
+        extractquery = six.text_type(resource.urlquery('gget'))
         source = self._RE_EXTRACT.search(extractquery)
         if source:
             return source.group(1)

@@ -5,8 +5,7 @@
 A set of AlgoComponents interrogating various databases.
 """
 
-from __future__ import division, print_function, absolute_import
-
+from __future__ import division, print_function, absolute_import, unicode_literals
 
 from bronx.stdtypes.date import Time
 import footprints

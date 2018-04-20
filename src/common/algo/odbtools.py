@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 from collections import defaultdict
 import copy
 import io
 import re
+import six
 import time
 
 import footprints
@@ -26,7 +27,6 @@ from common.data.obs import ObsMapContent, ObsMapItem, ObsRefContent, ObsRefItem
 from vortex.tools.parallelism import VortexWorkerBlindRun
 from vortex.algo.components import ParaBlindRun
 from taylorism import Boss
-from __builtin__ import property
 
 #: No automatic export
 __all__ = []
@@ -56,11 +56,9 @@ class Bateur(VortexWorkerBlindRun):
         attr=dict(
             base=dict(
                 info        = 'name of the odb database to process',
-                type        = str
             ),
             workdir=dict(
                 info        = 'working directory of the run',
-                type        = str
             ),
             inputsize = dict(
                 info        = 'input files total size in bytes',
@@ -440,7 +438,7 @@ class Raw2ODBparallel(TaylorOdbProcess):
             self.slots.as_file(self.date, 'ficdate')
         else:
             # From cy42_op1 onward, we only need environment variables
-            for var, value in self.slots.as_environment().iteritems():
+            for var, value in self.slots.as_environment().items():
                 logger.info('Setting env %s = %s', var, str(value))
                 self.env[var] = value
 
@@ -525,14 +523,14 @@ class Raw2ODBparallel(TaylorOdbProcess):
                     if thispack.refdata:
                         with io.open('refdata', 'w') as fd:
                             for rdentry in thispack.refdata:
-                                fd.write(unicode(rdentry + "\n"))
+                                fd.write(six.text_type(rdentry + "\n"))
                         sh.subtitle('Local refdata for: {:s}'.format(odbname))
                         sh.cat('refdata', output=False)
                 # Drive bator with a batormap file (from cy42_op1 onward)
                 else:
                     with io.open('batormap', 'w') as fd:
                         for mapentry in sorted(thispack.mapping):
-                            fd.write(unicode(ObsMapContent.formatted_data(mapentry) + '\n'))
+                            fd.write(six.text_type(ObsMapContent.formatted_data(mapentry) + '\n'))
                     sh.subtitle('Local batormap for: {:s}'.format(odbname))
                     sh.cat('batormap', output=False)
 
@@ -590,7 +588,7 @@ class Raw2ODBparallel(TaylorOdbProcess):
         # Generate the output bator_map
         with io.open('batodb_map.out', 'w') as fd:
             for x in sorted(self.obsmapout):
-                fd.write(unicode(ObsMapContent.formatted_data(x) + '\n'))
+                fd.write(six.text_type(ObsMapContent.formatted_data(x) + '\n'))
 
         # Generate a global refdata (if cycle allows it and if possible)
         if rh.resource.cycle < 'cy42_op1':
@@ -645,7 +643,7 @@ class Raw2ODBparallel(TaylorOdbProcess):
         for (row, srep) in sorted(self.para_synthesis.items(), key=lambda x: x[1]['time_start']):
             print(rfmt.format(row, srep['time_start'],
                               convert_bytes_in_unit(srep['mem_expected'], 'GiB'),
-                              srep['time_real'], str(srep['sched_id'])))
+                              srep['time_real'], six.text_type(srep['sched_id'])))
 
         print('\nThe memory limit was set to: {:.1f} GiB'.format(self.effective_maxmem / 1024.))
 
@@ -768,7 +766,7 @@ class OdbAverage(OdbProcess):
             for ccma in sh.glob('{0:s}.*'.format(self.layout_new)):
                 slurp = sh.cat(ccma, outsplit=False).replace(self.layout_new, self.layout_in)
                 with io.open(ccma.replace(self.layout_new, self.layout_in), 'w') as fd:
-                    fd.write(unicode(slurp))
+                    fd.write(six.text_type(slurp))
                 sh.rm(ccma)
 
         sh.mv(self.layout_new, self.layout_in + '.' + self.bingo.resource.part)

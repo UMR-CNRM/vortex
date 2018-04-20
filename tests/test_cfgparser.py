@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import os
 
 import logging
 import footprints
 logging.basicConfig(level=logging.ERROR)
 
-from ConfigParser import InterpolationMissingOptionError, NoSectionError, NoOptionError
+from six.moves.configparser import InterpolationMissingOptionError, NoSectionError, NoOptionError
 
 from unittest import TestCase, TestLoader, TextTestRunner
 from vortex.util.config import ExtendedReadOnlyConfigParser, GenericConfigParser, \
@@ -311,8 +313,8 @@ Localisation : HELLO"""
     def test_bare(self):
         c_conf = footprints.proxy.iniconf(kind='utestsites', family='utestfamily',
                                           version = 'bare')
-        self.assertItemsEqual(c_conf.groups(), ['utest_chemical', 'utest_volcanic'])
-        self.assertItemsEqual(c_conf.keys(), ['AGUA-DE-PAU', 'ARDOUKOBA', 'HELLO'])
+        self.assertEqual(set(c_conf.groups()), set(['utest_chemical', 'utest_volcanic']))
+        self.assertEqual(set(c_conf.keys()), set(['AGUA-DE-PAU', 'ARDOUKOBA', 'HELLO']))
         self.assertEqual(len(c_conf.tablelist), 3)
         self.assertIsInstance(c_conf.tablelist[0], _UnitTestTableItem)
         self.assertListEqual(c_conf.find('somewhere'), [c_conf.get('ARDOUKOBA')])

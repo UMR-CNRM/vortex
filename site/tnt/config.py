@@ -178,7 +178,7 @@ def read_directives(filename):
     """
     if os.path.splitext(filename)[1] in ('.yaml', '.yml'):
         import yaml
-        with open(filename, 'r') as yamlfh:
+        with io.open(filename, 'r') as yamlfh:
             return TntDirective(** yaml.load(yamlfh))
     else:
         prev_bytecode_flag = sys.dont_write_bytecode

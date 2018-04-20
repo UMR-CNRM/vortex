@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
-
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.layout.nodes import Task
 from vortex.tools.actions import actiond as ad
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class OpTask(Task):

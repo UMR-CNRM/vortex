@@ -6,6 +6,8 @@ This modules defines the base nodes of the logical layout
 for any :mod:`vortex` experiment.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import collections
 import re
 import six
@@ -43,11 +45,11 @@ class NiceLayout(object):
         self.header(msg)
         if kw:
             maxlen = max([ len(x) for x in kw.keys() ])
-            for k, v in sorted(kw.iteritems()):
-                print ' +', k.ljust(maxlen), '=', str(v)
+            for k, v in sorted(six.iteritems(kw)):
+                print(' +', k.ljust(maxlen), '=', six.text_type(v))
             print
         else:
-            print " + ...\n"
+            print(" + ...\n")
 
 
 class ConfigSet(collections.MutableMapping):
@@ -495,7 +497,7 @@ class Task(Node):
             backup  = kw.pop('backup', 'backup'),
         )
         self.options = kw.copy()
-        if isinstance(self.steps, basestring):
+        if isinstance(self.steps, six.string_types):
             self.steps = tuple(self.steps.replace(' ', '').split(','))
 
     @property
@@ -518,7 +520,7 @@ class Task(Node):
             t.env.RUNDIR = rundir
             t.sh.cd(rundir, create=True)
             t.rundir = t.sh.getcwd()
-        print 'The current directory is: {}'.format(t.sh.getcwd())
+        print('The current directory is: {}'.format(t.sh.getcwd()))
 
         # Some attempt to find the current active steps
         if not self.steps:
@@ -549,8 +551,8 @@ class Task(Node):
             for iopr in prefix:
                 sh.header('IO poll <' + iopr  + '>')
                 rc = sh.io_poll(iopr)
-                print rc
-                print rc.result
+                print(rc)
+                print(rc.result)
             sh.header('Post-IO Poll directory listing')
             sh.ll(output=False, fatal=False)
 

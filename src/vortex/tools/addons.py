@@ -1,17 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import defaultdict
+import six
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.layout import contexts
 from vortex.tools.env import Environment
 from vortex.tools.systems import OSExtended
+
+logger = footprints.loggers.getLogger(__name__)
+
+#: No automatic export
+__all__ = []
 
 
 class Addon(footprints.FootprintBase):
@@ -113,8 +117,8 @@ class Addon(footprints.FootprintBase):
         if (ctxtag not in self._context_cache and self.toolkind is not None):
             ltrack = contexts.current().localtracker
             # NB: 'str' is important because local might be in unicode...
-            candidates = [str(self.sh.path.realpath(local))
-                          for local, entry in ltrack.iteritems()
+            candidates = [six.text_type(self.sh.path.realpath(local))
+                          for local, entry in six.iteritems(ltrack)
                           if (entry.latest_rhdict('get').get('resource', dict()).get('kind', '') ==
                               self.toolkind)]
             if candidates:

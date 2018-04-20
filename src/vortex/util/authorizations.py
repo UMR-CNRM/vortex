@@ -8,17 +8,20 @@ not. Via the sessions module, glove et environment objects support the
 verification.
 """
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 from collections import namedtuple
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.util.config import GenericConfigParser
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class GroupHandler(namedtuple('PermsUsersHandler', ('perms', 'users'))):

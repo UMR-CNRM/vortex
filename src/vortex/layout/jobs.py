@@ -5,13 +5,14 @@
 This modules defines helpers to build job's scripts.
 """
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import ast
 import collections
 import functools
 import importlib
 import re
+import six
 import string
 import sys
 import traceback
@@ -76,7 +77,7 @@ def mkjob(t, **kw):
     opts.update(kw)
 
     # Fix actual options of the create process
-    opts.setdefault('mkopts', str(kw))
+    opts.setdefault('mkopts', six.text_type(kw))
 
     # Switch verbosity from boolean to plain string
     if isinstance(opts['verbose'], bool):
@@ -92,20 +93,20 @@ def mkjob(t, **kw):
         if vtxdate:
             opts['rundate'] = date.Date(vtxdate.group('date') +
                                         vtxdate.group('hh') + vtxdate.group('mm')).ymdhm
-            opts['runtime'] = str(date.Time('{:s}:{:s}'.format(vtxdate.group('hh'),
-                                                               vtxdate.group('mm'))))
+            opts['runtime'] = six.text_type(date.Time('{:s}:{:s}'.format(vtxdate.group('hh'),
+                                                                         vtxdate.group('mm'))))
             if 'cutoff' not in opts:
                 opts['cutoff'] = dict(A='assim', P='production').get(vtxdate.group('cutoff'))
             opts['name'] = _RE_VORTEXDATE.sub('', opts['name'])
         else:
             optime = _RE_OPTIME.search(opts['name'])
             if optime:
-                opts['runtime'] = str(date.Time('{:s}:{:s}'.format(optime.group('hh'),
-                                                                   optime.group('mm'))))
+                opts['runtime'] = six.text_type(date.Time('{:s}:{:s}'.format(optime.group('hh'),
+                                                                             optime.group('mm'))))
                 opts['name'] = _RE_OPTIME.sub('', opts['name'])
 
     for xopt in ('rundate', 'runtime'):
-        if isinstance(opts[xopt], basestring):
+        if isinstance(opts[xopt], six.string_types):
             opts[xopt] = "'" + opts[xopt] + "'"
 
     # Try to find default member number according to the jobname
@@ -329,10 +330,10 @@ class JobAssistant(footprints.FootprintBase):
         """Print some of the environment variables."""
         prefix = prefix or self.special_prefix
         specials = kw.get('actual', dict())
-        filtered = {k: v for k, v in specials.iteritems() if k.startswith(prefix)}
+        filtered = {k: v for k, v in specials.items() if k.startswith(prefix)}
         if filtered:
             t.sh.header('Copying actual {:s} variables to the environment'.format(prefix))
-            t.env.update({k: v for k, v in specials.iteritems() if k.startswith(prefix)})
+            t.env.update({k: v for k, v in specials.items() if k.startswith(prefix)})
             self.print_somevariables(t, prefix=prefix)
 
     @_extendable

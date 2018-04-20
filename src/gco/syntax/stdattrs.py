@@ -7,7 +7,10 @@ of attributes description that could be used in the footprint definition of any
 class which follow the :class:`footprints.Footprint` syntax.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import re
+import six
 from functools import total_ordering
 
 import footprints
@@ -24,7 +27,7 @@ def _lowerattr(matchobj):
     return matchobj.group(0).lower()
 
 
-class GenvKey(str):
+class GenvKey(six.text_type):
     """
     Attribute for a GEnv cycle name.
     Implicit attributes inside brackets are translated to lower case.
@@ -33,7 +36,8 @@ class GenvKey(str):
 
     def __new__(cls, value):
         """Proxy to ``str.__new___`` with attributes inside brackets translated to lower case."""
-        return str.__new__(cls, re.sub(r'\[\w+\]', _lowerattr, value.upper()))
+        return six.text_type.__new__(cls, re.sub(r'\[\w+\]', _lowerattr, value.upper()))
+
 
 a_gvar = dict(info            = 'The key that identifies the resource in the Genv database.',
               type            = GenvKey,
@@ -46,7 +50,7 @@ gvar = footprints.Footprint(info = 'A GENV access key',
                             attr = dict(gvar = a_gvar))
 
 
-class GenvDomain(str):
+class GenvDomain(six.text_type):
     """
     Remap plain area names to specific Genv short domain names.
     See also :mod:`gco.tools.genv`.
@@ -54,7 +58,7 @@ class GenvDomain(str):
 
     def __new__(cls, value):
         """Proxy to ``str.__new___`` with on the fly remapping of domain names to short values."""
-        return str.__new__(cls, domain_remap.get(value, value))
+        return six.text_type.__new__(cls, domain_remap.get(value, value))
 
 
 a_gdomain = dict(info = "The resource's geographical domain name in the Genv database.",
@@ -114,11 +118,11 @@ class ArpIfsSimplifiedCycle(object):
                 ('_op{:d}'.format(self._op - 1) if self._op else ''))
 
     def __repr__(self):
-        return '{} | {}'.format(self.__class__, str(self))
+        return '{} | {!s}'.format(self.__class__, self)
 
     def export_dict(self):
         """The pure dict/json output is the raw integer"""
-        return str(self)
+        return six.text_type(self)
 
 
 a_arpifs_cycle = dict(info     = "An Arpege/IFS cycle name",
@@ -138,22 +142,22 @@ uget_id_regex_only = re.compile('^' + uget_id_regex + '$')
 uget_id_regex = re.compile(r'\b' + uget_id_regex + r'\b')
 
 
-class GgetId(str):
+class GgetId(six.text_type):
     """Basestring wrapper for Gget Ids."""
     def __new__(cls, value):
         if uget_id_regex_only.match(value):
             raise ValueError('A GgetId cannot look like a UgetId !')
-        return str.__new__(cls, value)
+        return six.text_type.__new__(cls, value)
 
 
-class UgetId(str):
+class UgetId(six.text_type):
     """Basestring wrapper for Uget Ids."""
 
     def __new__(cls, value):
         vmatch = uget_id_regex_only.match(value)
         if not vmatch:
             raise ValueError('Invalid UgetId (got "{:s}")'.format(value))
-        me = str.__new__(cls, value)
+        me = six.text_type.__new__(cls, value)
         me._id = vmatch.group('id')
         me._location = vmatch.group('location')
         return me

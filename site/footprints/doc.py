@@ -5,10 +5,11 @@
 Footprint's docstring generator
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import collections
 import re
+import six
 
 from . import dump, priorities
 
@@ -70,7 +71,7 @@ def _formating_sphinx_v1(fp):
                      key=lambda item: item[1]['doc_visibility'].rank * 200 - item[1]['doc_zorder'])
     for attr, desc in s_attrs:
         # Find out the type name
-        t = desc.get('type', str)
+        t = desc.get('type', six.text_type)
         tname = (t.__module__ + '.' if not t.__module__.startswith('__') else '')
         tname += t.__name__
         # The attribute name, typen ...

@@ -5,6 +5,8 @@
 Some convenient functions that may simplify scripts
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from collections import defaultdict
 import random
 
@@ -80,7 +82,7 @@ def generic_input_checker(grouping_keys, min_items, *rhandlers, **kwargs):
         # Is the check real or a delusion ?
         fakecheck = kwargs.pop('fakecheck', False)
         #  The keys are sorted so that results remains reproducible
-        for grouping_values in sorted(rhgroups.iterkeys()):
+        for grouping_values in sorted(rhgroups.keys()):
             mychecks = [(rh, fakecheck or rh.check()) for rh in rhgroups[grouping_values]]
             groupid = fp.stdtypes.FPDict({k: v
                                           for k, v in zip(grouping_keys, grouping_values)

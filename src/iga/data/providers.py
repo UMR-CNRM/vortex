@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import os
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.providers  import Provider
 from vortex.util.config     import GenericConfigParser
@@ -18,6 +16,11 @@ from gco.data.providers import GEnv
 from common.tools.igastuff import IgakeyFactoryInline
 
 import iga.util.bpnames as bp
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 #: TODO move in config file
 ATM_LIST_ONE = {'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie','aromeaefr',
@@ -148,7 +151,7 @@ class IgaProvider(Provider):
         logger.debug('IgaProvider:pathname info %s', info)
         # patch for the pearp kind experiment
         if self.member is not None:
-            suffix = 'RUN' + str(self.member)
+            suffix = 'RUN{!s}'.format(self.member)
             new_path = os.path.join(
                 self.config.resolvedpath(resource, self.vapp, self.vconf),
                 suffix

@@ -6,12 +6,12 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import OrderedDict
+import io
 
 from arpifs_listings import norms, jo_tables, listings
 import footprints
 
 from . import addons
-from __builtin__ import property
 
 #: No automatic export
 __all__ = []
@@ -116,9 +116,9 @@ class ArpIfsListingsTool(addons.Addon):
         :rtype: :class:`ArpIfsListingDiff_Status`
         """
 
-        with open(listing1, 'r') as fh1:
+        with io.open(listing1, 'r') as fh1:
             l1_slurp = [l.rstrip("\n") for l in fh1]
-        with open(listing2, 'r') as fh2:
+        with io.open(listing2, 'r') as fh2:
             l2_slurp = [l.rstrip("\n") for l in fh2]
         l1_normset = norms.NormsSet(l1_slurp)
         l2_normset = norms.NormsSet(l2_slurp)
@@ -212,7 +212,7 @@ class ArpifsListingsFormatAdapter(footprints.FootprintBase):
     def lines(self):
         """Return an array populated with the listing file lines."""
         if self._lines is None:
-            with open(self.filename, self.openmode) as f:
+            with io.open(self.filename, self.openmode) as f:
                 self._lines = [l.rstrip("\n") for l in f]  # to remove trailing '\n'
         return self._lines
 

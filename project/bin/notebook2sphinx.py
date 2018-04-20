@@ -4,7 +4,8 @@
 Automatically convert notebooks to a set of RST files.
 '''
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import shutil
 
 argparse_epilog = '''

@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import six
 
 import footprints
 
@@ -55,7 +57,6 @@ class BdpeProvider(Provider):
                 values   = ['bdpe.archive.fr'],
             ),
             bdpeid = dict(
-                type    = str,
             ),
             prefered_target = dict(
                 optional = True,
@@ -112,8 +113,8 @@ class BdpeProvider(Provider):
 
         # resource description: rely on the footprint_export (it is also used to
         # JSONise resource).
-        rsrcdict = {k: str(v)
-                    for k, v in resource.footprint_export().iteritems()}
+        rsrcdict = {k: six.text_type(v)
+                    for k, v in six.iteritems(resource.footprint_export())}
 
         # check the BDPE pairs against the resource's
         for (k, v) in self.config.items(self.bdpeid):

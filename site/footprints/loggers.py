@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 # Fabrik for root logger instances
 
 import logging
+import six
 
 #: No automatic export
 __all__ = []
@@ -76,11 +77,12 @@ def setLogMethods(logger, methods=('debug', 'info', 'warning', 'error', 'critica
 
 def getActualLevel(level):
     """Return the actual level value as long as the argument is valid."""
+    lnames = logging._levelNames if six.PY2 else logging._levelToName
     if type(level) is int:
-        if level not in logging._levelNames:
+        if level not in lnames:
             level = None
     else:
-        level = logging._levelNames.get(level.upper())
+        level = lnames.get(level.upper())
     return level
 
 
@@ -90,7 +92,7 @@ def setGlobalLevel(level):
     """
     thislevel = getActualLevel(level)
     if thislevel is None:
-        logger.error('Try to set an unknown log level <%s>', level)
+        print('ERROR!!! Try to set an unknown log level {:s}'.format(level))
     else:
         for rootname in roots:
             r_logger = logging.getLogger(rootname)
@@ -136,5 +138,5 @@ class SlurpHandler(logging.Handler):
             self._stack.append(self.prepare(record))
         except (KeyboardInterrupt, SystemExit):
             raise
-        except:
+        except Exception:
             self.handleError(record)

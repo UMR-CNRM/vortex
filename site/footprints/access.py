@@ -5,8 +5,9 @@
 Footprint descriptors for attributes access.
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
+import six
 import weakref
 
 from . import loggers
@@ -39,7 +40,7 @@ class FootprintAttrDescriptorRWD(FootprintAttrDescriptor):
         fp = instance.footprint
         if self._attr is not None:
             fpdef = fp.attr[self._attr]
-            atype = fpdef.get('type', str)
+            atype = fpdef.get('type', six.text_type)
             if fpdef.get('isclass', False):
                 if not issubclass(value, atype):
                     raise ValueError('Attempt to set {0:s} as a non compatible subclass {1!s}'

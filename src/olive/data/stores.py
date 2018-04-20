@@ -2,17 +2,20 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import ftplib
+import hashlib
+import re
+
+import footprints
+
+from vortex.data.stores import StoreGlue, IniStoreGlue, ArchiveStore, CacheStore, MultiStore
+
 #: No automatic export
 __all__ = []
 
-import hashlib
-import re
-import ftplib
-
-import footprints
 logger = footprints.loggers.getLogger(__name__)
-
-from vortex.data.stores import StoreGlue, IniStoreGlue, ArchiveStore, CacheStore, MultiStore
 
 rextract = re.compile('^extract=(.*)$')
 oparchivemap = IniStoreGlue('@oparchive-glue.ini')

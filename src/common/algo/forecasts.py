@@ -1,21 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 from collections import defaultdict
 
 from bronx.stdtypes.date import Time, Month
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.algo.components import AlgoComponentError
 
 from vortex.util.structs import ShellEncoder
 from .ifsroot import IFSParallel
 from vortex.layout.dataflow import intent
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Forecast(IFSParallel):
@@ -50,7 +53,6 @@ class Forecast(IFSParallel):
             ),
             outputid = dict(
                 info        = "The identifier for the encoding of post-processed fields.",
-                type        = str,
                 optional    = True,
             )
         )
@@ -132,7 +134,7 @@ class Forecast(IFSParallel):
                 match_pf = re_pf.match(fname)
                 if match_pf:
                     gp_map[match_pf.group(1).lower()].append(Time(match_pf.group(2)))
-            for k, v in gp_map.iteritems():
+            for k, v in gp_map.items():
                 v.sort()
                 logger.info('Gridpoint files found: domain=%s, terms=%s',
                             k,
@@ -144,7 +146,7 @@ class Forecast(IFSParallel):
         # Gather DDH in folders
         if self.ddhpack:
             ddhmap = dict(DL='dlimited', GL='global', ZO='zonal')
-            for (prefix, ddhkind) in ddhmap.iteritems():
+            for (prefix, ddhkind) in ddhmap.items():
                 flist = sh.glob('DHF{}{}+*'.format(prefix, self.xpname))
                 if flist:
                     dest = 'ddhpack_{}'.format(ddhkind)
@@ -400,7 +402,6 @@ class FullPosBDAP(FullPos):
             ),
             outputid = dict(
                 info        = "The identifier for the encoding of post-processed fields.",
-                type        = str,
                 optional    = True,
             ),
             server_run = dict(

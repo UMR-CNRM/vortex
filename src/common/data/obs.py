@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
+import six
 import re
 import itertools
 from collections import namedtuple
@@ -448,9 +449,8 @@ class ObsRefContent(TextContent):
     @classmethod
     def formatted_data(self, item):
         """Return a formatted string."""
-        return '{0:8s} {1:8s} {2:16s} {3:8s} {4:s}'.format(
-            item.data, item.fmt, item.instr,
-            str(item.date), str(item.time)
+        return '{0:8s} {1:8s} {2:16s} {3:s} {4!s}'.format(
+            item.data, item.fmt, item.instr, six.text_type(item.date), item.time
         )
 
 

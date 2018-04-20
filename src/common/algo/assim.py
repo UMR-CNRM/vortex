@@ -1,19 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
 from bronx.stdtypes.date import Date
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools import odb
 from vortex.algo.components import BlindRun, Parallel
 from .ifsroot import IFSParallel
 from vortex.syntax.stdattrs import a_date
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class MergeVarBC(Parallel):
@@ -131,7 +134,7 @@ class SeaIceAnalysis(IFSParallel):
             logger.info('Setup IDAT=%s in %s', self.date.ymd, namrh.container.actualpath())
             try:
                 namrh.contents.setmacro('IDAT', int(self.date.ymd))
-            except:
+            except Exception:
                 logger.critical('Could not fix NAMICE in %s', namrh.container.actualpath())
                 raise
             namrh.contents.rewrite(namrh.container)

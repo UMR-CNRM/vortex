@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 import os
 import pwd
 import shutil
@@ -107,14 +109,14 @@ def clean_older_files(logger, path, timelimit, pattern='*'):
     seconds = duration_to_seconds(timelimit)
     rightnow = time.time()
     antiques = [f for f in glob(os.path.join(path, pattern))
-                if os.path.isfile(f)
-                and (rightnow - os.path.getmtime(f)) > seconds]
+                if (os.path.isfile(f) and
+                    (rightnow - os.path.getmtime(f)) > seconds)]
     logger.debug('Cleaning archived files', path=path, nfiles=len(antiques))
     for antique in antiques:
         os.remove(antique)
 
 
-def parent_mkdir(path, mode=0755):
+def parent_mkdir(path, mode=0o755):
     """mkdir -p : creates parent directories if necessary.
        Does not change the mode of existing directories.
        Return True if at least one directory was created.
@@ -204,7 +206,7 @@ class Request(object):
         if not args:
             args = self.__dict__.keys() + ['last']
         for attr in sorted([x for x in args if not x.startswith('_')]):
-            print ' *', attr, '=', getattr(self, attr)
+            print(' *', attr, '=', getattr(self, attr))
 
 
 class Deposit(footprints.util.GetByTag):
@@ -392,7 +394,7 @@ class Deposit(footprints.util.GetByTag):
 
     def cocoon(self):
         """Create directories for the pool and for it's zip archives."""
-        if parent_mkdir(self.path, 0755):
+        if parent_mkdir(self.path, 0o755):
             self.logger.warning('Mkdir', pool=self.tag, path=self.path)
         else:
             self.logger.info('Mkdir skipped', pool=self.tag, path=self.path, size=len(self.contents))

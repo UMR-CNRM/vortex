@@ -7,8 +7,11 @@ of attributes description that could be used in the footprint definition of any
 class which follow the :class:`footprints.Footprint` syntax.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import copy
 import re
+import six
 
 from bronx.stdtypes.date import Date, Time, Month
 import footprints
@@ -103,7 +106,7 @@ class DelayedInit(object):
                                               else repr(self.__proxied))
 
     def __str__(self):
-        return repr(self) if self.__proxied is None else str(self.__proxied)
+        return repr(self) if self.__proxied is None else six.text_type(self.__proxied)
 
 
 class FmtInt(int):
@@ -126,7 +129,7 @@ class FmtInt(int):
         return '{0:{fmt}d}'.format(value, fmt=self._fmt)
 
 
-class XPid(str):
+class XPid(six.text_type):
     """Basestring wrapper for experiment ids (abstract)."""
     pass
 
@@ -136,11 +139,11 @@ class LegacyXPid(XPid):
     def __new__(cls, value):
         if len(value) != 4 or '@' in value:
             raise ValueError('XPid should be a 4 digits string')
-        return str.__new__(cls, value.upper())
+        return six.text_type.__new__(cls, value.upper())
 
     def isoper(self):
         """Return true if current value looks like an op id."""
-        return str(self) in opsuites
+        return six.text_type(self) in opsuites
 
 
 class FreeXPid(XPid):
@@ -152,7 +155,7 @@ class FreeXPid(XPid):
         if not cls._re_valid.match(value):
             raise ValueError('XPid should be something like "id@location" (not "{:s}")'
                              .format(value))
-        return str.__new__(cls, value)
+        return six.text_type.__new__(cls, value)
 
     @property
     def id(self):
@@ -168,7 +171,7 @@ opsuites = set([LegacyXPid(x) for x in (['OPER', 'DBLE', 'TEST', 'MIRR'] +
                                         ['OP{0:02d}'.format(i) for i in range(100)])])
 
 
-class Namespace(str):
+class Namespace(six.text_type):
     """Basestring wrapper for namespaces (as net domains)."""
     def __new__(cls, value):
         value = value.lower()
@@ -187,7 +190,7 @@ class Namespace(str):
             port = None
         if 0 < value.count('.') < 2:
             raise ValueError('Namespace should contain one or at least 3 fields')
-        thisns = str.__new__(cls, value)
+        thisns = six.text_type.__new__(cls, value)
         thisns._port = int(port) if port else None
         thisns._user = netuser
         thisns._pass = netpass
@@ -225,7 +228,7 @@ class Namespace(str):
 class Latitude(float):
     """Bounded floating point value with N-S nice representation."""
     def __new__(cls, value):
-        value = str(value).lower()
+        value = six.text_type(value).lower()
         if value.endswith('n'):
             value = value[:-1]
         elif value.endswith('s'):
@@ -238,7 +241,7 @@ class Latitude(float):
 
     def nice(self):
         ns = 'N' if self >= 0 else 'S'
-        return str(self).strip('-') + ns
+        return six.text_type(self).strip('-') + ns
 
     @property
     def hemisphere(self):
@@ -248,7 +251,7 @@ class Latitude(float):
 class Longitude(float):
     """Bounded floating point value with E-W nice representation."""
     def __new__(cls, value):
-        value = str(value).lower()
+        value = six.text_type(value).lower()
         if value.endswith('e'):
             value = value[:-1]
         elif value.endswith('w'):
@@ -261,7 +264,7 @@ class Longitude(float):
 
     def nice(self):
         ns = 'E' if self >= 0 else 'W'
-        return str(self).strip('-') + ns
+        return six.text_type(self).strip('-') + ns
 
     @property
     def hemisphere(self):
@@ -320,7 +323,6 @@ actualfmt = footprints.Footprint(info = 'Actual data format', attr = dict(actual
 #: Usual definition of the ``cutoff`` attribute.
 a_cutoff = dict(
     info     = "The cutoff type of the generating process.",
-    type     = str,
     optional = False,
     alias    = ('cut',),
     values   = [
@@ -341,7 +343,6 @@ cutoff = footprints.Footprint(info = 'Abstract cutoff', attr = dict(cutoff = a_c
 #: Usual definition of the ``model`` attribute.
 a_model = dict(
     info     = "The model name (from a source code perspective).",
-    type     = str,
     alias    = ('turtle', ),
     optional = False,
     values   = models,
@@ -386,7 +387,6 @@ truncation = footprints.Footprint(info = 'Abstract truncation', attr = dict(trun
 #: Usual definition of the ``domain`` attribute.
 a_domain = dict(
     info     = "The resource's geographical domain.",
-    type     = str,
     optional = False,
 )
 
@@ -460,4 +460,4 @@ def show():
     """Returns available items and their type."""
     dmod = globals()
     for stda in sorted(filter(lambda x: x.startswith('a_') or type(dmod[x]) == footprints.Footprint, dmod.keys())):
-        print '{0} ( {1} ) :\n  {2}\n'.format(stda, type(dmod[stda]).__name__, dmod[stda])
+        print('{0} ( {1} ) :\n  {2}\n'.format(stda, type(dmod[stda]).__name__, dmod[stda]))

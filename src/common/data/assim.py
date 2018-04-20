@@ -1,18 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: Automatic export off
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 
 from bronx.stdtypes.date import Time
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.flow       import FlowResource, GeoFlowResource
 from vortex.data.contents   import JsonDictContent
 from vortex.syntax.stdattrs import FmtInt, term
 from gco.syntax.stdattrs    import gvar
+
+#: Automatic export off
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class _BackgroundErrorInfo(GeoFlowResource):
@@ -158,11 +161,11 @@ class BackgroundErrorNorm(_BackgroundErrorInfo):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'srenorm.' + str(self.geometry.truncation)
+        return 'srenorm.{!s}'.format(self.geometry.truncation)
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'srenorm.t' + str(self.geometry.truncation)
+        return 'srenorm.t{!s}'.format(self.geometry.truncation)
 
     def archive_pathinfo(self):
         """OpArchive specific pathname needs."""
@@ -217,11 +220,11 @@ class Wavelet(GeoFlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'wavelet.cv.' + str(self.geometry.truncation)
+        return 'wavelet.cv.{!s}'.format(self.geometry.truncation)
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'wavelet.cv.t' + str(self.geometry.truncation)
+        return 'wavelet.cv.t{!s}'.format(self.geometry.truncation)
 
     def archive_pathinfo(self):
         """OpArchive specific pathname needs."""

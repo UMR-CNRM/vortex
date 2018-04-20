@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-r"""
+"""
 This package defines some useful Design Patterns.
 Implementations may be not the most efficient or
 thread-safe proof ones, but still, for the time being,
 it is enough to satisfy our small needs.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 __all__ = [ 'Borg', 'Singleton' ]
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Borg(object):
@@ -31,9 +34,8 @@ class Singleton(object):
 
     def __new__(cls, *args, **kw):
         logger.debug('Request a singleton %s', cls)
-        if not '_instance' in cls.__dict__:
+        if '_instance' not in cls.__dict__:
             cls._instance = object.__new__(cls)
             logger.debug('Building a brand new singleton %s', cls._instance)
         logger.debug('New singleton %s', cls._instance)
         return cls._instance
-

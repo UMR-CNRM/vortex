@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
 
@@ -12,6 +11,9 @@ from vortex.data.contents   import TextContent, JsonDictContent
 from vortex.syntax.stdattrs import month
 
 from gco.syntax.stdattrs    import gvar
+
+#: No automatic export
+__all__ = []
 
 
 class GenvModelResource(ModelResource):
@@ -505,7 +507,7 @@ class AtlasMonthlyEmissivityInstrument(AtlasEmissivityInstrument):
 
     def gget_basename(self):
         """GGET specific naming convention."""
-        return '.m' + str(self.month)
+        return '.m{!s}'.format(self.month)
 
 
 class AtlasEmissivityPack(AtlasEmissivity):
@@ -627,8 +629,9 @@ class MatFilter(GenvStaticGeoResource):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'matrix.fil.' + self.scope.area + '.t' + str(self.geometry.truncation) + \
-               '.c' + str(self.geometry.stretching)
+        return ('matrix.fil.' + self.scope.area +
+                '.t{!s}'.format(self.geometry.truncation) +
+                '.c{!s}'.format(self.geometry.stretching))
 
 
 class Stabal(GenvStaticGeoResource):

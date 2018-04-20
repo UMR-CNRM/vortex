@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
@@ -10,6 +9,9 @@ from vortex.data.contents import JsonDictContent
 from vortex.data.flow import GeoFlowResource, FlowResource
 from vortex.syntax.stdattrs import term
 from vortex.tools import env
+
+#: No automatic export
+__all__ = []
 
 
 class GridPoint(GeoFlowResource):
@@ -161,11 +163,11 @@ class GridPointFullPos(GridPoint):
             if self.origin == 'hst':
                 name = 'HM' + self.geometry.area + '+' + self.term.fmthour
             elif self.origin == 'sumo':
-                deltastr = 'PT' + str(self.term.hour) + 'H'
+                deltastr = 'PT{!s}H'.format(self.term.hour)
                 deltadate = self.date + deltastr
                 name = 'SM' + self.geometry.area + '_void' + '+' + deltadate.ymd
             elif self.origin == 'interp':
-                deltastr = 'PT' + str(self.term.hour) + 'H'
+                deltastr = 'PT{!s}H'.format(self.term.hour)
                 deltadate = self.date + deltastr
                 name = 'SM' + self.geometry.area + '_interp' + '+' + deltadate.ymd
         else:
@@ -179,7 +181,7 @@ class GridPointFullPos(GridPoint):
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
 
-        deltastr = 'PT' + str(self.term.hour) + 'H'
+        deltastr = 'PT{!s}H'.format(self.term.hour)
         deltadate = self.date + deltastr
 
         name = None
@@ -223,11 +225,11 @@ class GridPointExport(GridPoint):
 
         name = None
         if re.match('aladin|arome', self.model):
-            name = 'GRID' + self.geometry.area + 'r' + str(self.date.hour) + '_' + self.term.fmthour
+            name = 'GRID' + self.geometry.area + 'r{!s}'.format(self.date.hour) + '_' + self.term.fmthour
         elif re.match('arp|hycom|surcotes', self.model):
             name = '(gribfix:igakey)'
         elif self.model == 'ifs':
-            deltastr = 'PT' + str(self.term.hour) + 'H'
+            deltastr = 'PT{!s}H'.format(self.term.hour)
             deltadate = self.date + deltastr
             name = 'MET' + deltadate.ymd + '.' + self.geometry.area  + '.grb'
 

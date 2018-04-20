@@ -1,4 +1,6 @@
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+import io
 import os
 import tempfile
 import unittest
@@ -51,7 +53,7 @@ class TestGcoGenv(unittest.TestCase):
         # Test genv autofill
         genv.autofill('cy42_op2.06')
         # Test DSI like autofill
-        with open(os.path.join(DATAPATHTEST, 'cy42_peace-op2.01.genv')) as fh:
+        with io.open(os.path.join(DATAPATHTEST, 'cy42_peace-op2.01.genv')) as fh:
             gdata = fh.read().rstrip('\n').split('\n')
         genv.autofill('cy42_peace-op2.01', gdata)
         # Check keys
@@ -157,7 +159,7 @@ class TestUgetUenv(unittest.TestCase):
         st = fp.proxy.store(scheme='uget', netloc='uget.multi.fr')
         # Get a simple file from the hack store
         st.get(uriparse('uget://uget.multi.fr/data/mask.atms.01b@huguette'), 'mask1', dict())
-        with open('mask1') as fhm:
+        with io.open('mask1') as fhm:
             self.assertEqual(fhm.readline().rstrip("\n"), 'hack')
         # Get a tar file but do not expand it because of its name
         st.get(uriparse('uget://uget.multi.fr/data/rrtm.const.02b.tgz@huguette'),
@@ -172,7 +174,7 @@ class TestUgetUenv(unittest.TestCase):
         # Extract ?
         st.get(uriparse('uget://uget.multi.fr/data/rrtm.const.02b.tgz@huguette?extract=file1'),
                'file1_extra', dict())
-        with open('file1_extra') as fhm:
+        with io.open('file1_extra') as fhm:
             self.assertEqual(fhm.readline().rstrip("\n"), 'cache')
         # The element is kept for next time...
         self.assertTrue(self.sh.path.isfile('rrtm.const.02b.tgz'))
@@ -180,7 +182,7 @@ class TestUgetUenv(unittest.TestCase):
         # next time...
         st.get(uriparse('uget://uget.multi.fr/data/rrtm.const.02b.tgz@huguette?extract=file3'),
                'file3_extra', dict())
-        with open('file3_extra') as fhm:
+        with io.open('file3_extra') as fhm:
             self.assertEqual(fhm.readline().rstrip("\n"), 'cache')
         # GCO special (see @gget-key-specific-conf.ini)
         st.get(uriparse('uget://uget.multi.fr/data/grib_api.def.02.tgz@huguette'),

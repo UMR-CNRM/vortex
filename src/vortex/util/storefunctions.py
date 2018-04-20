@@ -15,7 +15,6 @@ from vortex.tools.env import vartrue
 from vortex import sessions
 from . import helpers
 
-
 #: No automatic export
 __all__ = []
 

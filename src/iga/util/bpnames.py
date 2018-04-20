@@ -5,14 +5,17 @@
 Functions and tools to handle resources names or other kind of names.
 """
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
-import sys
 import re
+import six
+import sys
 
 from bronx.stdtypes.date import Time
 import footprints
+
+#: No automatic export
+__all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
 
@@ -158,7 +161,7 @@ def global_pnames(provider, resource):
 def clim_bdap_bnames(resource, provider):
     """docstring for clim_bdap_bnames"""
     if 'arome' in resource.model:
-        localname = 'BDAP_frangp_isba' + str(resource.month)
+        localname = 'BDAP_frangp_isba' + six.text_type(resource.month)
     elif resource.model == 'aladin':
         if "08" in resource.geometry.rnice:
             # clim_dap.caled01.m01
@@ -169,18 +172,18 @@ def clim_bdap_bnames(resource, provider):
             igadomain = "caled"
         else:
             raise ValueError('Could not evaluate <igadomain> in {!r}'.format(resource.geometry))
-        localname = 'clim_dap' + "." + igadomain + resolution + '.m' + str(resource.month)
+        localname = 'clim_dap' + "." + igadomain + resolution + '.m' + six.text_type(resource.month)
     else:
-        localname = 'const.clim.' + resource.geometry.area + '_m' + str(resource.month)
+        localname = 'const.clim.' + resource.geometry.area + '_m' + six.text_type(resource.month)
     return localname
 
 
 def clim_model_bnames(resource, provider):
     """docstring for clim_model_bnames"""
     if resource.model == 'arome' or resource.model == 'aladin':
-        localname = 'clim_' + resource.geometry.area + '_isba' + str(resource.month)
+        localname = 'clim_' + resource.geometry.area + '_isba' + six.text_type(resource.month)
     elif resource.model == 'arpege':
-        localname = 'clim_t' + str(resource.truncation) + '_isba' + str(resource.month)
+        localname = 'clim_t' + six.text_type(resource.truncation) + '_isba' + six.text_type(resource.month)
     else:
         raise ValueError('Unknown model {:s} in clim_model_bnames'.format(resource.model))
     return localname
@@ -225,7 +228,7 @@ def analysis_bnames(resource, provider):
         if mode == 'ana':
             suffix = resource.date.ymdh
         # s_init_sort_cep_OIN_ana.2017070900     (T0)
-        return 's_init_sort_' + config + '.' + str(suffix)
+        return 's_init_sort_' + config + '.' + six.text_type(suffix)
     else:
         anabase = 'ICMSH' + model_info + 'INIT'
         if resource.filling == 'surf':
@@ -250,7 +253,7 @@ def historic_bnames(resource, provider):
 
         if mode is None:
             term0 = resource.term.hour
-            delta = 'PT' + str(term0) + 'H'
+            delta = 'PT' + six.text_type(term0) + 'H'
             date_val = (resource.date + delta).ymdh
             config = provider.vconf[4:] + region
         else:
@@ -372,7 +375,7 @@ def gridpoint_bnames(resource, provider):
                                        vapp=provider.vapp, vconf=provider.vconf)
             nw_term = "{0:03d}".format(resource.term.hour)
             if provider.member is not None:
-                localname = prefix + '_' + suffix + '_' + str(provider.member) + '_' \
+                localname = prefix + '_' + suffix + '_' + six.text_type(provider.member) + '_' \
                     + resource.geometry.area + '_' + resource.term.fmthour
             else:
                 localname = prefix + suffix + nw_term + resource.geometry.area
@@ -408,12 +411,12 @@ def varbc_bnames(resource, provider):
     else:
         raise ValueError('Unknown model {:s} in varbc_bnames'.format(model))
     if stage == 'merge':
-        localname = 'VARBC.merge.' + str(reseau)
+        localname = 'VARBC.merge.{!s}'.format(reseau)
     else:
         if model == "arome":
-            localname = 'VARBC.cycle' + suffix +'.'+ str(resource.date.ymdhms)
+            localname = 'VARBC.cycle' + suffix + '. ' + six.text_type(resource.date.ymdhms)
         elif model == "arpege":
-            localname = 'VARBC.cycle.r' + str(reseau)
+            localname = 'VARBC.cycle.r{!s}'.format(reseau)
 
     return localname
 
@@ -448,16 +451,16 @@ def refdata_bnames(resource, provider):
 def bgstderr_bnames(resource, provider):
     if provider.igakey == 'france':
         # errgrib_scr type
-        return 'errgrib_scr.r' + str(resource.date.hour)
+        return 'errgrib_scr.r{!s}'.format(resource.date.hour)
     else:
         # I have to calculate a new date so as to get the correct run
         prefix = 'errgrib'
         if resource.term.hour in [3, 9]:
-            delta = 'PT' + str(resource.term.hour + 3) + 'H'
+            delta = 'PT{!s}H'.format(resource.term.hour + 3)
             suffix = resource.date + delta
             stdname = resource.cutoff
         elif resource.term == 12:
-            delta = 'PT' + str(resource.term.hour) + 'H'
+            delta = 'PT{!s}H'.format(resource.term.hour)
             suffix = resource.date + delta
             stdname = 'production_' + 'dsbscr'
         return prefix + '_' + stdname + '.' + suffix.compact()
@@ -467,21 +470,21 @@ def observations_bnames(resource, provider):
     """docstring for observations_bnames"""
     fmt, part = resource.nativefmt, resource.part
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
-    day = str(resource.date.day)
+    day = six.text_type(resource.date.day)
     u_prefix, suffix = gribNames(cutoff, reseau, model)
     dico_names = {
         'obsoul': 'obsoul' + '.' + part + '.' + suffix,
         'ecma': {
-            'surf': 'ECMA.surf' + '.' + str(int(reseau)) + '.' + str(reseau) + '.tar',
-            'conv': 'ECMA.conv' + '.' + day + '.' + str(reseau) + '.tar',
-            'prof': 'ECMA.prof' + '.' + day + '.' + str(reseau) + '.tar',
+            'surf': 'ECMA.surf' + '.' + six.text_type(int(reseau)) + '.' + six.text_type(reseau) + '.tar',
+            'conv': 'ECMA.conv' + '.' + day + '.' + six.text_type(reseau) + '.tar',
+            'prof': 'ECMA.prof' + '.' + day + '.' + six.text_type(reseau) + '.tar',
         }
 
     }
     localname = dico_names[fmt][0] + '.' + part + '.'
     logger.debug('localname %s', localname)
     if dico_names[fmt][1]:
-        localname += str(day) + '.' + suffix + dico_names[fmt][1]
+        localname += six.text_type(day) + '.' + suffix + dico_names[fmt][1]
     else:
         localname += suffix
     # localname = fmt + '.' + part + '.' + suffix
@@ -581,7 +584,6 @@ def global_snames(resource, provider):
             bname = 'RD_SURFAN' + modsuff + '.' + suff
         else:
             bname = 'rd_' + resource.part + modsuff + '.' + suff
-        print 'bname = ', bname
         logger.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
     if resource.realkind == 'historic':
         bname = 'toto'

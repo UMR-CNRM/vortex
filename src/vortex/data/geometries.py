@@ -21,13 +21,13 @@ To retrieve and browse an already defined geometry, please use the module's
 interface methods, :func:`get`, :func:`keys`, :func:`values` and :func:`items`::
 
     >>> from vortex.data import geometries
-    >>> print geometries.get(tag="global798")
+    >>> print(geometries.get(tag="global798"))
     <vortex.data.geometries.GaussGeometry | tag='global798' id='ARPEGE T798 stretched-rotated geometry' t=798 c=2.4>
 
 It is also possible to retrieve an existing geometry using the :class:`Geometry`
 class constructor::
 
-    >>> print geometries.Geometry("global798")
+    >>> print(geometries.Geometry("global798"))
     <vortex.data.geometries.GaussGeometry | tag='global798' id='ARPEGE T798 stretched-rotated geometry' t=798 c=2.4>
 
 To build a new geometry, you need to pick the concrete geometry class that fits
@@ -47,7 +47,7 @@ For example, let's build a new gaussian grid::
     ...                          stretching=2.1, area='France',  # 2.1 stretching over France
     ...                          new=True)  # Mandatory to create new geometries
     <vortex.data.geometries.GaussGeometry object at 0x...>
-    >>> print geometries.Geometry("global2198")
+    >>> print(geometries.Geometry("global2198"))
     <vortex.data.geometries.GaussGeometry | tag='global2198' id='My own gaussian geometry' t=2198 c=2.1>
 
 (From that moment on, the new geometry is available globally in Vortex)
@@ -56,17 +56,19 @@ Each geometry has its own attributes: please refers to each of the concrete
 class documentation for more details.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
+import six
 
 import footprints
 
 from vortex.util.config import GenericConfigParser
 
-logger = footprints.loggers.getLogger(__name__)
-
 #: No automatic export
 __all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 # Module Interface
@@ -127,7 +129,7 @@ class Geometry(footprints.util.GetByTag):
         self.inifile = None
         self.__dict__.update(kw)
         self.kind    = 'abstract'
-        self._init_attributes = {k:v for k,v in kw.items() if v is not None}
+        self._init_attributes = {k: v for k, v in kw.items() if v is not None}
         logger.debug('Abstract Geometry init kw=%s', str(kw))
 
     @classmethod
@@ -205,11 +207,11 @@ class HorizontalGeometry(Geometry):
         desc.update(kw)
         super(HorizontalGeometry, self).__init__(**desc)
         for k, v in self.__dict__.items():
-            if isinstance(v, basestring) and re.match('none', v, re.IGNORECASE):
+            if isinstance(v, six.string_types) and re.match('none', v, re.IGNORECASE):
                 self.__dict__[k] = None
-            if isinstance(v, basestring) and re.match('true', v, re.IGNORECASE):
+            if isinstance(v, six.string_types) and re.match('true', v, re.IGNORECASE):
                 self.__dict__[k] = True
-            if isinstance(v, basestring) and re.match('false', v, re.IGNORECASE):
+            if isinstance(v, six.string_types) and re.match('false', v, re.IGNORECASE):
                 self.__dict__[k] = False
         for item in ('nlon', 'nlat', 'ni', 'nj', 'nmassif', 'truncation'):
             cv = getattr(self, item)
@@ -270,8 +272,8 @@ class HorizontalGeometry(Geometry):
         card = "\n".join((
             '{0}Geometry {1!r}',
             '{0}{0}Info       : {2:s}',
-            '{0}{0}LAM        : {3:s}',
-        )).format(indent, self, self.info, str(self.lam))
+            '{0}{0}LAM        : {3!s}',
+        )).format(indent, self, self.info, self.lam)
         # Optional infos
         for attr in [k for k in ('area', 'resolution', 'truncation',
                                  'stretching', 'nlon', 'nlat', 'ni', 'nj',
@@ -535,7 +537,7 @@ def load(inifile='@geometries.ini', refresh=False, verbose=True):
         except IndexError:
             raise AttributeError('Kind={:s} is unknown (for geometry [{:s}])'.format(gkind, item))
         if verbose:
-            print '+ Load', item.ljust(16), 'as', thisclass
+            print('+ Load', item.ljust(16), 'as', thisclass)
         if refresh:
             # Always recreate the Geometry...
             thisclass(tag=item, new=True, **gdesc)
