@@ -5,9 +5,9 @@
 #: No automatic export
 __all__ = []
 
+import copy
 import hashlib
 import re
-import ftplib
 
 import footprints
 logger = footprints.loggers.getLogger(__name__)
@@ -37,11 +37,6 @@ class OliveArchiveStore(ArchiveStore):
                 default = 'xp',
                 outcast = ['vortex']
             ),
-            strategy=dict(
-                optional=True,
-                default='olive-archive',
-                outcast=['vortex-archive', 'op-ksh-archive', ]
-            ),
         )
     )
 
@@ -49,21 +44,17 @@ class OliveArchiveStore(ArchiveStore):
         logger.debug('Olive archive store init %s', self.__class__)
         super(OliveArchiveStore, self).__init__(*args, **kw)
 
-    @property
-    def _actual_scheme(self):
-        if self.scheme == 'olive':
-            return 'ftp'
-        else:
-            return self.scheme
-
     def remap_read(self, remote, options):
         """Remap actual remote path to distant store path for read-only actions."""
         xpath = remote['path'].split('/')
         xpath[1:2] = list(xpath[1])
-        xpath[:0] = [ self.system.path.sep,]
+        xpath[:0] = [ self.system.path.sep, self.storehead ]
         remote['path'] = self.system.path.join(*xpath)
 
-    remap_write = remap_read
+    def remap_write(self, remote, options):
+        """Remap actual remote path to distant store path for intrusive actions."""
+        if 'root' not in remote:
+            remote['root'] = self.storehead
 
     def olivecheck(self, remote, options):
         """Remap and ftpcheck sequence."""
@@ -183,10 +174,6 @@ class OpArchiveStore(ArchiveStore):
                 default  = 'oper.archive.fr',
                 remap    = {'dbl.archive.fr': 'dble.archive.fr'},
             ),
-            storage = dict(
-                optional = True,
-                default  = 'hendrix.meteo.fr',
-            ),
             storeroot = dict(
                 optional = True,
                 alias    = ['archivehome'],
@@ -197,11 +184,9 @@ class OpArchiveStore(ArchiveStore):
                 optional = True,
                 default  = oparchivemap,
             ),
-            strategy=dict(
-                optional=True,
-                default='op-ksh-archive',
-                outcast=['olive-archive','vortex-archive', ]
-            )
+            readonly = dict(
+                default  = True,
+            ),
         )
     )
 
@@ -209,37 +194,73 @@ class OpArchiveStore(ArchiveStore):
         logger.debug('Archive store init %s', self.__class__)
         super(OpArchiveStore, self).__init__(*args, **kw)
 
-    @property
-    def _actual_scheme(self):
-        if self.scheme == 'op':
-            return 'ftp'
-        else:
-            return self.scheme
-
-    @property
-    def _actual_glue(self):
-        return self.glue
+    def fullpath(self, remote):
+        return self.storeroot + remote['path']
 
     def oplocate(self, remote, options):
         """Delegates to ``system`` a distant check."""
-        return self.inarchivelocate(remote, options)
+        extract = remote['query'].get('extract', None)
+        cleanpath = self.fullpath(remote)
+        (dirname, basename) = self.system.path.split(cleanpath)
+        if not extract and self.glue.containsfile(basename):
+            cleanpath, _ = self.glue.filemap(self.system, dirname, basename)
+        if cleanpath is not None:
+            return self.inarchivelocate(remote, options)
+        else:
+            return None
 
     def opcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
+        extract = remote['query'].get('extract', None)
+        cleanpath = self.fullpath(remote)
+        (dirname, basename) = self.system.path.split(cleanpath)
+        if not extract and self.glue.containsfile(basename):
+            cleanpath, _ = self.glue.filemap(self.system, dirname, basename)
         return self.inarchivecheck(remote, options)
 
     def opget(self, remote, local, options):
         """File transfer: get from store."""
-        return self.inarchiveget(remote, local, options)
-
-    def opput(self, local, remote, options):
-        """File transfer: put to store."""
-        return self.inarchiveput(local, remote, options)
-
-    def opdelete(self, remote, options):
-        """This operation is not supported."""
-        logger.warning('Removing from OP Archive Store is not supported')
-        return False
+        targetpath = local
+        cleanpath  = self.fullpath(remote)
+        extract = remote['query'].get('extract', None)
+        locfmt = remote['query'].get('format', options.get('fmt', 'unknown'))
+        (dirname, basename) = self.system.path.split(cleanpath)
+        if not extract and self.glue.containsfile(basename):
+            extract = basename
+            cleanpath, targetpath = self.glue.filemap(self.system, dirname, basename)
+        elif extract:
+            extract = extract[0]
+            targetpath = basename
+        targetstamp = targetpath + '.stamp' + hashlib.md5(cleanpath).hexdigest()
+        rc = False
+        if cleanpath is not None:
+            if extract and self.system.path.exists(targetpath):
+                if self.system.path.exists(targetstamp):
+                    logger.info("%s was already fetched. that's great !", targetpath)
+                    rc = True
+                else:
+                    self.system.rm(targetpath)
+                    self.system.rmall(targetpath + '.stamp*')
+            if not rc:
+                options_plus = copy.copy(options)
+                options_plus['fmt'] = locfmt
+                rc = self.inarchiveget(cleanpath, targetpath, options_plus)
+            if not rc:
+                logger.error('FTP could not get file %s', cleanpath)
+            elif extract:
+                self.system.touch(targetstamp)
+                if extract == 'all':
+                    rc = self.system.untar(targetpath, output=False)
+                else:
+                    heaven = 'a_very_safe_untar_heaven'
+                    fulltarpath = self.system.path.abspath(targetpath)
+                    with self.system.cdcontext('a_very_safe_untar_heaven', create=True):
+                        rc = self.system.untar(fulltarpath, extract, output=False)
+                    rc = rc and self.system.rm(local)
+                    rc = rc and self.system.mv(self.system.path.join(heaven, extract),
+                                               local)
+                    self.system.rm(heaven)  # Sadly this is a temporary heaven
+        return rc
 
 
 class OpCacheStore(CacheStore):

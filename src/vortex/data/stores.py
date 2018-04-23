@@ -24,11 +24,10 @@ from vortex import sessions
 from vortex.layout import dataflow
 from vortex.util import config
 from vortex.syntax.stdattrs import hashalgo, hashalgo_avail_list, compressionpipeline
-from vortex.tools import caches
+from vortex.tools import storage
 from vortex.tools import compression
 from vortex.tools import net
 from vortex.tools.systems import ExecutionError
-from vortex.tools.actions import actiond as ad
 from vortex.syntax.stdattrs import Namespace, FreeXPid
 from vortex.syntax.stdattrs import DelayedEnvValue
 
@@ -923,7 +922,7 @@ class ArchiveStore(Store):
             info = 'Generic archive store',
             attr = dict(
                 scheme = dict(
-                    values   = ['ftp', 'ftserv'],
+                    values   = ['inarchive', ],
                 ),
                 netloc = dict(
                     values   = ['open.archive.fr'],
@@ -934,6 +933,9 @@ class ArchiveStore(Store):
                 storage = dict(
                     optional = True,
                     default  = None,
+                ),
+                storetube = dict(
+                    optional = True,
                 ),
                 storeroot = dict(
                     optional = True,
@@ -954,10 +956,6 @@ class ArchiveStore(Store):
                     optional = True,
                     default  = True,
                 ),
-                strategy = dict(
-                    optional = True,
-                    default = 'vortex-archive'
-                ),
             )
         ),
     ]
@@ -968,49 +966,31 @@ class ArchiveStore(Store):
         del self.archive
 
     @property
-    def _actual_scheme(self):
-        return self.scheme
-
-    @property
-    def _actual_glue(self):
-        return None
-
-    @property
     def realkind(self):
         return 'archivestore'
 
     def _str_more(self):
-        return 'hostname={:s}'.format(self.hostname())
-
-    def hostname(self):
-        """Returns the current :attr:`storage` or the value from the configuration file."""
-        if self.storage is None:
-            return self.system.env.get('VORTEX_DEFAULT_STORAGE',
-                                       self.system.default_target.get('stores:storage', 'hendrix.meteo.fr'))
-        else:
-            return self.storage
+        return 'archive={!r}'.format(self.archive)
 
     @property
-    def underlying_archive_strategy(self):
-        """The kind of archive that will be used."""
-        return self.strategy
+    def underlying_archive_kind(self):
+        return 'std'
 
     def _get_archive(self):
+        """Create a new Archive object only if needed."""
         if not self._archive:
             self._archive = footprints.proxy.archives.default(
-                kind = self.underlying_archive_strategy,
-                storage = self.hostname(),
-                rootdir = self.storeroot,
-                headdir = self.storehead,
+                kind = self.underlying_archive_kind,
+                storage = self.storage if self.storage else 'generic',
+                tube = self.storetube,
                 readonly = self.readonly,
-                scheme = self._actual_scheme,
             )
             self._archives_object_stack.add(self._archive)
         return self._archive
 
     def _set_archive(self, newarchive):
         """Set a new archive reference."""
-        if isinstance(newarchive, caches.Archive):
+        if isinstance(newarchive, storage.Archive):
             self._archive = newarchive
 
     def _del_archive(self):
@@ -1019,48 +999,46 @@ class ArchiveStore(Store):
 
     archive = property(_get_archive, _set_archive, _del_archive)
 
+    def _inarchiveformatpath(self, remote):
+        formatted = self.system.path.join(
+            remote.get('root', self.storeroot),
+            remote['path'].lstrip(self.system.path.sep)
+        )
+        return formatted
+
     def inarchivecheck(self, remote, options):
-        return self.archive.check(remote['path'],
-                                  username = remote.get('username'),
-                                  root = remote.get('root', self.storeroot),
-                                  glue = self._actual_glue)
+        return self.archive.check(self._inarchiveformatpath(remote),
+                                  username = remote.get('username', None),
+                                  compressionpipeline = self._actual_cpipeline)
 
     def inarchivelocate(self, remote, options):
-        return self.archive.fullpath(remote['path'],
-                                     username = remote.get('username'),
-                                     root=remote.get('root', self.storeroot),
-                                     glue = self._actual_glue)
+        return self.archive.fullpath(self._inarchiveformatpath(remote),
+                                     username = remote.get('username', None),
+                                     compressionpipeline = self._actual_cpipeline)
 
     def inarchiveget(self, remote, local, options):
         logger.info('inarchiveget on %s://%s/%s (to: %s)',
-                    self.scheme, self.netloc, remote['path'], local)
+                    self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
         rc = self.archive.retrieve(
-            remote['path'],
-            local,
+            self._inarchiveformatpath(remote), local,
             intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
-            fmt=options.get('fmt'),
+            fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler', None),
-            silent=options.get('silent', False),
             username = remote['username'],
             compressionpipeline = self._actual_cpipeline,
-            root=remote.get('root', self.storeroot),
-            glue = self._actual_glue,
         )
         return rc and self._hash_get_check(self.inarchiveget, remote, local, options)
 
     def inarchiveput(self, local, remote, options):
         logger.info('inarchiveput to %s://%s/%s (from: %s)',
-                   self.scheme, self.netloc, remote['path'], local)
+                    self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
         rc = self.archive.insert(
-            remote['path'],
-            local,
-            intent = _CACHE_PUT_INTENT,
-            fmt = options.get('fmt'),
+            self._inarchiveformatpath(remote), local,
+            intent = _ARCHIVE_PUT_INTENT,
+            fmt = options.get('fmt', 'foo'),
             info = options.get('rhandler'),
             logname = remote['username'],
             compressionpipeline = self._actual_cpipeline,
-            root=remote.get('root', self.storeroot),
-            glue = self._actual_glue,
             sync = options.get('synchro', not options.get('delayed', not self.storesync)),
             enforcesync = options.get('enforcesync', False),
         )
@@ -1068,35 +1046,13 @@ class ArchiveStore(Store):
 
     def inarchivedelete(self, remote, options):
         logger.info('inarchivedelete on %s://%s/%s',
-                    self.scheme, self.netloc, remote['path'])
+                    self.scheme, self.netloc, self._inarchiveformatpath(remote))
         return self.archive.delete(
-            remote['path'],
-            fmt  = options.get('fmt'),
+            self._inarchiveformatpath(remote),
+            fmt  = options.get('fmt', 'foo'),
             info = options.get('rhandler', None),
             username = remote['username'],
-            root=remote.get('root', self.storeroot),
-            glue = self._actual_glue,
         )
-
-    def ftpcheck(self, remote, options):
-        """Delegates to ``system.ftp`` a distant check."""
-        return self.inarchivecheck(remote, options)
-
-    def ftplocate(self, remote, options):
-        """Delegates to ``system.ftp`` the path evaluation."""
-        return self.inarchivelocate(remote, options)
-
-    def ftpget(self, remote, local, options):
-        """Delegates to ``system.ftp`` the get action."""
-        return self.inarchiveget(remote, local, options)
-
-    def ftpput(self, local, remote, options):
-        """Delegates to ``system.ftp`` the put action."""
-        return self.inarchiveput(local, remote, options)
-
-    def ftpdelete(self, remote, options):
-        """Delegates to ``system`` a distant remove."""
-        return self.inarchivedelete(remote, options)
 
 
 class ConfigurableArchiveStore(object):
@@ -1237,7 +1193,7 @@ class VortexArchiveStore(ArchiveStore):
         info = 'VORTEX archive access',
         attr = dict(
             scheme = dict(
-                values   = ['vortex', 'ftp', 'ftserv'],
+                values   = ['vortex'],
             ),
             netloc = dict(
                 values   = ['vortex.archive.fr'],
@@ -1246,11 +1202,6 @@ class VortexArchiveStore(ArchiveStore):
                 default  = 'vortex',
                 outcast  = ['xp'],
             ),
-            strategy = dict(
-                optional = True,
-                default = 'vortex-archive',
-                outcast = ['olive-archive', 'op-ksh-archive', ]
-            )
         )
     )
 
@@ -1258,16 +1209,16 @@ class VortexArchiveStore(ArchiveStore):
         logger.debug('Vortex archive store init %s', self.__class__)
         super(VortexArchiveStore, self).__init__(*args, **kw)
 
-    @property
-    def _actual_scheme(self):
-        if self.scheme == 'vortex':
-            return 'ftp'
-        else:
-            return self.scheme
-
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         pass
+
+    def remap_write(self, remote, options):
+        """Remap actual remote path to distant store path for intrusive actions."""
+        if 'root' not in remote:
+            remote = copy.copy(remote)
+            remote['root'] = self.storehead
+        return remote
 
     def vortexcheck(self, remote, options):
         """Remap and ftpcheck sequence."""
@@ -1318,11 +1269,9 @@ class VortexStdArchiveStore(VortexArchiveStore):
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
         xpath[3:4] = list(xpath[3])
-        xpath[:0] = [self.system.path.sep,]
+        xpath[:0] = [self.system.path.sep, self.storehead]
         remote['path'] = self.system.path.join(*xpath)
         return remote
-
-    remap_write = remap_read
 
 
 class VortexFreeStdArchiveStore(VortexArchiveStore, ConfigurableArchiveStore):
@@ -1350,6 +1299,7 @@ class VortexFreeStdArchiveStore(VortexArchiveStore, ConfigurableArchiveStore):
         xpath = remote['path'].split('/')
         f_xpid = FreeXPid(xpath[3])
         xpath[3] = f_xpid.id
+        xpath[:0] = [self.storehead, ]
         if 'root' not in remote:
             remote['root'] = self._actual_storeroot(f_xpid)
         remote['path'] = self.system.path.join(*xpath)
@@ -1385,7 +1335,7 @@ class VortexOpArchiveStore(VortexArchiveStore):
         vxdate.insert(7, '/')
         vxdate.insert(10, '/')
         xpath[4] = ''.join(vxdate)
-        xpath[:0] = [self.system.path.sep,]
+        xpath[:0] = [self.system.path.sep, self.storehead]
         remote['path'] = self.system.path.join(*xpath)
         return remote
 
@@ -1480,7 +1430,7 @@ class CacheStore(Store):
 
     def _set_cache(self, newcache):
         """Set a new cache reference."""
-        if isinstance(newcache, caches.Cache):
+        if isinstance(newcache, storage.Cache):
             self._cache = newcache
 
     def _del_cache(self):

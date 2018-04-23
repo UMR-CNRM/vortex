@@ -130,8 +130,8 @@ class GcoCentralStore(Store):
         """Return actual (gtool, garchive, tampon, gname)."""
         tg = self.system.default_target
 
-        l = rpath.lstrip('/').split('/')
-        gname = l.pop()
+        lpath = rpath.lstrip('/').split('/')
+        gname = lpath.pop()
 
         if 'GGET_TAMPON' in self.system.env:
             tampon = self.system.env.GGET_TAMPON
@@ -139,7 +139,7 @@ class GcoCentralStore(Store):
             rootdir = self.ggetroot
             if rootdir is None:
                 rootdir = tg.get('gco:rootdir', '')
-            tampon = rootdir + '/' + '/'.join(l)
+            tampon = rootdir + '/' + '/'.join(lpath)
 
         gcmd = self.ggetcmd
         if gcmd is None:
@@ -432,14 +432,14 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
 
     def ugetcheck(self, remote, options):
         """Remap and ftpcheck sequence."""
-        return self.ftpcheck(self._universal_remap(remote), options)
+        return self.inarchivecheck(self._universal_remap(remote), options)
 
     def ugetlocate(self, remote, options):
         """Remap and ftplocate sequence."""
-        return self.ftplocate(self._universal_remap(remote), options)
+        return self.inarchivelocate(self._universal_remap(remote), options)
 
     def _actual_get(self, remote, local, options):
-        return self.ftpget(remote, local, options)
+        return self.inarchiveget(remote, local, options)
 
     def ugetget(self, remote, local, options):
         """Remap and ftpget sequence."""
@@ -451,11 +451,11 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
         if not self.storetrue:
             logger.info("put deactivated for %s", str(local))
             return True
-        return self.ftpput(local, self._universal_remap(remote), options)
+        return self.inarchiveput(local, self._universal_remap(remote), options)
 
     def ugetdelete(self, remote, options):
         """Remap root dir and ftpdelete sequence."""
-        return self.ftpdelete(self._universal_remap(remote), options)
+        return self.inarchivedelete(self._universal_remap(remote), options)
 
 
 class _UgetCacheStore(CacheStore, _UgetStoreMixin):

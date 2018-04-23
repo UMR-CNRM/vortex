@@ -8,7 +8,7 @@ as standalone tools.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from . import caches, schedulers, services, systems, targets, date
+from . import storage, schedulers, services, systems, targets, date
 
 #: No automatic export
 __all__ = []
