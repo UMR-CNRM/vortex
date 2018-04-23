@@ -3,7 +3,6 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import numpy
 import multiprocessing
 from multiprocessing import sharedctypes
 
@@ -15,13 +14,13 @@ class SharedNumpyArray(object):
         Workers, while being handled as a numpy.ndarray or
         numpy.ma.masked_array.
 
-        :param array: initialize the SharedNumpyArray this one, supposed to be
-            either a multiprocessing.Array, a numpy.ndarray or a
+        :param array: initialize the SharedNumpyArray with this one, supposed
+            to be either a multiprocessing.Array, a numpy.ndarray or a
             numpy.ma.masked_array.
 
         Note:
         - constructing a SharedNumpyArray from a multiprocessing.Array will
-        not duplicate the but make the SharedArray be a pointer to the
+        not duplicate data but make the SharedArray be a pointer to the
         initial array;
         - constructing from a numpy array will duplicate data, and so the
         initial array will no longer be consistent with this one.
@@ -29,9 +28,10 @@ class SharedNumpyArray(object):
         The process-safetiness of the shared array is ensured
         (cf. multiprocessing.Array) through the use of
         SharedNumpyArray.acquire() and .release(),
-        but this is from the responsability of the user implementing the
+        but this is of the responsability of the user implementing the
         Worker's inner task.
         """
+        import numpy
         if isinstance(array, sharedctypes.SynchronizedArray):
             self._mp_array = array
             self._np_array = numpy.frombuffer(array.get_obj())
