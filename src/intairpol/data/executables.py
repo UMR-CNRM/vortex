@@ -113,3 +113,40 @@ class MkTopBD(BlackBox):
         first = basedate.ymdh
         last = (basedate + fcterm).ymdh
         return '{first}\n{last}\n'.format(first=first, last=last)
+
+class Init(BlackBox):
+    """Chemical Climatological Init"""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Update the date value of a chemical climatologic file',
+            attr = dict(
+                kind = dict(
+                    values  = ['initmoc'],
+                ),
+                gvar = dict(
+                    default = 'master_[kind]',
+                )
+            )
+        )
+    ]
+
+class TestRestart(BlackBox):
+    """Control Guess file """
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Control the guess files species under fixed thresholds',
+            attr = dict(
+                kind = dict(
+                    values  = ['tstrestart'],
+                ),
+                gvar = dict(
+                    default = 'master_[kind]',
+                )
+            )
+        )
+    ]
+

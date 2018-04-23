@@ -5,8 +5,10 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 
 import footprints
 
+from vortex.data.contents     import TextContent
 from vortex.data.flow import FlowResource, GeoFlowResource
-from vortex.syntax.stdattrs import term
+from vortex.syntax.stdattrs import term, a_domain
+
 
 #: Automatic export of  class
 __all__ = [ ]
@@ -123,7 +125,6 @@ class ObsFire(GeoFlowResource):
             term    = self.term.fmthm
         )
 
-
 class TopBoundaryCondition(FlowResource):
     """Boundary conditions on top of the model, e.g. mocage."""
 
@@ -188,4 +189,48 @@ class PostPeriodicStats(GeoFlowResource):
             term    = self.term.fmthm,
             geo     = self._geo2basename_info(),
             src     = [self.model, self.run_eval],
+        )
+
+
+class RestartFlagContent(TextContent):
+    """Specialisation of the TextContent"""
+    @property
+    def restart(self):
+        """Retrieves content file"""
+        return(int(self.data[0][0]))
+
+    def if_restart(self, restartvalue, nominalvalue):
+        return(restartvalue if self.restart else nominalvalue)
+
+
+class RestartFlag(FlowResource):
+    """Restart flag between tasks test_restart and clim_restart"""
+
+    _footprint = [
+        dict(
+            info = 'Restart flag',
+            attr = dict(
+                kind = dict(
+                    values  = ['restart_flag'],
+                ),
+                nativefmt = dict(
+                    values  = ['ascii'],
+                    default = 'ascii',
+                ),
+                clscontents=dict(
+                    default=RestartFlagContent,
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'restart_flag'
+
+    def basename_info(self):
+        """Generic information for names fabric."""
+        return dict(
+            radical = 'clim_restart',
+            fmt     = self.nativefmt,
         )

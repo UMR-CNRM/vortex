@@ -53,9 +53,9 @@ class MonthClimMisc(GenericClim):
                     default = 'clim_[model]_[source]'
                 ),
                 source = dict(
-                    values  = ['topmodel', 'fcst_photolysis'],
+                    type =str,
                 ),
-                model = dict(
+                 model = dict(
                     values  = ['mocage'],
                     default = 'mocage',
                 ),

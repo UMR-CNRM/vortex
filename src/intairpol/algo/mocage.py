@@ -9,6 +9,7 @@ import six
 
 import footprints
 
+from vortex import toolbox
 from vortex.algo.components import Parallel, BlindRun, Expresso
 from vortex.syntax.stdattrs import a_date, model
 from bronx.stdtypes import date
@@ -61,7 +62,7 @@ class CorrOmegaSurf(Parallel):
 
         with io.open('fort.2', 'w') as fnam:
             fnam.write(list_file)
-        sh.cat('fort.2')
+        sh.cat('fort.2',output=False)
 
 
 class Surface(Parallel):
@@ -119,32 +120,39 @@ class Surface(Parallel):
         gribrh = self.context.sequence.effective_inputs(
             role='SurfaceFields',
             kind='gridpoint')
+        # Sm files
+        smrh = self.context.sequence.effective_inputs(
+            role='SMFiles',
+            kind='boundary')
 
-        for i in gribrh:
-            r = i.rh
-            sh.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
-                                                                  r.resource.term.fmthm))
-            actualdate = r.resource.date + r.resource.term
+        if smrh:
+            for i in gribrh:
+                r = i.rh
+                sh.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
+                                                                    r.resource.term.fmthm))
+                actualdate = r.resource.date + r.resource.term
 
-            # Get a temporary namelist container
-            newcontainer = footprints.proxy.container(filename=self.namelist_name, format='txt')
+                # Get a temporary namelist container
+                newcontainer = footprints.proxy.container(filename=self.namelist_name, format='txt')
 
-            # Substitute macros in namelist
-            myblock = namrh.contents[self.namelist_name]
-            myblock.clear()
-            myblock.update(refblock)
-            myblock.addmacro('YYYY', actualdate.year)
-            myblock.addmacro('MM', actualdate.month)
-            myblock.addmacro('DD', actualdate.day)
-            myblock.addmacro('DOMAIN', r.resource.geometry.area)
-            myblock.addmacro('CFGFILE', self.cfgfile + '.' + r.resource.geometry.area + '.cfg')
+                # Substitute macros in namelist
+                myblock = namrh.contents[self.namelist_name]
+                myblock.clear()
+                myblock.update(refblock)
+                myblock.addmacro('YYYY', actualdate.year)
+                myblock.addmacro('MM', actualdate.month)
+                myblock.addmacro('DD', actualdate.day)
+                myblock.addmacro('DOMAIN', r.resource.geometry.area)
+                myblock.addmacro('CFGFILE', self.cfgfile + '.' + r.resource.geometry.area + '.cfg')
 
-            namrh.contents.rewrite(newcontainer)
-            newcontainer.cat()
+                namrh.contents.rewrite(newcontainer)
+                newcontainer.cat()
 
-            super(Surface, self).execute(rh, opts)
+                super(Surface, self).execute(rh, opts)
 
-            newcontainer.clear()
+                newcontainer.clear()
+        else:
+            logger.warning('No SM files')
 
 
 class Fire(Parallel):
@@ -178,6 +186,7 @@ class Fire(Parallel):
         rh.contents.setmacro(macro, value)
         logger.info('Setup %s macro to %s in %s', macro, value, rh.container.actualpath())
 
+
     def execute(self, rh, opts):
         """Standard execution."""
 
@@ -203,14 +212,14 @@ class Fire(Parallel):
             role='ObservationsFire',
             kind='obsfire')
 
-        for r_obs in obsrh:
+        for r_obs in obsrh :
             r = r_obs.rh
 
             sh.title('Loop on domain {0:s}'.format(r.resource.geometry.area))
 
-            # Create symlinks for fire obsfiles
+            #Create symlinks for fire obsfiles
             obsfiles = sh.ls(r.container.localpath())
-            for i in obsfiles:
+            for i in obsfiles :
                 path = r.container.localpath() + '/' + i
                 sh.symlink(path, i)
 
@@ -235,7 +244,7 @@ class Fire(Parallel):
             newcontainer.clear()
 
             # Remove symlinks
-            for i in obsfiles:
+            for i in obsfiles :
                 sh.remove(i)
 
 
@@ -327,9 +336,14 @@ class PPCamsBDAP(BlindRun):
         hmrh = self.context.sequence.effective_inputs(
             role='HMFiles',
             kind='gridpoint' )
+        # overwrite hmrh by the ascending sort of the hmrh list
+        hmrh.sort(key=lambda s: s.rh.resource.term)
 
         for i in hmrh:
             r = i.rh
+
+            ## wait for the next HM netcdf file to be translated in grib2 format
+            self.grab(i, comment='forecast outputs moved to grib2 format')
 
             sh.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
                                                                   r.resource.term.fmthm))
@@ -368,12 +382,21 @@ class PPCamsBDAP(BlindRun):
 
             newcontainer.clear()
 
+            actualname = 'MFM_' + actualdate.ymdh + '.grib2'
             if self.system.path.exists('MFM_V5-.grib2'):
-                sh.mv('MFM_V5-.grib2', 'MFM_' + actualdate.ymdh + '.grib2')
+                sh.mv('MFM_V5-.grib2', actualname)
             if self.system.path.exists('MFM_V5+.grib2'):
-                sh.mv('MFM_V5+.grib2', 'MFM_' + actualdate.ymdh + '.grib2')
+                sh.mv('MFM_V5+.grib2', actualname)
 
             sh.rmall('HMFILE', 'HM_HYBRID.nc', 'HM.nc')
+
+            ## The grib2 output may be promised for BDAP transferts : put method applied to these outputs
+            #  put these outputs in the cache ; IGA will perform the following actions.
+            expected = [x for x in self.promises
+                        if (re.match(actualname, x.rh.container.localpath()) ) ]
+            for thispromise in expected:
+                thispromise.put(incache=True)
+
 
 
 class Forecast(Parallel):
@@ -394,7 +417,13 @@ class Forecast(Parallel):
                 ),
                 model = dict(
                     values = ['mocage']
-                )
+                ),
+                flyargs = dict(
+                    default = ('HM', ),
+                ),
+                flypoll = dict(
+                    default = 'iopoll_mocage',
+                ),
             )
         )
     ]
@@ -408,8 +437,27 @@ class Forecast(Parallel):
         rh.contents.setmacro(macro, value)
         logger.info('Setup %s macro to %s in %s', macro, value, rh.container.actualpath())
 
+
+    def prepare(self, rh, opts):
+        """ Prepare the synchronisation with next tasks"""
+        # to control synchronisation and promised files : use the script in iopoll method
+        # The script executed via iopoll method returns the list of promised files ready
+
+        if self.promises:
+              self.io_poll_kwargs = dict(vconf=rh.provider.vconf.upper())
+              self.flyput = True
+        else:
+              self.flyput = False
+
+        super(Forecast, self).prepare(rh, opts)
+
+
     def execute(self, rh, opts):
         """Standard execution."""
+
+        sh = self.system
+
+        """ First : Prepare namelist substitutions """
 
         # Forecast namelist
         namrh = self.context.sequence.effective_inputs(
@@ -421,8 +469,37 @@ class Forecast(Parallel):
 
         namrh = namrh[0].rh
 
+        # Evaluate the final forecast's term according to SM and FM files retrieved
+        smrh = self.context.sequence.effective_inputs(
+            role='SMCoupling',
+            kind='boundary')
+        fmrh = self.context.sequence.effective_inputs(
+            role='FMFiles',
+            kind='gridpoint')
+
+        smterms = []
+        fmterms = []
+
+        for i in smrh:
+            r = i.rh
+            smterms.append(int(r.resource.term.fmth) + 24)
+            # 1 fichier SM par jour et domaine : l'échéance 00 permet un couplage pour un run +24h ....
+
+        for i in fmrh:
+            r = i.rh
+            fmterms.append(r.resource.term.fmth)
+
+        realfcterm = min(max(smterms),max(fmterms))
+        logger.info('Max(fmterms) : %s ',max(fmterms))
+        logger.info('Max(smterms) : %s ',max(smterms))
+        logger.info('Fcterm       : %s ',realfcterm)
+
         first = self.basedate
-        last = self.basedate + self.fcterm
+        deltastr = 'PT' + str(realfcterm) + 'H'
+        last = self.basedate + deltastr
+
+        if self.fcterm != str(realfcterm) :
+            sh.title('Forecast final term modified : {0:d} '.format(realfcterm))
 
         self._fix_nam_macro(namrh, 'YYYY1', int(first.year))
         self._fix_nam_macro(namrh, 'YYYY2', int(last.year))
@@ -479,3 +556,180 @@ class MkStatsCams(Expresso):
             mask    = '"' + actualmask + '"',
             verbose = '',
         )
+
+class Init(Parallel):
+    """Algo component for Init"""
+
+    _footprint = [
+        model,
+        dict(
+            info = 'ClimInit',
+            attr = dict(
+                kind = dict(
+                    values   = ['init'],
+                ),
+                basedate = a_date,
+                model = dict(
+                    values   = ['mocage']
+                )
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'init'
+
+    def _fix_nam_macro(self, rh, macro, value):
+        """Set a given namelist macro and issue a log message."""
+        rh.contents.setmacro(macro, value)
+        logger.info('Setup %s macro to %s in %s', macro, value, rh.container.actualpath())
+
+
+    def execute(self, rh, opts):
+        """Standard execution."""
+        sh = self.system
+       
+        # execution if relance_clim contains something else than 0
+        sh.title('Climatological Init ?  0=No else=yes ')
+
+        restartrh = self.context.sequence.effective_inputs(
+            role='ClimRestartFlag',
+            kind='restart_flag')
+
+        returncode = True
+
+        if restartrh:
+            restartrh = restartrh[0].rh
+            restartrh.container.cat()
+            returncode = restartrh.contents.restart
+
+
+        #Run the following lines only if returncode value is not 0
+        if returncode:
+
+            namrh = self.context.sequence.effective_inputs(
+            role='Namelist',
+            kind='namelist',)
+            if len(namrh) != 1:
+                logger.critical('There must be exactly one namelist for init execution. Stop.')
+                raise ValueError('There must be exactly one namelist for init execution. Stop.')
+
+            #Retrieve the domains -- A FINALISER - la substitution se fait actuellement pour une chaine de caracteres
+            # donc avec des cotes 'GLOB22,MACC02' et on voudrait 'GLOB22','MACC02'
+            climrh = self.context.sequence.effective_inputs(
+            role='RestartChemicalClimatology',
+            kind='clim_misc')
+            domains = []
+            ldom = []
+
+            for i in climrh:
+                r = i.rh
+                domains.append(r.resource.geometry.area)
+            for i in set(domains):
+                ldom.append(i)
+
+            #Substitute date and domains in the namelist
+            namrh = namrh[0].rh
+
+            self._fix_nam_macro(namrh, 'YYYY1', int(self.basedate.year))
+            self._fix_nam_macro(namrh, 'MM1', int(self.basedate.month))
+            self._fix_nam_macro(namrh, 'DD1', int(self.basedate.day))
+            self._fix_nam_macro(namrh, 'NBDOM', len(ldom))
+            self._fix_nam_macro(namrh, 'DOMAIN', ldom)
+
+            namrh.save()
+            namrh.container.cat()
+
+            #Execute the binary
+            super(Init, self).execute(rh, opts)
+        else:
+            # Remove the input HM* files
+            for file in sh.glob('HM' + '*'):
+                sh.remove(file)
+
+
+class ControlGuess(Parallel):
+    """Algo component for TSTRESTART"""
+
+    _footprint = [
+        model,
+        dict(
+            info = 'Tstrestart algo component',
+            attr = dict(
+                kind = dict(
+                    values = ['controlguess'],
+                ),
+                namelist_name = dict(
+                    info     = 'Namelist name for the binary',
+                    optional = True,
+                    default  = 'macc_seuils.nam',
+                ),
+                model = dict(
+                    values = ['mocage']
+                )
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'tstrestart'
+
+    def execute(self, rh, opts):
+        """Standard execution."""
+        sh = self.system
+        sh.title('Dans tstrestar')
+   
+        # Fa HM files 
+        farh = self.context.sequence.effective_inputs(
+            role='HMInitialCondition',
+            kind='gridpoint')
+
+        # loop on HM files
+        total=0
+        for i in farh:
+            # Delete the link for the expected input name
+            sh.rm('HMFILE')
+            r = i.rh
+            sh.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
+                                                                  r.resource.term.fmthm))
+            # link to expected input filename
+            sh.symlink(r.container.localpath(), 'HMFILE')
+
+            super(ControlGuess, self).execute(rh, opts)
+ 
+            # get the value written in output file
+            sh.title('Climatological Init :  0=No else=yes ')
+            sh.pwd()
+            sh.ls()
+            sh.cat('relance_clim',output=False)
+
+            # get the first line of relance_clim file
+            try:
+                with open('relance_clim', 'r') as fnam:
+                    lines = fnam.readlines()
+                returncode = lines[0]
+                # total stores the returncode values for each domain
+                total = total + int(returncode)
+            except IOError:
+                logger.error('Could not open file relance_clim in read mode')
+                raise
+
+        # end of the loop on HM files :
+        # write the total value into relance_clim which is read by clim-start
+        # if only one guess file is wrong, all domains will be chemical climatologic ones
+        logger.info('total %d', total)
+        try:
+            with open('relance_clim', 'w') as fwnam:
+                fwnam.write(str(total))
+            sh.title('End of tstrestart : Climatological Inits :  0=No else=yes ')
+            sh.cat('relance_clim',output=False)
+        except IOError:
+            logger.error('Could not open file relance_clim in write mode')
+            raise
+
+
+        sh.cat('relance_clim',output=False)
+ 
+
