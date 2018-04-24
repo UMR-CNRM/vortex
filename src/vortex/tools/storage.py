@@ -88,7 +88,9 @@ class Storage(footprints.FootprintBase):
     The following methods needs to be defined in the child classes:
 
         * *_actual_fullpath*
+        * *_actual_prestageinfo*
         * *_actual_check*
+        * *_actual_list*
         * *_actual_insert*
         * *_actual_retrieve*
         * *_actual_delete*
@@ -214,10 +216,22 @@ class Storage(footprints.FootprintBase):
         (rc, _) = self._actual_fullpath(item, **kwargs)
         return rc
 
+    def prestageinfo(self, item, **kwargs):
+        """Return the prestage infos for an **item** in the current storage place."""
+        # Currently no recording is performed for the check action
+        (rc, _) = self._actual_prestageinfo(item, **kwargs)
+        return rc
+
     def check(self, item, **kwargs):
         """Check/Stat an **item** from the current storage place."""
         # Currently no recording is performed for the check action
         (rc, _) = self._actual_check(item, **kwargs)
+        return rc
+
+    def list(self, item, **kwargs):
+        """List all data resources available in the **item** directory."""
+        # Currently no recording is performed for the check action
+        (rc, _) = self._actual_list(item, **kwargs)
         return rc
 
     @enforce_readonly
@@ -349,9 +363,14 @@ class Cache(Storage):
         if self.actual_record:
             self.sh.pickle_dump(self.history, dumpfile)
 
-    def _actual_fullpath(self, subpath, **kwargs):
+    def _actual_fullpath(self, item, **kwargs):
         """Return the path/URI to the **item**'s storage location."""
-        return self._formatted_path(subpath, **kwargs), dict()
+        return self._formatted_path(item, **kwargs), dict()
+
+    def _actual_prestageinfo(self, item, **kwargs):
+        """Returns pre-staging informations."""
+        return dict(strategy=self.kind,
+                    location=self._actual_fullpath(item, **kwargs), ), dict()
 
     def _actual_check(self, item, **kwargs):
         """Check/Stat an **item** from the current storage place."""
@@ -361,6 +380,17 @@ class Cache(Storage):
         except OSError:
             st = None
         return st, dict()
+
+    def _actual_list(self, item, **kwargs):
+        """List all data resources available in the **item** directory."""
+        path = self._actual_fullpath(item, **kwargs)
+        if self.system.path.exists(path):
+            if self.system.path.isdir(path):
+                return self.system.listdir(path), dict()
+            else:
+                return True, dict()
+        else:
+            return None, dict()
 
     def _actual_insert(self, item, local, **kwargs):
         """Insert an **item** in the current storage place."""
@@ -481,7 +511,8 @@ class Archive(Storage):
 
     def __getattr__(self, attr):
         """Provides proxy methods for _actual_* methods."""
-        mattr = re.match(r'_actual_(?P<action>fullpath|check|insert|retrieve|delete)', attr)
+        methods = r'fullpath|prestageinfo|check|list|insert|retrieve|delete'
+        mattr = re.match(r'_actual_(?P<action>' + methods + r')', attr)
         if mattr:
             pmethod = getattr(self, '_{:s}{:s}'.format(self.actual_tube, mattr.group('action')))
 
@@ -498,7 +529,7 @@ class Archive(Storage):
             raise AttributeError("The {:s} attribute was not found in this object"
                                  .format(attr))
 
-    def _ftpfullpath(self, subpath, **kwargs):
+    def _ftpfullpath(self, item, **kwargs):
         """Actual _fullpath using ftp."""
         username = kwargs.get('username', None)
         rc = None
@@ -506,9 +537,22 @@ class Archive(Storage):
                           logname=username,
                           delayed = True)
         if ftp:
-            rc = ftp.netpath(subpath)
+            rc = ftp.netpath(item)
             ftp.close()
         return rc, dict()
+
+    def _ftpprestageinfo(self, item, **kwargs):
+        """Actual _prestageinfo using ftp."""
+        username = kwargs.get('username', None)
+        if username is None:
+            ftp = self.sh.ftp(hostname=self.actual_storage,
+                              logname=username,
+                              delayed = True)
+            username = ftp.logname
+        baseinfo = dict(storage=self.actual_storage,
+                        logname=username,
+                        location=item, )
+        return baseinfo, dict()
 
     def _ftpcheck(self, item, **kwargs):
         """Actual _check using ftp."""
@@ -521,6 +565,32 @@ class Archive(Storage):
                 rc = ftp.size(item)
             except (ValueError, TypeError, ftplib.all_errors):
                 pass
+            finally:
+                ftp.close()
+        return rc, dict()
+
+    def _ftplist(self, item, **kwargs):
+        """Actual _list using ftp."""
+        ftp = self.sh.ftp(self.actual_storage,
+                          kwargs.get('username', None),
+                          delayed=True)
+        if ftp:
+            try:
+                # Is this a directory ?
+                rc = ftp.cd(item)
+            except ftplib.all_errors:
+                # Apparently not...
+                rc = None
+                try:
+                    # Is it a file ?
+                    if ftp.size(item) is not None:
+                        rc = True
+                except (ValueError, TypeError, ftplib.all_errors):
+                    pass
+            else:
+                # Content of the directory...
+                if rc:
+                    rc = ftp.nlst()
             finally:
                 ftp.close()
         return rc, dict()

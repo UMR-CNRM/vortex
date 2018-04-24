@@ -468,7 +468,7 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
         stuff = set()
         with self.system.ftppool():
             for a_remote in self._list_remap(remote):
-                rc = self.ftplist(a_remote, options)
+                rc = self.inarchivelist(a_remote, options)
                 if isinstance(rc, list):
                     stuff.update(rc)
                 elif rc is True:
@@ -477,7 +477,7 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
 
     def ugetprestageinfo(self, remote, options):
         """Remap and ftpprestageinfo sequence."""
-        return self.ftpprestageinfo(self._universal_remap(remote), options)
+        return self.inarchiveprestageinfo(self._universal_remap(remote), options)
 
     def _actual_get(self, remote, local, options):
         return self.inarchiveget(remote, local, options)

@@ -1081,41 +1081,16 @@ class ArchiveStore(Store):
                                      username = remote.get('username', None),
                                      compressionpipeline = self._actual_cpipeline)
 
-    def ftplist(self, remote, options):
-        """Use ``system.ftp`` to list availlable files."""
-        ftp = self.system.ftp(self.hostname(), remote['username'], delayed=True)
-        if ftp:
-            rpath = self._ftpformatpath(remote)
-            try:
-                # Is this a directory ?
-                rc = ftp.cd(rpath)
-            except ftplib.all_errors:
-                # Apparently not...
-                rc = None
-                try:
-                    # Is it a file ?
-                    if ftp.size(rpath) is not None:
-                        rc = True
-                except (ValueError, TypeError, ftplib.all_errors):
-                    pass
-            else:
-                # Content of the directory...
-                if rc:
-                    rc = ftp.nlst()
-            finally:
-                ftp.close()
-        return rc
+    def inarchivelist(self, remote, options):
+        """Use the archive object to list available files."""
+        return self.archive.list(self._inarchiveformatpath(remote),
+                                 username = remote.get('username', None))
 
-    def ftpprestageinfo(self, remote, options):
+    def inarchiveprestageinfo(self, remote, options):
         """Returns the prestaging informations"""
-        logname = remote['username']
-        if logname is None:
-            ftp = self.system.ftp(self.hostname(), remote['username'], delayed=True)
-            logname = ftp.logname
-        baseinfo = dict(storage=self.hostname(),
-                        logname=logname,
-                        location=self._ftpformatpath(remote), )
-        return baseinfo
+        return self.archive.prestageinfo(self._inarchiveformatpath(remote),
+                                         username = remote.get('username', None),
+                                         compressionpipeline = self._actual_cpipeline)
 
     def inarchiveget(self, remote, local, options):
         logger.info('inarchiveget on %s://%s/%s (to: %s)',
@@ -1199,7 +1174,7 @@ class ConfigurableArchiveStore(object):
         # Global configuration file
         logger.info("Reading config file: %s", self._store_global_config)
         maincfg = config.GenericConfigParser(inifile=self._store_global_config)
-        conf['host'] = dict(maincfg.items(self.hostname()))
+        conf['host'] = dict(maincfg.items(self.archive.actual_storage))
 
         # Look for a local configuration file
         localcfg = conf['host'].get('localconf', None)
@@ -1256,7 +1231,7 @@ class ConfigurableArchiveStore(object):
         method
         """
         ds = sessions.current().datastore
-        conf = ds.get(self._datastore_id, dict(storage=self.hostname()),
+        conf = ds.get(self._datastore_id, dict(storage=self.archive.actual_storage),
                       default_payload=dict(), readonly=True)
         if not conf:
             # If the configuration is empty, do what it takes...
@@ -1344,14 +1319,14 @@ class VortexArchiveStore(ArchiveStore):
         """Remap and ftplist sequence."""
         remote = self.remap_list(remote, options)
         if remote:
-            return self.ftplist(remote, options)
+            return self.inarchivelist(remote, options)
         else:
             return None
 
     def vortexprestageinfo(self, remote, options):
         """Remap and ftpprestageinfo sequence."""
         remote = self.remap_read(remote, options)
-        return self.ftpprestageinfo(remote, options)
+        return self.inarchiveprestageinfo(remote, options)
 
     def vortexget(self, remote, local, options):
         """Remap and ftpget sequence."""
@@ -1578,19 +1553,11 @@ class CacheStore(Store):
 
     def incachelist(self, remote, options):
         """List the content of a remote path."""
-        path = self.incachelocate(remote, options)
-        if self.system.path.exists(path):
-            if self.system.path.isdir(path):
-                return self.system.listdir(path)
-            else:
-                return True
-        else:
-            return None
+        return self.cache.list(remote['path'])
 
     def incacheprestageinfo(self, remote, options):
         """Returns pre-staging informations."""
-        return dict(strategy=self.strategy,
-                    location=self.incachelocate(remote, options), )
+        return self.cache.prestageinfo(remote['path'])
 
     def incacheget(self, remote, local, options):
         """Simple copy from current cache cache to ``local``."""

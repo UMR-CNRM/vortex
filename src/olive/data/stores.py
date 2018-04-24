@@ -72,7 +72,7 @@ class OliveArchiveStore(ArchiveStore):
     def oliveprestageinfo(self, remote, options):
         """Remap and ftpprestageinfo sequence."""
         self.remap_read(remote, options)
-        return self.ftpprestageinfo(remote, options)
+        return self.inarchiveprestageinfo(remote, options)
 
     def oliveget(self, remote, local, options):
         """Remap and ftpget sequence."""
@@ -206,28 +206,20 @@ class OpArchiveStore(ArchiveStore):
         logger.debug('Archive store init %s', self.__class__)
         super(OpArchiveStore, self).__init__(*args, **kw)
 
-    def fullpath(self, remote):
-        return self.storeroot + remote['path']
-
     def _op_find_stuff(self, remote, options, netpath=True):
-        ftp = self.system.ftp(self.hostname(), remote['username'], delayed=True)
-        if ftp:
-            extract = remote['query'].get('extract', None)
-            cleanpath = self.fullpath(remote)
-            (dirname, basename) = self.system.path.split(cleanpath)
-            if not extract and self.glue.containsfile(basename):
-                cleanpath, _ = self.glue.filemap(self.system, dirname, basename)
-            if cleanpath is not None:
-                if netpath:
-                    rloc = ftp.netpath(cleanpath)
-                else:
-                    rloc = cleanpath
+        l_remote = copy.copy(remote)
+        extract = l_remote['query'].pop('extract', None)
+        (dirname, basename) = self.system.path.split(l_remote['path'])
+        if not extract and self.glue.containsfile(basename):
+            l_remote['path'], _ = self.glue.filemap(self.system, dirname, basename)
+        if l_remote['path'] is not None:
+            if netpath:
+                rloc = self.inarchivelocate(l_remote, options)
             else:
-                rloc = None
-            ftp.close()
-            return rloc
+                rloc = self._inarchiveformatpath(l_remote)
         else:
-            return None
+            rloc = None
+        return rloc
 
     def oplocate(self, remote, options):
         """Delegates to ``system`` a distant locate."""
@@ -235,35 +227,35 @@ class OpArchiveStore(ArchiveStore):
 
     def opprestageinfo(self, remote, options):
         """Find out prestage info."""
-        superinfo = self.ftpprestageinfo(remote, options)
+        superinfo = self.inarchiveprestageinfo(remote, options)
         superinfo['location'] = self._op_find_stuff(remote, options, netpath=False)
         return superinfo
 
     def opcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
-        extract = remote['query'].get('extract', None)
-        cleanpath = self.fullpath(remote)
-        (dirname, basename) = self.system.path.split(cleanpath)
+        l_remote = copy.copy(remote)
+        extract = l_remote['query'].pop('extract', None)
+        (dirname, basename) = self.system.path.split(l_remote['path'])
         if not extract and self.glue.containsfile(basename):
-            cleanpath, _ = self.glue.filemap(self.system, dirname, basename)
-        return self.inarchivecheck(remote, options)
+            l_remote['path'], _ = self.glue.filemap(self.system, dirname, basename)
+        return self.inarchivecheck(l_remote, options)
 
     def opget(self, remote, local, options):
         """File transfer: get from store."""
         targetpath = local
-        cleanpath  = self.fullpath(remote)
-        extract = remote['query'].get('extract', None)
-        locfmt = remote['query'].get('format', options.get('fmt', 'unknown'))
-        (dirname, basename) = self.system.path.split(cleanpath)
+        l_remote = copy.copy(remote)
+        extract = l_remote['query'].pop('extract', None)
+        locfmt = l_remote['query'].pop('format', options.get('fmt', 'unknown'))
+        (dirname, basename) = self.system.path.split(l_remote['path'])
         if not extract and self.glue.containsfile(basename):
             extract = basename
-            cleanpath, targetpath = self.glue.filemap(self.system, dirname, basename)
+            l_remote['path'], targetpath = self.glue.filemap(self.system, dirname, basename)
         elif extract:
             extract = extract[0]
             targetpath = basename
-        targetstamp = targetpath + '.stamp' + hashlib.md5(cleanpath).hexdigest()
+        targetstamp = targetpath + '.stamp' + hashlib.md5(l_remote['path']).hexdigest()
         rc = False
-        if cleanpath is not None:
+        if l_remote['path'] is not None:
             if extract and self.system.path.exists(targetpath):
                 if self.system.path.exists(targetstamp):
                     logger.info("%s was already fetched. that's great !", targetpath)
@@ -274,9 +266,10 @@ class OpArchiveStore(ArchiveStore):
             if not rc:
                 options_plus = copy.copy(options)
                 options_plus['fmt'] = locfmt
-                rc = self.inarchiveget(cleanpath, targetpath, options_plus)
+                l_remote['path'] = l_remote['path']
+                rc = self.inarchiveget(l_remote, targetpath, options_plus)
             if not rc:
-                logger.error('FTP could not get file %s', cleanpath)
+                logger.error('FTP could not get file %s', l_remote['path'])
             elif extract:
                 self.system.touch(targetstamp)
                 if extract == 'all':
