@@ -6,8 +6,13 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import logging
 logging.basicConfig(level=logging.ERROR)
 import time
+numpy_looks_fine = True
+try:
+    import numpy as np
+except ImportError:
+    numpy_looks_fine = False
 
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
 
 import footprints
 import taylorism
@@ -173,6 +178,20 @@ class UtTaylorism(TestCase):
         boss.wait_till_finished()
         report = boss.get_report()
         self.assertEqual(len(report['workers_report']), 2, "2 instructions have been sent, which is not the size of report.")
+
+    @skipIf(not numpy_looks_fine)
+    def test_sharedmemory_array(self):
+        """Checks that sharedmemory mechanism works fine."""
+        vals = [813, 42, 8]
+        s = taylorism.util.SharedNumpyArray(np.ones((1,), dtype=int) * vals[0])
+        boss = taylorism.run_as_server(
+            common_instructions     = dict(use_lock=True),
+            individual_instructions = dict(value=vals[1:]),
+            scheduler               = footprints.proxy.scheduler(limit='threads', max_threads=2),
+            sharedmemory_common_instructions = dict(shared_sum=s)
+        )
+        boss.wait_till_finished()
+        self.assertEqual(s[0], sum(vals), "sharedmemory array has wrong value:{} instead of expected: {}.".format(s[0], sum(vals)))
 
 
 if __name__ == '__main__':

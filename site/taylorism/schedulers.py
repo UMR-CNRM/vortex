@@ -134,6 +134,7 @@ class NewLimitedScheduler(BaseScheduler):
 #: Abstract footprint attribute for binding aware schedulers
 _binded_fpattr = footprints.Footprint(info = 'Abstract binded attribute',
                                       attr = dict(binded = dict(type=bool,
+                                                                info="Binds the process to a single cpu.",
                                                                 default=False,
                                                                 optional=True)))
 

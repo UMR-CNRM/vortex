@@ -94,7 +94,7 @@ taylorism_log = footprints.loggers.getLogger(__name__)
 # : timeout when polling for a Queue/Pipe communication
 communications_timeout = 0.01
 
-__version__ = '1.0.7'
+__version__ = '1.0.8'
 
 
 # FUNCTIONS
@@ -104,7 +104,8 @@ def run_as_server(common_instructions=dict(),
                   individual_instructions=dict(),
                   scheduler=fpx.scheduler(limit='threads', max_threads=0),
                   verbose=False,
-                  maxlenreport=1024):
+                  maxlenreport=1024,
+                  sharedmemory_common_instructions=dict()):
     """
     Build a Boss instance, make him hire workers,
     run the workers, and returns the Boss instance.
@@ -119,8 +120,14 @@ def run_as_server(common_instructions=dict(),
     :param bool verbose: is the Boss verbose or not.
     :param int maxlenreport: the maximum number of lines for the report (when
         running in verbose mode)
+    :param dict sharedmemory_common_instructions: special "instructions", whose
+        memory allocation is shared among workers and from main process.
+        Warning: these objects must inherit in some way from
+        multiprocessing.Array or sharedctypes. For n-dimensional arrays,
+        it is advised to be instances of the here-defined :class:`SharedNumpyArray`.
     """
-    boss = Boss(verbose=verbose, scheduler=scheduler, maxlenreport=maxlenreport)
+    boss = Boss(verbose=verbose, scheduler=scheduler, maxlenreport=maxlenreport,
+                sharedmemory_common_instructions=sharedmemory_common_instructions)
     boss.set_instructions(common_instructions, individual_instructions)
     boss.make_them_work()
     return boss
@@ -131,7 +138,8 @@ def batch_main(common_instructions=dict(),
                scheduler=fpx.scheduler(limit='threads', max_threads=0),
                verbose=False,
                maxlenreport=1024,
-               print_report=print):
+               print_report=print,
+               sharedmemory_common_instructions=dict()):
     """
     Run execution of the instructions as a batch process, waiting for all
     instructions are finished and finally printing report.
@@ -142,7 +150,8 @@ def batch_main(common_instructions=dict(),
                          individual_instructions,
                          scheduler=scheduler,
                          verbose=verbose,
-                         maxlenreport=maxlenreport)
+                         maxlenreport=maxlenreport,
+                         sharedmemory_common_instructions=sharedmemory_common_instructions)
 
     with interrupt.SignalInterruptHandler():
         try:
@@ -354,7 +363,8 @@ class Boss(object):
                        'STOP_RIGHTNOW': 'Stop workers immediately and stop\
                                          listening.'}
 
-    def __init__(self, scheduler=None, name=None, verbose=False, maxlenreport=1024):
+    def __init__(self, scheduler=None, name=None, verbose=False,
+                 maxlenreport=1024, sharedmemory_common_instructions=dict()):
         if scheduler is None:
             scheduler = fpx.scheduler(limit='threads', max_threads=0)
         # Duck typing check...
@@ -364,6 +374,7 @@ class Boss(object):
         self.name = name
         self.verbose = verbose
         self.maxlenreport = int(maxlenreport)
+        self._sharedmemory_common_instructions = sharedmemory_common_instructions
 
         self.workers_messenger = mpc.Queue()
         (self.control_messenger_in, self.control_messenger_out) = mpc.Pipe()  # in = inside subprocess, out = main
@@ -716,8 +727,10 @@ class Boss(object):
                         report=report
                     )
                     for instructions in launchable:
+                        instructions_and_shared_memory = instructions.copy()
+                        instructions_and_shared_memory.update(self._sharedmemory_common_instructions)
                         try:
-                            w = hire_worker(instructions)
+                            w = hire_worker(instructions_and_shared_memory)
                         except (AttributeError, ValueError):
                             stop_them_working()
                             raise
