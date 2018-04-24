@@ -124,7 +124,7 @@ def run_as_server(common_instructions=dict(),
         memory allocation is shared among workers and from main process.
         Warning: these objects must inherit in some way from
         multiprocessing.Array or sharedctypes. For n-dimensional arrays,
-        it is advised to be instances of the here-defined SharedFPArray.
+        it is advised to be instances of the here-defined :class:`SharedNumpyArray`.
     """
     boss = Boss(verbose=verbose, scheduler=scheduler, maxlenreport=maxlenreport,
                 sharedmemory_common_instructions=sharedmemory_common_instructions)

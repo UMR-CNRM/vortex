@@ -19,11 +19,11 @@ class SharedNumpyArray(object):
             numpy.ma.masked_array.
 
         Note:
-        - constructing a SharedNumpyArray from a multiprocessing.Array will
-        not duplicate data but make the SharedArray be a pointer to the
-        initial array;
-        - constructing from a numpy array will duplicate data, and so the
-        initial array will no longer be consistent with this one.
+            * constructing a SharedNumpyArray from a multiprocessing.Array will
+              not duplicate data but make the SharedArray be a pointer to the
+              initial array;
+            * constructing from a numpy array will duplicate data, and so the
+              initial array will no longer be consistent with this one.
 
         The process-safetiness of the shared array is ensured
         (cf. multiprocessing.Array) through the use of
@@ -54,18 +54,9 @@ class SharedNumpyArray(object):
             if isinstance(array, numpy.ma.masked_array):
                 self._np_array = numpy.ma.masked_where(array.mask, self._np_array, copy=False)
 
-# transitivity of inner multiprocessing.Array methods regarding lock
-    def get_lock(self):
-        return self._mp_array.get_lock()
-
-    def acquire(self):
-        return self._mp_array.acquire()
-
-    def release(self):
-        return self._mp_array.release()
-
-# redefinition of implicit methods: hash because of Footprints, eq to be redefined together with hash in Python3
-# and transitivity of numpy arrays methods from the inner numpy array layer
+    # redefinition of implicit methods: hash because of Footprints, eq to be
+    # redefined together with hash in Python3 and transitivity of numpy arrays
+    # methods from the inner numpy array layer
     def __hash__(self):
         return hash(self._mp_array)
 

@@ -99,6 +99,19 @@ Backward-Compatibility Classes
    :member-order: alphabetical
 
 
+:mod:`taylorism.util` --- Utility classes
+=========================================
+
+
+.. automodule:: taylorism.util
+   :synopsis: Contains utility classes for Bosses and Workers.
+
+.. autoclass:: SharedNumpyArray
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+
 :mod:`taylorism.examples` --- Examples using the taylorism package
 ==================================================================
 
@@ -108,10 +121,6 @@ Examples
 .. automodule:: taylorism.examples
    :synopsis: Basic, illustrative examples of use.
 
-.. autoclass:: Sleeper
-   :members:
-   :private-members: _task
-     
 .. autofunction:: sleepers_generic_program
 
 .. autofunction:: sleepers_example_laxist
@@ -123,3 +132,28 @@ Examples
 .. autofunction:: sleepers_example_memory
 
 .. autofunction:: sleepers_example_bindedmemory
+
+.. autofunction:: logarithmer_example
+
+.. autofunction:: summer_example
+
+.. autofunction:: matrixproduct_example
+
+Worker classes used in the examples
+-----------------------------------
+
+.. autoclass:: Sleeper
+   :members:
+   :private-members: _task
+
+.. autoclass:: Logarithmer
+   :members:
+   :private-members: _task
+   
+.. autoclass:: Summer
+   :members:
+   :private-members: _task
+
+.. autoclass:: MatrixProducter
+   :members:
+   :private-members: _task
