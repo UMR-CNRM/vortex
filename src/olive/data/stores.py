@@ -4,7 +4,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import ftplib
+import copy
 import hashlib
 import re
 
@@ -62,12 +62,12 @@ class OliveArchiveStore(ArchiveStore):
     def olivecheck(self, remote, options):
         """Remap and ftpcheck sequence."""
         self.remap_read(remote, options)
-        return self.ftpcheck(remote, options)
+        return self.inarchivecheck(remote, options)
 
     def olivelocate(self, remote, options):
         """Remap and ftplocate sequence."""
         self.remap_read(remote, options)
-        return self.ftplocate(remote, options)
+        return self.inarchivelocate(remote, options)
 
     def oliveprestageinfo(self, remote, options):
         """Remap and ftpprestageinfo sequence."""
@@ -77,17 +77,17 @@ class OliveArchiveStore(ArchiveStore):
     def oliveget(self, remote, local, options):
         """Remap and ftpget sequence."""
         self.remap_read(remote, options)
-        return self.ftpget(remote, local, options)
+        return self.inarchiveget(remote, local, options)
 
     def oliveput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
         self.remap_write(remote, options)
-        return self.ftpput(local, remote, options)
+        return self.inarchiveput(local, remote, options)
 
     def olivedelete(self, remote, options):
         """Remap and ftpdelete sequence."""
         self.remap_write(remote, options)
-        return self.ftpdelete(remote, options)
+        return self.inarchivedelete(remote, options)
 
 
 class OliveCacheStore(CacheStore):
@@ -186,10 +186,6 @@ class OpArchiveStore(ArchiveStore):
                 default  = 'oper.archive.fr',
                 remap    = {'dbl.archive.fr': 'dble.archive.fr'},
             ),
-            storage = dict(
-                optional = True,
-                default  = 'hendrix.meteo.fr',
-            ),
             storeroot = dict(
                 optional = True,
                 alias    = ['archivehome'],
@@ -199,6 +195,9 @@ class OpArchiveStore(ArchiveStore):
                 type     = StoreGlue,
                 optional = True,
                 default  = oparchivemap,
+            ),
+            readonly = dict(
+                default  = True,
             ),
         )
     )
@@ -242,21 +241,12 @@ class OpArchiveStore(ArchiveStore):
 
     def opcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
-        ftp = self.system.ftp(self.hostname(), remote['username'])
-        rc = None
-        if ftp:
-            extract = remote['query'].get('extract', None)
-            cleanpath = self.fullpath(remote)
-            (dirname, basename) = self.system.path.split(cleanpath)
-            if not extract and self.glue.containsfile(basename):
-                cleanpath, _ = self.glue.filemap(self.system, dirname, basename)
-            try:
-                rc = ftp.size(cleanpath)
-            except (ValueError, TypeError, ftplib.all_errors):
-                pass
-            finally:
-                ftp.close()
-        return rc
+        extract = remote['query'].get('extract', None)
+        cleanpath = self.fullpath(remote)
+        (dirname, basename) = self.system.path.split(cleanpath)
+        if not extract and self.glue.containsfile(basename):
+            cleanpath, _ = self.glue.filemap(self.system, dirname, basename)
+        return self.inarchivecheck(remote, options)
 
     def opget(self, remote, local, options):
         """File transfer: get from store."""
@@ -282,14 +272,9 @@ class OpArchiveStore(ArchiveStore):
                     self.system.rm(targetpath)
                     self.system.rmall(targetpath + '.stamp*')
             if not rc:
-                rc = self.system.smartftget(
-                    cleanpath,
-                    targetpath,
-                    # ftp control
-                    hostname = self.hostname(),
-                    logname  = remote['username'],
-                    fmt      = locfmt,
-                )
+                options_plus = copy.copy(options)
+                options_plus['fmt'] = locfmt
+                rc = self.inarchiveget(cleanpath, targetpath, options_plus)
             if not rc:
                 logger.error('FTP could not get file %s', cleanpath)
             elif extract:
@@ -306,22 +291,6 @@ class OpArchiveStore(ArchiveStore):
                                                local)
                     self.system.rm(heaven)  # Sadly this is a temporary heaven
         return rc
-
-    def opput(self, local, remote, options):
-        """File transfer: put to store."""
-        return self.system.smartftput(
-            local,
-            self.fullpath(remote),
-            # ftp control
-            hostname = self.hostname(),
-            logname  = remote['username'],
-            fmt      = options.get('fmt'),
-        )
-
-    def opdelete(self, remote, options):
-        """This operation is not supported."""
-        logger.warning('Removing from OP Archive Store is not supported')
-        return False
 
 
 class OpCacheStore(CacheStore):
