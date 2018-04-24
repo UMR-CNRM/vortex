@@ -15,7 +15,6 @@ Package
   
 * :mod:`vortex.tools.actions`
 * :mod:`vortex.tools.addons`
-* :mod:`vortex.tools.caches`
 * :mod:`vortex.tools.compression`
 * :mod:`vortex.tools.date`
 * :mod:`vortex.tools.ddhpack`
@@ -30,6 +29,7 @@ Package
 * :mod:`vortex.tools.rawfiles`
 * :mod:`vortex.tools.schedulers`
 * :mod:`vortex.tools.services`
+* :mod:`vortex.tools.storage`
 * :mod:`vortex.tools.surfex`
 * :mod:`vortex.tools.systems`
 * :mod:`vortex.tools.targets`

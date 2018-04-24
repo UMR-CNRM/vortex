@@ -2,8 +2,33 @@
 # -*- coding:Utf-8 -*-
 
 """
-This package handles cache objects that could be in charge of
-hosting data resources. Cache objects use the :mod:`footprints` mechanism.
+This package handles :class:`Storage` objects that could be in charge of
+hosting data resources both locally ("Cache") or on a remote host "Archive").
+
+* :class:`Storage` is the main abstract class that defines the user-interface for
+  every classes of this module. :meth:`Storage.fullpath`, :meth:`Storage.check`,
+  :meth:`Storage.insert`, :meth:`Storage.retrieve` and :meth:`Storage.delete` are
+  frequently used form a user point of view.
+* The :class:`Cache` abstract class is a specialisation of the :class:`Storage`
+  class that handles data resources locally (i.e. data hosted on the same machine
+  that are readily and timelessly accessible). In this module, various concrete
+  implementations are provided for this class in order to support various cache
+  flavor.
+* The :class:`Archive` class (readily usable) is a specialisation of the
+  :class:`Storage` class dedicated to data resources stored remotely (e.g on a
+  mass archive system).
+
+These classes purely focus on the technical aspects (e.g. how to transfer a given
+filename, directory or file like object to its storage place ?). For :class:`Cache`
+based storage it determines the location of the data on the filesystem, in a
+database, ... For :class:`Archive` based storage it smoothly handles communication
+protocol between the local host and the remote archive.
+
+These classes are used by :class:`Store` objects to access data. Thus,
+:class:`Store` objects do not need to worry anymore about the technical
+aspects. Using the :mod:`footprints` package, for a given execution target, it
+allows to customise the way data are accessed leaving the :class:`Store` objects
+unchanged.
 """
 
 import ftplib
@@ -23,7 +48,11 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 
+# Decorators: for internal use in the Storage class
+# -------------------------------------------------
+
 def do_recording(flag):
+    """Add a record line in the History object (if sensible)."""
     @nicedeco
     def do_flagged_recording(f):
         def wrapped_action(self, item, *kargs, **kwargs):
@@ -38,6 +67,7 @@ def do_recording(flag):
 
 @nicedeco
 def enforce_readonly(f):
+    """Check that the current storage object is not readonly."""
     def wrapped_action(self, item, *kargs, **kwargs):
         if self.readonly:
             raise IOError("This Storage place is readonly.")
@@ -45,8 +75,13 @@ def enforce_readonly(f):
     return wrapped_action
 
 
+# Main Storage abstract class
+# ---------------------------
+
 class Storage(footprints.FootprintBase):
     """Root class for any Storage class, ex: Cache, Archive, ...
+
+    Tips for developers:
 
     The following methods needs to be defined in the child classes:
 
@@ -62,35 +97,43 @@ class Storage(footprints.FootprintBase):
 
     _abstract = True,
     _footprint = dict(
-        info = 'Default storage place description',
+        info = 'Default/Abstract storage place description.',
         attr = dict(
             config=dict(
+                info='A ready to use configuration file object for this storage place.',
                 type=GenericConfigParser,
                 optional=True,
                 default=None,
             ),
             inifile=dict(
+                info=('The name of the configuration file that will be used (if ' +
+                      '**config** is not provided.'),
                 optional=True,
                 default='@storage-[storage].ini',
             ),
             iniauto=dict(
+                info='If needed, use **inifile** to create a configuration file object.',
                 type=bool,
                 optional=True,
                 default=True,
             ),
             kind=dict(
+                info="The storage place's kind.",
                 values=['std'],
             ),
             storage=dict(
+                info="The storage target.",
                 optional=True,
             ),
             record=dict(
+                info="Record insert, retrieve, delete actions in an History object.",
                 type=bool,
                 optional=True,
                 default=False,
                 access='rwx',
             ),
             readonly=dict(
+                info="Disallow insert and delete action for this storage place.",
                 type=bool,
                 optional=True,
                 default=False,
@@ -108,6 +151,7 @@ class Storage(footprints.FootprintBase):
 
     @property
     def tag(self):
+        """The identifier of the storage place."""
         raise NotImplementedError()
 
     @property
@@ -119,10 +163,17 @@ class Storage(footprints.FootprintBase):
 
     @property
     def sh(self):
+        """Shortcut to the active System object."""
         return sessions.system()
 
     @property
     def history(self):
+        """The History object that will be used by this storage place.
+
+        :note: History objects are associated with the self.tag identifier. i.e.
+               all Storage's objects with the same tag will use the same History
+               object.
+        """
         return self._history
 
     def actual(self, attr):
@@ -137,28 +188,32 @@ class Storage(footprints.FootprintBase):
 
     @property
     def actual_record(self):
+        """Do we record things in the History object ?"""
         return self.actual('record')
 
     def addrecord(self, action, item, **infos):
-        """Push a new record to the storage place log."""
+        """Push a new record to the storage place log/history."""
         if self.actual_record:
             self.history.append(action, item, infos)
 
     def flush(self, dumpfile=None):
-        """Flush actual history to the specified ``dumpfile`` if record is on."""
+        """Flush actual history to the specified ``dumpfile`` if record is on.
+
+        :note: May raise the :class:`NotImplementedError` exception.
+        """
         raise NotImplementedError()
 
     def _findout_record_infos(self, kwargs):
         return dict(info=kwargs.get("info", None))
 
     def fullpath(self, item, **kwargs):
-        """Return the path/URI to the current storage place."""
+        """Return the path/URI to the **item**'s storage location."""
         # Currently no recording is performed for the check action
         (rc, _) = self._actual_fullpath(item, **kwargs)
         return rc
 
     def check(self, item, **kwargs):
-        """Check/Stat an item from the current storage place."""
+        """Check/Stat an **item** from the current storage place."""
         # Currently no recording is performed for the check action
         (rc, _) = self._actual_check(item, **kwargs)
         return rc
@@ -166,20 +221,29 @@ class Storage(footprints.FootprintBase):
     @enforce_readonly
     @do_recording('INSERT')
     def insert(self, item, local, **kwargs):
-        """Insert an item in the current storage place."""
+        """Insert an **item** in the current storage place.
+
+        :note: **local** may be a path to a file or any kind of file like objects.
+        """
         return self._actual_insert(item, local, **kwargs)
 
     @do_recording('RETRIEVE')
     def retrieve(self, item, local, **kwargs):
-        """Retrieve an item from the current storage place."""
+        """Retrieve an **item** from the current storage place.
+
+        :note: **local** may be a path to a file or any kind of file like objects.
+        """
         return self._actual_retrieve(item, local, **kwargs)
 
     @enforce_readonly
     @do_recording('DELETE')
     def delete(self, item, **kwargs):
-        """Delete an item from the current storage place."""
+        """Delete an **item** from the current storage place."""
         return self._actual_delete(item, **kwargs)
 
+
+# Defining the two main flavours of storage places
+# -----------------------------------------------
 
 class Cache(Storage):
     """Root class for any :class:Cache subclasses."""
@@ -194,10 +258,12 @@ class Cache(Storage):
                 default  = '@cache-[storage].ini',
             ),
             rootdir = dict(
+                info     = "The cache's location (usually on a filesystem).",
                 optional = True,
                 default  = '/tmp',
             ),
             headdir = dict(
+                info     = "The cache's subdirectory (within **rootdir**).",
                 optional = True,
                 default  = 'cache',
             ),
@@ -206,11 +272,13 @@ class Cache(Storage):
                 default  = 'localhost',
             ),
             rtouch = dict(
+                info     = "Perform the recursive touch command on the directory structure.",
                 type     = bool,
                 optional = True,
                 default  = False,
             ),
             rtouchskip = dict(
+                info     = "Do not 'touch' the first **rtouchskip** directories.",
                 type     = int,
                 optional = True,
                 default  = 0,
@@ -224,10 +292,12 @@ class Cache(Storage):
 
     @property
     def actual_rootdir(self):
+        """This cache rootdir (potentially read form the configuration file)."""
         return self.actual('rootdir')
 
     @property
     def actual_headdir(self):
+        """This cache headdir (potentially read form the configuration file)."""
         return self.actual('headdir')
 
     @property
@@ -237,6 +307,7 @@ class Cache(Storage):
 
     @property
     def tag(self):
+        """The identifier of this cache place."""
         return '{:s}_{:s}'.format(self.realkind, self.entry)
 
     def _formatted_path(self, subpath, **kwargs):  # @UnusedVariable
@@ -277,11 +348,11 @@ class Cache(Storage):
             self.sh.pickle_dump(self.history, dumpfile)
 
     def _actual_fullpath(self, subpath, **kwargs):
-        """Actual full path in the storage place."""
+        """Return the path/URI to the **item**'s storage location."""
         return self._formatted_path(subpath, **kwargs), dict()
 
     def _actual_check(self, item, **kwargs):
-        """Check/Stat an item in the current cache."""
+        """Check/Stat an **item** from the current storage place."""
         path = self._formatted_path(item, **kwargs)
         try:
             st = self.sh.stat(path)
@@ -290,7 +361,7 @@ class Cache(Storage):
         return st, dict()
 
     def _actual_insert(self, item, local, **kwargs):
-        """Insert an item in the current cache."""
+        """Insert an **item** in the current storage place."""
         # Get the relevant options
         intent = kwargs.get("intent", "in")
         fmt = kwargs.get("fmt", "foo")
@@ -300,7 +371,7 @@ class Cache(Storage):
         return rc, dict(intent=intent, fmt=fmt)
 
     def _actual_retrieve(self, item, local, **kwargs):
-        """Retrieve an item from the current cache."""
+        """Retrieve an **item** from the current storage place."""
         # Get the relevant options
         intent = kwargs.get("intent", "in")
         fmt = kwargs.get("fmt", "foo")
@@ -334,7 +405,7 @@ class Cache(Storage):
         return rc, dict(intent=intent, fmt=fmt)
 
     def _actual_delete(self, item, **kwargs):
-        """Delete an item from the current cache."""
+        """Delete an **item** from the current storage place."""
         # Get the relevant options
         fmt = kwargs.get("fmt", "foo")
         # Delete the element
@@ -343,7 +414,7 @@ class Cache(Storage):
 
 
 class Archive(Storage):
-    """Root class for any :class:Archive subclasses."""
+    """The default class to handle storage to a remote location."""
 
     _default_tube = 'ftp'
     _default_storage = 'hendrix.meteo.fr'
@@ -361,15 +432,16 @@ class Archive(Storage):
                 default  = 'generic',
             ),
             tube = dict(
+                info     = "How to communicate with the archive ?",
                 optional = True,
-                values = ['ftp', ],
+                values   = ['ftp', ],
             ),
         )
     )
 
     @property
     def tag(self):
-        """Tries to figure out what could be the actual entry point for archive space."""
+        """The identifier of this cache place."""
         return '{:s}_{:s}_{:s}'.format(self.realkind, self.actual_storage, self.kind)
 
     @property
@@ -378,6 +450,7 @@ class Archive(Storage):
 
     @property
     def actual_storage(self):
+        """This archive network name (potentially read form the configuration file)."""
         return ((self.storage if self.storage != 'generic' else None) or
                 self.sh.env.VORTEX_DEFAULT_STORAGE or
                 (self._actual_config.get(self.kind, 'storage')
@@ -386,10 +459,9 @@ class Archive(Storage):
                 self.sh.default_target.get('stores:storage', None) or
                 self._default_storage)
 
-        return self.actual('rootdir')
-
     @property
     def actual_tube(self):
+        """This archive communication scheme (potentially read form the configuration file)."""
         return (self.tube or
                 (self._actual_config.get(self.kind, 'tube', None)
                  if self._actual_config.has_option(self.kind, 'tube') else None) or
@@ -406,7 +478,7 @@ class Archive(Storage):
         return rawpath
 
     def __getattr__(self, attr):
-        """Provides proxy methods for _actual_* attributes."""
+        """Provides proxy methods for _actual_* methods."""
         mattr = re.match(r'_actual_(?P<action>fullpath|check|insert|retrieve|delete)', attr)
         if mattr:
             pmethod = getattr(self, '_{:s}{:s}'.format(self.actual_tube, mattr.group('action')))
@@ -425,7 +497,7 @@ class Archive(Storage):
                                  .format(attr))
 
     def _ftpfullpath(self, subpath, **kwargs):
-        """Actual full path in the archive place using ftp"""
+        """Actual _fullpath using ftp."""
         username = kwargs.get('username', None)
         rc = None
         ftp = self.sh.ftp(hostname=self.actual_storage,
@@ -437,7 +509,7 @@ class Archive(Storage):
         return rc, dict()
 
     def _ftpcheck(self, item, **kwargs):
-        """Check/Stat an item from the current archive using Ftp"""
+        """Actual _check using ftp."""
         username = kwargs.get('username', None)
         rc = None
         ftp = self.sh.ftp(hostname=self.actual_storage,
@@ -452,7 +524,7 @@ class Archive(Storage):
         return rc, dict()
 
     def _ftpretrieve(self, item, local, **kwargs):
-        """Retrieve an item from the current archive using ftp."""
+        """Actual _retrieve using ftp."""
         logger.info('ftpget on ftp://%s/%s (to: %s)', self.actual_storage, item, local)
         extras = dict(fmt=kwargs.get('fmt', 'foo'),
                       cpipeline=kwargs.get('compressionpipeline', None))
@@ -467,7 +539,7 @@ class Archive(Storage):
         return rc, extras
 
     def _ftpinsert(self, item, local, **kwargs):
-        """Insert an item in the current archive using ftp."""
+        """Actual _insert using ftp."""
         sync_insert = kwargs.get('sync')
         if sync_insert:
             logger.info('ftpput to ftp://%s/%s (from: %s)', self.actual_storage, item, local)
@@ -504,7 +576,7 @@ class Archive(Storage):
         return rc, extras
 
     def _ftpdelete(self, item, **kwargs):
-        """Delete an item from the current archive using ftp."""
+        """Actual _delete using ftp."""
         rc = None
         username = kwargs.get('username', None)
         ftp = self.system.ftp(self.actual_storage, username)
@@ -517,6 +589,9 @@ class Archive(Storage):
                 logger.error('Try to remove a non-existing resource <%s>', item)
         return rc, dict()
 
+
+# Concrete cache implementations
+# ------------------------------
 
 class MtoolCache(Cache):
     """Cache items for the MTOOL jobs (or any job that acts like it)."""
