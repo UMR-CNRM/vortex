@@ -33,12 +33,12 @@ class IO_Poll_Marine(addons.Addon):
 
     def iopoll_marine(self, prefix, model=None):
         """Do the actual job of polling files prefixed by ``prefix``."""
-        logger.info("BIENVENUE POPOL MARINE")
+        logger.info("Execution IOPOLL Marine")
         if model is not None:
             cmd = ['--model', model]
         else:
             cmd = []
-        cmd.extend['--prefix', prefix]
+        cmd.extend(['--prefix', prefix])
         # Catch the processed file
         rawout = self._spawn(cmd)
         # Cumulative results

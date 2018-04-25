@@ -4,16 +4,19 @@
 #: No automatic export
 __all__ = []
 
+import re
+
 import footprints
 
-from vortex.data.outflow import NoDateResource
+from vortex.data.outflow import ModelResource
 from gco.syntax.stdattrs import gvar, gdomain
 from previmar.data.contents import SurgeTemplate
+from bronx.stdtypes.date import Date
 
 logger = footprints.loggers.getLogger(__name__)
 
 
-class BlkdatNamFiles(NoDateResource):
+class BlkdatNamFiles(ModelResource):
     """
     """
     _footprint = [
@@ -30,6 +33,10 @@ class BlkdatNamFiles(NoDateResource):
                 ),
                 param = dict(
                     values  = ['full_prv', 'full_ana', 'ms', 'full'],
+                ),
+                date = dict(
+                    type     = Date,
+                    optional = True,
                 ),
                 clscontents=dict(
                     default = SurgeTemplate

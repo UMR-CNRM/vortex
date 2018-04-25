@@ -61,8 +61,10 @@ class SurgesCouplingForecasts(Parallel):
     def prepare(self, rh, opts):
         """Add some defaults env values for mpitool itself."""
         super(Parallel, self).prepare(rh, opts)
+        if opts.get('mpitool', True):
+            self.export('mpitool')
 
-        # Tweak the pseudo hycom namelists New version  !
+         # Tweak the pseudo hycom namelists New version  !
         for namsec in self.context.sequence.effective_inputs(role = re.compile('FileConfig')):
 
             r = namsec.rh
@@ -98,7 +100,7 @@ class SurgesCouplingForecasts(Parallel):
             r.save()
             r.container.cat()
 
-        # Promises should be nicely managed by a co-proccess
+        # Promises should be nicely managed by a co-process
         if self.promises:
             self.io_poll_kwargs = dict(model=rh.resource.model)
             self.flyput = True
