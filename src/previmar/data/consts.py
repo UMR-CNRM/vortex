@@ -107,7 +107,7 @@ class SurgesNativeGrid(GenvModelResource):
                     default = '[model]_[fields]_[gdomain]_tgz',
                 ),
                 fields = dict(
-                    values  = ['regional', 'cb'],
+                    values  = ['regional', 'cb', 'cbar'],
                 ),
             )
         )
@@ -135,7 +135,8 @@ class ConfSurges(GenvUsageModelResource):
                 ),
                 param = dict(
                     values  = ['pts', 'savefield', 'ports', 'blkdat',
-                               'blkdat_cmo', 'patch', 'run', 'run_red'],
+                               'blkdat_cmo', 'blkdat_shom', 'blkdat_ms', 'blkdat_full',
+                               'patch', 'run', 'run_red'],
                 ),
             )
         )

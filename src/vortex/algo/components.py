@@ -232,6 +232,10 @@ class AlgoComponent(footprints.FootprintBase):
         """Return actual io_poll prefixes."""
         return getattr(self, 'io_poll_args', tuple(self.flyargs))
 
+    def flyput_kwargs(self):
+        """Return actual io_poll prefixes."""
+        return getattr(self, 'io_poll_kwargs', dict())
+
     def flyput_check(self):
         """Check default args for io_poll command."""
         actual_args = list()
@@ -251,8 +255,8 @@ class AlgoComponent(footprints.FootprintBase):
         """Return a sleeping time in seconds between io_poll commands."""
         return getattr(self, 'io_poll_sleep', self.env.get('IO_POLL_SLEEP', 20))
 
-    def flyput_job(self, io_poll_method, io_poll_args, event_complete, event_free,
-                   queue_context):
+    def flyput_job(self, io_poll_method, io_poll_args, io_poll_kwargs,
+                   event_complete, event_free, queue_context):
         """Poll new data resources."""
         logger.info('Polling with method %s', str(io_poll_method))
         logger.info('Polling with args %s', str(io_poll_args))
@@ -269,7 +273,7 @@ class AlgoComponent(footprints.FootprintBase):
             try:
                 for arg in io_poll_args:
                     logger.info('Polling check arg %s', arg)
-                    rc = io_poll_method(arg)
+                    rc = io_poll_method(arg, **io_poll_kwargs)
                     try:
                         data.extend(rc.result)
                     except AttributeError:
@@ -330,6 +334,9 @@ class AlgoComponent(footprints.FootprintBase):
             logger.error('Could not check default arguments for polling data')
             return nope
 
+        # Additional named attributes
+        io_poll_kwargs = self.flyput_kwargs()
+
         # Define events for a nice termination
         event_stop = multiprocessing.Event()
         event_free = multiprocessing.Event()
@@ -338,7 +345,7 @@ class AlgoComponent(footprints.FootprintBase):
         p_io = multiprocessing.Process(
             name   = self.footprint_clsname(),
             target = self.flyput_job,
-            args   = (io_poll_method, io_poll_args, event_stop, event_free, queue_ctx),
+            args   = (io_poll_method, io_poll_args, io_poll_kwargs, event_stop, event_free, queue_ctx),
         )
 
         # The co-process is started

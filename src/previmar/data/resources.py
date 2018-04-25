@@ -17,7 +17,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 
 class SolutionPoint(FlowResource):
-    """Class for point solutions of the HYCOM model i.e s*pts (ascii file)."""
+    """Class for port solutions of the HYCOM model i.e s*pts (ascii file)."""
     _footprint = dict(
         info = 'Surges model point solution',
         attr = dict(
@@ -137,7 +137,8 @@ class SurgesResultNative(GeoFlowResource):
                 values = ['HUV_ltideonly_forcing', 'lssh_global_ms.nc',
                           'HUV_ltide_wind_forcing', 'lssh_global_full.nc',
                           'HUV_tideonly_forcing', 'HUV_tide_wind_forcing',
-                          'ssh_global_full.nc', 'ssh_global_ms.nc'],
+                          'ssh_global_full.nc', 'ssh_global_ms.nc',
+                          'ssh_global.nc', 'maree_global.nc'],
                 remap = {
                     'HUV_ltideonly_forcing': 'lssh_global_ms.nc',
                     'HUV_tideonly_forcing': 'ssh_global_ms.nc',
@@ -163,7 +164,7 @@ class BufrPoint(FlowResource):
     """Class for point solutions of the HYCOM model i.e bufr."""
     _footprint = dict(
         info = ('Surges model temporal solution bufr (for 24h period) (2d current (u,v) ' +
-                'Pmer, U10, V10, surcote and (Hauteur d eau Maree SHOM for ATL))'),
+                'Pmer, U10, V10, surcote and (Hauteur d eau Maree))'),
         attr = dict(
             kind = dict(
                 values = ['bufr_surges'],
@@ -205,7 +206,14 @@ class ForcingOutData(InitialCondition):
                 values  = ['ascii', 'unknown'],
             ),
             fields = dict(
-                values  = ['preatm', 'tauewd', 'taunwd', 'windx', 'windy'],
+                values  = ['preatm', 'tauewd', 'taunwd',
+                           'windx', 'windy', 'mslprs',
+                           'wndnwd', 'wndewd'],
+                remap = {
+                    'windx': 'wndewd',
+                    'windy': 'wndnwd',
+                    'preatm': 'mslprs',
+                },
             ),
         )
     )
@@ -221,6 +229,41 @@ class ForcingOutData(InitialCondition):
             geo     = lgeo,
             radical = self.realkind + '.' + self.fields,
             src     = [self.filling, self.model],
+        )
+
+
+class TideOnlyOut(InitialCondition):
+    """."""
+    _footprint = dict(
+        info = '',
+        attr = dict(
+            kind = dict(
+                values  = ['TideOnlyOut']
+            ),
+            nativefmt = dict(
+                values  = ['ascii', 'unknown'],
+            ),
+            fields = dict(
+                values  = ['pts', 'nat', 'native', 'txt', 'info'],
+                remap = {
+                    'info': 'txt',
+                    'native': 'nat',
+                },
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'TideOnlyOut'
+
+    def basename_info(self):
+        lgeo = [self.geometry.area, self.geometry.rnice]
+        return dict(
+            fmt     = self.nativefmt,
+            geo     = lgeo,
+            radical = self.realkind + '.' + self.fields,
+            src     = self.model,
         )
 
 
