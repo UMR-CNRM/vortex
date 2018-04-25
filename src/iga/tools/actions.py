@@ -330,4 +330,5 @@ class OpPhase(Action):
         return actiond.jeeves(**jeeves_opts)
 
 
-actiond.add(SendAlarm(), Route(), DMTEvent(), OpMail(), *OpPhase.actions())
+actiond.add(SendAlarm(), Route(), DMTEvent(), OpMail(inputs_charset='utf-8'),
+            *OpPhase.actions())
