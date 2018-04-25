@@ -22,7 +22,9 @@ Included Modules
 ----------------
 
 * :mod:`previmar.data.consts`
+* :mod:`previmar.data.contents`
 * :mod:`previmar.data.executables`
+* :mod:`previmar.data.namelists`
 * :mod:`previmar.data.resources`
 
 Classes

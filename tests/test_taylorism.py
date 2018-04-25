@@ -179,7 +179,7 @@ class UtTaylorism(TestCase):
         report = boss.get_report()
         self.assertEqual(len(report['workers_report']), 2, "2 instructions have been sent, which is not the size of report.")
 
-    @skipIf(not numpy_looks_fine)
+    @skipIf(not numpy_looks_fine, "NumPy is unavailable.")
     def test_sharedmemory_array(self):
         """Checks that sharedmemory mechanism works fine."""
         vals = [813, 42, 8]
