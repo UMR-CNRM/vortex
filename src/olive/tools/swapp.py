@@ -180,7 +180,7 @@ def olive_generic_hook_factory(body):
 
     def olive_generic_hook(t, rh):
         jail = dict(t=t, rh=rh, sh=t.sh, env=t.env, )
-        six.exec_(bytecode, globals=jail)
+        six.exec_(bytecode, jail)
 
     return olive_generic_hook
 
