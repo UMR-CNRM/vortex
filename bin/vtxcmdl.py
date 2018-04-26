@@ -63,6 +63,7 @@ Some of the defaults can be changed by the mean of environment variables:
 
 '''
 
+import locale
 import sys
 import os
 import re
@@ -75,6 +76,8 @@ vortexbase = re.sub(os.path.sep + 'bin$', '',
                     os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
+
+locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', 'en_US.UTF-8'))
 
 import footprints as fp
 from bronx.system import interrupt
