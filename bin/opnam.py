@@ -3,8 +3,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+import locale
 import sys
 import argparse
+
+locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', 'en_US.UTF-8'))
 
 # Let's use standard footprints logging facilities
 import footprints

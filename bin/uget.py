@@ -11,6 +11,7 @@ import cmd
 import ConfigParser
 import io
 import itertools
+import locale
 import logging
 import os
 import re
@@ -24,6 +25,8 @@ vortexbase = re.sub(os.path.sep + 'bin$', '',
                     os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
+
+locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', 'en_US.UTF-8'))
 
 from bronx.fancies.display import query_yes_no_quit, print_tablelike
 from bronx.syntax.decorators import nicedeco

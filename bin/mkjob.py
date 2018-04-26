@@ -4,6 +4,7 @@
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import argparse
+import locale
 import os
 import re
 from shutil import copyfile
@@ -23,6 +24,8 @@ pathdirs    = [os.path.join(vortex_path, xpath) for xpath in ('site', 'src', )]
 for d in pathdirs:
     if os.path.isdir(d):
         sys.path.insert(0, d)
+
+locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', 'en_US.UTF-8'))
 
 import bronx.stdtypes.date
 import vortex

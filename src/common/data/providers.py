@@ -69,9 +69,16 @@ class BdpeProvider(Provider):
                 values   = ['OPER', 'INT', 'SEC', 'DEV'],
             ),
             config = dict(
-                optional = True,
+                info     = 'A ready to use configuration file object for this storage place.',
                 type     = GenericConfigParser,
-                default  = GenericConfigParser('@bdpe-map-resources.ini')
+                optional = True,
+                default  = None,
+            ),
+            inifile = dict(
+                info     = ('The name of the configuration file that will be used (if ' +
+                            '**config** is not provided.'),
+                optional = True,
+                default  = '@bdpe-map-resources.ini',
             ),
         )
     )
@@ -79,6 +86,9 @@ class BdpeProvider(Provider):
     def __init__(self, *args, **kw):
         logger.debug('BDPE provider init %s', self.__class__)
         super(BdpeProvider, self).__init__(*args, **kw)
+        self._actual_config = self.config
+        if self._actual_config is None:
+            self._actual_config = GenericConfigParser(inifile=self.inifile)
 
     @property
     def realkind(self):
@@ -107,7 +117,7 @@ class BdpeProvider(Provider):
            the BDPE product description from the .ini file.
         """
         # check that the product is described in the configuration file
-        if not self.config.has_section(self.bdpeid):
+        if not self._actual_config.has_section(self.bdpeid):
             fmt = 'Missing product n°{} in BDPE configuration file\n"{}"'
             raise BdpeConfigurationError(fmt.format(self.bdpeid, self.config.file))
 
@@ -117,7 +127,7 @@ class BdpeProvider(Provider):
                     for k, v in six.iteritems(resource.footprint_export())}
 
         # check the BDPE pairs against the resource's
-        for (k, v) in self.config.items(self.bdpeid):
+        for (k, v) in self._actual_config.items(self.bdpeid):
             if k not in rsrcdict:
                 raise BdpeMismatchError('Missing key "{}" in resource'.format(k))
             if rsrcdict[k] != v:
