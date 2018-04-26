@@ -7,7 +7,7 @@ import locale
 import sys
 import argparse
 
-locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', 'en_US.UTF-8'))
+locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', str('en_US.UTF-8')))
 
 # Let's use standard footprints logging facilities
 import footprints

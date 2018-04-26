@@ -25,7 +25,7 @@ for d in pathdirs:
     if os.path.isdir(d):
         sys.path.insert(0, d)
 
-locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', 'en_US.UTF-8'))
+locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', str('en_US.UTF-8')))
 
 import bronx.stdtypes.date
 import vortex
