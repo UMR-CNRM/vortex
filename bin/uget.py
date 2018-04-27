@@ -178,7 +178,7 @@ class UGetShell(cmd.Cmd):
             # If a location is requested, deal with it
             for shortid, l_id, loc in zip(('shortuget', 'baseshort'),
                                           ('id', 'baseid'), ('location', 'baselocation')):
-                if loc in gdict and gdict[loc] is None:
+                if loc in gdict and gdict[l_id] and gdict[loc] is None:
                     if gdict.get('gco', False) and shortid.startswith('base'):
                         continue
                     gdict[loc] = self._cliconfig_get('location')
