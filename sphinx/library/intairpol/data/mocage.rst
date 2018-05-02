@@ -11,20 +11,9 @@
 .. autodata:: __all__
 
 
-Public data
------------
-
-
-Functions
----------
-
-
-Exceptions
-----------
-
-
 Classes
 -------
+
 .. autoclass:: Fire
    :show-inheritance:
    :members:
@@ -49,3 +38,14 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: RestartFlagContent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: RestartFlag
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+ 

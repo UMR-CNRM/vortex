@@ -19,6 +19,16 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: TestRestart
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Init
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: PrepSurfMocage
    :show-inheritance:
    :members:
