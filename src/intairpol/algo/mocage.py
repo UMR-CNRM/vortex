@@ -489,10 +489,10 @@ class Forecast(Parallel):
         logger.info('Fcterm       : %s ', realfcterm)
 
         first = self.basedate
-        deltastr = 'PT' + str(realfcterm) + 'H'
+        deltastr = 'PT' + six.text_type(realfcterm) + 'H'
         last = self.basedate + deltastr
 
-        if self.fcterm != str(realfcterm):
+        if self.fcterm != six.text_type(realfcterm):
             sh.title('Forecast final term modified : {0:d} '.format(realfcterm))
 
         self._fix_nam_macro(namrh, 'YYYY1', int(first.year))
@@ -712,7 +712,7 @@ class ControlGuess(Parallel):
         logger.info('total %d', total)
         try:
             with io.open('relance_clim', 'w') as fwnam:
-                fwnam.write(str(total))
+                fwnam.write(six.text_type(total))
             sh.title('End of tstrestart : Climatological Inits :  0=No else=yes ')
             sh.cat('relance_clim', output=False)
         except IOError:
