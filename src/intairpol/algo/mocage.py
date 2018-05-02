@@ -9,7 +9,6 @@ import six
 
 import footprints
 
-from vortex import toolbox
 from vortex.algo.components import Parallel, BlindRun, Expresso
 from vortex.syntax.stdattrs import a_date, model
 from bronx.stdtypes import date
@@ -62,7 +61,7 @@ class CorrOmegaSurf(Parallel):
 
         with io.open('fort.2', 'w') as fnam:
             fnam.write(list_file)
-        sh.cat('fort.2',output=False)
+        sh.cat('fort.2', output=False)
 
 
 class Surface(Parallel):
@@ -129,7 +128,7 @@ class Surface(Parallel):
             for i in gribrh:
                 r = i.rh
                 sh.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
-                                                                    r.resource.term.fmthm))
+                                                                      r.resource.term.fmthm))
                 actualdate = r.resource.date + r.resource.term
 
                 # Get a temporary namelist container
@@ -186,7 +185,6 @@ class Fire(Parallel):
         rh.contents.setmacro(macro, value)
         logger.info('Setup %s macro to %s in %s', macro, value, rh.container.actualpath())
 
-
     def execute(self, rh, opts):
         """Standard execution."""
 
@@ -212,14 +210,14 @@ class Fire(Parallel):
             role='ObservationsFire',
             kind='obsfire')
 
-        for r_obs in obsrh :
+        for r_obs in obsrh:
             r = r_obs.rh
 
             sh.title('Loop on domain {0:s}'.format(r.resource.geometry.area))
 
-            #Create symlinks for fire obsfiles
+            # Create symlinks for fire obsfiles
             obsfiles = sh.ls(r.container.localpath())
-            for i in obsfiles :
+            for i in obsfiles:
                 path = r.container.localpath() + '/' + i
                 sh.symlink(path, i)
 
@@ -244,7 +242,7 @@ class Fire(Parallel):
             newcontainer.clear()
 
             # Remove symlinks
-            for i in obsfiles :
+            for i in obsfiles:
                 sh.remove(i)
 
 
@@ -342,7 +340,7 @@ class PPCamsBDAP(BlindRun):
         for i in hmrh:
             r = i.rh
 
-            ## wait for the next HM netcdf file to be translated in grib2 format
+            # wait for the next HM netcdf file to be translated in grib2 format
             self.grab(i, comment='forecast outputs moved to grib2 format')
 
             sh.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
@@ -390,13 +388,12 @@ class PPCamsBDAP(BlindRun):
 
             sh.rmall('HMFILE', 'HM_HYBRID.nc', 'HM.nc')
 
-            ## The grib2 output may be promised for BDAP transferts : put method applied to these outputs
-            #  put these outputs in the cache ; IGA will perform the following actions.
+            # The grib2 output may be promised for BDAP transferts : put method applied to these outputs
+            # put these outputs in the cache ; IGA will perform the following actions.
             expected = [x for x in self.promises
                         if (re.match(actualname, x.rh.container.localpath()) ) ]
             for thispromise in expected:
                 thispromise.put(incache=True)
-
 
 
 class Forecast(Parallel):
@@ -437,27 +434,24 @@ class Forecast(Parallel):
         rh.contents.setmacro(macro, value)
         logger.info('Setup %s macro to %s in %s', macro, value, rh.container.actualpath())
 
-
     def prepare(self, rh, opts):
         """ Prepare the synchronisation with next tasks"""
         # to control synchronisation and promised files : use the script in iopoll method
         # The script executed via iopoll method returns the list of promised files ready
-
         if self.promises:
-              self.io_poll_kwargs = dict(vconf=rh.provider.vconf.upper())
-              self.flyput = True
+            self.io_poll_kwargs = dict(vconf=rh.provider.vconf.upper())
+            self.flyput = True
         else:
-              self.flyput = False
+            self.flyput = False
 
         super(Forecast, self).prepare(rh, opts)
-
 
     def execute(self, rh, opts):
         """Standard execution."""
 
         sh = self.system
 
-        """ First : Prepare namelist substitutions """
+        # First : Prepare namelist substitutions
 
         # Forecast namelist
         namrh = self.context.sequence.effective_inputs(
@@ -489,16 +483,16 @@ class Forecast(Parallel):
             r = i.rh
             fmterms.append(r.resource.term.fmth)
 
-        realfcterm = min(max(smterms),max(fmterms))
-        logger.info('Max(fmterms) : %s ',max(fmterms))
-        logger.info('Max(smterms) : %s ',max(smterms))
-        logger.info('Fcterm       : %s ',realfcterm)
+        realfcterm = min(max(smterms), max(fmterms))
+        logger.info('Max(fmterms) : %s ', max(fmterms))
+        logger.info('Max(smterms) : %s ', max(smterms))
+        logger.info('Fcterm       : %s ', realfcterm)
 
         first = self.basedate
         deltastr = 'PT' + str(realfcterm) + 'H'
         last = self.basedate + deltastr
 
-        if self.fcterm != str(realfcterm) :
+        if self.fcterm != str(realfcterm):
             sh.title('Forecast final term modified : {0:d} '.format(realfcterm))
 
         self._fix_nam_macro(namrh, 'YYYY1', int(first.year))
@@ -557,6 +551,7 @@ class MkStatsCams(Expresso):
             verbose = '',
         )
 
+
 class Init(Parallel):
     """Algo component for Init"""
 
@@ -585,11 +580,10 @@ class Init(Parallel):
         rh.contents.setmacro(macro, value)
         logger.info('Setup %s macro to %s in %s', macro, value, rh.container.actualpath())
 
-
     def execute(self, rh, opts):
         """Standard execution."""
         sh = self.system
-       
+
         # execution if relance_clim contains something else than 0
         sh.title('Climatological Init ?  0=No else=yes ')
 
@@ -604,22 +598,18 @@ class Init(Parallel):
             restartrh.container.cat()
             returncode = restartrh.contents.restart
 
-
-        #Run the following lines only if returncode value is not 0
+        # Run the following lines only if returncode value is not 0
         if returncode:
 
-            namrh = self.context.sequence.effective_inputs(
-            role='Namelist',
-            kind='namelist',)
+            namrh = self.context.sequence.effective_inputs(role='Namelist',
+                                                           kind='namelist')
             if len(namrh) != 1:
                 logger.critical('There must be exactly one namelist for init execution. Stop.')
                 raise ValueError('There must be exactly one namelist for init execution. Stop.')
 
-            #Retrieve the domains -- A FINALISER - la substitution se fait actuellement pour une chaine de caracteres
-            # donc avec des cotes 'GLOB22,MACC02' et on voudrait 'GLOB22','MACC02'
-            climrh = self.context.sequence.effective_inputs(
-            role='RestartChemicalClimatology',
-            kind='clim_misc')
+            # Retrieve the domains
+            climrh = self.context.sequence.effective_inputs(role='RestartChemicalClimatology',
+                                                            kind='clim_misc')
             domains = []
             ldom = []
 
@@ -629,7 +619,7 @@ class Init(Parallel):
             for i in set(domains):
                 ldom.append(i)
 
-            #Substitute date and domains in the namelist
+            # Substitute date and domains in the namelist
             namrh = namrh[0].rh
 
             self._fix_nam_macro(namrh, 'YYYY1', int(self.basedate.year))
@@ -641,12 +631,12 @@ class Init(Parallel):
             namrh.save()
             namrh.container.cat()
 
-            #Execute the binary
+            # Execute the binary
             super(Init, self).execute(rh, opts)
         else:
             # Remove the input HM* files
-            for file in sh.glob('HM' + '*'):
-                sh.remove(file)
+            for a_file in sh.glob('HM' + '*'):
+                sh.remove(a_file)
 
 
 class ControlGuess(Parallel):
@@ -680,14 +670,14 @@ class ControlGuess(Parallel):
         """Standard execution."""
         sh = self.system
         sh.title('Dans tstrestar')
-   
-        # Fa HM files 
+
+        # Fa HM files
         farh = self.context.sequence.effective_inputs(
             role='HMInitialCondition',
             kind='gridpoint')
 
         # loop on HM files
-        total=0
+        total = 0
         for i in farh:
             # Delete the link for the expected input name
             sh.rm('HMFILE')
@@ -698,16 +688,16 @@ class ControlGuess(Parallel):
             sh.symlink(r.container.localpath(), 'HMFILE')
 
             super(ControlGuess, self).execute(rh, opts)
- 
+
             # get the value written in output file
             sh.title('Climatological Init :  0=No else=yes ')
             sh.pwd()
             sh.ls()
-            sh.cat('relance_clim',output=False)
+            sh.cat('relance_clim', output=False)
 
             # get the first line of relance_clim file
             try:
-                with open('relance_clim', 'r') as fnam:
+                with io.open('relance_clim', 'r') as fnam:
                     lines = fnam.readlines()
                 returncode = lines[0]
                 # total stores the returncode values for each domain
@@ -721,15 +711,12 @@ class ControlGuess(Parallel):
         # if only one guess file is wrong, all domains will be chemical climatologic ones
         logger.info('total %d', total)
         try:
-            with open('relance_clim', 'w') as fwnam:
+            with io.open('relance_clim', 'w') as fwnam:
                 fwnam.write(str(total))
             sh.title('End of tstrestart : Climatological Inits :  0=No else=yes ')
-            sh.cat('relance_clim',output=False)
+            sh.cat('relance_clim', output=False)
         except IOError:
             logger.error('Could not open file relance_clim in write mode')
             raise
 
-
-        sh.cat('relance_clim',output=False)
- 
-
+        sh.cat('relance_clim', output=False)

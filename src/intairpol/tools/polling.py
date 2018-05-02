@@ -33,7 +33,7 @@ class IO_Poll_Mocage(addons.Addon):
         )
     )
 
-    def iopoll_mocage(self, prefix, vconf):
+    def iopoll_mocage(self, prefix, vconf):  # @UnusedVariable
         """Do the actual job of polling files prefixed by ``prefix``."""
         logger.info("Execution IOPOLL Mocage")
         # Call the script get from GCO historisation with toolkind=iopoll

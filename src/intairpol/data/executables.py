@@ -114,6 +114,7 @@ class MkTopBD(BlackBox):
         last = (basedate + fcterm).ymdh
         return '{first}\n{last}\n'.format(first=first, last=last)
 
+
 class Init(BlackBox):
     """Chemical Climatological Init"""
 
@@ -132,6 +133,7 @@ class Init(BlackBox):
         )
     ]
 
+
 class TestRestart(BlackBox):
     """Control Guess file """
 
@@ -149,4 +151,3 @@ class TestRestart(BlackBox):
             )
         )
     ]
-

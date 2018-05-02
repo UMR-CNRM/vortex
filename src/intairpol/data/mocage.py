@@ -5,10 +5,9 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 
 import footprints
 
-from vortex.data.contents     import TextContent
+from vortex.data.contents import TextContent
 from vortex.data.flow import FlowResource, GeoFlowResource
-from vortex.syntax.stdattrs import term, a_domain
-
+from vortex.syntax.stdattrs import term
 
 #: Automatic export of  class
 __all__ = [ ]
@@ -125,6 +124,7 @@ class ObsFire(GeoFlowResource):
             term    = self.term.fmthm
         )
 
+
 class TopBoundaryCondition(FlowResource):
     """Boundary conditions on top of the model, e.g. mocage."""
 
@@ -194,6 +194,7 @@ class PostPeriodicStats(GeoFlowResource):
 
 class RestartFlagContent(TextContent):
     """Specialisation of the TextContent"""
+
     @property
     def restart(self):
         """Retrieves content file"""

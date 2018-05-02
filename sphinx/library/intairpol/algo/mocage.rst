@@ -23,6 +23,16 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ControlGuess
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Init
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: CorrOmegaSurf
    :show-inheritance:
    :members:

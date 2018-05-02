@@ -53,9 +53,8 @@ class MonthClimMisc(GenericClim):
                     default = 'clim_[model]_[source]'
                 ),
                 source = dict(
-                    type =str,
                 ),
-                 model = dict(
+                model = dict(
                     values  = ['mocage'],
                     default = 'mocage',
                 ),
