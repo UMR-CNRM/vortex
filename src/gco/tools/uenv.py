@@ -17,7 +17,7 @@ __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
 
-_DATASTORE_KIND = 'uenv_registred_cycle'
+_DATASTORE_KIND = 'uenv_registered_cycle'
 
 _UENV_IGNORE_RE = re.compile(r'^(?:\s*(?:#|//|!).*|\s*)$')
 _UENV_LINE_RE = re.compile(r'^[^=]+=')

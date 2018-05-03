@@ -187,7 +187,7 @@ class OpJobAssistantTest(JobAssistant):
         t = vortex.ticket()
         from gco.tools import genv
         if cycle in genv.cycles():
-            logger.info('Cycle %s already registred', cycle)
+            logger.info('Cycle %s already registered', cycle)
         else:
             if t.env.OP_GCOCACHE:
                 genvdef = t.sh.path.join(t.env.OP_GCOCACHE, 'genv', cycle + '.genv')
