@@ -399,8 +399,14 @@ class XXTContent(IndexedTable):
             return None
         else:
             value = None
+            try:
+                t = Time(t)
+            except (ValueError, TypeError):
+                return None
             tkey = self.get(t.fmthm, self.get(six.text_type(t.hour), None))
-            if tkey is not None:
+            if tkey is None:
+                logger.warning('No entry found in the XXT file for term = %s.', t.fmthm)
+            else:
                 try:
                     value = tkey[n]
                 except IndexError:
