@@ -436,6 +436,8 @@ class FullPosBDAP(FullPos):
         )]
         initrh.sort(key=lambda rh: rh.resource.term)
 
+        do_fix_input_clim = self.do_climfile_fixer(rh, convkind='modelclim')
+
         ininc = self.naming_convention('ic', rh)
         infile = ininc()
 
@@ -445,6 +447,13 @@ class FullPosBDAP(FullPos):
             thisdate = r.resource.date + r.resource.term
             thismonth = thisdate.month
             logger.info('Fullpos <month:%s>' % thismonth)
+
+            if do_fix_input_clim:
+                self.climfile_fixer(rh, convkind='modelclim',
+                                    month=thismonth, geo=r.resource.geometry,
+                                    inputrole=(re.compile('^Clim'), re.compile('Clim$')),
+                                    inputkind='clim_model')
+
             thesenames = self.all_localclim_fixer(rh, thismonth)
 
             # Set a local storage place

@@ -8,7 +8,6 @@ import glob
 import io
 import os
 import shutil
-import six
 
 import footprints
 
@@ -113,7 +112,7 @@ def process_namelist(filename, directives,
             tntlog.warning('diff: ' + str(cb))
 
     with io.open(target_namfile, 'w', encoding='ascii') as fh_namout:
-        fh_namout.write(six.u(initial_nam.dumps(sorting=sorting)))
+        fh_namout.write(initial_nam.dumps(sorting=sorting))
 
 
 def process_tnt_stack(directive, sorting=SECOND_ORDER_SORTING):
