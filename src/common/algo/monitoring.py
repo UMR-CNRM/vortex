@@ -68,9 +68,9 @@ class OdbMonitoring(OdbProcess):
         sh = self.system
 
         # Looking for input observations
-        obsmatchup = [
+        obsatm = [
             x for x in self.input_obs()
-            if x.resource.stage.startswith('matchup') and x.resource.part == 'virtual'
+            if (x.resource.stage.startswith('matchup') or x.resource.stage.startswith('screening')) and x.resource.part == 'virtual'
         ]
 
         obssurf = [
@@ -79,14 +79,14 @@ class OdbMonitoring(OdbProcess):
         ]
 
         # One database at a time
-        if not obsmatchup and self.stage == 'atm':
-            raise ValueError('Could not find any ODB matchup input')
+        if not obsatm and self.stage == 'atm':
+            raise ValueError('Could not find any ODB matchup or screening ECMA database')
         if not obssurf and self.stage == 'surf':
-            raise ValueError('Could not find any ODB surface input')
+            raise ValueError('Could not find any ODB surface ECMA database')
 
         # Set actual ODB paths
-        if obsmatchup:
-            ecma = obsmatchup.pop(0)
+        if obsatm:
+            ecma = obsatm.pop(0)
         else:
             ecma = obssurf.pop(0)
         ecma_path = sh.path.abspath(ecma.container.localpath())
