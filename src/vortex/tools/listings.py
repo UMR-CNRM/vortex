@@ -8,7 +8,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from collections import OrderedDict
 import io
 
-from arpifs_listings import norms, jo_tables, listings
+from arpifs_listings import norms, jo_tables, cost_functions, listings
 import footprints
 
 from . import addons
@@ -203,10 +203,12 @@ class ArpifsListingsFormatAdapter(footprints.FootprintBase):
         self._lines = None
         self._normset = None
         self._jotables = None
+        self._costs = None
         self._end_is_reached = None
         if not self.fmtdelayedopen:
             self.normset
             self.jotables
+            self.costs
 
     @property
     def lines(self):
@@ -240,6 +242,13 @@ class ArpifsListingsFormatAdapter(footprints.FootprintBase):
         if self._jotables is None:
             self._jotables = jo_tables.JoTables(self.filename, self.lines)
         return self._jotables
+
+    @property
+    def cost_functions(self):
+        """Return a :class:`arpifs_listings.jo_tables.JoTables` object."""
+        if self._costs is None:
+            self._costs = cost_functions.CostFunctions(self.filename, self.lines)
+        return self._costs
 
     def __len__(self):
         """The number of lines in the listing."""

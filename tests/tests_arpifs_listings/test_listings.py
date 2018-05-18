@@ -19,11 +19,14 @@ def _find_testfile(fname):
 class TestListings(unittest.TestCase):
 
     L1SIZE = 3000
+    L2SIZE = 8071
 
     def setUp(self):
         self.l1File = _find_testfile('listing_screen_li1')
         self.l1N = listings.OutputListing(self.l1File, 'norms')
         self.l1J = listings.OutputListing(self.l1File, 'Jo-tables')
+        self.l2File = _find_testfile('listing_minim_li5')
+        self.l2J = listings.OutputListing(self.l2File, 'costs')
 
     def test_single(self):
         self.assertEqual(len(self.l1N), self.L1SIZE)
@@ -39,6 +42,11 @@ class TestListings(unittest.TestCase):
         self.assertEqual(self.l1J.patterns_count, 1)
         self.assertIsInstance(self.l1J.jo_tables, jo_tables.JoTables)
         self.assertEqual(len(self.l1J), self.L1SIZE)
+
+        self.assertEqual(len(self.l2J), self.L2SIZE)
+        self.l2J.parse_patterns(flush_after_reading=True)
+        self.assertEqual(self.l2J.patterns_count, 7)
+        self.assertEqual(len(self.l2J), self.L2SIZE)
 
     def test_diff_easy(self):
         self.l1N.look_for_end()
