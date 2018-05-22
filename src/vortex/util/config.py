@@ -24,6 +24,8 @@ logger = footprints.loggers.getLogger(__name__)
 
 _RE_AUTO_TPL = re.compile(r'^@([^/].*\.tpl)$')
 
+_RE_ENCODING = re.compile(r"^[ \t\v]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)")
+
 
 def load_template(t, tplfile, encoding=None):
     """
@@ -32,6 +34,8 @@ def load_template(t, tplfile, encoding=None):
 
     :param str encoding: Specify an encoding in order to get a properly decoded
                          unicode string.
+                         If "script", the encoding is read in the
+                         file if it is present, set to None else.
     """
     autofile = _RE_AUTO_TPL.match(tplfile)
     if autofile is None:
@@ -52,8 +56,34 @@ def load_template(t, tplfile, encoding=None):
                 raise ValueError('Template file not found: <{}>'.format(tplfile))
     try:
         import string
-        with io.open(tplfile, 'r', encoding=encoding) as tplfd:
-            tpl = string.Template(tplfd.read())
+        # Initialize encoding
+        actual_encoding = encoding
+        # Treat the case encoding = "script"
+        if actual_encoding == "script":
+            with io.open(tplfile, 'r') as tpfld_tmp:
+                i = 0
+                test = False
+                while i < 5 and not test:
+                    line = tpfld_tmp.readline()
+                    encoding_match = _RE_ENCODING.match(line)
+                    if encoding_match:
+                        test = True
+                        actual_encoding = encoding_match.group(1)
+                        print(actual_encoding)
+                    else:
+                        i += 1
+            if not test:
+                actual_encoding = None
+        # Read the template and delete the encoding line if present
+        with io.open(tplfile, 'r', encoding=actual_encoding) as tpfld:
+            if encoding == "script" and actual_encoding is not None:
+                tpl_content = tpfld.readlines()
+                line = tpl_content[i]
+                tpl_content.remove(line)
+                tpl = "".join(tpl_content)
+                tpl = string.Template(tpl)
+            else:
+                tpl = string.Template(tpfld.read())
         tpl.srcfile = tplfile
     except Exception as pb:
         logger.error('Could not read template <%s>', str(pb))
