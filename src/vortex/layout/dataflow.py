@@ -192,6 +192,17 @@ class Section(object):
                 print(' ', k.ljust(16), ':', v)
         self.rh.quickview(indent=1)
 
+    def as_dict(self):
+        """Export the section in a dictionary"""
+        outdict = dict()
+        for k, v in sorted(vars(self).items()):
+            if k == "_rh":
+                outdict["rh"] = v.as_dict()
+            elif k.startswith('_'):
+                outdict[k[1:]] = v
+            else:
+                outdict[k] = v
+        return outdict
 
 class Sequence(footprints.observers.Observer):
     """

@@ -8,6 +8,9 @@ General purpose functions that can be used in conjunction with the
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
+import json
+
 from footprints import proxy as fpx
 
 from vortex.data.stores import FunctionStoreCallbackError
@@ -50,3 +53,19 @@ def mergecontents(options):
     virtualcont = fpx.container(incore=True)
     newcontent.rewrite(virtualcont)
     return virtualcont
+
+
+def storesequence(options):
+    """
+    Store the content of the sequence into a json file
+    :return: a file like object
+    """
+    ctx = sessions.current().context
+    sequence = ctx.sequence.effective_inputs()
+    if len(sequence) == 0:
+        raise FunctionStoreCallbackError("Nothing to store: the effective inputs sequence is void.")
+    outlist = list()
+    for seq in sequence:
+        seq_dict = seq.as_dict()
+        outlist.append(seq_dict)
+    return six.StringIO(json.dumps(outlist, indent=4))
