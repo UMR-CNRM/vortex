@@ -8,6 +8,7 @@ Configuration management through ini files.
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import io
+import itertools
 import re
 import six
 from six.moves.configparser import SafeConfigParser, NoOptionError, NoSectionError, InterpolationDepthError
@@ -24,7 +25,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 _RE_AUTO_TPL = re.compile(r'^@([^/].*\.tpl)$')
 
-_RE_ENCODING = re.compile(r"^[ \t\v]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)")
+_RE_ENCODING = re.compile(r"^\s*#.*?coding[=:]\s*([-\w.]+)")
 
 
 def load_template(t, tplfile, encoding=None):
@@ -56,32 +57,25 @@ def load_template(t, tplfile, encoding=None):
                 raise ValueError('Template file not found: <{}>'.format(tplfile))
     try:
         import string
-        # Initialize encoding
-        actual_encoding = encoding
         # Treat the case encoding = "script"
-        if actual_encoding == "script":
-            with io.open(tplfile, 'r') as tpfld_tmp:
-                i = 0
-                test = False
-                while i < 5 and not test:
-                    line = tpfld_tmp.readline()
+        if encoding == "script":
+            actual_encoding = None
+            # To determine the encoding, open the file with the default encoding
+            # (ignoring decoding errors) and look for the 'coding' comment
+            with io.open(tplfile, 'r', errors='replace') as tpfld_tmp:
+                # Only inspect the fist 5 lines (in theory the fist two line would be enough)
+                for iencoding, line in enumerate(itertools.islice(tpfld_tmp, 5)):
                     encoding_match = _RE_ENCODING.match(line)
                     if encoding_match:
-                        test = True
                         actual_encoding = encoding_match.group(1)
-                        print(actual_encoding)
-                    else:
-                        i += 1
-            if not test:
-                actual_encoding = None
+                        break
+        else:
+            actual_encoding = encoding
         # Read the template and delete the encoding line if present
         with io.open(tplfile, 'r', encoding=actual_encoding) as tpfld:
             if encoding == "script" and actual_encoding is not None:
-                tpl_content = tpfld.readlines()
-                line = tpl_content[i]
-                tpl_content.remove(line)
-                tpl = "".join(tpl_content)
-                tpl = string.Template(tpl)
+                tpl = string.Template("".join([l for (i, l) in enumerate(tpfld)
+                                               if i != iencoding]))
             else:
                 tpl = string.Template(tpfld.read())
         tpl.srcfile = tplfile
