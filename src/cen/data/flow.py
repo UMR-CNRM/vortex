@@ -227,8 +227,10 @@ class Prep(InitialCondition):
         return 'PREP_' + self.date.ymdh + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
 
-class SnowObs(GeoFlowResource):
-
+class SnowObsOld(GeoFlowResource):
+    '''
+    Deprecated class
+    '''
     _footprint = [
         dict(
             info = 'Observations of snow for model evaluation',
@@ -277,7 +279,134 @@ class SnowObs(GeoFlowResource):
 
         return self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
+class SnowObs(ObsRaw):
+    '''
+    @author : B. Cluzet
+    New abstract class for snow obs (any geom, any time span, any sensor)
+    '''
+    _abstract = True
+    
+    _footprint = [
+        dict(
+            info = 'Snow observations',
+            attr = dict(
+                kind = dict(
+                    values = ['SnowObservations'],
+                ),
 
+                model = dict(
+                    values = ['obs']
+                ),
+
+                nativefmt = dict(
+                    values  = ['netcdf', 'nc'],
+                    default = 'netcdf',
+                    remap = dict(autoremap = 'first'),
+                ),
+                geometry = dict(
+                    info = "The resource's massif geometry.",
+                    type = MassifGeometry,
+                ),
+                # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
+                cutoff = dict(
+                    optional = True)
+            )
+        )
+    ]
+
+    _extension_remap = dict(netcdf='nc')
+    
+    @property
+    def period(self):
+        pass
+    
+    @property
+    def realkind(self):
+        return "obs"
+
+    def cenvortex_basename(self):
+        print "CENVORTEX_BASENAME"
+        print self.realkind + "_" + self.geometry.area + "_" + self.period + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
+
+        return self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
+
+
+class Snowobs_timeseries(SnowObs):
+    '''
+    @author : B. Cluzet
+    Class for timeseries of snow obs (any geom, any sensor).
+    '''   
+    
+    footprint = [
+        dict(
+            info = 'Timeseries of snow observations',
+            attr = dict(
+                datebegin = dict(
+                    info = "First date of the observation file",
+                    type = Date,
+                ),
+                dateend = dict(
+                    info = "Last date of the observation file",
+                    type = Date,
+                ),
+                part = dict(
+                    info = "Description of the obs (var, sensor,location...)",
+                    values= ['MODIS', 'insitu','SD','SWE',"snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"]
+                ),        
+            )
+        )
+    ]   
+    @property
+    def period(self):
+        return self.datebegin.y + '_' + self.dateend.y
+    
+    @property
+    def realkind(self):
+        return self.realkind + '_' + self.part    
+    
+    def cenvortex_basename(self):
+        print "CENVORTEX_BASENAME"
+        name = self.realkind + "_" + self.geometry.area + "_" + self.period + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
+        print name
+        return name
+ 
+class Snowobs_1date(SnowObs):
+    '''
+    @author : B. Cluzet
+    Class for snow obs. (any geom, any sensor) at one date.
+    '''   
+    
+    footprint = [
+        dict(
+            info = 'snow observation',
+            attr = dict(
+                dateobs = dict(
+                    info = "date of the observation file",
+                    type = Date,
+                ),
+                part = dict(
+                    info = "Description of the obs (var, sensor,location...)",
+                    values= ['MODIS', 'insitu','SD','SWE',"snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"]
+                ),        
+            )
+        )
+    ]
+       
+    @property
+    def period(self):
+        return self.dateobs.y
+    
+    @property
+    def realkind(self):
+        return self.realkind + '_' + self.part    
+    
+    def cenvortex_basename(self):
+        print "CENVORTEX_BASENAME"
+        name = self.realkind + "_" + self.geometry.area + "_" + self.period + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
+        print name
+        return name
+
+        
 class ScoresSnow(SurfaceIO):
     """Class for the safrane output files."""
     _footprint = [
