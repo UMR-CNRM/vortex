@@ -70,12 +70,14 @@ class OdbMonitoring(OdbProcess):
         # Looking for input observations
         obsatm = [
             x for x in self.input_obs()
-            if (x.resource.stage.startswith('matchup') or x.resource.stage.startswith('screening')) and x.resource.part == 'virtual'
+            if (x.rh.resource.stage.startswith('matchup') or
+                x.rh.resource.stage.startswith('screening')) and x.rh.resource.part == 'virtual'
         ]
 
         obssurf = [
             x for x in self.input_obs()
-            if x.resource.stage.startswith('canari') and (x.resource.part == 'surf' or x.resource.part == 'ground')
+            if x.rh.resource.stage.startswith('canari') and (x.rh.resource.part == 'surf' or
+                                                             x.rh.resource.part == 'ground')
         ]
 
         # One database at a time
@@ -89,7 +91,7 @@ class OdbMonitoring(OdbProcess):
             ecma = obsatm.pop(0)
         else:
             ecma = obssurf.pop(0)
-        ecma_path = sh.path.abspath(ecma.container.localpath())
+        ecma_path = sh.path.abspath(ecma.rh.container.localpath())
         self.env.ODB_SRCPATH_ECMA = ecma_path
         logger.info('Setting ODB env %s = %s.', 'ODB_SRCPATH_ECMA', ecma_path)
         self.env.ODB_DATAPATH_ECMA = ecma_path

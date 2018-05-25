@@ -207,10 +207,10 @@ class IFSODB(IFSParallel, odb.OdbComponent):
     def lookupodb(self, fatal=True):
         """Return a list of effective input resources which are odb observations."""
         allodb = [
-            x.rh for x in self.context.sequence.effective_inputs(kind = 'observations')
+            x for x in self.context.sequence.effective_inputs(kind = 'observations')
             if x.rh.container.actualfmt == 'odb'
         ]
-        allodb.sort(key=lambda rh: rh.resource.part)
+        allodb.sort(key=lambda s: s.rh.resource.part)
         if not allodb and fatal:
             logger.critical('Missing ODB input data for %s', self.fullname())
             raise ValueError('Missing ODB input data')
@@ -241,24 +241,24 @@ class Canari(IFSODB):
         sh = self.system
 
         # Looking for input observations
-        obsodb = [ x for x in self.lookupodb() if x.resource.part.startswith('surf') ]
+        obsodb = [ x for x in self.lookupodb() if x.rh.resource.part.startswith('surf') ]
 
         if not obsodb:
             logger.critical('No surface obsdata in inputs')
             raise ValueError('No surface obsdata for canari')
 
-        rsurf = obsodb.pop()
+        ssurf = obsodb.pop()
 
         if obsodb:
             logger.error('More than one surface obsdata provided')
-            logger.error('Using : %s / %s', rsurf.resource.layout, rsurf.resource.part)
-            for robs in obsodb:
-                logger.error('Skip : %s / %s', robs.resource.layout, robs.resource.part)
+            logger.error('Using : %s / %s', ssurf.rh.resource.layout, ssurf.rh.resource.part)
+            for sobs in obsodb:
+                logger.error('Skip : %s / %s', sobs.rh.resource.layout, sobs.rh.resource.part)
 
         # Defaults settings
-        self.virtualdb = rsurf.resource.layout
-        self.date      = rsurf.resource.date
-        cma_path       = sh.path.abspath(rsurf.container.localpath())
+        self.virtualdb = ssurf.rh.resource.layout
+        self.date      = ssurf.rh.resource.date
+        cma_path       = sh.path.abspath(ssurf.rh.container.localpath())
         sh.cp(sh.path.join(cma_path, 'IOASSIGN'), 'IOASSIGN')
         super(Canari, self).prepare(rh, opts)
 
@@ -279,6 +279,9 @@ class Canari(IFSODB):
             ODB_CCMA_LEFT_MARGIN     = self.slots.leftmargin,
             ODB_CCMA_RIGHT_MARGIN    = self.slots.rightmargin,
         )
+
+        # Fix the input DB intent
+        self.odb.is_rw_or_overwrite_method(ssurf)
 
 
 class Screening(IFSODB):
@@ -311,14 +314,14 @@ class Screening(IFSODB):
 
         # Assume that the first one looks like the others (something to care of later)
         odbtop = allodb[0]
-        self.virtualdb = odbtop.resource.layout
-        self.date      = odbtop.resource.date
+        self.virtualdb = odbtop.rh.resource.layout
+        self.date      = odbtop.rh.resource.date
 
         # Perform the premerging stuff
         self.odb.ioassign_merge(
             layout   = self.virtualdb,
             ioassign = self.ioassign,
-            odbnames = [ x.resource.part for x in allodb ],
+            odbnames = [ x.rh.resource.part for x in allodb ],
         )
 
         # Prepare CCMA output
@@ -341,6 +344,10 @@ class Screening(IFSODB):
 
         # Defaults settings
         super(Screening, self).prepare(rh, opts)
+
+        # Fix the input databases intent
+        for section in allodb:
+            self.odb.is_rw_or_overwrite_method(section)
 
         # Some extra settings
         self.env.update(
@@ -400,7 +407,7 @@ class IFSODBCCMA(IFSODB):
 
         # Looking for input observations
         allodb  = self.lookupodb()
-        allccma = [ x for x in allodb if x.resource.layout.lower() == 'ccma' ]
+        allccma = [ x for x in allodb if x.rh.resource.layout.lower() == 'ccma' ]
 
         if not allccma:
             logger.critical('Missing CCMA input data for ' + self.kind)
@@ -408,18 +415,21 @@ class IFSODBCCMA(IFSODB):
 
         # Set env and IOASSIGN
         ccma = allccma.pop()
-        ccma_path = sh.path.abspath(ccma.container.localpath())
+        ccma_path = sh.path.abspath(ccma.rh.container.localpath())
         sh.cp(sh.path.join(ccma_path, 'IOASSIGN'), 'IOASSIGN')
         self.env.update(
             ODB_SRCPATH_CCMA  = ccma_path,
             ODB_DATAPATH_CCMA = ccma_path,
         )
 
+        # Fix the input database intent
+        self.odb.is_rw_or_overwrite_method(ccma)
+
         # Look for channels namelists and set appropriate links
         self.setchannels(opts)
 
         # Defaults settings
-        self.date = ccma.resource.date
+        self.date = ccma.rh.resource.date
         super(IFSODBCCMA, self).prepare(rh, opts)
 
 
