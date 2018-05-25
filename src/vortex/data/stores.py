@@ -1583,7 +1583,7 @@ class CacheStore(Store):
         rc = self.cache.insert(
             remote['path'],
             local,
-            intent = 'inout',
+            intent = _CACHE_PUT_INTENT,
             fmt    = options.get('fmt'),
             info   = options.get('rhandler', None),
         )
