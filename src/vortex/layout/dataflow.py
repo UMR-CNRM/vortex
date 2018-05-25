@@ -202,6 +202,8 @@ class Section(object):
                 outdict[k[1:]] = v
             else:
                 outdict[k] = v
+        # Add the latest stage
+        outdict['stage'] = self.stage
         return outdict
 
 class Sequence(footprints.observers.Observer):

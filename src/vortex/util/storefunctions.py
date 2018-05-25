@@ -55,17 +55,23 @@ def mergecontents(options):
     return virtualcont
 
 
-def storesequence(options):
+def dumpinputs(options):
     """
-    Store the content of the sequence into a json file
+    Dump the content of the sequence's effective inputs into a JSON file
+
+    :note: the effective=False option can be provided. If so, all input sections
+           are dumped.
+
     :return: a file like object
     """
-    ctx = sessions.current().context
-    sequence = ctx.sequence.effective_inputs()
+    t = sessions.current()
+    ctx = t.context
+    if vartrue.match(options.get('effective', ['true', ]).pop()):
+        sequence = ctx.sequence.effective_inputs()
+    else:
+        sequence = ctx.sequence.inputs()
     if len(sequence) == 0:
         raise FunctionStoreCallbackError("Nothing to store: the effective inputs sequence is void.")
-    outlist = list()
-    for seq in sequence:
-        seq_dict = seq.as_dict()
-        outlist.append(seq_dict)
-    return six.StringIO(json.dumps(outlist, indent=4))
+    fileout = six.StringIO()
+    t.sh.json_dump([s.as_dict() for s in sequence], fileout, indent=4)
+    return fileout
