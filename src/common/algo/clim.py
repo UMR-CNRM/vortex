@@ -108,6 +108,9 @@ class FinalizePGD(AlgoComponent):
     """
     Finalise PGD file: report spectrally optimized orography from Clim to PGD,
     and add E-zone.
+
+    .. deprecated:: 1.2.4
+       Use :class:`SetFilteredOrogInPGD` instead.
     """
 
     _footprint = dict(
@@ -172,6 +175,52 @@ class FinalizePGD(AlgoComponent):
                 pgdout.writefield(fld, compression=epypgd.fieldscompression.get(f, None))
 
 
+class SetFilteredOrogInPGD(AlgoComponent):
+    """
+    Report spectrally optimized, filtered orography from Clim to PGD.
+    """
+
+    _footprint = dict(
+        info = "Report spectrally optimized, filtered orography from Clim to PGD.",
+        attr = dict(
+            kind = dict(
+                values   = ['set_filtered_orog_in_pgd'],
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(SetFilteredOrogInPGD, self).__init__(*args, **kwargs)
+        from common.util.usepygram import is_epygram_available
+        ev = '1.3.2'
+        self.algoassert(is_epygram_available(ev), "Epygram >= " + ev +
+                        " is needed here")
+
+    def execute(self, rh, opts):  # @UnusedVariable
+        """Convert SURFGEOPOTENTIEL from clim to SFX.ZS in pgd."""
+        from common.util.usepygram import epy_env_prepare
+        from bronx.meteo.constants import g0
+        # Handle resources
+        clim = self.context.sequence.effective_inputs(role=('Clim',))
+        self.algoassert(len(clim) == 1, "One and only one Clim to be provided")
+        pgdin = self.context.sequence.effective_inputs(role=('InputPGD',))
+        self.algoassert(len(pgdin) == 1, "One and only one InputPGD to be provided")
+        # copy fields
+        with epy_env_prepare(self.ticket):
+            epyclim = clim[0].rh.contents.data
+            epypgd = pgdin[0].rh.contents.data
+            epyclim.open()
+            epypgd.open(openmode='a')
+            # read spectrally fitted surface geopotential
+            g = epyclim.readfield('SURFGEOPOTENTIEL')
+            # convert to SURFEX orography
+            g.operation('/', g0)
+            g.fid['FA'] = 'SFX.ZS'
+            # write as orography
+            epypgd.writefield(g, compression=epypgd.fieldscompression.get(g.fid['FA'], None))
+            epypgd.close()
+
+
 class MakeLAMDomain(AlgoComponent):
     """
     Wrapper to call Epygram domain making functions and generate
@@ -213,6 +262,12 @@ class MakeLAMDomain(AlgoComponent):
                 optional = True,
                 default = 'quadratic',
             ),
+            Ezone_in_pgd = dict(
+                info = "Add E-zone sizes in BuildPGD namelist.",
+                optional = True,
+                type = bool,
+                default = False
+            ),
             # plot
             illustration = dict(
                 info = "Create the domain illustration image.",
@@ -240,7 +295,7 @@ class MakeLAMDomain(AlgoComponent):
     def __init__(self, *args, **kwargs):
         super(MakeLAMDomain, self).__init__(*args, **kwargs)
         from common.util.usepygram import is_epygram_available
-        ev = '1.2.14'
+        ev = '1.3.2'
         self.algoassert(is_epygram_available(ev), "Epygram >= " + ev +
                         " is needed here")
         self._check_geometry()
@@ -284,7 +339,8 @@ class MakeLAMDomain(AlgoComponent):
                                     **self.plot_params)
         namelists = dm.output.lam_geom2namelists(geometry,
                                                  truncation=self.truncation,
-                                                 orography_subtruncation=self.orography_truncation)
+                                                 orography_subtruncation=self.orography_truncation,
+                                                 Ezone_in_pgd=self.Ezone_in_pgd)
         dm.output.write_namelists(namelists, prefix=self.geometry.tag)
 
 
