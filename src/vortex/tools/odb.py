@@ -9,6 +9,8 @@ import six
 
 from bronx.stdtypes import date as bdate
 import footprints
+
+from vortex.layout.dataflow import intent
 from . import folder
 
 #: No automatic export
@@ -74,6 +76,14 @@ class OdbDriver(object):
             self.env.default(
                 IOASSIGN = self.sh.path.abspath('IOASSIGN'),
             )
+
+    def is_rw_or_overwrite_method(self, dbsection):
+        """If the input database is not fetch with intent=inout, add the proper env variable."""
+        if dbsection.intent == intent.IN:
+            if not int(self.env.get('ODB_OVERWRITE_METHOD', 0)):
+                logger.info('The input ODB database: %s is read-only. Setting ODB_OVERWRITE_METHOD to 1.',
+                            dbsection.rh.container.localpath())
+                self.env.ODB_OVERWRITE_METHOD = 1
 
     def ioassign_create(self, ioassign='ioassign.x', npool=1, layout='ecma'):
         """Build IO-Assign table."""

@@ -150,8 +150,8 @@ class _OdbProcessCommons(FootprintCopier):
     @staticmethod
     def input_obs(self):
         """Find any observations with the proper kind, without any regards to role."""
-        obsall = [x.rh for x in self.context.sequence.effective_inputs(kind = 'observations')]
-        obsall.sort(key=lambda rh: rh.resource.part)
+        obsall = [x for x in self.context.sequence.effective_inputs(kind = 'observations')]
+        obsall.sort(key=lambda s: s.rh.resource.part)
         return obsall
 
     @staticmethod
@@ -289,7 +289,8 @@ class Raw2ODBparallel(TaylorOdbProcess):
         # Looking for valid raw observations
         sizemin = self.env.VORTEX_OBS_SIZEMIN or 80
         obsok   = list()
-        for rhobs in obsall:
+        for secobs in obsall:
+            rhobs = secobs.rh
             if rhobs.resource.nativefmt == 'odb':
                 logger.warning('Observations set [%s] is ODB ready',
                                rhobs.resource.part)
@@ -677,7 +678,7 @@ class OdbAverage(OdbProcess):
         sh = self.system
 
         # Looking for input observations
-        obsall = [x for x in self.input_obs() if x.resource.layout == 'ecma']
+        obsall = [x for x in self.input_obs() if x.rh.resource.layout == 'ecma']
 
         # One database at a time
         if not obsall:
@@ -689,8 +690,8 @@ class OdbAverage(OdbProcess):
         sh.mkdir(self.layout_new)
         ccma_path = sh.path.abspath(self.layout_new)
         ccma_io   = sh.path.join(ccma_path, 'IOASSIGN')
-        self.layout_in = ecma.resource.layout.upper()
-        ecma_path = sh.path.abspath(ecma.container.localpath())
+        self.layout_in = ecma.rh.resource.layout.upper()
+        ecma_path = sh.path.abspath(ecma.rh.container.localpath())
         ecma_pool = sh.path.join(ecma_path, '1')
 
         if not sh.path.isdir(ecma_pool):
@@ -769,7 +770,7 @@ class OdbAverage(OdbProcess):
                     fd.write(six.text_type(slurp))
                 sh.rm(ccma)
 
-        sh.mv(self.layout_new, self.layout_in + '.' + self.bingo.resource.part)
+        sh.mv(self.layout_new, self.layout_in + '.' + self.bingo.rh.resource.part)
 
         super(OdbAverage, self).postfix(rh, opts)
 
@@ -791,28 +792,32 @@ class OdbMatchup(OdbProcess):
         sh = self.system
 
         # Looking for input observations
-        obsscr = [
+        obsscr_virtual = [
             x for x in self.input_obs()
-            if x.resource.stage.startswith('screen') and x.resource.part == 'virtual'
+            if x.rh.resource.stage.startswith('screen') and x.rh.resource.part == 'virtual'
+        ]
+        obsscr_parts = [
+            x for x in self.input_obs()
+            if x.rh.resource.stage.startswith('screen') and x.rh.resource.part != 'virtual'
         ]
         obscompressed = [
             x for x in self.input_obs()
-            if x.resource.stage.startswith('min') or x.resource.stage.startswith('traj')
+            if x.rh.resource.stage.startswith('min') or x.rh.resource.stage.startswith('traj')
         ]
 
         # One database at a time
-        if not obsscr:
+        if not obsscr_virtual:
             raise ValueError('Could not find any ODB screening input')
         if not obscompressed:
             raise ValueError('Could not find any ODB minim input')
 
         # Set actual layout and path
-        ecma = obsscr.pop(0)
+        ecma = obsscr_virtual.pop(0)
         ccma = obscompressed.pop(0)
-        self.layout_screening  = ecma.resource.layout
-        self.layout_compressed = ccma.resource.layout
-        ecma_path = sh.path.abspath(ecma.container.localpath())
-        ccma_path = sh.path.abspath(ccma.container.localpath())
+        self.layout_screening  = ecma.rh.resource.layout
+        self.layout_compressed = ccma.rh.resource.layout
+        ecma_path = sh.path.abspath(ecma.rh.container.localpath())
+        ccma_path = sh.path.abspath(ccma.rh.container.localpath())
         self.env.ODB_SRCPATH_CCMA  = ccma_path
         self.env.ODB_DATAPATH_CCMA = ccma_path
         self.env.ODB_SRCPATH_ECMA  = ecma_path
@@ -827,6 +832,11 @@ class OdbMatchup(OdbProcess):
 
         # Let ancesters handling most of the env setting
         super(OdbMatchup, self).prepare(rh, opts)
+
+        # Fix the input database intent
+        self.odb.is_rw_or_overwrite_method(ecma)
+        for section in obsscr_parts:
+            self.odb.is_rw_or_overwrite_method(section)
 
     def spawn_command_options(self):
         """Prepare command line options to binary."""
