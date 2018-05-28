@@ -19,6 +19,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: SetFilteredOrogInPGD
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: MakeLAMDomain
    :show-inheritance:
    :members:
