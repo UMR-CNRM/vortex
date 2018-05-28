@@ -109,8 +109,7 @@ class FinalizePGD(AlgoComponent):
     Finalise PGD file: report spectrally optimized orography from Clim to PGD,
     and add E-zone.
 
-    .. deprecated:: 1.2.4
-       Use :class:`SetFilteredOrogInPGD` instead.
+    .. deprecated:: since Vortex 1.3.0, use :class:`SetFilteredOrogInPGD` instead.
     """
 
     _footprint = dict(
@@ -262,7 +261,7 @@ class MakeLAMDomain(AlgoComponent):
                 optional = True,
                 default = 'quadratic',
             ),
-            Ezone_in_pgd = dict(
+            e_zone_in_pgd = dict(
                 info = "Add E-zone sizes in BuildPGD namelist.",
                 optional = True,
                 type = bool,
@@ -295,7 +294,7 @@ class MakeLAMDomain(AlgoComponent):
     def __init__(self, *args, **kwargs):
         super(MakeLAMDomain, self).__init__(*args, **kwargs)
         from common.util.usepygram import is_epygram_available
-        ev = '1.3.2'
+        ev = '1.3.2' if self.e_zone_in_pgd else '1.2.14'
         self.algoassert(is_epygram_available(ev), "Epygram >= " + ev +
                         " is needed here")
         self._check_geometry()
@@ -337,10 +336,13 @@ class MakeLAMDomain(AlgoComponent):
                                     out='.'.join([self.geometry.tag,
                                                   self.illustration_fmt]),
                                     **self.plot_params)
+        dm_extra_params = dict()
+        if self.self.e_zone_in_pgd:
+            dm_extra_params = dict(Ezone_in_pgd=self.e_zone_in_pgd)
         namelists = dm.output.lam_geom2namelists(geometry,
                                                  truncation=self.truncation,
                                                  orography_subtruncation=self.orography_truncation,
-                                                 Ezone_in_pgd=self.Ezone_in_pgd)
+                                                 ** dm_extra_params)
         dm.output.write_namelists(namelists, prefix=self.geometry.tag)
 
 
