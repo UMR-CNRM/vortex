@@ -156,13 +156,16 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
                 if myvalues:
                     # Ensure that the attribute types are consistent
                     if self._fasttrack_type[myattr] is None:
-                        self._fasttrack_type[myattr] = myfp.attr[myattr].get('type', str)
+                        self._fasttrack_type[myattr] = myfp.attr[myattr].get('type', six.text_type)
                         self._fasttrack_typeargs[myattr] = myfp.attr[myattr].get('args', dict())
                     else:
-                        if not (self._fasttrack_type[myattr] is myfp.attr[myattr].get('type', str) and
+                        if not (self._fasttrack_type[myattr] is myfp.attr[myattr].get('type', six.text_type) and
                                 self._fasttrack_typeargs[myattr] == myfp.attr[myattr].get('args', dict())):
-                            logger.warning("Inconsistent types for fasttrack attributes. " +
-                                           "Removing it from the fasttrack list.")
+                            logger.warning("Inconsistent types (%s vs %s) for fasttrack attributes (class: %s). " +
+                                           "Removing it (%s) from the fasttrack list.",
+                                           str(self._fasttrack_type[myattr]),
+                                           str(myfp.attr[myattr].get('type', str)),
+                                           repr(cls), myattr)
                             attrerror.add(myattr)
                             continue
                     # Let's go...

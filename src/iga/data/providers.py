@@ -76,12 +76,12 @@ class IgaProvider(Provider):
     """
 
     _footprint = [
+        namespacefp,
         member,
         dict(
             info = 'Iga job provider',
             attr = dict(
                 namespace = dict(
-                    optional = True,
                     default  = '[suite].inline.fr',
                     values   = ['oper.inline.fr', 'dble.inline.fr', 'dbl.inline.fr',
                                 'test.inline.fr', 'mirr.inline.fr', 'miroir.inline.fr'],

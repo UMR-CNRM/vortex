@@ -4,6 +4,7 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.providers import Provider
+from vortex.syntax.stdattrs import namespacefp
 
 #: No automatic export
 __all__ = []
@@ -11,16 +12,19 @@ __all__ = []
 
 class MercatorArchive(Provider):
 
-    _footprint = dict(
-        info = 'Mercator archive provider',
-        attr = dict(
-            namespace = dict(
-                optional = False,
-                default = 'mercator.archive.fr',
-                values = ['mercator.archive.fr', ]
-            ),
+    _footprint = [
+        namespacefp,
+        dict(
+            info = 'Mercator archive provider',
+            attr = dict(
+                namespace = dict(
+                    optional = False,
+                    default = 'mercator.archive.fr',
+                    values = ['mercator.archive.fr', ]
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
