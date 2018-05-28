@@ -142,6 +142,8 @@ def epy_env_prepare(t):
     # Clean trash...
     del localenv.GRIB_SAMPLES_PATH
     del localenv.GRIB_DEFINITION_PATH
+    del localenv.ECCODES_SAMPLES_PATH
+    del localenv.ECCODES_DEFINITION_PATH
     return localenv
 
 

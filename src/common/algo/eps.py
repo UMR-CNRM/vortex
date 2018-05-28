@@ -50,7 +50,7 @@ class Svect(IFSParallel):
         return 'svector'
 
 
-class Combi(BlindRun, grib.GribApiComponent):
+class Combi(BlindRun, grib.EcGribComponent):
     """Build the initial conditions of the EPS."""
 
     _abstract = True
@@ -59,7 +59,7 @@ class Combi(BlindRun, grib.GribApiComponent):
         """Set some variables according to target definition."""
         super(Combi, self).prepare(rh, opts)
         self.export('drhook_not_mpi')
-        self.gribapi_setup(rh, opts)
+        self.eccodes_setup(rh, opts, compat=True)
 
     def execute(self, rh, opts):
         """Standard Combi execution."""
@@ -425,7 +425,7 @@ class SurfCombiIC(BlindRun):
         namsec[0].rh.save()
 
 
-class Clustering(BlindRun, grib.GribApiComponent):
+class Clustering(BlindRun, grib.EcGribComponent):
     """Select by clustering a sample of members among the whole set."""
 
     _footprint = dict(
@@ -453,7 +453,7 @@ class Clustering(BlindRun, grib.GribApiComponent):
         """Set some variables according to target definition."""
         super(Clustering, self).prepare(rh, opts)
 
-        self.gribapi_setup(rh, opts)
+        self.eccodes_setup(rh, opts, compat=True)
 
         grib_sections = self.context.sequence.effective_inputs(role='ModelState',
                                                                kind='gridpoint')

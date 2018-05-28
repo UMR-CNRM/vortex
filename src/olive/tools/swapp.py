@@ -179,8 +179,12 @@ def olive_generic_hook_factory(body):
     bytecode = compile(body, '<string>', 'exec')
 
     def olive_generic_hook(t, rh):
-        jail = dict(t=t, rh=rh, sh=t.sh, env=t.env, )
-        six.exec_(bytecode, jail)
+        # Create a jail for the environment...
+        localenv = t.env.clone()
+        localenv.verbose(True, t.sh)
+        with localenv:
+            jail = dict(t=t, rh=rh, sh=t.sh, env=localenv, )
+            six.exec_(bytecode, jail)
 
     return olive_generic_hook
 

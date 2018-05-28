@@ -375,7 +375,7 @@ class Fa2Grib(ParaBlindRun):
             raise IOError("The waiting loop timed out")
 
 
-class StandaloneGRIBFilter(TaylorRun, grib.GribApiComponent):
+class StandaloneGRIBFilter(TaylorRun, grib.EcGribComponent):
 
     _footprint = dict(
         attr = dict(
@@ -553,7 +553,7 @@ class DegradedDiagPEError(AlgoComponentError):
         return outstr
 
 
-class DiagPE(BlindRun, grib.GribApiComponent):
+class DiagPE(BlindRun, grib.EcGribComponent):
     """Execution of diagnostics on grib input (ensemble forecasts specific)."""
     _footprint = dict(
         attr = dict(
@@ -611,7 +611,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
         # Prevent DrHook to initialise MPI and setup grib_api
         for optpack in ('drhook_not_mpi', ):
             self.export(optpack)
-        self.gribapi_setup(rh, opts)
+        self.eccodes_setup(rh, opts, compat=True)
 
     def spawn_hook(self):
         """Usually a good habit to dump the fort.4 namelist."""
@@ -856,7 +856,7 @@ class _DiagPICommons(FootprintCopier):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(self.__class__, self).prepare(rh, opts)
-        self.gribapi_setup(rh, opts)
+        self.eccodes_setup(rh, opts, compat=True)
 
         # Check for input files to concatenate
         if self.gribcat:
@@ -1010,13 +1010,13 @@ class _DiagPICommons(FootprintCopier):
                 thispromise.put(incache=True)
 
 
-class DiagPI(BlindRun, grib.GribApiComponent):
+class DiagPI(BlindRun, grib.EcGribComponent):
     """Execution of diagnostics on grib input (deterministic forecasts specific)."""
 
     __metaclass__ = _DiagPICommons
 
 
-class DiagPIMPI(Parallel, grib.GribApiComponent):
+class DiagPIMPI(Parallel, grib.EcGribComponent):
     """Execution of diagnostics on grib input (deterministic forecasts specific)."""
 
     __metaclass__ = _DiagPICommons
@@ -1050,7 +1050,7 @@ class Fa2GaussGrib(BlindRun):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(Fa2GaussGrib, self).prepare(rh, opts)
-        # Prevent DrHook to initialize MPI and setup grib_api
+        # Prevent DrHook to initialize MPI
         self.export('drhook_not_mpi')
 
     def execute(self, rh, opts):
