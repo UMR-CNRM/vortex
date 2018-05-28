@@ -172,7 +172,7 @@ def mkjob(t, **kw):
             if tplconf[explist]:
                 tplconf[explist] += ','  # Always ends with a ,
 
-    corejob = load_template(t, tplconf['template'])
+    corejob = load_template(t, tplconf['template'], encoding="script")
     opts['tplfile'] = corejob.srcfile
     pycode = string.Template(corejob.substitute(tplconf)).substitute(tplconf)
 
