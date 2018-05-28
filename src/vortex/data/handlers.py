@@ -197,6 +197,10 @@ class Handler(object):
         """Notify that a hook function has been executed."""
         self._observer.notify_upd(self, dict(stage = stage, hook = hookname))
 
+    def _notifyclear(self):
+        """Notify that the hashkey has changed."""
+        self._observer.notify_upd(self, dict(clear=True, ))
+
     def _notifyhash(self, oldhash):
         """Notify that the hashkey has changed."""
         self._observer.notify_upd(self, dict(oldhash = oldhash, ))
@@ -400,10 +404,12 @@ class Handler(object):
                     mycontainer = footprints.proxy.container(shouldfly=True,
                                                              actualfmt=self.container.actualfmt)
                     try:
+                        tmp_options = self.mkopts(extras)
+                        tmp_options['obs_notify'] = False
                         rst = store.get(
                             self.uridata,
                             mycontainer.iotarget(),
-                            self.mkopts(extras)
+                            tmp_options
                         )
                         if rst:
                             if store.delayed:
@@ -697,6 +703,7 @@ class Handler(object):
             logger.debug('Remove resource container %s', self.container)
             rst = self.container.clear()
             self.history.append(self.container.actualpath(), 'clear', rst)
+            self._notifyclear()
         return rst
 
     def mkgetpr(self, pr_getter=None, tplfile=None, tplskip='@sync-skip.tpl',

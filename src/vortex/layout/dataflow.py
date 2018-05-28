@@ -800,7 +800,10 @@ class LocalTracker(defaultdict):
         """
         lpath = rh.container.iotarget()
         if isinstance(lpath, six.string_types):
-            self[lpath].update_rh(rh, info)
+            if info.get('clear', False):
+                del self[lpath]
+            else:
+                self[lpath].update_rh(rh, info)
         else:
             logger.debug('The iotarget is not a six.text_type: skipped in %s',
                          self.__class__)

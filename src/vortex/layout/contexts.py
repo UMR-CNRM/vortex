@@ -187,7 +187,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         self._fstore   = dict()
         self._fstamps  = set()
         self._wkdir    = None
-        self._record   = True
+        self._record   = False
         self._prestaging_hub = None  # Will be initialised on demand
 
         if sequence:
@@ -245,14 +245,15 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         """
         if self.active:
             logger.debug('Notified %s upd item %s', self, item)
-            if (info['observerboard'] == _RHANDLERS_OBSBOARD and
-                    'stage' in info):
-                # Update the sequence
-                for section in self._sequence.fastsearch(item):
-                    if section.rh is item:
-                        section.updstage(info)
-                # Update the local tracker
-                self._localtracker.update_rh(item, info)
+            if info['observerboard'] == _RHANDLERS_OBSBOARD:
+                if 'stage' in info:
+                    # Update the sequence
+                    for section in self._sequence.fastsearch(item):
+                        if section.rh is item:
+                            section.updstage(info)
+                if ('stage' in info) or ('clear' in info):
+                    # Update the local tracker
+                    self._localtracker.update_rh(item, info)
             elif info['observerboard'] == _STORES_OBSBOARD:
                 # Update the local tracker
                 self._localtracker.update_store(item, info)
@@ -430,12 +431,17 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         self.system.trace = bkuptrace
         return fscheck
 
+    @property
+    def record(self):
+        """Automatic recording of section while loading resource handlers."""
+        return self._record
+
     def record_off(self):
         """Avoid automatic recording of section while loading resource handlers."""
         self._record = False
 
     def record_on(self):
-        """Restore default value to void context as it was before any :func:`record_off` call."""
+        """Activate automatic recording of section while loading resource handlers."""
         self._record = True
 
     def clear_promises(self, netloc='promise.cache.fr', scheme='vortex', storeoptions=None):

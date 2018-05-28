@@ -235,7 +235,8 @@ class Store(footprints.FootprintBase):
         return False
 
     def _observer_notify(self, action, rc, remote, local=None, options=None):
-        if self.storetrack:
+        strack = options is None or options.get('obs_notify', True)
+        if self.storetrack and strack:
             infos = dict(action=action, status=rc, remote=remote)
             # Is a localpath provided ?
             if local is not None:
@@ -287,7 +288,7 @@ class Store(footprints.FootprintBase):
             rc = False
         else:
             rc = getattr(self, self.scheme + 'check', self.notyet)(remote, options)
-            self._observer_notify('check', rc, remote)
+            self._observer_notify('check', rc, remote, options=options)
         return rc
 
     def locate(self, remote, options=None):
@@ -340,6 +341,7 @@ class Store(footprints.FootprintBase):
     def _hash_store_defaults(self, options):
         """Update default options when fetching hash files."""
         options = options.copy() if options is not None else dict()
+        options['obs_notify'] = False
         options['fmt'] = 'ascii'
         options['intent'] = _CACHE_GET_INTENT_DEFAULT
         options['auto_tarextract'] = False
@@ -436,7 +438,7 @@ class Store(footprints.FootprintBase):
             rc = True
         else:
             rc = getattr(self, self.scheme + 'delete', self.notyet)(remote, options)
-            self._observer_notify('del', rc, remote)
+            self._observer_notify('del', rc, remote, options=options)
         return rc
 
 

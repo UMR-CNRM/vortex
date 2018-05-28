@@ -182,7 +182,9 @@ def _tb_isolate(t, loglevel):
     """Handle the context and logger (internal use only)."""
     # Switch off autorecording of the current context
     ctx = t.context
-    ctx.record_off()
+    recordswitch = ctx.record
+    if recordswitch:
+        ctx.record_off()
     # Possibly change the log level if necessary
     if loglevel is not None:
         oldlevel = t.loglevel
@@ -192,7 +194,8 @@ def _tb_isolate(t, loglevel):
     finally:
         if loglevel is not None:
             t.setloglevel(oldlevel)
-        ctx.record_on()
+        if recordswitch:
+            ctx.record_on()
 
 
 def add_section(section, args, kw):
