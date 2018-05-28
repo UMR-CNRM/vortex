@@ -15,3 +15,5 @@ Functions
 ---------
 
 .. autofunction:: mergecontents
+
+.. autofunction:: dumpinputs
