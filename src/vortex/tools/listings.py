@@ -8,7 +8,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from collections import OrderedDict
 import io
 
-from arpifs_listings import norms, jo_tables, listings
+from arpifs_listings import norms, jo_tables, cost_functions, listings
 import footprints
 
 from . import addons
@@ -203,10 +203,13 @@ class ArpifsListingsFormatAdapter(footprints.FootprintBase):
         self._lines = None
         self._normset = None
         self._jotables = None
+        self._costs = None
         self._end_is_reached = None
         if not self.fmtdelayedopen:
             self.normset
             self.jotables
+            self.costs
+            self.flush_lines()
 
     @property
     def lines(self):
@@ -215,6 +218,10 @@ class ArpifsListingsFormatAdapter(footprints.FootprintBase):
             with io.open(self.filename, self.openmode) as f:
                 self._lines = [l.rstrip("\n") for l in f]  # to remove trailing '\n'
         return self._lines
+
+    def flush_lines(self):
+        """By defaults, listing lines are cached (that consumes memory). This method clear the cache."""
+        self._lines = None
 
     @property
     def end_is_reached(self):
@@ -232,6 +239,8 @@ class ArpifsListingsFormatAdapter(footprints.FootprintBase):
         """Return a :class:`arpifs_listings.norms.NormsSet` object."""
         if self._normset is None:
             self._normset = norms.NormsSet(self.lines)
+            if not self.fmtdelayedopen:
+                self.flush_lines()
         return self._normset
 
     @property
@@ -239,7 +248,18 @@ class ArpifsListingsFormatAdapter(footprints.FootprintBase):
         """Return a :class:`arpifs_listings.jo_tables.JoTables` object."""
         if self._jotables is None:
             self._jotables = jo_tables.JoTables(self.filename, self.lines)
+            if not self.fmtdelayedopen:
+                self.flush_lines()
         return self._jotables
+
+    @property
+    def cost_functions(self):
+        """Return a :class:`arpifs_listings.jo_tables.JoTables` object."""
+        if self._costs is None:
+            self._costs = cost_functions.CostFunctions(self.filename, self.lines)
+            if not self.fmtdelayedopen:
+                self.flush_lines()
+        return self._costs
 
     def __len__(self):
         """The number of lines in the listing."""

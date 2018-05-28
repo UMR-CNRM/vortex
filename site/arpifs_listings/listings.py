@@ -10,6 +10,7 @@ from collections import OrderedDict
 from .util import PARSING_ERROR_CODE, FOUND_NAN_ERROR_CODE, get_worst
 from .norms import NormsSet, NormsComparison
 from .jo_tables import JoTables, DEFAULT_N_THRESHOLD, DEFAULT_JO_THRESHOLD
+from .cost_functions import CostFunctions
 from .TLAD import ADTest, TLTest
 
 #: No automatic export
@@ -28,10 +29,10 @@ class OutputListing(object):
 
         :param filename: name of the file to read in
         :param pattern_type: type of pattern to compare, among
-                             ('norms', 'Jo-tables', 'AD-test', 'TL-test')
+                             ('norms', 'Jo-tables', 'costs', 'AD-test', 'TL-test')
         """
-        assert pattern_type in ('norms', 'Jo-tables', 'AD-test', 'TL-test'), \
-               "unknown pattern: " + pattern_type
+        assert pattern_type in ('norms', 'Jo-tables', 'costs', 'AD-test', 'TL-test'), \
+            "unknown pattern: " + pattern_type
 
         # init
         self.filename = filename
@@ -40,6 +41,7 @@ class OutputListing(object):
 
         self.normset = None
         self.jo_tables = None
+        self.costs = None
         self.ad_test = None
         self.tl_test = None
 
@@ -64,6 +66,8 @@ class OutputListing(object):
             n = len(self.normset)
         elif self.pattern_type == 'Jo-tables':
             n = len(self.jo_tables)
+        elif self.pattern_type == 'costs':
+            n = len(self.costs)
         elif self.pattern_type == 'AD-test':
             n = 1
         elif self.pattern_type == 'TL-test':
@@ -80,6 +84,8 @@ class OutputListing(object):
             self.parse_norms(flush_after_reading=flush_after_reading)
         elif self.pattern_type == 'Jo-tables':
             self.parse_jo_tables(flush_after_reading=flush_after_reading)
+        elif self.pattern_type == 'costs':
+            self.parse_costs(flush_after_reading=flush_after_reading)
         elif self.pattern_type == 'AD-test':
             self.parse_AD_test(flush_after_reading=flush_after_reading)
         elif self.pattern_type == 'TL-test':
@@ -111,6 +117,17 @@ class OutputListing(object):
         If **flush_after_reading**, get rid of listing after reading Jo-tables.
         """
         self.jo_tables = JoTables(self.filename, self.lines)
+        if flush_after_reading:
+            self.flush_listing()
+
+    # Jo-tables
+    def parse_costs(self, flush_after_reading=False):
+        """
+        Look for and read each cost function information
+
+        If **flush_after_reading**, get rid of listing after reading data.
+        """
+        self.costs = CostFunctions(self.filename, self.lines)
         if flush_after_reading:
             self.flush_listing()
 
