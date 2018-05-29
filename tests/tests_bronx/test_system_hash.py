@@ -35,7 +35,7 @@ class TestHashAdapter(unittest.TestCase):
 
         self.md5_h = HashAdapter('md5')
         # Decrease the blocksize in order to test everything
-        self.md5_h._PREFERED_BLOCKSIZE = 1024
+        self.md5_h._PREFERRED_BLOCKSIZE = 1024
 
     def tearDown(self):
         os.chdir(self.oldpwd)

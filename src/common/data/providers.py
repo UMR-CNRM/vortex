@@ -58,7 +58,7 @@ class BdpeProvider(Provider):
             ),
             bdpeid = dict(
             ),
-            prefered_target = dict(
+            preferred_target = dict(
                 optional = True,
                 default  = DelayedEnvValue('BDPE_CIBLE_PREFEREE', 'OPER'),
                 values   = ['OPER', 'INT', 'SEC', 'DEV'],
@@ -67,6 +67,13 @@ class BdpeProvider(Provider):
                 optional = True,
                 default  = DelayedEnvValue('BDPE_CIBLE_INTERDITE', 'DEV'),
                 values   = ['OPER', 'INT', 'SEC', 'DEV'],
+            ),
+            allow_archive = dict(
+                info     = 'If True, sets the env. var. allowing the use of the archive'
+                           ' version of the BDPE service',
+                optional = True,
+                type     = bool,
+                default  = False,
             ),
             config = dict(
                 info     = 'A ready to use configuration file object for this storage place.',
