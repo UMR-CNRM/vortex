@@ -57,7 +57,7 @@ class BdpeStore(Store):
         return False
 
     def bdpeput(self, local, remote, options):
-        """Cannot wrte to the BDPE (yet ?)."""
+        """Cannot write to the BDPE (yet ?)."""
         logger.error("A BdpeStore is not able to perform PUTs.")
         return False
 
@@ -73,9 +73,9 @@ class BdpeStore(Store):
         if not isinstance(local, six.string_types):
             raise TypeError('The BDPE provider can not deal with virtual containers')
 
-        # remote['path'] looks like '/86GV/20151105T0000P/BDPE_42+06:00'
+        # remote['path'] looks like '/OPER_SEC_True/20151105T0000P/BDPE_42+06:00'
         _, targetmix, str_date, more = remote['path'].split('/')
-        p_target, f_target = targetmix.split('no')
+        p_target, f_target, s_archive = targetmix.split('_')
         productid, str_term = more[5:].split('+')
         args = '{id} {date} {term} {local}'.format(
             id    = productid,
@@ -83,9 +83,13 @@ class BdpeStore(Store):
             term  = date.Time(str_term).fmtraw,  # HHHHmm
             local = local,
         )
-        actual_command = agt_actual_command(self.system, 'agt_lirepe', args,
-                                            extraenv=dict(BDPE_CIBLE_PREFEREE=p_target,
-                                                          BDPE_CIBLE_INTERDITE=f_target))
+        extraenv=dict(
+            BDPE_CIBLE_PREFEREE=p_target,
+            BDPE_CIBLE_INTERDITE=f_target
+        )
+        if s_archive == 'True':
+            extraenv['BDPE_LECTURE_ARCHIVE_AUTORISEE'] = 'oui'
+        actual_command = agt_actual_command(self.system, 'agt_lirepe', args, extraenv=extraenv)
 
         logger.debug('lirepe_cmd: %s', actual_command)
 
