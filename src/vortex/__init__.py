@@ -33,23 +33,6 @@ __tocinfoline__ = 'VORTEX core package'
 
 __all__ = []
 
-# Force stdout to be an unbuffered stream
-import os
-import six
-import sys
-try:
-    # With a standard Unix file descriptor
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w',
-                           0 if six.PY2 else 128)  # Buffering is mandatory with Python3
-except (IOError, AttributeError):
-    try:
-        # With an IOStream without file number
-        sys.stdout.flush_interval = 0
-    except AttributeError:
-        sys.stderr.write('Unable to set an unbuffered stdout stream.')
-del os
-del sys
-
 # Set vortex specific priorities for footprints usage
 
 import footprints
