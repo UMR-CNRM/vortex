@@ -1306,7 +1306,7 @@ class OSExtended(System):
                 logname = self.glove.user
             else:
                 raise ValueError("Either a logname or a glove must be set-up")
-        if self._current_ftppool is not None:
+        if self.ftpflavour == FTP_FLAVOUR.CONNECTION_POOLS and self._current_ftppool is not None:
             return self._current_ftppool.deal(hostname, logname, delayed=delayed)
         else:
             ftpclass = AutoRetriesFtp if self.ftpflavour != FTP_FLAVOUR.STD else StdFtp

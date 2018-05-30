@@ -482,6 +482,17 @@ class StdFtp(object):
         else:
             return True
 
+    def _process_logname_password(self, logname, password=None):
+        """Find the actual *logname* and *password*."""
+        if logname and password:
+            return logname, password
+        else:
+            actual_logname, actual_pwd = netrc_lookup(logname, self.host)
+            if actual_logname is not None:
+                return actual_logname, actual_pwd
+            else:
+                return None, None
+
     def fastlogin(self, logname, password=None, delayed=True):
         """
         Simple heuristic using actual attributes and/or netrc information to find
@@ -491,16 +502,11 @@ class StdFtp(object):
         necessary).
         """
         rc = False
-        if logname and password:
-            self._logname = logname
-            self._cached_pwd = password
+        p_logname, p_password = self._process_logname_password(logname, password)
+        if p_logname and p_password:
+            self._logname = p_logname
+            self._cached_pwd = p_password
             rc = True
-        else:
-            actual_logname, actual_pwd = netrc_lookup(logname, self.host)
-            if actual_logname is not None:
-                self._logname = actual_logname
-                self._cached_pwd = actual_pwd
-                rc = True
         if not delayed and rc:
             # If one really wants to login...
             rc = self.login(self._logname, self._cached_pwd)
@@ -831,21 +837,22 @@ class FtpConnectionPool(object):
 
     def deal(self, hostname, logname, delayed=True):
         """Retrieve an FTP client for the *hostname*/*logname* pair."""
-        if self._reusable[(hostname, logname)]:
-            ftpc = self._reusable[(hostname, logname)].pop()
+        p_logname, _ = netrc_lookup(logname, hostname)
+        if self._reusable[(hostname, p_logname)]:
+            ftpc = self._reusable[(hostname, p_logname)].pop()
             ftpc.reset()
             logger.debug('Re-using a client: %s', repr(ftpc))
             self._reused += 1
             return ftpc
         else:
             ftpc = self._FTPCLIENT_CLASS(self, self._system, hostname)
-            rc = ftpc.fastlogin(logname, delayed=delayed)
+            rc = ftpc.fastlogin(p_logname, delayed=delayed)
             if rc:
                 logger.debug('Creating a new client: %s', repr(ftpc))
                 self._created += 1
                 return ftpc
             else:
-                logger.warning('Could not login on %s as %s [%s]', hostname, logname, str(rc))
+                logger.warning('Could not login on %s as %s [%s]', hostname, p_logname, str(rc))
                 return None
 
     def relinquishing(self, client):
@@ -862,8 +869,8 @@ class FtpConnectionPool(object):
         logger.debug("Spare client for %s@%s has been stored (poolsize=%d).",
                      client.logname, client.host, self.poolsize)
         if self.poolsize >= self._REUSABLE_THRESHOLD:
-            logger.warning('The FTP pool is too big ! (%d  >= %d).',
-                           self.poolsize, self._REUSABLE_THRESHOLD)
+            logger.warning('The FTP pool is too big ! (%d  >= %d). Here are the details:\n%s',
+                           self.poolsize, self._REUSABLE_THRESHOLD, str(self))
 
     def clear(self):
         """Destroy all the spare FTP clients."""
