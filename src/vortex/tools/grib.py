@@ -57,7 +57,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         rc = False
         if source and isinstance(source, six.string_types) and self.sh.path.exists(source):
             with io.open(source, 'rb') as fd:
-                rc = fd.read(7) == 'file://'
+                rc = fd.read(7) == b'file://'
         return rc
 
     def _backend_cp(self, source, destination, intent='in'):
