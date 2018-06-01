@@ -116,3 +116,87 @@ class FireCst(GenvModelResource):
     @property
     def realkind(self):
         return 'firecst'
+
+
+class CfcScenario(GenvModelResource):
+    """
+     Fire constant file
+    """
+    _footprint = dict(
+        info = 'Initial CFC concentration clim file',
+        attr = dict(
+            kind = dict(
+                values  = ['cfc_scenario'],
+            ),
+            gvar = dict(
+                default = 'scenario_cfc'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'cfc_scenario'
+
+
+class TopScenario(GenvModelResource):
+    """
+    Top model scenario.
+    """
+    _footprint = dict(
+        info = 'Top model scenario',
+        attr = dict(
+            kind = dict(
+                values  = ['top_scenario'],
+            ),
+            gvar = dict(
+                default = 'scenario_top_model'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'top_scenario'
+
+
+class HybridLevels(GenvModelResource):
+        """
+        Hybrid levels description.
+        """
+        _footprint = dict(
+            info='Hybrid levels',
+            attr=dict(
+                kind=dict(
+                    values=['hybrid_levels'],
+                ),
+                gvar=dict(
+                    default='lev_hybrid'
+                ),
+            )
+        )
+
+        @property
+        def realkind(self):
+            return 'hybrid_levels'
+
+
+class SurfaceEmissionsProfilesTable(GenvModelResource):
+        """
+        Emissions profiles table.
+        """
+        _footprint = dict(
+             info='Surface Emissions profiles table',
+             attr=dict(
+                 kind=dict(
+                    values=['emiss_table'],
+                   ),
+                 gvar=dict(
+                        default='profilestable_surface'
+                 ),
+             )
+        )
+
+        @property
+        def realkind(self):
+             return 'emiss_table'
