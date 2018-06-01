@@ -67,6 +67,7 @@ def mkjob(t, **kw):
         name      = 'autojob',
         home      = t.env.HOME,
         rundate   = None,
+        rundates  = '',
         runtime   = None,
         suitebg   = None,
         member    = None,
