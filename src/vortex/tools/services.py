@@ -256,7 +256,7 @@ class MailService(Service):
         if not self.sh.default_target.isnetworknode:
             import tempfile
             count, tmpmsgfile = tempfile.mkstemp(prefix='mailx_')
-            with io.open(tmpmsgfile, 'w') as fd:
+            with io.open(tmpmsgfile, 'wb') as fd:
                 fd.write(msgcorpus)
             mailcmd = '{0:s} {1:s} < {2:s}'.format(
                 self.altmailx,
