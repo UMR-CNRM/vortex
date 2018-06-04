@@ -48,6 +48,7 @@ from vortex.syntax.stdattrs import a_term, a_domain
 from vortex.tools.actions import actiond as ad
 from vortex.tools.schedulers import SMS
 from vortex.tools.services import Service, FileReportService, TemplatedMailService
+from vortex.tools.systems import LocaleContext
 from vortex.util.config import GenericReadOnlyConfigParser
 from iga.tools.transmet import get_ttaaii_transmet_sh
 #: Export nothing
@@ -1065,19 +1066,15 @@ class OpMailService(TemplatedMailService):
 
     def header(self):
         """String prepended to the message body."""
-        locale.setlocale(locale.LC_ALL, u'fr_FR.UTF-8')
         now = date.now()
-        stamp1 = now.strftime(u'%A %d %B %Y')
-        stamp2 = now.strftime(u'%X')
-        if six.PY2:
-            penc = locale.getpreferredencoding()
-            stamp1 = stamp1.decode(penc)
-            stamp2 = stamp2.decode(penc)
-        return u'Mail envoyé le {} à {} locales.\n--\n\n'.format(stamp1, stamp2)
+        with LocaleContext(locale.LC_TIME, 'fr_FR.UTF-8', uselock=True):
+            stamp1 = now.strftime('%A %d %B %Y')
+            stamp2 = now.strftime('%X')
+        return 'Mail envoyé le {} à {} locales.\n--\n\n'.format(stamp1, stamp2)
 
     def trailer(self):
         """String appended to the message body."""
-        return (u'\n--\nEnvoi automatique par Vortex {} pour <{}@{}>.\n'
+        return ('\n--\nEnvoi automatique par Vortex {} pour <{}@{}>.\n'
                 .format(vortex.__version__,
                         self.env.user, self.sh.default_target.inetname))
 

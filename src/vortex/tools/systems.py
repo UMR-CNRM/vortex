@@ -50,6 +50,7 @@ import tarfile
 import tempfile
 import time
 from datetime import datetime
+import threading
 
 import footprints
 from bronx.stdtypes import date
@@ -85,6 +86,8 @@ istruedef = re.compile(r'on|true|ok', re.IGNORECASE)
 #: Pre-compiled regex to check a boolean false str value
 isfalsedef = re.compile(r'off|false|ko', re.IGNORECASE)
 
+#: Global lock to protect temporary locale changes
+LOCALE_LOCK = threading.Lock()
 
 _fmtshcmd_docbonus = """
 
@@ -187,6 +190,34 @@ class CdContext(object):
         self.sh.cd(self.oldpath)
         if self.clean_onexit:
             self.sh.rm(self.newpath)
+
+
+def setlocale(category, localename=None):
+    """Older Python2 insist on localename being an str and not unicode.
+
+    This was fixed somewhere between Python 2.7.5 and 2.7.12
+    and should be removed some day.
+    """
+    if localename:
+        return locale.setlocale(category, str(localename))
+    return locale.setlocale(category)
+
+
+@contextlib.contextmanager
+def NullContext():
+    """A context that does nothing, but with a context's semantic."""
+    yield
+
+
+@contextlib.contextmanager
+def LocaleContext(category, localename=None, uselock=False):
+    lock = LOCALE_LOCK if uselock else NullContext()
+    with lock:
+        previous = setlocale(category)
+        try:
+            yield setlocale(category, localename)
+        finally:
+            locale.setlocale(category, previous)
 
 
 class System(footprints.FootprintBase):
