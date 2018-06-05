@@ -5,15 +5,24 @@
 Services: opmail.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import sys
 sys.stdout = sys.stderr
 
 import logging
+import pprint
 
 import footprints
 import vortex
 from vortex import toolbox
 from vortex.tools import date
+from vortex.tools.actions import actiond as ad
+from iga.tools import actions
+from iga.tools import services
+
+# ask the IDE not to remove seemingly unused imports...
+assert any([actions, services])
 
 t = vortex.ticket()
 e = t.env
@@ -23,33 +32,24 @@ sh.trace = True
 e.verbose(True, sh)
 
 # run in a dedicated directory
-rundir = e.get('RUNDIR', e.get('WORKDIR', '\tmp') + '/rundir/' + date.today().ymd)
+rundir = e.get('RUNDIR', e.get('WORKDIR', '/tmp') + '/rundir/' + date.today().ymd)
 sh.cd(rundir, create=True)
 sh.subtitle('Rundir is ' + rundir)
-
-# get the current hour, to the second
-dtime = date.now().compact()
-stime = dtime[:8] + '_' + dtime[8:]
-
-from vortex.tools.actions import actiond as ad
-from iga.tools import actions
-from iga.tools import services
 
 
 def list_actions():
     """List available actions, their kind and status."""
-    import pprint
     sh.title('Actions information')
     sh.subtitle('available actions')
-    print pprint.pformat(ad.actions)
+    print(pprint.pformat(ad.actions))
     sh.subtitle('existing handlers')
-    print pprint.pformat(ad.items())
+    print(pprint.pformat(ad.items()))
     sh.subtitle('action -> handlers')
     for act in ad.actions:
         handlers = ad.candidates(act)
-        status   = [ h.status() for h in handlers ]
-        print act, ':', pprint.pformat(zip(status, handlers))
-    print
+        status = [h.status() for h in handlers]
+        print(act, ':', pprint.pformat(zip(status, handlers)))
+    print()
 
 
 def more_debug(names=None, level=logging.DEBUG):
@@ -73,7 +73,7 @@ def test_opmail():
         else:
             me = 'pascal.lamboley@meteo.fr'
             smtpserver = 'smtp.meteo.fr'
-        toolbox.defaults(smtpserver = smtpserver)  # usually automatic (but not on mac)
+        toolbox.defaults(smtpserver=smtpserver)  # usually automatic (but not on mac)
 
     if e.USER == 'lamboleyp':
         me = 'pascal.lamboley@meteo.fr'
@@ -81,7 +81,7 @@ def test_opmail():
         me = 'louis-francois.meunier@meteo.fr'
         if e.HOST == 'lxgmap45':
             smtpserver = 'smtp.meteo.fr'
-            toolbox.defaults(smtpserver = smtpserver)
+            toolbox.defaults(smtpserver=smtpserver)
 
     try:
         me
@@ -89,11 +89,12 @@ def test_opmail():
         raise NameError('please define "me = your_address" in the code')
 
     # set the sender once and for all
-    t.glove.email = me   # could be: toolbox.defaults(sender=me)
+    t.glove.email = me  # could be: toolbox.defaults(sender=me)
 
     # find an image somewhere to test attachments
     image = t.glove.siteconf + '/../sphinx/vortex.jpg'
 
+    sh.subtitle('send a simple mail')
     ad.mail(
         subject     = 'test vortex: simple mail',
         to          = me,
@@ -101,17 +102,18 @@ def test_opmail():
         attachments = [image],
     )
 
+    sh.subtitle('op_mail=0: mails are not sent')
     e.op_mail = 0
     ad.opmail(id='test_empty_section')
     ad.opmail(id='test_missing_section')
 
-    e.op_mail = 1
-    for op_suite in ['oper', 'double']:
-        e.op_suite = op_suite
+    for e.op_mail, op_suite in [(1, 'oper'), (0, 'double')]:
+        sh.subtitle('op_mail={} - op_suite={}'.format(e.op_mail, op_suite))
         ad.opmail(
             id          = 'test',
             attachments = [image],
-            extra       = 'extra value',
+            extra       = 'extra=' + op_suite,
+            to          = 'pascal',
         )
 
 
