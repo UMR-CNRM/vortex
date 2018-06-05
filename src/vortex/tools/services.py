@@ -17,7 +17,7 @@ from email import encoders
 from string import Template
 
 from bronx.stdtypes import date
-from bronx.syntax.pretty import Utf8PrettyPrinter
+from bronx.syntax.pretty import EncodedPrettyPrinter
 import footprints
 
 from vortex import sessions
@@ -613,10 +613,11 @@ class PromptService(Service):
 
     def __call__(self, options):
         """Prints what arguments the action was called with."""
-        pf = Utf8PrettyPrinter().pformat
+
+        pf = EncodedPrettyPrinter().pformat
         logger_action = getattr(logger, self.level, logger.warning)
         msg = (self.comment or 'PromptService was called.') + '\noptions = {}'
-        logger_action(msg.format(pf(options)).replace('\n', '\n<prompt> '))
+        logger_action(msg.format(pf(options)).replace('\n', '\n<prompt>'))
         return True
 
 

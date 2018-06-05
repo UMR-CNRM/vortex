@@ -17,7 +17,7 @@ import weakref
 
 import footprints
 from footprints.util import mktuple
-from bronx.syntax.pretty import Utf8PrettyPrinter
+from bronx.syntax.pretty import EncodedPrettyPrinter
 
 from vortex.util.roles import setrole
 
@@ -745,7 +745,7 @@ class LocalTrackerEntry(object):
             for internal in self._internals:
                 if len(self._data[internal][action]) > 0:
                     out += "+ {:4s} / {}\n{}\n".format(action.upper(), internal,
-                                                       Utf8PrettyPrinter().pformat(self._data[internal][action]))
+                                                       EncodedPrettyPrinter().pformat(self._data[internal][action]))
         return out
 
 
