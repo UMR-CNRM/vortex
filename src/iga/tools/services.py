@@ -31,18 +31,19 @@ import locale
 import logging
 import random
 import re
-import six
 import socket
-
-from six import StringIO
 from logging.handlers import SysLogHandler
 
+import six
+from six import StringIO
+
+import footprints
+import vortex
 from bronx.stdtypes import date
 from bronx.stdtypes.date import Time
-import footprints
-from footprints.stdtypes import FPDict
-import vortex
 from common.tools.agt import agt_actual_command
+from footprints.stdtypes import FPDict
+from iga.tools.transmet import get_ttaaii_transmet_sh
 from vortex.syntax.stdattrs import DelayedEnvValue
 from vortex.syntax.stdattrs import a_term, a_domain
 from vortex.tools.actions import actiond as ad
@@ -50,7 +51,7 @@ from vortex.tools.schedulers import SMS
 from vortex.tools.services import Service, FileReportService, TemplatedMailService
 from vortex.tools.systems import LocaleContext
 from vortex.util.config import GenericReadOnlyConfigParser
-from iga.tools.transmet import get_ttaaii_transmet_sh
+
 #: Export nothing
 __all__ = []
 
@@ -202,8 +203,8 @@ class AlarmProxyService(AlarmService):
         info = 'Alarm Proxy Service',
         attr = dict(
             issyslognode = dict(
-                values = [six.text_type(False), ],
-                default = '[systemtarget:issyslognode]',
+                values   = [six.text_type(False), ],
+                default  = '[systemtarget:issyslognode]',
                 optional = True
             ),
         )

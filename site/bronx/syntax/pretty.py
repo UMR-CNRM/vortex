@@ -63,6 +63,6 @@ else:
                 return obj.encode(self.encoding), True, False
             return pprint.PrettyPrinter.format(self, obj, context, maxlevels, level)
 
-        def pformat(self, object):
-            encoded = super(EncodedPrettyPrinter, self).pformat(object)
+        def pformat(self, obj):
+            encoded = super(EncodedPrettyPrinter, self).pformat(obj)
             return encoded.decode(self.encoding)

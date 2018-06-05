@@ -49,7 +49,6 @@ import sys
 import tarfile
 import tempfile
 import time
-from datetime import datetime
 import threading
 
 import footprints
@@ -74,7 +73,7 @@ logger = footprints.loggers.getLogger(__name__)
 try:
     import yaml
 except ImportError:
-    logger.warning('The YAML package is unavaillable on your system...')
+    logger.warning('The YAML package is unavailable on your system...')
     pass
 
 #: Pre-compiled regex to check a none str value
@@ -393,7 +392,7 @@ class System(footprints.FootprintBase):
     def external(self, key):
         """Return effective module object reference if any, or *None*."""
         try:
-            z = getattr(self, key)  # @UnusedVariable
+            getattr(self, key)
         except AttributeError:
             pass
         return self._xtrack.get(key, None)
@@ -455,7 +454,7 @@ class System(footprints.FootprintBase):
     def title(self, textlist, tchar='=', autolen=96):
         """Formated title output.
 
-        :param list|str testlist: A list of strings that contains the title's text
+        :param list|str textlist: A list of strings that contains the title's text
         :param str tchar: The character used to frame the title text
         :param int autolen: The title width
         """
@@ -465,12 +464,12 @@ class System(footprints.FootprintBase):
             nbc = autolen
         else:
             nbc = max([len(text) for text in textlist])
-        print
+        print()
         print(tchar * (nbc + 4))
         for text in textlist:
             print('{0:s} {1:^{size}s} {0:s}'.format(tchar, text.upper(), size=nbc))
         print(tchar * (nbc + 4))
-        print('')
+        print()
 
     def subtitle(self, text='', tchar='-', autolen=96):
         """Formated subtitle output.
@@ -880,7 +879,7 @@ class OSExtended(System):
             p = subprocess.Popen(args, stdin=stdin, stdout=cmdout, stderr=cmderr,
                                  shell=shell, env=localenv)
             p_out, p_err = p.communicate()
-        except ValueError as perr:
+        except ValueError:
             logger.critical(
                 'Weird arguments to Popen ({!s}, stdout={!s}, stderr={!s}, shell={!s})'.format(
                     args, cmdout, cmderr, shell
@@ -890,7 +889,7 @@ class OSExtended(System):
                 raise
             else:
                 logger.warning('Carry on because fatal is off')
-        except OSError as perr:
+        except OSError:
             logger.critical('Could not call %s', str(args))
             if fatal:
                 raise
@@ -1531,11 +1530,11 @@ class OSExtended(System):
     def rawftget(self, source, destination, hostname=None, logname=None, cpipeline=None):
         """Proceed with some external ftget command on the specified target.
 
-        :param str source: The remote path to get data
-        :param str destination: Path to the filename where to put the data.
-        :param str hostname: The target hostname  (default: *None*).
+        :param str source: the remote path to get data
+        :param str destination: path to the filename where to put the data.
+        :param str hostname: the target hostname  (default: *None*).
         :param str logname: the target logname  (default: *None*).
-        :param CompressionPipeline cpipeline: Unusued (kept for compatibility)
+        :param CompressionPipeline cpipeline: unused (kept for compatibility)
         """
         return self.ftserv_get(source, destination, hostname, logname)
 
@@ -1695,8 +1694,8 @@ class OSExtended(System):
 
     def safe_filesuffix(self):
         """Returns a file suffix that should be unique across the system."""
-        return '.'.join((datetime.now().strftime('_%Y%m%d_%H%M%S_%f'),
-                         self.hostname, 'p{0:06d}'.format(self._os.getpid()),))
+        return '.'.join((date.now().strftime('_%Y%m%d_%H%M%S_%f'),
+                         self.hostname, 'p{0:06d}'.format(os.getpid()),))
 
     def rawcp(self, source, destination):
         """Perform a simple ``copyfile`` or ``copytree`` command depending on **source**.
@@ -2135,6 +2134,7 @@ class OSExtended(System):
         self.stderr('listdir', *args)
         return self._os.listdir(self.path.expanduser(args[0]))
 
+    # noinspection PyPep8
     def l(self, *args):  # @IgnorePep8
         """
         Proxy to globbing after removing any option. A bit like the
