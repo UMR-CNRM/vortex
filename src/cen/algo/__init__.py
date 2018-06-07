@@ -7,7 +7,7 @@ Specific CEN AlgoComponents.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from . import components, deterministic, ensemble
+from . import deterministic, ensemble
 
 #: No automatic export
 __all__ = []

@@ -404,17 +404,13 @@ class Node(footprints.util.GetByTag, NiceLayout):
                 ('openmp' in self.conf and
                  not isinstance(self.conf.openmp, (list, tuple)))):
             env_update['OMP_NUM_THREADS'] = int(self.conf.get('openmp', 1))
-        
+
         # If some mpiopts are in the config file, use them...
         mpiopts = kwargs.pop('mpiopts', dict())
-        print "DEBUG1"
-        print mpiopts        
         mpiopts_map = dict(nnodes='nn', ntasks='nnp', nprocs='np', proc='np')
         for stuff in [s for s in ('proc', 'nprocs', 'nnodes', 'ntasks', 'openmp',
                                   'prefixcommand') if s in mpiopts or s in self.conf]:
                 mpiopts[mpiopts_map.get(stuff, stuff)] = mpiopts.pop(stuff, self.conf[stuff])
-        print "DEBUG2"
-        print mpiopts
 
         # if the prefix command is missing in the configuration file, look in the input sequence
         if 'prefixcommand' not in mpiopts:

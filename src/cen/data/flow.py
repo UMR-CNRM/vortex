@@ -10,7 +10,7 @@ from vortex.data.flow        import GeoFlowResource
 from common.data.obs         import ObsRaw
 from vortex.data.geometries  import MassifGeometry
 from common.data.modelstates import InitialCondition
-from vortex.syntax.stdattrs  import term
+from vortex.syntax.stdattrs  import Time
 
 from bronx.stdtypes.date import Date
 
@@ -34,7 +34,6 @@ class SafranGuess(GeoFlowResource):
     """Class for the guess file (P ou E file) that is used by SAFRAN."""
 
     _footprint = [
-        term,
         dict(
             info = 'Safran guess',
             attr = dict(
@@ -51,18 +50,19 @@ class SafranGuess(GeoFlowResource):
                 ),
                 source_app = dict(
                     values = ['arpege', 'arome', 'ifs', ],
-                    optional = True,
                 ),
                 source_conf = dict(
-                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps'],
-                    optional = True,
+                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps', 'pearome'],
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
                     type = MassifGeometry,
                 ),
+                cumul = dict(
+                    info = "The duration of cumulative fields (equivalent to the initial model resource term).",
+                    type = Time,
+                ),
             )
-
         )
     ]
 
@@ -75,11 +75,13 @@ class SafranGuess(GeoFlowResource):
     def basename_info(self):
         return dict(
             radical = self.realkind,
-            geo     = self.geometry.area,
             src     = [self.source_app, self.source_conf],
-            term    = self.term.fmthour,
+            term    = self.cumul.fmthour,
             fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
+
+    def cenvortex_basename(self):
+        return self.realkind + "." + self.source_app + "." + self.source_conf + "-" + str(self.cumul.hh) + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
     def cendev_basename(self):
         # guess files could be named PYYMMDDHH_hh where YYMMDDHH is the creation date and hh the echeance
@@ -115,11 +117,11 @@ class SurfaceIO(GeoFlowResource):
                 dateend = dict(
                     info = "Last date of the forcing file",
                     type = Date,
-                    optional = True,
                 ),
                 # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
                 cutoff = dict(
-                    optional = True)
+                    optional = True,
+                ),
             )
         )
     ]
@@ -130,15 +132,21 @@ class SurfaceIO(GeoFlowResource):
     def realkind(self):
         return self.kind
 
-    def cenvortex_basename(self):
+    def basename_info(self):
+        return dict(
+            radical = self.realkind,
+            period  = [self.datebegin.ymdh, self.dateend.ymdh],
+            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
+        )
 
+    def cenvortex_basename(self):
         for var in [self.realkind, self.datebegin.ymdh, self.dateend.ymdh, self._extension_remap.get(self.nativefmt, self.nativefmt)]:
             print type(var), var
         return self.realkind + "_" + self.datebegin.ymdh + "_" + self.dateend.ymdh + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
 
 class SurfaceForcing(SurfaceIO):
-    """Class for the safrane output files."""
+    """Class for all kind of meteorological forcing files."""
     _footprint = [
         dict(
             info = 'Safran-produced forcing file',
@@ -149,13 +157,28 @@ class SurfaceForcing(SurfaceIO):
                 model = dict(
                     values = ['safran'],
                 ),
+                source_app = dict(
+                    values = ['arpege', 'arome', 'ifs', ],
+                ),
+                source_conf = dict(
+                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps', 'pearome'],
+                ),
             )
         )
     ]
 
     @property
     def realkind(self):
-        return "FORCING"
+        return 'forcing_' + self.model
+
+    def basename_info(self):
+        return dict(
+            radical = self.realkind,
+            model   = self.model,
+            src     = [self.source_app, self.source_conf],
+            period  = [self.datebegin.ymdh, self.dateend.ymdh],
+            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
+        )
 
 
 class Pro(SurfaceIO):

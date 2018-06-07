@@ -48,14 +48,11 @@ class CenVortex(VortexFreeStd):
             self.vconf,
             self.experiment,
         ]
-        print "block="
-        print self.block
         if self.member is not None:
             rpath.append(self.nice_member())
         if self.block:
             rpath.append(self.block)
 
-        print os.path.join(*rpath)
         return os.path.join(*rpath)
 
     def basename(self, resource):
