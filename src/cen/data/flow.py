@@ -155,13 +155,17 @@ class SurfaceForcing(SurfaceIO):
                     values = ['MeteorologicalForcing'],
                 ),
                 model = dict(
-                    values = ['safran'],
+                    values = ['safran', 'obs'],
                 ),
                 source_app = dict(
                     values = ['arpege', 'arome', 'ifs', ],
+                    optional = True,
+                    default = None
                 ),
                 source_conf = dict(
                     values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps', 'pearome'],
+                    optional = True,
+                    default = None
                 ),
             )
         )
@@ -169,13 +173,12 @@ class SurfaceForcing(SurfaceIO):
 
     @property
     def realkind(self):
-        return 'forcing_' + self.model
+        return 'FORCING'
 
     def basename_info(self):
         return dict(
             radical = self.realkind,
-            model   = self.model,
-            src     = [self.source_app, self.source_conf],
+            src = [self.source_app, self.source_conf] if self.source_app or self.source_conf else list(),
             period  = [self.datebegin.ymdh, self.dateend.ymdh],
             fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
