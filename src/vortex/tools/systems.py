@@ -168,7 +168,7 @@ class CdContext(object):
     Context manager for temporarily changing the working directory.
 
     Returns to the initial directory, even when an exception is raised.
-    Has the syntax of system.cd, and can be used through system::
+    Has the syntax of the :meth:`~OSExtended.cd` call, and can be used through an :class:`OSExtended` object::
 
         with sh.cdcontext(newpath, create=True):
             # work in newpath
@@ -210,6 +210,16 @@ def NullContext():
 
 @contextlib.contextmanager
 def LocaleContext(category, localename=None, uselock=False):
+    """Context used to locally change the Locale.
+
+    This is used like the :func:`~locale.setlocale` function::
+
+        with LocaleContext(locale.LC_TIME, 'fr_FR.UTF-8'):
+            strtime = date.now().strftime('%X')
+
+    The ``locale`` is changed at the process level ; to avoid conflicting changes
+    in a multithread context, use *with care* the additional ``uselock`` argument.
+    """
     lock = LOCALE_LOCK if uselock else NullContext()
     with lock:
         previous = setlocale(category)
