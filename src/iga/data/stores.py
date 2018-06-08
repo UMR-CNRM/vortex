@@ -92,10 +92,14 @@ class IgaFinder(Finder):
             return self.rootdir  + remote['path']
 
     def fileget(self, remote, local, options):
-        """Delegates to ``system`` the copy of ``remote`` to ``local``."""
+        #"""Delegates to ``system`` the copy of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
         rc = self.system.cp(rpath, local, intent=options.get('intent'), fmt=options.get('fmt'))
-        return rc and self._hash_get_check(self.fileget, remote, local, dict())
+        
+        rc = rc and self._hash_get_check(self.fileget, remote, local, dict())
+        if rc:
+            self._localtarfix(local)
+        return rc
 
 
 class SopranoStore(Store):

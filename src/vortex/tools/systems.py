@@ -2279,6 +2279,7 @@ class OSExtended(System):
     def tarfix_in(self, source, destination):
         """Automatically untar **source** if **source** is a tarfile and **destination** is not."""
         ok = True
+        print("DBUG : TARFIX_IN")
         if self.is_tarname(source) and not self.is_tarname(destination):
             logger.info('Untar from get <%s>', source)
             (destdir, destfile) = self.path.split(self.path.abspath(destination))
@@ -2288,11 +2289,39 @@ class OSExtended(System):
             loctmp = tempfile.mkdtemp(prefix='untar_', dir=destdir)
             with self.cdcontext(loctmp):
                 ok = ok and self.untar(desttar, output=False)
-                unpacked = self.glob('*')
-                ok = ok and len(unpacked) == 1  # Only one element allowed in this kind of tarfiles
-                ok = ok and self.move(unpacked[0], self.path.join(destdir, destfile))
-                ok = ok and self.remove(desttar)
-            self.rm(loctmp)
+                try:
+                    unpacked = self.sh.glob('*')
+                    if unpacked:
+                        print("VALEUR UNPACKED : ", unpacked)
+                        if (len(unpacked) == 1 and
+                            self.sh.path.isdir(self.sh.path.join(unpacked[-1]))):
+                            # This is the most usual case... (ODB, DDH packs produced by Vortex)
+                            self.sh.mv(unpacked[-1], destination)
+                        else:
+                            # Old-style DDH packs (produced by Olive)
+                            print("Le MKDIR", '../',destination)
+                            print("Le RM :", loctmp)
+                            self.sh.mkdir('../' + destination)
+                            for item in unpacked:
+                                self.sh.mv(item, self.sh.path.join('../'+destination, item))
+                    else:
+                        logger.error('Nothing to unpack')
+                except StandardError as trouble:
+                    logger.critical('Unable to proceed folder tarfix-in step')
+                    raise trouble
+                finally:
+                    print("DESTDIR :", destdir)
+                    self.sh.cd(destdir)
+                    print("On en est ou ?")
+                    self.sh.rm(loctmp) 
+
+
+
+                #ok = ok and len(unpacked) == 1  # Only one element allowed in this kind of tarfiles
+                #ok = ok and self.move(unpacked[0], self.path.join(destdir, destfile))
+                #ok = ok and self.remove(desttar)
+            #self.rm(loctmp)
+        print("GDBUG : ", ok, source, destination)
         return (ok, source, destination)
 
     def tarfix_out(self, source, destination):
@@ -2300,6 +2329,9 @@ class OSExtended(System):
         Automatically tar the **source** input if **destination** is a tarfile and
         **source** is not."""
         ok = True
+        print("DBUG dans le TARFIX_OUT")
+        print("Source :", source)
+        print("destination :", destination)
         if not self.is_tarname(source) and self.is_tarname(destination):
             logger.info('Tar before put <%s>', source)
             sourcetar = self.path.abspath(source + '.tar')
