@@ -7,6 +7,8 @@ A set of AlgoComponents interrogating various databases.
 
 from __future__ import division, print_function, absolute_import, unicode_literals
 
+import copy
+
 from bronx.stdtypes.date import Time
 import footprints
 from vortex.algo.components import AlgoComponent, Expresso, BlindRun
@@ -17,6 +19,7 @@ from common.tools.bdap import BDAPrequest_actual_command, BDAPGetError, BDAPRequ
 from common.tools.bdmp import BDMPrequest_actual_command, BDMPGetError
 from common.tools.bdcp import BDCPrequest_actual_command, BDCPGetError
 from common.tools.bdm import BDMGetError, BDMRequestConfigurationError, BDMError
+from ecmwf.tools.mars import MarsError, MarsRequestConfigurationError, MarsGetError
 from common.data.obs import ObsMapContent
 
 #: No automatic export
@@ -507,3 +510,77 @@ class GetBDMOulan(BlindRun):
         if len(input_namelists) < 1:
             logger.error('No Oulan namelist found. Stop.')
             raise BDMError('No Oulan namelist found.')
+
+
+class GetMarsResource(AlgoComponent):
+    """AlgoComponent to get Mars resources using a Mars query file"""
+
+    _footprint = dict(
+        info = 'AlgoComponent to get a Mars resource',
+        attr = dict(
+            kind = dict(
+                values = ['get_mars', ]
+            ),
+            date = a_date,
+            substitutions = dict(
+                info = "A dictionary of values to be substituted",
+                type = dict,
+                default = dict(),
+                optional = True
+            ),
+            command = dict(
+                default = "/usr/local/bin/mars",
+                optional = True
+            ),
+            fatal = dict(
+                type = bool,
+                default = True,
+                optional = True
+            )
+        )
+    )
+
+    def execute_single(self, rh, opts):
+        """
+        Launch the Mars request(s).
+        The results of each requests are stored in a directory to avoid
+        files to be overwritten.
+        """
+        # Look for input queries
+        input_queries = self.context.sequence.effective_inputs(
+            role='Query',
+            kind='mars_query',
+        )
+
+        rc_all = True
+
+        for input_query in input_queries:
+            # Launch each input queries in a dedicated file
+            # (to check that the files do not overwrite each other)
+            query_file = input_query.rh.container.abspath
+            local_directory = '_'.join([query_file, self.date.ymdhms])
+            with self.system.cdcontext(local_directory, create=True):
+                # Prepare the query file used
+                query = input_query.rh
+                query_abspath = query.container.abspath
+                query_content = query.contents
+                dictkeyvalue = copy.deepcopy(self.substitutions)
+                if self.date is not None:
+                    dictkeyvalue["YYYYMMDDHH"] = self.date.ymdh
+                    dictkeyvalue["YYYYMMDD"] = self.date.ymd
+                    dictkeyvalue["HH"] = self.date.hh
+                query_content.setitems(dictkeyvalue)
+                query.save()
+                logger.info("Here is the content of the query file %s (after substitution):", query_abspath)
+                query.container.cat()
+                # Determine the command to launch
+                actual_command = " ".join([self.command, query_abspath])
+                # Launch the Mars request
+                rc = self.system.spawn([actual_command, ], shell=True, output=False, fatal=self.fatal)
+                if not rc:
+                    if self.fatal:
+                        logger.error("Problem during the Mars resquest of %s", query_abspath)
+                        raise MarsGetError
+                    else:
+                        logger.warning("Problem during the Mars resquest of %s", query_abspath)
+                rc_all = rc_all and rc
