@@ -127,6 +127,10 @@ class VortexNameBuilder(object):
                 packed.append(self.pack_void(i))
         return packed
 
+    def pack_std_negativetimes(self, items):
+        return [(t[1:] + 'ago' if t[0] == '-' else t)
+                for t in self.pack_std_items(items)]
+
     def pack_std(self, d):
         """
         Main entry point to convert a description into a file name
@@ -147,10 +151,10 @@ class VortexNameBuilder(object):
             name = name + '.' + '-'.join(self.pack_std_items(d['compute']))
 
         if d['term'] is not None:
-            name = name + '+' + '-'.join(self.pack_std_items(d['term']))
+            name = name + '+' + '-'.join(self.pack_std_negativetimes(d['term']))
         else:
             if d['period'] is not None:
-                name = name + '+' + '-'.join(self.pack_std_items(d['period']))
+                name = name + '+' + '-'.join(self.pack_std_negativetimes(d['period']))
 
         if d['number'] is not None:
             name = name + '.' + '-'.join(self.pack_std_items(d['number']))
