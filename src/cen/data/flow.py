@@ -139,10 +139,12 @@ class SurfaceIO(GeoFlowResource):
             fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
-    def cenvortex_basename(self):
-        for var in [self.realkind, self.datebegin.ymdh, self.dateend.ymdh, self._extension_remap.get(self.nativefmt, self.nativefmt)]:
-            print type(var), var
-        return self.realkind + "_" + self.datebegin.ymdh + "_" + self.dateend.ymdh + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
+# A supprimer car normalement maintenant la méthode basename_info fait exactement la même chose
+# vérifier que le provider cenvortex va bien chercher vortex_basename en l'absence de cenvortex_basename
+#     def cenvortex_basename(self):
+#         for var in [self.realkind, self.datebegin.ymdh, self.dateend.ymdh, self._extension_remap.get(self.nativefmt, self.nativefmt)]:
+#             print type(var), var
+#         return self.realkind + "_" + self.datebegin.ymdh + "_" + self.dateend.ymdh + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
 
 class SurfaceForcing(SurfaceIO):
@@ -155,7 +157,7 @@ class SurfaceForcing(SurfaceIO):
                     values = ['MeteorologicalForcing'],
                 ),
                 model = dict(
-                    values = ['safran', 'obs'],
+                    values = ['safran', 'obs', 'surfex'],
                 ),
                 source_app = dict(
                     values = ['arpege', 'arome', 'ifs', ],
@@ -176,9 +178,13 @@ class SurfaceForcing(SurfaceIO):
         return 'FORCING'
 
     def basename_info(self):
+        src = list()
+        for var in [self.source_app, self.source_conf]:
+            if var:
+                src.append(var)
         return dict(
             radical = self.realkind,
-            src = [self.source_app, self.source_conf] if self.source_app or self.source_conf else list(),
+            src = src,
             period  = [self.datebegin.ymdh, self.dateend.ymdh],
             fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
@@ -231,6 +237,12 @@ class Prep(InitialCondition):
                     value = ['surf', ],
                     default = 'surf',
                 ),
+                # In operational applications, date is used to refer to the run time but the validity date of the file can be different.
+                # In research applications, there is only the validity date which makes sense.
+                datevalidity = dict(
+                    optional = True,
+                    default = '[date]',
+                ),
                 # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
                 cutoff = dict(
                     optional = True)
@@ -247,13 +259,15 @@ class Prep(InitialCondition):
     def basename_info(self):
         return dict(
             radical = self.realkind,
-            geo     = self.geometry.area,
+            period = [self.datevalidity],
             fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
-    def cenvortex_basename(self):
-
-        return 'PREP_' + self.date.ymdh + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
+# A supprimer car normalement maintenant la méthode basename_info fait exactement la même chose
+# vérifier que le provider cenvortex va bien chercher vortex_basename en l'absence de cenvortex_basename
+#     def cenvortex_basename(self):
+#
+#         return 'PREP_' + self.datevalidity.ymdh + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
 
 class SnowObs(GeoFlowResource):
