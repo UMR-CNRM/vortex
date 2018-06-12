@@ -634,7 +634,7 @@ class Archive(Storage):
             if compressionpipeline:
                 compressionpipeline = compressionpipeline.description_string
             extras = dict(fmt=kwargs.get('fmt', 'foo'),
-                          compressionpipeline=compressionpipeline)
+                          cpipeline=compressionpipeline)
             rc = ad.jeeves(
                 hostname = self.actual_storage,
                 logname = kwargs.get('username', None),
