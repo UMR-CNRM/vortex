@@ -19,7 +19,7 @@ from common.tools.bdap import BDAPrequest_actual_command, BDAPGetError, BDAPRequ
 from common.tools.bdmp import BDMPrequest_actual_command, BDMPGetError
 from common.tools.bdcp import BDCPrequest_actual_command, BDCPGetError
 from common.tools.bdm import BDMGetError, BDMRequestConfigurationError, BDMError
-from common.tools.mars import MarsError, MarsRequestConfigurationError, MarsGetError
+from common.tools.mars import MarsGetError, callMarsExtract, findMarsExtractCommand
 from common.data.obs import ObsMapContent
 
 #: No automatic export
@@ -529,7 +529,6 @@ class GetMarsResource(AlgoComponent):
                 optional = True
             ),
             command = dict(
-                default = "/usr/local/bin/mars",
                 optional = True
             ),
             fatal = dict(
@@ -573,14 +572,14 @@ class GetMarsResource(AlgoComponent):
                 query.save()
                 logger.info("Here is the content of the query file %s (after substitution):", query_abspath)
                 query.container.cat()
-                # Determine the command to launch
-                actual_command = " ".join([self.command, query_abspath])
-                # Launch the Mars request
-                rc = self.system.spawn([actual_command, ], shell=True, output=False, fatal=self.fatal)
+                # Launch the command
+                actual_command = findMarsExtractCommand(command=self.command)
+                rc = callMarsExtract(sh=self.system, query_file=query_abspath, fatal=self.fatal,
+                                     command=actual_command)
                 if not rc:
                     if self.fatal:
-                        logger.error("Problem during the Mars resquest of %s", query_abspath)
+                        logger.error("Problem during the Mars request of %s", query_abspath)
                         raise MarsGetError
                     else:
-                        logger.warning("Problem during the Mars resquest of %s", query_abspath)
+                        logger.warning("Problem during the Mars request of %s", query_abspath)
                 rc_all = rc_all and rc
