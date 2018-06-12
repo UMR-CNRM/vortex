@@ -18,10 +18,13 @@ class ArchiveECMWF(Archive):
 
     _default_tube = 'ectrans'
 
-    _collector = ('archive', )
     _footprint = dict(
         info = 'Default archive description from ECMWF',
         attr = dict(
+            inifile = dict(
+                optional = True,
+                default  = '@archive-[storage].ini',
+            ),
             storage = dict(
                 optional = True,
                 default  = 'generic'
