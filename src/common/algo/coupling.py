@@ -362,6 +362,14 @@ class C901(IFSParallel):
         )
     )
 
+    ATM_FC_FILE = "ICMUAa001INIT"
+    ATM_FC_SPE_FILE = "ICMSHa001INIT"
+    SURF_FC_FILE = "ICMGGa001INIT"
+    SURF_ANA_FILE = "ICMGGb001INIT"
+    OROGRAPHY_SPE_FILE = "ICMSHb001INIT"
+    OUTPUT_FILE_NAME = "CN90xa001INIT"
+    OUTPUT_LISTING_NAME = "NODE.001_01"
+
     @property
     def realkind(self):
         return "c901"
@@ -372,66 +380,49 @@ class C901(IFSParallel):
         sh = self.system
 
         surf_fc_files = self.context.sequence.effective_inputs(
-            role = "SurfaceForecastFiles"
+            role = "SurfaceModelState"
         )
         surf_fc_files.sort(key=lambda s: s.rh.resource.term)
-        surf_fc_files_terms = [s.rh.resource.term for s in surf_fc_files]
+        surf_fc_files_terms = [s.rh.resource.date + s.rh.resource.term for s in surf_fc_files]
         atm_fc_files = self.context.sequence.effective_inputs(
-            role = "AtmosphereForecastFiles"
+            role = "AtmosphereModelState"
         )
         atm_fc_files.sort(key=lambda s: s.rh.resource.term)
-        atm_fc_files_terms = [s.rh.resource.term for s in atm_fc_files]
+        atm_fc_files_terms = [s.rh.resource.date + s.rh.resource.term for s in atm_fc_files]
         atm_fc_spe_files = self.context.sequence.effective_inputs(
-            role = "AtmosphereForecastSpectralFiles"
+            role = "AtmosphereModelSpectralState"
         )
         atm_fc_spe_files.sort(key=lambda s: s.rh.resource.term)
-        atm_fc_spe_files_terms = [s.rh.resource.term for s in atm_fc_spe_files]
+        atm_fc_spe_files_terms = [s.rh.resource.date + s.rh.resource.term for s in atm_fc_spe_files]
         current_surf_ana_file = self.context.sequence.effective_inputs(
-            role = "SurfaceAnalysisFiles"
+            role = "SurfaceAnalysis"
         )[0]
         current_orography_spe_file = self.context.sequence.effective_inputs(
-            role = "OrographySpectralFiles"
+            role = "OrographySpectralState"
         )[0]
-        if surf_fc_files_terms != atm_fc_files_terms or surf_fc_files_terms != atm_fc_spe_files_terms:
-            logger.error("The files of each type must have the same terms.")
-            raise AlgoComponentError("The files of each type must have the same terms.")
 
-        atm_fc_file = "ICMUAa001INIT"
-        atm_fc_spe_file = "ICMSHa001INIT"
-        surf_fc_file = "ICMGGa001INIT"
-        surf_ana_file = "ICMGGb001INIT"
-        orography_spe_file = "ICMSHb001INIT"
-        output_file_name = "CN90xa001INIT"
-        output_listing_name = "NODE.001_01"
+        self.algoassert(surf_fc_files_terms != atm_fc_files_terms or surf_fc_files_terms != atm_fc_spe_files_terms,
+                        "The files of each type must have the same validity dates.")
+
         for current_surf_fc_file in surf_fc_files:
             # Create the needed links for the run
-            if sh.path.exists(surf_fc_file):
-                logger.error("The file %s already exists. It should not.", surf_fc_file)
-                raise AlgoComponentError("The file already exists. It should not.")
-            else:
-                sh.softlink(current_surf_fc_file.rh.container.localpath(), surf_fc_file)
+            self.algoassert(sh.path.exists(self.SURF_FC_FILE),
+                            "The file {} already exists. It should not.".format(self.SURF_FC_FILE))
+            sh.cp(current_surf_fc_file.rh.container.iotarget(), self.SURF_FC_FILE, intent="in")
             current_atm_fc_file = atm_fc_files.pop()
-            if sh.path.exists(atm_fc_file):
-                logger.error("The file %s already exists. It should not.", atm_fc_file)
-                raise AlgoComponentError("The file already exists. It should not.")
-            else:
-                sh.softlink(current_atm_fc_file.rh.container.localpath(), atm_fc_file)
+            self.algoassert(sh.path.exists(self.ATM_FC_FILE),
+                            "The file {} already exists. It should not.".format(self.ATM_FC_FILE))
+            sh.cp(current_atm_fc_file.rh.container.iotarget(), self.ATM_FC_FILE, intent='in')
             current_atm_fc_spe_file = atm_fc_spe_files.pop()
-            if sh.path.exists(atm_fc_spe_file):
-                logger.error("The file %s already exists. It should not.", atm_fc_spe_file)
-                raise AlgoComponentError("The file already exists. It should not.")
-            else:
-                sh.softlink(current_atm_fc_spe_file.rh.container.localpath(), atm_fc_spe_file)
-            if sh.path.exists(surf_ana_file):
-                logger.error("The file %s already exists. It should not.", surf_ana_file)
-                raise AlgoComponentError("The file already exists. It should not.")
-            else:
-                sh.cp(current_surf_ana_file.rh.container.localpath(), surf_ana_file)
-            if sh.path.exists(orography_spe_file):
-                logger.error("The file %s already exists. It should not.", orography_spe_file)
-                raise AlgoComponentError("The file already exists. It should not.")
-            else:
-                sh.cp(current_orography_spe_file.rh.container.localpath(), orography_spe_file)
+            self.algoassert(sh.path.exists(self.ATM_FC_SPE_FILE),
+                            "The file {} already exists. It should not.".format(self.ATM_FC_SPE_FILE))
+            sh.cp(current_atm_fc_spe_file.rh.container.iotarget(), self.ATM_FC_SPE_FILE, intent='in')
+            self.algoassert(sh.path.exists(self.SURF_ANA_FILE),
+                            "The file {} already exists. It should not.".format(self.SURF_ANA_FILE))
+            sh.cp(current_surf_ana_file.rh.container.iotarget(), self.SURF_ANA_FILE, intent='in')
+            self.algoassert(sh.path.exists(self.OROGRAPHY_SPE_FILE),
+                            "The file {} already exists. It should not.".format(self.OROGRAPHY_SPE_FILE))
+            sh.cp(current_orography_spe_file.rh.container.iotarget(), self.OROGRAPHY_SPE_FILE, intent='in')
             # Find the validity date and the associated climatology file
             actual_date = current_surf_fc_file.resource.date + current_surf_fc_file.resource.term
             actualmonth = date.Month(actual_date)
@@ -442,9 +433,9 @@ class C901(IFSParallel):
             super(C901, self).execute(rh, opts)
             # Move the output file
             current_term = current_surf_fc_file.rh.resource.term
-            sh.move(output_file_name, output_file_name+"+{}".format(current_term.fmthm))
+            sh.move(self.OUTPUT_FILE_NAME, self.OUTPUT_FILE_NAME+"+{}".format(current_term.fmthm))
             # Cat all the listings into a single one
-            sh.cat(output_listing_name, output='NODE.all')
+            sh.cat(self.OUTPUT_LISTING_NAME, output='NODE.all')
             # Remove unneeded files
-            sh.rmall(atm_fc_file, atm_fc_spe_file, surf_fc_file, surf_ana_file, orography_spe_file,
-                     output_listing_name, 'std*')
+            sh.rmall(self.ATM_FC_FILE, self.ATM_FC_SPE_FILE, self.SURF_FC_FILE, self.SURF_ANA_FILE,
+                     self.OROGRAPHY_SPE_FILE, self.OUTPUT_LISTING_NAME, 'std*')
