@@ -19,7 +19,7 @@ from common.tools.bdap import BDAPrequest_actual_command, BDAPGetError, BDAPRequ
 from common.tools.bdmp import BDMPrequest_actual_command, BDMPGetError
 from common.tools.bdcp import BDCPrequest_actual_command, BDCPGetError
 from common.tools.bdm import BDMGetError, BDMRequestConfigurationError, BDMError
-from ecmwf.tools.mars import MarsError, MarsRequestConfigurationError, MarsGetError
+from common.tools.mars import MarsError, MarsRequestConfigurationError, MarsGetError
 from common.data.obs import ObsMapContent
 
 #: No automatic export
