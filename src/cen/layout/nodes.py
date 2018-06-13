@@ -16,7 +16,7 @@ from bronx.stdtypes.date import yesterday, Period, Time
 
 class S2Mtask(Task):
 
-    nightruntime = Time(hours=3, minutes=20)
+    nightruntime = Time(hour=3, minute=0)
 
     def get_period(self):
 
@@ -27,10 +27,13 @@ class S2Mtask(Task):
 
         if self.conf.previ:
             datebegin = dateendanalysis
-            dateend = dateendanalysis + Period(days=4)
+            if self.conf.rundate.hour == self.nightruntime.hour:
+                dateend = dateendanalysis + Period(days=5)
+            else:
+                dateend = dateendanalysis + Period(days=4)
         else:
             dateend = dateendanalysis
-            if self.conf.rundate.hour == self.conf.nightruntime:
+            if self.conf.rundate.hour == self.nightruntime.hour:
                 # The night run performs a 4 day analysis
                 datebegin = dateend - Period(days=4)
             else:
@@ -39,6 +42,13 @@ class S2Mtask(Task):
 
         return datebegin, dateend
 
+    def get_rundate_forcing(self):
+        if self.conf.previ:
+            rundate_forcing = self.conf.rundate.replace(hour=self.nightruntime.hour)
+        else:
+            rundate_forcing = self.conf.rundate
+        return rundate_forcing
+
     def get_rundate_prep(self):
         if self.conf.previ:
             rundate_prep = self.conf.rundate
@@ -46,7 +56,7 @@ class S2Mtask(Task):
             if self.conf.rundate.hour == self.nightruntime.hour:
                 rundate_prep = self.conf.rundate - Period(days=1)
             else:
-                rundate_prep = self.conf.rundate.replace(hour=self.conf.nightruntime)
+                rundate_prep = self.conf.rundate.replace(hour=self.nightruntime.hour)
         return rundate_prep
 
     def get_list_members(self):
