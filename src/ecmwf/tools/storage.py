@@ -9,8 +9,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import footprints
 from vortex.tools.storage import Archive
-from ecmwf.tools.interfaces import ECtrans, ECfs
-from ecmwf.tools.ectrans_parameters import ectransparameters
 
 
 class ArchiveECMWF(Archive):
@@ -58,41 +56,31 @@ class ArchiveECMWF(Archive):
 
     def _ectransretrieve(self, item, local, **kwargs):
         """Actual _retrieve using ectrans"""
-        ectrans = ECtrans(system=self.sh)
-        # Construct the different attributes
-        list_args = list()
-        list_options = ["get", "verbose", "overwrite"]
-        dict_args = ectransparameters(sh=self.sh, **kwargs)
-        dict_args["source"] = item
-        dict_args["target"] = local
-        # Call ECtrans
-        rc = ectrans(
-            list_args=list_args,
-            list_options=list_options,
-            dict_args=dict_args
-        )
-        del dict_args["source"]
-        del dict_args["target"]
-        return rc, dict_args
+        remote = self.sh.ectrans_remote_init(remote=kwargs.get("remote", None),
+                                             inifile=self.inifile,
+                                             storage=self.actual_storage)
+        gateway = self.sh.ectrans_gateway_init(gateway=kwargs.get("gateway", None),
+                                               inifile=self.inifile)
+        return self.sh.ectransget(source=local,
+                                  target=item,
+                                  fmt=kwargs.get("fmt", "foo"),
+                                  cpipeline=kwargs.get("compressionpipeline", None),
+                                  gateway=gateway,
+                                  remote=remote)
 
     def _ectransinsert(self, item, local, **kwargs):
         """Actual _insert using ectrans"""
-        ectrans = ECtrans(system=self.sh)
-        # Construct the different attributes
-        list_args = list()
-        list_options = ["put", "verbose", "overwrite"]
-        dict_args = ectransparameters(sh=self.sh, **kwargs)
-        dict_args["source"] = local
-        dict_args["target"] = item
-        # Call ECtrans
-        rc = ectrans(
-            list_args=list_args,
-            list_options=list_options,
-            dict_args=dict_args
-        )
-        del dict_args["source"]
-        del dict_args["target"]
-        return rc, dict_args
+        remote = self.sh.ectrans_remote_init(remote=kwargs.get("remote", None),
+                                             inifile=self.inifile,
+                                             storage=self.actual_storage)
+        gateway = self.sh.ectrans_gateway_init(gateway=kwargs.get("gateway", None),
+                                               inifile=self.inifile)
+        return self.sh.ectransput(source=local,
+                                  target=item,
+                                  fmt=kwargs.get("fmt", "foo"),
+                                  cpipeline=kwargs.get("compressionpipeline", None),
+                                  gateway=gateway,
+                                  remote=remote)
 
     def _ectransdelete(self, item, **kwargs):
         """Actual _delete using ectrans"""
@@ -113,85 +101,36 @@ class ArchiveECMWF(Archive):
 
     def _ecfscheck(self, item, **kwargs):
         """Actual _check using ecfs"""
-        ecfs = ECfs(system=self.sh)
-        command = "etest"
-        list_args = [item, ]
-        if "options" in kwargs:
-            list_options= kwargs["options"]
-            del kwargs["options"]
-        else:
-            list_options = ["r", ]
-        if ecfs:
-            rc = ecfs(command=command,
-                      list_args=list_args,
-                      dict_args=kwargs,
-                      list_options=list_options)
-        return rc, dict()
+        options = kwargs.get("options", None)
+        return self.sh.ecfstest(item=item,
+                                otpions=options)
 
     def _ecfslist(self, item, **kwargs):
         """Actual _list using ecfs"""
-        ecfs = ECfs(system=self.sh)
-        command = "els"
-        list_args = [item, ]
-        if "options" in kwargs:
-            list_options= kwargs["options"]
-            del kwargs["options"]
-        else:
-            list_options = ["l", ]
-        if ecfs:
-            rc = ecfs(command=command,
-                      list_args=list_args,
-                      dict_args=kwargs,
-                      list_options=list_options)
-        return rc, dict()
+        options = kwargs.get("options", None)
+        return self.sh.ecfsls(item=item,
+                              options=options)
 
     def _ecfsretrieve(self, item, local, **kwargs):
         """Actual _retrieve using ecfs"""
-        ecfs = ECfs(system=self.sh)
-        command = "ecp"
-        list_args = [item, local]
-        if "options" in kwargs:
-            list_options = kwargs["options"]
-            del kwargs["options"]
-        else:
-            list_options = list()
-        if ecfs:
-            rc = ecfs(command=command,
-                      list_args=list_args,
-                      dict_args=kwargs,
-                      list_options=list_options)
-        return rc, dict()
+        options = kwargs.get("options", None)
+        cpipeline = kwargs.get("compressionpipeline", None)
+        return self.sh.ecfsget(source=item,
+                               target=local,
+                               cpipeline=cpipeline,
+                               options=options)
 
     def _ecfsinsert(self, item, local, **kwargs):
         """Actual _insert using ecfs"""
-        ecfs = ECfs(system=self.sh)
-        command = "ecp"
-        list_args = [local, item]
-        if "options" in kwargs:
-            list_options = kwargs["options"]
-            del kwargs["options"]
-        else:
-            list_options = list()
-        if ecfs:
-            rc = ecfs(command=command,
-                      list_args=list_args,
-                      dict_args=kwargs,
-                      list_options=list_options)
-        return rc, dict()
+        options = kwargs.get("options", None)
+        cpipeline = kwargs.get("compressionpipeline", None)
+        return self.sh.ecfsput(source=local,
+                               target=item,
+                               cpipeline=cpipeline,
+                               options=options)
 
     def _ecfsdelete(self, item, **kwargs):
         """Actual _delete using ecfs"""
-        ecfs = ECfs(system=self.sh)
-        command = "erm"
-        list_args = [item, ]
-        if "options" in kwargs:
-            list_options = kwargs["options"]
-            del kwargs["options"]
-        else:
-            list_options = list()
-        if ecfs:
-            rc = ecfs(command=command,
-                      list_args=list_args,
-                      dict_args=kwargs,
-                      list_options=list_options)
-        return rc, dict()
+        options = kwargs.get("options", None)
+        return self.sh.ecfsrm(item=item,
+                              options=options)

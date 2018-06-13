@@ -10,8 +10,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import footprints
 from vortex.data.stores import Finder
-from ecmwf.tools.interfaces import ECtrans, ECfs
-from ecmwf.tools.ectrans_parameters import ectransparameters
 
 logger = footprints.loggers.getLogger(__name__)
 
@@ -43,42 +41,30 @@ class FinderECMWF(Finder):
         # Initializations
         rpath = self.ectransfullpath(remote)
         logger.info('ectransget on %s (to: %s)', rpath, local)
-        ectrans = ECtrans(system=self.system)
-        # Construct the different attributes
-        list_args = list()
-        list_options = ["get", "verbose", "overwrite"]
-        dict_args = ectransparameters(sh=self.system, **options)
-        dict_args["source"] = rpath
-        dict_args["target"] = local
-        # Call ECtrans
-        rc = ectrans(
-            list_args=list_args,
-            list_options=list_options,
-            dict_args=dict_args
-        )
-        del dict_args["source"]
-        del dict_args["target"]
+        ectrans_remote = self.sh.ectrans_remote_init(remote=options.get("remote", None),
+                                                     storage=self.hostname())
+        ectrans_gateway = self.sh.ectrans_gateway_init(gateway=options.get("gateway", None))
+        rc, dict_args = self.system.ectransget(source=rpath,
+                                               target=local,
+                                               fmt=options.get("fmt", "foo"),
+                                               cpipeline=options.get("compressionpipeline", None),
+                                               gateway=ectrans_gateway,
+                                               remote=ectrans_remote)
         return rc
 
     def ectransput(self, local, remote, options):
         # Initializations
         rpath = self.ectransfullpath(remote)
         logger.info('ectransput on %s (from: %s)', rpath, local)
-        ectrans = ECtrans(system=self.system)
-        # Construct the different attributes
-        list_args = list()
-        list_options = ["put", "verbose", "overwrite"]
-        dict_args = ectransparameters(sh=self.system, **options)
-        dict_args["source"] = local
-        dict_args["target"] = rpath
-        # Call ECtrans
-        rc = ectrans(
-            list_args=list_args,
-            list_options=list_options,
-            dict_args=dict_args
-        )
-        del dict_args["source"]
-        del dict_args["target"]
+        ectrans_remote = self.sh.ectrans_remote_init(remote=options.get("remote", None),
+                                                     storage=self.hostname())
+        ectrans_gateway = self.sh.ectrans_gateway_init(gateway=options.get("gateway", None))
+        rc, dict_args = self.system.ectransput(source=local,
+                                               target=rpath,
+                                               fmt=options.get("fmt", "foo"),
+                                               cpipeline=options.get("compressionpipeline", None),
+                                               gateway=ectrans_gateway,
+                                               remote=ectrans_remote)
         return rc
 
     def ectransdelete(self, remote, options):
@@ -89,18 +75,9 @@ class FinderECMWF(Finder):
 
     def ecfscheck(self, remote, options):
         rpath = self.ecfsfullpath(remote)
-        ecfs = ECfs(self.system)
-        command = "etest"
-        list_args = [rpath, ]
-        if "options" in options:
-            list_options = options["options"]
-        else:
-            list_options = ["r", ]
-        if ecfs:
-            rc = ecfs(command=command,
-                      list_args=list_args,
-                      dict_args=dict(),
-                      list_options=list_options)
+        list_options = options.get("options", list())
+        rc, dict_args = self.system.ecfstest(item=rpath,
+                                             options=list_options)
         return rc
 
     def ecfslocate(self, remote, options):
@@ -108,48 +85,27 @@ class FinderECMWF(Finder):
 
     def ecfsget(self, remote, local, options):
         rpath = self.ecfsfullpath(remote)
-        ecfs = ECfs(system=self.system)
-        command = "ecp"
-        list_args = [rpath, local]
-        if "options" in options:
-            list_options = options["options"]
-        else:
-            list_options = list()
-        if ecfs:
-            rc = ecfs(command=command,
-                      list_args=list_args,
-                      dict_args=dict(),
-                      list_options=list_options)
+        list_options = options.get("options", list())
+        cpipeline = options.get("compressionpipeline")
+        rc, dict_args = self.system.ecfsget(source=rpath,
+                                            target=local,
+                                            cpipeline=cpipeline,
+                                            options=list_options)
         return rc
 
     def ecfsput(self, local, remote, options):
         rpath = self.ecfsfullpath(remote)
-        ecfs = ECfs(system=self.system)
-        command = "ecp"
-        list_args = [local, rpath]
-        if "options" in options:
-            list_options = options["options"]
-        else:
-            list_options = list()
-        if ecfs:
-            rc = ecfs(command=command,
-                      list_args=list_args,
-                      dict_args=dict(),
-                      list_options=list_options)
+        list_options = options.get("options", list())
+        cpipeline = options.get("compressionpipeline")
+        rc, dict_args = self.system.ecfsput(source=local,
+                                            target=rpath,
+                                            cpipeline=cpipeline,
+                                            options=list_options)
         return rc
 
     def ecfsdelete(self, remote, options):
         rpath = self.ecfsfullpath(remote)
-        ecfs = ECfs(system=self.system)
-        command = "erm"
-        list_args = [rpath, ]
-        if "options" in options:
-            list_options = options["options"]
-        else:
-            list_options = list()
-        if ecfs:
-            rc = ecfs(command=command,
-                      list_args=list_args,
-                      dict_args=dict(),
-                      list_options=list_options)
+        list_options = options.get("options", list())
+        rc, dict_args = self.system.ecfsrm(item=rpath,
+                                           options=list_options)
         return rc
