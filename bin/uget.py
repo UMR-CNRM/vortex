@@ -101,7 +101,7 @@ class UGetShell(cmd.Cmd):
     _valid_hack = re.compile(r'(?P<gco>g)?(?P<what>data|env)\s+' + _valid_partial_baseid + r'\s+' +
                              r'into\s+' + _valid_partial_ugetid + '$')
     _valid_set = re.compile(r'(?P<what>storage|location)\s+(?P<value>\S+)$')
-    _valid_bootstraphack = re.compile(r'(?P<location>\w+)')
+    _valid_bootstraphack = re.compile(r'(?P<bootlocation>\w+)')
 
     _config_file = sh.path.join(gl.configrc, 'uget-client-defaults.ini')
 
@@ -937,7 +937,7 @@ class UGetShell(cmd.Cmd):
         """
         mline = self._valid_syntax(self._valid_bootstraphack, line)
         if mline:
-            basedir = sh.path.join(self._storehack.cache.entry, mline['location'])
+            basedir = sh.path.join(self._storehack.cache.entry, mline['bootlocation'])
             for d in ('env', 'data'):
                 finaldir = sh.path.join(basedir, d)
                 sh.mkdir(finaldir)
