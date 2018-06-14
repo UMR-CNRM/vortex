@@ -38,6 +38,7 @@ your needs. Currently available concrete geometries are:
     * :class:`LonlatGeometry` (That's pretty obvious)
     * :class:`CurvlinearGeometry` (Curvlinear grid)
     * :class:`MassifGeometry` (Partition of a mountain range in massifs)
+    * :class:`PostGeometry` (Ponctual geometry for nivology applications)
 
 For example, let's build a new gaussian grid::
 
@@ -200,6 +201,7 @@ class HorizontalGeometry(Geometry):
             truncation = None,
             stretching = None,
             nmassif = None,
+            nposts = None,
             lam = True,
             lonmin = None,
             latmin = None,
@@ -213,7 +215,7 @@ class HorizontalGeometry(Geometry):
                 self.__dict__[k] = True
             if isinstance(v, six.string_types) and re.match('false', v, re.IGNORECASE):
                 self.__dict__[k] = False
-        for item in ('nlon', 'nlat', 'ni', 'nj', 'nmassif', 'truncation'):
+        for item in ('nlon', 'nlat', 'ni', 'nj', 'nmassif', 'nposts', 'truncation'):
             cv = getattr(self, item)
             if cv is not None:
                 setattr(self, item, int(cv))
@@ -277,7 +279,7 @@ class HorizontalGeometry(Geometry):
         # Optional infos
         for attr in [k for k in ('area', 'resolution', 'truncation',
                                  'stretching', 'nlon', 'nlat', 'ni', 'nj',
-                                 'nmassif')
+                                 'nmassif', 'nposts')
                      if getattr(self, k, False)]:
             card += "\n{0}{0}{1:10s} : {2!s}".format(indent, attr.title(),
                                                      getattr(self, attr))
@@ -520,7 +522,31 @@ class MassifGeometry(UnstructuredGeometry):
         return fmts.format(self.kind, self.area, self.nmassif)
 
 
+class PostGeometry(UnstructuredGeometry):
+    """Post geometry for Nivology applications"""
+
+    _tag_topcls = False
+
+    def __init__(self, *args, **kw):  # @UnusedVariable
+        """
+        :param str tag: The geometry's name (if no **tag** attributes is provided,
+            the first positional attribute is considered to be the tag name)
+        :param str info: A free description of the geometry
+        :param int nposts: The number of posts in this geometry
+        :param str area: The grid location
+        """
+        super(PostGeometry, self).__init__(**kw)
+        self.kind = 'postes'
+        if self.area is None:
+            self.area = self.tag
+
+    def doc_export(self):
+        """Relevant informations to print in the documentation."""
+        fmts = 'kind={0:s}, area={1:s}, posts count={2!s}'
+        return fmts.format(self.kind, self.area, self.nposts)
+
 # Load default geometries when the module is first imported
+
 
 def load(inifile='@geometries.ini', refresh=False, verbose=True):
     """Load a set of pre-defined geometries from a configuration file.
