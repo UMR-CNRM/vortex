@@ -204,7 +204,13 @@ class Prep(InitialCondition):
                 ),
                 # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
                 cutoff = dict(
-                    optional = True)
+                    optional = True),
+                stage = dict(
+                    info = "specify for SODA if prep is background or analyzed",
+                    values = ['_an', '_bg', ''],
+                    default= '',
+                    optional = True,
+                ),
             )
         )
     ]
@@ -224,7 +230,7 @@ class Prep(InitialCondition):
 
     def cenvortex_basename(self):
 
-        return 'PREP_' + self.date.ymdh + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
+        return 'PREP_' + self.date.ymdh + self.stage + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
 
 class SnowObsOld(GeoFlowResource):
@@ -279,13 +285,13 @@ class SnowObsOld(GeoFlowResource):
 
         return self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
+
 class SnowObs(ObsRaw):
     '''
     @author : B. Cluzet
     New abstract class for snow obs (any geom, any time span, any sensor)
     '''
     _abstract = True
-    
     _footprint = [
         dict(
             info = 'Snow observations',
@@ -307,6 +313,11 @@ class SnowObs(ObsRaw):
                     info = "The resource's massif geometry.",
                     type = MassifGeometry,
                 ),
+                stage = dict(
+                    info = 'processing level of the obs',
+                    optional = True,
+                    default = 'void'
+                ),
                 # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
                 cutoff = dict(
                     optional = True)
@@ -315,11 +326,11 @@ class SnowObs(ObsRaw):
     ]
 
     _extension_remap = dict(netcdf='nc')
-    
+
     @property
     def period(self):
         pass
-    
+
     @property
     def realkind(self):
         return "obs"
@@ -335,9 +346,9 @@ class Snowobs_timeseries(SnowObs):
     '''
     @author : B. Cluzet
     Class for timeseries of snow obs (any geom, any sensor).
-    '''   
-    
-    footprint = [
+    '''
+
+    _footprint = [
         dict(
             info = 'Timeseries of snow observations',
             attr = dict(
@@ -348,35 +359,38 @@ class Snowobs_timeseries(SnowObs):
                 dateend = dict(
                     info = "Last date of the observation file",
                     type = Date,
+                    optional = False
                 ),
                 part = dict(
                     info = "Description of the obs (var, sensor,location...)",
-                    values= ['MODIS', 'insitu','SD','SWE',"snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"]
-                ),        
+                    values = ['MODIS', 'insitu', 'SD', 'SWE', "snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"]
+                ),
             )
         )
-    ]   
+    ]
+
     @property
     def period(self):
         return self.datebegin.y + '_' + self.dateend.y
-    
+
     @property
     def realkind(self):
-        return self.realkind + '_' + self.part    
-    
+        return super(Snowobs_1date, self).realkind + '_' + self.part
+
     def cenvortex_basename(self):
         print "CENVORTEX_BASENAME"
         name = self.realkind + "_" + self.geometry.area + "_" + self.period + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
         print name
         return name
- 
+
+
 class Snowobs_1date(SnowObs):
     '''
     @author : B. Cluzet
     Class for snow obs. (any geom, any sensor) at one date.
-    '''   
-    
-    footprint = [
+    '''
+
+    _footprint = [
         dict(
             info = 'snow observation',
             attr = dict(
@@ -386,27 +400,32 @@ class Snowobs_1date(SnowObs):
                 ),
                 part = dict(
                     info = "Description of the obs (var, sensor,location...)",
-                    values= ['MODIS', 'insitu','SD','SWE',"snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"]
-                ),        
+                    values = ['MODIS', 'insitu', 'SD', 'SWE', "snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"]
+                ),
+                stage = dict(
+                    info = "Enforce 1date",
+                    values = ['1date'],
+                    optional = False,
+                ),
             )
         )
     ]
-       
+
     @property
     def period(self):
-        return self.dateobs.y
-    
+        return self.dateobs.ymdh
+
     @property
     def realkind(self):
-        return self.realkind + '_' + self.part    
-    
+        return super(Snowobs_1date, self).realkind + '_' + self.part
+
     def cenvortex_basename(self):
         print "CENVORTEX_BASENAME"
         name = self.realkind + "_" + self.geometry.area + "_" + self.period + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
         print name
         return name
 
-        
+
 class ScoresSnow(SurfaceIO):
     """Class for the safrane output files."""
     _footprint = [

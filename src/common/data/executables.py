@@ -139,7 +139,7 @@ class OfflineSurfex(SurfaceModel):
                     default  = 'master_offline'
                 ),
                 kind = dict(
-                    values   = ['offline', ],
+                    values   = ['offline', 'soda'],
                 ),
                 model = dict(
                     values   = ['surfex', ],

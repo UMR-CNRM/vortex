@@ -36,6 +36,12 @@ class Surfex_PreProcess(AlgoComponent):
                 info = "Name of the first forcing file",
                 type = str,
             ),
+            nmembers = dict(
+                info = "number of members",
+                type = int,
+                optional = True,
+                default = None
+            ),
         )
     )
 
@@ -56,7 +62,7 @@ class Surfex_PreProcess(AlgoComponent):
         for namelist in self.find_namelists():
             # Update the contents of the namelist (date and location)
             # Location taken in the FORCING file.
-            newcontent = update_surfex_namelist_object(namelist.contents, self.datebegin, forcing = self.forcingname, dateend = self.dateend)
+            newcontent = update_surfex_namelist_object(namelist.contents, self.datebegin, forcing = self.forcingname, dateend = self.dateend, nmembers = self.nmembers)
             newnam = footprints.proxy.container(filename=namelist.container.basename)
             newcontent.rewrite(newnam)
             newnam.close()

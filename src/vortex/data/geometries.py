@@ -138,8 +138,8 @@ class Geometry(footprints.util.GetByTag):
     @classmethod
     def tag_clean(self, tag):
         """Geometries id tags are lower case."""
-        return tag.lower()
-
+        # return tag.lower() B. Cluzet strange bug with lautaret geom
+        return tag
     def doc_export(self):
         """Relevant informations to print in the documentation."""
         return 'kind={:s}'.format(self.kind)

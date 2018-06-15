@@ -796,6 +796,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         """HH formated string."""
         return self.strftime('%H')
 
+    @property
+    def ymdHh(self):
+        """SURFEX-SODA hour format yymmddHhh ex : 140331H10"""
+        return self.strftime('%y%m%dH%H')
+
     def compact(self):
         """Compact concatenation of date values, up to the second (YYYYMMDDHHSS)."""
         return self.ymdhms
