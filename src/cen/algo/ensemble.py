@@ -77,9 +77,10 @@ class Surfex_Member(VortexWorkerBlindRun):
                 optional = False
             ),
             nforcing = dict(
-                info = "Number of ensemblist forcing (default deterministic : 1)",
+                info = "Number of ensemblist forcing (soda-deterministic : 1, default-escroc = 0)",
                 type = int,
-                default = 1,
+                optional = True,
+                default = 0,
             ),
         )
     )
@@ -143,7 +144,7 @@ class Surfex_Member(VortexWorkerBlindRun):
         # print inputs
 
     def _surfex_commons(self, rundir, thisdir):
-        if self.nforcing > 1:  # in case of soda, each offline process runs in its own dir mb**** (thisdir)
+        if self.nforcing > 0:  # soda case
             self.set_env(thisdir)
         else:
             self.set_env(rundir)
@@ -171,7 +172,7 @@ class Surfex_Member(VortexWorkerBlindRun):
             self.modify_prep(datebegin_this_run)
 
             # Get the first file covering part of the whole simulation period
-            if self.nforcing > 1:
+            if self.nforcing > 0:
                 dateforcbegin, dateforcend = get_file_period("FORCING", thisdir, datebegin_this_run, self.dateend)
                 dateend_this_run = min(self.dateend, dateforcend)
                 print self.dateend
@@ -262,9 +263,10 @@ class Surfex_Ensemble(ParaBlindRun):
                 values = ["E1", "E2", "Crocus", "EZob", "E1tartes"]
             ),
             nforcing = dict(
-                info = "Number of ensemblist forcing (default determinitic : 1)",
+                info = "Number of ensemblist forcing (soda-deterministic : 1, default (escroc : 0)",
                 type = int,
-                default = 1,
+                optional = True,
+                default = 0,
             ),
         )
     )
@@ -390,4 +392,3 @@ class SodaWorker(Parallel):
         # datebegin_this_run = dateend_this_run
         # need_other_run = dateforcend < self.dateend
         os.chdir('..')
-
