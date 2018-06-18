@@ -114,5 +114,6 @@ class TestTargetsOp(unittest.TestCase):
         self.assertTrue(self.tg.isnetworknode)
         self.assertFalse(self.tg.istransfertnode)
 
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

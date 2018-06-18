@@ -19,6 +19,7 @@ class TagSubject(SendMail):
         kw['subject'] = self.tag + ': ' + kw.get('subject', 'no subject')
         return super(TagSubject, self).service_info(**kw)
 
+
 ad.add(TagSubject())
 
 print ad.actions

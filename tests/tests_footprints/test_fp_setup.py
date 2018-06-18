@@ -98,5 +98,6 @@ class utFootprintSetup(TestCase):
         self.assertIsInstance(rv, dict)
         self.assertDictEqual(rv, dict(bottomvalue=2, hello='foo'))
 
+
 if __name__ == '__main__':
     main(verbosity=2)

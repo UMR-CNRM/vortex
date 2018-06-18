@@ -318,5 +318,6 @@ class TestArpIfsSimplifiedCycle(unittest.TestCase):
         self.assertDetect('cy42_assimens-op2.05', 'cy42_op2')
         self.assertDetect('al41t1_arome@asscom1-op2.01', 'cy41t1_op2')
 
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

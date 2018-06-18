@@ -206,6 +206,7 @@ class Section(object):
         outdict['stage'] = self.stage
         return outdict
 
+
 class Sequence(footprints.observers.Observer):
     """
     Logical sequence of sections such as inputs or outputs sections.

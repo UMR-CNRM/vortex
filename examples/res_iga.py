@@ -25,6 +25,7 @@ def bilan(hdls):
         print hdl.location()
         hdl.get()
 
+
 liste_infos_res = (
     dict(kind='analysis', model='arpege', cutoff="assim", date="2011110906",
          file='/ch/mxpt/mxpt001/steph_perso/python/Vortex/SandBox/Essai/ICMSHARPEINIT',

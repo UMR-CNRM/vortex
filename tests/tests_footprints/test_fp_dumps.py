@@ -226,5 +226,6 @@ class utDump(TestCase):
         self.assertEqual(td.cleandump(complex2),
                          expected_complex2_oneline.format(me=__name__))
 
+
 if __name__ == '__main__':
     main(verbosity=2)

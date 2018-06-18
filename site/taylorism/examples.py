@@ -144,7 +144,7 @@ class MatrixProducter(Worker):
     def _task(self):
         for i in range(self.i1, self.i2 + 1):
             for j in range(self.j1, self.j2 + 1):
-                self.C[i, j] = sum([self.A[i,k] * self.B[k,j] for k in range(self.A.shape[1])])
+                self.C[i, j] = sum([self.A[i, k] * self.B[k, j] for k in range(self.A.shape[1])])
 
 
 def sleepers_generic_program(verbose=True, scheduler=None):
@@ -243,7 +243,7 @@ def summer_example(verbose=True, use_lock=True):
     print(str(s[0]) + '==' + str(sum(range(n))))
 
 
-def matrixproduct_example(A_shape = (6,7), B_shape = (7,8),
+def matrixproduct_example(A_shape = (6, 7), B_shape = (7, 8),
                           iblocks = 2, jblocks = 4,
                           verbose=True):
     """
@@ -287,4 +287,4 @@ def matrixproduct_example(A_shape = (6,7), B_shape = (7,8),
                          sharedmemory_common_instructions=dict(A=A, B=B, C=C))
     boss.wait_till_finished()
     print('Exec in:', time.time() - t0)
-    print(C[:,:])
+    print(C[:, :])

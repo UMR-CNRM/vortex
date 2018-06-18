@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 from vortex.data.outflow import NoDateResource
 from gco.syntax.stdattrs import gvar
+from vortex.data.contents import DataTemplate
 
 """
 Query files used by various databases.

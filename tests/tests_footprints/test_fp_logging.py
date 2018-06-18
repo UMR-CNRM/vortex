@@ -23,5 +23,6 @@ class utLogger(TestCase):
         for r in stack:
             l.handle(r)
 
+
 if __name__ == '__main__':
     main(verbosity=2)

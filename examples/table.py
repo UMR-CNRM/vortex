@@ -44,6 +44,7 @@ class TablePerso(IndexedTable):
     def xxtsrc(self, g, x):
         return self.xxtpos(1, g, x)
 
+
 ttab = TablePerso()
 ttab.add([
     [0, 'xxt00', 'select0'],

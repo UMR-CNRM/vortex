@@ -166,5 +166,6 @@ class TestExpressoServer(unittest.TestCase):
         self.assertFalse(self.sh.path.exists('server_decoy_processing_1',),
                          'Checking fake processing')
 
+
 if __name__ == '__main__':
     unittest.main()

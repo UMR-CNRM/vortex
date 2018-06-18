@@ -49,6 +49,7 @@ class R02(R01):
     def realkind(self):
         return 'R02'
 
+
 print t.line
 
 print R01.footprint_retrieve(), R01.footprint_retrieve().as_dict(), "\n"

@@ -49,6 +49,7 @@ from bronx.fancies.dispatch import ExtendedCmdLiner
 
 FULL_OPTS = ('xdate', 'model', 'cutoff', 'term', 'notterm', 'location', 'step', 'suite', 'kind', 'namespace')
 
+
 class OpNamCmd(ExtendedCmdLiner):
 
     @WrapCmdLineArgs('cfgname', 'cfgtag', 'cfgdir', 'cfgroot', 'cfgfile', 'suite', 'loglevel')
