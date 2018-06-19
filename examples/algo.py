@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 # Status : OK (v0.6.21)
 
 import vortex
@@ -17,7 +19,7 @@ sh.cd(e.HOME + '/tmp/rundir', create=True)
 
 tb = vortex.toolbox
 
-print t.line
+print(t.line)
 
 script = tb.rh(
     remote=g.siteroot + '/examples/tmp/test.sh',
@@ -26,46 +28,46 @@ script = tb.rh(
     language=e.trueshell()
 )
 
-print script.idcard()
+print(script.idcard())
 
-print t.line
+print(t.line)
 
-print t.prompt, "Get resource... ", script.get()
+print(t.prompt, "Get resource... ", script.get())
 
-print t.line
+print(t.line)
 
 x = tb.algo(engine='launch', interpreter=script.resource.language)
 
-print t.prompt, x
-print t.prompt, x.footprint_as_dict()
-print t.prompt, script.container.localpath()
+print(t.prompt, x)
+print(t.prompt, x.footprint_as_dict())
+print(t.prompt, script.container.localpath())
 
-print t.line
+print(t.line)
 
 x.run(script)
 
-print t.line
+print(t.line)
 
 x = tb.algo(engine='blind')
 
-print t.prompt, x
-print t.prompt, x.footprint_as_dict()
+print(t.prompt, x)
+print(t.prompt, x.footprint_as_dict())
 
-print t.line
+print(t.line)
 
 x.run(script)
 
-print t.line
+print(t.line)
 
 x = tb.algo(engine='parallel')
 
-print t.prompt, x
-print t.prompt, x.footprint_as_dict()
+print(t.prompt, x)
+print(t.prompt, x.footprint_as_dict())
 
 e.vortex_debug_env = True
 
-print t.line
+print(t.line)
 
 x.run(script, mpiopts=dict(n=2))
 
-print t.line
+print(t.line)

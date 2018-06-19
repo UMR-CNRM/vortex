@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from vortex import toolbox
 from vortex.tools import date
 
@@ -25,7 +27,7 @@ mysys = g.system
 myenv = mysys.env
 
 mysys.cd(myenv.tmpdir)
-print t.prompt, mysys.pwd()
+print(t.prompt, mysys.pwd())
 
 cache = myenv.home + '/tmp/fcdemo/'
 
@@ -43,9 +45,9 @@ fpenv = vortex.toolbox.defaults(
     model='arpege'
 )
 
-print t.prompt, fpenv()
+print(t.prompt, fpenv())
 
-print t.line
+print(t.line)
 
 analyse = toolbox.input(
     role = 'Analysis',
@@ -63,10 +65,10 @@ namelist = toolbox.input(
 
 for rl in ( analyse, namelist ):
     for r in rl:
-        print t.line, r.idcard()
+        print(t.line, r.idcard())
         r.get()
 
-print t.line
+print(t.line)
 
 arpege = toolbox.rload(
     role = 'Model',
@@ -76,7 +78,7 @@ arpege = toolbox.rload(
     local = 'ARPEGE.EX',
 ).pop()
 
-print arpege.idcard()
+print(arpege.idcard())
 arpege.get()
 
 toolbox.output(
@@ -95,10 +97,10 @@ toolbox.output(
     local = 'NODE.001_01'
 )
 
-print t.line
+print(t.line)
 
 x = toolbox.component(engine='parallel')
-print t.prompt, x.as_dict()
+print(t.prompt, x.as_dict())
 
 myenv.update(
     F_PROGINF="DETAIL",
@@ -126,7 +128,7 @@ x.run(arpege, mpiopts = dict(nn=1, nnp=4))
 
 for rh in output:
     for r in rh:
-        print t.line, r.idcard()
+        print(t.line, r.idcard())
         r.put()
 
-print t.prompt, 'Duration time =', t.duration()
+print(t.prompt, 'Duration time =', t.duration())

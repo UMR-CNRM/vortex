@@ -2,6 +2,8 @@
 # -*- coding:Utf-8 -*-
 # vim: set ts=4 sw=4 expandtab et:
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from vortex import sessions, toolbox
 from vortex.tools import env
 from vortex.syntax.stdattrs import Term
@@ -150,21 +152,21 @@ for bogus in bogus_namelist:
 #    )
 
 ################################################################################
-print t.prompt, "Resources loading duration=", t.duration()
+print(t.prompt, "Resources loading duration=", t.duration())
 
 #exit() ### cougar down ...
 
 # fetch all resources
 for r in resources_list:
     try:
-        print t.prompt, "fetch resource: "+r.provider.uri(r.resource)
+        print(t.prompt, "fetch resource: "+r.provider.uri(r.resource))
         r.get()
     except TypeError:
-        print dir(r.resource)
-        print r.resource.footprint_retrieve()
+        print(dir(r.resource))
+        print(r.resource.footprint_retrieve())
         raise
 
-print t.prompt, "Resources get duration=", t.duration()
+print(t.prompt, "Resources get duration=", t.duration())
 
 # cleanup
 total_size = 0
@@ -172,11 +174,11 @@ for r in resources_list:
     file_name = r.container.localpath()
     file_size = mysys.path.getsize(file_name)
     total_size += file_size
-    print t.prompt, file_size, ' -> ' + mysys.path.dirname(file_name) + \
-                                  '/' + mysys.path.basename(file_name)
+    print(t.prompt, file_size, ' -> ' + mysys.path.dirname(file_name) + \
+                                  '/' + mysys.path.basename(file_name))
     mysys.unlink(file_name)
 
-print t.prompt, "Total size fetched = ", float(total_size)/1024/1024, "MO"
-print t.prompt, "Total duration=", t.duration()
+print(t.prompt, "Total size fetched = ", float(total_size)/1024/1024, "MO")
+print(t.prompt, "Total duration=", t.duration())
 
 

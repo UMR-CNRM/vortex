@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from vortex import sessions, toolbox
 
 import vortex.data
@@ -23,7 +25,7 @@ myenv = env.current()
 mysys = t.system()
 
 mysys.chdir(myenv.TMPDIR + '/rundir')
-print t.prompt, mysys.pwd()
+print(t.prompt, mysys.pwd())
 
 #domain = ['GLOB15','GLOB25','EURAT01','EUROC25','GLOB05']
 domains = [ 'GLOB15' ]
@@ -37,7 +39,7 @@ prvout = dict(experiment = 'A000')
 arome_cycle = 'al36t1_arome-op2.22'
 arpege_cycle = 'cy36t1_op2.16'
 
-print t.line
+print(t.line)
 
 fpenv = vortex.toolbox.defaults(
     geometry = geo,
@@ -48,9 +50,9 @@ fpenv = vortex.toolbox.defaults(
     gspool=myenv.HOME + '/gco-tampon',
 )
 
-print t.prompt, fpenv()
+print(t.prompt, fpenv())
 
-print t.line
+print(t.line)
 
 genv.register(cycle=arpege_cycle, entry='double', MASTER_ARPEGE='cy36t1_masterodb-op2.12.SX20r411.x.exe')
 genv.register(cycle=arpege_cycle, entry='double', RTCOEF_TGZ='var.sat.misc_rtcoef.12.tgz')
@@ -60,8 +62,8 @@ genv.register(cycle=arpege_cycle, entry='double', MAT_FILTER_GLOB15='mat.filter.
 gconf = genv.register(cycle=arpege_cycle, entry='double', NAMELIST_ARPEGE='cy36t1_op2.11.nam')
 #gconf = genv.register(cycle=arome_cycle, entry='double', NAMELIST_AROME='al36t1_arome-op2.13.nam')
 
-print t.prompt, ">>>>> GENV :", genv.cycles()
-print t.prompt, gconf
+print(t.prompt, ">>>>> GENV :", genv.cycles())
+print(t.prompt, gconf)
 
 analysis = toolbox.rload(
     prvin,
@@ -170,14 +172,14 @@ myenv.update(
 
 for rh in inputs:
     for r in rh:
-        print r
-        print 'Resource attr : ', r.resource._attributes
-        print 'Provider attr: ', r.provider._attributes
-        print 'Container attr: ', r.container._attributes
+        print(r)
+        print('Resource attr : ', r.resource._attributes)
+        print('Provider attr: ', r.provider._attributes)
+        print('Container attr: ', r.container._attributes)
         # print t.line, r.idcard()
         r.get()
 
-print t.line
+print(t.line)
 
 """
 arpege = arpege.pop()

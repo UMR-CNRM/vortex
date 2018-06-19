@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from vortex import sessions, toolbox
 
 import vortex.data
@@ -21,7 +23,7 @@ myenv = env.current()
 mysys = t.system()
 
 mysys.chdir(myenv.TMPDIR + '/rundir')
-print t.prompt, mysys.pwd()
+print(t.prompt, mysys.pwd())
 
 #domain = ['GLOB15','GLOB25','EURAT01','EUROC25','GLOB05']
 domains = [ 'GLOB15' ]
@@ -34,7 +36,7 @@ inputdir = myenv.HOME + '/tmp/inputs/'
 prvin  = dict(experiment = '99A0', block='canari')
 prvout = dict(experiment = 'A001', block='forecast')
 
-print t.line
+print(t.line)
 
 fpenv = vortex.toolbox.defaults(
     geometry = geo,
@@ -44,9 +46,9 @@ fpenv = vortex.toolbox.defaults(
     model='arpege'
 )
 
-print t.prompt, fpenv()
+print(t.prompt, fpenv())
 
-print t.line
+print(t.line)
 
 analysis = toolbox.rload(
     prvin,
@@ -130,21 +132,21 @@ outputs = ( historic, gridpoint, listing )
 
 for rh in inputs:
     for r in rh:
-        print t.line, r.idcard()
+        print(t.line, r.idcard())
         r.get()
 
-print t.line
+print(t.line)
 
 arpege = arpege.pop()
 
 x = components.load(engine='launch', interpreter=arpege.resource.language)
-print t.prompt, x.as_dict()
+print(t.prompt, x.as_dict())
 
 x.run(arpege)
 
 for rh in outputs:
     for r in rh:
-        print t.line, r.idcard()
+        print(t.line, r.idcard())
         r.put()
 
-print t.prompt, 'Duration time =', t.duration()
+print(t.prompt, 'Duration time =', t.duration())

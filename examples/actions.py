@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 # Status : OK (v0.6.20)
 
 import vortex
@@ -22,8 +24,8 @@ class TagSubject(SendMail):
 
 ad.add(TagSubject())
 
-print ad.actions
-print ad.candidates('mail')
+print(ad.actions)
+print(ad.candidates('mail'))
 
 g = vortex.sessions.getglove()
 g.email = 'eric.sevault@meteo.fr'

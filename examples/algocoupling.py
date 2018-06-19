@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 # Status : OK (v0.6.21)
 
 import vortex
@@ -24,7 +26,7 @@ sh = t.system()
 
 if sh.cd(e.HOME + '/tmp/rundir'):
     #sh.rmglob('-rf', '*')
-    print t.prompt, sh.pwd()
+    print(t.prompt, sh.pwd())
 
 today = date.today()
 
@@ -104,32 +106,32 @@ inputs = (
     ),
 )
 
-print t.line
+print(t.line)
 
 t.warning()
 for rh in inputs:
     for r in rh:
-        print 'Get', r.location(), '...',
-        print r.get(insitu=False)
+        print('Get', r.location(), '...',)
+        print(r.get(insitu=False))
 
 
 rx = vortex.toolbox.rh(remote=g.siteroot + '/examples/tmp/test.sh',
                        file='testcpl.sh', language='bash', kind='script')
 
-print t.line
+print(t.line)
 
 rx.get()
 
-print t.line
+print(t.line)
 
 
 x = vortex.toolbox.algo(kind='coupling', timescheme='eul', model='arpifs',
                         fcterm=0, timestep=415.385, engine='parallel')
 
-print t.prompt, 'Engine is', x
+print(t.prompt, 'Engine is', x)
 
-print t.line
+print(t.line)
 
 x.run(rx, mpiopts=dict(n=2))
 
-print t.line
+print(t.line)

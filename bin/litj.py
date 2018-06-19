@@ -1,6 +1,9 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+#from __future__ import absolute_import, unicode_literals, division
+
 """
 Leave it to Jeeves
 A basic launching interface to Jeeves' services !
@@ -67,7 +70,7 @@ if __name__ == "__main__":
         j.restart()
 
     else:
-        print 'Unknown command'
+        print('Unknown command')
         sys.exit(2)
 
     sys.exit(0)

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import vortex
 
 from vortex.data.geometries import GaussGeometry
@@ -15,9 +17,9 @@ ctx = t.context
 
 ctx.system.cd(ctx.env.tmpdir + '/rundir')
 
-print t.prompt, ctx.system.pwd()
+print(t.prompt, ctx.system.pwd())
 
-print t.line
+print(t.line)
 
 spgeo = GaussGeometry(id='Current op', area='france', truncation=798, stretching=2.4, lam=False)
 
@@ -35,15 +37,15 @@ rh = vortex.toolbox.rload(
 )
 
 for r in rh:
-    print t.line, r.idcard()
-    print 'GET:', r.get()
+    print(t.line, r.idcard())
+    print('GET:', r.get())
 
 
-print t.line
+print(t.line)
 
-print t.prompt, 'Duration time =', t.duration()
+print(t.prompt, 'Duration time =', t.duration())
 
-print t.line
+print(t.line)
 
 rh = vortex.toolbox.rload(
     namespace='olive.archive.fr',
@@ -59,15 +61,15 @@ rh = vortex.toolbox.rload(
 )
 
 for r in rh:
-    print t.line, r.idcard()
-    print 'GET:', r.get()
+    print(t.line, r.idcard())
+    print('GET:', r.get())
 
-print t.line
+print(t.line)
 
 ctx.system.dir('analysis_*', output=False)
 
-print t.line
+print(t.line)
 
-print t.prompt, 'Duration time =', t.duration()
+print(t.prompt, 'Duration time =', t.duration())
 
-print t.line
+print(t.line)

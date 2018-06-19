@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import vortex
 from vortex.data.geometries import GaussGeometry
 
@@ -14,9 +16,9 @@ ctx = t.context
 
 ctx.system.cd(ctx.env.tmpdir + '/rundir')
 
-print t.prompt, ctx.system.pwd()
+print(t.prompt, ctx.system.pwd())
 
-print t.line
+print(t.line)
 
 spgeo = GaussGeometry(id='Current op', area='france', truncation=798, stretching=2.4, lam=False)
 
@@ -33,22 +35,22 @@ a = vortex.toolbox.rh(
     model='arpege',
 )
 
-print t.line
-print a.idcard()
+print(t.line)
+print(a.idcard())
 
-print t.line
-print a.locate()
+print(t.line)
+print(a.locate())
 
 a.provider = provider_vx
 
-print t.line
-print a.idcard()
+print(t.line)
+print(a.idcard())
 
-print t.line
-print a.locate()
+print(t.line)
+print(a.locate())
 
-print t.line
+print(t.line)
 
-print t.prompt, 'Duration time =', t.duration()
+print(t.prompt, 'Duration time =', t.duration())
 
-print t.line
+print(t.line)

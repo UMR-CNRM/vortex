@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import vortex
 from vortex.data.contents import IndexedTable
 
@@ -15,11 +17,11 @@ t = vortex.ticket()
 g = t.glove
 rl = vortex.toolbox.rload
 
-print t.line
+print(t.line)
 
-print t.prompt, 'Playing with table and callable attributes'
+print(t.prompt, 'Playing with table and callable attributes')
 
-print t.line
+print(t.line)
 
 
 class TablePerso(IndexedTable):
@@ -69,9 +71,9 @@ genv.register(
     NAMELIST_ARPEGE='cy36t1_op2.11.nam'
 )
 
-print genv.cycles()
+print(genv.cycles())
 
-print t.line
+print(t.line)
 
 nams = rl(
     genv=arpege_cycle,
@@ -84,10 +86,10 @@ nams = rl(
 )
 
 for nam in nams:
-    print t.line, nam.idcard()
+    print(t.line, nam.idcard())
 
-print t.line
+print(t.line)
 
-print t.prompt, 'Duration time =', t.duration()
+print(t.prompt, 'Duration time =', t.duration())
 
-print t.line
+print(t.line)

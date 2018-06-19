@@ -5,6 +5,8 @@
 Services: routing files.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import sys
 sys.stdout = sys.stderr
 
@@ -41,15 +43,15 @@ def list_actions():
     import pprint
     sh.title('Actions information')
     sh.subtitle('available actions')
-    print pprint.pformat(ad.actions)
+    print(pprint.pformat(ad.actions))
     sh.subtitle('existing handlers')
-    print pprint.pformat(ad.items())
+    print(pprint.pformat(ad.items()))
     sh.subtitle('action -> handlers')
     for act in ad.actions:
         handlers = ad.candidates(act)
         status = [h.status() for h in handlers]
-        print act, ':', pprint.pformat(zip(status, handlers))
-    print
+        print(act, ':', pprint.pformat(zip(status, handlers)))
+    print()
 
 
 def more_debug(names=None, level=logging.DEBUG):
@@ -90,8 +92,8 @@ def test_route():
     with open('tempo.dta', 'w') as fp:
         contents = "Test VORTEX - " + stime + '\n'
         fp.write(contents)
-    print "contents:", contents
-    print "md5 =", hashlib.md5(contents).hexdigest()
+    print("contents:", contents)
+    print("md5 =", hashlib.md5(contents).hexdigest())
 
     sh.subtitle('BDAP')
     ad.route(kind='bdap', filename='tempo.dta', productid=147, domain='ATOUR10', term=84,
@@ -106,7 +108,7 @@ def test_route():
     ad.route(kind='bdm', filename='tempo.dta', productid=4242)
 
     sh.subtitle('results')
-    print "log files were created in", resuldir
+    print("log files were created in", resuldir)
 
 
 ad.alarm_off()

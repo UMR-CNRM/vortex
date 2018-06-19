@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -15,14 +17,14 @@ import iga.data
 
 def bilan(hdls):
     for hdl in hdls:
-        print hdl
-        print hdl.complete
-        print hdl.provider
-        print hdl.provider.pathname(hdl.resource)
-        print hdl.resource
-        print hdl.resource.footprint_as_dict()
-        print hdl.container
-        print hdl.location()
+        print(hdl)
+        print(hdl.complete)
+        print(hdl.provider)
+        print(hdl.provider.pathname(hdl.resource))
+        print(hdl.resource)
+        print(hdl.resource.footprint_as_dict())
+        print(hdl.container)
+        print(hdl.location())
         hdl.get()
 
 

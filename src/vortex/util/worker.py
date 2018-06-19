@@ -17,18 +17,18 @@ class AttrDict(dict):
 
     >>> obj = AttrDict()
     >>> obj.test = 'hi'
-    >>> print obj['test']
+    >>> print(obj['test'])
     hi
 
     >>> obj['test'] = "bye"
-    >>> print obj.test
+    >>> print(obj.test)
     bye
 
-    >>> print len(obj)
+    >>> print(len(obj))
     1
 
     >>> obj.clear()
-    >>> print len(obj)
+    >>> print(len(obj))
     0
 
     >>> obj.a

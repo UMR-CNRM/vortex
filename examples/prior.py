@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from footprints.priorities import top
 
 import vortex
@@ -10,15 +12,15 @@ u_fill_fp_catalogs = SimpleTest
 t = vortex.ticket()
 t.warning()
 
-print t.line
+print(t.line)
 
-print t.prompt, 'Playing with priorities'
+print(t.prompt, 'Playing with priorities')
 
-print t.prompt, 'Priorities', top
+print(t.prompt, 'Priorities', top)
 for x in top:
-    print t.prompt, ' >', x
+    print(t.prompt, ' >', x)
 
-print t.line
+print(t.line)
 
 test = vortex.toolbox.rh(
     remote='databox',
@@ -30,23 +32,23 @@ test = vortex.toolbox.rh(
     virtual=True
 )
 
-print t.line
+print(t.line)
 
-print t.prompt, 'SimpleTest from load 1', test
-print t.prompt, 'SimpleTest handler complete ?', test.complete
-print t.prompt, 'SimpleTest resource ?', test.resource.realkind, test.resource
+print(t.prompt, 'SimpleTest from load 1', test)
+print(t.prompt, 'SimpleTest handler complete ?', test.complete)
+print(t.prompt, 'SimpleTest resource ?', test.resource.realkind, test.resource)
 
-print 'xtest() :', test.resource.xtest()
+print('xtest() :', test.resource.xtest())
 
-print t.line
+print(t.line)
 
-print t.prompt, top()
-print t.prompt, top.OLIVE.rank
+print(t.prompt, top())
+print(t.prompt, top.OLIVE.rank)
 top.OLIVE.up()
-print t.prompt, top()
-print t.prompt, top.OLIVE.rank
+print(t.prompt, top())
+print(t.prompt, top.OLIVE.rank)
 
-print t.line
+print(t.line)
 
 test = vortex.toolbox.rh(
     remote='databox',
@@ -58,23 +60,23 @@ test = vortex.toolbox.rh(
     virtual=True
 )
 
-print t.line
+print(t.line)
 
-print t.prompt, 'SimpleTest from load 2', test
-print t.prompt, 'SimpleTest handler complete ?', test.complete
-print t.prompt, 'SimpleTest resource ?', test.resource.realkind, test.resource
+print(t.prompt, 'SimpleTest from load 2', test)
+print(t.prompt, 'SimpleTest handler complete ?', test.complete)
+print(t.prompt, 'SimpleTest resource ?', test.resource.realkind, test.resource)
 
-print 'xtest() :', test.resource.xtest()
+print('xtest() :', test.resource.xtest())
 
-print t.line
+print(t.line)
 
 top.reset()
-print top()
+print(top())
 top.insert('olive', after='toolbox')
 top.insert('oper', before='debug')
-print top()
+print(top())
 
-print t.line
+print(t.line)
 
 test = vortex.toolbox.rh(
     remote='databox',
@@ -86,16 +88,16 @@ test = vortex.toolbox.rh(
     virtual=True
 )
 
-print t.line
+print(t.line)
 
-print t.prompt, 'SimpleTest from load 3', test
-print t.prompt, 'SimpleTest handler complete ?', test.complete
-print t.prompt, 'SimpleTest resource ?', test.resource.realkind, test.resource
+print(t.prompt, 'SimpleTest from load 3', test)
+print(t.prompt, 'SimpleTest handler complete ?', test.complete)
+print(t.prompt, 'SimpleTest resource ?', test.resource.realkind, test.resource)
 
-print 'xtest() :', test.resource.xtest()
+print('xtest() :', test.resource.xtest())
 
-print t.line
+print(t.line)
 
-print t.prompt, 'Duration time =', t.duration()
+print(t.prompt, 'Duration time =', t.duration())
 
-print t.line
+print(t.line)

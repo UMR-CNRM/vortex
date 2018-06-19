@@ -1,6 +1,8 @@
 #!/opt/softs/python/2.7.5/bin/python -u
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 __all__ = []
 
 import vortex
@@ -23,14 +25,14 @@ class Forecast(app.Application):
         self.subtitle('Experiment Setup')
         self.conf.update(kw)
 
-        print 'FC term  =', self.conf.fc_term
-        print 'FC terms =', self.conf.fc_terms
-        print 'FP terms =', self.conf.fp_terms
+        print('FC term  =', self.conf.fc_term)
+        print('FC terms =', self.conf.fc_terms)
+        print('FP terms =', self.conf.fp_terms)
 
         geomodel = vortex.data.geometries.get(tag=self.conf.fc_geometry)
 
-        print 'FC MODEL GEOMETRY =', geomodel
-        print 'FC BDAP DOMAINS   =', self.conf.fp_domains
+        print('FC MODEL GEOMETRY =', geomodel)
+        print('FC BDAP DOMAINS   =', self.conf.fp_domains)
 
         # Attributs par défaut pour toutes les résolutions d'empreintes à suivre.
         toolbox.defaults(
@@ -51,7 +53,7 @@ class Forecast(app.Application):
             block       = 'forecast',
         )
 
-        print 'Provider interne :', self.conf.p_flow
+        print('Provider interne :', self.conf.p_flow)
 
         # Provider de ressources extérieures au flux de l'expérience en cours (ici, l'archive oper)
         import iga.data
@@ -62,7 +64,7 @@ class Forecast(app.Application):
             namespace   = '[suite].inline.fr',
         )
 
-        print 'Provider externe :', self.conf.p_extern
+        print('Provider externe :', self.conf.p_extern)
 
         # Provider de ressources constantes (hors du flux), en général GEnv
 
@@ -88,7 +90,7 @@ class Forecast(app.Application):
             genv = self.conf.cycle,
         )
 
-        print 'Provider const :', self.conf.p_const
+        print('Provider const :', self.conf.p_const)
 
     def process(self):
         """Core processing of a forecast experiment."""

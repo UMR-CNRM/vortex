@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 # Status : OK (v0.6.21)
 
 import vortex
@@ -53,29 +55,29 @@ inputs = (
 )
 
 
-print t.line
+print(t.line)
 
 for rh in inputs:
     for r in rh:
-        print 'Get', r.location(), '...',
-        print r.get()
+        print('Get', r.location(), '...',)
+        print(r.get())
 
 rx = vortex.toolbox.rh(remote=g.siteroot + '/examples/tmp/test.sh',
                        file='test.sh', model='arpege', kind='ifsmodel')
 
-print t.line
+print(t.line)
 
 rx.get()
 
-print t.line
+print(t.line)
 
 x = vortex.toolbox.algo(kind='fclam', timestep=900, engine='parallel')
 
-print t.prompt, 'Engine is', x
+print(t.prompt, 'Engine is', x)
 
-print t.line
+print(t.line)
 
 x.run(rx, mpiopts=dict(n=2))
 
-print t.line
+print(t.line)
 

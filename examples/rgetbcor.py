@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import vortex
 import common.data
 import olive.data
@@ -12,9 +14,9 @@ ctx = t.context
 
 ctx.system.cd(ctx.env.tmpdir + '/rundir')
 
-print t.prompt, ctx.system.getcwd()
+print(t.prompt, ctx.system.getcwd())
 
-print t.line
+print(t.line)
 
 provider_op = vortex.toolbox.provider(suite='oper', namespace='[suite].archive.fr', igakey='arpege')
 
@@ -28,23 +30,23 @@ bcor = vortex.toolbox.rh(
     model='arpege',
 )
 
-print t.line
-print bcor.idcard()
+print(t.line)
+print(bcor.idcard())
 
-print t.line
-print bcor.locate()
+print(t.line)
+print(bcor.locate())
 
-print t.line
-print bcor.check()
+print(t.line)
+print(bcor.check())
 
-print t.line
-print bcor.get()
+print(t.line)
+print(bcor.get())
 
-print t.line
-print t.prompt, ctx.system.getcwd()
+print(t.line)
+print(t.prompt, ctx.system.getcwd())
 ctx.system.dir(bcor.container.localpath())
 
-print t.line
-print t.prompt, 'Duration time =', t.duration()
+print(t.line)
+print(t.prompt, 'Duration time =', t.duration())
 
-print t.line
+print(t.line)

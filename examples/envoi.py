@@ -3,6 +3,8 @@
 
 # Status : OK (v0.6.21)
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import os
 
 from vortex import sessions
@@ -69,22 +71,22 @@ dico6 = {
 
 ad.mail(**dico1)
 ad.mail_status()
-print '_'*80
+print('_'*80)
 
 ad.mail_on()
 ad.mail(**dico1)
 ad.mail(**dico3)
-print '_'*80
+print('_'*80)
 
 #TODO: prepare a test to alert the supervision
 ad.alarm(**dico4)
 ad.alarm_status()
-print '_'*80
+print('_'*80)
 
 ad.alarm_on()
 ad.alarm(**dico4)
-print '_'*80
+print('_'*80)
 
 ad.add(SendMail(kind='mailreport'))
 ad.mailreport(**dico6)
-print '_'*80
+print('_'*80)

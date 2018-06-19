@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import vortex
 import sandbox.data
 
 t = vortex.ticket()
 t.warning()
 
-print t.line
+print(t.line)
 
-print t.prompt, 'Load the test resource'
+print(t.prompt, 'Load the test resource')
 
-print t.line
+print(t.line)
 
 test = vortex.toolbox.rh(
     tube='ftp',
@@ -25,35 +27,35 @@ test = vortex.toolbox.rh(
     incore=True
 )
 
-print test.idcard()
-print test.get()
+print(test.idcard())
+print(test.get())
 
-print t.line
+print(t.line)
 
-print test.container.localpath(), '- filled ?', test.container.filled, test.container._tmpfile
+print(test.container.localpath(), '- filled ?', test.container.filled, test.container._tmpfile)
 
-print t.line
+print(t.line)
 
-print test.history()
+print(test.history())
 
-print t.line
+print(t.line)
 
 test.container.cat()
 
-print t.line
+print(t.line)
 
 c = test.contents
 
-print c
+print(c)
 
 for x in c:
-    print 'CONTENTS:', x
-    
-print 'LEN:', len(c)
-print 'RAW:', c()
+    print('CONTENTS:', x)
 
-print t.line
+print('LEN:', len(c))
+print('RAW:', c())
 
-print t.prompt, 'Duration time =', t.duration()
+print(t.line)
 
-print t.line
+print(t.prompt, 'Duration time =', t.duration())
+
+print(t.line)

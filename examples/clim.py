@@ -3,6 +3,8 @@
 
 # Status : TODO From a long long time...
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import vortex
 from vortex.data import geometries
 from vortex.tools import date
@@ -38,7 +40,7 @@ t = vortex.sessions.ticket()
 #lh8 = toolbox.rload( namespace='[suite].archive.fr',kind='historic',local='toto',model='aladin',date='2011111400',cutoff='production', term=3,suite='oper',area='testmp2')
 #lh8= toolbox.rload( kind='gridpoint',local='GRID+0003',model='arpege',date='2011111400',cutoff='production', term=3,origin='historic',nativefmt='grib', domain='GLOB15',suite='oper')
 
-print t.line
+print(t.line)
 
 vortex.toolbox.fast_resolve = True
 
@@ -53,7 +55,7 @@ lh8 = vortex.toolbox.rload(
 lrh = (lh8,)
 for rh in lrh:
     for r in rh:
-        print t.line, r.idcard(), t.line
-        print 'GET', r.location(), '...', r.get()
+        print(t.line, r.idcard(), t.line)
+        print('GET', r.location(), '...', r.get())
 
-print t.line
+print(t.line)

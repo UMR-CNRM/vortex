@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import vortex
 from vortex.tools import date
 
 import vortex.data
 import vortex.algo
 
-from vortex.data.geometries import GausGeometry, LonlatGeometry
+from vortex.data.geometries import GaussGeometry, LonlatGeometry
 
 import common.data
 import olive.data
@@ -25,14 +27,14 @@ e = t.env
 sh = t.system()
 sh.cd(e.HOME + '/tmp/rundir')
 
-print t.prompt, sh.pwd()
+print(t.prompt, sh.pwd())
 
 arpege_cycle = 'cy36t1_op2.16'
 
 #domain = ['GLOB15','GLOB25','EURAT01','EUROC25','GLOB05']
 domains = [ 'GLOB15' ]
 rundate = date.Date('2011092200')
-geo = GausGeometry(id='Current op', area='france', truncation=798, lam=False)
+geo = GaussGeometry(id='Current op', area='france', truncation=798, lam=False)
 geoBDAP = LonlatGeometry(area='GLOB15', resolution=1.5, runit='dg')
 
 
@@ -44,7 +46,7 @@ fpenv = vortex.toolbox.defaults(
     model='arpege'
 )
 
-print t.line
+print(t.line)
 
 if g.realkind == 'opuser':
     prvin  = dict()
@@ -55,10 +57,10 @@ else:
     prvout = vortex.proxy.provider(experiment='A001', block='forecast')
     prvcst = vortex.proxy.provider(genv=arpege_cycle)
 
-print t.prompt, fpenv()
-print t.prompt, prvin
+print(t.prompt, fpenv())
+print(t.prompt, prvin)
 
-print t.line
+print(t.line)
 
 vortex.toolbox.input(
     prvin,
@@ -67,18 +69,18 @@ vortex.toolbox.input(
     local = 'ICMSHFCSTINIT',
 )
 
-print t.line
+print(t.line)
 
 for section in c.sequence.inputs():
-    print section.role, section.stage, section.kind, section.intent, section
-    print ' > ', section.rh
-    print section.rh.get()
+    print(section.role, section.stage, section.kind, section.intent, section)
+    print(' > ', section.rh)
+    print(section.rh.get())
 
-print t.line
+print(t.line)
 
 for section in c.sequence:
-    print section.role, section.stage, section.kind, section.intent, section
+    print(section.role, section.stage, section.kind, section.intent, section)
 
-print t.line
+print(t.line)
 
-print 'Sequence inputs:', c.sequence.inputs()
+print('Sequence inputs:', c.sequence.inputs())

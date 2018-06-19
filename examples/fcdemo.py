@@ -3,6 +3,8 @@
 
 # Status : In progress (v0.6.21)
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import vortex
 from vortex.tools import date
 
@@ -30,7 +32,7 @@ rl = vortex.toolbox.rload
 t.warning()
 
 sh.cd(e.TMPDIR + '/rundir', create=True)
-print t.prompt, sh.pwd()
+print(t.prompt, sh.pwd())
 
 arpege_cycle = 'cy37t1_op1.17'
 
@@ -47,7 +49,7 @@ fpenv = vortex.toolbox.defaults(
     gspool=e.HOME + '/gco-tampon',
 )
 
-print t.line
+print(t.line)
 
 if g.realkind == 'opuser':
     prvin  = dict()
@@ -58,9 +60,9 @@ else:
     prvout = tb.provider(experiment='A001', block='forecast', namespace='vortex.cache.fr')
     prvcst = tb.provider(genv=arpege_cycle)
 
-print t.prompt, fpenv()
+print(t.prompt, fpenv())
 
-print t.line
+print(t.line)
 
 genv.register(
     # current arpege cycle
@@ -76,9 +78,9 @@ genv.register(
     NAMELIST_ARPEGE='cy37t1_op1.03.nam'
 )
 
-print genv.cycles()
+print(genv.cycles())
 
-print t.line
+print(t.line)
 
 input = (
 
@@ -180,29 +182,29 @@ outputs = (
 
 for rh in input:
     for r in rh:
-        print t.line, r.idcard()
-        print 'GET:', r.get()
+        print(t.line, r.idcard())
+        print('GET:', r.get())
 
-print t.line
+print(t.line)
 
-print arpege.idcard()
-print 'GET:', arpege.get()
+print(arpege.idcard())
+print('GET:', arpege.get())
 
-print t.line
+print(t.line)
 
 x = tb.component(engine='parallel')
 
-print t.prompt, x.as_dict()
+print(t.prompt, x.as_dict())
 
 x.run(arpege, mpiopts = dict(nn=1, nnp=4))
 
 for rh in outputs:
     for r in rh:
-        print t.line, r.idcard()
-        print 'Locate:', r.locate()
+        print(t.line, r.idcard())
+        print('Locate:', r.locate())
         sh.touch(r.container.localpath())
-        print 'PUT:', r.put()
+        print('PUT:', r.put())
 
-print t.line
+print(t.line)
 
-print t.prompt, 'Duration time =', t.duration()
+print(t.prompt, 'Duration time =', t.duration())

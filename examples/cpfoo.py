@@ -3,6 +3,8 @@
 
 # Status : Looks OK (v0.6.21)
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import vortex
 import olive
 import sandbox.data
@@ -16,7 +18,7 @@ ra = dict(
     geometry=geometries.get(tag='globalsp')
 )
 
-print t.line
+print(t.line)
 
 e = t.env
 sh = t.system()
@@ -24,7 +26,7 @@ sh.cd(e.HOME + '/tmp/rundir', create=True)
 
 thefile = 'titi'
 if sh.path.exists(thefile):
-    print 'Remove', thefile
+    print('Remove', thefile)
     sh.unlink(thefile)
 
 rl = vortex.toolbox.rh
@@ -34,26 +36,26 @@ with open('/tmp/toto', 'w') as fp:
 
 a = rl(ra, remote='/tmp/toto', file=thefile)
 
-print t.line
-print a.idcard()
-print t.line
-print t.prompt, 'LOC', a.locate()
-print t.prompt, 'GET', a.location(), '...', a.get()
-print t.prompt, 'CLEAR', '...', a.clear()
-print t.prompt, 'GET', '...', a.get()
-print t.prompt, a.history()
+print(t.line)
+print(a.idcard())
+print(t.line)
+print(t.prompt, 'LOC', a.locate())
+print(t.prompt, 'GET', a.location(), '...', a.get())
+print(t.prompt, 'CLEAR', '...', a.clear())
+print(t.prompt, 'GET', '...', a.get())
+print(t.prompt, a.history())
 sh.dir(output=False)
 
-print t.line
+print(t.line)
 
 a = rl(ra, remote='/tmp/toto', file='tmp/' + thefile)
 
-print t.line
-print a.idcard()
-print t.line
-print t.prompt, 'LOC', a.locate()
-print t.prompt, 'GET', a.location(), '...', a.get()
-print t.prompt, a.history()
+print(t.line)
+print(a.idcard())
+print(t.line)
+print(t.prompt, 'LOC', a.locate())
+print(t.prompt, 'GET', a.location(), '...', a.get())
+print(t.prompt, a.history())
 sh.dir(output=False)
 
 # user = 'mrpm631'
@@ -62,41 +64,41 @@ sh.ftp('cougar.meteo.fr', user).put(thefile, 'tmp/titi')
 
 a = rl(ra, tube='ftp', hostname='cougar.meteo.fr', remote='tmp/titi', file='bidon/' + thefile)
 
-print t.line
-print a.idcard()
-print t.line
-print t.prompt, 'LOC', a.locate()
-print t.prompt, 'GET', a.location(), '...', a.get()
-print t.prompt, a.history()
+print(t.line)
+print(a.idcard())
+print(t.line)
+print(t.prompt, 'LOC', a.locate())
+print(t.prompt, 'GET', a.location(), '...', a.get())
+print(t.prompt, a.history())
 sh.dir(output=False)
 
-print t.line
+print(t.line)
 
 thefile = 'signum'
 if sh.path.exists(thefile):
-    print 'Remove', thefile
+    print('Remove', thefile)
     sh.unlink(thefile)
 
 a = rl(ra, remote='tmp/signum', file=thefile, hostname='cougar.meteo.fr', tube='ftp')
 
-print t.line
-print a.idcard()
-print t.line
-print t.prompt, 'LOC', a.locate()
-print t.prompt, 'GET', a.location(), '...', a.get()
-print t.prompt, a.history()
+print(t.line)
+print(a.idcard())
+print(t.line)
+print(t.prompt, 'LOC', a.locate())
+print(t.prompt, 'GET', a.location(), '...', a.get())
+print(t.prompt, a.history())
 sh.dir(output=False)
 
-print t.line
+print(t.line)
 
 a = rl(ra, experiment='A001', block='canari', file='titi', namespace='olive.cache.fr')
 
-print t.line
-print a.idcard()
-print t.line
-print t.prompt, 'LOC', a.locate()
-print t.prompt, 'GET', a.location(), '...', a.put()
-print t.prompt, a.history()
+print(t.line)
+print(a.idcard())
+print(t.line)
+print(t.prompt, 'LOC', a.locate())
+print(t.prompt, 'GET', a.location(), '...', a.put())
+print(t.prompt, a.history())
 sh.dir(output=False)
 
-print t.line
+print(t.line)

@@ -1,5 +1,8 @@
 #!/opt/softs/python/2.7.5/bin/python -u
 # -*- coding: utf-8 -*-
+
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 #SBATCH --exclusive
 #SBATCH --verbose
 #SBATCH --cpus-per-task=6
@@ -101,15 +104,15 @@ fc_term  = 3
 fc_terms = range(0, fc_term+1)
 fp_terms = fc_terms
 
-print 'FC term =', fc_term, '/ FP terms =', fp_terms
+print('FC term =', fc_term, '/ FP terms =', fp_terms)
 
 # On fixe la géométrie par défaut du model, usuellement une information de configuration,
 # comme celle des domaines BDAP, mais ici, on fixe tout "à la main".
 geomodel = vortex.data.geometries.get(tag=e.get('GEOMETRY', 'globalsp'))
 bdap_domains = ['euroc25', 'eurat01', 'glob05', 'glob15', 'glob25']
 
-print 'GEOMETRY OBJ =', geomodel
-print 'BDAP DOMAINS =', bdap_domains
+print('GEOMETRY OBJ =', geomodel)
+print('BDAP DOMAINS =', bdap_domains)
 
 # Attributs par défaut pour toutes les résolutions d'empreintes à suivre.
 toolbox.defaults(
@@ -130,7 +133,7 @@ p_flux = vortex.proxy.provider(
     block       = 'forecast',
 )
 
-print 'Provider interne :', p_flux
+print('Provider interne :', p_flux)
 
 # Provider de ressources extérieures au flux de l'expérience en cours (ici, l'archive oper)
 import iga.data
@@ -141,7 +144,7 @@ p_extern = vortex.proxy.provider(
     namespace   = '[suite].inline.fr',
 )
 
-print 'Provider externe :', p_extern
+print('Provider externe :', p_extern)
 
 # Provider de ressources constantes (hors du flux), en général GEnv
 
@@ -167,7 +170,7 @@ p_const = vortex.proxy.provider(
     genv = cycle,
 )
 
-print 'Provider const :', p_const
+print('Provider const :', p_const)
 
 #--------------------------------------------------------------------------------------------------
 

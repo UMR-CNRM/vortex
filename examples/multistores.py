@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import vortex
 from vortex.data import geometries
 from vortex.tools.date import Date
@@ -19,11 +21,11 @@ e = t.env
 sh = t.system()
 sh.cd(e.HOME + '/tmp/rundir')
 
-print t.line
+print(t.line)
 
-print t.prompt, sh.pwd()
+print(t.prompt, sh.pwd())
 
-print t.line
+print(t.line)
 
 prvin  = vortex.toolbox.provider(suite='oper', vapp='arpege')
 prvout = vortex.toolbox.provider(experiment='A001', block='canari', namespace='multi.olive.fr')
@@ -35,7 +37,7 @@ fpenv = vortex.toolbox.defaults(
     cutoff='production',
 )
 
-print t.prompt, fpenv()
+print(t.prompt, fpenv())
 
 a = vortex.toolbox.rh(
     provider=prvin,
@@ -43,26 +45,26 @@ a = vortex.toolbox.rh(
     local='ICMSHFCSTINIT',
 )
 
-print t.line, a.idcard(), t.line
+print(t.line, a.idcard(), t.line)
 
-print 'GET', a.location(), '...', a.get()
+print('GET', a.location(), '...', a.get())
 
-print t.line
+print(t.line)
 
 sh.dir(output=False)
 
 a.provider = prvout
 
-print t.line, a.idcard()
+print(t.line, a.idcard())
 
-print t.line
+print(t.line)
 
-print t.prompt, 'Duration time =', t.duration()
+print(t.prompt, 'Duration time =', t.duration())
 
-print t.line
+print(t.line)
 
-print 'PUT', a.location(), '...', a.put()
+print('PUT', a.location(), '...', a.put())
 
-print t.prompt, 'Duration time =', t.duration()
+print(t.prompt, 'Duration time =', t.duration())
 
-print t.line
+print(t.line)

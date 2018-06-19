@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import footprints
 
 import vortex
@@ -50,21 +52,21 @@ class R02(R01):
         return 'R02'
 
 
-print t.line
+print(t.line)
 
-print R01.footprint_retrieve(), R01.footprint_retrieve().as_dict(), "\n"
+print(R01.footprint_retrieve(), R01.footprint_retrieve().as_dict(), "\n")
 
-print t.line
+print(t.line)
 
-print R02.footprint_retrieve(), R02.footprint_retrieve().as_dict(), "\n"
+print(R02.footprint_retrieve(), R02.footprint_retrieve().as_dict(), "\n")
 
-print t.line
+print(t.line)
 
 rfp = R02.footprint_retrieve()
-print rfp.info, rfp.only
+print(rfp.info, rfp.only)
 
-print t.line
+print(t.line)
 
-print t.prompt, 'Duration time =', t.duration()
+print(t.prompt, 'Duration time =', t.duration())
 
-print t.line
+print(t.line)
