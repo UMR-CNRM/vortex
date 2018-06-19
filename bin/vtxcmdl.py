@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 # encoding: utf-8
-'''
+"""
 Invokes get/put/prestage on resource handlers created form the command-line options.
 
 Any option specified on the command line (except -h and -v) will be used as
@@ -12,7 +12,7 @@ have default values (see the list below).
 
 This scripts only supports two notations for the command line:
 `--attribute=value` or `--atribute value`.
-'''
+"""
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
@@ -94,7 +94,7 @@ class ExtraArgumentError(Exception):
 
 
 def vortex_delayed_init(t):
-    '''Setup footprints'''
+    """Setup footprints"""
     import common, olive, gco  # @UnusedImport
     # Load shell addons
     import vortex.tools.folder  # @UnusedImport
@@ -104,7 +104,7 @@ def vortex_delayed_init(t):
 
 
 def actual_action(action, t, args, fatal=True):
-    '''Performs the action request by the user (get/put/prestage).'''
+    """Performs the action request by the user (get/put/prestage)."""
     from vortex import toolbox
     rhanlers = toolbox.rload(** vars(args))
     with t.sh.ftppool():
@@ -139,7 +139,7 @@ def actual_action(action, t, args, fatal=True):
                         print("... but going on since fatal is False.")
             else:
                 raise ValueError("The resource handler could not be fully defined.")
-    
+
         # Finish the action by actualy sending the prestaging request
         if action == 'prestage':
             ctx = t.context
@@ -147,7 +147,7 @@ def actual_action(action, t, args, fatal=True):
 
 
 def argvalue_rewrite(value):
-    '''Detect and process special values in arguments.'''
+    """Detect and process special values in arguments."""
     if value.startswith('rangex'):
         value = re.split('\s*,\s*', value[7:-1])
         return fp.util.rangex(* value)
@@ -159,13 +159,13 @@ def argvalue_rewrite(value):
 
 
 def process_remaining(margs, rargs):
-    '''Process all the remainging arguments and add them to the margs namespace.
+    """Process all the remainging arguments and add them to the margs namespace.
 
     All the remaining arguments must conform to the following convention:
 
       * --key=value
       * --key value
-    '''
+    """
     re_arg0 = re.compile('--(\w+)(?:=(.*))?$')
     while len(rargs):
         argmatch = re_arg0.match(rargs.pop(0))
@@ -186,7 +186,7 @@ def process_remaining(margs, rargs):
 
 
 def main():
-    '''Process command line options.'''
+    """Process command line options."""
 
     program_name = os.path.basename(sys.argv[0])
     program_shortdesc = program_name + ' -- ' + __import__('__main__').__doc__.lstrip("\n")

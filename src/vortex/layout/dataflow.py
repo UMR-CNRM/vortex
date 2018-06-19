@@ -299,7 +299,7 @@ class Sequence(footprints.observers.Observer):
 
     @staticmethod
     def _fuzzy_match(stuff, allowed):
-        '''Check if ``stuff`` is in ``allowed``. ``allowed`` may contain regex.'''
+        """Check if ``stuff`` is in ``allowed``. ``allowed`` may contain regex."""
         if (isinstance(allowed, six.string_types) or
                 not isinstance(allowed, collections.Iterable)):
             allowed = [allowed, ]
@@ -443,14 +443,14 @@ class SequenceInputsReport(object):
             self._local_map[local][kind].append(insec)
 
     def _local_status(self, local):
-        '''Find out the local resource status (see InputsReportStatus).
+        """Find out the local resource status (see InputsReportStatus).
 
         It returns a tuple that contains:
 
         * The local resource status (see InputsReportStatus)
         * The resource handler that was actually used to get the resource
         * The resource handler that should have been used in the nominal case
-        '''
+        """
         desc = self._local_map[local]
         # First, check the nominal resource
         nominal = desc['nominal'][-1]
@@ -469,7 +469,7 @@ class SequenceInputsReport(object):
         return status, true_rh, nominal.rh
 
     def synthetic_report(self, detailed=False, only=None):
-        '''Returns a string that describes each local resource with its status.
+        """Returns a string that describes each local resource with its status.
 
         :param bool detailed: when alternates are used, tell which resource handler
                               is actually used and which one should have been used
@@ -477,7 +477,7 @@ class SequenceInputsReport(object):
         :param list[str] only: Output only the listed statuses (statuses are defined in
                                :data:`InputsReportStatus`). By default (*None*), output
                                everything. Note that "alternates" are always shown.
-        '''
+        """
         if only is None:
             # The default is to display everything
             only = list(InputsReportStatus)
@@ -510,7 +510,7 @@ class SequenceInputsReport(object):
         return outstr
 
     def print_report(self, detailed=False, only=None):
-        '''Print a list of each local resource with its status.
+        """Print a list of each local resource with its status.
 
         :param bool detailed: when alternates are used, tell which resource handler
                               is actually used and which one should have been used
@@ -518,18 +518,18 @@ class SequenceInputsReport(object):
         :param list[str] only: Output only the listed statuses (statuses are defined in
                                :data:`InputsReportStatus`). By default (*None*), output
                                everything. Note that "alternates" are always shown.
-        '''
+        """
         print(self.synthetic_report(detailed=detailed, only=only))
 
     def active_alternates(self):
-        '''List the local resource for which an alternative resource has been used.
+        """List the local resource for which an alternative resource has been used.
 
         It returns a dictionary that associates the local resource name with
         a tuple that contains:
 
         * The resource handler that was actually used to get the resource
         * The resource handler that should have been used in the nominal case
-        '''
+        """
         outstack = dict()
         for local in self._local_map:
             status, true_rh, nominal_rh = self._local_status(local)
@@ -538,7 +538,7 @@ class SequenceInputsReport(object):
         return outstack
 
     def missing_resources(self):
-        '''List the missing local resources.'''
+        """List the missing local resources."""
         outstack = dict()
         for local in self._local_map:
             (status, true_rh,  # @UnusedVariable

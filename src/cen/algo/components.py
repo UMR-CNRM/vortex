@@ -520,7 +520,7 @@ class S2M_component(ParaBlindRun):
         self.env.DR_HOOK_NOT_MPI = 1
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
+        """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(S2M_component, self)._default_common_instructions(rh, opts)
         ddict['date']  = self.date  # Note: The date could be auto-detected using the sequence
         ddict['vconf'] = self.vconf

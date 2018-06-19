@@ -487,12 +487,12 @@ class FormatAdapter(DataContent):
 
 
 class MetaDataReader(footprints.FootprintBase):
-    '''
+    """
     Abstract class for any MetaDataReader.
 
     Note: _do_delayed_init have to be subclassed. That's where the content of the
     container is actually read.
-    '''
+    """
 
     _abstract  = True
     _collector = ('metadatareader',)
@@ -512,17 +512,17 @@ class MetaDataReader(footprints.FootprintBase):
 
     @property
     def _data(self):
-        '''Internal: check if one needs to intialise the _datahide dict.'''
+        """Internal: check if one needs to intialise the _datahide dict."""
         if self._datahide is None and self._content_in is not None:
             self._do_delayed_init()
         return self._datahide
 
     def content_init(self, thecontent):
-        '''Set the data content that will be used to read the metadata'''
+        """Set the data content that will be used to read the metadata"""
         self._content_in = thecontent
 
     def _do_delayed_init(self):
-        '''Internal: actually initialise the _data array. Have to be subclassed !'''
+        """Internal: actually initialise the _data array. Have to be subclassed !"""
         raise NotImplementedError
 
     def __getitem__(self, key):

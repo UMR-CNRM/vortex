@@ -461,7 +461,7 @@ class Raw2ODBparallel(TaylorOdbProcess):
                 nam.rh.save()
 
     def _default_pre_execute(self, rh, opts):
-        '''Change default initialisation to use LongerFirstScheduler'''
+        """Change default initialisation to use LongerFirstScheduler"""
         # Start the task scheduler
         self._boss = Boss(verbose=self.verbose,
                           scheduler=footprints.proxy.scheduler(limit='threads+memory',
