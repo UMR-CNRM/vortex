@@ -492,15 +492,15 @@ class HideService(Service):
         """Find a path for hidding files on the same filesystem."""
         username = self.sh.getlogname()
         work_dir = self.sh.path.join(self.sh.find_mount_point(filename), 'work')
-        if self.sh.path.exists(work_dir):
-            hidden_path = self.sh.path.join(work_dir, username, self.headdir)
-        else:
+        if not self.sh.path.exists(work_dir):
             logger.warning("path <%s> doesn't exist", work_dir)
             fullpath = self.sh.path.realpath(filename)
             if username not in fullpath:
                 logger.error('No login <%s> in path <%s>', username, fullpath)
                 raise ValueError('Login name not in actual path for hidding data')
-            hidden_path = self.sh.path.join(fullpath.partition(username)[0], username, self.headdir)
+            work_dir = fullpath.partition(username)[0]
+            logger.debug("using work_dir = <%s>", work_dir)
+        hidden_path = self.sh.path.join(work_dir, username, self.headdir)
         return hidden_path
 
     def __call__(self, *args):
