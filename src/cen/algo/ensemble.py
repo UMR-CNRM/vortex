@@ -11,12 +11,14 @@ from deterministic import Surfex_Parallel
 from bronx.stdtypes.date import Date
 
 import footprints
+from __builtin__ import str
 logger = footprints.loggers.getLogger(__name__)
 
 from snowtools.tools.change_prep import prep_tomodify
 from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
 from snowtools.tools.update_namelist import update_surfex_namelist_object
-from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles 
+from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
+from snowtools.tasks.vortex_kitchen import vortex_conf_file
 
 
 class Surfex_Member(VortexWorkerBlindRun):
@@ -260,13 +262,25 @@ class Surfex_Ensemble(ParaBlindRun):
             ),
             subensemble = dict(
                 info = "Name of the subensemble (define which physical options are used",
-                values = ["E1", "E2", "Crocus", "EZob", "E1tartes"]
+                values = ["E1", "E2", "Crocus", "E1tartes", "E1notartes"]
             ),
             nforcing = dict(
                 info = "Number of ensemblist forcing (soda-deterministic : 1, default (escroc : 0)",
                 type = int,
                 optional = True,
                 default = 0,
+            ),
+            confvapp = dict(
+                info = "vapp",
+                type = str,
+                optional = True,
+                default = None
+            ),
+            confvconf = dict(
+                info = "vconf",
+                type = str,
+                optional = True,
+                default = None
             ),
         )
     )
@@ -275,7 +289,22 @@ class Surfex_Ensemble(ParaBlindRun):
         """Set some variables according to target definition."""
         super(Surfex_Ensemble, self).prepare(rh, opts)
         self.env.DR_HOOK_NOT_MPI = 1
-        
+        self.subdirs = ['mb{0:04d}'.format(m) for m in self.members]
+
+        self.escroc = ESCROC_subensembles(self.subensemble, self.members)
+        self.physical_options = self.escroc.physical_options
+        self.snow_parameters = self.escroc.snow_parameters
+        self.membersId = self.escroc.members  # Escroc members ids in case of rand selection for ex.
+        if self.confvapp is not None and self.confvconf is not None:
+            self.system.cp(os.environ['WORKDIR'] + '/' + self.confvapp + '/' + self.confvconf + '/conf/' + self.confvapp + '_' + self.confvconf + '.ini', self.confvapp + '_' + self.confvconf + '.ini')
+            conffile = vortex_conf_file(self.confvapp + '_' + self.confvconf + '.ini', 'a')
+            conffile.write_field('membersId', self.membersId)
+            conffile.close()
+
+        print('subdirs, physical_options, parameters')
+        print(type(self.subdirs), type(self.physical_options), type(self.snow_parameters))
+        print(len(self.subdirs), len(self.physical_options), len(self.snow_parameters))
+
     def _default_common_instructions(self, rh, opts):
         '''Create a common instruction dictionary that will be used by the workers.'''
         ddict = super(Surfex_Ensemble, self)._default_common_instructions(rh, opts)
@@ -290,16 +319,7 @@ class Surfex_Ensemble(ParaBlindRun):
         common_i = self._default_common_instructions(rh, opts)
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
-        subdirs = ['mb{0:04d}'.format(m) for m in self.members]
-
-        escroc = ESCROC_subensembles(self.subensemble, self.members)
-        physical_options = escroc.physical_options
-        snow_parameters = escroc.snow_parameters
-
-        print 'subdirs, physical_options, parameters'
-        print type(subdirs), type(physical_options), type(snow_parameters)
-        print len(subdirs), len(physical_options), len(snow_parameters)
-        self._add_instructions(common_i, dict(subdir=subdirs, physical_options=physical_options, snow_parameters=snow_parameters))
+        self._add_instructions(common_i, dict(subdir=self.subdirs, physical_options=self.physical_options, snow_parameters=self.snow_parameters))
         self._default_post_execute(rh, opts)
 
 

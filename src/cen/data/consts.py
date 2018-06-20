@@ -9,6 +9,9 @@ logger = footprints.loggers.getLogger(__name__)
 
 from common.data.consts import GenvStaticGeoResource
 from gco.syntax.stdattrs import gdomain
+from vortex.util.config import IniConf
+from vortex.data.resources import Resource
+from common.data.namelists import Namelist
 
 
 class List(GenvStaticGeoResource):
@@ -96,3 +99,62 @@ class climTG(GenvStaticGeoResource):
     def cenvortex_basename(self):
         """CEN specific naming convention"""
         return 'init_TG_' + self.geometry.area + '.' + self._extension_remap.get(self.nativefmt, self.nativefmt)
+
+
+class ConfFile(Resource):
+    """
+    Vortex configuration file.
+    """
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                type = str,
+                values =['ini_file', ],
+            ),
+            nativefmt = dict(
+                optional = True
+            ),
+            vapp = dict(
+                type = str,
+                values = ['s2m'],
+            ),
+            vconf = dict(
+                type = str,
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return ''
+
+    def cenvortex_basename(self):
+        return self.vapp + '_' + self.vconf + '.ini'
+
+
+class CenNamelist(Namelist):
+    """
+    Cen namelist (resource for toolbox output)
+    """
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                type = str,
+                values = ['cen_namelist', ],
+                outcast = ['namelist', ],
+            ),
+            model = dict(
+                values = ['surfex', ],
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return ''
+
+    def cenvortex_basename(self):
+        return 'OPTIONS.nam'
+    
+    
