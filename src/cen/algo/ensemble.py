@@ -282,6 +282,12 @@ class Surfex_Ensemble(ParaBlindRun):
                 optional = True,
                 default = None
             ),
+            stopcount = dict(
+                info = 'counter for stop steps in the assim sequence',
+                type = int,
+                optional = True,
+                default = 1,
+            ),
         )
     )
 
@@ -295,11 +301,16 @@ class Surfex_Ensemble(ParaBlindRun):
         self.physical_options = self.escroc.physical_options
         self.snow_parameters = self.escroc.snow_parameters
         self.membersId = self.escroc.members  # Escroc members ids in case of rand selection for ex.
-        if self.confvapp is not None and self.confvconf is not None:
+        print('stopcount :', self.stopcount)
+        if self.stopcount == 1:
+            print('')
+            print('copying the fuck conf file')
+            print(os.environ['WORKDIR'] + '/' + self.confvapp + '/' + self.confvconf + '/conf/' + self.confvapp + '_' + self.confvconf + '.ini', self.confvapp + '_' + self.confvconf + '.ini')
             self.system.cp(os.environ['WORKDIR'] + '/' + self.confvapp + '/' + self.confvconf + '/conf/' + self.confvapp + '_' + self.confvconf + '.ini', self.confvapp + '_' + self.confvconf + '.ini')
-            conffile = vortex_conf_file(self.confvapp + '_' + self.confvconf + '.ini', 'a')
-            conffile.write_field('membersId', self.membersId)
-            conffile.close()
+        # counter for stop (assim + pauses) steps in conf file previously copied to currdir
+        conffile = vortex_conf_file(self.confvapp + '_' + self.confvconf + '.ini', 'a')
+        conffile.write_field('membersId_' + '{0:03d}'.format(self.stopcount), self.membersId)
+        conffile.close()
 
         print('subdirs, physical_options, parameters')
         print(type(self.subdirs), type(self.physical_options), type(self.snow_parameters))
