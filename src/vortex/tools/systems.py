@@ -1033,6 +1033,22 @@ class OSExtended(System):
         else:
             return False
 
+    def rperm(self, filename, force=False):
+        """Return whether a **filename** exists and is readable by all or not.
+
+        If **force** is set to *True*, the file's permission will be modified
+        so that the file becomes readable for all.
+        """
+        if self._os.path.exists(filename):
+            mode = self._os.stat(filename).st_mode
+            is_r = all([bool(mode & i) for i in [stat.S_IRUSR,stat.S_IRGRP,stat.S_IROTH]])
+            if not is_r and force:
+                self.chmod(filename, mode | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+                is_r = True
+            return is_r
+        else:
+            return False
+
     def wperm(self, filename, force=False):
         """Return whether a **filename** exists and is writable by owner or not.
 
