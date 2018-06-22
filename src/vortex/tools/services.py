@@ -463,7 +463,10 @@ class JeevesService(Service):
 
 class HideService(Service):
     """
-    Some service to hide data... for later use, perhaps...
+    A service to hide data.
+
+    Mainly used to store files to be handled asynchronously
+    (and then deleted) by Jeeves.
     """
 
     _footprint = dict(
@@ -503,21 +506,21 @@ class HideService(Service):
         hidden_path = self.sh.path.join(work_dir, username, self.headdir)
         return hidden_path
 
-    def __call__(self, *args):
-        """Main action: ..."""
-        for filename in args:
-            actual_rootdir = self.rootdir or self.find_rootdir(filename)
-            destination = self.sh.path.join(
-                actual_rootdir,
-                '.'.join((
-                    'HIDDEN',
-                    date.now().strftime('%Y%m%d%H%M%S.%f'),
-                    'P{0:06d}'.format(self.sh.getpid()),
-                    hashlib.md5(self.sh.path.abspath(filename)).hexdigest()
-                ))
-            )
-            self.sh.cp(filename, destination, intent='in', fmt=self.asfmt)
-            return destination
+    def __call__(self, filename):
+        """Main action: hide a cheap copy this file under a unique name."""
+
+        actual_rootdir = self.rootdir or self.find_rootdir(filename)
+        destination = self.sh.path.join(
+            actual_rootdir,
+            '.'.join((
+                'HIDDEN',
+                date.now().strftime('%Y%m%d%H%M%S.%f'),
+                'P{0:06d}'.format(self.sh.getpid()),
+                hashlib.md5(self.sh.path.abspath(filename)).hexdigest()
+            ))
+        )
+        self.sh.cp(filename, destination, intent='in', fmt=self.asfmt)
+        return destination
 
 
 class Directory(object):
