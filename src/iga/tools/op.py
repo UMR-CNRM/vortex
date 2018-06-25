@@ -151,7 +151,7 @@ class OpJobAssistantTest(JobAssistant):
         vortex.toolbox.defaults(
             jname = opd.get('op_jeeves', None),
             smtpserver='smtp.meteo.fr',
-            sender='dt_dsi_op_iga_sc@meteo.fr',
+            sender='admin_prod_sc@meteo.fr',
         )
 
     def _actions_setup(self, t, **kw):
