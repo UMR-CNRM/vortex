@@ -177,7 +177,7 @@ class HendrixPrestagingTool(PrestagingTool):
     )
 
     def flush(self, email=None):
-        """Acutally send the pre-staging request to Hendrix."""
+        """Actually send the pre-staging request to Hendrix."""
         # Build the target
         request = []
         if email is not None:

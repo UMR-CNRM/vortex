@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 # encoding: utf-8
-'''
+
+"""
 Invokes get/put/prestage on resource handlers created form the command-line options.
 
 Any option specified on the command line (except -h and -v) will be used as
@@ -11,10 +12,18 @@ The only mandatory attribute is --local but some commonly used attributes
 have default values (see the list below).
 
 This scripts only supports two notations for the command line:
-`--attribute=value` or `--atribute value`.
-'''
+`--attribute=value` or `--attribute value`.
+"""
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+
+import locale
+import os
+import re
+import sys
+import traceback
+from argparse import ArgumentParser
+from argparse import RawDescriptionHelpFormatter
 
 argparse_epilog = '''
 Examples:
@@ -41,7 +50,7 @@ vortex.toolbox.rload(local='toto_[geometry:area]_[term]',
                      model='[vapp]',
                      nativefmt='[format]')
 
-One can see that namespace, vapp, vconf, model and nativefmt are automaticaly
+One can see that namespace, vapp, vconf, model and nativefmt are automatically
 taken from the defaults. The user can override the defaults from the
 command-line.
 
@@ -50,26 +59,18 @@ For example, --term='rangex(0-6-1)' on the command-line, will result in
 term = [0, 1, 2, 3, 4, 5, 6] in the ``vortex.toolbox.rload``` call.
 
 The `daterangex` utility is also available, e.g. this would generate the
-dates from 2017 Jan. 1st, 18h (included) to 2017 Jan. 3rd, 7h (excluded)
+dates from 2017 Jan. 1st, 18h (included) to 2017 Jan. 3rd, 6h (included)
 by step of 6h:
-  --date=daterangex('2017010118','2017010307','PT6H')
+  --date=daterangex('2017010118','2017010306','PT6H')
 
 Environment variables:
 
-Some of the defaults can be changed by the mean of environment variables:
-  * --namespace default is control by VORTEX_NAMESPACE
-  * --vapp default is control by VORTEX_VAPP
-  * --vconf default is control by VORTEX_VCONF
+Some of the defaults can be changed by means of environment variables:
+  * --namespace default is controlled by VORTEX_NAMESPACE
+  * --vapp default is controlled by VORTEX_VAPP
+  * --vconf default is controlled by VORTEX_VCONF
 
 '''
-
-import locale
-import sys
-import os
-import re
-import traceback
-from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
 
 # Automatically set the python path
 vortexbase = re.sub(os.path.sep + 'bin$', '',
@@ -89,24 +90,27 @@ logger = fp.loggers.getLogger(__name__)
 
 
 class ExtraArgumentError(Exception):
+
     def __init__(self, msg='Incorrect extra arguments. Please check your command line"'):
         super(ExtraArgumentError, self).__init__(msg)
 
 
 def vortex_delayed_init(t):
-    '''Setup footprints'''
-    import common, olive, gco  # @UnusedImport
+    """Setup footprints"""
+    import common, olive, gco
     # Load shell addons
-    import vortex.tools.folder  # @UnusedImport
-    import vortex.tools.grib  # @UnusedImport
-    vortex.proxy.addon(kind='allfolders', shell=t.sh)  # @UndefinedVariable
-    vortex.proxy.addon(kind='grib', shell=t.sh)  # @UndefinedVariable
+    import vortex.tools.folder
+    import vortex.tools.grib
+    # prevent the IDE from considering these unused (footprint declarations)
+    assert any([common, olive, gco, vortex.tools.folder, vortex.tools.grib])
+    vortex.proxy.addon(kind='allfolders', shell=t.sh)
+    vortex.proxy.addon(kind='grib', shell=t.sh)
 
 
 def actual_action(action, t, args, fatal=True):
-    '''Performs the action request by the user (get/put/prestage).'''
+    """Performs the action request by the user (get/put/prestage)."""
     from vortex import toolbox
-    rhanlers = toolbox.rload(** vars(args))
+    rhanlers = toolbox.rload(**vars(args))
     with t.sh.ftppool():
         for n, rh in enumerate(rhanlers):
             t.sh.subtitle("Resource Handler {:02d}/{:02d}".format(n + 1, len(rhanlers)))
@@ -134,38 +138,38 @@ def actual_action(action, t, args, fatal=True):
                         print("\n:-( Action '{}' on the resource handler ended badly".format(action))
                 if not rst:
                     if fatal:
-                        raise IOError("... stopping everithing since fatal is True and rst={!s}".format(rst))
+                        raise IOError("... stopping everything since fatal is True and rst={!s}".format(rst))
                     else:
                         print("... but going on since fatal is False.")
             else:
                 raise ValueError("The resource handler could not be fully defined.")
-    
-        # Finish the action by actualy sending the prestaging request
+
+        # Finish the action by actually sending the prestaging request
         if action == 'prestage':
             ctx = t.context
             ctx.prestaging_hub.flush()
 
 
 def argvalue_rewrite(value):
-    '''Detect and process special values in arguments.'''
+    """Detect and process special values in arguments."""
     if value.startswith('rangex'):
         value = re.split('\s*,\s*', value[7:-1])
-        return fp.util.rangex(* value)
+        return fp.util.rangex(*value)
     elif value.startswith('daterangex'):
         value = re.split('\s*,\s*', value[11:-1])
-        return date.daterangex(* value)
+        return date.daterangex(*value)
     else:
         return value
 
 
 def process_remaining(margs, rargs):
-    '''Process all the remainging arguments and add them to the margs namespace.
+    """Process all the remainging arguments and add them to the margs namespace.
 
     All the remaining arguments must conform to the following convention:
 
       * --key=value
       * --key value
-    '''
+    """
     re_arg0 = re.compile('--(\w+)(?:=(.*))?$')
     while len(rargs):
         argmatch = re_arg0.match(rargs.pop(0))
@@ -186,7 +190,7 @@ def process_remaining(margs, rargs):
 
 
 def main():
-    '''Process command line options.'''
+    """Process command line options."""
 
     program_name = os.path.basename(sys.argv[0])
     program_shortdesc = program_name + ' -- ' + __import__('__main__').__doc__.lstrip("\n")
@@ -224,7 +228,7 @@ def main():
                         metavar='any_value...', action='append')
 
     # Process arguments
-    args = process_remaining(* parser.parse_known_args())
+    args = process_remaining(*parser.parse_known_args())
     del args.dummyattribute
 
     # Setup logger verbosity
