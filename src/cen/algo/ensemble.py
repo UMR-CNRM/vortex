@@ -482,6 +482,7 @@ class SurfexWorker(_S2MWorker):
         from snowtools.tools.update_namelist import update_surfex_namelist_object
         from snowtools.tools.change_forcing import forcinput_select, forcinput_tomerge
         from snowtools.utils.infomassifs import infomassifs
+        from snowtools.tools.massif_diags import massif_simu
 
         # ESCROC cases: each member will need to have its own namelist
         # meteo ensemble cases: the forcing modification must be applied to all members and the namelist generation requires that
@@ -543,6 +544,11 @@ class SurfexWorker(_S2MWorker):
 
             # Copy the SURFOUT file for next iteration
             self.system.cp("SURFOUT.nc", "PREP.nc")
+
+            # Post-process
+            pro = massif_simu("ISBA_PROGNOSTIC.OUT.nc")
+            pro.massif_natural_risk()
+            pro.close()
 
             # Rename outputs with the dates
             save_file_date(".", "SURFOUT", dateend_this_run, newprefix="PREP")
