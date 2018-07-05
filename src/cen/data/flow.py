@@ -49,18 +49,19 @@ class SafranGuess(GeoFlowResource):
                     optional = True,
                 ),
                 source_app = dict(
-                    values = ['arpege', 'arome', 'ifs', ],
+                    values = ['arpege', 'arome', 'ifs', 'cep' ],
                 ),
                 source_conf = dict(
-                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps', 'pearome'],
+                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps', 'pearome', 'era40'],
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
                     type = MassifGeometry,
                 ),
                 cumul = dict(
-                    info = "The duration of cumulative fields (equivalent to the initial model resource term).",
-                    type = Time,
+                    info     = "The duration of cumulative fields (equivalent to the initial model resource term).",
+                    type     = Time,
+                    optional = True,
                 ),
             )
         )
@@ -88,10 +89,13 @@ class SafranGuess(GeoFlowResource):
         # origin_date = self.date.replace(hour=0)
         # return 'P' + origin_date.yymdh + '_{0:02d}'.format(self.term.hour + 6)
         # guess files are named PYYMMDDHH
-        if self.date.hour in [0, 6, 12, 18]:
-            return 'P' + self.date.yymdh
-        else:
-            raise SafranObsDateError('SAFRAN guess are synoptic, therefore the hour must be 0, 6, 12 or 18')
+        if self.source_app == 'arpege':
+            if self.date.hour in [0, 6, 12, 18]:
+                return 'P' + self.date.yymdh
+            else:
+                raise SafranObsDateError('SAFRAN guess are synoptic, therefore the hour must be 0, 6, 12 or 18')
+        elif self.conf.source_app == 'cep':
+            return 'cep_' + self.data.nivologyseason()
 
 
 class SurfaceIO(GeoFlowResource):
@@ -189,6 +193,9 @@ class SurfaceForcing(SurfaceIO):
             fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
+    def cenvortex_basename(self):
+        return self.vortex_basename()
+
 
 class Pro(SurfaceIO):
     """Class for the safrane output files."""
@@ -265,8 +272,8 @@ class Prep(InitialCondition):
 
 # A supprimer car normalement maintenant la méthode basename_info fait exactement la même chose
 # vérifier que le provider cenvortex va bien chercher vortex_basename en l'absence de cenvortex_basename
-#     def cenvortex_basename(self):
-#
+    def cenvortex_basename(self):
+        return self.vortex_basename()
 #         return 'PREP_' + self.datevalidity.ymdh + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
 

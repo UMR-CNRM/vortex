@@ -22,7 +22,9 @@ class Safran(SurfaceModel):
             info = 'Safran module',
             attr = dict(
                 model = dict(
-                    values = ['safran'],
+                    values = ['safrane', 'safrane_dev', 'syrpluie', 'syrpluie_dev', 'syrmrr', 'syrmrr_dev',
+                              'sytist', 'sytist_dev', 'syvapr', 'syvapr_dev', 'syrper', 'syrper_dev',
+                              'syvafi', 'syvafi_dev', 'sypluie', 'sypluie_dev', 'intercep', 'intercep_dev'],
                 ),
                 gvar = dict(
                     optional = True,
@@ -34,162 +36,10 @@ class Safran(SurfaceModel):
 
     @property
     def realkind(self):
-        return 'safran_module'
+        return self.kind.split('_')[0]
 
     def command_line(self, **opts):
         return ''
-
-
-class Safrane(Safran):
-    """Base class for the Safrane executable."""
-
-    _footprint = [
-        dict(
-            info = 'Safrane executable',
-            attr = dict(
-                kind = dict(
-                    values = ['safrane', 'safrane_dev']
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'safrane'
-
-
-class Syrpluie(Safran):
-    """Base class for the Syrpluie executable."""
-
-    _footprint = [
-        dict(
-            info = 'Syrpluie executable',
-            attr = dict(
-                kind = dict(
-                    values = ['syrpluie', 'syrpluie_dev']
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'syrpluie'
-
-
-class Syrmrr(Safran):
-    """Base class for the Syrmrr executable."""
-
-    _footprint = [
-        dict(
-            info = 'Syrmrr executable',
-            attr = dict(
-                kind = dict(
-                    values = ['syrmrr', 'syrmrr_dev']
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'syrmrr'
-
-
-class Sytist(Safran):
-    """Base class for the Sytist executable."""
-
-    _footprint = [
-        dict(
-            info = 'Sytist executable',
-            attr = dict(
-                kind = dict(
-                    values = ['sytist', 'sytist_dev']
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'sytist'
-
-
-class Syvapr(Safran):
-    """Base class for the Sytist executable."""
-
-    _footprint = [
-        dict(
-            info = 'Syvapr executable',
-            attr = dict(
-                kind = dict(
-                    values = ['syvapr', 'syvapr_dev']
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'syvapr'
-
-
-class Syrper(Safran):
-    """Base class for the Sytist executable."""
-
-    _footprint = [
-        dict(
-            info = 'Syrper executable',
-            attr = dict(
-                kind = dict(
-                    values = ['syrper', 'syrper_dev']
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'syrper'
-
-
-class Syvafi(Safran):
-    """Base class for the Sytist executable."""
-
-    _footprint = [
-        dict(
-            info = 'Syvafi executable',
-            attr = dict(
-                kind = dict(
-                    values = ['syvafi', 'syvafi_dev']
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'syvafi'
-
-
-class Sypluie(Safran):
-    """Base class for the Sytist executable."""
-
-    _footprint = [
-        dict(
-            info = 'Sypluie executable',
-            attr = dict(
-                kind = dict(
-                    values = ['sypluie', 'sypluie_dev']
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'sypluie'
 
 
 class SafranGribFiltering(Script):

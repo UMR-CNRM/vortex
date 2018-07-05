@@ -879,6 +879,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return self.strftime('%H%M')
 
     @property
+    def dd(self):
+        """DD formated string."""
+        return self.strftime('%d')
+
+    @property
     def hh(self):
         """HH formated string."""
         return self.strftime('%H')

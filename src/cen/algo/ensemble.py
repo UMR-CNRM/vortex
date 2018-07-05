@@ -78,7 +78,7 @@ class GuessWorker(_S2MWorker):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = ['guess']
+                values = ['guess', 'intercep']
             ),
             interpreter = dict(
                 values = [ 'python' ]
@@ -152,7 +152,7 @@ class _SafranWorker(_S2MWorker):
         d = self.datebegin
         if ndays > 0:
             for n in range(1, ndays + 1):
-                try_dates = [d + Period(hours=h) for h in range(25)]  # We check for hourly guess
+                try_dates = [d + Period(hours=h) for h in range(0, 25, 3)]  # We check for 3-hours guess
                 self._days[n] = self.get_fichiers_P(try_dates, fatal=False)
                 d = d + Period(days=1)
         if ndays == 0:
@@ -184,7 +184,7 @@ class _SafranWorker(_S2MWorker):
 
         print('Running task {0:s}'.format(self.kind))
         for day, dates in self.days.items():
-            nech = len(dates)
+            nech = len(dates) if len(dates) == 9 else 5
             self.sapdat(dates[-1], nech)
             self._safran_task(rundir, thisdir, day, dates, rdict)
 
@@ -230,24 +230,38 @@ class _SafranWorker(_S2MWorker):
                 # We try to find the P file with format Pyymmddhh_tt (yymmddhh + tt = date)
                 # The maximum time is 96h (4 days)
                 if i == (len(dates) - 1):
-                    t = 1  # Avoid to take the first P file of the next day
+                    # Avoid to take the first P file of the next day
+                    # Check for a 6-hour analysis
+                    d = date - Period(hours = 6)
+                    oldp = 'P{0:s}_{1:s}'.format(d.yymdh, str(6))
+                    if self.system.path.exists(oldp):
+                        self.link_in(oldp, p)
+                        actual_dates.append(date)
+                    # If there is no 6-hour analysis we need at least a 24h forecast to have a cumulate rr24
+                    else:
+                        t = 24
                 else:
                     t = 0
-                while not self.system.path.islink(p) and (t < 108):
+                while not self.system.path.islink(p) and (t <= 108):
                     d = date - Period(hours = t)
                     oldp = 'P{0:s}_{1:s}'.format(d.yymdh, str(t))
                     if self.system.path.exists(oldp):
                         self.link_in(oldp, p)
                         actual_dates.append(date)
-                    t = t + 1  # Hourly check
+                    t = t + 3  # 3-hours check
                 if not self.system.path.islink(p) and fatal:
                     logger.error('The mandatory flow resources %s is missing.', p)
                     raise InputCheckerError("Some of the mandatory resources are missing.")
 
         if len(actual_dates) < 5:
             raise InputCheckerError("Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
-        else:
-            return actual_dates
+        elif len(actual_dates) > 5 and len(actual_dates) < 9:
+            # We must have either 5 or 9 dates, if not we only keep synoptic ones
+            for date in actual_dates:
+                if date.hour not in [0, 6, 12, 18]:
+                    actual_dates.remove(date)
+
+        return actual_dates
 
 
 class SafraneWorker(_SafranWorker):
@@ -261,7 +275,7 @@ class SafraneWorker(_SafranWorker):
     )
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
-        nech = len(dates)
+        nech = len(dates) if len(dates) == 9 else 5
         self.get_fichiers_P(dates)
         for d in dates:
             logger.info('Running date : {0:s}'.format(d.ymdh))
@@ -366,6 +380,7 @@ class SyrmrrWorker(_SafranWorker):
     )
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
+
         if self.check_mandatory_resources(rdict, ['SAPLUI5' + dates[-1].ymdh]):
             self.link_in('SAPLUI5' + dates[-1].ymdh, 'fort.12')
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
@@ -382,6 +397,9 @@ class SytistWorker(_SafranWorker):
             kind = dict(
                 values = ['sytist']
             ),
+            execution = dict(
+                values = ['analysis', 'forecast']
+            )
         )
     )
 
@@ -390,10 +408,26 @@ class SytistWorker(_SafranWorker):
         self.link_in('SAPLUI5_ARP' + dates[-1].ymdh, 'SAPLUI5_ARP')
         self.link_in('SAPLUI5_ANA' + dates[-1].ymdh, 'SAPLUI5_ANA')
         if self.check_mandatory_resources(rdict, ['SAPLUI5'] + ['SAFRANE_d{0:s}_{1:s}'.format(str(day), d.ymdh) for d in dates]):
+            print(['SAFRANE_d{0:s}_{1:s}'.format(str(day), d.ymdh) for d in dates])
             for j, d in enumerate(dates):
                 self.link_in('SAFRANE_d{0:s}_{1:s}'.format(str(day), d.ymdh), 'SAFRAN' + str(j + 1))
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
             self.local_spawn(list_name)
+
+    def sapdat(self, thisdate, nech=5):
+        # Creation of the 'sapdat' file containing the exact date of the file to be processed.
+        self.system.remove('sapdat')
+
+        # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
+        with open('sapdat', 'w') as d:
+            d.write(thisdate.strftime('%y,%m,%d,%H,') + str(nech) + '\n')
+            if self.execution == 'forecast':
+                d.write('0,0,3\n')
+            elif self.execution == 'analysis':
+                d.write('0,1,0\n')
+            d.write('3,1,3,3\n')
+            d.write('0\n')
+            d.write('1,1,{0:s}\n'.format(str(self.posts)))
 
 
 class SurfexWorker(_S2MWorker):
@@ -569,7 +603,7 @@ class Guess(ParaExpresso):
         info = 'AlgoComponent that runs several executions of a guess-making script',
         attr = dict(
             kind = dict(
-                values = [ 'guess' ],
+                values = [ 'guess'],
             ),
             members = dict(
                 info = "The members that will be processed",
@@ -615,7 +649,7 @@ class S2MComponent(ParaBlindRun):
         attr = dict(
             kind = dict(
                 values = ['safrane', 'syrpluie', 'syrmrr', 'sytist', 'sypluie', 'syvapr',
-                          'syvafi', 's2m_offline', 'escroc'],
+                          'syvafi', 's2m_offline', 'escroc', 'intercep'],
             ),
             members = dict(
                 info = "The members that will be processed",
@@ -624,6 +658,10 @@ class S2MComponent(ParaBlindRun):
             ),
             datebegin = a_date,
             dateend = a_date,
+            execution = dict(
+                values = ['analysis', 'forecast'],
+                optional = True,
+            )
         )
     )
 
@@ -646,7 +684,7 @@ class S2MComponent(ParaBlindRun):
         common_i = self._default_common_instructions(rh, opts)
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
-        subdirs = ['mb{0:03d}'.format(m) for m in self.members]
+        subdirs = [None, ] if self.members is None else ['mb{0:03d}'.format(m) for m in self.members]
 
         self._add_instructions(common_i, dict(subdir=subdirs))
         self._default_post_execute(rh, opts)
