@@ -150,7 +150,7 @@ class TopScenario(GenvModelResource):
                 values  = ['top_scenario'],
             ),
             gvar = dict(
-                default = 'scenario_top_model'
+                default = 'scenario_topmodel'
             ),
         )
     )
