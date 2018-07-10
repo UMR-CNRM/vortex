@@ -15,7 +15,7 @@ __all__ = [ ]
 logger = footprints.loggers.getLogger(__name__)
 
 
-class ChemicalBoundaryConditions(FlowResource):
+class ChemicalBoundaryConditions(GeoFlowResource):
     """Chemical boundary conditions produced by some external model."""
 
     _footprint = [
@@ -45,6 +45,15 @@ class ChemicalBoundaryConditions(FlowResource):
         actualdate = self.date + self.term
         fmtremap = dict(netcdf='nc')
         return prefix + actualdate.ymdh + '.' + fmtremap.get(self.nativefmt, self.nativefmt)
+
+    def basename_info(self):
+        """Generic information for names fabric."""
+        return dict(
+            radical = 'chemical_bc',
+            fmt     = self.nativefmt,
+            term    = self.term.fmthm,
+            geo     = self._geo2basename_info(),
+        )
 
 
 class Fire(GeoFlowResource):
