@@ -2212,10 +2212,12 @@ class OSExtended(System):
             zopt.discard('v')
         if autocompress:
             if tarfile.endswith('gz'):
+                # includes the conventional "*.tgz"
                 zopt.add('z')
             else:
                 zopt.discard('z')
             if tarfile.endswith('bz') or tarfile.endswith('bz2'):
+                # includes the conventional "*.tbz"
                 zopt.add('j')
             else:
                 zopt.discard('j')
@@ -2291,6 +2293,14 @@ class OSExtended(System):
         if radix.endswith('.tar'):
             radix = radix[:-4]
         return radix
+
+    def tarname_splitext(self, objname):
+        """Like os.path.splitext, but for tar names (e.g. might return ``.tar.gz``)."""
+        if not self.is_tarname(objname):
+            return (objname, '')
+        radix = self.tarname_radix(objname)
+        ext = objname.replace(radix, '')
+        return (radix, ext)
 
     def blind_dump(self, gateway, obj, destination, **opts):
         """

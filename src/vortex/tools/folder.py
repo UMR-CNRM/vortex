@@ -317,7 +317,8 @@ class FolderShell(addons.FtrawEnableAddon):
         if sh.is_tarname(source) and not sh.is_tarname(destination):
             logger.info('tarfix_in: untar from get <%s> to <%s>', source, destination)
             (destdir, destfile) = sh.path.split(sh.path.abspath(destination))
-            desttar = sh.path.abspath(destination + '.tar')
+            tar_ext = sh.tarname_splitext(source)[1]
+            desttar = sh.path.abspath(destination + tar_ext)
             sh.remove(desttar)
             ok = ok and sh.move(destination, desttar)
             loctmp = tempfile.mkdtemp(prefix='untar_', dir=destdir)
@@ -341,8 +342,9 @@ class FolderShell(addons.FtrawEnableAddon):
         sh = self.sh
         if sh.is_tarname(destination) and not sh.is_tarname(source):
             logger.info('tarfix_out: tar before put <%s> to <%s>', source, destination)
-            sourcetar = sh.path.abspath(source + '.tar')
-            (sourcedir, source_rel) = sh.path.split(source)
+            tar_ext = sh.tarname_splitext(destination)[1]
+            sourcetar = sh.path.abspath(source + tar_ext)
+            source_rel = sh.path.basename(source)
             (sourcedir, sourcefile) = sh.path.split(sourcetar)
             with sh.cdcontext(sourcedir):
                 ok = ok and sh.remove(sourcefile)
