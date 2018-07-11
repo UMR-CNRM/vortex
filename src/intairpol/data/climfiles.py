@@ -102,6 +102,7 @@ class Ch4SurfEmissions(GenericClim):
     def realkind(self):
         return 'emiss_ch4'
 
+
 class SurfaceSpeciesConfig(GenericClim):
     """
     Class for a surface species configuration file (domain dependnat)

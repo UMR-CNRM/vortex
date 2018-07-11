@@ -161,42 +161,42 @@ class TopScenario(GenvModelResource):
 
 
 class HybridLevels(GenvModelResource):
-        """
-        Hybrid levels description.
-        """
-        _footprint = dict(
-            info='Hybrid levels',
-            attr=dict(
-                kind=dict(
-                    values=['hybrid_levels'],
-                ),
-                gvar=dict(
-                    default='lev_hybrid'
-                ),
-            )
+    """
+    Hybrid levels description.
+    """
+    _footprint = dict(
+        info='Hybrid levels',
+        attr=dict(
+            kind=dict(
+                values=['hybrid_levels'],
+            ),
+            gvar=dict(
+                default='lev_hybrid'
+            ),
         )
+    )
 
-        @property
-        def realkind(self):
-            return 'hybrid_levels'
+    @property
+    def realkind(self):
+        return 'hybrid_levels'
 
 
 class SurfaceEmissionsProfilesTable(GenvModelResource):
-        """
-        Emissions profiles table.
-        """
-        _footprint = dict(
-             info='Surface Emissions profiles table',
-             attr=dict(
-                 kind=dict(
-                    values=['emiss_table'],
-                   ),
-                 gvar=dict(
-                        default='profilestable_surface'
-                 ),
-             )
+    """
+    Emissions profiles table.
+    """
+    _footprint = dict(
+        info='Surface Emissions profiles table',
+        attr=dict(
+            kind=dict(
+                values=['emiss_table'],
+            ),
+            gvar=dict(
+                default='profilestable_surface'
+            ),
         )
+    )
 
-        @property
-        def realkind(self):
-             return 'emiss_table'
+    @property
+    def realkind(self):
+        return 'emiss_table'
