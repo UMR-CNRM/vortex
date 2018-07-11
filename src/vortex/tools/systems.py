@@ -2292,42 +2292,6 @@ class OSExtended(System):
             radix = radix[:-4]
         return radix
 
-    def tarfix_in(self, source, destination):
-        """Automatically untar **source** if **source** is a tarfile and **destination** is not."""
-        ok = True
-        if self.is_tarname(source) and not self.is_tarname(destination):
-            logger.info('Untar from get <%s>', source)
-            (destdir, destfile) = self.path.split(self.path.abspath(destination))
-            desttar = self.path.abspath(destination + '.tar')
-            self.remove(desttar)
-            ok = ok and self.move(destination, desttar)
-            loctmp = tempfile.mkdtemp(prefix='untar_', dir=destdir)
-            with self.cdcontext(loctmp):
-                ok = ok and self.untar(desttar, output=False)
-                unpacked = self.glob('*')
-                ok = ok and len(unpacked) == 1  # Only one element allowed in this kind of tarfiles
-                ok = ok and self.move(unpacked[0], self.path.join(destdir, destfile))
-                ok = ok and self.remove(desttar)
-            self.rm(loctmp)
-        return (ok, source, destination)
-
-    def tarfix_out(self, source, destination):
-        """
-        Automatically tar the **source** input if **destination** is a tarfile and
-        **source** is not."""
-        ok = True
-        if not self.is_tarname(source) and self.is_tarname(destination):
-            logger.info('Tar before put <%s>', source)
-            sourcetar = self.path.abspath(source + '.tar')
-            (sourcedir, source_rel) = self.path.split(source)
-            (sourcedir, sourcefile) = self.path.split(sourcetar)
-            with self.cdcontext(sourcedir):
-                ok = ok and self.remove(sourcefile)
-                ok = ok and self.tar(sourcefile, source_rel, output=False)
-            return (ok, sourcetar, destination)
-        else:
-            return (ok, source, destination)
-
     def blind_dump(self, gateway, obj, destination, **opts):
         """
         Use **gateway** for a blind dump of the **obj** in file **destination**,

@@ -11,12 +11,13 @@ data are sent using FTP or SSH, a tar file is created on the fly.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
-import six
 import tempfile
 
+import six
+
 import footprints
-from . import addons
 from vortex.util.iosponge import IoSponge
+from . import addons
 
 #: No automatic export
 __all__ = []
@@ -74,7 +75,7 @@ class FolderShell(addons.FtrawEnableAddon):
         rc, source, destination = self.sh.tarfix_out(source, destination)
         rc = rc and self.sh.cp(source, destination, intent=intent)
         if rc:
-            rc, source, destination = self.sh.tarfix_in(source, destination)
+            rc, source, destination = self.tarfix_in(source, destination)
             if rc and intent == 'inout':
                 self.sh.stderr('chmod', 0o644, destination)
                 oldtrace, self.sh.trace = self.sh.trace, False
@@ -93,7 +94,7 @@ class FolderShell(addons.FtrawEnableAddon):
             rc, source, destination = self.sh.tarfix_out(source, destination)
             rc = rc and self.sh.move(source, destination)
             if rc:
-                rc, source, destination = self.sh.tarfix_in(source, destination)
+                rc, source, destination = self.tarfix_in(source, destination)
         return rc
 
     def _folder_credentials(self, hostname=None, logname=None):
@@ -115,7 +116,7 @@ class FolderShell(addons.FtrawEnableAddon):
     def _folder_unpack_stream(self, stdin=True, options='xvf'):
         return self.sh.popen(
             # the z option is omitted consequently it also works if the file is not compressed
-            ['tar', options, '-'], stdin = stdin, bufsize = 8192, )
+            ['tar', options, '-'], stdin=stdin, bufsize=8192, )
 
     def _packed_size(self, source):
         """Size of the final file, must be exact or be an overestimation.
@@ -304,6 +305,51 @@ class FolderShell(addons.FtrawEnableAddon):
         rc = ssh.scpput_stream(p.stdout, destination)
         self.sh.pclose(p)
         return rc
+
+    def tarfix_in(self, source, destination):
+        """Automatically untar **source** if **source** is a tarfile and **destination** is not.
+
+        This is called after a copy was blindly done: a ``source='foo.tgz'`` might have
+        been copied to ``destination='bar'``, which must be untarred here.
+        """
+        ok = True
+        sh = self.sh
+        if sh.is_tarname(source) and not sh.is_tarname(destination):
+            logger.info('tarfix_in: untar from get <%s> to <%s>', source, destination)
+            (destdir, destfile) = sh.path.split(sh.path.abspath(destination))
+            desttar = sh.path.abspath(destination + '.tar')
+            sh.remove(desttar)
+            ok = ok and sh.move(destination, desttar)
+            loctmp = tempfile.mkdtemp(prefix='untar_', dir=destdir)
+            with sh.cdcontext(loctmp):
+                ok = ok and sh.untar(desttar, output=False)
+                unpacked = sh.glob('*')
+                ok = ok and len(unpacked) == 1  # Only one element allowed in this kind of tarfiles
+                ok = ok and sh.move(unpacked[0], sh.path.join(destdir, destfile))
+                ok = ok and sh.remove(desttar)
+            sh.rm(loctmp)
+        return (ok, source, destination)
+
+    def tarfix_out(self, source, destination):
+        """Automatically tar **source** if **destination** is a tarfile and **source** is not.
+
+        This is called after a copy was blindly done: a directory might have been copied
+        to ``destination='foo.tgz'`` or ``destination='foo.tar.bz2'``.
+        The tar and compression implied by the name must be addressed here.
+        """
+        ok = True
+        sh = self.sh
+        if sh.is_tarname(destination) and not sh.is_tarname(source):
+            logger.info('tarfix_out: tar before put <%s> to <%s>', source, destination)
+            sourcetar = sh.path.abspath(source + '.tar')
+            (sourcedir, source_rel) = sh.path.split(source)
+            (sourcedir, sourcefile) = sh.path.split(sourcetar)
+            with sh.cdcontext(sourcedir):
+                ok = ok and sh.remove(sourcefile)
+                ok = ok and sh.tar(sourcefile, source_rel, output=False)
+            return (ok, sourcetar, destination)
+        else:
+            return (ok, source, destination)
 
 
 @folderize
