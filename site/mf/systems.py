@@ -182,7 +182,7 @@ class HendrixPrestagingTool(PrestagingTool):
         request = []
         if email is not None:
             request.append("#MAIL=" + email)
-        request.extend(self.items())
+        request.extend(sorted(self.items()))
         # Send this stuff to hendrix
         request_filename = '.'.join([self.logname or 'unknownuser',
                                      'stagereq',
