@@ -177,12 +177,12 @@ class HendrixPrestagingTool(PrestagingTool):
     )
 
     def flush(self, email=None):
-        """Acutally send the pre-staging request to Hendrix."""
+        """Actually send the pre-staging request to Hendrix."""
         # Build the target
         request = []
         if email is not None:
             request.append("#MAIL=" + email)
-        request.extend(self.items())
+        request.extend(sorted(self.items()))
         # Send this stuff to hendrix
         request_filename = '.'.join([self.logname or 'unknownuser',
                                      'stagereq',
