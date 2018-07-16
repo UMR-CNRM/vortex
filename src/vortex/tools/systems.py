@@ -1033,6 +1033,22 @@ class OSExtended(System):
         else:
             return False
 
+    def rperm(self, filename, force=False):
+        """Return whether a **filename** exists and is readable by all or not.
+
+        If **force** is set to *True*, the file's permission will be modified
+        so that the file becomes readable for all.
+        """
+        if self._os.path.exists(filename):
+            mode = self._os.stat(filename).st_mode
+            is_r = all([bool(mode & i) for i in [stat.S_IRUSR,stat.S_IRGRP,stat.S_IROTH]])
+            if not is_r and force:
+                self.chmod(filename, mode | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+                is_r = True
+            return is_r
+        else:
+            return False
+
     def wperm(self, filename, force=False):
         """Return whether a **filename** exists and is writable by owner or not.
 
@@ -2196,10 +2212,12 @@ class OSExtended(System):
             zopt.discard('v')
         if autocompress:
             if tarfile.endswith('gz'):
+                # includes the conventional "*.tgz"
                 zopt.add('z')
             else:
                 zopt.discard('z')
             if tarfile.endswith('bz') or tarfile.endswith('bz2'):
+                # includes the conventional "*.tbz"
                 zopt.add('j')
             else:
                 zopt.discard('j')
@@ -2276,41 +2294,13 @@ class OSExtended(System):
             radix = radix[:-4]
         return radix
 
-    def tarfix_in(self, source, destination):
-        """Automatically untar **source** if **source** is a tarfile and **destination** is not."""
-        ok = True
-        if self.is_tarname(source) and not self.is_tarname(destination):
-            logger.info('Untar from get <%s>', source)
-            (destdir, destfile) = self.path.split(self.path.abspath(destination))
-            desttar = self.path.abspath(destination + '.tar')
-            self.remove(desttar)
-            ok = ok and self.move(destination, desttar)
-            loctmp = tempfile.mkdtemp(prefix='untar_', dir=destdir)
-            with self.cdcontext(loctmp):
-                ok = ok and self.untar(desttar, output=False)
-                unpacked = self.glob('*')
-                ok = ok and len(unpacked) == 1  # Only one element allowed in this kind of tarfiles
-                ok = ok and self.move(unpacked[0], self.path.join(destdir, destfile))
-                ok = ok and self.remove(desttar)
-            self.rm(loctmp)
-        return (ok, source, destination)
-
-    def tarfix_out(self, source, destination):
-        """
-        Automatically tar the **source** input if **destination** is a tarfile and
-        **source** is not."""
-        ok = True
-        if not self.is_tarname(source) and self.is_tarname(destination):
-            logger.info('Tar before put <%s>', source)
-            sourcetar = self.path.abspath(source + '.tar')
-            (sourcedir, source_rel) = self.path.split(source)
-            (sourcedir, sourcefile) = self.path.split(sourcetar)
-            with self.cdcontext(sourcedir):
-                ok = ok and self.remove(sourcefile)
-                ok = ok and self.tar(sourcefile, source_rel, output=False)
-            return (ok, sourcetar, destination)
-        else:
-            return (ok, source, destination)
+    def tarname_splitext(self, objname):
+        """Like os.path.splitext, but for tar names (e.g. might return ``.tar.gz``)."""
+        if not self.is_tarname(objname):
+            return (objname, '')
+        radix = self.tarname_radix(objname)
+        ext = objname.replace(radix, '')
+        return (radix, ext)
 
     def blind_dump(self, gateway, obj, destination, **opts):
         """
