@@ -49,10 +49,10 @@ class SafranGuess(GeoFlowResource):
                     optional = True,
                 ),
                 source_app = dict(
-                    values = ['arpege', 'arome', 'ifs', 'cep' ],
+                    values = ['arpege', 'arome', 'ifs'],
                 ),
                 source_conf = dict(
-                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps', 'pearome', 'era40'],
+                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'eps', 'pearo', 'era40'],
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
@@ -61,7 +61,6 @@ class SafranGuess(GeoFlowResource):
                 cumul = dict(
                     info     = "The duration of cumulative fields (equivalent to the initial model resource term).",
                     type     = Time,
-                    optional = True,
                 ),
             )
         )
@@ -81,8 +80,8 @@ class SafranGuess(GeoFlowResource):
             fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
-    def cenvortex_basename(self):
-        return self.realkind + "." + self.source_app + "." + self.source_conf + "-" + str(self.cumul.hh) + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
+#    def cenvortex_basename(self):
+#        return self.realkind + "." + self.source_app + "." + self.source_conf + "-" + str(self.cumul.hh) + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
     def cendev_basename(self):
         # guess files could be named PYYMMDDHH_hh where YYMMDDHH is the creation date and hh the echeance
@@ -138,9 +137,9 @@ class SurfaceIO(GeoFlowResource):
 
     def basename_info(self):
         return dict(
-            radical = self.realkind,
-            period  = [self.datebegin.ymdh, self.dateend.ymdh],
-            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
+            radical    = self.realkind,
+            cen_period = [self.datebegin.ymdh, self.dateend.ymdh],
+            fmt        = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
 # A supprimer car normalement maintenant la méthode basename_info fait exactement la même chose
@@ -187,10 +186,10 @@ class SurfaceForcing(SurfaceIO):
             if var:
                 src.append(var)
         return dict(
-            radical = self.realkind,
-            src = src,
-            period  = [self.datebegin.ymdh, self.dateend.ymdh],
-            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
+            radical     = self.realkind,
+            src         = src,
+            cen_period  = [self.datebegin.ymdh, self.dateend.ymdh],
+            fmt         = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
     def cenvortex_basename(self):
@@ -265,16 +264,10 @@ class Prep(InitialCondition):
 
     def basename_info(self):
         return dict(
-            radical = self.realkind,
-            period = [self.datevalidity],
-            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
+            radical    = self.realkind,
+            cen_period = [self.datevalidity],
+            fmt        = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
-
-# A supprimer car normalement maintenant la méthode basename_info fait exactement la même chose
-# vérifier que le provider cenvortex va bien chercher vortex_basename en l'absence de cenvortex_basename
-    def cenvortex_basename(self):
-        return self.vortex_basename()
-#         return 'PREP_' + self.datevalidity.ymdh + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
 
 class SnowObs(GeoFlowResource):
@@ -322,14 +315,15 @@ class SnowObs(GeoFlowResource):
         return "obs_insitu"
 
     def cenvortex_basename(self):
-        print "CENVORTEX_BASENAME"
-        print self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
+        print("CENVORTEX_BASENAME")
+        print(self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt))
 
         return self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
 
 class ScoresSnow(SurfaceIO):
     """Class for the safrane output files."""
+
     _footprint = [
         dict(
             info = 'Safran-produced forcing file',

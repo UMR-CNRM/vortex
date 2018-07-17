@@ -3,8 +3,6 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import os.path
-
 import footprints
 
 from vortex.util.config     import GenericConfigParser
@@ -53,7 +51,7 @@ class CenVortex(VortexFreeStd):
         if self.block:
             rpath.append(self.block)
 
-        return os.path.join(*rpath)
+        return self.system.path.join(*rpath)
 
     def basename(self, resource):
         return resource.cenvortex_basename()

@@ -10,11 +10,11 @@ import six
 
 import footprints
 
-from vortex.layout.nodes import Task
 from bronx.stdtypes.date import yesterday, Period, Time
+import abc
 
 
-class S2Mtask(Task):
+class TaskMixIn(abc):
 
     nightruntime = Time(hour=3, minute=0)
 
@@ -73,4 +73,3 @@ class S2Mtask(Task):
             return self.conf.geometry.area
         elif suffix in self.conf.geometry:
             return list(self.conf.geometry.replace(suffix, ''))
-
