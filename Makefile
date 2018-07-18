@@ -38,7 +38,7 @@ flake8: ; flake8 --config=project/flake8.ini --statistics . > project/flake8_rep
 
 # Code quality analysis : pylint
 pylint:
-	bin/tbinterface.py -a -c all -n 'common,gco,iga,mercator,olive,previmar,sandbox' -f json -o 'project/tbinterface'
+	bin/tbinterface.py -a -c all -n 'cen,common,gco,iga,intairpol,olive,previmar,sandbox' -f json -o 'project/tbinterface'
 	pylint --rcfile=project/pylint.rc src/* site/* > project/pylint_global.txt || true
 
 
