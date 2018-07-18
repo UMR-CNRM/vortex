@@ -15,7 +15,7 @@
         namespace: vortex.multi.fr
         vapp: mocage
         vconf: camsfcst
-      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000A/chemical/vortexdata
+      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000A/chemical/chemical_bc.mocage+0003:00.netcdf
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: chemical
@@ -24,7 +24,7 @@
       term: 3
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/mocage/camsfcst/OPER/20180101T0000A/chemical/vortexdata
+      location: vortex://vsop.multi.fr/mocage/camsfcst/OPER/20180101T0000A/chemical/chemical_bc.mocage+0003:00.netcdf
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: chemical

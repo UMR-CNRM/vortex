@@ -4,14 +4,13 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import os.path
-import six
 
 import footprints
+from footprints import proxy as fpx
 
 from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, member, block
 from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt
-from vortex.util.names import VortexNameBuilder
-from vortex.tools import net
+from vortex.tools import net, names
 
 #: No automatic export
 __all__ = ['Provider']
@@ -234,6 +233,9 @@ class Remote(Provider):
 class Vortex(Provider):
     """Main provider of the toolbox, using a fix-size path and a dedicated name factory."""
 
+    _DEFAULT_NAME_BUILDER = names.VortexNameBuilder()
+    _CUSTOM_NAME_BUILDERS = dict()
+
     _abstract = True
     _footprint = [
         block,
@@ -262,9 +264,7 @@ class Vortex(Provider):
                 namebuild = dict(
                     info           = "The object responsible for building filenames.",
                     optional       = True,
-                    type           = VortexNameBuilder,
-                    default        = VortexNameBuilder(),
-                    doc_visibility = footprints.doc.visibility.GURU,
+                    doc_visibility = footprints.doc.visibility.ADVANCED,
                 ),
                 expected = dict(
                     info        = "Is the resource expected ?",
@@ -282,14 +282,24 @@ class Vortex(Provider):
     def __init__(self, *args, **kw):
         logger.debug('Vortex experiment provider init %s', self.__class__)
         super(Vortex, self).__init__(*args, **kw)
+        if self.namebuild is not None:
+            if self.namebuild not in self._CUSTOM_NAME_BUILDERS:
+                builder = fpx.vortexnamebuilder(name=self.namebuild)
+                if builder is None:
+                    raise ValueError("The << {:s} >> name builder does not exists."
+                                     .format(self.namebuild))
+                self._CUSTOM_NAME_BUILDERS[self.namebuild] = builder
+            self._namebuilder = self._CUSTOM_NAME_BUILDERS[self.namebuild]
+        else:
+            self._namebuilder = self._DEFAULT_NAME_BUILDER
+
+    @property
+    def namebuilder(self):
+        return self._namebuilder
 
     @property
     def realkind(self):
         return 'vortex'
-
-    def footprint_export_namebuild(self):
-        """Return the ``namebuild`` (class content type) attribute as a (module, name) tuple."""
-        return (self.namebuild.__module__, self.namebuild.__class__.__name__)
 
     def _str_more(self):
         """Additional information to print representation."""
@@ -306,33 +316,24 @@ class Vortex(Provider):
         """Returns the current ``namespace``."""
         return self.namespace.netloc
 
-    def nice_member(self):
-        """Nice formatting view of the member number, if any."""
-        return 'mb' + six.text_type(self.member) if self.member is not None else ''
-
     def pathname(self, resource):
         """Constructs pathname of the ``resource`` according to :func:`pathinfo`."""
-        rinfo = self.pathinfo(resource)
-        rdate = rinfo.get('date', '')
-        if rdate:
-            rdate = rdate.vortex(rinfo.get('cutoff', 'X'))
-        rpath = [
-            self.vapp,
-            self.vconf,
-            self.experiment,
-            rdate
-        ]
-        if self.member is not None:
-            rpath.append(self.nice_member())
-        rpath.append(self.block)
-        return os.path.join(*rpath)
+        rinfo = resource.namebuilding_info()
+        rinfo.update(
+            vapp=self.vapp,
+            vconf=self.vconf,
+            experiment=self.experiment,
+            block=self.block,
+            member=self.member,
+        )
+        return self.namebuilder.pack_pathname(rinfo)
 
     def basename(self, resource):
         """
         Constructs basename according to current ``namebuild`` factory
         and resource :func:`~vortex.data.resources.Resource.basename_info`.
         """
-        return self.namebuild.pack(resource.basename_info())
+        return self.namebuilder.pack_basename(resource.namebuilding_info())
 
 
 class VortexStd(Vortex):

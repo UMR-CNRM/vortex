@@ -5,7 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import footprints
 
-from common.data.consts import GenvStaticGeoResource
+from common.data.consts import GenvModelGeoResource
 from gco.syntax.stdattrs import gdomain
 
 #: No automatic export
@@ -14,7 +14,7 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 
-class List(GenvStaticGeoResource):
+class List(GenvModelGeoResource):
 
     _footprint = [
         gdomain,
@@ -41,7 +41,7 @@ class List(GenvStaticGeoResource):
         return 'safran_namelist'
 
 
-class Snowr_param(GenvStaticGeoResource):
+class Snowr_param(GenvModelGeoResource):
 
     _footprint = dict(
         attr = dict(

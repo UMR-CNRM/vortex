@@ -7,7 +7,8 @@ import re
 
 from vortex.data.contents import JsonDictContent
 from vortex.data.flow import GeoFlowResource, FlowResource
-from vortex.syntax.stdattrs import term
+from vortex.syntax.stdattrs import term_deco
+from vortex.syntax.stddeco import namebuilding_insert
 from vortex.tools import env
 
 #: No automatic export
@@ -22,7 +23,7 @@ class GridPoint(GeoFlowResource):
 
     _abstract = True
     _footprint = [
-        term,
+        term_deco,
         dict(
             info = 'GridPoint Fields',
             attr = dict(
@@ -66,9 +67,9 @@ class GridPoint(GeoFlowResource):
         """OP ARCHIVE specific naming convention (abstract)."""
         pass
 
-    def basename_info(self):
+    def namebuilding_info(self):
         """Generic information, radical = ``grid``."""
-
+        ninfo = super(GridPoint, self).namebuilding_info()
         if self.model == 'mocage':
             if self.origin == 'hst':
                 source = 'forecast'
@@ -81,14 +82,11 @@ class GridPoint(GeoFlowResource):
                 source = 'forecast'
         else:
             source = 'forecast'
-
-        return dict(
+        ninfo.update(
             radical = 'grid',
-            fmt     = self.nativefmt,
             src     = [self.model, source],
-            geo     = self._geo2basename_info(),
-            term    = self.term.fmthm
         )
+        return ninfo
 
     def iga_pathinfo(self):
         """Standard path information for IGA inline cache."""
@@ -128,14 +126,6 @@ class GridPointMap(FlowResource):
     @property
     def realkind(self):
         return 'gridpointmap'
-
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``bcor``."""
-        return dict(
-            radical = self.realkind,
-            fmt     = self.nativefmt,
-            src     = [self.model],
-        )
 
 
 class GridPointFullPos(GridPoint):
@@ -239,6 +229,7 @@ class GridPointExport(GridPoint):
         return name
 
 
+@namebuilding_insert('filtername', lambda s: s.filtername)
 class FilteredGridPointExport(GridPointExport):
 
     _footprint = dict(
@@ -247,9 +238,3 @@ class FilteredGridPointExport(GridPointExport):
             filtername = dict(),
         )
     )
-
-    def basename_info(self):
-        """Generic information, radical = ``grid``."""
-        infos = super(FilteredGridPointExport, self).basename_info()
-        infos["filtername"] = self.filtername
-        return infos

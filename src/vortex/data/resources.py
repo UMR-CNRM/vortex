@@ -5,7 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import footprints
 
-from vortex.syntax.stdattrs import a_nativefmt, notinrepr
+from vortex.syntax.stdattrs import nativefmt_deco, notinrepr
 from .contents import DataContent, UnknownContent, FormatAdapter
 
 #: Export Resource and associated Catalog classes.
@@ -18,21 +18,23 @@ class Resource(footprints.FootprintBase):
 
     _abstract  = True
     _collector = ('resource',)
-    _footprint = dict(
-        info = 'Abstract NWP Resource',
-        attr = dict(
-            nativefmt = a_nativefmt,
-            clscontents = dict(
-                info            = "The class instantiated to read the container's content",
-                type            = DataContent,
-                isclass         = True,
-                optional        = True,
-                default         = UnknownContent,
-                doc_visibility  = footprints.doc.visibility.ADVANCED,
-            )
-        ),
-        fastkeys = set(['kind', 'nativefmt', ]),
-    )
+    _footprint = [
+        nativefmt_deco,
+        dict(
+            info = 'Abstract NWP Resource',
+            attr = dict(
+                clscontents = dict(
+                    info            = "The class instantiated to read the container's content",
+                    type            = DataContent,
+                    isclass         = True,
+                    optional        = True,
+                    default         = UnknownContent,
+                    doc_visibility  = footprints.doc.visibility.ADVANCED,
+                )
+            ),
+            fastkeys = set(['kind', 'nativefmt', ])
+        )
+    ]
 
     def __init__(self, *args, **kw):
         logger.debug('Resource init %s', self.__class__)
@@ -55,35 +57,33 @@ class Resource(footprints.FootprintBase):
         """A nice cocoon to store miscellaneous information."""
         return self._mailbox
 
-    def vortex_pathinfo(self):
+    def generic_pathinfo(self):
         """
         Returns anonymous dict with suitable informations from vortex point of view.
         Doomed to be overwritten.
         """
-        return dict(
-            nativefmt = self.nativefmt
-        )
+        return dict()
 
     def pathinfo(self, provider):
         """Proxy to the appropriate method prefixed by provider name."""
-        actualpathinfo = getattr(self, provider + '_pathinfo', self.vortex_pathinfo)
+        actualpathinfo = getattr(self, provider + '_pathinfo', self.generic_pathinfo)
         return actualpathinfo()
 
-    def vortex_basename(self):
+    def generic_basename(self):
         """Abstract method."""
         pass
 
     def basename(self, provider):
         """Proxy to the appropriate method prefixed by provider name."""
-        actualbasename = getattr(self, provider + '_basename', self.vortex_basename)
+        actualbasename = getattr(self, provider + '_basename', self.generic_basename)
         return actualbasename()
 
-    def basename_info(self):
+    def namebuilding_info(self):
         """
         Returns anonymous dict with suitable informations from vortex point of view.
         In real world, probably doomed to return an empty dict.
         """
-        return dict()
+        return {'radical': self.realkind}
 
     def vortex_urlquery(self):
         """Query to be binded to the resource's location in vortex space."""

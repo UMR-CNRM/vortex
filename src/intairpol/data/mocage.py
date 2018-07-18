@@ -7,7 +7,8 @@ import footprints
 
 from vortex.data.contents import TextContent
 from vortex.data.flow import FlowResource, GeoFlowResource
-from vortex.syntax.stdattrs import term
+from vortex.syntax.stdattrs import term_deco
+from vortex.syntax.stddeco import namebuilding_append, namebuilding_delete, namebuilding_insert
 
 #: Automatic export of  class
 __all__ = [ ]
@@ -19,7 +20,7 @@ class ChemicalBoundaryConditions(FlowResource):
     """Chemical boundary conditions produced by some external model."""
 
     _footprint = [
-        term,
+        term_deco,
         dict(
             info = 'Chemical boundary conditions',
             attr = dict(
@@ -47,11 +48,12 @@ class ChemicalBoundaryConditions(FlowResource):
         return prefix + actualdate.ymdh + '.' + fmtremap.get(self.nativefmt, self.nativefmt)
 
 
+@namebuilding_delete('src')
 class Fire(GeoFlowResource):
     """Fire data file."""
 
     _footprint = [
-        term,
+        term_deco,
         dict(
             info = 'Fire data file',
             attr = dict(
@@ -76,21 +78,14 @@ class Fire(GeoFlowResource):
         actualdate = self.date + self.term
         return prefix + self.geometry.area + '+' + actualdate.ymd
 
-    def basename_info(self):
-        """Generic information for names fabric."""
-        return dict(
-            radical = 'fire',
-            fmt     = self.nativefmt,
-            geo     = self._geo2basename_info(),
-            term    = self.term.fmthm
-        )
 
-
+@namebuilding_delete('src')
+@namebuilding_delete('fmt')
 class ObsFire(GeoFlowResource):
     """Fire observations file."""
 
     _footprint = [
-        term,
+        term_deco,
         dict(
             info = 'Fire observations file',
             attr = dict(
@@ -116,15 +111,8 @@ class ObsFire(GeoFlowResource):
         actualdate = self.date + self.term
         return prefix + actualdate.ymd + '.tar.gz'
 
-    def basename_info(self):
-        """Generic information for names fabric."""
-        return dict(
-            radical = 'obsfire',
-            geo     = self._geo2basename_info(),
-            term    = self.term.fmthm
-        )
 
-
+@namebuilding_delete('fmt')
 class TopBoundaryCondition(FlowResource):
     """Boundary conditions on top of the model, e.g. mocage."""
 
@@ -146,19 +134,13 @@ class TopBoundaryCondition(FlowResource):
     def realkind(self):
         return 'topbd'
 
-    def basename_info(self):
-        """Generic information for names fabric."""
-        return dict(
-            radical = self.realkind,
-            src     = self.model,
-        )
 
-
+@namebuilding_append('src', lambda s: s.run_eval)
 class PostPeriodicStats(GeoFlowResource):
     """Stats computed on a defined forecast period."""
 
     _footprint = [
-        term,
+        term_deco,
         dict(
             info = 'Stats computed on a defined forecast period',
             attr = dict(
@@ -181,16 +163,6 @@ class PostPeriodicStats(GeoFlowResource):
     def realkind(self):
         return 'ppstats'
 
-    def basename_info(self):
-        """Generic information for names fabric for these stats."""
-        return dict(
-            radical = self.realkind,
-            fmt     = self.nativefmt,
-            term    = self.term.fmthm,
-            geo     = self._geo2basename_info(),
-            src     = [self.model, self.run_eval],
-        )
-
 
 class RestartFlagContent(TextContent):
     """Specialisation of the TextContent"""
@@ -204,6 +176,8 @@ class RestartFlagContent(TextContent):
         return(restartvalue if self.restart else nominalvalue)
 
 
+@namebuilding_insert('radical', lambda s: 'clim_restart')
+@namebuilding_delete('src')
 class RestartFlag(FlowResource):
     """Restart flag between tasks test_restart and clim_restart"""
 
@@ -228,10 +202,3 @@ class RestartFlag(FlowResource):
     @property
     def realkind(self):
         return 'restart_flag'
-
-    def basename_info(self):
-        """Generic information for names fabric."""
-        return dict(
-            radical = 'clim_restart',
-            fmt     = self.nativefmt,
-        )

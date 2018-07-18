@@ -7,10 +7,14 @@ import footprints
 from footprints.util import rangex
 
 from vortex.data.flow        import GeoFlowResource
-from common.data.obs         import ObsRaw
 from vortex.data.geometries  import MassifGeometry
+from vortex.syntax.stdattrs  import a_date
+from vortex.syntax.stddeco   import namebuilding_delete, namebuilding_insert
+
 from common.data.modelstates import Historic, InitialCondition
-from vortex.syntax.stdattrs  import a_date, term
+from common.data.obs         import ObsRaw
+
+from cen.syntax.stdattrs     import centerm_deco
 
 #: No automatic export
 __all__ = []
@@ -28,11 +32,12 @@ class SafranObsDateError(ValueError):
         )
 
 
+@namebuilding_insert('src', lambda s: [s.source_app, s.source_conf])
 class SafranGuess(GeoFlowResource):
     """Class for the guess file (P ou E file) that is used by SAFRAN."""
 
     _footprint = [
-        term,
+        centerm_deco,
         dict(
             info = 'Safran guess',
             attr = dict(
@@ -70,15 +75,6 @@ class SafranGuess(GeoFlowResource):
     def realkind(self):
         return 'guess'
 
-    def basename_info(self):
-        return dict(
-            radical = self.realkind,
-            geo     = self.geometry.area,
-            src     = [self.source_app, self.source_conf],
-            term    = self.term.fmthour,
-            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
-        )
-
     def cendev_basename(self):
         # guess files could be named PYYMMDDHH_hh where YYMMDDHH is the creation date and hh the echeance
         # origin_date = self.date.replace(hour=0)
@@ -94,7 +90,7 @@ class SurfaceForcing(GeoFlowResource):
     """Class for the safrane output files."""
 
     _footprint = [
-        term,
+        centerm_deco,
         dict(
             info = 'Safran-produced forcing file',
             attr = dict(
@@ -123,21 +119,12 @@ class SurfaceForcing(GeoFlowResource):
     def realkind(self):
         return 'forcing'
 
-    def basename_info(self):
-        return dict(
-            radical = self.realkind,
-            geo     = self.geometry.area,
-            src     = self.model,
-            term    = self.term.fmthour,
-            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
-        )
 
-
+@namebuilding_delete('src')
 class Prep(InitialCondition):
     """Class for the SURFEX-Crocus initialisation of the snowpack state."""
 
     _footprint = [
-        term,
         dict(
             info = 'Instant SURFEX-Crocus Snowpack state',
             attr = dict(
@@ -170,22 +157,16 @@ class Prep(InitialCondition):
     def realkind(self):
         return 'snowpackstate'
 
-    def basename_info(self):
-        return dict(
-            radical = self.realkind,
-            geo     = self.geometry.area,
-            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
-        )
-
     def cendev_basename(self):
         return 'prep' + self.date.yymdh
 
 
+@namebuilding_delete('src')
 class Pro(Historic):
     """Class for the SURFEX-Crocus simulated snowpack."""
 
     _footprint = [
-        term,
+        centerm_deco,
         dict(
             info = 'SURFEX-Crocus Snowpack simulation',
             attr = dict(
@@ -216,14 +197,6 @@ class Pro(Historic):
     @property
     def realkind(self):
         return 'snowpack'
-
-    def basename_info(self):
-        return dict(
-            radical = self.realkind,
-            geo     = self.geometry.area,
-            term    = self.term.fmthour,
-            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
-        )
 
 
 class SafranObsRaw(ObsRaw):

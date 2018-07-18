@@ -63,6 +63,7 @@ import six
 
 import footprints
 
+from vortex.syntax.stddeco import namebuilding_insert, generic_pathname_insert
 from vortex.util.config import GenericConfigParser
 
 #: No automatic export
@@ -142,6 +143,9 @@ class Geometry(footprints.util.GetByTag):
     def tag_clean(self, tag):
         """Geometries id tags are lower case."""
         return tag.lower()
+
+    def export_dict(self):
+        return self.tag
 
     def doc_export(self):
         """Relevant informations to print in the documentation."""
@@ -518,6 +522,48 @@ class MassifGeometry(UnstructuredGeometry):
         """Relevant informations to print in the documentation."""
         fmts = 'kind={0:s}, area={1:s}, massif count={2!s}'
         return fmts.format(self.kind, self.area, self.nmassif)
+
+
+# Pre-defined footprint attribute for any HorizontalGeometry
+
+#: Usual definition of the ``geometry`` attribute.
+a_hgeometry = dict(
+    info = "The resource's horizontal geometry.",
+    type = HorizontalGeometry,
+)
+
+
+def _add_geo2basename_info(cls):
+    """Decorator that adds a _geo2basename_info to a class."""
+
+    def _geo2basename_info(self, add_stretching=True):
+        """Return an array describing the geometry for the Vortex's name builder."""
+        if isinstance(self.geometry, GaussGeometry):
+            lgeo = [{'truncation': self.geometry.truncation}, ]
+            if add_stretching:
+                lgeo.append({'stretching': self.geometry.stretching})
+        elif isinstance(self.geometry, ProjectedGeometry):
+            lgeo = [self.geometry.area, self.geometry.rnice]
+        else:
+            lgeo = self.geometry.area  # Default: always defined
+        return lgeo
+
+    if not hasattr(cls, '_geo2basename_info'):
+        cls._geo2basename_info = _geo2basename_info
+    return cls
+
+
+#: Abstract footprint definition of the ``geometry`` attribute.
+hgeometry = footprints.Footprint(info = 'Abstract Horizontal Geometry',
+                                 attr = dict(geometry = a_hgeometry))
+
+#: Abstract footprint definition of the ``geometry`` attribute with decorators
+#: that alter the ``namebuilding_info`` method
+hgeometry_deco = footprints.DecorativeFootprint(
+    hgeometry,
+    decorator = [_add_geo2basename_info,
+                 namebuilding_insert('geo', lambda self: self._geo2basename_info()),
+                 generic_pathname_insert('geometry', lambda self: self.geometry, setdefault=True)])
 
 
 # Load default geometries when the module is first imported

@@ -23,6 +23,7 @@ Package
 * :mod:`vortex.tools.grib`
 * :mod:`vortex.tools.lfi`
 * :mod:`vortex.tools.listings`
+* :mod:`vortex.tools.names`
 * :mod:`vortex.tools.net`
 * :mod:`vortex.tools.odb`
 * :mod:`vortex.tools.parallelism`
