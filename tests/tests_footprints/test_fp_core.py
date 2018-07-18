@@ -16,7 +16,7 @@ import sys
 import types
 
 import footprints
-from footprints import Footprint, FootprintBase
+from footprints import Footprint, DecorativeFootprint, FootprintBase
 from footprints import doc, priorities, reporting, collectors
 from footprints.config import FootprintSetup
 
@@ -148,6 +148,11 @@ class FootprintTestFpAttr(FootprintTestOne):
     )
 
 
+def easy_decorator(cls):
+    cls.easy_decorator_was_here = True
+    return cls
+
+
 @contextmanager
 def capture(command, *args, **kwargs):
     out, sys.stdout = sys.stdout, StringIO()
@@ -197,7 +202,7 @@ class utFootprint(TestCase):
             info = 'Some nice stuff'
         )
 
-        self.fpter = Footprint(
+        self.fpter = DecorativeFootprint(
             attr = dict(
                 stuff1 = dict(
                     alias = ('arg1',)
@@ -208,7 +213,8 @@ class utFootprint(TestCase):
                     default = 1
                 ),
             ),
-            info = 'Some nice stuff'
+            info = 'Some nice stuff',
+            decorator = easy_decorator
         )
 
     def test_footprint_basics(self):
@@ -419,7 +425,7 @@ class utFootprint(TestCase):
         guess = dict(nothing='void')
         extras = dict()
         with self.assertRaises(KeyError):
-            u_rv = fp._replacement(nbpass, 'hip', True, guess, extras, list(guess.keys()), list(), set())
+            fp._replacement(nbpass, 'hip', True, guess, extras, list(guess.keys()), list(), set())
 
         rv = fp._replacement(nbpass, 'nothing', True, guess, extras, list(guess.keys()), list(), set())
         self.assertTrue(rv)
@@ -428,7 +434,7 @@ class utFootprint(TestCase):
         guess = dict(nothing='void', stuff1='misc_[stuff2]')
         footprints.logger.setLevel(logging.CRITICAL)
         with self.assertRaises(footprints.FootprintUnreachableAttr):
-            u_rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, list(guess.keys()), list(), set())
+            fp._replacement(nbpass, 'stuff1', True, guess, extras, list(guess.keys()), list(), set())
         footprints.logger.setLevel(logging.WARNING)
 
         guess = dict(nothing='void', stuff1='misc_[stuff2#0]')
@@ -913,12 +919,38 @@ class utFootprint(TestCase):
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
+    def test_decorative(self):
+        self.assertListEqual(self.fpter.decorators, [easy_decorator, ])
+        fptmp = self.fpter.as_footprint()
+        self.assertIsInstance(fptmp, Footprint)
+        self.assertEqual(fptmp.as_dict(), self.fpter.as_dict())
+        # Decorative but useless...
+        fpuseless = DecorativeFootprint(
+            attr = dict(
+                stuff1 = dict(
+                ),
+            ),
+            info = 'Some nice stuff',
+        )
+        self.assertListEqual(fpuseless.decorators, [])
+        # Not cool...
+        with self.assertRaises(ValueError):
+            DecorativeFootprint(
+                attr = dict(
+                    stuff1 = dict(
+                    ),
+                ),
+                info = 'Some nice stuff',
+                decorator = [easy_decorator, 'toto', ]
+            )
+
 
 # Base class for footprint classes
 
 class utFootprintBase(TestCase):
 
     def test_metaclass_abstract(self):
+
         class FootprintTestMeta(FootprintBase):
             _abstract = True
 
@@ -936,7 +968,7 @@ class utFootprintBase(TestCase):
             bind = list(),
             info = 'Not documented',
             only = dict(),
-            priority = dict( level = priorities.top.DEFAULT ),
+            priority = dict(level = priorities.top.DEFAULT)
         ))
 
         with self.assertRaises(KeyError):
@@ -946,7 +978,7 @@ class utFootprintBase(TestCase):
             self.assertTrue(FootprintTestMeta.footprint_values('foo'))
 
         with self.assertRaises(footprints.FootprintInvalidDefinition):
-            u_ftm = FootprintTestMeta()
+            FootprintTestMeta()
 
     def test_metaclass_empty(self):
         with self.assertRaises(footprints.FootprintInvalidDefinition):
@@ -968,7 +1000,7 @@ class utFootprintBase(TestCase):
 
         del FootprintTestMeta
 
-    def test_metaclass_inheritance(self):
+    def test_metaclass_inheritance_and_merging(self):
         class testA(FootprintBase):
             _footprint = dict(
                 attr = dict(
@@ -979,14 +1011,24 @@ class utFootprintBase(TestCase):
                 )
             )
 
-        class testB(FootprintBase):
-            _footprint = dict(
-                attr = dict(
-                    att1 = dict(default = 'titi'),
-                    att3 = dict(default = 'scrontch',
-                                optional = True),
-                )
+        fpatt3 = Footprint(
+            info = 'Abstract att1',
+            attr = dict(
+                att3 = dict(default = 'scrontch', optional = True),
             )
+        )
+
+        fpatt3_deco = DecorativeFootprint(fpatt3, decorator=[easy_decorator, ])
+
+        class testB(FootprintBase):
+            _footprint = [
+                fpatt3_deco,
+                dict(
+                    attr = dict(
+                        att1 = dict(default = 'titi'),
+                    )
+                )
+            ]
 
         class testC(testB, testA):
             _footprint = dict(
@@ -1003,6 +1045,11 @@ class utFootprintBase(TestCase):
         self.assertEqual(testC._footprint.attr['att3']['default'], 'scrontch')
         self.assertEqual(testC._footprint.attr['att3']['optional'], True)
 
+        # Decorator effect...
+        self.assertTrue(testB.easy_decorator_was_here)
+        self.assertTrue(testC.easy_decorator_was_here)  # Because of the MRO
+        self.assertNotIn('easy_decorator_was_here', testC.__dict__)  # But actually not defined in testC
+
     def test_baseclass_fp1(self):
         self.assertFalse(FootprintTestOne.footprint_abstract())
         self.assertSetEqual(set(FootprintTestOne.footprint_mandatory()),
@@ -1018,10 +1065,10 @@ class utFootprintBase(TestCase):
 
         footprints.logger.setLevel(logging.CRITICAL)
         with self.assertRaises(footprints.FootprintFatalError):
-            u_fp1 = FootprintTestOne(kind='hip')
+            FootprintTestOne(kind='hip')
 
         with self.assertRaises(footprints.FootprintFatalError):
-            u_fp1 = FootprintTestOne(kind='hip', someint=13)
+            FootprintTestOne(kind='hip', someint=13)
         footprints.logger.setLevel(logging.WARNING)
 
         fp1 = FootprintTestOne(kind='hip', someint=7)
@@ -1065,7 +1112,6 @@ class utFootprintBase(TestCase):
             someint = 8,
         )))
 
-
         fp1 = FootprintTestOne(stuff='foo', someint='7')
         self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
             kind = 'hop',
@@ -1105,13 +1151,13 @@ class utFootprintBase(TestCase):
 
         footprints.logger.setLevel(logging.CRITICAL)
         with self.assertRaises(footprints.FootprintFatalError):
-            u_fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo)
+            FootprintTestTwo(kind='hip', somefoo=thefoo)
 
         with self.assertRaises(footprints.FootprintFatalError):
-            u_fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=13)
+            FootprintTestTwo(kind='hip', somefoo=thefoo, someint=13)
 
         with self.assertRaises(footprints.FootprintFatalError):
-            u_fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=7)
+            FootprintTestTwo(kind='hip', somefoo=thefoo, someint=7)
         footprints.logger.setLevel(logging.WARNING)
 
         fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
@@ -1366,6 +1412,7 @@ class utProxy(TestCase):
         self.assertIsInstance(footprints.proxy.garbage, types.MethodType)
         self.assertIn('garbage', footprints.proxy)
         self.assertIn('garbages', footprints.proxy)
+
 
 if __name__ == '__main__':
     main(verbosity=2)

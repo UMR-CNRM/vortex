@@ -707,6 +707,31 @@ class Footprint(object):
         return self.priority['level']
 
 
+class DecorativeFootprint(Footprint):
+    """
+    This class extends the :class:`Footprint` class. In addition to the definition
+    and processing of the footprint itself, a class decorator can be registered.
+
+    The :class:`FootprintBaseMeta` will apply this decorator on the target class
+    only when the footprint is used directly (i.e. not when inherited).
+    """
+
+    def __init__(self, *args, **kw):
+        super(DecorativeFootprint, self).__init__(*args, **kw)
+        self._decorators = list()
+        if 'decorator' in kw:
+            self._decorators = kw['decorator'] if isinstance(kw['decorator'], list) else [kw['decorator'], ]
+            if not all([callable(d) for d in self._decorators]):
+                raise ValueError("Class decorators must be callables")
+
+    @property
+    def decorators(self):
+        return self._decorators
+
+    def as_footprint(self):
+        return Footprint(self._fp)
+
+
 class FootprintBaseMeta(type):
     """
     Meta class constructor for :class:`FootprintBase`.
@@ -726,12 +751,18 @@ class FootprintBaseMeta(type):
 
         # Footprint merging
         fplocal = d.get('_footprint', dict())
+        localdeco = list()
         bcfp = [c.__dict__.get('_footprint', dict()) for c in b]
         bcfp.reverse()  # That way, footprint's inheritance is consistent with python's
         if type(fplocal) is list:
             bcfp.extend(fplocal)
+            for fptmp in fplocal:
+                if isinstance(fptmp, DecorativeFootprint):
+                    localdeco.extend(fptmp.decorators)
         else:
             bcfp.append(fplocal)
+            if isinstance(fplocal, DecorativeFootprint):
+                localdeco.extend(fplocal.decorators)
         thisfp = d['_footprint'] = Footprint(*bcfp, myclsname=n)
 
         # Setting descriptors for footprint attributes
@@ -759,6 +790,10 @@ class FootprintBaseMeta(type):
 
         # At least build the class itself as a default type
         realcls = super(FootprintBaseMeta, cls).__new__(cls, n, b, d)
+
+        # Apply local decorators
+        for deco in localdeco:
+            realcls = deco(realcls)
 
         # A class that is not abstrat should register in dedicated collectors
         if not abstract:
