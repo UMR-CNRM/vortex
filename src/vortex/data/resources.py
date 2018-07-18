@@ -110,10 +110,6 @@ class Resource(footprints.FootprintBase):
         """Proxy to :meth:`genv_basename`."""
         return self.genv_basename()
 
-    def cendev_basename(self):
-        """Basename for the CEN Soprano provider."""
-        raise NotImplementedError('This resource is not CENdev ready.')
-
     def gget_urlquery(self):
         """Duck typing: return an empty string by default."""
         return ''

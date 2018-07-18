@@ -108,7 +108,7 @@ class MkTopBD(BlackBox):
         )
     ]
 
-    def stdin_text(self, fcterm=date.Time('24:00'), basedate=None):
+    def stdin_text(self, fcterm=date.Time('24:00'), basedate=None, **opts):  # @UnusedVariable
         """Build the stdin text used by the executable."""
         first = basedate.ymdh
         last = (basedate + fcterm).ymdh
